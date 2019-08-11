@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace PeterHan.CritterInventory {
@@ -31,12 +32,12 @@ namespace PeterHan.CritterInventory {
 		/// The cached category for "Critter (Wild)". Since ResourceCategoryScreen also has
 		/// only one static instance for now, this non-reentrant reference is safe.
 		/// </summary>
-		private static CritterResourceHeader critterTame;
+		private static ResourceCategoryHeader critterTame;
 		/// <summary>
 		/// The cached category for "Critter (Wild)". Since ResourceCategoryScreen also has
 		/// only one static instance for now, this non-reentrant reference is safe.
 		/// </summary>
-		private static CritterResourceHeader critterWild;
+		private static ResourceCategoryHeader critterWild;
 
 		/// <summary>
 		/// Applied to ResourceEntry to highlight critters on hover.
@@ -109,7 +110,7 @@ namespace PeterHan.CritterInventory {
 			/// Applied after Hover runs.
 			/// </summary>
 			/// <param name="__instance">The current resource category header.</param>
-			/// <param name="is_hovering">true if the user is hovering, or false otherwise</param>
+			/// <param name="is_hovering">true if the user is hovering, or false otherwise.</param>
 			private static void Postfix(ResourceCategoryHeader __instance, bool is_hovering) {
 				var info = __instance.gameObject.GetComponent<CritterResourceInfo>();
 				if (info != null) {
@@ -126,8 +127,11 @@ namespace PeterHan.CritterInventory {
 		}
 		
 		/// <summary>
-		/// Applied to ResourceCategoryHeader to suppress UpdateContents calls to critter
-		/// resource headers.
+		/// Applied to ResourceCategoryHeader to replace UpdateContents calls on critter
+		/// resource headers with logic to update with critters.
+		/// 
+		/// As compared to the old approach of updating separately, this method preserves the
+		/// semantics of the original UpdateContents, improving compatibility.
 		/// </summary>
 		[HarmonyPatch(typeof(ResourceCategoryHeader), "UpdateContents")]
 		public static class ResourceCategoryHeader_UpdateContents_Patch {
@@ -136,9 +140,12 @@ namespace PeterHan.CritterInventory {
 			/// </summary>
 			/// <param name="__instance">The current resource category header.</param>
 			private static bool Prefix(ResourceCategoryHeader __instance) {
+				var info = __instance.gameObject.GetComponent<CritterResourceInfo>();
 				// UpdateContents adds spurious entries (e.g. babies when only adults ever
 				// discovered) on critters
-				return __instance != critterTame.Header && __instance != critterWild.Header;
+				if (info != null)
+					__instance.Update(info.CritterType);
+				return info == null;
 			}
 		}
 
@@ -152,8 +159,8 @@ namespace PeterHan.CritterInventory {
 			/// </summary>
 			/// <param name="__instance">The current resource category list.</param>
 			private static void Postfix(ResourceCategoryScreen __instance) {
-				critterTame = new CritterResourceHeader(__instance, CritterType.Tame);
-				critterWild = new CritterResourceHeader(__instance, CritterType.Wild);
+				critterTame = CritterResourceHeader.Create(__instance, CritterType.Tame);
+				critterWild = CritterResourceHeader.Create(__instance, CritterType.Wild);
 			}
 		}
 
@@ -165,7 +172,7 @@ namespace PeterHan.CritterInventory {
 			/// <summary>
 			/// Alternates tame and wild critter updating to reduce CPU load.
 			/// </summary>
-			static int critterUpdatePacer = 0;
+			private static int critterUpdatePacer = 0;
 
 			/// <summary>
 			/// Applied after Update runs.
@@ -177,13 +184,13 @@ namespace PeterHan.CritterInventory {
 						// Tame critter update
 						critterTame.Activate();
 						if (critterUpdatePacer == 0)
-							CritterInventoryUtils.TotalCreatures(critterTame);
+							critterTame.UpdateContents();
 					}
 					if (critterWild != null) {
 						// Wild critter update
 						critterWild.Activate();
 						if (critterUpdatePacer == 1)
-							CritterInventoryUtils.TotalCreatures(critterWild);
+							critterWild.UpdateContents();
 					}
 					critterUpdatePacer = (critterUpdatePacer + 1) & 0x1;
 				}

@@ -26,100 +26,79 @@ using UnityEngine.UI;
 
 namespace PeterHan.CritterInventory {
 	/// <summary>
-	/// A resource header for "Critter (Wild)" or "Critter (Tame)"
+	/// Contains methods to manage resource headers for critters.
 	/// </summary>
-	sealed class CritterResourceHeader {
+	static class CritterResourceHeader {
 		/// <summary>
-		/// Creates tool tip text for the critter screen.
+		/// Activates a resource category heading.
 		/// </summary>
-		/// <param name="heading">The heading to display on the tool tip.</param>
-		/// <param name="totals">The total quantity available and reserved for errands.</param>
-		/// <returns>The tool tip text formatted for those values.</returns>
-		private static string FormatTooltip(string heading, CritterTotals totals) {
-			int total = totals.Total, reserved = totals.Reserved;
-			return heading + "\n" + string.Format(STRINGS.UI.RESOURCESCREEN.AVAILABLE_TOOLTIP,
-				total - reserved, reserved, total);
+		/// <param name="header">The heading to activate.</param>
+		public static void Activate(this ResourceCategoryHeader header) {
+			if (header != null) {
+				var go = header.gameObject;
+				if (!go.activeInHierarchy)
+					go.SetActive(true);
+			}
 		}
 
 		/// <summary>
-		/// The category for "Critter (Type)".
+		/// Creates a resource category header for critters.
 		/// </summary>
-		public ResourceCategoryHeader Header { get; }
-		/// <summary>
-		/// Cached Traverse instance for this header.
-		/// </summary>
-		private readonly Traverse trCategory;
-		/// <summary>
-		/// The critter type included in this header.
-		/// </summary>
-		public CritterType Type { get; set; }
-
-		/// <summary>
-		/// Creates a new critter resource header.
-		/// </summary>
-		/// <param name="allCategories">The parent of this object.</param>
-		/// <param name="type">The critter type for this resource header.</param>
-		public CritterResourceHeader(ResourceCategoryScreen allCategories, CritterType type) {
-			var trInstance = Traverse.Create(allCategories);
+		/// <param name="resList">The parent category screen for this header.</param>
+		/// <param name="type">The critter type to create.</param>
+		/// <returns>The heading for that critter type.</returns>
+		public static ResourceCategoryHeader Create(ResourceCategoryScreen resList,
+				CritterType type) {
+			var trInstance = Traverse.Create(resList);
 			var tag = GameTags.BagableCreature;
 			string typeStr = type.GetDescription();
-			// Create a heading for Critter
+			// Create a heading for Critter (Type)
 			PLibUtil.LogDebug("Creating Critter ({0}) category".F(typeStr));
 			var gameObject = Util.KInstantiateUI(trInstance.GetField<GameObject>(
-				"Prefab_CategoryBar"), allCategories.CategoryContainer.gameObject, false);
+				"Prefab_CategoryBar"), resList.CategoryContainer.gameObject, false);
 			gameObject.name = "CategoryHeader_{0}_{1}".F(tag.Name, type.ToString());
-			Header = gameObject.GetComponent<ResourceCategoryHeader>();
-			Header.SetTag(tag, GameUtil.MeasureUnit.quantity);
+			var header = gameObject.GetComponent<ResourceCategoryHeader>();
+			header.SetTag(tag, GameUtil.MeasureUnit.quantity);
 			// Tag it with a wild/tame tag
-			Header.gameObject.AddComponent<CritterResourceInfo>().CritterType = type;
-			Header.elements.LabelText.SetText("{0} ({1})".F(tag.ProperName(), typeStr));
-			trCategory = Traverse.Create(Header);
-			Type = type;
+			header.gameObject.AddComponent<CritterResourceInfo>().CritterType = type;
+			header.elements.LabelText.SetText("{0} ({1})".F(tag.ProperName(), typeStr));
+			return header;
 		}
+
 		/// <summary>
-		/// Activates this category if it is not already active.
+		/// Updates a critter resource category header.
 		/// </summary>
-		public void Activate() {
-			var go = Header.gameObject;
-			if (!go.activeInHierarchy)
-				go.SetActive(true);
-		}
-		/// <summary>
-		/// Creates a new resource entry.
-		/// </summary>
-		/// <param name="species">The species for this entry.</param>
-		private ResourceEntry CreateEntry(Tag species) {
-			var entry = trCategory.CallMethod<ResourceEntry>("NewResourceEntry", species,
-				GameUtil.MeasureUnit.quantity);
-			entry.SetName(species.ProperName());
-			entry.gameObject.AddComponent<CritterResourceInfo>().CritterType = Type;
-			return entry;
-		}
-		public override string ToString() {
-			return Header.name;
-		}
-		/// <summary>
-		/// Updates the resource entries with the critters found, creating if necessary.
-		/// </summary>
-		/// <param name="found">The distribution of critters found.</param>
-		public void Update(IDictionary<Tag, CritterTotals> found) {
-			var all = new CritterTotals();
-			var discovered = Header.ResourcesDiscovered;
+		/// <param name="header">The category header to update.</param>
+		/// <param name="type">The critter type it contains (can be pulled from the CritterResourceInfo component).</param>
+		public static void Update(this ResourceCategoryHeader header, CritterType type) {
+			var totals = DictionaryPool<Tag, CritterTotals, ResourceCategoryHeader>.Allocate();
+			var all = CritterInventoryUtils.FindCreatures(totals, type);
+			var discovered = header.ResourcesDiscovered;
+			var trCategory = Traverse.Create(header);
 			// Previously discovered but now extinct critters need an empty entry
 			foreach (var pair in discovered) {
 				var species = pair.Key;
-				if (!found.ContainsKey(species))
-					found.Add(species, new CritterTotals());
+				if (!totals.ContainsKey(species))
+					totals.Add(species, new CritterTotals());
 			}
 			// Go through resource entries for each species and update them
-			foreach (var pair in found) {
+			foreach (var pair in totals) {
 				var quantity = pair.Value;
-				UpdateEntry(pair.Key, quantity);
-				all.Add(quantity);
+				var species = pair.Key;
+				// Look up the species to see if we have found it already
+				if (!discovered.TryGetValue(species, out ResourceEntry entry)) {
+					entry = trCategory.CallMethod<ResourceEntry>("NewResourceEntry",
+						species, GameUtil.MeasureUnit.quantity);
+					entry.SetName(species.ProperName());
+					// Add component to tag it as wild/tame
+					entry.gameObject.AddComponent<CritterResourceInfo>().CritterType = type;
+					discovered.Add(species, entry);
+				}
+				UpdateEntry(entry, species, quantity);
 			}
 			bool anyDiscovered = discovered.Count > 0;
 			// Enable display and open/close based on critter presence
-			Header.elements.QuantityText.SetText(all.Available.ToString());
+			header.elements.QuantityText.SetText(all.Available.ToString());
 			trCategory.CallMethod("SetActiveColor", all.HasAny);
 			trCategory.CallMethod("SetInteractable", anyDiscovered);
 			// Still need to set this for expand/contract to work
@@ -128,38 +107,39 @@ namespace PeterHan.CritterInventory {
 			var tooltip = trCategory.GetField<ToolTip>("tooltip");
 			if (tooltip != null) {
 				tooltip.OnToolTip = null;
-				tooltip.toolTip = FormatTooltip(Header.elements.LabelText.text, all);
+				tooltip.toolTip = CritterInventoryUtils.FormatTooltip(header.elements.
+					LabelText.text, all);
 			}
+			totals.Recycle();
 		}
+
 		/// <summary>
 		/// Updates an individual resource entry with the critters found.
 		/// </summary>
+		/// <param name="entry">The entry to update.</param>
 		/// <param name="species">The species of critter which was found.</param>
 		/// <param name="quantity">The quantity of this critter which is present.</param>
-		private void UpdateEntry(Tag species, CritterTotals quantity) {
-			var discovered = Header.ResourcesDiscovered;
-			// Look up the species to see if we have found it already
-			if (!discovered.TryGetValue(species, out ResourceEntry entry)) {
-				entry = CreateEntry(species);
-				discovered.Add(species, entry);
-			}
+		private static void UpdateEntry(ResourceEntry entry, Tag species,
+				CritterTotals quantity) {
 			var trEntry = Traverse.Create(entry);
 			// Update the tool tip text
 			var tooltip = trEntry.GetField<ToolTip>("tooltip");
 			if (tooltip != null) {
 				tooltip.OnToolTip = null;
-				tooltip.toolTip = FormatTooltip(entry.NameLabel.text, quantity);
+				tooltip.toolTip = CritterInventoryUtils.FormatTooltip(entry.NameLabel.text,
+					quantity);
 			}
 			// Determine the color for the labels
 			var color = trEntry.GetField<Color>("AvailableColor");
 			if (quantity.Available <= 0)
 				color = trEntry.GetField<Color>("UnavailableColor");
-			if (entry.QuantityLabel.color != color)
-				entry.QuantityLabel.color = color;
-			if (entry.NameLabel.color != color)
-				entry.NameLabel.color = color;
+			LocText qLabel = entry.QuantityLabel, nLabel = entry.NameLabel;
+			if (qLabel.color != color)
+				qLabel.color = color;
+			if (nLabel.color != color)
+				nLabel.color = color;
 			// Add up overall totals
-			entry.QuantityLabel.SetText(quantity.Available.ToString());
+			qLabel.SetText(quantity.Available.ToString());
 		}
 	}
 }

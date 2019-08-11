@@ -19,12 +19,60 @@
 using Harmony;
 using PeterHan.PLib;
 using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace PeterHan.CritterInventory {
 	/// <summary>
 	/// Utility functions used for critter inventory creation.
 	/// </summary>
 	static class CritterInventoryUtils {
+		/// <summary>
+		/// Populates a list of the creatures matching the critter type specified.
+		/// </summary>
+		/// <param name="totals">The location where the quantity of creatures will be stored.</param>
+		/// <param name="type">The critter type to match.</param>
+		public static CritterTotals FindCreatures(IDictionary<Tag, CritterTotals> totals,
+				CritterType type) {
+			if (totals == null)
+				throw new ArgumentNullException("totals");
+			var all = new CritterTotals();
+			IterateCreatures((creature) => {
+				var species = creature.PrefabID();
+				var go = creature.gameObject;
+				if (type.Matches(creature)) {
+					var alignment = go.GetComponent<FactionAlignment>();
+					// Create critter totals if not present
+					if (!totals.TryGetValue(species, out CritterTotals total)) {
+						total = new CritterTotals();
+						totals.Add(species, total);
+					}
+					total.Total++;
+					all.Total++;
+					// Reserve wrangled, marked for attack, and trussed/bagged creatures
+					if ((go.GetComponent<Capturable>()?.IsMarkedForCapture ?? false) ||
+							((alignment?.targeted ?? false) && alignment.targetable) ||
+						creature.HasTag(GameTags.Creatures.Bagged)) {
+						total.Reserved++;
+						all.Reserved++;
+					}
+				}
+			});
+			return all;
+		}
+
+		/// <summary>
+		/// Creates tool tip text for the critter resource entries and headers.
+		/// </summary>
+		/// <param name="heading">The heading to display on the tool tip.</param>
+		/// <param name="totals">The total quantity available and reserved for errands.</param>
+		/// <returns>The tool tip text formatted for those values.</returns>
+		public static string FormatTooltip(string heading, CritterTotals totals) {
+			int total = totals.Total, reserved = totals.Reserved;
+			return heading + "\n" + string.Format(STRINGS.UI.RESOURCESCREEN.AVAILABLE_TOOLTIP,
+				total - reserved, reserved, total);
+		}
+
 		/// <summary>
 		/// Retrieves the UI description of a critter type.
 		/// </summary>
@@ -58,7 +106,7 @@ namespace PeterHan.CritterInventory {
 					// are indeed unreachable
 					if ((creatureBrain?.isSpawned ?? false) && !creatureBrain.HasTag(
 							GameTags.Dead))
-						action.Invoke(creatureBrain);
+						action?.Invoke(creatureBrain);
 				}
 			} finally {
 				(enumerator as IDisposable)?.Dispose();
@@ -73,46 +121,24 @@ namespace PeterHan.CritterInventory {
 		/// <returns>true if the creature matches the type, or false otherwise.</returns>
 		public static bool Matches(this CritterType type, CreatureBrain creature) {
 			bool match;
-			switch (type) {
-			case CritterType.Tame:
-				match = !creature.HasTag(GameTags.Creatures.Wild);
-				break;
-			case CritterType.Wild:
-				match = creature.HasTag(GameTags.Creatures.Wild);
-				break;
-			default:
-				throw new InvalidOperationException("Unsupported critter type " + type);
+			if (creature == null)
+				// Should not match any critter type
+				match = false;
+			else {
+				// Some creatures cannot be tamed (morbs)
+				bool canBeTamed = creature.gameObject.GetDef<WildnessMonitor.Def>() != null;
+				switch (type) {
+				case CritterType.Tame:
+					match = !creature.HasTag(GameTags.Creatures.Wild) && canBeTamed;
+					break;
+				case CritterType.Wild:
+					match = creature.HasTag(GameTags.Creatures.Wild) || !canBeTamed;
+					break;
+				default:
+					throw new InvalidOperationException("Unsupported critter type " + type);
+				}
 			}
 			return match;
-		}
-
-		/// <summary>
-		/// Totals up the number of creatures, creating resource entries if needed.
-		/// </summary>
-		/// <param name="wild">true to count wild creatures, or false to count tamed ones.</param>
-		public static void TotalCreatures(CritterResourceHeader header) {
-			var totals = DictionaryPool<Tag, CritterTotals, ResourceCategoryHeader>.Allocate();
-			CritterType type = header.Type;
-			IterateCreatures((creature) => {
-				var species = creature.PrefabID();
-				var go = creature.gameObject;
-				if (type.Matches(creature)) {
-					var alignment = go.GetComponent<FactionAlignment>();
-					// Create critter totals if not present
-					if (!totals.TryGetValue(species, out CritterTotals total)) {
-						total = new CritterTotals();
-						totals.Add(species, total);
-					}
-					total.Total++;
-					// Reserve wrangled, marked for attack, and trussed/bagged creatures
-					if ((go.GetComponent<Capturable>()?.IsMarkedForCapture ?? false) ||
-						((alignment?.targeted ?? false) && alignment.targetable) ||
-						creature.HasTag(GameTags.Creatures.Bagged))
-						total.Reserved++;
-				}
-			});
-			header.Update(totals);
-			totals.Recycle();
 		}
 	}
 }
