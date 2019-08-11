@@ -8,6 +8,7 @@ Steam Workshop: TBD
 
 ## Minor Updates - No Mechanics Changes
 |  **Name**  |  **Description**  |
+| :--------: | :---------------: |
 | Critter Inventory | Adds tame and wild critters to the inventory list |
 | PLib | Library required for all of my mods |
 
