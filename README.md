@@ -2,15 +2,14 @@
 
 Last tested on game version: **LU-357226**
 
-Steam Workshop: TBD
+Steam Workshop: https://steamcommunity.com/profiles/76561198025154321/myworkshopfiles/?appid=457140
 
 # Mod List
 
 ## Minor Updates - No Mechanics Changes
 |  **Name**  |  **Description**  |
 | :--------: | :---------------: |
-| Critter Inventory | Adds tame and wild critters to the inventory list |
-| PLib | Library required for all of my mods |
+| [Critter Inventory](https://steamcommunity.com/sharedfiles/filedetails/?id=1831438994) | Adds tame and wild critters to the inventory list |
 
 ## New Mechanics
 

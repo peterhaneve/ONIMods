@@ -16,6 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Harmony;
+using PeterHan.PLib;
 using System;
 
 namespace PeterHan.CritterInventory {
@@ -93,13 +95,20 @@ namespace PeterHan.CritterInventory {
 			CritterType type = header.Type;
 			IterateCreatures((creature) => {
 				var species = creature.PrefabID();
+				var go = creature.gameObject;
 				if (type.Matches(creature)) {
+					var alignment = go.GetComponent<FactionAlignment>();
 					// Create critter totals if not present
 					if (!totals.TryGetValue(species, out CritterTotals total)) {
 						total = new CritterTotals();
 						totals.Add(species, total);
 					}
 					total.Total++;
+					// Reserve wrangled, marked for attack, and trussed/bagged creatures
+					if ((go.GetComponent<Capturable>()?.IsMarkedForCapture ?? false) ||
+						((alignment?.targeted ?? false) && alignment.targetable) ||
+						creature.HasTag(GameTags.Creatures.Bagged))
+						total.Reserved++;
 				}
 			});
 			header.Update(totals);

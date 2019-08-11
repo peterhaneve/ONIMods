@@ -152,7 +152,7 @@ namespace PeterHan.CritterInventory {
 			}
 			// Determine the color for the labels
 			var color = trEntry.GetField<Color>("AvailableColor");
-			if (!quantity.HasAny)
+			if (quantity.Available <= 0)
 				color = trEntry.GetField<Color>("UnavailableColor");
 			if (entry.QuantityLabel.color != color)
 				entry.QuantityLabel.color = color;
