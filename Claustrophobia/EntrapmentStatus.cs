@@ -77,6 +77,12 @@ namespace PeterHan.Claustrophobia {
 		/// </summary>
 		public MinionIdentity Victim { get; }
 
+		/// <summary>
+		/// The name of the victim duplicant. Deleted Duplicants crash on retrieving their
+		/// name, so this is meant for the logs.
+		/// </summary>
+		public string VictimName { get; }
+
 		public EntrapmentStatus(MinionIdentity victim) {
 			Victim = victim ?? throw new ArgumentNullException("victim");
 			var trapQuery = ClaustrophobiaChecker.CheckEntrapment(victim);
@@ -93,11 +99,12 @@ namespace PeterHan.Claustrophobia {
 			}
 			LastStatus = EntrapmentState.None;
 			StillLiving = true;
+			VictimName = victim.name;
 		}
 
 		public override string ToString() {
 			return "{0} ({5} last): {1:D} reachable, bed:{2}, mess:{3}, toilet:{4}".F(
-				Victim.name, ReachableCells, CanReachBed, CanReachMess, CanReachToilet,
+				VictimName, ReachableCells, CanReachBed, CanReachMess, CanReachToilet,
 				LastStatus);
 		}
 	}

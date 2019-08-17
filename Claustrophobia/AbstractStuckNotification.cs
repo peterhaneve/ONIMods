@@ -46,7 +46,7 @@ namespace PeterHan.Claustrophobia {
 		/// </summary>
 		protected MinionIdentity Victim {
 			get {
-				return gameObject.GetComponent<MinionIdentity>();
+				return gameObject?.GetComponent<MinionIdentity>();
 			}
 		}
 		
@@ -101,13 +101,25 @@ namespace PeterHan.Claustrophobia {
 		/// Hides the notification.
 		/// </summary>
 		public void Hide() {
-			if (visible) {
-				// Log status
-				PLibUtil.LogDebug("{0} is no longer {1}".F(Victim?.name, Title));
+			var victim = Victim;
+			if (visible && victim != null) {
+				PLibUtil.LogDebug("{0} is no longer {1}".F(victim.name, Title));
+				// Unsubscribe from duplicant death notifications
 				gameObject.GetComponent<Notifier>()?.Remove(GetNotification());
-				Victim?.Unsubscribe((int)GameHashes.DuplicantDied, DestroyNotification);
+				victim.Unsubscribe((int)GameHashes.QueueDestroyObject, DestroyNotification);
+				victim.Unsubscribe((int)GameHashes.Died, DestroyNotification);
 				visible = false;
 			}
+		}
+
+		/// <summary>
+		/// Called when this object is destroyed.
+		/// </summary>
+		public void OnDestroy() {
+#if DEBUG
+			PLibUtil.LogDebug("Destroying stuck notification");
+#endif
+			gameObject?.GetComponent<Notifier>()?.Remove(GetNotification());
 		}
 
 		/// <summary>
@@ -122,11 +134,13 @@ namespace PeterHan.Claustrophobia {
 		/// Shows the notification.
 		/// </summary>
 		public void Show() {
-			if (!visible) {
-				// Log status
-				PLibUtil.LogWarning("{0} is now {1}!".F(Victim?.name, Title));
+			var victim = Victim;
+			if (!visible && victim != null) {
+				PLibUtil.LogWarning("{0} is now {1}!".F(victim.name, Title));
+				// Subscribe to duplicant death notifications
 				gameObject.GetComponent<Notifier>()?.Add(GetNotification());
-				Victim?.Subscribe((int)GameHashes.DuplicantDied, DestroyNotification);
+				victim.Subscribe((int)GameHashes.QueueDestroyObject, DestroyNotification);
+				victim.Subscribe((int)GameHashes.Died, DestroyNotification);
 				visible = true;
 			}
 		}

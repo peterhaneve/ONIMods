@@ -140,9 +140,7 @@ namespace PeterHan.Claustrophobia {
 			foreach (var status in toCheck) {
 				var victim = status.Victim;
 				var obj = victim.gameObject;
-				// Exclude falling Duplicants, they have no pathing
-				if (obj.activeInHierarchy && !(victim.GetSMI<FallMonitor.Instance>()?.
-						IsFalling() ?? false)) {
+				if (obj?.activeInHierarchy == true) {
 					int reachable = status.ReachableCells;
 					var lastStatus = status.LastStatus;
 					// Create notifications if not yet present
@@ -152,7 +150,7 @@ namespace PeterHan.Claustrophobia {
 							(reachable < threshold)) {
 						// Confined
 						PLibUtil.LogDebug("{0} is confined, reaches {1:D}, best reach {2:D}".F(
-							victim.name, reachable, mostReachable));
+							status.VictimName, reachable, mostReachable));
 						if (lastStatus == EntrapmentState.Confined) {
 							confined.Show();
 							trapped.Hide();
@@ -163,7 +161,7 @@ namespace PeterHan.Claustrophobia {
 					} else if (status.TrappedScore > 1) {
 						// Trapped
 						PLibUtil.LogDebug("{0} is trapped, bed? {1}, mess? {2}, toilet? {3}".F(
-							victim.name, status.CanReachBed, status.CanReachMess,
+							status.VictimName, status.CanReachBed, status.CanReachMess,
 							status.CanReachToilet));
 						if (lastStatus == EntrapmentState.Trapped) {
 							confined.Hide();
@@ -213,7 +211,7 @@ namespace PeterHan.Claustrophobia {
 				if (statusCache.TryGetValue(oldDupe, out EntrapmentStatus entry) && !entry.
 						StillLiving) {
 					statusCache.Remove(oldDupe);
-					PLibUtil.LogDebug("Removing {0} from cache".F(oldDupe.name));
+					PLibUtil.LogDebug("Removing {0} from cache".F(entry.VictimName));
 				}
 		}
 
@@ -236,23 +234,28 @@ namespace PeterHan.Claustrophobia {
 			}
 			checkNextFrame.Clear();
 			// Add periodic duplicants to check this time
-			for (int i = 0; i < step; i++) {
+			for (int i = 0; i < step && minionPacer < len; i++) {
 				var dupe = minionCache[minionPacer++];
-				var status = new EntrapmentStatus(dupe);
-				if (statusCache.TryGetValue(dupe, out EntrapmentStatus oldStatus)) {
-					// Copy status from previous entry
-					status.LastStatus = oldStatus.LastStatus;
-					statusCache[dupe] = status;
+				var obj = dupe.gameObject;
+				// Exclude falling Duplicants, they have no pathing
+				if (obj?.activeInHierarchy == true && obj.GetSMI<FallMonitor.Instance>()?.
+						IsFalling() != true) {
+					var status = new EntrapmentStatus(dupe);
+					if (statusCache.TryGetValue(dupe, out EntrapmentStatus oldStatus)) {
+						// Copy status from previous entry
+						status.LastStatus = oldStatus.LastStatus;
+						statusCache[dupe] = status;
 #if DEBUG
-					// Spam the log if debug build with dupe info every iteration
-					PLibUtil.LogDebug(status.ToString());
+						// Spam the log if debug build with dupe info every iteration
+						PLibUtil.LogDebug(status.ToString());
 #endif
-				} else {
-					// Add to cache if missing
-					statusCache.Add(dupe, status);
-					PLibUtil.LogDebug("Adding " + status);
+					} else {
+						// Add to cache if missing
+						statusCache.Add(dupe, status);
+						PLibUtil.LogDebug("Adding " + status);
+					}
+					checkThisFrame.Add(status);
 				}
-				checkThisFrame.Add(status);
 			}
 			CheckNotifications(checkThisFrame);
 			checkThisFrame.Recycle();
