@@ -45,17 +45,18 @@ namespace PeterHan.CritterInventory {
 		/// Creates a resource category header for critters.
 		/// </summary>
 		/// <param name="resList">The parent category screen for this header.</param>
+		/// <param name="prefab">The prefab to use for creating the headers.</param>
 		/// <param name="type">The critter type to create.</param>
 		/// <returns>The heading for that critter type.</returns>
 		public static ResourceCategoryHeader Create(ResourceCategoryScreen resList,
-				CritterType type) {
+				GameObject prefab, CritterType type) {
 			var trInstance = Traverse.Create(resList);
 			var tag = GameTags.BagableCreature;
 			string typeStr = type.GetDescription();
 			// Create a heading for Critter (Type)
 			PLibUtil.LogDebug("Creating Critter ({0}) category".F(typeStr));
-			var gameObject = Util.KInstantiateUI(trInstance.GetField<GameObject>(
-				"Prefab_CategoryBar"), resList.CategoryContainer.gameObject, false);
+			var gameObject = Util.KInstantiateUI(prefab, resList.CategoryContainer.gameObject,
+				false);
 			gameObject.name = "CategoryHeader_{0}_{1}".F(tag.Name, type.ToString());
 			var header = gameObject.GetComponent<ResourceCategoryHeader>();
 			header.SetTag(tag, GameUtil.MeasureUnit.quantity);
