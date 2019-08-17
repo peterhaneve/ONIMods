@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.757
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29201.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PLib", "PLib\PLib.csproj", "{B6D056B5-B658-4E93-8AE2-86069196B494}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CritterInventory", "CritterInventory\CritterInventory.csproj", "{0E69A516-4440-4B16-880F-44D8F297600E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Claustrophobia", "Claustrophobia\Claustrophobia.csproj", "{8636B2F7-E6A1-44A3-8927-12C6368C2624}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{0E69A516-4440-4B16-880F-44D8F297600E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0E69A516-4440-4B16-880F-44D8F297600E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0E69A516-4440-4B16-880F-44D8F297600E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8636B2F7-E6A1-44A3-8927-12C6368C2624}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8636B2F7-E6A1-44A3-8927-12C6368C2624}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8636B2F7-E6A1-44A3-8927-12C6368C2624}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8636B2F7-E6A1-44A3-8927-12C6368C2624}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

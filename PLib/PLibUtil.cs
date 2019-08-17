@@ -49,6 +49,15 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Checks to see if a building is usable.
+		/// </summary>
+		/// <param name="building">The building component to check.</param>
+		/// <returns>true if it is usable (enabled, not broken, not overheated), or false otherwise.</returns>
+		public static bool IsUsable(this GameObject building) {
+			return building.GetComponent<Operational>()?.IsFunctional ?? false;
+		}
+
+		/// <summary>
 		/// Logs a message to the debug log.
 		/// </summary>
 		/// <param name="message">The message to log.</param>

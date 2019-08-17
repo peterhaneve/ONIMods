@@ -16,50 +16,12 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
-
-namespace PeterHan.CritterInventory {
+namespace PeterHan.Claustrophobia {
 	/// <summary>
-	/// Stores the total quantity of critters available and the quantity reserved for errands.
-	/// 
-	/// While this could be a struct, it would get copied a lot.
+	/// The entrapment status in a previous frame. Used by the entrapment checker to only
+	/// trigger notifications if duplicants are trapped for more than a second.
 	/// </summary>
-	sealed class CritterTotals {
-		/// <summary>
-		/// The number of critters available to be used (total minus reserved).
-		/// </summary>
-		public int Available {
-			get {
-				return Total - Reserved;
-			}
-		}
-
-		/// <summary>
-		/// Returns true if any critters were found.
-		/// </summary>
-		public bool HasAny {
-			get {
-				return Total > 0;
-			}
-		}
-
-		/// <summary>
-		/// The number of critters of this type "reserved" for Wrangle or Attack errands.
-		/// </summary>
-		public int Reserved { get; set; }
-
-		/// <summary>
-		/// The total number of critters of this type.
-		/// </summary>
-		public int Total { get; set; }
-
-		public CritterTotals() {
-			Reserved = 0;
-			Total = 0;
-		}
-
-		public override string ToString() {
-			return "Total: {0:D} Reserved: {1:D}".F(Total, Reserved);
-		}
+	enum EntrapmentState {
+		None, Trapped, Confined
 	}
 }

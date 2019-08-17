@@ -18,7 +18,6 @@
 
 using Harmony;
 using PeterHan.PLib;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace PeterHan.CritterInventory {
