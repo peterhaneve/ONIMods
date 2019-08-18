@@ -18,6 +18,7 @@
 
 using Harmony;
 using System;
+using UnityEngine;
 
 namespace PeterHan.PLib {
 	/// <summary>
@@ -63,6 +64,24 @@ namespace PeterHan.PLib {
 		/// <returns>The value of the field.</returns>
 		public static T GetField<T>(this Traverse root, string name) {
 			return root.Field(name).GetValue<T>();
+		}
+
+		/// <summary>
+		/// Checks to see if an object is falling.
+		/// </summary>
+		/// <param name="obj">The object to check.</param>
+		/// <returns>true if it is falling, or false otherwise.</returns>
+		public static bool IsFalling(this GameObject obj) {
+			return obj.GetSMI<FallMonitor.Instance>()?.IsFalling() ?? false;
+		}
+
+		/// <summary>
+		/// Checks to see if a building is usable.
+		/// </summary>
+		/// <param name="building">The building component to check.</param>
+		/// <returns>true if it is usable (enabled, not broken, not overheated), or false otherwise.</returns>
+		public static bool IsUsable(this GameObject building) {
+			return building.GetComponent<Operational>()?.IsFunctional ?? false;
 		}
 
 		/// <summary>

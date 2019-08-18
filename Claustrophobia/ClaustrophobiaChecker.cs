@@ -19,6 +19,7 @@
 using PeterHan.PLib;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace PeterHan.Claustrophobia {
 	/// <summary>
@@ -187,7 +188,7 @@ namespace PeterHan.Claustrophobia {
 		private void FillDuplicantList() {
 			var enumerator = Components.LiveMinionIdentities.GetEnumerator();
 			minionCache.Clear();
-			// All entries are invalid
+			// Invalidate all entries
 			foreach (var pair in statusCache)
 				pair.Value.StillLiving = false;
 			// First iterate living duplicants and add valid entries to the list
@@ -204,15 +205,41 @@ namespace PeterHan.Claustrophobia {
 			} finally {
 				(enumerator as IDisposable)?.Dispose();
 			}
+			int living = statusCache.Count;
 			// Clear entries from the cache of deleted / deceased dupes
-			var oldDupes = new MinionIdentity[statusCache.Count];
-			statusCache.Keys.CopyTo(oldDupes, 0);
-			foreach (var oldDupe in oldDupes)
-				if (statusCache.TryGetValue(oldDupe, out EntrapmentStatus entry) && !entry.
-						StillLiving) {
-					statusCache.Remove(oldDupe);
-					PLibUtil.LogDebug("Removing {0} from cache".F(entry.VictimName));
+			if (living > 0) {
+				var oldDupes = new MinionIdentity[living];
+				statusCache.Keys.CopyTo(oldDupes, 0);
+				foreach (var oldDupe in oldDupes)
+					if (statusCache.TryGetValue(oldDupe, out EntrapmentStatus entry) && !entry.
+							StillLiving) {
+						statusCache.Remove(oldDupe);
+						PLibUtil.LogDebug("Removing {0} from cache".F(entry.VictimName));
+					}
+			}
+		}
+
+		/// <summary>
+		/// Checks Duplicants who need to be rechecked from the previous frame.
+		/// </summary>
+		/// <param name="checkThisFrame">The Duplicants to check for this frame.</param>
+		private void RecheckLastFrame(IList<EntrapmentStatus> checkThisFrame) {
+			foreach (var status in checkNextFrame) {
+				var dupe = status.Victim;
+				GameObject obj = null;
+				try {
+					obj = dupe.gameObject;
+				} catch (NullReferenceException) {
+					// If a duplicant is sandbox deleted, depending on component destruction
+					// order it may still be alive in the cache. In this case, gameObject
+					// throws NRE even though dupe is not null
 				}
+				if (obj?.activeInHierarchy == true) {
+					PLibUtil.LogDebug("Rechecking " + status);
+					checkThisFrame.Add(new EntrapmentStatus(dupe));
+				}
+			}
+			checkNextFrame.Clear();
 		}
 
 		/// <summary>
@@ -225,21 +252,21 @@ namespace PeterHan.Claustrophobia {
 			if (minionPacer < 0 || minionPacer >= len) {
 				FillDuplicantList();
 				minionPacer = 0;
+				len = minionCache.Count;
 			}
 			var checkThisFrame = ListPool<EntrapmentStatus, ClaustrophobiaChecker>.Allocate();
-			// Include those who need a check now
-			foreach (var status in checkNextFrame) {
-				checkThisFrame.Add(status);
-				PLibUtil.LogDebug("Rechecking " + status);
-			}
-			checkNextFrame.Clear();
+			RecheckLastFrame(checkThisFrame);
 			// Add periodic duplicants to check this time
 			for (int i = 0; i < step && minionPacer < len; i++) {
 				var dupe = minionCache[minionPacer++];
-				var obj = dupe.gameObject;
+				GameObject obj = null;
+				try {
+					obj = dupe.gameObject;
+				} catch (NullReferenceException) {
+					// See comment in RecheckLastFrame
+				}
 				// Exclude falling Duplicants, they have no pathing
-				if (obj?.activeInHierarchy == true && obj.GetSMI<FallMonitor.Instance>()?.
-						IsFalling() != true) {
+				if (obj?.activeInHierarchy == true && !obj.IsFalling()) {
 					var status = new EntrapmentStatus(dupe);
 					if (statusCache.TryGetValue(dupe, out EntrapmentStatus oldStatus)) {
 						// Copy status from previous entry
