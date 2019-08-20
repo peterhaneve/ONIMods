@@ -235,7 +235,7 @@ namespace PeterHan.Claustrophobia {
 					// throws NRE even though dupe is not null
 				}
 				if (obj?.activeInHierarchy == true) {
-					PLibUtil.LogDebug("Rechecking " + status);
+					PLibUtil.LogDebug("Rechecking " + status.VictimName);
 					checkThisFrame.Add(new EntrapmentStatus(dupe));
 				}
 			}

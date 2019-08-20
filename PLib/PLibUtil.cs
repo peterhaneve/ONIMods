@@ -26,6 +26,12 @@ namespace PeterHan.PLib {
 	/// </summary>
 	public static class PLibUtil {
 		/// <summary>
+		/// The number of layers. No public reference in the game files could be found for this
+		/// constant.
+		/// </summary>
+		public const int LAYER_COUNT = 39;
+
+		/// <summary>
 		/// Centers and selects an entity.
 		/// </summary>
 		/// <param name="entity">The entity to center and focus.</param>
@@ -38,6 +44,26 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Creates a popup message at the specified cell location on the Move layer.
+		/// </summary>
+		/// <param name="image">The image to display, likely from PopFXManager.Instance.</param>
+		/// <param name="text">The text to display.</param>
+		/// <param name="cell">The cell location to create the message.</param>
+		public static void CreatePopup(Sprite image, string text, int cell) {
+			CreatePopup(image, text, Grid.CellToPosCBC(cell, Grid.SceneLayer.Move));
+		}
+
+		/// <summary>
+		/// Creates a popup message at the specified location.
+		/// </summary>
+		/// <param name="image">The image to display, likely from PopFXManager.Instance.</param>
+		/// <param name="text">The text to display.</param>
+		/// <param name="position">The position to create the message.</param>
+		public static void CreatePopup(Sprite image, string text, Vector3 position) {
+			PopFXManager.Instance.SpawnFX(image, text, null, position);
+		}
+
+		/// <summary>
 		/// Highlights an entity. Use Color.black to unhighlight it.
 		/// </summary>
 		/// <param name="entity">The entity to highlight.</param>
@@ -46,6 +72,43 @@ namespace PeterHan.PLib {
 			var component = entity?.GetComponent<KAnimControllerBase>();
 			if (component != null)
 				component.HighlightColour = highlightColor;
+		}
+
+		/// <summary>
+		/// Loads a DDS sprite embedded in the current assembly.
+		/// </summary>
+		/// <param name="path">The fully qualified path to the DDS image to load.</param>
+		/// <param name="width">The desired width.</param>
+		/// <param name="height">The desired height.</param>
+		/// <returns>The sprite thus loaded.</returns>
+		/// <exception cref="ArgumentException">If the image could not be loaded.</exception>
+		public static Sprite LoadSprite(string path, int width, int height) {
+			// Open a stream to the image
+			try {
+				using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(
+						path)) {
+					const int SKIP = 128;
+					if (stream == null)
+						throw new ArgumentException("Could not load image: " + path);
+					// If len > int.MaxValue we will not go to space today, skip first 128
+					// bytes of stream
+					int len = (int)stream.Length - SKIP;
+					byte[] buffer = new byte[len];
+					stream.Seek(SKIP, System.IO.SeekOrigin.Begin);
+					stream.Read(buffer, 0, len);
+					// Load the texture from the stream
+					var texture = new Texture2D(width, height, TextureFormat.DXT5, false);
+					texture.LoadRawTextureData(buffer);
+					texture.Apply(false, true);
+					// Create a sprite centered on the texture
+					LogDebug("Loaded sprite: {0} ({1:D}x{2:D}, {3:D} bytes)".F(path, width,
+						height, len));
+					return Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(
+						width / 2, height / 2));
+				}
+			} catch (System.IO.IOException e) {
+				throw new ArgumentException("Could not load image: " + path, e);
+			}
 		}
 
 		/// <summary>

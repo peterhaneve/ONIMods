@@ -6,8 +6,8 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Claustrophobia")]
-[assembly: AssemblyDescription("Issues warnings when Duplicants are stuck in small, confined spaces.")]
+[assembly: AssemblyTitle("Bulk Settings Change")]
+[assembly: AssemblyDescription("Adds a tool to enable/disable disinfect, auto repair, or building operation in bulk.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("PeterHanONIMods")]
@@ -21,7 +21,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("8636b2f7-e6a1-44a3-8927-12c6368c2624")]
+[assembly: Guid("7ee6fd5e-3125-4b7b-a05b-51b5a65b2c40")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -34,6 +34,6 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.4.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]
 [assembly: NeutralResourcesLanguage("en-US")]
 
