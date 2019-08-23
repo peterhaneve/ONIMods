@@ -18,11 +18,8 @@
 
 using Harmony;
 using PeterHan.PLib;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.UI;
 
 namespace PeterHan.CritterInventory {
 	/// <summary>
@@ -50,7 +47,6 @@ namespace PeterHan.CritterInventory {
 		/// <returns>The heading for that critter type.</returns>
 		public static ResourceCategoryHeader Create(ResourceCategoryScreen resList,
 				GameObject prefab, CritterType type) {
-			var trInstance = Traverse.Create(resList);
 			var tag = GameTags.BagableCreature;
 			string typeStr = type.GetDescription();
 			// Create a heading for Critter (Type)
@@ -64,6 +60,32 @@ namespace PeterHan.CritterInventory {
 			header.gameObject.AddComponent<CritterResourceInfo>().CritterType = type;
 			header.elements.LabelText.SetText("{0} ({1})".F(tag.ProperName(), typeStr));
 			return header;
+		}
+
+		/// <summary>
+		/// Manages compatibility with Favorites Category.
+		/// 
+		/// This method is quite hacky.
+		/// </summary>
+		/// <param name="totals">The totals calculated from Update.</param>
+		public static void FavoritesCategoryCompat(IDictionary<Tag, CritterTotals> totals,
+				CritterType type) {
+			ResourceCategoryHeader favCategory = null;
+			var favTag = TagManager.Create("Favorites", "Favorites");
+			if ((ResourceCategoryScreen.Instance?.DisplayedCategories?.TryGetValue(favTag,
+					out favCategory) ?? false) && favCategory != null)
+				// Favorites Category is installed
+				foreach (var pair in favCategory.ResourcesDiscovered) {
+					var species = pair.Key;
+					var entry = pair.Value;
+					var intendedType = entry.gameObject.GetComponent<CritterResourceInfo>();
+					if (totals.TryGetValue(species, out CritterTotals quantity) &&
+							intendedType != null && intendedType.CritterType == type) {
+						// A critter in Favorites Category
+						UpdateEntry(entry, quantity);
+						entry.SetName("{0} ({1})".F(species.ProperName(), type));
+					}
+				}
 		}
 
 		/// <summary>
@@ -95,7 +117,7 @@ namespace PeterHan.CritterInventory {
 					entry.gameObject.AddComponent<CritterResourceInfo>().CritterType = type;
 					discovered.Add(species, entry);
 				}
-				UpdateEntry(entry, species, quantity);
+				UpdateEntry(entry, quantity);
 			}
 			bool anyDiscovered = discovered.Count > 0;
 			// Enable display and open/close based on critter presence
@@ -111,6 +133,7 @@ namespace PeterHan.CritterInventory {
 				tooltip.toolTip = CritterInventoryUtils.FormatTooltip(header.elements.
 					LabelText.text, all);
 			}
+			FavoritesCategoryCompat(totals, type);
 			totals.Recycle();
 		}
 
@@ -118,10 +141,8 @@ namespace PeterHan.CritterInventory {
 		/// Updates an individual resource entry with the critters found.
 		/// </summary>
 		/// <param name="entry">The entry to update.</param>
-		/// <param name="species">The species of critter which was found.</param>
 		/// <param name="quantity">The quantity of this critter which is present.</param>
-		private static void UpdateEntry(ResourceEntry entry, Tag species,
-				CritterTotals quantity) {
+		private static void UpdateEntry(ResourceEntry entry, CritterTotals quantity) {
 			var trEntry = Traverse.Create(entry);
 			// Update the tool tip text
 			var tooltip = trEntry.GetField<ToolTip>("tooltip");

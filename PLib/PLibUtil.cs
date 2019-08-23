@@ -26,12 +26,6 @@ namespace PeterHan.PLib {
 	/// </summary>
 	public static class PLibUtil {
 		/// <summary>
-		/// The number of layers. No public reference in the game files could be found for this
-		/// constant.
-		/// </summary>
-		public const int LAYER_COUNT = 39;
-
-		/// <summary>
 		/// Centers and selects an entity.
 		/// </summary>
 		/// <param name="entity">The entity to center and focus.</param>
@@ -93,18 +87,21 @@ namespace PeterHan.PLib {
 					// If len > int.MaxValue we will not go to space today, skip first 128
 					// bytes of stream
 					int len = (int)stream.Length - SKIP;
+					if (len < 0)
+						throw new ArgumentException("Image is too small: " + path);
 					byte[] buffer = new byte[len];
 					stream.Seek(SKIP, System.IO.SeekOrigin.Begin);
 					stream.Read(buffer, 0, len);
 					// Load the texture from the stream
 					var texture = new Texture2D(width, height, TextureFormat.DXT5, false);
 					texture.LoadRawTextureData(buffer);
-					texture.Apply(false, true);
+					texture.Apply(true, true);
 					// Create a sprite centered on the texture
 					LogDebug("Loaded sprite: {0} ({1:D}x{2:D}, {3:D} bytes)".F(path, width,
 						height, len));
+					// pivot is in RELATIVE coordinates!
 					return Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(
-						width / 2, height / 2));
+						0.5f, 0.5f));
 				}
 			} catch (System.IO.IOException e) {
 				throw new ArgumentException("Could not load image: " + path, e);

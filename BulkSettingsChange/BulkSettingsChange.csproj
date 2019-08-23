@@ -59,6 +59,7 @@
     <Compile Include="BulkChangeTool.cs" />
     <Compile Include="BulkToolMode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SpriteRegistry.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -71,6 +72,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Toggle.dds" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Placer.dds" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

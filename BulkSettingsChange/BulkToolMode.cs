@@ -61,7 +61,7 @@ namespace PeterHan.BulkSettingsChange {
 						EnableRepair);
 #if DEBUG
 					foreach (var mode in MODES)
-						PLibUtil.LogDebug("Tool mode: " + mode);
+						PLibUtil.LogDebug("Tool mode: " + mode.Value);
 #endif
 				}
 			}
@@ -86,19 +86,19 @@ namespace PeterHan.BulkSettingsChange {
 		/// <summary>
 		/// The name shown in the options menu.
 		/// </summary>
-		public string Name { get; }
+		public LocString Name { get; }
 
 		/// <summary>
 		/// The pop-up text to display when the action is performed.
 		/// </summary>
-		public string PopupText { get; }
+		public LocString PopupText { get; }
 
 		/// <summary>
 		/// The title shown to the user when dragging the tool.
 		/// </summary>
-		public string Title { get; }
+		public LocString Title { get; }
 
-		public BulkToolMode(string key, string name, string title, string popup) {
+		public BulkToolMode(string key, LocString name, LocString title, LocString popup) {
 			Key = key ?? throw new ArgumentNullException("key");
 			Name = name ?? throw new ArgumentNullException("name");
 			PopupText = popup ?? throw new ArgumentNullException("popup");

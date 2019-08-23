@@ -29,23 +29,7 @@ namespace PeterHan.BulkSettingsChange {
 	/// This code took inspiration from https://github.com/0Mayall/ONIBlueprints/
 	/// </summary>
 	public static class BulkChangePatches {
-		/// <summary>
-		/// The sprite used for the tool icon.
-		/// </summary>
-		private static Sprite TOOL_ICON;
-
-		/// <summary>
-		/// Loads the sprites if they are not already loaded.
-		/// </summary>
-		private static void LoadSprites() {
-			if (TOOL_ICON == null) {
-				PLibUtil.LogDebug("Loading sprites");
-				TOOL_ICON = PLibUtil.LoadSprite("PeterHan.BulkSettingsChange.Toggle.dds",
-					16, 16);
-				TOOL_ICON.name = BulkChangeStrings.ToolIconName;
-			}
-		}
-
+		
 		/// <summary>
 		/// Applied to OnPrefabInit to load the change settings tool into the available tool list.
 		/// </summary>
@@ -81,8 +65,7 @@ namespace PeterHan.BulkSettingsChange {
 			/// </summary>
 			/// <param name="___icons">The icon list where the icon can be added.</param>
 			public static void Postfix(ref List<Sprite> ___icons) {
-				LoadSprites();
-				___icons.Add(TOOL_ICON);
+				___icons.Add(SpriteRegistry.GetToolIcon());
 			}
 		}
 
@@ -98,7 +81,7 @@ namespace PeterHan.BulkSettingsChange {
 			public static void Postfix(ref ToolMenu __instance) {
 				PLibUtil.LogDebug("Adding BulkChangeTool to basic tools");
 				__instance.basicTools.Add(ToolMenu.CreateToolCollection(BulkChangeStrings.
-					ToolTitle, BulkChangeStrings.ToolIconName, Action.BuildMenuKeyZ, typeof(
+					ToolTitle, BulkChangeStrings.ToolIconName, Action.BuildMenuKeyQ, typeof(
 					BulkChangeTool).Name, BulkChangeStrings.ToolDescription, false));
 			}
 		}

@@ -58,8 +58,8 @@ namespace PeterHan.BulkSettingsChange {
 		/// <param name="enabled">The enable tool.</param>
 		/// <param name="disabled">The disable tool.</param>
 		/// <param name="cell">The cell where the change occurred.</param>
-		private static void ShowPopup(bool enable, BulkToolMode enabled,
-				BulkToolMode disabled, int cell) {
+		private static void ShowPopup(bool enable, BulkToolMode enabled, BulkToolMode disabled,
+				int cell) {
 			PLibUtil.CreatePopup(enable ? PopFXManager.Instance.sprite_Plus : PopFXManager.
 				Instance.sprite_Negative, enable ? enabled.PopupText : disabled.PopupText,
 				cell);
@@ -125,21 +125,21 @@ namespace PeterHan.BulkSettingsChange {
 #endif
 				if (enable || BulkChangeTools.DisableBuildings.IsOn(options)) {
 					// Enable/disable buildings
-					for (int i = 0; i < PLibUtil.LAYER_COUNT; i++)
+					for (int i = 0; i < (int)Grid.SceneLayer.SceneMAX; i++)
 						changed |= ToggleBuilding(cell, Grid.Objects[cell, i], enable);
 					if (changed)
 						ShowPopup(enable, BulkChangeTools.EnableBuildings, BulkChangeTools.
 							DisableBuildings, cell);
 				} else if (disinfect || BulkChangeTools.DisableDisinfect.IsOn(options)) {
 					// Enable/disable disinfect
-					for (int i = 0; i < PLibUtil.LAYER_COUNT; i++)
+					for (int i = 0; i < (int)Grid.SceneLayer.SceneMAX; i++)
 						changed |= ToggleDisinfect(cell, Grid.Objects[cell, i], disinfect);
 					if (changed)
-						ShowPopup(disinfect, BulkChangeTools.EnableDisinfect,
-							BulkChangeTools.DisableDisinfect, cell);
+						ShowPopup(disinfect, BulkChangeTools.EnableDisinfect, BulkChangeTools.
+							DisableDisinfect, cell);
 				} else if (repair || BulkChangeTools.DisableRepair.IsOn(options)) {
 					// Enable/disable repair
-					for (int i = 0; i < PLibUtil.LAYER_COUNT; i++)
+					for (int i = 0; i < (int)Grid.SceneLayer.SceneMAX; i++)
 						changed |= ToggleRepair(cell, Grid.Objects[cell, i], repair);
 					if (changed)
 						ShowPopup(repair, BulkChangeTools.EnableRepair, BulkChangeTools.
@@ -154,31 +154,38 @@ namespace PeterHan.BulkSettingsChange {
 			// Allow priority setting for the enable/disable building chores
 			interceptNumberKeysForPriority = true;
 			gameObject.AddComponent<BulkChangeHover>();
-			// Steal the area visualizer from the priority tool
-			var avTemplate = Traverse.Create(PrioritizeTool.Instance).GetField<GameObject>(
-				"areaVisualizer");
+			// HACK: Get the cursor from the disinfect tool
+			var trDisinfect = Traverse.Create(DisinfectTool.Instance);
+			cursor = trDisinfect.GetField<Texture2D>("cursor");
+			us.SetField("boxCursor", cursor);
+			// HACK: Get the area visualizer from the disinfect tool
+			var avTemplate = trDisinfect.GetField<GameObject>("areaVisualizer");
 			if (avTemplate != null) {
-				var areaVisualizer = Util.KInstantiate(avTemplate, gameObject);
-				var spriteRenderer = areaVisualizer.GetComponent<SpriteRenderer>();
-				// Set up the color and parent
+				var areaVisualizer = Util.KInstantiate(avTemplate, gameObject,
+					"BulkChangeToolAreaVisualizer");
 				areaVisualizer.SetActive(false);
-				areaVisualizer.name = "BulkChangeToolAreaVisualizer";
-#if false
-				spriteRenderer.color = DRAG_COLOR;
-				spriteRenderer.material.color = DRAG_COLOR;
-#endif
-				us.SetField("areaVisualizerSpriteRenderer", spriteRenderer);
+				areaVisualizerSpriteRenderer = areaVisualizer.GetComponent<SpriteRenderer>();
+				// The visualizer is private so we need to set it with reflection
 				us.SetField("areaVisualizer", areaVisualizer);
+				us.SetField("areaVisualizerTextPrefab", trDisinfect.GetField<GameObject>(
+					"areaVisualizerTextPrefab"));
 			}
-			// Steal the visualizer from the mop tool
-			var vTemplate = Traverse.Create(MopTool.Instance).GetField<GameObject>(
-				"visualizer");
-			if (vTemplate != null) {
-				visualizer = Util.KInstantiate(vTemplate, gameObject);
-				// Set up the color and parent
-				visualizer.SetActive(false);
-				visualizer.name = "BulkChangeToolVisualizer";
+			visualizer = new GameObject("BulkChangeToolVisualizer");
+			var spriteRenderer = visualizer.AddComponent<SpriteRenderer>();
+			// Set up the color and parent
+			if (spriteRenderer != null) {
+				// Determine the scaling amount since size is known
+				var sprite = SpriteRegistry.GetPlaceIcon();
+				float widthInM = sprite.texture.width / sprite.pixelsPerUnit,
+					scaleWidth = Grid.CellSizeInMeters / widthInM;
+				spriteRenderer.name = "BulkChangeToolSprite";
+				spriteRenderer.transform.localPosition = new Vector3(0.0f, 100.0f, 0.0f);
+				spriteRenderer.transform.localScale = new Vector3(scaleWidth, scaleWidth, 1.0f);
+				spriteRenderer.sprite = sprite;
+				spriteRenderer.enabled = true;
 			}
+			visualizer.SetLayerRecursively(LayerMask.NameToLayer("Overlay"));
+			visualizer.SetActive(false);
 		}
 
 		/// <summary>
@@ -192,9 +199,9 @@ namespace PeterHan.BulkSettingsChange {
 			var ed = building?.GetComponent<BuildingEnabledButton>();
 			bool changed = false;
 			if (ed != null) {
-				var edObj = Traverse.Create(ed);
+				var trEnableDisable = Traverse.Create(ed);
 				// Check to see if a work errand is pending
-				int toggleIndex = edObj.GetField<int>("ToggleIdx");
+				int toggleIndex = trEnableDisable.GetField<int>("ToggleIdx");
 				bool curEnabled = ed.IsEnabled, toggleQueued = building.GetComponent<
 					Toggleable>()?.IsToggleQueued(toggleIndex) ?? false;
 #if DEBUG
@@ -205,8 +212,14 @@ namespace PeterHan.BulkSettingsChange {
 				// is different than desired and no toggle errand is queued)
 				if (toggleQueued != (curEnabled != enable)) {
 					// Private methods grrr
-					edObj.CallMethod("OnMenuToggle");
-					PLibUtil.LogDebug("Building enable @{0:D} = {1}".F(cell, enable));
+					trEnableDisable.CallMethod("OnMenuToggle");
+					// Set priority according to the chosen level
+					var priority = building.GetComponent<Prioritizable>();
+					if (priority != null)
+						priority.SetMasterPriority(ToolMenu.Instance.PriorityScreen.
+							GetLastSelectedPriority());
+					PLibUtil.LogDebug("Enable {2} @{0:D} = {1}".F(cell, enable, building.
+						GetProperName()));
 					changed = true;
 				}
 			}
@@ -224,12 +237,13 @@ namespace PeterHan.BulkSettingsChange {
 			var ad = item?.GetComponent<AutoDisinfectable>();
 			bool changed = false;
 			if (ad != null) {
-				var adObj = Traverse.Create(ad);
+				var trAutoDisinfect = Traverse.Create(ad);
 				// Private methods grrr
-				if (adObj.GetField<bool>("enableAutoDisinfect") != enable) {
-					adObj.CallMethod(enable ? "EnableAutoDisinfect" :
+				if (trAutoDisinfect.GetField<bool>("enableAutoDisinfect") != enable) {
+					trAutoDisinfect.CallMethod(enable ? "EnableAutoDisinfect" :
 						"DisableAutoDisinfect");
-					PLibUtil.LogDebug("Auto disinfect @{0:D} = {1}".F(cell, enable));
+					PLibUtil.LogDebug("Auto disinfect {2} @{0:D} = {1}".F(cell, enable,
+						item.GetProperName()));
 					changed = true;
 				}
 			}
@@ -249,7 +263,8 @@ namespace PeterHan.BulkSettingsChange {
 			if (ar != null) {
 				// Private methods grrr
 				Traverse.Create(ar).CallMethod(enable ? "AllowRepair" : "CancelRepair");
-				PLibUtil.LogDebug("Auto repair @{0:D} = {1}".F(cell, enable));
+				PLibUtil.LogDebug("Auto repair {2} @{0:D} = {1}".F(cell, enable, item.
+					GetProperName()));
 				changed = true;
 			}
 			return changed;
