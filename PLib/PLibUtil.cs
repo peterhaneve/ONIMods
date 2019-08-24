@@ -70,6 +70,8 @@ namespace PeterHan.PLib {
 
 		/// <summary>
 		/// Loads a DDS sprite embedded in the current assembly.
+		/// 
+		/// It must be encoded using the DXT5 format.
 		/// </summary>
 		/// <param name="path">The fully qualified path to the DDS image to load.</param>
 		/// <param name="width">The desired width.</param>

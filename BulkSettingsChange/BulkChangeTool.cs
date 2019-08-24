@@ -18,7 +18,6 @@
 
 using Harmony;
 using PeterHan.PLib;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -148,8 +147,19 @@ namespace PeterHan.BulkSettingsChange {
 			}
 		}
 
+		public override void OnMouseMove(Vector3 cursorPos) {
+			base.OnMouseMove(cursorPos);
+			if (visualizer?.activeSelf == true) {
+				// HACK Offset position up half a cell (y)
+				var pos = visualizer.transform.localPosition;
+				pos.y += Grid.HalfCellSizeInMeters;
+				visualizer.transform.SetLocalPosition(pos);
+			}
+		}
+
 		protected override void OnPrefabInit() {
 			var us = Traverse.Create(this);
+			Sprite sprite;
 			base.OnPrefabInit();
 			// Allow priority setting for the enable/disable building chores
 			interceptNumberKeysForPriority = true;
@@ -173,18 +183,20 @@ namespace PeterHan.BulkSettingsChange {
 			visualizer = new GameObject("BulkChangeToolVisualizer");
 			var spriteRenderer = visualizer.AddComponent<SpriteRenderer>();
 			// Set up the color and parent
-			if (spriteRenderer != null) {
-				// Determine the scaling amount since size is known
-				var sprite = SpriteRegistry.GetPlaceIcon();
+			if (spriteRenderer != null && (sprite = SpriteRegistry.GetPlaceIcon()) != null) {
+				// Determine the scaling amount since pixel size is known
 				float widthInM = sprite.texture.width / sprite.pixelsPerUnit,
 					scaleWidth = Grid.CellSizeInMeters / widthInM;
+				spriteRenderer.flipY = true;
 				spriteRenderer.name = "BulkChangeToolSprite";
-				spriteRenderer.transform.localPosition = new Vector3(0.0f, 100.0f, 0.0f);
-				spriteRenderer.transform.localScale = new Vector3(scaleWidth, scaleWidth, 1.0f);
+				// Set sprite color to match other placement tools
+				spriteRenderer.color = new Color32(255, 172, 52, 255);
 				spriteRenderer.sprite = sprite;
 				spriteRenderer.enabled = true;
+				// Set scale to match 1 tile
+				visualizer.transform.localScale = new Vector3(scaleWidth, scaleWidth, 1.0f);
+				visualizer.SetLayerRecursively(LayerMask.NameToLayer("Overlay"));
 			}
-			visualizer.SetLayerRecursively(LayerMask.NameToLayer("Overlay"));
 			visualizer.SetActive(false);
 		}
 
@@ -211,7 +223,6 @@ namespace PeterHan.BulkSettingsChange {
 				// Only continue if we are cancelling the toggle errand or (the building state
 				// is different than desired and no toggle errand is queued)
 				if (toggleQueued != (curEnabled != enable)) {
-					// Private methods grrr
 					trEnableDisable.CallMethod("OnMenuToggle");
 					// Set priority according to the chosen level
 					var priority = building.GetComponent<Prioritizable>();
@@ -261,7 +272,6 @@ namespace PeterHan.BulkSettingsChange {
 			var ar = item?.GetComponent<Repairable>();
 			bool changed = false;
 			if (ar != null) {
-				// Private methods grrr
 				Traverse.Create(ar).CallMethod(enable ? "AllowRepair" : "CancelRepair");
 				PLibUtil.LogDebug("Auto repair {2} @{0:D} = {1}".F(cell, enable, item.
 					GetProperName()));
