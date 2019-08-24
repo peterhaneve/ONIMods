@@ -89,7 +89,7 @@ namespace PeterHan.Claustrophobia {
 		/// <summary>
 		/// These Duplicants will be immediately rechecked on the next pass.
 		/// </summary>
-		private IList<EntrapmentStatus> checkNextFrame;
+		private IList<MinionIdentity> checkNextFrame;
 
 		/// <summary>
 		/// Limits performance impact by cycling through duplicants.
@@ -107,7 +107,7 @@ namespace PeterHan.Claustrophobia {
 		private IDictionary<MinionIdentity, EntrapmentStatus> statusCache;
 
 		public ClaustrophobiaChecker() {
-			checkNextFrame = new List<EntrapmentStatus>(8);
+			checkNextFrame = new List<MinionIdentity>(8);
 			minionCache = new List<MinionIdentity>(64);
 			minionPacer = 0;
 			// PooledDictionary is useless since this dictionary is created once per load
@@ -141,42 +141,41 @@ namespace PeterHan.Claustrophobia {
 			foreach (var status in toCheck) {
 				var victim = status.Victim;
 				var obj = victim.gameObject;
-				if (obj?.activeInHierarchy == true) {
-					int reachable = status.ReachableCells;
-					var lastStatus = status.LastStatus;
-					// Create notifications if not yet present
-					var confined = obj.AddOrGet<ConfinedNotification>();
-					var trapped = obj.AddOrGet<TrappedNotification>();
-					if ((mostReachable > MIN_CONFINED && reachable < MIN_CONFINED) ||
-							(reachable < threshold)) {
-						// Confined
-						PLibUtil.LogDebug("{0} is confined, reaches {1:D}, best reach {2:D}".F(
-							status.VictimName, reachable, mostReachable));
-						if (lastStatus == EntrapmentState.Confined) {
-							confined.Show();
-							trapped.Hide();
-						} else
-							// Preserve current notification state, check next time
-							checkNextFrame.Add(status);
-						status.LastStatus = EntrapmentState.Confined;
-					} else if (status.TrappedScore > 1) {
-						// Trapped
-						PLibUtil.LogDebug("{0} is trapped, bed? {1}, mess? {2}, toilet? {3}".F(
-							status.VictimName, status.CanReachBed, status.CanReachMess,
-							status.CanReachToilet));
-						if (lastStatus == EntrapmentState.Trapped) {
-							confined.Hide();
-							trapped.Show();
-						} else
-							// Preserve current notification state, check next time
-							checkNextFrame.Add(status);
-						status.LastStatus = EntrapmentState.Trapped;
-					} else {
-						// Neither
+				int reachable = status.ReachableCells;
+				var lastStatus = status.LastStatus;
+				// Create notifications if not yet present
+				var confined = obj.AddOrGet<ConfinedNotification>();
+				var trapped = obj.AddOrGet<TrappedNotification>();
+				if ((mostReachable > MIN_CONFINED && reachable < MIN_CONFINED) ||
+						(reachable < threshold)) {
+					// Confined
+					PLibUtil.LogDebug(("{0} is confined ({3} last), reaches {1:D}, " +
+						"best reach {2:D}").F(status.VictimName, reachable, mostReachable,
+						lastStatus));
+					if (lastStatus == EntrapmentState.Confined) {
+						confined.Show();
 						trapped.Hide();
+					} else
+						// Preserve current notification state, check next time
+						checkNextFrame.Add(victim);
+					status.LastStatus = EntrapmentState.Confined;
+				} else if (status.TrappedScore > 1) {
+					// Trapped
+					PLibUtil.LogDebug(("{0} is trapped ({4} last), bed? {1}, mess? {2}, " +
+						"toilet? {3}").F(status.VictimName, status.CanReachBed,
+						status.CanReachMess, status.CanReachToilet, lastStatus));
+					if (lastStatus == EntrapmentState.Trapped) {
 						confined.Hide();
-						status.LastStatus = EntrapmentState.None;
-					}
+						trapped.Show();
+					} else
+						// Preserve current notification state, check next time
+						checkNextFrame.Add(victim);
+					status.LastStatus = EntrapmentState.Trapped;
+				} else {
+					// Neither
+					trapped.Hide();
+					confined.Hide();
+					status.LastStatus = EntrapmentState.None;
 				}
 			}
 		}
@@ -187,7 +186,8 @@ namespace PeterHan.Claustrophobia {
 		/// </summary>
 		private void FillDuplicantList() {
 			var enumerator = Components.LiveMinionIdentities.GetEnumerator();
-			minionCache.Clear();
+			var foundDupes = HashSetPool<MinionIdentity, ClaustrophobiaChecker>.Allocate();
+			int pacer = minionPacer, n;
 			// Invalidate all entries
 			foreach (var pair in statusCache)
 				pair.Value.StillLiving = false;
@@ -196,7 +196,7 @@ namespace PeterHan.Claustrophobia {
 				while (enumerator.MoveNext()) {
 					var dupe = enumerator.Current as MinionIdentity;
 					if (dupe != null && dupe.isSpawned) {
-						minionCache.Add(dupe);
+						foundDupes.Add(dupe);
 						// Mark entry as valid
 						if (statusCache.TryGetValue(dupe, out EntrapmentStatus entry))
 							entry.StillLiving = true;
@@ -217,6 +217,22 @@ namespace PeterHan.Claustrophobia {
 						PLibUtil.LogDebug("Removing {0} from cache".F(entry.VictimName));
 					}
 			}
+			// Clean up the duplicant cache and last frame list
+			for (int i = 0; i < (n = minionCache.Count); i++)
+				if (!foundDupes.Contains(minionCache[i])) {
+					checkNextFrame.Clear();
+					minionCache.RemoveAt(i);
+					pacer--;
+				}
+			// Refresh Duplicant cache if necessary
+			if (pacer < 0 || pacer >= n) {
+				minionCache.Clear();
+				foreach (var dupe in foundDupes)
+					minionCache.Add(dupe);
+				pacer = 0;
+			}
+			minionPacer = pacer;
+			foundDupes.Recycle();
 		}
 
 		/// <summary>
@@ -224,68 +240,52 @@ namespace PeterHan.Claustrophobia {
 		/// </summary>
 		/// <param name="checkThisFrame">The Duplicants to check for this frame.</param>
 		private void RecheckLastFrame(IList<EntrapmentStatus> checkThisFrame) {
-			foreach (var status in checkNextFrame) {
-				var dupe = status.Victim;
-				GameObject obj = null;
-				try {
-					obj = dupe.gameObject;
-				} catch (NullReferenceException) {
-					// If a duplicant is sandbox deleted, depending on component destruction
-					// order it may still be alive in the cache. In this case, gameObject
-					// throws NRE even though dupe is not null
+			foreach (var dupe in checkNextFrame)
+				if (dupe.gameObject?.activeInHierarchy == true) {
+					PLibUtil.LogDebug("Rechecking " + dupe?.name);
+					checkThisFrame.Add(UpdateStatus(dupe));
 				}
-				if (obj?.activeInHierarchy == true) {
-					PLibUtil.LogDebug("Rechecking " + status.VictimName);
-					checkThisFrame.Add(new EntrapmentStatus(dupe));
-				}
-			}
 			checkNextFrame.Clear();
 		}
 
 		/// <summary>
-		/// Checks for trapped duplicants.
+		/// Checks for trapped Duplicants.
 		/// </summary>
 		/// <param name="delta">The actual time since the last check.</param>
 		public void Sim1000ms(float delta) {
-			int len = minionCache.Count, step = 1 + Math.Max(0, len - 1) / PACE_CYCLE_TIME;
-			// Reset if needed
-			if (minionPacer < 0 || minionPacer >= len) {
-				FillDuplicantList();
-				minionPacer = 0;
-				len = minionCache.Count;
-			}
 			var checkThisFrame = ListPool<EntrapmentStatus, ClaustrophobiaChecker>.Allocate();
+			FillDuplicantList();
+			int len = minionCache.Count, step = 1 + Math.Max(0, len - 1) / PACE_CYCLE_TIME;
 			RecheckLastFrame(checkThisFrame);
 			// Add periodic duplicants to check this time
 			for (int i = 0; i < step && minionPacer < len; i++) {
 				var dupe = minionCache[minionPacer++];
-				GameObject obj = null;
-				try {
-					obj = dupe.gameObject;
-				} catch (NullReferenceException) {
-					// See comment in RecheckLastFrame
-				}
+				var obj = dupe.gameObject;
 				// Exclude falling Duplicants, they have no pathing
-				if (obj?.activeInHierarchy == true && !obj.IsFalling()) {
-					var status = new EntrapmentStatus(dupe);
-					if (statusCache.TryGetValue(dupe, out EntrapmentStatus oldStatus)) {
-						// Copy status from previous entry
-						status.LastStatus = oldStatus.LastStatus;
-						statusCache[dupe] = status;
-#if DEBUG
-						// Spam the log if debug build with dupe info every iteration
-						PLibUtil.LogDebug(status.ToString());
-#endif
-					} else {
-						// Add to cache if missing
-						statusCache.Add(dupe, status);
-						PLibUtil.LogDebug("Adding " + status);
-					}
-					checkThisFrame.Add(status);
-				}
+				if (obj?.activeInHierarchy == true && !obj.IsFalling())
+					checkThisFrame.Add(UpdateStatus(dupe));
 			}
 			CheckNotifications(checkThisFrame);
 			checkThisFrame.Recycle();
+		}
+
+		/// <summary>
+		/// Updates a Duplicant's entrapment status.
+		/// </summary>
+		/// <param name="dupe">The Duplicant to check.</param>
+		/// <returns>The status calculated for this Duplicant.</returns>
+		private EntrapmentStatus UpdateStatus(MinionIdentity dupe) {
+			var status = new EntrapmentStatus(dupe);
+			if (statusCache.TryGetValue(dupe, out EntrapmentStatus oldStatus)) {
+				// Copy status from previous entry
+				status.LastStatus = oldStatus.LastStatus;
+				statusCache[dupe] = status;
+			} else {
+				// Add to cache if missing
+				statusCache.Add(dupe, status);
+				PLibUtil.LogDebug("Adding " + status);
+			}
+			return status;
 		}
 	}
 }

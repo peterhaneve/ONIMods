@@ -133,7 +133,10 @@ namespace PeterHan.CritterInventory {
 				tooltip.toolTip = CritterInventoryUtils.FormatTooltip(header.elements.
 					LabelText.text, all);
 			}
+			// Disabled until coolazura's tags are up to date
+#if false
 			FavoritesCategoryCompat(totals, type);
+#endif
 			totals.Recycle();
 		}
 
