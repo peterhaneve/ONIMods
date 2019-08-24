@@ -69,6 +69,21 @@ namespace PeterHan.BulkSettingsChange {
 		/// </summary>
 		private IDictionary<string, ToolParameterMenu.ToggleState> options;
 
+		/// <summary>
+		/// Fixes the cursor position so that it is not off by half a grid cell.
+		/// 
+		/// This is a pretty nasty hack
+		/// </summary>
+		private void FixCursorPosition() {
+			var isAppFocused = Traverse.Create(this).GetField<bool>("isAppFocused");
+			if (visualizer?.activeSelf == true && isAppFocused) {
+				// Offset position up half a cell (y)
+				var pos = visualizer.transform.localPosition;
+				pos.y += Grid.HalfCellSizeInMeters;
+				visualizer.transform.SetLocalPosition(pos);
+			}
+		}
+
 		protected override string GetConfirmSound() {
 			string sound = base.GetConfirmSound();
 			// "Enable" use default, "Disable" uses cancel sound
@@ -107,7 +122,10 @@ namespace PeterHan.BulkSettingsChange {
 
 		protected override void OnDeactivateTool(InterfaceTool newTool) {
 			base.OnDeactivateTool(newTool);
-			ToolMenu.Instance.toolParameterMenu.ClearMenu();
+			var menu = ToolMenu.Instance.toolParameterMenu;
+			// Unregister events
+			menu.ClearMenu();
+			menu.onParametersChanged -= UpdateViewMode;
 			ToolMenu.Instance.PriorityScreen.Show(false);
 		}
 
@@ -149,12 +167,7 @@ namespace PeterHan.BulkSettingsChange {
 
 		public override void OnMouseMove(Vector3 cursorPos) {
 			base.OnMouseMove(cursorPos);
-			if (visualizer?.activeSelf == true) {
-				// HACK Offset position up half a cell (y)
-				var pos = visualizer.transform.localPosition;
-				pos.y += Grid.HalfCellSizeInMeters;
-				visualizer.transform.SetLocalPosition(pos);
-			}
+			FixCursorPosition();
 		}
 
 		protected override void OnPrefabInit() {
