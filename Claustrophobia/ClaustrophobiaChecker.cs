@@ -186,8 +186,7 @@ namespace PeterHan.Claustrophobia {
 		/// </summary>
 		private void FillDuplicantList() {
 			var enumerator = Components.LiveMinionIdentities.GetEnumerator();
-			var foundDupes = HashSetPool<MinionIdentity, ClaustrophobiaChecker>.Allocate();
-			int pacer = minionPacer, n;
+			minionCache.Clear();
 			// Invalidate all entries
 			foreach (var pair in statusCache)
 				pair.Value.StillLiving = false;
@@ -195,8 +194,9 @@ namespace PeterHan.Claustrophobia {
 			try {
 				while (enumerator.MoveNext()) {
 					var dupe = enumerator.Current as MinionIdentity;
-					if (dupe != null && dupe.isSpawned) {
-						foundDupes.Add(dupe);
+					// Do not replace with ?. since Unity overloads "=="
+					if (dupe != null && dupe.gameObject != null && dupe.isSpawned) {
+						minionCache.Add(dupe);
 						// Mark entry as valid
 						if (statusCache.TryGetValue(dupe, out EntrapmentStatus entry))
 							entry.StillLiving = true;
@@ -217,22 +217,6 @@ namespace PeterHan.Claustrophobia {
 						PLibUtil.LogDebug("Removing {0} from cache".F(entry.VictimName));
 					}
 			}
-			// Clean up the duplicant cache and last frame list
-			for (int i = 0; i < (n = minionCache.Count); i++)
-				if (!foundDupes.Contains(minionCache[i])) {
-					checkNextFrame.Clear();
-					minionCache.RemoveAt(i);
-					pacer--;
-				}
-			// Refresh Duplicant cache if necessary
-			if (pacer < 0 || pacer >= n) {
-				minionCache.Clear();
-				foreach (var dupe in foundDupes)
-					minionCache.Add(dupe);
-				pacer = 0;
-			}
-			minionPacer = pacer;
-			foundDupes.Recycle();
 		}
 
 		/// <summary>
@@ -240,9 +224,11 @@ namespace PeterHan.Claustrophobia {
 		/// </summary>
 		/// <param name="checkThisFrame">The Duplicants to check for this frame.</param>
 		private void RecheckLastFrame(IList<EntrapmentStatus> checkThisFrame) {
+			GameObject obj;
 			foreach (var dupe in checkNextFrame)
-				if (dupe.gameObject?.activeInHierarchy == true) {
-					PLibUtil.LogDebug("Rechecking " + dupe?.name);
+				// Do not replace with ?. since Unity overloads "=="
+				if (dupe != null && (obj = dupe.gameObject) != null && obj.activeInHierarchy) {
+					PLibUtil.LogDebug("Rechecking " + dupe.name);
 					checkThisFrame.Add(UpdateStatus(dupe));
 				}
 			checkNextFrame.Clear();
@@ -254,19 +240,27 @@ namespace PeterHan.Claustrophobia {
 		/// <param name="delta">The actual time since the last check.</param>
 		public void Sim1000ms(float delta) {
 			var checkThisFrame = ListPool<EntrapmentStatus, ClaustrophobiaChecker>.Allocate();
-			FillDuplicantList();
+			GameObject obj;
+			int pacer = minionPacer;
+			// Refresh Duplicant cache if necessary
+			if (pacer < 0 || pacer >= minionCache.Count) {
+				FillDuplicantList();
+				pacer = 0;
+			}
 			int len = minionCache.Count, step = 1 + Math.Max(0, len - 1) / PACE_CYCLE_TIME;
 			RecheckLastFrame(checkThisFrame);
 			// Add periodic duplicants to check this time
-			for (int i = 0; i < step && minionPacer < len; i++) {
-				var dupe = minionCache[minionPacer++];
-				var obj = dupe.gameObject;
-				// Exclude falling Duplicants, they have no pathing
-				if (obj?.activeInHierarchy == true && !obj.IsFalling())
+			for (int i = 0; i < step && pacer < len; i++) {
+				var dupe = minionCache[pacer++];
+				// Do not replace with ?. since Unity overloads "=="
+				if (dupe != null && (obj = dupe.gameObject) != null && obj.activeInHierarchy &&
+						!obj.IsFalling())
+					// Exclude falling Duplicants, they have no pathing
 					checkThisFrame.Add(UpdateStatus(dupe));
 			}
 			CheckNotifications(checkThisFrame);
 			checkThisFrame.Recycle();
+			minionPacer = pacer;
 		}
 
 		/// <summary>

@@ -221,7 +221,9 @@ namespace PeterHan.BulkSettingsChange {
 		/// <param name="enable">true to enable it, or false to disable it.</param>
 		/// <returns>true if changes were made, or false otherwise.</returns>
 		private bool ToggleBuilding(int cell, GameObject building, bool enable) {
-			var ed = building?.GetComponent<BuildingEnabledButton>();
+#pragma warning disable IDE0031 // Use null propagation
+			var ed = (building == null) ? null : building.GetComponent<BuildingEnabledButton>();
+#pragma warning restore IDE0031 // Use null propagation
 			bool changed = false;
 			if (ed != null) {
 				var trEnableDisable = Traverse.Create(ed);
@@ -258,7 +260,10 @@ namespace PeterHan.BulkSettingsChange {
 		/// <param name="enable">true to enable auto disinfect, or false to disable it.</param>
 		/// <returns>true if changes were made, or false otherwise.</returns>
 		private bool ToggleDisinfect(int cell, GameObject item, bool enable) {
-			var ad = item?.GetComponent<AutoDisinfectable>();
+			// == operator is overloaded on GameObject to be equal to null if destroyed
+#pragma warning disable IDE0031 // Use null propagation
+			var ad = (item == null) ? null : item.GetComponent<AutoDisinfectable>();
+#pragma warning restore IDE0031 // Use null propagation
 			bool changed = false;
 			if (ad != null) {
 				var trAutoDisinfect = Traverse.Create(ad);
@@ -282,7 +287,10 @@ namespace PeterHan.BulkSettingsChange {
 		/// <param name="enable">true to enable auto repair, or false to disable it.</param>
 		/// <returns>true if changes were made, or false otherwise.</returns>
 		private bool ToggleRepair(int cell, GameObject item, bool enable) {
-			var ar = item?.GetComponent<Repairable>();
+			// == operator is overloaded on GameObject to be equal to null if destroyed
+#pragma warning disable IDE0031 // Use null propagation
+			var ar = (item == null) ? null : item.GetComponent<Repairable>();
+#pragma warning restore IDE0031 // Use null propagation
 			bool changed = false;
 			if (ar != null) {
 				Traverse.Create(ar).CallMethod(enable ? "AllowRepair" : "CancelRepair");
