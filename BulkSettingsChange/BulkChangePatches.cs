@@ -29,7 +29,29 @@ namespace PeterHan.BulkSettingsChange {
 	/// This code took inspiration from https://github.com/0Mayall/ONIBlueprints/
 	/// </summary>
 	public static class BulkChangePatches {
-		
+		/// <summary>
+		/// Logs when the mod is loaded.
+		/// </summary>
+		public static class Mod_OnLoad {
+			public static void OnLoad() {
+				PLibUtil.LogModInit();
+			}
+		}
+
+		/// <summary>
+		/// Applied to LoadBindings to inject a custom binding when the database is loaded.
+		/// </summary>
+		[HarmonyPatch(typeof(GameInputMapping), "LoadBindings")]
+		public static class GameInputMapping_LoadBindings_Patch {
+			/// <summary>
+			/// Invoked before LoadBindings runs.
+			/// </summary>
+			private static void Prefix() {
+				var key = new PLibKeyBinding(BulkChangeStrings.ToolTitle, KKeyCode.Q);
+				KeyBindingManager.AddKeyBinding(key);
+			}
+		}
+
 		/// <summary>
 		/// Applied to OnPrefabInit to load the change settings tool into the available tool list.
 		/// </summary>
@@ -39,7 +61,7 @@ namespace PeterHan.BulkSettingsChange {
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
 			/// <param name="__instance">The current instance.</param>
-			public static void Postfix(PlayerController __instance) {
+			private static void Postfix(PlayerController __instance) {
 				// Create list so that new tool can be appended at the end
 				var interfaceTools = new List<InterfaceTool>(__instance.tools);
 				var bulkChangeTool = new GameObject(typeof(BulkChangeTool).Name);
@@ -64,7 +86,7 @@ namespace PeterHan.BulkSettingsChange {
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
 			/// <param name="___icons">The icon list where the icon can be added.</param>
-			public static void Postfix(ref List<Sprite> ___icons) {
+			private static void Postfix(ref List<Sprite> ___icons) {
 				___icons.Add(SpriteRegistry.GetToolIcon());
 			}
 		}
@@ -78,7 +100,7 @@ namespace PeterHan.BulkSettingsChange {
 			/// Applied after CreateBasicTools runs.
 			/// </summary>
 			/// <param name="__instance">The basic tool list.</param>
-			public static void Postfix(ref ToolMenu __instance) {
+			private static void Postfix(ref ToolMenu __instance) {
 				PLibUtil.LogDebug("Adding BulkChangeTool to basic tools");
 				__instance.basicTools.Add(ToolMenu.CreateToolCollection(BulkChangeStrings.
 					ToolTitle, BulkChangeStrings.ToolIconName, Action.BuildMenuKeyQ, typeof(
@@ -94,7 +116,7 @@ namespace PeterHan.BulkSettingsChange {
 			/// <summary>
 			/// Applied after DestroyInstances runs.
 			/// </summary>
-			public static void Postfix() {
+			private static void Postfix() {
 				PLibUtil.LogDebug("Destroying BulkChangeTool");
 				BulkChangeTool.DestroyInstance();
 			}

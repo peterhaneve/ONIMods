@@ -137,8 +137,9 @@ namespace PeterHan.BulkSettingsChange {
 					repair = BulkChangeTools.EnableRepair.IsOn(options);
 #if DEBUG
 				// Log what we are about to do
-				PLibUtil.LogDebug("{0} at cell {1:D}".F(ToolMenu.Instance.toolParameterMenu.
-					GetLastEnabledFilter(), cell));
+				var xy = Grid.CellToXY(cell);
+				PLibUtil.LogDebug("{0} at cell ({1:D},{2:D})".F(ToolMenu.Instance.
+					toolParameterMenu.GetLastEnabledFilter(), xy.X, xy.Y));
 #endif
 				if (enable || BulkChangeTools.DisableBuildings.IsOn(options)) {
 					// Enable/disable buildings
@@ -232,8 +233,9 @@ namespace PeterHan.BulkSettingsChange {
 				bool curEnabled = ed.IsEnabled, toggleQueued = building.GetComponent<
 					Toggleable>()?.IsToggleQueued(toggleIndex) ?? false;
 #if DEBUG
-				PLibUtil.LogDebug("Checking building @{0:D}: on={1}, queued={2}, desired={3}".
-					F(cell, curEnabled, toggleQueued, enable));
+				var xy = Grid.CellToXY(cell);
+				PLibUtil.LogDebug("Checking building @({0:D},{1:D}): on={2}, queued={3}, " +
+					"desired={4}".F(xy.X, xy.Y, curEnabled, toggleQueued, enable));
 #endif
 				// Only continue if we are cancelling the toggle errand or (the building state
 				// is different than desired and no toggle errand is queued)
@@ -269,10 +271,11 @@ namespace PeterHan.BulkSettingsChange {
 				var trAutoDisinfect = Traverse.Create(ad);
 				// Private methods grrr
 				if (trAutoDisinfect.GetField<bool>("enableAutoDisinfect") != enable) {
+					var xy = Grid.CellToXY(cell);
 					trAutoDisinfect.CallMethod(enable ? "EnableAutoDisinfect" :
 						"DisableAutoDisinfect");
-					PLibUtil.LogDebug("Auto disinfect {2} @{0:D} = {1}".F(cell, enable,
-						item.GetProperName()));
+					PLibUtil.LogDebug("Auto disinfect {3} @({0:D},{1:D}) = {2}".F(xy.X, xy.Y,
+						enable, item.GetProperName()));
 					changed = true;
 				}
 			}
@@ -293,9 +296,10 @@ namespace PeterHan.BulkSettingsChange {
 #pragma warning restore IDE0031 // Use null propagation
 			bool changed = false;
 			if (ar != null) {
+				var xy = Grid.CellToXY(cell);
 				Traverse.Create(ar).CallMethod(enable ? "AllowRepair" : "CancelRepair");
-				PLibUtil.LogDebug("Auto repair {2} @{0:D} = {1}".F(cell, enable, item.
-					GetProperName()));
+				PLibUtil.LogDebug("Auto repair {3} @({0:D},{1:D}) = {2}".F(xy.X, xy.Y, enable,
+					item.GetProperName()));
 				changed = true;
 			}
 			return changed;

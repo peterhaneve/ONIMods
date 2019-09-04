@@ -16,11 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using System;
 using System.Collections.Generic;
-
-using WidgetList = System.Collections.Generic.Dictionary<string, UnityEngine.GameObject>;
 
 namespace PeterHan.PLib {
 	/// <summary>
@@ -38,21 +35,13 @@ namespace PeterHan.PLib {
 			if (options == null)
 				throw new ArgumentNullException("options");
 			var kOpt = new Dictionary<string, ToolParameterMenu.ToggleState>(options.Count);
-			var titles = new Dictionary<string, string>(options.Count);
 			// Add to Klei format, yes it loses the order but it means less of a mess
 			foreach (var option in options) {
 				string key = option.Key;
+				Strings.Add("STRINGS.UI.TOOLS.FILTERLAYERS." + key, option.Title);
 				kOpt.Add(key, option.State);
-				titles.Add(key, option.Title);
 			}
 			menu.PopulateMenu(kOpt);
-			// Update the titles so that they are not all MISSING
-			var widgets = Traverse.Create(menu).GetField<WidgetList>("widgets");
-			foreach (var pair in widgets) {
-				var label = pair.Value.GetComponentInChildren<LocText>();
-				if (label != null && titles.TryGetValue(pair.Key, out string title))
-					label.text = title;
-			}
 			return kOpt;
 		}
 

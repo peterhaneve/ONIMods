@@ -16,10 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
-using System;
-using System.Collections.Generic;
-
 namespace PeterHan.BulkSettingsChange {
 	/// <summary>
 	/// Stores the strings used in the Bulk Settings Change tool.
@@ -28,12 +24,12 @@ namespace PeterHan.BulkSettingsChange {
 	/// </summary>
 	static class BulkChangeStrings {
 		// Tool tip and name in the tool list
-		public static string ToolDescription = "Enable or disable Auto-Disinfect, Auto-Repair, or buildings {Hotkey}";
-		public static string ToolTitle = "Change Settings";
+		public static readonly string ToolDescription = "Enable or disable Auto-Disinfect, Auto-Repair, or buildings {Hotkey}";
+		public static readonly string ToolTitle = "Change Settings";
 
 		// Internal strings, no translation needed
-		public static string PlaceIconName = "BULKCHANGESETTINGS.TOOL.BULKCHANGETOOL.PLACER";
-		public static string ToolIconName = "BULKCHANGESETTINGS.TOOL.BULKCHANGETOOL.ICON";
+		public static readonly string PlaceIconName = "BULKCHANGESETTINGS.TOOL.BULKCHANGETOOL.PLACER";
+		public static readonly string ToolIconName = "BULKCHANGESETTINGS.TOOL.BULKCHANGETOOL.ICON";
 	}
 
 	/// <summary>

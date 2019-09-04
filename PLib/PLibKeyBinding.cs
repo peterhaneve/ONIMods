@@ -16,35 +16,43 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
+using System;
 
-namespace PeterHan.Claustrophobia {
+namespace PeterHan.PLib {
 	/// <summary>
-	/// Patches which will be applied via annotations for Claustrophobia.
+	/// Represents a key bind created and managed by PLib.
 	/// </summary>
-	public static class ClaustrophobiaPatches {
+	public sealed class PLibKeyBinding {
 		/// <summary>
-		/// Logs when the mod is loaded.
+		/// The gamepad button to bind.
 		/// </summary>
-		public static class Mod_OnLoad {
-			public static void OnLoad() {
-				PLibUtil.LogModInit();
-			}
+		public GamepadButton GamePadButton { get; }
+
+		/// <summary>
+		/// The key code.
+		/// </summary>
+		public KKeyCode KeyCode { get; }
+
+		/// <summary>
+		/// The modifier code.
+		/// </summary>
+		public Modifier Modifier { get; }
+
+		/// <summary>
+		/// The key bind description.
+		/// </summary>
+		public LocString Title { get; }
+
+		public PLibKeyBinding(LocString title, KKeyCode keyCode, Modifier modifier = Modifier.
+				None, GamepadButton gamePadButton = GamepadButton.NumButtons) {
+			GamePadButton = gamePadButton;
+			KeyCode = keyCode;
+			Modifier = modifier;
+			Title = title ?? throw new ArgumentNullException("title");
 		}
 
-		/// <summary>
-		/// Applied to Game to register a component managing confined/trapped notifications.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "OnPrefabInit")]
-		public static class Game_OnPrefabInit_Patch {
-			/// <summary>
-			/// Applied after OnPrefabInit runs.
-			/// </summary>
-			/// <param name="__instance">The current game.</param>
-			private static void Postfix(Game __instance) {
-				__instance.gameObject.AddComponent<ClaustrophobiaChecker>();
-			}
+		public override string ToString() {
+			return "{0} + {1} = \"{2}\"".F(Modifier, KeyCode, Title);
 		}
 	}
 }

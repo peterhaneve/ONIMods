@@ -28,7 +28,7 @@ namespace PeterHan.CritterInventory {
 	/// </summary>
 	public static class CritterInventoryPatches {
 		/// <summary>
-		/// The cached category for "Critter (Wild)". Since ResourceCategoryScreen also has
+		/// The cached category for "Critter (Tame)". Since ResourceCategoryScreen also has
 		/// only one static instance for now, this non-reentrant reference is safe.
 		/// </summary>
 		private static ResourceCategoryHeader critterTame;
@@ -37,6 +37,15 @@ namespace PeterHan.CritterInventory {
 		/// only one static instance for now, this non-reentrant reference is safe.
 		/// </summary>
 		private static ResourceCategoryHeader critterWild;
+
+		/// <summary>
+		/// Logs when the mod is loaded.
+		/// </summary>
+		public static class Mod_OnLoad {
+			public static void OnLoad() {
+				PLibUtil.LogModInit();
+			}
+		}
 
 		/// <summary>
 		/// Applied to ResourceEntry to highlight critters on hover.

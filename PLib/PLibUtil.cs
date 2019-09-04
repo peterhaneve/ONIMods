@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Harmony;
 using System;
 using System.Reflection;
 using UnityEngine;
@@ -124,8 +125,32 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <param name="message">The message to log.</param>
 		public static void LogError(object message) {
+			// Cannot make a utility property or method for Assembly.GetCalling... because
+			// its caller would then be the assembly PLib is in, not the assembly which
+			// invoked LogXXX
 			Debug.LogErrorFormat("[PLib/{0}] {1}", Assembly.GetCallingAssembly()?.GetName()?.
-				Name, message);
+				Name ?? "?", message);
+		}
+
+		/// <summary>
+		/// Logs the mod name and version when a mod initializes.
+		/// </summary>
+		public static void LogModInit() {
+			var assembly = Assembly.GetCallingAssembly();
+			if (assembly != null) {
+				// Mod version
+				var fileVersions = assembly.GetCustomAttributes(typeof(
+					AssemblyFileVersionAttribute), true);
+				string modVersion = "Unknown";
+				if (fileVersions != null && fileVersions.Length > 0) {
+					// Retrieves the "File Version" attribute
+					var assemblyFileVersion = (AssemblyFileVersionAttribute)fileVersions[0];
+					if (assemblyFileVersion != null)
+						modVersion = assemblyFileVersion.Version;
+				}
+				Debug.LogFormat("[PLib] Mod {0} initialized, version {1}",
+					assembly.GetName()?.Name, modVersion);
+			}
 		}
 
 		/// <summary>
@@ -134,7 +159,7 @@ namespace PeterHan.PLib {
 		/// <param name="message">The message to log.</param>
 		public static void LogException(Exception thrown) {
 			Debug.LogErrorFormat("[PLib/{0}] {1} {2} at {3}", Assembly.GetCallingAssembly()?.
-				GetName()?.Name, thrown.GetType(), thrown.Message, thrown.StackTrace);
+				GetName()?.Name ?? "?", thrown.GetType(), thrown.Message, thrown.StackTrace);
 		}
 
 		/// <summary>
@@ -143,7 +168,7 @@ namespace PeterHan.PLib {
 		/// <param name="message">The message to log.</param>
 		public static void LogWarning(object message) {
 			Debug.LogWarningFormat("[PLib/{0}] {1}", Assembly.GetCallingAssembly()?.GetName()?.
-				Name, message);
+				Name ?? "?", message);
 		}
 	}
 }
