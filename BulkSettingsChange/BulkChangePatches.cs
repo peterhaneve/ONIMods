@@ -39,7 +39,21 @@ namespace PeterHan.BulkSettingsChange {
 		}
 
 		/// <summary>
-		/// Applied to LoadBindings to inject a custom binding when the database is loaded.
+		/// Applied to Game to clean up the bulk change tool on close.
+		/// </summary>
+		[HarmonyPatch(typeof(Game), "DestroyInstances")]
+		public static class Game_DestroyInstances_Patch {
+			/// <summary>
+			/// Applied after DestroyInstances runs.
+			/// </summary>
+			private static void Postfix() {
+				PLibUtil.LogDebug("Destroying BulkChangeTool");
+				BulkChangeTool.DestroyInstance();
+			}
+		}
+
+		/// <summary>
+		/// Applied to GameInputMapping to inject a custom binding when the database is loaded.
 		/// </summary>
 		[HarmonyPatch(typeof(GameInputMapping), "LoadBindings")]
 		public static class GameInputMapping_LoadBindings_Patch {
@@ -53,7 +67,8 @@ namespace PeterHan.BulkSettingsChange {
 		}
 
 		/// <summary>
-		/// Applied to OnPrefabInit to load the change settings tool into the available tool list.
+		/// Applied to PlayerController to load the change settings tool into the available
+		/// tool list.
 		/// </summary>
 		[HarmonyPatch(typeof(PlayerController), "OnPrefabInit")]
 		public static class PlayerController_OnPrefabInit_Patch {
@@ -105,20 +120,6 @@ namespace PeterHan.BulkSettingsChange {
 				__instance.basicTools.Add(ToolMenu.CreateToolCollection(BulkChangeStrings.
 					ToolTitle, BulkChangeStrings.ToolIconName, Action.BuildMenuKeyQ, typeof(
 					BulkChangeTool).Name, BulkChangeStrings.ToolDescription, false));
-			}
-		}
-
-		/// <summary>
-		/// Applied to Game to clean up the bulk change tool on close.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "DestroyInstances")]
-		public static class Game_DestroyInstances_Patch {
-			/// <summary>
-			/// Applied after DestroyInstances runs.
-			/// </summary>
-			private static void Postfix() {
-				PLibUtil.LogDebug("Destroying BulkChangeTool");
-				BulkChangeTool.DestroyInstance();
 			}
 		}
 	}

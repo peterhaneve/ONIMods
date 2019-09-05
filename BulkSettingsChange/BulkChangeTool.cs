@@ -28,6 +28,11 @@ namespace PeterHan.BulkSettingsChange {
 	/// </summary>
 	sealed class BulkChangeTool : DragTool {
 		/// <summary>
+		/// The color to use for this tool's placer icon.
+		/// </summary>
+		private static readonly Color32 TOOL_COLOR = new Color32(255, 172, 52, 255);
+
+		/// <summary>
 		/// The shared instance of this tool.
 		/// </summary>
 		private static BulkChangeTool tool;
@@ -68,21 +73,6 @@ namespace PeterHan.BulkSettingsChange {
 		/// The options available for this tool.
 		/// </summary>
 		private IDictionary<string, ToolParameterMenu.ToggleState> options;
-
-		/// <summary>
-		/// Fixes the cursor position so that it is not off by half a grid cell.
-		/// 
-		/// This is a pretty nasty hack
-		/// </summary>
-		private void FixCursorPosition() {
-			var isAppFocused = Traverse.Create(this).GetField<bool>("isAppFocused");
-			if (visualizer?.activeSelf == true && isAppFocused) {
-				// Offset position up half a cell (y)
-				var pos = visualizer.transform.localPosition;
-				pos.y += Grid.HalfCellSizeInMeters;
-				visualizer.transform.SetLocalPosition(pos);
-			}
-		}
 
 		protected override string GetConfirmSound() {
 			string sound = base.GetConfirmSound();
@@ -166,11 +156,6 @@ namespace PeterHan.BulkSettingsChange {
 			}
 		}
 
-		public override void OnMouseMove(Vector3 cursorPos) {
-			base.OnMouseMove(cursorPos);
-			FixCursorPosition();
-		}
-
 		protected override void OnPrefabInit() {
 			var us = Traverse.Create(this);
 			Sprite sprite;
@@ -195,7 +180,13 @@ namespace PeterHan.BulkSettingsChange {
 					"areaVisualizerTextPrefab"));
 			}
 			visualizer = new GameObject("BulkChangeToolVisualizer");
-			var spriteRenderer = visualizer.AddComponent<SpriteRenderer>();
+			// Actually fix the position to not be off by a grid cell
+			var offs = new GameObject("BulkChangeToolOffset");
+			var offsTransform = offs.transform;
+			offsTransform.SetParent(visualizer.transform);
+			offsTransform.SetLocalPosition(new Vector3(0.0f, Grid.HalfCellSizeInMeters, 0.0f));
+			offs.SetLayerRecursively(LayerMask.NameToLayer("Overlay"));
+			var spriteRenderer = offs.AddComponent<SpriteRenderer>();
 			// Set up the color and parent
 			if (spriteRenderer != null && (sprite = SpriteRegistry.GetPlaceIcon()) != null) {
 				// Determine the scaling amount since pixel size is known
@@ -204,12 +195,11 @@ namespace PeterHan.BulkSettingsChange {
 				spriteRenderer.flipY = true;
 				spriteRenderer.name = "BulkChangeToolSprite";
 				// Set sprite color to match other placement tools
-				spriteRenderer.color = new Color32(255, 172, 52, 255);
+				spriteRenderer.color = TOOL_COLOR;
 				spriteRenderer.sprite = sprite;
 				spriteRenderer.enabled = true;
 				// Set scale to match 1 tile
 				visualizer.transform.localScale = new Vector3(scaleWidth, scaleWidth, 1.0f);
-				visualizer.SetLayerRecursively(LayerMask.NameToLayer("Overlay"));
 			}
 			visualizer.SetActive(false);
 		}

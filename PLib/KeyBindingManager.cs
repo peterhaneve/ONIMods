@@ -77,42 +77,6 @@ namespace PeterHan.PLib {
 		private static IList<PLibKeyBinding> ourBindings;
 
 		/// <summary>
-		/// Applied to BuildDisplay to actually give us the right titles on the PLib tab.
-		/// </summary>
-		[HarmonyPatch(typeof(InputBindingsScreen), "BuildDisplay")]
-		public static class InputBindingsScreen_BuildDisplay_Patch {
-			/// <summary>
-			/// Applied after BuildDisplay runs.
-			/// </summary>
-			private static void Postfix(ref InputBindingsScreen __instance,
-					ref List<string> ___screens, int ___activeScreen,
-					ref LocText ___screenTitle) {
-				string curScreen = ___screens[___activeScreen];
-				if (curScreen == CATEGORY && ourBindings != null) {
-					int num = 0;
-					var curBindings = GameInputMapping.KeyBindings;
-					var transform = __instance.gameObject.transform;
-					// Update heading
-					___screenTitle.text = CATEGORY;
-					for (int i = 0; i < curBindings.Length; i++) {
-						var binding = curBindings[i];
-						GameObject child;
-						if (binding.mGroup == CATEGORY && binding.mRebindable &&
-								(child = transform.GetChild(num)?.gameObject) != null) {
-							// Unless the key bindings changed during the method, we will
-							// encounter the bindings in the same order they were added
-							var lt = child.transform.GetChild(0).GetComponentInChildren<LocText>();
-							PLibUtil.LogDebug(lt);
-							if (lt != null)
-								lt.text = ourBindings[num].Title;
-							num++;
-						}
-					}
-				}
-			}
-		}
-
-		/// <summary>
 		/// Adds a key binding to the key input screen.
 		/// </summary>
 		/// <param name="entry">The key binding to add.</param>
@@ -133,6 +97,31 @@ namespace PeterHan.PLib {
 					ourBindings = new List<PLibKeyBinding>(8);
 				ourBindings.Add(entry);
 				PLibUtil.LogDebug("Registered binding: " + entry);
+			}
+		}
+
+		public static void BuildDisplay(InputBindingsScreen instance, string curScreen,
+				LocText screenTitle) {
+			if (curScreen == CATEGORY && ourBindings != null) {
+				int num = 0;
+				var curBindings = GameInputMapping.KeyBindings;
+				var transform = instance.gameObject.transform;
+				// Update heading
+				screenTitle.text = CATEGORY;
+				for (int i = 0; i < curBindings.Length; i++) {
+					var binding = curBindings[i];
+					GameObject child;
+					if (binding.mGroup == CATEGORY && binding.mRebindable &&
+							(child = transform.GetChild(num)?.gameObject) != null) {
+						// Unless the key bindings changed during the method, we will
+						// encounter the bindings in the same order they were added
+						var lt = child.transform.GetChild(0).GetComponentInChildren<LocText>();
+						PLibUtil.LogDebug(lt);
+						if (lt != null)
+							lt.text = ourBindings[num].Title;
+						num++;
+					}
+				}
 			}
 		}
 	}

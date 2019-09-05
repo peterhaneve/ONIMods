@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using System;
 using System.Reflection;
 using UnityEngine;
@@ -133,24 +132,20 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
-		/// Logs the mod name and version when a mod initializes.
+		/// Logs the mod name and version when a mod initializes. Also initializes the PLib
+		/// patch bootstrapper for shared code.
+		/// 
+		/// <b>Must</b> be called in Mod_OnLoad for proper PLib functionality.
 		/// </summary>
 		public static void LogModInit() {
 			var assembly = Assembly.GetCallingAssembly();
 			if (assembly != null) {
-				// Mod version
-				var fileVersions = assembly.GetCustomAttributes(typeof(
-					AssemblyFileVersionAttribute), true);
-				string modVersion = "Unknown";
-				if (fileVersions != null && fileVersions.Length > 0) {
-					// Retrieves the "File Version" attribute
-					var assemblyFileVersion = (AssemblyFileVersionAttribute)fileVersions[0];
-					if (assemblyFileVersion != null)
-						modVersion = assemblyFileVersion.Version;
-				}
+				PLibRegistry.Init();
 				Debug.LogFormat("[PLib] Mod {0} initialized, version {1}",
-					assembly.GetName()?.Name, modVersion);
-			}
+					assembly.GetName()?.Name, assembly.GetFileVersion() ?? "Unknown");
+			} else
+				// Probably impossible
+				Debug.LogError("[PLib] Somehow called from null assembly!");
 		}
 
 		/// <summary>

@@ -46,7 +46,7 @@ namespace PeterHan.FallingSand {
 		}
 
 		/// <summary>
-		/// Applied to OnWorkTick to add a tracking component to objects which fall when
+		/// Applied to Diggable to add a tracking component to objects which fall when
 		/// digging.
 		/// </summary>
 		[HarmonyPatch(typeof(Diggable), "OnWorkTick")]
@@ -57,7 +57,7 @@ namespace PeterHan.FallingSand {
 		}
 
 		/// <summary>
-		/// Applied to OnStopWork to stop tracking digs which are destroyed.
+		/// Applied to Diggable to stop tracking digs which are destroyed.
 		/// </summary>
 		[HarmonyPatch(typeof(Diggable), "OnCleanUp")]
 		public static class Diggable_OnCleanUp_Patch {
@@ -67,7 +67,7 @@ namespace PeterHan.FallingSand {
 		}
 
 		/// <summary>
-		/// Applied to OnCleanUp to stop tracking all digging errands.
+		/// Applied to Game to stop tracking all digging errands.
 		/// </summary>
 		[HarmonyPatch(typeof(Game), "OnDestroy")]
 		public static class Game_OnDestroy_Patch {
@@ -77,7 +77,8 @@ namespace PeterHan.FallingSand {
 		}
 
 		/// <summary>
-		/// Applied to Spawn to flag spawned falling objects with the appropriate component.
+		/// Applied to UnstableGroundManager to flag spawned falling objects with the
+		/// appropriate component.
 		/// </summary>
 		[HarmonyPatch(typeof(UnstableGroundManager), "Spawn", typeof(int), typeof(Element),
 			typeof(float), typeof(float), typeof(byte), typeof(int))]
@@ -105,8 +106,8 @@ namespace PeterHan.FallingSand {
 		}
 
 		/// <summary>
-		/// Applied to RemoveFromPending to actually place the digs, now that the blocks are
-		/// solidified.
+		/// Applied to UnstableGroundManager to actually place the digs, now that the blocks
+		/// are solidified.
 		/// </summary>
 		[HarmonyPatch(typeof(UnstableGroundManager), "RemoveFromPending")]
 		public static class UnstableGroundManager_RemoveFromPending_Patch {
@@ -118,8 +119,8 @@ namespace PeterHan.FallingSand {
 		}
 
 		/// <summary>
-		/// Applied to Update to queue up dig errands on falling objects which are about to
-		/// become solid.
+		/// Applied to UnstableGroundManager to queue up dig errands on falling objects which
+		/// are about to become solid.
 		/// </summary>
 		[HarmonyPatch(typeof(UnstableGroundManager), "Update")]
 		public static class UnstableGroundManager_Update_Patch {

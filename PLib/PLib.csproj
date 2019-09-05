@@ -61,7 +61,11 @@
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="KeyBindingManager.cs" />
     <Compile Include="PLibKeyBinding.cs" />
+    <Compile Include="PLibPatches.cs" />
+    <Compile Include="PLibRegistry.cs" />
+    <Compile Include="PLibSharedData.cs" />
     <Compile Include="PLibUtil.cs" />
+    <Compile Include="PLibVersion.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ToolMode.cs" />
   </ItemGroup>
