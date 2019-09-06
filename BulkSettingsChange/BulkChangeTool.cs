@@ -64,7 +64,7 @@ namespace PeterHan.BulkSettingsChange {
 		/// <param name="cell">The cell where the change occurred.</param>
 		private static void ShowPopup(bool enable, BulkToolMode enabled, BulkToolMode disabled,
 				int cell) {
-			PLibUtil.CreatePopup(enable ? PopFXManager.Instance.sprite_Plus : PopFXManager.
+			PUtil.CreatePopup(enable ? PopFXManager.Instance.sprite_Plus : PopFXManager.
 				Instance.sprite_Negative, enable ? enabled.PopupText : disabled.PopupText,
 				cell);
 		}
@@ -96,13 +96,13 @@ namespace PeterHan.BulkSettingsChange {
 
 		protected override void OnActivateTool() {
 			var menu = ToolMenu.Instance.toolParameterMenu;
-			var modes = ListPool<ToolMode, BulkChangeTool>.Allocate();
+			var modes = ListPool<PToolMode, BulkChangeTool>.Allocate();
 			base.OnActivateTool();
 			// Create mode list
 			foreach (var mode in BulkToolMode.AllTools())
 				modes.Add(mode.ToToolMode(modes.Count == 0 ? ToolParameterMenu.ToggleState.On :
 					ToolParameterMenu.ToggleState.Off));
-			options = ToolMode.PopulateMenu(menu, modes);
+			options = PToolMode.PopulateMenu(menu, modes);
 			modes.Recycle();
 			// When the parameters are changed, update the view settings
 			menu.onParametersChanged += UpdateViewMode;
@@ -199,7 +199,7 @@ namespace PeterHan.BulkSettingsChange {
 				spriteRenderer.sprite = sprite;
 				spriteRenderer.enabled = true;
 				// Set scale to match 1 tile
-				visualizer.transform.localScale = new Vector3(scaleWidth, scaleWidth, 1.0f);
+				offsTransform.localScale = new Vector3(scaleWidth, scaleWidth, 1.0f);
 			}
 			visualizer.SetActive(false);
 		}
@@ -236,7 +236,7 @@ namespace PeterHan.BulkSettingsChange {
 					if (priority != null)
 						priority.SetMasterPriority(ToolMenu.Instance.PriorityScreen.
 							GetLastSelectedPriority());
-					PLibUtil.LogDebug("Enable {2} @{0:D} = {1}".F(cell, enable, building.
+					PUtil.LogDebug("Enable {2} @{0:D} = {1}".F(cell, enable, building.
 						GetProperName()));
 					changed = true;
 				}
@@ -264,7 +264,7 @@ namespace PeterHan.BulkSettingsChange {
 					var xy = Grid.CellToXY(cell);
 					trAutoDisinfect.CallMethod(enable ? "EnableAutoDisinfect" :
 						"DisableAutoDisinfect");
-					PLibUtil.LogDebug("Auto disinfect {3} @({0:D},{1:D}) = {2}".F(xy.X, xy.Y,
+					PUtil.LogDebug("Auto disinfect {3} @({0:D},{1:D}) = {2}".F(xy.X, xy.Y,
 						enable, item.GetProperName()));
 					changed = true;
 				}
@@ -288,7 +288,7 @@ namespace PeterHan.BulkSettingsChange {
 			if (ar != null) {
 				var xy = Grid.CellToXY(cell);
 				Traverse.Create(ar).CallMethod(enable ? "AllowRepair" : "CancelRepair");
-				PLibUtil.LogDebug("Auto repair {3} @({0:D},{1:D}) = {2}".F(xy.X, xy.Y, enable,
+				PUtil.LogDebug("Auto repair {3} @({0:D},{1:D}) = {2}".F(xy.X, xy.Y, enable,
 					item.GetProperName()));
 				changed = true;
 			}

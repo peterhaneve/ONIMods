@@ -17,7 +17,6 @@
  */
 
 using PeterHan.PLib;
-using System;
 using System.Collections.Generic;
 
 using CellSet = System.Collections.Generic.ICollection<int>;
@@ -60,7 +59,7 @@ namespace PeterHan.FallingSand {
 				// Assign priority to the dig
 				var obj = DigTool.PlaceDig(cell);
 				var xy = Grid.CellToXY(cell);
-				PLibUtil.LogDebug("Placed dig in cell ({0:D},{1:D})".F(xy.X, xy.Y));
+				PUtil.LogDebug("Placed dig in cell ({0:D},{1:D})".F(xy.X, xy.Y));
 				if (obj != null && (component = obj.GetComponent<Prioritizable>()) != null)
 					component.SetMasterPriority(priority);
 				digCells.Remove(cell);
@@ -78,7 +77,7 @@ namespace PeterHan.FallingSand {
 		/// Stops tracking all diggables.
 		/// </summary>
 		public void ClearAll() {
-			PLibUtil.LogDebug("Stopped tracking {0:D} diggables, {1:D} queued digs".F(
+			PUtil.LogDebug("Stopped tracking {0:D} diggables, {1:D} queued digs".F(
 				fallingCells.Count, digCells.Count));
 			digCells.Clear();
 			fallingCells.Clear();
@@ -120,16 +119,24 @@ namespace PeterHan.FallingSand {
 		private void GetFallingCells(int cell, CellSet results) {
 			var ugm = World.Instance.GetComponent<UnstableGroundManager>();
 			var fallables = ugm.GetCellsContainingFallingAbove(Grid.CellToXY(cell));
-			// Flag all fallables already falling
-			int nextCell = Grid.CellAbove(cell);
-			if (fallables.Contains(cell))
-				results.Add(cell);
-			while (Grid.IsValidCell(nextCell) && !Grid.Foundation[nextCell]) {
-				if ((Grid.Solid[nextCell] && Grid.Element[nextCell].IsUnstable) || fallables.
-						Contains(nextCell))
-					results.Add(nextCell);
-				nextCell = Grid.CellAbove(nextCell);
-			}
+			bool moreCells;
+			do {
+				// Continue while cell is valid and not a foundation
+				moreCells = Grid.IsValidCell(cell) && !Grid.Foundation[cell];
+				if (moreCells) {
+					if (Grid.Solid[cell]) {
+						// Solid/unstable = add to list, solid/stable = end search, unsolid =
+						// continue search without adding
+						if (Grid.Element[cell].IsUnstable)
+							results.Add(cell);
+						else
+							moreCells = false;
+					} else if (fallables.Contains(cell))
+						// Add falling objects also in the tiles
+						results.Add(cell);
+					cell = Grid.CellAbove(cell);
+				}
+			} while (moreCells);
 		}
 
 		/// <summary>

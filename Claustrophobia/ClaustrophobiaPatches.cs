@@ -29,7 +29,7 @@ namespace PeterHan.Claustrophobia {
 		/// </summary>
 		public static class Mod_OnLoad {
 			public static void OnLoad() {
-				PLibUtil.LogModInit();
+				PUtil.LogModInit();
 			}
 		}
 

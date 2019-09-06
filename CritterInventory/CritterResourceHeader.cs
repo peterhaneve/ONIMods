@@ -50,7 +50,7 @@ namespace PeterHan.CritterInventory {
 			var tag = GameTags.BagableCreature;
 			string typeStr = type.GetDescription();
 			// Create a heading for Critter (Type)
-			PLibUtil.LogDebug("Creating Critter ({0}) category".F(typeStr));
+			PUtil.LogDebug("Creating Critter ({0}) category".F(typeStr));
 			var gameObject = Util.KInstantiateUI(prefab, resList.CategoryContainer.gameObject,
 				false);
 			gameObject.name = "CategoryHeader_{0}_{1}".F(tag.Name, type.ToString());

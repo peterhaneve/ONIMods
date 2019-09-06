@@ -119,9 +119,9 @@ namespace PeterHan.BulkSettingsChange {
 		/// </summary>
 		/// <param name="state">The default state of this tool mode.</param>
 		/// <returns>The options entry.</returns>
-		public ToolMode ToToolMode(ToolParameterMenu.ToggleState state = ToolParameterMenu.
+		public PToolMode ToToolMode(ToolParameterMenu.ToggleState state = ToolParameterMenu.
 				ToggleState.On) {
-			return new ToolMode(Key, Name, state);
+			return new PToolMode(Key, Name, state);
 		}
 
 		public override string ToString() {

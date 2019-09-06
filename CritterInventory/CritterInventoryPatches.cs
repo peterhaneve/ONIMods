@@ -43,7 +43,7 @@ namespace PeterHan.CritterInventory {
 		/// </summary>
 		public static class Mod_OnLoad {
 			public static void OnLoad() {
-				PLibUtil.LogModInit();
+				PUtil.LogModInit();
 			}
 		}
 
@@ -67,7 +67,7 @@ namespace PeterHan.CritterInventory {
 					Tag species = __instance.Resource;
 					CritterInventoryUtils.IterateCreatures((creature) => {
 						if (creature.PrefabID() == species && type.Matches(creature))
-							PLibUtil.HighlightEntity(creature, is_hovering ? hlc : Color.
+							PUtil.HighlightEntity(creature, is_hovering ? hlc : Color.
 								black);
 					});
 				}
@@ -101,7 +101,7 @@ namespace PeterHan.CritterInventory {
 					if (count > 0)
 						// Rotate through valid indexes
 						// Select the object and center it
-						PLibUtil.CenterAndSelect(creaturesOfType[___selectionIdx++ % count]);
+						PUtil.CenterAndSelect(creaturesOfType[___selectionIdx++ % count]);
 					creaturesOfType.Recycle();
 				}
 			}
@@ -127,7 +127,7 @@ namespace PeterHan.CritterInventory {
 					// It is a creature header, highlight all matching
 					CritterInventoryUtils.IterateCreatures((creature) => {
 						if (type.Matches(creature))
-							PLibUtil.HighlightEntity(creature, is_hovering ? hlc :
+							PUtil.HighlightEntity(creature, is_hovering ? hlc :
 								Color.black);
 					});
 				}

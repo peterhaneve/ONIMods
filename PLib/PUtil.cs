@@ -24,7 +24,7 @@ namespace PeterHan.PLib {
 	/// <summary>
 	/// Static utility functions used across mods.
 	/// </summary>
-	public static class PLibUtil {
+	public static class PUtil {
 		/// <summary>
 		/// Centers and selects an entity.
 		/// </summary>
@@ -140,7 +140,7 @@ namespace PeterHan.PLib {
 		public static void LogModInit() {
 			var assembly = Assembly.GetCallingAssembly();
 			if (assembly != null) {
-				PLibRegistry.Init();
+				PRegistry.Init();
 				Debug.LogFormat("[PLib] Mod {0} initialized, version {1}",
 					assembly.GetName()?.Name, assembly.GetFileVersion() ?? "Unknown");
 			} else

@@ -23,7 +23,7 @@ namespace PeterHan.PLib {
 	/// <summary>
 	/// A tool mode used in custom tool menus. Shown in the options in the bottom right.
 	/// </summary>
-	public sealed class ToolMode {
+	public sealed class PToolMode {
 		/// <summary>
 		/// Sets up tool options in the tool parameter menu.
 		/// </summary>
@@ -31,7 +31,7 @@ namespace PeterHan.PLib {
 		/// <param name="options">The available modes.</param>
 		/// <returns>A dictionary which is updated in real time to contain the actual state of each mode.</returns>
 		public static IDictionary<string, ToolParameterMenu.ToggleState> PopulateMenu(
-				ToolParameterMenu menu, ICollection<ToolMode> options) {
+				ToolParameterMenu menu, ICollection<PToolMode> options) {
 			if (options == null)
 				throw new ArgumentNullException("options");
 			var kOpt = new Dictionary<string, ToolParameterMenu.ToggleState>(options.Count);
@@ -66,7 +66,7 @@ namespace PeterHan.PLib {
 		/// <param name="key">The key which identifies this tool mode.</param>
 		/// <param name="title">The title to be displayed.</param>
 		/// <param name="state">The initial state, default Off.</param>
-		public ToolMode(string key, string title, ToolParameterMenu.ToggleState state =
+		public PToolMode(string key, string title, ToolParameterMenu.ToggleState state =
 				ToolParameterMenu.ToggleState.Off) {
 			if (string.IsNullOrEmpty(key))
 				throw new ArgumentNullException("key");
@@ -78,7 +78,7 @@ namespace PeterHan.PLib {
 		}
 
 		public override bool Equals(object obj) {
-			var other = obj as ToolMode;
+			var other = obj as PToolMode;
 			return other != null && other.Key == Key;
 		}
 

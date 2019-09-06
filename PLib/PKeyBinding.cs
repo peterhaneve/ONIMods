@@ -22,7 +22,12 @@ namespace PeterHan.PLib {
 	/// <summary>
 	/// Represents a key bind created and managed by PLib.
 	/// </summary>
-	public sealed class PLibKeyBinding {
+	public sealed class PKeyBinding {
+		/// <summary>
+		/// The action to trigger.
+		/// </summary>
+		public PAction Action { get; }
+
 		/// <summary>
 		/// The gamepad button to bind.
 		/// </summary>
@@ -38,21 +43,16 @@ namespace PeterHan.PLib {
 		/// </summary>
 		public Modifier Modifier { get; }
 
-		/// <summary>
-		/// The key bind description.
-		/// </summary>
-		public LocString Title { get; }
-
-		public PLibKeyBinding(LocString title, KKeyCode keyCode, Modifier modifier = Modifier.
+		public PKeyBinding(PAction action, KKeyCode keyCode, Modifier modifier = Modifier.
 				None, GamepadButton gamePadButton = GamepadButton.NumButtons) {
+			Action = action ?? throw new ArgumentNullException("action");
 			GamePadButton = gamePadButton;
 			KeyCode = keyCode;
 			Modifier = modifier;
-			Title = title ?? throw new ArgumentNullException("title");
 		}
 
 		public override string ToString() {
-			return "{0} + {1} = \"{2}\"".F(Modifier, KeyCode, Title);
+			return "{0} + {1} = \"{2}\"".F(Modifier, KeyCode, Action);
 		}
 	}
 }

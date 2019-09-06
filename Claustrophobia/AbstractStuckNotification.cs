@@ -103,7 +103,7 @@ namespace PeterHan.Claustrophobia {
 		public void Hide() {
 			var victim = Victim;
 			if (visible && victim != null) {
-				PLibUtil.LogDebug("{0} is no longer {1}".F(victim.name, Title));
+				PUtil.LogDebug("{0} is no longer {1}".F(victim.name, Title));
 				// Unsubscribe from duplicant death notifications
 				gameObject.GetComponent<Notifier>()?.Remove(GetNotification());
 				victim.Unsubscribe((int)GameHashes.QueueDestroyObject, DestroyNotification);
@@ -127,7 +127,7 @@ namespace PeterHan.Claustrophobia {
 		/// </summary>
 		/// <param name="parameter">The duplicant which is trapped.</param>
 		protected void SelectDuplicant(object parameter) {
-			PLibUtil.CenterAndSelect(Victim);
+			PUtil.CenterAndSelect(Victim);
 		}
 
 		/// <summary>
@@ -136,7 +136,7 @@ namespace PeterHan.Claustrophobia {
 		public void Show() {
 			var victim = Victim;
 			if (!visible && victim != null) {
-				PLibUtil.LogWarning("{0} is now {1}!".F(victim.name, Title));
+				PUtil.LogWarning("{0} is now {1}!".F(victim.name, Title));
 				// Subscribe to duplicant death notifications
 				gameObject.GetComponent<Notifier>()?.Add(GetNotification());
 				victim.Subscribe((int)GameHashes.QueueDestroyObject, DestroyNotification);

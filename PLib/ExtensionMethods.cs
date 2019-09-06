@@ -135,10 +135,10 @@ namespace PeterHan.PLib {
 				if (method != null)
 					instance.Patch(method, prefix, postfix);
 				else
-					PLibUtil.LogWarning("Unable to find method {0} on type {1}".F(methodName,
+					PUtil.LogWarning("Unable to find method {0} on type {1}".F(methodName,
 						type.FullName));
 			} catch (AmbiguousMatchException e) {
-				PLibUtil.LogException(e);
+				PUtil.LogException(e);
 			}
 		}
 

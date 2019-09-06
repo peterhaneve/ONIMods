@@ -18,6 +18,7 @@
 
 using Harmony;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -26,11 +27,31 @@ namespace PeterHan.PLib {
 	/// <summary>
 	/// A custom component added to manage different PLib patch versions.
 	/// </summary>
-	sealed class PLibRegistry : MonoBehaviour {
+	sealed class PRegistry : MonoBehaviour, IDictionary<string, object> {
+		#region Shared Keys
+
+		/// <summary>
+		/// Key used for the PLib action internal ID.
+		/// </summary>
+		public const string KEY_ACTION_ID = "PLib.Action.ID";
+
+		/// <summary>
+		/// Used to synchronize access to PLib action data.
+		/// </summary>
+		public const string KEY_ACTION_LOCK = "PLib.Action.Lock";
+
+		/// <summary>
+		/// Used to denote the latest version of PLib installed across any mod, which is the
+		/// version that is being used for any shared item forwarding.
+		/// </summary>
+		public const string KEY_VERSION = "PLib.Version";
+
+		#endregion
+
 		/// <summary>
 		/// The instantiated instance of PLibRegistry, if it has been added as a component.
 		/// </summary>
-		private static PLibRegistry instance = null;
+		private static PRegistry instance = null;
 
 #pragma warning disable IDE0051 // Remove unused private members
 		/// <summary>
@@ -52,17 +73,19 @@ namespace PeterHan.PLib {
 					}
 				} catch (ArgumentOutOfRangeException e) {
 					// .NET 3.5 please
-					PLibUtil.LogException(e);
+					PUtil.LogException(e);
 				} catch (FormatException e) {
-					PLibUtil.LogException(e);
+					PUtil.LogException(e);
 				} catch (OverflowException e) {
-					PLibUtil.LogException(e);
+					PUtil.LogException(e);
 				}
+				// Store the winning version
+				PSharedData.PutData(KEY_VERSION, latestVer.ToString());
 				if (latest != null)
 					try {
 						Traverse.Create(latest).CallMethod("Apply", instance.PLibInstance);
 					} catch (ArgumentException e) {
-						PLibUtil.LogException(e);
+						PUtil.LogException(e);
 					}
 			} else {
 #if DEBUG
@@ -80,9 +103,9 @@ namespace PeterHan.PLib {
 			var obj = Global.Instance.gameObject;
 			if (obj != null) {
 				// The hack is sick but we have few choices
-				object reg = obj.GetComponent(typeof(PLibRegistry).Name);
+				object reg = obj.GetComponent(typeof(PRegistry).Name);
 				if (reg == null) {
-					var plr = obj.AddComponent<PLibRegistry>();
+					var plr = obj.AddComponent<PRegistry>();
 #if DEBUG
 					LogPatchDebug("Creating PLibRegistry from " + Assembly.
 						GetExecutingAssembly().FullName);
@@ -95,7 +118,7 @@ namespace PeterHan.PLib {
 				try {
 					Traverse.Create(reg).CallMethod("AddPatch", (object)new PLibPatches());
 				} catch (ArgumentException e) {
-					PLibUtil.LogException(e);
+					PUtil.LogException(e);
 				}
 			} else {
 #if DEBUG
@@ -136,7 +159,7 @@ namespace PeterHan.PLib {
 		/// </summary>
 		public HarmonyInstance PLibInstance { get; }
 
-		public PLibRegistry() {
+		public PRegistry() {
 			if (instance == null)
 				instance = this;
 			else {
@@ -147,6 +170,10 @@ namespace PeterHan.PLib {
 			modData = new Dictionary<string, object>(64);
 			Patches = new Dictionary<string, object>(32);
 			PLibInstance = HarmonyInstance.Create("PeterHan.PLib");
+
+			// Action 0 is reserved
+			modData.Add(KEY_ACTION_ID, 1);
+			modData.Add(KEY_ACTION_LOCK, new object());
 		}
 
 		/// <summary>
@@ -176,41 +203,81 @@ namespace PeterHan.PLib {
 			try {
 				// Gets called in Global.Awake() after mods load
 				PLibInstance.Patch(typeof(Global), "RestoreLegacyMetricsSetting", null,
-					new HarmonyMethod(typeof(PLibRegistry).GetMethod("ApplyLatest",
+					new HarmonyMethod(typeof(PRegistry).GetMethod("ApplyLatest",
 					BindingFlags.NonPublic | BindingFlags.Static)));
 			} catch (AmbiguousMatchException e) {
-				PLibUtil.LogException(e);
+				PUtil.LogException(e);
 			} catch (ArgumentException e) {
-				PLibUtil.LogException(e);
+				PUtil.LogException(e);
 			}
-		}
-
-		/// <summary>
-		/// Retrieves a value from the single-instance share.
-		/// </summary>
-		/// <param name="key">The string key to retrieve.</param>
-		/// <returns>The data associated with that key.</returns>
-		public object GetData(string key) {
-			if (string.IsNullOrEmpty(key))
-				throw new ArgumentNullException("key");
-			modData.TryGetValue(key, out object ret);
-			return ret;
-		}
-
-		/// <summary>
-		/// Saves a value into the single-instance share.
-		/// </summary>
-		/// <param name="key">The string key to set.</param>
-		/// <param name="value">The data to be associated with that key.</param>
-		public void PutData(string key, object value) {
-			if (modData.ContainsKey(key))
-				modData[key] = value;
-			else
-				modData.Add(key, value);
 		}
 
 		public override string ToString() {
 			return Patches.ToString();
 		}
+
+		#region IDictionary
+
+		public int Count => modData.Count;
+
+		public ICollection<string> Keys => modData.Keys;
+
+		public ICollection<object> Values => modData.Values;
+
+		/// <summary>
+		/// Mod data is mutable.
+		/// </summary>
+		public bool IsReadOnly => false;
+
+		public object this[string key] {
+			get => modData[key];
+			set => modData[key] = value;
+		}
+
+		public void Add(string key, object value) {
+			modData.Add(key, value);
+		}
+
+		public void Add(KeyValuePair<string, object> item) {
+			modData.Add(item);
+		}
+
+		public void Clear() {
+			modData.Clear();
+		}
+
+		public bool Contains(KeyValuePair<string, object> item) {
+			return modData.Contains(item);
+		}
+
+		public bool ContainsKey(string key) {
+			return modData.ContainsKey(key);
+		}
+
+		public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex) {
+			modData.CopyTo(array, arrayIndex);
+		}
+
+		public IEnumerator<KeyValuePair<string, object>> GetEnumerator() {
+			return modData.GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator() {
+			return modData.GetEnumerator();
+		}
+
+		public bool Remove(KeyValuePair<string, object> item) {
+			return modData.Remove(item);
+		}
+
+		public bool Remove(string key) {
+			return modData.Remove(key);
+		}
+
+		public bool TryGetValue(string key, out object value) {
+			return modData.TryGetValue(key, out value);
+		}
+
+		#endregion
 	}
 }

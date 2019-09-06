@@ -149,7 +149,7 @@ namespace PeterHan.Claustrophobia {
 				if ((mostReachable > MIN_CONFINED && reachable < MIN_CONFINED) ||
 						(reachable < threshold)) {
 					// Confined
-					PLibUtil.LogDebug(("{0} is confined ({3} last), reaches {1:D}, " +
+					PUtil.LogDebug(("{0} is confined ({3} last), reaches {1:D}, " +
 						"best reach {2:D}").F(status.VictimName, reachable, mostReachable,
 						lastStatus));
 					if (lastStatus == EntrapmentState.Confined) {
@@ -161,7 +161,7 @@ namespace PeterHan.Claustrophobia {
 					status.LastStatus = EntrapmentState.Confined;
 				} else if (status.TrappedScore > 1) {
 					// Trapped
-					PLibUtil.LogDebug(("{0} is trapped ({4} last), bed? {1}, mess? {2}, " +
+					PUtil.LogDebug(("{0} is trapped ({4} last), bed? {1}, mess? {2}, " +
 						"toilet? {3}").F(status.VictimName, status.CanReachBed,
 						status.CanReachMess, status.CanReachToilet, lastStatus));
 					if (lastStatus == EntrapmentState.Trapped) {
@@ -214,7 +214,7 @@ namespace PeterHan.Claustrophobia {
 					if (statusCache.TryGetValue(oldDupe, out EntrapmentStatus entry) && !entry.
 							StillLiving) {
 						statusCache.Remove(oldDupe);
-						PLibUtil.LogDebug("Removing {0} from cache".F(entry.VictimName));
+						PUtil.LogDebug("Removing {0} from cache".F(entry.VictimName));
 					}
 			}
 		}
@@ -228,7 +228,7 @@ namespace PeterHan.Claustrophobia {
 			foreach (var dupe in checkNextFrame)
 				// Do not replace with ?. since Unity overloads "=="
 				if (dupe != null && (obj = dupe.gameObject) != null && obj.activeInHierarchy) {
-					PLibUtil.LogDebug("Rechecking " + dupe.name);
+					PUtil.LogDebug("Rechecking " + dupe.name);
 					checkThisFrame.Add(UpdateStatus(dupe));
 				}
 			checkNextFrame.Clear();
@@ -277,7 +277,7 @@ namespace PeterHan.Claustrophobia {
 			} else {
 				// Add to cache if missing
 				statusCache.Add(dupe, status);
-				PLibUtil.LogDebug("Adding " + status);
+				PUtil.LogDebug("Adding " + status);
 			}
 			return status;
 		}

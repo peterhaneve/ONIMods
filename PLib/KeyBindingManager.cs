@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -26,61 +25,29 @@ namespace PeterHan.PLib {
 	/// Manages the addition of key bindings to the game with a method that can be configured
 	/// in the InputBindingsScreen.
 	/// 
-	/// While this class loads and patches InputBindingsScreen once for every mod that
-	/// uses its own copy of PLib, the instances are designed to work together and not stomp
-	/// on each other.
+	/// This class is only patched in once thanks to PLibPatches.
 	/// </summary>
 	public static class KeyBindingManager {
-#if false
-		/// <summary>
-		/// The "building" category used for building enable, copy settings, and so forth.
-		/// </summary>
-		public const string CategoryBuilding = "Building";
-		/// <summary>
-		/// The "cinematic camera" category.
-		/// </summary>
-		public const string CategoryCamera = "CinematicCamera";
-		/// <summary>
-		/// The "debug" category, used for debug mode tools.
-		/// </summary>
-		public const string CategoryDebug = "Debug";
-		/// <summary>
-		/// The "buildings menu" category used for hot key building specific buildings.
-		/// </summary>
-		public const string CategoryMenu = "BuildingsMenu";
-		/// <summary>
-		/// The "navigation" category, used for swapping between user views.
-		/// </summary>
-		public const string CategoryNavigation = "Navigation";
-		/// <summary>
-		/// The "root" category, used for most basic buttons such as W/A/S/D, tool bindings,
-		/// and overlay selection.
-		/// </summary>
-		public const string CategoryRoot = "Root";
-		/// <summary>
-		/// The "sandbox" category, used for sandbox mode tools.
-		/// </summary>
-		public const string CategorySandbox = "Sandbox";
-		/// <summary>
-		/// The "tool" category, used for drag straight and rotate.
-		/// </summary>
-		public const string CategoryTool = "Tool";
-#endif
 		/// <summary>
 		/// The category used for all PLib keys.
 		/// </summary>
 		private const string CATEGORY = "PLib";
 
 		/// <summary>
+		/// The title used for the PLib key bind category.
+		/// </summary>
+		private const string CATEGORY_TITLE = "PLib Mods";
+
+		/// <summary>
 		/// The bindings registered in this way.
 		/// </summary>
-		private static IList<PLibKeyBinding> ourBindings;
+		private static IList<PKeyBinding> ourBindings;
 
 		/// <summary>
 		/// Adds a key binding to the key input screen.
 		/// </summary>
 		/// <param name="entry">The key binding to add.</param>
-		public static void AddKeyBinding(PLibKeyBinding entry) {
+		public static void AddKeyBinding(PKeyBinding entry) {
 			var currentBindings = GameInputMapping.DefaultBindings;
 			if (currentBindings != null) {
 				// Create Klei binding
@@ -94,20 +61,18 @@ namespace PeterHan.PLib {
 				GameInputMapping.SetDefaultKeyBindings(newBindings);
 				// Add to our dictionary
 				if (ourBindings == null)
-					ourBindings = new List<PLibKeyBinding>(8);
+					ourBindings = new List<PKeyBinding>(8);
 				ourBindings.Add(entry);
-				PLibUtil.LogDebug("Registered binding: " + entry);
+				Strings.Add("STRINGS.INPUT_BINDINGS." + CATEGORY + ".NAME", CATEGORY_TITLE);
+				PUtil.LogDebug("Registered binding: " + entry);
 			}
 		}
 
-		public static void BuildDisplay(InputBindingsScreen instance, string curScreen,
-				LocText screenTitle) {
+		public static void BuildDisplay(InputBindingsScreen instance, string curScreen) {
 			if (curScreen == CATEGORY && ourBindings != null) {
 				int num = 0;
 				var curBindings = GameInputMapping.KeyBindings;
 				var transform = instance.gameObject.transform;
-				// Update heading
-				screenTitle.text = CATEGORY;
 				for (int i = 0; i < curBindings.Length; i++) {
 					var binding = curBindings[i];
 					GameObject child;
@@ -116,9 +81,9 @@ namespace PeterHan.PLib {
 						// Unless the key bindings changed during the method, we will
 						// encounter the bindings in the same order they were added
 						var lt = child.transform.GetChild(0).GetComponentInChildren<LocText>();
-						PLibUtil.LogDebug(lt);
+						PUtil.LogDebug(lt);
 						if (lt != null)
-							lt.text = ourBindings[num].Title;
+							lt.text = ourBindings[num].Action.Title;
 						num++;
 					}
 				}

@@ -1,6 +1,6 @@
 # Peter Han&#39;s Mods for Oxygen Not Included
 
-Last tested on game version: **LU-361684**
+Last tested on game version: **LU-365655**
 
 Steam Workshop: https://steamcommunity.com/profiles/76561198025154321/myworkshopfiles/?appid=457140
 

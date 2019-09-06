@@ -16,22 +16,19 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using System;
+using System.Collections.Generic;
 
 namespace PeterHan.PLib {
 	/// <summary>
 	/// Used to handle data sharing between all PLib mod dependents. This data is shared
 	/// across assemblies, so caution is advised when using custom types.
-	/// 
-	/// Access to this data may be slow, so avoid more checks than necessary.
 	/// </summary>
-	public static class PLibSharedData {
+	public static class PSharedData {
 		/// <summary>
 		/// The PLibRegistry cached object. Set to non-null when it is successfully resolved.
-		/// Cannot be of type PLibRegistry because it might be from another assembly.
 		/// </summary>
-		private static Traverse registry = null;
+		private static IDictionary<string, object> registry = null;
 
 		/// <summary>
 		/// Initializes the registry from the Global state if necessary.
@@ -40,9 +37,8 @@ namespace PeterHan.PLib {
 			if (registry == null) {
 				var obj = Global.Instance.gameObject;
 				object pr;
-				if (obj != null && (pr = obj.GetComponent(typeof(PLibRegistry).Name)) != null)
-					// Will only use reflection so 
-					registry = Traverse.Create(pr);
+				if (obj != null && (pr = obj.GetComponent(typeof(PRegistry).Name)) != null)
+					registry = pr as IDictionary<string, object>;
 			}
 		}
 
@@ -50,28 +46,35 @@ namespace PeterHan.PLib {
 		/// Retrieves a value from the single-instance share.
 		/// </summary>
 		/// <typeparam name="T">The type of the desired data.</typeparam>
-		/// <param name="key">The string key to retrieve.</param>
+		/// <param name="key">The string key to retrieve. <i>Suggested key format: YourMod.
+		/// Category.KeyName</i></param>
 		/// <returns>The data associated with that key.</returns>
-		public static T GetData<T>(string key) where T : class {
+		public static T GetData<T>(string key) {
+			T value = default;
+			object sval = null;
 			if (string.IsNullOrEmpty(key))
 				throw new ArgumentNullException("key");
 			InitRegistry();
-			object ret = default(T);
-			// Generics and Harmony do not work well so pass as System.Object and convert here
-			if (registry != null)
-				ret = registry.CallMethod<object>("GetData", key);
-			return ret as T;
+			registry?.TryGetValue(key, out sval);
+			if (sval is T)
+				value = (T)sval;
+			return value;
 		}
 
 		/// <summary>
 		/// Saves a value into the single-instance share.
 		/// </summary>
-		/// <param name="key">The string key to set.</param>
+		/// <param name="key">The string key to set. <i>Suggested key format: YourMod.
+		/// Category.KeyName</i></param>
 		/// <param name="value">The data to be associated with that key.</param>
 		public static void PutData(string key, object value) {
 			InitRegistry();
-			if (registry != null)
-				registry.CallMethod("PutData", key, value);
+			if (registry != null) {
+				if (registry.ContainsKey(key))
+					registry[key] = value;
+				else
+					registry.Add(key, value);
+			}
 		}
 	}
 }

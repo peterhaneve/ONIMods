@@ -55,17 +55,17 @@ namespace PeterHan.BulkSettingsChange {
 		/// </summary>
 		private static void LoadSprites() {
 			if (!spritesLoaded) {
-				PLibUtil.LogDebug("Loading sprites");
+				PUtil.LogDebug("Loading sprites");
 				try {
-					PLACE_ICON = PLibUtil.LoadSprite("PeterHan.BulkSettingsChange.Placer.dds",
+					PLACE_ICON = PUtil.LoadSprite("PeterHan.BulkSettingsChange.Placer.dds",
 						256, 256);
 					PLACE_ICON.name = BulkChangeStrings.PlaceIconName;
-					TOOL_ICON = PLibUtil.LoadSprite("PeterHan.BulkSettingsChange.Toggle.dds",
+					TOOL_ICON = PUtil.LoadSprite("PeterHan.BulkSettingsChange.Toggle.dds",
 						32, 32);
 					TOOL_ICON.name = BulkChangeStrings.ToolIconName;
 				} catch (ArgumentException e) {
 					// Could not load the icons, but better this than crashing
-					PLibUtil.LogException(e);
+					PUtil.LogException(e);
 				}
 				spritesLoaded = true;
 			}

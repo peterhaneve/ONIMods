@@ -28,13 +28,14 @@ namespace PeterHan.PLib {
 	sealed class PLibPatches {
 		#region Patches
 
+#pragma warning disable IDE0051 // Remove unused private members
+
 		/// <summary>
 		/// Applied after BuildDisplay runs.
 		/// </summary>
 		private static void BuildDisplay_Postfix(ref InputBindingsScreen __instance,
-				ref List<string> ___screens, int ___activeScreen, ref LocText ___screenTitle) {
-			KeyBindingManager.BuildDisplay(__instance, ___screens[___activeScreen],
-				___screenTitle);
+				ref List<string> ___screens, int ___activeScreen) {
+			KeyBindingManager.BuildDisplay(__instance, ___screens[___activeScreen]);
 		}
 
 		/// <summary>
@@ -44,13 +45,17 @@ namespace PeterHan.PLib {
 		private static void PatchAll(HarmonyInstance instance) {
 			if (instance == null)
 				throw new ArgumentNullException("instance");
+#if false
 			instance.Patch(typeof(InputBindingsScreen), "BuildDisplay", null,
 				PatchMethod("BuildDisplay_Postfix"));
+#endif
 		}
 
-		#endregion
+#pragma warning restore IDE0051 // Remove unused private members
 
-		#region Infrastructure
+#endregion
+
+#region Infrastructure
 
 		/// <summary>
 		/// Returns a patch method from this class. It must be static.
@@ -68,7 +73,7 @@ namespace PeterHan.PLib {
 		public string MyVersion { get; }
 
 		public PLibPatches() {
-			MyVersion = PLibVersion.VERSION;
+			MyVersion = PVersion.VERSION;
 		}
 
 		/// <summary>
@@ -76,7 +81,7 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <param name="instance">The Harmony instance to use for patching.</param>
 		public void Apply(HarmonyInstance instance) {
-			PLibRegistry.LogPatchDebug("Using version " + MyVersion);
+			PRegistry.LogPatchDebug("Using version " + MyVersion);
 			PatchAll(instance);
 		}
 
@@ -92,6 +97,6 @@ namespace PeterHan.PLib {
 			return "PLibPatches version " + MyVersion;
 		}
 
-		#endregion
+#endregion
 	}
 }

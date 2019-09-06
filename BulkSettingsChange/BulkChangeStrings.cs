@@ -24,12 +24,16 @@ namespace PeterHan.BulkSettingsChange {
 	/// </summary>
 	static class BulkChangeStrings {
 		// Tool tip and name in the tool list
-		public static readonly string ToolDescription = "Enable or disable Auto-Disinfect, Auto-Repair, or buildings {Hotkey}";
-		public static readonly string ToolTitle = "Change Settings";
+		public const string ToolDescription = "Enable or disable Auto-Disinfect, Auto-Repair, or buildings {Hotkey}";
+		public const string ToolTitle = "Change Settings";
 
 		// Internal strings, no translation needed
-		public static readonly string PlaceIconName = "BULKCHANGESETTINGS.TOOL.BULKCHANGETOOL.PLACER";
-		public static readonly string ToolIconName = "BULKCHANGESETTINGS.TOOL.BULKCHANGETOOL.ICON";
+		public const string PlaceIconName = "BULKSETTINGSCHANGE.TOOL.BULKCHANGETOOL.PLACER";
+		public const string ToolIconName = "BULKSETTINGSCHANGE.TOOL.BULKCHANGETOOL.ICON";
+
+		// Action strings
+		public const string ActionKey = "BULKCHANGESETTINGS.ACTION.CHANGESETTINGS";
+		public const string ActionTitle = "Settings Change Tool";
 	}
 
 	/// <summary>
