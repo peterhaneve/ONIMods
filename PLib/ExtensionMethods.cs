@@ -143,6 +143,36 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Patches a method manually with a transpiler.
+		/// </summary>
+		/// <param name="instance">The Harmony instance.</param>
+		/// <param name="type">The class to modify.</param>
+		/// <param name="methodName">The method to patch.</param>
+		/// <param name="transpiler">The transpiler to apply.</param>
+		public static void PatchTranspile(this HarmonyInstance instance, Type type,
+				string methodName, HarmonyMethod transpiler) {
+			if (type == null)
+				throw new ArgumentNullException("type");
+			if (string.IsNullOrEmpty(methodName))
+				throw new ArgumentNullException("method");
+			// Fetch the method
+			try {
+				var method = type.GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.
+					Public | BindingFlags.Static | BindingFlags.Instance);
+				if (method != null)
+					instance.Patch(method, null, null, transpiler);
+				else
+					PUtil.LogWarning("Unable to find method {0} on type {1}".F(methodName,
+						type.FullName));
+			} catch (AmbiguousMatchException e) {
+				PUtil.LogException(e);
+			} catch (FormatException e) {
+				PUtil.LogWarning("Unable to transpile method {0}: {1}".F(methodName,
+					e.Message));
+			}
+		}
+
+		/// <summary>
 		/// Uses Traverse to set a private field of an object.
 		/// </summary>
 		/// <param name="root">The object on which to set the field.</param>

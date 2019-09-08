@@ -27,7 +27,7 @@ namespace PeterHan.PLib {
 	/// <summary>
 	/// A custom component added to manage different PLib patch versions.
 	/// </summary>
-	sealed class PRegistry : MonoBehaviour, IDictionary<string, object> {
+	internal sealed class PRegistry : MonoBehaviour, IDictionary<string, object> {
 		#region Shared Keys
 
 		/// <summary>
@@ -39,6 +39,11 @@ namespace PeterHan.PLib {
 		/// Used to synchronize access to PLib action data.
 		/// </summary>
 		public const string KEY_ACTION_LOCK = "PLib.Action.Lock";
+
+		/// <summary>
+		/// Stores the functions to be invoked when a PLib action is fired.
+		/// </summary>
+		public const string KEY_ACTION_TABLE = "PLib.Action.Table";
 
 		/// <summary>
 		/// Used to denote the latest version of PLib installed across any mod, which is the
@@ -79,14 +84,17 @@ namespace PeterHan.PLib {
 				} catch (OverflowException e) {
 					PUtil.LogException(e);
 				}
-				// Store the winning version
-				PSharedData.PutData(KEY_VERSION, latestVer.ToString());
-				if (latest != null)
+				if (latest != null) {
+					// Store the winning version
+					PSharedData.PutData(KEY_VERSION, latestVer.ToString());
 					try {
 						Traverse.Create(latest).CallMethod("Apply", instance.PLibInstance);
 					} catch (ArgumentException e) {
 						PUtil.LogException(e);
 					}
+				}
+				// Reduce memory usage by cleaning up the patch list
+				instance.Patches.Clear();
 			} else {
 #if DEBUG
 				LogPatchWarning("ApplyLatest invoked with no Instance!");
@@ -131,7 +139,7 @@ namespace PeterHan.PLib {
 		/// Logs a debug message while patching in PLib patches.
 		/// </summary>
 		/// <param name="message">The debug message.</param>
-		public static void LogPatchDebug(string message) {
+		internal static void LogPatchDebug(string message) {
 			Debug.LogFormat("[PLibPatches] {0}", message);
 		}
 
@@ -139,7 +147,7 @@ namespace PeterHan.PLib {
 		/// Logs a warning encountered while patching in PLib patches.
 		/// </summary>
 		/// <param name="message">The warning message.</param>
-		public static void LogPatchWarning(string message) {
+		internal static void LogPatchWarning(string message) {
 			Debug.LogWarningFormat("[PLibPatches] {0}", message);
 		}
 

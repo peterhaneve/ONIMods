@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BulkChangeHover.cs" />
+    <Compile Include="BulkChangeOptions.cs" />
     <Compile Include="BulkChangePatches.cs" />
     <Compile Include="BulkChangeStrings.cs" />
     <Compile Include="BulkChangeTool.cs" />

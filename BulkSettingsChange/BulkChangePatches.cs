@@ -31,7 +31,7 @@ namespace PeterHan.BulkSettingsChange {
 		/// <summary>
 		/// The action to bring up the bulk change tool.
 		/// </summary>
-		public static PAction BulkChangeAction { get; private set; }
+		internal static PAction BulkChangeAction { get; private set; }
 
 		/// <summary>
 		/// Logs when the mod is loaded.
@@ -40,7 +40,7 @@ namespace PeterHan.BulkSettingsChange {
 			public static void OnLoad() {
 				PUtil.LogModInit();
 				BulkChangeAction = PAction.Register(BulkChangeStrings.ActionKey,
-					BulkChangeStrings.ActionTitle);
+					BulkChangeStrings.ActionTitle, new PKeyBinding(KKeyCode.Q));
 			}
 		}
 
@@ -57,22 +57,6 @@ namespace PeterHan.BulkSettingsChange {
 				BulkChangeTool.DestroyInstance();
 			}
 		}
-
-#if false
-		/// <summary>
-		/// Applied to GameInputMapping to inject a custom binding when the database is loaded.
-		/// </summary>
-		[HarmonyPatch(typeof(GameInputMapping), "LoadBindings")]
-		public static class GameInputMapping_LoadBindings_Patch {
-			/// <summary>
-			/// Invoked before LoadBindings runs.
-			/// </summary>
-			private static void Prefix() {
-				var key = new PKeyBinding(BulkChangeStrings.ToolTitle, KKeyCode.Q);
-				KeyBindingManager.AddKeyBinding(key);
-			}
-		}
-#endif
 
 		/// <summary>
 		/// Applied to PlayerController to load the change settings tool into the available
@@ -125,8 +109,8 @@ namespace PeterHan.BulkSettingsChange {
 			/// <param name="__instance">The basic tool list.</param>
 			private static void Postfix(ref ToolMenu __instance) {
 				PUtil.LogDebug("Adding BulkChangeTool to basic tools");
-				__instance.basicTools.Add(ToolMenu.CreateToolCollection(BulkChangeStrings.
-					ToolTitle, BulkChangeStrings.ToolIconName, Action.BuildMenuKeyQ, typeof(
+				__instance.basicTools.Add(PAction.CreateToolCollection(BulkChangeStrings.
+					ToolTitle, BulkChangeStrings.ToolIconName, BulkChangeAction, typeof(
 					BulkChangeTool).Name, BulkChangeStrings.ToolDescription, false));
 			}
 		}

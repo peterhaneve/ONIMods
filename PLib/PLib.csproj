@@ -41,6 +41,9 @@
     <Reference Include="Assembly-CSharp-firstpass">
       <HintPath>..\lib\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\lib\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
     <Reference Include="Unity.TextMeshPro, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -56,15 +59,24 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\lib\UnityEngine.UI.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>..\lib\UnityEngine.UIModule.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ExtensionMethods.cs" />
-    <Compile Include="KeyBindingManager.cs" />
-    <Compile Include="PAction.cs" />
-    <Compile Include="PKeyBinding.cs" />
+    <Compile Include="KeyBindings\KeyBindingManager.cs" />
+    <Compile Include="KeyBindings\KeyUtils.cs" />
+    <Compile Include="KeyBindings\PAction.cs" />
+    <Compile Include="KeyBindings\KeyAction.cs" />
+    <Compile Include="KeyBindings\PKeyBinding.cs" />
+    <Compile Include="KeyBindings\SerializedKeyBinding.cs" />
     <Compile Include="PLibPatches.cs" />
+    <Compile Include="POptions.cs" />
     <Compile Include="PRegistry.cs" />
     <Compile Include="PSharedData.cs" />
+    <Compile Include="PUIElements.cs" />
+    <Compile Include="PUITuning.cs" />
     <Compile Include="PUtil.cs" />
     <Compile Include="PVersion.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

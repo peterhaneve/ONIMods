@@ -20,6 +20,8 @@ using Harmony;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Reflection.Emit;
+using UnityEngine;
 
 namespace PeterHan.PLib {
 	/// <summary>
@@ -31,11 +33,91 @@ namespace PeterHan.PLib {
 #pragma warning disable IDE0051 // Remove unused private members
 
 		/// <summary>
-		/// Applied after BuildDisplay runs.
+		/// Applied to InputBindingsScreen to show PLib bindings properly.
 		/// </summary>
-		private static void BuildDisplay_Postfix(ref InputBindingsScreen __instance,
-				ref List<string> ___screens, int ___activeScreen) {
-			KeyBindingManager.BuildDisplay(__instance, ___screens[___activeScreen]);
+		private static bool BuildDisplay_Prefix(ref InputBindingsScreen __instance) {
+			KeyBindingManager.Instance.BuildDisplay(__instance);
+			return false;
+		}
+
+		/// <summary>
+		/// Applied to InputBindingsScreen to add a tab for PLib bindings.
+		/// </summary>
+		private static void CollectScreens_Postfix(ref List<string> ___screens) {
+			KeyBindingManager.Instance.CollectScreens(___screens);
+		}
+
+		/// <summary>
+		/// Applied to InputBindingsScreen to clean up PLib bindings properly.
+		/// </summary>
+		private static void DestroyDisplay_Prefix(ref GameObject ___parent) {
+			KeyBindingManager.Instance.DestroyDisplay(___parent);
+		}
+
+		/// <summary>
+		/// Applied to KInputManager to cancel key inputs.
+		/// </summary>
+		private static void HandleCancelInput_Postfix() {
+			KeyBindingManager.Instance.HandleCancelInput();
+		}
+
+		/// <summary>
+		/// Applied to modify LoadPreviewImage to silence "Preview image load failed".
+		/// </summary>
+		private static IEnumerable<CodeInstruction> LoadPreviewImage_Transpile(
+				IEnumerable<CodeInstruction> body) {
+			const string BLACKLIST = "LogFormat";
+			var returnBody = new List<CodeInstruction>(body);
+			int n = returnBody.Count;
+			// Look for "call Debug.LogFormat" and omit it
+			for (int i = 0; i < n; i++) {
+				var instr = returnBody[i];
+				if (instr.opcode.Name == "call" && (instr.operand as MethodBase)?.Name ==
+						BLACKLIST && i > 3)
+					// Patch this instruction and the 3 before it (ldstr, ldc, newarr)
+					for (int j = i - 3; j <= i; j++) {
+						instr = returnBody[j];
+						instr.opcode = OpCodes.Nop;
+						instr.operand = null;
+					}
+			}
+			return returnBody;
+		}
+
+		/// <summary>
+		/// Applied to InputBindingsScreen to suppress keystrokes when rebinding keys.
+		/// </summary>
+		private static bool OnKeyDown_Prefix(KButtonEvent e) {
+			return KeyBindingManager.Instance.OnKeyDown(e);
+		}
+
+		/// <summary>
+		/// Applied to InputBindingsScreen to reset PLib bindings if all bindings are reset.
+		/// </summary>
+		private static void OnReset_Prefix() {
+			KeyBindingManager.Instance.Reset();
+		}
+
+		/// <summary>
+		/// Applied to GameInputMapping to save our bindings when the game bindings are saved.
+		/// </summary>
+		private static void SaveBindings_Postfix() {
+			KeyBindingManager.Instance.SaveBindings();
+		}
+
+		/// <summary>
+		/// Applied to KInputController to handle custom button events.
+		/// </summary>
+		private static void KIC_Update_Postfix(KInputController __instance,
+				Modifier ___mActiveModifiers) {
+			KeyBindingManager.Instance.ProcessKeys(__instance, ___mActiveModifiers);
+		}
+
+		/// <summary>
+		/// Applied to InputBindingsScreen to map a key when it is pressed.
+		private static void IBS_Update_Postfix(ref InputBindingsScreen __instance,
+				ref KeyCode[] ___validKeys) {
+			KeyBindingManager.Instance.Update(__instance, ___validKeys);
 		}
 
 		/// <summary>
@@ -45,17 +127,33 @@ namespace PeterHan.PLib {
 		private static void PatchAll(HarmonyInstance instance) {
 			if (instance == null)
 				throw new ArgumentNullException("instance");
-#if false
-			instance.Patch(typeof(InputBindingsScreen), "BuildDisplay", null,
-				PatchMethod("BuildDisplay_Postfix"));
-#endif
+			instance.Patch(typeof(InputBindingsScreen), "BuildDisplay",
+				PatchMethod("BuildDisplay_Prefix"), null);
+			instance.Patch(typeof(InputBindingsScreen), "CollectScreens", null,
+				PatchMethod("CollectScreens_Postfix"));
+			instance.Patch(typeof(InputBindingsScreen), "DestroyDisplay",
+				PatchMethod("DestroyDisplay_Prefix"), null);
+			instance.Patch(typeof(InputBindingsScreen), "OnKeyDown",
+				PatchMethod("OnKeyDown_Prefix"), null);
+			instance.Patch(typeof(InputBindingsScreen), "OnReset",
+				PatchMethod("OnReset_Prefix"), null);
+			instance.Patch(typeof(InputBindingsScreen), "Update", null,
+				PatchMethod("IBS_Update_Postfix"));
+			instance.Patch(typeof(GameInputMapping), "SaveBindings", null,
+				PatchMethod("SaveBindings_Postfix"));
+			instance.Patch(typeof(KInputController), "HandleCancelInput", null,
+				PatchMethod("HandleCancelInput_Postfix"));
+			instance.Patch(typeof(KInputController), "Update", null,
+				PatchMethod("KIC_Update_Postfix"));
+			instance.PatchTranspile(typeof(SteamUGCService), "LoadPreviewImage",
+				PatchMethod("LoadPreviewImage_Transpile"));
 		}
 
 #pragma warning restore IDE0051 // Remove unused private members
 
-#endregion
+		#endregion
 
-#region Infrastructure
+		#region Infrastructure
 
 		/// <summary>
 		/// Returns a patch method from this class. It must be static.
@@ -83,6 +181,7 @@ namespace PeterHan.PLib {
 		public void Apply(HarmonyInstance instance) {
 			PRegistry.LogPatchDebug("Using version " + MyVersion);
 			PatchAll(instance);
+			KeyUtils.Init();
 		}
 
 		public override bool Equals(object obj) {
@@ -97,6 +196,6 @@ namespace PeterHan.PLib {
 			return "PLibPatches version " + MyVersion;
 		}
 
-#endregion
+		#endregion
 	}
 }

@@ -46,6 +46,15 @@ namespace PeterHan.FallingSand {
 		}
 
 		/// <summary>
+		/// Logs when the mod is loaded.
+		/// </summary>
+		public static class Mod_OnLoad {
+			public static void OnLoad() {
+				PUtil.LogModInit();
+			}
+		}
+
+		/// <summary>
 		/// Applied to Diggable to add a tracking component to objects which fall when
 		/// digging.
 		/// </summary>

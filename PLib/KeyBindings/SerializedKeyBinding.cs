@@ -16,43 +16,53 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace PeterHan.PLib {
 	/// <summary>
-	/// Represents a key bind created and managed by PLib.
+	/// Represents a key bind created and managed by PLib. This class is only used for
+	/// serialization and is not public to PLib consumers.
 	/// </summary>
-	public sealed class PKeyBinding {
+	[JsonObject(MemberSerialization = MemberSerialization.OptIn)]
+	internal sealed class SerializedKeyBinding {
 		/// <summary>
-		/// The action to trigger.
+		/// The action key that will be triggered when this key is pressed.
 		/// </summary>
-		public PAction Action { get; }
+		[JsonProperty]
+		public string Action { get; }
 
 		/// <summary>
 		/// The gamepad button to bind.
 		/// </summary>
+		[JsonProperty]
+		[JsonConverter(typeof(StringEnumConverter))]
 		public GamepadButton GamePadButton { get; }
 
 		/// <summary>
 		/// The key code.
 		/// </summary>
+		[JsonProperty]
+		[JsonConverter(typeof(StringEnumConverter))]
 		public KKeyCode KeyCode { get; }
 
 		/// <summary>
 		/// The modifier code.
 		/// </summary>
-		public Modifier Modifier { get; }
+		[JsonProperty]
+		[JsonConverter(typeof(StringEnumConverter))]
+		public Modifier Modifiers { get; }
 
-		public PKeyBinding(PAction action, KKeyCode keyCode, Modifier modifier = Modifier.
-				None, GamepadButton gamePadButton = GamepadButton.NumButtons) {
-			Action = action ?? throw new ArgumentNullException("action");
+		public SerializedKeyBinding(string action, KKeyCode keyCode, Modifier modifier,
+				GamepadButton gamePadButton) {
+			Action = action;
 			GamePadButton = gamePadButton;
 			KeyCode = keyCode;
-			Modifier = modifier;
+			Modifiers = modifier;
 		}
 
 		public override string ToString() {
-			return "{0} + {1} = \"{2}\"".F(Modifier, KeyCode, Action);
+			return "{0} + {1} = {2}".F(KeyCode, Modifiers, Action);
 		}
 	}
 }
