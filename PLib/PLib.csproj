@@ -65,12 +65,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ExtensionMethods.cs" />
-    <Compile Include="KeyBindings\KeyBindingManager.cs" />
-    <Compile Include="KeyBindings\KeyUtils.cs" />
     <Compile Include="KeyBindings\PAction.cs" />
-    <Compile Include="KeyBindings\KeyAction.cs" />
+    <Compile Include="KeyBindings\PActionManager.cs" />
     <Compile Include="KeyBindings\PKeyBinding.cs" />
-    <Compile Include="KeyBindings\SerializedKeyBinding.cs" />
     <Compile Include="PLibPatches.cs" />
     <Compile Include="POptions.cs" />
     <Compile Include="PRegistry.cs" />

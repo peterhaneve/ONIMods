@@ -109,9 +109,9 @@ namespace PeterHan.BulkSettingsChange {
 			/// <param name="__instance">The basic tool list.</param>
 			private static void Postfix(ref ToolMenu __instance) {
 				PUtil.LogDebug("Adding BulkChangeTool to basic tools");
-				__instance.basicTools.Add(PAction.CreateToolCollection(BulkChangeStrings.
-					ToolTitle, BulkChangeStrings.ToolIconName, BulkChangeAction, typeof(
-					BulkChangeTool).Name, BulkChangeStrings.ToolDescription, false));
+				__instance.basicTools.Add(ToolMenu.CreateToolCollection(BulkChangeStrings.
+					ToolTitle, BulkChangeStrings.ToolIconName, BulkChangeAction.GetKAction(),
+					typeof(BulkChangeTool).Name, BulkChangeStrings.ToolDescription, false));
 			}
 		}
 	}

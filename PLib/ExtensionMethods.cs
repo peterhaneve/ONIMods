@@ -143,6 +143,32 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Patches a constructor manually.
+		/// </summary>
+		/// <param name="instance">The Harmony instance.</param>
+		/// <param name="type">The class to modify.</param>
+		/// <param name="arguments">The constructor's argument types.</param>
+		/// <param name="prefix">The prefix to apply, or null if none.</param>
+		/// <param name="postfix">The postfix to apply, or null if none.</param>
+		public static void PatchConstructor(this HarmonyInstance instance, Type type,
+				Type[] arguments, HarmonyMethod prefix = null, HarmonyMethod postfix = null) {
+			if (type == null)
+				throw new ArgumentNullException("type");
+			// Fetch the constructor
+			try {
+				var cons = type.GetConstructor(BindingFlags.NonPublic | BindingFlags.Public |
+					BindingFlags.Static | BindingFlags.Instance, null, arguments, null);
+				if (cons != null)
+					instance.Patch(cons, prefix, postfix);
+				else
+					PUtil.LogWarning("Unable to find constructor on type {0}".F(type.
+						FullName));
+			} catch (ArgumentException e) {
+				PUtil.LogException(e);
+			}
+		}
+
+		/// <summary>
 		/// Patches a method manually with a transpiler.
 		/// </summary>
 		/// <param name="instance">The Harmony instance.</param>

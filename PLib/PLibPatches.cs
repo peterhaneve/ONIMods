@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
-using UnityEngine;
 
 namespace PeterHan.PLib {
 	/// <summary>
@@ -33,84 +32,64 @@ namespace PeterHan.PLib {
 #pragma warning disable IDE0051 // Remove unused private members
 
 		/// <summary>
-		/// Applied to InputBindingsScreen to show PLib bindings properly.
-		/// </summary>
-		private static bool BuildDisplay_Prefix(ref InputBindingsScreen __instance) {
-			KeyBindingManager.Instance.BuildDisplay(__instance);
-			return false;
-		}
-
-		/// <summary>
-		/// Applied to InputBindingsScreen to clean up PLib bindings properly.
-		/// </summary>
-		private static void DestroyDisplay_Prefix(ref GameObject ___parent) {
-			KeyBindingManager.Instance.DestroyDisplay(___parent);
-		}
-
-		/// <summary>
-		/// Applied to KInputManager to cancel key inputs.
-		/// </summary>
-		private static void HandleCancelInput_Postfix() {
-			KeyBindingManager.Instance.HandleCancelInput();
-		}
-
-		/// <summary>
-		/// Applied to modify LoadPreviewImage to silence "Preview image load failed".
+		/// Applied to modify SteamUGCService to silence "Preview image load failed".
 		/// </summary>
 		private static IEnumerable<CodeInstruction> LoadPreviewImage_Transpile(
 				IEnumerable<CodeInstruction> body) {
 			const string BLACKLIST = "LogFormat";
 			var returnBody = new List<CodeInstruction>(body);
 			int n = returnBody.Count;
-			// Look for "call Debug.LogFormat" and omit it
+			// Look for "call Debug.LogFormat" and wipe it with NOP
 			for (int i = 0; i < n; i++) {
 				var instr = returnBody[i];
 				if (instr.opcode.Name == "call" && (instr.operand as MethodBase)?.Name ==
-						BLACKLIST && i > 3)
+						BLACKLIST && i > 3) {
 					// Patch this instruction and the 3 before it (ldstr, ldc, newarr)
 					for (int j = i - 3; j <= i; j++) {
 						instr = returnBody[j];
 						instr.opcode = OpCodes.Nop;
 						instr.operand = null;
 					}
+					PRegistry.LogPatchDebug("No more preview image load failure ({0:D})".F(i));
+				}
 			}
 			return returnBody;
 		}
 
 		/// <summary>
-		/// Applied to InputBindingsScreen to suppress keystrokes when rebinding keys.
+		/// Applied to KeyDef (constructor) to adjust array lengths if necessary.
 		/// </summary>
-		private static bool OnKeyDown_Prefix(KButtonEvent e) {
-			return KeyBindingManager.Instance.OnKeyDown(e);
+		private static void CKeyDef_Postfix(ref KInputController.KeyDef __instance) {
+			__instance.mActionFlags = PActionManager.ExtendFlags(__instance.mActionFlags,
+				PActionManager.Instance.GetMaxAction());
 		}
 
 		/// <summary>
-		/// Applied to InputBindingsScreen to reset PLib bindings if all bindings are reset.
+		/// Applied to KInputController to adjust array lengths if necessary.
 		/// </summary>
-		private static void OnReset_Prefix() {
-			KeyBindingManager.Instance.Reset();
+		private static void IsActive_Prefix(ref bool[] ___mActionState) {
+			___mActionState = PActionManager.ExtendFlags(___mActionState, PActionManager.
+				Instance.GetMaxAction());
 		}
 
 		/// <summary>
-		/// Applied to GameInputMapping to save our bindings when the game bindings are saved.
+		/// Applied to KInputController to adjust array lengths if necessary.
 		/// </summary>
-		private static void SaveBindings_Postfix() {
-			KeyBindingManager.Instance.SaveBindings();
+		private static void QueueButtonEvent_Prefix(ref bool[] ___mActionState,
+				ref KInputController.KeyDef key_def) {
+			if (KInputManager.isFocused) {
+				int max = PActionManager.Instance.GetMaxAction();
+				key_def.mActionFlags = PActionManager.ExtendFlags(key_def.mActionFlags, max);
+				___mActionState = PActionManager.ExtendFlags(___mActionState, max);
+			}
 		}
 
 		/// <summary>
-		/// Applied to KInputController to handle custom button events.
+		/// Applied to GameInputMapping to update the action count if new actions are
+		/// registered.
 		/// </summary>
-		private static void KIC_Update_Postfix(KInputController __instance,
-				Modifier ___mActiveModifiers) {
-			KeyBindingManager.Instance.ProcessKeys(__instance, ___mActiveModifiers);
-		}
-
-		/// <summary>
-		/// Applied to InputBindingsScreen to map a key when it is pressed.
-		private static void IBS_Update_Postfix(ref InputBindingsScreen __instance,
-				ref KeyCode[] ___validKeys) {
-			KeyBindingManager.Instance.Update(__instance, ___validKeys);
+		private static void SetDefaultKeyBindings_Postfix() {
+			PActionManager.Instance.UpdateMaxAction();
 		}
 
 		/// <summary>
@@ -120,22 +99,21 @@ namespace PeterHan.PLib {
 		private static void PatchAll(HarmonyInstance instance) {
 			if (instance == null)
 				throw new ArgumentNullException("instance");
-			instance.Patch(typeof(InputBindingsScreen), "BuildDisplay",
-				PatchMethod("BuildDisplay_Prefix"), null);
-			instance.Patch(typeof(InputBindingsScreen), "DestroyDisplay",
-				PatchMethod("DestroyDisplay_Prefix"), null);
-			instance.Patch(typeof(InputBindingsScreen), "OnKeyDown",
-				PatchMethod("OnKeyDown_Prefix"), null);
-			instance.Patch(typeof(InputBindingsScreen), "OnReset",
-				PatchMethod("OnReset_Prefix"), null);
-			instance.Patch(typeof(InputBindingsScreen), "Update", null,
-				PatchMethod("IBS_Update_Postfix"));
-			instance.Patch(typeof(GameInputMapping), "SaveBindings", null,
-				PatchMethod("SaveBindings_Postfix"));
-			instance.Patch(typeof(KInputController), "HandleCancelInput", null,
-				PatchMethod("HandleCancelInput_Postfix"));
-			instance.Patch(typeof(KInputController), "Update", null,
-				PatchMethod("KIC_Update_Postfix"));
+
+			// GameInputMapping
+			instance.Patch(typeof(GameInputMapping), "SetDefaultKeyBindings", null,
+				PatchMethod("SetDefaultKeyBindings_Postfix"));
+
+			// KInputController
+			instance.PatchConstructor(typeof(KInputController.KeyDef), new Type[] {
+				typeof(KKeyCode), typeof(Modifier)
+			}, null, PatchMethod("CKeyDef_Postfix"));
+			instance.Patch(typeof(KInputController), "IsActive",
+				PatchMethod("IsActive_Prefix"), null);
+			instance.Patch(typeof(KInputController), "QueueButtonEvent",
+				PatchMethod("QueueButtonEvent_Prefix"), null);
+			
+			// SteamUGCService
 			instance.PatchTranspile(typeof(SteamUGCService), "LoadPreviewImage",
 				PatchMethod("LoadPreviewImage_Transpile"));
 		}
@@ -172,7 +150,7 @@ namespace PeterHan.PLib {
 		public void Apply(HarmonyInstance instance) {
 			PRegistry.LogPatchDebug("Using version " + MyVersion);
 			PatchAll(instance);
-			KeyUtils.Init();
+			PActionManager.Instance.Init();
 		}
 
 		public override bool Equals(object obj) {
