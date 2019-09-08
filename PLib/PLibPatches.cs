@@ -41,13 +41,6 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
-		/// Applied to InputBindingsScreen to add a tab for PLib bindings.
-		/// </summary>
-		private static void CollectScreens_Postfix(ref List<string> ___screens) {
-			KeyBindingManager.Instance.CollectScreens(___screens);
-		}
-
-		/// <summary>
 		/// Applied to InputBindingsScreen to clean up PLib bindings properly.
 		/// </summary>
 		private static void DestroyDisplay_Prefix(ref GameObject ___parent) {
@@ -129,8 +122,6 @@ namespace PeterHan.PLib {
 				throw new ArgumentNullException("instance");
 			instance.Patch(typeof(InputBindingsScreen), "BuildDisplay",
 				PatchMethod("BuildDisplay_Prefix"), null);
-			instance.Patch(typeof(InputBindingsScreen), "CollectScreens", null,
-				PatchMethod("CollectScreens_Postfix"));
 			instance.Patch(typeof(InputBindingsScreen), "DestroyDisplay",
 				PatchMethod("DestroyDisplay_Prefix"), null);
 			instance.Patch(typeof(InputBindingsScreen), "OnKeyDown",

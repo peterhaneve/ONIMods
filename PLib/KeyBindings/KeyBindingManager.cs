@@ -193,14 +193,6 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
-		/// Adds the PLib tab to the key binding screen if any bindings are registered.
-		/// </summary>
-		internal void CollectScreens(List<string> screens) {
-			if (actions.Count > 0)
-				screens.Add(KeyUtils.CATEGORY);
-		}
-
-		/// <summary>
 		/// Before destroying the display, cleans up the old button click actions.
 		/// </summary>
 		internal void DestroyDisplay(GameObject parent) {

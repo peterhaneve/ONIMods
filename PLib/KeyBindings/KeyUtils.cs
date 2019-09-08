@@ -120,19 +120,21 @@ namespace PeterHan.PLib {
 		/// </summary>
 		public static void Init() {
 			var actions = PSharedData.GetData<IList<object>>(PRegistry.KEY_ACTION_TABLE);
-			if (actions != null)
+			if (actions != null && actions.Count > 0) {
 				KeyBindingManager.Instance.AddKeyBindings(actions);
-			BindingEntry[] entries = GameInputMapping.DefaultBindings, newEntries;
-			// Register a fake binding for a placeholder
-			var faker = new BindingEntry(CATEGORY, GamepadButton.NumButtons,
-				KKeyCode.KleiKeys, Modifier.None, Action.BUILD_MENU_START_INTERCEPT);
-			int n = entries.Length;
-			// Append it to the "default" set; it never is mutable so it is never written out
-			newEntries = new BindingEntry[n + 1];
-			Array.Copy(entries, newEntries, n);
-			newEntries[n] = faker;
-			GameInputMapping.SetDefaultKeyBindings(newEntries);
-			KeyBindingManager.Instance.LoadBindings();
+				BindingEntry[] entries = GameInputMapping.DefaultBindings, newEntries;
+				// Register a fake binding for a placeholder
+				var faker = new BindingEntry(CATEGORY, GamepadButton.NumButtons,
+					KKeyCode.KleiKeys, Modifier.None, Action.BUILD_MENU_START_INTERCEPT);
+				int n = entries.Length;
+				// Append it to the "default" set; it never is mutable so it is never saved
+				// to the user's configuration file
+				newEntries = new BindingEntry[n + 1];
+				Array.Copy(entries, newEntries, n);
+				newEntries[n] = faker;
+				GameInputMapping.SetDefaultKeyBindings(newEntries);
+				KeyBindingManager.Instance.LoadBindings();
+			}
 		}
 
 		/// <summary>
