@@ -6,8 +6,8 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Bulk Settings Change")]
-[assembly: AssemblyDescription("Adds a tool to enable/disable disinfect, auto repair, or building operation in bulk.")]
+[assembly: AssemblyTitle("Sweep By Type")]
+[assembly: AssemblyDescription("Adds an optional material type filter to the Sweep tool.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("PeterHanONIMods")]
@@ -21,7 +21,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("7ee6fd5e-3125-4b7b-a05b-51b5a65b2c40")]
+[assembly: Guid("50c09a12-baa5-48ef-b26e-9fd859debc59")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -34,6 +34,6 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.3.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]
 [assembly: NeutralResourcesLanguage("en-US")]
 

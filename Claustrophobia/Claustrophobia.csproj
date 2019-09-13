@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AbstractStuckNotification.cs" />
+    <Compile Include="ClaustrophobiaStrings.cs" />
     <Compile Include="EntrapmentState.cs" />
     <Compile Include="EntrapmentStatus.cs" />
     <Compile Include="TrappedNotification.cs" />

@@ -59,10 +59,10 @@ namespace PeterHan.BulkSettingsChange {
 				try {
 					PLACE_ICON = PUtil.LoadSprite("PeterHan.BulkSettingsChange.Placer.dds",
 						256, 256);
-					PLACE_ICON.name = BulkChangeStrings.PlaceIconName;
+					PLACE_ICON.name = BulkChangeStrings.PLACE_ICON_NAME;
 					TOOL_ICON = PUtil.LoadSprite("PeterHan.BulkSettingsChange.Toggle.dds",
 						32, 32);
-					TOOL_ICON.name = BulkChangeStrings.ToolIconName;
+					TOOL_ICON.name = BulkChangeStrings.TOOL_ICON_NAME;
 				} catch (ArgumentException e) {
 					// Could not load the icons, but better this than crashing
 					PUtil.LogException(e);

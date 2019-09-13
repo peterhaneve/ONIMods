@@ -116,6 +116,27 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Dumps information about the parent tree of the specified GameObject to the debug
+		/// log.
+		/// </summary>
+		/// <param name="item">The item to determine hierarchy.</param>
+		public static void DebugObjectHierarchy(GameObject item) {
+			string info = "null";
+			if (item != null) {
+				var result = new StringBuilder(256);
+				do {
+					result.Append("- ");
+					result.Append(item.name ?? "Unnamed");
+					item = item.transform?.parent?.gameObject;
+					if (item != null)
+						result.AppendLine();
+				} while (item != null);
+				info = result.ToString();
+			}
+			PUtil.LogDebug("Object Tree:" + Environment.NewLine + info);
+		}
+
+		/// <summary>
 		/// Dumps information about the specified GameObject to the debug log.
 		/// </summary>
 		/// <param name="root">The root hierarchy to dump.</param>
@@ -158,14 +179,14 @@ namespace PeterHan.PLib {
 				}
 			// Children
 			if (n > 0)
-				result.Append(sol).Append(" Children:").AppendLine();
+				result.Append(sol).AppendLine(" Children:");
 			for (int i = 0; i < n; i++) {
 				var child = transform.GetChild(i).gameObject;
 				if (child != null)
 					// Exclude destroyed objects
-					result.Append(GetObjectTree(child, indent + 2)).AppendLine();
+					result.AppendLine(GetObjectTree(child, indent + 2));
 			}
-			return result.ToString();
+			return result.ToString().TrimEnd();
 		}
 
 		/// <summary>

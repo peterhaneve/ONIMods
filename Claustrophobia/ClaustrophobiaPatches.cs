@@ -24,12 +24,24 @@ namespace PeterHan.Claustrophobia {
 	/// Patches which will be applied via annotations for Claustrophobia.
 	/// </summary>
 	public static class ClaustrophobiaPatches {
+		public static void OnLoad() {
+			PUtil.LogModInit();
+		}
+
 		/// <summary>
-		/// Logs when the mod is loaded.
+		/// Handles localization by registering for translation.
 		/// </summary>
-		public static class Mod_OnLoad {
-			public static void OnLoad() {
-				PUtil.LogModInit();
+		[HarmonyPatch(typeof(Db), "Initialize")]
+		public static class Db_Initialize_Patch {
+			/// <summary>
+			/// Applied before Initialize runs.
+			/// </summary>
+			internal static void Prefix() {
+#if DEBUG
+				ModUtil.RegisterForTranslation(typeof(ClaustrophobiaStrings));
+#else
+				Localization.RegisterForTranslation(typeof(ClaustrophobiaStrings));
+#endif
 			}
 		}
 
@@ -42,7 +54,7 @@ namespace PeterHan.Claustrophobia {
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
 			/// <param name="__instance">The current game.</param>
-			private static void Postfix(Game __instance) {
+			internal static void Postfix(Game __instance) {
 				__instance.gameObject.AddComponent<ClaustrophobiaChecker>();
 			}
 		}

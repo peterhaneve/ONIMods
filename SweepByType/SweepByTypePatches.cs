@@ -19,28 +19,15 @@
 using Harmony;
 using PeterHan.PLib;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 
-namespace PeterHan.BulkSettingsChange {
+namespace PeterHan.SweepByType {
 	/// <summary>
-	/// Patches which will be applied via annotations for Bulk Settings Change.
-	/// 
-	/// This code took inspiration from https://github.com/0Mayall/ONIBlueprints/
+	/// Patches which will be applied via annotations for Sweep By Type.
 	/// </summary>
-	public static class BulkChangePatches {
-		/// <summary>
-		/// The action to bring up the bulk change tool.
-		/// </summary>
-		internal static PAction BulkChangeAction { get; private set; }
-
-		/// <summary>
-		/// Logs when the mod is loaded.
-		/// </summary>
+	public static class SweepByTypePatches {
 		public static void OnLoad() {
 			PUtil.LogModInit();
-			BulkChangeAction = PAction.Register(BulkChangeStrings.ACTION_KEY,
-				BulkChangeStrings.ACTION_TITLE, new PKeyBinding(KKeyCode.Q));
 		}
 
 		/// <summary>
@@ -53,15 +40,15 @@ namespace PeterHan.BulkSettingsChange {
 			/// </summary>
 			internal static void Prefix() {
 #if DEBUG
-				ModUtil.RegisterForTranslation(typeof(BulkChangeStrings));
+				ModUtil.RegisterForTranslation(typeof(SweepByTypeStrings));
 #else
-				Localization.RegisterForTranslation(typeof(BulkChangeStrings));
+				Localization.RegisterForTranslation(typeof(SweepByTypeStrings));
 #endif
 			}
 		}
 
 		/// <summary>
-		/// Applied to Game to clean up the bulk change tool on close.
+		/// Applied to Game to clean up the filtered sweep tool on close.
 		/// </summary>
 		[HarmonyPatch(typeof(Game), "DestroyInstances")]
 		public static class Game_DestroyInstances_Patch {
@@ -69,13 +56,13 @@ namespace PeterHan.BulkSettingsChange {
 			/// Applied after DestroyInstances runs.
 			/// </summary>
 			internal static void Postfix() {
-				PUtil.LogDebug("Destroying BulkChangeTool");
-				BulkChangeTool.DestroyInstance();
+				PUtil.LogDebug("Destroying FilteredClearTool");
+				FilteredClearTool.DestroyInstance();
 			}
 		}
 
 		/// <summary>
-		/// Applied to PlayerController to load the change settings tool into the available
+		/// Applied to PlayerController to load the filtered sweep tool into the available
 		/// tool list.
 		/// </summary>
 		[HarmonyPatch(typeof(PlayerController), "OnPrefabInit")]
@@ -87,47 +74,44 @@ namespace PeterHan.BulkSettingsChange {
 			internal static void Postfix(PlayerController __instance) {
 				// Create list so that new tool can be appended at the end
 				var interfaceTools = new List<InterfaceTool>(__instance.tools);
-				var bulkChangeTool = new GameObject(typeof(BulkChangeTool).Name);
-				bulkChangeTool.AddComponent<BulkChangeTool>();
+				var filteredSweepTool = new GameObject(typeof(FilteredClearTool).Name);
+				filteredSweepTool.AddComponent<FilteredClearTool>();
 				// Reparent tool to the player controller, then enable/disable to load it
-				bulkChangeTool.transform.SetParent(__instance.gameObject.transform);
-				bulkChangeTool.gameObject.SetActive(true);
-				bulkChangeTool.gameObject.SetActive(false);
-				PUtil.LogDebug("Created BulkChangeTool");
+				filteredSweepTool.transform.SetParent(__instance.gameObject.transform);
+				filteredSweepTool.gameObject.SetActive(true);
+				filteredSweepTool.gameObject.SetActive(false);
+				PUtil.LogDebug("Created FilteredClearTool");
 				// Add tool to tool list
-				interfaceTools.Add(bulkChangeTool.GetComponent<InterfaceTool>());
+				interfaceTools.Add(filteredSweepTool.GetComponent<InterfaceTool>());
 				__instance.tools = interfaceTools.ToArray();
 			}
 		}
 
 		/// <summary>
-		/// Applied to ToolMenu to add the settings change icon.
-		/// </summary>
-		[HarmonyPatch(typeof(ToolMenu), "OnPrefabInit")]
-		public static class ToolMenu_OnPrefabInit_Patch {
-			/// <summary>
-			/// Applied after OnPrefabInit runs.
-			/// </summary>
-			/// <param name="___icons">The icon list where the icon can be added.</param>
-			internal static void Postfix(ref List<Sprite> ___icons) {
-				___icons.Add(SpriteRegistry.GetToolIcon());
-			}
-		}
-
-		/// <summary>
-		/// Applied to ToolMenu to add the settings change tool to the tool list.
+		/// Applied to ToolMenu to replace the sweep tool with the filtered sweep tool!
 		/// </summary>
 		[HarmonyPatch(typeof(ToolMenu), "CreateBasicTools")]
 		public static class ToolMenu_CreateBasicTools_Patch {
 			/// <summary>
 			/// Applied after CreateBasicTools runs.
 			/// </summary>
-			/// <param name="__instance">The basic tool list.</param>
 			internal static void Postfix(ref ToolMenu __instance) {
-				PUtil.LogDebug("Adding BulkChangeTool to basic tools");
-				__instance.basicTools.Add(ToolMenu.CreateToolCollection(BulkChangeStrings.
-					TOOL_TITLE, BulkChangeStrings.TOOL_ICON_NAME, BulkChangeAction.GetKAction(),
-					typeof(BulkChangeTool).Name, BulkChangeStrings.TOOL_DESCRIPTION, false));
+				var filteredSweep = ToolMenu.CreateToolCollection(STRINGS.UI.TOOLS.
+					MARKFORSTORAGE.NAME, "icon_action_store", Action.Clear,
+					"FilteredClearTool", STRINGS.UI.TOOLTIPS.CLEARBUTTON, false);
+				var tools = __instance.basicTools;
+				int n = tools.Count;
+				bool replaced = false;
+				for (int i = 0; i < n && !replaced; i++)
+					// Replace by icon since it is a top level member
+					if (tools[i].icon == filteredSweep.icon) {
+						PUtil.LogDebug("Replacing sweep tool {0:D} with filtered sweep".F(i));
+						tools[i] = filteredSweep;
+						replaced = true;
+					}
+				// If no tool match found, log a warning
+				if (!replaced)
+					PUtil.LogWarning("Could not install filtered sweep tool!");
 			}
 		}
 	}

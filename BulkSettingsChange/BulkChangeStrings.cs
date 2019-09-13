@@ -19,21 +19,27 @@
 namespace PeterHan.BulkSettingsChange {
 	/// <summary>
 	/// Stores the strings used in the Bulk Settings Change tool.
-	/// 
-	/// TODO Translation support
 	/// </summary>
 	static class BulkChangeStrings {
 		// Tool tip and name in the tool list
-		public const string ToolDescription = "Enable or disable Auto-Disinfect, Auto-Repair, or buildings {Hotkey}";
-		public const string ToolTitle = "Change Settings";
+		public static LocString TOOL_DESCRIPTION = "Enable or disable Auto-Disinfect, Auto-Repair, or buildings {Hotkey}";
+		public static LocString TOOL_TITLE = "Change Settings";
 
-		// Internal strings, no translation needed
-		public const string PlaceIconName = "BULKSETTINGSCHANGE.TOOL.BULKCHANGETOOL.PLACER";
-		public const string ToolIconName = "BULKSETTINGSCHANGE.TOOL.BULKCHANGETOOL.ICON";
+		// Internal strings
+		public static string PLACE_ICON_NAME = "BULKSETTINGSCHANGE.TOOL.BULKCHANGETOOL.PLACER";
+		public static string TOOL_ICON_NAME = "BULKSETTINGSCHANGE.TOOL.BULKCHANGETOOL.ICON";
 
 		// Action strings
-		public const string ActionKey = "BULKCHANGESETTINGS.ACTION.CHANGESETTINGS";
-		public const string ActionTitle = "Settings Change Tool";
+		public static string ACTION_KEY = "BULKSETTINGSCHANGE.ACTION.CHANGESETTINGS";
+		public static LocString ACTION_TITLE = "Settings Change Tool";
+
+		// Tool strings
+		public static LocString TOOL_DISABLE_BUILDINGS = "Building Disabled";
+		public static LocString TOOL_DISABLE_DISINFECT = "Disinfect Disabled";
+		public static LocString TOOL_DISABLE_REPAIR = "Auto-Repair Disabled";
+		public static LocString TOOL_ENABLE_BUILDINGS = "Building Enabled";
+		public static LocString TOOL_ENABLE_DISINFECT = "Disinfect Enabled";
+		public static LocString TOOL_ENABLE_REPAIR = "Auto-Repair Enabled";
 	}
 
 	/// <summary>
@@ -43,27 +49,21 @@ namespace PeterHan.BulkSettingsChange {
 		// Available tools
 		public static readonly BulkToolMode DisableBuildings = new BulkToolMode(
 			"DISABLE_BUILDING", STRINGS.UI.USERMENUACTIONS.ENABLEBUILDING.NAME,
-			STRINGS.UI.USERMENUACTIONS.ENABLEBUILDING.NAME.ToString().ToUpper(),
-			"Building Disabled");
+			BulkChangeStrings.TOOL_DISABLE_BUILDINGS);
 		public static readonly BulkToolMode DisableDisinfect = new BulkToolMode(
 			"DISABLE_DISINFECT", STRINGS.BUILDINGS.AUTODISINFECTABLE.DISABLE_AUTODISINFECT.
-			NAME, STRINGS.BUILDINGS.AUTODISINFECTABLE.DISABLE_AUTODISINFECT.NAME.ToString().
-			ToUpper(), "Disinfect Disabled");
+			NAME, BulkChangeStrings.TOOL_DISABLE_DISINFECT);
 		public static readonly BulkToolMode DisableRepair = new BulkToolMode(
 			"DISABLE_REPAIR", STRINGS.BUILDINGS.REPAIRABLE.DISABLE_AUTOREPAIR.NAME,
-			STRINGS.BUILDINGS.REPAIRABLE.DISABLE_AUTOREPAIR.NAME.ToString().ToUpper(),
-			"Auto-Repair Disabled");
+			BulkChangeStrings.TOOL_DISABLE_REPAIR);
 		public static readonly BulkToolMode EnableBuildings = new BulkToolMode(
 			"ENABLE_BUILDING", STRINGS.UI.USERMENUACTIONS.ENABLEBUILDING.NAME_OFF,
-			STRINGS.UI.USERMENUACTIONS.ENABLEBUILDING.NAME_OFF.ToString().ToUpper(),
-			"Building Enabled");
+			BulkChangeStrings.TOOL_ENABLE_BUILDINGS);
 		public static readonly BulkToolMode EnableDisinfect = new BulkToolMode(
 			"ENABLE_DISINFECT", STRINGS.BUILDINGS.AUTODISINFECTABLE.ENABLE_AUTODISINFECT.NAME,
-			STRINGS.BUILDINGS.AUTODISINFECTABLE.ENABLE_AUTODISINFECT.NAME.ToString().ToUpper(),
-			"Disinfect Enabled");
+			BulkChangeStrings.TOOL_ENABLE_DISINFECT);
 		public static readonly BulkToolMode EnableRepair = new BulkToolMode(
 			"ENABLE_REPAIR", STRINGS.BUILDINGS.REPAIRABLE.ENABLE_AUTOREPAIR.NAME,
-			STRINGS.BUILDINGS.REPAIRABLE.ENABLE_AUTOREPAIR.NAME.ToString().ToUpper(),
-			"Auto-Repair Enabled");
+			BulkChangeStrings.TOOL_ENABLE_REPAIR);
 	}
 }

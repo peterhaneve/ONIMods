@@ -27,7 +27,7 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// The PLib version.
 		/// </summary>
-		public const string VERSION = "2.1.0.0";
+		public const string VERSION = "2.2.0.0";
 
 		/// <summary>
 		/// Reports whether the PLib version included or referenced by this mod is the latest
@@ -40,8 +40,8 @@ namespace PeterHan.PLib {
 			get {
 				bool latest = false;
 				try {
-					latest = (new Version(VERSION) == PSharedData.GetData<Version>(PRegistry.
-						KEY_VERSION));
+					latest = new Version(VERSION) == PSharedData.GetData<Version>(PRegistry.
+						KEY_VERSION);
 				} catch (OverflowException) {
 				} catch (FormatException) {
 				} catch (ArgumentOutOfRangeException) {

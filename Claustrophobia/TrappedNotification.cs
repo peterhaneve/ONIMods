@@ -22,8 +22,8 @@ namespace PeterHan.Claustrophobia {
 	/// </summary>
 	sealed class TrappedNotification : AbstractStuckNotification {
 		// TODO Translation
-		protected override string Message => "These Duplicants cannot access vital parts of the colony:";
+		protected override string Message => ClaustrophobiaStrings.TRAPPED_DESC;
 		protected override NotificationType Severity => NotificationType.Bad;
-		protected override string Title => "Trapped";
+		protected override string Title => ClaustrophobiaStrings.TRAPPED_TITLE;
 	}
 }

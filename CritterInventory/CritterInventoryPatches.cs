@@ -38,13 +38,8 @@ namespace PeterHan.CritterInventory {
 		/// </summary>
 		private static ResourceCategoryHeader critterWild;
 
-		/// <summary>
-		/// Logs when the mod is loaded.
-		/// </summary>
-		public static class Mod_OnLoad {
-			public static void OnLoad() {
-				PUtil.LogModInit();
-			}
+		public static void OnLoad() {
+			PUtil.LogModInit();
 		}
 
 		/// <summary>
@@ -58,7 +53,7 @@ namespace PeterHan.CritterInventory {
 			/// <param name="__instance">The current resource entry.</param>
 			/// <param name="is_hovering">true if the user is hovering, or false otherwise</param>
 			/// <param name="___HighlightColor">The highlight color from the instance.</param>
-			private static void Postfix(ref ResourceEntry __instance, bool is_hovering,
+			internal static void Postfix(ref ResourceEntry __instance, bool is_hovering,
 					ref Color ___HighlightColor) {
 				var info = __instance.gameObject.GetComponent<CritterResourceInfo>();
 				if (info != null) {
@@ -84,7 +79,7 @@ namespace PeterHan.CritterInventory {
 			/// </summary>
 			/// <param name="__instance">The current resource entry.</param>
 			/// <param name="___selectionIdx">The current selection index.</param>
-			private static void Postfix(ref ResourceEntry __instance, ref int ___selectionIdx)
+			internal static void Postfix(ref ResourceEntry __instance, ref int ___selectionIdx)
 			{
 				var info = __instance.gameObject.GetComponent<CritterResourceInfo>();
 				if (info != null) {
@@ -118,7 +113,7 @@ namespace PeterHan.CritterInventory {
 			/// <param name="__instance">The current resource category header.</param>
 			/// <param name="is_hovering">true if the user is hovering, or false otherwise.</param>
 			/// <param name="___highlightColour">The highlight color from the instance.</param>
-			private static void Postfix(ref ResourceCategoryHeader __instance,
+			internal static void Postfix(ref ResourceCategoryHeader __instance,
 					bool is_hovering, ref Color ___highlightColour) {
 				var info = __instance.gameObject.GetComponent<CritterResourceInfo>();
 				if (info != null) {
@@ -147,7 +142,7 @@ namespace PeterHan.CritterInventory {
 			/// Applied before UpdateContents runs.
 			/// </summary>
 			/// <param name="__instance">The current resource category header.</param>
-			private static bool Prefix(ref ResourceCategoryHeader __instance) {
+			internal static bool Prefix(ref ResourceCategoryHeader __instance) {
 				var info = __instance.gameObject.GetComponent<CritterResourceInfo>();
 				// UpdateContents adds spurious entries (e.g. babies when only adults ever
 				// discovered) on critters
@@ -167,7 +162,7 @@ namespace PeterHan.CritterInventory {
 			/// </summary>
 			/// <param name="__instance">The current resource category list.</param>
 			/// <param name="___Prefab_CategoryBar">The category bar prefab used to create categories.</param>
-			private static void Postfix(ref ResourceCategoryScreen __instance,
+			internal static void Postfix(ref ResourceCategoryScreen __instance,
 					ref GameObject ___Prefab_CategoryBar) {
 				critterTame = CritterResourceHeader.Create(__instance, ___Prefab_CategoryBar,
 					CritterType.Tame);
@@ -189,7 +184,7 @@ namespace PeterHan.CritterInventory {
 			/// <summary>
 			/// Applied after Update runs.
 			/// </summary>
-			private static void Postfix() {
+			internal static void Postfix() {
 				if (WorldInventory.Instance != null) {
 					if (critterTame != null) {
 						// Tame critter update

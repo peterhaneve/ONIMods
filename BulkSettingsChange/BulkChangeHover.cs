@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
 using System.Collections.Generic;
 
 namespace PeterHan.BulkSettingsChange {
@@ -25,17 +24,17 @@ namespace PeterHan.BulkSettingsChange {
 	/// </summary>
 	sealed class BulkChangeHover : HoverTextConfiguration {
 		public override void UpdateHoverElements(List<KSelectable> selected) {
-			var toolMode = ToolMenu.Instance.toolParameterMenu;
-			var hoverScreen = HoverTextScreen.Instance;
+			var hoverInstance = HoverTextScreen.Instance;
 			// Find the active mode
-			var drawer = hoverScreen.BeginDrawing();
-			var mode = BulkToolMode.FromKey(toolMode.GetLastEnabledFilter());
+			var drawer = hoverInstance.BeginDrawing();
+			var mode = BulkToolMode.FromKey(ToolMenu.Instance.toolParameterMenu.
+				GetLastEnabledFilter());
 			// Draw the tool title
 			drawer.BeginShadowBar(false);
-			drawer.DrawText(mode?.Title ?? BulkChangeStrings.ToolTitle, ToolTitleTextStyle);
+			drawer.DrawText(mode?.Title ?? BulkChangeStrings.TOOL_TITLE, ToolTitleTextStyle);
 			// Draw the instructions
-			ActionName = mode?.Name ?? BulkChangeStrings.ToolTitle;
-			DrawInstructions(HoverTextScreen.Instance, drawer);
+			ActionName = mode?.Name ?? BulkChangeStrings.TOOL_TITLE;
+			DrawInstructions(hoverInstance, drawer);
 			drawer.EndShadowBar();
 			drawer.EndDrawing();
 		}

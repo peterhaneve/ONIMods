@@ -16,13 +16,21 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace PeterHan.Claustrophobia {
+namespace PeterHan.SweepByType {
 	/// <summary>
-	/// A notification which appears when duplicants are confined to a small space.
+	/// Stores the strings used in the Sweep By Type tool.
 	/// </summary>
-	sealed class ConfinedNotification : AbstractStuckNotification {
-		protected override string Message => ClaustrophobiaStrings.CONFINED_DESC;
-		protected override NotificationType Severity => NotificationType.DuplicantThreatening;
-		protected override string Title => ClaustrophobiaStrings.CONFINED_TITLE;
+	static class SweepByTypeStrings {
+		// Tool modes displayed in the filter menu
+		public static LocString TOOL_MODE_DEFAULT = "Sweep All";
+		public static LocString TOOL_MODE_FILTERED = "Sweep By Type";
+		public static readonly string TOOL_KEY_DEFAULT = "SWEEPALL";
+		public static readonly string TOOL_KEY_FILTERED = "SWEEPFILTERED";
+
+		// Title for the resource list
+		public static LocString MATERIAL_TYPE = "Select material to sweep";
+
+		// Displayed in the tooltip action menu
+		public static LocString TOOLTIP_FILTERED = "SWEEP ONLY {0}";
 	}
 }

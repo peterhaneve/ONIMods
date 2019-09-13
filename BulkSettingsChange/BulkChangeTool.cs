@@ -160,9 +160,9 @@ namespace PeterHan.BulkSettingsChange {
 			var us = Traverse.Create(this);
 			Sprite sprite;
 			base.OnPrefabInit();
+			gameObject.AddComponent<BulkChangeHover>();
 			// Allow priority setting for the enable/disable building chores
 			interceptNumberKeysForPriority = true;
-			gameObject.AddComponent<BulkChangeHover>();
 			// HACK: Get the cursor from the disinfect tool
 			var trDisinfect = Traverse.Create(DisinfectTool.Instance);
 			cursor = trDisinfect.GetField<Texture2D>("cursor");

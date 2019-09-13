@@ -18,11 +18,15 @@
 
 namespace PeterHan.Claustrophobia {
 	/// <summary>
-	/// A notification which appears when duplicants are confined to a small space.
+	/// Strings used in Claustrophobia.
 	/// </summary>
-	sealed class ConfinedNotification : AbstractStuckNotification {
-		protected override string Message => ClaustrophobiaStrings.CONFINED_DESC;
-		protected override NotificationType Severity => NotificationType.DuplicantThreatening;
-		protected override string Title => ClaustrophobiaStrings.CONFINED_TITLE;
+	static class ClaustrophobiaStrings {
+		// Confined
+		public static LocString CONFINED_TITLE = "Confined";
+		public static LocString CONFINED_DESC = "These Duplicants are stuck in a small space:";
+
+		// Trapped
+		public static LocString TRAPPED_TITLE = "Trapped";
+		public static LocString TRAPPED_DESC = "These Duplicants cannot access vital parts of the colony:";
 	}
 }
