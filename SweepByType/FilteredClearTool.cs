@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 using Harmony;
 using System;
 using UnityEngine;
@@ -40,9 +39,11 @@ namespace PeterHan.SweepByType {
 		/// Destroys the singleton instance.
 		/// </summary>
 		internal static void DestroyInstance() {
-			if (Instance != null)
-				Instance.Cleanup();
-			Instance = null;
+			var inst = Instance;
+			if (inst != null) {
+				Destroy(inst);
+				Instance = null;
+			}
 		}
 
 		/// <summary>
@@ -53,6 +54,11 @@ namespace PeterHan.SweepByType {
 				return typeSelect?.CurrentSelectedElement ?? GameTags.Solid;
 			}
 		}
+
+		/// <summary>
+		/// A temporary product info screen used to create prefabs.
+		/// </summary>
+		private ProductInfoScreen infoScreen;
 
 		/// <summary>
 		/// The state of each tool option.
@@ -94,32 +100,62 @@ namespace PeterHan.SweepByType {
 		}
 
 		/// <summary>
-		/// Cleans up the type selector.
+		/// Builds the "Select Material" window.
 		/// </summary>
-		private void Cleanup() {
-			if (typeSelect != null)
-				Destroy(typeSelect.gameObject);
-			typeSelect = null;
+		/// <param name="menu">The parent window for the window.</param>
+		private void CreateSelector(ToolParameterMenu menu) {
+			if (menu == null)
+				throw new ArgumentNullException("menu");
+			Color32 color = PUIElements.BG_WHITE;
+			var parent = menu.transform.parent?.gameObject ?? GameScreenManager.Instance.
+				ssOverlayCanvas;
+			// Create a single MaterialSelector which is all we need
+			typeSelect = Util.KInstantiateUI<MaterialSelector>(infoScreen.
+				materialSelectionPanel.MaterialSelectorTemplate, parent);
+			var obj = typeSelect.gameObject;
+			typeSelect.name = "FilteredClearToolMaterials";
+			// Allow scrolling on the material list
+			Traverse.Create(typeSelect).SetField("ConsumeMouseScroll", true);
+			// Add canvas and renderer
+			obj.AddComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+			obj.AddComponent<CanvasRenderer>();
+			// Background and hit-test
+			var infoBG = infoScreen.transform.Find("BG");
+			if (infoBG != null) {
+				var imgComponent = infoBG.GetComponent<Image>();
+				if (imgComponent != null)
+					color = imgComponent.color;
+				obj.AddComponent<Image>().color = color;
+			}
+			obj.AddComponent<GraphicRaycaster>();
+			// Resize window to match its contents
+			PUIElements.AddSizeFitter(obj, ContentSizeFitter.FitMode.PreferredSize);
+			typeSelect.ConfigureScreen(sweepRecipe.Ingredients[0], sweepRecipe);
+			var transform = obj.rectTransform();
+			// Position
+			transform.pivot = new Vector2(1.0f, 0.0f);
+			transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+			transform.SetAsFirstSibling();
+			typeSelect.Activate();
 		}
 
 		/// <summary>
-		/// Builds the "Select Material" window.
+		/// Cleans up the "Select Material" window.
 		/// </summary>
-		private void InitMaterialSelector() {
-			// Reuse the "Product Info" asset from BuildMenu to allow resource selection
-			var pis = Util.KInstantiateUI<ProductInfoScreen>(Traverse.Create(
-				PlanScreen.Instance).GetField<GameObject>("productInfoScreenPrefab"),
-				gameObject);
-			typeSelect = Util.KInstantiateUI<MaterialSelector>(pis.materialSelectionPanel.
-				MaterialSelectorTemplate, visualizer);
-			// Create a single MaterialSelector which is all we need
-			typeSelect.name = "FilteredClearToolMaterials";
-			typeSelect.ToggleShowDescriptorsPanel(false);
-			typeSelect.Deactivate();
-			typeSelect.gameObject.layer = 5;
-			// Just for a prefab...
-			pis.Deactivate();
-			//Destroy(pis.gameObject);
+		private void DestroySelector() {
+			if (typeSelect != null)
+				typeSelect.Deactivate();
+			typeSelect = null;
+		}
+
+		protected override void OnCleanUp() {
+			base.OnCleanUp();
+			// Clean up everything needed
+			DestroySelector();
+			if (infoScreen != null) {
+				Destroy(infoScreen);
+				infoScreen = null;
+			}
 		}
 
 		protected override void OnPrefabInit() {
@@ -181,36 +217,46 @@ namespace PeterHan.SweepByType {
 		protected override void OnActivateTool() {
 			var menu = ToolMenu.Instance.toolParameterMenu;
 			base.OnActivateTool();
+			// Reuse the "Product Info" asset from BuildMenu to allow resource selection
+			if (infoScreen == null) {
+				infoScreen = Util.KInstantiateUI<ProductInfoScreen>(Traverse.Create(
+					PlanScreen.Instance).GetField<GameObject>("productInfoScreenPrefab"),
+					gameObject, false);
+				infoScreen.Show(false);
+			}
 			ToolMenu.Instance.PriorityScreen.Show(true);
 			// Default to "sweep all"
 			optionState = PToolMode.PopulateMenu(menu, toolOptions);
 			menu.onParametersChanged += UpdateViewMode;
-			if (typeSelect == null)
-				InitMaterialSelector();
 			UpdateViewMode();
 		}
 
 		protected override void OnDeactivateTool(InterfaceTool newTool) {
-			typeSelect?.Deactivate();
+			DestroySelector();
 			base.OnDeactivateTool(newTool);
 			optionState = null;
+			var menu = ToolMenu.Instance.toolParameterMenu;
+			// Unregister events
+			menu.ClearMenu();
+			menu.onParametersChanged -= UpdateViewMode;
 			ToolMenu.Instance.PriorityScreen.Show(false);
-			ToolMenu.Instance.toolParameterMenu.onParametersChanged -= UpdateViewMode;
 		}
 
 		/// <summary>
 		/// Based on the current tool mode, updates the overlay mode.
 		/// </summary>
 		private void UpdateViewMode() {
-			if (optionState != null && typeSelect != null) {
-				if (optionState[SweepByTypeStrings.TOOL_KEY_FILTERED] == ToolToggleState.On) {
+			var menu = ToolMenu.Instance.toolParameterMenu;
+			if (optionState != null && menu != null) {
+				var mode = menu.GetLastEnabledFilter();
+				if (mode == SweepByTypeStrings.TOOL_KEY_FILTERED) {
 					// Filtered
-					typeSelect.ConfigureScreen(sweepRecipe.Ingredients[0], sweepRecipe);
+					if (typeSelect == null)
+						CreateSelector(menu);
 					typeSelect.AutoSelectAvailableMaterial();
-					typeSelect.Activate();
 				} else
-					// Default
-					typeSelect.Deactivate();
+					// Standard
+					DestroySelector();
 			}
 		}
 	}

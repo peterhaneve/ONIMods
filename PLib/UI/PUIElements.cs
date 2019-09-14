@@ -28,6 +28,11 @@ namespace PeterHan.PLib {
 	/// </summary>
 	public sealed class PUIElements {
 		/// <summary>
+		/// A white color used for default backgrounds.
+		/// </summary>
+		public static readonly Color BG_WHITE = new Color32(255, 255, 255, 255);
+
+		/// <summary>
 		/// Adds text describing a particular component if available.
 		/// </summary>
 		/// <param name="result">The location to append the text.</param>
@@ -39,21 +44,32 @@ namespace PeterHan.PLib {
 			// Class specific
 			if (component is LocText lt)
 				result.AppendFormat(", Text={0}", lt.text);
-			foreach (var field in fields)
-				result.AppendFormat(", {0}={1}", field.Name, field.GetValue(component) ??
-					"null");
+			else if (component is Image ki)
+				result.AppendFormat(", Color={0}", ki.color);
+			else if (component is HorizontalOrVerticalLayoutGroup lg)
+				result.AppendFormat(", Child Align={0}, Control W={1}, Control H={2}",
+					lg.childAlignment, lg.childControlWidth, lg.childControlHeight);
+			foreach (var field in fields) {
+				object value = field.GetValue(component) ?? "null";
+				// Value type specific
+				if (value is LayerMask lm)
+					value = "Layer #" + lm.value;
+				result.AppendFormat(", {0}={1}", field.Name, value);
+			}
 		}
 
 		/// <summary>
 		/// Adds an auto-fit resizer to a UI element.
 		/// </summary>
 		/// <param name="uiElement">The element to resize.</param>
-		public static void AddSizeFitter(GameObject uiElement) {
+		/// <param name="mode">The sizing mode to use.</param>
+		public static void AddSizeFitter(GameObject uiElement, ContentSizeFitter.FitMode mode =
+				ContentSizeFitter.FitMode.MinSize) {
 			if (uiElement == null)
 				throw new ArgumentNullException("uiElement");
 			var fitter = uiElement.AddOrGet<ContentSizeFitter>();
-			fitter.horizontalFit = ContentSizeFitter.FitMode.MinSize;
-			fitter.verticalFit = ContentSizeFitter.FitMode.MinSize;
+			fitter.horizontalFit = mode;
+			fitter.verticalFit = mode;
 			fitter.enabled = true;
 			fitter.SetLayoutHorizontal();
 			fitter.SetLayoutVertical();
@@ -162,8 +178,8 @@ namespace PeterHan.PLib {
 			var transform = root.transform;
 			int n = transform.childCount;
 			// Basic information
-			result.Append(sol).AppendFormat("GameObject[{0}, {1:D} child(ren)]", root.
-				name, n).AppendLine();
+			result.Append(sol).AppendFormat("GameObject[{0}, {1:D} child(ren), Layer {2:D}]",
+				root.name, n, root.layer).AppendLine();
 			// Transformation
 			result.Append(sol).AppendFormat(" Translation=<{0}> Rotation=<{1}> Scale=<{2}>",
 				transform.localPosition, transform.localRotation, transform.localScale).

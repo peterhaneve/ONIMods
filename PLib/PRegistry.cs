@@ -217,6 +217,8 @@ namespace PeterHan.PLib {
 				PUtil.LogException(e);
 			} catch (ArgumentException e) {
 				PUtil.LogException(e);
+			} catch (TypeLoadException e) {
+				PUtil.LogException(e);
 			}
 		}
 

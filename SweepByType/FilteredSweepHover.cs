@@ -29,19 +29,19 @@ namespace PeterHan.SweepByType {
 			var hoverInstance = HoverTextScreen.Instance;
 			// Find the active mode
 			var drawer = hoverInstance.BeginDrawing();
-			var mode = ToolMenu.Instance.toolParameterMenu.GetLastEnabledFilter();
+			bool filtered = ToolMenu.Instance.toolParameterMenu.GetLastEnabledFilter() ==
+				SweepByTypeStrings.TOOL_KEY_FILTERED;
 			int cell = Grid.PosToCell(Camera.main.ScreenToWorldPoint(KInputManager.
 				GetMousePos()));
 			// Draw the tool title
+			string titleStr = filtered ? SweepByTypeStrings.TOOL_NAME_FILTERED : STRINGS.UI.
+				TOOLS.MARKFORSTORAGE.TOOLNAME;
 			drawer.BeginShadowBar(false);
-			drawer.DrawText(STRINGS.UI.TOOLS.MARKFORSTORAGE.TOOLNAME.text.ToUpper(),
-				ToolTitleTextStyle);
+			drawer.DrawText(titleStr.ToUpper(), ToolTitleTextStyle);
 			// Draw the instructions
-			if (mode == SweepByTypeStrings.TOOL_KEY_DEFAULT)
-				ActionName = STRINGS.UI.TOOLS.MARKFORSTORAGE.TOOLACTION;
-			else
-				ActionName = string.Format(SweepByTypeStrings.TOOLTIP_FILTERED,
-					FilteredClearTool.Instance.SelectedItemTag.ProperName());
+			ActionName = filtered ? string.Format(SweepByTypeStrings.TOOLTIP_FILTERED,
+				FilteredClearTool.Instance.SelectedItemTag.ProperName().ToUpper()) : STRINGS.
+				UI.TOOLS.MARKFORSTORAGE.TOOLACTION.text;
 			DrawInstructions(hoverInstance, drawer);
 			drawer.EndShadowBar();
 			if (selected != null && Grid.IsValidCell(cell) && Grid.IsVisible(cell))

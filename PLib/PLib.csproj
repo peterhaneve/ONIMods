@@ -55,6 +55,9 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\lib\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>..\lib\UnityEngine.TextRenderingModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\lib\UnityEngine.UI.dll</HintPath>
@@ -72,8 +75,8 @@
     <Compile Include="POptions.cs" />
     <Compile Include="PRegistry.cs" />
     <Compile Include="PSharedData.cs" />
-    <Compile Include="PUIElements.cs" />
-    <Compile Include="PUITuning.cs" />
+    <Compile Include="UI\PUIElements.cs" />
+    <Compile Include="UI\PUITuning.cs" />
     <Compile Include="PUtil.cs" />
     <Compile Include="PVersion.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -82,8 +85,6 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="UI\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

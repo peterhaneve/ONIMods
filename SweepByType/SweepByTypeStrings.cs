@@ -27,6 +27,10 @@ namespace PeterHan.SweepByType {
 		public static readonly string TOOL_KEY_DEFAULT = "SWEEPALL";
 		public static readonly string TOOL_KEY_FILTERED = "SWEEPFILTERED";
 
+		// Tool name displayed in the hover card when dragging filtered (uses stock game
+		// string for the default mode)
+		public static LocString TOOL_NAME_FILTERED = "FILTERED SWEEP TOOL";
+
 		// Title for the resource list
 		public static LocString MATERIAL_TYPE = "Select material to sweep";
 
