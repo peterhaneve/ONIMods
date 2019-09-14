@@ -112,10 +112,14 @@ namespace PeterHan.PLib {
 				PatchMethod("IsActive_Prefix"), null);
 			instance.Patch(typeof(KInputController), "QueueButtonEvent",
 				PatchMethod("QueueButtonEvent_Prefix"), null);
-			
+
 			// SteamUGCService
-			instance.PatchTranspile(typeof(SteamUGCService), "LoadPreviewImage",
-				PatchMethod("LoadPreviewImage_Transpile"));
+			try {
+				instance.PatchTranspile(typeof(SteamUGCService), "LoadPreviewImage",
+					PatchMethod("LoadPreviewImage_Transpile"));
+			} catch (TypeLoadException) {
+				// Not a Steam install, ignoring
+			}
 		}
 
 #pragma warning restore IDE0051 // Remove unused private members
@@ -149,7 +153,13 @@ namespace PeterHan.PLib {
 		/// <param name="instance">The Harmony instance to use for patching.</param>
 		public void Apply(HarmonyInstance instance) {
 			PRegistry.LogPatchDebug("Using version " + MyVersion);
-			PatchAll(instance);
+			try {
+				PatchAll(instance);
+			} catch (TypeLoadException e) {
+				PUtil.LogException(e);
+			} catch (TargetInvocationException e) {
+				PUtil.LogException(e);
+			}
 			PActionManager.Instance.Init();
 		}
 
