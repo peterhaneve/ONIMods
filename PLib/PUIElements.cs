@@ -169,14 +169,21 @@ namespace PeterHan.PLib {
 				transform.localPosition, transform.localRotation, transform.localScale).
 				AppendLine();
 			// Components
-			foreach (var component in root.GetComponents<Component>())
-				if (component != null && !(component is Transform)) {
+			foreach (var component in root.GetComponents<Component>()) {
+				if (component is RectTransform rt) {
+					// UI rectangle
+					var rect = rt.rect;
+					result.Append(sol).AppendFormat(" RectTransform[Left={0:F2} Top={1:F2} " +
+						"Right={2:F2} Bottom={3:F2}]", rect.xMin, rect.yMin, rect.xMax,
+						rect.yMax).AppendLine();
+				} else if (component != null && !(component is Transform)) {
 					// Exclude destroyed components and Transform objects
 					result.Append(sol).Append(" Component[").Append(component.GetType().
 						FullName);
 					AddComponentText(result, component);
 					result.AppendLine("]");
 				}
+			}
 			// Children
 			if (n > 0)
 				result.Append(sol).AppendLine(" Children:");

@@ -116,13 +116,10 @@ namespace PeterHan.SweepByType {
 			typeSelect.name = "FilteredClearToolMaterials";
 			typeSelect.ToggleShowDescriptorsPanel(false);
 			typeSelect.Deactivate();
-			typeSelect.rectTransform().pivot = new Vector2(0f, 0f);
-			var layoutElement = typeSelect.gameObject.AddOrGet<LayoutElement>();
-			layoutElement.minHeight = 200;
-			layoutElement.minWidth = 260;
-			//typeSelect.rectTransform().SetLocalPosition(new Vector3(280f, 0f, 0f));
+			typeSelect.gameObject.layer = 5;
 			// Just for a prefab...
-			Destroy(pis.gameObject);
+			pis.Deactivate();
+			//Destroy(pis.gameObject);
 		}
 
 		protected override void OnPrefabInit() {
