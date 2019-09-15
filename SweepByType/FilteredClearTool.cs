@@ -100,6 +100,52 @@ namespace PeterHan.SweepByType {
 		}
 
 		/// <summary>
+		/// Adds all discovered egg, food, cooking ingredient, and medicine types.
+		/// </summary>
+		private void AddEggsAndFoods() {
+			var toggleGroup = Traverse.Create(typeSelect).GetField<ToggleGroup>("toggleGroup");
+			var inv = WorldInventory.Instance;
+			if (inv != null) {
+				// Discovered resources only; iterating every item made from genetic ooze
+				// will add lots of false positives, this looks ugly but is better
+				foreach (var item in inv.GetDiscoveredResourcesFromTag(GameTags.Egg))
+					AddItemTag(item, toggleGroup);
+				foreach (var item in inv.GetDiscoveredResourcesFromTag(GameTags.Edible))
+					AddItemTag(item, toggleGroup);
+				foreach (var item in inv.GetDiscoveredResourcesFromTag(GameTags.
+						CookingIngredient))
+					AddItemTag(item, toggleGroup);
+				foreach (var item in inv.GetDiscoveredResourcesFromTag(GameTags.Medicine))
+					AddItemTag(item, toggleGroup);
+				foreach (var item in inv.GetDiscoveredResourcesFromTag(GameTags.Seed))
+					AddItemTag(item, toggleGroup);
+				// Pokeshell molts are in here
+				foreach (var item in inv.GetDiscoveredResourcesFromTag(GameTags.
+						IndustrialIngredient))
+					AddItemTag(item, toggleGroup);
+				typeSelect.RefreshToggleContents();
+			}
+		}
+
+		/// <summary>
+		/// Adds a specific tag type to the sweepable items list.
+		/// </summary>
+		/// <param name="tag">The tag to add.</param>
+		/// <param name="toggleGroup">The toggle group retrieved from the material selection window.</param>
+		private void AddItemTag(Tag tag, ToggleGroup toggleGroup) {
+			if (!typeSelect.ElementToggles.ContainsKey(tag)) {
+				var obj = Util.KInstantiate(typeSelect.TogglePrefab, typeSelect.
+					LayoutContainer, "MaterialSelection_" + tag.ProperName());
+				obj.transform.localScale = Vector3.one;
+				obj.SetActive(true);
+				var toggle = obj.GetComponent<KToggle>();
+				typeSelect.ElementToggles.Add(tag, toggle);
+				toggle.group = toggleGroup;
+				obj.gameObject.GetComponent<ToolTip>().toolTip = tag.ProperName();
+			}
+		}
+
+		/// <summary>
 		/// Builds the "Select Material" window.
 		/// </summary>
 		/// <param name="menu">The parent window for the window.</param>
@@ -131,10 +177,11 @@ namespace PeterHan.SweepByType {
 			// Resize window to match its contents
 			PUIElements.AddSizeFitter(obj, ContentSizeFitter.FitMode.PreferredSize);
 			typeSelect.ConfigureScreen(sweepRecipe.Ingredients[0], sweepRecipe);
+			AddEggsAndFoods();
 			var transform = obj.rectTransform();
 			// Position
 			transform.pivot = new Vector2(1.0f, 0.0f);
-			transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+			transform.localScale = Vector3.one;
 			transform.SetAsFirstSibling();
 			typeSelect.Activate();
 		}
@@ -164,7 +211,7 @@ namespace PeterHan.SweepByType {
 			Instance = this;
 			interceptNumberKeysForPriority = true;
 			populateHitsList = true;
-			gameObject.AddComponent<FilteredSweepHover>();
+			gameObject.AddComponent<FilteredClearHover>();
 			// Get the cursor from the existing sweep tool
 			var trSweep = Traverse.Create(ClearTool.Instance);
 			cursor = trSweep.GetField<Texture2D>("cursor");

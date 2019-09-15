@@ -36,5 +36,8 @@ namespace PeterHan.SweepByType {
 
 		// Displayed in the tooltip action menu
 		public static LocString TOOLTIP_FILTERED = "SWEEP ONLY {0}";
+
+		// Displayed if the type to sweep is missing somehow
+		public static LocString TOOLTIP_MISSING_TYPE = "SELECTED ITEM";
 	}
 }

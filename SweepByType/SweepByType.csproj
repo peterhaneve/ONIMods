@@ -62,7 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FilteredClearTool.cs" />
-    <Compile Include="FilteredSweepHover.cs" />
+    <Compile Include="FilteredClearHover.cs" />
     <Compile Include="SweepByTypePatches.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SweepByTypeStrings.cs" />
