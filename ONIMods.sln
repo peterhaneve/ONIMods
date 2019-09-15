@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SweepByType", "SweepByType\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeselectNewMaterials", "DeselectNewMaterials\DeselectNewMaterials.csproj", "{AD1515FF-30EA-4422-86E2-BA5482D1ECA5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastSave", "FastSave\FastSave.csproj", "{14774678-98BE-43FC-B3DA-8345A514CF52}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{AD1515FF-30EA-4422-86E2-BA5482D1ECA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD1515FF-30EA-4422-86E2-BA5482D1ECA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD1515FF-30EA-4422-86E2-BA5482D1ECA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14774678-98BE-43FC-B3DA-8345A514CF52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14774678-98BE-43FC-B3DA-8345A514CF52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14774678-98BE-43FC-B3DA-8345A514CF52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14774678-98BE-43FC-B3DA-8345A514CF52}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

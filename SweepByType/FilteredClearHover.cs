@@ -24,6 +24,10 @@ namespace PeterHan.SweepByType {
 	/// The hover text shown when filtered sweep is invoked.
 	/// </summary>
 	sealed class FilteredClearHover : HoverTextConfiguration {
+		/// <summary>
+		/// Updates the hover card text.
+		/// </summary>
+		/// <param name="selected">The objects under the cursor.</param>
 		public override void UpdateHoverElements(List<KSelectable> selected) {
 			var hoverInstance = HoverTextScreen.Instance;
 			// Find the active mode

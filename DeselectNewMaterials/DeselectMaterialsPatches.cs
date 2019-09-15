@@ -36,7 +36,7 @@ namespace PeterHan.DeselectNewMaterials {
 			/// <summary>
 			/// Applied after OnDiscover runs.
 			/// </summary>
-			internal static void Postfix(TreeFilterable __instance, Storage ___storage,
+			internal static void Postfix(ref TreeFilterable __instance, ref Storage ___storage,
 					Tag category_tag, Tag tag) {
 				if (___storage.storageFilters.Contains(category_tag))
 					__instance.RemoveTagFromFilter(tag);
