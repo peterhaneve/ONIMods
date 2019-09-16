@@ -76,13 +76,13 @@
     <Compile Include="POptions.cs" />
     <Compile Include="PRegistry.cs" />
     <Compile Include="PSharedData.cs" />
-    <Compile Include="UI\Insets.cs" />
     <Compile Include="UI\PUIElements.cs" />
     <Compile Include="UI\PUITuning.cs" />
     <Compile Include="PUtil.cs" />
     <Compile Include="PVersion.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PToolMode.cs" />
+    <Compile Include="UI\PUIUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

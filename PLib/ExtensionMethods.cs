@@ -19,6 +19,7 @@
 using Harmony;
 using System;
 using System.Reflection;
+using System.Text;
 using UnityEngine;
 
 namespace PeterHan.PLib {
@@ -106,12 +107,50 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Checks to see if a floating point value is NaN or infinite.
+		/// </summary>
+		/// <param name="value">The value to check.</param>
+		/// <returns>true if it is NaN, PositiveInfinity, or NegativeInfinity, or false otherwise.</returns>
+		public static bool IsNaNOrInfinity(this double value) {
+			return double.IsNaN(value) || double.IsInfinity(value);
+		}
+
+		/// <summary>
+		/// Checks to see if a floating point value is NaN or infinite.
+		/// </summary>
+		/// <param name="value">The value to check.</param>
+		/// <returns>true if it is NaN, PositiveInfinity, or NegativeInfinity, or false otherwise.</returns>
+		public static bool IsNaNOrInfinity(this float value) {
+			return float.IsNaN(value) || float.IsInfinity(value);
+		}
+
+		/// <summary>
 		/// Checks to see if a building is usable.
 		/// </summary>
 		/// <param name="building">The building component to check.</param>
 		/// <returns>true if it is usable (enabled, not broken, not overheated), or false otherwise.</returns>
 		public static bool IsUsable(this GameObject building) {
 			return building.GetComponent<Operational>()?.IsFunctional ?? false;
+		}
+
+		/// <summary>
+		/// Creates a string joining the members of an enumerable.
+		/// </summary>
+		/// <param name="values">The values to join.</param>
+		/// <param name="delimiter">The delimiter to use between values.</param>
+		/// <returns>A string consisting of each value in order, with the delimiter in between.</returns>
+		public static string Join(this System.Collections.IEnumerable values,
+				string delimiter = ",") {
+			var ret = new StringBuilder(128);
+			bool first = true;
+			// Append all, but skip comma if the first time
+			foreach (var value in values) {
+				if (!first)
+					ret.Append(delimiter);
+				ret.Append(value);
+				first = false;
+			}
+			return ret.ToString();
 		}
 
 		/// <summary>

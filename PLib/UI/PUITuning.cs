@@ -19,6 +19,7 @@
 using Harmony;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace PeterHan.PLib {
 	/// <summary>
@@ -35,6 +36,11 @@ namespace PeterHan.PLib {
 		/// The default color used on pink buttons.
 		/// </summary>
 		internal static Color ButtonColorPink { get; private set; }
+
+		/// <summary>
+		/// The color displayed on dialog backgrounds.
+		/// </summary>
+		internal static Color DialogBackground { get; private set; }
 
 		/// <summary>
 		/// The font used on all buttons
@@ -64,7 +70,7 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// The text styles used on all buttons.
 		/// </summary>
-		internal static TextStyleSetting ButtonTextStyle { get; private set; }
+		internal static TextStyleSetting UITextStyle { get; private set; }
 
 		/// <summary>
 		/// Initializes fields based on a template button.
@@ -89,7 +95,7 @@ namespace PeterHan.PLib {
 			else {
 				// Initialization: Text style and font
 				var text = obj.GetComponent<LocText>();
-				ButtonTextStyle = text.textStyleSetting;
+				UITextStyle = text.textStyleSetting;
 				ButtonFont = text.font;
 			}
 			// Initialization: Button sounds
@@ -104,6 +110,11 @@ namespace PeterHan.PLib {
 				LogUIWarning("Missing core prefab!");
 			else {
 				var trPrefab = Traverse.Create(prefab);
+				var bg = prefab.gameObject.GetComponent<Image>();
+				if (bg == null)
+					LogUIWarning("Missing dialog background!");
+				else
+					DialogBackground = bg.color;
 				// Much can be stolen from the Close button!
 				var closeTitle = trPrefab.GetField<KButton>("closeButtonTitle");
 				if (closeTitle == null)

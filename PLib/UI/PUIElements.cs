@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
@@ -48,30 +49,19 @@ namespace PeterHan.PLib {
 		private static readonly Vector2f UPPER_RIGHT = new Vector2f(0.0f, 1.0f);
 
 		/// <summary>
-		/// Adds text describing a particular component if available.
+		/// Safely adds a LocText to a game object without throwing an NRE on construction.
 		/// </summary>
-		/// <param name="result">The location to append the text.</param>
-		/// <param name="component">The component to describe.</param>
-		private static void AddComponentText(StringBuilder result, Component component) {
-			// Include all fields
-			var fields = component.GetType().GetFields(BindingFlags.DeclaredOnly |
-				BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-			// Class specific
-			if (component is LocText lt)
-				result.AppendFormat(", Text={0}, Color={1}, Font={2}", lt.text, lt.color,
-					lt.font);
-			else if (component is Image ki)
-				result.AppendFormat(", Color={0}", ki.color);
-			else if (component is HorizontalOrVerticalLayoutGroup lg)
-				result.AppendFormat(", Child Align={0}, Control W={1}, Control H={2}",
-					lg.childAlignment, lg.childControlWidth, lg.childControlHeight);
-			foreach (var field in fields) {
-				object value = field.GetValue(component) ?? "null";
-				// Value type specific
-				if (value is LayerMask lm)
-					value = "Layer #" + lm.value;
-				result.AppendFormat(", {0}={1}", field.Name, value);
-			}
+		/// <param name="obj">The game object to add the LocText.</param>
+		/// <returns>The added LocText object.</returns>
+		private static LocText AddLocText(GameObject obj) {
+			bool active = obj.activeSelf;
+			obj.SetActive(false);
+			var text = obj.AddComponent<LocText>();
+			// This is enough to let it activate
+			text.key = string.Empty;
+			text.textStyleSetting = PUITuning.UITextStyle;
+			obj.SetActive(active);
+			return text;
 		}
 
 		/// <summary>
@@ -121,17 +111,54 @@ namespace PeterHan.PLib {
 			button.AddComponent<LayoutElement>().flexibleWidth = 0;
 			button.AddComponent<ToolTip>();
 			// Add text to the button
-			var textChild = CreateUI(button, "Text", new Insets());
-			textChild.SetActive(false);
-			// Add text component to display the text
-			var text = textChild.AddComponent<LocText>();
-			text.key = string.Empty;
+			var textChild = CreateUI(button, "Text");
+			var text = AddLocText(textChild);
 			text.alignment = TMPro.TextAlignmentOptions.Center;
-			text.textStyleSetting = PUITuning.ButtonTextStyle;
 			text.font = PUITuning.ButtonFont;
-			textChild.SetActive(true);
 			button.SetActive(true);
 			return button;
+		}
+
+		/// <summary>
+		/// Creates a dialog.
+		/// </summary>
+		/// <param name="name">The dialog name.</param>
+		/// <param name="title">The dialog title.</param>
+		/// <param name="size">The dialog size.</param>
+		/// <returns>The dialog.</returns>
+		public static GameObject CreateDialog(string name, string title = "Dialog",
+				Vector2f size = default) {
+			var dialog = CreateUI(FrontEndManager.Instance.gameObject, name ?? "Dialog");
+			// Background
+			dialog.AddComponent<Image>().color = PUITuning.DialogBackground;
+			dialog.AddComponent<Canvas>();
+			dialog.AddComponent<LayoutElement>();
+			// Layout vertically
+			var lg = dialog.AddComponent<VerticalLayoutGroup>();
+			lg.childForceExpandWidth = true;
+			lg.padding = new RectOffset(1, 1, 1, 1);
+			lg.spacing = 1.0f;
+			// Header
+			var header = CreateUI(dialog, "Header");
+			header.AddComponent<Image>().color = PUITuning.ButtonColorPink;
+			header.AddComponent<LayoutElement>().minHeight = 24.0f;
+			// Title bar
+			var titleBar = CreateUI(header, "Title");
+			var text = AddLocText(titleBar);
+			text.text = title;
+			text.alignment = TMPro.TextAlignmentOptions.Center;
+			text.font = PUITuning.ButtonFont;
+			// Body
+			var panel = CreateUI(dialog, "Panel");
+			panel.AddComponent<Image>().color = PUITuning.ButtonColorBlue;
+			panel.AddComponent<LayoutElement>();
+			// Resize it
+			if (size.x > 0.0f && size.y > 0.0f)
+				SetSize(panel, size);
+			dialog.AddComponent<KScreen>();
+			dialog.AddComponent<GraphicRaycaster>();
+			AddSizeFitter(dialog, ContentSizeFitter.FitMode.PreferredSize);
+			return dialog;
 		}
 
 		/// <summary>
@@ -139,9 +166,9 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <param name="parent">The object's parent.</param>
 		/// <param name="name">The object name.</param>
-		/// <param name="margins">The margins inside the parent object. Leave out to disable anchoring to parent.</param>
+		/// <param name="margins">The margins inside the parent object. Leave null to disable anchoring to parent.</param>
 		/// <returns>The UI object with transform and canvas initialized.</returns>
-		private static GameObject CreateUI(GameObject parent, string name, Insets margins =
+		private static GameObject CreateUI(GameObject parent, string name, RectOffset margins =
 				null) {
 			var element = Util.NewGameObject(parent, name);
 			// Size and position
@@ -151,97 +178,15 @@ namespace PeterHan.PLib {
 			transform.anchoredPosition = CENTER;
 			transform.anchorMax = UPPER_RIGHT;
 			transform.anchorMin = LOWER_LEFT;
+			// Margins from the parent component
 			if (margins != null) {
-				transform.offsetMax = margins.GetOffsetMax();
-				transform.offsetMin = margins.GetOffsetMin();
+				transform.offsetMax = new Vector2f(margins.right, margins.top);
+				transform.offsetMin = new Vector2f(margins.left, margins.bottom);
 			}
+			// All UI components need a canvas renderer for some reason
 			element.AddComponent<CanvasRenderer>();
 			element.layer = LayerMask.NameToLayer("UI");
 			return element;
-		}
-
-		/// <summary>
-		/// Dumps information about the parent tree of the specified GameObject to the debug
-		/// log.
-		/// </summary>
-		/// <param name="item">The item to determine hierarchy.</param>
-		public static void DebugObjectHierarchy(GameObject item) {
-			string info = "null";
-			if (item != null) {
-				var result = new StringBuilder(256);
-				do {
-					result.Append("- ");
-					result.Append(item.name ?? "Unnamed");
-					item = item.transform?.parent?.gameObject;
-					if (item != null)
-						result.AppendLine();
-				} while (item != null);
-				info = result.ToString();
-			}
-			PUtil.LogDebug("Object Tree:" + Environment.NewLine + info);
-		}
-
-		/// <summary>
-		/// Dumps information about the specified GameObject to the debug log.
-		/// </summary>
-		/// <param name="root">The root hierarchy to dump.</param>
-		public static void DebugObjectTree(GameObject root) {
-			string info = "null";
-			if (root != null)
-				info = GetObjectTree(root, 0);
-			PUtil.LogDebug("Object Dump:" + Environment.NewLine + info);
-		}
-
-		/// <summary>
-		/// Creates a string recursively describing the specified GameObject.
-		/// </summary>
-		/// <param name="root">The root GameObject hierarchy.</param>
-		/// <returns>A string describing this game object.</returns>
-		private static string GetObjectTree(GameObject root, int indent) {
-			var result = new StringBuilder(1024);
-			// Calculate indent to make nested reading easier
-			var solBuilder = new StringBuilder(indent);
-			for (int i = 0; i < indent; i++)
-				solBuilder.Append(' ');
-			string sol = solBuilder.ToString();
-			var transform = root.transform;
-			int n = transform.childCount;
-			// Basic information
-			result.Append(sol).AppendFormat("GameObject[{0}, {1:D} child(ren), Layer {2:D}, " +
-				"Active={3}]", root.name, n, root.layer, root.activeInHierarchy).AppendLine();
-			// Transformation
-			result.Append(sol).AppendFormat(" Translation={0} [{3}] Rotation={1} [{4}] " +
-				"Scale={2}", transform.position, transform.rotation, transform.
-				localScale, transform.localPosition, transform.localRotation).AppendLine();
-			// Components
-			foreach (var component in root.GetComponents<Component>()) {
-				if (component is RectTransform rt) {
-					// UI rectangle
-					var rect = rt.rect;
-					Vector2 pivot = rt.pivot, aMin = rt.anchorMin, aMax = rt.anchorMax;
-					result.Append(sol).AppendFormat(" Rect[Coords=({0:F2},{1:F2}) " +
-						"Size=({2:F2},{3:F2}) Pivot=({4:F2},{5:F2}) ", rect.xMin,
-						rect.yMin, rect.width, rect.height, pivot.x, pivot.y);
-					result.AppendFormat("AnchorMin=({0:F2},{1:F2}), AnchorMax=({2:F2}," +
-						"{3:F2})]", aMin.x, aMin.y, aMax.x, aMax.y).AppendLine();
-				} else if (component != null && !(component is Transform)) {
-					// Exclude destroyed components and Transform objects
-					result.Append(sol).Append(" Component[").Append(component.GetType().
-						FullName);
-					AddComponentText(result, component);
-					result.AppendLine("]");
-				}
-			}
-			// Children
-			if (n > 0)
-				result.Append(sol).AppendLine(" Children:");
-			for (int i = 0; i < n; i++) {
-				var child = transform.GetChild(i).gameObject;
-				if (child != null)
-					// Exclude destroyed objects
-					result.AppendLine(GetObjectTree(child, indent + 2));
-			}
-			return result.ToString().TrimEnd();
 		}
 
 		/// <summary>
@@ -250,20 +195,13 @@ namespace PeterHan.PLib {
 		/// <param name="uiElement">The UI element to modify.</param>
 		/// <param name="minSize">The minimum size in units.</param>
 		public static void SetSize(GameObject uiElement, Vector2f minSize) {
-			float minX = minSize.x, minY = minSize.y;
 			if (uiElement == null)
 				throw new ArgumentNullException("uiElement");
 			var le = uiElement.GetComponent<LayoutElement>();
 			if (le != null) {
-				le.minWidth = minX;
-				le.minHeight = minY;
+				le.minWidth = minSize.x;
+				le.minHeight = minSize.y;
 			}
-			/*var rt = uiElement.rectTransform();
-			if (rt != null) {
-				rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, minX);
-				rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, minY);
-				LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
-			}*/
 		}
 
 		/// <summary>
@@ -313,5 +251,7 @@ namespace PeterHan.PLib {
 			confirmDialog.gameObject.SetActive(true);
 			return confirmDialog;
 		}
+
+		private PUIElements() { }
 	}
 }

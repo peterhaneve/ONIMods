@@ -145,8 +145,12 @@ namespace PeterHan.PLib {
 			/// Triggered when the Mod Options button is clicked.
 			/// </summary>
 			public void OnModOptions() {
-				var optionsScreen = KScreenManager.Instance.StartScreen(ScreenPrefabs.Instance.
-					ConfirmDialogScreen.gameObject, modsScreen.gameObject);
+				/*var optionsScreen = KScreenManager.Instance.StartScreen(ScreenPrefabs.Instance.
+					ConfirmDialogScreen.gameObject, modsScreen.gameObject);*/
+				var screen = PUIElements.CreateDialog("ModOptions", "Options Window",
+					new Vector2f(400.0f, 200.0f));
+				screen.GetComponent<KScreen>().Activate();
+				screen.DebugObjectTree();
 			}
 		}
 	}
