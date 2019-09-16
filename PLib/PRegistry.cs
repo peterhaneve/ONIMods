@@ -54,6 +54,11 @@ namespace PeterHan.PLib {
 		#endregion
 
 		/// <summary>
+		/// The Harmony instance name used when patching via PLib.
+		/// </summary>
+		internal const string PLIB_HARMONY = "PeterHan.PLib";
+
+		/// <summary>
 		/// The instantiated instance of PLibRegistry, if it has been added as a component.
 		/// </summary>
 		private static PRegistry instance = null;
@@ -177,7 +182,7 @@ namespace PeterHan.PLib {
 			}
 			modData = new Dictionary<string, object>(64);
 			Patches = new Dictionary<string, object>(32);
-			PLibInstance = HarmonyInstance.Create("PeterHan.PLib");
+			PLibInstance = HarmonyInstance.Create(PLIB_HARMONY);
 
 			// Action 0 is reserved
 			modData.Add(KEY_ACTION_ID, 1);

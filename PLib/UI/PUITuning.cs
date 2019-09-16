@@ -16,7 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
+using Harmony;
+using System.Reflection;
 using UnityEngine;
 
 namespace PeterHan.PLib {
@@ -24,37 +25,115 @@ namespace PeterHan.PLib {
 	/// Sets up common parameters for the UI in PLib based mods. Note that this class is still
 	/// specific to individual mods so the values in the latest PLib will not supersede them.
 	/// </summary>
-	static class PUITuning {
+	internal static class PUITuning {
 		/// <summary>
-		/// The default color used on buttons.
+		/// The default color used on blue buttons.
 		/// </summary>
-		public static Color BUTTON_COLOR { get; } = new Color(0.243137f, 0.262745f, 0.341176f);
+		internal static Color ButtonColorBlue { get; private set; }
 
 		/// <summary>
-		/// The color styles used on buttons.
+		/// The default color used on pink buttons.
 		/// </summary>
-		public static ColorStyleSetting BUTTON_STYLE { get; private set; }
+		internal static Color ButtonColorPink { get; private set; }
 
 		/// <summary>
-		/// The text styles used on buttons.
+		/// The font used on all buttons
 		/// </summary>
-		public static TextStyleSetting BUTTON_TEXT_STYLE { get; private set; }
+		internal static TMPro.TMP_FontAsset ButtonFont { get; private set; }
+
+		/// <summary>
+		/// The default image used for button appearance.
+		/// </summary>
+		internal static KImage ButtonImage { get; private set; }
+
+		/// <summary>
+		/// The sounds played by the button.
+		/// </summary>
+		internal static ButtonSoundPlayer ButtonSounds { get; private set; }
+
+		/// <summary>
+		/// The color styles used on pink buttons.
+		/// </summary>
+		internal static ColorStyleSetting ButtonStylePink { get; private set; }
+
+		/// <summary>
+		/// The color styles used on blue buttons.
+		/// </summary>
+		internal static ColorStyleSetting ButtonStyleBlue { get; private set; }
+
+		/// <summary>
+		/// The text styles used on all buttons.
+		/// </summary>
+		internal static TextStyleSetting ButtonTextStyle { get; private set; }
+
+		/// <summary>
+		/// Initializes fields based on a template button.
+		/// </summary>
+		private static void InitFromTitleButton(KButton closeTitle) {
+			// Initialization: Button colors
+			ButtonStyleBlue = closeTitle.colorStyleSetting;
+			ButtonColorBlue = ButtonStyleBlue.inactiveColor;
+		}
+
+		/// <summary>
+		/// Initializes fields based on a template button.
+		/// </summary>
+		private static void InitFromCloseButton(KButton close) {
+			GameObject obj;
+			// Initialization: Button colors
+			ButtonStylePink = close.colorStyleSetting;
+			ButtonColorPink = ButtonStylePink.inactiveColor;
+			var transform = close.gameObject.transform;
+			if (transform.childCount <= 0 || (obj = transform.GetChild(0).gameObject) == null)
+				LogUIWarning("Core button has wrong format!");
+			else {
+				// Initialization: Text style and font
+				var text = obj.GetComponent<LocText>();
+				ButtonTextStyle = text.textStyleSetting;
+				ButtonFont = text.font;
+			}
+			// Initialization: Button sounds
+			ButtonSounds = close.soundPlayer;
+			ButtonImage = close.GetComponent<KImage>();
+		}
 
 		static PUITuning() {
-			// Initialization: Button style
-			BUTTON_STYLE = ScriptableObject.CreateInstance<ColorStyleSetting>();
-			BUTTON_STYLE.name = "PUIButtonStyle";
-			BUTTON_STYLE.activeColor = new Color(0.503352f, 0.544442f, 0.698529f);
-			BUTTON_STYLE.inactiveColor = BUTTON_COLOR;
-			BUTTON_STYLE.disabledColor = new Color(0.415686f, 0.411765f, 0.4f);
-			BUTTON_STYLE.disabledActiveColor = new Color(0.625f, 0.615809f, 0.588235f);
-			BUTTON_STYLE.hoverColor = new Color(0.346129f, 0.373962f, 0.485294f);
-			BUTTON_STYLE.disabledhoverColor = new Color(0.5f, 0.48989f, 0.459559f);
-			// Initialization: Button text stylke
-			BUTTON_TEXT_STYLE = ScriptableObject.CreateInstance<TextStyleSetting>();
-			BUTTON_TEXT_STYLE.name = "PUIButtonTextStyle";
-			BUTTON_TEXT_STYLE.enableWordWrapping = true;
-			BUTTON_TEXT_STYLE.textColor = new Color(1.0f, 1.0f, 1.0f);
+			// Ouch! Hacky!
+			var prefab = Global.Instance.modErrorsPrefab?.GetComponent<KMod.ModErrorsScreen>();
+			if (prefab == null)
+				LogUIWarning("Missing core prefab!");
+			else {
+				var trPrefab = Traverse.Create(prefab);
+				// Much can be stolen from the Close button!
+				var closeTitle = trPrefab.GetField<KButton>("closeButtonTitle");
+				if (closeTitle == null)
+					LogUIWarning("Missing core button!");
+				else
+					InitFromTitleButton(closeTitle);
+				var close = trPrefab.GetField<KButton>("closeButton");
+				if (close == null)
+					LogUIWarning("Missing core button!");
+				else
+					InitFromCloseButton(close);
+			}
+		}
+
+		/// <summary>
+		/// Logs a debug message encountered in PLib UI functions.
+		/// </summary>
+		/// <param name="message">The debug message.</param>
+		internal static void LogUIDebug(string message) {
+			Debug.LogFormat("[PLib/UI/{0}] {1}", Assembly.GetCallingAssembly()?.GetName()?.
+				Name ?? "?", message);
+		}
+
+		/// <summary>
+		/// Logs a warning encountered in PLib UI functions.
+		/// </summary>
+		/// <param name="message">The warning message.</param>
+		internal static void LogUIWarning(string message) {
+			Debug.LogWarningFormat("[PLib/UI/{0}] {1}", Assembly.GetCallingAssembly()?.
+				GetName()?.Name ?? "?", message);
 		}
 	}
 }

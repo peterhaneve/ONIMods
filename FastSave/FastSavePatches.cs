@@ -26,14 +26,9 @@ namespace PeterHan.FastSave {
 	/// Patches which will be applied via annotations for Fast Save.
 	/// </summary>
 	public sealed class FastSavePatches {
-		/// <summary>
-		/// Time entries ending this many in-game seconds before the current time will be
-		/// removed.
-		/// </summary>
-		private const float MAX_USAGE_RETAIN = 6200.0f;
-
 		public static void OnLoad() {
 			PUtil.LogModInit();
+			POptions.RegisterOptions(typeof(FastSaveOptions));
 		}
 
 		/// <summary>
@@ -42,7 +37,7 @@ namespace PeterHan.FastSave {
 		/// <param name="values">The logged time entries.</param>
 		/// <param name="time">The current game time.</param>
 		private static void CleanTimes(List<Operational.TimeEntry> values, float time) {
-			float threshold = time - MAX_USAGE_RETAIN;
+			float threshold = time - FastSaveOptions.USAGE_SAFE;
 			var newEntries = ListPool<Operational.TimeEntry, FastSavePatches>.Allocate();
 			foreach (var entry in values) {
 				if (entry.endTime > threshold || entry.startTime > threshold)
@@ -72,6 +67,7 @@ namespace PeterHan.FastSave {
 			}
 		}
 
+		// This patch slowed down the game for little noticeable gain
 #if false
 		/// <summary>
 		/// Applied to Operational to remove old time entries whenever entries are added.

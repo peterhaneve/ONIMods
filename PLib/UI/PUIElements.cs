@@ -33,6 +33,21 @@ namespace PeterHan.PLib {
 		public static readonly Color BG_WHITE = new Color32(255, 255, 255, 255);
 
 		/// <summary>
+		/// Represents an anchor in the center.
+		/// </summary>
+		private static readonly Vector2f CENTER = new Vector2f(0.5f, 0.5f);
+
+		/// <summary>
+		/// Represents an anchor in the lower left corner.
+		/// </summary>
+		private static readonly Vector2f LOWER_LEFT = new Vector2f(1.0f, 0.0f);
+
+		/// <summary>
+		/// Represents an anchor in the upper right corner.
+		/// </summary>
+		private static readonly Vector2f UPPER_RIGHT = new Vector2f(0.0f, 1.0f);
+
+		/// <summary>
 		/// Adds text describing a particular component if available.
 		/// </summary>
 		/// <param name="result">The location to append the text.</param>
@@ -43,7 +58,8 @@ namespace PeterHan.PLib {
 				BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 			// Class specific
 			if (component is LocText lt)
-				result.AppendFormat(", Text={0}", lt.text);
+				result.AppendFormat(", Text={0}, Color={1}, Font={2}", lt.text, lt.color,
+					lt.font);
 			else if (component is Image ki)
 				result.AppendFormat(", Color={0}", ki.color);
 			else if (component is HorizontalOrVerticalLayoutGroup lg)
@@ -79,56 +95,69 @@ namespace PeterHan.PLib {
 		/// Creates a button.
 		/// </summary>
 		/// <param name="parent">The parent which will contain the button.</param>
-		/// <param name="template">The template button to use.</param>
 		/// <param name="name">The button name.</param>
 		/// <param name="onClick">The action to execute on click (optional).</param>
 		/// <returns>The matching button.</returns>
-		public static GameObject CreateButton(GameObject parent, Component template,
-				string name = null, System.Action onClick = null) {
+		public static GameObject CreateButton(GameObject parent, string name = null,
+				System.Action onClick = null) {
 			if (parent == null)
 				throw new ArgumentNullException("parent");
-			if (template == null)
-				throw new ArgumentNullException("template");
-			// Create the button
-			var button = Util.KInstantiateUI(template.gameObject, parent.transform.
-				gameObject, true);
-			if (!string.IsNullOrEmpty(name))
-				button.name = name;
-			// Add action
-			if (onClick != null) {
-				var kButton = button.GetComponent<KButton>();
-				if (kButton != null)
-					kButton.onClick += onClick;
-			}
-			AddSizeFitter(button);
-#if false
-			// TODO Maybe someday...
-			var button = new GameObject(name ?? "Button");
-			button.SetActive(true);
-			button.AddComponent<CanvasRenderer>();
-			var kButton = button.AddComponent<KButton>();
+			var button = CreateUI(parent, name ?? "Button");
+			// Background
+			var kImage = button.AddComponent<KImage>();
+			kImage.colorStyleSetting = PUITuning.ButtonStylePink;
+			kImage.color = PUITuning.ButtonColorPink;
+			kImage.sprite = PUITuning.ButtonImage.sprite;
+			kImage.type = Image.Type.Sliced;
 			// Set on click event
+			var kButton = button.AddComponent<KButton>();
 			if (onClick != null)
 				kButton.onClick += onClick;
 			kButton.additionalKImages = new KImage[0];
-			kButton.bgImage = template.gameObject.GetComponent<KButton>()?.bgImage;
+			kButton.soundPlayer = PUITuning.ButtonSounds;
+			kButton.bgImage = kImage;
 			// Set colors
-			kButton.colorStyleSetting = PUITuning.BUTTON_STYLE;
-			var kImage = button.AddComponent<KImage>();
-			kImage.colorStyleSetting = PUITuning.BUTTON_STYLE;
-			kImage.color = PUITuning.BUTTON_COLOR;
-			button.AddComponent<LayoutElement>();
+			kButton.colorStyleSetting = kImage.colorStyleSetting;
+			button.AddComponent<LayoutElement>().flexibleWidth = 0;
 			button.AddComponent<ToolTip>();
-			AddSizeFitter(button);
 			// Add text to the button
-			var textChild = new GameObject("Text");
+			var textChild = CreateUI(button, "Text", new Insets());
+			textChild.SetActive(false);
+			// Add text component to display the text
+			var text = textChild.AddComponent<LocText>();
+			text.key = string.Empty;
+			text.alignment = TMPro.TextAlignmentOptions.Center;
+			text.textStyleSetting = PUITuning.ButtonTextStyle;
+			text.font = PUITuning.ButtonFont;
 			textChild.SetActive(true);
-			textChild.transform.SetParent(button.transform);
-			textChild.AddComponent<CanvasRenderer>();
-			textChild.AddComponent<SetTextStyleSetting>().SetStyle(PUITuning.BUTTON_TEXT_STYLE);
-			DebugObjectTree(button);
-#endif
+			button.SetActive(true);
 			return button;
+		}
+
+		/// <summary>
+		/// Creates a UI game object.
+		/// </summary>
+		/// <param name="parent">The object's parent.</param>
+		/// <param name="name">The object name.</param>
+		/// <param name="margins">The margins inside the parent object. Leave out to disable anchoring to parent.</param>
+		/// <returns>The UI object with transform and canvas initialized.</returns>
+		private static GameObject CreateUI(GameObject parent, string name, Insets margins =
+				null) {
+			var element = Util.NewGameObject(parent, name);
+			// Size and position
+			var transform = element.AddOrGet<RectTransform>();
+			transform.localScale = Vector3.one;
+			transform.pivot = CENTER;
+			transform.anchoredPosition = CENTER;
+			transform.anchorMax = UPPER_RIGHT;
+			transform.anchorMin = LOWER_LEFT;
+			if (margins != null) {
+				transform.offsetMax = margins.GetOffsetMax();
+				transform.offsetMin = margins.GetOffsetMin();
+			}
+			element.AddComponent<CanvasRenderer>();
+			element.layer = LayerMask.NameToLayer("UI");
+			return element;
 		}
 
 		/// <summary>
@@ -178,20 +207,23 @@ namespace PeterHan.PLib {
 			var transform = root.transform;
 			int n = transform.childCount;
 			// Basic information
-			result.Append(sol).AppendFormat("GameObject[{0}, {1:D} child(ren), Layer {2:D}]",
-				root.name, n, root.layer).AppendLine();
+			result.Append(sol).AppendFormat("GameObject[{0}, {1:D} child(ren), Layer {2:D}, " +
+				"Active={3}]", root.name, n, root.layer, root.activeInHierarchy).AppendLine();
 			// Transformation
-			result.Append(sol).AppendFormat(" Translation=<{0}> Rotation=<{1}> Scale=<{2}>",
-				transform.localPosition, transform.localRotation, transform.localScale).
-				AppendLine();
+			result.Append(sol).AppendFormat(" Translation={0} [{3}] Rotation={1} [{4}] " +
+				"Scale={2}", transform.position, transform.rotation, transform.
+				localScale, transform.localPosition, transform.localRotation).AppendLine();
 			// Components
 			foreach (var component in root.GetComponents<Component>()) {
 				if (component is RectTransform rt) {
 					// UI rectangle
 					var rect = rt.rect;
-					result.Append(sol).AppendFormat(" RectTransform[Left={0:F2} Top={1:F2} " +
-						"Right={2:F2} Bottom={3:F2}]", rect.xMin, rect.yMin, rect.xMax,
-						rect.yMax).AppendLine();
+					Vector2 pivot = rt.pivot, aMin = rt.anchorMin, aMax = rt.anchorMax;
+					result.Append(sol).AppendFormat(" Rect[Coords=({0:F2},{1:F2}) " +
+						"Size=({2:F2},{3:F2}) Pivot=({4:F2},{5:F2}) ", rect.xMin,
+						rect.yMin, rect.width, rect.height, pivot.x, pivot.y);
+					result.AppendFormat("AnchorMin=({0:F2},{1:F2}), AnchorMax=({2:F2}," +
+						"{3:F2})]", aMin.x, aMin.y, aMax.x, aMax.y).AppendLine();
 				} else if (component != null && !(component is Transform)) {
 					// Exclude destroyed components and Transform objects
 					result.Append(sol).Append(" Component[").Append(component.GetType().
@@ -213,6 +245,28 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Sets a UI element's minimum size.
+		/// </summary>
+		/// <param name="uiElement">The UI element to modify.</param>
+		/// <param name="minSize">The minimum size in units.</param>
+		public static void SetSize(GameObject uiElement, Vector2f minSize) {
+			float minX = minSize.x, minY = minSize.y;
+			if (uiElement == null)
+				throw new ArgumentNullException("uiElement");
+			var le = uiElement.GetComponent<LayoutElement>();
+			if (le != null) {
+				le.minWidth = minX;
+				le.minHeight = minY;
+			}
+			/*var rt = uiElement.rectTransform();
+			if (rt != null) {
+				rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, minX);
+				rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, minY);
+				LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
+			}*/
+		}
+
+		/// <summary>
 		/// Sets a UI element's text.
 		/// </summary>
 		/// <param name="uiElement">The UI element to modify.</param>
@@ -222,7 +276,7 @@ namespace PeterHan.PLib {
 				throw new ArgumentNullException("uiElement");
 			var title = uiElement.GetComponentInChildren<LocText>();
 			if (title != null)
-				title.text = text ?? string.Empty;
+				title.SetText(text ?? string.Empty);
 		}
 
 		/// <summary>

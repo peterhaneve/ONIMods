@@ -20,34 +20,23 @@ using System;
 
 namespace PeterHan.PLib {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// An attribute placed on an option field or enum value for a class used as mod options in
+	/// order to denote the display title and other options.
 	/// </summary>
-	public static class PVersion {
+	public sealed class OptionAttribute : Attribute {
 		/// <summary>
-		/// The PLib version.
+		/// The option title.
 		/// </summary>
-		public const string VERSION = "2.5.0.0";
+		public string Title { get; }
 
-		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in Mod_OnLoad, and will always return false in those cases.
-		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				bool latest = false;
-				try {
-					latest = new Version(VERSION) == PSharedData.GetData<Version>(PRegistry.
-						KEY_VERSION);
-				} catch (OverflowException) {
-				} catch (FormatException) {
-				} catch (ArgumentOutOfRangeException) {
-				}
-				return latest;
-			}
+		public OptionAttribute(string title) {
+			if (string.IsNullOrEmpty(title))
+				throw new ArgumentNullException("title");
+			Title = title;
+		}
+
+		public override string ToString() {
+			return Title;
 		}
 	}
 }

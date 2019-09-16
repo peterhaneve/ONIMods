@@ -30,17 +30,17 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// The text shown on the Done button.
 		/// </summary>
-		public static readonly LocString BUTTON_OK = STRINGS.UI.FRONTEND.OPTIONS_SCREEN.BACK;
+		public static LocString BUTTON_OK = STRINGS.UI.FRONTEND.OPTIONS_SCREEN.BACK;
 
 		/// <summary>
 		/// The text shown on the Options button.
 		/// </summary>
-		public static readonly LocString BUTTON_OPTIONS = STRINGS.UI.FRONTEND.MAINMENU.OPTIONS;
+		public static LocString BUTTON_OPTIONS = STRINGS.UI.FRONTEND.MAINMENU.OPTIONS;
 
 		/// <summary>
 		/// The dialog title, where {0} is substituted with the mod friendly name.
 		/// </summary>
-		public static readonly string DIALOG_TITLE = "Options for {0}";
+		public static LocString DIALOG_TITLE = "Options for {0}";
 
 		/// <summary>
 		/// The location where mod option types are stored.
@@ -55,28 +55,26 @@ namespace PeterHan.PLib {
 		private static void AddModOptions(ModsScreen instance, Traverse modEntry) {
 			var modSpec = Global.Instance.modManager.mods[modEntry.GetField<int>(
 				"mod_index")];
+			var transform = modEntry.GetField<RectTransform>("rect_transform");
 			string modID = modSpec.label.id;
 			if (modSpec.enabled && !string.IsNullOrEmpty(modID) && options.TryGetValue(modID,
-					out Type optionsType)) {
-				var transform = modEntry.GetField<RectTransform>("rect_transform");
-				// Copy the Manage button
-				var templateButton = transform.Find("ManageButton");
-				if (templateButton == null)
-					PUtil.LogWarning("Could not find template button!");
-				else {
-					// Create delegate to spawn actions dialog
-					var action = new OptionsAction(instance, optionsType);
-					var settingsButton = PUIElements.CreateButton(transform.gameObject,
-						templateButton, "ModSettingsButton", action.OnModOptions);
-					PUIElements.AddSizeFitter(settingsButton);
-					PUIElements.SetText(settingsButton, BUTTON_OPTIONS.text);
-					PUIElements.SetToolTip(settingsButton, DIALOG_TITLE.F(modSpec.title));
-					// Move before the subscription and enable button
-					settingsButton.transform.SetSiblingIndex(3);
-				}
+					out Type optionsType) && transform != null) {
+				// Create delegate to spawn actions dialog
+				var action = new OptionsAction(instance, optionsType);
+				var settingsButton = PUIElements.CreateButton(transform.gameObject,
+					"ModSettingsButton", action.OnModOptions);
+				PUIElements.SetText(settingsButton, BUTTON_OPTIONS);
+				PUIElements.SetToolTip(settingsButton, DIALOG_TITLE.text.F(modSpec.title));
+				PUIElements.SetSize(settingsButton, new Vector2f(100.0f, 40.0f));
+				// Move before the subscription and enable button
+				settingsButton.transform.SetSiblingIndex(3);
 			}
 		}
 
+		/// <summary>
+		/// Registers a class as a mod options class.
+		/// </summary>
+		/// <param name="optionsType">The class which will represent the options for this mod.</param>
 		public static void RegisterOptions(Type optionsType) {
 			if (optionsType == null)
 				throw new ArgumentNullException("optionsType");
@@ -86,10 +84,24 @@ namespace PeterHan.PLib {
 				var modDir = Directory.GetParent(assembly.Location);
 				if (modDir != null) {
 					var id = Path.GetFileName(modDir.FullName);
-					if (options.ContainsKey(id))
-						PUtil.LogWarning("Duplicate mod ID: " + id);
-					else
-						options.Add(id, optionsType);
+					// Prevent concurrent modification (should be impossible anyways)
+					lock (options) {
+						if (options.Count < 1) {
+							// Patch in the mods screen
+							var instance = HarmonyInstance.Create(PRegistry.PLIB_HARMONY);
+							instance.Patch(typeof(ModsScreen), "BuildDisplay", null,
+								new HarmonyMethod(typeof(POptions), "BuildDisplay_Postfix"));
+							PUtil.LogDebug("Patched mods options screen");
+						}
+						if (options.ContainsKey(id))
+							PUtil.LogWarning("Duplicate mod ID: " + id);
+						else {
+							// Add as options for this mod
+							options.Add(id, optionsType);
+							PUtil.LogDebug("Registered mod options class {0} for {1}".F(
+								optionsType.Name, assembly.GetName()?.Name));
+						}
+					}
 					hasPath = true;
 				}
 			} catch (IOException) { }
@@ -99,19 +111,15 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
-		/// Applied to ModsScreen to add the buttons to BuildDisplay.
+		/// Applied to ModsScreen if mod options are registered, after BuildDisplay runs.
 		/// </summary>
-#if false
-		[HarmonyPatch(typeof(ModsScreen), "BuildDisplay")]
-		public static class ModsScreen_BuildDisplay_Patch {
-			private static void Postfix(ref ModsScreen __instance, ref object ___displayedMods) {
-				// Must cast the type because ModsScreen.DisplayedMod is private
-				var mods = (System.Collections.IEnumerable)___displayedMods;
-				foreach (var displayedMod in mods)
-					AddModOptions(__instance, Traverse.Create(displayedMod));
-			}
+		private static void BuildDisplay_Postfix(ref ModsScreen __instance,
+				ref object ___displayedMods) {
+			// Must cast the type because ModsScreen.DisplayedMod is private
+			var mods = (System.Collections.IEnumerable)___displayedMods;
+			foreach (var displayedMod in mods)
+				AddModOptions(__instance, Traverse.Create(displayedMod));
 		}
-#endif
 
 		/// <summary>
 		/// A triggerable action for handling mod options events that opens the options dialog.
@@ -137,7 +145,6 @@ namespace PeterHan.PLib {
 			/// Triggered when the Mod Options button is clicked.
 			/// </summary>
 			public void OnModOptions() {
-				PUtil.LogDebug("Options for " + optionsType.FullName);
 				var optionsScreen = KScreenManager.Instance.StartScreen(ScreenPrefabs.Instance.
 					ConfirmDialogScreen.gameObject, modsScreen.gameObject);
 			}

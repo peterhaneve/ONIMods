@@ -16,38 +16,60 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
-
 namespace PeterHan.PLib {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// Used to initialize a GUI component's insets from its parent.
 	/// </summary>
-	public static class PVersion {
+	public sealed class Insets {
 		/// <summary>
-		/// The PLib version.
+		/// The left inset.
 		/// </summary>
-		public const string VERSION = "2.5.0.0";
+		public float Left { get; set; }
 
 		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in Mod_OnLoad, and will always return false in those cases.
+		/// The right inset.
 		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				bool latest = false;
-				try {
-					latest = new Version(VERSION) == PSharedData.GetData<Version>(PRegistry.
-						KEY_VERSION);
-				} catch (OverflowException) {
-				} catch (FormatException) {
-				} catch (ArgumentOutOfRangeException) {
-				}
-				return latest;
-			}
+		public float Right { get; set; }
+
+		/// <summary>
+		/// The top inset.
+		/// </summary>
+		public float Top { get; set; }
+
+		/// <summary>
+		/// The bottom inset.
+		/// </summary>
+		public float Bottom { get; set; }
+
+		public Insets() : this(0.0f, 0.0f, 0.0f, 0.0f) {
+		}
+
+		public Insets(float left, float right, float top, float bottom) {
+			Left = left;
+			Right = right;
+			Top = top;
+			Bottom = bottom;
+		}
+
+		/// <summary>
+		/// Retrieves the minimum offset.
+		/// </summary>
+		/// <returns>The offsets of the top left corner.</returns>
+		public Vector2f GetOffsetMin() {
+			return new Vector2f(Left, Top);
+		}
+
+		/// <summary>
+		/// Retrieves the maximum offset.
+		/// </summary>
+		/// <returns>The offsets of the bottom right corner.</returns>
+		public Vector2f GetOffsetMax() {
+			return new Vector2f(Right, Bottom);
+		}
+
+		public override string ToString() {
+			return "Insets[Left={0:F2},Top={1:F2},Right={2:F2},Bottom={3:F2}]".F(Left, Top,
+				Right, Bottom);
 		}
 	}
 }
