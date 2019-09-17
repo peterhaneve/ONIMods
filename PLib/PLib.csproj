@@ -76,6 +76,13 @@
     <Compile Include="POptions.cs" />
     <Compile Include="PRegistry.cs" />
     <Compile Include="PSharedData.cs" />
+    <Compile Include="UI\IUIComponent.cs" />
+    <Compile Include="UI\PLabel.cs" />
+    <Compile Include="UI\PButton.cs" />
+    <Compile Include="UI\PDialog.cs" />
+    <Compile Include="UI\PPanel.cs" />
+    <Compile Include="UI\PSpacer.cs" />
+    <Compile Include="UI\PTextComponent.cs" />
     <Compile Include="UI\PUIElements.cs" />
     <Compile Include="UI\PUITuning.cs" />
     <Compile Include="PUtil.cs" />

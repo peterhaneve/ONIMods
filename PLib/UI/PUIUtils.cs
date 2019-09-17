@@ -22,7 +22,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PeterHan.PLib {
+namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// Utility functions for dealing with Unity UIs.
 	/// </summary>
@@ -40,9 +40,11 @@ namespace PeterHan.PLib {
 			if (component is LocText lt)
 				result.AppendFormat(", Text={0}, Color={1}, Font={2}", lt.text, lt.color,
 					lt.font);
-			else if (component is Image ki)
-				result.AppendFormat(", Color={0}", ki.color);
-			else if (component is HorizontalOrVerticalLayoutGroup lg)
+			else if (component is Image im) {
+				result.AppendFormat(", Color={0}", im.color);
+				if (im is KImage ki)
+					result.AppendFormat(", Sprite={0}", ki.sprite);
+			} else if (component is HorizontalOrVerticalLayoutGroup lg)
 				result.AppendFormat(", Child Align={0}, Control W={1}, Control H={2}",
 					lg.childAlignment, lg.childControlWidth, lg.childControlHeight);
 			foreach (var field in fields) {
@@ -56,6 +58,28 @@ namespace PeterHan.PLib {
 					value = "[" + ar.Join() + "]";
 				result.AppendFormat(", {0}={1}", field.Name, value);
 			}
+		}
+
+		/// <summary>
+		/// Builds a PLib UI object and adds it to an existing UI object.
+		/// </summary>
+		/// <param name="component">The UI object to add.</param>
+		/// <param name="parent">The parent of the new object.</param>
+		/// <param name="index">The sibling index to insert the element at, if provided.</param>
+		/// <returns>The built version of the UI object.</returns>
+		public static GameObject AddTo(this IUIComponent component, GameObject parent,
+				int index = -2) {
+			if (component == null)
+				throw new ArgumentNullException("component");
+			if (parent == null)
+				throw new ArgumentNullException("parent");
+			var child = component.Build();
+			PUIElements.SetParent(child, parent);
+			if (index == -1)
+				child.transform.SetAsLastSibling();
+			else if (index >= 0)
+				child.transform.SetSiblingIndex(index);
+			return child;
 		}
 
 		/// <summary>
@@ -76,7 +100,7 @@ namespace PeterHan.PLib {
 				} while (item != null);
 				info = result.ToString();
 			}
-			PUtil.LogDebug("Object Tree:" + Environment.NewLine + info);
+			LogUIDebug("Object Tree:" + Environment.NewLine + info);
 		}
 
 		/// <summary>
@@ -87,7 +111,7 @@ namespace PeterHan.PLib {
 			string info = "null";
 			if (root != null)
 				info = GetObjectTree(root, 0);
-			PUtil.LogDebug("Object Dump:" + Environment.NewLine + info);
+			LogUIDebug("Object Dump:" + Environment.NewLine + info);
 		}
 
 		/// <summary>
@@ -140,6 +164,24 @@ namespace PeterHan.PLib {
 					result.AppendLine(GetObjectTree(child, indent + 2));
 			}
 			return result.ToString().TrimEnd();
+		}
+
+		/// <summary>
+		/// Logs a debug message encountered in PLib UI functions.
+		/// </summary>
+		/// <param name="message">The debug message.</param>
+		internal static void LogUIDebug(string message) {
+			Debug.LogFormat("[PLib/UI/{0}] {1}", Assembly.GetCallingAssembly()?.GetName()?.
+				Name ?? "?", message);
+		}
+
+		/// <summary>
+		/// Logs a warning encountered in PLib UI functions.
+		/// </summary>
+		/// <param name="message">The warning message.</param>
+		internal static void LogUIWarning(string message) {
+			Debug.LogWarningFormat("[PLib/UI/{0}] {1}", Assembly.GetCallingAssembly()?.
+				GetName()?.Name ?? "?", message);
 		}
 	}
 }

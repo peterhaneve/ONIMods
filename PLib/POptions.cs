@@ -17,8 +17,10 @@
  */
 
 using Harmony;
+using PeterHan.PLib.UI;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using UnityEngine;
 
@@ -60,14 +62,15 @@ namespace PeterHan.PLib {
 			if (modSpec.enabled && !string.IsNullOrEmpty(modID) && options.TryGetValue(modID,
 					out Type optionsType) && transform != null) {
 				// Create delegate to spawn actions dialog
-				var action = new OptionsAction(instance, optionsType);
-				var settingsButton = PUIElements.CreateButton(transform.gameObject,
-					"ModSettingsButton", action.OnModOptions);
-				PUIElements.SetText(settingsButton, BUTTON_OPTIONS);
-				PUIElements.SetToolTip(settingsButton, DIALOG_TITLE.text.F(modSpec.title));
-				PUIElements.SetSize(settingsButton, new Vector2f(100.0f, 40.0f));
-				// Move before the subscription and enable button
-				settingsButton.transform.SetSiblingIndex(3);
+				var action = new OptionsAction(instance, optionsType, modSpec);
+				new PButton("ModSettingsButton") {
+					FlexSize = new Vector2f(0.0f, 1.0f),
+					OnClick = action.OnModOptions,
+					Text = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(BUTTON_OPTIONS.text.
+						ToLower()),
+					ToolTip = DIALOG_TITLE.text.F(modSpec.title)
+					// Move before the subscription and enable button
+				}.SetKleiPinkStyle().AddTo(transform.gameObject, 3);
 			}
 		}
 
@@ -113,7 +116,7 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Applied to ModsScreen if mod options are registered, after BuildDisplay runs.
 		/// </summary>
-		private static void BuildDisplay_Postfix(ref ModsScreen __instance,
+		internal static void BuildDisplay_Postfix(ref ModsScreen __instance,
 				ref object ___displayedMods) {
 			// Must cast the type because ModsScreen.DisplayedMod is private
 			var mods = (System.Collections.IEnumerable)___displayedMods;
@@ -126,6 +129,11 @@ namespace PeterHan.PLib {
 		/// </summary>
 		private sealed class OptionsAction {
 			/// <summary>
+			/// The mod whose settings are being modified.
+			/// </summary>
+			private readonly KMod.Mod modSpec;
+
+			/// <summary>
 			/// The Mods screen which will own this dialog.
 			/// </summary>
 			private readonly ModsScreen modsScreen;
@@ -135,7 +143,8 @@ namespace PeterHan.PLib {
 			/// </summary>
 			private readonly Type optionsType;
 
-			public OptionsAction(ModsScreen modsScreen, Type optionsType) {
+			public OptionsAction(ModsScreen modsScreen, Type optionsType, KMod.Mod modSpec) {
+				this.modSpec = modSpec ?? throw new ArgumentNullException("modSpec");
 				this.modsScreen = modsScreen ?? throw new ArgumentNullException("modsScreen");
 				this.optionsType = optionsType ?? throw new ArgumentNullException(
 					"optionsType");
@@ -145,12 +154,10 @@ namespace PeterHan.PLib {
 			/// Triggered when the Mod Options button is clicked.
 			/// </summary>
 			public void OnModOptions() {
-				/*var optionsScreen = KScreenManager.Instance.StartScreen(ScreenPrefabs.Instance.
-					ConfirmDialogScreen.gameObject, modsScreen.gameObject);*/
-				var screen = PUIElements.CreateDialog("ModOptions", "Options Window",
-					new Vector2f(400.0f, 200.0f));
-				screen.GetComponent<KScreen>().Activate();
-				screen.DebugObjectTree();
+				var screen = new PDialog("ModOptions") {
+					Title = DIALOG_TITLE.text.F(modSpec.title)
+				}.Build();
+				screen.AddComponent<ModOptionsScreen>().Activate();
 			}
 		}
 	}
@@ -158,7 +165,7 @@ namespace PeterHan.PLib {
 	/// <summary>
 	/// The screen displayed for mod options.
 	/// </summary>
-	sealed class ModOptionsScreen : KModalScreen {
+	sealed class ModOptionsScreen : KScreen {
 		protected override void OnActivate() {
 			base.OnActivate();
 		}

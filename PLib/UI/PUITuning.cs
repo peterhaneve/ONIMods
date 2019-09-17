@@ -17,40 +17,29 @@
  */
 
 using Harmony;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PeterHan.PLib {
+namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// Sets up common parameters for the UI in PLib based mods. Note that this class is still
 	/// specific to individual mods so the values in the latest PLib will not supersede them.
 	/// </summary>
 	internal static class PUITuning {
 		/// <summary>
-		/// The default color used on blue buttons.
-		/// </summary>
-		internal static Color ButtonColorBlue { get; private set; }
-
-		/// <summary>
-		/// The default color used on pink buttons.
-		/// </summary>
-		internal static Color ButtonColorPink { get; private set; }
-
-		/// <summary>
 		/// The color displayed on dialog backgrounds.
 		/// </summary>
 		internal static Color DialogBackground { get; private set; }
 
 		/// <summary>
-		/// The font used on all buttons
+		/// The font used on all buttons.
 		/// </summary>
 		internal static TMPro.TMP_FontAsset ButtonFont { get; private set; }
 
 		/// <summary>
 		/// The default image used for button appearance.
 		/// </summary>
-		internal static KImage ButtonImage { get; private set; }
+		internal static Sprite ButtonImage { get; private set; }
 
 		/// <summary>
 		/// The sounds played by the button.
@@ -68,6 +57,16 @@ namespace PeterHan.PLib {
 		internal static ColorStyleSetting ButtonStyleBlue { get; private set; }
 
 		/// <summary>
+		/// The image used for dialog close buttons.
+		/// </summary>
+		internal static Sprite CloseButtonImage { get; private set; }
+
+		/// <summary>
+		/// The default font size.
+		/// </summary>
+		internal static float DefaultFontSize { get; private set; }
+
+		/// <summary>
 		/// The text styles used on all buttons.
 		/// </summary>
 		internal static TextStyleSetting UITextStyle { get; private set; }
@@ -75,76 +74,67 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Initializes fields based on a template button.
 		/// </summary>
-		private static void InitFromTitleButton(KButton closeTitle) {
+		private static void InitCloseButton(KButton closeTitle) {
+			GameObject obj;
 			// Initialization: Button colors
 			ButtonStyleBlue = closeTitle.colorStyleSetting;
-			ButtonColorBlue = ButtonStyleBlue.inactiveColor;
+			var transform = closeTitle.gameObject.transform;
+			if (transform.childCount <= 0 || (obj = transform.GetChild(0).gameObject) == null)
+				PUIUtils.LogUIWarning("Core button has wrong format!");
+			else
+				// Initialization: Close button sprite
+				CloseButtonImage = obj.GetComponent<Image>()?.sprite;
 		}
 
 		/// <summary>
 		/// Initializes fields based on a template button.
 		/// </summary>
-		private static void InitFromCloseButton(KButton close) {
+		private static void InitTitleButton(KButton close) {
 			GameObject obj;
 			// Initialization: Button colors
 			ButtonStylePink = close.colorStyleSetting;
-			ButtonColorPink = ButtonStylePink.inactiveColor;
 			var transform = close.gameObject.transform;
 			if (transform.childCount <= 0 || (obj = transform.GetChild(0).gameObject) == null)
-				LogUIWarning("Core button has wrong format!");
+				PUIUtils.LogUIWarning("Core button has wrong format!");
 			else {
 				// Initialization: Text style and font
 				var text = obj.GetComponent<LocText>();
-				UITextStyle = text.textStyleSetting;
-				ButtonFont = text.font;
+				if (text != null) {
+					DefaultFontSize = text.fontSize;
+					UITextStyle = text.textStyleSetting;
+					ButtonFont = text.font;
+				}
 			}
 			// Initialization: Button sounds
 			ButtonSounds = close.soundPlayer;
-			ButtonImage = close.GetComponent<KImage>();
+			ButtonImage = close.GetComponent<KImage>()?.sprite;
 		}
 
 		static PUITuning() {
 			// Ouch! Hacky!
 			var prefab = Global.Instance.modErrorsPrefab?.GetComponent<KMod.ModErrorsScreen>();
 			if (prefab == null)
-				LogUIWarning("Missing core prefab!");
+				PUIUtils.LogUIWarning("Missing core prefab!");
 			else {
 				var trPrefab = Traverse.Create(prefab);
-				var bg = prefab.gameObject.GetComponent<Image>();
+				var transform = prefab.gameObject.transform;
+				var bg = transform.Find("Panel")?.GetComponent<Image>();
 				if (bg == null)
-					LogUIWarning("Missing dialog background!");
+					PUIUtils.LogUIWarning("Missing dialog background!");
 				else
 					DialogBackground = bg.color;
 				// Much can be stolen from the Close button!
 				var closeTitle = trPrefab.GetField<KButton>("closeButtonTitle");
 				if (closeTitle == null)
-					LogUIWarning("Missing core button!");
+					PUIUtils.LogUIWarning("Missing core button!");
 				else
-					InitFromTitleButton(closeTitle);
+					InitCloseButton(closeTitle);
 				var close = trPrefab.GetField<KButton>("closeButton");
 				if (close == null)
-					LogUIWarning("Missing core button!");
+					PUIUtils.LogUIWarning("Missing core button!");
 				else
-					InitFromCloseButton(close);
+					InitTitleButton(close);
 			}
-		}
-
-		/// <summary>
-		/// Logs a debug message encountered in PLib UI functions.
-		/// </summary>
-		/// <param name="message">The debug message.</param>
-		internal static void LogUIDebug(string message) {
-			Debug.LogFormat("[PLib/UI/{0}] {1}", Assembly.GetCallingAssembly()?.GetName()?.
-				Name ?? "?", message);
-		}
-
-		/// <summary>
-		/// Logs a warning encountered in PLib UI functions.
-		/// </summary>
-		/// <param name="message">The warning message.</param>
-		internal static void LogUIWarning(string message) {
-			Debug.LogWarningFormat("[PLib/UI/{0}] {1}", Assembly.GetCallingAssembly()?.
-				GetName()?.Name ?? "?", message);
 		}
 	}
 }

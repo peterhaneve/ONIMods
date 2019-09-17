@@ -17,13 +17,12 @@
  */
 
 using System;
-using System.Collections;
-using System.Reflection;
-using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PeterHan.PLib {
+using ContentFitMode = UnityEngine.UI.ContentSizeFitter.FitMode;
+
+namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// Used for creating and managing UI elements.
 	/// </summary>
@@ -32,6 +31,11 @@ namespace PeterHan.PLib {
 		/// A white color used for default backgrounds.
 		/// </summary>
 		public static readonly Color BG_WHITE = new Color32(255, 255, 255, 255);
+
+		/// <summary>
+		/// A completely transparent color.
+		/// </summary>
+		public static readonly Color TRANSPARENT = new Color32(255, 255, 255, 0);
 
 		/// <summary>
 		/// Represents an anchor in the center.
@@ -53,7 +57,7 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <param name="obj">The game object to add the LocText.</param>
 		/// <returns>The added LocText object.</returns>
-		private static LocText AddLocText(GameObject obj) {
+		internal static LocText AddLocText(GameObject obj) {
 			bool active = obj.activeSelf;
 			obj.SetActive(false);
 			var text = obj.AddComponent<LocText>();
@@ -68,120 +72,37 @@ namespace PeterHan.PLib {
 		/// Adds an auto-fit resizer to a UI element.
 		/// </summary>
 		/// <param name="uiElement">The element to resize.</param>
-		/// <param name="mode">The sizing mode to use.</param>
-		public static void AddSizeFitter(GameObject uiElement, ContentSizeFitter.FitMode mode =
-				ContentSizeFitter.FitMode.MinSize) {
+		/// <param name="modeHoriz">The sizing mode to use in the horizontal direction.</param>
+		/// <param name="modeVert">The sizing mode to use in the vertical direction.</param>
+		/// <returns>The UI element, for call chaining.</returns>
+		public static GameObject AddSizeFitter(GameObject uiElement, ContentFitMode modeHoriz =
+				ContentFitMode.PreferredSize, ContentFitMode modeVert = ContentFitMode.
+				PreferredSize) {
 			if (uiElement == null)
 				throw new ArgumentNullException("uiElement");
 			var fitter = uiElement.AddOrGet<ContentSizeFitter>();
-			fitter.horizontalFit = mode;
-			fitter.verticalFit = mode;
+			fitter.horizontalFit = modeHoriz;
+			fitter.verticalFit = modeVert;
 			fitter.enabled = true;
-			fitter.SetLayoutHorizontal();
-			fitter.SetLayoutVertical();
-		}
-
-		/// <summary>
-		/// Creates a button.
-		/// </summary>
-		/// <param name="parent">The parent which will contain the button.</param>
-		/// <param name="name">The button name.</param>
-		/// <param name="onClick">The action to execute on click (optional).</param>
-		/// <returns>The matching button.</returns>
-		public static GameObject CreateButton(GameObject parent, string name = null,
-				System.Action onClick = null) {
-			if (parent == null)
-				throw new ArgumentNullException("parent");
-			var button = CreateUI(parent, name ?? "Button");
-			// Background
-			var kImage = button.AddComponent<KImage>();
-			kImage.colorStyleSetting = PUITuning.ButtonStylePink;
-			kImage.color = PUITuning.ButtonColorPink;
-			kImage.sprite = PUITuning.ButtonImage.sprite;
-			kImage.type = Image.Type.Sliced;
-			// Set on click event
-			var kButton = button.AddComponent<KButton>();
-			if (onClick != null)
-				kButton.onClick += onClick;
-			kButton.additionalKImages = new KImage[0];
-			kButton.soundPlayer = PUITuning.ButtonSounds;
-			kButton.bgImage = kImage;
-			// Set colors
-			kButton.colorStyleSetting = kImage.colorStyleSetting;
-			button.AddComponent<LayoutElement>().flexibleWidth = 0;
-			button.AddComponent<ToolTip>();
-			// Add text to the button
-			var textChild = CreateUI(button, "Text");
-			var text = AddLocText(textChild);
-			text.alignment = TMPro.TextAlignmentOptions.Center;
-			text.font = PUITuning.ButtonFont;
-			button.SetActive(true);
-			return button;
-		}
-
-		/// <summary>
-		/// Creates a dialog.
-		/// </summary>
-		/// <param name="name">The dialog name.</param>
-		/// <param name="title">The dialog title.</param>
-		/// <param name="size">The dialog size.</param>
-		/// <returns>The dialog.</returns>
-		public static GameObject CreateDialog(string name, string title = "Dialog",
-				Vector2f size = default) {
-			var dialog = CreateUI(FrontEndManager.Instance.gameObject, name ?? "Dialog");
-			// Background
-			dialog.AddComponent<Image>().color = PUITuning.DialogBackground;
-			dialog.AddComponent<Canvas>();
-			dialog.AddComponent<LayoutElement>();
-			// Layout vertically
-			var lg = dialog.AddComponent<VerticalLayoutGroup>();
-			lg.childForceExpandWidth = true;
-			lg.padding = new RectOffset(1, 1, 1, 1);
-			lg.spacing = 1.0f;
-			// Header
-			var header = CreateUI(dialog, "Header");
-			header.AddComponent<Image>().color = PUITuning.ButtonColorPink;
-			header.AddComponent<LayoutElement>().minHeight = 24.0f;
-			// Title bar
-			var titleBar = CreateUI(header, "Title");
-			var text = AddLocText(titleBar);
-			text.text = title;
-			text.alignment = TMPro.TextAlignmentOptions.Center;
-			text.font = PUITuning.ButtonFont;
-			// Body
-			var panel = CreateUI(dialog, "Panel");
-			panel.AddComponent<Image>().color = PUITuning.ButtonColorBlue;
-			panel.AddComponent<LayoutElement>();
-			// Resize it
-			if (size.x > 0.0f && size.y > 0.0f)
-				SetSize(panel, size);
-			dialog.AddComponent<KScreen>();
-			dialog.AddComponent<GraphicRaycaster>();
-			AddSizeFitter(dialog, ContentSizeFitter.FitMode.PreferredSize);
-			return dialog;
+			return uiElement;
 		}
 
 		/// <summary>
 		/// Creates a UI game object.
 		/// </summary>
-		/// <param name="parent">The object's parent.</param>
 		/// <param name="name">The object name.</param>
-		/// <param name="margins">The margins inside the parent object. Leave null to disable anchoring to parent.</param>
+		/// <param name="anchor">true to anchor the object, or false otherwise.</param>
 		/// <returns>The UI object with transform and canvas initialized.</returns>
-		private static GameObject CreateUI(GameObject parent, string name, RectOffset margins =
-				null) {
-			var element = Util.NewGameObject(parent, name);
+		internal static GameObject CreateUI(string name, bool anchor = true) {
+			var element = new GameObject(name);
 			// Size and position
 			var transform = element.AddOrGet<RectTransform>();
 			transform.localScale = Vector3.one;
 			transform.pivot = CENTER;
-			transform.anchoredPosition = CENTER;
-			transform.anchorMax = UPPER_RIGHT;
-			transform.anchorMin = LOWER_LEFT;
-			// Margins from the parent component
-			if (margins != null) {
-				transform.offsetMax = new Vector2f(margins.right, margins.top);
-				transform.offsetMin = new Vector2f(margins.left, margins.bottom);
+			if (anchor) {
+				transform.anchoredPosition = CENTER;
+				transform.anchorMax = UPPER_RIGHT;
+				transform.anchorMin = LOWER_LEFT;
 			}
 			// All UI components need a canvas renderer for some reason
 			element.AddComponent<CanvasRenderer>();
@@ -190,18 +111,31 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Sets a UI element's parent.
+		/// </summary>
+		/// <param name="child">The UI element to modify.</param>
+		/// <param name="parent">The new parent object.</param>
+		public static void SetParent(GameObject child, GameObject parent) {
+			if (child == null)
+				throw new ArgumentNullException("child");
+#pragma warning disable IDE0031 // Use null propagation
+			child.transform.SetParent((parent == null) ? null : parent.transform, false);
+#pragma warning restore IDE0031 // Use null propagation
+		}
+
+		/// <summary>
 		/// Sets a UI element's minimum size.
 		/// </summary>
 		/// <param name="uiElement">The UI element to modify.</param>
 		/// <param name="minSize">The minimum size in units.</param>
-		public static void SetSize(GameObject uiElement, Vector2f minSize) {
+		/// <returns>The UI element, for call chaining.</returns>
+		public static GameObject SetMinSize(GameObject uiElement, Vector2f minSize) {
 			if (uiElement == null)
 				throw new ArgumentNullException("uiElement");
-			var le = uiElement.GetComponent<LayoutElement>();
-			if (le != null) {
-				le.minWidth = minSize.x;
-				le.minHeight = minSize.y;
-			}
+			var le = uiElement.AddOrGet<LayoutElement>();
+			le.minWidth = minSize.x;
+			le.minHeight = minSize.y;
+			return uiElement;
 		}
 
 		/// <summary>
@@ -209,12 +143,14 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <param name="uiElement">The UI element to modify.</param>
 		/// <param name="text">The text to display on the element.</param>
-		public static void SetText(GameObject uiElement, string text) {
+		/// <returns>The UI element, for call chaining.</returns>
+		public static GameObject SetText(GameObject uiElement, string text) {
 			if (uiElement == null)
 				throw new ArgumentNullException("uiElement");
-			var title = uiElement.GetComponentInChildren<LocText>();
-			if (title != null)
-				title.SetText(text ?? string.Empty);
+			var lt = uiElement.GetComponentInChildren<LocText>();
+			if (lt != null)
+				lt.SetText(text ?? string.Empty);
+			return uiElement;
 		}
 
 		/// <summary>
@@ -222,13 +158,15 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <param name="uiElement">The UI element to modify.</param>
 		/// <param name="tooltip">The tool tip text to display when hovered.</param>
-		public static void SetToolTip(GameObject uiElement, string tooltip) {
+		/// <returns>The UI element, for call chaining.</returns>
+		public static GameObject SetToolTip(GameObject uiElement, string tooltip) {
 			if (uiElement == null)
 				throw new ArgumentNullException("uiElement");
 			if (!string.IsNullOrEmpty(tooltip)) {
 				var tooltipComponent = uiElement.AddOrGet<ToolTip>();
 				tooltipComponent.toolTip = tooltip;
 			}
+			return uiElement;
 		}
 
 		/// <summary>

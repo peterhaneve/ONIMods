@@ -17,13 +17,14 @@
  */
 
 using Harmony;
-using System;
-using UnityEngine;
 using PeterHan.PLib;
+using PeterHan.PLib.UI;
+using System;
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
 
 using ToolToggleState = ToolParameterMenu.ToggleState;
-using UnityEngine.UI;
 
 namespace PeterHan.SweepByType {
 	/// <summary>
@@ -175,7 +176,7 @@ namespace PeterHan.SweepByType {
 			}
 			obj.AddComponent<GraphicRaycaster>();
 			// Resize window to match its contents
-			PUIElements.AddSizeFitter(obj, ContentSizeFitter.FitMode.PreferredSize);
+			PUIElements.AddSizeFitter(obj);
 			typeSelect.ConfigureScreen(sweepRecipe.Ingredients[0], sweepRecipe);
 			AddEggsAndFoods();
 			var transform = obj.rectTransform();
