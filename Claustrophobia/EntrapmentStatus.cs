@@ -18,6 +18,7 @@
 
 using PeterHan.PLib;
 using System;
+using UnityEngine;
 
 namespace PeterHan.Claustrophobia {
 	/// <summary>
@@ -75,7 +76,7 @@ namespace PeterHan.Claustrophobia {
 		/// <summary>
 		/// The duplicant to which this status applies.
 		/// </summary>
-		public MinionIdentity Victim { get; }
+		public GameObject Victim { get; }
 
 		/// <summary>
 		/// The name of the victim duplicant. Deleted Duplicants crash on retrieving their
@@ -83,7 +84,7 @@ namespace PeterHan.Claustrophobia {
 		/// </summary>
 		public string VictimName { get; }
 
-		public EntrapmentStatus(MinionIdentity victim) {
+		public EntrapmentStatus(GameObject victim) {
 			Victim = victim ?? throw new ArgumentNullException("victim");
 			var trapQuery = ClaustrophobiaChecker.CheckEntrapment(victim);
 			if (trapQuery != null) {

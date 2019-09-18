@@ -62,34 +62,37 @@ namespace PeterHan.Claustrophobia {
 		/// </summary>
 		/// <param name="victim">The Duplicant to check.</param>
 		/// <returns>The results of the entrapment query, or null if they could not be determined.</returns>
-		public static EntrapmentQuery CheckEntrapment(MinionIdentity victim) {
+		internal static EntrapmentQuery CheckEntrapment(GameObject victim) {
 			EntrapmentQuery result = null;
-			var cells = ListPool<int, ClaustrophobiaChecker>.Allocate();
-			var soleOwner = victim.GetSoleOwner();
-			var slots = Db.Get().AssignableSlots;
-			// Check beds
-			CheckAssignedCell(soleOwner, slots.Bed, cells);
-			int bedCell = cells.Count > 0 ? cells[0] : 0;
-			// Check mess tables
-			CheckAssignedCell(soleOwner, slots.MessStation, cells);
-			int messCell = cells.Count > 0 ? cells[0] : 0;
-			// Check toilets
-			CheckAssignedCell(soleOwner, slots.Toilet, cells);
-			int[] toiletCells = cells.ToArray();
-			var navigator = victim.GetComponent<Navigator>();
-			if (navigator != null) {
-				// The result will always be null, just keep the navigable cell total
-				result = new EntrapmentQuery(bedCell, messCell, toiletCells);
-				navigator.RunQuery(result);
+			MinionIdentity mi;
+			if (victim != null && (mi = victim.GetComponent<MinionIdentity>()) != null) {
+				var cells = ListPool<int, ClaustrophobiaChecker>.Allocate();
+				var soleOwner = mi.GetSoleOwner();
+				var slots = Db.Get().AssignableSlots;
+				// Check beds
+				CheckAssignedCell(soleOwner, slots.Bed, cells);
+				int bedCell = cells.Count > 0 ? cells[0] : 0;
+				// Check mess tables
+				CheckAssignedCell(soleOwner, slots.MessStation, cells);
+				int messCell = cells.Count > 0 ? cells[0] : 0;
+				// Check toilets
+				CheckAssignedCell(soleOwner, slots.Toilet, cells);
+				int[] toiletCells = cells.ToArray();
+				var navigator = victim.GetComponent<Navigator>();
+				if (navigator != null) {
+					// The result will always be null, just keep the navigable cell total
+					result = new EntrapmentQuery(bedCell, messCell, toiletCells);
+					navigator.RunQuery(result);
+				}
+				cells.Recycle();
 			}
-			cells.Recycle();
 			return result;
 		}
 
 		/// <summary>
 		/// These Duplicants will be immediately rechecked on the next pass.
 		/// </summary>
-		private IList<MinionIdentity> checkNextFrame;
+		private readonly IList<GameObject> checkNextFrame;
 
 		/// <summary>
 		/// Limits performance impact by cycling through duplicants.
@@ -99,19 +102,19 @@ namespace PeterHan.Claustrophobia {
 		/// <summary>
 		/// Cached Duplicants refreshed on every recycle of the pacer.
 		/// </summary>
-		private IList<MinionIdentity> minionCache;
+		private readonly IList<GameObject> minionCache;
 
 		/// <summary>
 		/// Stores the status of each living Duplicant.
 		/// </summary>
-		private IDictionary<MinionIdentity, EntrapmentStatus> statusCache;
+		private readonly IDictionary<GameObject, EntrapmentStatus> statusCache;
 
 		public ClaustrophobiaChecker() {
-			checkNextFrame = new List<MinionIdentity>(8);
-			minionCache = new List<MinionIdentity>(64);
+			checkNextFrame = new List<GameObject>(8);
+			minionCache = new List<GameObject>(64);
 			minionPacer = 0;
 			// PooledDictionary is useless since this dictionary is created once per load
-			statusCache = new Dictionary<MinionIdentity, EntrapmentStatus>(64);
+			statusCache = new Dictionary<GameObject, EntrapmentStatus>(64);
 		}
 
 		/// <summary>
@@ -192,13 +195,14 @@ namespace PeterHan.Claustrophobia {
 				pair.Value.StillLiving = false;
 			// First iterate living duplicants and add valid entries to the list
 			try {
+				GameObject obj;
 				while (enumerator.MoveNext()) {
 					var dupe = enumerator.Current as MinionIdentity;
 					// Do not replace with ?. since Unity overloads "=="
-					if (dupe != null && dupe.gameObject != null && dupe.isSpawned) {
-						minionCache.Add(dupe);
+					if (dupe != null && (obj = dupe.gameObject) != null && dupe.isSpawned) {
+						minionCache.Add(obj);
 						// Mark entry as valid
-						if (statusCache.TryGetValue(dupe, out EntrapmentStatus entry))
+						if (statusCache.TryGetValue(obj, out EntrapmentStatus entry))
 							entry.StillLiving = true;
 					}
 				}
@@ -208,13 +212,15 @@ namespace PeterHan.Claustrophobia {
 			int living = statusCache.Count;
 			// Clear entries from the cache of deleted / deceased dupes
 			if (living > 0) {
-				var oldDupes = new MinionIdentity[living];
+				var oldDupes = new GameObject[living];
 				statusCache.Keys.CopyTo(oldDupes, 0);
 				foreach (var oldDupe in oldDupes)
 					if (statusCache.TryGetValue(oldDupe, out EntrapmentStatus entry) && !entry.
 							StillLiving) {
 						statusCache.Remove(oldDupe);
+#if DEBUG
 						PUtil.LogDebug("Removing {0} from cache".F(entry.VictimName));
+#endif
 					}
 			}
 		}
@@ -227,8 +233,10 @@ namespace PeterHan.Claustrophobia {
 			GameObject obj;
 			foreach (var dupe in checkNextFrame)
 				// Do not replace with ?. since Unity overloads "=="
-				if (dupe != null && (obj = dupe.gameObject) != null && obj.activeInHierarchy) {
+				if (dupe != null && dupe.activeInHierarchy) {
+#if DEBUG
 					PUtil.LogDebug("Rechecking " + dupe.name);
+#endif
 					checkThisFrame.Add(UpdateStatus(dupe));
 				}
 			checkNextFrame.Clear();
@@ -240,7 +248,6 @@ namespace PeterHan.Claustrophobia {
 		/// <param name="delta">The actual time since the last check.</param>
 		public void Sim1000ms(float delta) {
 			var checkThisFrame = ListPool<EntrapmentStatus, ClaustrophobiaChecker>.Allocate();
-			GameObject obj;
 			int pacer = minionPacer;
 			// Refresh Duplicant cache if necessary
 			if (pacer < 0 || pacer >= minionCache.Count) {
@@ -253,8 +260,7 @@ namespace PeterHan.Claustrophobia {
 			for (int i = 0; i < step && pacer < len; i++) {
 				var dupe = minionCache[pacer++];
 				// Do not replace with ?. since Unity overloads "=="
-				if (dupe != null && (obj = dupe.gameObject) != null && obj.activeInHierarchy &&
-						!obj.IsFalling())
+				if (dupe != null && dupe.activeInHierarchy && !dupe.IsFalling())
 					// Exclude falling Duplicants, they have no pathing
 					checkThisFrame.Add(UpdateStatus(dupe));
 			}
@@ -268,7 +274,7 @@ namespace PeterHan.Claustrophobia {
 		/// </summary>
 		/// <param name="dupe">The Duplicant to check.</param>
 		/// <returns>The status calculated for this Duplicant.</returns>
-		private EntrapmentStatus UpdateStatus(MinionIdentity dupe) {
+		private EntrapmentStatus UpdateStatus(GameObject dupe) {
 			var status = new EntrapmentStatus(dupe);
 			if (statusCache.TryGetValue(dupe, out EntrapmentStatus oldStatus)) {
 				// Copy status from previous entry
