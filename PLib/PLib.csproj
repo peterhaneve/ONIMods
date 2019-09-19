@@ -76,6 +76,8 @@
     <Compile Include="POptions.cs" />
     <Compile Include="PRegistry.cs" />
     <Compile Include="PSharedData.cs" />
+    <Compile Include="UI\BoxLayoutGroup.cs" />
+    <Compile Include="UI\IAutoSize.cs" />
     <Compile Include="UI\IUIComponent.cs" />
     <Compile Include="UI\PLabel.cs" />
     <Compile Include="UI\PButton.cs" />
@@ -94,6 +96,11 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Close.dds" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Button.dds" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

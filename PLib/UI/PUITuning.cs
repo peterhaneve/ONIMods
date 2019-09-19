@@ -75,15 +75,19 @@ namespace PeterHan.PLib.UI {
 		/// Initializes fields based on a template button.
 		/// </summary>
 		private static void InitCloseButton(KButton closeTitle) {
-			GameObject obj;
 			// Initialization: Button colors
 			ButtonStyleBlue = closeTitle.colorStyleSetting;
+#if BORROW_KLEI
+			GameObject obj;
 			var transform = closeTitle.gameObject.transform;
 			if (transform.childCount <= 0 || (obj = transform.GetChild(0).gameObject) == null)
 				PUIUtils.LogUIWarning("Core button has wrong format!");
 			else
 				// Initialization: Close button sprite
 				CloseButtonImage = obj.GetComponent<Image>()?.sprite;
+#else
+			CloseButtonImage = PUtil.LoadSprite("PeterHan.PLib.Assets.Close.dds", 128, 128);
+#endif
 		}
 
 		/// <summary>
@@ -107,7 +111,12 @@ namespace PeterHan.PLib.UI {
 			}
 			// Initialization: Button sounds
 			ButtonSounds = close.soundPlayer;
+#if BORROW_KLEI
 			ButtonImage = close.GetComponent<KImage>()?.sprite;
+#else
+			ButtonImage = PUtil.LoadSprite("PeterHan.PLib.Assets.Button.dds", 16, 16,
+				new Vector4(3.0f, 3.0f, 3.0f, 3.0f));
+#endif
 		}
 
 		static PUITuning() {
@@ -117,12 +126,7 @@ namespace PeterHan.PLib.UI {
 				PUIUtils.LogUIWarning("Missing core prefab!");
 			else {
 				var trPrefab = Traverse.Create(prefab);
-				var transform = prefab.gameObject.transform;
-				var bg = transform.Find("Panel")?.GetComponent<Image>();
-				if (bg == null)
-					PUIUtils.LogUIWarning("Missing dialog background!");
-				else
-					DialogBackground = bg.color;
+				DialogBackground = new Color(0.0f, 0.0f, 0.0f);
 				// Much can be stolen from the Close button!
 				var closeTitle = trPrefab.GetField<KButton>("closeButtonTitle");
 				if (closeTitle == null)

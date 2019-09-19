@@ -25,21 +25,24 @@ namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// A custom UI panel factory which can arrange its children horizontally or vertically.
 	/// </summary>
-	public class PPanel : IUIComponent {
+	public class PPanel : IDynamicSizable {
+		/// <summary>
+		/// The alignment position to use for child elements if they are smaller than the
+		/// required size.
+		/// </summary>
+		public TextAnchor Alignment { get; set; }
+
 		/// <summary>
 		/// The background color of this panel. If null, no color will be used.
 		/// </summary>
 		public Color BackColor { get; set; }
 
 		/// <summary>
-		/// Whether children's dimensions in the opposite direction are controlled at all.
-		/// </summary>
-		public bool ControlOpposite { get; set; }
-
-		/// <summary>
 		/// The direction in which components will be laid out.
 		/// </summary>
 		public PanelDirection Direction { get; set; }
+
+		public bool DynamicSize { get; set; }
 
 		/// <summary>
 		/// The flexible size bounds of this component.
@@ -47,13 +50,8 @@ namespace PeterHan.PLib.UI {
 		public Vector2 FlexSize { get; set; }
 		
 		/// <summary>
-		/// Whether children will be stretched to fill the opposite direction from the layout.
-		/// </summary>
-		public bool ForceStretch { get; set; }
-
-		/// <summary>
-		/// The margin left around the contained components in pixels. If null, 0 margin is
-		/// used.
+		/// The margin left around the contained components in pixels. If null, no margin will
+		/// be used.
 		/// </summary>
 		public RectOffset Margin { get; set; }
 
@@ -72,10 +70,10 @@ namespace PeterHan.PLib.UI {
 		public PPanel() : this(null) { }
 
 		public PPanel(string name) {
+			Alignment = TextAnchor.MiddleCenter;
 			children = new List<IUIComponent>();
-			ControlOpposite = true;
+			DynamicSize = true;
 			FlexSize = Vector2.zero;
-			ForceStretch = false;
 			Name = name ?? "Panel";
 			BackColor = PUITuning.DialogBackground;
 			Direction = PanelDirection.Vertical;
@@ -96,30 +94,25 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public GameObject Build() {
-			HorizontalOrVerticalLayoutGroup lg;
-			var panel = new GameObject(Name);
+			var panel = PUIElements.CreateUI(Name);
 			panel.AddComponent<Image>().color = BackColor;
-			// Add layout component
-			if (Direction == PanelDirection.Horizontal) {
-				lg = panel.AddComponent<HorizontalLayoutGroup>();
-				lg.childControlHeight = ControlOpposite;
-				lg.childForceExpandHeight = ControlOpposite && ForceStretch;
-			} else {
-				lg = panel.AddComponent<VerticalLayoutGroup>();
-				lg.childControlWidth = ControlOpposite;
-				lg.childForceExpandWidth = ControlOpposite && ForceStretch;
-			}
-			if (Spacing > 0)
-				lg.spacing = Spacing;
-			if (Margin != null)
-				lg.padding = Margin;
-			// Set flex size
-			var le = panel.AddComponent<LayoutElement>();
-			le.flexibleWidth = FlexSize.x;
-			le.flexibleHeight = FlexSize.y;
+			panel.layer = LayerMask.NameToLayer("UI");
 			// Add children
 			foreach (var child in children)
 				PUIElements.SetParent(child.Build(), panel);
+			// Add layout component
+			var args = new BoxLayoutParams() {
+				Direction = Direction, Alignment = Alignment, Spacing = Spacing,
+				Margin = Margin
+			};
+			// Gotta love freezable layouts
+			if (DynamicSize) {
+				var lg = panel.AddComponent<BoxLayoutGroup>();
+				lg.Params = args;
+				lg.flexibleWidth = FlexSize.x;
+				lg.flexibleHeight = FlexSize.y;
+			} else
+				BoxLayoutGroup.LayoutNow(panel, args).SetFlexUISize(FlexSize);
 			return panel;
 		}
 

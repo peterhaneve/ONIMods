@@ -158,6 +158,8 @@ namespace PeterHan.PLib {
 					Title = DIALOG_TITLE.text.F(modSpec.title)
 				}.Build();
 				screen.AddComponent<ModOptionsScreen>().Activate();
+				PUIUtils.ForceLayoutRebuild(screen);
+				screen.DebugObjectTree();
 			}
 		}
 	}

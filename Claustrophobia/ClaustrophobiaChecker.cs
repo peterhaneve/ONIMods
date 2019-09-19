@@ -230,7 +230,6 @@ namespace PeterHan.Claustrophobia {
 		/// </summary>
 		/// <param name="checkThisFrame">The Duplicants to check for this frame.</param>
 		private void RecheckLastFrame(IList<EntrapmentStatus> checkThisFrame) {
-			GameObject obj;
 			foreach (var dupe in checkNextFrame)
 				// Do not replace with ?. since Unity overloads "=="
 				if (dupe != null && dupe.activeInHierarchy) {

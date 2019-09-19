@@ -73,7 +73,6 @@ namespace PeterHan.PLib.UI {
 			kButton.bgImage = kImage;
 			// Add foreground image since the background already has one
 			if (Sprite != null) {
-				float width = SpriteSize.x, height = SpriteSize.y;
 				var imageChild = PUIElements.CreateUI("Image");
 				var img = imageChild.AddComponent<Image>();
 				PUIElements.SetParent(imageChild, button);
@@ -81,14 +80,10 @@ namespace PeterHan.PLib.UI {
 				img.preserveAspect = true;
 				kButton.fgImage = img;
 				// Limit size if needed
-				if (width > 0.0f || height > 0.0f) {
-					var ile = imageChild.AddComponent<LayoutElement>();
-					if (width > 0.0f)
-						ile.preferredWidth = width;
-					if (height > 0.0f)
-						ile.preferredHeight = height;
-				} else
-					PUIElements.AddSizeFitter(imageChild);
+				if (SpriteSize.x > 0.0f && SpriteSize.y > 0.0f)
+					PUIElements.SetSizeImmediate(imageChild, SpriteSize);
+				else
+					PUIElements.AddSizeFitter(imageChild, DynamicSize);
 			}
 			// Set colors
 			kButton.colorStyleSetting = trueColor;
@@ -103,19 +98,17 @@ namespace PeterHan.PLib.UI {
 				text.font = PUITuning.ButtonFont;
 				text.enableWordWrapping = WordWrap;
 				text.text = Text;
-				PUIElements.AddSizeFitter(textChild);
+				PUIElements.AddSizeFitter(textChild, DynamicSize);
 			}
 			// Icon and text are side by side
 			var lg = button.AddComponent<HorizontalLayoutGroup>();
+			lg.childAlignment = TextAnchor.MiddleLeft;
 			lg.spacing = Math.Max(IconSpacing, 0);
 			lg.padding = Margin;
-			// Set flex size
-			var le = button.AddComponent<LayoutElement>();
-			le.flexibleWidth = FlexSize.x;
-			le.flexibleHeight = FlexSize.y;
 			// Add tooltip
 			if (!string.IsNullOrEmpty(ToolTip))
 				button.AddComponent<ToolTip>().toolTip = ToolTip;
+			PUIElements.AddSizeFitter(button, DynamicSize).SetFlexUISize(FlexSize);
 			button.SetActive(true);
 			return button;
 		}

@@ -79,6 +79,21 @@ namespace PeterHan.PLib {
 		/// <returns>The sprite thus loaded.</returns>
 		/// <exception cref="ArgumentException">If the image could not be loaded.</exception>
 		public static Sprite LoadSprite(string path, int width, int height) {
+			return LoadSprite(path, width, height, Vector4.zero);
+		}
+
+		/// <summary>
+		/// Loads a DDS sprite embedded in the current assembly as a 9-slice sprite.
+		/// 
+		/// It must be encoded using the DXT5 format.
+		/// </summary>
+		/// <param name="path">The fully qualified path to the DDS image to load.</param>
+		/// <param name="width">The desired width.</param>
+		/// <param name="height">The desired height.</param>
+		/// <param name="border">The sprite border.</param>
+		/// <returns>The sprite thus loaded.</returns>
+		/// <exception cref="ArgumentException">If the image could not be loaded.</exception>
+		public static Sprite LoadSprite(string path, int width, int height, Vector4 border) {
 			// Open a stream to the image
 			try {
 				using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(
@@ -103,7 +118,7 @@ namespace PeterHan.PLib {
 						height, len));
 					// pivot is in RELATIVE coordinates!
 					return Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(
-						0.5f, 0.5f));
+						0.5f, 0.5f), 100.0f, 0, SpriteMeshType.FullRect, border);
 				}
 			} catch (System.IO.IOException e) {
 				throw new ArgumentException("Could not load image: " + path, e);

@@ -37,7 +37,6 @@ namespace PeterHan.PLib.UI {
 
 		public override GameObject Build() {
 			var label = PUIElements.CreateUI(Name);
-			float width = SpriteSize.x, height = SpriteSize.y;
 			// Background
 			if (BackColor.a > 0)
 				label.AddComponent<Image>().color = BackColor;
@@ -57,21 +56,15 @@ namespace PeterHan.PLib.UI {
 				text.enableWordWrapping = WordWrap;
 				text.text = Text;
 			}
-			PUIElements.AddSizeFitter(label);
-			// Set flex size
-			var le = label.AddComponent<LayoutElement>();
-			le.flexibleWidth = FlexSize.x;
-			le.flexibleHeight = FlexSize.y;
-			if (Sprite != null) {
-				if (width > 0.0f)
-					le.preferredWidth = width;
-				if (height > 0.0f)
-					le.preferredHeight = height;
-			}
 			// Add tooltip
 			if (!string.IsNullOrEmpty(ToolTip))
 				label.AddComponent<ToolTip>().toolTip = ToolTip;
-			label.SetActive(true);
+			// Set up size
+			if (SpriteSize.x > 0.0f && SpriteSize.y > 0.0f)
+				PUIElements.SetSizeImmediate(label, SpriteSize);
+			else
+				PUIElements.AddSizeFitter(label, DynamicSize);
+			label.SetFlexUISize(FlexSize).SetActive(true);
 			return label;
 		}
 

@@ -28,11 +28,6 @@ namespace PeterHan.PLib.UI {
 		public string Name { get; }
 
 		/// <summary>
-		/// The dialog size.
-		/// </summary>
-		public Vector2f Size { get; set; }
-
-		/// <summary>
 		/// The dialog's parent.
 		/// </summary>
 		public GameObject Parent { get; set; }
@@ -43,7 +38,6 @@ namespace PeterHan.PLib.UI {
 		public string Title { get; set; }
 
 		public PDialog(string name) {
-			Size = new Vector2f(320.0f, 240.0f);
 			Name = name ?? "Dialog";
 			Parent = FrontEndManager.Instance.gameObject;
 			Title = "Dialog";
@@ -57,14 +51,10 @@ namespace PeterHan.PLib.UI {
 			// Background (needs to be unanchored so PPanel is not useful here)
 			dialog.AddComponent<Image>().color = PUITuning.DialogBackground;
 			dialog.AddComponent<Canvas>();
-			// Lay out components vertically
-			var lg = dialog.AddComponent<VerticalLayoutGroup>();
-			lg.childForceExpandWidth = true;
-			lg.padding = new RectOffset(1, 1, 1, 1);
-			lg.spacing = 1;
 			new PPanel("Header") {
 				// Horizontal title bar
-				Spacing = 3, Direction = PanelDirection.Horizontal
+				Spacing = 3, Direction = PanelDirection.Horizontal, FlexSize =
+					new Vector2(1.0f, 0.0f)
 			}.SetKleiPinkColor().AddChild(new PLabel("Title") {
 				// Title text, expand to width
 				Text = Title, FlexSize = new Vector2f(1.0f, 0.0f)
@@ -80,12 +70,18 @@ namespace PeterHan.PLib.UI {
 			}.SetKleiBlueStyle()).AddTo(dialog);
 			// Body, make it fill the flexible space
 			new PPanel("Body") {
-				FlexSize = Vector2.one
-			}.SetKleiBlueColor().AddTo(dialog);
-			// Set size
-			var transform = dialog.rectTransform();
-			transform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, Size.x);
-			transform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, Size.y);
+				FlexSize = Vector2.one, Alignment = TextAnchor.UpperRight, Margin =
+					new RectOffset(5, 5, 5, 5)
+			}.AddChild(new PLabel("Test") {
+				Text = "I really really hate dialogs"
+			}).AddChild(new PButton("Accept") {
+				Text = "ACCEPT"
+			}.SetKleiPinkStyle()).SetKleiBlueColor().AddTo(dialog);
+			// Lay out components vertically
+			BoxLayoutGroup.LayoutNow(dialog, new BoxLayoutParams() {
+				Alignment = TextAnchor.UpperCenter, Margin = new RectOffset(1, 1, 1, 1),
+				Spacing = 1.0f, Direction = PanelDirection.Vertical
+			});
 			dialog.AddComponent<GraphicRaycaster>();
 			return dialog;
 		}

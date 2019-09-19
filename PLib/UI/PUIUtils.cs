@@ -115,6 +115,20 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// A debug function used to forcefully re-layout a UI.
+		/// </summary>
+		/// <param name="uiElement">The UI to layout</param>
+		/// <returns>The UI element, for call chaining.</returns>
+		public static GameObject ForceLayoutRebuild(GameObject uiElement) {
+			if (uiElement == null)
+				throw new ArgumentNullException("uiElement");
+			var rt = uiElement.rectTransform();
+			if (rt != null)
+				LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
+			return uiElement;
+		}
+
+		/// <summary>
 		/// Creates a string recursively describing the specified GameObject.
 		/// </summary>
 		/// <param name="root">The root GameObject hierarchy.</param>
@@ -139,13 +153,14 @@ namespace PeterHan.PLib.UI {
 			foreach (var component in root.GetComponents<Component>()) {
 				if (component is RectTransform rt) {
 					// UI rectangle
-					var rect = rt.rect;
-					Vector2 pivot = rt.pivot, aMin = rt.anchorMin, aMax = rt.anchorMax;
-					result.Append(sol).AppendFormat(" Rect[Coords=({0:F2},{1:F2}) " +
-						"Size=({2:F2},{3:F2}) Pivot=({4:F2},{5:F2}) ", rect.xMin,
-						rect.yMin, rect.width, rect.height, pivot.x, pivot.y);
-					result.AppendFormat("AnchorMin=({0:F2},{1:F2}), AnchorMax=({2:F2}," +
-						"{3:F2})]", aMin.x, aMin.y, aMax.x, aMax.y).AppendLine();
+					Vector2 size = rt.sizeDelta;
+					result.Append(sol).AppendFormat(" Rect[Size=({0:F2},{1:F2}) Min=" +
+						"({2:F2},{3:F2}) ", size.x, size.y, LayoutUtility.GetMinWidth(rt),
+						LayoutUtility.GetMinHeight(rt));
+					result.AppendFormat("Preferred=({0:F2},{1:F2}) Flexible=({2:F2}," +
+						"{3:F2})]", LayoutUtility.GetPreferredWidth(rt), LayoutUtility.
+						GetPreferredHeight(rt), LayoutUtility.GetFlexibleWidth(rt),
+						LayoutUtility.GetFlexibleHeight(rt)).AppendLine();
 				} else if (component != null && !(component is Transform)) {
 					// Exclude destroyed components and Transform objects
 					result.Append(sol).Append(" Component[").Append(component.GetType().
@@ -182,6 +197,36 @@ namespace PeterHan.PLib.UI {
 		internal static void LogUIWarning(string message) {
 			Debug.LogWarningFormat("[PLib/UI/{0}] {1}", Assembly.GetCallingAssembly()?.
 				GetName()?.Name ?? "?", message);
+		}
+
+		/// <summary>
+		/// Sets a UI element's flexible size.
+		/// </summary>
+		/// <param name="uiElement">The UI element to modify.</param>
+		/// <param name="flexSize">The flexible size as a ratio.</param>
+		/// <returns>The UI element, for call chaining.</returns>
+		public static GameObject SetFlexUISize(this GameObject uiElement, Vector2 flexSize) {
+			if (uiElement == null)
+				throw new ArgumentNullException("uiElement");
+			var le = uiElement.AddOrGet<LayoutElement>();
+			le.flexibleWidth = flexSize.x;
+			le.flexibleHeight = flexSize.y;
+			return uiElement;
+		}
+
+		/// <summary>
+		/// Sets a UI element's minimum size.
+		/// </summary>
+		/// <param name="uiElement">The UI element to modify.</param>
+		/// <param name="minSize">The minimum size in units.</param>
+		/// <returns>The UI element, for call chaining.</returns>
+		public static GameObject SetMinUISize(this GameObject uiElement, Vector2 minSize) {
+			if (uiElement == null)
+				throw new ArgumentNullException("uiElement");
+			var le = uiElement.AddOrGet<LayoutElement>();
+			le.minWidth = minSize.x;
+			le.minHeight = minSize.y;
+			return uiElement;
 		}
 	}
 }

@@ -23,7 +23,9 @@ namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// The abstract parent of PLib UI components which display text and/or images.
 	/// </summary>
-	public abstract class PTextComponent : IUIComponent {
+	public abstract class PTextComponent : IDynamicSizable {
+		public bool DynamicSize { get; set; }
+
 		/// <summary>
 		/// The flexible size bounds of this component.
 		/// </summary>
@@ -77,6 +79,7 @@ namespace PeterHan.PLib.UI {
 		public bool WordWrap { get; set; }
 
 		protected PTextComponent(string name) {
+			DynamicSize = false;
 			FlexSize = Vector2.zero;
 			FontSize = 0.0f;
 			IconSpacing = 0;

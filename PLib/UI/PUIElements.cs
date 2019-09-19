@@ -72,18 +72,23 @@ namespace PeterHan.PLib.UI {
 		/// Adds an auto-fit resizer to a UI element.
 		/// </summary>
 		/// <param name="uiElement">The element to resize.</param>
+		/// <param name="dynamic">true to use the Unity content size fitter which adjusts to
+		/// content changes, or false to set the size only once.</param>
 		/// <param name="modeHoriz">The sizing mode to use in the horizontal direction.</param>
 		/// <param name="modeVert">The sizing mode to use in the vertical direction.</param>
 		/// <returns>The UI element, for call chaining.</returns>
-		public static GameObject AddSizeFitter(GameObject uiElement, ContentFitMode modeHoriz =
-				ContentFitMode.PreferredSize, ContentFitMode modeVert = ContentFitMode.
-				PreferredSize) {
+		public static GameObject AddSizeFitter(GameObject uiElement, bool dynamic = false,
+				ContentFitMode modeHoriz = ContentFitMode.PreferredSize,
+				ContentFitMode modeVert = ContentFitMode.PreferredSize) {
 			if (uiElement == null)
 				throw new ArgumentNullException("uiElement");
-			var fitter = uiElement.AddOrGet<ContentSizeFitter>();
-			fitter.horizontalFit = modeHoriz;
-			fitter.verticalFit = modeVert;
-			fitter.enabled = true;
+			if (dynamic) {
+				var fitter = uiElement.AddOrGet<ContentSizeFitter>();
+				fitter.horizontalFit = modeHoriz;
+				fitter.verticalFit = modeVert;
+				fitter.enabled = true;
+			} else
+				FitSizeNow(uiElement, modeHoriz, modeVert);
 			return uiElement;
 		}
 
@@ -111,6 +116,67 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Fits the UI element's size immediately, as if ContentSizeFitter was created on it,
+		/// but does not create a component and only affects the size once.
+		/// </summary>
+		/// <param name="uiElement">The element to resize.</param>
+		/// <param name="modeHoriz">The sizing mode to use in the horizontal direction.</param>
+		/// <param name="modeVert">The sizing mode to use in the vertical direction.</param>
+		/// <returns>The UI element, for call chaining.</returns>
+		private static void FitSizeNow(GameObject uiElement, ContentFitMode modeHoriz,
+				ContentFitMode modeVert) {
+			float width = 0.0f, height = 0.0f;
+			if (uiElement == null)
+				throw new ArgumentNullException("uiElement");
+			// Follow order in https://docs.unity3d.com/Manual/UIAutoLayout.html
+			var elements = uiElement.GetComponents<ILayoutElement>();
+			var constraints = uiElement.AddOrGet<LayoutElement>();
+			var rt = uiElement.AddOrGet<RectTransform>();
+			// Calculate horizontal
+			foreach (var layoutElement in elements)
+				layoutElement.CalculateLayoutInputHorizontal();
+			if (modeHoriz != ContentFitMode.Unconstrained) {
+				// Layout horizontal
+				foreach (var layoutElement in elements)
+					switch (modeHoriz) {
+					case ContentFitMode.MinSize:
+						width = Math.Max(width, layoutElement.minWidth);
+						break;
+					case ContentFitMode.PreferredSize:
+						width = Math.Max(width, layoutElement.preferredWidth);
+						break;
+					default:
+						break;
+					}
+				width = Math.Max(width, constraints.minWidth);
+				rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
+				constraints.minWidth = width;
+				constraints.flexibleWidth = 0.0f;
+			}
+			// Calculate vertical
+			foreach (var layoutElement in elements)
+				layoutElement.CalculateLayoutInputVertical();
+			if (modeVert != ContentFitMode.Unconstrained) {
+				// Layout vertical
+				foreach (var layoutElement in elements)
+					switch (modeVert) {
+					case ContentFitMode.MinSize:
+						height = Math.Max(height, layoutElement.minHeight);
+						break;
+					case ContentFitMode.PreferredSize:
+						height = Math.Max(height, layoutElement.preferredHeight);
+						break;
+					default:
+						break;
+					}
+				height = Math.Max(height, constraints.minHeight);
+				rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
+				constraints.minHeight = height;
+				constraints.flexibleHeight = 0.0f;
+			}
+		}
+
+		/// <summary>
 		/// Sets a UI element's parent.
 		/// </summary>
 		/// <param name="child">The UI element to modify.</param>
@@ -124,17 +190,29 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
-		/// Sets a UI element's minimum size.
+		/// Sets a UI element's size immediately.
 		/// </summary>
 		/// <param name="uiElement">The UI element to modify.</param>
-		/// <param name="minSize">The minimum size in units.</param>
+		/// <param name="size">The new size.</param>
 		/// <returns>The UI element, for call chaining.</returns>
-		public static GameObject SetMinSize(GameObject uiElement, Vector2f minSize) {
+		internal static GameObject SetSizeImmediate(GameObject uiElement, Vector2 size) {
 			if (uiElement == null)
 				throw new ArgumentNullException("uiElement");
+			float width = size.x, height = size.y;
 			var le = uiElement.AddOrGet<LayoutElement>();
-			le.minWidth = minSize.x;
-			le.minHeight = minSize.y;
+			// Min and preferred size set
+			le.minWidth = width;
+			le.minHeight = height;
+			le.preferredWidth = width;
+			le.preferredHeight = height;
+			le.flexibleHeight = 0.0f;
+			le.flexibleWidth = 0.0f;
+			// Apply to current size
+			var rt = uiElement.rectTransform();
+			if (rt != null) {
+				rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
+				rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
+			}
 			return uiElement;
 		}
 
