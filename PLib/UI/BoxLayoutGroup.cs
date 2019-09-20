@@ -110,7 +110,6 @@ namespace PeterHan.PLib.UI {
 					// Place and size component
 					obj.AddOrGet<RectTransform>().SetInsetAndSizeFromParentEdge(status.edge,
 						offset, compSize);
-					//PUtil.LogDebug("{0} {1:F2} {2:F2} {3:F2} {4:F2}".F(obj.name, offset, compSize, prefSize, size));
 					offset += compSize + ((compSize > 0.0f) ? spacing : 0.0f);
 					// Invoke SetLayout on dependants
 					components.Clear();
@@ -220,7 +219,7 @@ namespace PeterHan.PLib.UI {
 		private static LayoutSizes GetSize(GameObject obj, PanelDirection direction,
 				IEnumerable<ILayoutElement> elements) {
 			float min = 0.0f, preferred = 0.0f, flexible = 0.0f;
-			int priority = 0;
+			int minPri = int.MinValue, prefPri = int.MinValue, flexPri = int.MinValue;
 			foreach (var component in elements)
 				if (((component as Behaviour)?.isActiveAndEnabled ?? false) && !((component as
 						ILayoutIgnorer)?.ignoreLayout ?? false)) {
@@ -230,22 +229,15 @@ namespace PeterHan.PLib.UI {
 					else // if (direction == PanelDirection.Vertical)
 						component.CalculateLayoutInputVertical();
 					int lp = component.layoutPriority;
-					if (lp > priority) {
-						// Higher priority overrides all else
-						priority = lp;
-						min = preferred = flexible = 0.0f;
-					}
-					if (lp == priority) {
-						// Larger values win
-						if (direction == PanelDirection.Horizontal) {
-							min = Math.Max(min, component.minWidth);
-							preferred = Math.Max(preferred, component.preferredWidth);
-							flexible = Math.Max(flexible, component.flexibleWidth);
-						} else if (direction == PanelDirection.Vertical) {
-							min = Math.Max(min, component.minHeight);
-							preferred = Math.Max(preferred, component.preferredHeight);
-							flexible = Math.Max(flexible, component.flexibleHeight);
-						}
+					// Larger values win
+					if (direction == PanelDirection.Horizontal) {
+						PriValue(ref min, component.minWidth, lp, ref minPri);
+						PriValue(ref preferred, component.preferredWidth, lp, ref prefPri);
+						PriValue(ref flexible, component.flexibleWidth, lp, ref flexPri);
+					} else {
+						PriValue(ref min, component.minHeight, lp, ref minPri);
+						PriValue(ref preferred, component.preferredHeight, lp, ref prefPri);
+						PriValue(ref flexible, component.flexibleHeight, lp, ref flexPri);
 					}
 				}
 			return new LayoutSizes(obj, min, Math.Max(min, preferred), flexible);
@@ -259,8 +251,10 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <param name="obj">The object to lay out immediately.</param>
 		/// <param name="parameters">The layout parameters to use.</param>
+		/// <param name="size">The minimum component size.</param>
 		/// <returns>obj for call chaining</returns>
-		public static GameObject LayoutNow(GameObject obj, BoxLayoutParams parameters = null) {
+		public static GameObject LayoutNow(GameObject obj, BoxLayoutParams parameters = null,
+				Vector2 size = default(Vector2)) {
 			if (obj == null)
 				throw new ArgumentNullException("obj");
 			var args = parameters ?? new BoxLayoutParams();
@@ -270,8 +264,8 @@ namespace PeterHan.PLib.UI {
 			var vertical = Calc(obj, args, PanelDirection.Vertical);
 			// Update or create fixed layout element
 			var layoutElement = obj.AddOrGet<LayoutElement>();
-			float hsize = horizontal.total.min + margin.left + margin.right, vsize = vertical.
-				total.min + margin.top + margin.bottom;
+			float hsize = Math.Max(size.x, horizontal.total.min + margin.left + margin.right),
+				vsize = Math.Max(size.y, vertical.total.min + margin.top + margin.bottom);
 			layoutElement.minWidth = hsize;
 			layoutElement.preferredWidth = hsize;
 			layoutElement.flexibleWidth = 0.0f;
@@ -286,6 +280,28 @@ namespace PeterHan.PLib.UI {
 			DoLayout(args, horizontal, hsize);
 			DoLayout(args, vertical, vsize);
 			return obj;
+		}
+
+		/// <summary>
+		/// Aggregates layout values, replacing the value if a higher priority value is given
+		/// and otherwise taking the largest value.
+		/// </summary>
+		/// <param name="value">The current value.</param>
+		/// <param name="newValue">The candidate new value. No operation if this is less than zero.</param>
+		/// <param name="newPri">The new value's layout priority.</param>
+		/// <param name="pri">The current value's priority</param>
+		private static void PriValue(ref float value, float newValue, int newPri, ref int pri)
+		{
+			int thisPri = pri;
+			if (newValue >= 0.0f) {
+				if (newPri > thisPri) {
+					// Priority override?
+					pri = newPri;
+					value = newValue;
+				} else if (newValue > value && newPri == thisPri)
+					// Same priority and higher value?
+					value = newValue;
+			}
 		}
 
 		public float minWidth { get; private set; }

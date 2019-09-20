@@ -147,6 +147,24 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Logs an exception message to the debug log.
+		/// </summary>
+		/// <param name="message">The message to log.</param>
+		public static void LogException(Exception thrown) {
+			Debug.LogErrorFormat("[PLib/{0}] {1} {2} {3}", Assembly.GetCallingAssembly()?.
+				GetName()?.Name ?? "?", thrown.GetType(), thrown.Message, thrown.StackTrace);
+		}
+
+		/// <summary>
+		/// Logs an exception message to the debug log at WARNING level.
+		/// </summary>
+		/// <param name="message">The message to log.</param>
+		public static void LogExcWarn(Exception thrown) {
+			Debug.LogWarningFormat("[PLib/{0}] {1} {2} {3}", Assembly.GetCallingAssembly()?.
+				GetName()?.Name ?? "?", thrown.GetType(), thrown.Message, thrown.StackTrace);
+		}
+
+		/// <summary>
 		/// Logs the mod name and version when a mod initializes. Also initializes the PLib
 		/// patch bootstrapper for shared code.
 		/// 
@@ -161,15 +179,6 @@ namespace PeterHan.PLib {
 			} else
 				// Probably impossible
 				Debug.LogError("[PLib] Somehow called from null assembly!");
-		}
-
-		/// <summary>
-		/// Logs an exception message to the debug log.
-		/// </summary>
-		/// <param name="message">The message to log.</param>
-		public static void LogException(Exception thrown) {
-			Debug.LogErrorFormat("[PLib/{0}] {1} {2} at {3}", Assembly.GetCallingAssembly()?.
-				GetName()?.Name ?? "?", thrown.GetType(), thrown.Message, thrown.StackTrace);
 		}
 
 		/// <summary>

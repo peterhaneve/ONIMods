@@ -41,9 +41,9 @@ namespace PeterHan.PLib.UI {
 		public RectOffset Margin { get; set; }
 
 		/// <summary>
-		/// The action to trigger on click.
+		/// The action to trigger on click. It is passed the realized source object.
 		/// </summary>
-		public System.Action OnClick { get; set; }
+		public PUIDelegates.OnButtonPressed OnClick;
 
 		public PButton() : this(null) { }
 
@@ -66,8 +66,11 @@ namespace PeterHan.PLib.UI {
 			kImage.type = Image.Type.Sliced;
 			// Set on click event
 			var kButton = button.AddComponent<KButton>();
-			if (OnClick != null)
-				kButton.onClick += OnClick;
+			var evt = OnClick;
+			if (evt != null)
+				kButton.onClick += () => {
+					evt?.Invoke(button);
+				};
 			kButton.additionalKImages = new KImage[0];
 			kButton.soundPlayer = PUITuning.ButtonSounds;
 			kButton.bgImage = kImage;
@@ -82,8 +85,6 @@ namespace PeterHan.PLib.UI {
 				// Limit size if needed
 				if (SpriteSize.x > 0.0f && SpriteSize.y > 0.0f)
 					PUIElements.SetSizeImmediate(imageChild, SpriteSize);
-				else
-					PUIElements.AddSizeFitter(imageChild, DynamicSize);
 			}
 			// Set colors
 			kButton.colorStyleSetting = trueColor;
@@ -98,7 +99,6 @@ namespace PeterHan.PLib.UI {
 				text.font = PUITuning.ButtonFont;
 				text.enableWordWrapping = WordWrap;
 				text.text = Text;
-				PUIElements.AddSizeFitter(textChild, DynamicSize);
 			}
 			// Icon and text are side by side
 			var lg = button.AddComponent<HorizontalLayoutGroup>();
@@ -108,8 +108,9 @@ namespace PeterHan.PLib.UI {
 			// Add tooltip
 			if (!string.IsNullOrEmpty(ToolTip))
 				button.AddComponent<ToolTip>().toolTip = ToolTip;
-			PUIElements.AddSizeFitter(button, DynamicSize).SetFlexUISize(FlexSize);
-			button.SetActive(true);
+			PUIElements.AddSizeFitter(button, DynamicSize).SetFlexUISize(FlexSize).SetActive(
+				true);
+			InvokeRealize(button);
 			return button;
 		}
 

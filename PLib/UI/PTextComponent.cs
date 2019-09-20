@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
 using TMPro;
 using UnityEngine;
 
@@ -78,6 +79,8 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		public bool WordWrap { get; set; }
 
+		public event PUIDelegates.OnRealize OnRealize;
+
 		protected PTextComponent(string name) {
 			DynamicSize = false;
 			FlexSize = Vector2.zero;
@@ -94,6 +97,14 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public abstract GameObject Build();
+
+		/// <summary>
+		/// Invokes the OnRealize event.
+		/// </summary>
+		/// <param name="obj">The realized text component.</param>
+		protected void InvokeRealize(GameObject obj) {
+			OnRealize?.Invoke(obj);
+		}
 
 		public override string ToString() {
 			return "{3}[Name={0},Text={1},Sprite={2}]".F(Name, Text, Sprite, GetType().Name);

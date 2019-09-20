@@ -162,7 +162,7 @@ namespace PeterHan.FallingSand {
 				if (temp.Count > 0) {
 #if DEBUG
 					var xy = Grid.CellToXY(cell);
-					PLibUtil.LogDebug("Tracking cell ({0:D},{1:D}): {2:D} fallables".F(xy.X,
+					PUtil.LogDebug("Tracking cell ({0:D},{1:D}): {2:D} fallables".F(xy.X,
 						xy.Y, temp.Count));
 #endif
 					fallingCells.Add(instance, new HashSet<int>(temp));
@@ -179,7 +179,7 @@ namespace PeterHan.FallingSand {
 			if (fallingCells.Remove(instance)) {
 				var xy = Grid.PosToXY(instance.transform.GetPosition());
 #if DEBUG
-				PLibUtil.LogDebug("Stopped tracking cell ({0:D},{1:D})".F(xy.X, xy.Y));
+				PUtil.LogDebug("Stopped tracking cell ({0:D},{1:D})".F(xy.X, xy.Y));
 #endif
 			}
 		}

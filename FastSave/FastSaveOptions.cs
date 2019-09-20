@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
 using Newtonsoft.Json;
 using PeterHan.PLib;
 
@@ -51,7 +50,7 @@ namespace PeterHan.FastSave {
 		/// </summary>
 		internal const int SUMMARY_AGGRESSIVE = 4;
 
-		[Option("Save Optimization Mode")]
+		[Option("Save Optimization", "Trades off impact to colony statistics with save / load time")]
 		[JsonProperty]
 		public FastSaveMode Mode { get; set; }
 
@@ -71,11 +70,11 @@ namespace PeterHan.FastSave {
 		/// and 60s of uptime.
 		/// </summary>
 		public enum FastSaveMode {
-			[Option("Safe Mode")]
+			[Option("Safe", "Daily Reports: All, Operational History: 10 Cycles")]
 			Safe,
-			[Option("Moderate Mode")]
+			[Option("Moderate", "Daily Reports: 20 Cycles, Operational History: 1 Cycle")]
 			Moderate,
-			[Option("Aggressive Mode")]
+			[Option("Aggressive", "Daily Reports: 2 Cycles, Operational History: 60 Seconds")]
 			Aggressive
 		}
 	}

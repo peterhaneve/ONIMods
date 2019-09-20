@@ -13,6 +13,7 @@ Steam Workshop: https://steamcommunity.com/profiles/76561198025154321/myworkshop
 | [Critter Inventory](https://steamcommunity.com/sharedfiles/filedetails/?id=1831438994) | Adds tame and wild critters to the inventory list |
 | [Deselect New Materials](https://steamcommunity.com/sharedfiles/filedetails/?id=1863598374) | Deselects newly discovered materials from all storage compactors |
 | [Falling Sand](https://steamcommunity.com/sharedfiles/filedetails/?id=1855163252) | Automatically places Dig errands on fallen unstable tiles caused by mining |
+| [Fast Save](https://steamcommunity.com/sharedfiles/filedetails/?id=1867707267) | Increases performance when loading, saving, or automatically saving the game |
 | [Settings Change Tool](https://steamcommunity.com/sharedfiles/filedetails/?id=1843647561) | Allows Repair, Disinfect, and Enable settings to be changed on many buildings at once |
 | [Sweep By Type](https://steamcommunity.com/sharedfiles/filedetails/?id=1863428350) | Adds a filter to the Sweep tool to sweep only selected item types |
 

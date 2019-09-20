@@ -61,7 +61,7 @@ namespace PeterHan.BulkSettingsChange {
 						EnableRepair);
 #if DEBUG
 					foreach (var mode in MODES)
-						PLibUtil.LogDebug("Tool mode: " + mode.Value);
+						PUtil.LogDebug("Tool mode: " + mode.Value);
 #endif
 				}
 			}

@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -40,31 +41,39 @@ namespace PeterHan.PLib.UI {
 			// Background
 			if (BackColor.a > 0)
 				label.AddComponent<Image>().color = BackColor;
-			// Add foreground image since the background already has one
+			// Add foreground image
 			if (Sprite != null) {
-				var img = label.AddOrGet<Image>();
+				var imageChild = PUIElements.CreateUI("Image");
+				var img = imageChild.AddComponent<Image>();
+				PUIElements.SetParent(imageChild, label);
 				img.sprite = Sprite;
 				img.preserveAspect = true;
+				// Limit size if needed
+				if (SpriteSize.x > 0.0f && SpriteSize.y > 0.0f)
+					PUIElements.SetSizeImmediate(imageChild, SpriteSize);
 			}
 			// Add text
 			if (!string.IsNullOrEmpty(Text)) {
-				var text = PUIElements.AddLocText(label);
+				var textChild = PUIElements.CreateUI("Text");
+				var text = PUIElements.AddLocText(textChild);
+				PUIElements.SetParent(textChild, label);
 				// Font needs to be set before the text
-				text.alignment = TextAlignment;
+				text.alignment = TMPro.TextAlignmentOptions.Center;
 				text.fontSize = (FontSize > 0.0f) ? FontSize : PUITuning.DefaultFontSize;
 				text.font = PUITuning.ButtonFont;
 				text.enableWordWrapping = WordWrap;
 				text.text = Text;
 			}
+			// Icon and text are side by side
+			var lg = label.AddComponent<HorizontalLayoutGroup>();
+			lg.childAlignment = TextAnchor.MiddleLeft;
+			lg.spacing = Math.Max(IconSpacing, 0);
 			// Add tooltip
 			if (!string.IsNullOrEmpty(ToolTip))
 				label.AddComponent<ToolTip>().toolTip = ToolTip;
-			// Set up size
-			if (SpriteSize.x > 0.0f && SpriteSize.y > 0.0f)
-				PUIElements.SetSizeImmediate(label, SpriteSize);
-			else
-				PUIElements.AddSizeFitter(label, DynamicSize);
-			label.SetFlexUISize(FlexSize).SetActive(true);
+			PUIElements.AddSizeFitter(label, DynamicSize).SetFlexUISize(FlexSize).SetActive(
+				true);
+			InvokeRealize(label);
 			return label;
 		}
 

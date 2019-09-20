@@ -263,7 +263,7 @@ namespace PeterHan.PLib.UI {
 			var confirmDialog = Util.KInstantiateUI(prefab, parent, false).GetComponent<
 				ConfirmDialogScreen>();
 			confirmDialog.PopupConfirmDialog(message, null, null, null, null,
-				null, null, null, null, true);
+				message, null, null, null, true);
 			confirmDialog.gameObject.SetActive(true);
 			return confirmDialog;
 		}

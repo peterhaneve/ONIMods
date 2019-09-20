@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
 using UnityEngine;
 
 namespace PeterHan.PLib.UI {
@@ -34,5 +35,10 @@ namespace PeterHan.PLib.UI {
 		/// <returns>The game object representing this UI component. Multiple invocations return
 		/// unique objects.</returns>
 		GameObject Build();
+
+		/// <summary>
+		/// Actions invoked when the UI component is actually realized.
+		/// </summary>
+		event PUIDelegates.OnRealize OnRealize;
 	}
 }

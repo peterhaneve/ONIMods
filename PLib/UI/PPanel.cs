@@ -67,6 +67,8 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		protected readonly ICollection<IUIComponent> children;
 
+		public event PUIDelegates.OnRealize OnRealize;
+
 		public PPanel() : this(null) { }
 
 		public PPanel(string name) {
@@ -75,7 +77,7 @@ namespace PeterHan.PLib.UI {
 			DynamicSize = true;
 			FlexSize = Vector2.zero;
 			Name = name ?? "Panel";
-			BackColor = PUITuning.DialogBackground;
+			BackColor = PUIElements.TRANSPARENT;
 			Direction = PanelDirection.Vertical;
 			Margin = null;
 			Spacing = 0;
@@ -113,6 +115,7 @@ namespace PeterHan.PLib.UI {
 				lg.flexibleHeight = FlexSize.y;
 			} else
 				BoxLayoutGroup.LayoutNow(panel, args).SetFlexUISize(FlexSize);
+			OnRealize?.Invoke(panel);
 			return panel;
 		}
 

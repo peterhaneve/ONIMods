@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -28,6 +29,8 @@ namespace PeterHan.PLib.UI {
 		/// The preferred size of this spacer.
 		/// </summary>
 		public Vector2 PreferredSize { get; set; }
+
+		public event PUIDelegates.OnRealize OnRealize;
 
 		public string Name { get; }
 
@@ -45,6 +48,7 @@ namespace PeterHan.PLib.UI {
 			le.minWidth = 0.0f;
 			le.preferredHeight = PreferredSize.y;
 			le.preferredWidth = PreferredSize.x;
+			OnRealize?.Invoke(spacer);
 			return spacer;
 		}
 

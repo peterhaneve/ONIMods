@@ -128,7 +128,7 @@ namespace PeterHan.BulkSettingsChange {
 #if DEBUG
 				// Log what we are about to do
 				var xy = Grid.CellToXY(cell);
-				PLibUtil.LogDebug("{0} at cell ({1:D},{2:D})".F(ToolMenu.Instance.
+				PUtil.LogDebug("{0} at cell ({1:D},{2:D})".F(ToolMenu.Instance.
 					toolParameterMenu.GetLastEnabledFilter(), xy.X, xy.Y));
 #endif
 				if (enable || BulkChangeTools.DisableBuildings.IsOn(options)) {
@@ -224,7 +224,7 @@ namespace PeterHan.BulkSettingsChange {
 					Toggleable>()?.IsToggleQueued(toggleIndex) ?? false;
 #if DEBUG
 				var xy = Grid.CellToXY(cell);
-				PLibUtil.LogDebug("Checking building @({0:D},{1:D}): on={2}, queued={3}, " +
+				PUtil.LogDebug("Checking building @({0:D},{1:D}): on={2}, queued={3}, " +
 					"desired={4}".F(xy.X, xy.Y, curEnabled, toggleQueued, enable));
 #endif
 				// Only continue if we are cancelling the toggle errand or (the building state

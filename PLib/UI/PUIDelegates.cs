@@ -16,33 +16,30 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
+using UnityEngine;
 
-namespace PeterHan.PLib {
+namespace PeterHan.PLib.UI {
 	/// <summary>
-	/// An attribute placed on an option field or enum value for a class used as mod options in
-	/// order to denote the display title and other options.
+	/// Delegate types used in the UI event system.
 	/// </summary>
-	public sealed class OptionAttribute : Attribute {
+	public sealed class PUIDelegates {
 		/// <summary>
-		/// The option title.
+		/// The delegate type invoked when a dialog is closed.
 		/// </summary>
-		public string Title { get; }
+		/// <param name="option">The key of the chosen option, or PDialog.DIALOG_CLOSE_KEY if
+		/// the dialog was closed with ESC or the X button.</param>
+		public delegate void OnDialogClosed(string option);
 
 		/// <summary>
-		/// The option description tooltip.
+		/// The delegate type invoked when a button is pressed.
 		/// </summary>
-		public string Tooltip { get; }
+		/// <param name="source">The source button.</param>
+		public delegate void OnButtonPressed(GameObject source);
 
-		public OptionAttribute(string title, string tooltip = null) {
-			if (string.IsNullOrEmpty(title))
-				throw new ArgumentNullException("title");
-			Title = title;
-			Tooltip = tooltip;
-		}
-
-		public override string ToString() {
-			return Title;
-		}
+		/// <summary>
+		/// The delegate type invoked when components are converted into Unity game objects.
+		/// </summary>
+		/// <param name="realized">The realized object.</param>
+		public delegate void OnRealize(GameObject realized);
 	}
 }

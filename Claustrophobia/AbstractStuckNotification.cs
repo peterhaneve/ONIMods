@@ -117,7 +117,7 @@ namespace PeterHan.Claustrophobia {
 		/// </summary>
 		public void OnDestroy() {
 #if DEBUG
-			PLibUtil.LogDebug("Destroying stuck notification");
+			PUtil.LogDebug("Destroying stuck notification");
 #endif
 			gameObject?.GetComponent<Notifier>()?.Remove(GetNotification());
 		}

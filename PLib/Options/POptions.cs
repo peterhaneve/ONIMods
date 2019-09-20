@@ -17,14 +17,16 @@
  */
 
 using Harmony;
+using Newtonsoft.Json;
 using PeterHan.PLib.UI;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using UnityEngine;
 
-namespace PeterHan.PLib {
+namespace PeterHan.PLib.Options {
 	/// <summary>
 	/// Adds an "Options" screen to a mod in the Mods menu.
 	/// </summary>
@@ -40,21 +42,42 @@ namespace PeterHan.PLib {
 		public static LocString BUTTON_OPTIONS = STRINGS.UI.FRONTEND.MAINMENU.OPTIONS;
 
 		/// <summary>
+		/// The configuration file name to be used.
+		/// </summary>
+		public static readonly string CONFIG_FILE = "config.json";
+
+		/// <summary>
 		/// The dialog title, where {0} is substituted with the mod friendly name.
 		/// </summary>
 		public static LocString DIALOG_TITLE = "Options for {0}";
 
 		/// <summary>
-		/// The location where mod option types are stored.
+		/// The tooltip on the OK button.
 		/// </summary>
-		private static readonly IDictionary<string, Type> options = new Dictionary<string, Type>(4);
+		public static LocString TOOLTIP_OK = "Save these options. A restart may be required for some mods.";
+
+		/// <summary>
+		/// The tooltip on the CANCEL button.
+		/// </summary>
+		public static LocString TOOLTIP_CANCEL = "Discard changes.";
+
+		/// <summary>
+		/// The default size of the Mod Settings dialog.
+		/// </summary>
+		internal static readonly Vector2 SETTINGS_DIALOG_SIZE = new Vector2(320.0f, 200.0f);
+
+		/// <summary>
+		/// The location where mod option types are stored. Technically this class can manage
+		/// mod options for more than one mod.
+		/// </summary>
+		private static readonly IDictionary<string, Type> options =
+			new Dictionary<string, Type>(4);
 
 		/// <summary>
 		/// Adds the Options button to the Mods screen.
 		/// </summary>
-		/// <param name="instance">The current mods screen.</param>
 		/// <param name="modEntry">The mod entry where the button should be added.</param>
-		private static void AddModOptions(ModsScreen instance, Traverse modEntry) {
+		private static void AddModOptions(Traverse modEntry) {
 			var modSpec = Global.Instance.modManager.mods[modEntry.GetField<int>(
 				"mod_index")];
 			var transform = modEntry.GetField<RectTransform>("rect_transform");
@@ -62,7 +85,7 @@ namespace PeterHan.PLib {
 			if (modSpec.enabled && !string.IsNullOrEmpty(modID) && options.TryGetValue(modID,
 					out Type optionsType) && transform != null) {
 				// Create delegate to spawn actions dialog
-				var action = new OptionsAction(instance, optionsType, modSpec);
+				var action = new OptionsDialog(optionsType, modSpec);
 				new PButton("ModSettingsButton") {
 					FlexSize = new Vector2f(0.0f, 1.0f),
 					OnClick = action.OnModOptions,
@@ -75,6 +98,27 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Retrieves the mod directory for the specified assembly.
+		/// </summary>
+		/// <param name="modDLL">The assembly used for a mod.</param>
+		/// <returns>The directory where that mod's configuration file should be found.</returns>
+		private static string GetModDir(Assembly modDLL) {
+			string dir = null;
+			try {
+				dir = Directory.GetParent(modDLL.Location)?.FullName;
+			} catch (NotSupportedException e) {
+				// Guess from the Klei strings
+				PUtil.LogExcWarn(e);
+			} catch (System.Security.SecurityException e) {
+				// Guess from the Klei strings
+				PUtil.LogExcWarn(e);
+			}
+			if (dir == null)
+				dir = KMod.Manager.GetDirectory();
+			return dir;
+		}
+
+		/// <summary>
 		/// Registers a class as a mod options class.
 		/// </summary>
 		/// <param name="optionsType">The class which will represent the options for this mod.</param>
@@ -84,29 +128,26 @@ namespace PeterHan.PLib {
 			var assembly = optionsType.Assembly;
 			bool hasPath = false;
 			try {
-				var modDir = Directory.GetParent(assembly.Location);
-				if (modDir != null) {
-					var id = Path.GetFileName(modDir.FullName);
-					// Prevent concurrent modification (should be impossible anyways)
-					lock (options) {
-						if (options.Count < 1) {
-							// Patch in the mods screen
-							var instance = HarmonyInstance.Create(PRegistry.PLIB_HARMONY);
-							instance.Patch(typeof(ModsScreen), "BuildDisplay", null,
-								new HarmonyMethod(typeof(POptions), "BuildDisplay_Postfix"));
-							PUtil.LogDebug("Patched mods options screen");
-						}
-						if (options.ContainsKey(id))
-							PUtil.LogWarning("Duplicate mod ID: " + id);
-						else {
-							// Add as options for this mod
-							options.Add(id, optionsType);
-							PUtil.LogDebug("Registered mod options class {0} for {1}".F(
-								optionsType.Name, assembly.GetName()?.Name));
-						}
+				var id = Path.GetFileName(GetModDir(assembly));
+				// Prevent concurrent modification (should be impossible anyways)
+				lock (options) {
+					if (options.Count < 1) {
+						// Patch in the mods screen
+						var instance = HarmonyInstance.Create(PRegistry.PLIB_HARMONY);
+						instance.Patch(typeof(ModsScreen), "BuildDisplay", null,
+							new HarmonyMethod(typeof(POptions), "BuildDisplay_Postfix"));
+						PUtil.LogDebug("Patched mods options screen");
 					}
-					hasPath = true;
+					if (options.ContainsKey(id))
+						PUtil.LogWarning("Duplicate mod ID: " + id);
+					else {
+						// Add as options for this mod
+						options.Add(id, optionsType);
+						PUtil.LogDebug("Registered mod options class {0} for {1}".F(
+							optionsType.Name, assembly.GetName()?.Name));
+					}
 				}
+				hasPath = true;
 			} catch (IOException) { }
 			if (!hasPath)
 				PUtil.LogWarning("Unable to determine mod path for assembly: " + assembly.
@@ -116,67 +157,35 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Applied to ModsScreen if mod options are registered, after BuildDisplay runs.
 		/// </summary>
-		internal static void BuildDisplay_Postfix(ref ModsScreen __instance,
-				ref object ___displayedMods) {
+		internal static void BuildDisplay_Postfix(ref object ___displayedMods) {
 			// Must cast the type because ModsScreen.DisplayedMod is private
-			var mods = (System.Collections.IEnumerable)___displayedMods;
-			foreach (var displayedMod in mods)
-				AddModOptions(__instance, Traverse.Create(displayedMod));
+			foreach (var displayedMod in (System.Collections.IEnumerable)___displayedMods)
+				AddModOptions(Traverse.Create(displayedMod));
 		}
 
 		/// <summary>
-		/// A triggerable action for handling mod options events that opens the options dialog.
+		/// Reads mod settings from its configuration file.
 		/// </summary>
-		private sealed class OptionsAction {
-			/// <summary>
-			/// The mod whose settings are being modified.
-			/// </summary>
-			private readonly KMod.Mod modSpec;
-
-			/// <summary>
-			/// The Mods screen which will own this dialog.
-			/// </summary>
-			private readonly ModsScreen modsScreen;
-
-			/// <summary>
-			/// The type used to determine which options are visible.
-			/// </summary>
-			private readonly Type optionsType;
-
-			public OptionsAction(ModsScreen modsScreen, Type optionsType, KMod.Mod modSpec) {
-				this.modSpec = modSpec ?? throw new ArgumentNullException("modSpec");
-				this.modsScreen = modsScreen ?? throw new ArgumentNullException("modsScreen");
-				this.optionsType = optionsType ?? throw new ArgumentNullException(
-					"optionsType");
+		/// <typeparam name="T">The type of the settings object.</typeparam>
+		/// <returns>The settings read, or null if they could not be read (e.g. newly installed)</returns>
+		public static T ReadSettings<T>() where T : class {
+			T options = null;
+			// Calculate path from calling assembly
+			string path = Path.Combine(GetModDir(Assembly.GetCallingAssembly()), CONFIG_FILE);
+			try {
+				using (var jr = new JsonTextReader(File.OpenText(path))) {
+					var serializer = new JsonSerializer { MaxDepth = 8 };
+					// Deserialize from stream avoids reading file text into memory
+					options = serializer.Deserialize<T>(jr);
+				}
+			} catch (IOException e) {
+				// Options will be set to defaults
+				PUtil.LogExcWarn(e);
+			} catch (JsonException e) {
+				// Again set defaults
+				PUtil.LogExcWarn(e);
 			}
-			
-			/// <summary>
-			/// Triggered when the Mod Options button is clicked.
-			/// </summary>
-			public void OnModOptions() {
-				var screen = new PDialog("ModOptions") {
-					Title = DIALOG_TITLE.text.F(modSpec.title)
-				}.Build();
-				screen.AddComponent<ModOptionsScreen>().Activate();
-				PUIUtils.ForceLayoutRebuild(screen);
-				screen.DebugObjectTree();
-			}
-		}
-	}
-
-	/// <summary>
-	/// The screen displayed for mod options.
-	/// </summary>
-	sealed class ModOptionsScreen : KScreen {
-		protected override void OnActivate() {
-			base.OnActivate();
-		}
-
-		/// <summary>
-		/// Triggered when the options screen is closed.
-		/// </summary>
-		private void OnClose() {
-			Deactivate();
+			return options;
 		}
 	}
 }

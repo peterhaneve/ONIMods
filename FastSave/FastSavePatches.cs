@@ -18,7 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
-using System;
+using PeterHan.PLib.Options;
 using System.Collections.Generic;
 
 namespace PeterHan.FastSave {
@@ -26,8 +26,14 @@ namespace PeterHan.FastSave {
 	/// Patches which will be applied via annotations for Fast Save.
 	/// </summary>
 	public sealed class FastSavePatches {
+		/// <summary>
+		/// The options read from the config file.
+		/// </summary>
+		private static FastSaveOptions options;
+
 		public static void OnLoad() {
 			PUtil.LogModInit();
+			options = new FastSaveOptions();
 			POptions.RegisterOptions(typeof(FastSaveOptions));
 		}
 
@@ -37,18 +43,45 @@ namespace PeterHan.FastSave {
 		/// <param name="values">The logged time entries.</param>
 		/// <param name="time">The current game time.</param>
 		private static void CleanTimes(List<Operational.TimeEntry> values, float time) {
-			float threshold = time - FastSaveOptions.USAGE_SAFE;
+			float threshold = time;
+			// Select the threshold based on settings
+			switch (options.Mode) {
+			case FastSaveOptions.FastSaveMode.Aggressive:
+				threshold -= FastSaveOptions.USAGE_AGGRESSIVE;
+				break;
+			case FastSaveOptions.FastSaveMode.Moderate:
+				threshold -= FastSaveOptions.USAGE_MODERATE;
+				break;
+			case FastSaveOptions.FastSaveMode.Safe:
+			default:
+				threshold -= FastSaveOptions.USAGE_SAFE;
+				break;
+			}
+			// Delete old entries
 			var newEntries = ListPool<Operational.TimeEntry, FastSavePatches>.Allocate();
-			foreach (var entry in values) {
+			foreach (var entry in values)
 				if (entry.endTime > threshold || entry.startTime > threshold)
 					newEntries.Add(entry);
-			}
 #if DEBUG
 			PUtil.LogDebug("Deleted time entries: {0:D}".F(values.Count - newEntries.Count));
 #endif
 			values.Clear();
 			values.AddRange(newEntries);
 			newEntries.Recycle();
+		}
+
+		/// <summary>
+		/// Applied to Game to load settings when the mod starts up.
+		/// </summary>
+		[HarmonyPatch(typeof(Game), "OnPrefabInit")]
+		public static class Game_OnPrefabInit_Patch {
+			/// <summary>
+			/// Applied before OnPrefabInit runs.
+			/// </summary>
+			internal static void Prefix() {
+				options = POptions.ReadSettings<FastSaveOptions>() ?? new FastSaveOptions();
+				PUtil.LogDebug("FastSave in mode: {0}".F(options.Mode));
+			}
 		}
 
 		/// <summary>
@@ -64,6 +97,63 @@ namespace PeterHan.FastSave {
 				float now = GameClock.Instance.GetTime();
 				CleanTimes(___activeTimes, now);
 				CleanTimes(___inactiveTimes, now);
+			}
+		}
+
+		/// <summary>
+		/// Applied to ReportManager to remove old daily reports.
+		/// </summary>
+		[HarmonyPatch(typeof(ReportManager), "OnNightTime")]
+		public static class ReportManager_OnNightTime_Patch {
+			/// <summary>
+			/// Applied after OnNightTime runs.
+			/// </summary>
+			internal static void Postfix(ref List<ReportManager.DailyReport> ___dailyReports) {
+				int keep, n = ___dailyReports.Count;
+				// Select the threshold based on settings
+				switch (options.Mode) {
+				case FastSaveOptions.FastSaveMode.Aggressive:
+					keep = FastSaveOptions.SUMMARY_AGGRESSIVE;
+					break;
+				case FastSaveOptions.FastSaveMode.Moderate:
+					keep = FastSaveOptions.SUMMARY_MODERATE;
+					break;
+				case FastSaveOptions.FastSaveMode.Safe:
+				default:
+					keep = int.MaxValue;
+					break;
+				}
+				if (n > keep) {
+					// Take last N reports
+					var newReports = ListPool<ReportManager.DailyReport, FastSavePatches>.
+						Allocate();
+					int start = n - keep;
+					for (int i = 0; i < keep; i++)
+						newReports.Add(___dailyReports[i + start]);
+					___dailyReports.Clear();
+					___dailyReports.AddRange(newReports);
+					newReports.Recycle();
+#if DEBUG
+					PUtil.LogDebug("Cleared {0:D} daily report(s)".F(start));
+#endif
+				}
+			}
+		}
+
+		/// <summary>
+		/// Applied to ReportScreen to avoid crashing when deleted reports are shown.
+		/// </summary>
+		[HarmonyPatch(typeof(ReportScreen), "Refresh")]
+		public static class ReportScreen_Refresh_Patch {
+			/// <summary>
+			/// Applied after Refresh runs.
+			/// </summary>
+			internal static void Postfix(ref KButton ___prevButton,
+					ref ReportManager.DailyReport ___currentReport) {
+				int prevDay = ___currentReport.day - 1;
+				if (ReportManager.Instance.FindReport(prevDay) == null)
+					// Do not allow previous day if it cannot be found
+					___prevButton.isInteractable = false;
 			}
 		}
 

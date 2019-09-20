@@ -27,6 +27,16 @@ namespace PeterHan.PLib.UI {
 	/// </summary>
 	internal static class PUITuning {
 		/// <summary>
+		/// The left arrow image.
+		/// </summary>
+		internal static Sprite ArrowLeftImage { get; private set; }
+
+		/// <summary>
+		/// The right arrow image.
+		/// </summary>
+		internal static Sprite ArrowRightImage { get; private set; }
+
+		/// <summary>
 		/// The color displayed on dialog backgrounds.
 		/// </summary>
 		internal static Color DialogBackground { get; private set; }
@@ -139,6 +149,8 @@ namespace PeterHan.PLib.UI {
 				else
 					InitTitleButton(close);
 			}
+			ArrowLeftImage = PUtil.LoadSprite("PeterHan.PLib.Assets.ArrowLeft.dds", 128, 128);
+			ArrowRightImage = PUtil.LoadSprite("PeterHan.PLib.Assets.ArrowRight.dds", 128, 128);
 		}
 	}
 }
