@@ -20,6 +20,7 @@ using Harmony;
 using PeterHan.PLib;
 using PeterHan.PLib.Options;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace PeterHan.FastSave {
 	/// <summary>
@@ -154,6 +155,42 @@ namespace PeterHan.FastSave {
 				if (ReportManager.Instance.FindReport(prevDay) == null)
 					// Do not allow previous day if it cannot be found
 					___prevButton.isInteractable = false;
+			}
+		}
+
+		/// <summary>
+		/// Applied to RetiredColonyInfoScreen to resize the charts to available statistics.
+		/// </summary>
+		[HarmonyPatch(typeof(RetiredColonyInfoScreen), "ConfigureGraph")]
+		public static class RetiredColonyInfoScreen_ConfigureGraph_Patch {
+			/// <summary>
+			/// Applied after ConfigureGraph runs.
+			/// </summary>
+			internal static void Postfix(RetiredColonyData.RetiredColonyStatistic statistic,
+					ref Dictionary<string, GameObject> ___activeColonyWidgets,
+					ref Dictionary<string, Color> ___statColors) {
+				var reports = ReportManager.Instance?.reports;
+				if (___activeColonyWidgets.TryGetValue(statistic.name, out GameObject obj)) {
+					// Find first remaining report's cycle index
+					int minReport = (reports == null) ? 0 : reports[0].day;
+					var graph = obj.GetComponentInChildren<GraphBase>();
+					var lineLayer = obj.GetComponentInChildren<LineLayer>();
+					if (graph != null && lineLayer != null) {
+						// Update the graph min X value to that cycle #
+						graph.axis_x.min_value = minReport;
+						graph.RefreshGuides();
+						lineLayer.ClearLines();
+						// Recreate the line with the correct scale
+						var graphedLine = lineLayer.NewLine(statistic.value, statistic.id);
+						var lineFormatting = lineLayer.line_formatting;
+						int lastIndex = lineFormatting.Length - 1;
+						// Reassign the color (yes lots of duplicate work but a transpiler
+						// would be super annoying)
+						if (___statColors.TryGetValue(statistic.id, out Color color))
+							lineFormatting[lastIndex].color = color;
+						graphedLine.line_renderer.color = lineFormatting[lastIndex].color;
+					}
+				}
 			}
 		}
 

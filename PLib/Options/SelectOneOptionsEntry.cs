@@ -147,6 +147,7 @@ namespace PeterHan.PLib.Options {
 		/// <param name="obj">The actual item label.</param>
 		private void OnRealizeItemLabel(GameObject obj) {
 			label = obj;
+			Update();
 		}
 
 		/// <summary>

@@ -127,28 +127,28 @@ namespace PeterHan.PLib.Options {
 				throw new ArgumentNullException("optionsType");
 			var assembly = optionsType.Assembly;
 			bool hasPath = false;
-			try {
-				var id = Path.GetFileName(GetModDir(assembly));
-				// Prevent concurrent modification (should be impossible anyways)
-				lock (options) {
-					if (options.Count < 1) {
-						// Patch in the mods screen
-						var instance = HarmonyInstance.Create(PRegistry.PLIB_HARMONY);
-						instance.Patch(typeof(ModsScreen), "BuildDisplay", null,
-							new HarmonyMethod(typeof(POptions), "BuildDisplay_Postfix"));
-						PUtil.LogDebug("Patched mods options screen");
-					}
-					if (options.ContainsKey(id))
-						PUtil.LogWarning("Duplicate mod ID: " + id);
-					else {
-						// Add as options for this mod
-						options.Add(id, optionsType);
-						PUtil.LogDebug("Registered mod options class {0} for {1}".F(
-							optionsType.Name, assembly.GetName()?.Name));
-					}
+			var id = Path.GetFileName(GetModDir(assembly));
+			// Prevent concurrent modification (should be impossible anyways)
+			lock (options) {
+				if (options.Count < 1) {
+					// Patch in the mods screen
+					var instance = HarmonyInstance.Create(PRegistry.PLIB_HARMONY);
+					instance.Patch(typeof(ModsScreen), "BuildDisplay", null,
+						new HarmonyMethod(typeof(POptions), "BuildDisplay_Postfix"));
+#if DEBUG
+					PUtil.LogDebug("Patched mods options screen");
+#endif
 				}
-				hasPath = true;
-			} catch (IOException) { }
+				if (options.ContainsKey(id))
+					PUtil.LogWarning("Duplicate mod ID: " + id);
+				else {
+					// Add as options for this mod
+					options.Add(id, optionsType);
+					PUtil.LogDebug("Registered mod options class {0} for {1}".F(
+						optionsType.Name, assembly.GetName()?.Name));
+				}
+			}
+			hasPath = true;
 			if (!hasPath)
 				PUtil.LogWarning("Unable to determine mod path for assembly: " + assembly.
 					FullName);
@@ -178,6 +178,8 @@ namespace PeterHan.PLib.Options {
 					// Deserialize from stream avoids reading file text into memory
 					options = serializer.Deserialize<T>(jr);
 				}
+			} catch (FileNotFoundException) {
+				PUtil.LogDebug("{0} was not found; using default settings".F(CONFIG_FILE));
 			} catch (IOException e) {
 				// Options will be set to defaults
 				PUtil.LogExcWarn(e);

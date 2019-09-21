@@ -103,6 +103,26 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
+		/// Creates an options object using the default constructor if possible.
+		/// </summary>
+		private void CreateOptions() {
+			try {
+				var cons = optionsType.GetConstructor(Type.EmptyTypes);
+				if (cons != null)
+					options = cons.Invoke(null);
+			} catch (TargetInvocationException e) {
+				// Other mod's error
+				PUtil.LogException(e);
+			} catch (AmbiguousMatchException e) {
+				// Other mod's error
+				PUtil.LogException(e);
+			} catch (MemberAccessException e) {
+				// Other mod's error
+				PUtil.LogException(e);
+			}
+		}
+
+		/// <summary>
 		/// Triggered when the Mod Options button is clicked.
 		/// </summary>
 		/// <param name="ignore">The source button.</param>
@@ -128,25 +148,9 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
-		/// Creates an options object using the default constructor if possible.
+		/// Invoked when the dialog is closed.
 		/// </summary>
-		private void CreateOptions() {
-			try {
-				var cons = optionsType.GetConstructor(Type.EmptyTypes);
-				if (cons != null)
-					options = cons.Invoke(null);
-			} catch (TargetInvocationException e) {
-				// Other mod's error
-				PUtil.LogException(e);
-			} catch (AmbiguousMatchException e) {
-				// Other mod's error
-				PUtil.LogException(e);
-			} catch (MemberAccessException e) {
-				// Other mod's error
-				PUtil.LogException(e);
-			}
-		}
-
+		/// <param name="action">The action key taken.</param>
 		private void OnOptionsSelected(string action) {
 			if (action == "ok")
 				// Save changes to mod options
@@ -164,6 +168,9 @@ namespace PeterHan.PLib.Options {
 					// Deserialize from stream avoids reading file text into memory
 					options = serializer.Deserialize(jr, optionsType);
 				}
+			} catch (FileNotFoundException) {
+				PUtil.LogDebug("{0} was not found; using default settings".F(POptions.
+					CONFIG_FILE));
 			} catch (IOException e) {
 				// Options will be set to defaults
 				PUtil.LogExcWarn(e);

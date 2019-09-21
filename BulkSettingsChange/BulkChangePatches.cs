@@ -61,20 +61,6 @@ namespace PeterHan.BulkSettingsChange {
 		}
 
 		/// <summary>
-		/// Applied to Game to clean up the bulk change tool on close.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "DestroyInstances")]
-		public static class Game_DestroyInstances_Patch {
-			/// <summary>
-			/// Applied after DestroyInstances runs.
-			/// </summary>
-			internal static void Postfix() {
-				PUtil.LogDebug("Destroying BulkChangeTool");
-				BulkChangeTool.DestroyInstance();
-			}
-		}
-
-		/// <summary>
 		/// Applied to PlayerController to load the change settings tool into the available
 		/// tool list.
 		/// </summary>

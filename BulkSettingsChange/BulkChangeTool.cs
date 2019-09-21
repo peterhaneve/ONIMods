@@ -38,24 +38,6 @@ namespace PeterHan.BulkSettingsChange {
 		private static BulkChangeTool tool;
 
 		/// <summary>
-		/// The singleton instance of this tool.
-		/// </summary>
-		public static BulkChangeTool Instance {
-			get {
-				if (tool == null)
-					tool = new BulkChangeTool();
-				return tool;
-			}
-		}
-
-		/// <summary>
-		/// Destroys the singleton instance. It will be recreated if used again.
-		/// </summary>
-		public static void DestroyInstance() {
-			tool = null;
-		}
-
-		/// <summary>
 		/// Creates a popup on the cell of all buildings where a tool is applied.
 		/// </summary>
 		/// <param name="enable">true if the "enable" tool was used, false for "disable".</param>
@@ -108,6 +90,11 @@ namespace PeterHan.BulkSettingsChange {
 			menu.onParametersChanged += UpdateViewMode;
 			SetMode(Mode.Box);
 			UpdateViewMode();
+		}
+
+		protected override void OnCleanUp() {
+			base.OnCleanUp();
+			PUtil.LogDebug("Destroying BulkChangeTool");
 		}
 
 		protected override void OnDeactivateTool(InterfaceTool newTool) {

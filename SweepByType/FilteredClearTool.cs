@@ -124,6 +124,12 @@ namespace PeterHan.SweepByType {
 				foreach (var item in inv.GetDiscoveredResourcesFromTag(GameTags.
 						IndustrialIngredient))
 					AddItemTag(item, toggleGroup);
+				// Egg shells are in here
+				foreach (var item in inv.GetDiscoveredResourcesFromTag(GameTags.Organics))
+					AddItemTag(item, toggleGroup);
+				// Liquids
+				foreach (var item in inv.GetDiscoveredResourcesFromTag(GameTags.Liquid))
+					AddItemTag(item, toggleGroup);
 				typeSelect.RefreshToggleContents();
 			}
 		}
