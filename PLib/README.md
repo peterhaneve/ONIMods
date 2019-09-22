@@ -16,14 +16,16 @@ DLL releases for major versions are available in the [releases](https://github.c
 
 PLib should be included in your mod via ILMerge.
 The easiest way to do this is to add the PLib project or DLL as a reference in your mod project, then to use ILMerge as a post-build command.
-Suggested command: ```
+Suggested command:
+```powershell
 "$(ILMergeConsolePath)" /ndebug /out:$(TargetName)Merged.dll $(TargetName).dll PLib.dll /targetplatform:v2,C:/Windows/Microsoft.NET/Framework64/v2.0.50727
 ```
 
 This helps ensure that each mod gets the version of PLib that it was built against, reducing the risk of breakage due to PLib changes.
 However, some parts of PLib need to be patched only once, or rely on having the latest version.
 To handle this problem, PLib uses *auto-superseding*, which only loads and patches those portions of PLib after all mods have loaded, using the latest version of PLib on the system in any mod.
-Example log information showing this feature in action: ```
+Example log information showing this feature in action:
+```
 [05:29:18.099] [1] [INFO] [PLibPatches] Candidate version 2.4.0.0 from DeselectNewMaterialsMerged
 [05:29:18.100] [1] [INFO] [PLib] Mod DeselectNewMaterialsMerged initialized, version 1.0.0.0
 [05:29:18.150] [1] [INFO] [PLibPatches] Candidate version 2.3.0.0 from FallingSandMerged
