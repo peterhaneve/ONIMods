@@ -58,6 +58,32 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Finds the distance between two points.
+		/// </summary>
+		/// <param name="x1">The first X coordinate.</param>
+		/// <param name="y1">The first Y coordinate.</param>
+		/// <param name="x2">The second X coordinate.</param>
+		/// <param name="y2">The second Y coordinate.</param>
+		/// <returns>The non-taxicab (straight line) distance between the points.</returns>
+		public static float Distance(float x1, float y1, float x2, float y2) {
+			float dx = x2 - x1, dy = y2 - y1;
+			return Mathf.Sqrt(dx * dx + dy * dy);
+		}
+
+		/// <summary>
+		/// Finds the distance between two points.
+		/// </summary>
+		/// <param name="x1">The first X coordinate.</param>
+		/// <param name="y1">The first Y coordinate.</param>
+		/// <param name="x2">The second X coordinate.</param>
+		/// <param name="y2">The second Y coordinate.</param>
+		/// <returns>The non-taxicab (straight line) distance between the points.</returns>
+		public static double Distance(double x1, double y1, double x2, double y2) {
+			double dx = x2 - x1, dy = y2 - y1;
+			return Math.Sqrt(dx * dx + dy * dy);
+		}
+
+		/// <summary>
 		/// Highlights an entity. Use Color.black to unhighlight it.
 		/// </summary>
 		/// <param name="entity">The entity to highlight.</param>

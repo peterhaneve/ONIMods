@@ -46,6 +46,16 @@ namespace PeterHan.PLib {
 		public const string KEY_ACTION_TABLE = "PLib.Action.Table";
 
 		/// <summary>
+		/// Used to synchronize access to PLib.Lighting data.
+		/// </summary>
+		public const string KEY_LIGHTING_LOCK = "PLib.Lighting.Lock";
+
+		/// <summary>
+		/// Stores the lighting types currently registered.
+		/// </summary>
+		public const string KEY_LIGHTING_TABLE = "PLib.Lighting.Table";
+
+		/// <summary>
 		/// Used to denote the latest version of PLib installed across any mod, which is the
 		/// version that is being used for any shared item forwarding.
 		/// </summary>

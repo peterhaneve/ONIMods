@@ -98,6 +98,48 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Coerces a floating point number into the specified range.
+		/// </summary>
+		/// <param name="value">The original number.</param>
+		/// <param name="min">The minimum value (inclusive).</param>
+		/// <param name="max">The maximum value (inclusive).</param>
+		/// <returns>The nearest value between minimum and maximum inclusive to value.</returns>
+		public static double InRange(this double value, double min, double max) {
+			double result = value;
+			if (result < min) result = min;
+			if (result > max) result = max;
+			return result;
+		}
+
+		/// <summary>
+		/// Coerces a floating point number into the specified range.
+		/// </summary>
+		/// <param name="value">The original number.</param>
+		/// <param name="min">The minimum value (inclusive).</param>
+		/// <param name="max">The maximum value (inclusive).</param>
+		/// <returns>The nearest value between minimum and maximum inclusive to value.</returns>
+		public static float InRange(this float value, float min, float max) {
+			float result = value;
+			if (result < min) result = min;
+			if (result > max) result = max;
+			return result;
+		}
+
+		/// <summary>
+		/// Coerces an integer into the specified range.
+		/// </summary>
+		/// <param name="value">The original number.</param>
+		/// <param name="min">The minimum value (inclusive).</param>
+		/// <param name="max">The maximum value (inclusive).</param>
+		/// <returns>The nearest value between minimum and maximum inclusive to value.</returns>
+		public static int InRange(this int value, int min, int max) {
+			int result = value;
+			if (result < min) result = min;
+			if (result > max) result = max;
+			return result;
+		}
+
+		/// <summary>
 		/// Checks to see if an object is falling.
 		/// </summary>
 		/// <param name="obj">The object to check.</param>

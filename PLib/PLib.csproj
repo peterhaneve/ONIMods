@@ -71,6 +71,9 @@
     <Compile Include="KeyBindings\PAction.cs" />
     <Compile Include="KeyBindings\PActionManager.cs" />
     <Compile Include="KeyBindings\PKeyBinding.cs" />
+    <Compile Include="Lighting\OctantBuilder.cs" />
+    <Compile Include="Lighting\PLightManager.cs" />
+    <Compile Include="Lighting\PLightShape.cs" />
     <Compile Include="OptionAttribute.cs" />
     <Compile Include="Options\OptionsDialog.cs" />
     <Compile Include="Options\OptionsEntry.cs" />

@@ -33,11 +33,6 @@ namespace PeterHan.BulkSettingsChange {
 		private static readonly Color32 TOOL_COLOR = new Color32(255, 172, 52, 255);
 
 		/// <summary>
-		/// The shared instance of this tool.
-		/// </summary>
-		private static BulkChangeTool tool;
-
-		/// <summary>
 		/// Creates a popup on the cell of all buildings where a tool is applied.
 		/// </summary>
 		/// <param name="enable">true if the "enable" tool was used, false for "disable".</param>

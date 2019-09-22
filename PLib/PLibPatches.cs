@@ -17,10 +17,14 @@
  */
 
 using Harmony;
+using PeterHan.PLib.Lighting;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+
+using LightGridEmitter = LightGridManager.LightGridEmitter;
+using IntHandle = HandleVector<int>.Handle;
 
 namespace PeterHan.PLib {
 	/// <summary>
@@ -57,6 +61,33 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Applied to Light2D to properly attribute lighting sources.
+		/// </summary>
+		private static bool AddToScenePartitioner_Prefix(ref Light2D __instance,
+				ref IntHandle ___solidPartitionerEntry,
+				ref IntHandle ___liquidPartitionerEntry) {
+			var lm = PLightManager.Instance;
+			var obj = __instance.gameObject;
+			bool cont = true;
+			if (lm != null && obj != null) {
+				// Replace the whole method since the radius could use different algorithms
+				lm.CallingObject = obj;
+				cont = !PLightManager.AddScenePartitioner(__instance,
+					ref ___solidPartitionerEntry, ref ___liquidPartitionerEntry);
+			}
+			return cont;
+		}
+
+		/// <summary>
+		/// Applied to LightGridEmitter to unattribute lighting sources.
+		/// </summary>
+		private static void AddToGrid_Postfix() {
+			var lm = PLightManager.Instance;
+			if (lm != null)
+				lm.CallingObject = null;
+		}
+
+		/// <summary>
 		/// Applied to KeyDef (constructor) to adjust array lengths if necessary.
 		/// </summary>
 		private static void CKeyDef_Postfix(ref KInputController.KeyDef __instance) {
@@ -65,11 +96,55 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Applied to LightGridEmitter to compute the lux values properly.
+		/// </summary>
+		private static bool ComputeLux_Prefix(ref LightGridEmitter __instance, int cell,
+				ref int __result) {
+			var lm = PLightManager.Instance;
+			return lm == null || !lm.GetBrightness(__instance, cell, out __result);
+		}
+
+		/// <summary>
+		/// Applied to LightGridManager to properly preview a new light source.
+		/// 
+		/// RadiationGridManager.CreatePreview has no references so no sense in patching that
+		/// yet.
+		/// </summary>
+		private static bool CreatePreview_Prefix(int origin_cell, float radius,
+				LightShape shape, int lux) {
+			var lm = PLightManager.Instance;
+			return lm == null || !lm.PreviewLight(origin_cell, radius, shape, lux);
+		}
+
+		/// <summary>
+		/// Applied to DiscreteShadowCaster to handle lighting requests.
+		/// </summary>
+		private static bool GetVisibleCells_Prefix(int cell, ref List<int> visiblePoints,
+				int range, LightShape shape) {
+			bool exec = true;
+			var lm = PLightManager.Instance;
+			if (shape != LightShape.Circle && shape != LightShape.Cone && lm != null)
+				// This is not a customer scenario
+				exec = !lm.GetVisibleCells(cell, visiblePoints, range, shape);
+			return exec;
+		}
+
+		/// <summary>
 		/// Applied to KInputController to adjust array lengths if necessary.
 		/// </summary>
 		private static void IsActive_Prefix(ref bool[] ___mActionState) {
 			___mActionState = PActionManager.ExtendFlags(___mActionState, PActionManager.
 				Instance.GetMaxAction());
+		}
+
+		/// <summary>
+		/// Applied to LightShapePreview to properly attribute lighting sources.
+		/// </summary>
+		private static void LightShapePreview_Update_Prefix(ref LightShapePreview __instance) {
+			var lm = PLightManager.Instance;
+			var obj = __instance.gameObject;
+			if (lm != null && obj != null)
+				lm.CallingObject = obj;
 		}
 
 		/// <summary>
@@ -85,11 +160,37 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Applied to LightGridEmitter to properly attribute lighting sources.
+		/// </summary>
+		private static void RefreshShapeAndPosition_Postfix(ref Light2D __instance) {
+			var lm = PLightManager.Instance;
+			var obj = __instance.gameObject;
+			if (lm != null && obj != null)
+				lm.CallingObject = obj;
+		}
+
+		/// <summary>
+		/// Applied to LightGridEmitter to clean up the trash when it is removed from grid.
+		/// </summary>
+		private static void RemoveFromGrid_Postfix(ref LightGridEmitter __instance) {
+			PLightManager.Instance?.DestroyLight(__instance);
+		}
+
+		/// <summary>
 		/// Applied to GameInputMapping to update the action count if new actions are
 		/// registered.
 		/// </summary>
 		private static void SetDefaultKeyBindings_Postfix() {
 			PActionManager.Instance.UpdateMaxAction();
+		}
+
+		/// <summary>
+		/// Applied to LightGridEmitter to update lit cells upon a lighting request.
+		/// </summary>
+		private static bool UpdateLitCells_Prefix(ref LightGridEmitter __instance,
+				ref List<int> ___litCells, ref LightGridEmitter.State ___state) {
+			var lm = PLightManager.Instance;
+			return lm == null || !lm.UpdateLitCells(__instance, ___state, ___litCells);
 		}
 
 		/// <summary>
@@ -113,6 +214,36 @@ namespace PeterHan.PLib {
 			instance.Patch(typeof(KInputController), "QueueButtonEvent",
 				PatchMethod("QueueButtonEvent_Prefix"), null);
 
+			if (PLightManager.InitInstance()) {
+				// DiscreteShadowCaster
+				instance.Patch(typeof(DiscreteShadowCaster), "GetVisibleCells",
+					PatchMethod("GetVisibleCells_Prefix"), null);
+
+				// Light2D
+				instance.Patch(typeof(Light2D), "AddToScenePartitioner",
+					PatchMethod("AddToScenePartitioner_Prefix"), null);
+				instance.Patch(typeof(Light2D), "RefreshShapeAndPosition", null,
+					PatchMethod("RefreshShapeAndPosition_Postfix"));
+
+				// LightGridEmitter
+				instance.Patch(typeof(LightGridEmitter), "AddToGrid", null,
+					PatchMethod("AddToGrid_Postfix"));
+				instance.Patch(typeof(LightGridEmitter), "ComputeLux",
+					PatchMethod("ComputeLux_Prefix"), null);
+				instance.Patch(typeof(LightGridEmitter), "RemoveFromGrid",
+					null, PatchMethod("RemoveFromGrid_Postfix"));
+				instance.Patch(typeof(LightGridEmitter), "UpdateLitCells",
+					PatchMethod("UpdateLitCells_Prefix"), null);
+
+				// LightGridManager
+				instance.Patch(typeof(LightGridManager), "CreatePreview",
+					PatchMethod("CreatePreview_Prefix"), null);
+
+				// LightShapePreview
+				instance.Patch(typeof(LightShapePreview), "Update",
+					PatchMethod("LightShapePreview_Update_Prefix"), null);
+			}
+
 			// SteamUGCService
 			try {
 				instance.PatchTranspile(typeof(SteamUGCService), "LoadPreviewImage",
@@ -134,8 +265,11 @@ namespace PeterHan.PLib {
 		/// <param name="name">The patch method name.</param>
 		/// <returns>The matching method.</returns>
 		private static HarmonyMethod PatchMethod(string name) {
-			return new HarmonyMethod(typeof(PLibPatches).GetMethod(name, BindingFlags.
-				NonPublic | BindingFlags.Static));
+			var method = typeof(PLibPatches).GetMethod(name, BindingFlags.
+				NonPublic | BindingFlags.Static);
+			if (method == null)
+				PRegistry.LogPatchWarning("No PLibPatches method found: " + name);
+			return new HarmonyMethod(method);
 		}
 
 		/// <summary>
@@ -161,6 +295,7 @@ namespace PeterHan.PLib {
 				PUtil.LogException(e);
 			}
 			PActionManager.Instance.Init();
+			PRegistry.LogPatchDebug("PLib patches applied");
 		}
 
 		public override bool Equals(object obj) {
