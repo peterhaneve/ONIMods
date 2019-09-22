@@ -84,19 +84,16 @@ namespace PeterHan.PLib.Lighting {
 		/// <returns>This object, for call chaining.</returns>
 		public OctantBuilder AddOctant(int range, Octant octant) {
 			var points = ListPool<int, OctantBuilder>.Allocate();
-			Vector2I start = Grid.CellToXY(SourceCell);
 			OCTANT_SCAN?.Invoke(null, new object[] {
-				start, range, 1, octant, 1.0, 0.0, points
+				Grid.CellToXY(SourceCell), range, 1, octant, 1.0, 0.0, points
 			});
 			// Transfer to our array using:
 			foreach (int cell in points) {
 				float intensity;
-				if (SmoothLight) {
-					Vector2I newCell = Grid.CellToXY(cell);
+				if (SmoothLight)
 					// Better, not rounded falloff
-					intensity = 1.0f / Math.Max(1.0f, Falloff * PUtil.Distance(
-						start.X, start.Y, newCell.X, newCell.Y));
-				} else
+					intensity = PLightShape.GetSmoothFalloff(Falloff, cell, SourceCell);
+				else
 					// Default falloff
 					intensity = PLightShape.GetDefaultFalloff(Falloff, cell, SourceCell);
 				destination[cell] = intensity;

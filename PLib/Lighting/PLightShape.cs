@@ -47,8 +47,22 @@ namespace PeterHan.PLib.Lighting {
 		/// <param name="origin">The light origin cell.</param>
 		/// <returns>The brightness at that location from 0 to 1.</returns>
 		public static float GetDefaultFalloff(float falloffRate, int cell, int origin) {
-			return 1.0f / Mathf.Max(1.0f, Mathf.RoundToInt(falloffRate * Math.Max(Grid.
+			return 1.0f / Math.Max(1.0f, Mathf.RoundToInt(falloffRate * Math.Max(Grid.
 				GetCellDistance(origin, cell), 1)));
+		}
+
+		/// <summary>
+		/// Calculates the brightness falloff similar to the default falloff, but far smoother.
+		/// Slightly heavier on computation however.
+		/// </summary>
+		/// <param name="falloffRate">The falloff rate to use.</param>
+		/// <param name="cell">The cell where falloff is being computed.</param>
+		/// <param name="origin">The light origin cell.</param>
+		/// <returns>The brightness at that location from 0 to 1.</returns>
+		public static float GetSmoothFalloff(float falloffRate, int cell, int origin) {
+			Vector2I newCell = Grid.CellToXY(cell), start = Grid.CellToXY(origin);
+			return 1.0f / Math.Max(1.0f, falloffRate * PUtil.Distance(start.X, start.Y,
+				newCell.X, newCell.Y));
 		}
 
 		/// <summary>

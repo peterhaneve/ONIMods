@@ -99,9 +99,9 @@ namespace PeterHan.PLib {
 		/// Applied to LightGridEmitter to compute the lux values properly.
 		/// </summary>
 		private static bool ComputeLux_Prefix(ref LightGridEmitter __instance, int cell,
-				ref int __result) {
+				ref LightGridEmitter.State ___state, ref int __result) {
 			var lm = PLightManager.Instance;
-			return lm == null || !lm.GetBrightness(__instance, cell, out __result);
+			return lm == null || !lm.GetBrightness(__instance, cell, ___state, out __result);
 		}
 
 		/// <summary>
@@ -145,6 +145,17 @@ namespace PeterHan.PLib {
 			var obj = __instance.gameObject;
 			if (lm != null && obj != null)
 				lm.CallingObject = obj;
+		}
+
+		/// <summary>
+		/// Applied to Rotatable to rotate light previews if a visualizer is rotated.
+		/// </summary>
+		private static void OrientVisualizer_Postfix(ref Rotatable __instance) {
+			var obj = __instance.gameObject;
+			LightShapePreview preview;
+			// Force regeneration on next Update()
+			if (obj != null && (preview = obj.GetComponent<LightShapePreview>()) != null)
+				Traverse.Create(preview).SetField("previousCell", -1);
 		}
 
 		/// <summary>
@@ -242,6 +253,10 @@ namespace PeterHan.PLib {
 				// LightShapePreview
 				instance.Patch(typeof(LightShapePreview), "Update",
 					PatchMethod("LightShapePreview_Update_Prefix"), null);
+
+				// Rotatable
+				instance.Patch(typeof(Rotatable), "OrientVisualizer", null,
+					PatchMethod("OrientVisualizer_Postfix"));
 			}
 
 			// SteamUGCService

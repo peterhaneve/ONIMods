@@ -31,6 +31,11 @@ namespace PeterHan.PLib.Lighting {
 	/// </summary>
 	internal sealed class PLightManager {
 		/// <summary>
+		/// If true, enables the smooth light falloff mode even on vanilla lights.
+		/// </summary>
+		internal static bool ForceSmoothLight { get; set; } = false;
+
+		/// <summary>
 		/// The only instance of PLightManager.
 		/// </summary>
 		internal static PLightManager Instance { get; private set; }
@@ -45,21 +50,24 @@ namespace PeterHan.PLib.Lighting {
 		/// <returns>true if registered, or false if not.</returns>
 		internal static bool AddScenePartitioner(Light2D instance, ref IntHandle solidPart,
 				ref IntHandle liquidPart) {
-			var trInstance = Traverse.Create(instance);
 			bool handled = false;
-			int rad = (int)instance.Range, cell = trInstance.GetProperty<int>("origin");
-			// Only if there would be a valid area
-			if (rad > 0 && Grid.IsValidCell(cell)) {
-				var origin = Grid.CellToXY(cell);
-				var minCoords = new Vector2I(origin.x - rad, origin.y - rad);
-				// Optimize only for vanilla cone, rest get the whole thing
-				int width = 2 * rad, height = (instance.shape == LightShape.Cone) ?
-					rad : 2 * rad;
-				solidPart = trInstance.CallMethod<IntHandle>("AddToLayer", minCoords,
-					width, height, GameScenePartitioner.Instance.solidChangedLayer);
-				liquidPart = trInstance.CallMethod<IntHandle>("AddToLayer", minCoords,
-					width, height, GameScenePartitioner.Instance.liquidChangedLayer);
-				handled = true;
+			var shape = instance.shape;
+			// Avoid interfering with vanilla lights
+			if (shape != LightShape.Cone && shape != LightShape.Circle) {
+				var trInstance = Traverse.Create(instance);
+				int rad = (int)instance.Range, cell = trInstance.GetProperty<int>("origin");
+				// Only if there would be a valid area
+				if (rad > 0 && Grid.IsValidCell(cell)) {
+					var origin = Grid.CellToXY(cell);
+					var minCoords = new Vector2I(origin.x - rad, origin.y - rad);
+					// Better safe than sorry, check whole possible radius
+					int width = 2 * rad, height = 2 * rad;
+					solidPart = trInstance.CallMethod<IntHandle>("AddToLayer", minCoords,
+						width, height, GameScenePartitioner.Instance.solidChangedLayer);
+					liquidPart = trInstance.CallMethod<IntHandle>("AddToLayer", minCoords,
+						width, height, GameScenePartitioner.Instance.liquidChangedLayer);
+					handled = true;
+				}
 			}
 			return handled;
 		}
@@ -82,6 +90,11 @@ namespace PeterHan.PLib.Lighting {
 						patch = true;
 					}
 				}
+			// Initialize anyways if smooth lighting is forced on
+			if (!patch && ForceSmoothLight) {
+				Instance = new PLightManager();
+				patch = true;
+			}
 			return patch;
 		}
 
@@ -153,9 +166,11 @@ namespace PeterHan.PLib.Lighting {
 		/// </summary>
 		/// <param name="source">The source of the light.</param>
 		/// <param name="location">The location to check.</param>
+		/// <param name="state">The lighting state.</param>
 		/// <param name="result">The brightness there.</param>
 		/// <returns>true if that brightness is valid, or false otherwise.</returns>
-		internal bool GetBrightness(LightGridEmitter source, int location, out int result) {
+		internal bool GetBrightness(LightGridEmitter source, int location,
+				LightGridEmitter.State state, out int result) {
 			bool valid;
 			CacheEntry cacheEntry;
 			lock (brightCache) {
@@ -172,6 +187,14 @@ namespace PeterHan.PLib.Lighting {
 #endif
 					result = 0;
 				}
+			} else if (ForceSmoothLight) {
+				// Use smooth light even for vanilla Cone and Circle
+				if (state.shape == LightShape.Circle || state.shape == LightShape.Cone) {
+					result = Mathf.RoundToInt(state.intensity * PLightShape.GetSmoothFalloff(
+						state.falloffRate, location, state.origin));
+					valid = true;
+				} else
+					result = 0;
 			} else {
 #if DEBUG
 				PUtil.LogDebug("Lighting request for invalid emitter at {0:D}".F(location));
