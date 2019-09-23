@@ -17,6 +17,7 @@
  */
 
 using PeterHan.PLib;
+using PeterHan.PLib.Options;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -105,6 +106,11 @@ namespace PeterHan.Claustrophobia {
 		private readonly IList<GameObject> minionCache;
 
 		/// <summary>
+		/// The current options.
+		/// </summary>
+		private readonly ClaustrophobiaOptions options;
+
+		/// <summary>
 		/// Stores the status of each living Duplicant.
 		/// </summary>
 		private readonly IDictionary<GameObject, EntrapmentStatus> statusCache;
@@ -115,6 +121,12 @@ namespace PeterHan.Claustrophobia {
 			minionPacer = 0;
 			// PooledDictionary is useless since this dictionary is created once per load
 			statusCache = new Dictionary<GameObject, EntrapmentStatus>(64);
+			// Read config
+			options = POptions.ReadSettings<ClaustrophobiaOptions>();
+			if (options == null)
+				options = new ClaustrophobiaOptions();
+			PUtil.LogDebug("Claustrophobia Options: Strict Mode = {0}".F(options.
+				StrictConfined));
 		}
 
 		/// <summary>
@@ -149,8 +161,9 @@ namespace PeterHan.Claustrophobia {
 				// Create notifications if not yet present
 				var confined = obj.AddOrGet<ConfinedNotification>();
 				var trapped = obj.AddOrGet<TrappedNotification>();
-				if ((mostReachable > MIN_CONFINED && reachable < MIN_CONFINED) ||
-						(reachable < threshold)) {
+				bool rawConfined = (mostReachable > MIN_CONFINED && reachable <
+					MIN_CONFINED) || reachable < threshold;
+				if (rawConfined && (!options.StrictConfined || status.TrappedScore > 1)) {
 					// Confined
 					PUtil.LogDebug(("{0} is confined ({3} last), reaches {1:D}, " +
 						"best reach {2:D}").F(status.VictimName, reachable, mostReachable,

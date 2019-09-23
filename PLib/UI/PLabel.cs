@@ -26,14 +26,56 @@ namespace PeterHan.PLib.UI {
 	/// </summary>
 	public class PLabel : PTextComponent {
 		/// <summary>
-		/// The label's background color. If null, no background color is applied.
+		/// Shared routine to spawn UI image objects.
+		/// </summary>
+		/// <param name="parent">The parent object for the image.</param>
+		/// <param name="sprite">The sprite to display.</param>
+		/// <param name="imageSize">The size to which to scale the sprite.</param>
+		/// <returns>The child image object.</returns>
+		internal static Image ImageChildHelper(GameObject parent, Sprite sprite,
+				Vector2 imageSize = default) {
+			var imageChild = PUIElements.CreateUI("Image");
+			var img = imageChild.AddComponent<Image>();
+			PUIElements.SetParent(imageChild, parent);
+			img.sprite = sprite;
+			img.preserveAspect = true;
+			// Limit size if needed
+			if (imageSize.x > 0.0f && imageSize.y > 0.0f)
+				PUIElements.SetSizeImmediate(imageChild, imageSize);
+			return img;
+		}
+
+		/// <summary>
+		/// Shared routine to spawn UI text objects.
+		/// </summary>
+		/// <param name="parent">The parent object for the text.</param>
+		/// <param name="fontSize">The font size.</param>
+		/// <param name="contents">The default text.</param>
+		/// <param name="wordWrap">Whether to enable word wrap.</param>
+		/// <returns>The child text object.</returns>
+		internal static LocText TextChildHelper(GameObject parent, float fontSize,
+				string contents = "", bool wordWrap = false) {
+			var textChild = PUIElements.CreateUI("Text");
+			var locText = PUIElements.AddLocText(textChild);
+			PUIElements.SetParent(textChild, parent);
+			// Font needs to be set before the text
+			locText.alignment = TMPro.TextAlignmentOptions.Center;
+			locText.fontSize = (fontSize > 0.0f) ? fontSize : PUITuning.DefaultFontSize;
+			locText.font = PUITuning.ButtonFont;
+			locText.text = contents;
+			locText.enableWordWrapping = wordWrap;
+			return locText;
+		}
+
+		/// <summary>
+		/// The label's background color.
 		/// </summary>
 		public Color BackColor { get; set; }
 
 		public PLabel() : this(null) { }
 
 		public PLabel(string name) : base(name ?? "Label") {
-			BackColor = PUIElements.TRANSPARENT;
+			BackColor = PUITuning.Colors.Transparent;
 		}
 
 		public override GameObject Build() {
@@ -42,28 +84,11 @@ namespace PeterHan.PLib.UI {
 			if (BackColor.a > 0)
 				label.AddComponent<Image>().color = BackColor;
 			// Add foreground image
-			if (Sprite != null) {
-				var imageChild = PUIElements.CreateUI("Image");
-				var img = imageChild.AddComponent<Image>();
-				PUIElements.SetParent(imageChild, label);
-				img.sprite = Sprite;
-				img.preserveAspect = true;
-				// Limit size if needed
-				if (SpriteSize.x > 0.0f && SpriteSize.y > 0.0f)
-					PUIElements.SetSizeImmediate(imageChild, SpriteSize);
-			}
+			if (Sprite != null)
+				ImageChildHelper(label, Sprite, SpriteSize);
 			// Add text
-			if (!string.IsNullOrEmpty(Text)) {
-				var textChild = PUIElements.CreateUI("Text");
-				var text = PUIElements.AddLocText(textChild);
-				PUIElements.SetParent(textChild, label);
-				// Font needs to be set before the text
-				text.alignment = TMPro.TextAlignmentOptions.Center;
-				text.fontSize = (FontSize > 0.0f) ? FontSize : PUITuning.DefaultFontSize;
-				text.font = PUITuning.ButtonFont;
-				text.enableWordWrapping = WordWrap;
-				text.text = Text;
-			}
+			if (!string.IsNullOrEmpty(Text))
+				TextChildHelper(label, FontSize, Text, WordWrap);
 			// Icon and text are side by side
 			var lg = label.AddComponent<HorizontalLayoutGroup>();
 			lg.childAlignment = TextAnchor.MiddleLeft;
@@ -82,7 +107,7 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <returns>This label for call chaining.</returns>
 		public PLabel SetKleiBlueColor() {
-			BackColor = PUITuning.ButtonStyleBlue.inactiveColor;
+			BackColor = PUITuning.Colors.ButtonBlueStyle.inactiveColor;
 			return this;
 		}
 
@@ -91,7 +116,7 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <returns>This label for call chaining.</returns>
 		public PLabel SetKleiPinkColor() {
-			BackColor = PUITuning.ButtonStylePink.inactiveColor;
+			BackColor = PUITuning.Colors.ButtonPinkStyle.inactiveColor;
 			return this;
 		}
 	}

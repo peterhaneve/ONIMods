@@ -91,7 +91,7 @@ namespace PeterHan.PLib.UI {
 			SpriteSize = Vector2.zero;
 			Text = null;
 			TextAlignment = TextAlignmentOptions.Center;
-			TextColor = PUITuning.UITextStyle;
+			TextColor = PUITuning.UITextLightStyle;
 			ToolTip = "";
 			WordWrap = false;
 		}

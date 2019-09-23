@@ -123,11 +123,12 @@ namespace PeterHan.PLib.Options {
 			return new PPanel("Select") {
 				Direction = PanelDirection.Horizontal, Spacing = 5, DynamicSize = true
 			}.AddChild(new PButton("Previous") {
-				Sprite = PUITuning.ArrowLeftImage, SpriteSize = ARROW_SIZE,
-				OnClick = OnPrevious
-			}.SetKleiBlueStyle()).AddChild(lbl).AddChild(new PButton("Next") {
-				Sprite = PUITuning.ArrowRightImage, SpriteSize = ARROW_SIZE, OnClick = OnNext
-			}.SetKleiBlueStyle());
+				SpriteSize = ARROW_SIZE, OnClick = OnPrevious, ToolTip = POptions.
+				TOOLTIP_PREVIOUS
+			}.SetKleiBlueStyle().SetImageLeftArrow()).AddChild(lbl).
+			AddChild(new PButton("Next") {
+				SpriteSize = ARROW_SIZE, OnClick = OnNext, ToolTip = POptions.TOOLTIP_NEXT
+			}.SetKleiBlueStyle().SetImageRightArrow());
 		}
 
 		/// <summary>

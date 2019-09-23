@@ -110,7 +110,7 @@ namespace PeterHan.PLib.UI {
 			int i = 0;
 			PUIElements.SetParent(dialog, Parent);
 			// Background (needs to be unanchored so PPanel is not useful here)
-			dialog.AddComponent<Image>().color = PUITuning.DialogBackground;
+			dialog.AddComponent<Image>().color = PUITuning.Colors.DialogBackground;
 			dialog.AddComponent<Canvas>();
 			new PPanel("Header") {
 				// Horizontal title bar
@@ -121,7 +121,7 @@ namespace PeterHan.PLib.UI {
 				Text = Title, FlexSize = flexW
 			}).AddChild(new PButton(DIALOG_KEY_CLOSE) {
 				// Close button
-				Sprite = PUITuning.CloseButtonImage, Margin = new RectOffset(3, 3, 3, 3),
+				Sprite = PUITuning.Images.Close, Margin = new RectOffset(3, 3, 3, 3),
 				SpriteSize = new Vector2f(16.0f, 16.0f),
 				OnClick = dComponent.DoButton
 			}.SetKleiBlueStyle()).AddTo(dialog);

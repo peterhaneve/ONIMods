@@ -59,10 +59,10 @@ namespace PeterHan.PLib.UI {
 			var button = PUIElements.CreateUI(Name);
 			// Background
 			var kImage = button.AddComponent<KImage>();
-			var trueColor = Color ?? PUITuning.ButtonStylePink;
+			var trueColor = Color ?? PUITuning.Colors.ButtonPinkStyle;
 			kImage.colorStyleSetting = trueColor;
 			kImage.color = trueColor.inactiveColor;
-			kImage.sprite = PUITuning.ButtonImage;
+			kImage.sprite = PUITuning.Images.ButtonBorder;
 			kImage.type = Image.Type.Sliced;
 			// Set on click event
 			var kButton = button.AddComponent<KButton>();
@@ -75,31 +75,13 @@ namespace PeterHan.PLib.UI {
 			kButton.soundPlayer = PUITuning.ButtonSounds;
 			kButton.bgImage = kImage;
 			// Add foreground image since the background already has one
-			if (Sprite != null) {
-				var imageChild = PUIElements.CreateUI("Image");
-				var img = imageChild.AddComponent<Image>();
-				PUIElements.SetParent(imageChild, button);
-				img.sprite = Sprite;
-				img.preserveAspect = true;
-				kButton.fgImage = img;
-				// Limit size if needed
-				if (SpriteSize.x > 0.0f && SpriteSize.y > 0.0f)
-					PUIElements.SetSizeImmediate(imageChild, SpriteSize);
-			}
+			if (Sprite != null)
+				kButton.fgImage = PLabel.ImageChildHelper(button, Sprite, SpriteSize);
 			// Set colors
 			kButton.colorStyleSetting = trueColor;
 			// Add text
-			if (!string.IsNullOrEmpty(Text)) {
-				var textChild = PUIElements.CreateUI("Text");
-				var text = PUIElements.AddLocText(textChild);
-				PUIElements.SetParent(textChild, button);
-				// Font needs to be set before the text
-				text.alignment = TMPro.TextAlignmentOptions.Center;
-				text.fontSize = (FontSize > 0.0f) ? FontSize : PUITuning.DefaultFontSize;
-				text.font = PUITuning.ButtonFont;
-				text.enableWordWrapping = WordWrap;
-				text.text = Text;
-			}
+			if (!string.IsNullOrEmpty(Text))
+				PLabel.TextChildHelper(button, FontSize, Text, WordWrap);
 			// Icon and text are side by side
 			var lg = button.AddComponent<HorizontalLayoutGroup>();
 			lg.childAlignment = TextAnchor.MiddleLeft;
@@ -115,12 +97,31 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Sets the sprite to a leftward facing arrow. Beware the size, scale the button down!
+		/// </summary>
+		/// <returns>This button for call chaining.</returns>
+		public PButton SetImageLeftArrow() {
+			Sprite = PUITuning.Images.ArrowLeft;
+			return this;
+		}
+
+		/// <summary>
+		/// Sets the sprite to a rightward facing arrow. Beware the size, scale the button
+		/// down!
+		/// </summary>
+		/// <returns>This button for call chaining.</returns>
+		public PButton SetImageRightArrow() {
+			Sprite = PUITuning.Images.ArrowRight;
+			return this;
+		}
+
+		/// <summary>
 		/// Sets the default Klei pink button style as this button's color and text style.
 		/// </summary>
 		/// <returns>This button for call chaining.</returns>
 		public PButton SetKleiPinkStyle() {
-			TextColor = PUITuning.UITextStyle;
-			Color = PUITuning.ButtonStylePink;
+			TextColor = PUITuning.UITextLightStyle;
+			Color = PUITuning.Colors.ButtonPinkStyle;
 			return this;
 		}
 
@@ -129,8 +130,8 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <returns>This button for call chaining.</returns>
 		public PButton SetKleiBlueStyle() {
-			TextColor = PUITuning.UITextStyle;
-			Color = PUITuning.ButtonStyleBlue;
+			TextColor = PUITuning.UITextLightStyle;
+			Color = PUITuning.Colors.ButtonBlueStyle;
 			return this;
 		}
 	}

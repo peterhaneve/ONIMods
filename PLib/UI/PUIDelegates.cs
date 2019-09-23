@@ -37,9 +37,23 @@ namespace PeterHan.PLib.UI {
 		public delegate void OnButtonPressed(GameObject source);
 
 		/// <summary>
+		/// The delegate type invoked when a checkbox is clicked.
+		/// </summary>
+		/// <param name="source">The source button.</param>
+		/// <param name="state">The checkbox state.</param>
+		public delegate void OnChecked(GameObject source, int state);
+
+		/// <summary>
 		/// The delegate type invoked when components are converted into Unity game objects.
 		/// </summary>
 		/// <param name="realized">The realized object.</param>
 		public delegate void OnRealize(GameObject realized);
+
+		/// <summary>
+		/// The delegate type invoked when a toggle button is swapped between states.
+		/// </summary>
+		/// <param name="source">The source button.</param>
+		/// <param name="on">true if the button is toggled on, or false otherwise.</param>
+		public delegate void OnToggleButton(GameObject source, bool on);
 	}
 }

@@ -77,7 +77,7 @@ namespace PeterHan.PLib.UI {
 			DynamicSize = true;
 			FlexSize = Vector2.zero;
 			Name = name ?? "Panel";
-			BackColor = PUIElements.TRANSPARENT;
+			BackColor = PUITuning.Colors.Transparent;
 			Direction = PanelDirection.Vertical;
 			Margin = null;
 			Spacing = 0;
@@ -97,7 +97,8 @@ namespace PeterHan.PLib.UI {
 
 		public GameObject Build() {
 			var panel = PUIElements.CreateUI(Name);
-			panel.AddComponent<Image>().color = BackColor;
+			if (BackColor.a > 0.0f)
+				panel.AddComponent<Image>().color = BackColor;
 			panel.layer = LayerMask.NameToLayer("UI");
 			// Add children
 			foreach (var child in children)
@@ -136,7 +137,7 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <returns>This panel for call chaining.</returns>
 		public PPanel SetKleiBlueColor() {
-			BackColor = PUITuning.ButtonStyleBlue.inactiveColor;
+			BackColor = PUITuning.Colors.ButtonBlueStyle.inactiveColor;
 			return this;
 		}
 
@@ -145,7 +146,7 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <returns>This panel for call chaining.</returns>
 		public PPanel SetKleiPinkColor() {
-			BackColor = PUITuning.ButtonStylePink.inactiveColor;
+			BackColor = PUITuning.Colors.ButtonPinkStyle.inactiveColor;
 			return this;
 		}
 

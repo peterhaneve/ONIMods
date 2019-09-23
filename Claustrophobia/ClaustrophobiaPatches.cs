@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Options;
 
 namespace PeterHan.Claustrophobia {
 	/// <summary>
@@ -26,6 +27,7 @@ namespace PeterHan.Claustrophobia {
 	public static class ClaustrophobiaPatches {
 		public static void OnLoad() {
 			PUtil.LogModInit();
+			POptions.RegisterOptions(typeof(ClaustrophobiaOptions));
 		}
 
 		/// <summary>

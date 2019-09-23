@@ -64,8 +64,15 @@ namespace PeterHan.PLib.Options {
 			// Enumeration type
 			if (type.IsEnum)
 				entry = new SelectOneOptionsEntry(field, oa.Title, oa.Tooltip, type);
+			else if (type == typeof(bool))
+				entry = new CheckboxOptionsEntry(field, oa.Title, oa.Tooltip);
 			return entry;
 		}
+
+		/// <summary>
+		/// The currently active dialog.
+		/// </summary>
+		private KScreen dialog;
 
 		/// <summary>
 		/// The mod whose settings are being modified.
@@ -94,12 +101,23 @@ namespace PeterHan.PLib.Options {
 		private readonly string path;
 
 		internal OptionsDialog(Type optionsType, KMod.Mod modSpec) {
+			dialog = null;
 			this.modSpec = modSpec ?? throw new ArgumentNullException("modSpec");
 			this.optionsType = optionsType ?? throw new ArgumentNullException(
 				"optionsType");
 			optionEntries = BuildOptions(optionsType);
 			options = null;
 			path = Path.Combine(modSpec.file_source.GetRoot(), POptions.CONFIG_FILE);
+		}
+
+		/// <summary>
+		/// Closes the current dialog.
+		/// </summary>
+		private void CloseDialog() {
+			if (dialog != null) {
+				dialog.Deactivate();
+				dialog = null;
+			}
 		}
 
 		/// <summary>
@@ -127,24 +145,30 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <param name="ignore">The source button.</param>
 		public void OnModOptions(GameObject ignore) {
+			// Close current dialog if open
+			CloseDialog();
 			// Ensure that it is on top of other screens (which may be +100 modal)
-			var dialog = new PDialog("ModOptions") {
+			var pDialog = new PDialog("ModOptions") {
 				Title = POptions.DIALOG_TITLE.text.F(modSpec.title), Size = POptions.
 				SETTINGS_DIALOG_SIZE, SortKey = 150.0f
 			}.AddButton("ok", STRINGS.UI.CONFIRMDIALOG.OK, POptions.TOOLTIP_OK).
 			AddButton(PDialog.DIALOG_KEY_CLOSE, STRINGS.UI.CONFIRMDIALOG.CANCEL,
 				POptions.TOOLTIP_CANCEL);
+			#region TEST
+			
+			#endregion
 			// For each option, add its UI component to panel
 			foreach (var entry in optionEntries)
-				dialog.Body.AddChild(entry.GetUIEntry());
+				pDialog.Body.AddChild(entry.GetUIEntry());
 			ReadOptions();
 			if (options == null)
 				CreateOptions();
-			dialog.DialogClosed += OnOptionsSelected;
+			pDialog.DialogClosed += OnOptionsSelected;
 			// Manually build the dialog so the options can be updated after realization
-			var obj = dialog.Build();
+			var obj = pDialog.Build();
 			UpdateOptions();
-			obj.GetComponent<KScreen>().Activate();
+			dialog = obj.GetComponent<KScreen>();
+			dialog.Activate();
 		}
 
 		/// <summary>

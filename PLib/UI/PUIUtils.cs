@@ -182,6 +182,55 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Loads a DDS sprite embedded in the current assembly as a 9-slice sprite.
+		/// 
+		/// It must be encoded using the DXT5 format.
+		/// </summary>
+		/// <param name="path">The fully qualified path to the DDS image to load.</param>
+		/// <param name="width">The desired width.</param>
+		/// <param name="height">The desired height.</param>
+		/// <param name="border">The sprite border.</param>
+		/// <param name="log">true to log the load, or false otherwise.</param>
+		/// <returns>The sprite thus loaded.</returns>
+		/// <exception cref="ArgumentException">If the image could not be loaded.</exception>
+		internal static Sprite LoadSprite(string path, int width, int height,
+				Vector4 border = default, bool log = false) {
+			// Open a stream to the image
+			try {
+				using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(
+						path)) {
+					const int SKIP = 128;
+					if (stream == null)
+						throw new ArgumentException("Could not load image: " + path);
+					// If len > int.MaxValue we will not go to space today, skip first 128
+					// bytes of stream
+					int len = (int)stream.Length - SKIP;
+					if (len < 0)
+						throw new ArgumentException("Image is too small: " + path);
+					byte[] buffer = new byte[len];
+					stream.Seek(SKIP, System.IO.SeekOrigin.Begin);
+					stream.Read(buffer, 0, len);
+					// Load the texture from the stream
+					var texture = new Texture2D(width, height, TextureFormat.DXT5, false);
+					texture.LoadRawTextureData(buffer);
+					texture.Apply(true, true);
+					// Create a sprite centered on the texture
+#if DEBUG
+					log = true;
+#endif
+					if (log)
+						PUtil.LogDebug("Loaded sprite: {0} ({1:D}x{2:D}, {3:D} bytes)".F(path,
+							width, height, len));
+					// pivot is in RELATIVE coordinates!
+					return Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(
+						0.5f, 0.5f), 100.0f, 0, SpriteMeshType.FullRect, border);
+				}
+			} catch (System.IO.IOException e) {
+				throw new ArgumentException("Could not load image: " + path, e);
+			}
+		}
+
+		/// <summary>
 		/// Logs a debug message encountered in PLib UI functions.
 		/// </summary>
 		/// <param name="message">The debug message.</param>

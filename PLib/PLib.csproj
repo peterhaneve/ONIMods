@@ -75,6 +75,7 @@
     <Compile Include="Lighting\PLightManager.cs" />
     <Compile Include="Lighting\PLightShape.cs" />
     <Compile Include="OptionAttribute.cs" />
+    <Compile Include="Options\CheckboxOptionsEntry.cs" />
     <Compile Include="Options\OptionsDialog.cs" />
     <Compile Include="Options\OptionsEntry.cs" />
     <Compile Include="Options\SelectOneOptionsEntry.cs" />
@@ -83,14 +84,16 @@
     <Compile Include="PRegistry.cs" />
     <Compile Include="PSharedData.cs" />
     <Compile Include="UI\BoxLayoutGroup.cs" />
-    <Compile Include="UI\IAutoSize.cs" />
+    <Compile Include="UI\IDynamicSizable.cs" />
     <Compile Include="UI\IUIComponent.cs" />
+    <Compile Include="UI\PCheckBox.cs" />
     <Compile Include="UI\PLabel.cs" />
     <Compile Include="UI\PButton.cs" />
     <Compile Include="UI\PDialog.cs" />
     <Compile Include="UI\PPanel.cs" />
     <Compile Include="UI\PSpacer.cs" />
     <Compile Include="UI\PTextComponent.cs" />
+    <Compile Include="UI\PToggle.cs" />
     <Compile Include="UI\PUIDelegates.cs" />
     <Compile Include="UI\PUIElements.cs" />
     <Compile Include="UI\PUITuning.cs" />
@@ -113,6 +116,16 @@
     <EmbeddedResource Include="Assets\ArrowLeft.dds" />
     <EmbeddedResource Include="Assets\ArrowRight.dds" />
     <EmbeddedResource Include="Assets\Check.dds" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Contract.dds" />
+    <EmbeddedResource Include="Assets\Expand.dds" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\Partial.dds" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\CheckBorder.dds" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

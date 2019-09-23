@@ -254,7 +254,7 @@ namespace PeterHan.PLib.UI {
 		/// <param name="size">The minimum component size.</param>
 		/// <returns>obj for call chaining</returns>
 		public static GameObject LayoutNow(GameObject obj, BoxLayoutParams parameters = null,
-				Vector2 size = default(Vector2)) {
+				Vector2 size = default) {
 			if (obj == null)
 				throw new ArgumentNullException("obj");
 			var args = parameters ?? new BoxLayoutParams();

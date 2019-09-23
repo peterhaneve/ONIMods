@@ -52,14 +52,25 @@ namespace PeterHan.PLib.Options {
 		public static LocString DIALOG_TITLE = "Options for {0}";
 
 		/// <summary>
-		/// The tooltip on the OK button.
-		/// </summary>
-		public static LocString TOOLTIP_OK = "Save these options. A restart may be required for some mods.";
-
-		/// <summary>
 		/// The tooltip on the CANCEL button.
 		/// </summary>
 		public static LocString TOOLTIP_CANCEL = "Discard changes.";
+
+		/// <summary>
+		/// The tooltip for cycling to the next item.
+		/// </summary>
+		public static LocString TOOLTIP_NEXT = "Next";
+
+		/// <summary>
+		/// The tooltip on the OK button.
+		/// </summary>
+		public static LocString TOOLTIP_OK = "Save these options. A restart may be required " +
+			"for some mods.";
+
+		/// <summary>
+		/// The tooltip for cycling to the previous item.
+		/// </summary>
+		public static LocString TOOLTIP_PREVIOUS = "Previous";
 
 		/// <summary>
 		/// The default size of the Mod Settings dialog.

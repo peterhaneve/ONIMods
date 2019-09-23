@@ -28,16 +28,6 @@ namespace PeterHan.PLib.UI {
 	/// </summary>
 	public sealed class PUIElements {
 		/// <summary>
-		/// A white color used for default backgrounds.
-		/// </summary>
-		public static readonly Color BG_WHITE = new Color32(255, 255, 255, 255);
-
-		/// <summary>
-		/// A completely transparent color.
-		/// </summary>
-		public static readonly Color TRANSPARENT = new Color32(255, 255, 255, 0);
-
-		/// <summary>
 		/// Represents an anchor in the center.
 		/// </summary>
 		private static readonly Vector2f CENTER = new Vector2f(0.5f, 0.5f);
@@ -63,7 +53,7 @@ namespace PeterHan.PLib.UI {
 			var text = obj.AddComponent<LocText>();
 			// This is enough to let it activate
 			text.key = string.Empty;
-			text.textStyleSetting = PUITuning.UITextStyle;
+			text.textStyleSetting = PUITuning.UITextLightStyle;
 			obj.SetActive(active);
 			return text;
 		}
