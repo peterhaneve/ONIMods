@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib.Lighting;
+using PeterHan.PLib.Options;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -85,6 +86,13 @@ namespace PeterHan.PLib {
 			var lm = PLightManager.Instance;
 			if (lm != null)
 				lm.CallingObject = null;
+		}
+
+		/// <summary>
+		/// Applied to ModsScreen if mod options are registered, after BuildDisplay runs.
+		/// </summary>
+		private static void BuildDisplay_Postfix(ref object ___displayedMods) {
+			POptions.BuildDisplay(___displayedMods);
 		}
 
 		/// <summary>
@@ -258,6 +266,11 @@ namespace PeterHan.PLib {
 				instance.Patch(typeof(Rotatable), "OrientVisualizer", null,
 					PatchMethod("OrientVisualizer_Postfix"));
 			}
+
+			// ModsScreen
+			POptions.Init();
+			instance.Patch(typeof(ModsScreen), "BuildDisplay", null,
+				PatchMethod("BuildDisplay_Postfix"));
 
 			// SteamUGCService
 			try {

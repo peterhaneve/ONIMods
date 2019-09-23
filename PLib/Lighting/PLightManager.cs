@@ -78,18 +78,16 @@ namespace PeterHan.PLib.Lighting {
 		/// <returns>true if the lighting manager was initialized and has something to do,
 		/// or false otherwise.</returns>
 		internal static bool InitInstance() {
-			object locker = PSharedData.GetData<object>(PRegistry.KEY_LIGHTING_LOCK);
 			bool patch = false;
-			if (locker != null)
-				lock (locker) {
-					// Only run if any lights were registered
-					var list = PSharedData.GetData<List<object>>(PRegistry.KEY_LIGHTING_TABLE);
-					if (list != null) {
-						Instance = new PLightManager();
-						Instance.Init(list);
-						patch = true;
-					}
+			lock (PSharedData.GetLock(PRegistry.KEY_LIGHTING_LOCK)) {
+				// Only run if any lights were registered
+				var list = PSharedData.GetData<IList<object>>(PRegistry.KEY_LIGHTING_TABLE);
+				if (list != null) {
+					Instance = new PLightManager();
+					Instance.Init(list);
+					patch = true;
 				}
+			}
 			// Initialize anyways if smooth lighting is forced on
 			if (!patch && ForceSmoothLight) {
 				Instance = new PLightManager();
@@ -239,7 +237,7 @@ namespace PeterHan.PLib.Lighting {
 		/// mods have loaded.
 		/// </summary>
 		/// <param name="lightShapes">The shapes from the shared data.</param>
-		private void Init(List<object> lightShapes) {
+		private void Init(IList<object> lightShapes) {
 			int i = 0;
 			foreach (var light in lightShapes)
 				// Should only have instances of PLightShape from other mods
@@ -372,8 +370,9 @@ namespace PeterHan.PLib.Lighting {
 			private readonly Traverse method;
 
 			internal CrossModLightWrapper(Traverse other) {
-				method = other?.Method("Invoke", typeof(GameObject), typeof(int), typeof(int),
-					typeof(BrightnessDict));
+				method = other?.Method("FillLight", new Type[] {
+					typeof(GameObject), typeof(int), typeof(int), typeof(BrightnessDict)
+				});
 				if (method == null)
 					PUtil.LogError("PLightSource handler has invalid method signature!");
 			}

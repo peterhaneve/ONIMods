@@ -43,6 +43,27 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Retrieves a locking object from the shared data, creating it if necessary.
+		/// </summary>
+		/// <param name="key">The locking object to retrieve.</param>
+		/// <returns>A lock object to synchronize data accesses.</returns>
+		internal static object GetLock(string key) {
+			object locker;
+			if (string.IsNullOrEmpty(key))
+				throw new ArgumentNullException("key");
+			InitRegistry();
+			if (registry != null) {
+				// Attempt to read and relock
+				registry.TryGetValue(key, out locker);
+				if (locker == null)
+					registry.Add(key, locker = new object());
+			} else
+				// Avoid crashing by locking null
+				locker = new object();
+			return locker;
+		}
+
+		/// <summary>
 		/// Retrieves a value from the single-instance share.
 		/// </summary>
 		/// <typeparam name="T">The type of the desired data.</typeparam>

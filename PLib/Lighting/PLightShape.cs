@@ -73,17 +73,13 @@ namespace PeterHan.PLib.Lighting {
 		/// <param name="handler">The handler for that shape.</param>
 		/// <returns>The light shape which can be used.</returns>
 		public static PLightShape Register(string identifier, CastLight handler) {
-			object locker = PSharedData.GetData<object>(PRegistry.KEY_LIGHTING_LOCK);
-			if (locker == null)
-				PSharedData.PutData(PRegistry.KEY_LIGHTING_LOCK, locker = new object());
 			PLightShape lightShape;
-			lock (locker) {
+			lock (PSharedData.GetLock(PRegistry.KEY_LIGHTING_LOCK)) {
 				// Get list holding lighting information
-				var list = PSharedData.GetData<List<object>>(PRegistry.KEY_LIGHTING_TABLE);
-				if (list == null) {
-					list = new List<object>();
-					PSharedData.PutData(PRegistry.KEY_LIGHTING_TABLE, list);
-				}
+				var list = PSharedData.GetData<IList<object>>(PRegistry.KEY_LIGHTING_TABLE);
+				if (list == null)
+					PSharedData.PutData(PRegistry.KEY_LIGHTING_TABLE, list =
+						new List<object>());
 				// Try to find a match for this identifier
 				object ls = null;
 				int n = list.Count, index = 0;
@@ -147,7 +143,7 @@ namespace PeterHan.PLib.Lighting {
 			brightness.Clear();
 			// Found handler!
 			if (source == null)
-				PUtil.LogError("CreateLight: Calling game object is null!");
+				PUtil.LogError("FillLight: Calling game object is null!");
 			else
 				Handler?.Invoke(source, cell, range, brightness);
 		}

@@ -233,13 +233,12 @@ namespace PeterHan.PLib.UI {
 					DefaultFontSize = text.fontSize;
 					UITextLightStyle = text.textStyleSetting;
 					UITextLightStyle.textColor = Colors.UITextLight;
-					UITextDarkStyle = new TextStyleSetting() {
-						enableWordWrapping = UITextLightStyle.enableWordWrapping,
-						fontSize = UITextLightStyle.fontSize,
-						sdfFont = UITextLightStyle.sdfFont,
-						style = UITextLightStyle.style,
-						textColor = Colors.UITextDark
-					};
+					UITextDarkStyle = ScriptableObject.CreateInstance<TextStyleSetting>();
+					UITextDarkStyle.enableWordWrapping = UITextLightStyle.enableWordWrapping;
+					UITextDarkStyle.fontSize = UITextLightStyle.fontSize;
+					UITextDarkStyle.sdfFont = UITextLightStyle.sdfFont;
+					UITextDarkStyle.style = UITextLightStyle.style;
+					UITextDarkStyle.textColor = Colors.UITextDark;
 					ButtonFont = text.font;
 				}
 			}

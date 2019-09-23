@@ -26,6 +26,8 @@ using System.IO;
 using System.Reflection;
 using UnityEngine;
 
+using OptionsTable = System.Collections.Generic.IDictionary<string, System.Type>;
+
 namespace PeterHan.PLib.Options {
 	/// <summary>
 	/// Adds an "Options" screen to a mod in the Mods menu.
@@ -52,6 +54,11 @@ namespace PeterHan.PLib.Options {
 		public static LocString DIALOG_TITLE = "Options for {0}";
 
 		/// <summary>
+		/// The default size of the Mod Settings dialog.
+		/// </summary>
+		internal static readonly Vector2 SETTINGS_DIALOG_SIZE = new Vector2(320.0f, 200.0f);
+
+		/// <summary>
 		/// The tooltip on the CANCEL button.
 		/// </summary>
 		public static LocString TOOLTIP_CANCEL = "Discard changes.";
@@ -73,38 +80,33 @@ namespace PeterHan.PLib.Options {
 		public static LocString TOOLTIP_PREVIOUS = "Previous";
 
 		/// <summary>
-		/// The default size of the Mod Settings dialog.
+		/// The mod options table.
 		/// </summary>
-		internal static readonly Vector2 SETTINGS_DIALOG_SIZE = new Vector2(320.0f, 200.0f);
-
-		/// <summary>
-		/// The location where mod option types are stored. Technically this class can manage
-		/// mod options for more than one mod.
-		/// </summary>
-		private static readonly IDictionary<string, Type> options =
-			new Dictionary<string, Type>(4);
+		private static OptionsTable options = null;
 
 		/// <summary>
 		/// Adds the Options button to the Mods screen.
 		/// </summary>
 		/// <param name="modEntry">The mod entry where the button should be added.</param>
 		private static void AddModOptions(Traverse modEntry) {
-			var modSpec = Global.Instance.modManager.mods[modEntry.GetField<int>(
-				"mod_index")];
-			var transform = modEntry.GetField<RectTransform>("rect_transform");
-			string modID = modSpec.label.id;
-			if (modSpec.enabled && !string.IsNullOrEmpty(modID) && options.TryGetValue(modID,
-					out Type optionsType) && transform != null) {
-				// Create delegate to spawn actions dialog
-				var action = new OptionsDialog(optionsType, modSpec);
-				new PButton("ModSettingsButton") {
-					FlexSize = new Vector2f(0.0f, 1.0f),
-					OnClick = action.OnModOptions,
-					Text = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(BUTTON_OPTIONS.text.
-						ToLower()),
-					ToolTip = DIALOG_TITLE.text.F(modSpec.title)
-					// Move before the subscription and enable button
-				}.SetKleiPinkStyle().AddTo(transform.gameObject, 3);
+			int index = modEntry.GetField<int>("mod_index");
+			var mods = Global.Instance.modManager.mods;
+			if (index >= 0 && index < mods.Count) {
+				var modSpec = mods[index];
+				var transform = modEntry.GetField<RectTransform>("rect_transform");
+				string modID = modSpec.label.id;
+				if (modSpec.enabled && !string.IsNullOrEmpty(modID) && options.TryGetValue(
+						modID, out Type optionsType) && transform != null) {
+					// Create delegate to spawn actions dialog
+					var action = new OptionsDialog(optionsType, modSpec);
+					new PButton("ModSettingsButton") {
+						FlexSize = new Vector2f(0.0f, 1.0f),
+						OnClick = action.OnModOptions,
+						Text = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(BUTTON_OPTIONS.
+							text.ToLower()), ToolTip = DIALOG_TITLE.text.F(modSpec.title)
+						// Move before the subscription and enable button
+					}.SetKleiPinkStyle().AddTo(transform.gameObject, 3);
+				}
 			}
 		}
 
@@ -130,6 +132,15 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
+		/// Initializes and stores the options table for quicker lookups later.
+		/// </summary>
+		internal static void Init() {
+			lock (PSharedData.GetLock(PRegistry.KEY_OPTIONS_LOCK)) {
+				options = PSharedData.GetData<OptionsTable>(PRegistry.KEY_OPTIONS_TABLE);
+			}
+		}
+
+		/// <summary>
 		/// Registers a class as a mod options class.
 		/// </summary>
 		/// <param name="optionsType">The class which will represent the options for this mod.</param>
@@ -137,19 +148,14 @@ namespace PeterHan.PLib.Options {
 			if (optionsType == null)
 				throw new ArgumentNullException("optionsType");
 			var assembly = optionsType.Assembly;
-			bool hasPath = false;
 			var id = Path.GetFileName(GetModDir(assembly));
 			// Prevent concurrent modification (should be impossible anyways)
-			lock (options) {
-				if (options.Count < 1) {
-					// Patch in the mods screen
-					var instance = HarmonyInstance.Create(PRegistry.PLIB_HARMONY);
-					instance.Patch(typeof(ModsScreen), "BuildDisplay", null,
-						new HarmonyMethod(typeof(POptions), "BuildDisplay_Postfix"));
-#if DEBUG
-					PUtil.LogDebug("Patched mods options screen");
-#endif
-				}
+			lock (PSharedData.GetLock(PRegistry.KEY_OPTIONS_LOCK)) {
+				// Get options table
+				var options = PSharedData.GetData<OptionsTable>(PRegistry.KEY_OPTIONS_TABLE);
+				if (options == null)
+					PSharedData.PutData(PRegistry.KEY_OPTIONS_TABLE, options =
+						new Dictionary<string, Type>(8));
 				if (options.ContainsKey(id))
 					PUtil.LogWarning("Duplicate mod ID: " + id);
 				else {
@@ -159,19 +165,16 @@ namespace PeterHan.PLib.Options {
 						optionsType.Name, assembly.GetName()?.Name));
 				}
 			}
-			hasPath = true;
-			if (!hasPath)
-				PUtil.LogWarning("Unable to determine mod path for assembly: " + assembly.
-					FullName);
 		}
 
 		/// <summary>
 		/// Applied to ModsScreen if mod options are registered, after BuildDisplay runs.
 		/// </summary>
-		internal static void BuildDisplay_Postfix(ref object ___displayedMods) {
-			// Must cast the type because ModsScreen.DisplayedMod is private
-			foreach (var displayedMod in (System.Collections.IEnumerable)___displayedMods)
-				AddModOptions(Traverse.Create(displayedMod));
+		internal static void BuildDisplay(object displayedMods) {
+			if (options != null)
+				// Must cast the type because ModsScreen.DisplayedMod is private
+				foreach (var displayedMod in (System.Collections.IEnumerable)displayedMods)
+					AddModOptions(Traverse.Create(displayedMod));
 		}
 
 		/// <summary>
