@@ -31,13 +31,9 @@ namespace PeterHan.PLib.Lighting {
 		/// Implemented by classes which want to handle light.
 		/// </summary>
 		/// <param name="source">The source game object.</param>
-		/// <param name="sourceCell">The cell casting the light.</param>
-		/// <param name="range">The range of the light as set in the source.</param>
-		/// <param name="brightness">The location where points lit by this light shape
-		/// should be stored. The key is the cell to light, the value is the fraction of
-		/// the base brightness to use here.</param>
-		public delegate void CastLight(GameObject source, int sourceCell, int range,
-			IDictionary<int, float> brightness);
+		/// <param name="args">The parameters to use for lighting, and the location to
+		/// store results. See the LightingArgs class documentation for details.</param>
+		public delegate void CastLight(GameObject source, LightingArgs args);
 
 		/// <summary>
 		/// Calculates the brightness falloff as it would be in the stock game.
@@ -140,12 +136,11 @@ namespace PeterHan.PLib.Lighting {
 		/// <param name="brightness">The location where lit points will be stored.</param>
 		internal void FillLight(GameObject source, int cell, int range,
 				BrightnessDict brightness) {
-			brightness.Clear();
 			// Found handler!
 			if (source == null)
-				PUtil.LogError("FillLight: Calling game object is null!");
+				PUtil.LogWarning("FillLight: Calling game object is null!");
 			else
-				Handler?.Invoke(source, cell, range, brightness);
+				Handler?.Invoke(source, new LightingArgs(cell, range, brightness));
 		}
 
 		public override int GetHashCode() {

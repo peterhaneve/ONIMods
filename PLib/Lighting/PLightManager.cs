@@ -276,7 +276,7 @@ namespace PeterHan.PLib.Lighting {
 				int index = shape - LightShape.Cone - 1;
 				if (index < shapes.Count) {
 					// Found handler!
-					shapes[index].Handler?.Invoke(CallingObject, origin, (int)radius, cells);
+					shapes[index].FillLight(CallingObject, origin, (int)radius, cells);
 					foreach (var pair in cells) {
 						int cell = pair.Key;
 						if (Grid.IsValidCell(cell)) {
@@ -319,9 +319,10 @@ namespace PeterHan.PLib.Lighting {
 						brightCache.Add(source, cacheEntry);
 					}
 				}
-				// We have the proper owner
-				ps.FillLight(cacheEntry.Owner, state.origin, (int)state.radius, cacheEntry.
-					Intensity);
+				var brightness = cacheEntry.Intensity;
+				// Proper owner found
+				brightness.Clear();
+				ps.FillLight(cacheEntry.Owner, state.origin, (int)state.radius, brightness);
 				foreach (var point in cacheEntry.Intensity)
 					litCells.Add(point.Key);
 				handled = true;
@@ -378,17 +379,12 @@ namespace PeterHan.PLib.Lighting {
 			}
 
 			/// <summary>
-			/// Handles lighting for this light type.
+			/// Handles lighting from another mod.
 			/// </summary>
 			/// <param name="source">The source game object.</param>
-			/// <param name="sourceCell">The cell casting the light.</param>
-			/// <param name="range">The range of the light as set in the source.</param>
-			/// <param name="brightness">The location where points lit by this light shape
-			/// should be stored. The key is the cell to light, the value is the fraction of
-			/// the base brightness to use here.</param>
-			internal void CastLight(GameObject source, int sourceCell, int range,
-					BrightnessDict brightness) {
-				method?.GetValue(source, sourceCell, range, brightness);
+			/// <param name="args">The lighting arguments.</param>
+			internal void CastLight(GameObject source, LightingArgs args) {
+				method?.GetValue(source, args.SourceCell, args.Range, args.Brightness);
 			}
 		}
 	}
