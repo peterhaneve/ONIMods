@@ -82,7 +82,7 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// The mod options table.
 		/// </summary>
-		private static OptionsTable options = null;
+		private static OptionsTable modOptions = null;
 
 		/// <summary>
 		/// Adds the Options button to the Mods screen.
@@ -95,7 +95,7 @@ namespace PeterHan.PLib.Options {
 				var modSpec = mods[index];
 				var transform = modEntry.GetField<RectTransform>("rect_transform");
 				string modID = modSpec.label.id;
-				if (modSpec.enabled && !string.IsNullOrEmpty(modID) && options.TryGetValue(
+				if (modSpec.enabled && !string.IsNullOrEmpty(modID) && modOptions.TryGetValue(
 						modID, out Type optionsType) && transform != null) {
 					// Create delegate to spawn actions dialog
 					var action = new OptionsDialog(optionsType, modSpec);
@@ -136,7 +136,7 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		internal static void Init() {
 			lock (PSharedData.GetLock(PRegistry.KEY_OPTIONS_LOCK)) {
-				options = PSharedData.GetData<OptionsTable>(PRegistry.KEY_OPTIONS_TABLE);
+				modOptions = PSharedData.GetData<OptionsTable>(PRegistry.KEY_OPTIONS_TABLE);
 			}
 		}
 
@@ -171,7 +171,7 @@ namespace PeterHan.PLib.Options {
 		/// Applied to ModsScreen if mod options are registered, after BuildDisplay runs.
 		/// </summary>
 		internal static void BuildDisplay(object displayedMods) {
-			if (options != null)
+			if (modOptions != null)
 				// Must cast the type because ModsScreen.DisplayedMod is private
 				foreach (var displayedMod in (System.Collections.IEnumerable)displayedMods)
 					AddModOptions(Traverse.Create(displayedMod));

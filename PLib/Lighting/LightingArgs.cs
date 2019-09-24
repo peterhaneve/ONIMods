@@ -37,7 +37,7 @@ namespace PeterHan.PLib.Lighting {
 		/// <summary>
 		/// The location where lighting results are stored.
 		/// </summary>
-		internal IDictionary<int, float> Brightness { get; }
+		public IDictionary<int, float> Brightness { get; }
 		
 		/// <summary>
 		/// The maximum range to use for cell lighting. Do not light up cells beyond this
