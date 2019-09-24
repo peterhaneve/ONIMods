@@ -46,3 +46,40 @@ Example log information showing this feature in action:
 
 The accessor `PVersion.IsLatestVersion` can be used to determine if the version of PLib in a particular mod is the latest one on the system.
 This is not a guarantee that the PLib instance in a particular mod is the loaded instance if multiple mods have this latest version.
+
+### Initialization
+
+Initialize PLib by calling `PUtil.LogModInit()` in `OnLoad`.
+This call is required before using almost every other PLib function.
+It will emit your mod's `AssemblyFileVersion` to the log.
+
+Note the difference between the Assembly Version `AssemblyVersion` and `AssemblyFileVersion`.
+Both can be used, but changing `AssemblyVersion` breaks any explicit references to the assembly by name (ever wonder why .NET 3.5 still uses the .NET 2.0 version string?).
+
+### Options
+
+Register options classes by using `POptions.RegisterOptions(Type)` in `OnLoad`.
+The argument should be the type of the class your mod uses for its options.
+It should be JSON serializable (Newtonsoft.Json is bundled with the game and can be referenced).
+Fields need an `Option` annotation in order to be visible to the options window.
+
+### Actions
+
+Register actions by using `PAction.Register(string, LocString, PKeyBinding)` in `OnLoad`.
+The identifier should be unique to the action used and should include the mod name to avoid conflicts with other mods.
+If multiple mods register the same action identifier, only the first will receive a valid `PAction`.
+The returned `PAction` object has a `GetKAction` method which can be used to retrieve an `Action` that works in standard Klei functions.
+The `PKeyBinding` is used to specify the default key binding.
+
+### Lighting
+
+Register lighting types by using `PLightShape.Register(string, CastLight)` in `OnLoad`.
+The identifier should be unique to the light pattern that will be registered.
+If multiple mods register the same lighting type identifier, all will receive a valid `PLightShape` object but only the first mod loaded will be used to render it.
+The returned `PLightShape` object has a `GetKLightShape` method which can be used to retrieve a `LightShape` that works in standard `Light2D` functions.
+The `CastLight` specifies a callback in your mod that can handle drawing the light. It needs the signature
+```c
+void CastLight(GameObject source, LightingArgs args);
+```
+The mod will receive the source of the light (with the `Light2D` component) and an object encapsulating the lighting arguments.
+See the `LightingArgs` class for more details.
