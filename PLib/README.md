@@ -49,19 +49,74 @@ This is not a guarantee that the PLib instance in a particular mod is the loaded
 
 ### Initialization
 
-Initialize PLib by calling `PUtil.LogModInit()` in `OnLoad`.
-This call is required before using almost every other PLib function.
-It will emit your mod's `AssemblyFileVersion` to the log.
+Initialize PLib by calling `PUtil.LogModInit()` in `OnLoad`. PLib *must* be initialized before using most of PLib functionality.
 
-Note the difference between the Assembly Version `AssemblyVersion` and `AssemblyFileVersion`.
-Both can be used, but changing `AssemblyVersion` breaks any explicit references to the assembly by name (ever wonder why .NET 3.5 still uses the .NET 2.0 version string?).
+It will emit your mod's `AssemblyFileVersion` to the log. It is not `AssemblyVersion`, because  changing `AssemblyVersion` breaks any explicit references to the assembly by name. (Ever wonder why .NET 3.5 still uses the .NET 2.0 version string?)
 
 ### Options
 
-Register options classes by using `POptions.RegisterOptions(Type)` in `OnLoad`.
-The argument should be the type of the class your mod uses for its options.
-It should be JSON serializable (Newtonsoft.Json is bundled with the game and can be referenced).
-Fields need an `Option` annotation in order to be visible to the options window.
+Provides utilities for reading and writing config files, as well as editing configs in-game via the mod menu.
+
+#### Reading/writing config files
+
+To read, use `PLib.Options.POptions.ReadSettings<T>()` where T is the type that the config file will be deserialized to. By default, PLib assumes the config file is located in the mod assembly directory and is named `config.json`.
+
+To write, use `PLib.Options.POptions.WriteSettings<T>(T settings)`, where again T is the settings type.
+
+#### Registering for the config screen
+
+PLib.Options automatically displays config menus for mods that are registered. You can register an mod by invoking `POptions.RegisterOptions(Type settingtype)` in `OnLoad`. The argument should be the type of the class your mod uses for its options, and must be JSON serializable. Newtonsoft.Json is bundled with the game and can be referenced.
+
+Fields must be a property, not a member, and should be annotated with `PLib.Option(string displaytext, [string tooltip=""])` to be visible in the mod config menu. Currently supported types are: `int`, `float`, `string`, `bool`.
+
+#### Range limits
+
+`int` and `float` options can have validation in the form of a range limit. Annotating the property with `PLib.Limit(double min, double max)`.
+
+#### Example
+
+```cs
+using Newtonsoft.Json;
+using PeterHan;
+using PeterHan.PLib.Options;
+
+// ...
+
+[JsonObject(MemberSerialization.OptIn)]
+public class PrintingPodRechargeSettings
+{
+    [PLib.Option("Wattage", "How many watts you can use before exploding.")]
+    [PLib.Limit(1, 50000)]
+    [JsonProperty]
+    public float Watts { get; set; }
+
+    public PrintingPodRechargeSettings()
+    {
+        Watts = 10000f; // defaults to 10000, e.g. if the config doesn't exist
+    }
+}
+```
+
+```cs
+using PeterHan;
+
+// ...
+
+public static class Mod_OnLoad
+{
+    public static void OnLoad()
+    {
+        PLib.PUtil.LogModInit();
+        PLib.POptions.RegisterOptions(typeof(TestModSetting));
+    }
+}
+```
+
+This is how it looks in the mod menu:
+
+![mod menu example screenshot](https://i.imgur.com/1S1i9ru.png)
+
+
 
 ### Actions
 
