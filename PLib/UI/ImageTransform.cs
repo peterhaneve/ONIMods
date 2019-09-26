@@ -16,17 +16,21 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
+
 namespace PeterHan.PLib.UI {
 	/// <summary>
-	/// A UI component which can be dynamically resized for its content.
+	/// An enumeration describing how to transform the image in a label.
+	/// 
+	/// Rotations are counterclockwise from 0 (straight up).
 	/// </summary>
-	public interface IDynamicSizable : IUIComponent {
-		/// <summary>
-		/// Whether the component should dynamically resize for its content. This adds more
-		/// components and more layout depth, so should only be enabled if necessary.
-		/// 
-		/// Defaults to false. Must be set to true for components with a nonzero flex size.
-		/// </summary>
-		bool DynamicSize { get; set; }
+	[Flags]
+	public enum ImageTransform : uint {
+		None = 0,
+		FlipHorizontal = 1,
+		FlipVertical = 2,
+		Rotate90 = 4,
+		Rotate180 = 8,
+		Rotate270 = Rotate90 | Rotate180
 	}
 }

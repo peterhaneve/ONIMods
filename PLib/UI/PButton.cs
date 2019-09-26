@@ -43,7 +43,7 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// The action to trigger on click. It is passed the realized source object.
 		/// </summary>
-		public PUIDelegates.OnButtonPressed OnClick;
+		public PUIDelegates.OnButtonPressed OnClick { get; set; }
 
 		public PButton() : this(null) { }
 
@@ -52,7 +52,6 @@ namespace PeterHan.PLib.UI {
 			Sprite = null;
 			Text = null;
 			ToolTip = "";
-			WordWrap = false;
 		}
 
 		public override GameObject Build() {
@@ -76,22 +75,26 @@ namespace PeterHan.PLib.UI {
 			kButton.bgImage = kImage;
 			// Add foreground image since the background already has one
 			if (Sprite != null)
-				kButton.fgImage = PLabel.ImageChildHelper(button, Sprite, SpriteSize);
+				kButton.fgImage = ImageChildHelper(button, Sprite, SpriteTransform, SpriteSize);
 			// Set colors
 			kButton.colorStyleSetting = trueColor;
 			// Add text
 			if (!string.IsNullOrEmpty(Text))
-				PLabel.TextChildHelper(button, FontSize, Text, WordWrap);
-			// Icon and text are side by side
-			var lg = button.AddComponent<HorizontalLayoutGroup>();
-			lg.childAlignment = TextAnchor.MiddleLeft;
-			lg.spacing = Math.Max(IconSpacing, 0);
-			lg.padding = Margin;
+				PLabel.TextChildHelper(button, TextStyle ?? PUITuning.Fonts.UILightStyle, Text);
 			// Add tooltip
 			if (!string.IsNullOrEmpty(ToolTip))
 				button.AddComponent<ToolTip>().toolTip = ToolTip;
-			PUIElements.AddSizeFitter(button, DynamicSize).SetFlexUISize(FlexSize).SetActive(
-				true);
+			button.SetActive(true);
+			// Icon and text are side by side
+			var lp = new BoxLayoutParams() {
+				Spacing = IconSpacing, Direction = PanelDirection.Horizontal, Margin = Margin,
+				Alignment = TextAlignment
+			};
+			if (DynamicSize)
+				button.AddComponent<BoxLayoutGroup>().Params = lp;
+			else
+				BoxLayoutGroup.LayoutNow(button, lp);
+			button.SetFlexUISize(FlexSize);
 			InvokeRealize(button);
 			return button;
 		}
@@ -101,7 +104,8 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <returns>This button for call chaining.</returns>
 		public PButton SetImageLeftArrow() {
-			Sprite = PUITuning.Images.ArrowLeft;
+			Sprite = PUITuning.Images.Arrow;
+			SpriteTransform = ImageTransform.FlipHorizontal;
 			return this;
 		}
 
@@ -111,7 +115,8 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <returns>This button for call chaining.</returns>
 		public PButton SetImageRightArrow() {
-			Sprite = PUITuning.Images.ArrowRight;
+			Sprite = PUITuning.Images.Arrow;
+			SpriteTransform = ImageTransform.None;
 			return this;
 		}
 
@@ -120,7 +125,7 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <returns>This button for call chaining.</returns>
 		public PButton SetKleiPinkStyle() {
-			TextColor = PUITuning.UITextLightStyle;
+			TextStyle = PUITuning.Fonts.UILightStyle;
 			Color = PUITuning.Colors.ButtonPinkStyle;
 			return this;
 		}
@@ -130,7 +135,7 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <returns>This button for call chaining.</returns>
 		public PButton SetKleiBlueStyle() {
-			TextColor = PUITuning.UITextLightStyle;
+			TextStyle = PUITuning.Fonts.UILightStyle;
 			Color = PUITuning.Colors.ButtonBlueStyle;
 			return this;
 		}

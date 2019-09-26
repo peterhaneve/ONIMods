@@ -26,56 +26,20 @@ namespace PeterHan.PLib.UI {
 	/// </summary>
 	public class PLabel : PTextComponent {
 		/// <summary>
-		/// Shared routine to spawn UI image objects.
-		/// </summary>
-		/// <param name="parent">The parent object for the image.</param>
-		/// <param name="sprite">The sprite to display.</param>
-		/// <param name="imageSize">The size to which to scale the sprite.</param>
-		/// <returns>The child image object.</returns>
-		internal static Image ImageChildHelper(GameObject parent, Sprite sprite,
-				Vector2 imageSize = default) {
-			var imageChild = PUIElements.CreateUI("Image");
-			var img = imageChild.AddComponent<Image>();
-			PUIElements.SetParent(imageChild, parent);
-			img.sprite = sprite;
-			img.preserveAspect = true;
-			// Limit size if needed
-			if (imageSize.x > 0.0f && imageSize.y > 0.0f)
-				PUIElements.SetSizeImmediate(imageChild, imageSize);
-			return img;
-		}
-
-		/// <summary>
-		/// Shared routine to spawn UI text objects.
-		/// </summary>
-		/// <param name="parent">The parent object for the text.</param>
-		/// <param name="fontSize">The font size.</param>
-		/// <param name="contents">The default text.</param>
-		/// <param name="wordWrap">Whether to enable word wrap.</param>
-		/// <returns>The child text object.</returns>
-		internal static LocText TextChildHelper(GameObject parent, float fontSize,
-				string contents = "", bool wordWrap = false) {
-			var textChild = PUIElements.CreateUI("Text");
-			var locText = PUIElements.AddLocText(textChild);
-			PUIElements.SetParent(textChild, parent);
-			// Font needs to be set before the text
-			locText.alignment = TMPro.TextAlignmentOptions.Center;
-			locText.fontSize = (fontSize > 0.0f) ? fontSize : PUITuning.DefaultFontSize;
-			locText.font = PUITuning.ButtonFont;
-			locText.text = contents;
-			locText.enableWordWrapping = wordWrap;
-			return locText;
-		}
-
-		/// <summary>
 		/// The label's background color.
 		/// </summary>
 		public Color BackColor { get; set; }
+
+		/// <summary>
+		/// The margin around the component.
+		/// </summary>
+		public RectOffset Margin { get; set; }
 
 		public PLabel() : this(null) { }
 
 		public PLabel(string name) : base(name ?? "Label") {
 			BackColor = PUITuning.Colors.Transparent;
+			Margin = null;
 		}
 
 		public override GameObject Build() {
@@ -85,19 +49,24 @@ namespace PeterHan.PLib.UI {
 				label.AddComponent<Image>().color = BackColor;
 			// Add foreground image
 			if (Sprite != null)
-				ImageChildHelper(label, Sprite, SpriteSize);
+				ImageChildHelper(label, Sprite, SpriteTransform, SpriteSize);
 			// Add text
 			if (!string.IsNullOrEmpty(Text))
-				TextChildHelper(label, FontSize, Text, WordWrap);
-			// Icon and text are side by side
-			var lg = label.AddComponent<HorizontalLayoutGroup>();
-			lg.childAlignment = TextAnchor.MiddleLeft;
-			lg.spacing = Math.Max(IconSpacing, 0);
+				TextChildHelper(label, TextStyle ?? PUITuning.Fonts.UILightStyle, Text);
 			// Add tooltip
 			if (!string.IsNullOrEmpty(ToolTip))
 				label.AddComponent<ToolTip>().toolTip = ToolTip;
-			PUIElements.AddSizeFitter(label, DynamicSize).SetFlexUISize(FlexSize).SetActive(
-				true);
+			label.SetActive(true);
+			// Icon and text are side by side
+			var lp = new BoxLayoutParams() {
+				Spacing = IconSpacing, Direction = PanelDirection.Horizontal, Margin = Margin,
+				Alignment = TextAlignment
+			};
+			if (DynamicSize)
+				label.AddComponent<BoxLayoutGroup>().Params = lp;
+			else
+				BoxLayoutGroup.LayoutNow(label, lp);
+			label.SetFlexUISize(FlexSize);
 			InvokeRealize(label);
 			return label;
 		}

@@ -17,6 +17,8 @@
  */
 
 using Harmony;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 namespace PeterHan.PLib.UI {
@@ -30,64 +32,78 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		public static class Images {
 			/// <summary>
-			/// The left arrow image.
+			/// The right arrow image. Rotate it in the Image to get more directions.
 			/// </summary>
-			public static Sprite ArrowLeft { get; private set; }
-
-			/// <summary>
-			/// The right arrow image.
-			/// </summary>
-			public static Sprite ArrowRight { get; private set; }
+			public static Sprite Arrow { get; }
 
 			/// <summary>
 			/// The default image used for button appearance.
 			/// </summary>
-			public static Sprite ButtonBorder { get; private set; }
+			public static Sprite ButtonBorder { get; }
 
 			/// <summary>
 			/// The border image around a checkbox.
 			/// </summary>
-			public static Sprite CheckBorder { get; private set; }
+			public static Sprite CheckBorder { get; }
 
 			/// <summary>
 			/// The image for a check box which is checked.
 			/// </summary>
-			public static Sprite Checked { get; private set; }
+			public static Sprite Checked { get; }
 
 			/// <summary>
 			/// The image used for dialog close buttons.
 			/// </summary>
-			public static Sprite Close { get; private set; }
+			public static Sprite Close { get; }
 
 			/// <summary>
 			/// The image for contracting a category.
 			/// </summary>
-			public static Sprite Contract { get; private set; }
+			public static Sprite Contract { get; }
 
 			/// <summary>
 			/// The image for expanding a category.
 			/// </summary>
-			public static Sprite Expand { get; private set; }
+			public static Sprite Expand { get; }
 
 			/// <summary>
 			/// The image for a check box which is neither checked nor unchecked.
 			/// </summary>
-			public static Sprite Partial { get; private set; }
+			public static Sprite Partial { get; }
 
-			internal static void InitSprites() {
-				ArrowLeft = PUIUtils.LoadSprite("PeterHan.PLib.Assets.ArrowLeft.dds", 64,
-					64);
-				ArrowRight = PUIUtils.LoadSprite("PeterHan.PLib.Assets.ArrowRight.dds", 64,
-					64);
-				ButtonBorder = PUIUtils.LoadSprite("PeterHan.PLib.Assets.Button.dds", 16, 16,
-					new Vector4(3.0f, 3.0f, 3.0f, 3.0f));
-				CheckBorder = PUIUtils.LoadSprite("PeterHan.PLib.Assets.CheckBorder.dds", 16,
-					16, new Vector4(4.0f, 4.0f, 4.0f, 4.0f));
-				Checked = PUIUtils.LoadSprite("PeterHan.PLib.Assets.Check.dds", 64, 64);
-				Close = PUIUtils.LoadSprite("PeterHan.PLib.Assets.Close.dds", 64, 64);
-				Contract = PUIUtils.LoadSprite("PeterHan.PLib.Assets.Contract.dds", 64, 64);
-				Expand = PUIUtils.LoadSprite("PeterHan.PLib.Assets.Expand.dds", 64, 64);
-				Partial = PUIUtils.LoadSprite("PeterHan.PLib.Assets.Partial.dds", 64, 64);
+			/// <summary>
+			/// The sprite dictionary.
+			/// </summary>
+			private static readonly IDictionary<string, Sprite> SPRITES;
+
+			static Images() {
+				SPRITES = new Dictionary<string, Sprite>(512);
+				// List out all sprites shipped with the game
+				foreach (var img in Resources.FindObjectsOfTypeAll<Sprite>()) {
+					string name = img?.name;
+					if (!string.IsNullOrEmpty(name) && !SPRITES.ContainsKey(name))
+						SPRITES.Add(name, img);
+				}
+
+				Arrow = GetSpriteByName("game_speed_play");
+				ButtonBorder = GetSpriteByName("web_button");
+				CheckBorder = GetSpriteByName("overview_jobs_skill_box");
+				Checked = GetSpriteByName("overview_jobs_icon_checkmark");
+				Close = GetSpriteByName("cancel");
+				Contract = GetSpriteByName("iconDown");
+				Expand = GetSpriteByName("iconRight");
+				Partial = GetSpriteByName("overview_jobs_icon_mixed");
+			}
+
+			/// <summary>
+			/// Retrieves a sprite by its name.
+			/// </summary>
+			/// <param name="name">The sprite name.</param>
+			/// <returns>The matching sprite, or null if no sprite found in the resources has that name.</returns>
+			public static Sprite GetSpriteByName(string name) {
+				if (!SPRITES.TryGetValue(name, out Sprite sprite))
+					sprite = null;
+				return sprite;
 			}
 		}
 
@@ -98,51 +114,63 @@ namespace PeterHan.PLib.UI {
 			/// <summary>
 			/// A white color used for default backgrounds.
 			/// </summary>
-			public static Color BackgroundLight { get; private set; }
+			public static Color BackgroundLight { get; }
 
 			/// <summary>
 			/// The color styles used on pink buttons.
 			/// </summary>
-			internal static ColorStyleSetting ButtonPinkStyle { get; private set; }
+			internal static ColorStyleSetting ButtonPinkStyle { get; }
 
 			/// <summary>
 			/// The color styles used on blue buttons.
 			/// </summary>
-			internal static ColorStyleSetting ButtonBlueStyle { get; private set; }
+			internal static ColorStyleSetting ButtonBlueStyle { get; }
 
 			/// <summary>
 			/// The default colors used on check boxes with dark backgrounds.
 			/// </summary>
-			internal static ColorStyleSetting CheckboxDarkStyle { get; private set; }
+			internal static ColorStyleSetting CheckboxDarkStyle { get; }
 
 			/// <summary>
 			/// The default colors used on check boxes with white backgrounds.
 			/// </summary>
-			internal static ColorStyleSetting CheckboxWhiteStyle { get; private set; }
+			internal static ColorStyleSetting CheckboxWhiteStyle { get; }
 
 			/// <summary>
 			/// The color displayed on dialog backgrounds.
 			/// </summary>
-			public static Color DialogBackground { get; private set; }
+			public static Color DialogBackground { get; }
+
+			/// <summary>
+			/// The background color for selections.
+			/// </summary>
+			public static Color SelectionBackground { get; }
+
+			/// <summary>
+			/// The foreground color for selections.
+			/// </summary>
+			public static Color SelectionForeground { get; }
 
 			/// <summary>
 			/// A completely transparent color.
 			/// </summary>
-			public static Color Transparent { get; private set; }
+			public static Color Transparent { get; }
 
 			/// <summary>
 			/// Used for dark-colored UI text.
 			/// </summary>
-			public static Color UITextDark { get; private set; }
+			public static Color UITextDark { get; }
 
 			/// <summary>
 			/// Used for light-colored UI text.
 			/// </summary>
-			public static Color UITextLight { get; private set; }
+			public static Color UITextLight { get; }
 
-			internal static void InitColors() {
+			static Colors() {
 				BackgroundLight = new Color32(255, 255, 255, 255);
 				DialogBackground = new Color32(0, 0, 0, 255);
+				SelectionBackground = new Color32(189, 218, 255, 255);
+				SelectionForeground = new Color32(0, 0, 0, 255);
 				Transparent = new Color32(255, 255, 255, 0);
 				UITextLight = new Color32(255, 255, 255, 255);
 				UITextDark = new Color32(0, 0, 0, 255);
@@ -188,78 +216,126 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
-		/// The font used on all buttons.
+		/// Collects references to fonts in the game.
 		/// </summary>
-		internal static TMPro.TMP_FontAsset ButtonFont { get; private set; }
+		public static class Fonts {
+			/// <summary>
+			/// The text font name.
+			/// </summary>
+			private const string FONT_TEXT = "NotoSans-Regular";
+
+			/// <summary>
+			/// The UI font name.
+			/// </summary>
+			private const string FONT_UI = "GRAYSTROKE REGULAR SDF";
+
+			/// <summary>
+			/// The default font size.
+			/// </summary>
+			public static int DefaultSize { get; }
+
+			/// <summary>
+			/// The font used on text.
+			/// </summary>
+			internal static TMP_FontAsset Text { get; }
+
+			/// <summary>
+			/// The text styles used on all items with a light background.
+			/// </summary>
+			internal static TextStyleSetting TextDarkStyle { get; }
+
+			/// <summary>
+			/// The text styles used on all items with a dark background.
+			/// </summary>
+			internal static TextStyleSetting TextLightStyle { get; }
+
+			/// <summary>
+			/// The font used on UI elements.
+			/// </summary>
+			internal static TMP_FontAsset UI { get; }
+
+			/// <summary>
+			/// The text styles used on all UI items with a light background.
+			/// </summary>
+			internal static TextStyleSetting UIDarkStyle { get; }
+
+			/// <summary>
+			/// The text styles used on all UI items with a dark background.
+			/// </summary>
+			internal static TextStyleSetting UILightStyle { get; }
+
+			/// <summary>
+			/// The font dictionary.
+			/// </summary>
+			private static readonly IDictionary<string, TMP_FontAsset> FONTS;
+
+			static Fonts() {
+				FONTS = new Dictionary<string, TMP_FontAsset>(16);
+				// List out all fonts shipped with the game
+				foreach (var newFont in Resources.FindObjectsOfTypeAll<TMP_FontAsset>()) {
+					string name = newFont?.name;
+					if (!string.IsNullOrEmpty(name) && !FONTS.ContainsKey(name))
+						FONTS.Add(name, newFont);
+				}
+
+				// Initialization: UI fonts
+				if ((Text = GetFontByName(FONT_TEXT)) == null)
+					PUtil.LogWarning("Unable to find font " + FONT_TEXT);
+				if ((UI = GetFontByName(FONT_UI)) == null)
+					PUtil.LogWarning("Unable to find font " + FONT_UI);
+
+				// Initialization: Text style
+				DefaultSize = 14;
+				TextDarkStyle = ScriptableObject.CreateInstance<TextStyleSetting>();
+				TextDarkStyle.enableWordWrapping = false;
+				TextDarkStyle.fontSize = DefaultSize;
+				TextDarkStyle.sdfFont = Text;
+				TextDarkStyle.style = FontStyles.Normal;
+				TextDarkStyle.textColor = Colors.UITextDark;
+				TextLightStyle = ScriptableObject.CreateInstance<TextStyleSetting>();
+				TextLightStyle.enableWordWrapping = false;
+				TextLightStyle.fontSize = DefaultSize;
+				TextLightStyle.sdfFont = Text;
+				TextLightStyle.style = FontStyles.Normal;
+				TextLightStyle.textColor = Colors.UITextLight;
+				UIDarkStyle = ScriptableObject.CreateInstance<TextStyleSetting>();
+				UIDarkStyle.enableWordWrapping = false;
+				UIDarkStyle.fontSize = DefaultSize;
+				UIDarkStyle.sdfFont = UI;
+				UIDarkStyle.style = FontStyles.Normal;
+				UIDarkStyle.textColor = Colors.UITextDark;
+				UILightStyle = ScriptableObject.CreateInstance<TextStyleSetting>();
+				UILightStyle.enableWordWrapping = false;
+				UILightStyle.fontSize = DefaultSize;
+				UILightStyle.sdfFont = UI;
+				UILightStyle.style = FontStyles.Normal;
+				UILightStyle.textColor = Colors.UITextLight;
+			}
+
+			/// <summary>
+			/// Retrieves a font by its name.
+			/// </summary>
+			/// <param name="name">The font name.</param>
+			/// <returns>The matching font, or null if no font found in the resources has that name.</returns>
+			internal static TMP_FontAsset GetFontByName(string name) {
+				if (!FONTS.TryGetValue(name, out TMP_FontAsset font))
+					font = null;
+				return font;
+			}
+		}
 
 		/// <summary>
 		/// The sounds played by the button.
 		/// </summary>
-		internal static ButtonSoundPlayer ButtonSounds { get; private set; }
-
-		/// <summary>
-		/// The default font size.
-		/// </summary>
-		public static float DefaultFontSize { get; private set; }
+		internal static ButtonSoundPlayer ButtonSounds { get; }
 
 		/// <summary>
 		/// The sounds played by the toggle.
 		/// </summary>
-		internal static ToggleSoundPlayer ToggleSounds { get; private set; }
+		internal static ToggleSoundPlayer ToggleSounds { get; }
 
-		/// <summary>
-		/// The text styles used on all buttons by default.
-		/// </summary>
-		internal static TextStyleSetting UITextLightStyle { get; private set; }
-
-		/// <summary>
-		/// The text styles used on all items with a light background.
-		/// </summary>
-		internal static TextStyleSetting UITextDarkStyle { get; private set; }
-
-		/// <summary>
-		/// Initializes fields based on a template button.
-		/// </summary>
-		private static void InitTitleButton(KButton close) {
-			GameObject obj;
-			// Initialization: Button colors
-			var transform = close.gameObject.transform;
-			if (transform.childCount <= 0 || (obj = transform.GetChild(0).gameObject) == null)
-				PUIUtils.LogUIWarning("Core button has wrong format!");
-			else {
-				// Initialization: Text style and font
-				var text = obj.GetComponent<LocText>();
-				if (text != null) {
-					DefaultFontSize = text.fontSize;
-					UITextLightStyle = text.textStyleSetting;
-					UITextLightStyle.textColor = Colors.UITextLight;
-					UITextDarkStyle = ScriptableObject.CreateInstance<TextStyleSetting>();
-					UITextDarkStyle.enableWordWrapping = UITextLightStyle.enableWordWrapping;
-					UITextDarkStyle.fontSize = UITextLightStyle.fontSize;
-					UITextDarkStyle.sdfFont = UITextLightStyle.sdfFont;
-					UITextDarkStyle.style = UITextLightStyle.style;
-					UITextDarkStyle.textColor = Colors.UITextDark;
-					ButtonFont = text.font;
-				}
-			}
-		}
 
 		static PUITuning() {
-			Colors.InitColors();
-			Images.InitSprites();
-			// Ouch! Hacky!
-			var prefab = Global.Instance.modErrorsPrefab?.GetComponent<KMod.ModErrorsScreen>();
-			if (prefab == null)
-				PUIUtils.LogUIWarning("Missing core prefab!");
-			else {
-				var trPrefab = Traverse.Create(prefab);
-				// Much can be stolen from the Close button!
-				var close = trPrefab.GetField<KButton>("closeButton");
-				if (close == null)
-					PUIUtils.LogUIWarning("Missing core button!");
-				else
-					InitTitleButton(close);
-			}
 			// Initialization: Button sounds
 			ButtonSounds = new ButtonSoundPlayer() {
 				Enabled = true

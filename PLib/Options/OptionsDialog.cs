@@ -42,7 +42,7 @@ namespace PeterHan.PLib.Options {
 				foreach (var attr in prop.GetCustomAttributes(false))
 					if ((oa = OptionsEntry.GetTitle(attr)) != null) {
 						// Attempt to find a class that will represent it
-						var entry = CreateOptions(prop.Name, prop.PropertyType, oa);
+						var entry = CreateOptions(prop, oa);
 						if (entry != null)
 							entries.Add(entry);
 						break;
@@ -54,18 +54,24 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// Creates an options entry wrapper for the specified property.
 		/// </summary>
-		/// <param name="field">The property name.</param>
-		/// <param name="type">The property type.</param>
+		/// <param name="field">The property to wrap.</param>
 		/// <param name="oa">The option title and tool tip.</param>
 		/// <returns>An options wrapper, or null if none can handle this type.</returns>
-		private static OptionsEntry CreateOptions(string field, Type type, OptionAttribute oa)
-		{
+		private static OptionsEntry CreateOptions(PropertyInfo info, OptionAttribute oa) {
 			OptionsEntry entry = null;
+			Type type = info.PropertyType;
+			string field = info.Name;
 			// Enumeration type
 			if (type.IsEnum)
 				entry = new SelectOneOptionsEntry(field, oa.Title, oa.Tooltip, type);
 			else if (type == typeof(bool))
 				entry = new CheckboxOptionsEntry(field, oa.Title, oa.Tooltip);
+			else if (type == typeof(int))
+				entry = new IntOptionsEntry(oa.Title, oa.Tooltip, info);
+			else if (type == typeof(float))
+				entry = new FloatOptionsEntry(oa.Title, oa.Tooltip, info);
+			else if (type == typeof(string))
+				entry = new StringOptionsEntry(oa.Title, oa.Tooltip, info);
 			return entry;
 		}
 
@@ -130,7 +136,7 @@ namespace PeterHan.PLib.Options {
 					options = cons.Invoke(null);
 			} catch (TargetInvocationException e) {
 				// Other mod's error
-				PUtil.LogException(e);
+				PUtil.LogExcWarn(e);
 			} catch (AmbiguousMatchException e) {
 				// Other mod's error
 				PUtil.LogException(e);
@@ -154,10 +160,8 @@ namespace PeterHan.PLib.Options {
 			}.AddButton("ok", STRINGS.UI.CONFIRMDIALOG.OK, POptions.TOOLTIP_OK).
 			AddButton(PDialog.DIALOG_KEY_CLOSE, STRINGS.UI.CONFIRMDIALOG.CANCEL,
 				POptions.TOOLTIP_CANCEL);
-			#region TEST
-			
-			#endregion
 			// For each option, add its UI component to panel
+			pDialog.Body.Spacing = 3;
 			foreach (var entry in optionEntries)
 				pDialog.Body.AddChild(entry.GetUIEntry());
 			ReadOptions();

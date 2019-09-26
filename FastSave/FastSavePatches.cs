@@ -19,6 +19,7 @@
 using Harmony;
 using PeterHan.PLib;
 using PeterHan.PLib.Options;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -36,6 +37,7 @@ namespace PeterHan.FastSave {
 			PUtil.LogModInit();
 			options = new FastSaveOptions();
 			POptions.RegisterOptions(typeof(FastSaveOptions));
+			PUtil.RegisterPostload(OnPostLoad);
 		}
 
 		/// <summary>
@@ -72,6 +74,30 @@ namespace PeterHan.FastSave {
 		}
 
 		/// <summary>
+		/// Invoked after all other mods load.
+		/// </summary>
+		/// <param name="hInst">The Harmony instance to use for patching.</param>
+		private static void OnPostLoad(HarmonyInstance hInst) {
+			try {
+				hInst.Patch(typeof(Operational), "OnSerializing", new HarmonyMethod(
+					typeof(FastSavePatches), "OnSerializing_Prefix"), null);
+			} catch (Exception e) {
+				PUtil.LogWarning("Caught {0}, disabling Operational history trimming".F(e.
+					GetType()));
+			}
+		}
+
+		/// <summary>
+		/// Applied before OnSerializing runs.
+		/// </summary>
+		internal static void OnSerializing_Prefix(ref List<Operational.TimeEntry>
+				___activeTimes, ref List<Operational.TimeEntry> ___inactiveTimes) {
+			float now = GameClock.Instance.GetTime();
+			CleanTimes(___activeTimes, now);
+			CleanTimes(___inactiveTimes, now);
+		}
+
+		/// <summary>
 		/// Applied to Game to load settings when the mod starts up.
 		/// </summary>
 		[HarmonyPatch(typeof(Game), "OnPrefabInit")]
@@ -82,22 +108,6 @@ namespace PeterHan.FastSave {
 			internal static void Prefix() {
 				options = POptions.ReadSettings<FastSaveOptions>() ?? new FastSaveOptions();
 				PUtil.LogDebug("FastSave in mode: {0}".F(options.Mode));
-			}
-		}
-
-		/// <summary>
-		/// Applied to Operational to remove old time entries whenever the game is saved.
-		/// </summary>
-		[HarmonyPatch(typeof(Operational), "OnSerializing")]
-		public static class Operational_OnSerializing_Patch {
-			/// <summary>
-			/// Applied before OnSerializing runs.
-			/// </summary>
-			internal static void Prefix(ref List<Operational.TimeEntry> ___activeTimes,
-					ref List<Operational.TimeEntry> ___inactiveTimes) {
-				float now = GameClock.Instance.GetTime();
-				CleanTimes(___activeTimes, now);
-				CleanTimes(___inactiveTimes, now);
 			}
 		}
 
@@ -193,24 +203,5 @@ namespace PeterHan.FastSave {
 				}
 			}
 		}
-
-		// This patch slowed down the game for little noticeable gain
-#if false
-		/// <summary>
-		/// Applied to Operational to remove old time entries whenever entries are added.
-		/// </summary>
-		[HarmonyPatch(typeof(Operational), "AddTimeEntry")]
-		public static class Operational_AddTimeEntry_Patch {
-			/// <summary>
-			/// Applied after AddTimeEntry runs.
-			/// </summary>
-			internal static void Postfix(ref List<Operational.TimeEntry> ___activeTimes,
-					ref List<Operational.TimeEntry> ___inactiveTimes) {
-				float now = GameClock.Instance.GetTime();
-				CleanTimes(___activeTimes, now);
-				CleanTimes(___inactiveTimes, now);
-			}
-		}
-#endif
 	}
 }

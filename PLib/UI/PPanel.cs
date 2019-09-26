@@ -42,6 +42,10 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		public PanelDirection Direction { get; set; }
 
+		/// <summary>
+		/// Defaults to true for panels, but can be set to false to freeze them for a small
+		/// performance gain on panels which will have a perpetually fixed size.
+		/// </summary>
 		public bool DynamicSize { get; set; }
 
 		/// <summary>

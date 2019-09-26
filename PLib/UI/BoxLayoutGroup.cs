@@ -89,6 +89,8 @@ namespace PeterHan.PLib.UI {
 		private static void DoLayoutLinear(LayoutResults required, BoxLayoutParams args,
 				LayoutStatus status) {
 			var total = required.total;
+			var components = ListPool<ILayoutController, BoxLayoutGroup>.Allocate();
+			var direction = args.Direction;
 			// Determine flex size ratio
 			float size = status.size, prefRatio = 0.0f, minSize = total.min, prefSize =
 				total.preferred, excess = Math.Max(0.0f, size - prefSize), flexTotal = total.
@@ -96,8 +98,9 @@ namespace PeterHan.PLib.UI {
 			if (size > minSize && prefSize > minSize)
 				// Do not divide by 0
 				prefRatio = Math.Min(1.0f, (size - minSize) / (prefSize - minSize));
-			var components = ListPool<ILayoutController, BoxLayoutGroup>.Allocate();
-			var direction = args.Direction;
+			if (excess > 0.0f && flexTotal == 0.0f)
+				// If no components can be expanded, offset all
+				offset += GetOffset(args, status.direction, excess);
 			foreach (var child in required.children) {
 				var obj = child.source;
 				// Active objects only
@@ -111,11 +114,11 @@ namespace PeterHan.PLib.UI {
 					obj.AddOrGet<RectTransform>().SetInsetAndSizeFromParentEdge(status.edge,
 						offset, compSize);
 					offset += compSize + ((compSize > 0.0f) ? spacing : 0.0f);
-					// Invoke SetLayout on dependants
+					// Invoke SetLayout on dependents
 					components.Clear();
 					obj.GetComponents(components);
 					foreach (var component in components)
-						if (!((component as ILayoutIgnorer)?.ignoreLayout ?? false)) {
+						if (!IgnoreLayout(component)) {
 							if (direction == PanelDirection.Horizontal)
 								component.SetLayoutHorizontal();
 							else // if (direction == PanelDirection.Vertical)
@@ -154,7 +157,7 @@ namespace PeterHan.PLib.UI {
 					components.Clear();
 					obj.GetComponents(components);
 					foreach (var component in components)
-						if (!((component as ILayoutIgnorer)?.ignoreLayout ?? false)) {
+						if (!IgnoreLayout(component)) {
 							if (direction == PanelDirection.Horizontal)
 								component.SetLayoutVertical();
 							else // if (direction == PanelDirection.Vertical)
@@ -221,8 +224,8 @@ namespace PeterHan.PLib.UI {
 			float min = 0.0f, preferred = 0.0f, flexible = 0.0f;
 			int minPri = int.MinValue, prefPri = int.MinValue, flexPri = int.MinValue;
 			foreach (var component in elements)
-				if (((component as Behaviour)?.isActiveAndEnabled ?? false) && !((component as
-						ILayoutIgnorer)?.ignoreLayout ?? false)) {
+				if (((component as Behaviour)?.isActiveAndEnabled ?? false) && !IgnoreLayout(
+						component)) {
 					// Calculate must come first
 					if (direction == PanelDirection.Horizontal)
 						component.CalculateLayoutInputHorizontal();
@@ -244,10 +247,22 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Reports whether the component should be ignored for layout.
+		/// </summary>
+		/// <param name="component">The component to check.</param>
+		/// <returns>true if it specifies to ignore layout, or false otherwise.</returns>
+		private static bool IgnoreLayout(object component) {
+			return (component as ILayoutIgnorer)?.ignoreLayout ?? false;
+		}
+
+		/// <summary>
 		/// Without adding a BoxLayoutGroup component to the specified object, lays it out
 		/// based on its current child and layout element sizes, then updates its preferred
 		/// and minimum sizes based on the results. The component will be laid out at a fixed
-		/// size equal to its minimum size.
+		/// size equal to its preferred size.
+		/// 
+		/// UI elements should be active before any layouts are added, especially if they are
+		/// to be frozen.
 		/// </summary>
 		/// <param name="obj">The object to lay out immediately.</param>
 		/// <param name="parameters">The layout parameters to use.</param>
@@ -264,8 +279,9 @@ namespace PeterHan.PLib.UI {
 			var vertical = Calc(obj, args, PanelDirection.Vertical);
 			// Update or create fixed layout element
 			var layoutElement = obj.AddOrGet<LayoutElement>();
-			float hsize = Math.Max(size.x, horizontal.total.min + margin.left + margin.right),
-				vsize = Math.Max(size.y, vertical.total.min + margin.top + margin.bottom);
+			float hmin = horizontal.total.preferred + margin.left + margin.right,
+				vmin = vertical.total.preferred + margin.top + margin.bottom,
+				hsize = Math.Max(size.x, hmin), vsize = Math.Max(size.y, vmin);
 			layoutElement.minWidth = hsize;
 			layoutElement.preferredWidth = hsize;
 			layoutElement.flexibleWidth = 0.0f;

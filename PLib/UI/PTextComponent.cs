@@ -16,26 +16,76 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
-using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// The abstract parent of PLib UI components which display text and/or images.
 	/// </summary>
 	public abstract class PTextComponent : IDynamicSizable {
+		/// <summary>
+		/// Shared routine to spawn UI image objects.
+		/// </summary>
+		/// <param name="parent">The parent object for the image.</param>
+		/// <param name="sprite">The sprite to display.</param>
+		/// <param name="rotate">How to rotate or flip the sprite.</param>
+		/// <param name="imageSize">The size to which to scale the sprite.</param>
+		/// <returns>The child image object.</returns>
+		protected static Image ImageChildHelper(GameObject parent, Sprite sprite,
+				ImageTransform rotate = ImageTransform.None, Vector2 imageSize = default) {
+			var imageChild = PUIElements.CreateUI("Image");
+			var img = imageChild.AddComponent<Image>();
+			PUIElements.SetParent(imageChild, parent);
+			img.sprite = sprite;
+			img.preserveAspect = true;
+			// Set up transform
+			var scale = Vector3.one;
+			float rot = 0.0f;
+			if ((rotate & ImageTransform.FlipHorizontal) != ImageTransform.None)
+				scale.x = -1.0f;
+			if ((rotate & ImageTransform.FlipVertical) != ImageTransform.None)
+				scale.y = -1.0f;
+			if ((rotate & ImageTransform.Rotate90) != ImageTransform.None)
+				rot = 90.0f;
+			if ((rotate & ImageTransform.Rotate180) != ImageTransform.None)
+				rot += 180.0f;
+			// Update transform
+			var transform = imageChild.rectTransform();
+			transform.localScale = scale;
+			transform.Rotate(new Vector3(0.0f, 0.0f, rot));
+			// Limit size if needed
+			if (imageSize.x > 0.0f && imageSize.y > 0.0f)
+				PUIElements.SetSizeImmediate(imageChild, imageSize);
+			return img;
+		}
+
+		/// <summary>
+		/// Shared routine to spawn UI text objects.
+		/// </summary>
+		/// <param name="parent">The parent object for the text.</param>
+		/// <param name="fontSize">The font size.</param>
+		/// <param name="contents">The default text.</param>
+		/// <param name="wordWrap">Whether to enable word wrap.</param>
+		/// <returns>The child text object.</returns>
+		protected static LocText TextChildHelper(GameObject parent, TextStyleSetting style,
+				string contents = "") {
+			var textChild = PUIElements.CreateUI("Text");
+			var locText = PUIElements.AddLocText(textChild);
+			PUIElements.SetParent(textChild, parent);
+			// Font needs to be set before the text
+			locText.alignment = TMPro.TextAlignmentOptions.Center;
+			locText.textStyleSetting = style;
+			locText.text = contents;
+			return locText;
+		}
+
 		public bool DynamicSize { get; set; }
 
 		/// <summary>
 		/// The flexible size bounds of this component.
 		/// </summary>
 		public Vector2 FlexSize { get; set; }
-
-		/// <summary>
-		/// The font size of this component.
-		/// </summary>
-		public float FontSize { get; set; }
 
 		/// <summary>
 		/// The spacing between text and icon.
@@ -55,6 +105,11 @@ namespace PeterHan.PLib.UI {
 		public Vector2 SpriteSize { get; set; }
 
 		/// <summary>
+		/// How to rotate or flip the sprite.
+		/// </summary>
+		public ImageTransform SpriteTransform { get; set; }
+
+		/// <summary>
 		/// The label's text.
 		/// </summary>
 		public string Text { get; set; }
@@ -62,38 +117,32 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// The text alignment in the label.
 		/// </summary>
-		public TextAlignmentOptions TextAlignment { get; set; }
+		public TextAnchor TextAlignment { get; set; }
 
 		/// <summary>
-		/// The label's text color.
+		/// The label's text color, font, word wrap settings, and font size.
 		/// </summary>
-		public TextStyleSetting TextColor { get; set; }
+		public TextStyleSetting TextStyle { get; set; }
 
 		/// <summary>
 		/// The tool tip text.
 		/// </summary>
 		public string ToolTip { get; set; }
 
-		/// <summary>
-		/// Whether word wrap is enabled.
-		/// </summary>
-		public bool WordWrap { get; set; }
-
 		public event PUIDelegates.OnRealize OnRealize;
 
 		protected PTextComponent(string name) {
 			DynamicSize = false;
 			FlexSize = Vector2.zero;
-			FontSize = 0.0f;
 			IconSpacing = 0;
 			Name = name;
 			Sprite = null;
 			SpriteSize = Vector2.zero;
+			SpriteTransform = ImageTransform.None;
 			Text = null;
-			TextAlignment = TextAlignmentOptions.Center;
-			TextColor = PUITuning.UITextLightStyle;
+			TextAlignment = TextAnchor.MiddleCenter;
+			TextStyle = null;
 			ToolTip = "";
-			WordWrap = false;
 		}
 
 		public abstract GameObject Build();

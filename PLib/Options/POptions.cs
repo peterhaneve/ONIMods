@@ -100,10 +100,10 @@ namespace PeterHan.PLib.Options {
 					// Create delegate to spawn actions dialog
 					var action = new OptionsDialog(optionsType, modSpec);
 					new PButton("ModSettingsButton") {
-						FlexSize = new Vector2f(0.0f, 1.0f),
-						OnClick = action.OnModOptions,
+						FlexSize = new Vector2f(0.0f, 1.0f), OnClick = action.OnModOptions,
+						DynamicSize = true, ToolTip = DIALOG_TITLE.text.F(modSpec.title),
 						Text = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(BUTTON_OPTIONS.
-							text.ToLower()), ToolTip = DIALOG_TITLE.text.F(modSpec.title)
+							text.ToLower())
 						// Move before the subscription and enable button
 					}.SetKleiPinkStyle().AddTo(transform.gameObject, 3);
 				}
@@ -115,7 +115,9 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <param name="modDLL">The assembly used for a mod.</param>
 		/// <returns>The directory where that mod's configuration file should be found.</returns>
-		private static string GetModDir(Assembly modDLL) {
+		public static string GetModDir(Assembly modDLL) {
+			if (modDLL == null)
+				throw new ArgumentNullException("modDLL");
 			string dir = null;
 			try {
 				dir = Directory.GetParent(modDLL.Location)?.FullName;
@@ -123,6 +125,9 @@ namespace PeterHan.PLib.Options {
 				// Guess from the Klei strings
 				PUtil.LogExcWarn(e);
 			} catch (System.Security.SecurityException e) {
+				// Guess from the Klei strings
+				PUtil.LogExcWarn(e);
+			} catch (IOException e) {
 				// Guess from the Klei strings
 				PUtil.LogExcWarn(e);
 			}
@@ -202,6 +207,29 @@ namespace PeterHan.PLib.Options {
 				PUtil.LogExcWarn(e);
 			}
 			return options;
+		}
+
+		/// <summary>
+		/// Writes mod settings to its configuration file.
+		/// </summary>
+		/// <typeparam name="T">The type of the settings object.</typeparam>
+		/// <param name="settings">The settings to write</param>
+		public static void WriteSettings<T>(T settings) where T : class {
+			// Calculate path from calling assembly
+			string path = Path.Combine(GetModDir(Assembly.GetCallingAssembly()), CONFIG_FILE);
+			try {
+				using (var jw = new JsonTextWriter(File.CreateText(path))) {
+					var serializer = new JsonSerializer { MaxDepth = 8 };
+					// Serialize from stream avoids creating file text in memory
+					serializer.Serialize(jw, settings);
+				}
+			} catch (IOException e) {
+				// Options will be set to defaults
+				PUtil.LogExcWarn(e);
+			} catch (JsonException e) {
+				// Again set defaults
+				PUtil.LogExcWarn(e);
+			}
 		}
 	}
 }

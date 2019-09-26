@@ -37,7 +37,7 @@ namespace PeterHan.PLib.UI {
 			var fields = component.GetType().GetFields(BindingFlags.DeclaredOnly |
 				BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 			// Class specific
-			if (component is LocText lt)
+			if (component is TMPro.TMP_Text lt)
 				result.AppendFormat(", Text={0}, Color={1}, Font={2}", lt.text, lt.color,
 					lt.font);
 			else if (component is Image im) {
@@ -273,8 +273,11 @@ namespace PeterHan.PLib.UI {
 			if (uiElement == null)
 				throw new ArgumentNullException("uiElement");
 			var le = uiElement.AddOrGet<LayoutElement>();
-			le.minWidth = minSize.x;
-			le.minHeight = minSize.y;
+			float minX = minSize.x, minY = minSize.y;
+			if (minX > 0.0f)
+				le.minWidth = minX;
+			if (minY > 0.0f)
+				le.minHeight = minY;
 			return uiElement;
 		}
 	}

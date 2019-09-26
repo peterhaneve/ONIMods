@@ -75,7 +75,7 @@ namespace PeterHan.PLib.Lighting {
 				var list = PSharedData.GetData<IList<object>>(PRegistry.KEY_LIGHTING_TABLE);
 				if (list == null)
 					PSharedData.PutData(PRegistry.KEY_LIGHTING_TABLE, list =
-						new List<object>());
+						new List<object>(8));
 				// Try to find a match for this identifier
 				object ls = null;
 				int n = list.Count, index = 0;

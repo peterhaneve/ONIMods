@@ -16,17 +16,40 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace PeterHan.PLib.UI {
+using System;
+
+namespace PeterHan.PLib {
 	/// <summary>
-	/// A UI component which can be dynamically resized for its content.
+	/// An attribute placed on an option field for a property used as mod options to define
+	/// minimum and maximum acceptable values.
 	/// </summary>
-	public interface IDynamicSizable : IUIComponent {
+	public sealed class LimitAttribute : Attribute {
 		/// <summary>
-		/// Whether the component should dynamically resize for its content. This adds more
-		/// components and more layout depth, so should only be enabled if necessary.
-		/// 
-		/// Defaults to false. Must be set to true for components with a nonzero flex size.
+		/// The maximum value (inclusive).
 		/// </summary>
-		bool DynamicSize { get; set; }
+		public double Maximum { get; }
+
+		/// <summary>
+		/// The minimum value (inclusive).
+		/// </summary>
+		public double Minimum { get; }
+
+		public LimitAttribute(double min, double max) {
+			Minimum = min.IsNaNOrInfinity() ? 0.0 : min;
+			Maximum = (max.IsNaNOrInfinity() || max < min) ? min : max;
+		}
+
+		/// <summary>
+		/// Reports whether a value is in the range included in these limits.
+		/// </summary>
+		/// <param name="value">The value to check.</param>
+		/// <returns>true if it is included in the limits, or false otherwise.</returns>
+		public bool InRange(double value) {
+			return value >= Minimum && value <= Maximum;
+		}
+
+		public override string ToString() {
+			return "{0:F2} to {1:F2}".F(Minimum, Maximum);
+		}
 	}
 }

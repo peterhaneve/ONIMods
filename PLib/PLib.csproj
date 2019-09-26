@@ -75,7 +75,11 @@
     <Compile Include="Lighting\OctantBuilder.cs" />
     <Compile Include="Lighting\PLightManager.cs" />
     <Compile Include="Lighting\PLightShape.cs" />
-    <Compile Include="OptionAttribute.cs" />
+    <Compile Include="Options\FloatOptionsEntry.cs" />
+    <Compile Include="Options\StringOptionsEntry.cs" />
+    <Compile Include="Options\LimitAttribute.cs" />
+    <Compile Include="Options\OptionAttribute.cs" />
+    <Compile Include="Options\IntegerOptionsEntry.cs" />
     <Compile Include="Options\CheckboxOptionsEntry.cs" />
     <Compile Include="Options\OptionsDialog.cs" />
     <Compile Include="Options\OptionsEntry.cs" />
@@ -86,6 +90,7 @@
     <Compile Include="PSharedData.cs" />
     <Compile Include="UI\BoxLayoutGroup.cs" />
     <Compile Include="UI\IDynamicSizable.cs" />
+    <Compile Include="UI\ImageTransform.cs" />
     <Compile Include="UI\IUIComponent.cs" />
     <Compile Include="UI\PCheckBox.cs" />
     <Compile Include="UI\PLabel.cs" />
@@ -94,6 +99,7 @@
     <Compile Include="UI\PPanel.cs" />
     <Compile Include="UI\PSpacer.cs" />
     <Compile Include="UI\PTextComponent.cs" />
+    <Compile Include="UI\PTextField.cs" />
     <Compile Include="UI\PToggle.cs" />
     <Compile Include="UI\PUIDelegates.cs" />
     <Compile Include="UI\PUIElements.cs" />
@@ -108,25 +114,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Assets\Close.dds" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Assets\Button.dds" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Assets\ArrowLeft.dds" />
-    <EmbeddedResource Include="Assets\ArrowRight.dds" />
-    <EmbeddedResource Include="Assets\Check.dds" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Assets\Contract.dds" />
-    <EmbeddedResource Include="Assets\Expand.dds" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Assets\Partial.dds" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Assets\CheckBorder.dds" />
+    <Folder Include="Assets\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

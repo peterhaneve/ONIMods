@@ -50,6 +50,12 @@ namespace PeterHan.PLib.UI {
 		public delegate void OnRealize(GameObject realized);
 
 		/// <summary>
+		/// The delegate type invoked when text in a text field is changed.
+		/// </summary>
+		/// <param name="source">The source text field.</param>
+		public delegate void OnTextChanged(GameObject source, string text);
+
+		/// <summary>
 		/// The delegate type invoked when a toggle button is swapped between states.
 		/// </summary>
 		/// <param name="source">The source button.</param>

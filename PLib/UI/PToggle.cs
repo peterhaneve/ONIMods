@@ -63,7 +63,7 @@ namespace PeterHan.PLib.UI {
 		/// The action to trigger when the state changes. It is passed the realized source
 		/// object.
 		/// </summary>
-		public PUIDelegates.OnToggleButton OnStateChanged;
+		public PUIDelegates.OnToggleButton OnStateChanged { get; set; }
 
 		/// <summary>
 		/// The size to scale the toggle images. If 0x0, it will not be scaled.
@@ -127,6 +127,10 @@ namespace PeterHan.PLib.UI {
 			toggle.SetFlexUISize(FlexSize).SetActive(true);
 			OnRealize?.Invoke(toggle);
 			return toggle;
+		}
+
+		public override string ToString() {
+			return "PToggle[Name={0}]".F(Name);
 		}
 	}
 }

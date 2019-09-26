@@ -73,7 +73,7 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// The events to invoke when the dialog is closed.
 		/// </summary>
-		public event PUIDelegates.OnDialogClosed DialogClosed;
+		public PUIDelegates.OnDialogClosed DialogClosed { get; set; }
 
 		public event PUIDelegates.OnRealize OnRealize;
 
@@ -114,16 +114,14 @@ namespace PeterHan.PLib.UI {
 			dialog.AddComponent<Canvas>();
 			new PPanel("Header") {
 				// Horizontal title bar
-				Spacing = 3, Direction = PanelDirection.Horizontal, FlexSize =
-					new Vector2(1.0f, 0.0f)
+				Spacing = 3, Direction = PanelDirection.Horizontal, FlexSize = flexW
 			}.SetKleiPinkColor().AddChild(new PLabel("Title") {
 				// Title text, expand to width
-				Text = Title, FlexSize = flexW
+				Text = Title, FlexSize = flexW, DynamicSize = true
 			}).AddChild(new PButton(DIALOG_KEY_CLOSE) {
 				// Close button
 				Sprite = PUITuning.Images.Close, Margin = new RectOffset(3, 3, 3, 3),
-				SpriteSize = new Vector2f(16.0f, 16.0f),
-				OnClick = dComponent.DoButton
+				SpriteSize = new Vector2f(16.0f, 16.0f), OnClick = dComponent.DoButton
 			}.SetKleiBlueStyle()).AddTo(dialog);
 			// Buttons
 			var buttonPanel = new PPanel("Buttons") {

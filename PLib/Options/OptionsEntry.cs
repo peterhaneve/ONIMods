@@ -28,6 +28,26 @@ namespace PeterHan.PLib.Options {
 	/// </summary>
 	internal abstract class OptionsEntry {
 		/// <summary>
+		/// Tries to retrieve the limits for an option.
+		/// </summary>
+		/// <param name="attr">The annotation to check.</param>
+		/// <returns>The LimitAttribute matching that annotation, or null if it is not a LimitAttribute.</returns>
+		internal static LimitAttribute GetLimits(object attr) {
+			if (attr == null)
+				throw new ArgumentNullException("attr");
+			LimitAttribute la = null;
+			if (attr.GetType().Name == typeof(LimitAttribute).Name) {
+				// Has limit type
+				var trAttr = Traverse.Create(attr);
+				double min = trAttr.GetProperty<double>("Minimum"), max = trAttr.
+					GetProperty<double>("Maximum");
+				if (min != 0.0 || max != 0.0)
+					la = new LimitAttribute(min, max);
+			}
+			return la;
+		}
+
+		/// <summary>
 		/// Tries to retrieve the option's title and tool tip.
 		/// </summary>
 		/// <param name="attr">The annotation to check.</param>
@@ -80,10 +100,10 @@ namespace PeterHan.PLib.Options {
 		internal IUIComponent GetUIEntry() {
 			return new PPanel("Option_" + Field) {
 				Direction = PanelDirection.Horizontal, FlexSize = new Vector2(1.0f, 0.0f),
-				DynamicSize = true, Spacing = 5, Alignment = TextAnchor.MiddleCenter
+				Spacing = 5, Alignment = TextAnchor.MiddleCenter
 			}.AddChild(new PLabel("Label") {
 				Text = Title, ToolTip = ToolTip, FlexSize = new Vector2(1.0f, 0.0f),
-				TextAlignment = TMPro.TextAlignmentOptions.Left
+				TextAlignment = TextAnchor.MiddleLeft, DynamicSize = true
 			}).AddChild(GetUIComponent());
 		}
 

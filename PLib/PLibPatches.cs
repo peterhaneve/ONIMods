@@ -279,6 +279,9 @@ namespace PeterHan.PLib {
 			} catch (TypeLoadException) {
 				// Not a Steam install, ignoring
 			}
+
+			// Postload
+			PUtil.ExecutePostload();
 		}
 
 #pragma warning restore IDE0051 // Remove unused private members

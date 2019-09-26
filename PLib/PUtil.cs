@@ -17,8 +17,11 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+
+using PostLoadHandler = System.Action<Harmony.HarmonyInstance>;
 
 namespace PeterHan.PLib {
 	/// <summary>
@@ -81,6 +84,28 @@ namespace PeterHan.PLib {
 		public static double Distance(double x1, double y1, double x2, double y2) {
 			double dx = x2 - x1, dy = y2 - y1;
 			return Math.Sqrt(dx * dx + dy * dy);
+		}
+		
+		/// <summary>
+		/// Executes all post-load handlers.
+		/// </summary>
+		internal static void ExecutePostload() {
+			IList<PostLoadHandler> postload = null;
+			lock (PSharedData.GetLock(PRegistry.KEY_POSTLOAD_LOCK)) {
+				// Get list holding postload information
+				var list = PSharedData.GetData<IList<PostLoadHandler>>(PRegistry.
+					KEY_POSTLOAD_TABLE);
+				if (list != null)
+					postload = new List<PostLoadHandler>(list);
+			}
+			// If there were any, run them
+			if (postload != null) {
+				var hInst = Harmony.HarmonyInstance.Create("PLib.PostLoad");
+				PRegistry.LogPatchDebug("Executing {0:D} post-load handler(s)".F(postload.
+					Count));
+				foreach (var handler in postload)
+					handler?.Invoke(hInst);
+			}
 		}
 
 		/// <summary>
@@ -186,6 +211,28 @@ namespace PeterHan.PLib {
 		public static void LogWarning(object message) {
 			Debug.LogWarningFormat("[PLib/{0}] {1}", Assembly.GetCallingAssembly()?.GetName()?.
 				Name ?? "?", message);
+		}
+
+		/// <summary>
+		/// Registers a method which will be run after PLib and all mods load. It will be
+		/// passed a HarmonyInstance which can be used to make late patches.
+		/// </summary>
+		/// <param name="callback">The method to invoke.</param>
+		public static void RegisterPostload(PostLoadHandler callback) {
+			if (callback == null)
+				throw new ArgumentNullException("callback");
+			lock (PSharedData.GetLock(PRegistry.KEY_POSTLOAD_LOCK)) {
+				// Get list holding postload information
+				var list = PSharedData.GetData<IList<PostLoadHandler>>(PRegistry.
+					KEY_POSTLOAD_TABLE);
+				if (list == null)
+					PSharedData.PutData(PRegistry.KEY_POSTLOAD_TABLE, list =
+						new List<PostLoadHandler>(16));
+				list.Add(callback);
+				string name = Assembly.GetCallingAssembly()?.GetName()?.Name;
+				if (name != null)
+					PRegistry.LogPatchDebug("Registered post-load handler for " + name);
+			}
 		}
 	}
 }

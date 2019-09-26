@@ -53,13 +53,16 @@ namespace PeterHan.PLib.UI {
 			var text = obj.AddComponent<LocText>();
 			// This is enough to let it activate
 			text.key = string.Empty;
-			text.textStyleSetting = PUITuning.UITextLightStyle;
+			text.textStyleSetting = PUITuning.Fonts.UILightStyle;
 			obj.SetActive(active);
 			return text;
 		}
 
 		/// <summary>
 		/// Adds an auto-fit resizer to a UI element.
+		/// 
+		/// UI elements should be active before any layouts are added, especially if they are
+		/// to be frozen.
 		/// </summary>
 		/// <param name="uiElement">The element to resize.</param>
 		/// <param name="dynamic">true to use the Unity content size fitter which adjusts to
@@ -87,8 +90,10 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <param name="name">The object name.</param>
 		/// <param name="anchor">true to anchor the object, or false otherwise.</param>
+		/// <param name="renderer">true to add a canvas renderer, or false otherwise.</param>
 		/// <returns>The UI object with transform and canvas initialized.</returns>
-		internal static GameObject CreateUI(string name, bool anchor = true) {
+		internal static GameObject CreateUI(string name, bool anchor = true,
+				bool renderer = true) {
 			var element = new GameObject(name);
 			// Size and position
 			var transform = element.AddOrGet<RectTransform>();
@@ -100,7 +105,8 @@ namespace PeterHan.PLib.UI {
 				transform.anchorMin = LOWER_LEFT;
 			}
 			// All UI components need a canvas renderer for some reason
-			element.AddComponent<CanvasRenderer>();
+			if (renderer)
+				element.AddComponent<CanvasRenderer>();
 			element.layer = LayerMask.NameToLayer("UI");
 			return element;
 		}
@@ -215,7 +221,7 @@ namespace PeterHan.PLib.UI {
 		public static GameObject SetText(GameObject uiElement, string text) {
 			if (uiElement == null)
 				throw new ArgumentNullException("uiElement");
-			var lt = uiElement.GetComponentInChildren<LocText>();
+			var lt = uiElement.GetComponentInChildren<TMPro.TextMeshProUGUI>();
 			if (lt != null)
 				lt.SetText(text ?? string.Empty);
 			return uiElement;
@@ -240,17 +246,14 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// Shows a confirmation or message dialog based on a prefab.
 		/// </summary>
-		/// <param name="prefab">The dialog to show.</param>
 		/// <param name="parent">The dialog's parent.</param>
 		/// <param name="message">The message to display.</param>
 		/// <returns>The dialog created.</returns>
-		public static ConfirmDialogScreen ShowConfirmDialog(GameObject prefab,
-				GameObject parent, string message) {
-			if (prefab == null)
-				throw new ArgumentNullException("prefab");
+		public static ConfirmDialogScreen ShowConfirmDialog(GameObject parent, string message) {
 			if (parent == null)
 				throw new ArgumentNullException("parent");
-			var confirmDialog = Util.KInstantiateUI(prefab, parent, false).GetComponent<
+			var confirmDialog = Util.KInstantiateUI(ScreenPrefabs.Instance.ConfirmDialogScreen.
+				gameObject, parent, false).GetComponent<
 				ConfirmDialogScreen>();
 			confirmDialog.PopupConfirmDialog(message, null, null, null, null,
 				message, null, null, null, true);

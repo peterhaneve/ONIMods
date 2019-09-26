@@ -278,19 +278,6 @@ namespace PeterHan.SweepByType {
 					gameObject, false);
 				infoScreen.Show(false);
 			}
-#if true
-			var ds = Traverse.Create(DetailsScreen.Instance);
-			var screens = ds.GetField<List<DetailsScreen.SideScreenRef>>("sideScreens");
-			foreach (var screen in screens) {
-				var prefab = screen.screenPrefab;
-				if (prefab is TreeFilterableSideScreen) {
-					prefab.gameObject.DebugObjectTree();
-					var arrow = prefab.gameObject.transform.Find("ArrowToggle").gameObject;
-					var ae = arrow.GetComponent<KToggle>().artExtension;
-					PUtil.LogDebug("{0} {1} {2} {3}".F(ae, ae.SelectedFlourish, ae.Shadow, ae.TopRightIcon));
-				}
-			}
-#endif
 			ToolMenu.Instance.PriorityScreen.Show(true);
 			// Default to "sweep all"
 			optionState = PToolMode.PopulateMenu(menu, toolOptions);

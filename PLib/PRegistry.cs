@@ -66,6 +66,16 @@ namespace PeterHan.PLib {
 		public const string KEY_OPTIONS_TABLE = "PLib.Options.Table";
 
 		/// <summary>
+		/// Used to synchronize access to post load handlers.
+		/// </summary>
+		public const string KEY_POSTLOAD_LOCK = "PLib.PostLoad.Lock";
+
+		/// <summary>
+		/// Stores the post load handlers currently registered.
+		/// </summary>
+		public const string KEY_POSTLOAD_TABLE = "PLib.PostLoad.Table";
+
+		/// <summary>
 		/// Used to denote the latest version of PLib installed across any mod, which is the
 		/// version that is being used for any shared item forwarding.
 		/// </summary>

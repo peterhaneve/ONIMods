@@ -22,9 +22,14 @@ using UnityEngine.UI;
 
 namespace PeterHan.PLib.UI {
 	/// <summary>
-	/// A custom UI button check box class.
+	/// A custom UI button check box factory class.
 	/// </summary>
 	public class PCheckBox : PTextComponent {
+		/// <summary>
+		/// The offset between the checkbox border and icon.
+		/// </summary>
+		private static readonly RectOffset CHECKBOX_MARGIN = new RectOffset(2, 2, 2, 2);
+
 		/// <summary>
 		/// The unchecked state.
 		/// </summary>
@@ -108,21 +113,20 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// The action to trigger on click. It is passed the realized source object.
 		/// </summary>
-		public PUIDelegates.OnChecked OnChecked;
+		public PUIDelegates.OnChecked OnChecked { get; set; }
 
 		public PCheckBox() : this(null) { }
 
 		public PCheckBox(string name) : base(name ?? "CheckBox") {
 			BackColor = PUITuning.Colors.BackgroundLight;
 			CheckColor = null;
-			CheckSize = new Vector2(20.0f, 20.0f);
+			CheckSize = new Vector2(16.0f, 16.0f);
 			IconSpacing = 3;
 			InitialState = STATE_UNCHECKED;
 			Margin = new RectOffset();
 			Sprite = null;
 			Text = null;
 			ToolTip = "";
-			WordWrap = false;
 		}
 
 		public override GameObject Build() {
@@ -151,19 +155,12 @@ namespace PeterHan.PLib.UI {
 				PUIElements.SetSizeImmediate(imageChild, CheckSize);
 			else
 				PUIElements.AddSizeFitter(imageChild, false);
-			BoxLayoutGroup.LayoutNow(checkBorder);
-			BoxLayoutGroup.LayoutNow(checkBack);
 			// Add foreground image since the background already has one
 			if (Sprite != null)
-				PLabel.ImageChildHelper(checkbox, Sprite, SpriteSize);
+				ImageChildHelper(checkbox, Sprite, SpriteTransform, SpriteSize);
 			// Add text
 			if (!string.IsNullOrEmpty(Text))
-				PLabel.TextChildHelper(checkbox, FontSize, Text, WordWrap);
-			// Icon and text are side by side
-			var lg = checkbox.AddComponent<HorizontalLayoutGroup>();
-			lg.childAlignment = TextAnchor.MiddleLeft;
-			lg.spacing = Math.Max(IconSpacing, 0);
-			lg.padding = Margin;
+				TextChildHelper(checkbox, TextStyle ?? PUITuning.Fonts.UILightStyle, Text);
 			// Add tooltip
 			if (!string.IsNullOrEmpty(ToolTip))
 				checkbox.AddComponent<ToolTip>().toolTip = ToolTip;
@@ -179,8 +176,21 @@ namespace PeterHan.PLib.UI {
 			kButton.states = GenerateStates(trueColor, borderImg);
 			kButton.toggle_image = img;
 			kButton.ChangeState(InitialState);
-			PUIElements.AddSizeFitter(checkbox, DynamicSize).SetFlexUISize(FlexSize).SetActive(
-				true);
+			checkbox.SetActive(true);
+			BoxLayoutGroup.LayoutNow(checkBorder, new BoxLayoutParams() {
+				Margin = CHECKBOX_MARGIN
+			});
+			BoxLayoutGroup.LayoutNow(checkBack);
+			// Icon and text are side by side
+			var lp = new BoxLayoutParams() {
+				Margin = Margin, Spacing = Math.Max(IconSpacing, 0), Alignment = TextAnchor.
+				MiddleLeft
+			};
+			if (DynamicSize)
+				checkbox.AddComponent<BoxLayoutGroup>().Params = lp;
+			else
+				BoxLayoutGroup.LayoutNow(checkbox, lp);
+			PUIElements.AddSizeFitter(checkbox, DynamicSize).SetFlexUISize(FlexSize);
 			InvokeRealize(checkbox);
 			return checkbox;
 		}
@@ -190,7 +200,7 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <returns>This button for call chaining.</returns>
 		public PCheckBox SetKleiPinkStyle() {
-			TextColor = PUITuning.UITextLightStyle;
+			TextStyle = PUITuning.Fonts.UILightStyle;
 			BackColor = PUITuning.Colors.ButtonPinkStyle.inactiveColor;
 			CheckColor = PUITuning.Colors.CheckboxDarkStyle;
 			return this;
@@ -201,7 +211,7 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <returns>This button for call chaining.</returns>
 		public PCheckBox SetKleiBlueStyle() {
-			TextColor = PUITuning.UITextLightStyle;
+			TextStyle = PUITuning.Fonts.UILightStyle;
 			BackColor = PUITuning.Colors.ButtonBlueStyle.inactiveColor;
 			CheckColor = PUITuning.Colors.CheckboxDarkStyle;
 			return this;
