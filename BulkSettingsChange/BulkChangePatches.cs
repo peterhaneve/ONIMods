@@ -38,7 +38,7 @@ namespace PeterHan.BulkSettingsChange {
 		/// Logs when the mod is loaded.
 		/// </summary>
 		public static void OnLoad() {
-			PUtil.LogModInit();
+			PUtil.InitLibrary();
 			BulkChangeAction = PAction.Register(BulkChangeStrings.ACTION_KEY,
 				BulkChangeStrings.ACTION_TITLE, new PKeyBinding(KKeyCode.Q));
 		}

@@ -26,7 +26,7 @@ namespace PeterHan.Claustrophobia {
 	/// </summary>
 	public static class ClaustrophobiaPatches {
 		public static void OnLoad() {
-			PUtil.LogModInit();
+			PUtil.InitLibrary();
 			POptions.RegisterOptions(typeof(ClaustrophobiaOptions));
 		}
 

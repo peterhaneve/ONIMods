@@ -27,7 +27,7 @@ namespace PeterHan.SweepByType {
 	/// </summary>
 	public static class SweepByTypePatches {
 		public static void OnLoad() {
-			PUtil.LogModInit();
+			PUtil.InitLibrary();
 		}
 
 		/// <summary>

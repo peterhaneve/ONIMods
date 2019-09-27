@@ -34,7 +34,7 @@ namespace PeterHan.FastSave {
 		private static FastSaveOptions options;
 
 		public static void OnLoad() {
-			PUtil.LogModInit();
+			PUtil.InitLibrary();
 			options = new FastSaveOptions();
 			POptions.RegisterOptions(typeof(FastSaveOptions));
 			PUtil.RegisterPostload(OnPostLoad);

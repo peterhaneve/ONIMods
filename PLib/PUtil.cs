@@ -120,6 +120,24 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Initializes the PLib patch bootstrapper for shared code. <b>Must</b> be called in
+		/// Mod_OnLoad for proper PLib functionality.
+		/// 
+		/// Optionally logs the mod name and version when a mod initializes.
+		/// </summary>
+		public static void InitLibrary(bool logVersion = true) {
+			var assembly = Assembly.GetCallingAssembly();
+			if (assembly != null) {
+				PRegistry.Init();
+				if (logVersion)
+					Debug.LogFormat("[PLib] Mod {0} initialized, version {1}",
+						assembly.GetName()?.Name, assembly.GetFileVersion() ?? "Unknown");
+			} else
+				// Probably impossible
+				Debug.LogError("[PLib] Somehow called from null assembly!");
+		}
+
+		/// <summary>
 		/// Loads a DDS sprite embedded in the current assembly.
 		/// 
 		/// It must be encoded using the DXT5 format.
@@ -191,17 +209,11 @@ namespace PeterHan.PLib {
 		/// Logs the mod name and version when a mod initializes. Also initializes the PLib
 		/// patch bootstrapper for shared code.
 		/// 
-		/// <b>Must</b> be called in Mod_OnLoad for proper PLib functionality.
+		/// At the suggestion of some folks, this method has been renamed to InitLibrary.
 		/// </summary>
+		[Obsolete("LogModInit is obsolete. Use InitLibrary(bool) instead.")]
 		public static void LogModInit() {
-			var assembly = Assembly.GetCallingAssembly();
-			if (assembly != null) {
-				PRegistry.Init();
-				Debug.LogFormat("[PLib] Mod {0} initialized, version {1}",
-					assembly.GetName()?.Name, assembly.GetFileVersion() ?? "Unknown");
-			} else
-				// Probably impossible
-				Debug.LogError("[PLib] Somehow called from null assembly!");
+			InitLibrary();
 		}
 
 		/// <summary>

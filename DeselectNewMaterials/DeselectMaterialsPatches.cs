@@ -18,14 +18,39 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Options;
+using UnityEngine;
 
 namespace PeterHan.DeselectNewMaterials {
 	/// <summary>
 	/// Patches for Deselect New Materials.
 	/// </summary>
 	public sealed class DeselectMaterialsPatches {
+		/// <summary>
+		/// The options for this mod.
+		/// </summary>
+		private static DeselectMaterialsOptions options;
+
 		public static void OnLoad() {
-			PUtil.LogModInit();
+			PUtil.InitLibrary();
+			options = new DeselectMaterialsOptions();
+			POptions.RegisterOptions(typeof(DeselectMaterialsOptions));
+		}
+
+		/// <summary>
+		/// Applied to Game to load settings when the mod starts up.
+		/// </summary>
+		[HarmonyPatch(typeof(Game), "OnPrefabInit")]
+		public static class Game_OnPrefabInit_Patch {
+			/// <summary>
+			/// Applied before OnPrefabInit runs.
+			/// </summary>
+			internal static void Prefix() {
+				options = POptions.ReadSettings<DeselectMaterialsOptions>() ??
+					new DeselectMaterialsOptions();
+				PUtil.LogDebug("DeselectNewMaterials settings: Ignore Food = {0}".F(options.
+					IgnoreFoodBoxes));
+			}
 		}
 
 		/// <summary>
@@ -38,8 +63,15 @@ namespace PeterHan.DeselectNewMaterials {
 			/// </summary>
 			internal static void Postfix(ref TreeFilterable __instance, ref Storage ___storage,
 					Tag category_tag, Tag tag) {
-				if (___storage.storageFilters.Contains(category_tag))
-					__instance.RemoveTagFromFilter(tag);
+				GameObject obj;
+				if ((obj = __instance.gameObject) != null) {
+					// Ignore fridges and ration boxes if the check box is set
+					bool isFood = obj.GetComponent<Refrigerator>() != null || obj.
+						GetComponent<RationBox>() != null;
+					if (obj != null && (!options.IgnoreFoodBoxes || !isFood) && ___storage.
+							storageFilters.Contains(category_tag))
+						__instance.RemoveTagFromFilter(tag);
+				}
 			}
 		}
 	}

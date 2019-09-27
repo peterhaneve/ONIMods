@@ -39,7 +39,7 @@ namespace PeterHan.CritterInventory {
 		private static ResourceCategoryHeader critterWild;
 
 		public static void OnLoad() {
-			PUtil.LogModInit();
+			PUtil.InitLibrary();
 		}
 
 		/// <summary>

@@ -45,7 +45,7 @@ namespace PeterHan.FallingSand {
 		}
 
 		public static void OnLoad() {
-			PUtil.LogModInit();
+			PUtil.InitLibrary();
 		}
 
 		/// <summary>

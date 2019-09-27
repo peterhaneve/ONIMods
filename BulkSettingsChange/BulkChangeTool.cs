@@ -269,10 +269,22 @@ namespace PeterHan.BulkSettingsChange {
 			bool changed = false;
 			if (ar != null) {
 				var xy = Grid.CellToXY(cell);
-				Traverse.Create(ar).CallMethod(enable ? "AllowRepair" : "CancelRepair");
+				var trRepairable = Traverse.Create(ar);
+				// Need to check the state machine directly
+				var smi = trRepairable.GetField<Repairable.SMInstance>("smi");
+				var currentState = smi.GetCurrentState();
+				// Prevent buildings in the allow state from being repaired again
+				if (enable) {
+					if (currentState == smi.sm.forbidden) {
+						trRepairable.CallMethod("AllowRepair");
+						changed = true;
+					}
+				} else if (currentState != smi.sm.forbidden) {
+					trRepairable.CallMethod("CancelRepair");
+					changed = true;
+				}
 				PUtil.LogDebug("Auto repair {3} @({0:D},{1:D}) = {2}".F(xy.X, xy.Y, enable,
 					item.GetProperName()));
-				changed = true;
 			}
 			return changed;
 		}
