@@ -49,10 +49,8 @@ namespace PeterHan.PLib.UI {
 		/// Generates the checkbox image states.
 		/// </summary>
 		/// <param name="imageColor">The color style for the checked icon.</param>
-		/// <param name="borderImage">The border image.</param>
 		/// <returns>The states for this checkbox.</returns>
-		private static ToggleState[] GenerateStates(ColorStyleSetting imageColor,
-				Image borderImage) {
+		private static ToggleState[] GenerateStates(ColorStyleSetting imageColor) {
 			var sps = new StatePresentationSetting() {
 				color = imageColor.activeColor, use_color_on_hover = true,
 				color_on_hover = imageColor.hoverColor, image_target = null,
@@ -83,6 +81,34 @@ namespace PeterHan.PLib.UI {
 					additional_display_settings = new StatePresentationSetting[] { sps }
 				}
 			};
+		}
+
+		/// <summary>
+		/// Gets a realized check box's state.
+		/// </summary>
+		/// <param name="realized">The realized check box.</param>
+		/// <returns>The check box state.</returns>
+		public static int GetCheckState(GameObject realized) {
+			int state = STATE_UNCHECKED;
+			if (realized == null)
+				throw new ArgumentNullException("realized");
+			var checkButton = realized.GetComponentInChildren<MultiToggle>();
+			if (checkButton != null)
+				state = checkButton.CurrentState;
+			return state;
+		}
+
+		/// <summary>
+		/// Sets a realized check box's state.
+		/// </summary>
+		/// <param name="realized">The realized check box.</param>
+		/// <param name="state">The new state to set.</param>
+		public static void SetCheckState(GameObject realized, int state) {
+			if (realized == null)
+				throw new ArgumentNullException("realized");
+			var checkButton = realized.GetComponentInChildren<MultiToggle>();
+			if (checkButton != null && checkButton.CurrentState != state)
+				checkButton.ChangeState(state);
 		}
 
 		/// <summary>
@@ -165,17 +191,17 @@ namespace PeterHan.PLib.UI {
 			if (!string.IsNullOrEmpty(ToolTip))
 				checkbox.AddComponent<ToolTip>().toolTip = ToolTip;
 			// Toggle
-			var kButton = checkbox.AddComponent<MultiToggle>();
+			var mToggle = checkbox.AddComponent<MultiToggle>();
 			var evt = OnChecked;
 			if (evt != null)
-				kButton.onClick += () => {
-					evt?.Invoke(checkbox, kButton.CurrentState);
+				mToggle.onClick += () => {
+					evt?.Invoke(checkbox, mToggle.CurrentState);
 				};
-			kButton.play_sound_on_click = true;
-			kButton.play_sound_on_release = false;
-			kButton.states = GenerateStates(trueColor, borderImg);
-			kButton.toggle_image = img;
-			kButton.ChangeState(InitialState);
+			mToggle.play_sound_on_click = true;
+			mToggle.play_sound_on_release = false;
+			mToggle.states = GenerateStates(trueColor);
+			mToggle.toggle_image = img;
+			mToggle.ChangeState(InitialState);
 			checkbox.SetActive(true);
 			BoxLayoutGroup.LayoutNow(checkBorder, new BoxLayoutParams() {
 				Margin = CHECKBOX_MARGIN

@@ -104,7 +104,16 @@ namespace PeterHan.PLib {
 				PRegistry.LogPatchDebug("Executing {0:D} post-load handler(s)".F(postload.
 					Count));
 				foreach (var handler in postload)
-					handler?.Invoke(hInst);
+					try {
+						handler?.Invoke(hInst);
+					} catch (Exception e) {
+						var method = handler.Method;
+						// Say which mod's postload crashed
+						if (method != null)
+							PRegistry.LogPatchWarning("Postload handler for {0} failed:".F(
+								method.DeclaringType.Assembly?.GetName()?.Name ?? "?"));
+						LogException(e);
+					}
 			}
 		}
 
