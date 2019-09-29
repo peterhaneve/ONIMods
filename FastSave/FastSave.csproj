@@ -77,7 +77,6 @@
   <PropertyGroup>
     <PostBuildEvent>"$(ILMergeConsolePath)" /ndebug /out:$(TargetName)Merged.dll $(TargetName).dll PLib.dll /targetplatform:v2,C:/Windows/Microsoft.NET/Framework64/v2.0.50727
 echo F | xcopy /Y /R /Q "$(TargetDir)$(TargetName)Merged.dll" "$(SolutionDir)Out\$(TargetName)\$(TargetName).dll"
-echo F | xcopy /Y /R /Q "$(ProjectDir)Preview.png" "$(SolutionDir)Out\$(TargetName)\preview.png"
 xcopy /Y /R /Q /I /E "$(SolutionDir)Out\$(TargetName)" "$(USERPROFILE)\Documents\Klei\OxygenNotIncluded\mods\dev\$(TargetName)"</PostBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

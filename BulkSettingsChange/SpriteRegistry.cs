@@ -55,7 +55,6 @@ namespace PeterHan.BulkSettingsChange {
 		/// </summary>
 		private static void LoadSprites() {
 			if (!spritesLoaded) {
-				PUtil.LogDebug("Loading sprites");
 				try {
 					PLACE_ICON = PUtil.LoadSprite("PeterHan.BulkSettingsChange.Placer.dds",
 						256, 256);

@@ -85,6 +85,20 @@ namespace PeterHan.EfficientFetch {
 		}
 
 		/// <summary>
+		/// Applied to Game to clean up the fetch manager on close.
+		/// </summary>
+		[HarmonyPatch(typeof(Game), "DestroyInstances")]
+		public static class Game_DestroyInstances_Patch {
+			/// <summary>
+			/// Applied after DestroyInstances runs.
+			/// </summary>
+			internal static void Postfix() {
+				PUtil.LogDebug("Destroying EfficientFetch");
+				EfficientFetchManager.DestroyInstance();
+			}
+		}
+
+		/// <summary>
 		/// Applied to Game to load settings when the mod starts up.
 		/// </summary>
 		[HarmonyPatch(typeof(Game), "OnPrefabInit")]
@@ -98,20 +112,6 @@ namespace PeterHan.EfficientFetch {
 				PUtil.LogDebug("EfficientFetch starting: Min Ratio={0:D}%".F(options.
 					MinimumAmountPercent));
 				EfficientFetchManager.CreateInstance(options.GetMinimumRatio());
-			}
-		}
-
-		/// <summary>
-		/// Applied to Game to clean up the fetch manager on close.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "DestroyInstances")]
-		public static class Game_DestroyInstances_Patch {
-			/// <summary>
-			/// Applied after DestroyInstances runs.
-			/// </summary>
-			internal static void Postfix() {
-				PUtil.LogDebug("Destroying EfficientFetch");
-				EfficientFetchManager.DestroyInstance();
 			}
 		}
 	}
