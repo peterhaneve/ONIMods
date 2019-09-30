@@ -1,0 +1,4 @@
+﻿[
+	{ id:"MetalTile", decor:5, radius:2 },
+	{ id:"CarpetTile", decor:10, radius:3 },
+]

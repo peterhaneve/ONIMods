@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>PLib</id>
+    <version>$version$</version>
+    <title>PeterHan.PLib for Oxygen Not Included</title>
+    <authors>Peter Han (https://github.com/peterhaneve)</authors>
+    <owners>Peter Han (https://github.com/peterhaneve)</owners>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/peterhaneve/ONIMods</projectUrl>
+    <iconUrl>icon.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.</description>
+    <releaseNotes>Initial version uploaded on NuGet. See https://github.com/peterhaneve/ONIMods/releases for full release history prior to 2.11.</releaseNotes>
+    <copyright>Copyright 2019 Peter Han</copyright>
+    <tags>Tag1 Tag2</tags>
+  </metadata>
+</package>
