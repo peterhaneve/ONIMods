@@ -79,22 +79,8 @@ namespace PeterHan.DecorRework {
 			}
 		}
 
-		/// <summary>
-		/// Cleans up the handles to the partitioners if they are valid.
-		/// </summary>
-		private void CleanupHandles() {
-			if (partitioner != IntHandle.InvalidHandle) {
-				GameScenePartitioner.Instance?.Free(ref partitioner);
-				partitioner = IntHandle.InvalidHandle;
-			}
-			if (solidChangedPartitioner != IntHandle.InvalidHandle) {
-				GameScenePartitioner.Instance?.Free(ref solidChangedPartitioner);
-				solidChangedPartitioner = IntHandle.InvalidHandle;
-			}
-		}
-
 		public void Dispose() {
-			CleanupHandles();
+			RemoveDecor();
 			provider.Unsubscribe((int)GameHashes.OperationalFlagChanged,
 				OnOperationalFlagChanged);
 		}
@@ -115,7 +101,6 @@ namespace PeterHan.DecorRework {
 			var obj = provider.gameObject;
 			int cell, x, y;
 			RemoveDecor();
-			CleanupHandles();
 			if (obj != null && Grid.IsValidCell(cell = Grid.PosToCell(obj))) {
 				float decor = provider.decor?.GetTotalValue() ?? 0.0f;
 				int radius = (int?)provider.decorRadius?.GetTotalValue() ?? 5;
@@ -129,13 +114,7 @@ namespace PeterHan.DecorRework {
 				// Broken buildings are ugly!
 				if (broken)
 					decor = DecorReimaginedPatches.Options.BrokenBuildingDecor;
-#if false
-				if (disabled)
-					PUtil.LogDebug("Disabled building Refresh(): " + obj?.name);
-				if (broken)
-					PUtil.LogDebug("Broken building Refresh(): " + obj?.name);
-#endif
-				if (decor != 0.0f && !disabled) {
+				if (decor != 0.0f && (!disabled || decor < 0.0f)) {
 					// Decor actually can be applied
 					var rot = provider.rotatable;
 					var orientation = rot ? rot.GetOrientation() : Orientation.Neutral;
@@ -165,6 +144,14 @@ namespace PeterHan.DecorRework {
 		/// </summary>
 		private void RemoveDecor() {
 			var inst = DecorCellManager.Instance;
+			if (partitioner != IntHandle.InvalidHandle) {
+				GameScenePartitioner.Instance?.Free(ref partitioner);
+				partitioner = IntHandle.InvalidHandle;
+			}
+			if (solidChangedPartitioner != IntHandle.InvalidHandle) {
+				GameScenePartitioner.Instance?.Free(ref solidChangedPartitioner);
+				solidChangedPartitioner = IntHandle.InvalidHandle;
+			}
 			if (inst != null) {
 				foreach (int cell in cells)
 					inst.RemoveDecorProvider(cell, provider);

@@ -16,6 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Harmony;
+using PeterHan.PLib;
 using System;
 using System.Collections.Generic;
 
@@ -47,14 +49,19 @@ namespace PeterHan.DecorRework {
 		}
 
 		/// <summary>
-		/// Cached building status items from the database.
+		/// The flag to check for broken buildings.
 		/// </summary>
-		private readonly Database.BuildingStatusItems buildingStatus;
+		private readonly Operational.Flag brokenFlag;
 
 		/// <summary>
 		/// Stores the decor providers at a given location.
 		/// </summary>
 		private readonly DecorCell[] decorGrid;
+
+		/// <summary>
+		/// The critter attribute for happiness.
+		/// </summary>
+		private readonly Klei.AI.Attribute happinessAttribute;
 
 		/// <summary>
 		/// Lists all decor providers and handles rebuilding their splats.
@@ -67,7 +74,9 @@ namespace PeterHan.DecorRework {
 		private readonly int size;
 
 		private DecorCellManager() {
-			buildingStatus = Db.Get().BuildingStatusItems;
+			brokenFlag = Traverse.Create(typeof(BuildingHP.States)).
+				GetField<Operational.Flag>("healthyFlag");
+			happinessAttribute = Db.Get().CritterAttributes.Happiness;
 			size = Grid.CellCount;
 			decorGrid = new DecorCell[size];
 			provInfo = new Dictionary<DecorProvider, DecorSplatNew>(1024);
@@ -103,12 +112,13 @@ namespace PeterHan.DecorRework {
 		/// </summary>
 		/// <param name="instance">The DecorProvider that is being destroyed.</param>
 		internal void DestroyDecor(DecorProvider instance) {
+			DecorSplatNew splat;
 			lock (provInfo) {
-				if (provInfo.TryGetValue(instance, out DecorSplatNew splat)) {
-					splat.Dispose();
+				if (provInfo.TryGetValue(instance, out splat))
 					provInfo.Remove(instance);
-				}
 			}
+			if (splat != null)
+				splat.Dispose();
 		}
 
 		public void Dispose() {
@@ -150,16 +160,18 @@ namespace PeterHan.DecorRework {
 			if (provider == null)
 				throw new ArgumentNullException("provider");
 			var obj = provider.gameObject;
-			bool broken = false, disabled = false;
-			var selectable = obj.GetComponent<KSelectable>();
+			// Get status of the object
 			var prefabID = obj.GetComponent<KPrefabID>();
+			var entombStatus = obj.GetComponent<Structure>();
+			var disableStatus = obj.GetComponent<BuildingEnabledButton>();
+			var breakStatus = obj.GetComponent<BuildingHP>();
+			var glumStatus = obj.GetComponent<Klei.AI.Modifiers>()?.attributes?.Get(
+				happinessAttribute);
 			// Entombed/disabled = 0 decor, broken = use value in DecorTuning for broken
-			if (selectable != null) {
-				broken = selectable.HasStatusItem(buildingStatus.Broken);
-				disabled = selectable.HasStatusItem(buildingStatus.Entombed) ||
-					selectable.HasStatusItem(buildingStatus.MissingFoundation) ||
-					selectable.HasStatusItem(buildingStatus.BuildingDisabled);
-			}
+			bool broken = brokenFlag != null && breakStatus != null && breakStatus.IsBroken;
+			bool disabled = (entombStatus != null && entombStatus.IsEntombed()) ||
+				(disableStatus != null && !disableStatus.IsEnabled) || (glumStatus != null &&
+				glumStatus.GetTotalValue() < 0.0f);
 			if (provInfo.TryGetValue(provider, out DecorSplatNew splat))
 				splat?.Refresh(broken, disabled);
 			// Handle rooms which require an item with 20 decor: has to actually be functional

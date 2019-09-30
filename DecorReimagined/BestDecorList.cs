@@ -64,7 +64,9 @@ namespace PeterHan.DecorRework {
 		private readonly int cell;
 
 		/// <summary>
-		/// Sorts the decor by value.
+		/// Sorts the decor by value. SortedList works better in most cases, but the really
+		/// pathological setups with tons of debris etc cause that one to degrade to
+		/// unacceptable performance.
 		/// </summary>
 		private readonly SortedDictionary<DecorWrapper, bool> decorByValue;
 

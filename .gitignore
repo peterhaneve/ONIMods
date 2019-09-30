@@ -257,5 +257,6 @@ paket-files/
 /Out/
 /Assets/
 /textures/
+*.cmd
 *.xcf
 /*.pptx

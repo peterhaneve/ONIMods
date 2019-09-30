@@ -46,6 +46,9 @@
     <Reference Include="Assembly-CSharp-firstpass">
       <HintPath>..\lib\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
+    <Reference Include="PLib, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\PLib.2.11.1\lib\net35\PLib.dll</HintPath>
+    </Reference>
     <Reference Include="System.Core" />
     <Reference Include="Unity.TextMeshPro">
       <HintPath>..\lib\Unity.TextMeshPro.dll</HintPath>
@@ -68,12 +71,6 @@
     <Compile Include="CritterTotals.cs" />
     <Compile Include="CritterType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\PLib\PLib.csproj">
-      <Project>{b6d056b5-b658-4e93-8ae2-86069196b494}</Project>
-      <Name>PLib</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

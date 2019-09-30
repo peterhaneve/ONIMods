@@ -33,3 +33,4 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("2.0.0.0")]
 [assembly: AssemblyFileVersion(PeterHan.PLib.PVersion.VERSION)]
+[assembly: AssemblyInformationalVersion(PeterHan.PLib.PVersion.VERSION)]
