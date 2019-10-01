@@ -71,6 +71,8 @@ namespace PeterHan.DecorRework {
 
 		public void Dispose() {
 			lock (decorProviders) {
+				foreach (var pair in decorProviders)
+					pair.Value.Dispose();
 				decorProviders.Recycle();
 			}
 		}
@@ -105,12 +107,18 @@ namespace PeterHan.DecorRework {
 			lock (decorProviders) {
 				decorProviders.TryGetValue(prefabID, out values);
 			}
-			if (values != null)
+			if (values != null) {
+				int count;
+				// Lock the right things at the right times
 				lock (values) {
 					removed = values.RemoveDecorItem(provider);
-					if (values.Count < 1)
-						decorProviders.Remove(prefabID);
+					count = values.Count;
 				}
+				if (count < 1)
+					lock (decorProviders) {
+						decorProviders.Remove(prefabID);
+					}
+			}
 			return removed;
 		}
 	}

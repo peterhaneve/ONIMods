@@ -8,4 +8,12 @@
     <Description>Adds a tool to enable/disable disinfect, auto repair, or building operation in bulk.</Description>
     <AssemblyVersion>1.5.0.0</AssemblyVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Placer.dds" />
+    <None Remove="Toggle.dds" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Placer.dds" />
+    <EmbeddedResource Include="Toggle.dds" />
+  </ItemGroup>
 </Project>

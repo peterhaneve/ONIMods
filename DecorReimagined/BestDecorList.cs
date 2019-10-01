@@ -25,7 +25,7 @@ namespace PeterHan.DecorRework {
 	/// Lists all the items of one type that are providing decor, and gives the user the
 	/// benefit of the doubt by selecting the one with the highest decor.
 	/// </summary>
-	internal sealed class BestDecorList {
+	internal sealed class BestDecorList : IDisposable {
 		/// <summary>
 		/// The best decor score of this list.
 		/// </summary>
@@ -85,6 +85,13 @@ namespace PeterHan.DecorRework {
 			return UpdateBestDecor();
 		}
 
+		public void Dispose() {
+			var decor = Grid.Decor;
+			if (decor != null)
+				decor[cell] -= BestDecor;
+			decorByValue.Clear();
+		}
+
 		/// <summary>
 		/// Removes a decor item.
 		/// </summary>
@@ -113,6 +120,7 @@ namespace PeterHan.DecorRework {
 		/// <returns>true if the score changed, or false otherwise.</returns>
 		private bool UpdateBestDecor() {
 			float decor = 0.0f, oldDecor = BestDecor;
+			best = new DecorWrapper(0.0f, null);
 			using (var it = decorByValue.GetEnumerator()) {
 				if (it.MoveNext()) {
 					best = it.Current.Key;

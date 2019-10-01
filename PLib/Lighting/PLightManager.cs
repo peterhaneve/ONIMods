@@ -171,33 +171,38 @@ namespace PeterHan.PLib.Lighting {
 				LightGridEmitter.State state, out int result) {
 			bool valid;
 			CacheEntry cacheEntry;
-			lock (brightCache) {
-				// Shared access to the cache
-				valid = brightCache.TryGetValue(source, out cacheEntry);
-			}
-			if (valid) {
-				valid = cacheEntry.Intensity.TryGetValue(location, out float ratio);
-				if (valid)
-					result = Mathf.RoundToInt(cacheEntry.BaseLux * ratio);
-				else {
+			var shape = state.shape;
+			if (shape != LightShape.Cone && shape != LightShape.Circle) {
+				lock (brightCache) {
+					// Shared access to the cache
+					valid = brightCache.TryGetValue(source, out cacheEntry);
+				}
+				if (valid) {
+					valid = cacheEntry.Intensity.TryGetValue(location, out float ratio);
+					if (valid)
+						result = Mathf.RoundToInt(cacheEntry.BaseLux * ratio);
+					else {
 #if DEBUG
-					PUtil.LogDebug("Lighting request for invalid cell at {0:D}".F(location));
+						PUtil.LogDebug("GetBrightness for invalid cell at {0:D}".F(location));
+#endif
+						result = 0;
+					}
+				} else {
+#if DEBUG
+					PUtil.LogDebug("GetBrightness for invalid emitter at {0:D}".F(location));
 #endif
 					result = 0;
+					valid = false;
 				}
 			} else if (ForceSmoothLight) {
 				// Use smooth light even for vanilla Cone and Circle
-				if (state.shape == LightShape.Circle || state.shape == LightShape.Cone) {
-					result = Mathf.RoundToInt(state.intensity * PLightShape.GetSmoothFalloff(
-						state.falloffRate, location, state.origin));
-					valid = true;
-				} else
-					result = 0;
+				result = Mathf.RoundToInt(state.intensity * PLightShape.GetSmoothFalloff(
+					state.falloffRate, location, state.origin));
+				valid = true;
 			} else {
-#if DEBUG
-				PUtil.LogDebug("Lighting request for invalid emitter at {0:D}".F(location));
-#endif
+				// Stock
 				result = 0;
+				valid = false;
 			}
 			return valid;
 		}

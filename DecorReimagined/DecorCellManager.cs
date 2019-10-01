@@ -122,16 +122,16 @@ namespace PeterHan.DecorRework {
 		}
 
 		public void Dispose() {
+			lock (provInfo) {
+				foreach (var provider in provInfo)
+					provider.Value.Dispose();
+				provInfo.Clear();
+			}
 			lock (decorGrid) {
 				for (int i = 0; i < size; i++) {
 					decorGrid[i]?.Dispose();
 					decorGrid[i] = null;
 				}
-			}
-			lock (provInfo) {
-				foreach (var provider in provInfo)
-					provider.Value.Dispose();
-				provInfo.Clear();
 			}
 		}
 

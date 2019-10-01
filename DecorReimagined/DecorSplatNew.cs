@@ -86,9 +86,6 @@ namespace PeterHan.DecorRework {
 		}
 
 		private void OnOperationalFlagChanged(object argument) {
-#if DEBUG
-			PUtil.LogDebug("Operational flag changed for " + provider.gameObject?.name);
-#endif
 			provider?.Refresh();
 		}
 
@@ -114,7 +111,7 @@ namespace PeterHan.DecorRework {
 				// Broken buildings are ugly!
 				if (broken)
 					decor = DecorReimaginedPatches.Options.BrokenBuildingDecor;
-				if (decor != 0.0f && (!disabled || decor < 0.0f)) {
+				if (decor != 0.0f && (!disabled || decor < 0.0f) && radius > 0) {
 					// Decor actually can be applied
 					var rot = provider.rotatable;
 					var orientation = rot ? rot.GetOrientation() : Orientation.Neutral;
