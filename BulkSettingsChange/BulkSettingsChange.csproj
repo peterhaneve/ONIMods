@@ -2,15 +2,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
-    <Product>PeterHanONIMods</Product>
-	<Title>Settings Change Tool</Title>
+    <AssemblyTitle>Settings Change Tool</AssemblyTitle>
     <Version>1.6.0.0</Version>
     <RootNamespace>PeterHan.BulkSettingsChange</RootNamespace>
     <Description>Adds a tool to enable/disable disinfect, auto repair, or building operation in bulk.</Description>
     <AssemblyVersion>1.5.0.0</AssemblyVersion>
-    <Company />
-    <Authors>Peter Han</Authors>
-    <Copyright>Copyright ©Peter Han 2019</Copyright>
-    <PackageId>BulkSettingsChange</PackageId>
   </PropertyGroup>
 </Project>

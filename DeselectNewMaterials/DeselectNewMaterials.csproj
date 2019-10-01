@@ -2,11 +2,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
-    <Product>PeterHanONIMods</Product>
+    <AssemblyTitle>Deselect New Materials</AssemblyTitle>
     <Version>1.2.0.0</Version>
     <RootNamespace>PeterHan.DeselectNewMaterials</RootNamespace>
-    <Authors>Peter Han</Authors>
-    <Copyright>Copyright ©Peter Han 2019</Copyright>
     <Description>Deselects all newly discovered materials from storage buildings even if their category was checked.</Description>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
   </PropertyGroup>
 </Project>

@@ -2,12 +2,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
-    <Product>PeterHanONIMods</Product>
+    <AssemblyTitle>Critter Inventory Display</AssemblyTitle>
     <Version>1.5.0.0</Version>
     <RootNamespace>PeterHan.CritterInventory</RootNamespace>
-    <Authors>Peter Han</Authors>
-    <Company>Peter Han</Company>
-    <Copyright>Copyright ©Peter Han 2019</Copyright>
     <Description>Displays available critters in the Inventory screen.</Description>
+    <AssemblyVersion>1.5.0.0</AssemblyVersion>
   </PropertyGroup>
 </Project>

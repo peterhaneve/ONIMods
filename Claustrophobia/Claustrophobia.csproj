@@ -2,12 +2,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
-    <Product>PeterHanONIMods</Product>
+    <AssemblyTitle>Claustrophobia</AssemblyTitle>
     <Version>1.10.0.0</Version>
     <RootNamespace>PeterHan.Claustrophobia</RootNamespace>
-    <Authors>Peter Han</Authors>
-    <Company>Peter Han</Company>
-    <Copyright>Copyright ©Peter Han 2019</Copyright>
     <Description>Issues warnings when Duplicants are stuck in small, confined spaces.</Description>
+    <AssemblyVersion>1.10.0.0</AssemblyVersion>
   </PropertyGroup>
 </Project>

@@ -2,11 +2,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
-    <Product>PeterHanONIMods</Product>
+    <AssemblyTitle>Falling Sand</AssemblyTitle>
     <Version>1.3.0.0</Version>
     <RootNamespace>PeterHan.FallingSand</RootNamespace>
     <Description>Places Dig errands on unstable materials which fall during mining.</Description>
-    <Authors>Peter Han</Authors>
-    <Copyright>Copyright ©Peter Han 2019</Copyright>
+    <AssemblyVersion>1.3.0.0</AssemblyVersion>
   </PropertyGroup>
 </Project>

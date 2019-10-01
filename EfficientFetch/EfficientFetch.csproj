@@ -2,11 +2,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
-    <Product>PeterHanONIMods</Product>
+    <AssemblyTitle>Efficient Supply</AssemblyTitle>
     <Version>1.0.0.0</Version>
     <RootNamespace>PeterHan.EfficientFetch</RootNamespace>
     <Description>Prevents Duplicants from fetching tiny amounts of materials to fulfill chores.</Description>
-    <Authors>Peter Han</Authors>
-    <Copyright>Copyright ©Peter Han 2019</Copyright>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
   </PropertyGroup>
 </Project>

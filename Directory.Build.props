@@ -24,4 +24,9 @@
   <ItemGroup Condition=" '$(UsesPLib)' != 'false' ">
     <ProjectReference Include="../PLib/PLib.csproj" Private="true"/>
   </ItemGroup>
+  <PropertyGroup>
+    <Product>PeterHanONIMods</Product>
+    <Authors>Peter Han</Authors>
+    <Copyright>Copyright ©Peter Han 2019</Copyright>
+  </PropertyGroup>
 </Project>

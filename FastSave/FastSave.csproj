@@ -2,11 +2,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
-    <Product>PeterHanONIMods</Product>
+    <AssemblyTitle>Fast Save</AssemblyTitle>
     <Version>1.4.0.0</Version>
     <RootNamespace>PeterHan.FastSave</RootNamespace>
     <Description>Trims data from save files to make saving and loading faster.</Description>
-    <Authors>Peter Han</Authors>
-    <Copyright>Copyright ©Peter Han 2019</Copyright>
+    <AssemblyVersion>1.4.0.0</AssemblyVersion>
   </PropertyGroup>
 </Project>
