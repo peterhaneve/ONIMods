@@ -1,120 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{B6D056B5-B658-4E93-8AE2-86069196B494}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>PeterHan.PLib</RootNamespace>
-    <AssemblyName>PLib</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
-    <TargetFrameworkProfile />
+    <TargetFramework>net35</TargetFramework>
+    <Title>PeterHan.PLib</Title>
+    <Version>2.11.1.0</Version>
+	<UsesPLib>false</UsesPLib>
+	<Authors>Peter Han (https://github.com/peterhaneve)</Authors>
+	<PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	<PackageIconUrl>https://github.com/peterhaneve/ONIMods/raw/master/PLib/icon.png</PackageIconUrl>
+	<PackageTags>Game, OxygenNotIncluded, Oxygen, PLib, Library</PackageTags>
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	<Copyright>Copyright 2019 Peter Han</Copyright>
+	<Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
+	
+Contains functions aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
+	<PackageReleaseNotes>Updated build system, thanks to skairunner and neersighted!</PackageReleaseNotes>
+	<RootNamespace>PeterHan.PLib</RootNamespace>
+	<AssemblyVersion>2.0.0.0</AssemblyVersion>
+	<FileVersion>2.11.1.0</FileVersion>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="0Harmony, Version=1.2.0.1, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Lib.Harmony.1.2.0.1\lib\net35\0Harmony.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>..\lib\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>..\lib\Assembly-CSharp-firstpass.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\lib\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Core" />
-    <Reference Include="Unity.TextMeshPro, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\Unity.TextMeshPro.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine">
-      <HintPath>..\lib\UnityEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\lib\UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>..\lib\UnityEngine.TextRenderingModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\UnityEngine.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UIModule">
-      <HintPath>..\lib\UnityEngine.UIModule.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="ExtensionMethods.cs" />
-    <Compile Include="KeyBindings\PAction.cs" />
-    <Compile Include="KeyBindings\PActionManager.cs" />
-    <Compile Include="KeyBindings\PKeyBinding.cs" />
-    <Compile Include="Lighting\LightingArgs.cs" />
-    <Compile Include="Lighting\OctantBuilder.cs" />
-    <Compile Include="Lighting\PLightManager.cs" />
-    <Compile Include="Lighting\PLightShape.cs" />
-    <Compile Include="Options\FloatOptionsEntry.cs" />
-    <Compile Include="Options\StringOptionsEntry.cs" />
-    <Compile Include="Options\LimitAttribute.cs" />
-    <Compile Include="Options\OptionAttribute.cs" />
-    <Compile Include="Options\IntegerOptionsEntry.cs" />
-    <Compile Include="Options\CheckboxOptionsEntry.cs" />
-    <Compile Include="Options\OptionsDialog.cs" />
-    <Compile Include="Options\OptionsEntry.cs" />
-    <Compile Include="Options\SelectOneOptionsEntry.cs" />
-    <Compile Include="PLibPatches.cs" />
-    <Compile Include="Options\POptions.cs" />
-    <Compile Include="PRegistry.cs" />
-    <Compile Include="PSharedData.cs" />
-    <Compile Include="UI\BoxLayoutGroup.cs" />
-    <Compile Include="UI\IDynamicSizable.cs" />
-    <Compile Include="UI\ImageTransform.cs" />
-    <Compile Include="UI\IUIComponent.cs" />
-    <Compile Include="UI\PCheckBox.cs" />
-    <Compile Include="UI\PLabel.cs" />
-    <Compile Include="UI\PButton.cs" />
-    <Compile Include="UI\PDialog.cs" />
-    <Compile Include="UI\PPanel.cs" />
-    <Compile Include="UI\PSpacer.cs" />
-    <Compile Include="UI\PTextComponent.cs" />
-    <Compile Include="UI\PTextField.cs" />
-    <Compile Include="UI\PToggle.cs" />
-    <Compile Include="UI\PUIDelegates.cs" />
-    <Compile Include="UI\PUIElements.cs" />
-    <Compile Include="UI\PUITuning.cs" />
-    <Compile Include="PUtil.cs" />
-    <Compile Include="PVersion.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PToolMode.cs" />
-    <Compile Include="UI\PUIUtils.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Assets\" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
