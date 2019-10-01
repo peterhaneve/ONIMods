@@ -18,6 +18,7 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
 	<PackageReleaseNotes>Updated build system, thanks to skairunner and neersighted!</PackageReleaseNotes>
 	<RootNamespace>PeterHan.PLib</RootNamespace>
 	<AssemblyVersion>2.0.0.0</AssemblyVersion>
-	<FileVersion>2.11.1.0</FileVersion>
+	<GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+	<GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>
 </Project>

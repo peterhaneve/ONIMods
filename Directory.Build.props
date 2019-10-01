@@ -10,10 +10,10 @@
 
   <ItemGroup>
 	<PackageReference Include="ILRepack.MSBuild.Task" Version="2.0.13" />
-    <PackageReference Include="Newtonsoft.Json" Version="7.0.1" />
-    <Reference Include="0Harmony" HintPath="$(GameFolder)/0Harmony.dll" />
+	<Reference Include="0Harmony" HintPath="$(GameFolder)/0Harmony.dll" />
     <Reference Include="Assembly-CSharp" HintPath="$(GameFolder)/Assembly-CSharp.dll" />
     <Reference Include="Assembly-CSharp-firstpass" HintPath="$(GameFolder)/Assembly-CSharp-firstpass.dll" />
+    <Reference Include="Newtonsoft.Json" HintPath="$(GameFolder)/Newtonsoft.Json.dll" />
     <Reference Include="UnityEngine" HintPath="$(GameFolder)/UnityEngine.dll" />
     <Reference Include="UnityEngine.CoreModule" HintPath="$(GameFolder)/UnityEngine.CoreModule.dll" />
     <Reference Include="Unity.TextMeshPro" HintPath="$(GameFolder)/Unity.TextMeshPro.dll" />
@@ -22,6 +22,6 @@
     <Reference Include="UnityEngine.UIModule" HintPath="$(GameFolder)/UnityEngine.UIModule.dll" />
   </ItemGroup>
   <ItemGroup Condition=" '$(UsesPLib)' != 'false' ">
-    <ProjectReference Include="../PLib/PLib.csproj" />
+    <ProjectReference Include="../PLib/PLib.csproj" Private="true"/>
   </ItemGroup>
 </Project>

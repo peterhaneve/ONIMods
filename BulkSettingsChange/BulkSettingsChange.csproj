@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
     <Product>PeterHanONIMods</Product>
+	<Title>Settings Change Tool</Title>
     <Version>1.6.0.0</Version>
     <RootNamespace>PeterHan.BulkSettingsChange</RootNamespace>
     <Description>Adds a tool to enable/disable disinfect, auto repair, or building operation in bulk.</Description>
