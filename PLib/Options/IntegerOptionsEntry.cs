@@ -68,10 +68,12 @@ namespace PeterHan.PLib.Options {
 		protected override IUIComponent GetUIComponent() {
 			var cb = new PTextField() {
 				OnTextChanged = (obj, text) => {
-					if (int.TryParse(text, out int newValue) && (limits == null || limits.
-							InRange(newValue)))
+					if (int.TryParse(text, out int newValue)) {
+						if (limits != null)
+							newValue = limits.ClampToRange(newValue);
 						// Record the valid value
 						value = newValue;
+					}
 					Update();
 				}, ToolTip = ToolTip, Text = value.ToString(), MinWidth = 64, MaxLength = 10,
 				Type = PTextField.FieldType.Integer

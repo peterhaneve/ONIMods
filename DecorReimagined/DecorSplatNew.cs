@@ -27,6 +27,11 @@ namespace PeterHan.DecorRework {
 	/// </summary>
 	internal sealed class DecorSplatNew : IDisposable {
 		/// <summary>
+		/// The cached decor value.
+		/// </summary>
+		private float cacheDecor;
+		
+		/// <summary>
 		/// The cells this decor splat affects.
 		/// </summary>
 		private readonly IList<int> cells;
@@ -48,6 +53,7 @@ namespace PeterHan.DecorRework {
 
 		internal DecorSplatNew(DecorProvider provider) {
 			this.provider = provider ?? throw new ArgumentNullException("provider");
+			cacheDecor = 0.0f;
 			cells = new List<int>(256);
 			partitioner = IntHandle.InvalidHandle;
 			solidChangedPartitioner = IntHandle.InvalidHandle;
@@ -116,7 +122,8 @@ namespace PeterHan.DecorRework {
 					var rot = provider.rotatable;
 					var orientation = rot ? rot.GetOrientation() : Orientation.Neutral;
 					// Calculate expanded extents
-					Extents extents, be = provider.occupyArea.GetExtents(orientation);
+					Extents extents, be = provider.occupyArea?.GetExtents(orientation) ??
+						new Extents();
 					extents.x = x = Math.Max(0, be.x - radius);
 					extents.y = y = Math.Max(0, be.y - radius);
 					extents.width = Math.Min(Grid.WidthInCells - 1, be.x + be.width + radius) -
@@ -132,6 +139,7 @@ namespace PeterHan.DecorRework {
 						"DecorProvider.SplatSolidCheck", obj, extents, GameScenePartitioner.
 						Instance.solidChangedLayer, provider.refreshPartionerCallback);
 					AddDecor(cell, decor, extents);
+					cacheDecor = decor;
 				}
 			}
 		}
@@ -150,8 +158,10 @@ namespace PeterHan.DecorRework {
 				solidChangedPartitioner = IntHandle.InvalidHandle;
 			}
 			if (inst != null) {
-				foreach (int cell in cells)
-					inst.RemoveDecorProvider(cell, provider);
+				if (cacheDecor != 0.0f)
+					foreach (int cell in cells)
+						inst.RemoveDecorProvider(cell, provider, cacheDecor);
+				cacheDecor = 0.0f;
 				cells.Clear();
 			}
 		}

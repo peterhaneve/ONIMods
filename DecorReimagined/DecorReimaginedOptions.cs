@@ -25,24 +25,67 @@ namespace PeterHan.DecorRework {
 	/// </summary>
 	[JsonObject(MemberSerialization.OptIn)]
 	public sealed class DecorReimaginedOptions {
+		/// <summary>
+		/// Whether all critters unconditionally get 0 decor. Improves performance but makes
+		/// the game harder.
+		/// </summary>
+		[Option("No Critter Decor", "Removes decor from all critters.\r\nIncreases " +
+			"performance on large critter farms, but may make the game harder.")]
+		[JsonProperty]
+		public bool AllCrittersZeroDecor { get; set; }
+
+		/// <summary>
+		/// The decor of the Atmo Suit and Jet Suit items.
+		/// </summary>
+		[JsonProperty]
+		public int AtmoSuitDecor { get; set; }
+
+		/// <summary>
+		/// The decor of broken buildings.
+		/// </summary>
 		[JsonProperty]
 		public float BrokenBuildingDecor { get; set; }
 
+		/// <summary>
+		/// The decor of each different debris pile.
+		/// </summary>
 		[JsonProperty]
 		public float DebrisDecor { get; set; }
 
+		/// <summary>
+		/// The radius of decor from debris.
+		/// </summary>
 		[JsonProperty]
 		public int DebrisRadius { get; set; }
 
+		/// <summary>
+		/// Whether hard mode is enabled.
+		/// </summary>
 		[Option("Hard Mode", "Make your Duplicants more picky about decor, and your life much harder")]
 		[JsonProperty]
 		public bool HardMode { get; set; }
 
+		/// <summary>
+		/// The decor of the Snazzy Suit item.
+		/// </summary>
+		[JsonProperty]
+		public int SnazzySuitDecor { get; set; }
+
+		/// <summary>
+		/// The decor of the Warm Vest and Cool Vest items.
+		/// </summary>
+		[JsonProperty]
+		public int VestDecor { get; set; }
+
 		public DecorReimaginedOptions() {
+			AllCrittersZeroDecor = false;
+			AtmoSuitDecor = -10;
 			BrokenBuildingDecor = -60.0f;
 			DebrisDecor = -10.0f;
 			DebrisRadius = 2;
+			SnazzySuitDecor = 15;
 			HardMode = false;
+			VestDecor = 0;
 		}
 
 		public override string ToString() {

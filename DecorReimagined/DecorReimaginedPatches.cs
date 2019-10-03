@@ -39,6 +39,22 @@ namespace PeterHan.DecorRework {
 		}
 
 		/// <summary>
+		/// Applied to AtmoSuitConfig to patch the atmo suit to look ugly.
+		/// </summary>
+		[HarmonyPatch(typeof(AtmoSuitConfig), "CreateEquipmentDef")]
+		public static class AtmoSuitConfig_CreateEquipmentDef_Patch {
+			/// <summary>
+			/// Applied after CreateEquipmentDef runs.
+			/// </summary>
+			internal static void Postfix(ref EquipmentDef __result) {
+				if (__result != null && Options != null) {
+					PUtil.LogDebug("Atmo Suit: {0:D}".F(Options.AtmoSuitDecor));
+					DecorTuning.TuneSuits(Options, __result);
+				}
+			}
+		}
+
+		/// <summary>
 		/// Applied to Db to apply the new decor levels.
 		/// </summary>
 		[HarmonyPatch(typeof(Db), "Initialize")]
@@ -144,6 +160,22 @@ namespace PeterHan.DecorRework {
 			internal static void Postfix() {
 				PUtil.LogDebug("Creating DecorCellManager");
 				DecorCellManager.CreateInstance();
+			}
+		}
+
+		/// <summary>
+		/// Applied to JetSuitConfig to patch the jet suit to look ugly.
+		/// </summary>
+		[HarmonyPatch(typeof(JetSuitConfig), "CreateEquipmentDef")]
+		public static class JetSuitConfig_CreateEquipmentDef_Patch {
+			/// <summary>
+			/// Applied after CreateEquipmentDef runs.
+			/// </summary>
+			internal static void Postfix(ref EquipmentDef __result) {
+				if (__result != null && Options != null) {
+					PUtil.LogDebug("Jet Suit: {0:D}".F(Options.AtmoSuitDecor));
+					DecorTuning.TuneSuits(Options, __result);
+				}
 			}
 		}
 

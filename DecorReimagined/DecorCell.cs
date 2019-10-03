@@ -100,8 +100,9 @@ namespace PeterHan.DecorRework {
 		/// </summary>
 		/// <param name="prefabID">The prefab ID of the provider.</param>
 		/// <param name="provider">The provider to remove.</param>
+		/// <param name="decor">The provider's current decor score.</param>
 		/// <returns>true if the decor score was changed, or false otherwise.</returns>
-		public bool RemoveDecorProvider(Tag prefabID, DecorProvider provider) {
+		public bool RemoveDecorProvider(Tag prefabID, DecorProvider provider, float decor) {
 			BestDecorList values;
 			bool removed = false;
 			lock (decorProviders) {
@@ -111,7 +112,7 @@ namespace PeterHan.DecorRework {
 				int count;
 				// Lock the right things at the right times
 				lock (values) {
-					removed = values.RemoveDecorItem(provider);
+					removed = values.RemoveDecorItem(decor, provider);
 					count = values.Count;
 				}
 				if (count < 1)

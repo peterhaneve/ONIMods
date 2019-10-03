@@ -37,9 +37,12 @@ namespace PeterHan.FastSave {
 			PUtil.InitLibrary();
 			options = new FastSaveOptions();
 			POptions.RegisterOptions(typeof(FastSaveOptions));
+#if false
 			PUtil.RegisterPostload(OnPostLoad);
+#endif
 		}
 
+#if false
 		/// <summary>
 		/// Cleans old time entries from the logs.
 		/// </summary>
@@ -96,6 +99,7 @@ namespace PeterHan.FastSave {
 			CleanTimes(___activeTimes, now);
 			CleanTimes(___inactiveTimes, now);
 		}
+#endif
 
 		/// <summary>
 		/// Applied to Game to load settings when the mod starts up.

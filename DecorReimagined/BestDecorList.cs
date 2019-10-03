@@ -95,18 +95,20 @@ namespace PeterHan.DecorRework {
 		/// <summary>
 		/// Removes a decor item.
 		/// </summary>
+		/// <param name="decor">The current decor of the item.</param>
 		/// <param name="provider">The decor item to remove.</param>
-		public bool RemoveDecorItem(DecorProvider provider) {
+		public bool RemoveDecorItem(float decor, DecorProvider provider) {
 			bool found = false;
 			// Find and remove
-			foreach (var pair in decorByValue) {
+			/*foreach (var pair in decorByValue) {
 				var pairKey = pair.Key;
 				if (pairKey.Provider == provider) {
 					decorByValue.Remove(pairKey);
 					found = true;
 					break;
 				}
-			}
+			}*/
+			found = decorByValue.Remove(new DecorWrapper(decor, provider));
 			return found && UpdateBestDecor();
 		}
 

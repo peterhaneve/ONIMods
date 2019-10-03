@@ -40,6 +40,24 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Clamps the specified value to the range of this Limits object.
+		/// </summary>
+		/// <param name="value">The value to coerce.</param>
+		/// <returns>The nearest value included by these limits to the specified value.</returns>
+		public float ClampToRange(float value) {
+			return value.InRange((float)Minimum, (float)Maximum);
+		}
+
+		/// <summary>
+		/// Clamps the specified value to the range of this Limits object.
+		/// </summary>
+		/// <param name="value">The value to coerce.</param>
+		/// <returns>The nearest value included by these limits to the specified value.</returns>
+		public int ClampToRange(int value) {
+			return value.InRange((int)Minimum, (int)Maximum);
+		}
+
+		/// <summary>
 		/// Reports whether a value is in the range included in these limits.
 		/// </summary>
 		/// <param name="value">The value to check.</param>

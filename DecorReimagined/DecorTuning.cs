@@ -128,6 +128,12 @@ namespace PeterHan.DecorRework {
 				component.baseDecor = options.DebrisDecor;
 				component.baseRadius = Math.Max(1, options.DebrisRadius);
 			}
+			// Patch the suits
+			PUtil.LogDebug("Snazzy Suit: {0:D} Warm/Cool Vest: {1:D}".F(options.
+				SnazzySuitDecor, options.VestDecor));
+			ClothingWearer.ClothingInfo.FANCY_CLOTHING.decorMod = options.SnazzySuitDecor;
+			ClothingWearer.ClothingInfo.COOL_CLOTHING.decorMod = options.VestDecor;
+			ClothingWearer.ClothingInfo.WARM_CLOTHING.decorMod = options.VestDecor;
 		}
 
 		/// <summary>
@@ -161,6 +167,17 @@ namespace PeterHan.DecorRework {
 			patcher.PatchConstructor(typeof(DecorMonitor.Instance), new Type[] {
 				typeof(IStateMachineTarget) }, null, new HarmonyMethod(typeof(DecorTuning),
 				"UpdateDecorLevels"));
+		}
+
+		/// <summary>
+		/// Adjusts Atmo and Jet suit decor.
+		/// </summary>
+		/// <param name="options">The options for the decor of those suits.</param>
+		/// <param name="suit">The suit def to modify.</param>
+		internal static void TuneSuits(DecorReimaginedOptions options, EquipmentDef suit) {
+			var attr = Db.Get().BuildingAttributes;
+			suit.AttributeModifiers.Add(new AttributeModifier(attr.Decor.Id, options.
+				AtmoSuitDecor, STRINGS.EQUIPMENT.PREFABS.ATMO_SUIT.NAME, false, false, true));
 		}
 
 		/// <summary>

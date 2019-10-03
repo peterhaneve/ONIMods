@@ -64,6 +64,11 @@ namespace PeterHan.DecorRework {
 		private readonly Klei.AI.Attribute happinessAttribute;
 
 		/// <summary>
+		/// True if critter decor is disabled.
+		/// </summary>
+		private readonly bool noCritterDecor;
+
+		/// <summary>
 		/// Lists all decor providers and handles rebuilding their splats.
 		/// </summary>
 		private readonly IDictionary<DecorProvider, DecorSplatNew> provInfo;
@@ -78,6 +83,7 @@ namespace PeterHan.DecorRework {
 				GetField<Operational.Flag>("healthyFlag");
 			happinessAttribute = Db.Get().CritterAttributes.Happiness;
 			size = Grid.CellCount;
+			noCritterDecor = DecorReimaginedPatches.Options.AllCrittersZeroDecor;
 			decorGrid = new DecorCell[size];
 			provInfo = new Dictionary<DecorProvider, DecorSplatNew>(1024);
 		}
@@ -89,7 +95,12 @@ namespace PeterHan.DecorRework {
 		/// <param name="provider">The object providing decor.</param>
 		/// <param name="decor">The quantity of decor to add or subtract.</param>
 		public void AddDecorProvider(int cell, DecorProvider provider, float decor) {
-			if (Grid.IsValidCell(cell) && cell < size && cell >= 0)
+			var parent = provider.gameObject;
+			bool allowForCritter = (parent == null) ? false : (!noCritterDecor ||
+				parent.GetComponent<CreatureBrain>() == null);
+			// Must be a valid cell, and the object must be either not a critter or critter
+			// decor enabled
+			if (Grid.IsValidCell(cell) && cell < size && cell >= 0 && allowForCritter)
 				lock (decorGrid) {
 					AddOrGet(cell).AddDecorProvider(provider.PrefabID(), provider, decor);
 				}
@@ -205,12 +216,12 @@ namespace PeterHan.DecorRework {
 		/// <param name="cell">The cell.</param>
 		/// <param name="provider">The object providing decor.</param>
 		/// <param name="decor">The quantity of decor to add or subtract.</param>
-		public void RemoveDecorProvider(int cell, DecorProvider provider) {
+		public void RemoveDecorProvider(int cell, DecorProvider provider, float decor) {
 			if (Grid.IsValidCell(cell) && cell < size && cell >= 0)
 				lock (decorGrid) {
 					var dc = decorGrid[cell];
 					if (dc != null) {
-						dc.RemoveDecorProvider(provider.PrefabID(), provider);
+						dc.RemoveDecorProvider(provider.PrefabID(), provider, decor);
 						if (dc.Count == 0)
 							decorGrid[cell] = null;
 					}
