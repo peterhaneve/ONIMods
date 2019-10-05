@@ -11,7 +11,7 @@ Local copies of these mods are available in the [Releases](https://github.com/pe
 These mods should be installed into the `local` folder, creating it if it does not already exist.
 Mods should remain in their own subfolder.
 
-![Local where local mods should be installed](localmods.png)
+![Location where local mods should be installed](Docs/localmods.png)
 
 * Windows: `%USERPROFILE%\Documents\Klei\OxygenNotIncluded\mods\local`
   Replace the documents path with the path to your `Documents` folder if this folder has been redirected.
