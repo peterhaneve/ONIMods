@@ -105,11 +105,11 @@ namespace PeterHan.PLib.UI {
 			var flexW = new Vector2(1.0f, 0.0f);
 			if (Parent == null)
 				throw new InvalidOperationException("Parent for dialog may not be null");
-			var dialog = PUIElements.CreateUI(Name);
+			var dialog = PUIElements.CreateUI(null, Name);
 			var dComponent = dialog.AddComponent<PDialogComp>();
 			int i = 0;
 			PUIElements.SetParent(dialog, Parent);
-			// Background (needs to be unanchored so PPanel is not useful here)
+			// Background
 			dialog.AddComponent<Image>().color = PUITuning.Colors.DialogBackground;
 			dialog.AddComponent<Canvas>();
 			new PPanel("Header") {
@@ -126,7 +126,7 @@ namespace PeterHan.PLib.UI {
 			// Buttons
 			var buttonPanel = new PPanel("Buttons") {
 				Alignment = TextAnchor.LowerCenter, Spacing = 5, Direction = PanelDirection.
-				Horizontal, Margin = new RectOffset(5, 5, 0, 5), DynamicSize = false
+				Horizontal, Margin = new RectOffset(5, 5, 0, 5)
 			};
 			// Add each user button
 			foreach (var button in buttons) {
@@ -145,8 +145,7 @@ namespace PeterHan.PLib.UI {
 			// Body, make it fill the flexible space
 			new PPanel("BodyAndButtons") {
 				Alignment = TextAnchor.MiddleCenter, Spacing = 0, Direction = PanelDirection.
-				Vertical, Margin = new RectOffset(5, 5, 5, 5), DynamicSize = true,
-				FlexSize = Vector2.one
+				Vertical, Margin = new RectOffset(5, 5, 5, 5), FlexSize = Vector2.one
 			}.SetKleiBlueColor().AddChild(Body).AddChild(buttonPanel).AddTo(dialog);
 			// Lay out components vertically
 			BoxLayoutGroup.LayoutNow(dialog, new BoxLayoutParams() {

@@ -55,7 +55,7 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public override GameObject Build() {
-			var button = PUIElements.CreateUI(Name);
+			var button = PUIElements.CreateUI(null, Name);
 			// Background
 			var kImage = button.AddComponent<KImage>();
 			var trueColor = Color ?? PUITuning.Colors.ButtonPinkStyle;

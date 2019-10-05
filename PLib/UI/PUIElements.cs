@@ -28,32 +28,18 @@ namespace PeterHan.PLib.UI {
 	/// </summary>
 	public sealed class PUIElements {
 		/// <summary>
-		/// Represents an anchor in the center.
-		/// </summary>
-		private static readonly Vector2f CENTER = new Vector2f(0.5f, 0.5f);
-
-		/// <summary>
-		/// Represents an anchor in the lower left corner.
-		/// </summary>
-		private static readonly Vector2f LOWER_LEFT = new Vector2f(1.0f, 0.0f);
-
-		/// <summary>
-		/// Represents an anchor in the upper right corner.
-		/// </summary>
-		private static readonly Vector2f UPPER_RIGHT = new Vector2f(0.0f, 1.0f);
-
-		/// <summary>
 		/// Safely adds a LocText to a game object without throwing an NRE on construction.
 		/// </summary>
 		/// <param name="obj">The game object to add the LocText.</param>
+		/// <param name="setting">The text style.</param>
 		/// <returns>The added LocText object.</returns>
-		internal static LocText AddLocText(GameObject obj) {
+		internal static LocText AddLocText(GameObject obj, TextStyleSetting setting = null) {
 			bool active = obj.activeSelf;
 			obj.SetActive(false);
 			var text = obj.AddComponent<LocText>();
 			// This is enough to let it activate
 			text.key = string.Empty;
-			text.textStyleSetting = PUITuning.Fonts.UILightStyle;
+			text.textStyleSetting = setting ?? PUITuning.Fonts.UIDarkStyle;
 			obj.SetActive(active);
 			return text;
 		}
@@ -88,24 +74,25 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// Creates a UI game object.
 		/// </summary>
+		/// <param name="parent">The parent of the UI object. If not set now, or added/changed
+		/// later, the anchors must be redefined.</param>
 		/// <param name="name">The object name.</param>
-		/// <param name="anchor">true to anchor the object, or false otherwise.</param>
-		/// <param name="renderer">true to add a canvas renderer, or false otherwise.</param>
+		/// <param name="canvas">true to add a canvas renderer, or false otherwise.</param>
+		/// <param name="horizAnchor">How to anchor the object horizontally.</param>
+		/// <param name="vertAnchor">How to anchor the object vertically.</param>
 		/// <returns>The UI object with transform and canvas initialized.</returns>
-		internal static GameObject CreateUI(string name, bool anchor = true,
-				bool renderer = true) {
+		internal static GameObject CreateUI(GameObject parent, string name, bool canvas = true,
+				PUIAnchoring horizAnchor = PUIAnchoring.Stretch,
+				PUIAnchoring vertAnchor = PUIAnchoring.Stretch) {
 			var element = new GameObject(name);
+			if (parent != null)
+				SetParent(element, parent);
 			// Size and position
 			var transform = element.AddOrGet<RectTransform>();
 			transform.localScale = Vector3.one;
-			transform.pivot = CENTER;
-			if (anchor) {
-				transform.anchoredPosition = CENTER;
-				transform.anchorMax = UPPER_RIGHT;
-				transform.anchorMin = LOWER_LEFT;
-			}
+			SetAnchors(element, horizAnchor, vertAnchor);
 			// All UI components need a canvas renderer for some reason
-			if (renderer)
+			if (canvas)
 				element.AddComponent<CanvasRenderer>();
 			element.layer = LayerMask.NameToLayer("UI");
 			return element;
@@ -173,43 +160,84 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Sets the anchor location of a UI element.
+		/// </summary>
+		/// <param name="uiElement">The UI element to modify.</param>
+		/// <param name="horizAnchor">The horizontal anchor mode.</param>
+		/// <param name="vertAnchor">The vertical anchor mode.</param>
+		/// <returns>The UI element, for call chaining.</returns>
+		public static GameObject SetAnchors(GameObject uiElement, PUIAnchoring horizAnchor,
+				PUIAnchoring vertAnchor) {
+			Vector2 aMax = new Vector2(), aMin = new Vector2(), pivot = new Vector2();
+			var transform = uiElement.rectTransform();
+			// Anchor: horizontal
+			switch (horizAnchor) {
+			case PUIAnchoring.Center:
+				aMin.x = 0.5f;
+				aMax.x = 0.5f;
+				pivot.x = 0.5f;
+				break;
+			case PUIAnchoring.End:
+				aMin.x = 1.0f;
+				aMax.x = 1.0f;
+				pivot.x = 1.0f;
+				break;
+			case PUIAnchoring.Stretch:
+				aMin.x = 0.0f;
+				aMax.x = 1.0f;
+				pivot.x = 0.5f;
+				break;
+			default:
+				aMin.x = 0.0f;
+				aMax.x = 0.0f;
+				pivot.x = 0.0f;
+				break;
+			}
+			// Anchor: vertical
+			switch (vertAnchor) {
+			case PUIAnchoring.Center:
+				aMin.y = 0.5f;
+				aMax.y = 0.5f;
+				pivot.y = 0.5f;
+				break;
+			case PUIAnchoring.End:
+				aMin.y = 1.0f;
+				aMax.y = 1.0f;
+				pivot.y = 1.0f;
+				break;
+			case PUIAnchoring.Stretch:
+				aMin.y = 0.0f;
+				aMax.y = 1.0f;
+				pivot.y = 0.5f;
+				break;
+			default:
+				aMin.y = 0.0f;
+				aMax.y = 0.0f;
+				pivot.y = 0.0f;
+				break;
+			}
+			transform.anchorMax = aMax;
+			transform.anchorMin = aMin;
+			transform.pivot = pivot;
+			transform.anchoredPosition = Vector2.zero;
+			transform.offsetMax = Vector2.zero;
+			transform.offsetMin = Vector2.zero;
+			return uiElement;
+		}
+
+		/// <summary>
 		/// Sets a UI element's parent.
 		/// </summary>
 		/// <param name="child">The UI element to modify.</param>
 		/// <param name="parent">The new parent object.</param>
-		public static void SetParent(GameObject child, GameObject parent) {
+		/// <returns>The UI element, for call chaining.</returns>
+		public static GameObject SetParent(GameObject child, GameObject parent) {
 			if (child == null)
 				throw new ArgumentNullException("child");
 #pragma warning disable IDE0031 // Use null propagation
 			child.transform.SetParent((parent == null) ? null : parent.transform, false);
 #pragma warning restore IDE0031 // Use null propagation
-		}
-
-		/// <summary>
-		/// Sets a UI element's size immediately.
-		/// </summary>
-		/// <param name="uiElement">The UI element to modify.</param>
-		/// <param name="size">The new size.</param>
-		/// <returns>The UI element, for call chaining.</returns>
-		internal static GameObject SetSizeImmediate(GameObject uiElement, Vector2 size) {
-			if (uiElement == null)
-				throw new ArgumentNullException("uiElement");
-			float width = size.x, height = size.y;
-			var le = uiElement.AddOrGet<LayoutElement>();
-			// Min and preferred size set
-			le.minWidth = width;
-			le.minHeight = height;
-			le.preferredWidth = width;
-			le.preferredHeight = height;
-			le.flexibleHeight = 0.0f;
-			le.flexibleWidth = 0.0f;
-			// Apply to current size
-			var rt = uiElement.rectTransform();
-			if (rt != null) {
-				rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
-				rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
-			}
-			return uiElement;
+			return child;
 		}
 
 		/// <summary>
@@ -262,5 +290,19 @@ namespace PeterHan.PLib.UI {
 		}
 
 		private PUIElements() { }
+	}
+
+	/// <summary>
+	/// The anchor mode to set a UI component.
+	/// </summary>
+	public enum PUIAnchoring {
+		// Stretch to all
+		Stretch,
+		// Relative to beginning
+		Beginning,
+		// Relative to center
+		Center,
+		// Relative to end
+		End
 	}
 }

@@ -19,12 +19,7 @@
 using Harmony;
 using PeterHan.PLib;
 using PeterHan.PLib.UI;
-using System;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-
-using ToolToggleState = ToolParameterMenu.ToggleState;
 
 namespace PeterHan.SweepByType {
 	/// <summary>
@@ -48,168 +43,38 @@ namespace PeterHan.SweepByType {
 		}
 
 		/// <summary>
-		/// The currently selected item type to sweep.
+		/// The types to sweep.
 		/// </summary>
-		internal Tag SelectedItemTag {
-			get {
-				return typeSelect?.CurrentSelectedElement ?? GameTags.Solid;
-			}
-		}
-
-		/// <summary>
-		/// A temporary product info screen used to create prefabs.
-		/// </summary>
-		private ProductInfoScreen infoScreen;
-
-		/// <summary>
-		/// The state of each tool option.
-		/// </summary>
-		private IDictionary<string, ToolToggleState> optionState;
-
-		/// <summary>
-		/// The tool options shown in the filter menu.
-		/// </summary>
-		private readonly ICollection<PToolMode> toolOptions;
-
-		/// <summary>
-		/// A fake recipe allowing to sweep any solid.
-		/// </summary>
-		private readonly Recipe sweepRecipe;
+		private HashSetPool<Tag, FilteredClearTool>.PooledHashSet cachedTypes;
 
 		/// <summary>
 		/// Allows selection of the type to sweep.
 		/// </summary>
-		private MaterialSelector typeSelect;
+		internal TypeSelectControl TypeSelect { get; private set; }
 
 		public FilteredClearTool() {
-			optionState = null;
-			// Require 0 of any solid
-			sweepRecipe = new Recipe() {
-				Name = SweepByTypeStrings.MATERIAL_TYPE,
-				recipeDescription = SweepByTypeStrings.MATERIAL_TYPE,
-				Ingredients = new List<Recipe.Ingredient>() {
-					new Recipe.Ingredient(GameTags.Solid, float.Epsilon)
-				}
-			};
-			toolOptions = new List<PToolMode>(2) {
-				new PToolMode(SweepByTypeStrings.TOOL_KEY_DEFAULT, SweepByTypeStrings.
-					TOOL_MODE_DEFAULT, ToolToggleState.On),
-				new PToolMode(SweepByTypeStrings.TOOL_KEY_FILTERED, SweepByTypeStrings.
-					TOOL_MODE_FILTERED)
-			};
-			typeSelect = null;
+			cachedTypes = null;
+			TypeSelect = null;
 		}
 
 		/// <summary>
-		/// Adds all discovered egg, food, cooking ingredient, and medicine types.
+		/// Destroys the cached list after a drag completes.
 		/// </summary>
-		private void AddEggsAndFoods() {
-			var toggleGroup = Traverse.Create(typeSelect).GetField<ToggleGroup>("toggleGroup");
-			var inv = WorldInventory.Instance;
-			if (inv != null) {
-				// Discovered resources only; iterating every item made from genetic ooze
-				// will add lots of false positives, this looks ugly but is better
-				foreach (var item in inv.GetDiscoveredResourcesFromTag(GameTags.Egg))
-					AddItemTag(item, toggleGroup);
-				foreach (var item in inv.GetDiscoveredResourcesFromTag(GameTags.Edible))
-					AddItemTag(item, toggleGroup);
-				foreach (var item in inv.GetDiscoveredResourcesFromTag(GameTags.
-						CookingIngredient))
-					AddItemTag(item, toggleGroup);
-				foreach (var item in inv.GetDiscoveredResourcesFromTag(GameTags.Medicine))
-					AddItemTag(item, toggleGroup);
-				foreach (var item in inv.GetDiscoveredResourcesFromTag(GameTags.Seed))
-					AddItemTag(item, toggleGroup);
-				// Pokeshell molts are in here
-				foreach (var item in inv.GetDiscoveredResourcesFromTag(GameTags.
-						IndustrialIngredient))
-					AddItemTag(item, toggleGroup);
-				// Egg shells are in here
-				foreach (var item in inv.GetDiscoveredResourcesFromTag(GameTags.Organics))
-					AddItemTag(item, toggleGroup);
-				// Liquids
-				foreach (var item in inv.GetDiscoveredResourcesFromTag(GameTags.Liquid))
-					AddItemTag(item, toggleGroup);
-				typeSelect.RefreshToggleContents();
+		private void DoneDrag() {
+			if (cachedTypes != null) {
+				cachedTypes.Recycle();
+				cachedTypes = null;
 			}
-		}
-
-		/// <summary>
-		/// Adds a specific tag type to the sweepable items list.
-		/// </summary>
-		/// <param name="tag">The tag to add.</param>
-		/// <param name="toggleGroup">The toggle group retrieved from the material selection window.</param>
-		private void AddItemTag(Tag tag, ToggleGroup toggleGroup) {
-			if (!typeSelect.ElementToggles.ContainsKey(tag)) {
-				var obj = Util.KInstantiate(typeSelect.TogglePrefab, typeSelect.
-					LayoutContainer, "MaterialSelection_" + tag.ProperName());
-				obj.transform.localScale = Vector3.one;
-				obj.SetActive(true);
-				var toggle = obj.GetComponent<KToggle>();
-				typeSelect.ElementToggles.Add(tag, toggle);
-				toggle.group = toggleGroup;
-				obj.gameObject.GetComponent<ToolTip>().toolTip = tag.ProperName();
-			}
-		}
-
-		/// <summary>
-		/// Builds the "Select Material" window.
-		/// </summary>
-		/// <param name="menu">The parent window for the window.</param>
-		private void CreateSelector(ToolParameterMenu menu) {
-			if (menu == null)
-				throw new ArgumentNullException("menu");
-			Color32 color = PUITuning.Colors.BackgroundLight;
-			var parent = menu.transform.parent?.gameObject ?? GameScreenManager.Instance.
-				ssOverlayCanvas;
-			// Create a single MaterialSelector which is all we need
-			typeSelect = Util.KInstantiateUI<MaterialSelector>(infoScreen.
-				materialSelectionPanel.MaterialSelectorTemplate, parent);
-			var obj = typeSelect.gameObject;
-			typeSelect.name = "FilteredClearToolMaterials";
-			// Allow scrolling on the material list
-			Traverse.Create(typeSelect).SetField("ConsumeMouseScroll", true);
-			// Add canvas and renderer
-			obj.AddComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-			obj.AddComponent<CanvasRenderer>();
-			// Background and hit-test
-			var infoBG = infoScreen.transform.Find("BG");
-			if (infoBG != null) {
-				var imgComponent = infoBG.GetComponent<Image>();
-				if (imgComponent != null)
-					color = imgComponent.color;
-				obj.AddComponent<Image>().color = color;
-			}
-			obj.AddComponent<GraphicRaycaster>();
-			// Resize window to match its contents
-			PUIElements.AddSizeFitter(obj);
-			typeSelect.ConfigureScreen(sweepRecipe.Ingredients[0], sweepRecipe);
-			AddEggsAndFoods();
-			var transform = obj.rectTransform();
-			// Position
-			transform.pivot = new Vector2(1.0f, 0.0f);
-			transform.localScale = Vector3.one;
-			transform.SetAsFirstSibling();
-			typeSelect.Activate();
-		}
-
-		/// <summary>
-		/// Cleans up the "Select Material" window.
-		/// </summary>
-		private void DestroySelector() {
-			if (typeSelect != null)
-				typeSelect.Deactivate();
-			typeSelect = null;
 		}
 
 		protected override void OnCleanUp() {
 			base.OnCleanUp();
 			// Clean up everything needed
-			DestroySelector();
-			if (infoScreen != null) {
-				Destroy(infoScreen);
-				infoScreen = null;
+			if (TypeSelect != null) {
+				Destroy(TypeSelect.RootPanel);
+				TypeSelect = null;
 			}
+			DoneDrag();
 		}
 
 		protected override void OnPrefabInit() {
@@ -238,25 +103,33 @@ namespace PeterHan.SweepByType {
 			visualizer = Util.KInstantiate(trSweep.GetField<GameObject>("visualizer"),
 				gameObject, "FilteredClearToolSprite");
 			visualizer.SetActive(false);
+			TypeSelect = new TypeSelectControl();
+		}
+
+		protected override void OnDragComplete(Vector3 cursorDown, Vector3 cursorUp) {
+			DoneDrag();
 		}
 
 		protected override void OnDragTool(int cell, int distFromOrigin) {
 			var gameObject = Grid.Objects[cell, (int)ObjectLayer.Pickupables];
-			if (gameObject != null && optionState != null) {
+			if (gameObject != null && TypeSelect != null) {
 				// Linked list of debris in layer 3
 				var objectListNode = gameObject.GetComponent<Pickupable>().objectLayerListItem;
 				var priority = ToolMenu.Instance.PriorityScreen.GetLastSelectedPriority();
-				bool byType = optionState[SweepByTypeStrings.TOOL_KEY_FILTERED] ==
-					ToolToggleState.On;
-				var targetTag = SelectedItemTag;
+				if (cachedTypes == null) {
+					// Build the list
+					cachedTypes = HashSetPool<Tag, FilteredClearTool>.Allocate();
+					TypeSelect.AddTypesToSweep(cachedTypes);
+				}
+				var types = cachedTypes;
 				while (objectListNode != null) {
 					var content = objectListNode.gameObject;
 					objectListNode = objectListNode.nextItem;
 					// Ignore Duplicants
 					if (content != null && content.GetComponent<MinionIdentity>() == null) {
 						var cc = content.GetComponent<Clearable>();
-						if (cc != null && cc.isClearable && (!byType || content.HasTag(
-								targetTag))) {
+						if (cc != null && cc.isClearable && types.Contains(content.PrefabID()))
+						{
 							// Parameter is whether to force, not remove sweep errand!
 							cc.MarkForClear(false);
 							var pr = content.GetComponent<Prioritizable>();
@@ -269,49 +142,25 @@ namespace PeterHan.SweepByType {
 		}
 
 		protected override void OnActivateTool() {
-			var menu = ToolMenu.Instance.toolParameterMenu;
+			var menu = ToolMenu.Instance;
 			base.OnActivateTool();
-			// Reuse the "Product Info" asset from BuildMenu to allow resource selection
-			if (infoScreen == null) {
-				infoScreen = Util.KInstantiateUI<ProductInfoScreen>(Traverse.Create(
-					PlanScreen.Instance).GetField<GameObject>("productInfoScreenPrefab"),
-					gameObject, false);
-				infoScreen.Show(false);
+			// Update only on tool activation to improve performance
+			if (TypeSelect != null) {
+				var root = TypeSelect.RootPanel;
+				TypeSelect.Update();
+				PUIElements.SetParent(root, menu.gameObject);
+				root.transform.SetAsFirstSibling();
 			}
-			ToolMenu.Instance.PriorityScreen.Show(true);
-			// Default to "sweep all"
-			optionState = PToolMode.PopulateMenu(menu, toolOptions);
-			menu.onParametersChanged += UpdateViewMode;
-			UpdateViewMode();
+			menu.PriorityScreen.Show(true);
 		}
 
 		protected override void OnDeactivateTool(InterfaceTool newTool) {
-			DestroySelector();
+			var menu = ToolMenu.Instance;
+			// Unparent but do not dispose
+			if (TypeSelect != null)
+				PUIElements.SetParent(TypeSelect.RootPanel, null);
+			menu.PriorityScreen.Show(false);
 			base.OnDeactivateTool(newTool);
-			optionState = null;
-			var menu = ToolMenu.Instance.toolParameterMenu;
-			// Unregister events
-			menu.ClearMenu();
-			menu.onParametersChanged -= UpdateViewMode;
-			ToolMenu.Instance.PriorityScreen.Show(false);
-		}
-
-		/// <summary>
-		/// Based on the current tool mode, updates the overlay mode.
-		/// </summary>
-		private void UpdateViewMode() {
-			var menu = ToolMenu.Instance.toolParameterMenu;
-			if (optionState != null && menu != null) {
-				var mode = menu.GetLastEnabledFilter();
-				if (mode == SweepByTypeStrings.TOOL_KEY_FILTERED) {
-					// Filtered
-					if (typeSelect == null)
-						CreateSelector(menu);
-					typeSelect.AutoSelectAvailableMaterial();
-				} else
-					// Standard
-					DestroySelector();
-			}
 		}
 	}
 }

@@ -26,9 +26,9 @@ namespace PeterHan.PLib.UI {
 	/// </summary>
 	public class PCheckBox : PTextComponent {
 		/// <summary>
-		/// The offset between the checkbox border and icon.
+		/// The border size between the checkbox border and icon.
 		/// </summary>
-		private static readonly RectOffset CHECKBOX_MARGIN = new RectOffset(2, 2, 2, 2);
+		private const float CHECKBOX_MARGIN = 2.0f;
 
 		/// <summary>
 		/// The unchecked state.
@@ -156,31 +156,32 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public override GameObject Build() {
-			var checkbox = PUIElements.CreateUI(Name);
+			var checkbox = PUIElements.CreateUI(null, Name);
 			// Background
-			var trueColor = CheckColor ?? PUITuning.Colors.CheckboxWhiteStyle;
+			var trueColor = CheckColor ?? PUITuning.Colors.ComponentLightStyle;
 			// Checkbox background
-			var checkBack = PUIElements.CreateUI("CheckBox");
+			var checkBack = PUIElements.CreateUI(checkbox, "CheckBox");
 			checkBack.AddComponent<Image>().color = BackColor;
-			PUIElements.SetParent(checkBack, checkbox);
 			// Checkbox border
-			var checkBorder = PUIElements.CreateUI("CheckBorder");
+			var checkBorder = PUIElements.CreateUI(checkBack, "CheckBorder");
 			var borderImg = checkBorder.AddComponent<Image>();
 			borderImg.sprite = PUITuning.Images.CheckBorder;
 			borderImg.color = trueColor.activeColor;
 			borderImg.type = Image.Type.Sliced;
-			PUIElements.SetParent(checkBorder, checkBack);
 			// Checkbox foreground
-			var imageChild = PUIElements.CreateUI("CheckMark");
+			var imageChild = PUIElements.CreateUI(checkBorder, "CheckMark", true, PUIAnchoring.
+				Center, PUIAnchoring.Center);
 			var img = imageChild.AddComponent<Image>();
-			PUIElements.SetParent(imageChild, checkBorder);
 			img.sprite = PUITuning.Images.Checked;
 			img.preserveAspect = true;
-			// Limit size if needed
-			if (CheckSize.x > 0.0f && CheckSize.y > 0.0f)
-				PUIElements.SetSizeImmediate(imageChild, CheckSize);
-			else
-				PUIElements.AddSizeFitter(imageChild, false);
+			// Determine the checkbox size
+			var actualSize = CheckSize;
+			if (actualSize.x <= 0.0f || actualSize.y <= 0.0f) {
+				var rt = imageChild.rectTransform();
+				actualSize.x = LayoutUtility.GetPreferredWidth(rt);
+				actualSize.y = LayoutUtility.GetPreferredHeight(rt);
+			}
+			imageChild.SetUISize(CheckSize, false);
 			// Add foreground image since the background already has one
 			if (Sprite != null)
 				ImageChildHelper(checkbox, Sprite, SpriteTransform, SpriteSize);
@@ -203,10 +204,10 @@ namespace PeterHan.PLib.UI {
 			mToggle.toggle_image = img;
 			mToggle.ChangeState(InitialState);
 			checkbox.SetActive(true);
-			BoxLayoutGroup.LayoutNow(checkBorder, new BoxLayoutParams() {
-				Margin = CHECKBOX_MARGIN
-			});
-			BoxLayoutGroup.LayoutNow(checkBack);
+			// Lay out the checkbox using anchors only
+			checkBack.SetUISize(new Vector2(CheckSize.x + 2.0f * CHECKBOX_MARGIN, CheckSize.y +
+				2.0f * CHECKBOX_MARGIN), true);
+			imageChild.SetUISize(CheckSize);
 			// Icon and text are side by side
 			var lp = new BoxLayoutParams() {
 				Margin = Margin, Spacing = Math.Max(IconSpacing, 0), Alignment = TextAnchor.
@@ -216,7 +217,7 @@ namespace PeterHan.PLib.UI {
 				checkbox.AddComponent<BoxLayoutGroup>().Params = lp;
 			else
 				BoxLayoutGroup.LayoutNow(checkbox, lp);
-			PUIElements.AddSizeFitter(checkbox, DynamicSize).SetFlexUISize(FlexSize);
+			checkbox.SetFlexUISize(FlexSize);
 			InvokeRealize(checkbox);
 			return checkbox;
 		}
@@ -228,7 +229,7 @@ namespace PeterHan.PLib.UI {
 		public PCheckBox SetKleiPinkStyle() {
 			TextStyle = PUITuning.Fonts.UILightStyle;
 			BackColor = PUITuning.Colors.ButtonPinkStyle.inactiveColor;
-			CheckColor = PUITuning.Colors.CheckboxDarkStyle;
+			CheckColor = PUITuning.Colors.ComponentDarkStyle;
 			return this;
 		}
 
@@ -239,7 +240,7 @@ namespace PeterHan.PLib.UI {
 		public PCheckBox SetKleiBlueStyle() {
 			TextStyle = PUITuning.Fonts.UILightStyle;
 			BackColor = PUITuning.Colors.ButtonBlueStyle.inactiveColor;
-			CheckColor = PUITuning.Colors.CheckboxDarkStyle;
+			CheckColor = PUITuning.Colors.ComponentDarkStyle;
 			return this;
 		}
 	}

@@ -25,7 +25,7 @@ namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// A custom UI panel factory which can arrange its children horizontally or vertically.
 	/// </summary>
-	public class PPanel : IDynamicSizable {
+	public class PPanel : IUIComponent {
 		/// <summary>
 		/// The alignment position to use for child elements if they are smaller than the
 		/// required size.
@@ -33,7 +33,7 @@ namespace PeterHan.PLib.UI {
 		public TextAnchor Alignment { get; set; }
 
 		/// <summary>
-		/// The background color of this panel. If null, no color will be used.
+		/// The background color of this panel.
 		/// </summary>
 		public Color BackColor { get; set; }
 
@@ -42,10 +42,7 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		public PanelDirection Direction { get; set; }
 
-		/// <summary>
-		/// Defaults to true for panels, but can be set to false to freeze them for a small
-		/// performance gain on panels which will have a perpetually fixed size.
-		/// </summary>
+		[Obsolete("PPanel always is dynamically sized now, unless built using BuildWithFixedSize.")]
 		public bool DynamicSize { get; set; }
 
 		/// <summary>
@@ -78,7 +75,6 @@ namespace PeterHan.PLib.UI {
 		public PPanel(string name) {
 			Alignment = TextAnchor.MiddleCenter;
 			children = new List<IUIComponent>();
-			DynamicSize = true;
 			FlexSize = Vector2.zero;
 			Name = name ?? "Panel";
 			BackColor = PUITuning.Colors.Transparent;
@@ -100,28 +96,49 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public GameObject Build() {
-			var panel = PUIElements.CreateUI(Name);
+			return Build(default, true);
+		}
+
+		/// <summary>
+		/// Builds this panel.
+		/// </summary>
+		/// <param name="size">The fixed size to use if dynamic is false.</param>
+		/// <param name="dynamic">Whether to use dynamic sizing.</param>
+		/// <returns>The realized panel.</returns>
+		private GameObject Build(Vector2 size, bool dynamic) {
+			var panel = PUIElements.CreateUI(null, Name);
 			if (BackColor.a > 0.0f)
 				panel.AddComponent<Image>().color = BackColor;
-			panel.layer = LayerMask.NameToLayer("UI");
 			// Add children
-			foreach (var child in children)
-				PUIElements.SetParent(child.Build(), panel);
+			foreach (var child in children) {
+				var obj = child.Build();
+				PUIElements.SetParent(obj, panel);
+				PUIElements.SetAnchors(obj, PUIAnchoring.Stretch, PUIAnchoring.Stretch);
+			}
 			// Add layout component
 			var args = new BoxLayoutParams() {
 				Direction = Direction, Alignment = Alignment, Spacing = Spacing,
 				Margin = Margin
 			};
 			// Gotta love freezable layouts
-			if (DynamicSize) {
+			if (dynamic) {
 				var lg = panel.AddComponent<BoxLayoutGroup>();
 				lg.Params = args;
 				lg.flexibleWidth = FlexSize.x;
 				lg.flexibleHeight = FlexSize.y;
 			} else
-				BoxLayoutGroup.LayoutNow(panel, args).SetFlexUISize(FlexSize);
+				BoxLayoutGroup.LayoutNow(panel, args, size).SetFlexUISize(FlexSize);
 			OnRealize?.Invoke(panel);
 			return panel;
+		}
+
+		/// <summary>
+		/// Builds this panel with a given default size.
+		/// </summary>
+		/// <param name="size">The fixed size to use if dynamic is false.</param>
+		/// <returns>The realized panel.</returns>
+		public GameObject BuildWithFixedSize(Vector2 size) {
+			return Build(size, false);
 		}
 
 		/// <summary>

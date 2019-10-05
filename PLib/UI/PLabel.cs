@@ -43,7 +43,7 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public override GameObject Build() {
-			var label = PUIElements.CreateUI(Name);
+			var label = PUIElements.CreateUI(null, Name);
 			// Background
 			if (BackColor.a > 0)
 				label.AddComponent<Image>().color = BackColor;

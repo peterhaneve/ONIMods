@@ -29,31 +29,26 @@ namespace PeterHan.SweepByType {
 		/// </summary>
 		/// <param name="selected">The objects under the cursor.</param>
 		public override void UpdateHoverElements(List<KSelectable> selected) {
+			var ts = FilteredClearTool.Instance.TypeSelect;
 			var hoverInstance = HoverTextScreen.Instance;
-			// Find the active mode
-			var drawer = hoverInstance.BeginDrawing();
-			bool filtered = ToolMenu.Instance.toolParameterMenu.GetLastEnabledFilter() ==
-				SweepByTypeStrings.TOOL_KEY_FILTERED;
+			// Determine if in default Sweep All mode
+			bool all = ts.IsAllSelected;
 			int cell = Grid.PosToCell(Camera.main.ScreenToWorldPoint(KInputManager.
 				GetMousePos()));
 			// Draw the tool title
-			string titleStr = filtered ? SweepByTypeStrings.TOOL_NAME_FILTERED : STRINGS.UI.
-				TOOLS.MARKFORSTORAGE.TOOLNAME;
+			string titleStr = all ? STRINGS.UI.TOOLS.MARKFORSTORAGE.TOOLNAME :
+				SweepByTypeStrings.TOOL_NAME_FILTERED;
+			var drawer = hoverInstance.BeginDrawing();
+			var dash = hoverInstance.GetSprite("dash");
 			drawer.BeginShadowBar(false);
 			drawer.DrawText(titleStr.ToUpper(), ToolTitleTextStyle);
 			// Draw the instructions
-			string item;
-			var tag = FilteredClearTool.Instance.SelectedItemTag;
-			if (tag == GameTags.Solid)
-				item = SweepByTypeStrings.TOOLTIP_MISSING_TYPE;
-			else
-				item = tag.ProperName().ToUpper();
-			ActionName = filtered ? string.Format(SweepByTypeStrings.TOOLTIP_FILTERED, item) :
-				STRINGS.UI.TOOLS.MARKFORSTORAGE.TOOLACTION.text;
+			ActionName = all ? STRINGS.UI.TOOLS.MARKFORSTORAGE.TOOLACTION.text :
+				SweepByTypeStrings.TOOLTIP_FILTERED.text;
 			DrawInstructions(hoverInstance, drawer);
 			drawer.EndShadowBar();
 			if (selected != null && Grid.IsValidCell(cell) && Grid.IsVisible(cell))
-				DrawPickupText(selected, drawer);
+				DrawPickupText(selected, drawer, dash);
 			drawer.EndDrawing();
 		}
 
@@ -62,9 +57,9 @@ namespace PeterHan.SweepByType {
 		/// </summary>
 		/// <param name="selected">The items which were found.</param>
 		/// <param name="drawer">The renderer for hover card text.</param>
-		private void DrawPickupText(IEnumerable<KSelectable> selected, HoverTextDrawer drawer)
-		{
-			var hoverInstance = HoverTextScreen.Instance;
+		/// <param name="dash">The dash sprite.</param>
+		private void DrawPickupText(IEnumerable<KSelectable> selected, HoverTextDrawer drawer,
+				Sprite dash) {
 			// For each pickupable object, show the type
 			foreach (var obj in selected) {
 				var cc = obj.GetComponent<Clearable>();
@@ -77,12 +72,12 @@ namespace PeterHan.SweepByType {
 					// Element name (uppercase)
 					drawer.DrawText(obj.GetProperName().ToUpper(), Styles_Title.Standard);
 					drawer.NewLine(26);
-					drawer.DrawIcon(hoverInstance.GetSprite("dash"), 18);
+					drawer.DrawIcon(dash, 18);
 					// Mass (kg, g, mg...)
 					drawer.DrawText(GameUtil.GetFormattedMass(ec.Mass), Styles_BodyText.
 						Standard);
 					drawer.NewLine(26);
-					drawer.DrawIcon(hoverInstance.GetSprite("dash"), 18);
+					drawer.DrawIcon(dash, 18);
 					// Temperature
 					drawer.DrawText(GameUtil.GetFormattedTemperature(ec.Temperature),
 						Styles_BodyText.Standard);

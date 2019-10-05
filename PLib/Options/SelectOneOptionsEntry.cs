@@ -121,7 +121,7 @@ namespace PeterHan.PLib.Options {
 			lbl.OnRealize += OnRealizeItemLabel;
 			// Build UI with 2 arrow buttons and a label to display the option
 			return new PPanel("Select") {
-				Direction = PanelDirection.Horizontal, Spacing = 5, DynamicSize = true
+				Direction = PanelDirection.Horizontal, Spacing = 5
 			}.AddChild(new PButton("Previous") {
 				SpriteSize = ARROW_SIZE, OnClick = OnPrevious, ToolTip = POptions.
 				TOOLTIP_PREVIOUS

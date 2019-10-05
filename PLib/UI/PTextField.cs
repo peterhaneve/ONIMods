@@ -25,7 +25,7 @@ namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// A custom UI text field factory class.
 	/// </summary>
-	public sealed class PTextField : IDynamicSizable {
+	public sealed class PTextField : IUIComponent {
 		/// <summary>
 		/// The text field's background color.
 		/// </summary>
@@ -52,8 +52,6 @@ namespace PeterHan.PLib.UI {
 				return cType;
 			}
 		}
-
-		public bool DynamicSize { get; set; }
 
 		/// <summary>
 		/// The flexible size bounds of this component.
@@ -113,7 +111,6 @@ namespace PeterHan.PLib.UI {
 
 		public PTextField(string name) {
 			BackColor = PUITuning.Colors.BackgroundLight;
-			DynamicSize = false;
 			FlexSize = Vector2.zero;
 			MaxLength = 256;
 			MinWidth = 32;
@@ -126,18 +123,16 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public GameObject Build() {
-			var textField = PUIElements.CreateUI(Name);
+			var textField = PUIElements.CreateUI(null, Name);
 			// Background
 			var style = TextStyle ?? PUITuning.Fonts.TextLightStyle;
 			textField.AddComponent<Image>().color = style.textColor;
 			// Text box with rectangular clipping area
-			var textArea = PUIElements.CreateUI("Text Area", true, false);
+			var textArea = PUIElements.CreateUI(textField, "Text Area", false);
 			textArea.AddComponent<Image>().color = BackColor;
-			PUIElements.SetParent(textArea, textField);
 			var mask = textArea.AddComponent<RectMask2D>();
 			// Scrollable text
-			var textBox = PUIElements.CreateUI("Text");
-			PUIElements.SetParent(textBox, textArea);
+			var textBox = PUIElements.CreateUI(textArea, "Text");
 			// Text to display
 			var textDisplay = textBox.AddComponent<TextMeshProUGUI>();
 			textDisplay.alignment = TextAlignment;
@@ -165,22 +160,11 @@ namespace PeterHan.PLib.UI {
 				textField.AddComponent<ToolTip>().toolTip = ToolTip;
 			mask.enabled = true;
 			// Lay out - TMP_InputField does not support auto layout so we have to do a hack
-			var minSize = new Vector2(MinWidth, LayoutUtility.GetPreferredHeight(textBox.
-				rectTransform()));
-			textArea.SetMinUISize(minSize).SetFlexUISize(Vector2.one);
-			var lp = new BoxLayoutParams() {
-				Direction = PanelDirection.Horizontal, Alignment = TextAnchor.MiddleLeft,
-				Margin = new RectOffset(1, 1, 1, 1)
-			};
-			if (DynamicSize) {
-				var layout = textField.AddComponent<BoxLayoutGroup>();
-				layout.Params = lp;
-				layout.flexibleWidth = FlexSize.x;
-				layout.flexibleHeight = FlexSize.y;
-				textField.SetMinUISize(minSize);
-			} else
-				BoxLayoutGroup.LayoutNow(textField, lp, new Vector2(MinWidth, 0.0f)).
-					SetFlexUISize(FlexSize);
+			var rt = textBox.rectTransform();
+			float height = LayoutUtility.GetPreferredHeight(rt);
+			textField.SetUISize(new Vector2(MinWidth + 2.0f, height + 2.0f), true).
+				SetFlexUISize(FlexSize);
+			textArea.SetUISize(new Vector2(MinWidth, height));
 			OnRealize?.Invoke(textField);
 			return textField;
 		}

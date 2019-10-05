@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
@@ -182,6 +183,56 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Calculates the size of a single game object.
+		/// </summary>
+		/// <param name="obj">The object to calculate.</param>
+		/// <param name="direction">The direction to calculate.</param>
+		/// <param name="elements">The layout eligible components of this game object.</param>
+		/// <returns>The object's minimum and preferred size.</returns>
+		internal static LayoutSizes GetSize(GameObject obj, PanelDirection direction,
+				IEnumerable<ILayoutElement> elements) {
+			float min = 0.0f, preferred = 0.0f, flexible = 0.0f, scaleFactor;
+			int minPri = int.MinValue, prefPri = int.MinValue, flexPri = int.MinValue;
+			var scale = obj.transform.localScale;
+			// Find the correct scale direction
+			if (direction == PanelDirection.Horizontal)
+				scaleFactor = scale.x;
+			else
+				scaleFactor = scale.y;
+			foreach (var component in elements)
+				if (((component as Behaviour)?.isActiveAndEnabled ?? false) && !IgnoreLayout(
+						component)) {
+					// Calculate must come first
+					if (direction == PanelDirection.Horizontal)
+						component.CalculateLayoutInputHorizontal();
+					else // if (direction == PanelDirection.Vertical)
+						component.CalculateLayoutInputVertical();
+					int lp = component.layoutPriority;
+					// Larger values win
+					if (direction == PanelDirection.Horizontal) {
+						PriValue(ref min, component.minWidth, lp, ref minPri);
+						PriValue(ref preferred, component.preferredWidth, lp, ref prefPri);
+						PriValue(ref flexible, component.flexibleWidth, lp, ref flexPri);
+					} else {
+						PriValue(ref min, component.minHeight, lp, ref minPri);
+						PriValue(ref preferred, component.preferredHeight, lp, ref prefPri);
+						PriValue(ref flexible, component.flexibleHeight, lp, ref flexPri);
+					}
+				}
+			return new LayoutSizes(obj, min * scaleFactor, Math.Max(min, preferred) *
+				scaleFactor, flexible);
+		}
+
+		/// <summary>
+		/// Reports whether the component should be ignored for layout.
+		/// </summary>
+		/// <param name="component">The component to check.</param>
+		/// <returns>true if it specifies to ignore layout, or false otherwise.</returns>
+		internal static bool IgnoreLayout(object component) {
+			return (component as ILayoutIgnorer)?.ignoreLayout ?? false;
+		}
+
+		/// <summary>
 		/// Loads a DDS sprite embedded in the current assembly as a 9-slice sprite.
 		/// 
 		/// It must be encoded using the DXT5 format.
@@ -249,6 +300,28 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Aggregates layout values, replacing the value if a higher priority value is given
+		/// and otherwise taking the largest value.
+		/// </summary>
+		/// <param name="value">The current value.</param>
+		/// <param name="newValue">The candidate new value. No operation if this is less than zero.</param>
+		/// <param name="newPri">The new value's layout priority.</param>
+		/// <param name="pri">The current value's priority</param>
+		private static void PriValue(ref float value, float newValue, int newPri, ref int pri)
+		{
+			int thisPri = pri;
+			if (newValue >= 0.0f) {
+				if (newPri > thisPri) {
+					// Priority override?
+					pri = newPri;
+					value = newValue;
+				} else if (newValue > value && newPri == thisPri)
+					// Same priority and higher value?
+					value = newValue;
+			}
+		}
+		
+		/// <summary>
 		/// Sets a UI element's flexible size.
 		/// </summary>
 		/// <param name="uiElement">The UI element to modify.</param>
@@ -257,9 +330,16 @@ namespace PeterHan.PLib.UI {
 		public static GameObject SetFlexUISize(this GameObject uiElement, Vector2 flexSize) {
 			if (uiElement == null)
 				throw new ArgumentNullException("uiElement");
-			var le = uiElement.AddOrGet<LayoutElement>();
-			le.flexibleWidth = flexSize.x;
-			le.flexibleHeight = flexSize.y;
+			var fs = uiElement.GetComponent<ISettableFlexSize>();
+			if (fs == null) {
+				var le = uiElement.AddOrGet<LayoutElement>();
+				le.flexibleWidth = flexSize.x;
+				le.flexibleHeight = flexSize.y;
+			} else {
+				// Avoid duplicate LayoutElement on layouts
+				fs.flexibleWidth = flexSize.x;
+				fs.flexibleHeight = flexSize.y;
+			}
 			return uiElement;
 		}
 
@@ -278,6 +358,37 @@ namespace PeterHan.PLib.UI {
 				le.minWidth = minX;
 			if (minY > 0.0f)
 				le.minHeight = minY;
+			return uiElement;
+		}
+
+		/// <summary>
+		/// Immediately resizes a UI element.
+		/// </summary>
+		/// <param name="uiElement">The UI element to modify.</param>
+		/// <param name="size">The new element size.</param>
+		/// <param name="addLayout">true to add a layout element with that size, or false
+		/// otherwise.</param>
+		/// <returns>The UI element, for call chaining.</returns>
+		public static GameObject SetUISize(this GameObject uiElement, Vector2 size,
+				bool addLayout = false) {
+			if (uiElement == null)
+				throw new ArgumentNullException("uiElement");
+			var transform = uiElement.AddOrGet<RectTransform>();
+			float width = size.x, height = size.y;
+			if (width >= 0.0f)
+				transform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
+			if (height >= 0.0f)
+				transform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
+			if (addLayout) {
+				var le = uiElement.AddOrGet<LayoutElement>();
+				// Set minimum and preferred size
+				le.minWidth = width;
+				le.minHeight = height;
+				le.preferredWidth = width;
+				le.preferredHeight = height;
+				le.flexibleHeight = 0.0f;
+				le.flexibleWidth = 0.0f;
+			}
 			return uiElement;
 		}
 	}

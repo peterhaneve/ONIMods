@@ -34,9 +34,9 @@ namespace PeterHan.PLib.UI {
 		/// <returns>The child image object.</returns>
 		protected static Image ImageChildHelper(GameObject parent, Sprite sprite,
 				ImageTransform rotate = ImageTransform.None, Vector2 imageSize = default) {
-			var imageChild = PUIElements.CreateUI("Image");
+			var imageChild = PUIElements.CreateUI(parent, "Image", true, PUIAnchoring.
+				Beginning, PUIAnchoring.Beginning);
 			var img = imageChild.AddComponent<Image>();
-			PUIElements.SetParent(imageChild, parent);
 			img.sprite = sprite;
 			img.preserveAspect = true;
 			// Set up transform
@@ -56,7 +56,7 @@ namespace PeterHan.PLib.UI {
 			transform.Rotate(new Vector3(0.0f, 0.0f, rot));
 			// Limit size if needed
 			if (imageSize.x > 0.0f && imageSize.y > 0.0f)
-				PUIElements.SetSizeImmediate(imageChild, imageSize);
+				imageChild.SetUISize(imageSize, true);
 			return img;
 		}
 
@@ -70,12 +70,10 @@ namespace PeterHan.PLib.UI {
 		/// <returns>The child text object.</returns>
 		protected static LocText TextChildHelper(GameObject parent, TextStyleSetting style,
 				string contents = "") {
-			var textChild = PUIElements.CreateUI("Text");
-			var locText = PUIElements.AddLocText(textChild);
-			PUIElements.SetParent(textChild, parent);
+			var textChild = PUIElements.CreateUI(parent, "Text");
+			var locText = PUIElements.AddLocText(textChild, style);
 			// Font needs to be set before the text
 			locText.alignment = TMPro.TextAlignmentOptions.Center;
-			locText.textStyleSetting = style;
 			locText.text = contents;
 			return locText;
 		}

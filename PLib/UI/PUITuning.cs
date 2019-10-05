@@ -20,6 +20,7 @@ using Harmony;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace PeterHan.PLib.UI {
 	/// <summary>
@@ -72,6 +73,26 @@ namespace PeterHan.PLib.UI {
 			public static Sprite Partial { get; }
 
 			/// <summary>
+			/// The border of a horizontal scroll bar.
+			/// </summary>
+			public static Sprite ScrollBorderHorizontal { get; }
+
+			/// <summary>
+			/// The handle of a horizontal scroll bar.
+			/// </summary>
+			public static Sprite ScrollHandleHorizontal { get; }
+
+			/// <summary>
+			/// The border of a vertical scroll bar.
+			/// </summary>
+			public static Sprite ScrollBorderVertical { get; }
+
+			/// <summary>
+			/// The handle of a vertical scroll bar.
+			/// </summary>
+			public static Sprite ScrollHandleVertical { get; }
+
+			/// <summary>
 			/// The sprite dictionary.
 			/// </summary>
 			private static readonly IDictionary<string, Sprite> SPRITES;
@@ -93,6 +114,10 @@ namespace PeterHan.PLib.UI {
 				Contract = GetSpriteByName("iconDown");
 				Expand = GetSpriteByName("iconRight");
 				Partial = GetSpriteByName("overview_jobs_icon_mixed");
+				ScrollBorderHorizontal = GetSpriteByName("build_menu_scrollbar_frame_horizontal");
+				ScrollHandleHorizontal = GetSpriteByName("build_menu_scrollbar_inner_horizontal");
+				ScrollBorderVertical = GetSpriteByName("build_menu_scrollbar_frame");
+				ScrollHandleVertical = GetSpriteByName("build_menu_scrollbar_inner");
 			}
 
 			/// <summary>
@@ -127,19 +152,24 @@ namespace PeterHan.PLib.UI {
 			internal static ColorStyleSetting ButtonBlueStyle { get; }
 
 			/// <summary>
-			/// The default colors used on check boxes with dark backgrounds.
+			/// The default colors used on check boxes / toggles with dark backgrounds.
 			/// </summary>
-			internal static ColorStyleSetting CheckboxDarkStyle { get; }
+			public static ColorStyleSetting ComponentDarkStyle { get; }
 
 			/// <summary>
-			/// The default colors used on check boxes with white backgrounds.
+			/// The default colors used on check boxes / toggles with white backgrounds.
 			/// </summary>
-			internal static ColorStyleSetting CheckboxWhiteStyle { get; }
+			public static ColorStyleSetting ComponentLightStyle { get; }
 
 			/// <summary>
 			/// The color displayed on dialog backgrounds.
 			/// </summary>
 			public static Color DialogBackground { get; }
+
+			/// <summary>
+			/// The color displayed on scrollbar handles.
+			/// </summary>
+			internal static ColorBlock ScrollbarColors { get; }
 
 			/// <summary>
 			/// The background color for selections.
@@ -178,22 +208,22 @@ namespace PeterHan.PLib.UI {
 				// Check boxes
 				Color active = new Color(0.0f, 0.0f, 0.0f), disabled = new Color(0.784f,
 					0.784f, 0.784f, 1.0f);
-				CheckboxWhiteStyle = ScriptableObject.CreateInstance<ColorStyleSetting>();
-				CheckboxWhiteStyle.activeColor = active;
-				CheckboxWhiteStyle.inactiveColor = active;
-				CheckboxWhiteStyle.hoverColor = active;
-				CheckboxWhiteStyle.disabledActiveColor = disabled;
-				CheckboxWhiteStyle.disabledColor = disabled;
-				CheckboxWhiteStyle.disabledhoverColor = disabled;
+				ComponentLightStyle = ScriptableObject.CreateInstance<ColorStyleSetting>();
+				ComponentLightStyle.activeColor = active;
+				ComponentLightStyle.inactiveColor = active;
+				ComponentLightStyle.hoverColor = active;
+				ComponentLightStyle.disabledActiveColor = disabled;
+				ComponentLightStyle.disabledColor = disabled;
+				ComponentLightStyle.disabledhoverColor = disabled;
 
 				active = new Color(1.0f, 1.0f, 1.0f);
-				CheckboxDarkStyle = ScriptableObject.CreateInstance<ColorStyleSetting>();
-				CheckboxDarkStyle.activeColor = active;
-				CheckboxDarkStyle.inactiveColor = active;
-				CheckboxDarkStyle.hoverColor = active;
-				CheckboxDarkStyle.disabledActiveColor = disabled;
-				CheckboxDarkStyle.disabledColor = disabled;
-				CheckboxDarkStyle.disabledhoverColor = disabled;
+				ComponentDarkStyle = ScriptableObject.CreateInstance<ColorStyleSetting>();
+				ComponentDarkStyle.activeColor = active;
+				ComponentDarkStyle.inactiveColor = active;
+				ComponentDarkStyle.hoverColor = active;
+				ComponentDarkStyle.disabledActiveColor = disabled;
+				ComponentDarkStyle.disabledColor = disabled;
+				ComponentDarkStyle.disabledhoverColor = disabled;
 
 				// Buttons: pink
 				ButtonPinkStyle = ScriptableObject.CreateInstance<ColorStyleSetting>();
@@ -212,6 +242,16 @@ namespace PeterHan.PLib.UI {
 				ButtonBlueStyle.disabledActiveColor = new Color(0.625f, 0.6158088f, 0.5882353f);
 				ButtonBlueStyle.hoverColor = new Color(0.3461289f, 0.3739619f, 0.4852941f);
 				ButtonBlueStyle.disabledhoverColor = new Color(0.5f, 0.4898898f, 0.4595588f);
+
+				// Scrollbars
+				ScrollbarColors = new ColorBlock {
+					colorMultiplier = 1.0f,
+					fadeDuration = 0.1f,
+					disabledColor = new Color(0.392f, 0.392f, 0.392f),
+					highlightedColor = new Color32(161, 163, 174, 255),
+					normalColor = new Color32(161, 163, 174, 255),
+					pressedColor = BackgroundLight
+				};
 			}
 		}
 
@@ -242,12 +282,12 @@ namespace PeterHan.PLib.UI {
 			/// <summary>
 			/// The text styles used on all items with a light background.
 			/// </summary>
-			internal static TextStyleSetting TextDarkStyle { get; }
+			public static TextStyleSetting TextDarkStyle { get; }
 
 			/// <summary>
 			/// The text styles used on all items with a dark background.
 			/// </summary>
-			internal static TextStyleSetting TextLightStyle { get; }
+			public static TextStyleSetting TextLightStyle { get; }
 
 			/// <summary>
 			/// The font used on UI elements.
@@ -257,12 +297,12 @@ namespace PeterHan.PLib.UI {
 			/// <summary>
 			/// The text styles used on all UI items with a light background.
 			/// </summary>
-			internal static TextStyleSetting UIDarkStyle { get; }
+			public static TextStyleSetting UIDarkStyle { get; }
 
 			/// <summary>
 			/// The text styles used on all UI items with a dark background.
 			/// </summary>
-			internal static TextStyleSetting UILightStyle { get; }
+			public static TextStyleSetting UILightStyle { get; }
 
 			/// <summary>
 			/// The font dictionary.

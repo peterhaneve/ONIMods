@@ -81,7 +81,7 @@ namespace PeterHan.PLib.UI {
 
 		public PToggle(string name) {
 			ActiveSprite = PUITuning.Images.Contract;
-			Color = PUITuning.Colors.CheckboxDarkStyle;
+			Color = PUITuning.Colors.ComponentDarkStyle;
 			Margin = TOGGLE_MARGIN;
 			Name = name ?? "Toggle";
 			InactiveSprite = PUITuning.Images.Expand;
@@ -89,7 +89,7 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public GameObject Build() {
-			var toggle = PUIElements.CreateUI(Name);
+			var toggle = PUIElements.CreateUI(null, Name);
 			// Set on click event
 			var kToggle = toggle.AddComponent<KToggle>();
 			var evt = OnStateChanged;
@@ -118,7 +118,7 @@ namespace PeterHan.PLib.UI {
 			toggleImage.DisabledHoverColor = Color.disabledhoverColor;
 			// Set size
 			if (Size.x > 0.0f && Size.y > 0.0f)
-				PUIElements.SetSizeImmediate(toggle, Size);
+				toggle.SetUISize(Size, true);
 			else
 				PUIElements.AddSizeFitter(toggle, DynamicSize);
 			// Add tooltip

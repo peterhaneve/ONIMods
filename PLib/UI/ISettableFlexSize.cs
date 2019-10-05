@@ -16,19 +16,21 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace PeterHan.SweepByType {
+using UnityEngine.UI;
+
+namespace PeterHan.PLib.UI {
 	/// <summary>
-	/// Stores the strings used in the Sweep By Type tool.
+	/// Describes a UI component whose flexible size can be mutated.
 	/// </summary>
-	static class SweepByTypeStrings {
-		// Title of material select dialog
-		public static LocString DIALOG_TITLE = "Select material to sweep";
+	internal interface ISettableFlexSize : ILayoutGroup {
+		/// <summary>
+		/// The flexible width of the completed layout group can be set.
+		/// </summary>
+		float flexibleWidth { get; set; }
 
-		// Tool name displayed in the hover card when dragging filtered (uses stock game
-		// string for the default mode)
-		public static LocString TOOL_NAME_FILTERED = "FILTERED SWEEP TOOL";
-
-		// Displayed in the tooltip action menu
-		public static LocString TOOLTIP_FILTERED = "SWEEP ONLY SELECTED ITEMS";
+		/// <summary>
+		/// The flexible height of the completed layout group can be set.
+		/// </summary>
+		float flexibleHeight { get; set; }
 	}
 }

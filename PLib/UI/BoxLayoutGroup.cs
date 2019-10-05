@@ -30,7 +30,7 @@ namespace PeterHan.PLib.UI {
 	/// 
 	/// Intended to work something like Java's BoxLayout...
 	/// </summary>
-	public sealed class BoxLayoutGroup : UIBehaviour, ILayoutGroup, ILayoutElement {
+	public sealed class BoxLayoutGroup : UIBehaviour, ISettableFlexSize, ILayoutElement {
 		/// <summary>
 		/// Calculates the size of the box layout container.
 		/// </summary>
@@ -50,7 +50,7 @@ namespace PeterHan.PLib.UI {
 					// Only on active game objects
 					components.Clear();
 					child.GetComponents(components);
-					var hc = GetSize(child, direction, components);
+					var hc = PUIUtils.GetSize(child, direction, components);
 					if (args.Direction == direction)
 						result.Accum(hc, args.Spacing);
 					else
@@ -118,7 +118,7 @@ namespace PeterHan.PLib.UI {
 					components.Clear();
 					obj.GetComponents(components);
 					foreach (var component in components)
-						if (!IgnoreLayout(component)) {
+						if (!PUIUtils.IgnoreLayout(component)) {
 							if (direction == PanelDirection.Horizontal)
 								component.SetLayoutHorizontal();
 							else // if (direction == PanelDirection.Vertical)
@@ -153,11 +153,11 @@ namespace PeterHan.PLib.UI {
 					// Place and size component
 					obj.AddOrGet<RectTransform>().SetInsetAndSizeFromParentEdge(status.edge,
 						offset + status.offset, compSize);
-					// Invoke SetLayout on dependants
+					// Invoke SetLayout on dependents
 					components.Clear();
 					obj.GetComponents(components);
 					foreach (var component in components)
-						if (!IgnoreLayout(component)) {
+						if (!PUIUtils.IgnoreLayout(component)) {
 							if (direction == PanelDirection.Horizontal)
 								component.SetLayoutVertical();
 							else // if (direction == PanelDirection.Vertical)
@@ -213,49 +213,6 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
-		/// Calculates the size of a single game object.
-		/// </summary>
-		/// <param name="obj">The object to calculate.</param>
-		/// <param name="direction">The direction to calculate.</param>
-		/// <param name="elements">The layout eligible components of this game object.</param>
-		/// <returns>The object's minimum and preferred size.</returns>
-		private static LayoutSizes GetSize(GameObject obj, PanelDirection direction,
-				IEnumerable<ILayoutElement> elements) {
-			float min = 0.0f, preferred = 0.0f, flexible = 0.0f;
-			int minPri = int.MinValue, prefPri = int.MinValue, flexPri = int.MinValue;
-			foreach (var component in elements)
-				if (((component as Behaviour)?.isActiveAndEnabled ?? false) && !IgnoreLayout(
-						component)) {
-					// Calculate must come first
-					if (direction == PanelDirection.Horizontal)
-						component.CalculateLayoutInputHorizontal();
-					else // if (direction == PanelDirection.Vertical)
-						component.CalculateLayoutInputVertical();
-					int lp = component.layoutPriority;
-					// Larger values win
-					if (direction == PanelDirection.Horizontal) {
-						PriValue(ref min, component.minWidth, lp, ref minPri);
-						PriValue(ref preferred, component.preferredWidth, lp, ref prefPri);
-						PriValue(ref flexible, component.flexibleWidth, lp, ref flexPri);
-					} else {
-						PriValue(ref min, component.minHeight, lp, ref minPri);
-						PriValue(ref preferred, component.preferredHeight, lp, ref prefPri);
-						PriValue(ref flexible, component.flexibleHeight, lp, ref flexPri);
-					}
-				}
-			return new LayoutSizes(obj, min, Math.Max(min, preferred), flexible);
-		}
-
-		/// <summary>
-		/// Reports whether the component should be ignored for layout.
-		/// </summary>
-		/// <param name="component">The component to check.</param>
-		/// <returns>true if it specifies to ignore layout, or false otherwise.</returns>
-		private static bool IgnoreLayout(object component) {
-			return (component as ILayoutIgnorer)?.ignoreLayout ?? false;
-		}
-
-		/// <summary>
 		/// Without adding a BoxLayoutGroup component to the specified object, lays it out
 		/// based on its current child and layout element sizes, then updates its preferred
 		/// and minimum sizes based on the results. The component will be laid out at a fixed
@@ -274,50 +231,30 @@ namespace PeterHan.PLib.UI {
 				throw new ArgumentNullException("obj");
 			var args = parameters ?? new BoxLayoutParams();
 			var margin = args.Margin ?? new RectOffset();
-			// Calculate
-			var horizontal = Calc(obj, args, PanelDirection.Horizontal);
-			var vertical = Calc(obj, args, PanelDirection.Vertical);
-			// Update or create fixed layout element
 			var layoutElement = obj.AddOrGet<LayoutElement>();
+			var rt = obj.rectTransform();
+			// Calculate H
+			var horizontal = Calc(obj, args, PanelDirection.Horizontal);
+			// Update or create fixed layout element
 			float hmin = horizontal.total.preferred + margin.left + margin.right,
-				vmin = vertical.total.preferred + margin.top + margin.bottom,
-				hsize = Math.Max(size.x, hmin), vsize = Math.Max(size.y, vmin);
+				hsize = Math.Max(size.x, hmin);
 			layoutElement.minWidth = hsize;
 			layoutElement.preferredWidth = hsize;
 			layoutElement.flexibleWidth = 0.0f;
+			// Size the object now
+			rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, hsize);
+			DoLayout(args, horizontal, hsize);
+			// Calculate V
+			var vertical = Calc(obj, args, PanelDirection.Vertical);
+			float vmin = vertical.total.preferred + margin.top + margin.bottom,
+				vsize = Math.Max(size.y, vmin);
 			layoutElement.minHeight = vsize;
 			layoutElement.preferredHeight = vsize;
 			layoutElement.flexibleHeight = 0.0f;
 			// Size the object now
-			var rt = obj.rectTransform();
-			rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, hsize);
 			rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, vsize);
-			// Allocate
-			DoLayout(args, horizontal, hsize);
 			DoLayout(args, vertical, vsize);
 			return obj;
-		}
-
-		/// <summary>
-		/// Aggregates layout values, replacing the value if a higher priority value is given
-		/// and otherwise taking the largest value.
-		/// </summary>
-		/// <param name="value">The current value.</param>
-		/// <param name="newValue">The candidate new value. No operation if this is less than zero.</param>
-		/// <param name="newPri">The new value's layout priority.</param>
-		/// <param name="pri">The current value's priority</param>
-		private static void PriValue(ref float value, float newValue, int newPri, ref int pri)
-		{
-			int thisPri = pri;
-			if (newValue >= 0.0f) {
-				if (newPri > thisPri) {
-					// Priority override?
-					pri = newPri;
-					value = newValue;
-				} else if (newValue > value && newPri == thisPri)
-					// Same priority and higher value?
-					value = newValue;
-			}
 		}
 
 		public float minWidth { get; private set; }
@@ -527,44 +464,6 @@ namespace PeterHan.PLib.UI {
 
 			public override string ToString() {
 				return direction + " " + total;
-			}
-		}
-
-		/// <summary>
-		/// A class representing the size sets of a particular component.
-		/// </summary>
-		private struct LayoutSizes {
-			/// <summary>
-			/// The flexible dimension value.
-			/// </summary>
-			public float flexible;
-
-			/// <summary>
-			/// The minimum dimension value.
-			/// </summary>
-			public float min;
-
-			/// <summary>
-			/// The preferred dimension value.
-			/// </summary>
-			public float preferred;
-
-			/// <summary>
-			/// The source of these values.
-			/// </summary>
-			public readonly GameObject source;
-
-			internal LayoutSizes(GameObject source, float min, float preferred,
-					float flexible) {
-				this.source = source;
-				this.flexible = flexible;
-				this.min = min;
-				this.preferred = preferred;
-			}
-
-			public override string ToString() {
-				return "LayoutSizes[min={0:F2},preferred={1:F2},flexible={2:F2}]".F(min,
-					preferred, flexible);
 			}
 		}
 
