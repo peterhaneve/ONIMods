@@ -4,6 +4,21 @@ Last tested on game version: **LU-372041**
 
 Steam Workshop: https://steamcommunity.com/profiles/76561198025154321/myworkshopfiles/?appid=457140
 
+## Local Downloads
+
+Steam sometimes serves outdated mod versions, and Oxygen Not Included is also available on the Epic Games Store.
+Local copies of these mods are available in the [Releases](https://github.com/peterhaneve/ONIMods/releases/tag/ModsLatest) section.
+These mods should be installed into the `local` folder, creating it if it does not already exist.
+Mods should remain in their own subfolder.
+
+![Local where local mods should be installed](localmods.png)
+
+* Windows: `%USERPROFILE%\Documents\Klei\OxygenNotIncluded\mods\local`
+  Replace the documents path with the path to your `Documents` folder if this folder has been redirected.
+* Mac OS and Linux: `~/Klei/OxygenNotIncluded/mods/local`
+
+**Do not use a Steam copy and a local copy of the same mod at the same time.** Disable the Steam version in the mods list before activating any local copies.
+
 # Mod List
 
 ## Minor Updates - No Mechanics Changes
