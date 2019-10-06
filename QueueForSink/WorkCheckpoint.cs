@@ -30,7 +30,7 @@ namespace PeterHan.QueueForSinks {
 #pragma warning disable IDE0044
 #pragma warning disable CS0649
 		[MyCmpReq]
-		private DirectionControl direction;
+		protected DirectionControl direction;
 #pragma warning restore CS0649
 #pragma warning restore IDE0044
 
@@ -65,8 +65,9 @@ namespace PeterHan.QueueForSinks {
 		/// Called to see if a Duplicant shall not pass!
 		/// </summary>
 		/// <param name="reactor">The Duplicant to check.</param>
+		/// <param name="direction">The X direction the Duplicant is moving.</param>
 		/// <returns>true if the Duplicant must stop, or false if they can pass</returns>
-		protected abstract bool MustStop(GameObject reactor);
+		protected abstract bool MustStop(GameObject reactor, float direction);
 
 		protected override void OnCleanUp() {
 			base.OnCleanUp();
@@ -75,17 +76,18 @@ namespace PeterHan.QueueForSinks {
 
 		protected override void OnSpawn() {
 			base.OnSpawn();
+			// Using MyCmpReq on generics was crashing
 			workable = gameObject.GetComponent<T>();
 			CreateNewReactable();
 		}
 
 		/// <summary>
-		/// A reaction which stops Duplicants in their tracks if they need to wash but the
-		/// basin is in use.
+		/// A reaction which stops Duplicants in their tracks if they need to use a workable
+		/// that is already in use.
 		/// </summary>
 		private sealed class SinkCheckpointReactable : Reactable {
 			/// <summary>
-			/// The parent sink checkpoint.
+			/// The parent work checkpoint.
 			/// </summary>
 			private readonly WorkCheckpoint<T> checkpoint;
 
@@ -100,7 +102,7 @@ namespace PeterHan.QueueForSinks {
 			private Navigator reactorNavigator;
 
 			internal SinkCheckpointReactable(WorkCheckpoint<T> checkpoint) : base(checkpoint.
-					gameObject, "SinkCheckpointReactable", Db.Get().ChoreTypes.
+					gameObject, "WorkCheckpointReactable", Db.Get().ChoreTypes.
 					Checkpoint, 1, 1) {
 				this.checkpoint = checkpoint ?? throw new ArgumentNullException("checkpoint");
 				distractedAnim = Assets.GetAnim("anim_idle_distracted_kanim");
@@ -124,7 +126,6 @@ namespace PeterHan.QueueForSinks {
 					Cleanup();
 				bool canBegin = !disposed && reactor == null;
 				if (canBegin)
-					// Must be dirty and facing the right way
 					canBegin = MustStop(newReactor, transition.x);
 				return canBegin;
 			}
@@ -139,17 +140,17 @@ namespace PeterHan.QueueForSinks {
 			}
 
 			/// <summary>
-			/// Returns whether a duplicant must stop and wait for the sink.
+			/// Returns whether a duplicant must stop and wait.
 			/// </summary>
 			/// <param name="dupe">The duplicant to check.</param>
 			/// <param name="x">The X direction they are going.</param>
 			/// <returns>true if they must wait, or false if they may pass.</returns>
 			private bool MustStop(GameObject dupe, float x) {
 				var dir = checkpoint.direction.allowedDirection;
-				// Left is decreasing X
+				// Left is decreasing X, must be facing the correct direction
 				return (dir == WorkableReactable.AllowedDirection.Any ||
 					(dir == WorkableReactable.AllowedDirection.Left) == (x < 0.0f)) &&
-					checkpoint.workable.GetWorker() != null && checkpoint.MustStop(dupe);
+					checkpoint.workable.GetWorker() != null && checkpoint.MustStop(dupe, x);
 			}
 
 			public override void Update(float dt) {

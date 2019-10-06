@@ -27,7 +27,7 @@ namespace PeterHan.PLib {
 		/// Registers a PAction with the action manager. There is no corresponding Unregister
 		/// call, so avoid spamming PActions.
 		/// 
-		/// This call should occur after PUtil.LogModInit() during the mod OnLoad(). If called
+		/// This call should occur after PUtil.InitLibrary() during the mod OnLoad(). If called
 		/// earlier, it may fail with InvalidOperationException, and if called later, the
 		/// user's custom key bind (if applicable) will be discarded.
 		/// </summary>
@@ -38,12 +38,15 @@ namespace PeterHan.PLib {
 		/// <exception cref="InvalidOperationException">If PLib is not yet initialized.</exception>
 		public static PAction Register(string identifier, LocString title,
 				PKeyBinding binding = null) {
-			object locker = PSharedData.GetData<object>(PRegistry.KEY_ACTION_LOCK);
+			// In case this call is used before the library was initialized
+			if (!PUtil.PLibInit) {
+				PUtil.InitLibrary(false);
+				PUtil.LogWarning("PUtil.InitLibrary was not called before using " +
+					"PAction.Register!");
+			}
 			int actionID;
-			if (locker == null)
-				throw new InvalidOperationException("PAction.Register called before PLib loaded!");
 			PAction action;
-			lock (locker) {
+			lock (PSharedData.GetLock(PRegistry.KEY_ACTION_LOCK)) {
 				actionID = PSharedData.GetData<int>(PRegistry.KEY_ACTION_ID);
 				if (actionID <= 0)
 					throw new InvalidOperationException("PAction action ID is not set!");

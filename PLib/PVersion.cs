@@ -27,7 +27,7 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// The PLib version.
 		/// </summary>
-		public const string VERSION = "2.12.5.0";
+		public const string VERSION = "2.12.8.0";
 
 		/// <summary>
 		/// Reports whether the PLib version included or referenced by this mod is the latest

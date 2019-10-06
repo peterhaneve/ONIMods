@@ -70,6 +70,12 @@ namespace PeterHan.PLib.Lighting {
 		/// <returns>The light shape which can be used.</returns>
 		public static PLightShape Register(string identifier, CastLight handler) {
 			PLightShape lightShape;
+			// In case this call is used before the library was initialized
+			if (!PUtil.PLibInit) {
+				PUtil.InitLibrary(false);
+				PUtil.LogWarning("PUtil.InitLibrary was not called before using " +
+					"PLightShape.Register!");
+			}
 			lock (PSharedData.GetLock(PRegistry.KEY_LIGHTING_LOCK)) {
 				// Get list holding lighting information
 				var list = PSharedData.GetData<IList<object>>(PRegistry.KEY_LIGHTING_TABLE);

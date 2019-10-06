@@ -80,38 +80,5 @@ namespace PeterHan.QueueForSinks {
 				go.AddComponent<SinkCheckpoint>();
 			}
 		}
-
-		/// <summary>
-		/// A class for a checkpoint on ore scrubbers.
-		/// </summary>
-		private sealed class ScrubberCheckpoint : WorkCheckpoint<OreScrubber.Work> {
-			protected override bool MustStop(GameObject reactor) {
-				var storage = reactor.GetComponent<Storage>();
-				bool stop = false;
-				byte noDisease = Klei.SimUtil.DiseaseInfo.Invalid.idx;
-				PrimaryElement element;
-				if (storage != null)
-					// Search all items, blacklist food, require a disease
-					foreach (var item in storage.items)
-						if (item != null && (element = item.GetComponent<PrimaryElement>()) !=
-								null && element.DiseaseIdx != noDisease && !item.HasTag(
-								GameTags.Edible)) {
-							stop = true;
-							break;
-						}
-				return stop;
-			}
-		}
-
-		/// <summary>
-		/// A class for a checkpoint on sinks.
-		/// </summary>
-		private sealed class SinkCheckpoint : WorkCheckpoint<HandSanitizer.Work> {
-			protected override bool MustStop(GameObject reactor) {
-				var element = reactor.GetComponent<PrimaryElement>();
-				return element != null && element.DiseaseIdx != Klei.SimUtil.DiseaseInfo.
-					Invalid.idx;
-			}
-		}
 	}
 }

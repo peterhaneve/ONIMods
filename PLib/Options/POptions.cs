@@ -152,6 +152,12 @@ namespace PeterHan.PLib.Options {
 		public static void RegisterOptions(Type optionsType) {
 			if (optionsType == null)
 				throw new ArgumentNullException("optionsType");
+			// In case this call is used before the library was initialized
+			if (!PUtil.PLibInit) {
+				PUtil.InitLibrary(false);
+				PUtil.LogWarning("PUtil.InitLibrary was not called before using " +
+					"RegisterOptions!");
+			}
 			var assembly = optionsType.Assembly;
 			var id = Path.GetFileName(GetModDir(assembly));
 			// Prevent concurrent modification (should be impossible anyways)

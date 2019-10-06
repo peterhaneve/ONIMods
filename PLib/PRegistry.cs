@@ -126,6 +126,13 @@ namespace PeterHan.PLib {
 						Traverse.Create(latest).CallMethod("Apply", instance.PLibInstance);
 					} catch (ArgumentException e) {
 						PUtil.LogException(e);
+					} catch (Exception e) {
+						if (e.Message?.ToLower() == "cannot get method value without method")
+							// Cannot get method value without method
+							PUtil.LogError("The first PLib mod in the load order did not " +
+								"use PUtil.InitLibrary(). PLib cannot patch correctly!");
+						else
+							PUtil.LogException(e);
 					}
 				}
 				// Reduce memory usage by cleaning up the patch list

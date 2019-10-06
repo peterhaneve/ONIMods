@@ -29,6 +29,11 @@ namespace PeterHan.PLib {
 	/// </summary>
 	public static class PUtil {
 		/// <summary>
+		/// Whether PLib has been initialized.
+		/// </summary>
+		internal static bool PLibInit { get; private set; } = false;
+
+		/// <summary>
 		/// Centers and selects an entity.
 		/// </summary>
 		/// <param name="entity">The entity to center and focus.</param>
@@ -130,17 +135,27 @@ namespace PeterHan.PLib {
 
 		/// <summary>
 		/// Initializes the PLib patch bootstrapper for shared code. <b>Must</b> be called in
-		/// Mod_OnLoad for proper PLib functionality.
+		/// OnLoad for proper PLib functionality.
 		/// 
 		/// Optionally logs the mod name and version when a mod initializes.
 		/// </summary>
 		public static void InitLibrary(bool logVersion = true) {
 			var assembly = Assembly.GetCallingAssembly();
 			if (assembly != null) {
-				PRegistry.Init();
-				if (logVersion)
-					Debug.LogFormat("[PLib] Mod {0} initialized, version {1}",
-						assembly.GetName()?.Name, assembly.GetFileVersion() ?? "Unknown");
+				bool needInit;
+				// Check if PLib was already initialized
+				lock (assembly) {
+					needInit = !PLibInit;
+					if (needInit)
+						PLibInit = true;
+				}
+				if (needInit) {
+					// Only if not already initialized
+					PRegistry.Init();
+					if (logVersion)
+						Debug.LogFormat("[PLib] Mod {0} initialized, version {1}",
+							assembly.GetName()?.Name, assembly.GetFileVersion() ?? "Unknown");
+				}
 			} else
 				// Probably impossible
 				Debug.LogError("[PLib] Somehow called from null assembly!");
@@ -242,6 +257,11 @@ namespace PeterHan.PLib {
 		public static void RegisterPostload(PostLoadHandler callback) {
 			if (callback == null)
 				throw new ArgumentNullException("callback");
+			// Some others used this call before the library was initialized
+			if (!PLibInit) {
+				InitLibrary(false);
+				LogWarning("PUtil.InitLibrary was not called before using RegisterPostload!");
+			}
 			lock (PSharedData.GetLock(PRegistry.KEY_POSTLOAD_LOCK)) {
 				// Get list holding postload information
 				var list = PSharedData.GetData<IList<PostLoadHandler>>(PRegistry.
