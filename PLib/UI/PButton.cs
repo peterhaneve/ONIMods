@@ -80,7 +80,7 @@ namespace PeterHan.PLib.UI {
 			kButton.colorStyleSetting = trueColor;
 			// Add text
 			if (!string.IsNullOrEmpty(Text))
-				PLabel.TextChildHelper(button, TextStyle ?? PUITuning.Fonts.UILightStyle, Text);
+				TextChildHelper(button, TextStyle ?? PUITuning.Fonts.UILightStyle, Text);
 			// Add tooltip
 			if (!string.IsNullOrEmpty(ToolTip))
 				button.AddComponent<ToolTip>().toolTip = ToolTip;

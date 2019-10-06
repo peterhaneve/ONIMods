@@ -3,25 +3,27 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29201.188
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PLib", "PLib\PLib.csproj", "{B6D056B5-B658-4E93-8AE2-86069196B494}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLib", "PLib\PLib.csproj", "{B6D056B5-B658-4E93-8AE2-86069196B494}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CritterInventory", "CritterInventory\CritterInventory.csproj", "{0E69A516-4440-4B16-880F-44D8F297600E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CritterInventory", "CritterInventory\CritterInventory.csproj", "{0E69A516-4440-4B16-880F-44D8F297600E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Claustrophobia", "Claustrophobia\Claustrophobia.csproj", "{8636B2F7-E6A1-44A3-8927-12C6368C2624}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Claustrophobia", "Claustrophobia\Claustrophobia.csproj", "{8636B2F7-E6A1-44A3-8927-12C6368C2624}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BulkSettingsChange", "BulkSettingsChange\BulkSettingsChange.csproj", "{7EE6FD5E-3125-4B7B-A05B-51B5A65B2C40}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BulkSettingsChange", "BulkSettingsChange\BulkSettingsChange.csproj", "{7EE6FD5E-3125-4B7B-A05B-51B5A65B2C40}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FallingSand", "FallingSand\FallingSand.csproj", "{E4030A99-A84E-4B60-AF54-926DE71F1A68}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FallingSand", "FallingSand\FallingSand.csproj", "{E4030A99-A84E-4B60-AF54-926DE71F1A68}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SweepByType", "SweepByType\SweepByType.csproj", "{50C09A12-BAA5-48EF-B26E-9FD859DEBC59}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SweepByType", "SweepByType\SweepByType.csproj", "{50C09A12-BAA5-48EF-B26E-9FD859DEBC59}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeselectNewMaterials", "DeselectNewMaterials\DeselectNewMaterials.csproj", "{AD1515FF-30EA-4422-86E2-BA5482D1ECA5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeselectNewMaterials", "DeselectNewMaterials\DeselectNewMaterials.csproj", "{AD1515FF-30EA-4422-86E2-BA5482D1ECA5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastSave", "FastSave\FastSave.csproj", "{14774678-98BE-43FC-B3DA-8345A514CF52}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastSave", "FastSave\FastSave.csproj", "{14774678-98BE-43FC-B3DA-8345A514CF52}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EfficientFetch", "EfficientFetch\EfficientFetch.csproj", "{8F30AB5F-8AC3-44D3-ABEC-0BCC17FBD775}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EfficientFetch", "EfficientFetch\EfficientFetch.csproj", "{8F30AB5F-8AC3-44D3-ABEC-0BCC17FBD775}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DecorReimagined", "DecorReimagined\DecorReimagined.csproj", "{A8477153-3849-4EF4-8A59-00B6B27F747F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DecorReimagined", "DecorReimagined\DecorReimagined.csproj", "{A8477153-3849-4EF4-8A59-00B6B27F747F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QueueForSink", "QueueForSink\QueueForSink.csproj", "{5F7960C6-558C-4258-9DAD-1443BD2D17D4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,6 +71,10 @@ Global
 		{A8477153-3849-4EF4-8A59-00B6B27F747F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A8477153-3849-4EF4-8A59-00B6B27F747F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A8477153-3849-4EF4-8A59-00B6B27F747F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F7960C6-558C-4258-9DAD-1443BD2D17D4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F7960C6-558C-4258-9DAD-1443BD2D17D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F7960C6-558C-4258-9DAD-1443BD2D17D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F7960C6-558C-4258-9DAD-1443BD2D17D4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

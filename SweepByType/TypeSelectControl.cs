@@ -26,7 +26,7 @@ namespace PeterHan.SweepByType {
 	/// <summary>
 	/// A control which allows selection of types.
 	/// </summary>
-	public sealed class TypeSelectControl {
+	public sealed class TypeSelectControl : IComparer<Tag> {
 		/// <summary>
 		/// The margin around the scrollable area to avoid stomping on the scrollbar.
 		/// </summary>
@@ -168,7 +168,7 @@ namespace PeterHan.SweepByType {
 				ScrollVertical = true, AlwaysShowVertical = true, TrackSize = 8.0f,
 				FlexSize = Vector2.one, BackColor = PUITuning.Colors.BackgroundLight
 			})).SetKleiBlueColor().BuildWithFixedSize(PANEL_SIZE);
-			children = new SortedList<Tag, TypeSelectCategory>(16);
+			children = new SortedList<Tag, TypeSelectCategory>(16, this);
 			Screen = RootPanel.AddComponent<TypeSelectScreen>();
 		}
 
@@ -197,6 +197,10 @@ namespace PeterHan.SweepByType {
 			PCheckBox.SetCheckState(allItems, PCheckBox.STATE_UNCHECKED);
 			foreach (var child in children)
 				child.Value.ClearAll();
+		}
+
+		public int Compare(Tag x, Tag y) {
+			return x.ProperName().CompareTo(y.ProperName());
 		}
 
 		private void OnCheck(GameObject source, int state) {

@@ -196,9 +196,9 @@ namespace PeterHan.PLib.UI {
 			var scale = obj.transform.localScale;
 			// Find the correct scale direction
 			if (direction == PanelDirection.Horizontal)
-				scaleFactor = scale.x;
+				scaleFactor = Math.Abs(scale.x);
 			else
-				scaleFactor = scale.y;
+				scaleFactor = Math.Abs(scale.y);
 			foreach (var component in elements)
 				if (((component as Behaviour)?.isActiveAndEnabled ?? false) && !IgnoreLayout(
 						component)) {

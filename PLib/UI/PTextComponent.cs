@@ -25,6 +25,11 @@ namespace PeterHan.PLib.UI {
 	/// </summary>
 	public abstract class PTextComponent : IDynamicSizable {
 		/// <summary>
+		/// The center of an object for pivoting.
+		/// </summary>
+		private static readonly Vector2 CENTER = new Vector2(0.5f, 0.5f);
+
+		/// <summary>
 		/// Shared routine to spawn UI image objects.
 		/// </summary>
 		/// <param name="parent">The parent object for the image.</param>
@@ -34,8 +39,11 @@ namespace PeterHan.PLib.UI {
 		/// <returns>The child image object.</returns>
 		protected static Image ImageChildHelper(GameObject parent, Sprite sprite,
 				ImageTransform rotate = ImageTransform.None, Vector2 imageSize = default) {
-			var imageChild = PUIElements.CreateUI(parent, "Image", true, PUIAnchoring.
-				Beginning, PUIAnchoring.Beginning);
+			var imageChild = PUIElements.CreateUI(parent, "Image", true,
+				PUIAnchoring.Beginning, PUIAnchoring.Beginning);
+			var rt = imageChild.rectTransform();
+			// The pivot is important here
+			rt.pivot = CENTER;
 			var img = imageChild.AddComponent<Image>();
 			img.sprite = sprite;
 			img.preserveAspect = true;

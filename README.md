@@ -34,5 +34,8 @@ Mods should remain in their own subfolder.
 | [Sweep By Type](https://steamcommunity.com/sharedfiles/filedetails/?id=1863428350) | Adds a filter to the Sweep tool to sweep only selected item types |
 
 ## New Mechanics
+|  **Name**  |  **Description**  |
+| :--------: | :---------------: |
+| [Queue for Sinks](https://steamcommunity.com/sharedfiles/filedetails/?id=1881925531) | Causes Duplicants to automatically line up to use sinks, wash basins, hand sanitizers, and ore scrubbers |
 
 ## World Generation

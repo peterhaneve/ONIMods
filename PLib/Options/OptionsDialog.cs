@@ -149,25 +149,25 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// Triggered when the Mod Options button is clicked.
 		/// </summary>
-		/// <param name="ignore">The source button.</param>
-		public void OnModOptions(GameObject ignore) {
+		public void OnModOptions(GameObject _) {
 			// Close current dialog if open
 			CloseDialog();
 			// Ensure that it is on top of other screens (which may be +100 modal)
 			var pDialog = new PDialog("ModOptions") {
 				Title = POptions.DIALOG_TITLE.text.F(modSpec.title), Size = POptions.
-				SETTINGS_DIALOG_SIZE, SortKey = 150.0f
+				SETTINGS_DIALOG_SIZE, SortKey = 150.0f, DialogBackColor = PUITuning.Colors.
+				OptionsBackground, DialogClosed = OnOptionsSelected
 			}.AddButton("ok", STRINGS.UI.CONFIRMDIALOG.OK, POptions.TOOLTIP_OK).
 			AddButton(PDialog.DIALOG_KEY_CLOSE, STRINGS.UI.CONFIRMDIALOG.CANCEL,
 				POptions.TOOLTIP_CANCEL);
 			// For each option, add its UI component to panel
 			pDialog.Body.Spacing = 3;
+			pDialog.Body.BackColor = new Color32(48, 52, 67, 255);
 			foreach (var entry in optionEntries)
 				pDialog.Body.AddChild(entry.GetUIEntry());
 			ReadOptions();
 			if (options == null)
 				CreateOptions();
-			pDialog.DialogClosed += OnOptionsSelected;
 			// Manually build the dialog so the options can be updated after realization
 			var obj = pDialog.Build();
 			UpdateOptions();

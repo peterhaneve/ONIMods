@@ -1,0 +1,167 @@
+﻿/*
+ * Copyright 2019 Peter Han
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+ * and associated documentation files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+using System;
+using UnityEngine;
+
+namespace PeterHan.QueueForSinks {
+	/// <summary>
+	/// A checkpoint component which prevents Duplicants from passing if a sink, wash basin,
+	/// or ore scrubber is in use and they could use it.
+	/// </summary>
+	public abstract class WorkCheckpoint<T> : KMonoBehaviour, ISaveLoadable where T : Workable
+	{
+		// These fields are filled in automatically by KMonoBehaviour
+#pragma warning disable IDE0044
+#pragma warning disable CS0649
+		[MyCmpReq]
+		private DirectionControl direction;
+#pragma warning restore CS0649
+#pragma warning restore IDE0044
+
+		/// <summary>
+		/// The current reaction.
+		/// </summary>
+		private SinkCheckpointReactable reactable;
+
+		/// <summary>
+		/// The workable which controls tasks.
+		/// </summary>
+		private T workable;
+
+		/// <summary>
+		/// Destroys the current reaction.
+		/// </summary>
+		private void ClearReactable() {
+			if (reactable != null) {
+				reactable.Cleanup();
+				reactable = null;
+			}
+		}
+
+		/// <summary>
+		/// Creates a new reaction.
+		/// </summary>
+		private void CreateNewReactable() {
+			reactable = new SinkCheckpointReactable(this);
+		}
+
+		/// <summary>
+		/// Called to see if a Duplicant shall not pass!
+		/// </summary>
+		/// <param name="reactor">The Duplicant to check.</param>
+		/// <returns>true if the Duplicant must stop, or false if they can pass</returns>
+		protected abstract bool MustStop(GameObject reactor);
+
+		protected override void OnCleanUp() {
+			base.OnCleanUp();
+			ClearReactable();
+		}
+
+		protected override void OnSpawn() {
+			base.OnSpawn();
+			workable = gameObject.GetComponent<T>();
+			CreateNewReactable();
+		}
+
+		/// <summary>
+		/// A reaction which stops Duplicants in their tracks if they need to wash but the
+		/// basin is in use.
+		/// </summary>
+		private sealed class SinkCheckpointReactable : Reactable {
+			/// <summary>
+			/// The parent sink checkpoint.
+			/// </summary>
+			private readonly WorkCheckpoint<T> checkpoint;
+
+			/// <summary>
+			/// The animation to play while stopped.
+			/// </summary>
+			private readonly KAnimFile distractedAnim;
+
+			/// <summary>
+			/// The navigator of the Duplicant who is waiting.
+			/// </summary>
+			private Navigator reactorNavigator;
+
+			internal SinkCheckpointReactable(WorkCheckpoint<T> checkpoint) : base(checkpoint.
+					gameObject, "SinkCheckpointReactable", Db.Get().ChoreTypes.
+					Checkpoint, 1, 1) {
+				this.checkpoint = checkpoint ?? throw new ArgumentNullException("checkpoint");
+				distractedAnim = Assets.GetAnim("anim_idle_distracted_kanim");
+				preventChoreInterruption = false;
+			}
+
+			protected override void InternalBegin() {
+				reactorNavigator = reactor.GetComponent<Navigator>();
+				// Animation to make them stand impatiently in line
+				var controller = reactor.GetComponent<KBatchedAnimController>();
+				controller.AddAnimOverrides(distractedAnim, 1f);
+				controller.Play("idle_pre", KAnim.PlayMode.Once, 1f, 0f);
+				controller.Queue("idle_default", KAnim.PlayMode.Loop, 1f, 0f);
+				checkpoint.CreateNewReactable();
+			}
+
+			public override bool InternalCanBegin(GameObject newReactor, Navigator.
+					ActiveTransition transition) {
+				bool disposed = checkpoint?.workable == null;
+				if (disposed)
+					Cleanup();
+				bool canBegin = !disposed && reactor == null;
+				if (canBegin)
+					// Must be dirty and facing the right way
+					canBegin = MustStop(newReactor, transition.x);
+				return canBegin;
+			}
+
+			protected override void InternalCleanup() {
+				reactorNavigator = null;
+			}
+
+			protected override void InternalEnd() {
+				reactor?.GetComponent<KBatchedAnimController>().RemoveAnimOverrides(
+					distractedAnim);
+			}
+
+			/// <summary>
+			/// Returns whether a duplicant must stop and wait for the sink.
+			/// </summary>
+			/// <param name="dupe">The duplicant to check.</param>
+			/// <param name="x">The X direction they are going.</param>
+			/// <returns>true if they must wait, or false if they may pass.</returns>
+			private bool MustStop(GameObject dupe, float x) {
+				var dir = checkpoint.direction.allowedDirection;
+				// Left is decreasing X
+				return (dir == WorkableReactable.AllowedDirection.Any ||
+					(dir == WorkableReactable.AllowedDirection.Left) == (x < 0.0f)) &&
+					checkpoint.workable.GetWorker() != null && checkpoint.MustStop(dupe);
+			}
+
+			public override void Update(float dt) {
+				if (checkpoint?.workable == null || reactorNavigator == null)
+					Cleanup();
+				else {
+					reactorNavigator.AdvancePath(false);
+					if (!reactorNavigator.path.IsValid() || !MustStop(reactor,
+							reactorNavigator.GetNextTransition().x))
+						Cleanup();
+				}
+			}
+		}
+	}
+}

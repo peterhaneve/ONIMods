@@ -167,6 +167,11 @@ namespace PeterHan.PLib.UI {
 			public static Color DialogBackground { get; }
 
 			/// <summary>
+			/// The color displayed on options dialog backgrounds.
+			/// </summary>
+			public static Color OptionsBackground { get; }
+
+			/// <summary>
 			/// The color displayed on scrollbar handles.
 			/// </summary>
 			internal static ColorBlock ScrollbarColors { get; }
@@ -199,6 +204,7 @@ namespace PeterHan.PLib.UI {
 			static Colors() {
 				BackgroundLight = new Color32(255, 255, 255, 255);
 				DialogBackground = new Color32(0, 0, 0, 255);
+				OptionsBackground = new Color32(31, 34, 43, 255);
 				SelectionBackground = new Color32(189, 218, 255, 255);
 				SelectionForeground = new Color32(0, 0, 0, 255);
 				Transparent = new Color32(255, 255, 255, 0);

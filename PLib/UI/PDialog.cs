@@ -41,6 +41,11 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		public PPanel Body { get; }
 
+		/// <summary>
+		/// The background color of the dialog itself (including button panel).
+		/// </summary>
+		public Color DialogBackColor { get; set; }
+
 		public string Name { get; }
 
 		/// <summary>
@@ -79,8 +84,10 @@ namespace PeterHan.PLib.UI {
 
 		public PDialog(string name) {
 			Body = new PPanel("Body") {
-				Alignment = TextAnchor.UpperCenter, FlexSize = Vector2.one
+				Alignment = TextAnchor.UpperCenter, FlexSize = Vector2.one,
+				Margin = new RectOffset(6, 6, 6, 6)
 			};
+			DialogBackColor = PUITuning.Colors.ButtonBlueStyle.inactiveColor;
 			buttons = new List<DialogButton>(4);
 			Name = name ?? "Dialog";
 			Parent = FrontEndManager.Instance.gameObject;
@@ -126,7 +133,7 @@ namespace PeterHan.PLib.UI {
 			// Buttons
 			var buttonPanel = new PPanel("Buttons") {
 				Alignment = TextAnchor.LowerCenter, Spacing = 5, Direction = PanelDirection.
-				Horizontal, Margin = new RectOffset(5, 5, 0, 5)
+				Horizontal, Margin = new RectOffset(5, 5, 5, 5)
 			};
 			// Add each user button
 			foreach (var button in buttons) {
@@ -144,9 +151,10 @@ namespace PeterHan.PLib.UI {
 			}
 			// Body, make it fill the flexible space
 			new PPanel("BodyAndButtons") {
-				Alignment = TextAnchor.MiddleCenter, Spacing = 0, Direction = PanelDirection.
-				Vertical, Margin = new RectOffset(5, 5, 5, 5), FlexSize = Vector2.one
-			}.SetKleiBlueColor().AddChild(Body).AddChild(buttonPanel).AddTo(dialog);
+				Alignment = TextAnchor.MiddleCenter, Spacing = 5, Direction = PanelDirection.
+				Vertical, Margin = new RectOffset(10, 10, 10, 5), FlexSize = Vector2.one,
+				BackColor = DialogBackColor
+			}.AddChild(Body).AddChild(buttonPanel).AddTo(dialog);
 			// Lay out components vertically
 			BoxLayoutGroup.LayoutNow(dialog, new BoxLayoutParams() {
 				Alignment = TextAnchor.UpperCenter, Margin = new RectOffset(1, 1, 1, 1),
