@@ -46,7 +46,7 @@ namespace PeterHan.DecorRework {
 			/// <summary>
 			/// Applied after CreateEquipmentDef runs.
 			/// </summary>
-			internal static void Postfix(ref EquipmentDef __result) {
+			internal static void Postfix(EquipmentDef __result) {
 				if (__result != null && Options != null) {
 					PUtil.LogDebug("Atmo Suit: {0:D}".F(Options.AtmoSuitDecor));
 					DecorTuning.TuneSuits(Options, __result);
@@ -76,8 +76,8 @@ namespace PeterHan.DecorRework {
 			/// <summary>
 			/// Applied before GetDecorForCell runs.
 			/// </summary>
-			internal static bool Prefix(ref DecorProvider __instance, int cell,
-					out float __result) {
+			internal static bool Prefix(DecorProvider __instance, int cell, out float __result)
+			{
 				bool cont = true;
 				var inst = DecorCellManager.Instance;
 				if (inst != null) {
@@ -97,7 +97,7 @@ namespace PeterHan.DecorRework {
 			/// <summary>
 			/// Applied after OnCleanUp runs.
 			/// </summary>
-			internal static void Postfix(ref DecorProvider __instance) {
+			internal static void Postfix(DecorProvider __instance) {
 				DecorCellManager.Instance?.DestroyDecor(__instance);
 			}
 		}
@@ -110,7 +110,7 @@ namespace PeterHan.DecorRework {
 			/// <summary>
 			/// Applied after OnSpawn runs.
 			/// </summary>
-			internal static void Postfix(ref DecorProvider __instance) {
+			internal static void Postfix(DecorProvider __instance) {
 				DecorCellManager.Instance?.RegisterDecor(__instance);
 			}
 		}
@@ -123,7 +123,7 @@ namespace PeterHan.DecorRework {
 			/// <summary>
 			/// Applied before Refresh runs.
 			/// </summary>
-			internal static bool Prefix(ref DecorProvider __instance) {
+			internal static bool Prefix(DecorProvider __instance) {
 				var obj = __instance.gameObject;
 				var inst = DecorCellManager.Instance;
 				bool cont = true;
@@ -171,7 +171,7 @@ namespace PeterHan.DecorRework {
 			/// <summary>
 			/// Applied after CreateEquipmentDef runs.
 			/// </summary>
-			internal static void Postfix(ref EquipmentDef __result) {
+			internal static void Postfix(EquipmentDef __result) {
 				if (__result != null && Options != null) {
 					PUtil.LogDebug("Jet Suit: {0:D}".F(Options.AtmoSuitDecor));
 					DecorTuning.TuneSuits(Options, __result);

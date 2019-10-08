@@ -48,7 +48,7 @@ namespace PeterHan.EfficientFetch {
 			/// <summary>
 			/// Applied before FindFetchTarget runs.
 			/// </summary>
-			internal static bool Prefix(ref FetchChore __instance, ref ChoreConsumerState
+			internal static bool Prefix(FetchChore __instance, ChoreConsumerState
 					consumer_state, ref Pickupable __result) {
 				var inst = EfficientFetchManager.Instance;
 				bool cont = true;
@@ -66,9 +66,9 @@ namespace PeterHan.EfficientFetch {
 			/// <summary>
 			/// Applied before UpdatePickups runs.
 			/// </summary>
-			internal static bool Prefix(ref FetchManager.FetchablesByPrefabId __instance,
-					ref Navigator worker_navigator, ref GameObject worker_go,
-					ref Dictionary<int, int> ___cellCosts) {
+			internal static bool Prefix(FetchManager.FetchablesByPrefabId __instance,
+					Navigator worker_navigator, GameObject worker_go,
+					Dictionary<int, int> ___cellCosts) {
 				var inst = EfficientFetchManager.Instance;
 				bool cont = true;
 				if (inst != null && options.MinimumAmountPercent > 0)

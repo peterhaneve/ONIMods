@@ -23,6 +23,9 @@ namespace PeterHan.QueueForSinks {
 	/// A class for a checkpoint on ore scrubbers.
 	/// </summary>
 	public sealed class ScrubberCheckpoint : WorkCheckpoint<OreScrubber.Work> {
+		// Scrubbers are 3x3
+		private const int OFFSET = 3;
+
 		/// <summary>
 		/// Checks for another usable ore scrubber in the specified direction. It is assumed
 		/// that the current scrubber already requires a stop in that direction.
@@ -33,11 +36,9 @@ namespace PeterHan.QueueForSinks {
 		private bool CheckForOtherScrubber(bool dir) {
 			var scrubber = gameObject;
 			bool stop = true;
-			if (scrubber != null) {
-				int cell = Grid.PosToCell(scrubber);
-				// Scrubbers are 3x3
-				for (int i = 0; i < 3 && Grid.IsValidBuildingCell(cell); i++)
-					cell = dir ? Grid.CellRight(cell) : Grid.CellLeft(cell);
+			int cell;
+			if (scrubber != null && Grid.IsValidCell(cell = Grid.PosToCell(scrubber))) {
+				cell = Grid.OffsetCell(cell, new CellOffset(dir ? OFFSET : -OFFSET, 0));
 				// Is cell valid?
 				if (Grid.IsValidBuildingCell(cell)) {
 					var nScrub = Grid.Objects[cell, (int)ObjectLayer.Building];

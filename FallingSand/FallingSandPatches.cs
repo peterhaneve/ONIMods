@@ -54,7 +54,7 @@ namespace PeterHan.FallingSand {
 		/// </summary>
 		[HarmonyPatch(typeof(Diggable), "OnWorkTick")]
 		public static class Diggable_OnWorkTick_Patch {
-			internal static void Postfix(ref Diggable __instance) {
+			internal static void Postfix(Diggable __instance) {
 				FallingSandManager.Instance.TrackDiggable(__instance);
 			}
 		}
@@ -64,7 +64,7 @@ namespace PeterHan.FallingSand {
 		/// </summary>
 		[HarmonyPatch(typeof(Diggable), "OnCleanUp")]
 		public static class Diggable_OnCleanUp_Patch {
-			internal static void Postfix(ref Diggable __instance) {
+			internal static void Postfix(Diggable __instance) {
 				FallingSandManager.Instance.UntrackDiggable(__instance);
 			}
 		}
@@ -86,7 +86,7 @@ namespace PeterHan.FallingSand {
 		[HarmonyPatch(typeof(UnstableGroundManager), "Spawn", typeof(int), typeof(Element),
 			typeof(float), typeof(float), typeof(byte), typeof(int))]
 		public static class UnstableGroundManager_Spawn_Patch {
-			internal static void Postfix(ref List<GameObject> ___fallingObjects, int cell) {
+			internal static void Postfix(List<GameObject> ___fallingObjects, int cell) {
 				int n = ___fallingObjects.Count;
 				GameObject obj;
 				Diggable cause;
@@ -114,7 +114,7 @@ namespace PeterHan.FallingSand {
 		/// </summary>
 		[HarmonyPatch(typeof(UnstableGroundManager), "RemoveFromPending")]
 		public static class UnstableGroundManager_RemoveFromPending_Patch {
-			internal static void Postfix(int cell, ref List<int> ___pendingCells) {
+			internal static void Postfix(int cell, List<int> ___pendingCells) {
 				FallingSandManager.Instance.CheckDigQueue(cell);
 				if (___pendingCells.Count < 1)
 					FallingSandManager.Instance.ClearDig();
@@ -127,7 +127,7 @@ namespace PeterHan.FallingSand {
 		/// </summary>
 		[HarmonyPatch(typeof(UnstableGroundManager), "Update")]
 		public static class UnstableGroundManager_Update_Patch {
-			internal static void Prefix(ref List<GameObject> ___fallingObjects) {
+			internal static void Prefix(List<GameObject> ___fallingObjects) {
 				foreach (var obj in ___fallingObjects)
 					if (obj != null)
 						CheckFallingObject(obj);

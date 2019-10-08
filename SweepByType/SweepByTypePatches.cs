@@ -71,7 +71,7 @@ namespace PeterHan.SweepByType {
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
 			/// <param name="__instance">The current instance.</param>
-			internal static void Postfix(ref PlayerController __instance) {
+			internal static void Postfix(PlayerController __instance) {
 				// Create list so that new tool can be appended at the end
 				var interfaceTools = new List<InterfaceTool>(__instance.tools);
 				var filteredSweepTool = new GameObject(typeof(FilteredClearTool).Name);
@@ -95,7 +95,7 @@ namespace PeterHan.SweepByType {
 			/// <summary>
 			/// Applied after CreateBasicTools runs.
 			/// </summary>
-			internal static void Postfix(ref ToolMenu __instance) {
+			internal static void Postfix(ToolMenu __instance) {
 				var filteredSweep = ToolMenu.CreateToolCollection(STRINGS.UI.TOOLS.
 					MARKFORSTORAGE.NAME, "icon_action_store", Action.Clear,
 					"FilteredClearTool", STRINGS.UI.TOOLTIPS.CLEARBUTTON, false);

@@ -53,8 +53,8 @@ namespace PeterHan.CritterInventory {
 			/// <param name="__instance">The current resource entry.</param>
 			/// <param name="is_hovering">true if the user is hovering, or false otherwise</param>
 			/// <param name="___HighlightColor">The highlight color from the instance.</param>
-			internal static void Postfix(ref ResourceEntry __instance, bool is_hovering,
-					ref Color ___HighlightColor) {
+			internal static void Postfix(ResourceEntry __instance, bool is_hovering,
+					Color ___HighlightColor) {
 				var info = __instance.gameObject.GetComponent<CritterResourceInfo>();
 				if (info != null) {
 					var hlc = ___HighlightColor;
@@ -62,8 +62,7 @@ namespace PeterHan.CritterInventory {
 					Tag species = __instance.Resource;
 					CritterInventoryUtils.IterateCreatures((creature) => {
 						if (creature.PrefabID() == species && type.Matches(creature))
-							PUtil.HighlightEntity(creature, is_hovering ? hlc : Color.
-								black);
+							PUtil.HighlightEntity(creature, is_hovering ? hlc : Color.black);
 					});
 				}
 			}
@@ -79,7 +78,7 @@ namespace PeterHan.CritterInventory {
 			/// </summary>
 			/// <param name="__instance">The current resource entry.</param>
 			/// <param name="___selectionIdx">The current selection index.</param>
-			internal static void Postfix(ref ResourceEntry __instance, ref int ___selectionIdx)
+			internal static void Postfix(ResourceEntry __instance, ref int ___selectionIdx)
 			{
 				var info = __instance.gameObject.GetComponent<CritterResourceInfo>();
 				if (info != null) {
@@ -113,16 +112,15 @@ namespace PeterHan.CritterInventory {
 			/// <param name="__instance">The current resource category header.</param>
 			/// <param name="is_hovering">true if the user is hovering, or false otherwise.</param>
 			/// <param name="___highlightColour">The highlight color from the instance.</param>
-			internal static void Postfix(ref ResourceCategoryHeader __instance,
-					bool is_hovering, ref Color ___highlightColour) {
+			internal static void Postfix(ResourceCategoryHeader __instance,
+					bool is_hovering, Color ___highlightColour) {
 				var info = __instance.gameObject.GetComponent<CritterResourceInfo>();
 				if (info != null) {
-					var hlc = ___highlightColour;
 					CritterType type = info.CritterType;
 					// It is a creature header, highlight all matching
 					CritterInventoryUtils.IterateCreatures((creature) => {
 						if (type.Matches(creature))
-							PUtil.HighlightEntity(creature, is_hovering ? hlc :
+							PUtil.HighlightEntity(creature, is_hovering ? ___highlightColour :
 								Color.black);
 					});
 				}
@@ -142,7 +140,7 @@ namespace PeterHan.CritterInventory {
 			/// Applied before UpdateContents runs.
 			/// </summary>
 			/// <param name="__instance">The current resource category header.</param>
-			internal static bool Prefix(ref ResourceCategoryHeader __instance) {
+			internal static bool Prefix(ResourceCategoryHeader __instance) {
 				var info = __instance.gameObject.GetComponent<CritterResourceInfo>();
 				// UpdateContents adds spurious entries (e.g. babies when only adults ever
 				// discovered) on critters
@@ -162,8 +160,8 @@ namespace PeterHan.CritterInventory {
 			/// </summary>
 			/// <param name="__instance">The current resource category list.</param>
 			/// <param name="___Prefab_CategoryBar">The category bar prefab used to create categories.</param>
-			internal static void Postfix(ref ResourceCategoryScreen __instance,
-					ref GameObject ___Prefab_CategoryBar) {
+			internal static void Postfix(ResourceCategoryScreen __instance,
+					GameObject ___Prefab_CategoryBar) {
 				critterTame = CritterResourceHeader.Create(__instance, ___Prefab_CategoryBar,
 					CritterType.Tame);
 				critterWild = CritterResourceHeader.Create(__instance, ___Prefab_CategoryBar,

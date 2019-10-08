@@ -93,8 +93,8 @@ namespace PeterHan.FastSave {
 		/// <summary>
 		/// Applied before OnSerializing runs.
 		/// </summary>
-		internal static void OnSerializing_Prefix(ref List<Operational.TimeEntry>
-				___activeTimes, ref List<Operational.TimeEntry> ___inactiveTimes) {
+		internal static void OnSerializing_Prefix(List<Operational.TimeEntry> ___activeTimes,
+				List<Operational.TimeEntry> ___inactiveTimes) {
 			float now = GameClock.Instance.GetTime();
 			CleanTimes(___activeTimes, now);
 			CleanTimes(___inactiveTimes, now);
@@ -123,7 +123,7 @@ namespace PeterHan.FastSave {
 			/// <summary>
 			/// Applied after OnNightTime runs.
 			/// </summary>
-			internal static void Postfix(ref List<ReportManager.DailyReport> ___dailyReports) {
+			internal static void Postfix(List<ReportManager.DailyReport> ___dailyReports) {
 				int keep, n = ___dailyReports.Count;
 				// Select the threshold based on settings
 				switch (options.Mode) {
@@ -163,8 +163,8 @@ namespace PeterHan.FastSave {
 			/// <summary>
 			/// Applied after Refresh runs.
 			/// </summary>
-			internal static void Postfix(ref KButton ___prevButton,
-					ref ReportManager.DailyReport ___currentReport) {
+			internal static void Postfix(ReportManager.DailyReport ___currentReport,
+					KButton ___prevButton) {
 				int prevDay = ___currentReport.day - 1;
 				if (ReportManager.Instance.FindReport(prevDay) == null)
 					// Do not allow previous day if it cannot be found
@@ -181,8 +181,8 @@ namespace PeterHan.FastSave {
 			/// Applied after ConfigureGraph runs.
 			/// </summary>
 			internal static void Postfix(RetiredColonyData.RetiredColonyStatistic statistic,
-					ref Dictionary<string, GameObject> ___activeColonyWidgets,
-					ref Dictionary<string, Color> ___statColors) {
+					Dictionary<string, GameObject> ___activeColonyWidgets,
+					Dictionary<string, Color> ___statColors) {
 				var reports = ReportManager.Instance?.reports;
 				if (___activeColonyWidgets.TryGetValue(statistic.name, out GameObject obj)) {
 					// Find first remaining report's cycle index

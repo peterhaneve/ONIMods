@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
 using UnityEngine;
 
 namespace PeterHan.QueueForSinks {
@@ -24,6 +23,9 @@ namespace PeterHan.QueueForSinks {
 	/// A class for a checkpoint on sinks.
 	/// </summary>
 	public sealed class SinkCheckpoint : WorkCheckpoint<HandSanitizer.Work> {
+		// Sinks are 2x3
+		private const int OFFSET = 2;
+
 		/// <summary>
 		/// Checks for another usable sink in the specified direction. It is assumed that the
 		/// current sink already requires a stop in that direction.
@@ -34,11 +36,10 @@ namespace PeterHan.QueueForSinks {
 		private bool CheckForOtherSink(bool dir) {
 			var sink = gameObject;
 			bool stop = true;
-			if (sink != null) {
-				int cell = Grid.PosToCell(sink);
+			int cell;
+			if (sink != null && Grid.IsValidCell(cell = Grid.PosToCell(sink))) {
 				// Sinks are 2x2
-				for (int i = 0; i < 2 && Grid.IsValidBuildingCell(cell); i++)
-					cell = dir ? Grid.CellRight(cell) : Grid.CellLeft(cell);
+				cell = Grid.OffsetCell(cell, new CellOffset(dir ? OFFSET : -OFFSET, 0));
 				// Is cell valid?
 				if (Grid.IsValidBuildingCell(cell)) {
 					var nSink = Grid.Objects[cell, (int)ObjectLayer.Building];

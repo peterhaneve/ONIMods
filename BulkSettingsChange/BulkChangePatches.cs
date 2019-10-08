@@ -95,7 +95,7 @@ namespace PeterHan.BulkSettingsChange {
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
 			/// <param name="___icons">The icon list where the icon can be added.</param>
-			internal static void Postfix(ref List<Sprite> ___icons) {
+			internal static void Postfix(List<Sprite> ___icons) {
 				___icons.Add(SpriteRegistry.GetToolIcon());
 			}
 		}
@@ -109,7 +109,7 @@ namespace PeterHan.BulkSettingsChange {
 			/// Applied after CreateBasicTools runs.
 			/// </summary>
 			/// <param name="__instance">The basic tool list.</param>
-			internal static void Postfix(ref ToolMenu __instance) {
+			internal static void Postfix(ToolMenu __instance) {
 				PUtil.LogDebug("Adding BulkChangeTool to basic tools");
 				__instance.basicTools.Add(ToolMenu.CreateToolCollection(BulkChangeStrings.
 					TOOL_TITLE, BulkChangeStrings.TOOL_ICON_NAME, BulkChangeAction.GetKAction(),
