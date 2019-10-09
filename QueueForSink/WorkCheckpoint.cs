@@ -37,7 +37,7 @@ namespace PeterHan.QueueForSinks {
 		/// <summary>
 		/// The current reaction.
 		/// </summary>
-		private SinkCheckpointReactable reactable;
+		private WorkCheckpointReactable reactable;
 
 		/// <summary>
 		/// The workable which controls tasks.
@@ -58,7 +58,7 @@ namespace PeterHan.QueueForSinks {
 		/// Creates a new reaction.
 		/// </summary>
 		private void CreateNewReactable() {
-			reactable = new SinkCheckpointReactable(this);
+			reactable = new WorkCheckpointReactable(this);
 		}
 
 		/// <summary>
@@ -85,7 +85,7 @@ namespace PeterHan.QueueForSinks {
 		/// A reaction which stops Duplicants in their tracks if they need to use a workable
 		/// that is already in use.
 		/// </summary>
-		private sealed class SinkCheckpointReactable : Reactable {
+		private sealed class WorkCheckpointReactable : Reactable {
 			/// <summary>
 			/// The parent work checkpoint.
 			/// </summary>
@@ -101,7 +101,7 @@ namespace PeterHan.QueueForSinks {
 			/// </summary>
 			private Navigator reactorNavigator;
 
-			internal SinkCheckpointReactable(WorkCheckpoint<T> checkpoint) : base(checkpoint.
+			internal WorkCheckpointReactable(WorkCheckpoint<T> checkpoint) : base(checkpoint.
 					gameObject, "WorkCheckpointReactable", Db.Get().ChoreTypes.
 					Checkpoint, 1, 1) {
 				this.checkpoint = checkpoint ?? throw new ArgumentNullException("checkpoint");

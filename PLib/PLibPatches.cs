@@ -64,7 +64,7 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Applied to Light2D to properly attribute lighting sources.
 		/// </summary>
-		private static bool AddToScenePartitioner_Prefix(ref Light2D __instance,
+		private static bool AddToScenePartitioner_Prefix(Light2D __instance,
 				ref IntHandle ___solidPartitionerEntry,
 				ref IntHandle ___liquidPartitionerEntry) {
 			var lm = PLightManager.Instance;
@@ -91,14 +91,14 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Applied to ModsScreen if mod options are registered, after BuildDisplay runs.
 		/// </summary>
-		private static void BuildDisplay_Postfix(ref object ___displayedMods) {
+		private static void BuildDisplay_Postfix(object ___displayedMods) {
 			POptions.BuildDisplay(___displayedMods);
 		}
 
 		/// <summary>
 		/// Applied to KeyDef (constructor) to adjust array lengths if necessary.
 		/// </summary>
-		private static void CKeyDef_Postfix(ref KInputController.KeyDef __instance) {
+		private static void CKeyDef_Postfix(KInputController.KeyDef __instance) {
 			__instance.mActionFlags = PActionManager.ExtendFlags(__instance.mActionFlags,
 				PActionManager.Instance.GetMaxAction());
 		}
@@ -106,8 +106,8 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Applied to LightGridEmitter to compute the lux values properly.
 		/// </summary>
-		private static bool ComputeLux_Prefix(ref LightGridEmitter __instance, int cell,
-				ref LightGridEmitter.State ___state, ref int __result) {
+		private static bool ComputeLux_Prefix(LightGridEmitter __instance, int cell,
+				LightGridEmitter.State ___state, ref int __result) {
 			var lm = PLightManager.Instance;
 			return lm == null || !lm.GetBrightness(__instance, cell, ___state, out __result);
 		}
@@ -127,7 +127,7 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Applied to DiscreteShadowCaster to handle lighting requests.
 		/// </summary>
-		private static bool GetVisibleCells_Prefix(int cell, ref List<int> visiblePoints,
+		private static bool GetVisibleCells_Prefix(int cell, List<int> visiblePoints,
 				int range, LightShape shape) {
 			bool exec = true;
 			var lm = PLightManager.Instance;
@@ -148,7 +148,7 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Applied to LightShapePreview to properly attribute lighting sources.
 		/// </summary>
-		private static void LightShapePreview_Update_Prefix(ref LightShapePreview __instance) {
+		private static void LightShapePreview_Update_Prefix(LightShapePreview __instance) {
 			var lm = PLightManager.Instance;
 			var obj = __instance.gameObject;
 			if (lm != null && obj != null)
@@ -158,7 +158,7 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Applied to Rotatable to rotate light previews if a visualizer is rotated.
 		/// </summary>
-		private static void OrientVisualizer_Postfix(ref Rotatable __instance) {
+		private static void OrientVisualizer_Postfix(Rotatable __instance) {
 			var obj = __instance.gameObject;
 			LightShapePreview preview;
 			// Force regeneration on next Update()
@@ -170,7 +170,7 @@ namespace PeterHan.PLib {
 		/// Applied to KInputController to adjust array lengths if necessary.
 		/// </summary>
 		private static void QueueButtonEvent_Prefix(ref bool[] ___mActionState,
-				ref KInputController.KeyDef key_def) {
+				KInputController.KeyDef key_def) {
 			if (KInputManager.isFocused) {
 				int max = PActionManager.Instance.GetMaxAction();
 				key_def.mActionFlags = PActionManager.ExtendFlags(key_def.mActionFlags, max);
@@ -181,7 +181,7 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Applied to LightGridEmitter to properly attribute lighting sources.
 		/// </summary>
-		private static void RefreshShapeAndPosition_Postfix(ref Light2D __instance) {
+		private static void RefreshShapeAndPosition_Postfix(Light2D __instance) {
 			var lm = PLightManager.Instance;
 			var obj = __instance.gameObject;
 			if (lm != null && obj != null)
@@ -191,7 +191,7 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Applied to LightGridEmitter to clean up the trash when it is removed from grid.
 		/// </summary>
-		private static void RemoveFromGrid_Postfix(ref LightGridEmitter __instance) {
+		private static void RemoveFromGrid_Postfix(LightGridEmitter __instance) {
 			PLightManager.Instance?.DestroyLight(__instance);
 		}
 
@@ -206,8 +206,8 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Applied to LightGridEmitter to update lit cells upon a lighting request.
 		/// </summary>
-		private static bool UpdateLitCells_Prefix(ref LightGridEmitter __instance,
-				ref List<int> ___litCells, ref LightGridEmitter.State ___state) {
+		private static bool UpdateLitCells_Prefix(LightGridEmitter __instance,
+				List<int> ___litCells, LightGridEmitter.State ___state) {
 			var lm = PLightManager.Instance;
 			return lm == null || !lm.UpdateLitCells(__instance, ___state, ___litCells);
 		}
@@ -286,9 +286,9 @@ namespace PeterHan.PLib {
 
 #pragma warning restore IDE0051 // Remove unused private members
 
-		#endregion
+#endregion
 
-		#region Infrastructure
+#region Infrastructure
 
 		/// <summary>
 		/// Returns a patch method from this class. It must be static.
@@ -341,6 +341,6 @@ namespace PeterHan.PLib {
 			return "PLibPatches version " + MyVersion;
 		}
 
-		#endregion
+#endregion
 	}
 }
