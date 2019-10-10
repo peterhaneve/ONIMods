@@ -18,7 +18,6 @@
 
 using Harmony;
 using PeterHan.PLib;
-using UnityEngine;
 
 namespace PeterHan.QueueForSinks {
 	/// <summary>
@@ -30,54 +29,29 @@ namespace PeterHan.QueueForSinks {
 		}
 
 		/// <summary>
-		/// Applied to HandSanitizerConfig to add a checkpoint for hand sanitizers.
+		/// Applied to HandSanitizer.Work to add a checkpoint for hand sanitizers, sinks, and
+		/// wash basins.
 		/// </summary>
-		[HarmonyPatch(typeof(HandSanitizerConfig), "DoPostConfigureComplete")]
-		public static class HandSanitizerConfig_DoPostConfigureComplete_Patch {
+		[HarmonyPatch(typeof(HandSanitizer.Work), "OnPrefabInit")]
+		public static class HandSanitizer_Work_OnPrefabInit_Patch {
 			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
+			/// Applied after OnPrefabInit runs.
 			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddComponent<SinkCheckpoint>();
+			internal static void Postfix(HandSanitizer.Work __instance) {
+				__instance.gameObject?.AddComponent<SinkCheckpoint>();
 			}
 		}
 
 		/// <summary>
-		/// Applied to OreScrubberConfig to add a checkpoint for ore scrubbers.
+		/// Applied to OreScrubber.Work to add a checkpoint for ore scrubbers.
 		/// </summary>
-		[HarmonyPatch(typeof(OreScrubberConfig), "DoPostConfigureComplete")]
-		public static class OreScrubberConfig_DoPostConfigureComplete_Patch {
+		[HarmonyPatch(typeof(OreScrubber.Work), "OnPrefabInit")]
+		public static class OreScrubberConfig_OnPrefabInit_Patch {
 			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
+			/// Applied after OnPrefabInit runs.
 			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddComponent<ScrubberCheckpoint>();
-			}
-		}
-
-		/// <summary>
-		/// Applied to WashBasinConfig to add a checkpoint for wash basins.
-		/// </summary>
-		[HarmonyPatch(typeof(WashBasinConfig), "DoPostConfigureComplete")]
-		public static class WashBasinConfig_DoPostConfigureComplete_Patch {
-			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddComponent<SinkCheckpoint>();
-			}
-		}
-
-		/// <summary>
-		/// Applied to WashSinkConfig to add a checkpoint for sinks.
-		/// </summary>
-		[HarmonyPatch(typeof(WashSinkConfig), "DoPostConfigureComplete")]
-		public static class WashSinkConfig_DoPostConfigureComplete_Patch {
-			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddComponent<SinkCheckpoint>();
+			internal static void Postfix(OreScrubber.Work __instance) {
+				__instance.gameObject?.AddComponent<ScrubberCheckpoint>();
 			}
 		}
 	}
