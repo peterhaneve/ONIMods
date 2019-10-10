@@ -2,5 +2,8 @@
 	{ id:"MetalTile", decor:5, radius:2 },
 	{ id:"CarpetTile", decor:10, radius:3 },
 	{ id:"SuitLocker", decor:0, radius: 1 },
-	{ id:"SuitSuitMarker", decor:0, radius: 1 },
+	{ id:"SuitMarker", decor:0, radius: 1 },
+	{ id:"MonumentTop", decor:40, radius: 5 },
+	{ id:"MonumentMiddle", decor:40, radius: 5 },
+	{ id:"MonumentBottom", decor:30, radius: 5 },
 ]

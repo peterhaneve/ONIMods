@@ -20,6 +20,7 @@ using Harmony;
 using PeterHan.PLib;
 using PeterHan.PLib.Options;
 using System;
+using UnityEngine;
 
 namespace PeterHan.DecorRework {
 	/// <summary>
@@ -164,6 +165,19 @@ namespace PeterHan.DecorRework {
 		}
 
 		/// <summary>
+		/// Applied to adjust sculpture art decor levels.
+		/// </summary>
+		[HarmonyPatch(typeof(IceSculptureConfig), "DoPostConfigureComplete")]
+		public static class IceSculptureConfig_DoPostConfigureComplete_Patch {
+			/// <summary>
+			/// Applied after DoPostConfigureComplete runs.
+			/// </summary>
+			internal static void Postfix(GameObject go) {
+				Options?.ApplyToSculpture(go);
+			}
+		}
+
+		/// <summary>
 		/// Applied to JetSuitConfig to patch the jet suit to look ugly.
 		/// </summary>
 		[HarmonyPatch(typeof(JetSuitConfig), "CreateEquipmentDef")]
@@ -195,6 +209,80 @@ namespace PeterHan.DecorRework {
 					HardMode));
 				PUtil.LogDebug("Loading decor database");
 				DecorTuning.ApplyDatabase(Options);
+			}
+		}
+
+		/// <summary>
+		/// Applied to adjust sculpture art decor levels.
+		/// </summary>
+		[HarmonyPatch(typeof(MarbleSculptureConfig), "DoPostConfigureComplete")]
+		public static class MarbleSculptureConfig_DoPostConfigureComplete_Patch {
+			/// <summary>
+			/// Applied after DoPostConfigureComplete runs.
+			/// </summary>
+			internal static void Postfix(GameObject go) {
+				Options?.ApplyToSculpture(go);
+			}
+		}
+
+		/// <summary>
+		/// Applied to adjust sculpture art decor levels.
+		/// </summary>
+		[HarmonyPatch(typeof(MetalSculptureConfig), "DoPostConfigureComplete")]
+		public static class MetalSculptureConfig_DoPostConfigureComplete_Patch {
+			/// <summary>
+			/// Applied after DoPostConfigureComplete runs.
+			/// </summary>
+			internal static void Postfix(GameObject go) {
+				Options?.ApplyToSculpture(go);
+			}
+		}
+
+		/// <summary>
+		/// Applied to adjust sculpture art decor levels.
+		/// </summary>
+		[HarmonyPatch(typeof(SculptureConfig), "DoPostConfigureComplete")]
+		public static class SculptureConfig_DoPostConfigureComplete_Patch {
+			/// <summary>
+			/// Applied after DoPostConfigureComplete runs.
+			/// </summary>
+			internal static void Postfix(GameObject go) {
+				Options?.ApplyToSculpture(go);
+			}
+		}
+
+		/// <summary>
+		/// Applied to adjust sculpture art decor levels.
+		/// </summary>
+		[HarmonyPatch(typeof(SmallSculptureConfig), "DoPostConfigureComplete")]
+		public static class SmallSculptureConfig_DoPostConfigureComplete_Patch {
+			/// <summary>
+			/// Applied after DoPostConfigureComplete runs.
+			/// </summary>
+			internal static void Postfix(GameObject go) {
+				Options?.ApplyToSculpture(go);
+			}
+		}
+
+		/// <summary>
+		/// Applied to UglyCryChore.States to make ugly criers more ugly!
+		/// </summary>
+		[HarmonyPatch(typeof(UglyCryChore.States), "InitializeStates")]
+		public static class UglyCryChore_InitializeStates_Patch {
+			/// <summary>
+			/// Applied after InitializeStates runs.
+			/// </summary>
+			internal static void Postfix(Klei.AI.Effect ___uglyCryingEffect) {
+				string decorID = Db.Get().Attributes.Decor.Id;
+				int uglyDecor = Math.Min(0, Options?.UglyCrierDecor ?? -30);
+				foreach (var modifier in ___uglyCryingEffect.SelfModifiers)
+					if (modifier.AttributeId == decorID) {
+#if DEBUG
+						PUtil.LogDebug("Ugly Crier: {0:D}".F());
+#endif
+						modifier.SetValue(uglyDecor);
+						break;
+					}
 			}
 		}
 	}
