@@ -4,7 +4,6 @@ spriteName: Asteroid_icysandstone
 coordinatePrefix: S-100K
 difficulty: 6
 tier: 2
-disableWorldTraits: true
 
 worldsize:
   X: 256
