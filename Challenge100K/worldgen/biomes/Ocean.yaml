@@ -1,0 +1,22 @@
+TerrainBiomeLookupTable:
+  # keys to remove from in-memory structure when this file is loaded
+  remove: [] 
+  # elements to add from in-memory structure when this file is loaded
+  add:
+    Frigid:
+    - content: Granite
+      bandSize: 0.05
+    - content: SedimentaryRock
+      bandSize: 0.10
+    - content: BleachStone
+      bandSize: 0.05
+    - content: Sand
+      bandSize: 0.25
+    - content: SolidCarbonDioxide
+      bandSize: 0.1
+      overrides:
+        massMultiplier: 1000.0
+    - content: Hydrogen
+      bandSize: 0.25
+    - content: BrineIce
+      bandSize: 0.45

@@ -1,0 +1,28 @@
+biomeNoise: noise/Sandstone
+temperatureRange: ExtremelyCold
+pdWeight: 0.5
+density:
+  min: 65
+  max: 65
+avoidRadius: 65.0
+doAvoidPoints: false
+dontRelaxChildren: true
+sampleBehaviour: PoissonDisk
+borderOverride: rocky
+biomes:
+  - name: biomes/Sedimentary/Frigid_CO2
+    weight: 1
+    tags:
+      - Hatch
+      - HatchBuried
+      - BasicForagePlant
+      - BasicForagePlantPlanted
+centralFeature:
+  type: features/sedimentary/SmallLake
+features: []
+tags:
+  - IgnoreCaveOverride
+  - NoGlobalFeatureSpawning
+  - StartWorld
+pointsOfInterest:
+zoneType: Sandstone

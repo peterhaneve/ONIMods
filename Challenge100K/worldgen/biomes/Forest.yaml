@@ -1,0 +1,32 @@
+TerrainBiomeLookupTable:
+  # keys to remove from in-memory structure when this file is loaded
+  remove: [] 
+  # elements to add from in-memory structure when this file is loaded
+  add:
+    Frigid:
+    - content: AluminumOre
+      bandSize: 0.02
+    - content: IgneousRock
+      bandSize: 0.03
+    - content: Dirt
+      bandSize: 0.025
+    - content: IgneousRock
+      bandSize: 0.03
+    - content: Dirt
+      bandSize: 0.10
+    - content: IgneousRock
+      bandSize: 0.05
+    - content: Dirt
+      bandSize: 0.10
+    - content: IgneousRock
+      bandSize: 0.03
+    - content: OxyRock
+      bandSize: 0.01
+    - content: Snow
+      bandSize: 0.05
+    - content: Oxygen
+      bandSize: 0.35
+    - content: SolidCarbonDioxide
+      bandSize: 0.30
+      overrides:
+        massMultiplier: 1000.0

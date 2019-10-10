@@ -1,0 +1,51 @@
+biomeNoise: noise/SandstoneStart
+temperatureRange: VeryCold
+pdWeight: 2
+density:
+  min: 10
+  max: 20
+avoidRadius: 20.0
+minChildCount: 6
+doAvoidPoints: false
+dontRelaxChildren: true
+sampleBehaviour: PoissonDisk
+borderOverride: rocky
+biomes:
+  - name: biomes/Sedimentary/Frigid
+    weight: 4
+    tags:
+      - LightBug
+      - PrickleFlower
+      - PrickleFlowerSeed
+      - PrickleGrass
+      - PrickleGrassSeed
+      - Hatch
+      - HatchBuried  
+      - BasicSingleHarvestPlantSeed
+      - BasicSingleHarvestPlant
+      - BasicForagePlant
+      - BasicForagePlantPlanted
+  - name: biomes/Sedimentary/Metal_Frigid
+    weight: 2
+    tags:   
+      - Hatch
+      - HatchBuried
+      - BasicForagePlant
+      - BasicForagePlantPlanted
+  - name: biomes/Sedimentary/Frigid_CO2
+    weight: 1
+    tags:
+      - Hatch
+      - HatchBuried
+      - BasicForagePlant
+      - BasicForagePlantPlanted
+centralFeature:
+  type: features/generic/StartLocation
+features:
+  - type: features/sedimentary/SmallLake
+  - type: features/sedimentary/FlatLake
+tags:
+  - IgnoreCaveOverride
+  - NoGlobalFeatureSpawning
+  - StartWorld
+zoneType: Sandstone

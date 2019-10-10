@@ -1,0 +1,48 @@
+TerrainBiomeLookupTable:
+  # keys to remove from in-memory structure when this file is loaded
+  remove: [] 
+  # elements to add from in-memory structure when this file is loaded
+  add:
+    Frigid:
+    - content: Algae
+      bandSize: 0.1
+    - content: Clay
+      bandSize: 0.3
+    - content: Algae
+      bandSize: 0.2
+    - content: Clay
+      bandSize: 0.3
+    - content: SlimeMold
+      bandSize: 0.125
+    - content: SlimeMold
+      bandSize: 0.125
+    - content: Algae
+      bandSize: 0.2
+    - content: Clay
+      bandSize: 0.3
+    - content: SlimeMold
+      bandSize: 0.2
+    - content: Clay
+      bandSize: 0.3
+    - content: SlimeMold
+      bandSize: 0.2
+    - content: Clay
+      bandSize: 0.4
+    - content: SlimeMold
+      bandSize: 2
+    - content: SedimentaryRock
+      bandSize: 1
+    - content: GoldAmalgam
+      bandSize: 1
+    - content: SlimeMold
+      bandSize: 0.125
+    - content: ContaminatedOxygen
+      bandSize: 1
+    - content: DirtyIce
+      bandSize: 0.125
+    - content: SolidCarbonDioxide
+      bandSize: 1
+      overrides:
+        massMultiplier: 1000.0
+    - content: DirtyIce
+      bandSize: 0.75

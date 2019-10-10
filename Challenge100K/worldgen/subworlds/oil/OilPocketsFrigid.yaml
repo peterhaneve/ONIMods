@@ -1,0 +1,33 @@
+biomeNoise: noise/OilPockets
+temperatureRange: 11
+minChildCount: 2
+density:
+  min: 35
+  max: 45
+avoidRadius: 50.0
+sampleBehaviour: PoissonDisk
+biomes:
+  - name: biomes/Oil/OilPocketsFrigid
+    weight: 1
+    tags:
+      - CactusPlantSeed
+      - EvilFlowerSeed
+pointsOfInterest:
+ geysers_a:
+  - poi_oilpockets_geyser_a
+  - poi_oilpockets_geyser_b
+  - poi_oilpockets_geyser_c    
+ geysers_b:
+  - poi_oilpockets_geyser_d
+  - poi_oilpockets_geyser_e
+  - poi_oilpockets_geyser_f
+ geysers_c:
+  - poi_oilpockets_geyser_a
+  - poi_oilpockets_geyser_b
+  - poi_oilpockets_geyser_c
+  - poi_oilpockets_geyser_d
+  - poi_oilpockets_geyser_e
+  - poi_oilpockets_geyser_f
+tags:
+  - IgnoreCaveOverride
+zoneType: OilField

@@ -1,0 +1,18 @@
+TerrainBiomeLookupTable:
+  # keys to remove from in-memory structure when this file is loaded
+  remove: [] 
+  # elements to add from in-memory structure when this file is loaded
+  add:
+    Frigid:
+    - content: IronOre
+      bandSize: 0.03
+    - content: MaficRock
+      bandSize: 0.1
+    - content: Rust
+      bandSize: 0.35  
+    - content: Snow
+      bandSize: 0.05
+    - content: SolidCarbonDioxide
+      bandSize: 0.75
+      overrides:
+        massMultiplier: 1000.0

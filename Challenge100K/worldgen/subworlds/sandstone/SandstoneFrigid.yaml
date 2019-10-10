@@ -1,0 +1,36 @@
+biomeNoise: noise/Sandstone
+temperatureRange: 11
+density:
+  min: 10
+  max: 20
+avoidRadius: 20.0
+doAvoidPoints: false
+dontRelaxChildren: true
+sampleBehaviour: PoissonDisk
+biomes:
+  - name: biomes/Sedimentary/Frigid
+    weight: 4
+    tags:
+      - PrickleFlowerSeed
+      - PrickleGrassSeed
+      - HatchBuried  
+      - BasicSingleHarvestPlantSeed
+      - BasicForagePlant
+  - name: biomes/Sedimentary/Metal_Frigid
+    weight: 2
+    tags:   
+      - HatchBuried
+      - BasicForagePlantPlanted
+  - name: biomes/Sedimentary/Frigid_CO2
+    weight: 1
+    tags:
+      - HatchBuried
+      - BasicForagePlantPlanted
+features:
+  - type: features/sedimentary/SmallFrozenLake
+  - type: features/sedimentary/MetalVacuumBlob
+  - type: features/sedimentary/FlatFrozenLake
+  - type: features/sedimentary/MediumFrozenLake  
+tags:
+  - IgnoreCaveOverride
+zoneType: Sandstone

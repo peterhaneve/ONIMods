@@ -1,0 +1,34 @@
+biomeNoise: noise/subworldFrozen
+temperatureRange: 11
+minChildCount: 4
+density:
+  min: 10
+  max: 20
+avoidRadius: 20.0
+sampleBehaviour: PoissonDisk
+biomes:
+  - name: biomes/Frozen/Solid
+    weight: 1
+    tags:
+      - ColdWheat
+      - ColdWheatSeed
+      - ColdBreather
+tags:
+  - IgnoreCaveOverride
+pointsOfInterest:
+   heatsinks_a:
+    - poi_ice_heatsink_a
+    - poi_ice_heatsink_b
+    - poi_ice_heatsink_c
+    - poi_ice_heatsink_d
+   heatsinks_b:
+    - poi_ice_heatsink_a
+    - poi_ice_heatsink_b
+    - poi_ice_heatsink_c
+    - poi_ice_heatsink_d
+   heatsinks_c:
+    - poi_ice_heatsink_a
+    - poi_ice_heatsink_b
+    - poi_ice_heatsink_c
+    - poi_ice_heatsink_d
+zoneType: FrozenWastes

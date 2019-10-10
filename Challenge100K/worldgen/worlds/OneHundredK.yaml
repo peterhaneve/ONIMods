@@ -1,0 +1,106 @@
+name: STRINGS.WORLDS.ONEHUNDREDK.NAME
+description: STRINGS.WORLDS.ONEHUNDREDK.DESCRIPTION
+spriteName: Asteroid_icysandstone
+coordinatePrefix: S-100K
+difficulty: 6
+tier: 2
+disableWorldTraits: true
+
+worldsize:
+  X: 256
+  Y: 384
+layoutMethod: PowerTree
+
+# List all the zone files to load
+subworldFiles:
+  - name: subworlds/sandstone/SandstoneStartFrigid
+  - name: subworlds/sandstone/SandstoneFrigid
+  - name: subworlds/sandstone/SandstoneMiniMetalFrigid
+  - name: subworlds/sandstone/SandstoneMiniWaterFrigid
+  - name: subworlds/sandstone/SandstoneMiniAlgaeFrigid
+  - name: subworlds/marsh/MarshFrigid
+  - name: subworlds/jungle/JungleFrigid
+  - name: subworlds/frozen/FrozenFrigid
+  - name: subworlds/Impenetrable
+  - name: subworlds/magma/MagmaFrigid
+  - name: subworlds/oil/OilPocketsFrigid
+  - name: subworlds/space/SpaceFrigid
+  - name: subworlds/space/SurfaceFrigid
+  - name: subworlds/ocean/OceanFrigid
+  - name: subworlds/rust/RustFrigid
+  - name: subworlds/forest/ForestFrigid
+
+startSubworldName: subworlds/sandstone/SandstoneStartFrigid
+startingBaseTemplate: sandstoneBase
+startingBasePositionHorizontal:
+  min: 0.4
+  max: 0.5
+startingBasePositionVertical:
+  min: 0.45
+  max: 0.55
+
+globalFeatureTemplates:
+  feature_geyser_generic: 16
+
+# When we are converting unknown cells, this will give us the options, processed in this order, the effects are cumlative
+unknownCellsAllowedSubworlds: 
+  - tagcommand: Default
+    command: Replace
+    subworldNames:
+      - subworlds/sandstone/SandstoneStartFrigid
+  - tagcommand: DistanceFromTag
+    tag: AtStart
+    minDistance: 1
+    maxDistance: 1
+    command: Replace
+    subworldNames:
+      - subworlds/sandstone/SandstoneMiniMetalFrigid
+      - subworlds/sandstone/SandstoneMiniWaterFrigid
+      - subworlds/sandstone/SandstoneMiniAlgaeFrigid
+  - tagcommand: DistanceFromTag
+    tag: AtStart
+    minDistance: 2
+    maxDistance: 2
+    command: Replace
+    subworldNames:
+      - subworlds/marsh/MarshFrigid
+      - subworlds/jungle/JungleFrigid
+      - subworlds/ocean/OceanFrigid
+      - subworlds/rust/RustFrigid
+  - tagcommand: DistanceFromTag
+    tag: AtStart
+    minDistance: 3
+    maxDistance: 999
+    command: Replace
+    subworldNames:
+      - subworlds/forest/ForestFrigid
+      - subworlds/marsh/MarshFrigid
+      - subworlds/jungle/JungleFrigid
+      - subworlds/ocean/OceanFrigid
+      - subworlds/sandstone/SandstoneFrigid
+      - subworlds/rust/RustFrigid
+      - subworlds/frozen/FrozenFrigid
+  - tagcommand: AtTag
+    tag: AtDepths
+    command: Replace
+    subworldNames:
+      - subworlds/oil/OilPocketsFrigid
+  - tagcommand: DistanceFromTag
+    tag: AtDepths
+    minDistance: 1
+    maxDistance: 1
+    command: Replace
+    subworldNames:
+      - subworlds/oil/OilPocketsFrigid
+  - tagcommand: AtTag
+    tag: AtSurface
+    command: Replace
+    subworldNames:
+      - subworlds/space/SpaceFrigid
+  - tagcommand: DistanceFromTag
+    tag: AtSurface
+    minDistance: 1
+    maxDistance: 1
+    command: Replace
+    subworldNames:
+      - subworlds/space/SurfaceFrigid

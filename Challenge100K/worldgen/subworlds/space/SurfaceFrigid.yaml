@@ -1,0 +1,18 @@
+biomeNoise: noise/subworldFrozen
+temperatureRange: 11
+minChildCount: 1
+density:
+  min: 70
+  max: 70
+avoidRadius: 50.0
+sampleBehaviour: PoissonDisk
+biomes:
+  - name: biomes/Misc/Surface
+    weight: 1
+    tags:
+      - Mole
+tags:
+  - IgnoreCaveOverride
+  - ErodePointToWorldTop
+  - NoGlobalFeatureSpawning
+zoneType: Space

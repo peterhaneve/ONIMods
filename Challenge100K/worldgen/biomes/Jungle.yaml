@@ -1,0 +1,40 @@
+TerrainBiomeLookupTable:
+  # keys to remove from in-memory structure when this file is loaded
+  remove: [] 
+  # elements to add from in-memory structure when this file is loaded
+  add:
+    Frigid:
+    - content: Phosphorite
+      bandSize: 0.5
+    - content: Carbon
+      bandSize: 0.5
+    - content: IgneousRock
+      bandSize: 1.5
+    - content: IronOre
+      bandSize: 0.5
+    - content: Algae
+      bandSize: 0.25
+    - content: SolidChlorine
+      bandSize: 0.5
+      overrides:
+        massMultiplier: 1000.0
+    - content: Hydrogen
+      bandSize: 0.5
+    - content: Phosphorite
+      bandSize: 0.5
+    - content: Carbon
+      bandSize: 0.5
+    - content: IgneousRock
+      bandSize: 1.5
+    - content: Algae
+      bandSize: 0.25
+    - content: IronOre
+      bandSize: 0.5
+    - content: IgneousRock
+      bandSize: 1.5
+    - content: Carbon
+      bandSize: 0.5
+    - content: Phosphorite
+      bandSize: 1
+    - content: Algae
+      bandSize: 0.25

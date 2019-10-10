@@ -1,0 +1,90 @@
+TerrainBiomeLookupTable:
+  # keys to remove from in-memory structure when this file is loaded
+  remove: [] 
+  # elements to add from in-memory structure when this file is loaded
+  add:
+    Frigid:
+    - content: SandStone
+      bandSize: 0.2
+    - content: Sand
+      bandSize: 0.15
+    - content: Dirt
+      bandSize: 0.2
+    - content: Algae
+      bandSize: 0.4
+    - content: Cuprite
+      bandSize: 0.06
+      overrides:
+        massOverride: 200
+    - content: OxyRock
+      bandSize: 0.04
+    - content: Snow
+      bandSize: 0.2
+    - content: Oxygen
+      bandSize: 1.1
+    Frigid_CO2:
+    - content: SandStone
+      bandSize: 0.2
+    - content: Cuprite
+      bandSize: 0.15
+      overrides:
+        massOverride: 200
+    - content: Dirt
+      bandSize: 0.2
+    - content: Algae
+      bandSize: 0.4
+    - content: Cuprite
+      bandSize: 0.06
+      overrides:
+        massOverride: 200
+    - content: SolidCarbonDioxide
+      bandSize: 1
+      overrides:
+        massMultiplier: 10.0
+    Frigid_Vacuum:
+    - content: SandStone
+      bandSize: 0.2
+    - content: Dirt
+      bandSize: 0.2
+    - content: Cuprite
+      bandSize: 0.1
+      overrides:
+        massOverride: 200
+    - content: Vacuum
+      bandSize: 1
+    Metal_Frigid:
+    - content: SandStone
+      bandSize: 0.2
+    - content: Sand
+      bandSize: 0.15
+    - content: Dirt
+      bandSize: 0.1
+    - content: Cuprite
+      bandSize: 0.25
+      overrides:
+        massOverride: 1200
+    - content: Carbon
+      bandSize: 0.2
+    - content: SolidCarbonDioxide
+      bandSize: 0.7
+      overrides:
+        massMultiplier: 100.0
+    - content: Cuprite
+      bandSize: 0.8
+      overrides:
+        massOverride: 1200
+    - content: Dirt
+      bandSize: 0.2
+    Lake_Frigid:
+    - content: SandStone
+      bandSize: 0.2
+    - content: Sand
+      bandSize: 0.15
+    - content: Dirt
+      bandSize: 0.2
+    - content: Algae
+      bandSize: 0.3
+    - content: Oxygen
+      bandSize: 0.8
+    - content: Ice
+      bandSize: 0.5

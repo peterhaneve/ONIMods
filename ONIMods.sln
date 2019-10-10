@@ -25,6 +25,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DecorReimagined", "DecorRei
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QueueForSink", "QueueForSink\QueueForSink.csproj", "{5F7960C6-558C-4258-9DAD-1443BD2D17D4}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Challenge100K", "Challenge100K\Challenge100K.csproj", "{A509A4BA-68E0-4C85-AA0E-5AB4A64D503B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,10 @@ Global
 		{5F7960C6-558C-4258-9DAD-1443BD2D17D4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5F7960C6-558C-4258-9DAD-1443BD2D17D4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5F7960C6-558C-4258-9DAD-1443BD2D17D4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A509A4BA-68E0-4C85-AA0E-5AB4A64D503B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A509A4BA-68E0-4C85-AA0E-5AB4A64D503B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A509A4BA-68E0-4C85-AA0E-5AB4A64D503B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A509A4BA-68E0-4C85-AA0E-5AB4A64D503B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

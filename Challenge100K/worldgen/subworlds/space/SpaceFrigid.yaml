@@ -1,0 +1,16 @@
+biomeNoise: noise/Generic
+temperatureRange: 11
+minChildCount: 4
+density:
+  min: 35
+  max: 45
+avoidRadius: 50.0
+sampleBehaviour: PoissonDisk
+biomes:
+  - name: biomes/Misc/Space
+    weight: 1
+pointsOfInterest:
+tags:
+  - IgnoreCaveOverride
+  - NoGlobalFeatureSpawning
+zoneType: Space
