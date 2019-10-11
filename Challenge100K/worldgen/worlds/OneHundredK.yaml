@@ -21,7 +21,6 @@ subworldFiles:
   - name: subworlds/jungle/JungleFrigid
   - name: subworlds/frozen/FrozenFrigid
   - name: subworlds/Impenetrable
-  - name: subworlds/magma/MagmaFrigid
   - name: subworlds/oil/OilPocketsFrigid
   - name: subworlds/space/SpaceFrigid
   - name: subworlds/space/SurfaceFrigid

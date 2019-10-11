@@ -40,7 +40,7 @@ TerrainBiomeLookupTable:
     - content: SolidCarbonDioxide
       bandSize: 1
       overrides:
-        massMultiplier: 10.0
+        massOverride: 10
     Frigid_Vacuum:
     - content: SandStone
       bandSize: 0.2
@@ -68,7 +68,7 @@ TerrainBiomeLookupTable:
     - content: SolidCarbonDioxide
       bandSize: 0.7
       overrides:
-        massMultiplier: 100.0
+        massOverride: 100
     - content: Cuprite
       bandSize: 0.8
       overrides:
