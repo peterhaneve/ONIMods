@@ -17,7 +17,7 @@ TerrainBiomeLookupTable:
     - content: SolidChlorine
       bandSize: 0.5
       overrides:
-        massMultiplier: 1000.0
+        massOverride: 1000.0
     - content: Hydrogen
       bandSize: 0.5
     - content: Phosphorite

@@ -43,6 +43,6 @@ TerrainBiomeLookupTable:
     - content: SolidCarbonDioxide
       bandSize: 1
       overrides:
-        massMultiplier: 1000.0
+        massOverride: 1000.0
     - content: DirtyIce
       bandSize: 0.75

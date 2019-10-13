@@ -29,4 +29,4 @@ TerrainBiomeLookupTable:
     - content: SolidCarbonDioxide
       bandSize: 0.30
       overrides:
-        massMultiplier: 1000.0
+        massOverride: 1000.0
