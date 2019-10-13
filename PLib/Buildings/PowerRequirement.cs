@@ -18,36 +18,30 @@
 
 using System;
 
-namespace PeterHan.PLib {
+namespace PeterHan.PLib.Buildings {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// Stores related information about a building's power requirements.
 	/// </summary>
-	public static class PVersion {
+	public class PowerRequirement {
 		/// <summary>
-		/// The PLib version.
+		/// The maximum building wattage.
 		/// </summary>
-		public const string VERSION = "2.14.0.0";
+		public float MaxWattage { get; }
 
 		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in Mod_OnLoad, and will always return false in those cases.
+		/// The location of the plug related to the foundation tile.
 		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				bool latest = false;
-				try {
-					latest = new Version(VERSION) == PSharedData.GetData<Version>(PRegistry.
-						KEY_VERSION);
-				} catch (OverflowException) {
-				} catch (FormatException) {
-				} catch (ArgumentOutOfRangeException) {
-				}
-				return latest;
-			}
+		public CellOffset PlugLocation { get; }
+
+		public PowerRequirement(float wattage, CellOffset plugLocation) {
+			if (wattage.IsNaNOrInfinity() || wattage < 0.0f)
+				throw new ArgumentException("wattage");
+			MaxWattage = wattage;
+			PlugLocation = plugLocation;
+		}
+
+		public override string ToString() {
+			return "Power[Watts={0:F0},Location={1}]".F(MaxWattage, PlugLocation);
 		}
 	}
 }

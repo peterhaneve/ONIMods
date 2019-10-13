@@ -37,5 +37,6 @@ Mods should remain in their own subfolder.
 |  **Name**  |  **Description**  |
 | :--------: | :---------------: |
 | [Queue for Sinks](https://steamcommunity.com/sharedfiles/filedetails/?id=1881925531) | Causes Duplicants to automatically line up to use sinks, wash basins, hand sanitizers, and ore scrubbers |
+| [Smart Pumps](https://forums.kleientertainment.com/forums/topic/91094-the-mystery-about-pump-range/) | Adds new, smarter liquid and gas pumps for specific situations |
 
 ## World Generation

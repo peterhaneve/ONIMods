@@ -26,6 +26,7 @@ using System.Reflection.Emit;
 
 using LightGridEmitter = LightGridManager.LightGridEmitter;
 using IntHandle = HandleVector<int>.Handle;
+using PeterHan.PLib.Buildings;
 
 namespace PeterHan.PLib {
 	/// <summary>
@@ -125,6 +126,17 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Applied to BuildingTemplates to properly debug missing building anims.
+		/// </summary>
+		private static void CreateBuildingDef_Postfix(BuildingDef __result, string anim,
+				string id) {
+			var animFiles = __result?.AnimFiles;
+			if (animFiles != null && animFiles.Length > 0 && animFiles[0] == null)
+				Debug.LogWarningFormat("(when looking for KAnim named {0} on building {1})",
+					anim, id);
+		}
+
+		/// <summary>
 		/// Applied to DiscreteShadowCaster to handle lighting requests.
 		/// </summary>
 		private static bool GetVisibleCells_Prefix(int cell, List<int> visiblePoints,
@@ -135,6 +147,13 @@ namespace PeterHan.PLib {
 				// This is not a customer scenario
 				exec = !lm.GetVisibleCells(cell, visiblePoints, range, shape);
 			return exec;
+		}
+
+		/// <summary>
+		/// Applied to Db to register PLib buildings.
+		/// </summary>
+		private static void Initialize_Prefix() {
+			PBuilding.AddAllTechs();
 		}
 
 		/// <summary>
@@ -153,6 +172,13 @@ namespace PeterHan.PLib {
 			var obj = __instance.gameObject;
 			if (lm != null && obj != null)
 				lm.CallingObject = obj;
+		}
+
+		/// <summary>
+		/// Applied to GeneratedBuildings to register PLib buildings.
+		/// </summary>
+		private static void LoadGeneratedBuildings_Prefix() {
+			PBuilding.AddAllStrings();
 		}
 
 		/// <summary>
@@ -222,60 +248,70 @@ namespace PeterHan.PLib {
 
 			// GameInputMapping
 			instance.Patch(typeof(GameInputMapping), "SetDefaultKeyBindings", null,
-				PatchMethod("SetDefaultKeyBindings_Postfix"));
+				PatchMethod(nameof(SetDefaultKeyBindings_Postfix)));
 
 			// KInputController
 			instance.PatchConstructor(typeof(KInputController.KeyDef), new Type[] {
 				typeof(KKeyCode), typeof(Modifier)
-			}, null, PatchMethod("CKeyDef_Postfix"));
+			}, null, PatchMethod(nameof(CKeyDef_Postfix)));
 			instance.Patch(typeof(KInputController), "IsActive",
-				PatchMethod("IsActive_Prefix"), null);
+				PatchMethod(nameof(IsActive_Prefix)), null);
 			instance.Patch(typeof(KInputController), "QueueButtonEvent",
-				PatchMethod("QueueButtonEvent_Prefix"), null);
+				PatchMethod(nameof(QueueButtonEvent_Prefix)), null);
 
 			if (PLightManager.InitInstance()) {
 				// DiscreteShadowCaster
 				instance.Patch(typeof(DiscreteShadowCaster), "GetVisibleCells",
-					PatchMethod("GetVisibleCells_Prefix"), null);
+					PatchMethod(nameof(GetVisibleCells_Prefix)), null);
 
 				// Light2D
 				instance.Patch(typeof(Light2D), "AddToScenePartitioner",
-					PatchMethod("AddToScenePartitioner_Prefix"), null);
+					PatchMethod(nameof(AddToScenePartitioner_Prefix)), null);
 				instance.Patch(typeof(Light2D), "RefreshShapeAndPosition", null,
-					PatchMethod("RefreshShapeAndPosition_Postfix"));
+					PatchMethod(nameof(RefreshShapeAndPosition_Postfix)));
 
 				// LightGridEmitter
 				instance.Patch(typeof(LightGridEmitter), "AddToGrid", null,
-					PatchMethod("AddToGrid_Postfix"));
+					PatchMethod(nameof(AddToGrid_Postfix)));
 				instance.Patch(typeof(LightGridEmitter), "ComputeLux",
-					PatchMethod("ComputeLux_Prefix"), null);
+					PatchMethod(nameof(ComputeLux_Prefix)), null);
 				instance.Patch(typeof(LightGridEmitter), "RemoveFromGrid",
-					null, PatchMethod("RemoveFromGrid_Postfix"));
+					null, PatchMethod(nameof(RemoveFromGrid_Postfix)));
 				instance.Patch(typeof(LightGridEmitter), "UpdateLitCells",
-					PatchMethod("UpdateLitCells_Prefix"), null);
+					PatchMethod(nameof(UpdateLitCells_Prefix)), null);
 
 				// LightGridManager
 				instance.Patch(typeof(LightGridManager), "CreatePreview",
-					PatchMethod("CreatePreview_Prefix"), null);
+					PatchMethod(nameof(CreatePreview_Prefix)), null);
 
 				// LightShapePreview
 				instance.Patch(typeof(LightShapePreview), "Update",
-					PatchMethod("LightShapePreview_Update_Prefix"), null);
+					PatchMethod(nameof(LightShapePreview_Update_Prefix)), null);
 
 				// Rotatable
 				instance.Patch(typeof(Rotatable), "OrientVisualizer", null,
-					PatchMethod("OrientVisualizer_Postfix"));
+					PatchMethod(nameof(OrientVisualizer_Postfix)));
+			}
+
+			// PBuilding
+			instance.Patch(typeof(BuildingTemplates), "CreateBuildingDef", null,
+				PatchMethod(nameof(CreateBuildingDef_Postfix)));
+			if (PBuilding.CheckBuildings()) {
+				instance.Patch(typeof(Db), "Initialize",
+					PatchMethod(nameof(Initialize_Prefix)), null);
+				instance.Patch(typeof(GeneratedBuildings), "LoadGeneratedBuildings",
+					PatchMethod(nameof(LoadGeneratedBuildings_Prefix)), null);
 			}
 
 			// ModsScreen
 			POptions.Init();
 			instance.Patch(typeof(ModsScreen), "BuildDisplay", null,
-				PatchMethod("BuildDisplay_Postfix"));
+				PatchMethod(nameof(BuildDisplay_Postfix)));
 
 			// SteamUGCService
 			try {
 				instance.PatchTranspile(typeof(SteamUGCService), "LoadPreviewImage",
-					PatchMethod("LoadPreviewImage_Transpile"));
+					PatchMethod(nameof(LoadPreviewImage_Transpile)));
 			} catch (TypeLoadException) {
 				// Not a Steam install, ignoring
 			}

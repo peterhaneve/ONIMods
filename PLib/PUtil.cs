@@ -34,6 +34,23 @@ namespace PeterHan.PLib {
 		internal static bool PLibInit { get; private set; } = false;
 
 		/// <summary>
+		/// Adds the name and description for a status item.
+		/// 
+		/// Must be used before the StatusItem is first instantiated.
+		/// </summary>
+		/// <param name="id">The status item ID.</param>
+		/// <param name="category">The status item category.</param>
+		/// <param name="name">The name to display in the UI.</param>
+		/// <param name="desc">The description to display in the UI.</param>
+		public static void AddStatusItemStrings(string id, string category, string name,
+				string desc) {
+			string uid = id.ToUpperInvariant();
+			string ucategory = category.ToUpperInvariant();
+			Strings.Add("STRINGS." + ucategory + ".STATUSITEMS." + uid + ".NAME", name);
+			Strings.Add("STRINGS." + ucategory + ".STATUSITEMS." + uid + ".TOOLTIP", desc);
+		}
+
+		/// <summary>
 		/// Centers and selects an entity.
 		/// </summary>
 		/// <param name="entity">The entity to center and focus.</param>

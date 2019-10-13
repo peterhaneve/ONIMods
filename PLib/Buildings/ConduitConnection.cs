@@ -17,37 +17,30 @@
  */
 
 using System;
+using System.Collections.Generic;
 
-namespace PeterHan.PLib {
+namespace PeterHan.PLib.Buildings {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// Represents a pipe connection to a building.
 	/// </summary>
-	public static class PVersion {
+	public class ConduitConnection {
 		/// <summary>
-		/// The PLib version.
+		/// The conduit location.
 		/// </summary>
-		public const string VERSION = "2.14.0.0";
+		public CellOffset Location { get; }
 
 		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in Mod_OnLoad, and will always return false in those cases.
+		/// The conduit type.
 		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				bool latest = false;
-				try {
-					latest = new Version(VERSION) == PSharedData.GetData<Version>(PRegistry.
-						KEY_VERSION);
-				} catch (OverflowException) {
-				} catch (FormatException) {
-				} catch (ArgumentOutOfRangeException) {
-				}
-				return latest;
-			}
+		public ConduitType Type { get; }
+
+		public ConduitConnection(ConduitType type, CellOffset location) {
+			Location = location;
+			Type = type;
+		}
+
+		public override string ToString() {
+			return "Connection[Type={0},Location={1}]".F(Type, Location);
 		}
 	}
 }

@@ -46,6 +46,16 @@ namespace PeterHan.PLib {
 		public const string KEY_ACTION_TABLE = "PLib.Action.Table";
 
 		/// <summary>
+		/// Used to synchronize access to PLib building data.
+		/// </summary>
+		public const string KEY_BUILDING_LOCK = "PLib.Building.Lock";
+
+		/// <summary>
+		/// Stores the registered PLib buildings.
+		/// </summary>
+		public const string KEY_BUILDING_TABLE = "PLib.Building.Table";
+
+		/// <summary>
 		/// Used to synchronize access to PLib.Lighting data.
 		/// </summary>
 		public const string KEY_LIGHTING_LOCK = "PLib.Lighting.Lock";
