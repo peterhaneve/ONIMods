@@ -43,7 +43,8 @@ namespace PeterHan.PLib.Buildings {
 			if (buildingTable == null)
 				throw new InvalidOperationException("Building table not loaded");
 			lock (PSharedData.GetLock(PRegistry.KEY_BUILDING_LOCK)) {
-				PUtil.LogDebug("Register strings for {0:D} buildings".F(buildingTable.Count));
+				PRegistry.LogPatchDebug("Register strings for {0:D} buildings".F(
+					buildingTable.Count));
 				foreach (var building in buildingTable)
 					if (building != null) {
 						var trBuilding = Traverse.Create(building);
@@ -52,12 +53,12 @@ namespace PeterHan.PLib.Buildings {
 						if (addStr.MethodExists())
 							addStr.GetValue();
 						else
-							PUtil.LogError("Invalid building strings in buildings table!");
+							PRegistry.LogPatchWarning("Invalid building strings!");
 						var addMenu = trBuilding.Method(nameof(AddPlan));
 						if (addMenu.MethodExists())
 							addMenu.GetValue();
 						else
-							PUtil.LogError("Invalid building plan in buildings table!");
+							PRegistry.LogPatchWarning("Invalid building plan!");
 					}
 			}
 		}
@@ -69,7 +70,8 @@ namespace PeterHan.PLib.Buildings {
 			if (buildingTable == null)
 				throw new InvalidOperationException("Building table not loaded");
 			lock (PSharedData.GetLock(PRegistry.KEY_BUILDING_LOCK)) {
-				PUtil.LogDebug("Register techs for {0:D} buildings".F(buildingTable.Count));
+				PRegistry.LogPatchDebug("Register techs for {0:D} buildings".F(
+					buildingTable.Count));
 				foreach (var building in buildingTable)
 					if (building != null) {
 						var trBuilding = Traverse.Create(building);
@@ -78,7 +80,7 @@ namespace PeterHan.PLib.Buildings {
 						if (addTech.MethodExists())
 							addTech.GetValue();
 						else
-							PUtil.LogError("Invalid building tech in buildings table!");
+							PRegistry.LogPatchWarning("Invalid building technology!");
 					}
 			}
 		}

@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
+using KSerialization;
 using System;
 using System.Collections.Generic;
 using IntHandle = HandleVector<int>.Handle;
@@ -25,7 +25,50 @@ namespace PeterHan.DecorRework {
 	/// <summary>
 	/// Replaces DecorProvider.Splat with something easier to maintain.
 	/// </summary>
-	internal sealed class DecorSplatNew : IDisposable {
+	[SerializationConfig(MemberSerialization.OptIn)]
+	internal sealed class DecorSplatNew : KMonoBehaviour, ISaveLoadable {
+#pragma warning disable IDE0044 // Add readonly modifier
+#pragma warning disable CS0649
+
+		/// <summary>
+		/// Monitors building breakdowns.
+		/// </summary>
+		[MyCmpGet]
+		private BuildingHP breakStatus;
+
+		/// <summary>
+		/// Monitors manual building disabled.
+		/// </summary>
+		[MyCmpGet]
+		private BuildingEnabledButton disableStatus;
+
+		/// <summary>
+		/// Monitors building entombment.
+		/// </summary>
+		[MyCmpGet]
+		private Structure entombStatus;
+
+		/// <summary>
+		/// Monitors status modifiers like "glum".
+		/// </summary>
+		[MyCmpGet]
+		private Klei.AI.Modifiers glumStatus;
+
+		/// <summary>
+		/// The ID of this object.
+		/// </summary>
+		[MyCmpReq]
+		private KPrefabID prefabID;
+
+		/// <summary>
+		/// The decor provider responsible for this splat.
+		/// </summary>
+		[MyCmpReq]
+		private DecorProvider provider;
+
+#pragma warning restore CS0649
+#pragma warning restore IDE0044 // Add readonly modifier
+
 		/// <summary>
 		/// The cached decor value.
 		/// </summary>
@@ -46,19 +89,11 @@ namespace PeterHan.DecorRework {
 		/// </summary>
 		private IntHandle solidChangedPartitioner;
 
-		/// <summary>
-		/// The decor provider responsible for this splat.
-		/// </summary>
-		private readonly DecorProvider provider;
-
-		internal DecorSplatNew(DecorProvider provider) {
-			this.provider = provider ?? throw new ArgumentNullException("provider");
+		internal DecorSplatNew() {
 			cacheDecor = 0.0f;
-			cells = new List<int>(256);
+			cells = new List<int>(64);
 			partitioner = IntHandle.InvalidHandle;
 			solidChangedPartitioner = IntHandle.InvalidHandle;
-			provider.Subscribe((int)GameHashes.OperationalFlagChanged,
-				OnOperationalFlagChanged);
 		}
 
 		/// <summary>
@@ -85,14 +120,20 @@ namespace PeterHan.DecorRework {
 			}
 		}
 
-		public void Dispose() {
+		protected override void OnCleanUp() {
 			RemoveDecor();
-			provider.Unsubscribe((int)GameHashes.OperationalFlagChanged,
-				OnOperationalFlagChanged);
+			Unsubscribe((int)GameHashes.OperationalFlagChanged, OnOperationalFlagChanged);
+			base.OnCleanUp();
 		}
 
 		private void OnOperationalFlagChanged(object argument) {
-			provider?.Refresh();
+			if (gameObject != null)
+				RefreshDecor();
+		}
+
+		protected override void OnSpawn() {
+			base.OnSpawn();
+			Subscribe((int)GameHashes.OperationalFlagChanged, OnOperationalFlagChanged);
 		}
 
 		/// <summary>
@@ -100,8 +141,8 @@ namespace PeterHan.DecorRework {
 		/// </summary>
 		/// <param name="broken">true if the building is treated as broken, or false otherwise.</param>
 		/// <param name="disabled">true if the building is treated as disabled, or false otherwise.</param>
-		public void Refresh(bool broken, bool disabled) {
-			var obj = provider.gameObject;
+		private void RefreshCells(bool broken, bool disabled) {
+			var obj = gameObject;
 			int cell, x, y;
 			RemoveDecor();
 			if (obj != null && Grid.IsValidCell(cell = Grid.PosToCell(obj))) {
@@ -123,7 +164,7 @@ namespace PeterHan.DecorRework {
 					var orientation = rot ? rot.GetOrientation() : Orientation.Neutral;
 					// Calculate expanded extents
 					Extents extents, be = provider.occupyArea?.GetExtents(orientation) ??
-						new Extents();
+						Extents.OneCell(Grid.PosToCell(obj));
 					extents.x = x = Math.Max(0, be.x - radius);
 					extents.y = y = Math.Max(0, be.y - radius);
 					extents.width = Math.Min(Grid.WidthInCells - 1, be.x + be.width + radius) -
@@ -141,6 +182,33 @@ namespace PeterHan.DecorRework {
 					AddDecor(cell, decor, extents);
 					cacheDecor = decor;
 				}
+			}
+		}
+
+		/// <summary>
+		/// Replaces the Refresh method of DecorProvider to handle the decor ourselves.
+		/// </summary>
+		internal void RefreshDecor() {
+			var inst = DecorCellManager.Instance;
+			// Get status of the object
+			var happiness = glumStatus?.attributes?.Get(inst.HappinessAttribute);
+			// Entombed/disabled = 0 decor, broken = use value in DecorTuning for broken
+			bool disabled = (entombStatus != null && entombStatus.IsEntombed()) ||
+				(disableStatus != null && !disableStatus.IsEnabled) || (happiness != null &&
+				happiness.GetTotalValue() < 0.0f);
+			bool broken = breakStatus != null && breakStatus.IsBroken;
+			RefreshCells(broken, disabled);
+			// Handle rooms which require an item with 20 decor: has to actually be functional
+			bool hasTag = prefabID.HasTag(RoomConstraints.ConstraintTags.Decor20);
+			bool needsTag = provider.decor.GetTotalValue() >= 20f && !broken && !disabled;
+			if (hasTag != needsTag) {
+				// Tag needs to be added/removed
+				if (needsTag)
+					prefabID.AddTag(RoomConstraints.ConstraintTags.Decor20, false);
+				else
+					prefabID.RemoveTag(RoomConstraints.ConstraintTags.Decor20);
+				// Force room recalculation
+				Game.Instance.roomProber.SolidChangedEvent(Grid.PosToCell(gameObject), true);
 			}
 		}
 

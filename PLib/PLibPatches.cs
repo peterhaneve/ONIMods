@@ -17,6 +17,7 @@
  */
 
 using Harmony;
+using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Lighting;
 using PeterHan.PLib.Options;
 using System;
@@ -26,7 +27,6 @@ using System.Reflection.Emit;
 
 using LightGridEmitter = LightGridManager.LightGridEmitter;
 using IntHandle = HandleVector<int>.Handle;
-using PeterHan.PLib.Buildings;
 
 namespace PeterHan.PLib {
 	/// <summary>

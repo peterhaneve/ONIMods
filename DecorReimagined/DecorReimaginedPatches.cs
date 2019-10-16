@@ -91,28 +91,19 @@ namespace PeterHan.DecorRework {
 		}
 
 		/// <summary>
-		/// Applied to DecorProvider to clean up obsolete instances on destroy.
-		/// </summary>
-		[HarmonyPatch(typeof(DecorProvider), "OnCleanUp")]
-		public static class DecorProvider_OnCleanUp_Patch {
-			/// <summary>
-			/// Applied after OnCleanUp runs.
-			/// </summary>
-			internal static void Postfix(DecorProvider __instance) {
-				DecorCellManager.Instance?.DestroyDecor(__instance);
-			}
-		}
-
-		/// <summary>
 		/// Applied to DecorProvider to refresh it when operational status changes.
 		/// </summary>
-		[HarmonyPatch(typeof(DecorProvider), "OnSpawn")]
-		public static class DecorProvider_OnSpawn_Patch {
+		[HarmonyPatch(typeof(DecorProvider), "OnPrefabInit")]
+		public static class DecorProvider_OnPrefabInit_Patch {
 			/// <summary>
-			/// Applied after OnSpawn runs.
+			/// Applied after OnPrefabInit runs.
 			/// </summary>
-			internal static void Postfix(DecorProvider __instance) {
-				DecorCellManager.Instance?.RegisterDecor(__instance);
+			internal static void Postfix(DecorProvider __instance, ref int[] ___cells,
+					ref int ___cellCount) {
+				__instance.gameObject.AddOrGet<DecorSplatNew>();
+				// Save a lot of memory
+				___cells = new int[16];
+				___cellCount = 0;
 			}
 		}
 
@@ -126,11 +117,12 @@ namespace PeterHan.DecorRework {
 			/// </summary>
 			internal static bool Prefix(DecorProvider __instance) {
 				var obj = __instance.gameObject;
-				var inst = DecorCellManager.Instance;
+				DecorSplatNew splat;
 				bool cont = true;
-				if (obj != null && inst != null) {
+				if (obj != null && (splat = obj.GetComponent<DecorSplatNew>()) != null) {
+					// Replace it
 					cont = false;
-					inst.RefreshDecor(__instance);
+					splat.RefreshDecor();
 				}
 				return cont;
 			}

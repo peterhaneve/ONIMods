@@ -99,6 +99,16 @@ namespace PeterHan.PLib {
 		internal const string PLIB_HARMONY = "PeterHan.PLib";
 
 		/// <summary>
+		/// Ensures that ApplyLatest is only invoked once.
+		/// </summary>
+		private static bool applied = false;
+
+		/// <summary>
+		/// Ensures that access to the applied flag is synchronized.
+		/// </summary>
+		private static readonly object applyLock = new object();
+
+		/// <summary>
 		/// The instantiated instance of PLibRegistry, if it has been added as a component.
 		/// </summary>
 		private static PRegistry instance = null;
@@ -111,42 +121,51 @@ namespace PeterHan.PLib {
 			if (instance != null) {
 				object latest = null;
 				Version latestVer = null;
-				try {
-					foreach (var pair in instance.Patches) {
-						var patch = pair.Value;
-						var patchVer = new Version(pair.Key);
-						if (latestVer == null || latestVer.CompareTo(patchVer) < 0) {
-							// First element or newer version
-							latest = patch;
-							latestVer = patchVer;
+				bool wasApplied;
+				// Synchronize access to the apply flag
+				lock (applyLock) {
+					wasApplied = applied;
+					if (!wasApplied)
+						applied = true;
+				}
+				if (!wasApplied) {
+					try {
+						foreach (var pair in instance.Patches) {
+							var patch = pair.Value;
+							var patchVer = new Version(pair.Key);
+							if (latestVer == null || latestVer.CompareTo(patchVer) < 0) {
+								// First element or newer version
+								latest = patch;
+								latestVer = patchVer;
+							}
+						}
+					} catch (ArgumentOutOfRangeException e) {
+						// .NET 3.5 please
+						PUtil.LogException(e);
+					} catch (FormatException e) {
+						PUtil.LogException(e);
+					} catch (OverflowException e) {
+						PUtil.LogException(e);
+					}
+					if (latest != null) {
+						// Store the winning version
+						PSharedData.PutData(KEY_VERSION, latestVer.ToString());
+						try {
+							var applyMethod = Traverse.Create(latest).Method("Apply",
+								new Type[] { typeof(HarmonyInstance) });
+							// Raise warning if a bad patch made it in somehow
+							if (applyMethod.MethodExists())
+								applyMethod.GetValue(instance.PLibInstance);
+							else
+								LogPatchWarning("The first PLib mod in the load order did " +
+									"not use PUtil.InitLibrary()!");
+						} catch (Exception e) {
+							PUtil.LogException(e);
 						}
 					}
-				} catch (ArgumentOutOfRangeException e) {
-					// .NET 3.5 please
-					PUtil.LogException(e);
-				} catch (FormatException e) {
-					PUtil.LogException(e);
-				} catch (OverflowException e) {
-					PUtil.LogException(e);
+					// Reduce memory usage by cleaning up the patch list
+					instance.Patches.Clear();
 				}
-				if (latest != null) {
-					// Store the winning version
-					PSharedData.PutData(KEY_VERSION, latestVer.ToString());
-					try {
-						Traverse.Create(latest).CallMethod("Apply", instance.PLibInstance);
-					} catch (ArgumentException e) {
-						PUtil.LogException(e);
-					} catch (Exception e) {
-						if (e.Message?.ToLower() == "cannot get method value without method")
-							// Cannot get method value without method
-							PUtil.LogError("The first PLib mod in the load order did not " +
-								"use PUtil.InitLibrary(). PLib cannot patch correctly!");
-						else
-							PUtil.LogException(e);
-					}
-				}
-				// Reduce memory usage by cleaning up the patch list
-				instance.Patches.Clear();
 			} else {
 #if DEBUG
 				LogPatchWarning("ApplyLatest invoked with no Instance!");
@@ -177,7 +196,7 @@ namespace PeterHan.PLib {
 				// Use reflection to execute the actual AddPatch method
 				try {
 					Traverse.Create(reg).CallMethod("AddPatch", (object)new PLibPatches());
-				} catch (ArgumentException e) {
+				} catch (Exception e) {
 					PUtil.LogException(e);
 				}
 			} else {
@@ -243,16 +262,25 @@ namespace PeterHan.PLib {
 		public void AddPatch(object patch) {
 			if (patch == null)
 				throw new ArgumentNullException("patch");
-			string ver = Traverse.Create(patch).GetProperty<string>("MyVersion");
-			if (ver == null) {
+			// Verify the class name
+			if (patch.GetType().FullName == typeof(PLibPatches).FullName) {
+				string ver = null;
+				try {
+					ver = Traverse.Create(patch).GetProperty<string>("MyVersion");
+				} catch (Exception e) {
+					PUtil.LogException(e);
+				}
+				if (ver == null) {
 #if DEBUG
-				LogPatchWarning("Invalid patch provided to AddPatch!");
+					LogPatchWarning("Invalid patch provided to AddPatch!");
 #endif
-			} else if (!Patches.ContainsKey(ver)) {
-				LogPatchDebug("Candidate version {0} from {1}".F(ver, patch.GetType().
-					Assembly.GetName()?.Name));
-				Patches.Add(ver, patch);
-			}
+				} else if (!Patches.ContainsKey(ver)) {
+					LogPatchDebug("Candidate version {0} from {1}".F(ver, patch.GetType().
+						Assembly.GetName()?.Name));
+					Patches.Add(ver, patch);
+				}
+			} else
+				LogPatchWarning("Invalid patch provided to AddPatch!");
 		}
 
 		/// <summary>
@@ -261,10 +289,10 @@ namespace PeterHan.PLib {
 		/// </summary>
 		private void ApplyBootstrapper() {
 			try {
-				// Gets called in Global.Awake() after mods load
-				PLibInstance.Patch(typeof(Global), "RestoreLegacyMetricsSetting", null,
-					new HarmonyMethod(typeof(PRegistry).GetMethod("ApplyLatest",
-					BindingFlags.NonPublic | BindingFlags.Static)));
+				// Gets called in Global.Awake() after mods load, and a few other places, but
+				// we have a flag to avoid initializing more than once
+				PLibInstance.Patch(typeof(GlobalResources), "Instance", null,
+					new HarmonyMethod(typeof(PRegistry), "ApplyLatest"));
 			} catch (AmbiguousMatchException e) {
 				PUtil.LogException(e);
 			} catch (ArgumentException e) {

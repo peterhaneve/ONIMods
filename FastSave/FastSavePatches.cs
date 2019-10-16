@@ -186,7 +186,7 @@ namespace PeterHan.FastSave {
 				var reports = ReportManager.Instance?.reports;
 				if (___activeColonyWidgets.TryGetValue(statistic.name, out GameObject obj)) {
 					// Find first remaining report's cycle index
-					int minReport = (reports == null) ? 0 : reports[0].day;
+					int minReport = ((reports?.Count ?? 0) < 1) ? 0 : reports[0].day;
 					var graph = obj.GetComponentInChildren<GraphBase>();
 					var lineLayer = obj.GetComponentInChildren<LineLayer>();
 					if (graph != null && lineLayer != null) {

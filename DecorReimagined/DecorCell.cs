@@ -17,8 +17,7 @@
  */
 
 using System;
-using DecorPool = DictionaryPool<Tag, PeterHan.DecorRework.BestDecorList,
-	PeterHan.DecorRework.DecorCellManager>;
+using System.Collections.Generic;
 
 namespace PeterHan.DecorRework {
 	/// <summary>
@@ -30,7 +29,8 @@ namespace PeterHan.DecorRework {
 		/// </summary>
 		public int Count {
 			get {
-				return decorProviders.Count;
+				return decorProviders.Count + (negativeDecor == null ? 0 : negativeDecor.
+					Count);
 			}
 		}
 
@@ -42,11 +42,20 @@ namespace PeterHan.DecorRework {
 		/// <summary>
 		/// The decor providers for buildings applied to this cell.
 		/// </summary>
-		private readonly DecorPool.PooledDictionary decorProviders;
+		private readonly IDictionary<Tag, BestDecorList> decorProviders;
+
+		/// <summary>
+		/// In hard mode, holds the negative decor items.
+		/// </summary>
+		private readonly IDictionary<DecorProvider, float> negativeDecor;
 
 		internal DecorCell(int cell) {
 			this.cell = cell;
-			decorProviders = DecorPool.Allocate();
+			decorProviders = new Dictionary<Tag, BestDecorList>(24);
+			if (DecorReimaginedPatches.Options?.HardMode ?? false)
+				negativeDecor = new Dictionary<DecorProvider, float>(24);
+			else
+				negativeDecor = null;
 		}
 
 		/// <summary>
@@ -57,23 +66,41 @@ namespace PeterHan.DecorRework {
 		/// <param name="decor">The provider's current decor score.</param>
 		/// <returns>true if the decor score was changed, or false otherwise.</returns>
 		public bool AddDecorProvider(Tag prefabID, DecorProvider provider, float decor) {
-			BestDecorList values;
+			BestDecorList values = null;
 			bool add = false;
+			if (provider == null)
+				throw new ArgumentNullException("provider");
 			lock (decorProviders) {
-				if (!decorProviders.TryGetValue(prefabID, out values))
+				if (decor < 0.0f && negativeDecor != null) {
+					// Hard mode mwahaha
+					if (!negativeDecor.ContainsKey(provider)) {
+						negativeDecor.Add(provider, decor);
+						Grid.Decor[cell] += decor;
+						add = true;
+					}
+				} else if (!decorProviders.TryGetValue(prefabID, out values))
 					decorProviders.Add(prefabID, values = new BestDecorList(cell));
 			}
-			lock (values) {
-				add = values.AddDecorItem(decor, provider);
-			}
+			if (values != null)
+				lock (values) {
+					add = values.AddDecorItem(decor, provider);
+				}
 			return add;
 		}
 
 		public void Dispose() {
 			lock (decorProviders) {
+				if (negativeDecor != null) {
+					var gd = Grid.Decor;
+					// Hard mode cleanup
+					if (gd != null)
+						foreach (var pair in negativeDecor)
+							gd[cell] -= pair.Value;
+					negativeDecor.Clear();
+				}
 				foreach (var pair in decorProviders)
 					pair.Value.Dispose();
-				decorProviders.Recycle();
+				decorProviders.Clear();
 			}
 		}
 
@@ -83,12 +110,13 @@ namespace PeterHan.DecorRework {
 		/// <param name="provider">The decor provider to check.</param>
 		/// <returns>The score provided by that provider, or 0 if it does not provide decor there.</returns>
 		public float GetDecorProvidedBy(DecorProvider provider) {
-			BestDecorList values;
+			BestDecorList values = null;
 			float decor = 0.0f;
 			if (provider == null)
 				throw new ArgumentNullException("provider");
 			lock (decorProviders) {
-				decorProviders.TryGetValue(provider.PrefabID(), out values);
+				if (negativeDecor == null || !negativeDecor.TryGetValue(provider, out decor))
+					decorProviders.TryGetValue(provider.PrefabID(), out values);
 			}
 			if (values != null && provider == values.BestProvider)
 				decor = values.BestDecor;
@@ -103,10 +131,17 @@ namespace PeterHan.DecorRework {
 		/// <param name="decor">The provider's current decor score.</param>
 		/// <returns>true if the decor score was changed, or false otherwise.</returns>
 		public bool RemoveDecorProvider(Tag prefabID, DecorProvider provider, float decor) {
-			BestDecorList values;
+			BestDecorList values = null;
 			bool removed = false;
+			if (provider == null)
+				throw new ArgumentNullException("provider");
 			lock (decorProviders) {
-				decorProviders.TryGetValue(prefabID, out values);
+				if (decor < 0.0f && negativeDecor != null) {
+					// Remove in hard mode, single = is intentional
+					if (removed = negativeDecor.Remove(provider))
+						Grid.Decor[cell] -= decor;
+				} else
+					decorProviders.TryGetValue(prefabID, out values);
 			}
 			if (values != null) {
 				int count;
