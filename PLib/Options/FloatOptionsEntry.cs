@@ -85,7 +85,7 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// Called when the text field is realized.
 		/// </summary>
-		/// <param name="obj">The actual text field.</param>
+		/// <param name="realized">The actual text field.</param>
 		private void OnRealizeTextField(GameObject realized) {
 			textField = realized;
 			Update();

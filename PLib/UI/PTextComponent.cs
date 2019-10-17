@@ -72,9 +72,8 @@ namespace PeterHan.PLib.UI {
 		/// Shared routine to spawn UI text objects.
 		/// </summary>
 		/// <param name="parent">The parent object for the text.</param>
-		/// <param name="fontSize">The font size.</param>
+		/// <param name="style">The text style to use.</param>
 		/// <param name="contents">The default text.</param>
-		/// <param name="wordWrap">Whether to enable word wrap.</param>
 		/// <returns>The child text object.</returns>
 		protected static LocText TextChildHelper(GameObject parent, TextStyleSetting style,
 				string contents = "") {

@@ -81,7 +81,7 @@ namespace PeterHan.PLib.UI {
 			BackColor = PUITuning.Colors.Transparent;
 			Child = null;
 			FlexSize = Vector2.zero;
-			Name = name;
+			Name = name ?? "Scroll";
 			ScrollHorizontal = false;
 			ScrollVertical = false;
 			TrackSize = DEFAULT_TRACK_SIZE;
@@ -103,8 +103,7 @@ namespace PeterHan.PLib.UI {
 			viewport.AddComponent<RectMask2D>().enabled = true;
 			// BoxLayoutGroup resizes the viewport which is undesired, we only want to pass
 			// an auto-layout request on to the children
-			viewport.AddComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.
-				MiddleCenter;
+			viewport.AddComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.UpperLeft;
 			scroll.viewport = viewport.rectTransform();
 			// Make the child
 			var child = Child.Build();
@@ -135,7 +134,6 @@ namespace PeterHan.PLib.UI {
 		/// <returns>The scroll bar component.</returns>
 		private Scrollbar CreateScrollHoriz(GameObject parent) {
 			// Outer scrollbar
-			var trackRect = new Vector2(TrackSize, TrackSize);
 			var track = PUIElements.CreateUI(parent, "Scrollbar H", true, PUIAnchoring.Stretch,
 				PUIAnchoring.End);
 			track.AddComponent<Image>().sprite = PUITuning.Images.ScrollBorderHorizontal;

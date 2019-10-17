@@ -54,7 +54,7 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// Creates an options entry wrapper for the specified property.
 		/// </summary>
-		/// <param name="field">The property to wrap.</param>
+		/// <param name="info">The property to wrap.</param>
 		/// <param name="oa">The option title and tool tip.</param>
 		/// <returns>An options wrapper, or null if none can handle this type.</returns>
 		private static OptionsEntry CreateOptions(PropertyInfo info, OptionAttribute oa) {

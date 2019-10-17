@@ -133,6 +133,7 @@ namespace PeterHan.PLib.UI {
 		/// Creates a string recursively describing the specified GameObject.
 		/// </summary>
 		/// <param name="root">The root GameObject hierarchy.</param>
+		/// <param name="indent">The indentation to use.</param>
 		/// <returns>A string describing this game object.</returns>
 		private static string GetObjectTree(GameObject root, int indent) {
 			var result = new StringBuilder(1024);

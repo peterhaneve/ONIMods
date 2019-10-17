@@ -189,9 +189,9 @@ namespace PeterHan.DecorRework {
 		/// Replaces the Refresh method of DecorProvider to handle the decor ourselves.
 		/// </summary>
 		internal void RefreshDecor() {
-			var inst = DecorCellManager.Instance;
 			// Get status of the object
-			var happiness = glumStatus?.attributes?.Get(inst.HappinessAttribute);
+			var happiness = glumStatus?.attributes?.Get(DecorCellManager.Instance.
+				HappinessAttribute);
 			// Entombed/disabled = 0 decor, broken = use value in DecorTuning for broken
 			bool disabled = (entombStatus != null && entombStatus.IsEntombed()) ||
 				(disableStatus != null && !disableStatus.IsEnabled) || (happiness != null &&

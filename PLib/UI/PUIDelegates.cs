@@ -53,6 +53,7 @@ namespace PeterHan.PLib.UI {
 		/// The delegate type invoked when text in a text field is changed.
 		/// </summary>
 		/// <param name="source">The source text field.</param>
+		/// <param name="text">The new text.</param>
 		public delegate void OnTextChanged(GameObject source, string text);
 
 		/// <summary>

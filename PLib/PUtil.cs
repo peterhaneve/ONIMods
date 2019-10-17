@@ -231,7 +231,7 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Logs an exception message to the debug log.
 		/// </summary>
-		/// <param name="message">The message to log.</param>
+		/// <param name="thrown">The exception to log.</param>
 		public static void LogException(Exception thrown) {
 			Debug.LogErrorFormat("[PLib/{0}] {1} {2} {3}", Assembly.GetCallingAssembly()?.
 				GetName()?.Name ?? "?", thrown.GetType(), thrown.Message, thrown.StackTrace);
@@ -240,7 +240,7 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Logs an exception message to the debug log at WARNING level.
 		/// </summary>
-		/// <param name="message">The message to log.</param>
+		/// <param name="thrown">The exception to log.</param>
 		public static void LogExcWarn(Exception thrown) {
 			Debug.LogWarningFormat("[PLib/{0}] {1} {2} {3}", Assembly.GetCallingAssembly()?.
 				GetName()?.Name ?? "?", thrown.GetType(), thrown.Message, thrown.StackTrace);

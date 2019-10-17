@@ -21,6 +21,7 @@ using PeterHan.PLib.UI;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace PeterHan.SweepByType {
 	/// <summary>
@@ -40,7 +41,7 @@ namespace PeterHan.SweepByType {
 		/// <summary>
 		/// The size of checkboxes and images in this control.
 		/// </summary>
-		internal static readonly Vector2 PANEL_SIZE = new Vector2(240.0f, 320.0f);
+		internal static readonly Vector2 PANEL_SIZE = new Vector2(260.0f, 320.0f);
 
 		/// <summary>
 		/// The margin between the scroll pane and the window.
@@ -133,6 +134,16 @@ namespace PeterHan.SweepByType {
 		/// </summary>
 		private readonly SortedList<Tag, TypeSelectCategory> children;
 
+		/// <summary>
+		/// The scrollbar's last position.
+		/// </summary>
+		private Vector3 position;
+
+		/// <summary>
+		/// Caches the vertical scroll bar to avoid jumping around on open/close.
+		/// </summary>
+		private GameObject vScroll;
+
 		public TypeSelectControl() {
 			var allCheckBox = new PCheckBox("SelectAll") {
 				Text = STRINGS.UI.UISIDESCREENS.TREEFILTERABLESIDESCREEN.ALLBUTTON,
@@ -166,9 +177,15 @@ namespace PeterHan.SweepByType {
 					FlexSize = new Vector2(1.0f, 0.0f), Alignment = TextAnchor.UpperLeft
 				}.AddChild(allCheckBox).AddChild(cp), ScrollHorizontal = false,
 				ScrollVertical = true, AlwaysShowVertical = true, TrackSize = 8.0f,
-				FlexSize = Vector2.one, BackColor = PUITuning.Colors.BackgroundLight
+				FlexSize = Vector2.one, BackColor = PUITuning.Colors.BackgroundLight,
 			})).SetKleiBlueColor().BuildWithFixedSize(PANEL_SIZE);
+			// Cache the vertical scroll bar
+			var vst = RootPanel.transform.Find("TypeSelectControl/Scroll/Viewport/SelectType");
+#pragma warning disable IDE0031 // Use null propagation
+			vScroll = (vst == null) ? null : vst.gameObject;
+#pragma warning restore IDE0031 // Use null propagation
 			children = new SortedList<Tag, TypeSelectCategory>(16, this);
+			position = Vector3.zero;
 			Screen = RootPanel.AddComponent<TypeSelectScreen>();
 		}
 
@@ -214,6 +231,31 @@ namespace PeterHan.SweepByType {
 				ClearAll();
 				break;
 			}
+		}
+
+		/// <summary>
+		/// Waits one frame and restores the scrollbar position.
+		/// </summary>
+		/// <returns>An enumerator for the coroutine.</returns>
+		private System.Collections.IEnumerator ProcessScrollPosition() {
+			yield return new WaitForEndOfFrame();
+			if (vScroll != null)
+				vScroll.transform.SetPosition(position);
+		}
+
+		/// <summary>
+		/// Restores the scrollbar position.
+		/// </summary>
+		private void RestoreScrollPosition() {
+			RootPanel.GetComponent<TypeSelectScreen>().StartCoroutine(ProcessScrollPosition());
+		}
+
+		/// <summary>
+		/// Saves the current scrollbar position.
+		/// </summary>
+		private void SaveScrollPosition() {
+			if (vScroll != null)
+				position = vScroll.transform.GetPosition();
 		}
 
 		/// <summary>
@@ -374,9 +416,12 @@ namespace PeterHan.SweepByType {
 
 			private void OnToggle(GameObject source, bool open) {
 				var obj = ChildPanel;
-				if (obj != null)
+				if (obj != null) {
+					parent.SaveScrollPosition();
 					// Scale to 0x0 if not visible
 					obj.rectTransform().localScale = open ? Vector3.one : Vector3.zero;
+					parent.RestoreScrollPosition();
+				}
 			}
 
 			/// <summary>

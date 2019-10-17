@@ -69,7 +69,7 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// Called when the checkbox is realized.
 		/// </summary>
-		/// <param name="obj">The actual check box.</param>
+		/// <param name="realized">The actual check box.</param>
 		private void OnRealizeCheckBox(GameObject realized) {
 			checkbox = realized;
 			Update();

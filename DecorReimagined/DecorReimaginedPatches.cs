@@ -19,6 +19,7 @@
 using Harmony;
 using PeterHan.PLib;
 using PeterHan.PLib.Options;
+using PeterHan.Reimagination;
 using System;
 using UnityEngine;
 
@@ -33,7 +34,7 @@ namespace PeterHan.DecorRework {
 		internal static DecorReimaginedOptions Options { get; private set; }
 
 		public static void OnLoad() {
-			PUtil.InitLibrary();
+			ImaginationLoader.Init(typeof(DecorReimaginedPatches));
 			Options = new DecorReimaginedOptions();
 			POptions.RegisterOptions(typeof(DecorReimaginedOptions));
 			PUtil.RegisterPostload(DecorTuning.TuneBuildings);
@@ -153,6 +154,7 @@ namespace PeterHan.DecorRework {
 			internal static void Postfix() {
 				PUtil.LogDebug("Creating DecorCellManager");
 				DecorCellManager.CreateInstance();
+				ImaginationLoader.IsFinalDestination();
 			}
 		}
 
