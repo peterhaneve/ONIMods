@@ -26,7 +26,7 @@ using System.IO;
 using System.Reflection;
 using UnityEngine;
 
-namespace PeterHan.DecorRework {
+namespace ReimaginationTeam.DecorRework {
 	/// <summary>
 	/// Tunes the difficulty and numbers behind Decor Reimagined.
 	/// </summary>
@@ -73,6 +73,11 @@ namespace PeterHan.DecorRework {
 		public const bool HIDE_DECOR_IN_WALLS = true;
 
 		/// <summary>
+		/// The number of decor items required to earn the achievement "And It Feels Like Home".
+		/// </summary>
+		public const int NUM_DECOR_FOR_ACHIEVEMENT = 15;
+
+		/// <summary>
 		/// Applies decor values from the database.
 		/// </summary>
 		internal static void ApplyDatabase(DecorReimaginedOptions options) {
@@ -80,7 +85,7 @@ namespace PeterHan.DecorRework {
 			try {
 				// Read in database from the embedded config json
 				using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(
-						"PeterHan.DecorRework.buildings.json")) {
+						"ReimaginationTeam.DecorRework.buildings.json")) {
 					var jr = new JsonTextReader(new StreamReader(stream));
 					entries = new JsonSerializer {
 						MaxDepth = 2

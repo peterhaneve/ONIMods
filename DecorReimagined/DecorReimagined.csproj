@@ -3,10 +3,10 @@
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
     <AssemblyTitle>Decor Reimagined</AssemblyTitle>
-    <FileVersion>0.5.0.0</FileVersion>
-    <RootNamespace>PeterHan.DecorRework</RootNamespace>
+    <FileVersion>1.0.0.0</FileVersion>
+    <RootNamespace>ReimaginationTeam.DecorRework</RootNamespace>
     <Description>Reworks decor, making an attractive colony a better colony.</Description>
-    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="buildings.json" />

@@ -1,0 +1,5 @@
+Graystroke Font
+Size 28
+800x446 Image
+Grow 4 Feather 4 on shadow
+Text starts at y=8

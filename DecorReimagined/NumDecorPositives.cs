@@ -16,38 +16,43 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Database;
+using PeterHan.PLib;
 using System;
+using System.IO;
 
-namespace PeterHan.PLib {
+namespace ReimaginationTeam.DecorRework {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// An achievement requirement with progress that requires a specified quantity of
+	/// positive decor items affecting a cell at any given time.
 	/// </summary>
-	public static class PVersion {
+	public sealed class NumDecorPositives : ColonyAchievementRequirement {
 		/// <summary>
-		/// The PLib version.
+		/// The number of decor items required.
 		/// </summary>
-		public const string VERSION = "2.15.5.0";
+		private int required;
 
-		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in Mod_OnLoad, and will always return false in those cases.
-		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				bool latest = false;
-				try {
-					latest = new Version(VERSION) == PSharedData.GetData<Version>(PRegistry.
-						KEY_VERSION);
-				} catch (OverflowException) {
-				} catch (FormatException) {
-				} catch (ArgumentOutOfRangeException) {
-				}
-				return latest;
-			}
+		public NumDecorPositives(int required) {
+			if (required < 1)
+				throw new ArgumentException("required > 0");
+			this.required = required;
+		}
+
+		public override void Deserialize(IReader reader) {
+			required = reader.ReadInt32();
+		}
+
+		public override string GetProgress(bool complete) {
+			return DecorReimaginedStrings.FEELSLIKEHOME_PROGRESS.text.F(complete ? required :
+				(DecorCellManager.Instance?.NumPositiveDecor ?? 0));
+		}
+
+		public override void Serialize(BinaryWriter writer) {
+			writer.Write(required);
+		}
+
+		public override bool Success() {
+			return (DecorCellManager.Instance?.NumPositiveDecor ?? 0) >= required;
 		}
 	}
 }

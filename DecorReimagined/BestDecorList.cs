@@ -20,7 +20,7 @@ using PeterHan.PLib;
 using System;
 using System.Collections.Generic;
 
-namespace PeterHan.DecorRework {
+namespace ReimaginationTeam.DecorRework {
 	/// <summary>
 	/// Lists all the items of one type that are providing decor, and gives the user the
 	/// benefit of the doubt by selecting the one with the highest decor.
@@ -80,6 +80,7 @@ namespace PeterHan.DecorRework {
 		/// </summary>
 		/// <param name="decor">The current decor of the item.</param>
 		/// <param name="provider">The decor item to add.</param>
+		/// <returns>true if the decor score changed, or false otherwise.</returns>
 		public bool AddDecorItem(float decor, DecorProvider provider) {
 			decorByValue.Add(new DecorWrapper(decor, provider), true);
 			return UpdateBestDecor();
@@ -97,19 +98,9 @@ namespace PeterHan.DecorRework {
 		/// </summary>
 		/// <param name="decor">The current decor of the item.</param>
 		/// <param name="provider">The decor item to remove.</param>
+		/// <returns>true if the decor score changed, or false otherwise.</returns>
 		public bool RemoveDecorItem(float decor, DecorProvider provider) {
-			bool found = false;
-			// Find and remove
-			/*foreach (var pair in decorByValue) {
-				var pairKey = pair.Key;
-				if (pairKey.Provider == provider) {
-					decorByValue.Remove(pairKey);
-					found = true;
-					break;
-				}
-			}*/
-			found = decorByValue.Remove(new DecorWrapper(decor, provider));
-			return found && UpdateBestDecor();
+			return decorByValue.Remove(new DecorWrapper(decor, provider)) && UpdateBestDecor();
 		}
 
 		public override string ToString() {
@@ -139,7 +130,7 @@ namespace PeterHan.DecorRework {
 		/// <summary>
 		/// The key for the decor list - compares on full equality but sorts on decor value.
 		/// </summary>
-		public struct DecorWrapper : IComparable<DecorWrapper> {
+		private struct DecorWrapper : IComparable<DecorWrapper> {
 			/// <summary>
 			/// The decor value of this object.
 			/// </summary>
@@ -150,26 +141,21 @@ namespace PeterHan.DecorRework {
 			/// </summary>
 			public DecorProvider Provider { get; }
 
-			public DecorWrapper(float decor, DecorProvider provider) {
+			internal DecorWrapper(float decor, DecorProvider provider) {
 				Decor = decor;
 				Provider = provider;
 			}
 
 			public int CompareTo(DecorWrapper other) {
-				int result = 0;
+				int result;
 				float oDecor = other.Decor, decor = Decor;
 				if (oDecor > decor)
 					result = 1;
 				else if (oDecor < decor)
 					result = -1;
-				else {
+				else
 					// Break the tie somehow
-					int hc1 = Provider.GetHashCode(), hc2 = other.Provider.GetHashCode();
-					if (hc1 > hc2)
-						result = 1;
-					else if (hc1 < hc2)
-						result = -1;
-				}
+					result = Provider.GetHashCode().CompareTo(other.Provider.GetHashCode());
 				return result;
 			}
 

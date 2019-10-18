@@ -21,7 +21,7 @@ using PeterHan.PLib;
 using System;
 using System.Collections.Generic;
 
-namespace PeterHan.DecorRework {
+namespace ReimaginationTeam.DecorRework {
 	/// <summary>
 	/// Manages decor applying once per type in a cell.
 	/// </summary>
@@ -42,9 +42,7 @@ namespace PeterHan.DecorRework {
 		/// Destroys the cell-level decor manager.
 		/// </summary>
 		public static void DestroyInstance() {
-			if (Instance != null) {
-				Instance.Dispose();
-			}
+			Instance?.Dispose();
 			Instance = null;
 		}
 
@@ -52,6 +50,11 @@ namespace PeterHan.DecorRework {
 		/// The critter attribute for happiness.
 		/// </summary>
 		public Klei.AI.Attribute HappinessAttribute { get; }
+
+		/// <summary>
+		/// Tracks the "And It Feels Like Home" achievement.
+		/// </summary>
+		public int NumPositiveDecor { get; private set; }
 
 		/// <summary>
 		/// Stores the decor providers at a given location.
@@ -72,6 +75,7 @@ namespace PeterHan.DecorRework {
 			HappinessAttribute = Db.Get().CritterAttributes.Happiness;
 			size = Grid.CellCount;
 			noCritterDecor = DecorReimaginedPatches.Options.AllCrittersZeroDecor;
+			NumPositiveDecor = 0;
 			decorGrid = new DecorCell[size];
 		}
 
@@ -149,6 +153,14 @@ namespace PeterHan.DecorRework {
 						}
 					}
 				}
+		}
+
+		/// <summary>
+		/// Updates the most number of positive decor items seen affecting one tile.
+		/// </summary>
+		/// <param name="quantity">The quantity affecting a given tile.</param>
+		internal void UpdateBestPositiveDecor(int quantity) {
+			NumPositiveDecor = Math.Max(NumPositiveDecor, quantity);
 		}
 	}
 }

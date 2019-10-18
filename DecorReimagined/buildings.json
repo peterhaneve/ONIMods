@@ -6,5 +6,9 @@
 	{ id:"MonumentTop", decor:40, radius: 5 },
 	{ id:"MonumentMiddle", decor:40, radius: 5 },
 	{ id:"MonumentBottom", decor:30, radius: 5 },
-	{ id:"MarbleSculpture", decor:30, radius: 8 }
+	{ id:"MarbleSculpture", decor:30, radius: 8 },
+	{ id:"WireBridgeHighWattage", decor: -50, radius: 6 },
+	{ id:"HighWattageWire", decor: -50, radius: 6 },
+	{ id:"WireRefinedBridgeHighWattage", decor: -30, radius: 4 },
+	{ id:"WireRefinedHighWattage", decor: -30, radius: 4 }
 ]

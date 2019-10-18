@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace PeterHan.DecorRework {
+namespace ReimaginationTeam.DecorRework {
 	/// <summary>
 	/// Stores decor providers which affect a given cell.
 	/// </summary>
@@ -78,8 +78,10 @@ namespace PeterHan.DecorRework {
 						Grid.Decor[cell] += decor;
 						add = true;
 					}
-				} else if (!decorProviders.TryGetValue(prefabID, out values))
+				} else if (!decorProviders.TryGetValue(prefabID, out values)) {
 					decorProviders.Add(prefabID, values = new BestDecorList(cell));
+					UpdateNumPositive();
+				}
 			}
 			if (values != null)
 				lock (values) {
@@ -156,6 +158,17 @@ namespace PeterHan.DecorRework {
 					}
 			}
 			return removed;
+		}
+
+		/// <summary>
+		/// Counts the total number of unique positive decor items (as currently calculated).
+		/// </summary>
+		private void UpdateNumPositive() {
+			int positive = 0;
+			foreach (var pair in decorProviders)
+				if (pair.Value.BestDecor > 0.0f)
+					positive++;
+			DecorCellManager.Instance?.UpdateBestPositiveDecor(positive);
 		}
 	}
 }

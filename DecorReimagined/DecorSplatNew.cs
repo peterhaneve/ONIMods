@@ -21,11 +21,12 @@ using System;
 using System.Collections.Generic;
 using IntHandle = HandleVector<int>.Handle;
 
-namespace PeterHan.DecorRework {
+namespace ReimaginationTeam.DecorRework {
 	/// <summary>
 	/// Replaces DecorProvider.Splat with something easier to maintain.
 	/// </summary>
 	[SerializationConfig(MemberSerialization.OptIn)]
+	[SkipSaveFileSerialization]
 	internal sealed class DecorSplatNew : KMonoBehaviour, ISaveLoadable {
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable CS0649

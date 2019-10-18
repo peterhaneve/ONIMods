@@ -16,14 +16,16 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Database;
 using Harmony;
 using PeterHan.PLib;
 using PeterHan.PLib.Options;
-using PeterHan.Reimagination;
+using ReimaginationTeam.Reimagination;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
-namespace PeterHan.DecorRework {
+namespace ReimaginationTeam.DecorRework {
 	/// <summary>
 	/// Patches which will be applied via annotations for Decor Reimagined.
 	/// </summary>
@@ -38,6 +40,61 @@ namespace PeterHan.DecorRework {
 			Options = new DecorReimaginedOptions();
 			POptions.RegisterOptions(typeof(DecorReimaginedOptions));
 			PUtil.RegisterPostload(DecorTuning.TuneBuildings);
+			PatchParks();
+			PatchRecBuildings();
+		}
+
+		/// <summary>
+		/// Counts the number of growing, wild plants in a room.
+		/// </summary>
+		/// <param name="room">The room to check.</param>
+		/// <returns>The number of wild, living (not stifled/dead) plants in that room.</returns>
+		private static int CountValidPlants(Room room) {
+			int wildPlants = 0;
+			if (room != null)
+				foreach (var plant in room.cavity.plants)
+					if (plant != null) {
+						var planted = plant.GetComponent<BasicForagePlantPlanted>();
+						var farmTile = plant.GetComponent<ReceptacleMonitor>();
+						var wilting = plant.GetComponent<WiltCondition>();
+						// Plant must not be wilted
+						if (((farmTile != null && !farmTile.Replanted) || (planted != null)) &&
+								(wilting == null || !wilting.IsWilting()))
+							wildPlants++;
+					}
+			return wildPlants;
+		}
+
+		/// <summary>
+		/// Patches the park and nature reserve to require living plants.
+		/// </summary>
+		private static void PatchParks() {
+			RoomConstraints.WILDPLANT = new RoomConstraints.Constraint(null, (room) => {
+				return CountValidPlants(room) >= 2;
+			}, 1, STRINGS.ROOMS.CRITERIA.WILDPLANT.NAME, STRINGS.ROOMS.CRITERIA.WILDPLANT.
+				DESCRIPTION);
+			RoomConstraints.WILDPLANTS = new RoomConstraints.Constraint(null, (room) => {
+				return CountValidPlants(room) >= 4;
+			}, 1, STRINGS.ROOMS.CRITERIA.WILDPLANTS.NAME, STRINGS.ROOMS.CRITERIA.WILDPLANTS.
+				DESCRIPTION);
+		}
+
+		/// <summary>
+		/// Patches the recreation buildings constraint (for great hall and rec room) to
+		/// require that the building actually be functional. It can be disabled by automation,
+		/// but that cannot be excluded without also excluding buildings that are not in use.
+		/// 
+		/// Broken, disabled, entombed, and unplugged buildings are not functional.
+		/// </summary>
+		private static void PatchRecBuildings() {
+			RoomConstraints.REC_BUILDING = new RoomConstraints.Constraint((building) => {
+				var operational = building.GetComponent<Operational>();
+				var enabled = building.GetComponent<BuildingEnabledButton>();
+				return building.HasTag(RoomConstraints.ConstraintTags.RecBuilding) &&
+					(operational == null || operational.IsFunctional) && (enabled == null ||
+					enabled.IsEnabled);
+			}, null, 1, STRINGS.ROOMS.CRITERIA.REC_BUILDING.NAME, STRINGS.ROOMS.CRITERIA.
+				REC_BUILDING.DESCRIPTION);
 		}
 
 		/// <summary>
@@ -66,7 +123,54 @@ namespace PeterHan.DecorRework {
 			/// </summary>
 			internal static void Postfix() {
 				DecorTuning.InitEffects();
+				PUtil.AddColonyAchievement(new ColonyAchievement("AndItFeelsLikeHome", "",
+					DecorReimaginedStrings.FEELSLIKEHOME_NAME, DecorReimaginedStrings.
+					FEELSLIKEHOME_DESC.text.F(DecorTuning.NUM_DECOR_FOR_ACHIEVEMENT), false,
+					new List<ColonyAchievementRequirement>() {
+						// Specified number of +decor items on one cell
+						new NumDecorPositives(DecorTuning.NUM_DECOR_FOR_ACHIEVEMENT)
+					}, "", "", "", "", null, "", "art_underground"));
 				PUtil.LogDebug("Initialized decor effects");
+			}
+		}
+
+		/// <summary>
+		/// Applied to DecorMonitor.Instance to hide decor while sleeping.
+		/// </summary>
+		[HarmonyPatch(typeof(DecorMonitor.Instance), "Update")]
+		public static class DecorMonitor_Instance_Update_Patch {
+			private const float SLEW = 4.16666651f;
+
+			/// <summary>
+			/// Applied before Update runs.
+			/// </summary>
+			internal static bool Prefix(DecorMonitor.Instance __instance, float dt,
+					Klei.AI.AmountInstance ___amount, Klei.AI.AttributeModifier ___modifier,
+					ref float ___cycleTotalDecor) {
+				bool cont = true;
+				var obj = __instance.gameObject;
+				ChoreDriver driver;
+				// If no chore driver, allow stock implementation
+				if (obj != null && (driver = obj.GetComponent<ChoreDriver>()) != null) {
+					var chore = driver.GetCurrentChore();
+					cont = false;
+					// Slew to zero decor if sleeping
+					float decorAtCell = GameUtil.GetDecorAtCell(Grid.PosToCell(obj));
+					if (chore != null && chore.choreType == Db.Get().ChoreTypes.Sleep)
+						decorAtCell = 0.0f;
+					___cycleTotalDecor += decorAtCell * dt;
+					// Constants copied from the base game
+					float value = 0.0f, curDecor = ___amount.value;
+					if (Mathf.Abs(decorAtCell - curDecor) > 0.5f) {
+						if (decorAtCell > curDecor)
+							value = 3.0f * SLEW;
+						else if (decorAtCell < curDecor)
+							value = -SLEW;
+					} else
+						___amount.value = decorAtCell;
+					___modifier.SetValue(value);
+				}
+				return cont;
 			}
 		}
 
@@ -229,6 +333,24 @@ namespace PeterHan.DecorRework {
 			/// </summary>
 			internal static void Postfix(GameObject go) {
 				Options?.ApplyToSculpture(go);
+			}
+		}
+
+		/// <summary>
+		/// Applied to Operational to update room stat.
+		/// </summary>
+		[HarmonyPatch(typeof(Operational), "SetFlag")]
+		public static class Operational_SetFlag_Patch {
+			/// <summary>
+			/// Applied after SetFlag runs.
+			/// </summary>
+			internal static void Postfix(Operational __instance, Operational.Flag flag) {
+				var obj = __instance.gameObject;
+				if (obj != null && obj.HasTag(RoomConstraints.ConstraintTags.RecBuilding) &&
+						(flag.FlagType == Operational.Flag.Type.Functional || flag ==
+						BuildingEnabledButton.EnabledFlag))
+					// Update rooms if rec buildings break down or get disabled
+					Game.Instance.roomProber.SolidChangedEvent(Grid.PosToCell(obj), true);
 			}
 		}
 

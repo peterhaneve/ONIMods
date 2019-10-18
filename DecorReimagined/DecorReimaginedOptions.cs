@@ -20,7 +20,7 @@ using Newtonsoft.Json;
 using PeterHan.PLib;
 using UnityEngine;
 
-namespace PeterHan.DecorRework {
+namespace ReimaginationTeam.DecorRework {
 	/// <summary>
 	/// The options class used for Decor Reimagined.
 	/// </summary>

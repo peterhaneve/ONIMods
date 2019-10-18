@@ -40,3 +40,10 @@ Mods should remain in their own subfolder.
 | [Smart Pumps](https://forums.kleientertainment.com/forums/topic/91094-the-mystery-about-pump-range/) | Adds new, smarter liquid and gas pumps for specific situations |
 
 ## World Generation
+
+
+## Reimagination Team Mods
+
+|  **Name**  |  **Description**  |
+| :--------: | :---------------: |
+| [Decor Reimagined](https://steamcommunity.com/sharedfiles/filedetails/?id=1892161928) | Reimagines decor, rewarding bases with consistent, unique decor items |

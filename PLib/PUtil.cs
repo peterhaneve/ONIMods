@@ -34,6 +34,17 @@ namespace PeterHan.PLib {
 		internal static bool PLibInit { get; private set; } = false;
 
 		/// <summary>
+		/// Adds a colony achievement to the colony summary screen. Must be invoked after the
+		/// database is initialized (Db.Initialize() postfix recommended).
+		/// </summary>
+		/// <param name="achievement">The achievement to add.</param>
+		public static void AddColonyAchievement(Database.ColonyAchievement achievement) {
+			if (achievement == null)
+				throw new ArgumentNullException("achievement");
+			Db.Get()?.ColonyAchievements?.resources?.Add(achievement);
+		}
+
+		/// <summary>
 		/// Adds the name and description for a status item.
 		/// 
 		/// Must be used before the StatusItem is first instantiated.

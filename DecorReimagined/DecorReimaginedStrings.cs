@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace PeterHan.DecorRework {
+namespace ReimaginationTeam.DecorRework {
 	/// <summary>
 	/// Stores the strings used in Decor Reimagined.
 	/// </summary>
@@ -36,5 +36,10 @@ namespace PeterHan.DecorRework {
 		public static LocString DECORMINUS1_TOOLTIP = "This Duplicant thought that the overall " +
 			STRINGS.UI.PRE_KEYWORD + "Decor" + STRINGS.UI.PST_KEYWORD +
 			" yesterday could use some improvement";
+
+		// Colony initiatives
+		public static LocString FEELSLIKEHOME_NAME = "And It Feels Like Home";
+		public static LocString FEELSLIKEHOME_DESC = "Have {0} unique positive decor items visible from the same location at once.";
+		public static LocString FEELSLIKEHOME_PROGRESS = "Positive decor items visible at one location: {0:D}";
 	}
 }
