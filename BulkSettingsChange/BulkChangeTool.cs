@@ -33,6 +33,22 @@ namespace PeterHan.BulkSettingsChange {
 		private static readonly Color32 TOOL_COLOR = new Color32(255, 172, 52, 255);
 
 		/// <summary>
+		/// A version of Compostable.OnToggleCompost that does not crash if the select tool
+		/// is not in use.
+		/// </summary>
+		/// <param name="comp">The item to toggle compost.</param>
+		private static void DoToggleCompost(Compostable comp) {
+			var obj = comp.gameObject;
+			var pickupable = obj.GetComponent<Pickupable>();
+			if (comp.isMarkedForCompost)
+				EntitySplitter.Split(pickupable, pickupable.TotalAmount, comp.originalPrefab);
+			else {
+				pickupable.storage?.Drop(obj, true);
+				EntitySplitter.Split(pickupable, pickupable.TotalAmount, comp.compostPrefab);
+			}
+		}
+
+		/// <summary>
 		/// Creates a popup on the cell of all buildings where a tool is applied.
 		/// </summary>
 		/// <param name="enable">true if the "enable" tool was used, false for "disable".</param>
@@ -106,7 +122,9 @@ namespace PeterHan.BulkSettingsChange {
 			if (Grid.IsValidCell(cell)) {
 				bool enable = BulkChangeTools.EnableBuildings.IsOn(options), changed = false,
 					disinfect = BulkChangeTools.EnableDisinfect.IsOn(options),
-					repair = BulkChangeTools.EnableRepair.IsOn(options);
+					repair = BulkChangeTools.EnableRepair.IsOn(options),
+					empty = BulkChangeTools.EnableEmpty.IsOn(options),
+					compost = BulkChangeTools.EnableCompost.IsOn(options);
 #if DEBUG
 				// Log what we are about to do
 				var xy = Grid.CellToXY(cell);
@@ -115,25 +133,38 @@ namespace PeterHan.BulkSettingsChange {
 #endif
 				if (enable || BulkChangeTools.DisableBuildings.IsOn(options)) {
 					// Enable/disable buildings
-					for (int i = 0; i < (int)Grid.SceneLayer.SceneMAX; i++)
+					for (int i = 0; i < (int)ObjectLayer.NumLayers; i++)
 						changed |= ToggleBuilding(cell, Grid.Objects[cell, i], enable);
 					if (changed)
 						ShowPopup(enable, BulkChangeTools.EnableBuildings, BulkChangeTools.
 							DisableBuildings, cell);
 				} else if (disinfect || BulkChangeTools.DisableDisinfect.IsOn(options)) {
 					// Enable/disable disinfect
-					for (int i = 0; i < (int)Grid.SceneLayer.SceneMAX; i++)
+					for (int i = 0; i < (int)ObjectLayer.NumLayers; i++)
 						changed |= ToggleDisinfect(cell, Grid.Objects[cell, i], disinfect);
 					if (changed)
 						ShowPopup(disinfect, BulkChangeTools.EnableDisinfect, BulkChangeTools.
 							DisableDisinfect, cell);
 				} else if (repair || BulkChangeTools.DisableRepair.IsOn(options)) {
 					// Enable/disable repair
-					for (int i = 0; i < (int)Grid.SceneLayer.SceneMAX; i++)
+					for (int i = 0; i < (int)ObjectLayer.NumLayers; i++)
 						changed |= ToggleRepair(cell, Grid.Objects[cell, i], repair);
 					if (changed)
 						ShowPopup(repair, BulkChangeTools.EnableRepair, BulkChangeTools.
 							DisableRepair, cell);
+				} else if (empty || BulkChangeTools.DisableEmpty.IsOn(options)) {
+					// Enable/disable empty storage
+					for (int i = 0; i < (int)ObjectLayer.NumLayers; i++)
+						changed |= ToggleEmptyStorage(cell, Grid.Objects[cell, i], empty);
+					if (changed)
+						ShowPopup(empty, BulkChangeTools.EnableEmpty, BulkChangeTools.
+							DisableEmpty, cell);
+				} else if (compost || BulkChangeTools.DisableCompost.IsOn(options)) {
+					// Enable/disable compost
+					if (ToggleCompost(cell, Grid.Objects[cell, (int)ObjectLayer.Pickupables],
+							compost))
+						ShowPopup(compost, BulkChangeTools.EnableCompost, BulkChangeTools.
+							DisableCompost, cell);
 				}
 			}
 		}
@@ -194,9 +225,7 @@ namespace PeterHan.BulkSettingsChange {
 		/// <param name="enable">true to enable it, or false to disable it.</param>
 		/// <returns>true if changes were made, or false otherwise.</returns>
 		private bool ToggleBuilding(int cell, GameObject building, bool enable) {
-#pragma warning disable IDE0031 // Use null propagation
-			var ed = (building == null) ? null : building.GetComponent<BuildingEnabledButton>();
-#pragma warning restore IDE0031 // Use null propagation
+			var ed = building.GetComponentSafe<BuildingEnabledButton>();
 			bool changed = false;
 			if (ed != null) {
 				var trEnableDisable = Traverse.Create(ed);
@@ -204,7 +233,7 @@ namespace PeterHan.BulkSettingsChange {
 				int toggleIndex = trEnableDisable.GetField<int>("ToggleIdx");
 				bool curEnabled = ed.IsEnabled, toggleQueued = building.GetComponent<
 					Toggleable>()?.IsToggleQueued(toggleIndex) ?? false;
-#if DEBUG
+#if false
 				var xy = Grid.CellToXY(cell);
 				PUtil.LogDebug("Checking building @({0:D},{1:D}): on={2}, queued={3}, " +
 					"desired={4}".F(xy.X, xy.Y, curEnabled, toggleQueued, enable));
@@ -218,9 +247,44 @@ namespace PeterHan.BulkSettingsChange {
 					if (priority != null)
 						priority.SetMasterPriority(ToolMenu.Instance.PriorityScreen.
 							GetLastSelectedPriority());
-					PUtil.LogDebug("Enable {2} @{0:D} = {1}".F(cell, enable, building.
-						GetProperName()));
+#if DEBUG
+					var xy = Grid.CellToXY(cell);
+					PUtil.LogDebug("Enable {3} @({0:D},{1:D}) = {2}".F(xy.X, xy.Y, enable,
+						building.GetProperName()));
+#endif
 					changed = true;
+				}
+			}
+			return changed;
+		}
+
+		/// <summary>
+		/// Toggles compost on the object.
+		/// </summary>
+		/// <param name="cell">The cell this object occupies.</param>
+		/// <param name="item">The object to toggle.</param>
+		/// <param name="enable">true to mark for compost, or false to unmark it.</param>
+		/// <returns>true if changes were made, or false otherwise.</returns>
+		private bool ToggleCompost(int cell, GameObject item, bool enable) {
+			var pickupable = item.GetComponentSafe<Pickupable>();
+			bool changed = false;
+			if (pickupable != null) {
+				var objectListNode = pickupable.objectLayerListItem;
+				while (objectListNode != null) {
+					var comp = objectListNode.gameObject.GetComponentSafe<Compostable>();
+					objectListNode = objectListNode.nextItem;
+					// Duplicants cannot be composted... this is not Rim World
+					if (comp != null && comp.isMarkedForCompost != enable) {
+						// OnToggleCompost method causes a crash because select tool is not
+						// active
+						DoToggleCompost(comp);
+#if DEBUG
+						var xy = Grid.CellToXY(cell);
+						PUtil.LogDebug("Compost {3} @({0:D},{1:D}) = {2}".F(xy.X, xy.Y,
+							enable, item.GetProperName()));
+#endif
+						changed = true;
+					}
 				}
 			}
 			return changed;
@@ -234,20 +298,43 @@ namespace PeterHan.BulkSettingsChange {
 		/// <param name="enable">true to enable auto disinfect, or false to disable it.</param>
 		/// <returns>true if changes were made, or false otherwise.</returns>
 		private bool ToggleDisinfect(int cell, GameObject item, bool enable) {
-			// == operator is overloaded on GameObject to be equal to null if destroyed
-#pragma warning disable IDE0031 // Use null propagation
-			var ad = (item == null) ? null : item.GetComponent<AutoDisinfectable>();
-#pragma warning restore IDE0031 // Use null propagation
+			var ad = item.GetComponentSafe<AutoDisinfectable>();
 			bool changed = false;
 			if (ad != null) {
 				var trAutoDisinfect = Traverse.Create(ad);
 				// Private methods grrr
 				if (trAutoDisinfect.GetField<bool>("enableAutoDisinfect") != enable) {
-					var xy = Grid.CellToXY(cell);
 					trAutoDisinfect.CallMethod(enable ? "EnableAutoDisinfect" :
 						"DisableAutoDisinfect");
+#if DEBUG
+					var xy = Grid.CellToXY(cell);
 					PUtil.LogDebug("Auto disinfect {3} @({0:D},{1:D}) = {2}".F(xy.X, xy.Y,
 						enable, item.GetProperName()));
+#endif
+					changed = true;
+				}
+			}
+			return changed;
+		}
+
+		/// <summary>
+		/// Toggles empty storage on the object.
+		/// </summary>
+		/// <param name="cell">The cell this building occupies.</param>
+		/// <param name="item">The item to toggle.</param>
+		/// <param name="enable">true to schedule for emptying, or false to disable it.</param>
+		/// <returns>true if changes were made, or false otherwise.</returns>
+		private bool ToggleEmptyStorage(int cell, GameObject item, bool enable) {
+			var daw = item.GetComponentSafe<DropAllWorkable>();
+			bool changed = false;
+			if (daw != null) {
+				if ((Traverse.Create(daw).GetField<Chore>("chore") != null) != enable) {
+					daw.DropAll();
+#if DEBUG
+					var xy = Grid.CellToXY(cell);
+					PUtil.LogDebug("Empty storage {3} @({0:D},{1:D}) = {2}".F(xy.X, xy.Y,
+						enable, item.GetProperName()));
+#endif
 					changed = true;
 				}
 			}
@@ -262,13 +349,9 @@ namespace PeterHan.BulkSettingsChange {
 		/// <param name="enable">true to enable auto repair, or false to disable it.</param>
 		/// <returns>true if changes were made, or false otherwise.</returns>
 		private bool ToggleRepair(int cell, GameObject item, bool enable) {
-			// == operator is overloaded on GameObject to be equal to null if destroyed
-#pragma warning disable IDE0031 // Use null propagation
-			var ar = (item == null) ? null : item.GetComponent<Repairable>();
-#pragma warning restore IDE0031 // Use null propagation
+			var ar = item.GetComponentSafe<Repairable>();
 			bool changed = false;
 			if (ar != null) {
-				var xy = Grid.CellToXY(cell);
 				var trRepairable = Traverse.Create(ar);
 				// Need to check the state machine directly
 				var smi = trRepairable.GetField<Repairable.SMInstance>("smi");
@@ -283,8 +366,11 @@ namespace PeterHan.BulkSettingsChange {
 					trRepairable.CallMethod("CancelRepair");
 					changed = true;
 				}
+#if DEBUG
+				var xy = Grid.CellToXY(cell);
 				PUtil.LogDebug("Auto repair {3} @({0:D},{1:D}) = {2}".F(xy.X, xy.Y, enable,
 					item.GetProperName()));
+#endif
 			}
 			return changed;
 		}
@@ -304,7 +390,7 @@ namespace PeterHan.BulkSettingsChange {
 				ToolMenu.Instance.PriorityScreen.Show(true);
 				OverlayScreen.Instance.ToggleOverlay(OverlayModes.Priorities.ID);
 			} else {
-				// Enable/Disable Auto-Repair
+				// Enable/Disable Auto-Repair, Compost, Empty Storage
 				ToolMenu.Instance.PriorityScreen.Show(false);
 				OverlayScreen.Instance.ToggleOverlay(OverlayModes.None.ID);
 			}

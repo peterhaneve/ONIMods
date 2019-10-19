@@ -31,6 +31,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartPumps", "SmartPumps\Sm
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ElementDict", "ElementDict\ElementDict.csproj", "{1DDF3C07-4FDC-4F8D-B998-14229938E097}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ResearchQueue", "ResearchQueue\ResearchQueue.csproj", "{5E9C5B40-C5B0-4F39-9950-4D0E350185AA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -93,6 +95,10 @@ Global
 		{1DDF3C07-4FDC-4F8D-B998-14229938E097}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1DDF3C07-4FDC-4F8D-B998-14229938E097}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1DDF3C07-4FDC-4F8D-B998-14229938E097}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E9C5B40-C5B0-4F39-9950-4D0E350185AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E9C5B40-C5B0-4F39-9950-4D0E350185AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E9C5B40-C5B0-4F39-9950-4D0E350185AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E9C5B40-C5B0-4F39-9950-4D0E350185AA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

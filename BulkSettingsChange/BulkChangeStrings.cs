@@ -35,10 +35,14 @@ namespace PeterHan.BulkSettingsChange {
 
 		// Tool strings
 		public static LocString TOOL_DISABLE_BUILDINGS = "Building Disabled";
+		public static LocString TOOL_DISABLE_COMPOST = "Compost Disabled";
 		public static LocString TOOL_DISABLE_DISINFECT = "Disinfect Disabled";
+		public static LocString TOOL_DISABLE_EMPTY = "Empty Storage Cancelled";
 		public static LocString TOOL_DISABLE_REPAIR = "Auto-Repair Disabled";
 		public static LocString TOOL_ENABLE_BUILDINGS = "Building Enabled";
+		public static LocString TOOL_ENABLE_COMPOST = "Compost Enabled";
 		public static LocString TOOL_ENABLE_DISINFECT = "Disinfect Enabled";
+		public static LocString TOOL_ENABLE_EMPTY = "Storage Emptied";
 		public static LocString TOOL_ENABLE_REPAIR = "Auto-Repair Enabled";
 	}
 
@@ -50,18 +54,30 @@ namespace PeterHan.BulkSettingsChange {
 		public static readonly BulkToolMode DisableBuildings = new BulkToolMode(
 			"DISABLE_BUILDING", STRINGS.UI.USERMENUACTIONS.ENABLEBUILDING.NAME,
 			BulkChangeStrings.TOOL_DISABLE_BUILDINGS);
+		public static readonly BulkToolMode DisableCompost = new BulkToolMode(
+			"DISABLE_COMPOST", STRINGS.UI.USERMENUACTIONS.COMPOST.NAME_OFF,
+			BulkChangeStrings.TOOL_DISABLE_COMPOST);
 		public static readonly BulkToolMode DisableDisinfect = new BulkToolMode(
 			"DISABLE_DISINFECT", STRINGS.BUILDINGS.AUTODISINFECTABLE.DISABLE_AUTODISINFECT.
 			NAME, BulkChangeStrings.TOOL_DISABLE_DISINFECT);
+		public static readonly BulkToolMode DisableEmpty = new BulkToolMode(
+			"DISABLE_EMPTY", STRINGS.UI.USERMENUACTIONS.EMPTYSTORAGE.NAME_OFF,
+			BulkChangeStrings.TOOL_DISABLE_EMPTY);
 		public static readonly BulkToolMode DisableRepair = new BulkToolMode(
 			"DISABLE_REPAIR", STRINGS.BUILDINGS.REPAIRABLE.DISABLE_AUTOREPAIR.NAME,
 			BulkChangeStrings.TOOL_DISABLE_REPAIR);
 		public static readonly BulkToolMode EnableBuildings = new BulkToolMode(
 			"ENABLE_BUILDING", STRINGS.UI.USERMENUACTIONS.ENABLEBUILDING.NAME_OFF,
 			BulkChangeStrings.TOOL_ENABLE_BUILDINGS);
+		public static readonly BulkToolMode EnableCompost = new BulkToolMode(
+			"ENABLE_COMPOST", STRINGS.UI.USERMENUACTIONS.COMPOST.NAME,
+			BulkChangeStrings.TOOL_ENABLE_COMPOST);
 		public static readonly BulkToolMode EnableDisinfect = new BulkToolMode(
 			"ENABLE_DISINFECT", STRINGS.BUILDINGS.AUTODISINFECTABLE.ENABLE_AUTODISINFECT.NAME,
 			BulkChangeStrings.TOOL_ENABLE_DISINFECT);
+		public static readonly BulkToolMode EnableEmpty = new BulkToolMode(
+			"ENABLE_EMPTY", STRINGS.UI.USERMENUACTIONS.EMPTYSTORAGE.NAME,
+			BulkChangeStrings.TOOL_ENABLE_EMPTY);
 		public static readonly BulkToolMode EnableRepair = new BulkToolMode(
 			"ENABLE_REPAIR", STRINGS.BUILDINGS.REPAIRABLE.ENABLE_AUTOREPAIR.NAME,
 			BulkChangeStrings.TOOL_ENABLE_REPAIR);

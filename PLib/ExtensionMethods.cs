@@ -59,6 +59,19 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Retrieves a component, but returns null if the GameObject is disposed.
+		/// </summary>
+		/// <typeparam name="T">The component type to retrieve.</typeparam>
+		/// <param name="obj">The GameObject that hosts the component.</param>
+		/// <returns>The requested component, or null if it does not exist</returns>
+		public static T GetComponentSafe<T>(this GameObject obj) where T : Component {
+#pragma warning disable IDE0031 // Use null propagation
+			// == operator is overloaded on GameObject to be equal to null if destroyed
+			return (obj == null) ? null : obj.GetComponent<T>();
+#pragma warning restore IDE0031 // Use null propagation
+		}
+
+		/// <summary>
 		/// Uses Traverse to retrieve a private field of an object.
 		/// </summary>
 		/// <param name="root">The object on which to get the field.</param>

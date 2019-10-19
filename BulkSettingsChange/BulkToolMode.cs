@@ -29,7 +29,7 @@ namespace PeterHan.BulkSettingsChange {
 		/// A dictionary to look tool modes up by key.
 		/// </summary>
 		private static readonly IDictionary<string, BulkToolMode> MODES = new Dictionary<
-			string, BulkToolMode>(6);
+			string, BulkToolMode>(10);
 
 		/// <summary>
 		/// Retrieves a collection of all tool modes.
@@ -47,18 +47,16 @@ namespace PeterHan.BulkSettingsChange {
 			lock (MODES) {
 				if (MODES.Count < 1) {
 					// Initialize dictionary
-					MODES.Add(BulkChangeTools.DisableBuildings.Key, BulkChangeTools.
-						DisableBuildings);
-					MODES.Add(BulkChangeTools.EnableBuildings.Key, BulkChangeTools.
-						EnableBuildings);
-					MODES.Add(BulkChangeTools.DisableDisinfect.Key, BulkChangeTools.
-						DisableDisinfect);
-					MODES.Add(BulkChangeTools.EnableDisinfect.Key, BulkChangeTools.
-						EnableDisinfect);
-					MODES.Add(BulkChangeTools.DisableRepair.Key, BulkChangeTools.
-						DisableRepair);
-					MODES.Add(BulkChangeTools.EnableRepair.Key, BulkChangeTools.
-						EnableRepair);
+					BulkChangeTools.DisableBuildings.AddTo(MODES);
+					BulkChangeTools.EnableBuildings.AddTo(MODES);
+					BulkChangeTools.DisableDisinfect.AddTo(MODES);
+					BulkChangeTools.EnableDisinfect.AddTo(MODES);
+					BulkChangeTools.DisableRepair.AddTo(MODES);
+					BulkChangeTools.EnableRepair.AddTo(MODES);
+					BulkChangeTools.DisableCompost.AddTo(MODES);
+					BulkChangeTools.EnableCompost.AddTo(MODES);
+					BulkChangeTools.DisableEmpty.AddTo(MODES);
+					BulkChangeTools.EnableEmpty.AddTo(MODES);
 #if DEBUG
 					foreach (var mode in MODES)
 						PUtil.LogDebug("Tool mode: " + mode.Value);
@@ -106,6 +104,14 @@ namespace PeterHan.BulkSettingsChange {
 			Key = key ?? throw new ArgumentNullException("key");
 			Name = name ?? throw new ArgumentNullException("name");
 			PopupText = popup ?? throw new ArgumentNullException("popup");
+		}
+
+		/// <summary>
+		/// Adds this tool to the tool list.
+		/// </summary>
+		/// <param name="tools">The location where the tool should be added.</param>
+		private void AddTo(IDictionary<string, BulkToolMode> tools) {
+			tools.Add(Key, this);
 		}
 
 		/// <summary>

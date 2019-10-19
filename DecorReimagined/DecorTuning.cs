@@ -37,6 +37,11 @@ namespace ReimaginationTeam.DecorRework {
 		public const float DECOR_EFFECT_LEN = 660.0f;
 
 		/// <summary>
+		/// The percentage of decor perceived in sleep.
+		/// </summary>
+		public const float DECOR_FRACTION_SLEEP = 0.5f;
+
+		/// <summary>
 		/// Replaces the stock decor morale bonuses.
 		/// </summary>
 		private static readonly DecorLevel[] DECOR_LEVELS = {

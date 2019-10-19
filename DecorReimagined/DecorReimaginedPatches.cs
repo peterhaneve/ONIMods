@@ -139,7 +139,10 @@ namespace ReimaginationTeam.DecorRework {
 		/// </summary>
 		[HarmonyPatch(typeof(DecorMonitor.Instance), "Update")]
 		public static class DecorMonitor_Instance_Update_Patch {
-			private const float SLEW = 4.16666651f;
+			/// <summary>
+			/// The slew speed of displayed decor.
+			/// </summary>
+			private const float SLEW = 4.166666667f;
 
 			/// <summary>
 			/// Applied before Update runs.
@@ -157,9 +160,9 @@ namespace ReimaginationTeam.DecorRework {
 					// Slew to zero decor if sleeping
 					float decorAtCell = GameUtil.GetDecorAtCell(Grid.PosToCell(obj));
 					if (chore != null && chore.choreType == Db.Get().ChoreTypes.Sleep)
-						decorAtCell = 0.0f;
+						decorAtCell *= DecorTuning.DECOR_FRACTION_SLEEP;
 					___cycleTotalDecor += decorAtCell * dt;
-					// Constants copied from the base game
+					// Constants are the same as the base game
 					float value = 0.0f, curDecor = ___amount.value;
 					if (Mathf.Abs(decorAtCell - curDecor) > 0.5f) {
 						if (decorAtCell > curDecor)
