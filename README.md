@@ -15,7 +15,9 @@ Mods should remain in their own subfolder.
 
 * Windows: `%USERPROFILE%\Documents\Klei\OxygenNotIncluded\mods\local`
   Replace the documents path with the path to your `Documents` folder if this folder has been redirected.
-* Mac OS and Linux: `~/Klei/OxygenNotIncluded/mods/local`
+* Mac OS: `/Users/user name/Library/Application Support/unity.Klei.Oxygen Not Included/mods/local`
+  Replace `user name` with your user name.
+* Linux: `~/.config/unity3d/Klei/Oxygen Not Included/mods/local`
 
 **Do not use a Steam copy and a local copy of the same mod at the same time.** Disable the Steam version in the mods list before activating any local copies.
 
