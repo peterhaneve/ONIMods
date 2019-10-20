@@ -18,6 +18,7 @@
 
 using Newtonsoft.Json;
 using PeterHan.PLib;
+using PeterHan.PLib.Options;
 using UnityEngine;
 
 namespace ReimaginationTeam.DecorRework {
@@ -25,6 +26,7 @@ namespace ReimaginationTeam.DecorRework {
 	/// The options class used for Decor Reimagined.
 	/// </summary>
 	[JsonObject(MemberSerialization.OptIn)]
+	[RestartRequired]
 	public sealed class DecorReimaginedOptions {
 		// String names for the art stages.
 		private const string ART_CRUDE = "Bad";

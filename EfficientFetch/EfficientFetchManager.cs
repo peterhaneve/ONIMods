@@ -83,8 +83,7 @@ namespace PeterHan.EfficientFetch {
 			IList<Pickup> fp = null;
 			var fm = Game.Instance.fetchManager;
 			try {
-				var pickupsField = typeof(FetchManager).GetField("pickups", BindingFlags.
-					NonPublic | BindingFlags.Public | BindingFlags.Instance);
+				var pickupsField = typeof(FetchManager).GetFieldSafe("pickups", false);
 				if (pickupsField != null && fm != null)
 					fp = pickupsField.GetValue(fm) as IList<Pickup>;
 			} catch (FieldAccessException) {

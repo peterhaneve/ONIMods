@@ -54,6 +54,22 @@ namespace PeterHan.PLib.Options {
 		public static LocString DIALOG_TITLE = "Options for {0}";
 
 		/// <summary>
+		/// The cancel button in the restart dialog.
+		/// </summary>
+		public static LocString RESTART_CANCEL = STRINGS.UI.FRONTEND.MOD_DIALOGS.RESTART.CANCEL;
+
+		/// <summary>
+		/// The OK button in the restart dialog.
+		/// </summary>
+		public static LocString RESTART_OK = STRINGS.UI.FRONTEND.MOD_DIALOGS.RESTART.OK;
+
+		/// <summary>
+		/// The message prompting the user to restart.
+		/// </summary>
+		public static LocString RESTART_REQUIRED = "Oxygen Not Included must be restarted " +
+			"for these options to take effect.";
+
+		/// <summary>
 		/// The default size of the Mod Settings dialog.
 		/// </summary>
 		internal static readonly Vector2 SETTINGS_DIALOG_SIZE = new Vector2(320.0f, 200.0f);
@@ -71,8 +87,8 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// The tooltip on the OK button.
 		/// </summary>
-		public static LocString TOOLTIP_OK = "Save these options. A restart may be required " +
-			"for some mods.";
+		public static LocString TOOLTIP_OK = "Save these options. Some mods may require " +
+			"a restart for the options to take effect.";
 
 		/// <summary>
 		/// The tooltip for cycling to the previous item.

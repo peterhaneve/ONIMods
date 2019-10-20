@@ -332,11 +332,7 @@ namespace PeterHan.PLib {
 		/// <param name="name">The patch method name.</param>
 		/// <returns>The matching method.</returns>
 		private static HarmonyMethod PatchMethod(string name) {
-			var method = typeof(PLibPatches).GetMethod(name, BindingFlags.
-				NonPublic | BindingFlags.Static);
-			if (method == null)
-				PRegistry.LogPatchWarning("No PLibPatches method found: " + name);
-			return new HarmonyMethod(method);
+			return new HarmonyMethod(typeof(PLibPatches), name);
 		}
 
 		/// <summary>

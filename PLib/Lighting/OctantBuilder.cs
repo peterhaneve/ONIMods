@@ -34,15 +34,10 @@ namespace PeterHan.PLib.Lighting {
 
 		static OctantBuilder() {
 			// Cache the method for faster execution
-			try {
-				OCTANT_SCAN = typeof(DiscreteShadowCaster).GetMethod("ScanOctant", BindingFlags.
-					NonPublic | BindingFlags.Static);
-				if (OCTANT_SCAN == null)
-					PUtil.LogError("OctantBuilder cannot find default octant scanner");
-			} catch (AmbiguousMatchException e) {
-				// Uh oh, invalid method
-				PUtil.LogException(e);
-			}
+			OCTANT_SCAN = typeof(DiscreteShadowCaster).GetMethodSafe("ScanOctant", true,
+				PPatchTools.AnyArguments);
+			if (OCTANT_SCAN == null)
+				PUtil.LogError("OctantBuilder cannot find default octant scanner!");
 		}
 
 		/// <summary>
@@ -65,6 +60,11 @@ namespace PeterHan.PLib.Lighting {
 		/// </summary>
 		private readonly BrightnessDict destination;
 
+		/// <summary>
+		/// Creates a new octant builder.
+		/// </summary>
+		/// <param name="destination">The location where the lit cells will be placed.</param>
+		/// <param name="sourceCell">The origin cell of the light.</param>
 		public OctantBuilder(BrightnessDict destination, int sourceCell) {
 			if (!Grid.IsValidCell(sourceCell))
 				throw new ArgumentException("sourceCell");

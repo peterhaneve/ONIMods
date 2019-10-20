@@ -230,34 +230,14 @@ namespace PeterHan.ResearchQueue {
 			}
 
 			/// <summary>
-			/// Transpiles SetActiveResearch to add a call at the end and rip out a Sort call
-			/// in the middle.
+			/// Transpiles SetActiveResearch to rip out a Sort call in the middle.
 			/// </summary>
 			internal static IEnumerable<CodeInstruction> Transpiler(
 					IEnumerable<CodeInstruction> method) {
-				MethodInfo update = null, listSort = null;
-				FieldInfo queuedTech = null;
-				try {
-					update = typeof(ResearchQueuePatches).GetMethod(nameof(
-						UpdateResearchOrder), BindingFlags.NonPublic | BindingFlags.Static);
-					queuedTech = typeof(Research).GetField("queuedTech", BindingFlags.
-						NonPublic | BindingFlags.Public | BindingFlags.Instance);
-					listSort = typeof(List<TechInstance>).GetMethod("Sort", BindingFlags.
-						Public | BindingFlags.Instance, null, new Type[] {
-							typeof(Comparison<TechInstance>)
-						}, new ParameterModifier[1]);
-				} catch (AmbiguousMatchException e) {
-					PUtil.LogException(e);
-				}
-				foreach (var instr in method) {
-					// Strip out sort call
-					if (instr.opcode == OpCodes.Callvirt && instr.operand == listSort) {
-						// Pull off the closure, and "queuedTech"
-						yield return new CodeInstruction(OpCodes.Pop);
-						yield return new CodeInstruction(OpCodes.Pop);
-					} else
-						yield return instr;
-				}
+				return PPatchTools.ReplaceMethodCall(method, typeof(List<TechInstance>).
+					GetMethodSafe("Sort", false, new Type[] {
+						typeof(Comparison<TechInstance>)
+					}));
 			}
 		}
 
@@ -332,7 +312,7 @@ namespace PeterHan.ResearchQueue {
 		}
 
 		/// <summary>
-		/// Applied to SaveGame.
+		/// Applied to SaveGame to add a component for saving the research queue.
 		/// </summary>
 		[HarmonyPatch(typeof(SaveGame), "OnPrefabInit")]
 		public static class SaveGame_OnPrefabInit_Patch {

@@ -99,6 +99,11 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Does nothing, to make the buttons appear.
+		/// </summary>
+		private static void DoNothing() { }
+
+		/// <summary>
 		/// Fits the UI element's size immediately, as if ContentSizeFitter was created on it,
 		/// but does not create a component and only affects the size once.
 		/// </summary>
@@ -272,22 +277,52 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
-		/// Shows a confirmation or message dialog based on a prefab.
+		/// Shows a message dialog.
 		/// </summary>
 		/// <param name="parent">The dialog's parent.</param>
 		/// <param name="message">The message to display.</param>
 		/// <returns>The dialog created.</returns>
-		public static ConfirmDialogScreen ShowConfirmDialog(GameObject parent, string message) {
+		[Obsolete]
+		public static ConfirmDialogScreen ShowConfirmDialog(GameObject parent, string message)
+		{
+			return ShowConfirmDialog(parent, message, DoNothing);
+		}
+
+		/// <summary>
+		/// Shows a confirmation dialog.
+		/// </summary>
+		/// <param name="parent">The dialog's parent.</param>
+		/// <param name="message">The message to display.</param>
+		/// <param name="onConfirm">The action to invoke if Yes or OK is selected.</param>
+		/// <param name="onCancel">The action to invoke if No or Cancel is selected.</param>
+		/// <param name="confirmText">The text for the OK/Yes button.</param>
+		/// <param name="cancelText">The text for the Cancel/No button.</param>
+		/// <returns>The dialog created.</returns>
+		public static ConfirmDialogScreen ShowConfirmDialog(GameObject parent, string message,
+				System.Action onConfirm, System.Action onCancel = null,
+				string confirmText = null, string cancelText = null) {
 			if (parent == null)
-				throw new ArgumentNullException("parent");
-			var confirmDialog = Util.KInstantiateUI(ScreenPrefabs.Instance.ConfirmDialogScreen.
-				gameObject, parent, false).GetComponent<
-				ConfirmDialogScreen>();
-			confirmDialog.PopupConfirmDialog(message, null, null, null, null,
-				message, null, null, null, true);
-			confirmDialog.gameObject.SetActive(true);
+				parent = FrontEndManager.Instance.gameObject;
+			var obj = Util.KInstantiateUI(ScreenPrefabs.Instance.ConfirmDialogScreen.
+				gameObject, parent, false);
+			var confirmDialog = obj.GetComponent<ConfirmDialogScreen>();
+			confirmDialog.PopupConfirmDialog(message, onConfirm, onCancel ?? DoNothing, null,
+				null, null, confirmText, cancelText);
+			obj.SetActive(true);
 			return confirmDialog;
 		}
+
+		/// <summary>
+		/// Shows a message dialog.
+		/// </summary>
+		/// <param name="parent">The dialog's parent.</param>
+		/// <param name="message">The message to display.</param>
+		/// <returns>The dialog created.</returns>
+		public static ConfirmDialogScreen ShowMessageDialog(GameObject parent, string message)
+		{
+			return ShowConfirmDialog(parent, message, DoNothing);
+		}
+
 
 		private PUIElements() { }
 	}

@@ -76,6 +76,11 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
+		/// An action that does nothing. Required to make the cancel button appear.
+		/// </summary>
+		private static void DoNothing() { }
+
+		/// <summary>
 		/// The currently active dialog.
 		/// </summary>
 		private KScreen dialog;
@@ -180,9 +185,25 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <param name="action">The action key taken.</param>
 		private void OnOptionsSelected(string action) {
-			if (action == "ok")
+			if (action == "ok") {
 				// Save changes to mod options
 				WriteOptions();
+				if (options != null) {
+					// Check for [RestartRequired]
+					string rr = typeof(RestartRequiredAttribute).FullName;
+					bool restartRequired = false;
+					foreach (var attr in options.GetType().GetCustomAttributes(true))
+						if (attr.GetType().FullName == rr) {
+							restartRequired = true;
+							break;
+						}
+					if (restartRequired)
+						// Prompt user to restart
+						PUIElements.ShowConfirmDialog(null, POptions.RESTART_REQUIRED,
+							App.instance.Restart, null, POptions.RESTART_OK, POptions.
+							RESTART_CANCEL);
+				}
+			}
 		}
 
 		/// <summary>

@@ -18,36 +18,12 @@
 
 using System;
 
-namespace PeterHan.PLib {
+namespace PeterHan.PLib.Options {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// An empty marker attribute. If applied to an options class, PLib will notify the user
+	/// that the game must be restarted to apply the options. This attribute will be ignored on
+	/// specific options.
 	/// </summary>
-	public static class PVersion {
-		/// <summary>
-		/// The PLib version.
-		/// </summary>
-		public const string VERSION = "2.16.0.0";
-
-		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in Mod_OnLoad, and will always return false in those cases.
-		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				bool latest = false;
-				try {
-					latest = new Version(VERSION) == PSharedData.GetData<Version>(PRegistry.
-						KEY_VERSION);
-				} catch (OverflowException) {
-				} catch (FormatException) {
-				} catch (ArgumentOutOfRangeException) {
-				}
-				return latest;
-			}
-		}
+	public sealed class RestartRequiredAttribute : Attribute {
 	}
 }
