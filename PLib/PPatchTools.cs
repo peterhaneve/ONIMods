@@ -195,9 +195,51 @@ namespace PeterHan.PLib {
 		/// Adds a logger to all unhandled exceptions.
 		/// </summary>
 		public static void LogAllExceptions() {
+			// This is not for production use
 			PUtil.LogWarning("PLib in mod " + Assembly.GetCallingAssembly().GetName()?.Name +
 				" is logging ALL unhandled exceptions!");
 			AppDomain.CurrentDomain.UnhandledException += OnThrown;
+		}
+
+		/// <summary>
+		/// Adds a logger to all failed assertions. The assertions will still fail, but a stack
+		/// trace will be printed for each failed assertion.
+		/// </summary>
+		public static void LogAllFailedAsserts() {
+			var inst = HarmonyInstance.Create("PeterHan.PLib.LogFailedAsserts");
+			MethodBase assert;
+			var handler = new HarmonyMethod(typeof(PPatchTools), nameof(OnAssertFailed));
+			// This is not for production use
+			PUtil.LogWarning("PLib in mod " + Assembly.GetCallingAssembly().GetName()?.Name +
+				" is logging ALL failed assertions!");
+			try {
+				// Assert(bool)
+				assert = GetMethodSafe(typeof(Debug), "Assert", true, typeof(bool));
+				if (assert != null)
+					inst.Patch(assert, handler);
+				// Assert(bool, object)
+				assert = GetMethodSafe(typeof(Debug), "Assert", true, typeof(bool), typeof(
+					object));
+				if (assert != null)
+					inst.Patch(assert, handler);
+				// Assert(bool, object, UnityEngine.Object)
+				assert = GetMethodSafe(typeof(Debug), "Assert", true, typeof(bool), typeof(
+					object), typeof(UnityEngine.Object));
+				if (assert != null)
+					inst.Patch(assert, handler);
+			} catch (Exception e) {
+				PUtil.LogException(e);
+			}
+		}
+
+		/// <summary>
+		/// Logs a failed assertion that is about to occur.
+		/// </summary>
+		private static void OnAssertFailed(bool condition) {
+			if (!condition) {
+				Debug.LogError("Assert is about to fail:");
+				Debug.LogError(new System.Diagnostics.StackTrace().ToString());
+			}
 		}
 
 		/// <summary>
@@ -314,6 +356,8 @@ namespace PeterHan.PLib {
 				startHandler.blocks.Add(new ExceptionBlock(ExceptionBlockType.BeginCatchBlock,
 					typeof(Exception)));
 				yield return startHandler;
+				// Rethrow exception
+				yield return new CodeInstruction(OpCodes.Rethrow);
 				// End catch block
 				var endCatch = new CodeInstruction(OpCodes.Leave, endMethod);
 				endCatch.blocks.Add(new ExceptionBlock(ExceptionBlockType.EndExceptionBlock,
