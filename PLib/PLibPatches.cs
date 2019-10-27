@@ -17,6 +17,7 @@
  */
 
 using Harmony;
+using KSerialization;
 using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Lighting;
 using PeterHan.PLib.Options;
@@ -27,6 +28,8 @@ using System.Reflection.Emit;
 
 using LightGridEmitter = LightGridManager.LightGridEmitter;
 using IntHandle = HandleVector<int>.Handle;
+using System.IO;
+using Database;
 
 namespace PeterHan.PLib {
 	/// <summary>
@@ -222,6 +225,33 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Applied to Serialize to fix deserializing non-Klei achievements.
+		/// </summary>
+		private static bool Serialize_Prefix(ColonyAchievementStatus __instance,
+				BinaryWriter writer) {
+			var requirements = __instance.Requirements;
+			writer.Write((byte)(__instance.success ? 1 : 0));
+			writer.Write((byte)(__instance.failed ? 1 : 0));
+			if (requirements == null)
+				writer.Write(0);
+			else {
+				Assembly asm = typeof(Game).Assembly, asmFirstPass = typeof(KObject).Assembly;
+				writer.Write(requirements.Count);
+				foreach (var requirement in requirements) {
+					var type = requirement.GetType();
+					var typeAsm = type.Assembly;
+					// Handles Assembly-CSharp and Assembly-CSharp-firstpass
+					if (typeAsm == asm || typeAsm == asmFirstPass)
+						writer.WriteKleiString(type.ToString());
+					else
+						writer.WriteKleiString(type.AssemblyQualifiedName);
+					requirement.Serialize(writer);
+				}
+			}
+			return false;
+		}
+
+		/// <summary>
 		/// Applied to GameInputMapping to update the action count if new actions are
 		/// registered.
 		/// </summary>
@@ -245,6 +275,10 @@ namespace PeterHan.PLib {
 		private static void PatchAll(HarmonyInstance instance) {
 			if (instance == null)
 				throw new ArgumentNullException("instance");
+
+			// ColonyAchievementStatus
+			instance.Patch(typeof(ColonyAchievementStatus), "Serialize",
+				PatchMethod(nameof(Serialize_Prefix)), null);
 
 			// GameInputMapping
 			instance.Patch(typeof(GameInputMapping), "SetDefaultKeyBindings", null,

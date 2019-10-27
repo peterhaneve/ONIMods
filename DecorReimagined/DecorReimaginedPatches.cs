@@ -31,6 +31,11 @@ namespace ReimaginationTeam.DecorRework {
 	/// </summary>
 	public static class DecorReimaginedPatches {
 		/// <summary>
+		/// The achievement name of the bugged initial And It Feels Like Home achievement.
+		/// </summary>
+		private const string ACHIEVE_NAME = "AndItFeelsLikeHome";
+
+		/// <summary>
 		/// The options for Decor Reimagined.
 		/// </summary>
 		internal static DecorReimaginedOptions Options { get; private set; }
@@ -114,6 +119,29 @@ namespace ReimaginationTeam.DecorRework {
 		}
 
 		/// <summary>
+		/// Applied to ColonyAchievementTracker to fix achievement status from old versions of
+		/// this mod.
+		/// </summary>
+		[HarmonyPatch(typeof(ColonyAchievementTracker), "Deserialize")]
+		public static class ColonyAchievementTracker_Deserialize_Patch {
+			/// <summary>
+			/// Applied after Deserialize runs.
+			/// </summary>
+			internal static void Postfix(ColonyAchievementTracker __instance) {
+				foreach (var achieve in __instance.achievements)
+					if (achieve.Key == ACHIEVE_NAME) {
+						var reqs = achieve.Value.Requirements;
+						// It gets deleted
+						if (reqs.Count < 1) {
+							reqs.Add(new NumDecorPositives(DecorTuning.
+								NUM_DECOR_FOR_ACHIEVEMENT));
+							PUtil.LogWarning("Fixing achievement bug from v1.x save");
+						}
+					}
+			}
+		}
+
+		/// <summary>
 		/// Applied to Db to apply the new decor levels.
 		/// </summary>
 		[HarmonyPatch(typeof(Db), "Initialize")]
@@ -123,7 +151,7 @@ namespace ReimaginationTeam.DecorRework {
 			/// </summary>
 			internal static void Postfix() {
 				DecorTuning.InitEffects();
-				PUtil.AddColonyAchievement(new ColonyAchievement("AndItFeelsLikeHome", "",
+				PUtil.AddColonyAchievement(new ColonyAchievement(ACHIEVE_NAME, "",
 					DecorReimaginedStrings.FEELSLIKEHOME_NAME, DecorReimaginedStrings.
 					FEELSLIKEHOME_DESC.text.F(DecorTuning.NUM_DECOR_FOR_ACHIEVEMENT), false,
 					new List<ColonyAchievementRequirement>() {
