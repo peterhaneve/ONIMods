@@ -50,3 +50,4 @@ Mods should remain in their own subfolder.
 |  **Name**  |  **Description**  |
 | :--------: | :---------------: |
 | [Decor Reimagined](https://steamcommunity.com/sharedfiles/filedetails/?id=1892161928) | Reimagines decor, rewarding bases with consistent, unique decor items |
+| [Traits Reworked](https://steamcommunity.com/sharedfiles/filedetails/?id=1905214098) | Reworks Duplicant traits to make all traits meaningful and the most extreme traits more sensible |

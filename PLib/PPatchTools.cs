@@ -37,6 +37,15 @@ namespace PeterHan.PLib {
 		private const BindingFlags BASE_FLAGS = BindingFlags.Public | BindingFlags.NonPublic;
 
 		/// <summary>
+		/// Opcodes to load an integer onto the stack.
+		/// </summary>
+		private static readonly OpCode[] LOAD_INT = {
+			OpCodes.Ldc_I4_M1, OpCodes.Ldc_I4_0, OpCodes.Ldc_I4_1, OpCodes.Ldc_I4_2,
+			OpCodes.Ldc_I4_3, OpCodes.Ldc_I4_4, OpCodes.Ldc_I4_5, OpCodes.Ldc_I4_6,
+			OpCodes.Ldc_I4_7, OpCodes.Ldc_I4_8
+		};
+
+		/// <summary>
 		/// Passed to GetMethodSafe to match any method arguments.
 		/// </summary>
 		public static Type[] AnyArguments {
@@ -256,6 +265,142 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Transpiles a method to replace instances of one constant value with another.
+		/// </summary>
+		/// <param name="method">The method to patch.</param>
+		/// <param name="oldValue">The old constant to remove.</param>
+		/// <param name="newValue">The new constant to replace.</param>
+		/// <param name="all">true to replace all instances, or false to replace the first
+		/// instance (default).</param>
+		/// <returns>A transpiled version of that method which replaces instances of the first
+		/// constant with that of the second.</returns>
+		public static TranspiledMethod ReplaceConstant(TranspiledMethod method,
+				double oldValue, double newValue, bool all = false) {
+			if (method == null)
+				throw new ArgumentNullException("method");
+			int replaced = 0;
+			foreach (var inst in method) {
+				var instruction = inst;
+				var opcode = instruction.opcode;
+				if ((opcode == OpCodes.Ldc_R8 && (instruction.operand is double dval) &&
+						dval == oldValue)) {
+					// Replace instruction if first instance, or all to be replaced
+					if (all || replaced == 0)
+						instruction.operand = newValue;
+					replaced++;
+				}
+				yield return instruction;
+			}
+		}
+
+		/// <summary>
+		/// Transpiles a method to replace instances of one constant value with another.
+		/// </summary>
+		/// <param name="method">The method to patch.</param>
+		/// <param name="oldValue">The old constant to remove.</param>
+		/// <param name="newValue">The new constant to replace.</param>
+		/// <param name="all">true to replace all instances, or false to replace the first
+		/// instance (default).</param>
+		/// <returns>A transpiled version of that method which replaces instances of the first
+		/// constant with that of the second.</returns>
+		public static TranspiledMethod ReplaceConstant(TranspiledMethod method, float oldValue,
+				float newValue, bool all = false) {
+			if (method == null)
+				throw new ArgumentNullException("method");
+			int replaced = 0;
+			foreach (var inst in method) {
+				var instruction = inst;
+				var opcode = instruction.opcode;
+				if ((opcode == OpCodes.Ldc_R4 && (instruction.operand is float fval) &&
+						fval == oldValue)) {
+					// Replace instruction if first instance, or all to be replaced
+					if (all || replaced == 0)
+						instruction.operand = newValue;
+					replaced++;
+				}
+				yield return instruction;
+			}
+		}
+
+		/// <summary>
+		/// Transpiles a method to replace instances of one constant value with another.
+		/// </summary>
+		/// <param name="method">The method to patch.</param>
+		/// <param name="oldValue">The old constant to remove.</param>
+		/// <param name="newValue">The new constant to replace.</param>
+		/// <param name="all">true to replace all instances, or false to replace the first
+		/// instance (default).</param>
+		/// <returns>A transpiled version of that method which replaces instances of the first
+		/// constant with that of the second.</returns>
+		public static TranspiledMethod ReplaceConstant(TranspiledMethod method, int oldValue,
+				int newValue, bool all = false) {
+			if (method == null)
+				throw new ArgumentNullException("method");
+			int replaced = 0;
+			bool quickCode = oldValue >= -1 && oldValue <= 8;
+			// Quick test for the opcode on the shorthand forms
+			OpCode qc = OpCodes.Nop;
+			if (quickCode)
+				qc = LOAD_INT[oldValue + 1];
+			foreach (var inst in method) {
+				var instruction = inst;
+				var opcode = instruction.opcode;
+				object operand = instruction.operand;
+				if ((opcode == OpCodes.Ldc_I4 && (operand is int ival) && ival == oldValue) ||
+						(opcode == OpCodes.Ldc_I4_S && (operand is byte bval) && bval ==
+						oldValue) || (quickCode && qc == opcode)) {
+					// Replace instruction if first instance, or all to be replaced
+					if (all || replaced == 0) {
+						if (newValue >= -1 && newValue <= 8) {
+							// Short form: constant
+							instruction.opcode = LOAD_INT[newValue + 1];
+							instruction.operand = null;
+						} else if (newValue >= byte.MinValue && newValue <= byte.MaxValue) {
+							// Short form: 0-255
+							instruction.opcode = OpCodes.Ldc_I4_S;
+							instruction.operand = (byte)newValue;
+						} else {
+							// Long form
+							instruction.opcode = OpCodes.Ldc_I4;
+							instruction.operand = newValue;
+						}
+					}
+					replaced++;
+				}
+				yield return instruction;
+			}
+		}
+
+		/// <summary>
+		/// Transpiles a method to replace instances of one constant value with another.
+		/// </summary>
+		/// <param name="method">The method to patch.</param>
+		/// <param name="oldValue">The old constant to remove.</param>
+		/// <param name="newValue">The new constant to replace.</param>
+		/// <param name="all">true to replace all instances, or false to replace the first
+		/// instance (default).</param>
+		/// <returns>A transpiled version of that method which replaces instances of the first
+		/// constant with that of the second.</returns>
+		public static TranspiledMethod ReplaceConstant(TranspiledMethod method, long oldValue,
+				long newValue, bool all = false) {
+			if (method == null)
+				throw new ArgumentNullException("method");
+			int replaced = 0;
+			foreach (var inst in method) {
+				var instruction = inst;
+				var opcode = instruction.opcode;
+				if ((opcode == OpCodes.Ldc_I8 && (instruction.operand is long lval) &&
+						lval == oldValue)) {
+					// Replace instruction if first instance, or all to be replaced
+					if (all || replaced == 0)
+						instruction.operand = newValue;
+					replaced++;
+				}
+				yield return instruction;
+			}
+		}
+
+		/// <summary>
 		/// Transpiles a method to replace all calls to the specified victim method with
 		/// another method, altering the call type if necessary. The argument types and return
 		/// type must match exactly, including in/out/ref parameters.
@@ -277,6 +422,8 @@ namespace PeterHan.PLib {
 		/// exactly match the old method's argument types.</exception>
 		public static TranspiledMethod ReplaceMethodCall(TranspiledMethod method,
 				MethodInfo victim, MethodInfo newMethod = null) {
+			if (method == null)
+				throw new ArgumentNullException("method");
 			if (victim == null)
 				throw new ArgumentNullException("victim");
 			// Sanity check arguments

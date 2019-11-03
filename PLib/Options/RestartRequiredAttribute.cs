@@ -21,8 +21,8 @@ using System;
 namespace PeterHan.PLib.Options {
 	/// <summary>
 	/// An empty marker attribute. If applied to an options class, PLib will notify the user
-	/// that the game must be restarted to apply the options. This attribute will be ignored on
-	/// specific options.
+	/// that the game must be restarted to apply the options. This attribute will not work if
+	/// it is applied to an individual option, only if applied to the class as a whole.
 	/// </summary>
 	public sealed class RestartRequiredAttribute : Attribute {
 	}

@@ -104,17 +104,19 @@ namespace PeterHan.Claustrophobia {
 		}
 
 		public override bool IsMatch(int cell, int parent_cell, int cost) {
-			if (parent_cell != Grid.InvalidCell)
-				ReachableCells++;
-			if (cell == bedCell)
-				bedReachable = true;
-			if (cell == messCell)
-				messReachable = true;
-			int len = toiletCells.Length, tc;
-			// Any reachable toilet
-			for (int i = 0; i < len && !toiletReachable && (tc = toiletCells[i]) <= cell; i++)
-				if (tc == cell)
-					toiletReachable = true;
+			if (Grid.IsValidBuildingCell(cell)) {
+				if (parent_cell != Grid.InvalidCell)
+					ReachableCells++;
+				if (cell == bedCell)
+					bedReachable = true;
+				if (cell == messCell)
+					messReachable = true;
+				int len = toiletCells.Length, tc;
+				// Any reachable toilet
+				for (int i = 0; i < len && !toiletReachable && (tc = toiletCells[i]) <= cell; i++)
+					if (tc == cell)
+						toiletReachable = true;
+			}
 			return false;
 		}
 

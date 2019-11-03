@@ -399,8 +399,11 @@ namespace PeterHan.PLib.Buildings {
 			if (!addedStrings) {
 				string prefix = "STRINGS.BUILDINGS.PREFABS." + ID.ToUpperInvariant() + ".";
 				Strings.Add(prefix + "NAME", Name);
-				Strings.Add(prefix + "DESC", Description);
-				Strings.Add(prefix + "EFFECT", EffectText);
+				// Allow null values to be defined in LocString class adds / etc
+				if (Description != null)
+					Strings.Add(prefix + "DESC", Description);
+				if (EffectText != null)
+					Strings.Add(prefix + "EFFECT", EffectText);
 				addedStrings = true;
 			}
 		}

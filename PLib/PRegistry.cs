@@ -184,6 +184,8 @@ namespace PeterHan.PLib {
 				// The hack is sick but we have few choices
 				object reg = obj.GetComponent(typeof(PRegistry).Name);
 				if (reg == null) {
+					// TODO: In some cases a PRegistry gets added with a weird type name
+					// including a GUID which does not match GetComponent.Name!
 					var plr = obj.AddComponent<PRegistry>();
 #if DEBUG
 					LogPatchDebug("Creating PLibRegistry from " + Assembly.
