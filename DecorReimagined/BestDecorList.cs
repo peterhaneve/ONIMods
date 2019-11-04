@@ -82,7 +82,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// <param name="provider">The decor item to add.</param>
 		/// <returns>true if the decor score changed, or false otherwise.</returns>
 		public bool AddDecorItem(float decor, DecorProvider provider) {
-			decorByValue.Add(new DecorWrapper(decor, provider), true);
+			decorByValue[new DecorWrapper(decor, provider)] = true;
 			return UpdateBestDecor();
 		}
 
