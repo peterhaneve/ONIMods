@@ -253,5 +253,33 @@ namespace PeterHan.PLib.Options {
 				PUtil.LogExcWarn(e);
 			}
 		}
+
+		/// <summary>
+		/// A class which can be used by mods to maintain a singleton of their options. This
+		/// class should be the parent of the mod options class, and &lt;T&gt; should be the
+		/// type of the options class to store.
+		/// </summary>
+		/// <typeparam name="T">The mod options class to wrap.</typeparam>
+		public abstract class SingletonOptions<T> where T : class, new() {
+			/// <summary>
+			/// The only instance of the singleton options.
+			/// </summary>
+			protected static T instance;
+
+			/// <summary>
+			/// Retrieves the program options, or lazily initializes them if not yet loaded.
+			/// </summary>
+			public static T Instance {
+				get {
+					if (instance == null)
+						instance = ReadSettings<T>() ?? new T();
+					return instance;
+				}
+				protected set {
+					if (value != null)
+						instance = value;
+				}
+			}
+		}
 	}
 }

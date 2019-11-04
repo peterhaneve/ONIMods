@@ -4,7 +4,7 @@
     <TargetFramework>net35</TargetFramework>
     <Title>PeterHan.PLib</Title>
 	  <AssemblyTitle>PeterHanLib</AssemblyTitle>
-	  <Version>2.16.0.0</Version>
+	  <Version>2.17.0.0</Version>
 	  <UsesPLib>false</UsesPLib>
 	  <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
 	  <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
@@ -16,13 +16,11 @@
 	  <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
 	
 Contains functions aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
-	  <PackageReleaseNotes>Added optional attribute on options classes for [RequiresRestart]. If this attribute is specified, PLib will prompt the user to restart if the registering mod's options are changed.
+	  <PackageReleaseNotes>Fix issues with falsely rejecting methods in PPatchTools and improve diagnostics. Fix exceptions being swallowed by wrapping with error handlers. Add another debug method to log failed assertions.
 
-Added patch tools class to aid with method retrieval and transpiling.
-
-Fixed multiple bugs in confirmation dialogs.</PackageReleaseNotes>
+Add a fix to saving custom colony achievements.</PackageReleaseNotes>
 	  <RootNamespace>PeterHan.PLib</RootNamespace>
-	  <AssemblyVersion>2.16.0.0</AssemblyVersion>
+	  <AssemblyVersion>2.17.0.0</AssemblyVersion>
 	  <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
 	  <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>

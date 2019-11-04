@@ -271,7 +271,7 @@ namespace PeterHan.PLib.UI {
 					log = true;
 #endif
 					if (log)
-						PUtil.LogDebug("Loaded sprite: {0} ({1:D}x{2:D}, {3:D} bytes)".F(path,
+						LogUIDebug("Loaded sprite: {0} ({1:D}x{2:D}, {3:D} bytes)".F(path,
 							width, height, len));
 					// pivot is in RELATIVE coordinates!
 					return Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(

@@ -43,9 +43,6 @@ namespace PeterHan.PLib {
 				name = "State";
 			if (sm == null)
 				throw new ArgumentNullException("sm");
-			var trState = Traverse.Create(state);
-			trState.SetField("sm", sm);
-			trState.SetField("root", sm.root);
 			state.defaultState = sm.GetDefaultState();
 			// Process any sub parameters
 			sm.CreateStates(state);

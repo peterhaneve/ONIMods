@@ -71,8 +71,15 @@ namespace PeterHan.TraitRework {
 					string name = field.Name;
 					// This is done before TRAITS tuning class is initialized
 					var traitClass = traitsClass.GetNestedType(name);
-					if (traitClass != null && (field.GetValue(null) is LocString initValue))
-						Traverse.Create(traitClass).SetField("DESC", initValue);
+					try {
+						if (traitClass != null && (field.GetValue(null) is LocString initValue))
+							Traverse.Create(traitClass).SetField("DESC", initValue);
+					} catch (FieldAccessException e) {
+						// Should be unreachable, only public fields
+						PUtil.LogExcWarn(e);
+					} catch (TargetException e) {
+						PUtil.LogExcWarn(e);
+					}
 				}
 		}
 
@@ -263,12 +270,15 @@ namespace PeterHan.TraitRework {
 				// Transition from waitForSleep to sleepy
 				waitForSleep.Transition(__instance.sleepy, (smi) => {
 					var obj = smi.gameObject;
-					bool notHolding = (obj.GetComponent<Storage>()?.IsEmpty() ?? false);
+					bool holding = false;
+					if (obj != null) {
+						holding = !(obj.GetComponent<Storage>()?.IsEmpty() ?? false);
 #if DEBUG
-					if (obj != null && !notHolding)
-						PUtil.LogDebug("{0} is holding object, defer narcolepsy".F(obj.name));
+						if (holding)
+							PUtil.LogDebug("{0} is holding object, defer narcolepsy".F(obj.name));
 #endif
-					return obj == null || notHolding;
+					}
+					return obj == null || !holding;
 				}, UpdateRate.SIM_1000ms);
 			}
 

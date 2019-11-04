@@ -58,32 +58,30 @@ namespace PeterHan.PLib {
 		/// Compares the method parameters and throws ArgumentException if they do not match.
 		/// </summary>
 		/// <param name="victim">The victim method.</param>
+		/// <param name="paramTypes">The method's parameter types.</param>
 		/// <param name="newMethod">The replacement method.</param>
 		private static void CompareMethodParams(MethodInfo victim, Type[] paramTypes,
 				MethodInfo newMethod) {
+			Type[] newTypes = newMethod.GetParameterTypes();
+			if (!newMethod.IsStatic)
+				newTypes = PushDeclaringType(newTypes, newMethod.DeclaringType);
+			if (!victim.IsStatic)
+				paramTypes = PushDeclaringType(paramTypes, victim.DeclaringType);
 			int n = paramTypes.Length;
-			Type[] newTypes, initTypes = newMethod.GetParameterTypes();
-			if (!victim.IsStatic && newMethod.IsStatic) {
-				// Allow special case of passing "this" as first static arg
-				var newParamTypes = new List<Type>(initTypes);
-				newParamTypes.Insert(0, victim.DeclaringType);
-				newTypes = newParamTypes.ToArray();
-			} else
-				newTypes = initTypes;
 			// Argument count check
 			if (newTypes.Length != n)
-				throw new ArgumentException("New method {0} ({1:D} arguments) does not " +
-					"match method {2} ({3:D} arguments)".F(newMethod.Name, newTypes.Length,
+				throw new ArgumentException(("New method {0} ({1:D} arguments) does not " +
+					"match method {2} ({3:D} arguments)").F(newMethod.Name, newTypes.Length,
 					victim.Name, n));
 			// Argument type check
 			for (int i = 0; i < n; i++)
 				if (paramTypes[i] != newTypes[i])
-					throw new ArgumentException("Argument {0:D}: New method type {1} does " +
-						"not match old method type {2}".F(i, paramTypes[i].FullName,
+					throw new ArgumentException(("Argument {0:D}: New method type {1} does " +
+						"not match old method type {2}").F(i, paramTypes[i].FullName,
 						newTypes[i].FullName));
 			if (victim.ReturnType != newMethod.ReturnType)
-				throw new ArgumentException("New method {0} (returns {1}) does not match " +
-					"method {2} (returns {3})".F(newMethod.Name, newMethod.
+				throw new ArgumentException(("New method {0} (returns {1}) does not match " +
+					"method {2} (returns {3})").F(newMethod.Name, newMethod.
 					ReturnType, victim.Name, victim.ReturnType));
 		}
 
@@ -262,6 +260,22 @@ namespace PeterHan.PLib {
 				else
 					Debug.LogError(e.ExceptionObject);
 			}
+		}
+
+		/// <summary>
+		/// Inserts the declaring instance type to the front of the specified array.
+		/// </summary>
+		/// <param name="types">The parameter types.</param>
+		/// <param name="declaringType">The type which declared this method.</param>
+		/// <returns>The types with declaringType inserted at the beginning.</returns>
+		private static Type[] PushDeclaringType(Type[] types, Type declaringType) {
+			int n = types.Length;
+			// Allow special case of passing "this" as first static arg
+			var newParamTypes = new Type[n];
+			newParamTypes[0] = declaringType;
+			for (int i = 0; i < n; i++)
+				newParamTypes[i + 1] = types[i];
+			return newParamTypes;
 		}
 
 		/// <summary>
