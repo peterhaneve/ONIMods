@@ -75,11 +75,11 @@ namespace PeterHan.PLib {
 					victim.Name, n));
 			// Argument type check
 			for (int i = 0; i < n; i++)
-				if (paramTypes[i] != newTypes[i])
+				if (!newTypes[i].IsAssignableFrom(paramTypes[i]))
 					throw new ArgumentException(("Argument {0:D}: New method type {1} does " +
 						"not match old method type {2}").F(i, paramTypes[i].FullName,
 						newTypes[i].FullName));
-			if (victim.ReturnType != newMethod.ReturnType)
+			if (!victim.ReturnType.IsAssignableFrom(newMethod.ReturnType))
 				throw new ArgumentException(("New method {0} (returns {1}) does not match " +
 					"method {2} (returns {3})").F(newMethod.Name, newMethod.
 					ReturnType, victim.Name, victim.ReturnType));
@@ -271,7 +271,7 @@ namespace PeterHan.PLib {
 		private static Type[] PushDeclaringType(Type[] types, Type declaringType) {
 			int n = types.Length;
 			// Allow special case of passing "this" as first static arg
-			var newParamTypes = new Type[n];
+			var newParamTypes = new Type[n + 1];
 			newParamTypes[0] = declaringType;
 			for (int i = 0; i < n; i++)
 				newParamTypes[i + 1] = types[i];
