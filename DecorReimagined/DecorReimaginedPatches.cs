@@ -432,5 +432,39 @@ namespace ReimaginationTeam.DecorRework {
 					}
 			}
 		}
+
+		/// <summary>
+		/// Applied to WiltCondition to re-evaluate Park and Nature Reserve status when a plant
+		/// is no longer dead.
+		/// </summary>
+		[HarmonyPatch(typeof(WiltCondition), "DoRecover")]
+		public static class WiltCondition_DoRecover_Patch {
+			/// <summary>
+			/// Applied after DoRecover runs.
+			/// </summary>
+			internal static void Postfix(WiltCondition __instance) {
+				var obj = __instance.gameObject;
+				if (obj != null)
+					// Update rooms if plants grow/recover
+					Game.Instance.roomProber.SolidChangedEvent(Grid.PosToCell(obj), true);
+			}
+		}
+
+		/// <summary>
+		/// Applied to WiltCondition to re-evaluate Park and Nature Reserve status when a plant
+		/// becomes dead.
+		/// </summary>
+		[HarmonyPatch(typeof(WiltCondition), "DoWilt")]
+		public static class WiltCondition_DoWilt_Patch {
+			/// <summary>
+			/// Applied after DoWilt runs.
+			/// </summary>
+			internal static void Postfix(WiltCondition __instance) {
+				var obj = __instance.gameObject;
+				if (obj != null)
+					// Update rooms if plants grow/recover
+					Game.Instance.roomProber.SolidChangedEvent(Grid.PosToCell(obj), true);
+			}
+		}
 	}
 }

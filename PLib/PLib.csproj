@@ -4,7 +4,7 @@
     <TargetFramework>net35</TargetFramework>
     <Title>PeterHan.PLib</Title>
 	  <AssemblyTitle>PeterHanLib</AssemblyTitle>
-	  <Version>2.17.1.0</Version>
+	  <Version>2.17.3.0</Version>
 	  <UsesPLib>false</UsesPLib>
 	  <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
 	  <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
@@ -20,7 +20,7 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
 
 Add a fix to saving custom colony achievements.</PackageReleaseNotes>
 	  <RootNamespace>PeterHan.PLib</RootNamespace>
-	  <AssemblyVersion>2.17.0.0</AssemblyVersion>
+	  <AssemblyVersion>2.17.3.0</AssemblyVersion>
 	  <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
 	  <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>

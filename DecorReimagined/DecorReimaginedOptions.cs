@@ -93,6 +93,13 @@ namespace ReimaginationTeam.DecorRework {
 		public int MasterpieceArtDecor { get; set; }
 
 		/// <summary>
+		/// If true, tile decor will not be changed.
+		/// </summary>
+		[Option("Preserve Tile Decor", "Preserve the decor values other mods have set for Tiles")]
+		[JsonProperty]
+		public bool PreserveTileDecor { get; set; }
+
+		/// <summary>
 		/// The decor bonus for level 2 art "quaint".
 		/// </summary>
 		[JsonProperty]
@@ -126,6 +133,7 @@ namespace ReimaginationTeam.DecorRework {
 			DefaultArtDecor = -5;
 			HardMode = false;
 			MasterpieceArtDecor = 10;
+			PreserveTileDecor = false;
 			QuaintArtDecor = 5;
 			SnazzySuitDecor = 15;
 			// -30 is a slap on the wrist

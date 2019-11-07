@@ -112,7 +112,10 @@ namespace ReimaginationTeam.DecorRework {
 					if (!string.IsNullOrEmpty(id = entry.id) && !editDecor.ContainsKey(id))
 						editDecor.Add(id, entry);
 				foreach (var def in Assets.BuildingDefs)
-					if (editDecor.TryGetValue(id = def.PrefabID, out DecorDbEntry entry)) {
+					// If PreserveTileDecor is set to true, ignore foundation tile decor mods
+					if (editDecor.TryGetValue(id = def.PrefabID, out DecorDbEntry entry) &&
+							(def.TileLayer != ObjectLayer.FoundationTile || !options.
+							PreserveTileDecor)) {
 						float decor = entry.decor;
 						int radius = entry.radius;
 						var provider = def.BuildingComplete.GetComponent<DecorProvider>();

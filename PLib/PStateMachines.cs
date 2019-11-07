@@ -30,6 +30,31 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <typeparam name="T">The state machine type.</typeparam>
 		/// <typeparam name="I">The state machine Instance type.</typeparam>
+		/// <param name="sm">The base state machine.</param>
+		/// <param name="name">The state name.</param>
+		/// <returns>The new state.</returns>
+		public static GameStateMachine<T, I>.State CreateState<T, I>(
+				this GameStateMachine<T, I> sm, string name)
+				where T : GameStateMachine<T, I, IStateMachineTarget, object> where I :
+				GameStateMachine<T, I, IStateMachineTarget, object>.GameInstance {
+			var state = new GameStateMachine<T, I>.State();
+			if (string.IsNullOrEmpty(name))
+				name = "State";
+			if (sm == null)
+				throw new ArgumentNullException("sm");
+			state.defaultState = sm.GetDefaultState();
+			// Process any sub parameters
+			sm.CreateStates(state);
+			sm.BindState(sm.root, state, name);
+			return state;
+		}
+
+		/// <summary>
+		/// Creates and initializes a new state. This method should be used in a postfix patch
+		/// on InitializeStates if new states are to be added.
+		/// </summary>
+		/// <typeparam name="T">The state machine type.</typeparam>
+		/// <typeparam name="I">The state machine Instance type.</typeparam>
 		/// <typeparam name="M">The state machine Target type.</typeparam>
 		/// <param name="sm">The base state machine.</param>
 		/// <param name="name">The state name.</param>
@@ -66,6 +91,16 @@ namespace PeterHan.PLib {
 		public static void ClearExitActions(this StateMachine.BaseState state) {
 			if (state != null)
 				state.exitActions.Clear();
+		}
+
+		/// <summary>
+		/// Clears the existing Transition actions on a state. Parameter transitions are not
+		/// affected.
+		/// </summary>
+		/// <param name="state">The state to modify.</param>
+		public static void ClearTransitions(this StateMachine.BaseState state) {
+			if (state != null)
+				state.transitions.Clear();
 		}
 	}
 }

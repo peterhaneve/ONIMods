@@ -35,6 +35,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ResearchQueue", "ResearchQu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TraitRework", "TraitRework\TraitRework.csproj", "{89F93E0F-394A-4914-9050-B8B278A05245}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StarmapQueue", "StarmapQueue\StarmapQueue.csproj", "{C55DDC3F-B911-43E3-BBF8-5C7147D1CE90}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -105,6 +107,10 @@ Global
 		{89F93E0F-394A-4914-9050-B8B278A05245}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89F93E0F-394A-4914-9050-B8B278A05245}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89F93E0F-394A-4914-9050-B8B278A05245}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C55DDC3F-B911-43E3-BBF8-5C7147D1CE90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C55DDC3F-B911-43E3-BBF8-5C7147D1CE90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C55DDC3F-B911-43E3-BBF8-5C7147D1CE90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C55DDC3F-B911-43E3-BBF8-5C7147D1CE90}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

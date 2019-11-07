@@ -35,6 +35,7 @@ Mods should remain in their own subfolder.
 | [Research Queue](https://steamcommunity.com/sharedfiles/filedetails/?id=1893887916) | Allows queueing of multiple technologies to research |
 | [Settings Change Tool](https://steamcommunity.com/sharedfiles/filedetails/?id=1843647561) | Allows Repair, Disinfect, and Enable settings to be changed on many buildings at once |
 | [Sweep By Type](https://steamcommunity.com/sharedfiles/filedetails/?id=1863428350) | Adds a filter to the Sweep tool to sweep only selected item types |
+| [Starmap Queue](https://steamcommunity.com/sharedfiles/filedetails/?id=1907780517) | Automatically selects new destinations to be analyzed when the Telescope finishes research |
 
 ## New Mechanics
 |  **Name**  |  **Description**  |
