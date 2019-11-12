@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
     <AssemblyTitle>One Hundred K Challenge</AssemblyTitle>
-    <Version>1.2.0.0</Version>
+    <FileVersion>1.2.0.0</FileVersion>
     <RootNamespace>PeterHan.Challenge100K</RootNamespace>
     <Description>Can you survive a world with a temperature of 100 K?</Description>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>

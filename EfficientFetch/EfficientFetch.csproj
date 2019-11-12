@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
     <AssemblyTitle>Efficient Supply</AssemblyTitle>
-    <Version>1.1.0.0</Version>
+    <FileVersion>1.1.0.0</FileVersion>
     <RootNamespace>PeterHan.EfficientFetch</RootNamespace>
     <Description>Prevents Duplicants from fetching tiny amounts of materials to fulfill chores.</Description>
     <AssemblyVersion>1.1.0.0</AssemblyVersion>

@@ -286,7 +286,7 @@ namespace PeterHan.PLib.Lighting {
 						int cell = pair.Key;
 						if (Grid.IsValidCell(cell)) {
 							// Allow any fraction, not just linear falloff
-							int lightValue = (int)Math.Round(lux * pair.Value);
+							int lightValue = Mathf.RoundToInt(lux * pair.Value);
 							LightGridManager.previewLightCells.Add(new Tuple<int, int>(cell,
 								lightValue));
 							LightGridManager.previewLux[cell] = lightValue;
