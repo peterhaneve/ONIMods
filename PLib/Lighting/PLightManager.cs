@@ -106,10 +106,10 @@ namespace PeterHan.PLib.Lighting {
 			if (shape == null) {
 				var trLight = Traverse.Create(otherShape);
 				// Retrieve the ID, handler, and identifier
-				int id = trLight.GetProperty<int>("ShapeID");
+				int id = trLight.GetProperty<int>(nameof(PLightShape.ShapeID));
 				if (id > 0) {
-					string identifer = trLight.GetProperty<string>("Identifier") ??
-						("LightShape" + id);
+					string identifer = trLight.GetProperty<string>(nameof(PLightShape.
+						Identifier)) ?? ("LightShape" + id);
 					shape = new PLightShape(id, identifer, new CrossModLightWrapper(trLight).
 						CastLight);
 				} else
@@ -379,7 +379,7 @@ namespace PeterHan.PLib.Lighting {
 				method = other?.Method("FillLight", new Type[] {
 					typeof(GameObject), typeof(int), typeof(int), typeof(BrightnessDict)
 				});
-				if (method == null)
+				if (method == null || !method.MethodExists())
 					PUtil.LogError("PLightSource handler has invalid method signature!");
 			}
 

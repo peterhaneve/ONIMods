@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Options;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -26,8 +27,15 @@ namespace PeterHan.SweepByType {
 	/// Patches which will be applied via annotations for Sweep By Type.
 	/// </summary>
 	public static class SweepByTypePatches {
+		/// <summary>
+		/// The current mod options, set on load.
+		/// </summary>
+		internal static SweepByTypeOptions Options { get; private set; }
+
 		public static void OnLoad() {
 			PUtil.InitLibrary();
+			POptions.RegisterOptions(typeof(SweepByTypeOptions));
+			Options = null;
 		}
 
 		/// <summary>
@@ -72,6 +80,7 @@ namespace PeterHan.SweepByType {
 			/// </summary>
 			/// <param name="__instance">The current instance.</param>
 			internal static void Postfix(PlayerController __instance) {
+				Options = POptions.ReadSettings<SweepByTypeOptions>();
 				// Create list so that new tool can be appended at the end
 				var interfaceTools = new List<InterfaceTool>(__instance.tools);
 				var filteredSweepTool = new GameObject(typeof(FilteredClearTool).Name);
@@ -80,7 +89,8 @@ namespace PeterHan.SweepByType {
 				filteredSweepTool.transform.SetParent(__instance.gameObject.transform);
 				filteredSweepTool.gameObject.SetActive(true);
 				filteredSweepTool.gameObject.SetActive(false);
-				PUtil.LogDebug("Created FilteredClearTool");
+				PUtil.LogDebug("Created FilteredClearTool with icons " + ((Options?.
+					DisableIcons == true) ? "disabled" : "enabled"));
 				// Add tool to tool list
 				interfaceTools.Add(filteredSweepTool.GetComponent<InterfaceTool>());
 				__instance.tools = interfaceTools.ToArray();

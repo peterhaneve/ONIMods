@@ -39,8 +39,8 @@ namespace PeterHan.PLib.Options {
 			if (attr.GetType().Name == typeof(LimitAttribute).Name) {
 				// Has limit type
 				var trAttr = Traverse.Create(attr);
-				double min = trAttr.GetProperty<double>("Minimum"), max = trAttr.
-					GetProperty<double>("Maximum");
+				double min = trAttr.GetProperty<double>(nameof(LimitAttribute.Minimum)),
+					max = trAttr.GetProperty<double>(nameof(LimitAttribute.Maximum));
 				if (min != 0.0 || max != 0.0)
 					la = new LimitAttribute(min, max);
 			}
@@ -59,8 +59,8 @@ namespace PeterHan.PLib.Options {
 			if (attr.GetType().Name == typeof(OptionAttribute).Name) {
 				// Has the Options attribute, but is cross-mod...
 				var trAttr = Traverse.Create(attr);
-				string title = trAttr.GetProperty<string>("Title"), tooltip = trAttr.
-					GetProperty<string>("Tooltip") ?? "";
+				string title = trAttr.GetProperty<string>(nameof(OptionAttribute.Title)),
+					tooltip = trAttr. GetProperty<string>(nameof(OptionAttribute.Tooltip)) ?? "";
 				if (!string.IsNullOrEmpty(title))
 					oa = new OptionAttribute(title, tooltip);
 			}

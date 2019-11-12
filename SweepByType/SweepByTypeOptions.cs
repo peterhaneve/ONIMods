@@ -16,38 +16,28 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
+using Newtonsoft.Json;
+using PeterHan.PLib;
 
-namespace PeterHan.PLib {
+namespace PeterHan.SweepByType {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// The options class used for Sweep by Type.
 	/// </summary>
-	public static class PVersion {
+	[JsonObject(MemberSerialization.OptIn)]
+	public sealed class SweepByTypeOptions {
 		/// <summary>
-		/// The PLib version.
+		/// If true, icons will be disabled, which can improve performance on low-end machines.
 		/// </summary>
-		public const string VERSION = "2.18.0.0";
+		[Option("Disable Material Icons", "Disables the material icons in the Sweep By Type menu.\r\n\r\nMay improve performance on low-end computers.")]
+		[JsonProperty]
+		public bool DisableIcons { get; set; }
 
-		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in Mod_OnLoad, and will always return false in those cases.
-		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				bool latest = false;
-				try {
-					latest = new Version(VERSION) == PSharedData.GetData<Version>(PRegistry.
-						KEY_VERSION);
-				} catch (OverflowException) {
-				} catch (FormatException) {
-				} catch (ArgumentOutOfRangeException) {
-				}
-				return latest;
-			}
+		public SweepByTypeOptions() {
+			DisableIcons = false;
+		}
+
+		public override string ToString() {
+			return "SweepByTypeOptions[disableIcons={0}]".F(DisableIcons);
 		}
 	}
 }

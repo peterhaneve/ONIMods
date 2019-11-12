@@ -44,14 +44,28 @@ namespace PeterHan.PLib.Options {
 		public static LocString BUTTON_OPTIONS = STRINGS.UI.FRONTEND.MAINMENU.OPTIONS;
 
 		/// <summary>
-		/// The configuration file name to be used.
+		/// The configuration file name to be used. This field is an alias to be binary
+		/// compatible with PLib <= 2.17. This file name is case sensitive.
 		/// </summary>
-		public static readonly string CONFIG_FILE = "config.json";
+		[Obsolete("CONFIG_FILE is obsolete. Add a ConfigFileAttribute to options classes to specify the configuration file name.")]	
+		public static readonly string CONFIG_FILE = CONFIG_FILE_NAME;
+
+		/// <summary>
+		/// The configuration file name to be used by default for classes that do not specify
+		/// otherwise. This file name is case sensitive.
+		/// </summary>
+		public const string CONFIG_FILE_NAME = "config.json";
 
 		/// <summary>
 		/// The dialog title, where {0} is substituted with the mod friendly name.
 		/// </summary>
 		public static LocString DIALOG_TITLE = "Options for {0}";
+
+		/// <summary>
+		/// The maximum nested class depth which will be serialized in mod options to avoid
+		/// infinite loops.
+		/// </summary>
+		public const int MAX_SERIALIZATION_DEPTH = 8;
 
 		/// <summary>
 		/// The cancel button in the restart dialog.
@@ -127,6 +141,50 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
+		/// Applied to ModsScreen if mod options are registered, after BuildDisplay runs.
+		/// </summary>
+		internal static void BuildDisplay(object displayedMods) {
+			if (modOptions != null)
+				// Must cast the type because ModsScreen.DisplayedMod is private
+				foreach (var displayedMod in (System.Collections.IEnumerable)displayedMods)
+					AddModOptions(Traverse.Create(displayedMod));
+		}
+
+		/// <summary>
+		/// Retrieves the configuration file attribute for a mod config.
+		/// </summary>
+		/// <param name="optionsType">The type potentially containing the config file attribute.</param>
+		/// <returns>The ConfigFileAttribute (in this mod's assembly) applied to that type,
+		/// or null if none is present.</returns>
+		public static ConfigFileAttribute GetConfigFileAttribute(Type optionsType) {
+			if (optionsType == null)
+				throw new ArgumentNullException("optionsType");
+			ConfigFileAttribute newAttr = null;
+			foreach (var attr in optionsType.GetCustomAttributes(true))
+				// Cross mod types need reflection
+				if (attr.GetType().Name == typeof(ConfigFileAttribute).Name) {
+					var trAttr = Traverse.Create(attr);
+					string file = null;
+					bool indent = false;
+					// Log any errors from obtaining these values
+					try {
+						file = trAttr.GetProperty<string>(nameof(ConfigFileAttribute.
+							ConfigFileName));
+						indent = trAttr.GetProperty<bool>(nameof(ConfigFileAttribute.
+							IndentOutput));
+					} catch (Exception e) {
+						PUtil.LogException(e);
+					}
+					// Remove invalid file names
+					if (!PUtil.IsValidFileName(file))
+						file = null;
+					newAttr = new ConfigFileAttribute(file, indent);
+					break;
+				}
+			return newAttr;
+		}
+
+		/// <summary>
 		/// Retrieves the mod directory for the specified assembly.
 		/// </summary>
 		/// <param name="modDLL">The assembly used for a mod.</param>
@@ -195,32 +253,35 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
-		/// Applied to ModsScreen if mod options are registered, after BuildDisplay runs.
+		/// Reads mod settings from its configuration file. The calling assembly is used for
+		/// compatibility reasons to resolve the proper settings folder.
 		/// </summary>
-		internal static void BuildDisplay(object displayedMods) {
-			if (modOptions != null)
-				// Must cast the type because ModsScreen.DisplayedMod is private
-				foreach (var displayedMod in (System.Collections.IEnumerable)displayedMods)
-					AddModOptions(Traverse.Create(displayedMod));
+		/// <typeparam name="T">The type of the settings object.</typeparam>
+		/// <returns>The settings read, or null if they could not be read (e.g. newly installed).</returns>
+		public static T ReadSettings<T>() where T : class {
+			var type = typeof(T);
+			string file = GetConfigFileAttribute(type)?.ConfigFileName;
+			return ReadSettings(Path.Combine(GetModDir(Assembly.GetCallingAssembly()),
+				file ?? CONFIG_FILE_NAME), type) as T;
 		}
 
 		/// <summary>
 		/// Reads mod settings from its configuration file.
 		/// </summary>
-		/// <typeparam name="T">The type of the settings object.</typeparam>
+		/// <param name="path">The path to the settings file.</param>
+		/// <param name="optionsType">The options type.</param>
 		/// <returns>The settings read, or null if they could not be read (e.g. newly installed)</returns>
-		public static T ReadSettings<T>() where T : class {
-			T options = null;
-			// Calculate path from calling assembly
-			string path = Path.Combine(GetModDir(Assembly.GetCallingAssembly()), CONFIG_FILE);
+		internal static object ReadSettings(string path, Type optionsType) {
+			object options = null;
 			try {
 				using (var jr = new JsonTextReader(File.OpenText(path))) {
-					var serializer = new JsonSerializer { MaxDepth = 8 };
+					var serializer = new JsonSerializer { MaxDepth = MAX_SERIALIZATION_DEPTH };
 					// Deserialize from stream avoids reading file text into memory
-					options = serializer.Deserialize<T>(jr);
+					options = serializer.Deserialize(jr, optionsType);
 				}
 			} catch (FileNotFoundException) {
-				PUtil.LogDebug("{0} was not found; using default settings".F(CONFIG_FILE));
+				PUtil.LogDebug("{0} was not found; using default settings".F(Path.GetFileName(
+					path)));
 			} catch (IOException e) {
 				// Options will be set to defaults
 				PUtil.LogExcWarn(e);
@@ -232,26 +293,41 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
-		/// Writes mod settings to its configuration file.
+		/// Writes mod settings to its configuration file. The calling assembly is used for
+		/// compatibility reasons to resolve the proper settings folder.
 		/// </summary>
 		/// <typeparam name="T">The type of the settings object.</typeparam>
 		/// <param name="settings">The settings to write</param>
 		public static void WriteSettings<T>(T settings) where T : class {
-			// Calculate path from calling assembly
-			string path = Path.Combine(GetModDir(Assembly.GetCallingAssembly()), CONFIG_FILE);
-			try {
-				using (var jw = new JsonTextWriter(File.CreateText(path))) {
-					var serializer = new JsonSerializer { MaxDepth = 8 };
-					// Serialize from stream avoids creating file text in memory
-					serializer.Serialize(jw, settings);
+			string file = GetConfigFileAttribute(typeof(T))?.ConfigFileName;
+			WriteSettings(settings, Path.Combine(GetModDir(Assembly.GetCallingAssembly()),
+				file ?? CONFIG_FILE_NAME));
+		}
+
+		/// <summary>
+		/// Writes mod settings to its configuration file.
+		/// </summary>
+		/// <param name="settings">The settings to write.</param>
+		/// <param name="path">The path to the settings file.</param>
+		/// <param name="indent">true to indent the output, or false to leave it in one line.</param>
+		internal static void WriteSettings(object settings, string path, bool indent = false) {
+			if (settings != null)
+				try {
+					using (var jw = new JsonTextWriter(File.CreateText(path))) {
+						var serializer = new JsonSerializer {
+							MaxDepth = MAX_SERIALIZATION_DEPTH
+						};
+						serializer.Formatting = indent ? Formatting.Indented : Formatting.None;
+						// Serialize from stream avoids creating file text in memory
+						serializer.Serialize(jw, settings);
+					}
+				} catch (IOException e) {
+					// Options will be set to defaults
+					PUtil.LogExcWarn(e);
+				} catch (JsonException e) {
+					// Again set defaults
+					PUtil.LogExcWarn(e);
 				}
-			} catch (IOException e) {
-				// Options will be set to defaults
-				PUtil.LogExcWarn(e);
-			} catch (JsonException e) {
-				// Again set defaults
-				PUtil.LogExcWarn(e);
-			}
 		}
 
 		/// <summary>

@@ -140,6 +140,17 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Applied to EquipmentTemplates to properly debug missing item anims.
+		/// </summary>
+		private static void CreateEquipmentDef_Postfix(EquipmentDef __result, string Anim,
+				string Id) {
+			var anim = __result?.Anim;
+			if (anim == null)
+				Debug.LogWarningFormat("(when looking for KAnim named {0} on equipment {1})",
+					Anim, Id);
+		}
+
+		/// <summary>
 		/// Applied to DiscreteShadowCaster to handle lighting requests.
 		/// </summary>
 		private static bool GetVisibleCells_Prefix(int cell, List<int> visiblePoints,
@@ -330,6 +341,8 @@ namespace PeterHan.PLib {
 			// PBuilding
 			instance.Patch(typeof(BuildingTemplates), "CreateBuildingDef", null,
 				PatchMethod(nameof(CreateBuildingDef_Postfix)));
+			instance.Patch(typeof(EquipmentTemplates), "CreateEquipmentDef", null,
+				PatchMethod(nameof(CreateEquipmentDef_Postfix)));
 			if (PBuilding.CheckBuildings()) {
 				instance.Patch(typeof(Db), "Initialize",
 					PatchMethod(nameof(Initialize_Prefix)), null);

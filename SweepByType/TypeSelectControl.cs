@@ -69,9 +69,12 @@ namespace PeterHan.SweepByType {
 			if (prefab != null) {
 				// Extract the UI preview image (sucks for bottles, but it is all we have)
 				var component = prefab.GetComponent<KBatchedAnimController>();
-				if (component != null)
-					result = Def.GetUISpriteFromMultiObjectAnim(component.AnimFiles[0], "ui",
-						false, string.Empty);
+				if (component != null) {
+					var anim = component.AnimFiles[0];
+					// Gas bottles do not have a place sprite, silence the warning
+					if (anim != null && anim.name != "gas_tank_kanim")
+						result = Def.GetUISpriteFromMultiObjectAnim(anim);
+				}
 			}
 			return result;
 		}
@@ -110,6 +113,11 @@ namespace PeterHan.SweepByType {
 		}
 
 		/// <summary>
+		/// Whether material icons should be disabled.
+		/// </summary>
+		public bool DisableIcons { get; }
+
+		/// <summary>
 		/// The root panel of the whole control.
 		/// </summary>
 		public GameObject RootPanel { get; }
@@ -142,9 +150,11 @@ namespace PeterHan.SweepByType {
 		/// <summary>
 		/// Caches the vertical scroll bar to avoid jumping around on open/close.
 		/// </summary>
-		private GameObject vScroll;
+		private readonly GameObject vScroll;
 
-		public TypeSelectControl() {
+		public TypeSelectControl(bool disableIcons = false) {
+			DisableIcons = disableIcons;
+			// Select/deselect all types
 			var allCheckBox = new PCheckBox("SelectAll") {
 				Text = STRINGS.UI.UISIDESCREENS.TREEFILTERABLESIDESCREEN.ALLBUTTON,
 				CheckSize = ROW_SIZE, InitialState = PCheckBox.STATE_CHECKED,
@@ -247,7 +257,7 @@ namespace PeterHan.SweepByType {
 		/// Restores the scrollbar position.
 		/// </summary>
 		private void RestoreScrollPosition() {
-			RootPanel.GetComponent<TypeSelectScreen>().StartCoroutine(ProcessScrollPosition());
+			RootPanel.GetComponent<TypeSelectScreen>()?.StartCoroutine(ProcessScrollPosition());
 		}
 
 		/// <summary>
@@ -262,27 +272,27 @@ namespace PeterHan.SweepByType {
 		/// Updates the list of available elements.
 		/// </summary>
 		public void Update() {
-			var instance = WorldInventory.Instance;
-			if (instance != null) {
+			var inventory = WorldInventory.Instance;
+			if (inventory != null) {
 				// Find categories with discovered materials
 				// This is the same logic as used in ResourceCategoryScreen
 				foreach (var category in GameTags.MaterialCategories)
-					UpdateCategory(instance, category);
+					UpdateCategory(inventory, category);
 				foreach (var category in GameTags.CalorieCategories)
-					UpdateCategory(instance, category);
+					UpdateCategory(inventory, category);
 				foreach (var category in GameTags.UnitCategories)
-					UpdateCategory(instance, category);
-				UpdateCategory(instance, GameTags.Miscellaneous);
+					UpdateCategory(inventory, category);
+				UpdateCategory(inventory, GameTags.Miscellaneous);
 			}
 		}
 
 		/// <summary>
 		/// Updates all elements in the specified category.
 		/// </summary>
-		/// <param name="instance">The inventory of discovered elements.</param>
+		/// <param name="inv">The inventory of discovered elements.</param>
 		/// <param name="category">The category to search.</param>
-		private void UpdateCategory(WorldInventory instance, Tag category) {
-			if (instance.TryGetDiscoveredResourcesFromTag(category, out HashSet<Tag> found) &&
+		private void UpdateCategory(WorldInventory inv, Tag category) {
+			if (inv.TryGetDiscoveredResourcesFromTag(category, out HashSet<Tag> found) &&
 					found.Count > 0) {
 				// Attempt to add to type select control
 				if (!children.TryGetValue(category, out TypeSelectCategory current)) {
@@ -332,6 +342,11 @@ namespace PeterHan.SweepByType {
 			public GameObject ChildPanel { get; }
 
 			/// <summary>
+			/// The parent control.
+			/// </summary>
+			public TypeSelectControl Control { get; }
+
+			/// <summary>
 			/// The header for this category.
 			/// </summary>
 			public GameObject Header { get; }
@@ -341,13 +356,8 @@ namespace PeterHan.SweepByType {
 			/// </summary>
 			private readonly SortedList<Tag, TypeSelectElement> children;
 
-			/// <summary>
-			/// The parent of this category.
-			/// </summary>
-			private readonly TypeSelectControl parent;
-
 			internal TypeSelectCategory(TypeSelectControl parent, Tag categoryTag) {
-				this.parent = parent ?? throw new ArgumentNullException("parent");
+				Control = parent ?? throw new ArgumentNullException("parent");
 				CategoryTag = categoryTag;
 				var selectBox = new PCheckBox("SelectCategory") {
 					Text = CategoryTag.ProperName(), DynamicSize = true, OnChecked = OnCheck,
@@ -411,16 +421,16 @@ namespace PeterHan.SweepByType {
 					ClearAll();
 					break;
 				}
-				parent.UpdateFromChildren();
+				Control.UpdateFromChildren();
 			}
 
 			private void OnToggle(GameObject source, bool open) {
 				var obj = ChildPanel;
 				if (obj != null) {
-					parent.SaveScrollPosition();
+					Control.SaveScrollPosition();
 					// Scale to 0x0 if not visible
 					obj.rectTransform().localScale = open ? Vector3.one : Vector3.zero;
-					parent.RestoreScrollPosition();
+					Control.RestoreScrollPosition();
 				}
 			}
 
@@ -451,7 +461,7 @@ namespace PeterHan.SweepByType {
 			/// </summary>
 			internal void UpdateFromChildren() {
 				UpdateAllItems(CheckBox, children.Values);
-				parent.UpdateFromChildren();
+				Control.UpdateFromChildren();
 			}
 		}
 
@@ -480,8 +490,9 @@ namespace PeterHan.SweepByType {
 				CheckBox = new PCheckBox("Select") {
 					CheckSize = ROW_SIZE, SpriteSize = ROW_SIZE, OnChecked = OnCheck,
 					Text = ElementTag.ProperName(), InitialState = PCheckBox.
-					STATE_CHECKED, Sprite = GetStorageObjectSprite(elementTag),
-					TextStyle = PUITuning.Fonts.TextDarkStyle
+					STATE_CHECKED, Sprite = (parent.Control.DisableIcons ? null :
+					GetStorageObjectSprite(elementTag)), TextStyle = PUITuning.Fonts.
+					TextDarkStyle
 				}.Build();
 			}
 

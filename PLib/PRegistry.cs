@@ -115,12 +115,10 @@ namespace PeterHan.PLib {
 
 #pragma warning disable IDE0051 // Remove unused private members
 		/// <summary>
-		/// Finds the latest patch and applies only it.
+		/// Finds the latest patch and applies it only if it was not applied before.
 		/// </summary>
 		private static void ApplyLatest() {
 			if (instance != null) {
-				object latest = null;
-				Version latestVer = null;
 				bool wasApplied;
 				// Synchronize access to the apply flag
 				lock (applyLock) {
@@ -128,44 +126,8 @@ namespace PeterHan.PLib {
 					if (!wasApplied)
 						applied = true;
 				}
-				if (!wasApplied) {
-					try {
-						foreach (var pair in instance.Patches) {
-							var patch = pair.Value;
-							var patchVer = new Version(pair.Key);
-							if (latestVer == null || latestVer.CompareTo(patchVer) < 0) {
-								// First element or newer version
-								latest = patch;
-								latestVer = patchVer;
-							}
-						}
-					} catch (ArgumentOutOfRangeException e) {
-						// .NET 3.5 please
-						PUtil.LogException(e);
-					} catch (FormatException e) {
-						PUtil.LogException(e);
-					} catch (OverflowException e) {
-						PUtil.LogException(e);
-					}
-					if (latest != null) {
-						// Store the winning version
-						PSharedData.PutData(KEY_VERSION, latestVer.ToString());
-						try {
-							var applyMethod = Traverse.Create(latest).Method("Apply",
-								new Type[] { typeof(HarmonyInstance) });
-							// Raise warning if a bad patch made it in somehow
-							if (applyMethod.MethodExists())
-								applyMethod.GetValue(instance.PLibInstance);
-							else
-								LogPatchWarning("The first PLib mod in the load order did " +
-									"not use PUtil.InitLibrary()!");
-						} catch (Exception e) {
-							PUtil.LogException(e);
-						}
-					}
-					// Reduce memory usage by cleaning up the patch list
-					instance.Patches.Clear();
-				}
+				if (!wasApplied)
+					DoApplyLatest();
 			} else {
 #if DEBUG
 				LogPatchWarning("ApplyLatest invoked with no Instance!");
@@ -173,6 +135,50 @@ namespace PeterHan.PLib {
 			}
 		}
 #pragma warning restore IDE0051 // Remove unused private members
+
+		/// <summary>
+		/// Applies the latest patch version.
+		/// </summary>
+		private static void DoApplyLatest() {
+			object latest = null;
+			Version latestVer = null;
+			try {
+				foreach (var pair in instance.Patches) {
+					var patch = pair.Value;
+					var patchVer = new Version(pair.Key);
+					if (latestVer == null || latestVer.CompareTo(patchVer) < 0) {
+						// First element or newer version
+						latest = patch;
+						latestVer = patchVer;
+					}
+				}
+			} catch (ArgumentOutOfRangeException e) {
+				// .NET 3.5 please
+				PUtil.LogException(e);
+			} catch (FormatException e) {
+				PUtil.LogException(e);
+			} catch (OverflowException e) {
+				PUtil.LogException(e);
+			}
+			if (latest != null) {
+				// Store the winning version
+				PSharedData.PutData(KEY_VERSION, latestVer.ToString());
+				try {
+					var applyMethod = Traverse.Create(latest).Method(nameof(PLibPatches.Apply),
+						new Type[] { typeof(HarmonyInstance) });
+					// Raise warning if a bad patch made it in somehow
+					if (applyMethod.MethodExists())
+						applyMethod.GetValue(instance.PLibInstance);
+					else
+						LogPatchWarning("The first PLib mod in the load order did not use " +
+							"PUtil.InitLibrary()!");
+				} catch (Exception e) {
+					PUtil.LogException(e);
+				}
+			}
+			// Reduce memory usage by cleaning up the patch list
+			instance.Patches.Clear();
+		}
 
 		/// <summary>
 		/// Initializes the patch bootstrapper, creating a PLibPatchRegistry if not yet
@@ -184,9 +190,13 @@ namespace PeterHan.PLib {
 				// The hack is sick but we have few choices
 				object reg = obj.GetComponent(typeof(PRegistry).Name);
 				if (reg == null) {
-					// TODO: In some cases a PRegistry gets added with a weird type name
-					// including a GUID which does not match GetComponent.Name!
 					var plr = obj.AddComponent<PRegistry>();
+					// If PLib is ILMerged more than once, PRegistry gets added with a weird
+					// type name including a GUID which does not match GetComponent.Name!
+					string typeName = plr.GetType().Name;
+					if (typeName != "PRegistry")
+						Debug.LogErrorFormat("PRegistry has the type name {0}; this may be " +
+							"the result of ILMerging PLib more than once!", typeName);
 #if DEBUG
 					LogPatchDebug("Creating PLibRegistry from " + Assembly.
 						GetExecutingAssembly().FullName);
@@ -197,7 +207,8 @@ namespace PeterHan.PLib {
 				}
 				// Use reflection to execute the actual AddPatch method
 				try {
-					Traverse.Create(reg).CallMethod("AddPatch", (object)new PLibPatches());
+					Traverse.Create(reg).CallMethod(nameof(PRegistry.AddPatch),
+						(object)new PLibPatches());
 				} catch (Exception e) {
 					PUtil.LogException(e);
 				}
@@ -268,7 +279,8 @@ namespace PeterHan.PLib {
 			if (patch.GetType().FullName == typeof(PLibPatches).FullName) {
 				string ver = null;
 				try {
-					ver = Traverse.Create(patch).GetProperty<string>("MyVersion");
+					ver = Traverse.Create(patch).GetProperty<string>(nameof(PLibPatches.
+						MyVersion));
 				} catch (Exception e) {
 					PUtil.LogException(e);
 				}

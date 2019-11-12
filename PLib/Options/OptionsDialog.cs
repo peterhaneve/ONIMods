@@ -76,11 +76,6 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
-		/// An action that does nothing. Required to make the cancel button appear.
-		/// </summary>
-		private static void DoNothing() { }
-
-		/// <summary>
 		/// The currently active dialog.
 		/// </summary>
 		private KScreen dialog;
@@ -111,6 +106,11 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		private readonly string path;
 
+		/// <summary>
+		/// The config file attribute for the options type, if present.
+		/// </summary>
+		private readonly ConfigFileAttribute typeAttr;
+
 		internal OptionsDialog(Type optionsType, KMod.Mod modSpec) {
 			dialog = null;
 			this.modSpec = modSpec ?? throw new ArgumentNullException("modSpec");
@@ -118,7 +118,10 @@ namespace PeterHan.PLib.Options {
 				"optionsType");
 			optionEntries = BuildOptions(optionsType);
 			options = null;
-			path = Path.Combine(modSpec.file_source.GetRoot(), POptions.CONFIG_FILE);
+			// Determine config location
+			typeAttr = POptions.GetConfigFileAttribute(optionsType);
+			path = Path.Combine(modSpec.file_source.GetRoot(), typeAttr?.ConfigFileName ??
+				POptions.CONFIG_FILE_NAME);
 		}
 
 		/// <summary>
@@ -170,7 +173,7 @@ namespace PeterHan.PLib.Options {
 			pDialog.Body.BackColor = new Color32(48, 52, 67, 255);
 			foreach (var entry in optionEntries)
 				pDialog.Body.AddChild(entry.GetUIEntry());
-			ReadOptions();
+			options = POptions.ReadSettings(path, optionsType);
 			if (options == null)
 				CreateOptions();
 			// Manually build the dialog so the options can be updated after realization
@@ -207,29 +210,6 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
-		/// Reads the mod options from its config file.
-		/// </summary>
-		private void ReadOptions() {
-			try {
-				// Cannot use POptions.ReadSettings because we already have the path
-				using (var jr = new JsonTextReader(File.OpenText(path))) {
-					var serializer = new JsonSerializer { MaxDepth = 8 };
-					// Deserialize from stream avoids reading file text into memory
-					options = serializer.Deserialize(jr, optionsType);
-				}
-			} catch (FileNotFoundException) {
-				PUtil.LogDebug("{0} was not found; using default settings".F(POptions.
-					CONFIG_FILE));
-			} catch (IOException e) {
-				// Options will be set to defaults
-				PUtil.LogExcWarn(e);
-			} catch (JsonException e) {
-				// Again set defaults
-				PUtil.LogExcWarn(e);
-			}
-		}
-
-		/// <summary>
 		/// Updates the dialog with the latest options from the file.
 		/// </summary>
 		private void UpdateOptions() {
@@ -247,20 +227,7 @@ namespace PeterHan.PLib.Options {
 				// Update from local options
 				foreach (var option in optionEntries)
 					option.WriteTo(options);
-			try {
-				using (var jw = new JsonTextWriter(File.CreateText(path))) {
-					var serializer = new JsonSerializer { MaxDepth = 8 };
-					jw.CloseOutput = true;
-					// Write to stream
-					if (options != null)
-						serializer.Serialize(jw, options);
-				}
-			} catch (IOException e) {
-				// TODO popup a warning
-				PUtil.LogExcWarn(e);
-			} catch (JsonException e) {
-				PUtil.LogExcWarn(e);
-			}
+			POptions.WriteSettings(options, path, typeAttr?.IndentOutput ?? false);
 		}
 	}
 }

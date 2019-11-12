@@ -21,7 +21,6 @@ using PeterHan.PLib;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Reflection.Emit;
 
 namespace PeterHan.ResearchQueue {
 	/// <summary>
@@ -149,7 +148,7 @@ namespace PeterHan.ResearchQueue {
 		}
 
 		/// <summary>
-		/// Goes through the research screen and updated titles for techs in the queue.
+		/// Goes through the research screen and updates titles for techs in the queue.
 		/// </summary>
 		/// <param name="queuedTech">The current research queue.</param>
 		private static void UpdateResearchOrder(IList<TechInstance> queuedTech) {
@@ -320,7 +319,7 @@ namespace PeterHan.ResearchQueue {
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
 			internal static void Postfix(SaveGame __instance) {
-				// Add a component for saving the research queue.
+				// Add a component for saving the research queue
 				__instance.gameObject?.AddOrGet<SavedResearchQueue>();
 			}
 		}

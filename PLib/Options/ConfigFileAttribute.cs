@@ -18,36 +18,32 @@
 
 using System;
 
-namespace PeterHan.PLib {
+namespace PeterHan.PLib.Options {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// An attribute placed on an options class only (will not function on a member property)
+	/// which denotes the config file name to use for that mod, and allows save/load options
+	/// to be set.
 	/// </summary>
-	public static class PVersion {
+	public sealed class ConfigFileAttribute : Attribute {
 		/// <summary>
-		/// The PLib version.
+		/// The configuration file name. If null, the default file name will be used.
 		/// </summary>
-		public const string VERSION = "2.18.0.0";
+		public string ConfigFileName { get; }
 
 		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in Mod_OnLoad, and will always return false in those cases.
+		/// Whether the output should be indented nicely. Defaults to false for smaller
+		/// config files.
 		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				bool latest = false;
-				try {
-					latest = new Version(VERSION) == PSharedData.GetData<Version>(PRegistry.
-						KEY_VERSION);
-				} catch (OverflowException) {
-				} catch (FormatException) {
-				} catch (ArgumentOutOfRangeException) {
-				}
-				return latest;
-			}
+		public bool IndentOutput { get; }
+
+		public ConfigFileAttribute(string FileName = POptions.CONFIG_FILE_NAME,
+				bool IndentOutput = false) {
+			ConfigFileName = FileName;
+			this.IndentOutput = IndentOutput;
+		}
+
+		public override string ToString() {
+			return ConfigFileName;
 		}
 	}
 }

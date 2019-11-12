@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using UnityEngine;
 
@@ -32,6 +33,15 @@ namespace PeterHan.PLib {
 		/// Whether PLib has been initialized.
 		/// </summary>
 		internal static bool PLibInit { get; private set; } = false;
+
+		/// <summary>
+		/// The characters which are not allowed in file names.
+		/// </summary>
+		private static readonly HashSet<char> INVALID_FILE_CHARS;
+
+		static PUtil() {
+			INVALID_FILE_CHARS = new HashSet<char>(Path.GetInvalidFileNameChars());
+		}
 
 		/// <summary>
 		/// Adds a colony achievement to the colony summary screen. Must be invoked after the
@@ -187,6 +197,27 @@ namespace PeterHan.PLib {
 			} else
 				// Probably impossible
 				Debug.LogError("[PLib] Somehow called from null assembly!");
+		}
+
+		/// <summary>
+		/// Returns true if the file is a valid file name. If the argument contains path
+		/// separator characters, this method returns false, since that is not a valid file
+		/// name.
+		/// 
+		/// Null and empty file names are not valid file names.
+		/// </summary>
+		/// <param name="file">The file name to check.</param>
+		/// <returns>true if the name could be used to name a file, or false otherwise.</returns>
+		public static bool IsValidFileName(string file) {
+			bool valid = (file != null);
+			if (valid) {
+				// Cannot contain characters in INVALID_FILE_CHARS
+				int len = file.Length;
+				for (int i = 0; i < len && valid; i++)
+					if (INVALID_FILE_CHARS.Contains(file[i]))
+						valid = false;
+			}
+			return valid;
 		}
 
 		/// <summary>

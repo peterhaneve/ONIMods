@@ -52,7 +52,7 @@ namespace PeterHan.SweepByType {
 		/// </summary>
 		internal TypeSelectControl TypeSelect { get; private set; }
 
-		public FilteredClearTool() {
+		internal FilteredClearTool() {
 			cachedTypes = null;
 			TypeSelect = null;
 		}
@@ -67,6 +67,19 @@ namespace PeterHan.SweepByType {
 			}
 		}
 
+		protected override void OnActivateTool() {
+			var menu = ToolMenu.Instance;
+			base.OnActivateTool();
+			// Update only on tool activation to improve performance
+			if (TypeSelect != null) {
+				var root = TypeSelect.RootPanel;
+				TypeSelect.Update();
+				PUIElements.SetParent(root, menu.gameObject);
+				root.transform.SetAsFirstSibling();
+			}
+			menu.PriorityScreen.Show(true);
+		}
+
 		protected override void OnCleanUp() {
 			base.OnCleanUp();
 			// Clean up everything needed
@@ -77,33 +90,13 @@ namespace PeterHan.SweepByType {
 			DoneDrag();
 		}
 
-		protected override void OnPrefabInit() {
-			var us = Traverse.Create(this);
-			base.OnPrefabInit();
-			Instance = this;
-			interceptNumberKeysForPriority = true;
-			populateHitsList = true;
-			gameObject.AddComponent<FilteredClearHover>();
-			// Get the cursor from the existing sweep tool
-			var trSweep = Traverse.Create(ClearTool.Instance);
-			cursor = trSweep.GetField<Texture2D>("cursor");
-			us.SetField("boxCursor", cursor);
-			// Get the area visualizer from the sweep tool
-			var avTemplate = trSweep.GetField<GameObject>("areaVisualizer");
-			if (avTemplate != null) {
-				var areaVisualizer = Util.KInstantiate(avTemplate, gameObject,
-					"FilteredClearToolAreaVisualizer");
-				areaVisualizer.SetActive(false);
-				areaVisualizerSpriteRenderer = areaVisualizer.GetComponent<SpriteRenderer>();
-				// The visualizer is private so we need to set it with reflection
-				us.SetField("areaVisualizer", areaVisualizer);
-				us.SetField("areaVisualizerTextPrefab", trSweep.GetField<GameObject>(
-					"areaVisualizerTextPrefab"));
-			}
-			visualizer = Util.KInstantiate(trSweep.GetField<GameObject>("visualizer"),
-				gameObject, "FilteredClearToolSprite");
-			visualizer.SetActive(false);
-			TypeSelect = new TypeSelectControl();
+		protected override void OnDeactivateTool(InterfaceTool newTool) {
+			var menu = ToolMenu.Instance;
+			// Unparent but do not dispose
+			if (TypeSelect != null)
+				PUIElements.SetParent(TypeSelect.RootPanel, null);
+			menu.PriorityScreen.Show(false);
+			base.OnDeactivateTool(newTool);
 		}
 
 		protected override void OnDragComplete(Vector3 cursorDown, Vector3 cursorUp) {
@@ -141,26 +134,35 @@ namespace PeterHan.SweepByType {
 			}
 		}
 
-		protected override void OnActivateTool() {
-			var menu = ToolMenu.Instance;
-			base.OnActivateTool();
-			// Update only on tool activation to improve performance
-			if (TypeSelect != null) {
-				var root = TypeSelect.RootPanel;
-				TypeSelect.Update();
-				PUIElements.SetParent(root, menu.gameObject);
-				root.transform.SetAsFirstSibling();
+		protected override void OnPrefabInit() {
+			var us = Traverse.Create(this);
+			base.OnPrefabInit();
+			Instance = this;
+			interceptNumberKeysForPriority = true;
+			populateHitsList = true;
+			gameObject.AddComponent<FilteredClearHover>();
+			// Get the cursor from the existing sweep tool
+			var trSweep = Traverse.Create(ClearTool.Instance);
+			cursor = trSweep.GetField<Texture2D>("cursor");
+			us.SetField("boxCursor", cursor);
+			// Get the area visualizer from the sweep tool
+			var avTemplate = trSweep.GetField<GameObject>("areaVisualizer");
+			if (avTemplate != null) {
+				var areaVisualizer = Util.KInstantiate(avTemplate, gameObject,
+					"FilteredClearToolAreaVisualizer");
+				areaVisualizer.SetActive(false);
+				areaVisualizerSpriteRenderer = areaVisualizer.GetComponent<SpriteRenderer>();
+				// The visualizer is private so we need to set it with reflection
+				us.SetField("areaVisualizer", areaVisualizer);
+				us.SetField("areaVisualizerTextPrefab", trSweep.GetField<GameObject>(
+					"areaVisualizerTextPrefab"));
 			}
-			menu.PriorityScreen.Show(true);
-		}
-
-		protected override void OnDeactivateTool(InterfaceTool newTool) {
-			var menu = ToolMenu.Instance;
-			// Unparent but do not dispose
-			if (TypeSelect != null)
-				PUIElements.SetParent(TypeSelect.RootPanel, null);
-			menu.PriorityScreen.Show(false);
-			base.OnDeactivateTool(newTool);
+			visualizer = Util.KInstantiate(trSweep.GetField<GameObject>("visualizer"),
+				gameObject, "FilteredClearToolSprite");
+			visualizer.SetActive(false);
+			// Allow icons to be disabled
+			TypeSelect = new TypeSelectControl(SweepByTypePatches.Options?.DisableIcons ??
+				false);
 		}
 	}
 }
