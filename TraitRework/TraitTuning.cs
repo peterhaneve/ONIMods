@@ -139,7 +139,10 @@ namespace PeterHan.TraitRework {
 				new AttributeModifier(attrs.ToiletEfficiency.Id, -1f, IRRITABLEBOWEL.NAME));
 			// Squeamish = -30 HP (from +0 HP)
 			var hpMaxAttr = attrs.Get("HitPointsMax");
-			hpMaxAttr.Name = "Maximum " + db.Amounts.HitPoints.Name;
+			hpMaxAttr.Name = string.Format(TraitStrings.MAX_HP, db.Amounts.HitPoints.Name);
+			hpMaxAttr.Description = TraitStrings.MAX_HP_SHORTDESC;
+			hpMaxAttr.SetFormatter(new StandardAttributeFormatter(GameUtil.UnitClass.
+				SimpleInteger, GameUtil.TimeSlice.None));
 			AddTrait("Hemophobia", false, true, new string[] { "MedicalAid" },
 				new AttributeModifier(hpMaxAttr.Id, -30f, HEMOPHOBIA.NAME));
 			// Narcoleptic = ignores Sore Back

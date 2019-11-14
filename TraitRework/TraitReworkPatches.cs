@@ -36,6 +36,11 @@ namespace PeterHan.TraitRework {
 		internal static AttributeModifier EAT_LIT_MODIFIER;
 
 		/// <summary>
+		/// The minimum version where "lit workspace" eating was fixed in the stock game.
+		/// </summary>
+		private const uint VERSION_DISABLE_LITEATING = 379337U;
+
+		/// <summary>
 		/// Adds a short trait description for the embark screen.
 		/// </summary>
 		/// <param name="traitID">The trait ID to add.</param>
@@ -142,6 +147,13 @@ namespace PeterHan.TraitRework {
 		[HarmonyPatch(typeof(Edible), "OnStopWork")]
 		public static class Edible_OnStopWork_Patch {
 			/// <summary>
+			/// Controls whether this patch is implemented.
+			/// </summary>
+			internal static bool Prepare() {
+				return PUtil.GameVersion < VERSION_DISABLE_LITEATING;
+			}
+
+			/// <summary>
 			/// Applied after OnStopWork runs.
 			/// </summary>
 			internal static void Postfix(Worker worker) {
@@ -155,6 +167,13 @@ namespace PeterHan.TraitRework {
 		/// </summary>
 		[HarmonyPatch(typeof(Edible), "OnWorkTick")]
 		public static class Edible_OnWorkTick_Patch {
+			/// <summary>
+			/// Controls whether this patch is implemented.
+			/// </summary>
+			internal static bool Prepare() {
+				return PUtil.GameVersion < VERSION_DISABLE_LITEATING;
+			}
+
 			/// <summary>
 			/// Applied after OnWorkTick runs.
 			/// </summary>

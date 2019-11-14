@@ -36,19 +36,21 @@ namespace PeterHan.TraitRework {
 
 		// Extended trait tooltips
 		public static LocString CANTCOOK_SHORTDESC = "Will not eat " + UI.PRE_KEYWORD +
-			"Food" + UI.PST_KEYWORD + " prepared in " + UI.PRE_KEYWORD + BUILDINGS.
+			"Food" + UI.PST_KEYWORD + " from " + UI.PRE_KEYWORD + BUILDINGS.
 			PREFABS.GOURMETCOOKINGSTATION.NAME + UI.PST_KEYWORD;
 		public static LocString CANTCOOK_EXT = "• Will not eat " + UI.FormatAsLink(
 			RESEARCH.TREES.TITLE_FOOD, "FOOD") + " prepared in " + UI.FormatAsLink(BUILDINGS.
 			PREFABS.GOURMETCOOKINGSTATION.NAME, GourmetCookingStationConfig.ID);
+
+		public static LocString MAX_HP = "Maximum {0}";
+		public static LocString MAX_HP_SHORTDESC = "Determines how much damage from hostile conditions a Duplicant can endure";
 
 		public static LocString NARCOLEPSY_SHORTDESC = "Immune to " + UI.PRE_KEYWORD +
 			"Sore Back" + UI.PST_KEYWORD;
 		public static LocString NARCOLEPSY_TOOLTIP = "Sleeping on the ground will not affect this Duplicant";
 
 		public static LocString SCAREDYCAT_SHORTDESC = "Will not eat " + UI.PRE_KEYWORD +
-			"Meat" + UI.PST_KEYWORD + " or " + UI.PRE_KEYWORD + "Fish" + UI.PST_KEYWORD +
-			" products";
+			"Meat" + UI.PST_KEYWORD + " or " + UI.PRE_KEYWORD + "Fish" + UI.PST_KEYWORD;
 		public static LocString SCAREDYCAT_EXT = "• Will not eat " + UI.FormatAsLink(
 			ITEMS.FOOD.MEAT.NAME, MeatConfig.ID) + " or " + UI.FormatAsLink(ITEMS.FOOD.
 			FISHMEAT.NAME, PacuFilletConfig.ID) + " products";
@@ -57,7 +59,7 @@ namespace PeterHan.TraitRework {
 		/// Updated trait descriptions are stored here.
 		/// </summary>
 		public static class TraitDescriptions {
-			public static LocString CALORIEBURNER = "This Duplicant might actually be several black holes in a trench coat, but the extra food makes them stronger";
+			public static LocString CALORIEBURNER = "This Duplicant might actually be a black hole in a trench coat, but the extra food makes them stronger";
 
 			public static LocString CANTCOOK = "This Duplicant has a deep-seated distrust of the culinary arts and will only eat simple foods";
 
@@ -65,7 +67,7 @@ namespace PeterHan.TraitRework {
 
 			public static LocString HEMOPHOBIA = "This Duplicant has a frail body and delicate disposition, and cannot tend to the sick";
 
-			public static LocString MOUTHBREATHER = "This Duplicant sucks up way more than their fair share of " + ELEMENTS.OXYGEN.NAME + ", but the extra air makes them faster";
+			public static LocString MOUTHBREATHER = "This Duplicant sucks up more than their fair share of " + ELEMENTS.OXYGEN.NAME + ", but the extra air makes them faster";
 
 			public static LocString NARCOLEPSY = "This Duplicant can and will fall asleep at any time, but does not mind sleeping on the ground";
 

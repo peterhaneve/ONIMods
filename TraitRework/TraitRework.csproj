@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
     <AssemblyTitle>Traits Reworked</AssemblyTitle>
-    <FileVersion>1.1.0.0</FileVersion>
+    <FileVersion>1.2.0.0</FileVersion>
     <RootNamespace>PeterHan.TraitRework</RootNamespace>
     <Description>Reworks traits to make Duplicant selection more interesting.</Description>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>

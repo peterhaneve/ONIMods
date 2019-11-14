@@ -30,9 +30,17 @@ namespace PeterHan.PLib {
 	/// </summary>
 	public static class PUtil {
 		/// <summary>
+		/// Retrieves the current changelist version of the game. LU-371502 has a version of
+		/// 371502u.
+		/// 
+		/// If the version cannot be determined, returns 0.
+		/// </summary>
+		public static uint GameVersion { get; }
+
+		/// <summary>
 		/// Whether PLib has been initialized.
 		/// </summary>
-		internal static bool PLibInit { get; private set; } = false;
+		internal static bool PLibInit { get; private set; }
 
 		/// <summary>
 		/// The characters which are not allowed in file names.
@@ -41,6 +49,8 @@ namespace PeterHan.PLib {
 
 		static PUtil() {
 			INVALID_FILE_CHARS = new HashSet<char>(Path.GetInvalidFileNameChars());
+			PLibInit = false;
+			GameVersion = GetGameVersion();
 		}
 
 		/// <summary>
@@ -158,6 +168,24 @@ namespace PeterHan.PLib {
 						LogException(e);
 					}
 			}
+		}
+
+		/// <summary>
+		/// Retrieves the current game version from the Klei code.
+		/// </summary>
+		/// <returns>The change list version of the game, or 0 if it cannot be determined.</returns>
+		private static uint GetGameVersion() {
+			/*
+			 * KleiVersion.ChangeList is a const which is substituted at compile time; if
+			 * accessed directly, PLib would have a version "baked in" and would never
+			 * update depending on the game version in use.
+			 */
+			var field = PPatchTools.GetFieldSafe(typeof(KleiVersion), nameof(KleiVersion.
+				ChangeList), true);
+			uint ver = 0U;
+			if (field != null && field.GetValue(null) is uint newVer)
+				ver = newVer;
+			return ver;
 		}
 
 		/// <summary>
