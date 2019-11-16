@@ -32,6 +32,7 @@ Mods should remain in their own subfolder.
 | [Efficient Supply](https://steamcommunity.com/sharedfiles/filedetails/?id=1874600082) | Optimizes Supply errands by preventing the use of tiny item stacks |
 | [Falling Sand](https://steamcommunity.com/sharedfiles/filedetails/?id=1855163252) | Automatically places Dig errands on fallen unstable tiles caused by mining |
 | [Fast Save](https://steamcommunity.com/sharedfiles/filedetails/?id=1867707267) | Increases performance when loading, saving, or automatically saving the game |
+| [Food Supply Tooltips](https://steamcommunity.com/sharedfiles/filedetails/?id=1914501780) | Adds tooltips to food sources indicating how much food they can produce per cycle |
 | [Research Queue](https://steamcommunity.com/sharedfiles/filedetails/?id=1893887916) | Allows queueing of multiple technologies to research |
 | [Settings Change Tool](https://steamcommunity.com/sharedfiles/filedetails/?id=1843647561) | Allows Repair, Disinfect, and Enable settings to be changed on many buildings at once |
 | [Sweep By Type](https://steamcommunity.com/sharedfiles/filedetails/?id=1863428350) | Adds a filter to the Sweep tool to sweep only selected item types |
@@ -51,4 +52,5 @@ Mods should remain in their own subfolder.
 |  **Name**  |  **Description**  |
 | :--------: | :---------------: |
 | [Decor Reimagined](https://steamcommunity.com/sharedfiles/filedetails/?id=1892161928) | Reimagines decor, rewarding bases with consistent, unique decor items |
+| [Diseases Restored](https://steamcommunity.com/sharedfiles/filedetails/?id=1911357229) | Restores diseases making germs more dangerous again, and adds methods to deal with germ spread |
 | [Traits Reworked](https://steamcommunity.com/sharedfiles/filedetails/?id=1905214098) | Reworks Duplicant traits to make all traits meaningful and the most extreme traits more sensible |
