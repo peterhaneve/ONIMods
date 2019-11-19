@@ -89,7 +89,7 @@ namespace PeterHan.FoodTooltip {
 		/// </summary>
 		/// <param name="item">The item to search.</param>
 		/// <param name="found">The foods found so far.</param>
-		/// <param name="quantity">The quantity of the base item used to create the provided item.</param>
+		/// <param name="quantity">The quantity of the base item.</param>
 		private void SearchForRecipe(Tag item, IList<FoodResult> found, float quantity) {
 			var prefab = Assets.GetPrefab(item);
 			if (prefab != null && quantity > 0.0f) {
@@ -108,8 +108,8 @@ namespace PeterHan.FoodTooltip {
 							break;
 						}
 					if (amount > 0.0f)
-						SearchForRecipe(recipe.Result, found, recipe.OutputUnits / (amount *
-							quantity));
+						SearchForRecipe(recipe.Result, found, recipe.OutputUnits * quantity /
+							amount);
 				}
 				// And complex ones too
 				foreach (var recipe in ComplexRecipeManager.Get().recipes) {
@@ -123,8 +123,8 @@ namespace PeterHan.FoodTooltip {
 					if (amount > 0.0f)
 						// Check all results of the recipe
 						foreach (var result in recipe.results)
-							SearchForRecipe(result.material, found, result.amount / (amount *
-								quantity));
+							SearchForRecipe(result.material, found, result.amount * quantity /
+								amount);
 				}
 			}
 		}
