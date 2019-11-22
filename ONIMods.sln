@@ -39,6 +39,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StarmapQueue", "StarmapQueu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FoodTooltip", "FoodTooltip\FoodTooltip.csproj", "{CFE40396-D97A-4904-B13A-760D28E3EB31}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resculpt", "Resculpt\Resculpt.csproj", "{74F922E7-30FA-4F88-B599-4ABBCAEB6938}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -117,6 +119,10 @@ Global
 		{CFE40396-D97A-4904-B13A-760D28E3EB31}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CFE40396-D97A-4904-B13A-760D28E3EB31}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CFE40396-D97A-4904-B13A-760D28E3EB31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74F922E7-30FA-4F88-B599-4ABBCAEB6938}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74F922E7-30FA-4F88-B599-4ABBCAEB6938}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74F922E7-30FA-4F88-B599-4ABBCAEB6938}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74F922E7-30FA-4F88-B599-4ABBCAEB6938}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

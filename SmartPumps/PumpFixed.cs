@@ -136,15 +136,14 @@ namespace PeterHan.SmartPumps {
 		}
 
 		protected override void OnCleanUp() {
-			dispenser.GetConduitManager().RemoveConduitUpdater(OnConduitUpdate);
+			dispenser.GetConduitManager()?.RemoveConduitUpdater(OnConduitUpdate);
 			base.OnCleanUp();
 		}
 
 		// Called when conduits are updated.
 		private void OnConduitUpdate(float dt) {
-			bool show = dispenser.ConduitContents.mass > 0.0f;
-			conduitBlockedGuid = selectable.ToggleStatusItem(Db.Get().
-				BuildingStatusItems.ConduitBlocked, conduitBlockedGuid, show, null);
+			conduitBlockedGuid = selectable.ToggleStatusItem(Db.Get().BuildingStatusItems.
+				ConduitBlocked, conduitBlockedGuid, dispenser.blocked);
 		}
 
 		protected override void OnPrefabInit() {
@@ -160,8 +159,8 @@ namespace PeterHan.SmartPumps {
 			base.OnSpawn();
 			elapsedTime = 0f;
 			pumpable = UpdateOperational();
-			dispenser.GetConduitManager().AddConduitUpdater(OnConduitUpdate,
-				ConduitFlowPriority.Last);
+			dispenser.GetConduitManager()?.AddConduitUpdater(OnConduitUpdate,
+				ConduitFlowPriority.LastPostUpdate);
 		}
 
 		/// <summary>

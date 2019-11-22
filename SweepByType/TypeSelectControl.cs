@@ -21,13 +21,12 @@ using PeterHan.PLib.UI;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace PeterHan.SweepByType {
 	/// <summary>
 	/// A control which allows selection of types.
 	/// </summary>
-	public sealed class TypeSelectControl : IComparer<Tag> {
+	public sealed class TypeSelectControl {
 		/// <summary>
 		/// The margin around the scrollable area to avoid stomping on the scrollbar.
 		/// </summary>
@@ -194,7 +193,8 @@ namespace PeterHan.SweepByType {
 #pragma warning disable IDE0031 // Use null propagation
 			vScroll = (vst == null) ? null : vst.gameObject;
 #pragma warning restore IDE0031 // Use null propagation
-			children = new SortedList<Tag, TypeSelectCategory>(16, this);
+			children = new SortedList<Tag, TypeSelectCategory>(16, TagAlphabetComparer.
+				INSTANCE);
 			position = Vector3.zero;
 			Screen = RootPanel.AddComponent<TypeSelectScreen>();
 		}
@@ -224,10 +224,6 @@ namespace PeterHan.SweepByType {
 			PCheckBox.SetCheckState(allItems, PCheckBox.STATE_UNCHECKED);
 			foreach (var child in children)
 				child.Value.ClearAll();
-		}
-
-		public int Compare(Tag x, Tag y) {
-			return x.ProperName().CompareTo(y.ProperName());
 		}
 
 		private void OnCheck(GameObject source, int state) {
@@ -372,7 +368,8 @@ namespace PeterHan.SweepByType {
 					OnStateChanged = OnToggle, Size = new Vector2(ROW_SIZE.x * 0.5f,
 					ROW_SIZE.y * 0.5f), Color = PUITuning.Colors.ComponentLightStyle
 				}).AddChild(selectBox).Build();
-				children = new SortedList<Tag, TypeSelectElement>(16);
+				children = new SortedList<Tag, TypeSelectElement>(16, TagAlphabetComparer.
+					INSTANCE);
 				ChildPanel = new PPanel("Children") {
 					Direction = PanelDirection.Vertical, Alignment = TextAnchor.UpperLeft,
 					Spacing = ROW_SPACING, Margin = new RectOffset(INDENT, 0, 0, 0)
