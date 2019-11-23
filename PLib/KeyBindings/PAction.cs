@@ -24,6 +24,35 @@ namespace PeterHan.PLib {
 	/// </summary>
 	public sealed class PAction {
 		/// <summary>
+		/// The maximum action value (typically used to mean "no action") used in the currently
+		/// running instance of the game.
+		/// 
+		/// Since Action is compiled to a const int when a mod is built, any changes to the
+		/// Action enum will break direct references to Action.NumActions. Use this property
+		/// instead to always use the intended "no action" value.
+		/// </summary>
+		public static Action MaxAction { get; }
+
+		static PAction() {
+			Action numActions = Action.NumActions;
+			try {
+				// Enum.TryParse was introduced in .NET Framework 4.0
+				numActions = (Action)Enum.Parse(typeof(Action), "NumActions");
+			} catch (ArgumentException) {
+				// Klei renamed it...
+				PUtil.LogWarning("Unable to determine MaxAction, using value {0:D}".F(
+					numActions));
+			} catch (OverflowException) {
+				// Klei renamed it...
+				PUtil.LogWarning("Unable to determine MaxAction, using value {0:D}".F(
+					numActions));
+			} catch (InvalidCastException) {
+				// Should be unreachable
+			}
+			MaxAction = numActions;
+		}
+
+		/// <summary>
 		/// Registers a PAction with the action manager. There is no corresponding Unregister
 		/// call, so avoid spamming PActions.
 		/// 
@@ -121,7 +150,7 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <returns>The Klei action for use in game functions.</returns>
 		public Action GetKAction() {
-			return (Action)((int)Action.NumActions + ID);
+			return (Action)((int)MaxAction + ID);
 		}
 
 		public override int GetHashCode() {

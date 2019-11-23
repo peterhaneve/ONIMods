@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib;
 using UnityEngine;
 
 namespace PeterHan.Resculpt {
@@ -100,7 +101,7 @@ namespace PeterHan.Resculpt {
 				if (string.IsNullOrEmpty(text))
 					text = ResculptStrings.RESCULPT_BUTTON;
 				var button = new KIconButtonMenu.ButtonInfo("action_control", text, OnResculpt,
-					Action.NumActions, null, null, null, ResculptStrings.RESCULPT_TOOLTIP);
+					PAction.MaxAction, null, null, null, ResculptStrings.RESCULPT_TOOLTIP);
 				Game.Instance?.userMenu?.AddButton(gameObject, button);
 			}
 		}

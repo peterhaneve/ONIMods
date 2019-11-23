@@ -31,11 +31,6 @@ namespace PeterHan.PLib {
 		internal static PActionManager Instance { get; } = new PActionManager();
 
 		/// <summary>
-		/// The old maximum Action limit.
-		/// </summary>
-		private const int N_ACTIONS = (int)Action.NumActions;
-
-		/// <summary>
 		/// The category used for all PLib keys.
 		/// </summary>
 		public const string CATEGORY = "PLib";
@@ -119,7 +114,8 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <returns>The maximum int index for an Action.</returns>
 		public int GetMaxAction() {
-			return (maxPAction > 0) ? (maxPAction + N_ACTIONS) : N_ACTIONS - 1;
+			int nActions = (int)PAction.MaxAction;
+			return (maxPAction > 0) ? (maxPAction + nActions) : nActions - 1;
 		}
 
 		/// <summary>
