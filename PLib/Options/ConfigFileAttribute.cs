@@ -24,6 +24,7 @@ namespace PeterHan.PLib.Options {
 	/// which denotes the config file name to use for that mod, and allows save/load options
 	/// to be set.
 	/// </summary>
+	[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 	public sealed class ConfigFileAttribute : Attribute {
 		/// <summary>
 		/// The configuration file name. If null, the default file name will be used.

@@ -24,6 +24,7 @@ namespace PeterHan.PLib.Options {
 	/// that the game must be restarted to apply the options. This attribute will not work if
 	/// it is applied to an individual option, only if applied to the class as a whole.
 	/// </summary>
+	[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 	public sealed class RestartRequiredAttribute : Attribute {
 	}
 }

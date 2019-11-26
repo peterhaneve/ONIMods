@@ -14,8 +14,9 @@ DLL releases for major versions are available in the [releases](https://github.c
 
 ## Usage
 
-PLib should be included in your mod via ILMerge.
-The easiest way to do this is to add the PLib project or DLL as a reference in your mod project, then to use ILMerge as a post-build command.
+PLib should be included in your mod.
+The easiest way to do this is to use ILMerge and add the PLib project or DLL as a reference in your mod project.
+ILMerge is best used as a post-build command.
 Suggested command:
 ```powershell
 "$(ILMergeConsolePath)" /ndebug /out:$(TargetName)Merged.dll $(TargetName).dll PLib.dll /targetplatform:v2,C:/Windows/Microsoft.NET/Framework64/v2.0.50727
@@ -49,7 +50,7 @@ This is not a guarantee that the PLib instance in a particular mod is the loaded
 
 ### Initialization
 
-Initialize PLib by calling `PUtil.LogModInit()` in `OnLoad`. PLib *must* be initialized before using most of PLib functionality.
+Initialize PLib by calling `PUtil.InitLibrary(bool)` in `OnLoad`. PLib *must* be initialized before using most of PLib functionality.
 
 It will emit your mod's `AssemblyFileVersion` to the log. It is not `AssemblyVersion`, because  changing `AssemblyVersion` breaks any explicit references to the assembly by name. (Ever wonder why .NET 3.5 still uses the .NET 2.0 version string?)
 
@@ -67,7 +68,7 @@ To write, use `PLib.Options.POptions.WriteSettings<T>(T settings)`, where again 
 
 PLib.Options automatically displays config menus for mods that are registered. You can register an mod by invoking `POptions.RegisterOptions(Type settingtype)` in `OnLoad`. The argument should be the type of the class your mod uses for its options, and must be JSON serializable. Newtonsoft.Json is bundled with the game and can be referenced.
 
-Fields must be a property, not a member, and should be annotated with `PLib.Option(string displaytext, [string tooltip=""])` to be visible in the mod config menu. Currently supported types are: `int`, `float`, `string`, `bool`.
+Fields must be a property, not a member, and should be annotated with `PLib.Option(string displaytext, [string tooltip=""])` to be visible in the mod config menu. Currently supported types are: `int`, `float`, `string`, `bool`, and `Enum`.
 
 #### Range limits
 
@@ -125,6 +126,8 @@ The identifier should be unique to the action used and should include the mod na
 If multiple mods register the same action identifier, only the first will receive a valid `PAction`.
 The returned `PAction` object has a `GetKAction` method which can be used to retrieve an `Action` that works in standard Klei functions.
 The `PKeyBinding` is used to specify the default key binding.
+
+Note that the game can change the values in the `Action` enum. Instead of using the built-in `Action.NumActions` to denote "no action", consider using `PAction.MaxAction` instead which will use the correct value at runtime if necessary.
 
 ### Lighting
 

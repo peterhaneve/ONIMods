@@ -20,9 +20,11 @@ using System;
 
 namespace PeterHan.PLib {
 	/// <summary>
-	/// An attribute placed on an option field or enum value for a class used as mod options in
+	/// An attribute placed on an option property or enum value for a class used as mod options in
 	/// order to denote the display title and other options.
 	/// </summary>
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Enum, AllowMultiple = false,
+		Inherited = true)]
 	public sealed class OptionAttribute : Attribute {
 		/// <summary>
 		/// The option category.

@@ -23,6 +23,7 @@ namespace PeterHan.PLib {
 	/// An attribute placed on an option field for a property used as mod options to define
 	/// minimum and maximum acceptable values.
 	/// </summary>
+	[AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
 	public sealed class LimitAttribute : Attribute {
 		/// <summary>
 		/// The maximum value (inclusive).
