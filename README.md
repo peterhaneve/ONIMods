@@ -34,6 +34,7 @@ Mods should remain in their own subfolder.
 | [Fast Save](https://steamcommunity.com/sharedfiles/filedetails/?id=1867707267) | Increases performance when loading, saving, or automatically saving the game |
 | [Food Supply Tooltips](https://steamcommunity.com/sharedfiles/filedetails/?id=1914501780) | Adds tooltips to food sources indicating how much food they can produce per cycle |
 | [Research Queue](https://steamcommunity.com/sharedfiles/filedetails/?id=1893887916) | Allows queueing of multiple technologies to research |
+| [Sandbox Tools](https://steamcommunity.com/sharedfiles/filedetails/?id=1928837153) | Improves the Sandbox mode with new spawnable items and other small tweaks | 
 | [Settings Change Tool](https://steamcommunity.com/sharedfiles/filedetails/?id=1843647561) | Allows Repair, Disinfect, and Enable settings to be changed on many buildings at once |
 | [Sweep By Type](https://steamcommunity.com/sharedfiles/filedetails/?id=1863428350) | Adds a filter to the Sweep tool to sweep only selected item types |
 | [Starmap Queue](https://steamcommunity.com/sharedfiles/filedetails/?id=1907780517) | Automatically selects new destinations to be analyzed when the Telescope finishes research |

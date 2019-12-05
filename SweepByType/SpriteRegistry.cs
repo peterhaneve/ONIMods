@@ -20,9 +20,9 @@ using PeterHan.PLib;
 using System;
 using UnityEngine;
 
-namespace PeterHan.BulkSettingsChange {
+namespace PeterHan.SweepByType {
 	/// <summary>
-	/// Stores sprites used in the bulk change tool.
+	/// Stores sprites used in the filtered sweep tool.
 	/// </summary>
 	static class SpriteRegistry {
 		/// <summary>
@@ -31,19 +31,9 @@ namespace PeterHan.BulkSettingsChange {
 		private static bool spritesLoaded;
 
 		/// <summary>
-		/// The sprite used for the placer icon.
-		/// </summary>
-		private static Sprite PLACE_ICON;
-
-		/// <summary>
 		/// The sprite used for the tool icon.
 		/// </summary>
 		private static Sprite TOOL_ICON;
-
-		public static Sprite GetPlaceIcon() {
-			LoadSprites();
-			return PLACE_ICON;
-		}
 
 		public static Sprite GetToolIcon() {
 			LoadSprites();
@@ -56,10 +46,8 @@ namespace PeterHan.BulkSettingsChange {
 		private static void LoadSprites() {
 			if (!spritesLoaded) {
 				try {
-					PLACE_ICON = PUtil.LoadSprite("PeterHan.BulkSettingsChange.Placer.png");
-					PLACE_ICON.name = BulkChangeStrings.PLACE_ICON_NAME;
-					TOOL_ICON = PUtil.LoadSprite("PeterHan.BulkSettingsChange.Toggle.png");
-					TOOL_ICON.name = BulkChangeStrings.TOOL_ICON_NAME;
+					TOOL_ICON = PUtil.LoadSprite("PeterHan.SweepByType.Sweep.png");
+					TOOL_ICON.name = SweepByTypeStrings.TOOL_ICON_NAME;
 				} catch (ArgumentException e) {
 					// Could not load the icons, but better this than crashing
 					PUtil.LogException(e);

@@ -3,9 +3,15 @@
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
     <AssemblyTitle>Sweep By Type</AssemblyTitle>
-    <FileVersion>1.9.0.0</FileVersion>
+    <FileVersion>1.10.0.0</FileVersion>
     <RootNamespace>PeterHan.SweepByType</RootNamespace>
     <Description>Adds an optional material type filter to the Sweep tool.</Description>
-    <AssemblyVersion>1.6.0.0</AssemblyVersion>
+    <AssemblyVersion>1.10.0.0</AssemblyVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Sweep.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Sweep.png" />
+  </ItemGroup>
 </Project>

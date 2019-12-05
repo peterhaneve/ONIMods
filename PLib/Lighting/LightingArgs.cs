@@ -33,7 +33,7 @@ namespace PeterHan.PLib.Lighting {
 	/// location. These values should be between 0 and 1 normally, with the maximum brightness
 	/// being set by the intensity parameter of the Light2D.
 	/// </summary>
-	public sealed class LightingArgs : IDictionary<int, float> {
+	public sealed class LightingArgs : EventArgs, IDictionary<int, float> {
 		/// <summary>
 		/// The location where lighting results are stored.
 		/// </summary>

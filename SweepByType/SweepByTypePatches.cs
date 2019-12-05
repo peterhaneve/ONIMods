@@ -81,19 +81,9 @@ namespace PeterHan.SweepByType {
 			/// <param name="__instance">The current instance.</param>
 			internal static void Postfix(PlayerController __instance) {
 				Options = POptions.ReadSettings<SweepByTypeOptions>();
-				// Create list so that new tool can be appended at the end
-				var interfaceTools = new List<InterfaceTool>(__instance.tools);
-				var filteredSweepTool = new GameObject(typeof(FilteredClearTool).Name);
-				filteredSweepTool.AddComponent<FilteredClearTool>();
-				// Reparent tool to the player controller, then enable/disable to load it
-				filteredSweepTool.transform.SetParent(__instance.gameObject.transform);
-				filteredSweepTool.gameObject.SetActive(true);
-				filteredSweepTool.gameObject.SetActive(false);
+				PToolMode.RegisterTool<FilteredClearTool>(__instance);
 				PUtil.LogDebug("Created FilteredClearTool with icons " + ((Options?.
 					DisableIcons == true) ? "disabled" : "enabled"));
-				// Add tool to tool list
-				interfaceTools.Add(filteredSweepTool.GetComponent<InterfaceTool>());
-				__instance.tools = interfaceTools.ToArray();
 			}
 		}
 
@@ -107,14 +97,15 @@ namespace PeterHan.SweepByType {
 			/// </summary>
 			internal static void Postfix(ToolMenu __instance) {
 				var filteredSweep = ToolMenu.CreateToolCollection(STRINGS.UI.TOOLS.
-					MARKFORSTORAGE.NAME, "icon_action_store", Action.Clear,
-					"FilteredClearTool", STRINGS.UI.TOOLTIPS.CLEARBUTTON, false);
+					MARKFORSTORAGE.NAME, SweepByTypeStrings.TOOL_ICON_NAME, PUtil.TryParseEnum(
+					"Clear", Action.Clear), nameof(FilteredClearTool), STRINGS.UI.TOOLTIPS.
+					CLEARBUTTON, false);
 				var tools = __instance.basicTools;
 				int n = tools.Count;
 				bool replaced = false;
 				for (int i = 0; i < n && !replaced; i++)
 					// Replace by icon since it is a top level member
-					if (tools[i].icon == filteredSweep.icon) {
+					if (tools[i].icon == "icon_action_store") {
 						PUtil.LogDebug("Replacing sweep tool {0:D} with filtered sweep".F(i));
 						tools[i] = filteredSweep;
 						replaced = true;
@@ -122,6 +113,20 @@ namespace PeterHan.SweepByType {
 				// If no tool match found, log a warning
 				if (!replaced)
 					PUtil.LogWarning("Could not install filtered sweep tool!");
+			}
+		}
+
+		/// <summary>
+		/// Applied to ToolMenu to add the filtered destroy icon.
+		/// </summary>
+		[HarmonyPatch(typeof(ToolMenu), "OnPrefabInit")]
+		public static class ToolMenu_OnPrefabInit_Patch {
+			/// <summary>
+			/// Applied after OnPrefabInit runs.
+			/// </summary>
+			/// <param name="___icons">The icon list where the icon can be added.</param>
+			internal static void Postfix(List<Sprite> ___icons) {
+				___icons.Add(SpriteRegistry.GetToolIcon());
 			}
 		}
 	}

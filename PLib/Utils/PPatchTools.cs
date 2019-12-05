@@ -20,6 +20,7 @@ using Harmony;
 using Harmony.ILCopying;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;

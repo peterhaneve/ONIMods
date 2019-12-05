@@ -33,10 +33,12 @@
     <ItemGroup>  
       <AnimFiles Include="$(ProjectDir)\anim\**\*.*" />
 	  <WorldGenFiles Include="$(ProjectDir)\worldgen\**\*.*" />
+	  <YamlFiles Include="$(ProjectDir)\*.yaml" />
     </ItemGroup>  
 
     <Copy SourceFiles="@(AnimFiles)" DestinationFiles="@(AnimFiles->'$(InstallFolder)\anim\%(RecursiveDir)%(Filename)%(Extension)')" />
 	<Copy SourceFiles="@(WorldGenFiles)" DestinationFiles="@(WorldGenFiles->'$(InstallFolder)\worldgen\%(RecursiveDir)%(Filename)%(Extension)')" />
+	<Copy SourceFiles="@(YamlFiles)" DestinationFolder="$(InstallFolder)" />
     <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(InstallFolder)\$(TargetFileName)" />
   </Target>
 </Project>

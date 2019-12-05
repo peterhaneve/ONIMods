@@ -234,6 +234,47 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Loads a sprite embedded in the current assembly as a 9-slice sprite.
+		/// 
+		/// It may be encoded using PNG, DXT5, or JPG format.
+		/// </summary>
+		/// <param name="path">The fully qualified path to the image to load.</param>
+		/// <param name="border">The sprite border.</param>
+		/// <param name="log">true to log the load, or false otherwise.</param>
+		/// <returns>The sprite thus loaded.</returns>
+		/// <exception cref="ArgumentException">If the image could not be loaded.</exception>
+		internal static Sprite LoadSprite(string path, Vector4 border = default, bool log = false) {
+			// Open a stream to the image
+			try {
+				using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(
+						path)) {
+					if (stream == null)
+						throw new ArgumentException("Could not load image: " + path);
+					// If len > int.MaxValue we will not go to space today
+					int len = (int)stream.Length;
+					byte[] buffer = new byte[len];
+					var texture = new Texture2D(2, 2);
+					// Load the texture from the stream
+					stream.Read(buffer, 0, len);
+					ImageConversion.LoadImage(texture, buffer, false);
+					// Create a sprite centered on the texture
+					int width = texture.width, height = texture.height;
+#if DEBUG
+					log = true;
+#endif
+					if (log)
+						PUtil.LogDebug("Loaded sprite: {0} ({1:D}x{2:D}, {3:D} bytes)".F(path,
+							width, height, len));
+					// pivot is in RELATIVE coordinates!
+					return Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(
+						0.5f, 0.5f), 100.0f, 0, SpriteMeshType.FullRect, border);
+				}
+			} catch (System.IO.IOException e) {
+				throw new ArgumentException("Could not load image: " + path, e);
+			}
+		}
+
+		/// <summary>
 		/// Loads a DDS sprite embedded in the current assembly as a 9-slice sprite.
 		/// 
 		/// It must be encoded using the DXT5 format.
@@ -245,8 +286,8 @@ namespace PeterHan.PLib.UI {
 		/// <param name="log">true to log the load, or false otherwise.</param>
 		/// <returns>The sprite thus loaded.</returns>
 		/// <exception cref="ArgumentException">If the image could not be loaded.</exception>
-		internal static Sprite LoadSprite(string path, int width, int height,
-				Vector4 border = default, bool log = false) {
+		internal static Sprite LoadSpriteLegacy(string path, int width, int height,
+				Vector4 border = default) {
 			// Open a stream to the image
 			try {
 				using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(
@@ -267,12 +308,8 @@ namespace PeterHan.PLib.UI {
 					texture.LoadRawTextureData(buffer);
 					texture.Apply(true, true);
 					// Create a sprite centered on the texture
-#if DEBUG
-					log = true;
-#endif
-					if (log)
-						LogUIDebug("Loaded sprite: {0} ({1:D}x{2:D}, {3:D} bytes)".F(path,
-							width, height, len));
+					LogUIDebug("Loaded sprite: {0} ({1:D}x{2:D}, {3:D} bytes)".F(path,
+						width, height, len));
 					// pivot is in RELATIVE coordinates!
 					return Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(
 						0.5f, 0.5f), 100.0f, 0, SpriteMeshType.FullRect, border);

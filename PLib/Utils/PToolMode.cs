@@ -46,6 +46,32 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Registers a tool with the game. It still must be added to a tool collection to be
+		/// visible.
+		/// </summary>
+		/// <typeparam name="T">The tool type to register.</typeparam>
+		/// <param name="controller">The player controller which will be its parent; consider
+		/// using in a postfix on PlayerController.OnPrefabInit.</param>
+		public static void RegisterTool<T>(PlayerController controller) where T : InterfaceTool
+		{
+			if (controller == null)
+				throw new ArgumentNullException("controller");
+			// Create list so that new tool can be appended at the end
+			var interfaceTools = ListPool<InterfaceTool, PlayerController>.Allocate();
+			interfaceTools.AddRange(controller.tools);
+			var newTool = new UnityEngine.GameObject(typeof(T).Name);
+			newTool.AddComponent<T>();
+			// Reparent tool to the player controller, then enable/disable to load it
+			newTool.transform.SetParent(controller.gameObject.transform);
+			newTool.gameObject.SetActive(true);
+			newTool.gameObject.SetActive(false);
+			// Add tool to tool list
+			interfaceTools.Add(newTool.GetComponent<InterfaceTool>());
+			controller.tools = interfaceTools.ToArray();
+			interfaceTools.Recycle();
+		}
+
+		/// <summary>
 		/// A unique key used to identify this mode.
 		/// </summary>
 		public string Key { get; }

@@ -34,21 +34,8 @@ namespace PeterHan.PLib {
 		public static Action MaxAction { get; }
 
 		static PAction() {
-			Action numActions = Action.NumActions;
-			try {
-				// Enum.TryParse was introduced in .NET Framework 4.0
-				numActions = (Action)Enum.Parse(typeof(Action), "NumActions");
-			} catch (ArgumentException) {
-				// Klei renamed it...
-				PUtil.LogWarning("Unable to determine MaxAction, using value {0:D}".F(
-					numActions));
-			} catch (OverflowException) {
-				// Klei renamed it...
-				PUtil.LogWarning("Unable to determine MaxAction, using value {0:D}".F(
-					numActions));
-			} catch (InvalidCastException) {
-				// Should be unreachable
-			}
+			// Enum.TryParse was introduced in .NET Framework 4.0
+			Action numActions = PUtil.TryParseEnum("NumActions", Action.NumActions);
 			MaxAction = numActions;
 		}
 

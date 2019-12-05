@@ -205,7 +205,6 @@ namespace PeterHan.BulkSettingsChange {
 				// Determine the scaling amount since pixel size is known
 				float widthInM = sprite.texture.width / sprite.pixelsPerUnit,
 					scaleWidth = Grid.CellSizeInMeters / widthInM;
-				spriteRenderer.flipY = true;
 				spriteRenderer.name = "BulkChangeToolSprite";
 				// Set sprite color to match other placement tools
 				spriteRenderer.color = TOOL_COLOR;

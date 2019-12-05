@@ -167,6 +167,11 @@ namespace PeterHan.PLib.UI {
 			public static Color DialogBackground { get; }
 
 			/// <summary>
+			/// The color displayed in the large border around the outsides of options dialogs.
+			/// </summary>
+			public static Color DialogDarkBackground { get; }
+
+			/// <summary>
 			/// The color displayed on options dialog backgrounds.
 			/// </summary>
 			public static Color OptionsBackground { get; }
@@ -204,6 +209,7 @@ namespace PeterHan.PLib.UI {
 			static Colors() {
 				BackgroundLight = new Color32(255, 255, 255, 255);
 				DialogBackground = new Color32(0, 0, 0, 255);
+				DialogDarkBackground = new Color32(48, 52, 67, 255);
 				OptionsBackground = new Color32(31, 34, 43, 255);
 				SelectionBackground = new Color32(189, 218, 255, 255);
 				SelectionForeground = new Color32(0, 0, 0, 255);

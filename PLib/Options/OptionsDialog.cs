@@ -120,8 +120,12 @@ namespace PeterHan.PLib.Options {
 			options = null;
 			// Determine config location
 			typeAttr = POptions.GetConfigFileAttribute(optionsType);
-			path = Path.Combine(modSpec.file_source.GetRoot(), typeAttr?.ConfigFileName ??
-				POptions.CONFIG_FILE_NAME);
+			var src = modSpec.file_source;
+			if (src == null)
+				path = null;
+			else
+				path = Path.Combine(src.GetRoot(), typeAttr?.ConfigFileName ?? POptions.
+					CONFIG_FILE_NAME);
 		}
 
 		/// <summary>
@@ -158,29 +162,31 @@ namespace PeterHan.PLib.Options {
 		/// Triggered when the Mod Options button is clicked.
 		/// </summary>
 		public void OnModOptions(GameObject _) {
-			// Close current dialog if open
-			CloseDialog();
-			// Ensure that it is on top of other screens (which may be +100 modal)
-			var pDialog = new PDialog("ModOptions") {
-				Title = POptions.DIALOG_TITLE.text.F(modSpec.title), Size = POptions.
-				SETTINGS_DIALOG_SIZE, SortKey = 150.0f, DialogBackColor = PUITuning.Colors.
-				OptionsBackground, DialogClosed = OnOptionsSelected
-			}.AddButton("ok", STRINGS.UI.CONFIRMDIALOG.OK, POptions.TOOLTIP_OK).
-			AddButton(PDialog.DIALOG_KEY_CLOSE, STRINGS.UI.CONFIRMDIALOG.CANCEL,
-				POptions.TOOLTIP_CANCEL);
-			// For each option, add its UI component to panel
-			pDialog.Body.Spacing = 3;
-			pDialog.Body.BackColor = new Color32(48, 52, 67, 255);
-			foreach (var entry in optionEntries)
-				pDialog.Body.AddChild(entry.GetUIEntry());
-			options = POptions.ReadSettings(path, optionsType);
-			if (options == null)
-				CreateOptions();
-			// Manually build the dialog so the options can be updated after realization
-			var obj = pDialog.Build();
-			UpdateOptions();
-			dialog = obj.GetComponent<KScreen>();
-			dialog.Activate();
+			if (path != null) {
+				// Close current dialog if open
+				CloseDialog();
+				// Ensure that it is on top of other screens (which may be +100 modal)
+				var pDialog = new PDialog("ModOptions") {
+					Title = POptions.DIALOG_TITLE.text.F(modSpec.title), Size = POptions.
+					SETTINGS_DIALOG_SIZE, SortKey = 150.0f, DialogBackColor = PUITuning.Colors.
+					OptionsBackground, DialogClosed = OnOptionsSelected
+				}.AddButton("ok", STRINGS.UI.CONFIRMDIALOG.OK, POptions.TOOLTIP_OK).
+				AddButton(PDialog.DIALOG_KEY_CLOSE, STRINGS.UI.CONFIRMDIALOG.CANCEL,
+					POptions.TOOLTIP_CANCEL);
+				// For each option, add its UI component to panel
+				pDialog.Body.Spacing = 3;
+				pDialog.Body.BackColor = PUITuning.Colors.DialogDarkBackground;
+				foreach (var entry in optionEntries)
+					pDialog.Body.AddChild(entry.GetUIEntry());
+				options = POptions.ReadSettings(path, optionsType);
+				if (options == null)
+					CreateOptions();
+				// Manually build the dialog so the options can be updated after realization
+				var obj = pDialog.Build();
+				UpdateOptions();
+				dialog = obj.GetComponent<KScreen>();
+				dialog.Activate();
+			}
 		}
 
 		/// <summary>

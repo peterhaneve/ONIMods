@@ -3,17 +3,17 @@
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
     <AssemblyTitle>Settings Change Tool</AssemblyTitle>
-    <FileVersion>1.9.0.0</FileVersion>
+    <FileVersion>1.10.0.0</FileVersion>
     <RootNamespace>PeterHan.BulkSettingsChange</RootNamespace>
     <Description>Adds a tool to enable/disable disinfect, auto repair, compost, empty storage, or building operation in bulk.</Description>
     <AssemblyVersion>1.9.0.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="Placer.dds" />
-    <None Remove="Toggle.dds" />
+    <None Remove="Placer.png" />
+    <None Remove="Toggle.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Placer.dds" />
-    <EmbeddedResource Include="Toggle.dds" />
+    <EmbeddedResource Include="Placer.png" />
+    <EmbeddedResource Include="Toggle.png" />
   </ItemGroup>
 </Project>

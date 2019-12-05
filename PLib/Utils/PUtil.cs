@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Klei;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -249,6 +250,20 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Loads a sprite embedded in the current assembly.
+		/// 
+		/// It may be encoded using PNG, DXT5, or JPG format.
+		/// </summary>
+		/// <param name="path">The fully qualified path to the image to load.</param>
+		/// <param name="border">The sprite border. If there is no 9-patch border, use default(Vector4).</param>
+		/// <param name="log">true to log the sprite load, or false to load silently.</param>
+		/// <returns>The sprite thus loaded.</returns>
+		/// <exception cref="ArgumentException">If the image could not be loaded.</exception>
+		public static Sprite LoadSprite(string path, Vector4 border = default, bool log = true) {
+			return UI.PUIUtils.LoadSprite(path, border, log);
+		}
+
+		/// <summary>
 		/// Loads a DDS sprite embedded in the current assembly.
 		/// 
 		/// It must be encoded using the DXT5 format.
@@ -258,8 +273,9 @@ namespace PeterHan.PLib {
 		/// <param name="height">The desired height.</param>
 		/// <returns>The sprite thus loaded.</returns>
 		/// <exception cref="ArgumentException">If the image could not be loaded.</exception>
+		[Obsolete("LoadSprite(path, Vector4, bool) allows the use of PNG/JPG images which scale far better")]
 		public static Sprite LoadSprite(string path, int width, int height) {
-			return LoadSprite(path, width, height, Vector4.zero);
+			return UI.PUIUtils.LoadSpriteLegacy(path, width, height, default(Vector4));
 		}
 
 		/// <summary>
@@ -273,8 +289,9 @@ namespace PeterHan.PLib {
 		/// <param name="border">The sprite border.</param>
 		/// <returns>The sprite thus loaded.</returns>
 		/// <exception cref="ArgumentException">If the image could not be loaded.</exception>
+		[Obsolete("LoadSprite(path, Vector4, bool) allows the use of PNG/JPG images which scale far better")]
 		public static Sprite LoadSprite(string path, int width, int height, Vector4 border) {
-			return UI.PUIUtils.LoadSprite(path, width, height, border, true);
+			return UI.PUIUtils.LoadSpriteLegacy(path, width, height, border);
 		}
 
 		/// <summary>
@@ -361,6 +378,30 @@ namespace PeterHan.PLib {
 				if (name != null)
 					PRegistry.LogPatchDebug("Registered post-load handler for " + name);
 			}
+		}
+
+		/// <summary>
+		/// Attempts to parse an enumeration's value.
+		/// </summary>
+		/// <typeparam name="T">The enumeration type to parse.</typeparam>
+		/// <param name="enumValue">The value to parse.</param>
+		/// <param name="ifNotFound">The value to use if the provided value is invalid.</param>
+		/// <param name="ignoreCase">true to ignore case, or false (default) to be case sensitive.</param>
+		/// <returns>The parsed enumeration value, or ifNotFound if the value string is invalid.
+		/// Note that out of range integer strings will be successfully parsed and converted to
+		/// the enumeration type.</returns>
+		public static T TryParseEnum<T>(string enumValue, T ifNotFound = default,
+				bool ignoreCase = false) where T : Enum {
+			T value = ifNotFound;
+			if (enumValue == null)
+				throw new ArgumentNullException("enumName");
+			try {
+				value = (T)Enum.Parse(typeof(T), enumValue, ignoreCase);
+			} catch (InvalidCastException) {
+			} catch (ArgumentException) {
+			} catch (OverflowException) {
+			}
+			return value;
 		}
 	}
 }

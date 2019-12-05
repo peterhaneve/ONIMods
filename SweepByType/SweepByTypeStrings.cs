@@ -21,6 +21,9 @@ namespace PeterHan.SweepByType {
 	/// Stores the strings used in the Sweep By Type tool.
 	/// </summary>
 	static class SweepByTypeStrings {
+		// Icon name for the tool
+		public const string TOOL_ICON_NAME = "filtered_clear";
+
 		// Title of material select dialog
 		public static LocString DIALOG_TITLE = "Select material to sweep";
 
