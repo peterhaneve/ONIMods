@@ -361,6 +361,7 @@ namespace PeterHan.PLib.Buildings {
 		public void AddPlan() {
 			if (!addedPlan && Category.IsValid) {
 				bool add = false;
+				//ModUtil.AddBuildingToPlanScreen(Category, ID);
 				foreach (var menu in TUNING.BUILDINGS.PLANORDER)
 					if (menu.category == Category) {
 						// Found category
