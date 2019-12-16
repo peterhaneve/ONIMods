@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -24,6 +25,19 @@ namespace PeterHan.SweepByType {
 	/// The hover text shown when filtered sweep is invoked.
 	/// </summary>
 	sealed class FilteredClearHover : HoverTextConfiguration {
+		protected override void OnSpawn() {
+			base.OnSpawn();
+			// Take the text configuration from the existing sweep tool's hover text
+			var template = ClearTool.Instance?.gameObject?.GetComponentSafe<
+				HoverTextConfiguration>();
+			if (template != null) {
+				Styles_BodyText = template.Styles_BodyText;
+				Styles_Instruction = template.Styles_Instruction;
+				Styles_Title = template.Styles_Title;
+				Styles_Values = template.Styles_Values;
+			}
+		}
+
 		/// <summary>
 		/// Updates the hover card text.
 		/// </summary>
@@ -39,7 +53,6 @@ namespace PeterHan.SweepByType {
 			string titleStr = all ? STRINGS.UI.TOOLS.MARKFORSTORAGE.TOOLNAME :
 				SweepByTypeStrings.TOOL_NAME_FILTERED;
 			var drawer = hoverInstance.BeginDrawing();
-			var dash = hoverInstance.GetSprite("dash");
 			drawer.BeginShadowBar(false);
 			drawer.DrawText(titleStr.ToUpper(), ToolTitleTextStyle);
 			// Draw the instructions
@@ -48,7 +61,7 @@ namespace PeterHan.SweepByType {
 			DrawInstructions(hoverInstance, drawer);
 			drawer.EndShadowBar();
 			if (selected != null && Grid.IsValidCell(cell) && Grid.IsVisible(cell))
-				DrawPickupText(selected, drawer, dash);
+				DrawPickupText(selected, drawer, hoverInstance.GetSprite("dash"));
 			drawer.EndDrawing();
 		}
 
@@ -61,23 +74,23 @@ namespace PeterHan.SweepByType {
 		private void DrawPickupText(IEnumerable<KSelectable> selected, HoverTextDrawer drawer,
 				Sprite dash) {
 			// For each pickupable object, show the type
-			foreach (var obj in selected) {
-				var cc = obj.GetComponent<Clearable>();
-				var ec = obj.GetComponent<PrimaryElement>();
+			foreach (var selectable in selected) {
+				var cc = selectable.GetComponent<Clearable>();
+				var ec = selectable.GetComponent<PrimaryElement>();
 				// Ignore duplicants
-				if (cc != null && cc.isClearable && ec != null && obj.GetComponent<
+				if (cc != null && cc.isClearable && ec != null && selectable.GetComponent<
 						MinionIdentity>() == null) {
-					var element = ec.Element;
 					drawer.BeginShadowBar(false);
 					// Element name (uppercase)
-					drawer.DrawText(obj.GetProperName().ToUpper(), Styles_Title.Standard);
-					drawer.NewLine(26);
-					drawer.DrawIcon(dash, 18);
+					drawer.DrawText(GameUtil.GetUnitFormattedName(selectable.gameObject, true),
+						Styles_Title.Standard);
+					drawer.NewLine();
+					drawer.DrawIcon(dash);
 					// Mass (kg, g, mg...)
-					drawer.DrawText(GameUtil.GetFormattedMass(ec.Mass), Styles_BodyText.
+					drawer.DrawText(GameUtil.GetFormattedMass(ec.Mass), Styles_Values.Property.
 						Standard);
-					drawer.NewLine(26);
-					drawer.DrawIcon(dash, 18);
+					drawer.NewLine();
+					drawer.DrawIcon(dash);
 					// Temperature
 					drawer.DrawText(GameUtil.GetFormattedTemperature(ec.Temperature),
 						Styles_BodyText.Standard);

@@ -67,6 +67,22 @@ namespace PeterHan.SweepByType {
 			}
 		}
 
+		/// <summary>
+		/// Marks a debris item to be swept if it matches the filters.
+		/// </summary>
+		/// <param name="content">The item to sweep.</param>
+		/// <param name="priority">The priority to set the sweep errand.</param>
+		private void MarkForClear(GameObject content, PrioritySetting priority) {
+			var cc = content.GetComponent<Clearable>();
+			if (cc != null && cc.isClearable && cachedTypes.Contains(content.PrefabID())) {
+				// Parameter is whether to force, not remove sweep errand!
+				cc.MarkForClear(false);
+				var pr = content.GetComponent<Prioritizable>();
+				if (pr != null)
+					pr.SetMasterPriority(priority);
+			}
+		}
+
 		protected override void OnActivateTool() {
 			var menu = ToolMenu.Instance;
 			base.OnActivateTool();
@@ -114,22 +130,12 @@ namespace PeterHan.SweepByType {
 					cachedTypes = HashSetPool<Tag, FilteredClearTool>.Allocate();
 					TypeSelect.AddTypesToSweep(cachedTypes);
 				}
-				var types = cachedTypes;
 				while (objectListNode != null) {
 					var content = objectListNode.gameObject;
 					objectListNode = objectListNode.nextItem;
 					// Ignore Duplicants
-					if (content != null && content.GetComponent<MinionIdentity>() == null) {
-						var cc = content.GetComponent<Clearable>();
-						if (cc != null && cc.isClearable && types.Contains(content.PrefabID()))
-						{
-							// Parameter is whether to force, not remove sweep errand!
-							cc.MarkForClear(false);
-							var pr = content.GetComponent<Prioritizable>();
-							if (pr != null)
-								pr.SetMasterPriority(priority);
-						}
-					}
+					if (content != null && content.GetComponent<MinionIdentity>() == null)
+						MarkForClear(content, priority);
 				}
 			}
 		}
@@ -137,29 +143,33 @@ namespace PeterHan.SweepByType {
 		protected override void OnPrefabInit() {
 			var us = Traverse.Create(this);
 			base.OnPrefabInit();
+			var inst = ClearTool.Instance;
 			Instance = this;
 			interceptNumberKeysForPriority = true;
 			populateHitsList = true;
-			gameObject.AddComponent<FilteredClearHover>();
 			// Get the cursor from the existing sweep tool
-			var trSweep = Traverse.Create(ClearTool.Instance);
-			cursor = trSweep.GetField<Texture2D>("cursor");
-			us.SetField("boxCursor", cursor);
-			// Get the area visualizer from the sweep tool
-			var avTemplate = trSweep.GetField<GameObject>("areaVisualizer");
-			if (avTemplate != null) {
-				var areaVisualizer = Util.KInstantiate(avTemplate, gameObject,
-					"FilteredClearToolAreaVisualizer");
-				areaVisualizer.SetActive(false);
-				areaVisualizerSpriteRenderer = areaVisualizer.GetComponent<SpriteRenderer>();
-				// The visualizer is private so we need to set it with reflection
-				us.SetField("areaVisualizer", areaVisualizer);
-				us.SetField("areaVisualizerTextPrefab", trSweep.GetField<GameObject>(
-					"areaVisualizerTextPrefab"));
+			if (inst != null) {
+				var trSweep = Traverse.Create(inst);
+				gameObject.AddComponent<FilteredClearHover>();
+				cursor = trSweep.GetField<Texture2D>("cursor");
+				us.SetField("boxCursor", cursor);
+				// Get the area visualizer from the sweep tool
+				var avTemplate = trSweep.GetField<GameObject>("areaVisualizer");
+				if (avTemplate != null) {
+					var areaVisualizer = Util.KInstantiate(avTemplate, gameObject,
+						"FilteredClearToolAreaVisualizer");
+					areaVisualizer.SetActive(false);
+					areaVisualizerSpriteRenderer = areaVisualizer.GetComponent<
+						SpriteRenderer>();
+					// The visualizer is private so we need to set it with reflection
+					us.SetField("areaVisualizer", areaVisualizer);
+					us.SetField("areaVisualizerTextPrefab", trSweep.GetField<GameObject>(
+						"areaVisualizerTextPrefab"));
+				}
+				visualizer = Util.KInstantiate(trSweep.GetField<GameObject>("visualizer"),
+					gameObject, "FilteredClearToolSprite");
+				visualizer.SetActive(false);
 			}
-			visualizer = Util.KInstantiate(trSweep.GetField<GameObject>("visualizer"),
-				gameObject, "FilteredClearToolSprite");
-			visualizer.SetActive(false);
 			// Allow icons to be disabled
 			TypeSelect = new TypeSelectControl(SweepByTypePatches.Options?.DisableIcons ??
 				false);

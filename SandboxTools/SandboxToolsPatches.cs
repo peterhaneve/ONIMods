@@ -46,8 +46,10 @@ namespace PeterHan.SandboxTools {
 					if (ok) {
 						string name = prefab.PrefabTag.Name;
 						// Include anti-entropy thermo nullifier and neural vacillator
+						// Vacillator's ID is private, we have to make do
 						ok = (name.StartsWith("Prop") && name.Length > 4 && char.IsUpper(
-							name, 4)) || name == "MassiveHeatSink" || name == "GeneShuffler";
+							name, 4)) || name == MassiveHeatSinkConfig.ID ||
+							name == "GeneShuffler";
 					}
 					return ok;
 				}, null, Def.GetUISprite(Assets.GetPrefab("PropLadder"))));
@@ -109,7 +111,7 @@ namespace PeterHan.SandboxTools {
 		private static GameObject BuildFixedMaterials(BuildingDef def, int cell,
 				Orientation orient, Storage storage, IList<Tag> elements, float temperature,
 				bool sound, float timeBuilt) {
-			if (def != null && def.PrefabID == "MassiveHeatSink" && elements != null) {
+			if (def != null && def.PrefabID == MassiveHeatSinkConfig.ID && elements != null) {
 				// Special case the AETN to iron (it uses niobium otherwise)
 				elements.Clear();
 				elements.Add(ElementLoader.FindElementByHash(SimHashes.Iron).tag);
@@ -163,7 +165,6 @@ namespace PeterHan.SandboxTools {
 			/// <summary>
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
-			/// <param name="__instance">The current instance.</param>
 			internal static void Postfix(PlayerController __instance) {
 				PToolMode.RegisterTool<FilteredDestroyTool>(__instance);
 				PUtil.LogDebug("Created FilteredDestroyTool");

@@ -148,6 +148,16 @@ namespace PeterHan.PLib.Buildings {
 		public string AudioCategory { get; set; }
 
 		/// <summary>
+		/// The audio volume used when placing/completing the building.
+		/// </summary>
+		public string AudioSize { get; set; }
+
+		/// <summary>
+		/// Whether this building can break down.
+		/// </summary>
+		public bool Breaks { get; set; }
+
+		/// <summary>
 		/// The build menu category.
 		/// </summary>
 		public HashedString Category { get; set; }
@@ -243,6 +253,11 @@ namespace PeterHan.PLib.Buildings {
 		public EffectorValues Noise { get; set; }
 
 		/// <summary>
+		/// The layer for this building.
+		/// </summary>
+		public ObjectLayer ObjectLayer { get; set; }
+
+		/// <summary>
 		/// The output conduits.
 		/// </summary>
 		public IList<ConduitConnection> OutputConduits { get; }
@@ -272,6 +287,11 @@ namespace PeterHan.PLib.Buildings {
 		/// The directions this building can face.
 		/// </summary>
 		public PermittedRotations RotateMode { get; set; }
+
+		/// <summary>
+		/// The scene layer for this building.
+		/// </summary>
+		public Grid.SceneLayer SceneLayer { get; set; }
 
 		/// <summary>
 		/// The technology name required to unlock the building.
@@ -321,6 +341,8 @@ namespace PeterHan.PLib.Buildings {
 			AddAfter = null;
 			Animation = "";
 			AudioCategory = "Metal";
+			AudioSize = "medium";
+			Breaks = true;
 			Category = DEFAULT_CATEGORY;
 			ConstructionTime = 10.0f;
 			Decor = TUNING.BUILDINGS.DECOR.NONE;
@@ -340,12 +362,14 @@ namespace PeterHan.PLib.Buildings {
 			LogicIO = new List<LogicPorts.Port>(4);
 			Name = name;
 			Noise = TUNING.NOISE_POLLUTION.NONE;
+			ObjectLayer = ObjectLayer.Building;
 			OutputConduits = new List<ConduitConnection>(4);
 			OverheatTemperature = null;
 			Placement = BuildLocationRule.OnFloor;
 			PowerInput = null;
 			PowerOutput = null;
 			RotateMode = PermittedRotations.Unrotatable;
+			SceneLayer = Grid.SceneLayer.Building;
 			Tech = null;
 			ViewMode = OverlayModes.None.ID;
 			Width = 1;
@@ -458,10 +482,13 @@ namespace PeterHan.PLib.Buildings {
 			var def = BuildingTemplates.CreateBuildingDef(ID, Width, Height, Animation, HP,
 				Math.Max(0.1f, ConstructionTime), quantity, tag, 2400.0f, Placement, Decor,
 				Noise);
+			def.AudioCategory = AudioCategory;
+			def.AudioSize = AudioSize;
 			if (OverheatTemperature != null) {
 				def.Overheatable = true;
 				def.OverheatTemperature = OverheatTemperature ?? 348.15f;
-			}
+			} else
+				def.Overheatable = false;
 			// Plug in
 			if (PowerInput != null) {
 				def.RequiresPowerInput = true;
@@ -474,11 +501,14 @@ namespace PeterHan.PLib.Buildings {
 				def.GeneratorWattageRating = PowerOutput.MaxWattage;
 				def.PowerOutputOffset = PowerOutput.PlugLocation;
 			}
+			def.Breakable = Breaks;
 			def.PermittedRotations = RotateMode;
 			def.ExhaustKilowattsWhenActive = Math.Max(0.0f, ExhaustHeatGeneration);
 			def.SelfHeatKilowattsWhenActive = Math.Max(0.0f, HeatGeneration);
 			def.Floodable = Floods;
 			def.Entombable = Entombs;
+			def.ObjectLayer = ObjectLayer;
+			def.SceneLayer = SceneLayer;
 			def.ViewMode = ViewMode;
 			// Conduits
 			if (InputConduits.Count > 1)
