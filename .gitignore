@@ -258,6 +258,5 @@ paket-files/
 /Assets/
 /textures/
 *.cmd
-*.xcf
 /*.pptx
 *.po
