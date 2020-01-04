@@ -15,9 +15,9 @@ Mods should remain in their own subfolder.
 
 * Windows: `%USERPROFILE%\Documents\Klei\OxygenNotIncluded\mods\local`
   Replace the documents path with the path to your `Documents` folder if this folder has been redirected.
-* Mac OS: `/Users/user name/Library/Application Support/unity.Klei.Oxygen Not Included/mods/local`
+* Mac OS: `/Users/user name/Library/Application Support/unity.Klei.Oxygen Not Included/mods/Local`
   Replace `user name` with your user name.
-* Linux: `~/.config/unity3d/Klei/Oxygen Not Included/mods/local`
+* Linux: `~/.config/unity3d/Klei/Oxygen Not Included/mods/Local`
 
 **Do not use a Steam copy and a local copy of the same mod at the same time.** Disable the Steam version in the mods list before activating any local copies.
 
@@ -44,6 +44,7 @@ Mods should remain in their own subfolder.
 | :--------: | :---------------: |
 | [Queue for Sinks](https://steamcommunity.com/sharedfiles/filedetails/?id=1881925531) | Causes Duplicants to automatically line up to use sinks, wash basins, hand sanitizers, and ore scrubbers |
 | [Smart Pumps](https://forums.kleientertainment.com/forums/topic/91094-the-mystery-about-pump-range/) | Adds new, smarter liquid and gas pumps for specific situations |
+| [Thermal Interface Plate](https://steamcommunity.com/sharedfiles/filedetails/?id=1938747693) | Transfers heat between buildings in its tile, even in a complete Vacuum |
 
 ## World Generation
 
