@@ -67,9 +67,14 @@ namespace PeterHan.FoodTooltip {
 				throw new ArgumentNullException("tag");
 			// Check for existing list
 			if (!cache.TryGetValue(tag, out IList<FoodResult> items)) {
-				items = new List<FoodResult>();
-				SearchForRecipe(tag, items, 1.0f);
-				cache.Add(tag, items);
+				var seen = HashSetPool<Tag, FoodRecipeCache>.Allocate();
+				try {
+					items = new List<FoodResult>();
+					SearchForRecipe(tag, items, seen, 1.0f);
+					cache.Add(tag, items);
+				} finally {
+					seen.Recycle();
+				}
 			}
 			// Create a copy of the results
 			int n = items.Count;
@@ -89,12 +94,15 @@ namespace PeterHan.FoodTooltip {
 		/// </summary>
 		/// <param name="item">The item to search.</param>
 		/// <param name="found">The foods found so far.</param>
+		/// <param name="seen">The items already seen, to prevent recipe loops from crashing.</param>
 		/// <param name="quantity">The quantity of the base item.</param>
-		private void SearchForRecipe(Tag item, IList<FoodResult> found, float quantity) {
+		private void SearchForRecipe(Tag item, IList<FoodResult> found, ICollection<Tag> seen,
+				float quantity) {
 			var prefab = Assets.GetPrefab(item);
-			if (prefab != null && quantity > 0.0f) {
+			if (prefab != null && quantity > 0.0f && !seen.Contains(item)) {
 				var edible = prefab.GetComponent<Edible>();
 				float kcal;
+				seen.Add(item);
 				// Item itself is usable as food
 				if (edible != null && (kcal = edible.FoodInfo.CaloriesPerUnit) > 0.0f)
 					found.Add(new FoodResult(kcal, quantity, item));
@@ -108,8 +116,8 @@ namespace PeterHan.FoodTooltip {
 							break;
 						}
 					if (amount > 0.0f)
-						SearchForRecipe(recipe.Result, found, recipe.OutputUnits * quantity /
-							amount);
+						SearchForRecipe(recipe.Result, found, seen, recipe.OutputUnits *
+							quantity / amount);
 				}
 				// And complex ones too
 				foreach (var recipe in ComplexRecipeManager.Get().recipes) {
@@ -123,8 +131,8 @@ namespace PeterHan.FoodTooltip {
 					if (amount > 0.0f)
 						// Check all results of the recipe
 						foreach (var result in recipe.results)
-							SearchForRecipe(result.material, found, result.amount * quantity /
-								amount);
+							SearchForRecipe(result.material, found, seen, result.amount *
+								quantity / amount);
 				}
 			}
 		}

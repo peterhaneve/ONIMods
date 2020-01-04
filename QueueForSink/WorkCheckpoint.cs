@@ -147,10 +147,13 @@ namespace PeterHan.QueueForSinks {
 			/// <returns>true if they must wait, or false if they may pass.</returns>
 			private bool MustStop(GameObject dupe, float x) {
 				var dir = checkpoint.direction.allowedDirection;
+				// Allow suffocating Duplicants to pass
+				var suff = dupe?.GetSMI<SuffocationMonitor.Instance>();
 				// Left is decreasing X, must be facing the correct direction
 				return (dir == WorkableReactable.AllowedDirection.Any ||
 					(dir == WorkableReactable.AllowedDirection.Left) == (x < 0.0f)) &&
-					checkpoint.workable.GetWorker() != null && checkpoint.MustStop(dupe, x);
+					checkpoint.workable.GetWorker() != null && checkpoint.MustStop(dupe, x) &&
+					(suff == null || !suff.IsSuffocating());
 			}
 
 			public override void Update(float dt) {

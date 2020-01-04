@@ -18,12 +18,14 @@
 
 using PeterHan.PLib;
 using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace PeterHan.ThermalPlate {
 	/// <summary>
 	/// A component which transfers heat among buildings and entities in its cell.
 	/// </summary>
-	public sealed class ThermalInterfacePlate : KMonoBehaviour, ISim200ms {
+	public sealed class ThermalInterfacePlate : KMonoBehaviour, ISim200ms, ISim1000ms {
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable CS0649
 		/// <summary>
@@ -34,19 +36,55 @@ namespace PeterHan.ThermalPlate {
 #pragma warning restore CS0649
 #pragma warning restore IDE0044 // Add readonly modifier
 
+		/// <summary>
+		/// The buildings to which heat will be transferred.
+		/// </summary>
+		private readonly ICollection<GameObject> transferCache;
+
+		public ThermalInterfacePlate() {
+			transferCache = new List<GameObject>();
+		}
+
 		public void Sim200ms(float dt) {
-			// Might be expensive, but heat transfer needs to be simulated relatively accurately
+			// Might be expensive, but heat transfer needs to be simulated accurately
 			var pe = building?.primaryElement;
 			if (pe != null) {
-				int cell = Grid.PosToCell(this);
-				// https://forums.kleientertainment.com/forums/topic/84275-decrypting-heat-transfer/
 				float temp = pe.Temperature;
-				for (int i = 0; i < (int)ObjectLayer.NumLayers; i++) {
-					var newBuilding = Grid.Objects[cell, i].GetComponentSafe<BuildingComplete>();
-					if (newBuilding != null && newBuilding != building)
-						temp = TransferHeatTo(pe, newBuilding, temp, dt);
+				// https://forums.kleientertainment.com/forums/topic/84275-decrypting-heat-transfer/
+				lock (transferCache) {
+					foreach (var gameObject in transferCache) {
+						var newBuilding = gameObject.GetComponentSafe<BuildingComplete>();
+						if (newBuilding != null)
+							temp = TransferHeatTo(pe, newBuilding, temp, dt);
+					}
 				}
 				pe.Temperature = temp;
+			}
+		}
+
+		public void Sim1000ms(float ignore) {
+			lock (transferCache) {
+				transferCache.Clear();
+				// Update the buildings to which heat should be transferred
+				int cell = Grid.PosToCell(this);
+				for (int i = 0; i < (int)ObjectLayer.NumLayers; i++) {
+					var gameObject = Grid.Objects[cell, i];
+					var newBuilding = gameObject.GetComponentSafe<BuildingComplete>();
+					if (newBuilding != null && newBuilding != building)
+						transferCache.Add(gameObject);
+				}
+				// Transfer heat to adjacent tempshift plates since those have 3x3 radii
+				for (int dx = -1; dx <= 1; dx++)
+					for (int dy = -1; dy <= 1; dy++) {
+						int newCell = Grid.OffsetCell(cell, new CellOffset(dx, dy));
+						if (newCell != cell && Grid.IsValidBuildingCell(newCell)) {
+							var gameObject = Grid.Objects[newCell, (int)ObjectLayer.Backwall];
+							var plate = gameObject.GetComponentSafe<BuildingComplete>();
+							// Is it a tempshift plate?
+							if (plate?.Def?.PrefabID == ThermalBlockConfig.ID)
+								transferCache.Add(gameObject);
+						}
+					}
 			}
 		}
 
