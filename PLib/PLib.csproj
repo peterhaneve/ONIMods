@@ -16,7 +16,12 @@
 	  <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
 	
 Contains functions aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
-	  <PackageReleaseNotes>Update PAction to adapt automatically to changes to the Action enum at runtime. Add an accessor for the currently running version of the game.</PackageReleaseNotes>
+	  <PackageReleaseNotes>Add a PriorityQueue class for efficient path finding and ColoredRangeVisualizer for a more flexible way to visualize building ranges.
+
+Additional features added to PBuilding including building layer settings and placement audio settings.
+
+Options annotations can only be applied where they belong.
+    </PackageReleaseNotes>
 	  <RootNamespace>PeterHan.PLib</RootNamespace>
 	  <AssemblyVersion>2.20.0.0</AssemblyVersion>
 	  <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
