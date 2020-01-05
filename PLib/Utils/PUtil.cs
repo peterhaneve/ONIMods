@@ -354,6 +354,15 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Plays a sound effect.
+		/// </summary>
+		/// <param name="name">The sound effect name to play.</param>
+		/// <param name="position">The position where the sound is generated.</param>
+		public static void PlaySound(string name, Vector3 position) {
+			SoundEvent.PlayOneShot(GlobalAssets.GetSound(name), position);
+		}
+
+		/// <summary>
 		/// Registers a method which will be run after PLib and all mods load. It will be
 		/// passed a HarmonyInstance which can be used to make late patches.
 		/// </summary>

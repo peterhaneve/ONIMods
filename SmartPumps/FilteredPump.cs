@@ -56,7 +56,7 @@ namespace PeterHan.SmartPumps {
 		// These components are automatically populated by KMonoBehaviour
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable CS0649
-		[MyCmpGet]
+		[MyCmpReq]
 		private Filterable filterable;
 #pragma warning restore CS0649
 #pragma warning restore IDE0044 // Add readonly modifier

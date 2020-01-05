@@ -68,19 +68,19 @@ namespace PeterHan.SmartPumps {
 		// These components are automatically populated by KMonoBehaviour
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable CS0649
-		[MyCmpGet]
+		[MyCmpReq]
 		protected ElementConsumer consumer;
 
-		[MyCmpGet]
+		[MyCmpReq]
 		protected ConduitDispenser dispenser;
 
 		[MyCmpReq]
 		protected Operational operational;
 
-		[MyCmpGet]
+		[MyCmpReq]
 		protected KSelectable selectable;
 
-		[MyCmpGet]
+		[MyCmpReq]
 		protected Storage storage;
 #pragma warning restore CS0649
 #pragma warning restore IDE0044 // Add readonly modifier
@@ -149,7 +149,7 @@ namespace PeterHan.SmartPumps {
 		protected override void OnPrefabInit() {
 			var statusItems = Db.Get().BuildingStatusItems;
 			base.OnPrefabInit();
-			consumer?.EnableConsumption(false);
+			consumer.EnableConsumption(false);
 			// These can be replaced by subclasses
 			noGasAvailable = statusItems.NoGasElementToPump;
 			noLiquidAvailable = statusItems.NoLiquidElementToPump;

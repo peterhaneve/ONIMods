@@ -31,7 +31,7 @@ namespace PeterHan.ThermalPlate {
 		/// <summary>
 		/// The completed thermal interface plate building.
 		/// </summary>
-		[MyCmpGet]
+		[MyCmpReq]
 		private BuildingComplete building;
 #pragma warning restore CS0649
 #pragma warning restore IDE0044 // Add readonly modifier
@@ -47,7 +47,7 @@ namespace PeterHan.ThermalPlate {
 
 		public void Sim200ms(float dt) {
 			// Might be expensive, but heat transfer needs to be simulated accurately
-			var pe = building?.primaryElement;
+			var pe = building.primaryElement;
 			if (pe != null) {
 				float temp = pe.Temperature;
 				// https://forums.kleientertainment.com/forums/topic/84275-decrypting-heat-transfer/

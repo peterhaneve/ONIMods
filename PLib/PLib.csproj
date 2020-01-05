@@ -4,7 +4,7 @@
     <TargetFramework>net35</TargetFramework>
     <Title>PeterHan.PLib</Title>
 	  <AssemblyTitle>PeterHanLib</AssemblyTitle>
-	  <Version>2.19.5.0</Version>
+	  <Version>2.20.0.0</Version>
 	  <UsesPLib>false</UsesPLib>
 	  <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
 	  <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
@@ -18,7 +18,7 @@
 Contains functions aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
 	  <PackageReleaseNotes>Update PAction to adapt automatically to changes to the Action enum at runtime. Add an accessor for the currently running version of the game.</PackageReleaseNotes>
 	  <RootNamespace>PeterHan.PLib</RootNamespace>
-	  <AssemblyVersion>2.19.5.0</AssemblyVersion>
+	  <AssemblyVersion>2.20.0.0</AssemblyVersion>
 	  <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
 	  <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>

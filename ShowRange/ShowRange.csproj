@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net35</TargetFramework>
+    <AssemblyTitle>Show Building Ranges</AssemblyTitle>
+    <FileVersion>1.0.0.0</FileVersion>
+    <RootNamespace>PeterHan.ShowRange</RootNamespace>
+    <Description>Shows the range of buildings such as the Pump, Deodorizer, Space Scanner, and Telescope.</Description>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+  </PropertyGroup>
+</Project>

@@ -29,14 +29,13 @@ using System.Reflection.Emit;
 using LightGridEmitter = LightGridManager.LightGridEmitter;
 using IntHandle = HandleVector<int>.Handle;
 using System.IO;
-using Database;
 
 namespace PeterHan.PLib {
 	/// <summary>
 	/// All patches for PLib are stored here and only applied once for all PLib mods loaded.
 	/// </summary>
 	sealed class PLibPatches {
-		#region Patches
+#region Patches
 
 #pragma warning disable IDE0051 // Remove unused private members
 
