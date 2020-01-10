@@ -56,6 +56,26 @@ namespace PeterHan.PLib {
 		public const string KEY_BUILDING_TABLE = "PLib.Building.Table";
 
 		/// <summary>
+		/// Used to synchronize access to PLib codex creature dirs.
+		/// </summary>
+		public const string KEY_CODEX_CREATURES_LOCK = "PLib.Codex.Creatures.Lock";
+
+		/// <summary>
+		/// Stores the paths to the codex creature dirs.
+		/// </summary>
+		public const string KEY_CODEX_CREATURES_TABLE = "PLib.Codex.Creatures.Table";
+
+		/// <summary>
+		/// Used to synchronize access to PLib codex plant dirs.
+		/// </summary>
+		public const string KEY_CODEX_PLANTS_LOCK = "PLib.Codex.Plants.Lock";
+
+		/// <summary>
+		/// Stores the paths to the codex plant dirs.
+		/// </summary>
+		public const string KEY_CODEX_PLANTS_TABLE = "PLib.Codex.Plants.Table";
+
+		/// <summary>
 		/// Used to synchronize access to PLib.Lighting data.
 		/// </summary>
 		public const string KEY_LIGHTING_LOCK = "PLib.Lighting.Lock";

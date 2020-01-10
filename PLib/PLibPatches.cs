@@ -279,6 +279,43 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Applied to CodexCache to collect dynamic codex entries from the file system.
+		/// </summary>
+		private static void CollectEntries_Postfix(string folder, List<CodexEntry> __result) {
+			// Check to see if we are loading from either the "Creatures" directory or "Plants" directory.
+			string baseEntryPath = Traverse.Create(typeof(CodexCache)).Field("baseEntryPath").GetValue<string>();
+			string path = !string.IsNullOrEmpty(folder) ? Path.Combine(baseEntryPath, folder) : baseEntryPath;
+			bool modified = false;
+			if (path.EndsWith("Creatures")) {
+				__result.AddRange(Codex.PCodex.LoadCreaturesEntries());
+				modified = true;
+			}
+			if (path.EndsWith("Plants")) {
+				__result.AddRange(Codex.PCodex.LoadPlantsEntries());
+				modified = true;
+			}
+			if (modified) {
+				foreach (CodexEntry codexEntry in __result) {
+					if (string.IsNullOrEmpty(codexEntry.sortString))
+						codexEntry.sortString = Strings.Get(codexEntry.title);
+				}
+				__result.Sort((x, y) => x.sortString.CompareTo(y.sortString));
+			}
+		}
+
+		/// <summary>
+		/// Applied to CodexCache to collect dynamic codex sub entries from the file system.
+		/// </summary>
+		private static void CollectSubEntries_Postfix(string folder, List<SubEntry> __result) {
+			int startSize = __result.Count;
+			__result.AddRange(Codex.PCodex.LoadCreaturesSubEntries());
+			__result.AddRange(Codex.PCodex.LoadPlantsSubEntries());
+			if (__result.Count != startSize) {
+				__result.Sort((x, y) => x.title.CompareTo(y.title));
+			}
+		}
+
+		/// <summary>
 		/// Applies all patches.
 		/// </summary>
 		/// <param name="instance">The Harmony instance to use when patching.</param>
@@ -348,6 +385,12 @@ namespace PeterHan.PLib {
 				instance.Patch(typeof(GeneratedBuildings), "LoadGeneratedBuildings",
 					PatchMethod(nameof(LoadGeneratedBuildings_Prefix)), null);
 			}
+
+			// PCodex
+			instance.Patch(typeof(CodexCache), "CollectEntries", null,
+				PatchMethod(nameof(CollectEntries_Postfix)));
+			instance.Patch(typeof(CodexCache), "CollectSubEntries", null,
+				PatchMethod(nameof(CollectSubEntries_Postfix)));
 
 			// ModsScreen
 			POptions.Init();
