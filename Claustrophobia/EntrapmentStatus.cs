@@ -60,6 +60,12 @@ namespace PeterHan.Claustrophobia {
 		public bool StillLiving { get; set; }
 
 		/// <summary>
+		/// The number of loop cycles (roughly the number of seconds) for which the Duplicant
+		/// has been in its current state, if the Duplicant is currently trapped or confined.
+		/// </summary>
+		public int TimeInState { get; set; }
+
+		/// <summary>
 		/// Retrieves the "trapped score" of this Duplicant, gaining one point for each
 		/// inaccessible essential colony item.
 		/// </summary>
@@ -100,6 +106,7 @@ namespace PeterHan.Claustrophobia {
 			}
 			LastStatus = EntrapmentState.None;
 			StillLiving = true;
+			TimeInState = 0;
 			VictimName = victim.name;
 		}
 

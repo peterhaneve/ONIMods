@@ -30,12 +30,20 @@ namespace PeterHan.Claustrophobia {
 		[JsonProperty]
 		public bool StrictConfined { get; set; }
 
+		[Option("Stuck Threshold (s)", "The minimum time for which a Duplicant must be " +
+			"stuck before a notification is displayed.")]
+		[Limit(0.0, 30.0)]
+		[JsonProperty]
+		public int StuckThreshold { get; set; }
+
 		public ClaustrophobiaOptions() {
 			StrictConfined = false;
+			StuckThreshold = 3;
 		}
 
 		public override string ToString() {
-			return "ClaustrophobiaOptions[strict={0}]".F(StrictConfined);
+			return "ClaustrophobiaOptions[strict={0},threshold{1:D}]".F(StrictConfined,
+				StuckThreshold);
 		}
 	}
 }

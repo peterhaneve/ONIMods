@@ -125,8 +125,8 @@ namespace PeterHan.Claustrophobia {
 			options = POptions.ReadSettings<ClaustrophobiaOptions>();
 			if (options == null)
 				options = new ClaustrophobiaOptions();
-			PUtil.LogDebug("Claustrophobia Options: Strict Mode = {0}".F(options.
-				StrictConfined));
+			PUtil.LogDebug("Claustrophobia Options: Strict Mode = {0}, Threshold = {1:D}".F(
+				options.StrictConfined, options.StuckThreshold));
 		}
 
 		/// <summary>
@@ -156,7 +156,7 @@ namespace PeterHan.Claustrophobia {
 			foreach (var status in toCheck) {
 				var victim = status.Victim;
 				var obj = victim.gameObject;
-				int reachable = status.ReachableCells;
+				int reachable = status.ReachableCells, time = status.TimeInState;
 				var lastStatus = status.LastStatus;
 				// Create notifications if not yet present
 				var confined = obj.AddOrGet<ConfinedNotification>();
@@ -164,35 +164,44 @@ namespace PeterHan.Claustrophobia {
 				bool rawConfined = (mostReachable > MIN_CONFINED && reachable <
 					MIN_CONFINED) || reachable < threshold;
 				if (rawConfined && (!options.StrictConfined || status.TrappedScore > 1)) {
+					if (lastStatus == EntrapmentState.Confined)
+						time++;
+					else
+						time = 0;
 					// Confined
-					PUtil.LogDebug(("{0} is confined ({3} last), reaches {1:D}, " +
-						"best reach {2:D}").F(status.VictimName, reachable, mostReachable,
-						lastStatus));
-					if (lastStatus == EntrapmentState.Confined) {
+					if (time >= options.StuckThreshold) {
+						PUtil.LogDebug(("{0} is confined ({3} last), reaches {1:D}, " +
+							"best reach {2:D}").F(status.VictimName, reachable, mostReachable,
+							lastStatus));
 						confined.Show();
 						trapped.Hide();
 					} else
-						// Preserve current notification state, check next time
 						checkNextFrame.Add(victim);
-					status.LastStatus = EntrapmentState.Confined;
+					lastStatus = EntrapmentState.Confined;
 				} else if (status.TrappedScore > 1) {
+					if (lastStatus == EntrapmentState.Trapped)
+						time++;
+					else
+						time = 0;
 					// Trapped
-					PUtil.LogDebug(("{0} is trapped ({4} last), bed? {1}, mess? {2}, " +
-						"toilet? {3}").F(status.VictimName, status.CanReachBed,
-						status.CanReachMess, status.CanReachToilet, lastStatus));
-					if (lastStatus == EntrapmentState.Trapped) {
+					if (time >= options.StuckThreshold) {
+						PUtil.LogDebug(("{0} is trapped ({4} last), bed? {1}, mess? {2}, " +
+							"toilet? {3}").F(status.VictimName, status.CanReachBed,
+							status.CanReachMess, status.CanReachToilet, lastStatus));
 						confined.Hide();
 						trapped.Show();
 					} else
-						// Preserve current notification state, check next time
 						checkNextFrame.Add(victim);
-					status.LastStatus = EntrapmentState.Trapped;
+					lastStatus = EntrapmentState.Trapped;
 				} else {
 					// Neither
 					trapped.Hide();
 					confined.Hide();
-					status.LastStatus = EntrapmentState.None;
+					lastStatus = EntrapmentState.None;
+					time = 0;
 				}
+				status.TimeInState = time;
+				status.LastStatus = lastStatus;
 			}
 		}
 
@@ -291,6 +300,7 @@ namespace PeterHan.Claustrophobia {
 			if (statusCache.TryGetValue(dupe, out EntrapmentStatus oldStatus)) {
 				// Copy status from previous entry
 				status.LastStatus = oldStatus.LastStatus;
+				status.TimeInState = oldStatus.TimeInState;
 				statusCache[dupe] = status;
 			} else {
 				// Add to cache if missing
