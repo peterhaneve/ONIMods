@@ -110,6 +110,10 @@ namespace PeterHan.Claustrophobia {
 			VictimName = victim.name;
 		}
 
+		public override bool Equals(object obj) {
+			return obj is EntrapmentStatus other && Victim == other.Victim;
+		}
+
 		public override string ToString() {
 			return "{0} ({5} last): {1:D} reachable, bed:{2}, mess:{3}, toilet:{4}".F(
 				VictimName, ReachableCells, CanReachBed, CanReachMess, CanReachToilet,

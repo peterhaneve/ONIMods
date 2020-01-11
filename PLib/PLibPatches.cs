@@ -29,6 +29,7 @@ using System.Reflection.Emit;
 using LightGridEmitter = LightGridManager.LightGridEmitter;
 using IntHandle = HandleVector<int>.Handle;
 using System.IO;
+using PeterHan.PLib.Datafiles;
 
 namespace PeterHan.PLib {
 	/// <summary>
@@ -348,6 +349,11 @@ namespace PeterHan.PLib {
 				instance.Patch(typeof(GeneratedBuildings), "LoadGeneratedBuildings",
 					PatchMethod(nameof(LoadGeneratedBuildings_Prefix)), null);
 			}
+
+			// PLocalization
+			var locale = Localization.GetLocale();
+			if (locale != null)
+				PLocalization.LocalizeAll(locale);
 
 			// ModsScreen
 			POptions.Init();

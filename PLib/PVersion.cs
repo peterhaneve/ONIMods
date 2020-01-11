@@ -34,7 +34,7 @@ namespace PeterHan.PLib {
 		/// version loaded on the client.
 		/// 
 		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in Mod_OnLoad, and will always return false in those cases.
+		/// unavailable in OnLoad, and will always return false in those cases.
 		/// </summary>
 		public static bool IsLatestVersion {
 			get {

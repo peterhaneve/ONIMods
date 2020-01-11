@@ -281,9 +281,12 @@ namespace PeterHan.Claustrophobia {
 			for (int i = 0; i < step && pacer < len; i++) {
 				var dupe = minionCache[pacer++];
 				// Do not replace with ?. since Unity overloads "=="
-				if (dupe != null && dupe.activeInHierarchy && !dupe.IsFalling())
+				if (dupe != null && dupe.activeInHierarchy && !dupe.IsFalling()) {
 					// Exclude falling Duplicants, they have no pathing
-					checkThisFrame.Add(UpdateStatus(dupe));
+					var status = UpdateStatus(dupe);
+					if (!checkThisFrame.Contains(status))
+						checkThisFrame.Add(status);
+				}
 			}
 			CheckNotifications(checkThisFrame);
 			checkThisFrame.Recycle();

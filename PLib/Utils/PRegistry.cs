@@ -66,6 +66,16 @@ namespace PeterHan.PLib {
 		public const string KEY_LIGHTING_TABLE = "PLib.Lighting.Table";
 
 		/// <summary>
+		/// Used to synchronize access to localization mods.
+		/// </summary>
+		public const string KEY_LOCALE_LOCK = "PLib.Localization.Lock";
+
+		/// <summary>
+		/// Stores the localization mods currently registered.
+		/// </summary>
+		public const string KEY_LOCALE_TABLE = "PLib.Localization.Table";
+
+		/// <summary>
 		/// Used to synchronize access to PLib options data.
 		/// </summary>
 		public const string KEY_OPTIONS_LOCK = "PLib.Options.Lock";

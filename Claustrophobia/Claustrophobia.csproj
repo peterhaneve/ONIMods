@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net35</TargetFramework>
     <AssemblyTitle>Claustrophobia</AssemblyTitle>
-    <FileVersion>1.13.0.0</FileVersion>
+    <FileVersion>1.14.0.0</FileVersion>
     <RootNamespace>PeterHan.Claustrophobia</RootNamespace>
     <Description>Issues warnings when Duplicants are stuck in small, confined spaces.</Description>
     <AssemblyVersion>1.13.0.0</AssemblyVersion>
