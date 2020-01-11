@@ -49,7 +49,7 @@ namespace PeterHan.PLib.UI {
 				label.AddComponent<Image>().color = BackColor;
 			// Add foreground image
 			if (Sprite != null)
-				ImageChildHelper(label, Sprite, SpriteTransform, SpriteSize);
+				ImageChildHelper(label, this);
 			// Add text
 			if (!string.IsNullOrEmpty(Text))
 				TextChildHelper(label, TextStyle ?? PUITuning.Fonts.UILightStyle, Text);

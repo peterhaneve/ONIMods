@@ -33,23 +33,22 @@ namespace PeterHan.PLib.UI {
 		/// Shared routine to spawn UI image objects.
 		/// </summary>
 		/// <param name="parent">The parent object for the image.</param>
-		/// <param name="sprite">The sprite to display.</param>
-		/// <param name="rotate">How to rotate or flip the sprite.</param>
-		/// <param name="imageSize">The size to which to scale the sprite.</param>
+		/// <param name="settings">The settings to use for displaying the image.</param>
 		/// <returns>The child image object.</returns>
-		protected static Image ImageChildHelper(GameObject parent, Sprite sprite,
-				ImageTransform rotate = ImageTransform.None, Vector2 imageSize = default) {
+		protected static Image ImageChildHelper(GameObject parent, PTextComponent settings) {
 			var imageChild = PUIElements.CreateUI(parent, "Image", true,
 				PUIAnchoring.Beginning, PUIAnchoring.Beginning);
 			var rt = imageChild.rectTransform();
 			// The pivot is important here
 			rt.pivot = CENTER;
 			var img = imageChild.AddComponent<Image>();
-			img.sprite = sprite;
+			img.color = settings.SpriteTint;
+			img.sprite = settings.Sprite;
 			img.preserveAspect = true;
 			// Set up transform
 			var scale = Vector3.one;
 			float rot = 0.0f;
+			var rotate = settings.SpriteTransform;
 			if ((rotate & ImageTransform.FlipHorizontal) != ImageTransform.None)
 				scale.x = -1.0f;
 			if ((rotate & ImageTransform.FlipVertical) != ImageTransform.None)
@@ -63,6 +62,7 @@ namespace PeterHan.PLib.UI {
 			transform.localScale = scale;
 			transform.Rotate(new Vector3(0.0f, 0.0f, rot));
 			// Limit size if needed
+			var imageSize = settings.SpriteSize;
 			if (imageSize.x > 0.0f && imageSize.y > 0.0f)
 				imageChild.SetUISize(imageSize, true);
 			return img;
@@ -110,6 +110,11 @@ namespace PeterHan.PLib.UI {
 		public Vector2 SpriteSize { get; set; }
 
 		/// <summary>
+		/// The color to tint the sprite. For no tint, use Color.white.
+		/// </summary>
+		public Color SpriteTint { get; set; }
+
+		/// <summary>
 		/// How to rotate or flip the sprite.
 		/// </summary>
 		public ImageTransform SpriteTransform { get; set; }
@@ -143,6 +148,7 @@ namespace PeterHan.PLib.UI {
 			Name = name;
 			Sprite = null;
 			SpriteSize = Vector2.zero;
+			SpriteTint = Color.white;
 			SpriteTransform = ImageTransform.None;
 			Text = null;
 			TextAlignment = TextAnchor.MiddleCenter;

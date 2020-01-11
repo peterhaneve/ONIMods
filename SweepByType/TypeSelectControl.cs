@@ -38,7 +38,7 @@ namespace PeterHan.SweepByType {
 		internal const int INDENT = 24;
 
 		/// <summary>
-		/// The size of checkboxes and images in this control.
+		/// The size of the panel (UI sizes are hard coded in prefabs).
 		/// </summary>
 		internal static readonly Vector2 PANEL_SIZE = new Vector2(260.0f, 320.0f);
 
@@ -61,18 +61,18 @@ namespace PeterHan.SweepByType {
 		/// Gets the sprite for a particular element tag.
 		/// </summary>
 		/// <param name="elementTag">The tag of the element to look up.</param>
+		/// <param name="tint">The tint which will be used for the image.</param>
 		/// <returns>The sprite to use for it.</returns>
-		internal static Sprite GetStorageObjectSprite(Tag elementTag) {
+		internal static Sprite GetStorageObjectSprite(Tag elementTag, out Color tint) {
 			Sprite result = null;
 			var prefab = Assets.GetPrefab(elementTag);
+			tint = Color.white;
 			if (prefab != null) {
 				// Extract the UI preview image (sucks for bottles, but it is all we have)
-				var component = prefab.GetComponent<KBatchedAnimController>();
-				if (component != null) {
-					var anim = component.AnimFiles[0];
-					// Gas bottles do not have a place sprite, silence the warning
-					if (anim != null && anim.name != "gas_tank_kanim")
-						result = Def.GetUISpriteFromMultiObjectAnim(anim);
+				var sprite = Def.GetUISprite(prefab);
+				if (sprite != null) {
+					tint = sprite.second;
+					result = sprite.first;
 				}
 			}
 			return result;
@@ -88,15 +88,11 @@ namespace PeterHan.SweepByType {
 			if (allItems != null) {
 				bool all = true, none = true;
 				foreach (var child in children)
-					switch (PCheckBox.GetCheckState(child.CheckBox)) {
-					case PCheckBox.STATE_CHECKED:
+					if (PCheckBox.GetCheckState(child.CheckBox) == PCheckBox.STATE_CHECKED)
 						none = false;
-						break;
-					default:
+					else
 						// Partially checked or unchecked
 						all = false;
-						break;
-					}
 				PCheckBox.SetCheckState(allItems, none ? PCheckBox.STATE_UNCHECKED : (all ?
 					PCheckBox.STATE_CHECKED : PCheckBox.STATE_PARTIAL));
 			}
@@ -227,16 +223,12 @@ namespace PeterHan.SweepByType {
 		}
 
 		private void OnCheck(GameObject source, int state) {
-			switch (state) {
-			case PCheckBox.STATE_UNCHECKED:
+			if (state == PCheckBox.STATE_UNCHECKED)
 				// Clicked when unchecked, check all
 				CheckAll();
-				break;
-			default:
+			else
 				// Clicked when checked or partial, clear all
 				ClearAll();
-				break;
-			}
 		}
 
 		/// <summary>
@@ -408,16 +400,12 @@ namespace PeterHan.SweepByType {
 			}
 
 			private void OnCheck(GameObject source, int state) {
-				switch (state) {
-				case PCheckBox.STATE_UNCHECKED:
+				if (state == PCheckBox.STATE_UNCHECKED)
 					// Clicked when unchecked, check all
 					CheckAll();
-					break;
-				default:
+				else
 					// Clicked when checked or partial, clear all
 					ClearAll();
-					break;
-				}
 				Control.UpdateFromChildren();
 			}
 
@@ -483,27 +471,25 @@ namespace PeterHan.SweepByType {
 
 			internal TypeSelectElement(TypeSelectCategory parent, Tag elementTag) {
 				this.parent = parent ?? throw new ArgumentNullException("parent");
+				var tint = Color.white;
+				var sprite = parent.Control.DisableIcons ? null :
+					GetStorageObjectSprite(elementTag, out tint);
 				ElementTag = elementTag;
 				CheckBox = new PCheckBox("Select") {
 					CheckSize = ROW_SIZE, SpriteSize = ROW_SIZE, OnChecked = OnCheck,
 					Text = ElementTag.ProperName(), InitialState = PCheckBox.
-					STATE_CHECKED, Sprite = (parent.Control.DisableIcons ? null :
-					GetStorageObjectSprite(elementTag)), TextStyle = PUITuning.Fonts.
-					TextDarkStyle
+					STATE_CHECKED, Sprite = sprite, SpriteTint = tint,
+					TextStyle = PUITuning.Fonts.TextDarkStyle
 				}.Build();
 			}
 
 			private void OnCheck(GameObject source, int state) {
-				switch (state) {
-				case PCheckBox.STATE_UNCHECKED:
+				if (state == PCheckBox.STATE_UNCHECKED)
 					// Clicked when unchecked, check and possibly check all
 					PCheckBox.SetCheckState(CheckBox, PCheckBox.STATE_CHECKED);
-					break;
-				default:
+				else
 					// Clicked when checked, clear and possibly uncheck
 					PCheckBox.SetCheckState(CheckBox, PCheckBox.STATE_UNCHECKED);
-					break;
-				}
 				parent.UpdateFromChildren();
 			}
 

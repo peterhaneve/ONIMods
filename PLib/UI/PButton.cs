@@ -75,7 +75,7 @@ namespace PeterHan.PLib.UI {
 			kButton.bgImage = kImage;
 			// Add foreground image since the background already has one
 			if (Sprite != null)
-				kButton.fgImage = ImageChildHelper(button, Sprite, SpriteTransform, SpriteSize);
+				kButton.fgImage = ImageChildHelper(button, this);
 			// Set colors
 			kButton.colorStyleSetting = trueColor;
 			// Add text

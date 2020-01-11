@@ -35,8 +35,7 @@ namespace PeterHan.PLib {
 
 		static PAction() {
 			// Enum.TryParse was introduced in .NET Framework 4.0
-			Action numActions = PUtil.TryParseEnum("NumActions", Action.NumActions);
-			MaxAction = numActions;
+			MaxAction = PUtil.TryParseEnum("NumActions", Action.NumActions);
 		}
 
 		/// <summary>

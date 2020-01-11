@@ -184,7 +184,7 @@ namespace PeterHan.PLib.UI {
 			imageChild.SetUISize(CheckSize, false);
 			// Add foreground image since the background already has one
 			if (Sprite != null)
-				ImageChildHelper(checkbox, Sprite, SpriteTransform, SpriteSize);
+				ImageChildHelper(checkbox, this);
 			// Add text
 			if (!string.IsNullOrEmpty(Text))
 				TextChildHelper(checkbox, TextStyle ?? PUITuning.Fonts.UILightStyle, Text);
