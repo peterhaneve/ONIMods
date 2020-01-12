@@ -29,6 +29,7 @@ using System.Reflection.Emit;
 using LightGridEmitter = LightGridManager.LightGridEmitter;
 using IntHandle = HandleVector<int>.Handle;
 using System.IO;
+using PeterHan.PLib.Datafiles;
 
 namespace PeterHan.PLib {
 	/// <summary>
@@ -287,11 +288,11 @@ namespace PeterHan.PLib {
 			string path = !string.IsNullOrEmpty(folder) ? Path.Combine(baseEntryPath, folder) : baseEntryPath;
 			bool modified = false;
 			if (path.EndsWith("Creatures")) {
-				__result.AddRange(Codex.PCodex.LoadCreaturesEntries());
+				__result.AddRange(Datafiles.PCodex.LoadCreaturesEntries());
 				modified = true;
 			}
 			if (path.EndsWith("Plants")) {
-				__result.AddRange(Codex.PCodex.LoadPlantsEntries());
+				__result.AddRange(Datafiles.PCodex.LoadPlantsEntries());
 				modified = true;
 			}
 			if (modified) {
@@ -308,8 +309,8 @@ namespace PeterHan.PLib {
 		/// </summary>
 		private static void CollectSubEntries_Postfix(string folder, List<SubEntry> __result) {
 			int startSize = __result.Count;
-			__result.AddRange(Codex.PCodex.LoadCreaturesSubEntries());
-			__result.AddRange(Codex.PCodex.LoadPlantsSubEntries());
+			__result.AddRange(Datafiles.PCodex.LoadCreaturesSubEntries());
+			__result.AddRange(Datafiles.PCodex.LoadPlantsSubEntries());
 			if (__result.Count != startSize) {
 				__result.Sort((x, y) => x.title.CompareTo(y.title));
 			}
@@ -391,6 +392,11 @@ namespace PeterHan.PLib {
 				PatchMethod(nameof(CollectEntries_Postfix)));
 			instance.Patch(typeof(CodexCache), "CollectSubEntries", null,
 				PatchMethod(nameof(CollectSubEntries_Postfix)));
+
+			// PLocalization
+			var locale = Localization.GetLocale();
+			if (locale != null)
+				PLocalization.LocalizeAll(locale);
 
 			// ModsScreen
 			POptions.Init();

@@ -1,12 +1,60 @@
-﻿using System;
+﻿/*
+ * Copyright 2020 Davis Cook
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+ * and associated documentation files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Klei;
 using Harmony;
 
-namespace PeterHan.PLib.Codex {
-	public sealed class PCodex {
+namespace PeterHan.PLib.Datafiles {
+	/// <summary>
+	/// Handles codex entries for mods by automatically loading yaml
+	/// entries and subentries for critters and plants from the codex
+	/// folder in their mod directories.
+	/// </summary>
+	public static class PCodex {
+
+		/// <summary>
+		/// The subfolder from which critter codex entries are loaded.
+		/// </summary>
+		public const string CREATURES_DIR = "codex/Creatures";
+
+		/// <summary>
+		/// The subfolder from which plant codex entries are loaded.
+		/// </summary>
+		public const string PLANTS_DIR = "codex/Plants";
+
+		/// <summary>
+		/// The file extension used for codex entry/subentries.
+		/// </summary>
+		public const string CODEX_FILES = "*.yaml";
+
+		/// <summary>
+		/// The codex category under which critter entries should go.
+		/// </summary>
+		public const string CREATURES_CATEGORY = "CREATURES";
+
+		/// <summary>
+		/// The codex category under which plant entries should go.
+		/// </summary>
+		public const string PLANTS_CATEGORY = "PLANTS";
 
 		private static void RegisterEntry(Assembly modAssembly, string lockKey, string tableKey, string entryPath, string debugLine) {
 			// Store the path to the creatures folder on disk for use in loading codex entries
@@ -23,18 +71,31 @@ namespace PeterHan.PLib.Codex {
 			}
 		}
 
+		/// <summary>
+		/// Loads critter codex entries for the calling mod.
+		/// </summary>
 		public static void RegisterCreatures() {
 			var assembly = Assembly.GetCallingAssembly();
 			RegisterEntry(assembly, PRegistry.KEY_CODEX_CREATURES_LOCK, PRegistry.KEY_CODEX_CREATURES_TABLE,
-				"codex/Creatures", "Registered codex creatures directory: {0}");
+				CREATURES_DIR, "Registered codex creatures directory: {0}");
 		}
 
+		/// <summary>
+		/// Loads plant codex entries for the calling mod.
+		/// </summary>
 		public static void RegisterPlants() {
 			var assembly = Assembly.GetCallingAssembly();
 			RegisterEntry(assembly, PRegistry.KEY_CODEX_PLANTS_LOCK, PRegistry.KEY_CODEX_PLANTS_TABLE,
-				"codex/Plants", "Registered codex plants directory: {0}");
+				PLANTS_DIR, "Registered codex plants directory: {0}");
 		}
 
+		/// <summary>
+		/// Loads all codex entries for all mods reigstered to the lib.
+		/// </summary>
+		/// <param name="lockKey">Key for shared data lock.</param>
+		/// <param name="tableKey">Key for shared data table.</param>
+		/// <param name="category">The codex category under which these data entries should be loaded.</param>
+		/// <returns>The list of entries that were loaded.</returns>
 		private static List<CodexEntry> LoadEntries(string lockKey, string tableKey, string category) {
 			List<CodexEntry> entries = new List<CodexEntry>();
 			lock (PSharedData.GetLock(lockKey)) {
@@ -47,10 +108,10 @@ namespace PeterHan.PLib.Codex {
 #endif
 					string[] strArray = new string[0];
 					try {
-						strArray = Directory.GetFiles(dir, "*.yaml");
+						strArray = Directory.GetFiles(dir, CODEX_FILES);
 					}
 					catch (UnauthorizedAccessException ex) {
-						Debug.LogWarning(ex);
+						PUtil.LogExcWarn(ex);
 					}
 					foreach (string str in strArray) {
 						try {
@@ -64,7 +125,7 @@ namespace PeterHan.PLib.Codex {
 							}
 						}
 						catch (Exception ex) {
-							DebugUtil.DevLogErrorFormat("CodexCache.CollectEntries failed to load [{0}]: {1}", str, ex.ToString());
+							PUtil.LogException(ex);
 						}
 					}
 				}
@@ -74,14 +135,20 @@ namespace PeterHan.PLib.Codex {
 
 		internal static List<CodexEntry> LoadCreaturesEntries() {
 			return LoadEntries(PRegistry.KEY_CODEX_CREATURES_LOCK,
-				PRegistry.KEY_CODEX_CREATURES_TABLE, "CREATURES");
+				PRegistry.KEY_CODEX_CREATURES_TABLE, CREATURES_CATEGORY);
 		}
 
 		internal static List<CodexEntry> LoadPlantsEntries() {
 			return LoadEntries(PRegistry.KEY_CODEX_PLANTS_LOCK,
-				PRegistry.KEY_CODEX_PLANTS_TABLE, "PLANTS");
+				PRegistry.KEY_CODEX_PLANTS_TABLE, PLANTS_CATEGORY);
 		}
 
+		/// <summary>
+		/// Loads all codex subentries for all mods reigstered to the lib.
+		/// </summary>
+		/// <param name="lockKey">Key for shared data lock.</param>
+		/// <param name="tableKey">Key for shared data table.</param>
+		/// <returns>The list of subentries that were loaded.</returns>
 		private static List<SubEntry> LoadSubEntries(string lockKey, string tableKey) {
 			List<SubEntry> entries = new List<SubEntry>();
 			lock (PSharedData.GetLock(lockKey)) {
@@ -94,10 +161,10 @@ namespace PeterHan.PLib.Codex {
 #endif
 					string[] strArray = new string[0];
 					try {
-						strArray = Directory.GetFiles(dir, "*.yaml", SearchOption.AllDirectories);
+						strArray = Directory.GetFiles(dir, CODEX_FILES, SearchOption.AllDirectories);
 					}
 					catch (UnauthorizedAccessException ex) {
-						Debug.LogWarning(ex);
+						PUtil.LogExcWarn(ex);
 					}
 					foreach (string str in strArray) {
 						try {
@@ -108,7 +175,7 @@ namespace PeterHan.PLib.Codex {
 							if (entries != null)
 								entries.Add(subEntry);
 						} catch (Exception ex) {
-							DebugUtil.DevLogErrorFormat("CodexCache.CollectSubEntries failed to load [{0}]: {1}", str, ex.ToString());
+							PUtil.LogException(ex);
 						}
 					}
 				}

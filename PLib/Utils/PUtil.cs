@@ -299,7 +299,7 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <param name="error">The YAML parsing error</param>
 		/// <param name="force_log_as_warning">Unused but matches expected callback type signature</param>
-		public static void YamlParseErrorCB(YamlIO.Error error, bool force_log_as_warning) {
+		internal static void YamlParseErrorCB(YamlIO.Error error, bool force_log_as_warning) {
 			throw new Exception(string.Format("{0} parse error in {1}\n{2}", error.severity, error.file.full_path, error.message), error.inner_exception);
 		}
 

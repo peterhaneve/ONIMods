@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Datafiles;
 using PeterHan.PLib.Options;
 
 namespace PeterHan.Claustrophobia {
@@ -28,23 +29,7 @@ namespace PeterHan.Claustrophobia {
 		public static void OnLoad() {
 			PUtil.InitLibrary();
 			POptions.RegisterOptions(typeof(ClaustrophobiaOptions));
-		}
-
-		/// <summary>
-		/// Handles localization by registering for translation.
-		/// </summary>
-		[HarmonyPatch(typeof(Db), "Initialize")]
-		public static class Db_Initialize_Patch {
-			/// <summary>
-			/// Applied before Initialize runs.
-			/// </summary>
-			internal static void Prefix() {
-#if DEBUG
-				ModUtil.RegisterForTranslation(typeof(ClaustrophobiaStrings));
-#else
-				Localization.RegisterForTranslation(typeof(ClaustrophobiaStrings));
-#endif
-			}
+			PLocalization.Register();
 		}
 
 		/// <summary>

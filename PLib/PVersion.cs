@@ -27,14 +27,14 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// The PLib version.
 		/// </summary>
-		public const string VERSION = "2.20.0.0";
+		public const string VERSION = "2.20.5.0";
 
 		/// <summary>
 		/// Reports whether the PLib version included or referenced by this mod is the latest
 		/// version loaded on the client.
 		/// 
 		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in Mod_OnLoad, and will always return false in those cases.
+		/// unavailable in OnLoad, and will always return false in those cases.
 		/// </summary>
 		public static bool IsLatestVersion {
 			get {
