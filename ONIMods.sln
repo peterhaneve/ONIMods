@@ -47,6 +47,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThermalPlate", "ThermalPlat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShowRange", "ShowRange\ShowRange.csproj", "{F7519F98-94BC-491C-9E99-48A7670FAF88}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StockBugFix", "StockBugFix\StockBugFix.csproj", "{99C7BEC1-7837-419C-BA0A-9CFA1DD8CD63}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -141,6 +143,10 @@ Global
 		{F7519F98-94BC-491C-9E99-48A7670FAF88}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F7519F98-94BC-491C-9E99-48A7670FAF88}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F7519F98-94BC-491C-9E99-48A7670FAF88}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99C7BEC1-7837-419C-BA0A-9CFA1DD8CD63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99C7BEC1-7837-419C-BA0A-9CFA1DD8CD63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99C7BEC1-7837-419C-BA0A-9CFA1DD8CD63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99C7BEC1-7837-419C-BA0A-9CFA1DD8CD63}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

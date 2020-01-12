@@ -4,7 +4,7 @@
     <TargetFramework>net35</TargetFramework>
     <Title>PeterHan.PLib</Title>
 	  <AssemblyTitle>PeterHanLib</AssemblyTitle>
-	  <Version>2.20.0.0</Version>
+	  <Version>2.21.0.0</Version>
 	  <UsesPLib>false</UsesPLib>
 	  <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
 	  <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
@@ -16,14 +16,12 @@
 	  <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
 	
 Contains functions aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
-	  <PackageReleaseNotes>Add a PriorityQueue class for efficient path finding and ColoredRangeVisualizer for a more flexible way to visualize building ranges.
+	  <PackageReleaseNotes>Add the PCodex class for allowing mods to register their own plant and critter codex entries.
 
-Additional features added to PBuilding including building layer settings and placement audio settings.
-
-Options annotations can only be applied where they belong.
+Add the PLocalization class to allow mods to load their own translation strings.
     </PackageReleaseNotes>
 	  <RootNamespace>PeterHan.PLib</RootNamespace>
-	  <AssemblyVersion>2.20.0.0</AssemblyVersion>
+	  <AssemblyVersion>2.21.0.0</AssemblyVersion>
 	  <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
 	  <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>

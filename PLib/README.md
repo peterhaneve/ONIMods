@@ -23,6 +23,8 @@ Suggested command:
 ```
 
 This helps ensure that each mod gets the version of PLib that it was built against, reducing the risk of breakage due to PLib changes.
+PLib can also be packaged separately as a DLL with an individual mod.
+
 However, some parts of PLib need to be patched only once, or rely on having the latest version.
 To handle this problem, PLib uses *auto-superseding*, which only loads and patches those portions of PLib after all mods have loaded, using the latest version of PLib on the system in any mod.
 Example log information showing this feature in action:
@@ -52,7 +54,7 @@ This is not a guarantee that the PLib instance in a particular mod is the loaded
 
 Initialize PLib by calling `PUtil.InitLibrary(bool)` in `OnLoad`. PLib *must* be initialized before using most of PLib functionality.
 
-It will emit your mod's `AssemblyFileVersion` to the log. It is not `AssemblyVersion`, because  changing `AssemblyVersion` breaks any explicit references to the assembly by name. (Ever wonder why .NET 3.5 still uses the .NET 2.0 version string?)
+It will emit your mod's `AssemblyFileVersion` to the log. Using the `AssemblyVersion` instead is discouraged, because changing `AssemblyVersion` breaks any explicit references to the assembly by name. (Ever wonder why .NET 3.5 still uses the .NET 2.0 version string?)
 
 ### Options
 
@@ -66,7 +68,7 @@ To write, use `PLib.Options.POptions.WriteSettings<T>(T settings)`, where again 
 
 #### Registering for the config screen
 
-PLib.Options automatically displays config menus for mods that are registered. You can register an mod by invoking `POptions.RegisterOptions(Type settingtype)` in `OnLoad`. The argument should be the type of the class your mod uses for its options, and must be JSON serializable. Newtonsoft.Json is bundled with the game and can be referenced.
+PLib.Options automatically displays config menus for mods that are registered. Register a mod by invoking `POptions.RegisterOptions(Type settingtype)` in `OnLoad`. The argument should be the type of the class the mod uses for its options, and must be JSON serializable. Newtonsoft.Json is bundled with the game and can be referenced.
 
 Fields must be a property, not a member, and should be annotated with `PLib.Option(string displaytext, [string tooltip=""])` to be visible in the mod config menu. Currently supported types are: `int`, `float`, `string`, `bool`, and `Enum`.
 
@@ -117,8 +119,6 @@ This is how it looks in the mod menu:
 
 ![mod menu example screenshot](https://i.imgur.com/1S1i9ru.png)
 
-
-
 ### Actions
 
 Register actions by using `PAction.Register(string, LocString, PKeyBinding)` in `OnLoad`.
@@ -141,3 +141,15 @@ void CastLight(GameObject source, LightingArgs args);
 ```
 The mod will receive the source of the light (with the `Light2D` component) and an object encapsulating the lighting arguments.
 See the `LightingArgs` class for more details.
+
+### Translations
+
+Register a mod for translation by using `PLocalization.Register()` in `OnLoad`.
+All classes in the mod assembly with `public static` `LocString` fields will be eligible for translation.
+Translation files need to be placed in the `translations` folder in the mod directory, named as the target language code (*zh-CN* for example) and ending with the `.po` extension.
+Note that the translation only occurs after all mods load, so avoid referencing the `LocString` fields during class initialization or `OnLoad` as they may not yet be localized at that time.
+
+### Codex Entries
+
+Register a mod for codex loading by using `PCodex.RegisterCreatures()` and/or `PCodex.RegisterPlants()`.
+The codex files will be loaded using the same structure as the base game: a `codex` folder must exist in the mod directory, with `Creatures` and `Plants` subfolders containing the codex data.

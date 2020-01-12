@@ -25,12 +25,13 @@ using Harmony;
 
 namespace PeterHan.PLib.Datafiles {
 	/// <summary>
-	/// Handles codex entries for mods by automatically loading yaml
-	/// entries and subentries for critters and plants from the codex
-	/// folder in their mod directories.
+	/// Handles codex entries for mods by automatically loading YAML entries and subentries for
+	/// critters and plants from the codex folder in their mod directories.
+	/// 
+	/// The layerable files loader in the stock game is broken, so this class is required to
+	/// correctly load new codex entries.
 	/// </summary>
 	public static class PCodex {
-
 		/// <summary>
 		/// The subfolder from which critter codex entries are loaded.
 		/// </summary>
@@ -56,14 +57,14 @@ namespace PeterHan.PLib.Datafiles {
 		/// </summary>
 		public const string PLANTS_CATEGORY = "PLANTS";
 
-		private static void RegisterEntry(Assembly modAssembly, string lockKey, string tableKey, string entryPath, string debugLine) {
+		private static void RegisterEntry(Assembly modAssembly, string lockKey, string tableKey,
+				string entryPath, string debugLine) {
 			// Store the path to the creatures folder on disk for use in loading codex entries
 			string dir = Options.POptions.GetModDir(modAssembly);
 			lock (PSharedData.GetLock(lockKey)) {
-				var table = PSharedData.GetData<List<string>>(tableKey);
+				var table = PSharedData.GetData<IList<string>>(tableKey);
 				if (table == null)
-					PSharedData.PutData(tableKey, table = new
-						List<string>(8));
+					PSharedData.PutData(tableKey, table = new List<string>(8));
 #if DEBUG
 				PUtil.LogDebug(debugLine.F(dir));
 #endif
@@ -72,73 +73,86 @@ namespace PeterHan.PLib.Datafiles {
 		}
 
 		/// <summary>
-		/// Loads critter codex entries for the calling mod.
+		/// Registers the calling mod as having custom creature codex entries. The entries will
+		/// be read from the mod directory in the "codex/Creatures" subfolder.
 		/// </summary>
 		public static void RegisterCreatures() {
-			var assembly = Assembly.GetCallingAssembly();
-			RegisterEntry(assembly, PRegistry.KEY_CODEX_CREATURES_LOCK, PRegistry.KEY_CODEX_CREATURES_TABLE,
-				CREATURES_DIR, "Registered codex creatures directory: {0}");
+			RegisterEntry(Assembly.GetCallingAssembly(), PRegistry.KEY_CODEX_CREATURES_LOCK,
+				PRegistry.KEY_CODEX_CREATURES_TABLE, CREATURES_DIR,
+				"Registered codex creatures directory: {0}");
 		}
 
 		/// <summary>
-		/// Loads plant codex entries for the calling mod.
+		/// Registers the calling mod as having custom plant codex entries. The entries will
+		/// be read from the mod directory in the "codex/Plants" subfolder.
 		/// </summary>
 		public static void RegisterPlants() {
-			var assembly = Assembly.GetCallingAssembly();
-			RegisterEntry(assembly, PRegistry.KEY_CODEX_PLANTS_LOCK, PRegistry.KEY_CODEX_PLANTS_TABLE,
-				PLANTS_DIR, "Registered codex plants directory: {0}");
+			RegisterEntry(Assembly.GetCallingAssembly(), PRegistry.KEY_CODEX_PLANTS_LOCK,
+				PRegistry.KEY_CODEX_PLANTS_TABLE, PLANTS_DIR,
+				"Registered codex plants directory: {0}");
 		}
 
 		/// <summary>
-		/// Loads all codex entries for all mods reigstered to the lib.
+		/// Loads all codex entries for all mods registered.
 		/// </summary>
 		/// <param name="lockKey">Key for shared data lock.</param>
 		/// <param name="tableKey">Key for shared data table.</param>
 		/// <param name="category">The codex category under which these data entries should be loaded.</param>
 		/// <returns>The list of entries that were loaded.</returns>
-		private static List<CodexEntry> LoadEntries(string lockKey, string tableKey, string category) {
-			List<CodexEntry> entries = new List<CodexEntry>();
+		private static IList<CodexEntry> LoadEntries(string lockKey, string tableKey,
+				string category) {
+			var entries = new List<CodexEntry>(32);
 			lock (PSharedData.GetLock(lockKey)) {
-				var table = PSharedData.GetData<List<string>>(tableKey);
-				if (table == null)
-					return entries;
-				foreach (string dir in table) {
+				var table = PSharedData.GetData<IList<string>>(tableKey);
+				if (table != null)
+					foreach (string dir in table) {
 #if DEBUG
-					PUtil.LogDebug("Loaded codex entries from directory: {0}".F(dir));
+						PUtil.LogDebug("Loaded codex entries from directory: {0}".F(dir));
 #endif
-					string[] strArray = new string[0];
-					try {
-						strArray = Directory.GetFiles(dir, CODEX_FILES);
-					}
-					catch (UnauthorizedAccessException ex) {
-						PUtil.LogExcWarn(ex);
-					}
-					foreach (string str in strArray) {
+						string[] codexFiles = new string[0];
 						try {
-							string filename = str;
-							YamlIO.ErrorHandler fMgCache0 = new YamlIO.ErrorHandler(PUtil.YamlParseErrorCB);
-							List<Tuple<string, Type>> widgetTagMappings = Traverse.Create(typeof(CodexCache)).Field("widgetTagMappings").GetValue<List<Tuple<string, Type>>>();
-							CodexEntry codexEntry = YamlIO.LoadFile<CodexEntry>(filename, fMgCache0, widgetTagMappings);
-							if (codexEntry != null) {
-								codexEntry.category = category;
-								entries.Add(codexEntry);
+							// List codex data files in the codex directory
+							codexFiles = Directory.GetFiles(dir, CODEX_FILES);
+						} catch (UnauthorizedAccessException ex) {
+							PUtil.LogExcWarn(ex);
+						} catch (IOException ex) {
+							PUtil.LogExcWarn(ex);
+						}
+						var widgetTagMappings = Traverse.Create(typeof(CodexCache)).
+							GetField<List<Tuple<string, Type>>>("widgetTagMappings");
+						foreach (string str in codexFiles)
+							try {
+								string filename = str;
+								var codexEntry = YamlIO.LoadFile<CodexEntry>(filename, PUtil.
+									YamlParseErrorCB, widgetTagMappings);
+								if (codexEntry != null) {
+									codexEntry.category = category;
+									entries.Add(codexEntry);
+								}
+							} catch (IOException ex) {
+								PUtil.LogException(ex);
+							} catch (InvalidDataException ex) {
+								PUtil.LogException(ex);
 							}
-						}
-						catch (Exception ex) {
-							PUtil.LogException(ex);
-						}
 					}
-				}
 			}
 			return entries;
 		}
 
-		internal static List<CodexEntry> LoadCreaturesEntries() {
+		/// <summary>
+		/// Loads the mod creature entries.
+		/// </summary>
+		/// <returns>The list of all creature entries loaded from mods.</returns>
+		internal static IList<CodexEntry> LoadCreaturesEntries() {
 			return LoadEntries(PRegistry.KEY_CODEX_CREATURES_LOCK,
 				PRegistry.KEY_CODEX_CREATURES_TABLE, CREATURES_CATEGORY);
 		}
 
-		internal static List<CodexEntry> LoadPlantsEntries() {
+		/// <summary>
+		/// Loads the mod plant entries.
+		/// </summary>
+		/// <returns>The list of all plant entries loaded from mods.</returns>
+		internal static IList<CodexEntry> LoadPlantsEntries() {
 			return LoadEntries(PRegistry.KEY_CODEX_PLANTS_LOCK,
 				PRegistry.KEY_CODEX_PLANTS_TABLE, PLANTS_CATEGORY);
 		}
@@ -149,46 +163,57 @@ namespace PeterHan.PLib.Datafiles {
 		/// <param name="lockKey">Key for shared data lock.</param>
 		/// <param name="tableKey">Key for shared data table.</param>
 		/// <returns>The list of subentries that were loaded.</returns>
-		private static List<SubEntry> LoadSubEntries(string lockKey, string tableKey) {
-			List<SubEntry> entries = new List<SubEntry>();
+		private static IList<SubEntry> LoadSubEntries(string lockKey, string tableKey) {
+			var entries = new List<SubEntry>(32);
 			lock (PSharedData.GetLock(lockKey)) {
 				var table = PSharedData.GetData<List<string>>(tableKey);
-				if (table == null)
-					return entries;
-				foreach (string dir in table) {
+				if (table != null)
+					foreach (string dir in table) {
 #if DEBUG
-					PUtil.LogDebug("Loaded codex sub entries from directory: {0}".F(dir));
+						PUtil.LogDebug("Loaded codex sub entries from directory: {0}".F(dir));
 #endif
-					string[] strArray = new string[0];
-					try {
-						strArray = Directory.GetFiles(dir, CODEX_FILES, SearchOption.AllDirectories);
-					}
-					catch (UnauthorizedAccessException ex) {
-						PUtil.LogExcWarn(ex);
-					}
-					foreach (string str in strArray) {
+						string[] codexFiles = new string[0];
 						try {
-							string filename = str;
-							YamlIO.ErrorHandler fMgCache1 = new YamlIO.ErrorHandler(PUtil.YamlParseErrorCB);
-							List<Tuple<string, Type>> widgetTagMappings = Traverse.Create(typeof(CodexCache)).Field("widgetTagMappings").GetValue<List<Tuple<string, Type>>>();
-							SubEntry subEntry = YamlIO.LoadFile<SubEntry>(filename, fMgCache1, widgetTagMappings);
-							if (entries != null)
-								entries.Add(subEntry);
-						} catch (Exception ex) {
-							PUtil.LogException(ex);
+							// List codex data files in the codex directory
+							codexFiles = Directory.GetFiles(dir, CODEX_FILES, SearchOption.
+								AllDirectories);
+						} catch (UnauthorizedAccessException ex) {
+							PUtil.LogExcWarn(ex);
+						} catch (IOException ex) {
+							PUtil.LogExcWarn(ex);
 						}
+						var widgetTagMappings = Traverse.Create(typeof(CodexCache)).
+							GetField<List<Tuple<string, Type>>>("widgetTagMappings");
+						foreach (string filename in codexFiles)
+							try {
+								var subEntry = YamlIO.LoadFile<SubEntry>(filename, PUtil.
+									YamlParseErrorCB, widgetTagMappings);
+								if (entries != null)
+									entries.Add(subEntry);
+							} catch (IOException ex) {
+								PUtil.LogException(ex);
+							} catch (InvalidDataException ex) {
+								PUtil.LogException(ex);
+							}
 					}
-				}
 			}
 			return entries;
 		}
 
-		internal static List<SubEntry> LoadCreaturesSubEntries() {
+		/// <summary>
+		/// Loads the mod creature sub-entries.
+		/// </summary>
+		/// <returns>The list of all creature sub-entries loaded from mods.</returns>
+		internal static IList<SubEntry> LoadCreaturesSubEntries() {
 			return LoadSubEntries(PRegistry.KEY_CODEX_CREATURES_LOCK,
 				PRegistry.KEY_CODEX_CREATURES_TABLE);
 		}
 
-		internal static List<SubEntry> LoadPlantsSubEntries() {
+		/// <summary>
+		/// Loads the mod plant sub-entries.
+		/// </summary>
+		/// <returns>The list of all plant sub-entries loaded from mods.</returns>
+		internal static IList<SubEntry> LoadPlantsSubEntries() {
 			return LoadSubEntries(PRegistry.KEY_CODEX_PLANTS_LOCK,
 				PRegistry.KEY_CODEX_PLANTS_TABLE);
 		}

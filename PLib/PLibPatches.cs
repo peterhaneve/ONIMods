@@ -283,23 +283,26 @@ namespace PeterHan.PLib {
 		/// Applied to CodexCache to collect dynamic codex entries from the file system.
 		/// </summary>
 		private static void CollectEntries_Postfix(string folder, List<CodexEntry> __result) {
-			// Check to see if we are loading from either the "Creatures" directory or "Plants" directory.
-			string baseEntryPath = Traverse.Create(typeof(CodexCache)).Field("baseEntryPath").GetValue<string>();
-			string path = !string.IsNullOrEmpty(folder) ? Path.Combine(baseEntryPath, folder) : baseEntryPath;
+			// Check to see if we are loading from either the "Creatures" directory or
+			// "Plants" directory
+			string baseEntryPath = Traverse.Create(typeof(CodexCache)).GetField<string>(
+				"baseEntryPath");
+			string path = string.IsNullOrEmpty(folder) ? baseEntryPath : Path.Combine(
+				baseEntryPath, folder);
 			bool modified = false;
 			if (path.EndsWith("Creatures")) {
-				__result.AddRange(Datafiles.PCodex.LoadCreaturesEntries());
+				__result.AddRange(PCodex.LoadCreaturesEntries());
 				modified = true;
 			}
 			if (path.EndsWith("Plants")) {
-				__result.AddRange(Datafiles.PCodex.LoadPlantsEntries());
+				__result.AddRange(PCodex.LoadPlantsEntries());
 				modified = true;
 			}
 			if (modified) {
-				foreach (CodexEntry codexEntry in __result) {
+				foreach (var codexEntry in __result)
+					// Fill in a default sort string if necessary
 					if (string.IsNullOrEmpty(codexEntry.sortString))
 						codexEntry.sortString = Strings.Get(codexEntry.title);
-				}
 				__result.Sort((x, y) => x.sortString.CompareTo(y.sortString));
 			}
 		}
@@ -307,13 +310,12 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Applied to CodexCache to collect dynamic codex sub entries from the file system.
 		/// </summary>
-		private static void CollectSubEntries_Postfix(string folder, List<SubEntry> __result) {
+		private static void CollectSubEntries_Postfix(List<SubEntry> __result) {
 			int startSize = __result.Count;
-			__result.AddRange(Datafiles.PCodex.LoadCreaturesSubEntries());
-			__result.AddRange(Datafiles.PCodex.LoadPlantsSubEntries());
-			if (__result.Count != startSize) {
+			__result.AddRange(PCodex.LoadCreaturesSubEntries());
+			__result.AddRange(PCodex.LoadPlantsSubEntries());
+			if (__result.Count != startSize)
 				__result.Sort((x, y) => x.title.CompareTo(y.title));
-			}
 		}
 
 		/// <summary>
