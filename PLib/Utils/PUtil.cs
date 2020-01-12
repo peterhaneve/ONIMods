@@ -139,7 +139,7 @@ namespace PeterHan.PLib {
 			double dx = x2 - x1, dy = y2 - y1;
 			return Math.Sqrt(dx * dx + dy * dy);
 		}
-		
+
 		/// <summary>
 		/// Executes all post-load handlers.
 		/// </summary>
@@ -292,6 +292,15 @@ namespace PeterHan.PLib {
 		[Obsolete("LoadSprite(path, Vector4, bool) allows the use of PNG/JPG images which scale far better")]
 		public static Sprite LoadSprite(string path, int width, int height, Vector4 border) {
 			return UI.PUIUtils.LoadSpriteLegacy(path, width, height, border);
+		}
+
+		/// <summary>
+		/// Callback function for the YAML parser to process errors that it throws.
+		/// </summary>
+		/// <param name="error">The YAML parsing error</param>
+		/// <param name="force_log_as_warning">Unused but matches expected callback type signature</param>
+		internal static void YamlParseErrorCB(YamlIO.Error error, bool force_log_as_warning) {
+			throw new Exception(string.Format("{0} parse error in {1}\n{2}", error.severity, error.file.full_path, error.message), error.inner_exception);
 		}
 
 		/// <summary>
