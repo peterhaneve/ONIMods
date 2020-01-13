@@ -443,7 +443,7 @@ namespace PeterHan.PLib {
 				throw new ArgumentNullException("victim");
 			// Sanity check arguments
 			var types = victim.GetParameterTypes();
-			int n = types.Length;
+			int n = types.Length, replaced = 0;
 			if (newMethod != null)
 				CompareMethodParams(victim, types, newMethod);
 			else if (victim.ReturnType != typeof(void))
@@ -469,9 +469,16 @@ namespace PeterHan.PLib {
 						for (int i = 0; i < n - 1; i++)
 							yield return new CodeInstruction(OpCodes.Pop);
 					}
+					replaced++;
 				} else
 					yield return instruction;
 			}
+#if DEBUG
+			if (replaced == 0)
+				PUtil.LogWarning("No method calls replaced: {0}.{1} to {2}.{3}".F(victim.
+					DeclaringType.Name, victim.Name, newMethod?.DeclaringType?.Name ?? "None",
+					newMethod?.Name));
+#endif
 		}
 
 		/// <summary>

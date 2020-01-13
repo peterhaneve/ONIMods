@@ -149,10 +149,10 @@ namespace PeterHan.SandboxTools {
 			/// </summary>
 			internal static IEnumerable<CodeInstruction> Transpiler(
 					IEnumerable<CodeInstruction> method) {
-				return PPatchTools.ReplaceMethodCall(method, PPatchTools.GetMethodSafe(
-					typeof(BuildingDef), nameof(BuildingDef.Build), false, PPatchTools.
-					AnyArguments), PPatchTools.GetMethodSafe(typeof(SandboxToolsPatches),
-					nameof(BuildAtTemp), true, PPatchTools.AnyArguments));
+				return PPatchTools.ReplaceMethodCall(method, typeof(BuildingDef).GetMethodSafe(
+					nameof(BuildingDef.Build), false, PPatchTools.AnyArguments),
+					typeof(SandboxToolsPatches).GetMethodSafe(nameof(BuildAtTemp), true,
+					PPatchTools.AnyArguments));
 			}
 		}
 
@@ -182,10 +182,10 @@ namespace PeterHan.SandboxTools {
 			/// </summary>
 			internal static IEnumerable<CodeInstruction> Transpiler(
 					IEnumerable<CodeInstruction> method) {
-				return PPatchTools.ReplaceMethodCall(method, PPatchTools.GetMethodSafe(
-					typeof(BuildingDef), nameof(BuildingDef.Build), false, PPatchTools.
-					AnyArguments), PPatchTools.GetMethodSafe(typeof(SandboxToolsPatches),
-					nameof(BuildFixedMaterials), true, PPatchTools.AnyArguments));
+				return PPatchTools.ReplaceMethodCall(method, typeof(BuildingDef).GetMethodSafe(
+					nameof(BuildingDef.Build), false, PPatchTools.AnyArguments),
+					typeof(SandboxToolsPatches).GetMethodSafe(nameof(BuildFixedMaterials),
+					true, PPatchTools.AnyArguments));
 			}
 		}
 

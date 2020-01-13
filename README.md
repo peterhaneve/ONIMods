@@ -38,6 +38,7 @@ Mods should remain in their own subfolder.
 | [Settings Change Tool](https://steamcommunity.com/sharedfiles/filedetails/?id=1843647561) | Allows Repair, Disinfect, and Enable settings to be changed on many buildings at once |
 | [Show Building Ranges](https://steamcommunity.com/sharedfiles/filedetails/?id=1960996649) | Shows the active range of many buildings while they are selected or being placed |
 | [Starmap Queue](https://steamcommunity.com/sharedfiles/filedetails/?id=1907780517) | Automatically selects new destinations to be analyzed when the Telescope finishes research |
+| [Stock Bug Fix](https://steamcommunity.com/sharedfiles/filedetails/?id=1967921388) | Fixes some annoying bugs in the base game |
 | [Sweep By Type](https://steamcommunity.com/sharedfiles/filedetails/?id=1863428350) | Adds a filter to the Sweep tool to sweep only selected item types |
 
 ## New Mechanics
