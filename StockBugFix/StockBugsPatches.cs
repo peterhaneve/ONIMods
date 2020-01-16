@@ -69,6 +69,44 @@ namespace PeterHan.StockBugFix {
 		}
 
 		/// <summary>
+		/// Applied to GourmetCookingStationConfig to make the CO2 output in the right place.
+		/// </summary>
+		[HarmonyPatch(typeof(GourmetCookingStationConfig), "ConfigureBuildingTemplate")]
+		public static class GourmetCookingStationConfig_ConfigureBuildingTemplate_Patch {
+			/// <summary>
+			/// Applied after ConfigureBuildingTemplate runs.
+			/// </summary>
+			internal static void Postfix(GameObject go) {
+				var elements = go.GetComponentSafe<ElementConverter>()?.outputElements;
+				if (elements != null) {
+					// ElementConverter.OutputElement is a struct!
+					int n = elements.Length;
+					for (int i = 0; i < n; i++) {
+						var outputElement = elements[i];
+						var offset = outputElement.outputElementOffset;
+						if (offset.y > 2.0f) {
+							outputElement.outputElementOffset = new Vector2(offset.x, 2.0f);
+							elements[i] = outputElement;
+						}
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// Applied to PolymerizerConfig to fix a symmetry error when emitting the plastic.
+		/// </summary>
+		[HarmonyPatch(typeof(PolymerizerConfig), "ConfigureBuildingTemplate")]
+		public static class PolymerizerConfig_ConfigureBuildingTemplate_Patch {
+			/// <summary>
+			/// Applied after ConfigureBuildingTemplate runs.
+			/// </summary>
+			internal static void Postfix(GameObject go) {
+				go.GetComponentSafe<Polymerizer>().emitOffset = new Vector3(-1.75f, 1.0f, 0.0f);
+			}
+		}
+
+		/// <summary>
 		/// Applied to FuelTank's property setter to properly update the chore when its
 		/// capacity is changed.
 		/// </summary>
@@ -151,11 +189,6 @@ namespace PeterHan.StockBugFix {
 		/// </summary>
 		[HarmonyPatch(typeof(ElectricalUtilityNetwork), "UpdateOverloadTime")]
 		public static class ElectricalUtilityNetwork_UpdateOverloadTime_Patch {
-			internal static bool Prefix(float watts_used) {
-				PUtil.LogDebug("UpdateOverloadTime: Power = {0:F3}".F(watts_used));
-				return true;
-			}
-
 			/// <summary>
 			/// Transpiles UpdateOverloadTime to fix round off issues.
 			/// </summary>

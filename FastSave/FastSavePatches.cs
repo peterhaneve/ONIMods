@@ -18,8 +18,8 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Datafiles;
 using PeterHan.PLib.Options;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -28,90 +28,92 @@ namespace PeterHan.FastSave {
 	/// Patches which will be applied via annotations for Fast Save.
 	/// </summary>
 	public sealed class FastSavePatches {
-		/// <summary>
-		/// The options read from the config file.
-		/// </summary>
-		private static FastSaveOptions options;
-
 		public static void OnLoad() {
 			PUtil.InitLibrary();
-			options = new FastSaveOptions();
 			POptions.RegisterOptions(typeof(FastSaveOptions));
-#if false
-			PUtil.RegisterPostload(OnPostLoad);
-#endif
+			CleanUsageLogs.RegisterPostload();
+			// Sorry, Fast Save now requires a restart to take effect because of background!
+			PUtil.LogDebug("FastSave in mode: {0}".F(FastSaveOptions.Instance.Mode));
+			PLocalization.Register();
 		}
 
-#if false
 		/// <summary>
-		/// Cleans old time entries from the logs.
+		/// Applied to Game.
 		/// </summary>
-		/// <param name="values">The logged time entries.</param>
-		/// <param name="time">The current game time.</param>
-		private static void CleanTimes(List<Operational.TimeEntry> values, float time) {
-			float threshold = time;
-			// Select the threshold based on settings
-			switch (options.Mode) {
-			case FastSaveOptions.FastSaveMode.Aggressive:
-				threshold -= FastSaveOptions.USAGE_AGGRESSIVE;
-				break;
-			case FastSaveOptions.FastSaveMode.Moderate:
-				threshold -= FastSaveOptions.USAGE_MODERATE;
-				break;
-			case FastSaveOptions.FastSaveMode.Safe:
-			default:
-				threshold -= FastSaveOptions.USAGE_SAFE;
-				break;
+		[HarmonyPatch(typeof(Game), "DelayedSave")]
+		public static class Game_DelayedSave_Patch {
+			internal static bool Prepare() {
+				// Only enable if background save is on
+				return FastSaveOptions.Instance.BackgroundSave;
 			}
-			// Delete old entries
-			var newEntries = ListPool<Operational.TimeEntry, FastSavePatches>.Allocate();
-			foreach (var entry in values)
-				if (entry.endTime > threshold || entry.startTime > threshold)
-					newEntries.Add(entry);
-#if DEBUG
-			PUtil.LogDebug("Deleted time entries: {0:D}".F(values.Count - newEntries.Count));
-#endif
-			values.Clear();
-			values.AddRange(newEntries);
-			newEntries.Recycle();
-		}
 
-		/// <summary>
-		/// Invoked after all other mods load.
-		/// </summary>
-		/// <param name="hInst">The Harmony instance to use for patching.</param>
-		private static void OnPostLoad(HarmonyInstance hInst) {
-			try {
-				hInst.Patch(typeof(Operational), "OnSerializing", new HarmonyMethod(
-					typeof(FastSavePatches), "OnSerializing_Prefix"), null);
-			} catch (Exception e) {
-				PUtil.LogWarning("Caught {0}, disabling Operational history trimming".F(e.
-					GetType()));
-			}
-		}
-
-		/// <summary>
-		/// Applied before OnSerializing runs.
-		/// </summary>
-		internal static void OnSerializing_Prefix(List<Operational.TimeEntry> ___activeTimes,
-				List<Operational.TimeEntry> ___inactiveTimes) {
-			float now = GameClock.Instance.GetTime();
-			CleanTimes(___activeTimes, now);
-			CleanTimes(___inactiveTimes, now);
-		}
-#endif
-
-		/// <summary>
-		/// Applied to Game to load settings when the mod starts up.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "OnPrefabInit")]
-		public static class Game_OnPrefabInit_Patch {
 			/// <summary>
-			/// Applied before OnPrefabInit runs.
+			/// Applied before DelayedSave runs.
 			/// </summary>
-			internal static void Prefix() {
-				options = POptions.ReadSettings<FastSaveOptions>() ?? new FastSaveOptions();
-				PUtil.LogDebug("FastSave in mode: {0}".F(options.Mode));
+			internal static System.Collections.IEnumerator Postfix(
+					System.Collections.IEnumerator result, string filename, bool isAutoSave,
+					Game.SavingPostCB ___activatePostCB, bool updateSavePointer,
+					Game.SavingActiveCB ___activateActiveCB) {
+				if (isAutoSave) {
+					// Wait for player to stop dragging
+					while (PlayerController.Instance.IsDragging())
+						yield return null;
+					PlayerController.Instance.AllowDragging(false);
+					BackgroundAutosave.DisableSaving();
+					try {
+						yield return null;
+						if (___activateActiveCB != null) {
+							___activateActiveCB();
+							yield return null;
+						}
+						// Save in the background
+						Game.Instance.timelapser.SaveColonyPreview(filename);
+						BackgroundAutosave.Instance.StartSave(filename);
+						// Wait asynchronously for it
+						while (!BackgroundAutosave.Instance.CheckSaveStatus())
+							yield return null;
+						if (updateSavePointer)
+							SaveLoader.SetActiveSaveFilePath(filename);
+						___activatePostCB?.Invoke();
+						for (int i = 0; i < 5; i++)
+							yield return null;
+					} finally {
+						BackgroundAutosave.EnableSaving();
+						PlayerController.Instance.AllowDragging(true);
+					}
+					yield break;
+				} else
+					// Original method
+					while (result.MoveNext())
+						yield return result.Current;
+			}
+		}
+
+		/// <summary>
+		/// Applied to Timelapser to save the PNG on a background thread.
+		/// </summary>
+		[HarmonyPatch(typeof(Timelapser), "WriteToPng")]
+		public static class Timelapser_WriteToPng_Patch {
+			internal static bool Prepare() {
+				// Only enable if background save is on
+				return FastSaveOptions.Instance.BackgroundSave;
+			}
+
+			/// <summary>
+			/// Applied before WriteToPng runs.
+			/// </summary>
+			internal static bool Prefix(RenderTexture renderTex, string ___previewSaveGamePath,
+					bool ___previewScreenshot) {
+				if (renderTex != null) {
+					int width = renderTex.width, height = renderTex.height;
+					// Read pixels from the screen
+					var screenData = new Texture2D(width, height, TextureFormat.ARGB32, false);
+					screenData.ReadPixels(new Rect(0.0f, 0.0f, width, height), 0, 0);
+					screenData.Apply();
+					BackgroundTimelapser.Instance.Start(___previewSaveGamePath, screenData,
+						___previewScreenshot);
+				}
+				return false;
 			}
 		}
 
@@ -126,7 +128,7 @@ namespace PeterHan.FastSave {
 			internal static void Postfix(List<ReportManager.DailyReport> ___dailyReports) {
 				int keep, n = ___dailyReports.Count;
 				// Select the threshold based on settings
-				switch (options.Mode) {
+				switch (FastSaveOptions.Instance.Mode) {
 				case FastSaveOptions.FastSaveMode.Aggressive:
 					keep = FastSaveOptions.SUMMARY_AGGRESSIVE;
 					break;

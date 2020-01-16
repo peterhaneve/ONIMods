@@ -16,25 +16,17 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace PeterHan.SweepByType {
+using System;
+
+namespace PeterHan.FastSave {
 	/// <summary>
-	/// Stores the strings used in the Sweep By Type tool.
+	/// Strings used in Fast Save.
 	/// </summary>
-	static class SweepByTypeStrings {
-		// Icon name for the tool
-		public const string TOOL_ICON_NAME = "filtered_clear";
+	static class FastSaveStrings {
+		// Warns the user that quitting may cause data loss
+		public static LocString DESKTOP_QUIT_WARNING = "Exit to Desktop may corrupt the current autosave!";
 
-		// Title of material select dialog
-		public static LocString DIALOG_TITLE = "Select material to sweep";
-
-		// Title of the category containing microchips, artifacts, and so forth
-		public static LocString CATEGORY_MISCPICKUPABLE = "Other";
-
-		// Tool name displayed in the hover card when dragging filtered (uses stock game
-		// string for the default mode)
-		public static LocString TOOL_NAME_FILTERED = "FILTERED SWEEP TOOL";
-
-		// Displayed in the tooltip action menu
-		public static LocString TOOLTIP_FILTERED = "SWEEP ONLY SELECTED ITEMS";
+		// Why is the save button disabled?
+		public static LocString AUTOSAVE_PROGRESS = "Auto-Save in progress";
 	}
 }

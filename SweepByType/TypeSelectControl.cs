@@ -271,6 +271,8 @@ namespace PeterHan.SweepByType {
 				foreach (var category in GameTags.UnitCategories)
 					UpdateCategory(inventory, category);
 				UpdateCategory(inventory, GameTags.Miscellaneous);
+				UpdateCategory(inventory, GameTags.MiscPickupable, SweepByTypeStrings.
+					CATEGORY_MISCPICKUPABLE);
 			}
 		}
 
@@ -279,12 +281,14 @@ namespace PeterHan.SweepByType {
 		/// </summary>
 		/// <param name="inv">The inventory of discovered elements.</param>
 		/// <param name="category">The category to search.</param>
-		private void UpdateCategory(WorldInventory inv, Tag category) {
+		/// <param name="overrideName">The name to override the category title</param>
+		private void UpdateCategory(WorldInventory inv, Tag category,
+				string overrideName = null) {
 			if (inv.TryGetDiscoveredResourcesFromTag(category, out HashSet<Tag> found) &&
 					found.Count > 0) {
 				// Attempt to add to type select control
 				if (!children.TryGetValue(category, out TypeSelectCategory current)) {
-					current = new TypeSelectCategory(this, category);
+					current = new TypeSelectCategory(this, category, overrideName);
 					children.Add(category, current);
 					int index = children.IndexOfKey(category) << 1;
 					GameObject header = current.Header, panel = current.ChildPanel;
@@ -344,11 +348,14 @@ namespace PeterHan.SweepByType {
 			/// </summary>
 			private readonly SortedList<Tag, TypeSelectElement> children;
 
-			internal TypeSelectCategory(TypeSelectControl parent, Tag categoryTag) {
+			internal TypeSelectCategory(TypeSelectControl parent, Tag categoryTag,
+					string overrideName = null) {
 				Control = parent ?? throw new ArgumentNullException("parent");
 				CategoryTag = categoryTag;
+				string title = string.IsNullOrEmpty(overrideName) ? CategoryTag.ProperName() :
+					overrideName;
 				var selectBox = new PCheckBox("SelectCategory") {
-					Text = CategoryTag.ProperName(), DynamicSize = true, OnChecked = OnCheck,
+					Text = title, DynamicSize = true, OnChecked = OnCheck,
 					CheckSize = ROW_SIZE, InitialState = PCheckBox.STATE_CHECKED,
 					TextStyle = PUITuning.Fonts.TextDarkStyle
 				};

@@ -18,13 +18,15 @@
 
 using Newtonsoft.Json;
 using PeterHan.PLib;
+using PeterHan.PLib.Options;
 
 namespace PeterHan.FastSave {
 	/// <summary>
 	/// The options class used for Fast Save.
 	/// </summary>
 	[JsonObject(MemberSerialization.OptIn)]
-	public sealed class FastSaveOptions {
+	[RestartRequired]
+	public sealed class FastSaveOptions : POptions.SingletonOptions<FastSaveOptions> {
 		/// <summary>
 		/// Time entries ending this many in-game seconds before the current time will be
 		/// removed in Safe mode.
@@ -50,16 +52,21 @@ namespace PeterHan.FastSave {
 		/// </summary>
 		internal const int SUMMARY_AGGRESSIVE = 4;
 
+		[Option("Background Save", "Performs autosaves in the background, allowing\r\ngame play to continue while saving")]
+		[JsonProperty]
+		public bool BackgroundSave { get; set; }
+
 		[Option("Save Optimization", "Trades off impact to colony statistics with save / load time")]
 		[JsonProperty]
 		public FastSaveMode Mode { get; set; }
 
 		public FastSaveOptions() {
 			Mode = FastSaveMode.Safe;
+			BackgroundSave = false;
 		}
 
 		public override string ToString() {
-			return "FastSaveOptions[mode={0}]".F(Mode);
+			return "FastSaveOptions[mode={0},background={1}]".F(Mode, BackgroundSave);
 		}
 
 		/// <summary>

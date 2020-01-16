@@ -42,7 +42,11 @@ namespace PeterHan.SweepByType {
 				nx = x.ToString();
 			if (string.IsNullOrEmpty(ny))
 				ny = y.ToString();
-			return string.Compare(nx, ny, true);
+			int difference = string.Compare(nx, ny, true);
+			// Pokeshell molts large and small
+			if (difference == 0)
+				difference = string.Compare(x.Name, y.Name, StringComparison.InvariantCulture);
+			return difference;
 		}
 	}
 }
