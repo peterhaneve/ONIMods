@@ -108,7 +108,7 @@ namespace PeterHan.PLib.UI {
 			// Make the child
 			var child = Child.Build();
 			PUIElements.SetAnchors(PUIElements.SetParent(child, viewport), PUIAnchoring.
-				Beginning, PUIAnchoring.Beginning);
+				Beginning, PUIAnchoring.End);
 			scroll.content = child.rectTransform();
 			pane.SetActive(true);
 			// Vertical scrollbar

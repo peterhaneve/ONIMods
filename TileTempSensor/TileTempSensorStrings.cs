@@ -18,36 +18,18 @@
 
 using System;
 
-namespace PeterHan.PLib {
+namespace PeterHan.TileTempSensor {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// Strings used in Thermo Switch Tile.
 	/// </summary>
-	public static class PVersion {
-		/// <summary>
-		/// The PLib version.
-		/// </summary>
-		public const string VERSION = "2.22.0.0";
-
-		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in OnLoad, and will always return false in those cases.
-		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				bool latest = false;
-				try {
-					latest = new Version(VERSION) == PSharedData.GetData<Version>(PRegistry.
-						KEY_VERSION);
-				} catch (OverflowException) {
-				} catch (FormatException) {
-				} catch (ArgumentOutOfRangeException) {
-				}
-				return latest;
-			}
-		}
+	public static class TileTempSensorStrings {
+		// Thermo Switch Tile
+		public static LocString TILETEMP_NAME = "Thermo Switch Tile";
+		public static LocString TILETEMP_DESCRIPTION = "Liquid drops have been sent an official eviction notice with the invention of a Thermo Switch that can transfer heat effectively with its surrounding solid tiles.";
+		public static LocString TILETEMP_EFFECT = string.Concat("Sends a ",
+			STRINGS.UI.FormatAsAutomationState("Green Signal", STRINGS.UI.AutomationState.Active),
+			" when temperature reaches the configured level.\n\nOtherwise, sends a ",
+			STRINGS.UI.FormatAsAutomationState("Red Signal", STRINGS.UI.AutomationState.Standby),
+			".");
 	}
 }

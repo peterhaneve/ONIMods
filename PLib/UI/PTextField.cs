@@ -144,7 +144,6 @@ namespace PeterHan.PLib.UI {
 			textDisplay.fontStyle = style.style;
 			textDisplay.maxVisibleLines = 1;
 			// Text field itself
-			var onChange = OnTextChanged;
 			textField.SetActive(false);
 			var textEntry = textField.AddComponent<TMP_InputField>();
 			textEntry.textComponent = textDisplay;
@@ -152,9 +151,11 @@ namespace PeterHan.PLib.UI {
 			textField.SetActive(true);
 			textEntry.text = Text ?? "";
 			textDisplay.text = Text ?? "";
-			ConfigureTextEntry(textEntry).onDeselect.AddListener((text) => {
-				onChange?.Invoke(textField, (text ?? "").TrimEnd());
-			});
+			// Events!
+			ConfigureTextEntry(textEntry);
+			var events = textField.AddComponent<PTextFieldEvents>();
+			events.OnTextChanged = OnTextChanged;
+			events.OnValidate = OnValidate;
 			// Add tooltip
 			if (!string.IsNullOrEmpty(ToolTip))
 				textField.AddComponent<ToolTip>().toolTip = ToolTip;
@@ -173,8 +174,7 @@ namespace PeterHan.PLib.UI {
 		/// Sets up the text entry field.
 		/// </summary>
 		/// <param name="textEntry">The input field to configure.</param>
-		/// <returns>The input field.</returns>
-		private TMP_InputField ConfigureTextEntry(TMP_InputField textEntry) {
+		private void ConfigureTextEntry(TMP_InputField textEntry) {
 			textEntry.characterLimit = Math.Max(1, MaxLength);
 			textEntry.contentType = ContentType;
 			textEntry.enabled = true;
@@ -187,11 +187,7 @@ namespace PeterHan.PLib.UI {
 			textEntry.richText = false;
 			textEntry.selectionColor = PUITuning.Colors.SelectionBackground;
 			textEntry.transition = Selectable.Transition.None;
-			// Events
 			textEntry.restoreOriginalTextOnEscape = true;
-			if (OnValidate != null)
-				textEntry.onValidateInput = OnValidate;
-			return textEntry;
 		}
 
 		/// <summary>
@@ -223,6 +219,111 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		public enum FieldType {
 			Text, Integer, Float
+		}
+
+		/// <summary>
+		/// A class instance that handles events for text fields.
+		/// </summary>
+		private sealed class PTextFieldEvents : KScreen {
+			/// <summary>
+			/// The action to trigger on text change. It is passed the realized source object.
+			/// </summary>
+			[SerializeField]
+			internal PUIDelegates.OnTextChanged OnTextChanged { get; set; }
+
+			/// <summary>
+			/// The callback to invoke when validating input.
+			/// </summary>
+			[SerializeField]
+			internal TMP_InputField.OnValidateInput OnValidate { get; set; }
+
+			[MyCmpReq]
+#pragma warning disable IDE0044 // Add readonly modifier
+#pragma warning disable CS0649
+			private TMP_InputField textEntry;
+#pragma warning restore CS0649
+#pragma warning restore IDE0044 // Add readonly modifier
+
+			/// <summary>
+			/// Whether editing is in progress.
+			/// </summary>
+			private bool editing;
+
+			internal PTextFieldEvents() {
+				activateOnSpawn = true;
+				editing = false;
+			}
+
+			/// <summary>
+			/// Completes the edit process one frame after the data is entered.
+			/// </summary>
+			private System.Collections.IEnumerator DelayEndEdit() {
+				yield return new WaitForEndOfFrame();
+				StopEditing();
+			}
+
+			public override float GetSortKey() {
+				return editing ? 99.0f : base.GetSortKey();
+			}
+
+			protected override void OnSpawn() {
+				base.OnSpawn();
+				textEntry.onFocus += OnFocus;
+				textEntry.onEndEdit.AddListener(OnEndEdit);
+				if (OnValidate != null)
+					textEntry.onValidateInput = OnValidate;
+			}
+
+			/// <summary>
+			/// Triggered when editing of the text ends (field loses focus).
+			/// </summary>
+			/// <param name="text">The text entered.</param>
+			private void OnEndEdit(string text) {
+				var obj = gameObject;
+				if (obj != null)
+					OnTextChanged?.Invoke(obj, text);
+				StartCoroutine(DelayEndEdit());
+			}
+
+			/// <summary>
+			/// Triggered when the text field gains focus.
+			/// </summary>
+			private void OnFocus() {
+				editing = true;
+				textEntry.Select();
+				textEntry.ActivateInputField();
+				KScreenManager.Instance.RefreshStack();
+			}
+
+			/// <summary>
+			/// Destroys events if editing is in progress to prevent bubbling through to the
+			/// game UI.
+			/// </summary>
+			public override void OnKeyDown(KButtonEvent e) {
+				if (editing)
+					e.Consumed = true;
+				else
+					base.OnKeyDown(e);
+			}
+
+			/// <summary>
+			/// Destroys events if editing is in progress to prevent bubbling through to the
+			/// game UI.
+			/// </summary>
+			public override void OnKeyUp(KButtonEvent e) {
+				if (editing)
+					e.Consumed = true;
+				else
+					base.OnKeyUp(e);
+			}
+
+			/// <summary>
+			/// Completes the edit process.
+			/// </summary>
+			private void StopEditing() {
+				textEntry.DeactivateInputField();
+				editing = false;
+			}
 		}
 	}
 }

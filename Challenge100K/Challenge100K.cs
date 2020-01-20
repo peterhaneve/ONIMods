@@ -26,6 +26,11 @@ namespace PeterHan.Challenge100K {
 	/// </summary>
 	public static class Challenge100K {
 		/// <summary>
+		/// The sprite to load for the asteroid selection.
+		/// </summary>
+		private const string SPRITE = "Asteroid_onehundredk";
+
+		/// <summary>
 		/// The "to 11" cold temperature for frigid biomes.
 		/// </summary>
 		private static Temperature to11 = null;
@@ -44,7 +49,7 @@ namespace PeterHan.Challenge100K {
 		[HarmonyPatch(typeof(Db), "Initialize")]
 		public static class Db_Initialize_Patch {
 			public static LocString NAME = "100K Challenge";
-			public static LocString DESCRIPTION = "One of the coldest worlds ever surveyed, this harsh and unforgiving asteroid features an average temperature of only 100 K (-173 C).\r\n\r\nSURVIVAL IN THIS WORLD WILL BE NEARLY IMPOSSIBLE, BUT A GLIMMER OF HOPE REMAINS. CAN YOU USE ALL THAT YOU HAVE LEARNED TO SURVIVE FOR 100 CYCLES?\r\n";
+			public static LocString DESCRIPTION = "One of the coldest worlds ever surveyed, this harsh and unforgiving asteroid features an average temperature of only 100 K (-173 C).\r\n\r\n<smallcaps>Survival in this world will be nearly impossible, but a glimmer of hope remains. Can you use all that you have learned to survive for 100 cycles?</smallcaps>\r\n";
 
 			/// <summary>
 			/// Applied after Initialize runs.
@@ -52,6 +57,9 @@ namespace PeterHan.Challenge100K {
 			internal static void Postfix() {
 				Strings.Add("STRINGS.WORLDS.ONEHUNDREDK.NAME", NAME);
 				Strings.Add("STRINGS.WORLDS.ONEHUNDREDK.DESCRIPTION", DESCRIPTION);
+				var sprite = PUtil.LoadSprite("PeterHan.Challenge100K." + SPRITE + ".png");
+				if (sprite != null)
+					Assets.Sprites.Add(SPRITE, sprite);
 			}
 		}
 

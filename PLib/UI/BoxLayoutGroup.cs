@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+//#define DEBUG_LAYOUT
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -315,6 +316,9 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public void CalculateLayoutInputHorizontal() {
+#if DEBUG_LAYOUT
+			PUIUtils.LogUIDebug("CalculateLayoutInputHorizontal for " + gameObject.name);
+#endif
 			var margin = parameters.Margin;
 			float gap = (margin == null) ? 0.0f : margin.left + margin.right;
 			horizontal = Calc(gameObject, parameters, PanelDirection.Horizontal);
@@ -324,6 +328,9 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public void CalculateLayoutInputVertical() {
+#if DEBUG_LAYOUT
+			PUIUtils.LogUIDebug("CalculateLayoutInputVertical for " + gameObject.name);
+#endif
 			var margin = parameters.Margin;
 			float gap = (margin == null) ? 0.0f : margin.top + margin.bottom;
 			vertical = Calc(gameObject, parameters, PanelDirection.Vertical);
@@ -369,6 +376,9 @@ namespace PeterHan.PLib.UI {
 			if (horizontal == null)
 				throw new InvalidOperationException("SetLayoutHorizontal before CalculateLayoutInputHorizontal");
 #endif
+#if DEBUG_LAYOUT
+			PUIUtils.LogUIDebug("SetLayoutHorizontal for " + gameObject.name);
+#endif
 			if (horizontal != null) {
 				var rt = gameObject.rectTransform();
 				DoLayout(parameters, horizontal, rt.rect.size.x);
@@ -379,6 +389,9 @@ namespace PeterHan.PLib.UI {
 #if DEBUG
 			if (vertical == null)
 				throw new InvalidOperationException("SetLayoutVertical before CalculateLayoutInputVertical");
+#endif
+#if DEBUG_LAYOUT
+			PUIUtils.LogUIDebug("SetLayoutVertical for " + gameObject.name);
 #endif
 			if (vertical != null) {
 				var rt = gameObject.rectTransform();

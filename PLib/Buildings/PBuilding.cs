@@ -534,9 +534,14 @@ namespace PeterHan.PLib.Buildings {
 		/// <param name="go">The game object to configure.</param>
 		public void CreateLogicPorts(GameObject go) {
 			int n = LogicIO.Count;
-			var ports = new LogicPorts.Port[n];
-			LogicIO.CopyTo(ports, 0);
-			GeneratedBuildings.RegisterLogicPorts(go, ports);
+			var inputs = new List<LogicPorts.Port>(n);
+			var outputs = new List<LogicPorts.Port>(n);
+			foreach (var port in LogicIO)
+				if (port.spriteType == LogicPortSpriteType.Output)
+					outputs.Add(port);
+				else
+					inputs.Add(port);
+			GeneratedBuildings.RegisterLogicPorts(go, inputs.ToArray(), outputs.ToArray());
 		}
 
 		/// <summary>

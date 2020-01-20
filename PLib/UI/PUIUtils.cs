@@ -16,12 +16,15 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Harmony;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
+
+using SideScreenRef = DetailsScreen.SideScreenRef;
 
 namespace PeterHan.PLib.UI {
 	/// <summary>
@@ -58,6 +61,49 @@ namespace PeterHan.PLib.UI {
 				else if (value is Array ar)
 					value = "[" + ar.Join() + "]";
 				result.AppendFormat(", {0}={1}", field.Name, value);
+			}
+		}
+
+		/// <summary>
+		/// Adds the specified side screen content to the side screen list. The side screen
+		/// behavior should be defined in a class inherited from SideScreenContent.
+		/// </summary>
+		/// <typeparam name="T">The type of the controller that will determine how the side
+		/// screen works. A new instance will be created and added as a component to the new
+		/// side screen.</typeparam>
+		/// <param name="uiPrefab">The UI prefab to use. If null is passed, the UI should
+		/// be created and added to the GameObject hosting the controller object in its
+		/// OnPrefabInit function.</param>
+		public static void AddSideScreenContent<T>(GameObject uiPrefab = null)
+				where T : SideScreenContent {
+			var inst = DetailsScreen.Instance;
+			if (inst == null)
+				LogUIWarning("DetailsScreen is not yet initialized, try a postfix on " +
+					"DetailsScreen.OnPrefabInit");
+			else {
+				var ss = Traverse.Create(inst).GetField<List<SideScreenRef>>("sideScreens");
+				string name = typeof(T).Name;
+				if (ss != null) {
+					// The ref normally contains a prefab which is instantiated
+					var newScreen = new SideScreenRef();
+					// Mimic the basic screens
+					var rootObject = new GameObject(name);
+					rootObject.AddComponent<LayoutElement>();
+					rootObject.AddComponent<VerticalLayoutGroup>();
+					rootObject.AddComponent<CanvasRenderer>();
+					rootObject.SetActive(false);
+					var controller = rootObject.AddComponent<T>();
+					if (uiPrefab != null) {
+						// Add prefab if supplied
+						controller.ContentContainer = uiPrefab;
+						uiPrefab.transform.parent = rootObject.transform;
+					}
+					newScreen.name = name;
+					// Never used
+					newScreen.offset = Vector2.zero;
+					newScreen.screenPrefab = controller;
+					ss.Add(newScreen);
+				}
 			}
 		}
 

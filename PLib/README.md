@@ -56,7 +56,7 @@ Initialize PLib by calling `PUtil.InitLibrary(bool)` in `OnLoad`. PLib *must* be
 
 It will emit your mod's `AssemblyFileVersion` to the log. Using the `AssemblyVersion` instead is discouraged, because changing `AssemblyVersion` breaks any explicit references to the assembly by name. (Ever wonder why .NET 3.5 still uses the .NET 2.0 version string?)
 
-### Options
+## Options
 
 Provides utilities for reading and writing config files, as well as editing configs in-game via the mod menu.
 
@@ -119,6 +119,8 @@ This is how it looks in the mod menu:
 
 ![mod menu example screenshot](https://i.imgur.com/1S1i9ru.png)
 
+## Gameplay
+
 ### Actions
 
 Register actions by using `PAction.Register(string, LocString, PKeyBinding)` in `OnLoad`.
@@ -142,6 +144,8 @@ void CastLight(GameObject source, LightingArgs args);
 The mod will receive the source of the light (with the `Light2D` component) and an object encapsulating the lighting arguments.
 See the `LightingArgs` class for more details.
 
+## User Interface
+
 ### Translations
 
 Register a mod for translation by using `PLocalization.Register()` in `OnLoad`.
@@ -153,3 +157,12 @@ Note that the translation only occurs after all mods load, so avoid referencing 
 
 Register a mod for codex loading by using `PCodex.RegisterCreatures()` and/or `PCodex.RegisterPlants()`.
 The codex files will be loaded using the same structure as the base game: a `codex` folder must exist in the mod directory, with `Creatures` and `Plants` subfolders containing the codex data.
+
+### Side Screens
+
+Add your side screen class in a postfix patch on `DetailsScreen.OnPrefabInit` using `PUIUtils.AddSideScreenContent<T>()`.
+The type parameter should be a custom class which extends `SideScreenContent`.
+The optional argument can be used to set an existing UI `GameObject` as the UI to be displayed.
+
+If the UI is created using PLib UI functions, do not supply a UI Prefab. Instead, create the UI in the `OnPrefabInit` method of the side screen content class, and use `AddTo(gameObject, 0)` on the root PPanel to add it to the side screen content.
+A reference to the UI `GameObject` created by `AddTo` should also be stored in the `ContentContainer` property of the side screen content class.

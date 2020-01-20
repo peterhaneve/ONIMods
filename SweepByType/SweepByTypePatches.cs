@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Datafiles;
 using PeterHan.PLib.Options;
 using System.Collections.Generic;
 using UnityEngine;
@@ -35,6 +36,7 @@ namespace PeterHan.SweepByType {
 		public static void OnLoad() {
 			PUtil.InitLibrary();
 			POptions.RegisterOptions(typeof(SweepByTypeOptions));
+			PLocalization.Register();
 			Options = null;
 		}
 
