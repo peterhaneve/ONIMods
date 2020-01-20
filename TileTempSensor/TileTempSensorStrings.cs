@@ -16,20 +16,20 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
-
 namespace PeterHan.TileTempSensor {
 	/// <summary>
-	/// Strings used in Thermo Switch Tile.
+	/// Strings used in Thermo Sensor Tile.
 	/// </summary>
 	public static class TileTempSensorStrings {
-		// Thermo Switch Tile
-		public static LocString TILETEMP_NAME = "Thermo Switch Tile";
-		public static LocString TILETEMP_DESCRIPTION = "Liquid drops have been sent an official eviction notice with the invention of a Thermo Switch that can transfer heat effectively with its surrounding solid tiles.";
+		// Thermo Sensor Tile
+		public static LocString TILETEMP_NAME = "Thermo Sensor Tile";
+		public static LocString TILETEMP_DESCRIPTION = "Liquid drops have been sent an official eviction notice with the invention of a Thermo Sensor that can transfer heat effectively with its surrounding solid tiles.";
 		public static LocString TILETEMP_EFFECT = string.Concat("Sends a ",
 			STRINGS.UI.FormatAsAutomationState("Green Signal", STRINGS.UI.AutomationState.Active),
-			" when temperature reaches the configured level.\n\nOtherwise, sends a ",
+			" or a ",
 			STRINGS.UI.FormatAsAutomationState("Red Signal", STRINGS.UI.AutomationState.Standby),
-			".");
+			" when ambient ",
+			STRINGS.UI.FormatAsLink("Temperature", "HEAT"),
+			" enters the chosen range.");
 	}
 }

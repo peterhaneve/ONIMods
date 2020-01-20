@@ -24,7 +24,7 @@ using UnityEngine;
 
 namespace PeterHan.TileTempSensor {
 	/// <summary>
-	/// A Thermo Switch which occupies a full tile.
+	/// A Thermo Sensor which occupies a full tile.
 	/// </summary>
 	public class TileTempSensorConfig : IBuildingConfig {
 		/// <summary>
