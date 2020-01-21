@@ -90,7 +90,8 @@ namespace PeterHan.PLib.UI {
 					// The ref normally contains a prefab which is instantiated
 					var newScreen = new SideScreenRef();
 					// Mimic the basic screens
-					var rootObject = Util.KInstantiate((GameObject)null, body, name);
+					var rootObject = new GameObject(name);
+					PUIElements.SetParent(rootObject, body);
 					rootObject.AddComponent<LayoutElement>();
 					rootObject.AddComponent<VerticalLayoutGroup>();
 					rootObject.AddComponent<CanvasRenderer>();
