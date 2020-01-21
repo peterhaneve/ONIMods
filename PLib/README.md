@@ -162,7 +162,7 @@ The codex files will be loaded using the same structure as the base game: a `cod
 
 Add your side screen class in a postfix patch on `DetailsScreen.OnPrefabInit` using `PUIUtils.AddSideScreenContent<T>()`.
 The type parameter should be a custom class which extends `SideScreenContent`.
-The optional argument can be used to set an existing UI `GameObject` as the UI to be displayed.
+The optional argument can be used to set an existing UI `GameObject` as the UI to be displayed, either created using PLib UI or custom creation.
 
-If the UI is created using PLib UI functions, do not supply a UI Prefab. Instead, create the UI in the `OnPrefabInit` method of the side screen content class, and use `AddTo(gameObject, 0)` on the root PPanel to add it to the side screen content.
+If the argument is `null`, create the UI in the **constructor** of the side screen content class, and use `AddTo(gameObject, 0)` on the root PPanel to add it to the side screen content.
 A reference to the UI `GameObject` created by `AddTo` should also be stored in the `ContentContainer` property of the side screen content class.

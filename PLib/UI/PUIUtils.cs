@@ -104,7 +104,7 @@ namespace PeterHan.PLib.UI {
 					newScreen.name = name;
 					// Never used
 					newScreen.offset = Vector2.zero;
-					newScreen.screenPrefab = null;
+					newScreen.screenPrefab = controller;
 					newScreen.screenInstance = controller;
 					ss.Add(newScreen);
 				}
