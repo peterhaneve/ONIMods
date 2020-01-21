@@ -81,17 +81,19 @@ namespace PeterHan.PLib.UI {
 				LogUIWarning("DetailsScreen is not yet initialized, try a postfix on " +
 					"DetailsScreen.OnPrefabInit");
 			else {
-				var ss = Traverse.Create(inst).GetField<List<SideScreenRef>>("sideScreens");
+				var trInst = Traverse.Create(inst);
+				// These are private fields
+				var ss = trInst.GetField<List<SideScreenRef>>("sideScreens");
+				var body = trInst.GetField<GameObject>("sideScreenContentBody");
 				string name = typeof(T).Name;
-				if (ss != null) {
+				if (ss != null && body != null) {
 					// The ref normally contains a prefab which is instantiated
 					var newScreen = new SideScreenRef();
 					// Mimic the basic screens
-					var rootObject = new GameObject(name);
+					var rootObject = Util.KInstantiate((GameObject)null, body, name);
 					rootObject.AddComponent<LayoutElement>();
 					rootObject.AddComponent<VerticalLayoutGroup>();
 					rootObject.AddComponent<CanvasRenderer>();
-					rootObject.SetActive(false);
 					var controller = rootObject.AddComponent<T>();
 					if (uiPrefab != null) {
 						// Add prefab if supplied
@@ -101,7 +103,8 @@ namespace PeterHan.PLib.UI {
 					newScreen.name = name;
 					// Never used
 					newScreen.offset = Vector2.zero;
-					newScreen.screenPrefab = controller;
+					newScreen.screenPrefab = null;
+					newScreen.screenInstance = controller;
 					ss.Add(newScreen);
 				}
 			}
