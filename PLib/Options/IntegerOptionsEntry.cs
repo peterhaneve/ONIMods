@@ -53,8 +53,8 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		private int value;
 
-		internal IntOptionsEntry(string title, string tooltip, PropertyInfo prop) :
-				base(prop?.Name, title, tooltip) {
+		internal IntOptionsEntry(OptionAttribute oa, PropertyInfo prop) : base(prop?.Name, oa)
+		{
 			LimitAttribute fieldLimits = null;
 			textField = null;
 			value = 0;

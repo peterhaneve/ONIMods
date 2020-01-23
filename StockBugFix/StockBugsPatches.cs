@@ -29,6 +29,44 @@ namespace PeterHan.StockBugFix {
 	/// </summary>
 	public sealed class StockBugsPatches {
 		/// <summary>
+		/// Applies rocket damage. Since the amount is known to be instant, the method can be
+		/// simplified greatly.
+		/// </summary>
+		private static float ApplyRocketDamage(WorldDamage instance, int cell, float amount,
+				int _, int destroyCallback, string sourceName, string popText) {
+			if (Grid.Solid[cell]) {
+				bool hadBuilding = false;
+				// Destroy the cell immediately
+				var obj = Grid.Objects[cell, (int)ObjectLayer.FoundationTile];
+				if (obj != null) {
+					// Break down the building on that cell
+					var hp = obj.GetComponent<BuildingHP>();
+					if (hp != null) {
+						// Damage for all it has left
+						obj.Trigger((int)GameHashes.DoBuildingDamage, new BuildingHP.
+								DamageSourceInfo {
+							damage = hp.HitPoints,
+							source = sourceName,
+							popString = popText
+						});
+						if (!hp.destroyOnDamaged)
+							hadBuilding = true;
+					}
+				}
+				Grid.Damage[cell] = 1.0f;
+				if (hadBuilding)
+					// Destroy tile completely
+					SimMessages.ReplaceElement(cell, SimHashes.Vacuum, CellEventLogger.
+						Instance.SimCellOccupierDestroySelf, 0.0f, 0.0f, 255, 0,
+						destroyCallback);
+				else
+					// Regular tile, break it normally
+					instance.DestroyCell(cell, destroyCallback);
+			}
+			return amount;
+		}
+
+		/// <summary>
 		/// Retrieves the specified property setter.
 		/// </summary>
 		/// <param name="baseType">The type with the property.</param>
@@ -275,6 +313,52 @@ namespace PeterHan.StockBugFix {
 				if (___geneShufflerSMI != null) {
 					var sm = ___geneShufflerSMI.sm;
 					___geneShufflerSMI.GoTo(sm.recharging);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Applied to LaunchableRocket to not dupe materials when launched through a door.
+		/// </summary>
+		[HarmonyPatch(typeof(LaunchableRocket.States), "DoWorldDamage")]
+		public static class LaunchableRocket_States_DoWorldDamage_Patch {
+			/// <summary>
+			/// Transpiles DoWorldDamage to destroy tiles more intelligently.
+			/// </summary>
+			internal static IEnumerable<CodeInstruction> Transpiler(
+					IEnumerable<CodeInstruction> method) {
+				// There are 2 overloads, so types must be specified
+				return PPatchTools.ReplaceMethodCall(method, typeof(WorldDamage).GetMethodSafe(
+					nameof(WorldDamage.ApplyDamage), false, typeof(int), typeof(float),
+					typeof(int), typeof(int), typeof(string), typeof(string)),
+					typeof(StockBugsPatches).GetMethodSafe(nameof(ApplyRocketDamage), true,
+					PPatchTools.AnyArguments));
+			}
+		}
+
+		/// <summary>
+		/// Applied to LaunchableRocket to make rockets correctly disappear if loaded while
+		/// underway.
+		/// </summary>
+		[HarmonyPatch(typeof(LaunchableRocket), "OnSpawn")]
+		public static class LaunchableRocket_OnSpawn_Patch {
+			/// <summary>
+			/// Applied after OnSpawn runs.
+			/// </summary>
+			internal static void Postfix(LaunchableRocket __instance) {
+				var smi = __instance.smi;
+				const string name = nameof(LaunchableRocket.States.not_grounded.space);
+				if (smi != null && (smi.GetCurrentState().name?.EndsWith(name) ?? false)) {
+#if DEBUG
+					PUtil.LogDebug("Scheduling rocket fix task");
+#endif
+					GameScheduler.Instance.Schedule("FixRocketAnims", 0.5f, (_) => {
+						var parts = smi.master.parts;
+						if (smi.GetCurrentState().name?.EndsWith(name) ?? false)
+							// Hide them!
+							foreach (var part in parts)
+								part.GetComponent<KBatchedAnimController>().enabled = false;
+					});
 				}
 			}
 		}

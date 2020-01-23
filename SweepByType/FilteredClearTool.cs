@@ -43,6 +43,11 @@ namespace PeterHan.SweepByType {
 		}
 
 		/// <summary>
+		/// Whether "all" was selected.
+		/// </summary>
+		private bool cachedAll;
+
+		/// <summary>
 		/// The types to sweep.
 		/// </summary>
 		private HashSetPool<Tag, FilteredClearTool>.PooledHashSet cachedTypes;
@@ -53,6 +58,7 @@ namespace PeterHan.SweepByType {
 		internal TypeSelectControl TypeSelect { get; private set; }
 
 		internal FilteredClearTool() {
+			cachedAll = false;
 			cachedTypes = null;
 			TypeSelect = null;
 		}
@@ -62,6 +68,7 @@ namespace PeterHan.SweepByType {
 		/// </summary>
 		private void DoneDrag() {
 			if (cachedTypes != null) {
+				cachedAll = false;
 				cachedTypes.Recycle();
 				cachedTypes = null;
 			}
@@ -74,7 +81,8 @@ namespace PeterHan.SweepByType {
 		/// <param name="priority">The priority to set the sweep errand.</param>
 		private void MarkForClear(GameObject content, PrioritySetting priority) {
 			var cc = content.GetComponent<Clearable>();
-			if (cc != null && cc.isClearable && cachedTypes.Contains(content.PrefabID())) {
+			if (cc != null && cc.isClearable && (cachedAll || cachedTypes.
+					Contains(content.PrefabID()))) {
 				// Parameter is whether to force, not remove sweep errand!
 				cc.MarkForClear(false);
 				var pr = content.GetComponent<Prioritizable>();
@@ -129,6 +137,7 @@ namespace PeterHan.SweepByType {
 					// Build the list
 					cachedTypes = HashSetPool<Tag, FilteredClearTool>.Allocate();
 					TypeSelect.AddTypesToSweep(cachedTypes);
+					cachedAll = TypeSelect.IsAllSelected;
 				}
 				while (objectListNode != null) {
 					var content = objectListNode.gameObject;

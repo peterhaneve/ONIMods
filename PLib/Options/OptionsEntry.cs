@@ -26,7 +26,7 @@ namespace PeterHan.PLib.Options {
 	/// <summary>
 	/// An entry in the Options screen for one particular setting.
 	/// </summary>
-	internal abstract class OptionsEntry {
+	internal abstract class OptionsEntry : IComparable<OptionsEntry> {
 		/// <summary>
 		/// Tries to retrieve the limits for an option.
 		/// </summary>
@@ -52,7 +52,7 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <param name="attr">The annotation to check.</param>
 		/// <returns>The OptionAttribute matching that annotation, or null if it is not an OptionAttribute.</returns>
-		internal static OptionAttribute GetTitle(object attr) {
+		internal static OptionAttribute GetOptionInfo(object attr) {
 			if (attr == null)
 				throw new ArgumentNullException("attr");
 			OptionAttribute oa = null;
@@ -60,12 +60,18 @@ namespace PeterHan.PLib.Options {
 				// Has the Options attribute, but is cross-mod...
 				var trAttr = Traverse.Create(attr);
 				string title = trAttr.GetProperty<string>(nameof(OptionAttribute.Title)),
-					tooltip = trAttr. GetProperty<string>(nameof(OptionAttribute.Tooltip)) ?? "";
+					tt = trAttr.GetProperty<string>(nameof(OptionAttribute.Tooltip)) ?? "",
+					cat = trAttr.GetProperty<string>(nameof(OptionAttribute.Category)) ?? "";
 				if (!string.IsNullOrEmpty(title))
-					oa = new OptionAttribute(title, tooltip);
+					oa = new OptionAttribute(title, tt, cat);
 			}
 			return oa;
 		}
+
+		/// <summary>
+		/// The category for this entry.
+		/// </summary>
+		public string Category { get; }
 
 		/// <summary>
 		/// The option field name.
@@ -87,10 +93,28 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		protected abstract object Value { get; set; }
 
+		[Obsolete("Do not use this constructor, it exists only for binary compatibility")]
 		protected OptionsEntry(string field, string title, string tooltip) {
+			Category = "";
 			Field = field;
 			Title = title;
 			ToolTip = tooltip;
+		}
+
+		protected OptionsEntry(string field, OptionAttribute attr) {
+			if (attr == null)
+				throw new ArgumentNullException("attr");
+			Field = field;
+			Title = attr.Title;
+			ToolTip = attr.Tooltip;
+			Category = attr.Category ?? "";
+		}
+
+		public int CompareTo(OptionsEntry other) {
+			if (other == null)
+				throw new ArgumentNullException("other");
+			return string.Compare(Category, other.Category, StringComparison.
+				CurrentCultureIgnoreCase);
 		}
 
 		/// <summary>

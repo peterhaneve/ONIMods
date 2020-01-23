@@ -105,8 +105,10 @@ namespace PeterHan.PLib.UI {
 			// an auto-layout request on to the children
 			viewport.AddComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.UpperLeft;
 			scroll.viewport = viewport.rectTransform();
-			// Make the child
+			// Make the child; give it a separate Canvas to reduce layout rebuilds
 			var child = Child.Build();
+			child.AddOrGet<Canvas>().pixelPerfect = false;
+			child.AddOrGet<GraphicRaycaster>();
 			PUIElements.SetAnchors(PUIElements.SetParent(child, viewport), PUIAnchoring.
 				Beginning, PUIAnchoring.End);
 			scroll.content = child.rectTransform();

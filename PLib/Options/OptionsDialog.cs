@@ -16,13 +16,14 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Newtonsoft.Json;
 using PeterHan.PLib.UI;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
+
+using OptionsList = System.Collections.Generic.ICollection<PeterHan.PLib.Options.OptionsEntry>;
 
 namespace PeterHan.PLib.Options {
 	/// <summary>
@@ -34,20 +35,26 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <param name="forType">The type of the options class.</param>
 		/// <returns>A list of all public properties annotated for options dialogs.</returns>
-		private static ICollection<OptionsEntry> BuildOptions(Type forType) {
-			var entries = new List<OptionsEntry>(16);
+		private static IDictionary<string, OptionsList> BuildOptions(Type forType) {
+			var entries = new Dictionary<string, OptionsList>(4);
 			OptionAttribute oa;
-			foreach (var prop in forType.GetProperties()) {
+			foreach (var prop in forType.GetProperties())
 				// Must have the annotation
 				foreach (var attr in prop.GetCustomAttributes(false))
-					if ((oa = OptionsEntry.GetTitle(attr)) != null) {
+					if ((oa = OptionsEntry.GetOptionInfo(attr)) != null) {
 						// Attempt to find a class that will represent it
 						var entry = CreateOptions(prop, oa);
-						if (entry != null)
-							entries.Add(entry);
+						if (entry != null) {
+							string category = entry.Category ?? "";
+							// Add this category if it does not exist
+							if (!entries.TryGetValue(category, out OptionsList inCat)) {
+								inCat = new List<OptionsEntry>(16);
+								entries.Add(category, inCat);
+							}
+							inCat.Add(entry);
+						}
 						break;
 					}
-			}
 			return entries;
 		}
 
@@ -63,15 +70,15 @@ namespace PeterHan.PLib.Options {
 			string field = info.Name;
 			// Enumeration type
 			if (type.IsEnum)
-				entry = new SelectOneOptionsEntry(field, oa.Title, oa.Tooltip, type);
+				entry = new SelectOneOptionsEntry(field, oa, type);
 			else if (type == typeof(bool))
-				entry = new CheckboxOptionsEntry(field, oa.Title, oa.Tooltip);
+				entry = new CheckboxOptionsEntry(field, oa);
 			else if (type == typeof(int))
-				entry = new IntOptionsEntry(oa.Title, oa.Tooltip, info);
+				entry = new IntOptionsEntry(oa, info);
 			else if (type == typeof(float))
-				entry = new FloatOptionsEntry(oa.Title, oa.Tooltip, info);
+				entry = new FloatOptionsEntry(oa, info);
 			else if (type == typeof(string))
-				entry = new StringOptionsEntry(oa.Title, oa.Tooltip, info);
+				entry = new StringOptionsEntry(oa, info);
 			return entry;
 		}
 
@@ -88,7 +95,7 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// The option entries in the dialog.
 		/// </summary>
-		private readonly ICollection<OptionsEntry> optionEntries;
+		private readonly IDictionary<string, OptionsList> optionCategories;
 
 		/// <summary>
 		/// The options read from the config. It might contain hidden options so preserve its
@@ -114,9 +121,8 @@ namespace PeterHan.PLib.Options {
 		internal OptionsDialog(Type optionsType, KMod.Mod modSpec) {
 			dialog = null;
 			this.modSpec = modSpec ?? throw new ArgumentNullException("modSpec");
-			this.optionsType = optionsType ?? throw new ArgumentNullException(
-				"optionsType");
-			optionEntries = BuildOptions(optionsType);
+			this.optionsType = optionsType ?? throw new ArgumentNullException("optionsType");
+			optionCategories = BuildOptions(optionsType);
 			options = null;
 			// Determine config location
 			typeAttr = POptions.GetConfigFileAttribute(optionsType);
@@ -126,6 +132,43 @@ namespace PeterHan.PLib.Options {
 			else
 				path = Path.Combine(src.GetRoot(), typeAttr?.ConfigFileName ?? POptions.
 					CONFIG_FILE_NAME);
+		}
+
+		/// <summary>
+		/// Adds a category header to the dialog.
+		/// </summary>
+		/// <param name="body">The parent of the header.</param>
+		/// <param name="category">The header title.</param>
+		private void AddCategoryHeader(PPanel body, string category) {
+			if (!string.IsNullOrEmpty(category)) {
+				body.AddChild(new PLabel("CategoryHeader_" + category) {
+					Text = category, TextStyle = POptions.TITLE_STYLE,
+					TextAlignment = TextAnchor.LowerCenter, DynamicSize = true,
+					Margin = new RectOffset(0, 0, 0, 2), FlexSize = new Vector2(1.0f, 0.0f),
+				});
+			}
+		}
+
+		/// <summary>
+		/// Checks the mod config class for the [RestartRequired] attribute, and brings up a
+		/// restart dialog if necessary.
+		/// </summary>
+		private void CheckForRestart() {
+			if (options != null) {
+				string rr = typeof(RestartRequiredAttribute).FullName;
+				bool restartRequired = false;
+				// Check for [RestartRequired]
+				foreach (var attr in options.GetType().GetCustomAttributes(true))
+					if (attr.GetType().FullName == rr) {
+						restartRequired = true;
+						break;
+					}
+				if (restartRequired)
+					// Prompt user to restart
+					PUIElements.ShowConfirmDialog(null, POptions.RESTART_REQUIRED,
+						App.instance.Restart, null, POptions.RESTART_OK, POptions.
+						RESTART_CANCEL);
+			}
 		}
 
 		/// <summary>
@@ -170,14 +213,28 @@ namespace PeterHan.PLib.Options {
 					Title = POptions.DIALOG_TITLE.text.F(modSpec.title), Size = POptions.
 					SETTINGS_DIALOG_SIZE, SortKey = 150.0f, DialogBackColor = PUITuning.Colors.
 					OptionsBackground, DialogClosed = OnOptionsSelected
-				}.AddButton("ok", STRINGS.UI.CONFIRMDIALOG.OK, POptions.TOOLTIP_OK).
-				AddButton(PDialog.DIALOG_KEY_CLOSE, STRINGS.UI.CONFIRMDIALOG.CANCEL,
+				}.AddButton("ok", STRINGS.UI.CONFIRMDIALOG.OK, POptions.TOOLTIP_OK);
+				pDialog.AddButton("manual", POptions.BUTTON_MANUAL, POptions.TOOLTIP_MANUAL).
+					AddButton(PDialog.DIALOG_KEY_CLOSE, STRINGS.UI.CONFIRMDIALOG.CANCEL,
 					POptions.TOOLTIP_CANCEL);
+				PPanel body = pDialog.Body, current;
+				var margin = body.Margin;
 				// For each option, add its UI component to panel
-				pDialog.Body.Spacing = 3;
-				pDialog.Body.BackColor = PUITuning.Colors.DialogDarkBackground;
-				foreach (var entry in optionEntries)
-					pDialog.Body.AddChild(entry.GetUIEntry());
+				body.Spacing = 10;
+				body.Margin = new RectOffset(0, 0, 0, 0);
+				// Display all categories
+				foreach (var catEntries in optionCategories) {
+					string category = catEntries.Key;
+					current = new PPanel("Entries_" + category) {
+						Alignment = TextAnchor.UpperCenter, Spacing = 5,
+						BackColor = PUITuning.Colors.DialogDarkBackground,
+						FlexSize = new Vector2(1.0f, 0.0f), Margin = margin
+					};
+					AddCategoryHeader(current, catEntries.Key);
+					foreach (var entry in catEntries.Value)
+						current.AddChild(entry.GetUIEntry());
+					body.AddChild(current);
+				}
 				options = POptions.ReadSettings(path, optionsType);
 				if (options == null)
 					CreateOptions();
@@ -197,20 +254,22 @@ namespace PeterHan.PLib.Options {
 			if (action == "ok") {
 				// Save changes to mod options
 				WriteOptions();
-				if (options != null) {
-					// Check for [RestartRequired]
-					string rr = typeof(RestartRequiredAttribute).FullName;
-					bool restartRequired = false;
-					foreach (var attr in options.GetType().GetCustomAttributes(true))
-						if (attr.GetType().FullName == rr) {
-							restartRequired = true;
-							break;
-						}
-					if (restartRequired)
-						// Prompt user to restart
-						PUIElements.ShowConfirmDialog(null, POptions.RESTART_REQUIRED,
-							App.instance.Restart, null, POptions.RESTART_OK, POptions.
-							RESTART_CANCEL);
+				CheckForRestart();
+			} else if (action == "manual") {
+				string uri = null;
+				try {
+					uri = new Uri(Path.GetDirectoryName(path)).AbsoluteUri;
+				} catch (UriFormatException e) {
+					PUtil.LogWarning("Unable to convert parent of " + path + " to a URI:");
+					PUtil.LogExcWarn(e);
+				}
+				if (!string.IsNullOrEmpty(uri)) {
+					// Open the config folder, opening the file itself might start an unknown
+					// editor which could execute the json somehow...
+					WriteOptions();
+					PUtil.LogDebug("Opening config folder: " + uri);
+					Application.OpenURL(uri);
+					CheckForRestart();
 				}
 			}
 		}
@@ -221,8 +280,9 @@ namespace PeterHan.PLib.Options {
 		private void UpdateOptions() {
 			// Read into local options
 			if (options != null)
-				foreach (var option in optionEntries)
-					option.ReadFrom(options);
+				foreach (var catEntries in optionCategories)
+					foreach (var option in catEntries.Value)
+						option.ReadFrom(options);
 		}
 
 		/// <summary>
@@ -231,8 +291,9 @@ namespace PeterHan.PLib.Options {
 		private void WriteOptions() {
 			if (options != null)
 				// Update from local options
-				foreach (var option in optionEntries)
-					option.WriteTo(options);
+				foreach (var catEntries in optionCategories)
+					foreach (var option in catEntries.Value)
+						option.WriteTo(options);
 			POptions.WriteSettings(options, path, typeAttr?.IndentOutput ?? false);
 		}
 	}

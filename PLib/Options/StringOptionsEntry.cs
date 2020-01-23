@@ -46,8 +46,8 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		private string value;
 
-		internal StringOptionsEntry(string title, string tooltip, PropertyInfo prop) :
-				base(prop?.Name, title, tooltip) {
+		internal StringOptionsEntry(OptionAttribute oa, PropertyInfo prop) : base(prop?.Name,
+				oa) {
 			textField = null;
 			value = "";
 		}

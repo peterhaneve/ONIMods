@@ -121,10 +121,11 @@ namespace PeterHan.PLib.UI {
 			dialog.AddComponent<Canvas>();
 			new PPanel("Header") {
 				// Horizontal title bar
-				Spacing = 3, Direction = PanelDirection.Horizontal, FlexSize = flexW
+				Direction = PanelDirection.Horizontal, FlexSize = flexW
 			}.SetKleiPinkColor().AddChild(new PLabel("Title") {
 				// Title text, expand to width
-				Text = Title, FlexSize = flexW, DynamicSize = true
+				Margin = new RectOffset(3, 3, 0, 0), Text = Title, FlexSize = flexW,
+				DynamicSize = true
 			}).AddChild(new PButton(DIALOG_KEY_CLOSE) {
 				// Close button
 				Sprite = PUITuning.Images.Close, Margin = new RectOffset(3, 3, 3, 3),
@@ -132,7 +133,7 @@ namespace PeterHan.PLib.UI {
 			}.SetKleiBlueStyle()).AddTo(dialog);
 			// Buttons
 			var buttonPanel = new PPanel("Buttons") {
-				Alignment = TextAnchor.LowerCenter, Spacing = 5, Direction = PanelDirection.
+				Alignment = TextAnchor.LowerCenter, Spacing = 7, Direction = PanelDirection.
 				Horizontal, Margin = new RectOffset(5, 5, 5, 5)
 			};
 			// Add each user button

@@ -43,7 +43,7 @@ namespace PeterHan.PLib.Options {
 					OptionAttribute oa = null;
 					// Search for OptionsAttribute
 					foreach (var attrib in enumField.GetCustomAttributes(false))
-						if ((oa = GetTitle(attrib)) != null)
+						if ((oa = GetOptionInfo(attrib)) != null)
 							break;
 					// If not found, use the default
 					if (oa != null) {
@@ -92,8 +92,8 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		private readonly IList<Option> options;
 
-		internal SelectOneOptionsEntry(string field, string title, string tooltip,
-				Type fieldType) : base(field, title, tooltip) {
+		internal SelectOneOptionsEntry(string field, OptionAttribute oa, Type fieldType) :
+				base(field, oa) {
 			var eval = Enum.GetValues(fieldType);
 			if (eval == null)
 				throw new ArgumentException("No values, or invalid values, for enum");

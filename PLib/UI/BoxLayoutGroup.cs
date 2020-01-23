@@ -225,7 +225,7 @@ namespace PeterHan.PLib.UI {
 		/// <param name="obj">The object to lay out immediately.</param>
 		/// <param name="parameters">The layout parameters to use.</param>
 		/// <param name="size">The minimum component size.</param>
-		/// <returns>obj for call chaining</returns>
+		/// <returns>obj for call chaining.</returns>
 		public static GameObject LayoutNow(GameObject obj, BoxLayoutParams parameters = null,
 				Vector2 size = default) {
 			if (obj == null)

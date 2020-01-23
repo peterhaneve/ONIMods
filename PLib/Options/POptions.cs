@@ -34,6 +34,11 @@ namespace PeterHan.PLib.Options {
 	/// </summary>
 	public sealed class POptions {
 		/// <summary>
+		/// The button used to manually edit the mod configuration.
+		/// </summary>
+		public static LocString BUTTON_MANUAL = "MANUAL CONFIG";
+
+		/// <summary>
 		/// The text shown on the Done button.
 		/// </summary>
 		public static LocString BUTTON_OK = STRINGS.UI.FRONTEND.OPTIONS_SCREEN.BACK;
@@ -89,9 +94,24 @@ namespace PeterHan.PLib.Options {
 		internal static readonly Vector2 SETTINGS_DIALOG_SIZE = new Vector2(320.0f, 200.0f);
 
 		/// <summary>
+		/// The color of option category titles.
+		/// </summary>
+		internal static readonly Color TITLE_COLOR = new Color32(127, 127, 127, 255);
+
+		/// <summary>
+		/// The text style applied to option category titles.
+		/// </summary>
+		internal static readonly TextStyleSetting TITLE_STYLE;
+
+		/// <summary>
 		/// The tooltip on the CANCEL button.
 		/// </summary>
 		public static LocString TOOLTIP_CANCEL = "Discard changes.";
+
+		/// <summary>
+		/// The tooltip on the MANUAL CONFIG button.
+		/// </summary>
+		public static LocString TOOLTIP_MANUAL = "Opens the folder containing the full mod configuration.";
 
 		/// <summary>
 		/// The tooltip for cycling to the next item.
@@ -112,7 +132,19 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// The mod options table.
 		/// </summary>
-		private static OptionsTable modOptions = null;
+		private static OptionsTable modOptions;
+
+		static POptions() {
+			var baseStyle = PUITuning.Fonts.UILightStyle;
+			// Initialize the title font style
+			TITLE_STYLE = ScriptableObject.CreateInstance<TextStyleSetting>();
+			TITLE_STYLE.enableWordWrapping = false;
+			TITLE_STYLE.fontSize = baseStyle.fontSize;
+			TITLE_STYLE.sdfFont = baseStyle.sdfFont;
+			TITLE_STYLE.style = TMPro.FontStyles.Bold;
+			TITLE_STYLE.textColor = TITLE_COLOR;
+			modOptions = null;
+		}
 
 		/// <summary>
 		/// Adds the Options button to the Mods screen.
@@ -173,7 +205,7 @@ namespace PeterHan.PLib.Options {
 						indent = trAttr.GetProperty<bool>(nameof(ConfigFileAttribute.
 							IndentOutput));
 					} catch (Exception e) {
-						PUtil.LogException(e);
+						PUtil.LogExcWarn(e);
 					}
 					// Remove invalid file names
 					if (!PUtil.IsValidFileName(file))
@@ -206,7 +238,7 @@ namespace PeterHan.PLib.Options {
 				PUtil.LogExcWarn(e);
 			}
 			if (dir == null)
-				dir = KMod.Manager.GetDirectory();
+				dir = Path.Combine(KMod.Manager.GetDirectory(), modDLL.GetName()?.Name ?? "");
 			return dir;
 		}
 
@@ -220,7 +252,8 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
-		/// Registers a class as a mod options class.
+		/// Registers a class as a mod options class. The type is registered for its defining
+		/// assembly, not for the calling assembly, for compatibility reasons.
 		/// </summary>
 		/// <param name="optionsType">The class which will represent the options for this mod.</param>
 		public static void RegisterOptions(Type optionsType) {
@@ -253,20 +286,40 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
-		/// Reads mod settings from its configuration file. The calling assembly is used for
-		/// compatibility reasons to resolve the proper settings folder.
+		/// Reads a mod's settings from its configuration file. The calling assembly is used
+		/// for compatibility reasons to resolve the proper settings folder.
 		/// </summary>
 		/// <typeparam name="T">The type of the settings object.</typeparam>
 		/// <returns>The settings read, or null if they could not be read (e.g. newly installed).</returns>
 		public static T ReadSettings<T>() where T : class {
-			var type = typeof(T);
-			string file = GetConfigFileAttribute(type)?.ConfigFileName;
-			return ReadSettings(Path.Combine(GetModDir(Assembly.GetCallingAssembly()),
-				file ?? CONFIG_FILE_NAME), type) as T;
+			return ReadSettings<T>(Assembly.GetCallingAssembly());
 		}
 
 		/// <summary>
-		/// Reads mod settings from its configuration file.
+		/// Reads a mod's settings from its configuration file. The assembly defining T is used
+		/// to resolve the proper settings folder.
+		/// </summary>
+		/// <typeparam name="T">The type of the settings object.</typeparam>
+		/// <returns>The settings read, or null if they could not be read (e.g. newly installed).</returns>
+		public static T ReadSettingsForAssembly<T>() where T : class {
+			return ReadSettings<T>(typeof(T).Assembly);
+		}
+
+		/// <summary>
+		/// Reads a mod's settings from its configuration file.
+		/// </summary>
+		/// <typeparam name="T">The type of the settings object.</typeparam>
+		/// <param name="assembly">The assembly used to look up the correct settings folder.</param>
+		/// <returns>The settings read, or null if they could not be read (e.g. newly installed).</returns>
+		internal static T ReadSettings<T>(Assembly assembly) where T : class {
+			var type = typeof(T);
+			string file = GetConfigFileAttribute(type)?.ConfigFileName;
+			return ReadSettings(Path.Combine(GetModDir(assembly), file ?? CONFIG_FILE_NAME),
+				type) as T;
+		}
+
+		/// <summary>
+		/// Reads a mod's settings from its configuration file.
 		/// </summary>
 		/// <param name="path">The path to the settings file.</param>
 		/// <param name="optionsType">The options type.</param>
@@ -282,8 +335,11 @@ namespace PeterHan.PLib.Options {
 			} catch (FileNotFoundException) {
 				PUtil.LogDebug("{0} was not found; using default settings".F(Path.GetFileName(
 					path)));
-			} catch (IOException e) {
+			} catch (UnauthorizedAccessException e) {
 				// Options will be set to defaults
+				PUtil.LogExcWarn(e);
+			} catch (IOException e) {
+				// Again set defaults
 				PUtil.LogExcWarn(e);
 			} catch (JsonException e) {
 				// Again set defaults
@@ -293,19 +349,41 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
-		/// Writes mod settings to its configuration file. The calling assembly is used for
+		/// Writes a mod's settings to its configuration file. The calling assembly is used for
 		/// compatibility reasons to resolve the proper settings folder.
 		/// </summary>
 		/// <typeparam name="T">The type of the settings object.</typeparam>
-		/// <param name="settings">The settings to write</param>
+		/// <param name="settings">The settings to write.</param>
 		public static void WriteSettings<T>(T settings) where T : class {
-			string file = GetConfigFileAttribute(typeof(T))?.ConfigFileName;
-			WriteSettings(settings, Path.Combine(GetModDir(Assembly.GetCallingAssembly()),
-				file ?? CONFIG_FILE_NAME));
+			WriteSettings(settings, Assembly.GetCallingAssembly());
 		}
 
 		/// <summary>
-		/// Writes mod settings to its configuration file.
+		/// Writes a mod's settings to its configuration file. The assembly defining T is used
+		/// to resolve the proper settings folder.
+		/// </summary>
+		/// <typeparam name="T">The type of the settings object.</typeparam>
+		/// <param name="settings">The settings to write.</param>
+		public static void WriteSettingsForAssembly<T>(T settings) where T : class {
+			WriteSettings(settings, typeof(T).Assembly);
+		}
+
+		/// <summary>
+		/// Writes a mod's settings to its configuration file. The calling assembly is used for
+		/// compatibility reasons to resolve the proper settings folder.
+		/// </summary>
+		/// <typeparam name="T">The type of the settings object.</typeparam>
+		/// <param name="assembly">The assembly used to look up the correct settings folder.</param>
+		/// <param name="settings">The settings to write.</param>
+		internal static void WriteSettings<T>(T settings, Assembly assembly) where T : class {
+			var attr = GetConfigFileAttribute(typeof(T));
+			string file = attr?.ConfigFileName;
+			WriteSettings(settings, Path.Combine(GetModDir(assembly), file ??
+				CONFIG_FILE_NAME), attr?.IndentOutput ?? false);
+		}
+
+		/// <summary>
+		/// Writes a mod's settings to its configuration file.
 		/// </summary>
 		/// <param name="settings">The settings to write.</param>
 		/// <param name="path">The path to the settings file.</param>
@@ -321,19 +399,22 @@ namespace PeterHan.PLib.Options {
 						// Serialize from stream avoids creating file text in memory
 						serializer.Serialize(jw, settings);
 					}
+				} catch (UnauthorizedAccessException e) {
+					// Options cannot be set
+					PUtil.LogExcWarn(e);
 				} catch (IOException e) {
-					// Options will be set to defaults
+					// Options cannot be set
 					PUtil.LogExcWarn(e);
 				} catch (JsonException e) {
-					// Again set defaults
+					// Options cannot be set
 					PUtil.LogExcWarn(e);
 				}
 		}
 
 		/// <summary>
 		/// A class which can be used by mods to maintain a singleton of their options. This
-		/// class should be the parent of the mod options class, and &lt;T&gt; should be the
-		/// type of the options class to store.
+		/// class should be the superclass of the mod options class, and &lt;T&gt; should be
+		/// the type of the options class to store.
 		/// </summary>
 		/// <typeparam name="T">The mod options class to wrap.</typeparam>
 		public abstract class SingletonOptions<T> where T : class, new() {

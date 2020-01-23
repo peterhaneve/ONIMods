@@ -144,12 +144,12 @@ namespace PeterHan.PLib.UI {
 			/// <summary>
 			/// The color styles used on pink buttons.
 			/// </summary>
-			internal static ColorStyleSetting ButtonPinkStyle { get; }
+			public static ColorStyleSetting ButtonPinkStyle { get; }
 
 			/// <summary>
 			/// The color styles used on blue buttons.
 			/// </summary>
-			internal static ColorStyleSetting ButtonBlueStyle { get; }
+			public static ColorStyleSetting ButtonBlueStyle { get; }
 
 			/// <summary>
 			/// The default colors used on check boxes / toggles with dark backgrounds.
@@ -179,7 +179,7 @@ namespace PeterHan.PLib.UI {
 			/// <summary>
 			/// The color displayed on scrollbar handles.
 			/// </summary>
-			internal static ColorBlock ScrollbarColors { get; }
+			public static ColorBlock ScrollbarColors { get; }
 
 			/// <summary>
 			/// The background color for selections.

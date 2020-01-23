@@ -48,8 +48,7 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		private GameObject checkbox;
 
-		internal CheckboxOptionsEntry(string field, string title, string tooltip) :
-				base(field, title, tooltip) {
+		internal CheckboxOptionsEntry(string field, OptionAttribute oa) : base(field, oa) {
 			check = false;
 			checkbox = null;
 		}

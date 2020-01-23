@@ -53,8 +53,8 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		private float value;
 
-		internal FloatOptionsEntry(string title, string tooltip, PropertyInfo prop) :
-				base(prop?.Name, title, tooltip) {
+		internal FloatOptionsEntry(OptionAttribute oa, PropertyInfo prop) : base(prop?.Name,
+				oa) {
 			LimitAttribute fieldLimits = null;
 			textField = null;
 			value = 0.0f;
