@@ -4,7 +4,7 @@
     <TargetFramework>net35</TargetFramework>
     <Title>PeterHan.PLib</Title>
 	  <AssemblyTitle>PeterHanLib</AssemblyTitle>
-	  <Version>2.22.2.0</Version>
+	  <Version>2.23.0.0</Version>
 	  <UsesPLib>false</UsesPLib>
 	  <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
 	  <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
@@ -16,12 +16,12 @@
 	  <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
 	
 Contains functions aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
-	  <PackageReleaseNotes>Add a utility method to register side screens. Add output port support to PBuilding.
+	  <PackageReleaseNotes>Add support for Category in options classes, which subdivides the options into groups on screen.
 
-Fix bugs in PTextField and PScrollPane regarding scrolling and input focus / event handling.
+Fix a bug in custom side screen content.
     </PackageReleaseNotes>
 	  <RootNamespace>PeterHan.PLib</RootNamespace>
-	  <AssemblyVersion>2.22.2.0</AssemblyVersion>
+	  <AssemblyVersion>2.23.0.0</AssemblyVersion>
 	  <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
 	  <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>
