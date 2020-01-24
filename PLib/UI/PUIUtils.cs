@@ -74,39 +74,101 @@ namespace PeterHan.PLib.UI {
 		/// <param name="uiPrefab">The UI prefab to use. If null is passed, the UI should
 		/// be created and added to the GameObject hosting the controller object in its
 		/// OnPrefabInit function.</param>
-		public static void AddSideScreenContent<T>(GameObject uiPrefab = null)
+		/// <param name="inOrder">If the insertion should be performed in some order. The default of
+		/// false will simply insert at the end of the list which will make this screen appear
+		/// at the top of every side screen it applies to. Set to true to perform insertion
+		/// elsewhere in the list.</param>
+		/// <param name="insertBefore">If the insertion should be done before "insertionName" or
+		/// after "insertionName". True means before, false means after.</param>
+		/// <param name="insertionName">The name of the side screen that you want to choose
+		/// the ordering of this one around. Should be from this list:
+		/// Telepad Side Screen
+		/// Assignable Side Screen
+		/// Valve Side Screen
+		/// Tree Filterable Side Screen
+		/// Single Entity Receptacle Screen
+		/// Planter Side Screen
+		/// SingleSliderScreen
+		/// DualSliderScreen
+		/// Timed Switch Side Screen
+		/// Threshold Switch Side Screen
+		/// Research Side Screen
+		/// Filter Side Screen
+		/// Access Control Side Screen
+		/// ActivationRangeSideScreen
+		/// Gene Shuffler Side Screen
+		/// Sealed Door Side Screen
+		/// Capacity Control Side Screen
+		/// Door Toggle Side Screen
+		/// Suit Locker Side Screen
+		/// Lure Side Screen
+		/// Role Station Side Screen
+		/// Automatable Side Screen
+		/// SingleButtonSideScreen
+		/// IncubatorSideScreen
+		/// IntSliderSideScreen
+		/// SingleCheckboxSideScreen
+		/// CommandModuleSideScreen
+		/// CometDetectorSideScreen
+		/// TelescopeSideScreen
+		/// ComplexFabricatorSideScreen
+		/// MinionSideScreen
+		/// MonumentSideScreen
+		/// Logic Filter Side Screen</param>
+		public static void AddSideScreenContent<T>(GameObject uiPrefab = null, bool inOrder = false, bool insertBefore = true, string insertionName = null)
 				where T : SideScreenContent {
 			var inst = DetailsScreen.Instance;
-			if (inst == null)
+			if (inst == null) {
 				LogUIWarning("DetailsScreen is not yet initialized, try a postfix on " +
 					"DetailsScreen.OnPrefabInit");
-			else {
-				var trInst = Traverse.Create(inst);
-				// These are private fields
-				var ss = trInst.GetField<List<SideScreenRef>>("sideScreens");
-				var body = trInst.GetField<GameObject>("sideScreenContentBody");
-				string name = typeof(T).Name;
-				if (ss != null && body != null) {
-					// The ref normally contains a prefab which is instantiated
-					var newScreen = new SideScreenRef();
-					// Mimic the basic screens
-					var rootObject = new GameObject(name);
-					PUIElements.SetParent(rootObject, body);
-					rootObject.AddComponent<LayoutElement>();
-					rootObject.AddComponent<VerticalLayoutGroup>();
-					rootObject.AddComponent<CanvasRenderer>();
-					var controller = rootObject.AddComponent<T>();
-					if (uiPrefab != null) {
-						// Add prefab if supplied
-						controller.ContentContainer = uiPrefab;
-						uiPrefab.transform.parent = rootObject.transform;
-					}
-					newScreen.name = name;
-					// Never used
-					newScreen.offset = Vector2.zero;
-					newScreen.screenPrefab = controller;
-					newScreen.screenInstance = controller;
+				return;
+			}
+			if (inOrder && insertionName == null) {
+				LogUIWarning("When specifying \"inOrder: true\" the \"insertionName\" must be non-null");
+				return;
+			}
+			var trInst = Traverse.Create(inst);
+			// These are private fields
+			var ss = trInst.GetField<List<SideScreenRef>>("sideScreens");
+			var body = trInst.GetField<GameObject>("sideScreenContentBody");
+			string name = typeof(T).Name;
+			if (ss != null && body != null) {
+				// The ref normally contains a prefab which is instantiated
+				var newScreen = new SideScreenRef();
+				// Mimic the basic screens
+				var rootObject = new GameObject(name);
+				PUIElements.SetParent(rootObject, body);
+				rootObject.AddComponent<LayoutElement>();
+				rootObject.AddComponent<VerticalLayoutGroup>();
+				rootObject.AddComponent<CanvasRenderer>();
+				var controller = rootObject.AddComponent<T>();
+				if (uiPrefab != null) {
+					// Add prefab if supplied
+					controller.ContentContainer = uiPrefab;
+					uiPrefab.transform.parent = rootObject.transform;
+				}
+				newScreen.name = name;
+				// Never used
+				newScreen.offset = Vector2.zero;
+				newScreen.screenPrefab = controller;
+				newScreen.screenInstance = controller;
+				if (!inOrder)
 					ss.Add(newScreen);
+				else {
+					for (var i = 0; i < ss.Count; i++) {
+						if (ss[i].name.Equals(insertionName)) {
+							if (insertBefore) {
+								ss.Insert(i, newScreen);
+							} else {
+								if (i + 1 >= ss.Count) {
+									ss.Add(newScreen);
+								} else {
+									ss.Insert(i + 1, newScreen);
+								}
+							}
+							return;
+						}
+					}
 				}
 			}
 		}
