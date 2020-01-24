@@ -112,6 +112,83 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Adds the specified side screen content to the side screen list. The side screen
+		/// behavior should be defined in a class inherited from SideScreenContent.
+		/// </summary>
+		/// <typeparam name="T">The type of the controller that will determine how the side
+		/// screen works. A new instance will be created and added as a component to the new
+		/// side screen.</typeparam>
+		/// <param name="fullName">The full name of the type of side screen to based to ordering 
+		/// around. An example of how this method can be used is:
+		/// `AddSideScreenContentWithOrdering<MySideScreen>(typeof(CapacityControlSideScreen).FullName);`
+		/// Notice that you want to use `typeof(TargetedSideScreen).FullName` as the value of this parameter</param>
+		/// <param name="insertBefore">Boolean flag if we should insert before or after the targeted side screen
+		/// in the list. Defaults to before. When inserting before the screen, if both are valid for a building
+		/// then the side screen of type "T" will show below the one of type "fullName". When inserting after
+		/// the screen, the reverse is true.</param>
+		/// <param name="uiPrefab">The UI prefab to use. If null is passed, the UI should
+		/// be created and added to the GameObject hosting the controller object in its
+		/// OnPrefabInit function.</param>
+		public static void AddSideScreenContentWithOrdering<T>(string fullName, bool insertBefore = true, GameObject uiPrefab = null)
+				where T : SideScreenContent {
+			var inst = DetailsScreen.Instance;
+			if (inst == null)
+				LogUIWarning("DetailsScreen is not yet initialized, try a postfix on " +
+					"DetailsScreen.OnPrefabInit");
+			else {
+				var trInst = Traverse.Create(inst);
+				// These are private fields
+				var ss = trInst.GetField<List<SideScreenRef>>("sideScreens");
+				var body = trInst.GetField<GameObject>("sideScreenContentBody");
+				string name = typeof(T).Name;
+				if (ss != null && body != null) {
+					// The ref normally contains a prefab which is instantiated
+					var newScreen = new SideScreenRef();
+					// Mimic the basic screens
+					var rootObject = new GameObject(name);
+					PUIElements.SetParent(rootObject, body);
+					rootObject.AddComponent<LayoutElement>();
+					rootObject.AddComponent<VerticalLayoutGroup>();
+					rootObject.AddComponent<CanvasRenderer>();
+					var controller = rootObject.AddComponent<T>();
+					if (uiPrefab != null) {
+						// Add prefab if supplied
+						controller.ContentContainer = uiPrefab;
+						uiPrefab.transform.parent = rootObject.transform;
+					}
+					newScreen.name = name;
+					// Never used
+					newScreen.offset = Vector2.zero;
+					newScreen.screenPrefab = controller;
+					newScreen.screenInstance = controller;
+					foreach (var screen in ss) {
+						SideScreenContent[] screens = screen.screenPrefab.GetComponentsInChildren<SideScreenContent>();
+						if (screens.Length < 1) {
+							PUtil.LogError($"Could not find SideScreenContent on side screen named {screen.name}");
+							continue;
+						}
+
+						SideScreenContent content = screens[0];
+						if (content.GetType().FullName == fullName) {
+							// once we find first matching screen we perform insertion and are done so return method to exit
+							int index = ss.IndexOf(screen);
+							if (insertBefore) {
+								ss.Insert(index, newScreen);
+							} else {
+								if (index + 1 >= ss.Count)
+									ss.Add(newScreen);
+								else
+									ss.Insert(index + 1, newScreen);
+							}
+							return;
+						}
+					}
+
+				}
+			}
+		}
+
+		/// <summary>
 		/// Builds a PLib UI object and adds it to an existing UI object.
 		/// </summary>
 		/// <param name="component">The UI object to add.</param>
