@@ -303,6 +303,21 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Sets a game object's parent.
+		/// </summary>
+		/// <param name="child">The game object to modify.</param>
+		/// <param name="parent">The new parent object.</param>
+		/// <returns>The game object, for call chaining.</returns>
+		public static GameObject SetParent(this GameObject child, GameObject parent) {
+			if (child == null)
+				throw new ArgumentNullException("child");
+#pragma warning disable IDE0031 // Use null propagation
+			child.transform.SetParent((parent == null) ? null : parent.transform, false);
+#pragma warning restore IDE0031 // Use null propagation
+			return child;
+		}
+
+		/// <summary>
 		/// Uses Traverse to set a private property of an object.
 		/// </summary>
 		/// <param name="root">The object on which to set the property.</param>

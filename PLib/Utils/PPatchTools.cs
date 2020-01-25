@@ -454,7 +454,7 @@ namespace PeterHan.PLib {
 			foreach (var instruction in method) {
 				var opcode = instruction.opcode;
 				if ((opcode == OpCodes.Call || opcode == OpCodes.Calli || opcode == OpCodes.
-						Callvirt) && instruction.operand == victim) {
+						Callvirt) && (instruction.operand as MethodInfo) == victim) {
 					if (newMethod != null) {
 						// Replace with new method
 						instruction.opcode = newMethod.IsStatic ? OpCodes.Call :

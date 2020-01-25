@@ -98,7 +98,7 @@ namespace PeterHan.SweepByType {
 			if (TypeSelect != null) {
 				var root = TypeSelect.RootPanel;
 				TypeSelect.Update();
-				PUIElements.SetParent(root, menu.gameObject);
+				root.SetParent(menu.gameObject);
 				root.transform.SetAsFirstSibling();
 			}
 			menu.PriorityScreen.Show(true);
@@ -118,7 +118,7 @@ namespace PeterHan.SweepByType {
 			var menu = ToolMenu.Instance;
 			// Unparent but do not dispose
 			if (TypeSelect != null)
-				PUIElements.SetParent(TypeSelect.RootPanel, null);
+				TypeSelect.RootPanel.SetParent(null);
 			menu.PriorityScreen.Show(false);
 			base.OnDeactivateTool(newTool);
 		}

@@ -294,13 +294,11 @@ namespace PeterHan.SweepByType {
 					int index = children.IndexOfKey(category) << 1;
 					GameObject header = current.Header, panel = current.ChildPanel;
 					// Header goes in even indexes, panel goes in odds
-					PUIElements.SetParent(header, childPanel);
-					PUIElements.SetAnchors(header, PUIAnchoring.Stretch,
-						PUIAnchoring.Stretch);
+					header.SetParent(childPanel);
+					PUIElements.SetAnchors(header, PUIAnchoring.Stretch, PUIAnchoring.Stretch);
 					header.transform.SetSiblingIndex(index);
-					PUIElements.SetParent(panel, childPanel);
-					PUIElements.SetAnchors(panel, PUIAnchoring.Stretch,
-						PUIAnchoring.Stretch);
+					panel.SetParent(childPanel);
+					PUIElements.SetAnchors(panel, PUIAnchoring.Stretch, PUIAnchoring.Stretch);
 					panel.transform.SetSiblingIndex(index + 1);
 				}
 				foreach (var element in found)
@@ -440,7 +438,7 @@ namespace PeterHan.SweepByType {
 					// Add the element to the list, then get its index and move it in the panel
 					// to maintain sorted order
 					children.Add(element, child);
-					PUIElements.SetParent(cb, ChildPanel);
+					cb.SetParent(ChildPanel);
 					if (PCheckBox.GetCheckState(cb) == PCheckBox.STATE_CHECKED)
 						// Set to checked
 						PCheckBox.SetCheckState(cb, PCheckBox.STATE_CHECKED);

@@ -56,12 +56,15 @@ namespace PeterHan.FallingSand {
 		public void CheckDigQueue(int cell) {
 			if (digCells.TryGetValue(cell, out PrioritySetting priority)) {
 				Prioritizable component;
-				// Assign priority to the dig
-				var obj = DigTool.PlaceDig(cell);
 				var xy = Grid.CellToXY(cell);
-				PUtil.LogDebug("Placed dig in cell ({0:D},{1:D})".F(xy.X, xy.Y));
-				if (obj != null && (component = obj.GetComponent<Prioritizable>()) != null)
-					component.SetMasterPriority(priority);
+				// Assign priority to the dig
+				if (Grid.IsSolidCell(cell)) {
+					var obj = DigTool.PlaceDig(cell);
+					PUtil.LogDebug("Placed dig in cell ({0:D},{1:D})".F(xy.X, xy.Y));
+					if ((component = obj.GetComponentSafe<Prioritizable>()) != null)
+						component.SetMasterPriority(priority);
+				} else
+					PUtil.LogDebug("Could not place dig in cell ({0:D},{1:D})".F(xy.X, xy.Y));
 				digCells.Remove(cell);
 			}
 		}

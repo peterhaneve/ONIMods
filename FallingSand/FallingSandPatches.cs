@@ -90,20 +90,18 @@ namespace PeterHan.FallingSand {
 				int n = ___fallingObjects.Count;
 				GameObject obj;
 				Diggable cause;
-				if (n > 0 && (obj = ___fallingObjects[n - 1].gameObject) != null) {
-					// Actually caused by digging?
-					if ((cause = FallingSandManager.Instance.FindDigErrand(cell)) != null &&
-							cause.gameObject != null) {
-						// Should never be null since object was just spawned
-						var component = obj.AddComponent<FallFromDigging>();
-						var xy = Grid.CellToXY(cell);
-						PUtil.LogDebug("Digging induced: {0} @ ({1:D},{2:D})".F(obj.name,
-							xy.X, xy.Y));
-						// Unity equals operator strikes again
-						var digPri = cause.gameObject.GetComponent<Prioritizable>();
-						if (digPri != null)
-							component.Priority = digPri.GetMasterPriority();
-					}
+				// Actually caused by digging?
+				if (n > 0 && (obj = ___fallingObjects[n - 1].gameObject) != null &&
+						(cause = FallingSandManager.Instance.FindDigErrand(cell)) != null) {
+					// Should never be null since object was just spawned
+					var component = obj.AddComponent<FallFromDigging>();
+					var xy = Grid.CellToXY(cell);
+					PUtil.LogDebug("Digging induced: {0} @ ({1:D},{2:D})".F(obj.name,
+						xy.X, xy.Y));
+					// Unity equals operator strikes again
+					var digPri = cause.gameObject.GetComponentSafe<Prioritizable>();
+					if (digPri != null)
+						component.Priority = digPri.GetMasterPriority();
 				}
 			}
 		}
