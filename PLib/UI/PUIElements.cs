@@ -81,12 +81,12 @@ namespace PeterHan.PLib.UI {
 		/// <param name="horizAnchor">How to anchor the object horizontally.</param>
 		/// <param name="vertAnchor">How to anchor the object vertically.</param>
 		/// <returns>The UI object with transform and canvas initialized.</returns>
-		internal static GameObject CreateUI(GameObject parent, string name, bool canvas = true,
+		public static GameObject CreateUI(GameObject parent, string name, bool canvas = true,
 				PUIAnchoring horizAnchor = PUIAnchoring.Stretch,
 				PUIAnchoring vertAnchor = PUIAnchoring.Stretch) {
 			var element = new GameObject(name);
 			if (parent != null)
-				SetParent(element, parent);
+				element.SetParent(parent);
 			// Size and position
 			var transform = element.AddOrGet<RectTransform>();
 			transform.localScale = Vector3.one;
@@ -236,13 +236,9 @@ namespace PeterHan.PLib.UI {
 		/// <param name="child">The UI element to modify.</param>
 		/// <param name="parent">The new parent object.</param>
 		/// <returns>The UI element, for call chaining.</returns>
+		[Obsolete("Use the GameObject.SetParent(GameObject) extension method")]
 		public static GameObject SetParent(GameObject child, GameObject parent) {
-			if (child == null)
-				throw new ArgumentNullException("child");
-#pragma warning disable IDE0031 // Use null propagation
-			child.transform.SetParent((parent == null) ? null : parent.transform, false);
-#pragma warning restore IDE0031 // Use null propagation
-			return child;
+			return child.SetParent(parent);
 		}
 
 		/// <summary>

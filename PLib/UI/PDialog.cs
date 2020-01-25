@@ -115,7 +115,7 @@ namespace PeterHan.PLib.UI {
 			var dialog = PUIElements.CreateUI(null, Name);
 			var dComponent = dialog.AddComponent<PDialogComp>();
 			int i = 0;
-			PUIElements.SetParent(dialog, Parent);
+			dialog.SetParent(Parent);
 			// Background
 			dialog.AddComponent<Image>().color = PUITuning.Colors.DialogBackground;
 			dialog.AddComponent<Canvas>();

@@ -112,7 +112,7 @@ namespace PeterHan.PLib.UI {
 			// Add children
 			foreach (var child in children) {
 				var obj = child.Build();
-				PUIElements.SetParent(obj, panel);
+				obj.SetParent(panel);
 				PUIElements.SetAnchors(obj, PUIAnchoring.Stretch, PUIAnchoring.Stretch);
 			}
 			// Add layout component

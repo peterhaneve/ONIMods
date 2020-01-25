@@ -67,48 +67,19 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// Adds the specified side screen content to the side screen list. The side screen
 		/// behavior should be defined in a class inherited from SideScreenContent.
+		/// 
+		/// The side screen will be added at the end of the list, which will cause it to
+		/// appear previous side screens in the details panel.
 		/// </summary>
 		/// <typeparam name="T">The type of the controller that will determine how the side
 		/// screen works. A new instance will be created and added as a component to the new
 		/// side screen.</typeparam>
 		/// <param name="uiPrefab">The UI prefab to use. If null is passed, the UI should
 		/// be created and added to the GameObject hosting the controller object in its
-		/// OnPrefabInit function.</param>
+		/// constructor.</param>
 		public static void AddSideScreenContent<T>(GameObject uiPrefab = null)
 				where T : SideScreenContent {
-			var inst = DetailsScreen.Instance;
-			if (inst == null)
-				LogUIWarning("DetailsScreen is not yet initialized, try a postfix on " +
-					"DetailsScreen.OnPrefabInit");
-			else {
-				var trInst = Traverse.Create(inst);
-				// These are private fields
-				var ss = trInst.GetField<List<SideScreenRef>>("sideScreens");
-				var body = trInst.GetField<GameObject>("sideScreenContentBody");
-				string name = typeof(T).Name;
-				if (ss != null && body != null) {
-					// The ref normally contains a prefab which is instantiated
-					var newScreen = new SideScreenRef();
-					// Mimic the basic screens
-					var rootObject = new GameObject(name);
-					PUIElements.SetParent(rootObject, body);
-					rootObject.AddComponent<LayoutElement>();
-					rootObject.AddComponent<VerticalLayoutGroup>();
-					rootObject.AddComponent<CanvasRenderer>();
-					var controller = rootObject.AddComponent<T>();
-					if (uiPrefab != null) {
-						// Add prefab if supplied
-						controller.ContentContainer = uiPrefab;
-						uiPrefab.transform.parent = rootObject.transform;
-					}
-					newScreen.name = name;
-					// Never used
-					newScreen.offset = Vector2.zero;
-					newScreen.screenPrefab = controller;
-					newScreen.screenInstance = controller;
-					ss.Add(newScreen);
-				}
-			}
+			AddSideScreenContentWithOrdering<T>(null, true, uiPrefab);
 		}
 
 		/// <summary>
@@ -118,18 +89,23 @@ namespace PeterHan.PLib.UI {
 		/// <typeparam name="T">The type of the controller that will determine how the side
 		/// screen works. A new instance will be created and added as a component to the new
 		/// side screen.</typeparam>
-		/// <param name="fullName">The full name of the type of side screen to based to ordering 
+		/// <param name="targetClassName">The full name of the type of side screen to based to ordering 
 		/// around. An example of how this method can be used is:
-		/// `AddSideScreenContentWithOrdering<MySideScreen>(typeof(CapacityControlSideScreen).FullName);`
-		/// Notice that you want to use `typeof(TargetedSideScreen).FullName` as the value of this parameter</param>
-		/// <param name="insertBefore">Boolean flag if we should insert before or after the targeted side screen
-		/// in the list. Defaults to before. When inserting before the screen, if both are valid for a building
-		/// then the side screen of type "T" will show below the one of type "fullName". When inserting after
+		/// `AddSideScreenContentWithOrdering&lt;MySideScreen&gt;(typeof(CapacityControlSideScreen).FullName);`
+		/// `typeof(TargetedSideScreen).FullName` is the suggested value of this parameter.
+		/// Side screens from other mods can be used with their qualified names, even if no
+		/// no reference to their type is available, but the target mod must have added their
+		/// custom side screen to the list first.</param>
+		/// <param name="insertBefore">Whether to insert the new screen before or after the
+		/// target side screen in the list. Defaults to before (true).
+		/// When inserting before the screen, if both are valid for a building then the side
+		/// screen of type "T" will show below the one of type "fullName". When inserting after
 		/// the screen, the reverse is true.</param>
 		/// <param name="uiPrefab">The UI prefab to use. If null is passed, the UI should
 		/// be created and added to the GameObject hosting the controller object in its
-		/// OnPrefabInit function.</param>
-		public static void AddSideScreenContentWithOrdering<T>(string fullName, bool insertBefore = true, GameObject uiPrefab = null)
+		/// constructor.</param>
+		public static void AddSideScreenContentWithOrdering<T>(string targetClassName,
+				bool insertBefore = true, GameObject uiPrefab = null)
 				where T : SideScreenContent {
 			var inst = DetailsScreen.Instance;
 			if (inst == null)
@@ -138,15 +114,15 @@ namespace PeterHan.PLib.UI {
 			else {
 				var trInst = Traverse.Create(inst);
 				// These are private fields
-				var ss = trInst.GetField<List<SideScreenRef>>("sideScreens");
+				var screens = trInst.GetField<List<SideScreenRef>>("sideScreens");
 				var body = trInst.GetField<GameObject>("sideScreenContentBody");
 				string name = typeof(T).Name;
-				if (ss != null && body != null) {
+				if (body != null && screens != null) {
 					// The ref normally contains a prefab which is instantiated
 					var newScreen = new SideScreenRef();
 					// Mimic the basic screens
 					var rootObject = new GameObject(name);
-					PUIElements.SetParent(rootObject, body);
+					rootObject.SetParent(body);
 					rootObject.AddComponent<LayoutElement>();
 					rootObject.AddComponent<VerticalLayoutGroup>();
 					rootObject.AddComponent<CanvasRenderer>();
@@ -157,33 +133,11 @@ namespace PeterHan.PLib.UI {
 						uiPrefab.transform.parent = rootObject.transform;
 					}
 					newScreen.name = name;
-					// Never used
+					// Offset is never used
 					newScreen.offset = Vector2.zero;
 					newScreen.screenPrefab = controller;
 					newScreen.screenInstance = controller;
-					foreach (var screen in ss) {
-						SideScreenContent[] screens = screen.screenPrefab.GetComponentsInChildren<SideScreenContent>();
-						if (screens.Length < 1) {
-							PUtil.LogError($"Could not find SideScreenContent on side screen named {screen.name}");
-							continue;
-						}
-
-						SideScreenContent content = screens[0];
-						if (content.GetType().FullName == fullName) {
-							// once we find first matching screen we perform insertion and are done so return method to exit
-							int index = ss.IndexOf(screen);
-							if (insertBefore) {
-								ss.Insert(index, newScreen);
-							} else {
-								if (index + 1 >= ss.Count)
-									ss.Add(newScreen);
-								else
-									ss.Insert(index + 1, newScreen);
-							}
-							return;
-						}
-					}
-
+					InsertSideScreenContent(screens, newScreen, targetClassName, insertBefore);
 				}
 			}
 		}
@@ -202,7 +156,7 @@ namespace PeterHan.PLib.UI {
 			if (parent == null)
 				throw new ArgumentNullException("parent");
 			var child = component.Build();
-			PUIElements.SetParent(child, parent);
+			child.SetParent(parent);
 			if (index == -1)
 				child.transform.SetAsLastSibling();
 			else if (index >= 0)
@@ -358,6 +312,54 @@ namespace PeterHan.PLib.UI {
 		/// <returns>true if it specifies to ignore layout, or false otherwise.</returns>
 		internal static bool IgnoreLayout(object component) {
 			return (component as ILayoutIgnorer)?.ignoreLayout ?? false;
+		}
+
+		/// <summary>
+		/// Inserts the side screen at the target location.
+		/// </summary>
+		/// <param name="screens"></param>
+		/// <param name="newScreen"></param>
+		/// <param name="targetClassName"></param>
+		/// <param name="insertBefore"></param>
+		private static void InsertSideScreenContent(IList<SideScreenRef> screens,
+				SideScreenRef newScreen, string targetClassName, bool insertBefore) {
+			if (screens == null)
+				throw new ArgumentNullException("screens");
+			if (newScreen == null)
+				throw new ArgumentNullException("newScreen");
+			if (string.IsNullOrEmpty(targetClassName))
+				// Add to end by default
+				screens.Add(newScreen);
+			else {
+				int n = screens.Count;
+				bool found = false;
+				for (int i = 0; i < n; i++) {
+					var screen = screens[i];
+					var contents = screen.screenPrefab?.GetComponentsInChildren<
+						SideScreenContent>();
+					if (contents == null || contents.Length < 1)
+						// Some naughty mod added a prefab with no side screen content!
+						PUtil.LogWarning("Could not find SideScreenContent on side screen: " +
+							screen.name);
+					else if (contents[0].GetType().FullName == targetClassName) {
+						// Once the first matching screen is found, perform insertion
+						if (insertBefore)
+							screens.Insert(i, newScreen);
+						else if (i >= n - 1)
+							screens.Add(newScreen);
+						else
+							screens.Insert(i + 1, newScreen);
+						found = true;
+						break;
+					}
+				}
+				// Warn if no match found
+				if (!found) {
+					PUtil.LogWarning("No side screen with class name {0} found!".F(
+						targetClassName));
+					screens.Add(newScreen);
+				}
+			}
 		}
 
 		/// <summary>

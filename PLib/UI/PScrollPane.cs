@@ -109,8 +109,8 @@ namespace PeterHan.PLib.UI {
 			var child = Child.Build();
 			child.AddOrGet<Canvas>().pixelPerfect = false;
 			child.AddOrGet<GraphicRaycaster>();
-			PUIElements.SetAnchors(PUIElements.SetParent(child, viewport), PUIAnchoring.
-				Beginning, PUIAnchoring.End);
+			PUIElements.SetAnchors(child.SetParent(viewport), PUIAnchoring.Beginning,
+				PUIAnchoring.End);
 			scroll.content = child.rectTransform();
 			pane.SetActive(true);
 			// Vertical scrollbar
@@ -137,8 +137,10 @@ namespace PeterHan.PLib.UI {
 		private Scrollbar CreateScrollHoriz(GameObject parent) {
 			// Outer scrollbar
 			var track = PUIElements.CreateUI(parent, "Scrollbar H", true, PUIAnchoring.Stretch,
-				PUIAnchoring.End);
-			track.AddComponent<Image>().sprite = PUITuning.Images.ScrollBorderHorizontal;
+				PUIAnchoring.Beginning);
+			var bg = track.AddComponent<Image>();
+			bg.sprite = PUITuning.Images.ScrollBorderHorizontal;
+			bg.type = Image.Type.Sliced;
 			// Scroll track
 			var sb = track.AddComponent<Scrollbar>();
 			sb.interactable = true;
@@ -149,10 +151,11 @@ namespace PeterHan.PLib.UI {
 			var area = PUIElements.CreateUI(track, "Sliding Area", false);
 			// Handle
 			var handle = PUIElements.CreateUI(area, "Handle", true, PUIAnchoring.Stretch,
-				PUIAnchoring.Beginning);
+				PUIAnchoring.End);
 			sb.handleRect = handle.rectTransform();
 			var hImg = handle.AddComponent<Image>();
 			hImg.sprite = PUITuning.Images.ScrollHandleHorizontal;
+			hImg.type = Image.Type.Sliced;
 			sb.targetGraphic = hImg;
 			track.SetActive(true);
 			// Sizing
@@ -170,7 +173,9 @@ namespace PeterHan.PLib.UI {
 			// Outer scrollbar
 			var track = PUIElements.CreateUI(parent, "Scrollbar V", true, PUIAnchoring.End,
 				PUIAnchoring.Stretch);
-			track.AddComponent<Image>().sprite = PUITuning.Images.ScrollBorderVertical;
+			var bg = track.AddComponent<Image>();
+			bg.sprite = PUITuning.Images.ScrollBorderVertical;
+			bg.type = Image.Type.Sliced;
 			// Scroll track
 			var sb = track.AddComponent<Scrollbar>();
 			sb.interactable = true;
@@ -185,6 +190,7 @@ namespace PeterHan.PLib.UI {
 			sb.handleRect = handle.rectTransform();
 			var hImg = handle.AddComponent<Image>();
 			hImg.sprite = PUITuning.Images.ScrollHandleVertical;
+			hImg.type = Image.Type.Sliced;
 			sb.targetGraphic = hImg;
 			track.SetActive(true);
 			// Sizing
