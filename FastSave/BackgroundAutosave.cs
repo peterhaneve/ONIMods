@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using UnityEngine;
+
 using ButtonInfo = KButtonMenu.ButtonInfo;
 using PAUSE_SCREEN = STRINGS.UI.FRONTEND.PAUSE_SCREEN;
 
@@ -145,7 +146,6 @@ namespace PeterHan.FastSave {
 		/// </summary>
 		/// <param name="filename">The file name that is being saved.</param>
 		private void CleanAutosaves(string filename) {
-			RetireColonyUtility.SaveColonySummaryData();
 			if (!Klei.GenericGameSettings.instance.keepAllAutosaves) {
 				var saveFiles = SaveLoader.GetSaveFiles(Path.GetDirectoryName(filename));
 				// Clean up old autosaves and their preview images
@@ -251,6 +251,8 @@ namespace PeterHan.FastSave {
 					PUtil.LogException(e);
 					save = false;
 				}
+				// In Unity 4 GetComponent no longer works on background threads
+				RetireColonyUtility.SaveColonySummaryData();
 				if (save)
 					StartSave(new BackgroundSaveData(buffer, compress, filename));
 			}

@@ -73,7 +73,8 @@ namespace PeterHan.PLib {
 		/// <param name="item">The key binding to retrieve.</param>
 		/// <returns>The Strings entry describing this key binding.</returns>
 		private static string GetBindingTitle(string category, string item) {
-			return "STRINGS.INPUT_BINDINGS." + category.ToUpper() + "." + item.ToUpper();
+			return "STRINGS.INPUT_BINDINGS." + category.ToUpperInvariant() + "." + item.
+				ToUpperInvariant();
 		}
 
 		/// <summary>

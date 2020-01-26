@@ -22,7 +22,7 @@ namespace PeterHan.SmartPumps {
 	/// </summary>
 	static class SmartPumpsStrings {
 		// Filtered Gas Pump
-		public static LocString GASPUMP_NAME = "Filtered Gas Pump";
+		public static LocString GASPUMP_NAME = STRINGS.UI.FormatAsLink("Filtered Gas Pump", FilteredGasPumpConfig.ID);
 		public static LocString GASPUMP_DESCRIPTION = "Rumors hold that hidden behind the parts from discarded Carbon Skimmers used in this pump is a demon with a pair of chopsticks, picking gas molecules from the air forever and ever.";
 		public static LocString GASPUMP_EFFECT = string.Concat("Draws in only the specified ",
 			STRINGS.UI.FormatAsLink("Gas", "ELEMENTS_GAS"),
@@ -33,7 +33,7 @@ namespace PeterHan.SmartPumps {
 			".");
 
 		// Filtered Liquid Pump
-		public static LocString LIQUIDPUMP_NAME = "Filtered Liquid Pump";
+		public static LocString LIQUIDPUMP_NAME = STRINGS.UI.FormatAsLink("Filtered Liquid Pump", FilteredLiquidPumpConfig.ID);
 		public static LocString LIQUIDPUMP_DESCRIPTION = "Scarred by nightmares of mixed liquid pools, an obsessive colony AI commissioned this pump with an attached Element Sensor in an attempt to purge this heresy forever.";
 		public static LocString LIQUIDPUMP_EFFECT = string.Concat("Draws in only the specified ",
 			STRINGS.UI.FormatAsLink("Liquid", "ELEMENTS_LIQUID"),
@@ -44,7 +44,7 @@ namespace PeterHan.SmartPumps {
 			".");
 
 		// Vacuum Pump
-		public static LocString VACUUMPUMP_NAME = "Vacuum Pump";
+		public static LocString VACUUMPUMP_NAME = STRINGS.UI.FormatAsLink("Vacuum Pump", VacuumPumpConfig.ID);
 		public static LocString VACUUMPUMP_DESCRIPTION = "After watching a Gas Pump work all night to lower the pressure in a room from 5 mg to 4 mg, Liam decided to invent this Vacuum Pump instead of wasting his time on the Manual Generator all day.";
 		public static LocString VACUUMPUMP_EFFECT = string.Concat("Draws in low-pressure ",
 			STRINGS.UI.FormatAsLink("Gas", "ELEMENTS_GAS"),

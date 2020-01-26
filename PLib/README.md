@@ -12,41 +12,26 @@ PLib can be checked out and compiled from source (tested on Visual Studio Commun
 
 DLL releases for major versions are available in the [releases](https://github.com/peterhaneve/ONIMods/releases) page.
 
+### NuGet
+
+PLib is available as a [NuGet package](https://www.nuget.org/packages/PLib/).
+
 ## Usage
 
-PLib should be included in your mod.
-The easiest way to do this is to use ILMerge and add the PLib project or DLL as a reference in your mod project.
-ILMerge is best used as a post-build command.
+PLib must be included with mods that depend on it.
+The easiest way to do this is to use ILMerge and add the PLib project or DLL as a reference in the mod project.
+ILMerge is available as a [NuGet package](https://www.nuget.org/packages/ilmerge) and is best used as a post-build command.
 Suggested command:
 ```powershell
 "$(ILMergeConsolePath)" /ndebug /out:$(TargetName)Merged.dll $(TargetName).dll PLib.dll /targetplatform:v2,C:/Windows/Microsoft.NET/Framework64/v2.0.50727
 ```
 
 This helps ensure that each mod gets the version of PLib that it was built against, reducing the risk of breakage due to PLib changes.
+Note that if using ILMerge, all dependencies of your mod *and PLib* must be added as references to the project.
 PLib can also be packaged separately as a DLL with an individual mod.
 
-However, some parts of PLib need to be patched only once, or rely on having the latest version.
+Some parts of PLib need to be patched only once, or rely on having the latest version.
 To handle this problem, PLib uses *auto-superseding*, which only loads and patches those portions of PLib after all mods have loaded, using the latest version of PLib on the system in any mod.
-Example log information showing this feature in action:
-```
-[05:29:18.099] [1] [INFO] [PLibPatches] Candidate version 2.4.0.0 from DeselectNewMaterialsMerged
-[05:29:18.100] [1] [INFO] [PLib] Mod DeselectNewMaterialsMerged initialized, version 1.0.0.0
-[05:29:18.150] [1] [INFO] [PLibPatches] Candidate version 2.3.0.0 from FallingSandMerged
-[05:29:18.150] [1] [INFO] [PLib] Mod FallingSandMerged initialized, version 1.2.0.0
-[05:29:18.159] [1] [INFO] [PLibPatches] Candidate version 2.1.0.0 from BulkSettingsChangeMerged
-[05:29:18.160] [1] [INFO] [PLib] Mod BulkSettingsChangeMerged initialized, version 1.2.0.0
-[05:29:18.170] [1] [INFO] [PLibPatches] Candidate version 2.7.0.0 from SweepByTypeMerged
-[05:29:18.171] [1] [INFO] [PLib] Mod SweepByTypeMerged initialized, version 1.2.0.0
-[05:29:18.183] [1] [INFO] [PLib] Mod FastSaveMerged initialized, version 1.2.0.0
-[05:29:18.185] [1] [INFO] [PLib/FastSaveMerged] Registered mod options class FastSaveOptions for FastSaveMerged
-[05:29:18.195] [1] [INFO] [PLibPatches] Candidate version 2.0.0.0 from CritterInventoryMerged
-[05:29:18.196] [1] [INFO] [PLib] Mod CritterInventoryMerged initialized, version 1.4.0.0
-[05:29:18.203] [1] [INFO] [PLibPatches] Candidate version 2.5.0.0 from ClaustrophobiaMerged
-[05:29:18.203] [1] [INFO] [PLib] Mod ClaustrophobiaMerged initialized, version 1.8.0.0
-[05:29:18.216] [1] [INFO] [PLib/BulkSettingsChangeMerged] Registering 1 key binds
-[05:29:18.343] [1] [INFO] [PLibPatches] Using version 2.7.0.0
-```
-
 The accessor `PVersion.IsLatestVersion` can be used to determine if the version of PLib in a particular mod is the latest one on the system.
 This is not a guarantee that the PLib instance in a particular mod is the loaded instance if multiple mods have this latest version.
 
@@ -68,13 +53,24 @@ To write, use `PLib.Options.POptions.WriteSettings<T>(T settings)`, where again 
 
 #### Registering for the config screen
 
-PLib.Options automatically displays config menus for mods that are registered. Register a mod by invoking `POptions.RegisterOptions(Type settingtype)` in `OnLoad`. The argument should be the type of the class the mod uses for its options, and must be JSON serializable. Newtonsoft.Json is bundled with the game and can be referenced.
+PLib.Options adds configuration menus to the Mods screen for mods that are registered.
+Register a mod by invoking `POptions.RegisterOptions(Type settingtype)` in `OnLoad`.
+The argument should be the type of the class the mod uses for its options, and must be JSON serializable.
+`Newtonsoft.Json` is bundled with the game and can be referenced.
 
-Fields must be a property, not a member, and should be annotated with `PLib.Option(string displaytext, [string tooltip=""])` to be visible in the mod config menu. Currently supported types are: `int`, `float`, `string`, `bool`, and `Enum`.
+Fields must be a property, not a member, and should be annotated with `PLib.Option(string displaytext, [string tooltip=""])` to be visible in the mod config menu.
+Currently supported types are: `int`, `float`, `string`, `bool`, and `Enum`.
+
+#### Categories
+
+The optional third parameter of `Option` allows setting a custom category for the option to group related options together.
+The category name is displayed as the title for the section.
 
 #### Range limits
 
-`int` and `float` options can have validation in the form of a range limit. Annotating the property with `PLib.Limit(double min, double max)`.
+`int` and `float` options can have validation in the form of a range limit.
+Annotate the property with `PLib.Limit(double min, double max)`.
+Note that users can still enter values outside of the range manually in the configuration file.
 
 #### Example
 

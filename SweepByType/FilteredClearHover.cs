@@ -77,7 +77,7 @@ namespace PeterHan.SweepByType {
 			foreach (var selectable in selected) {
 				var cc = selectable.GetComponent<Clearable>();
 				var ec = selectable.GetComponent<PrimaryElement>();
-				// Ignore duplicants
+				// Ignore Duplicants
 				if (cc != null && cc.isClearable && ec != null && selectable.GetComponent<
 						MinionIdentity>() == null) {
 					drawer.BeginShadowBar(false);
