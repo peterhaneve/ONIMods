@@ -16,7 +16,11 @@
       <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
     
 Contains functions aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
-      <PackageReleaseNotes>Fix a localization issue in Actions. Add functions to insert custom side screens before or after a pre-existing side screen to control display order.</PackageReleaseNotes>
+      <PackageReleaseNotes>Update to .NET Framework 4 for the latest game version.
+
+All mods targeting the latest versions of Oxygen Not Included should switch to PLib 3.0 or higher. PLib 2.22 and higher from the 2.x series works on both versions.
+
+PLib 2 still correctly forwards calls to PLib 3. PLib 3 is fully source compatible with PLib 2 but is not binary compatible due to the dependency updates.</PackageReleaseNotes>
       <RootNamespace>PeterHan.PLib</RootNamespace>
       <AssemblyVersion>3.0.0.0</AssemblyVersion>
       <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
