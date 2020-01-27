@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net35</TargetFramework>
+    <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>One Hundred K Challenge</AssemblyTitle>
-    <FileVersion>1.3.0.0</FileVersion>
+    <FileVersion>2.0.0.0</FileVersion>
     <RootNamespace>PeterHan.Challenge100K</RootNamespace>
     <Description>Can you survive a world with a temperature of 100 K?</Description>
-    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Asteroid_onehundredk.png" />

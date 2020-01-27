@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net35</TargetFramework>
+    <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Decor Reimagined</AssemblyTitle>
-    <FileVersion>1.4.0.0</FileVersion>
+    <FileVersion>2.0.0.0</FileVersion>
     <RootNamespace>ReimaginationTeam.DecorRework</RootNamespace>
     <Description>Reworks decor, making an attractive colony a better colony.</Description>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="buildings.json" />

@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net35</TargetFramework>
+    <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Deselect New Materials</AssemblyTitle>
-    <FileVersion>1.3.0.0</FileVersion>
+    <FileVersion>2.0.0.0</FileVersion>
     <RootNamespace>PeterHan.DeselectNewMaterials</RootNamespace>
     <Description>Deselects all newly discovered materials from storage buildings even if their category was checked.</Description>
-    <AssemblyVersion>1.3.0.0</AssemblyVersion>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
   </PropertyGroup>
 </Project>

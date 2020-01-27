@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net35</TargetFramework>
+    <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Thermal Interface Plate</AssemblyTitle>
-    <FileVersion>1.1.0.0</FileVersion>
+    <FileVersion>2.0.0.0</FileVersion>
     <RootNamespace>PeterHan.ThermalPlate</RootNamespace>
     <Description>Exchanges heat between buildings in its tile, even in Vacuum.</Description>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
   </PropertyGroup>
 </Project>

@@ -13,7 +13,7 @@
     </ItemGroup>
 
     <ILRepack 
-        TargetPlatformVersion="v2"
+        TargetPlatformVersion="v4"
         OutputType="SameAsPrimaryAssembly"
         MainAssembly="$(TargetPath)" 
         OutputAssembly="$(TargetPath)" 

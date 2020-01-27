@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net35</TargetFramework>
+    <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Falling Sand</AssemblyTitle>
-    <FileVersion>1.5.0.0</FileVersion>
+    <FileVersion>2.0.0.0</FileVersion>
     <RootNamespace>PeterHan.FallingSand</RootNamespace>
     <Description>Places Dig errands on unstable materials which fall during mining.</Description>
-    <AssemblyVersion>1.5.0.0</AssemblyVersion>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
   </PropertyGroup>
 </Project>
