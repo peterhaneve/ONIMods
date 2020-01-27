@@ -21,6 +21,9 @@ namespace PeterHan.ThermalTooltips {
 	/// Stores the strings used in Thermal Tooltips.
 	/// </summary>
 	static class ThermalTooltipsStrings {
+		// <element> [<percentage>] and <secondary element> [<percentage>]
+		public static LocString AND_JOIN = "[{0}] and ";
+
 		// State change message (fallback if icon not found)
 		public static LocString CHANGES = "Changes";
 

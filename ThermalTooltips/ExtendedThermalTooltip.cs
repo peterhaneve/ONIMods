@@ -18,7 +18,6 @@
 
 using PeterHan.PLib;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace PeterHan.ThermalTooltips {
@@ -86,17 +85,16 @@ namespace PeterHan.ThermalTooltips {
 					DisplayThermalStats(element, temperature, mass);
 					var coldElement = element.lowTempTransition;
 					// Freeze to
-					if (coldElement.IsValidTransition(element)) {
-						PrepareStateChange(spriteCold);
-						DisplayElement(coldElement, Math.Max(0.1f, element.lowTemp -
-							TRANSITION_HYSTERESIS));
-					}
+					if (coldElement.IsValidTransition(element))
+						DisplayTransition(coldElement, Math.Max(0.1f, element.lowTemp -
+							TRANSITION_HYSTERESIS), element.lowTempTransitionOreID,
+							element.lowTempTransitionOreMassConversion, spriteCold);
 					var hotElement = element.highTempTransition;
 					// Boil to
-					if (hotElement.IsValidTransition(element)) {
-						PrepareStateChange(spriteHot);
-						DisplayElement(hotElement, element.highTemp + TRANSITION_HYSTERESIS);
-					}
+					if (hotElement.IsValidTransition(element))
+						DisplayTransition(hotElement, element.highTemp + TRANSITION_HYSTERESIS,
+							element.highTempTransitionOreID,
+							element.highTempTransitionOreMassConversion, spriteHot);
 				} else
 					// Not displayed in this mode
 					DisplayTemperature(temperature);
@@ -104,18 +102,16 @@ namespace PeterHan.ThermalTooltips {
 		}
 
 		/// <summary>
-		/// Displays the information about the element transition temperature.
+		/// Displays an element and its icon.
 		/// </summary>
-		/// <param name="newElement">The element to which it transitions.</param>
-		/// <param name="temp">The temperature when it occurs.</param>
-		private void DisplayElement(Element newElement, float temp) {
-			var prefab = Assets.GetPrefab(newElement.tag);
+		/// <param name="element">The element to display.</param>
+		private void DisplayElement(Element element) {
+			var prefab = Assets.GetPrefab(element.tag);
 			Tuple<Sprite, Color> pair;
 			// Extract the UI preview image
 			if (prefab != null && (pair = Def.GetUISprite(prefab)) != null)
 				Drawer.DrawIcon(pair.first, pair.second);
-			Drawer.DrawText("{0:##0.#} ({1})".F(newElement.name, GameUtil.
-				GetFormattedTemperature(temp)), Style);
+			Drawer.DrawText(element.name, Style);
 		}
 
 		/// <summary>
@@ -166,17 +162,38 @@ namespace PeterHan.ThermalTooltips {
 		}
 
 		/// <summary>
-		/// Displays the tooltip text for phase change.
+		/// Displays the information about the element transition temperature.
 		/// </summary>
+		/// <param name="newElement">The element to which it transitions.</param>
+		/// <param name="temp">The temperature when it occurs.</param>
+		/// <param name="altElement">The secondary element produced as a byproduct.</param>
+		/// <param name="ratio">The ratio of the secondary element by mass.</param>
 		/// <param name="sprite">The sprite to display for the phase change.</param>
-		private void PrepareStateChange(Sprite sprite) {
+		private void DisplayTransition(Element newElement, float temp, SimHashes altElement,
+				float ratio, Sprite sprite) {
 			Drawer.NewLine();
 			Drawer.DrawIcon(spriteDash);
+			// Fallback if sprite is missing
 			if (sprite != null)
 				Drawer.DrawIcon(sprite);
 			else
 				Drawer.DrawText(ThermalTooltipsStrings.CHANGES, Style);
 			Drawer.DrawText(ThermalTooltipsStrings.TO_JOIN, Style);
+			// Primary element
+			DisplayElement(newElement);
+			if (altElement != SimHashes.Vacuum && altElement != SimHashes.Void && ratio >
+					0.0f) {
+				var secondary = ElementLoader.FindElementByHash(altElement);
+				ratio *= 100.0f;
+				if (secondary != null) {
+					Drawer.DrawText(string.Format(ThermalTooltipsStrings.AND_JOIN, GameUtil.
+						GetFormattedPercent(100.0f - ratio)), Style);
+					DisplayElement(secondary);
+					Drawer.DrawText(string.Format("[{0}]", GameUtil.GetFormattedPercent(
+						ratio)), Style);
+				}
+			}
+			Drawer.DrawText(" ({0:##0.#})".F(GameUtil.GetFormattedTemperature(temp)), Style);
 		}
 	}
 }

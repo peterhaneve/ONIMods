@@ -46,11 +46,11 @@ namespace PeterHan.ThermalTooltips {
 		/// </summary>
 		private static void AddThermalInfoElements(HoverTextDrawer drawer, string _,
 				TextStyleSetting style, int cell) {
-			if (Grid.IsValidCell(cell)) {
+			var instance = ThermalTooltipsPatches.TooltipInstance;
+			if (instance != null && Grid.IsValidCell(cell)) {
 				var element = Grid.Element[cell];
 				float mass = Grid.Mass[cell];
-				var instance = ThermalTooltipsPatches.TooltipInstance;
-				if (instance != null && element != null && mass > 0.0f) {
+				if (element != null && mass > 0.0f) {
 					instance.Drawer = drawer;
 					instance.Style = style;
 					instance.AddThermalInfo(element, Grid.Temperature[cell], mass);
@@ -118,7 +118,6 @@ namespace PeterHan.ThermalTooltips {
 			object peOperand = null, lastLdloc = null;
 			CodeInstruction loadCell = null, lastInstruction = null;
 			foreach (var instruction in method) {
-				bool passThru = true;
 				var opcode = instruction.opcode;
 				var callee = instruction.operand as MethodInfo;
 				// This is the PrimaryElement local variable which will be used
@@ -132,7 +131,7 @@ namespace PeterHan.ThermalTooltips {
 					if (opcode == OpCodes.Callvirt && elementTemp != null && callee ==
 							elementTemp)
 						peOperand = lastLdloc;
-					// Looking for the first call to GameUtil.GetFormattedTemperature
+					// Look for the first call to GameUtil.GetFormattedTemperature
 					else if (opcode == OpCodes.Call && marker != null && callee == marker)
 						state = (drawText == null) ? State.DONE : State.WAIT_FIRST;
 					break;
@@ -147,14 +146,14 @@ namespace PeterHan.ThermalTooltips {
 							yield return new CodeInstruction(OpCodes.Ldloc_S, peOperand);
 							// Call our method
 							PUtil.LogDebug("Patched UpdateHoverElements (Buildings)");
-							yield return new CodeInstruction(OpCodes.Call, handlerBuild);
-							passThru = false;
+							instruction.opcode = OpCodes.Call;
+							instruction.operand = handlerBuild;
 						}
 						state = State.NEED_SECOND;
 					}
 					break;
 				case State.NEED_SECOND:
-					// Looking for the second call to GameUtil.GetFormattedTemperature
+					// Look for the second call to GameUtil.GetFormattedTemperature
 					if (opcode == OpCodes.Call && callee == marker)
 						state = State.WAIT_SECOND;
 					break;
@@ -169,8 +168,8 @@ namespace PeterHan.ThermalTooltips {
 								operand);
 							// Call our method
 							PUtil.LogDebug("Patched UpdateHoverElements (Elements)");
-							yield return new CodeInstruction(OpCodes.Call, handlerElements);
-							passThru = false;
+							instruction.opcode = OpCodes.Call;
+							instruction.operand = handlerElements;
 						}
 						state = State.DONE;
 					}
@@ -178,8 +177,7 @@ namespace PeterHan.ThermalTooltips {
 				default:
 					break;
 				}
-				if (passThru)
-					yield return instruction;
+				yield return instruction;
 				lastInstruction = instruction;
 			}
 		}
