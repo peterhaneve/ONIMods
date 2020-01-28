@@ -95,7 +95,7 @@ namespace PeterHan.ThermalTooltips {
 			/// </summary>
 			internal static IEnumerable<CodeInstruction> Transpiler(
 					IEnumerable<CodeInstruction> method) {
-				return new ThermalTooltipTranspilerPatch().DoTranspile(method);
+				return new ThermalTranspilerPatch().DoTranspile(method);
 			}
 		}
 	}

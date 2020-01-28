@@ -31,16 +31,15 @@ namespace PeterHan.FallingSand {
 		/// </summary>
 		/// <param name="obj">The object which is falling.</param>
 		private static void CheckFallingObject(GameObject obj) {
-			var dig = obj.GetComponent<FallFromDigging>();
-			if (dig != null) {
-				int cell = Grid.PosToCell(obj.transform.GetPosition());
-				if (Grid.IsValidCell(cell) && Grid.IsVisible(cell)) {
-					// Did it land somewhere visible?
-					int below = Grid.CellBelow(cell);
-					if (Grid.IsValidCell(below) && (Grid.Element[below].IsSolid ||
-							(Grid.Properties[below] & 4) != 0))
-						FallingSandManager.Instance.QueueDig(cell, dig.Priority);
-				}
+			var dig = obj.GetComponentSafe<FallFromDigging>();
+			int cell;
+			if (dig != null && Grid.IsValidCell(cell = Grid.PosToCell(obj.transform.
+					GetPosition())) && Grid.IsVisible(cell)) {
+				// Did it land somewhere visible?
+				int below = Grid.CellBelow(cell);
+				if (Grid.IsValidCell(below) && (Grid.Element[below].IsSolid || (Grid.
+						Properties[below] & (int)Sim.Cell.Properties.SolidImpermeable) != 0))
+					FallingSandManager.Instance.QueueDig(cell, dig.Priority);
 			}
 		}
 

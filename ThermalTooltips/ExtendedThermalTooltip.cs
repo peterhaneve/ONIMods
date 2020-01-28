@@ -31,9 +31,19 @@ namespace PeterHan.ThermalTooltips {
 		private const float TRANSITION_HYSTERESIS = 3.0f;
 
 		/// <summary>
+		/// The cell to use for element-based thermal tooltips.
+		/// </summary>
+		public int Cell { get; set; }
+
+		/// <summary>
 		/// The hover text drawer where the information will be written.
 		/// </summary>
 		public HoverTextDrawer Drawer { get; set; }
+
+		/// <summary>
+		/// The element to use for item-based thermal tooltips.
+		/// </summary>
+		public PrimaryElement PrimaryElement { get; set; }
 
 		/// <summary>
 		/// The text style to use.
@@ -62,11 +72,38 @@ namespace PeterHan.ThermalTooltips {
 
 		internal ExtendedThermalTooltip(ThermalTooltipsOptions options) {
 			this.options = options;
+			Cell = 0;
+			PrimaryElement = null;
 			Drawer = null;
 			Style = null;
 			spriteDash = Assets.GetSprite("dash");
 			spriteCold = Assets.GetSprite("crew_state_temp_down");
 			spriteHot = Assets.GetSprite("crew_state_temp_up");
+		}
+
+		/// <summary>
+		/// Displays an element and its icon.
+		/// </summary>
+		/// <param name="element">The element to display.</param>
+		/// <param name="oldElementName">The name of the base element. If it is the same as
+		/// the provided element, the state of matter will be displayed.</param>
+		private void DisplayElement(Element element, string oldElementName = null) {
+			var prefab = Assets.GetPrefab(element.tag);
+			string name = STRINGS.UI.StripLinkFormatting(element.name);
+			Tuple<Sprite, Color> pair;
+			// Extract the UI preview image
+			if (prefab != null && (pair = Def.GetUISprite(prefab)) != null)
+				Drawer.DrawIcon(pair.first, pair.second);
+			if (name == oldElementName) {
+				// Do not switch case on State, it is a bit field
+				if (element.IsLiquid)
+					name = STRINGS.ELEMENTS.STATE.LIQUID + " " + name;
+				else if (element.IsSolid)
+					name = STRINGS.ELEMENTS.STATE.SOLID + " " + name;
+				else if (element.IsGas)
+					name = STRINGS.ELEMENTS.STATE.GAS + " " + name;
+			}
+			Drawer.DrawText(name, Style);
 		}
 
 		/// <summary>
@@ -76,60 +113,34 @@ namespace PeterHan.ThermalTooltips {
 		/// <param name="element">The element that is being displayed.</param>
 		/// <param name="temperature">The element's temperature in K.</param>
 		/// <param name="mass">The element's mass in kg.</param>
-		public void AddThermalInfo(Element element, float temperature, float mass) {
+		public void DisplayThermalInfo(Element element, float temperature, float mass) {
 			if (Drawer != null && Style != null) {
 				// Ignore SHC <= 0: vacuum, void, neutronium
 				if (element != null && (SimDebugView.Instance.GetMode() == OverlayModes.
 						Temperature.ID || options?.OnlyOnThermalOverlay == false) &&
 						element.specificHeatCapacity > 0.0f) {
+					string name = STRINGS.UI.StripLinkFormatting(element.name);
 					DisplayThermalStats(element, temperature, mass);
 					var coldElement = element.lowTempTransition;
 					// Freeze to
-					if (coldElement.IsValidTransition(element))
+					if (coldElement.IsValidTransition(element)) {
+						DisplayTransitionSprite(spriteCold);
 						DisplayTransition(coldElement, Math.Max(0.1f, element.lowTemp -
 							TRANSITION_HYSTERESIS), element.lowTempTransitionOreID,
-							element.lowTempTransitionOreMassConversion, spriteCold);
+							element.lowTempTransitionOreMassConversion, name);
+					}
 					var hotElement = element.highTempTransition;
 					// Boil to
-					if (hotElement.IsValidTransition(element))
+					if (hotElement.IsValidTransition(element)) {
+						DisplayTransitionSprite(spriteHot);
 						DisplayTransition(hotElement, element.highTemp + TRANSITION_HYSTERESIS,
 							element.highTempTransitionOreID,
-							element.highTempTransitionOreMassConversion, spriteHot);
+							element.highTempTransitionOreMassConversion, name);
+					}
 				} else
 					// Not displayed in this mode
-					DisplayTemperature(temperature);
+					Drawer.DrawText(GetTemperatureString(temperature), Style);
 			}
-		}
-
-		/// <summary>
-		/// Displays an element and its icon.
-		/// </summary>
-		/// <param name="element">The element to display.</param>
-		private void DisplayElement(Element element) {
-			var prefab = Assets.GetPrefab(element.tag);
-			Tuple<Sprite, Color> pair;
-			// Extract the UI preview image
-			if (prefab != null && (pair = Def.GetUISprite(prefab)) != null)
-				Drawer.DrawIcon(pair.first, pair.second);
-			Drawer.DrawText(element.name, Style);
-		}
-
-		/// <summary>
-		/// Displays the temperature, in all units if needed.
-		/// </summary>
-		/// <param name="temp">The temperature to display.</param>
-		private void DisplayTemperature(float temp) {
-			if (options?.AllUnits == true) {
-				float f = GameUtil.GetTemperatureConvertedFromKelvin(temp, GameUtil.
-					TemperatureUnit.Fahrenheit);
-				float c = GameUtil.GetTemperatureConvertedFromKelvin(temp, GameUtil.
-					TemperatureUnit.Celsius);
-				Drawer.DrawText("{0:##0.#}{3} / {1:##0.#}{4} / {2:##0.#}{5}".F(c, f, temp,
-					STRINGS.UI.UNITSUFFIXES.TEMPERATURE.CELSIUS,
-					STRINGS.UI.UNITSUFFIXES.TEMPERATURE.FAHRENHEIT,
-					STRINGS.UI.UNITSUFFIXES.TEMPERATURE.KELVIN), Style);
-			} else
-				Drawer.DrawText(GameUtil.GetFormattedTemperature(temp), Style);
 		}
 
 		/// <summary>
@@ -142,7 +153,7 @@ namespace PeterHan.ThermalTooltips {
 			float tc = element.thermalConductivity, shc = element.specificHeatCapacity;
 			string kDTU = STRINGS.UI.UNITSUFFIXES.HEAT.KDTU.text.Trim();
 			// Temperature
-			DisplayTemperature(temp);
+			Drawer.DrawText(GetTemperatureString(temp), Style);
 			Drawer.NewLine();
 			Drawer.DrawIcon(spriteDash);
 			// Thermal conductivity
@@ -166,11 +177,34 @@ namespace PeterHan.ThermalTooltips {
 		/// </summary>
 		/// <param name="newElement">The element to which it transitions.</param>
 		/// <param name="temp">The temperature when it occurs.</param>
-		/// <param name="altElement">The secondary element produced as a byproduct.</param>
+		/// <param name="secondary">The secondary element produced as a byproduct.</param>
 		/// <param name="ratio">The ratio of the secondary element by mass.</param>
-		/// <param name="sprite">The sprite to display for the phase change.</param>
-		private void DisplayTransition(Element newElement, float temp, SimHashes altElement,
-				float ratio, Sprite sprite) {
+		/// <param name="oldName">The old element's name.</param>
+		private void DisplayTransition(Element newElement, float temp, SimHashes secondary,
+				float ratio, string oldName) {
+			// Primary element
+			DisplayElement(newElement, oldName);
+			if (secondary != SimHashes.Vacuum && secondary != SimHashes.Void && ratio > 0.0f) {
+				var altElement = ElementLoader.FindElementByHash(secondary);
+				ratio *= 100.0f;
+				if (altElement != null) {
+					// "and <other element>"
+					Drawer.DrawText(string.Format(ThermalTooltipsStrings.AND_JOIN, GameUtil.
+						GetFormattedPercent(100.0f - ratio)), Style);
+					DisplayElement(altElement, oldName);
+					Drawer.DrawText(string.Format("[{0}]", GameUtil.GetFormattedPercent(
+						ratio)), Style);
+				}
+			}
+			Drawer.DrawText(" ({0:##0.#})".F(GetTemperatureString(temp)), Style);
+		}
+
+		/// <summary>
+		/// Displays the hot or cold sprite (or the fallback text if not found) and the
+		/// required lead-in text for an element transition.
+		/// </summary>
+		/// <param name="sprite">The sprite to display.</param>
+		private void DisplayTransitionSprite(Sprite sprite) {
 			Drawer.NewLine();
 			Drawer.DrawIcon(spriteDash);
 			// Fallback if sprite is missing
@@ -179,21 +213,27 @@ namespace PeterHan.ThermalTooltips {
 			else
 				Drawer.DrawText(ThermalTooltipsStrings.CHANGES, Style);
 			Drawer.DrawText(ThermalTooltipsStrings.TO_JOIN, Style);
-			// Primary element
-			DisplayElement(newElement);
-			if (altElement != SimHashes.Vacuum && altElement != SimHashes.Void && ratio >
-					0.0f) {
-				var secondary = ElementLoader.FindElementByHash(altElement);
-				ratio *= 100.0f;
-				if (secondary != null) {
-					Drawer.DrawText(string.Format(ThermalTooltipsStrings.AND_JOIN, GameUtil.
-						GetFormattedPercent(100.0f - ratio)), Style);
-					DisplayElement(secondary);
-					Drawer.DrawText(string.Format("[{0}]", GameUtil.GetFormattedPercent(
-						ratio)), Style);
-				}
-			}
-			Drawer.DrawText(" ({0:##0.#})".F(GameUtil.GetFormattedTemperature(temp)), Style);
+		}
+
+		/// <summary>
+		/// Retrieves the string value of the temperature, in all units if needed.
+		/// </summary>
+		/// <param name="temp">The temperature to display.</param>
+		/// <returns>The display value of that temperature.</returns>
+		private string GetTemperatureString(float temp) {
+			string result;
+			if (options?.AllUnits == true) {
+				float f = GameUtil.GetTemperatureConvertedFromKelvin(temp, GameUtil.
+					TemperatureUnit.Fahrenheit);
+				float c = GameUtil.GetTemperatureConvertedFromKelvin(temp, GameUtil.
+					TemperatureUnit.Celsius);
+				result = "{0:##0.#}{3} / {1:##0.#}{4} / {2:##0.#}{5}".F(c, f, temp,
+					STRINGS.UI.UNITSUFFIXES.TEMPERATURE.CELSIUS,
+					STRINGS.UI.UNITSUFFIXES.TEMPERATURE.FAHRENHEIT,
+					STRINGS.UI.UNITSUFFIXES.TEMPERATURE.KELVIN);
+			} else
+				result = GameUtil.GetFormattedTemperature(temp);
+			return result;
 		}
 	}
 }
