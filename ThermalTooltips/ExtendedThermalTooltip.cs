@@ -20,6 +20,8 @@ using PeterHan.PLib;
 using System;
 using UnityEngine;
 
+using TEMP_SUFFIXES = STRINGS.UI.UNITSUFFIXES.TEMPERATURE;
+
 namespace PeterHan.ThermalTooltips {
 	/// <summary>
 	/// Displays extended thermal information tooltips on objects in-game.
@@ -93,7 +95,7 @@ namespace PeterHan.ThermalTooltips {
 			Tuple<Sprite, Color> pair;
 			// Extract the UI preview image
 			if (prefab != null && (pair = Def.GetUISprite(prefab)) != null)
-				Drawer.DrawIcon(pair.first, pair.second);
+				Drawer.DrawIcon(pair.first, pair.second, 22);
 			if (name == oldElementName) {
 				// Do not switch case on State, it is a bit field
 				if (element.IsLiquid)
@@ -209,7 +211,7 @@ namespace PeterHan.ThermalTooltips {
 			Drawer.DrawIcon(spriteDash);
 			// Fallback if sprite is missing
 			if (sprite != null)
-				Drawer.DrawIcon(sprite);
+				Drawer.DrawIcon(sprite, Color.white, 22);
 			else
 				Drawer.DrawText(ThermalTooltipsStrings.CHANGES, Style);
 			Drawer.DrawText(ThermalTooltipsStrings.TO_JOIN, Style);
@@ -223,15 +225,29 @@ namespace PeterHan.ThermalTooltips {
 		private string GetTemperatureString(float temp) {
 			string result;
 			if (options?.AllUnits == true) {
-				float f = GameUtil.GetTemperatureConvertedFromKelvin(temp, GameUtil.
-					TemperatureUnit.Fahrenheit);
-				float c = GameUtil.GetTemperatureConvertedFromKelvin(temp, GameUtil.
-					TemperatureUnit.Celsius);
-				result = "{0:##0.#}{3} / {1:##0.#}{4} / {2:##0.#}{5}".F(c, f, temp,
-					STRINGS.UI.UNITSUFFIXES.TEMPERATURE.CELSIUS,
-					STRINGS.UI.UNITSUFFIXES.TEMPERATURE.FAHRENHEIT,
-					STRINGS.UI.UNITSUFFIXES.TEMPERATURE.KELVIN);
+				string c = ThermalTooltipsStrings.TEMP_FORMAT.F(GameUtil.
+					GetTemperatureConvertedFromKelvin(temp, GameUtil.TemperatureUnit.
+					Celsius), TEMP_SUFFIXES.CELSIUS);
+				string f = ThermalTooltipsStrings.TEMP_FORMAT.F(GameUtil.
+					GetTemperatureConvertedFromKelvin(temp, GameUtil.TemperatureUnit.
+					Fahrenheit), TEMP_SUFFIXES.FAHRENHEIT);
+				string k = ThermalTooltipsStrings.TEMP_FORMAT.F(temp, TEMP_SUFFIXES.KELVIN);
+				// Put the user preferred temperature first
+				switch (GameUtil.temperatureUnit) {
+				case GameUtil.TemperatureUnit.Celsius:
+					result = ThermalTooltipsStrings.ALL_TEMPS.F(c, f, k);
+					break;
+				case GameUtil.TemperatureUnit.Fahrenheit:
+					result = ThermalTooltipsStrings.ALL_TEMPS.F(f, c, k);
+					break;
+				case GameUtil.TemperatureUnit.Kelvin:
+				default:
+					// No k, f, c for you!
+					result = ThermalTooltipsStrings.ALL_TEMPS.F(k, c, f);
+					break;
+				}
 			} else
+				// Single unit OR DisplayAllTemps
 				result = GameUtil.GetFormattedTemperature(temp);
 			return result;
 		}

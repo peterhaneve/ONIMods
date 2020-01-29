@@ -20,6 +20,7 @@ using Harmony;
 using PeterHan.PLib;
 using PeterHan.PLib.Datafiles;
 using PeterHan.PLib.Options;
+using System;
 using System.Collections.Generic;
 
 namespace PeterHan.ThermalTooltips {
@@ -79,8 +80,17 @@ namespace PeterHan.ThermalTooltips {
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
 			internal static void Postfix() {
-				TooltipInstance = new ExtendedThermalTooltip(POptions.
-					ReadSettings<ThermalTooltipsOptions>());
+				var options = POptions.ReadSettings<ThermalTooltipsOptions>();
+				// Check for DisplayAllTemps
+				try {
+					if (Type.GetType("DisplayAllTemps.State, DisplayAllTemps", false) != null) {
+						// Let Display All Temps take over display (ironically setting AllUnits
+						// to FALSE) since it patches GetFormattedTemperature
+						PUtil.LogDebug("DisplayAllTemps compatibility activated");
+						options.AllUnits = false;
+					}
+				} catch { }
+				TooltipInstance = new ExtendedThermalTooltip(options);
 				PUtil.LogDebug("Created ExtendedThermalTooltip");
 			}
 		}

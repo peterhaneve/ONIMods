@@ -21,6 +21,9 @@ namespace PeterHan.ThermalTooltips {
 	/// Stores the strings used in Thermal Tooltips.
 	/// </summary>
 	static class ThermalTooltipsStrings {
+		// The string used to display all temperature units
+		internal const string ALL_TEMPS = "{0} / {1} / {2}";
+
 		// <element> [<percentage>] and <secondary element> [<percentage>]
 		public static LocString AND_JOIN = "[{0}] and ";
 
@@ -29,6 +32,9 @@ namespace PeterHan.ThermalTooltips {
 
 		// Total heat energy in kDTU
 		public static LocString HEAT_ENERGY = "Heat Energy: {0:##0.#} {1}";
+
+		// Format to use for temperature values (including suffix)
+		internal const string TEMP_FORMAT = "{0:##0.#}{1}";
 
 		// Thermal mass is the amount of kDTU required to shift by 1 degree C/K/F
 		public static LocString THERMAL_MASS = "Thermal Mass: {0:##0.#} {1}/{2}";
