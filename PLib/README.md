@@ -60,11 +60,13 @@ The argument should be the type of the class the mod uses for its options, and m
 
 Fields must be a property, not a member, and should be annotated with `PLib.Option(string displaytext, [string tooltip=""])` to be visible in the mod config menu.
 Currently supported types are: `int`, `float`, `string`, `bool`, and `Enum`.
+If a valid localization string key name is used for `displaytext` (such as `STRINGS.YOURMOD.OPTIONS.YOUROPTION`), the localized value of that string from the strings database is used as the display text.
 
 #### Categories
 
 The optional third parameter of `Option` allows setting a custom category for the option to group related options together.
 The category name is displayed as the title for the section.
+If a valid localization string key name is used for the category (such as `STRINGS.YOURMOD.OPTIONS.YOURCATEGORY`), the localized value of that string from the strings database is used as the title.
 
 #### Range limits
 
