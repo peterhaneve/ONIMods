@@ -4,7 +4,7 @@
     <TargetFramework>net40</TargetFramework>
     <Title>PeterHan.PLib</Title>
       <AssemblyTitle>PeterHanLib</AssemblyTitle>
-      <Version>3.0.0.0</Version>
+      <Version>3.0.1.0</Version>
       <UsesPLib>false</UsesPLib>
       <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
       <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
@@ -22,7 +22,7 @@ All mods targeting the latest versions of Oxygen Not Included should switch to P
 
 PLib 2 still correctly forwards calls to PLib 3. PLib 3 is fully source compatible with PLib 2 but is not binary compatible due to the dependency updates.</PackageReleaseNotes>
       <RootNamespace>PeterHan.PLib</RootNamespace>
-      <AssemblyVersion>3.0.0.0</AssemblyVersion>
+      <AssemblyVersion>3.0.1.0</AssemblyVersion>
       <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
       <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>

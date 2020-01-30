@@ -99,6 +99,14 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
+		/// Saves the mod enabled settings and restarts the game.
+		/// </summary>
+		private static void SaveAndRestart() {
+			Global.Instance?.modManager?.Save();
+			App.instance.Restart();
+		}
+
+		/// <summary>
 		/// The currently active dialog.
 		/// </summary>
 		private KScreen dialog;
@@ -181,7 +189,7 @@ namespace PeterHan.PLib.Options {
 				if (restartRequired)
 					// Prompt user to restart
 					PUIElements.ShowConfirmDialog(null, POptions.RESTART_REQUIRED,
-						App.instance.Restart, null, POptions.RESTART_OK, POptions.
+						SaveAndRestart, null, POptions.RESTART_OK, POptions.
 						RESTART_CANCEL);
 			}
 		}

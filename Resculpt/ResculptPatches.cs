@@ -18,7 +18,6 @@
 
 using Harmony;
 using PeterHan.PLib;
-using UnityEngine;
 
 namespace PeterHan.Resculpt {
 	/// <summary>
@@ -30,122 +29,21 @@ namespace PeterHan.Resculpt {
 		}
 
 		/// <summary>
-		/// Applied to CanvasConfig to allow repainting.
+		/// Applied to Artable to allow repainting.
 		/// </summary>
-		[HarmonyPatch(typeof(CanvasConfig), "DoPostConfigureComplete")]
-		public static class CanvasConfig_DoPostConfigureComplete_Patch {
+		[HarmonyPatch(typeof(Artable), "OnSpawn")]
+		public static class Artable_OnSpawn_Patch {
 			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddOrGet<Resculptable>().ButtonText = ResculptStrings.REPAINT_BUTTON;
-			}
-		}
-
-		/// <summary>
-		/// Applied to CanvasTallConfig to allow repainting.
-		/// </summary>
-		[HarmonyPatch(typeof(CanvasTallConfig), "DoPostConfigureComplete")]
-		public static class CanvasTallConfig_DoPostConfigureComplete_Patch {
-			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddOrGet<Resculptable>().ButtonText = ResculptStrings.REPAINT_BUTTON;
-			}
-		}
-
-		/// <summary>
-		/// Applied to CanvasWideConfig to allow repainting.
-		/// </summary>
-		[HarmonyPatch(typeof(CanvasWideConfig), "DoPostConfigureComplete")]
-		public static class CanvasWideConfig_DoPostConfigureComplete_Patch {
-			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddOrGet<Resculptable>().ButtonText = ResculptStrings.REPAINT_BUTTON;
-			}
-		}
-
-		/// <summary>
-		/// Applied to MarbleSculptureConfig to allow resculpting.
-		/// </summary>
-		[HarmonyPatch(typeof(MarbleSculptureConfig), "DoPostConfigureComplete")]
-		public static class MarbleSculptureConfig_DoPostConfigureComplete_Patch {
-			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddOrGet<Resculptable>();
-			}
-		}
-
-		/// <summary>
-		/// Applied to MetalSculptureConfig to allow resculpting.
-		/// </summary>
-		[HarmonyPatch(typeof(MetalSculptureConfig), "DoPostConfigureComplete")]
-		public static class MetalSculptureConfig_DoPostConfigureComplete_Patch {
-			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddOrGet<Resculptable>();
-			}
-		}
-
-		/// <summary>
-		/// Applied to IceSculptureConfig to allow resculpting.
-		/// </summary>
-		[HarmonyPatch(typeof(IceSculptureConfig), "DoPostConfigureComplete")]
-		public static class IceSculptureConfig_DoPostConfigureComplete_Patch {
-			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddOrGet<Resculptable>();
-			}
-		}
-
-		/// <summary>
-		/// Applied to SculptureConfig to allow resculpting.
-		/// </summary>
-		[HarmonyPatch(typeof(SculptureConfig), "DoPostConfigureComplete")]
-		public static class SculptureConfig_DoPostConfigureComplete_Patch {
-			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddOrGet<Resculptable>();
-			}
-		}
-
-		/// <summary>
-		/// Applied to SmallSculptureConfig to allow resculpting.
-		/// </summary>
-		[HarmonyPatch(typeof(SmallSculptureConfig), "DoPostConfigureComplete")]
-		public static class SmallSculptureConfig_DoPostConfigureComplete_Patch {
-			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddOrGet<Resculptable>();
-			}
-		}
-
-		/// <summary>
-		/// Applied to Artable to refresh the user menu when work is completed to show the
-		/// resculpt button.
-		/// </summary>
-		[HarmonyPatch(typeof(Artable), "OnCompleteWork")]
-		public static class Artable_OnCompleteWork_Patch {
-			/// <summary>
-			/// Applied after OnCompleteWork runs.
+			/// Applied after OnSpawn runs.
 			/// </summary>
 			internal static void Postfix(Artable __instance) {
-				var obj = __instance.gameObject;
-				if (obj != null)
-					Game.Instance?.userMenu?.Refresh(obj);
+				var go = __instance.gameObject;
+				if (go != null) {
+					var rs = go.AddOrGet<Resculptable>();
+					// Is it a painting?
+					if (__instance is Painting)
+						rs.ButtonText = ResculptStrings.REPAINT_BUTTON;
+				}
 			}
 		}
 	}
