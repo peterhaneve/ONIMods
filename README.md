@@ -40,6 +40,7 @@ Mods should remain in their own subfolder.
 | [Starmap Queue](https://steamcommunity.com/sharedfiles/filedetails/?id=1907780517) | Automatically selects new destinations to be analyzed when the Telescope finishes research |
 | [Stock Bug Fix](https://steamcommunity.com/sharedfiles/filedetails/?id=1967921388) | Fixes some annoying bugs in the base game |
 | [Sweep By Type](https://steamcommunity.com/sharedfiles/filedetails/?id=1863428350) | Adds a filter to the Sweep tool to sweep only selected item types |
+| [Thermal Tooltips](https://steamcommunity.com/sharedfiles/filedetails/?id=1983504552) | Displays expanded thermal information tooltips in the Temperature Overlay |
 
 ## New Mechanics
 |  **Name**  |  **Description**  |
@@ -47,6 +48,7 @@ Mods should remain in their own subfolder.
 | [Queue for Sinks](https://steamcommunity.com/sharedfiles/filedetails/?id=1881925531) | Causes Duplicants to automatically line up to use sinks, wash basins, hand sanitizers, and ore scrubbers |
 | [Smart Pumps](https://forums.kleientertainment.com/forums/topic/91094-the-mystery-about-pump-range/) | Adds new, smarter liquid and gas pumps for specific situations |
 | [Thermal Interface Plate](https://steamcommunity.com/sharedfiles/filedetails/?id=1938747693) | Transfers heat between buildings in its tile, even in a complete Vacuum |
+| [Thermo Sensor Tile](https://steamcommunity.com/sharedfiles/filedetails/?id=1974008313) | A Thermo Sensor in tile form for effective heat measurement of adjacent tiles |
 
 ## World Generation
 
