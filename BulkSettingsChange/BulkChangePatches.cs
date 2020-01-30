@@ -18,8 +18,8 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Datafiles;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 
 namespace PeterHan.BulkSettingsChange {
@@ -39,6 +39,7 @@ namespace PeterHan.BulkSettingsChange {
 		/// </summary>
 		public static void OnLoad() {
 			PUtil.InitLibrary();
+			PLocalization.Register();
 			BulkChangeAction = PAction.Register(BulkChangeStrings.ACTION_KEY,
 				BulkChangeStrings.ACTION_TITLE, new PKeyBinding(KKeyCode.Q));
 		}
@@ -54,8 +55,6 @@ namespace PeterHan.BulkSettingsChange {
 			internal static void Prefix() {
 #if DEBUG
 				ModUtil.RegisterForTranslation(typeof(BulkChangeStrings));
-#else
-				Localization.RegisterForTranslation(typeof(BulkChangeStrings));
 #endif
 			}
 		}

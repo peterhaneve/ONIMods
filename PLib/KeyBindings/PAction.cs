@@ -47,7 +47,9 @@ namespace PeterHan.PLib {
 		/// user's custom key bind (if applicable) will be discarded.
 		/// </summary>
 		/// <param name="identifier">The identifier for this action.</param>
-		/// <param name="title">The action's title.</param>
+		/// <param name="title">The action's title. To localize the action's title, use the
+		/// UpdateLocalizedTitle method on the PAction instance in a postload patch (which
+		/// runs after localization mods have been loaded)</param>
 		/// <param name="binding">The default key binding for this action.</param>
 		/// <returns>The action thus registered.</returns>
 		/// <exception cref="InvalidOperationException">If PLib is not yet initialized.</exception>
@@ -61,6 +63,7 @@ namespace PeterHan.PLib {
 			}
 			int actionID;
 			PAction action;
+			// Avoid any future threading issues
 			lock (PSharedData.GetLock(PRegistry.KEY_ACTION_LOCK)) {
 				actionID = PSharedData.GetData<int>(PRegistry.KEY_ACTION_ID);
 				if (actionID <= 0)
@@ -68,7 +71,8 @@ namespace PeterHan.PLib {
 				PSharedData.PutData(PRegistry.KEY_ACTION_ID, actionID + 1);
 			}
 			action = new PAction(actionID, identifier, title);
-			PActionManager.ConfigureTitle(action);
+			if (!string.IsNullOrEmpty(title))
+				PActionManager.ConfigureTitle(action);
 			action.AddKeyBinding(binding ?? new PKeyBinding());
 			return action;
 		}
@@ -105,12 +109,16 @@ namespace PeterHan.PLib {
 			if (binding == null)
 				throw new ArgumentNullException("binding");
 			if (currentBindings != null) {
+				// Only if GameInputMapping is initialized
 				Action action = GetKAction();
 				bool inBindings = false;
-				// Only if GameInputMapping is initialized
 				int n = currentBindings.Length;
 				for (int i = 0; i < n && !inBindings; i++) {
-					if (currentBindings[i].mAction == action) {
+					var cb = currentBindings[i];
+					if (cb.mAction == action) {
+						// Already exists, but it really should not
+						PActionManager.LogKeyBindWarning("Action {0} already exists; " +
+							"assigned to KeyCode {1}".F(action, cb.mKeyCode));
 						inBindings = true;
 						break;
 					}
@@ -145,6 +153,18 @@ namespace PeterHan.PLib {
 
 		public override string ToString() {
 			return "PAction[" + Identifier + "]: " + Title;
+		}
+
+		/// <summary>
+		/// Updates the localized title of this action as shown in the Key Bindings window.
+		/// 
+		/// If you localize your key bindings, use this method in a postload patch to update
+		/// the action title after all mods (including translation mods) have loaded.
+		/// </summary>
+		/// <param name="newTitle">The new localized title to apply.</param>
+		public void UpdateLocalizedTitle(LocString newTitle) {
+			if (newTitle != null && !string.IsNullOrEmpty(newTitle.text))
+				PActionManager.ConfigureTitle(new PAction(ID, Identifier, newTitle));
 		}
 	}
 }

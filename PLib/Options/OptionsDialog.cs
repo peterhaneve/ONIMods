@@ -59,6 +59,22 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
+		/// First looks to see if the string exists in the string database; if it does, returns
+		/// the localized value, otherwise returns the string unmodified.
+		/// 
+		/// This method is somewhat slow. Cache the result if possible.
+		/// </summary>
+		/// <param name="keyOrValue">The string key to check.</param>
+		/// <returns>The string value with that key, or the key if there is no such localized
+		/// string value.</returns>
+		internal static string LookInStrings(string keyOrValue) {
+			string result = keyOrValue;
+			if (Strings.TryGet(keyOrValue, out StringEntry entry))
+				result = entry.String;
+			return result;
+		}
+
+		/// <summary>
 		/// Creates an options entry wrapper for the specified property.
 		/// </summary>
 		/// <param name="info">The property to wrap.</param>
@@ -140,13 +156,12 @@ namespace PeterHan.PLib.Options {
 		/// <param name="body">The parent of the header.</param>
 		/// <param name="category">The header title.</param>
 		private void AddCategoryHeader(PPanel body, string category) {
-			if (!string.IsNullOrEmpty(category)) {
+			if (!string.IsNullOrEmpty(category))
 				body.AddChild(new PLabel("CategoryHeader_" + category) {
-					Text = category, TextStyle = POptions.TITLE_STYLE,
+					Text = LookInStrings(category), TextStyle = POptions.TITLE_STYLE,
 					TextAlignment = TextAnchor.LowerCenter, DynamicSize = true,
 					Margin = new RectOffset(0, 0, 0, 2), FlexSize = new Vector2(1.0f, 0.0f),
 				});
-			}
 		}
 
 		/// <summary>

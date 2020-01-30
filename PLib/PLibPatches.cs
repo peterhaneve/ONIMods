@@ -108,6 +108,45 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Applied to CodexCache to collect dynamic codex entries from the file system.
+		/// </summary>
+		private static void CollectEntries_Postfix(string folder, List<CodexEntry> __result) {
+			// Check to see if we are loading from either the "Creatures" directory or
+			// "Plants" directory
+			string baseEntryPath = Traverse.Create(typeof(CodexCache)).GetField<string>(
+				"baseEntryPath");
+			string path = string.IsNullOrEmpty(folder) ? baseEntryPath : Path.Combine(
+				baseEntryPath, folder);
+			bool modified = false;
+			if (path.EndsWith("Creatures")) {
+				__result.AddRange(PCodex.LoadCreaturesEntries());
+				modified = true;
+			}
+			if (path.EndsWith("Plants")) {
+				__result.AddRange(PCodex.LoadPlantsEntries());
+				modified = true;
+			}
+			if (modified) {
+				foreach (var codexEntry in __result)
+					// Fill in a default sort string if necessary
+					if (string.IsNullOrEmpty(codexEntry.sortString))
+						codexEntry.sortString = Strings.Get(codexEntry.title);
+				__result.Sort((x, y) => x.sortString.CompareTo(y.sortString));
+			}
+		}
+
+		/// <summary>
+		/// Applied to CodexCache to collect dynamic codex sub entries from the file system.
+		/// </summary>
+		private static void CollectSubEntries_Postfix(List<SubEntry> __result) {
+			int startSize = __result.Count;
+			__result.AddRange(PCodex.LoadCreaturesSubEntries());
+			__result.AddRange(PCodex.LoadPlantsSubEntries());
+			if (__result.Count != startSize)
+				__result.Sort((x, y) => x.title.CompareTo(y.title));
+		}
+
+		/// <summary>
 		/// Applied to LightGridEmitter to compute the lux values properly.
 		/// </summary>
 		private static bool ComputeLux_Prefix(LightGridEmitter __instance, int cell,
@@ -148,6 +187,18 @@ namespace PeterHan.PLib {
 			if (anim == null)
 				Debug.LogWarningFormat("(when looking for KAnim named {0} on equipment {1})",
 					Anim, Id);
+		}
+
+		/// <summary>
+		/// Applied to GetKeycodeLocalized to quash warning spam on key codes that are valid
+		/// but not handled by default.
+		/// </summary>
+		private static bool GetKeycodeLocalized_Prefix(KKeyCode key_code, ref string __result)
+		{
+			string newResult = PActionManager.GetExtraKeycodeLocalized(key_code);
+			if (newResult != null)
+				__result = newResult;
+			return newResult == null;
 		}
 
 		/// <summary>
@@ -280,45 +331,6 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
-		/// Applied to CodexCache to collect dynamic codex entries from the file system.
-		/// </summary>
-		private static void CollectEntries_Postfix(string folder, List<CodexEntry> __result) {
-			// Check to see if we are loading from either the "Creatures" directory or
-			// "Plants" directory
-			string baseEntryPath = Traverse.Create(typeof(CodexCache)).GetField<string>(
-				"baseEntryPath");
-			string path = string.IsNullOrEmpty(folder) ? baseEntryPath : Path.Combine(
-				baseEntryPath, folder);
-			bool modified = false;
-			if (path.EndsWith("Creatures")) {
-				__result.AddRange(PCodex.LoadCreaturesEntries());
-				modified = true;
-			}
-			if (path.EndsWith("Plants")) {
-				__result.AddRange(PCodex.LoadPlantsEntries());
-				modified = true;
-			}
-			if (modified) {
-				foreach (var codexEntry in __result)
-					// Fill in a default sort string if necessary
-					if (string.IsNullOrEmpty(codexEntry.sortString))
-						codexEntry.sortString = Strings.Get(codexEntry.title);
-				__result.Sort((x, y) => x.sortString.CompareTo(y.sortString));
-			}
-		}
-
-		/// <summary>
-		/// Applied to CodexCache to collect dynamic codex sub entries from the file system.
-		/// </summary>
-		private static void CollectSubEntries_Postfix(List<SubEntry> __result) {
-			int startSize = __result.Count;
-			__result.AddRange(PCodex.LoadCreaturesSubEntries());
-			__result.AddRange(PCodex.LoadPlantsSubEntries());
-			if (__result.Count != startSize)
-				__result.Sort((x, y) => x.title.CompareTo(y.title));
-		}
-
-		/// <summary>
 		/// Applies all patches.
 		/// </summary>
 		/// <param name="instance">The Harmony instance to use when patching.</param>
@@ -333,6 +345,10 @@ namespace PeterHan.PLib {
 			// GameInputMapping
 			instance.Patch(typeof(GameInputMapping), "SetDefaultKeyBindings", null,
 				PatchMethod(nameof(SetDefaultKeyBindings_Postfix)));
+
+			// GameUtil
+			instance.Patch(typeof(GameUtil), "GetKeycodeLocalized",
+				PatchMethod(nameof(GetKeycodeLocalized_Prefix)), null);
 
 			// KInputController
 			instance.PatchConstructor(typeof(KInputController.KeyDef), new Type[] {

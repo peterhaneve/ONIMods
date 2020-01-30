@@ -78,6 +78,55 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Retrieves a "localized" (if PLib is localized) description of additional key codes
+		/// from the KKeyCode enumeration, to avoid warning spam on popular keybinds like
+		/// arrow keys, delete, home, and so forth.
+		/// </summary>
+		/// <param name="code">The key code.</param>
+		/// <returns>A description of that key code, or null if no localization is found.</returns>
+		internal static string GetExtraKeycodeLocalized(KKeyCode code) {
+			string localCode = null;
+			switch (code) {
+			case KKeyCode.Home:
+				localCode = KeyCodeStrings.HOME;
+				break;
+			case KKeyCode.End:
+				localCode = KeyCodeStrings.END;
+				break;
+			case KKeyCode.PageDown:
+				localCode = KeyCodeStrings.PAGEDOWN;
+				break;
+			case KKeyCode.PageUp:
+				localCode = KeyCodeStrings.PAGEUP;
+				break;
+			case KKeyCode.LeftArrow:
+				localCode = KeyCodeStrings.ARROWLEFT;
+				break;
+			case KKeyCode.UpArrow:
+				localCode = KeyCodeStrings.ARROWUP;
+				break;
+			case KKeyCode.RightArrow:
+				localCode = KeyCodeStrings.ARROWRIGHT;
+				break;
+			case KKeyCode.DownArrow:
+				localCode = KeyCodeStrings.ARROWDOWN;
+				break;
+			case KKeyCode.Pause:
+				localCode = KeyCodeStrings.PAUSE;
+				break;
+			case KKeyCode.SysReq:
+				localCode = KeyCodeStrings.SYSRQ;
+				break;
+			case KKeyCode.Print:
+				localCode = KeyCodeStrings.PRTSCREEN;
+				break;
+			default:
+				break;
+			}
+			return localCode;
+		}
+
+		/// <summary>
 		/// Logs a message encountered by the PLib key binding system.
 		/// </summary>
 		/// <param name="message">The message.</param>
@@ -134,7 +183,7 @@ namespace PeterHan.PLib {
 			int n = queueBindKeys.Count;
 			if (n > 0 && GameInputMapping.DefaultBindings != null) {
 				// Safe to add them without risk of concurrent modification
-				PUtil.LogDebug("Registering {0:D} key binds".F(n));
+				LogKeyBind("Registering {0:D} key binds".F(n));
 				foreach (var pair in queueBindKeys)
 					pair.Key.AddKeyBinding(pair.Value);
 				queueBindKeys.Clear();

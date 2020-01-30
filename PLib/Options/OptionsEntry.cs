@@ -122,12 +122,14 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <returns>A UI component with both the title and editor.</returns>
 		internal IUIComponent GetUIEntry() {
+			var expandWidth = new Vector2(1.0f, 0.0f);
 			return new PPanel("Option_" + Field) {
-				Direction = PanelDirection.Horizontal, FlexSize = new Vector2(1.0f, 0.0f),
+				Direction = PanelDirection.Horizontal, FlexSize = expandWidth,
 				Spacing = 5, Alignment = TextAnchor.MiddleCenter
 			}.AddChild(new PLabel("Label") {
-				Text = Title, ToolTip = ToolTip, FlexSize = new Vector2(1.0f, 0.0f),
-				TextAlignment = TextAnchor.MiddleLeft, DynamicSize = true
+				Text = OptionsDialog.LookInStrings(Title), ToolTip = ToolTip, FlexSize =
+				expandWidth, TextAlignment = TextAnchor.MiddleLeft,
+				DynamicSize = true
 			}).AddChild(GetUIComponent());
 		}
 

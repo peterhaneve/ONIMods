@@ -16,15 +16,21 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace PeterHan.PLib.UI {
 	/// <summary>
-	/// A spacer to add into layouts. Has a large flexible width/height to eat all the space.
+	/// A spacer to add into layouts. Has a large flexible width/height by default to eat all
+	/// the extra space.
 	/// </summary>
 	public class PSpacer : IUIComponent {
+		/// <summary>
+		/// The flexible size of this spacer. Defaults to (1, 1) but can be set to (0, 0) to
+		/// make this spacer a fixed size area instead.
+		/// </summary>
+		public Vector2 FlexSize { get; set; }
+
 		/// <summary>
 		/// The preferred size of this spacer.
 		/// </summary>
@@ -36,14 +42,15 @@ namespace PeterHan.PLib.UI {
 
 		public PSpacer() {
 			Name = "Spacer";
+			FlexSize = Vector2.one;
 			PreferredSize = Vector2.zero;
 		}
 
 		public GameObject Build() {
 			var spacer = new GameObject(Name);
 			var le = spacer.AddComponent<LayoutElement>();
-			le.flexibleHeight = 1.0f;
-			le.flexibleWidth = 1.0f;
+			le.flexibleHeight = FlexSize.y;
+			le.flexibleWidth = FlexSize.x;
 			le.minHeight = 0.0f;
 			le.minWidth = 0.0f;
 			le.preferredHeight = PreferredSize.y;
