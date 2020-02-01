@@ -242,6 +242,7 @@ namespace PeterHan.PLib.Options {
 			return dir;
 		}
 
+#if !OPTIONS_ONLY
 		/// <summary>
 		/// Initializes and stores the options table for quicker lookups later.
 		/// </summary>
@@ -250,6 +251,7 @@ namespace PeterHan.PLib.Options {
 				modOptions = PSharedData.GetData<OptionsTable>(PRegistry.KEY_OPTIONS_TABLE);
 			}
 		}
+#endif
 
 		/// <summary>
 		/// Registers a class as a mod options class. The type is registered for its defining
@@ -259,6 +261,21 @@ namespace PeterHan.PLib.Options {
 		public static void RegisterOptions(Type optionsType) {
 			if (optionsType == null)
 				throw new ArgumentNullException("optionsType");
+#if OPTIONS_ONLY
+			var assembly = optionsType.Assembly;
+			var id = Path.GetFileName(GetModDir(assembly));
+			// Local options type
+			if (modOptions == null)
+				modOptions = new Dictionary<string, Type>(4);
+			if (modOptions.ContainsKey(id))
+				PUtil.LogWarning("Duplicate mod ID: " + id);
+			else {
+				// Add as options for this mod
+				modOptions.Add(id, optionsType);
+				PUtil.LogDebug("Registered mod options class {0} for {1}".F(optionsType.Name,
+					assembly.GetName()?.Name));
+			}
+#else
 			// In case this call is used before the library was initialized
 			if (!PUtil.PLibInit) {
 				PUtil.InitLibrary(false);
@@ -279,10 +296,11 @@ namespace PeterHan.PLib.Options {
 				else {
 					// Add as options for this mod
 					options.Add(id, optionsType);
-					PUtil.LogDebug("Registered mod options class {0} for {1}".F(
-						optionsType.Name, assembly.GetName()?.Name));
+					PUtil.LogDebug("Registered mod options class {0} for {1}".F(optionsType.
+						Name, assembly.GetName()?.Name));
 				}
 			}
+#endif
 		}
 
 		/// <summary>
