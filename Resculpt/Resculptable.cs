@@ -28,7 +28,7 @@ namespace PeterHan.Resculpt {
 		/// <summary>
 		/// The event handler when the info menu is displayed.
 		/// </summary>
-		private static EventSystem.IntraObjectHandler<Resculptable> OnRefreshDelegate =
+		private static readonly EventSystem.IntraObjectHandler<Resculptable> OnRefreshDelegate =
 			new EventSystem.IntraObjectHandler<Resculptable>(OnRefreshUserMenu);
 
 		/// <summary>
@@ -37,6 +37,12 @@ namespace PeterHan.Resculpt {
 		private static void OnRefreshUserMenu(Resculptable component, object _) {
 			component.OnRefreshUserMenu();
 		}
+
+		/// <summary>
+		/// The icon sprite shown on the repaint or resculpt button.
+		/// </summary>
+		[SerializeField]
+		public string ButtonIcon;
 
 		/// <summary>
 		/// The text shown on the repaint or resculpt button. If null, the Resculpt text is
@@ -96,11 +102,13 @@ namespace PeterHan.Resculpt {
 		/// </summary>
 		private void OnRefreshUserMenu() {
 			if (artable != null && artable.CurrentStatus != Artable.Status.Ready) {
-				string text = ButtonText;
+				string text = ButtonText, icon = ButtonIcon;
 				// Set default name if not set
 				if (string.IsNullOrEmpty(text))
 					text = ResculptStrings.RESCULPT_BUTTON;
-				var button = new KIconButtonMenu.ButtonInfo("action_control", text, OnResculpt,
+				if (string.IsNullOrEmpty(icon))
+					icon = ResculptStrings.RESCULPT_SPRITE;
+				var button = new KIconButtonMenu.ButtonInfo(icon, text, OnResculpt,
 					PAction.MaxAction, null, null, null, ResculptStrings.RESCULPT_TOOLTIP);
 				Game.Instance?.userMenu?.AddButton(gameObject, button);
 			}
