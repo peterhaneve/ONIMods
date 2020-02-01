@@ -295,15 +295,6 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
-		/// A callback function for the YAML parser to process errors that it throws.
-		/// </summary>
-		/// <param name="error">The YAML parsing error</param>
-		internal static void YamlParseErrorCB(YamlIO.Error error, bool _) {
-			throw new InvalidDataException(string.Format("{0} parse error in {1}\n{2}", error.
-				severity, error.file.full_path, error.message), error.inner_exception);
-		}
-
-		/// <summary>
 		/// Logs a message to the debug log.
 		/// </summary>
 		/// <param name="message">The message to log.</param>
@@ -420,6 +411,15 @@ namespace PeterHan.PLib {
 			} catch (OverflowException) {
 			}
 			return value;
+		}
+
+		/// <summary>
+		/// A callback function for the YAML parser to process errors that it throws.
+		/// </summary>
+		/// <param name="error">The YAML parsing error</param>
+		internal static void YamlParseErrorCB(YamlIO.Error error, bool _) {
+			throw new InvalidDataException(string.Format("{0} parse error in {1}\n{2}", error.
+				severity, error.file.full_path, error.message), error.inner_exception);
 		}
 	}
 }

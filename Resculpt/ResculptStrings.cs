@@ -21,11 +21,13 @@ namespace PeterHan.Resculpt {
 	/// Stores the strings used in Resculpt.
 	/// </summary>
 	public static class ResculptStrings {
-		/// <summary>
-		/// The button in the user menu to trigger resculpting or repainting.
-		/// </summary>
+		// The button in the user menu to trigger resculpting or repainting
 		public static readonly LocString REPAINT_BUTTON = "Repaint";
 		public static readonly LocString RESCULPT_BUTTON = "Resculpt";
+
+		// The sprite names used for the repainting and resculpting icons
+		public const string REPAINT_SPRITE = "action_repaint";
+		public const string RESCULPT_SPRITE = "action_resculpt";
 
 		public static readonly LocString RESCULPT_TOOLTIP = "Changes the design of this object";
 	}

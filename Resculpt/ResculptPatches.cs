@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace PeterHan.Resculpt {
@@ -25,127 +26,101 @@ namespace PeterHan.Resculpt {
 	/// Patches which will be applied via annotations for Resculpt.
 	/// </summary>
 	public static class ResculptPatches {
+		/// <summary>
+		/// The default sprite to use for the button if the custom sprites fail to load.
+		/// </summary>
+		private const string DEFAULT_SPRITE = "action_control";
+
+		/// <summary>
+		/// Loads the sprites for this mod and registers them in the Assets class.
+		/// </summary>
+		private static void LoadImages() {
+			LoadImage("repaint.png", ResculptStrings.REPAINT_SPRITE);
+			LoadImage("resculpt.png", ResculptStrings.RESCULPT_SPRITE);
+		}
+
+		/// <summary>
+		/// Loads the specified sprite into the assets.
+		/// </summary>
+		/// <param name="path">The image file name.</param>
+		/// <param name="name">The desired sprite name.</param>
+		private static void LoadImage(string path, string name) {
+			var sprite = PUtil.LoadSprite("PeterHan.Resculpt." + path);
+			if (sprite == null)
+				sprite = Assets.GetSprite(DEFAULT_SPRITE);
+			if (sprite != null)
+				sprite.name = name;
+			Assets.Sprites.Add(name, sprite);
+		}
+
 		public static void OnLoad() {
 			PUtil.InitLibrary();
 		}
 
 		/// <summary>
-		/// Applied to CanvasConfig to allow repainting.
+		/// Applied to Artable to allow repainting.
 		/// </summary>
-		[HarmonyPatch(typeof(CanvasConfig), "DoPostConfigureComplete")]
-		public static class CanvasConfig_DoPostConfigureComplete_Patch {
+		[HarmonyPatch(typeof(Artable), "OnSpawn")]
+		public static class Artable_OnSpawn_Patch {
 			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddOrGet<Resculptable>().ButtonText = ResculptStrings.REPAINT_BUTTON;
-			}
-		}
-
-		/// <summary>
-		/// Applied to CanvasTallConfig to allow repainting.
-		/// </summary>
-		[HarmonyPatch(typeof(CanvasTallConfig), "DoPostConfigureComplete")]
-		public static class CanvasTallConfig_DoPostConfigureComplete_Patch {
-			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddOrGet<Resculptable>().ButtonText = ResculptStrings.REPAINT_BUTTON;
-			}
-		}
-
-		/// <summary>
-		/// Applied to CanvasWideConfig to allow repainting.
-		/// </summary>
-		[HarmonyPatch(typeof(CanvasWideConfig), "DoPostConfigureComplete")]
-		public static class CanvasWideConfig_DoPostConfigureComplete_Patch {
-			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddOrGet<Resculptable>().ButtonText = ResculptStrings.REPAINT_BUTTON;
-			}
-		}
-
-		/// <summary>
-		/// Applied to MarbleSculptureConfig to allow resculpting.
-		/// </summary>
-		[HarmonyPatch(typeof(MarbleSculptureConfig), "DoPostConfigureComplete")]
-		public static class MarbleSculptureConfig_DoPostConfigureComplete_Patch {
-			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddOrGet<Resculptable>();
-			}
-		}
-
-		/// <summary>
-		/// Applied to MetalSculptureConfig to allow resculpting.
-		/// </summary>
-		[HarmonyPatch(typeof(MetalSculptureConfig), "DoPostConfigureComplete")]
-		public static class MetalSculptureConfig_DoPostConfigureComplete_Patch {
-			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddOrGet<Resculptable>();
-			}
-		}
-
-		/// <summary>
-		/// Applied to IceSculptureConfig to allow resculpting.
-		/// </summary>
-		[HarmonyPatch(typeof(IceSculptureConfig), "DoPostConfigureComplete")]
-		public static class IceSculptureConfig_DoPostConfigureComplete_Patch {
-			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddOrGet<Resculptable>();
-			}
-		}
-
-		/// <summary>
-		/// Applied to SculptureConfig to allow resculpting.
-		/// </summary>
-		[HarmonyPatch(typeof(SculptureConfig), "DoPostConfigureComplete")]
-		public static class SculptureConfig_DoPostConfigureComplete_Patch {
-			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddOrGet<Resculptable>();
-			}
-		}
-
-		/// <summary>
-		/// Applied to SmallSculptureConfig to allow resculpting.
-		/// </summary>
-		[HarmonyPatch(typeof(SmallSculptureConfig), "DoPostConfigureComplete")]
-		public static class SmallSculptureConfig_DoPostConfigureComplete_Patch {
-			/// <summary>
-			/// Applied after DoPostConfigureComplete runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.AddOrGet<Resculptable>();
-			}
-		}
-
-		/// <summary>
-		/// Applied to Artable to refresh the user menu when work is completed to show the
-		/// resculpt button.
-		/// </summary>
-		[HarmonyPatch(typeof(Artable), "OnCompleteWork")]
-		public static class Artable_OnCompleteWork_Patch {
-			/// <summary>
-			/// Applied after OnCompleteWork runs.
+			/// Applied after OnSpawn runs.
 			/// </summary>
 			internal static void Postfix(Artable __instance) {
-				var obj = __instance.gameObject;
-				if (obj != null)
-					Game.Instance?.userMenu?.Refresh(obj);
+				var go = __instance.gameObject;
+				if (go != null) {
+					var rs = go.AddOrGet<Resculptable>();
+					// Is it a painting?
+					if (__instance is Painting) {
+						rs.ButtonText = ResculptStrings.REPAINT_BUTTON;
+						rs.ButtonIcon = ResculptStrings.REPAINT_SPRITE;
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// Applied to Assets to load the button images when necessary.
+		/// </summary>
+		[HarmonyPatch(typeof(Assets), "OnPrefabInit")]
+		public static class Assets_OnPrefabInit_Patch {
+			/// <summary>
+			/// Applied after OnPrefabInit runs.
+			/// </summary>
+			internal static void Postfix() {
+				LoadImages();
+			}
+		}
+
+		/// <summary>
+		/// Applied to UserMenuScreen to add our new button icons to the menu.
+		/// </summary>
+		[HarmonyPatch(typeof(UserMenuScreen), "OnSpawn")]
+		public static class UserMenuScreen_OnSpawn_Patch {
+			/// <summary>
+			/// Applied after OnSpawn runs.
+			/// </summary>
+			internal static void Postfix(ref Sprite[] ___icons) {
+				var oldIcons = ___icons;
+				if (oldIcons != null) {
+					var newIcons = new List<Sprite>(oldIcons.Length + 2);
+					bool hasRepaint = false, hasResculpt = false;
+					// Have we done it already?
+					newIcons.AddRange(oldIcons);
+					foreach (var icon in newIcons)
+						if (icon != null) {
+							string name = icon.name;
+							if (name == ResculptStrings.REPAINT_SPRITE)
+								hasRepaint = true;
+							else if (name == ResculptStrings.RESCULPT_SPRITE)
+								hasResculpt = true;
+						}
+					// Append the new icons from this mod, if they are not already present
+					if (!hasRepaint)
+						newIcons.Add(Assets.GetSprite(ResculptStrings.REPAINT_SPRITE));
+					if (!hasResculpt)
+						newIcons.Add(Assets.GetSprite(ResculptStrings.RESCULPT_SPRITE));
+					___icons = newIcons.ToArray();
+				}
 			}
 		}
 	}

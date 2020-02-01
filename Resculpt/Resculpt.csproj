@@ -6,6 +6,14 @@
     <FileVersion>1.1.0.0</FileVersion>
     <RootNamespace>PeterHan.Resculpt</RootNamespace>
     <Description>Allows the design of sculpting blocks and paintings to be changed without reconstructing them.</Description>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="repaint.png" />
+    <None Remove="resculpt.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="repaint.png" />
+    <EmbeddedResource Include="resculpt.png" />
+  </ItemGroup>
 </Project>
