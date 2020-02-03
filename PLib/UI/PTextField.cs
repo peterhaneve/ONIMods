@@ -19,6 +19,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace PeterHan.PLib.UI {
@@ -32,7 +33,7 @@ namespace PeterHan.PLib.UI {
 		public Color BackColor { get; set; }
 
 		/// <summary>
-		/// Retrieves the built-in type used for Text Mesh Pro.
+		/// Retrieves the built-in field type used for Text Mesh Pro.
 		/// </summary>
 		private TMP_InputField.ContentType ContentType {
 			get {
@@ -160,12 +161,12 @@ namespace PeterHan.PLib.UI {
 			if (!string.IsNullOrEmpty(ToolTip))
 				textField.AddComponent<ToolTip>().toolTip = ToolTip;
 			mask.enabled = true;
-			// Lay out - TMP_InputField does not support auto layout so we have to do a hack
-			var rt = textBox.rectTransform();
-			float height = LayoutUtility.GetPreferredHeight(rt);
-			textField.SetUISize(new Vector2(MinWidth + 2.0f, height + 2.0f), true).
-				SetFlexUISize(FlexSize);
-			textArea.SetUISize(new Vector2(MinWidth, height));
+			// Lay out - TMP_InputField does not support auto layout but we do!
+			var layout = textField.AddComponent<PTextFieldLayout>();
+			PUIElements.SetAnchorOffsets(textArea, new RectOffset(1, 1, 1, 1));
+			layout.minWidth = MinWidth;
+			layout.flexibleWidth = FlexSize.x;
+			layout.flexibleHeight = FlexSize.y;
 			OnRealize?.Invoke(textField);
 			return textField;
 		}
@@ -210,6 +211,20 @@ namespace PeterHan.PLib.UI {
 			return this;
 		}
 
+		/// <summary>
+		/// Sets the minimum (and preferred) width of this text field in characters.
+		/// 
+		/// The width is computed using the currently selected text style.
+		/// </summary>
+		/// <param name="chars">The number of characters to be displayed.</param>
+		/// <returns>This button for call chaining.</returns>
+		public PTextField SetMinWidthInCharacters(int chars) {
+			int width = Mathf.RoundToInt(chars * PUIUtils.GetEmWidth(TextStyle));
+			if (width > 0)
+				MinWidth = width;
+			return this;
+		}
+
 		public override string ToString() {
 			return "PTextField[Name={0},Type={1}]".F(Name, Type);
 		}
@@ -222,107 +237,158 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
-		/// A class instance that handles events for text fields.
+		/// Handles layout for text boxes. Not freezable.
 		/// </summary>
-		private sealed class PTextFieldEvents : KScreen {
+		private sealed class PTextFieldLayout : UIBehaviour, ILayoutElement, ISettableFlexSize
+		{
 			/// <summary>
-			/// The action to trigger on text change. It is passed the realized source object.
+			/// The flexible height of the text box.
 			/// </summary>
-			[SerializeField]
-			internal PUIDelegates.OnTextChanged OnTextChanged { get; set; }
-
-			/// <summary>
-			/// The callback to invoke when validating input.
-			/// </summary>
-			[SerializeField]
-			internal TMP_InputField.OnValidateInput OnValidate { get; set; }
-
-			[MyCmpReq]
-#pragma warning disable IDE0044 // Add readonly modifier
-#pragma warning disable CS0649
-			private TMP_InputField textEntry;
-#pragma warning restore CS0649
-#pragma warning restore IDE0044 // Add readonly modifier
+			public float flexibleHeight { get; set; }
 
 			/// <summary>
-			/// Whether editing is in progress.
+			/// The flexible width of the text box.
 			/// </summary>
-			private bool editing;
+			public float flexibleWidth { get; set; }
 
-			internal PTextFieldEvents() {
-				activateOnSpawn = true;
-				editing = false;
+			/// <summary>
+			/// The minimum height of the text box.
+			/// </summary>
+			public float minHeight { get; private set; }
+
+			/// <summary>
+			/// The minimum width of the text box.
+			/// </summary>
+			public float minWidth { get; set; }
+
+			/// <summary>
+			/// The preferred height of the text box.
+			/// </summary>
+			public float preferredHeight { get; private set; }
+
+			/// <summary>
+			/// The preferred width of the text box.
+			/// </summary>
+			public float preferredWidth { get; set; }
+
+			public int layoutPriority => 1;
+
+			/// <summary>
+			/// Caches elements when calculating layout to improve performance.
+			/// </summary>
+			private ILayoutElement[] calcElements;
+
+			/// <summary>
+			/// Caches elements when setting layout to improve performance.
+			/// </summary>
+			private ILayoutController[] setElements;
+
+			/// <summary>
+			/// The text area where the mask is displayed.
+			/// </summary>
+			private GameObject textArea;
+
+			/// <summary>
+			/// The text box component used to determine the size of the overall layout.
+			/// </summary>
+			private GameObject textBox;
+
+			public void CalculateLayoutInputHorizontal() {
+				if (textArea != null) {
+					calcElements = textArea.GetComponents<ILayoutElement>();
+					// Lay out children
+					foreach (var component in calcElements)
+						if (!PUIUtils.IgnoreLayout(component))
+							component.CalculateLayoutInputHorizontal();
+				}
+				preferredWidth = minWidth;
+			}
+
+			public void CalculateLayoutInputVertical() {
+#pragma warning disable IDE0031 // Use null propagation
+				var child = (textBox == null) ? null : textBox.rectTransform();
+#pragma warning restore IDE0031
+				if (textArea != null && calcElements != null) {
+					// Lay out children
+					foreach (var component in calcElements)
+						if (!PUIUtils.IgnoreLayout(component))
+							component.CalculateLayoutInputVertical();
+					calcElements = null;
+				}
+				if (child != null) {
+					float height = LayoutUtility.GetPreferredHeight(child);
+					// 1px for the border
+					minHeight = preferredHeight = height + 2.0f;
+				} else
+					// Fallback if text box is somehow not set
+					minHeight = preferredHeight = 1.0f;
+			}
+
+			protected override void OnDidApplyAnimationProperties() {
+				base.OnDidApplyAnimationProperties();
+				SetDirty();
+			}
+
+			protected override void OnDisable() {
+				base.OnEnable();
+				SetDirty();
+			}
+
+			protected override void OnEnable() {
+				base.OnEnable();
+				UpdateComponents();
+				SetDirty();
+			}
+
+			protected override void OnRectTransformDimensionsChange() {
+				base.OnRectTransformDimensionsChange();
+				SetDirty();
+			}
+
+			public void SetLayoutHorizontal() {
+				if (textArea != null) {
+					setElements = textArea.GetComponents<ILayoutController>();
+					// Lay out descendents
+					foreach (var component in setElements)
+						if (!PUIUtils.IgnoreLayout(component))
+							component.SetLayoutHorizontal();
+				}
+			}
+
+			public void SetLayoutVertical() {
+				if (textArea != null && setElements != null) {
+					// Lay out descendents
+					foreach (var component in setElements)
+						if (!PUIUtils.IgnoreLayout(component))
+							component.SetLayoutVertical();
+					setElements = null;
+				}
 			}
 
 			/// <summary>
-			/// Completes the edit process one frame after the data is entered.
+			/// Sets this layout as dirty.
 			/// </summary>
-			private System.Collections.IEnumerator DelayEndEdit() {
-				yield return new WaitForEndOfFrame();
-				StopEditing();
-			}
-
-			public override float GetSortKey() {
-				return editing ? 99.0f : base.GetSortKey();
-			}
-
-			protected override void OnSpawn() {
-				base.OnSpawn();
-				textEntry.onFocus += OnFocus;
-				textEntry.onEndEdit.AddListener(OnEndEdit);
-				if (OnValidate != null)
-					textEntry.onValidateInput = OnValidate;
+			private void SetDirty() {
+				if (gameObject != null && IsActive())
+					LayoutRebuilder.MarkLayoutForRebuild(gameObject.rectTransform());
 			}
 
 			/// <summary>
-			/// Triggered when editing of the text ends (field loses focus).
+			/// Caches the child components for performance reasons at runtime.
 			/// </summary>
-			/// <param name="text">The text entered.</param>
-			private void OnEndEdit(string text) {
+			private void UpdateComponents() {
 				var obj = gameObject;
-				if (obj != null)
-					OnTextChanged?.Invoke(obj, text);
-				StartCoroutine(DelayEndEdit());
-			}
-
-			/// <summary>
-			/// Triggered when the text field gains focus.
-			/// </summary>
-			private void OnFocus() {
-				editing = true;
-				textEntry.Select();
-				textEntry.ActivateInputField();
-				KScreenManager.Instance.RefreshStack();
-			}
-
-			/// <summary>
-			/// Destroys events if editing is in progress to prevent bubbling through to the
-			/// game UI.
-			/// </summary>
-			public override void OnKeyDown(KButtonEvent e) {
-				if (editing)
-					e.Consumed = true;
-				else
-					base.OnKeyDown(e);
-			}
-
-			/// <summary>
-			/// Destroys events if editing is in progress to prevent bubbling through to the
-			/// game UI.
-			/// </summary>
-			public override void OnKeyUp(KButtonEvent e) {
-				if (editing)
-					e.Consumed = true;
-				else
-					base.OnKeyUp(e);
-			}
-
-			/// <summary>
-			/// Completes the edit process.
-			/// </summary>
-			private void StopEditing() {
-				textEntry.DeactivateInputField();
-				editing = false;
+				if (obj != null) {
+					var transform = obj.transform;
+					textBox = obj.GetComponentInChildren<TextMeshProUGUI>()?.gameObject;
+					if (transform != null && transform.childCount > 0)
+						textArea = transform.GetChild(0)?.gameObject;
+					else
+						textArea = null;
+				} else {
+					textBox = null;
+					textArea = null;
+				}
 			}
 		}
 	}

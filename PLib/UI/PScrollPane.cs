@@ -18,6 +18,7 @@
 
 using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace PeterHan.PLib.UI {
@@ -98,19 +99,15 @@ namespace PeterHan.PLib.UI {
 			scroll.horizontal = ScrollHorizontal;
 			scroll.vertical = ScrollVertical;
 			// Viewport
-			var viewport = PUIElements.CreateUI(pane, "Viewport", true, PUIAnchoring.Stretch,
-				PUIAnchoring.Stretch);
-			viewport.AddComponent<RectMask2D>().enabled = true;
-			// BoxLayoutGroup resizes the viewport which is undesired, we only want to pass
-			// an auto-layout request on to the children
-			viewport.AddComponent<VerticalLayoutGroup>().childAlignment = TextAnchor.UpperLeft;
-			scroll.viewport = viewport.rectTransform();
+			pane.AddComponent<RectMask2D>().enabled = true;
+			scroll.viewport = pane.rectTransform();
 			// Make the child; give it a separate Canvas to reduce layout rebuilds
 			var child = Child.Build();
 			child.AddOrGet<Canvas>().pixelPerfect = false;
 			child.AddOrGet<GraphicRaycaster>();
-			PUIElements.SetAnchors(child.SetParent(viewport), PUIAnchoring.Beginning,
+			PUIElements.SetAnchors(child.SetParent(pane), PUIAnchoring.Beginning,
 				PUIAnchoring.End);
+			PUIElements.SetAnchorOffsets(child, new RectOffset(0, 0, 0, 0));
 			scroll.content = child.rectTransform();
 			pane.SetActive(true);
 			// Vertical scrollbar
@@ -124,7 +121,10 @@ namespace PeterHan.PLib.UI {
 				scroll.horizontalScrollbarVisibility = AlwaysShowHorizontal ? ScrollRect.
 					ScrollbarVisibility.Permanent : ScrollRect.ScrollbarVisibility.AutoHide;
 			}
-			pane.SetFlexUISize(FlexSize);
+			// Custom layout to pass child sizes up the tree
+			var layout = pane.AddComponent<PScrollPaneLayout>();
+			layout.flexibleHeight = FlexSize.y;
+			layout.flexibleWidth = FlexSize.x;
 			OnRealize?.Invoke(pane);
 			return pane;
 		}
@@ -135,6 +135,7 @@ namespace PeterHan.PLib.UI {
 		/// <param name="parent">The parent component.</param>
 		/// <returns>The scroll bar component.</returns>
 		private Scrollbar CreateScrollHoriz(GameObject parent) {
+			int iSize = Mathf.RoundToInt(TrackSize);
 			// Outer scrollbar
 			var track = PUIElements.CreateUI(parent, "Scrollbar H", true, PUIAnchoring.Stretch,
 				PUIAnchoring.Beginning);
@@ -147,20 +148,17 @@ namespace PeterHan.PLib.UI {
 			sb.transition = Selectable.Transition.ColorTint;
 			sb.colors = PUITuning.Colors.ScrollbarColors;
 			sb.SetDirection(Scrollbar.Direction.RightToLeft, true);
-			// Sliding area
-			var area = PUIElements.CreateUI(track, "Sliding Area", false);
 			// Handle
-			var handle = PUIElements.CreateUI(area, "Handle", true, PUIAnchoring.Stretch,
+			var handle = PUIElements.CreateUI(track, "Handle", true, PUIAnchoring.Stretch,
 				PUIAnchoring.End);
+			PUIElements.SetAnchorOffsets(handle, new RectOffset(1, 1, 1, 1));
 			sb.handleRect = handle.rectTransform();
 			var hImg = handle.AddComponent<Image>();
 			hImg.sprite = PUITuning.Images.ScrollHandleHorizontal;
 			hImg.type = Image.Type.Sliced;
 			sb.targetGraphic = hImg;
 			track.SetActive(true);
-			// Sizing
-			track.SetUISize(new Vector2(TrackSize + 2.0f, TrackSize + 2.0f));
-			area.SetUISize(new Vector2(TrackSize, TrackSize));
+			PUIElements.SetAnchorOffsets(track, new RectOffset(2, 2, -iSize - 1, 1));
 			return sb;
 		}
 
@@ -170,6 +168,7 @@ namespace PeterHan.PLib.UI {
 		/// <param name="parent">The parent component.</param>
 		/// <returns>The scroll bar component.</returns>
 		private Scrollbar CreateScrollVert(GameObject parent) {
+			int iSize = Mathf.RoundToInt(TrackSize);
 			// Outer scrollbar
 			var track = PUIElements.CreateUI(parent, "Scrollbar V", true, PUIAnchoring.End,
 				PUIAnchoring.Stretch);
@@ -182,20 +181,17 @@ namespace PeterHan.PLib.UI {
 			sb.transition = Selectable.Transition.ColorTint;
 			sb.colors = PUITuning.Colors.ScrollbarColors;
 			sb.SetDirection(Scrollbar.Direction.BottomToTop, true);
-			// Sliding area
-			var area = PUIElements.CreateUI(track, "Sliding Area", false);
 			// Handle
-			var handle = PUIElements.CreateUI(area, "Handle", true, PUIAnchoring.Stretch,
+			var handle = PUIElements.CreateUI(track, "Handle", true, PUIAnchoring.Stretch,
 				PUIAnchoring.Beginning);
+			PUIElements.SetAnchorOffsets(handle, new RectOffset(1, 1, 1, 1));
 			sb.handleRect = handle.rectTransform();
 			var hImg = handle.AddComponent<Image>();
 			hImg.sprite = PUITuning.Images.ScrollHandleVertical;
 			hImg.type = Image.Type.Sliced;
 			sb.targetGraphic = hImg;
 			track.SetActive(true);
-			// Sizing
-			track.SetUISize(new Vector2(TrackSize + 2.0f, TrackSize + 2.0f));
-			area.SetUISize(new Vector2(TrackSize, TrackSize));
+			PUIElements.SetAnchorOffsets(track, new RectOffset(-iSize - 1, 1, 2, 2));
 			return sb;
 		}
 
@@ -219,6 +215,147 @@ namespace PeterHan.PLib.UI {
 
 		public override string ToString() {
 			return "PScrollPane[Name={0},Child={1}]".F(Name, Child);
+		}
+
+		/// <summary>
+		/// Handles layout for scroll panes. Not freezable.
+		/// </summary>
+		private sealed class PScrollPaneLayout : UIBehaviour, ILayoutElement,
+				ISettableFlexSize {
+			/// <summary>
+			/// The flexible height of the scroll pane.
+			/// </summary>
+			public float flexibleHeight { get; set; }
+
+			/// <summary>
+			/// The flexible width of the scroll pane.
+			/// </summary>
+			public float flexibleWidth { get; set; }
+
+			/// <summary>
+			/// The minimum height of the scroll pane.
+			/// </summary>
+			public float minHeight { get; private set; }
+
+			/// <summary>
+			/// The minimum width of the scroll pane.
+			/// </summary>
+			public float minWidth { get; private set; }
+
+			/// <summary>
+			/// The preferred height of the scroll pane.
+			/// </summary>
+			public float preferredHeight { get; private set; }
+
+			/// <summary>
+			/// The preferred width of the scroll pane.
+			/// </summary>
+			public float preferredWidth { get; private set; }
+
+			public int layoutPriority => 1;
+
+			/// <summary>
+			/// Caches elements when calculating layout to improve performance.
+			/// </summary>
+			private ILayoutElement[] calcElements;
+
+			/// <summary>
+			/// The child object inside the scroll rect.
+			/// </summary>
+			private GameObject child;
+
+			/// <summary>
+			/// Caches elements when setting layout to improve performance.
+			/// </summary>
+			private ILayoutController[] setElements;
+
+			internal PScrollPaneLayout() {
+				minHeight = 0.0f;
+				minWidth = 0.0f;
+			}
+
+			public void CalculateLayoutInputHorizontal() {
+				if (child != null) {
+					calcElements = child.GetComponents<ILayoutElement>();
+					// Lay out children
+					preferredWidth = PUIUtils.GetSize(child, PanelDirection.Horizontal,
+						calcElements).preferred;
+				}
+			}
+
+			public void CalculateLayoutInputVertical() {
+				if (child != null && calcElements != null) {
+					// Lay out children
+					preferredHeight = PUIUtils.GetSize(child, PanelDirection.Vertical,
+						calcElements).preferred;
+					calcElements = null;
+				}
+			}
+
+			protected override void OnDidApplyAnimationProperties() {
+				base.OnDidApplyAnimationProperties();
+				SetDirty();
+			}
+
+			protected override void OnDisable() {
+				base.OnDisable();
+				SetDirty();
+			}
+
+			protected override void OnEnable() {
+				base.OnEnable();
+				UpdateComponents();
+				SetDirty();
+			}
+
+			protected override void OnRectTransformDimensionsChange() {
+				base.OnRectTransformDimensionsChange();
+				SetDirty();
+			}
+
+			/// <summary>
+			/// Sets this layout as dirty.
+			/// </summary>
+			private void SetDirty() {
+				if (gameObject != null && IsActive())
+					LayoutRebuilder.MarkLayoutForRebuild(gameObject.rectTransform());
+			}
+
+			public void SetLayoutHorizontal() {
+				if (child != null) {
+					setElements = child.GetComponents<ILayoutController>();
+					child.rectTransform().SetSizeWithCurrentAnchors(RectTransform.Axis.
+						Horizontal, preferredWidth);
+					// ScrollRect does not rebuild the child's layout
+					foreach (var component in setElements)
+						if (!PUIUtils.IgnoreLayout(component))
+							component.SetLayoutHorizontal();
+				}
+			}
+
+			public void SetLayoutVertical() {
+				if (child != null && setElements != null) {
+					child.rectTransform().SetSizeWithCurrentAnchors(RectTransform.Axis.
+						Vertical, preferredHeight);
+					// ScrollRect does not rebuild the child's layout
+					foreach (var component in setElements)
+						if (!PUIUtils.IgnoreLayout(component))
+							component.SetLayoutVertical();
+					setElements = null;
+				}
+			}
+
+			/// <summary>
+			/// Caches the child component for performance reasons at runtime.
+			/// </summary>
+			private void UpdateComponents() {
+				var obj = gameObject;
+				ScrollRect sr;
+				if (obj != null && (sr = obj.GetComponent<ScrollRect>()) != null)
+					child = sr.content?.gameObject;
+				else
+					child = null;
+			}
 		}
 	}
 }

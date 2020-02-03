@@ -316,27 +316,29 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public void CalculateLayoutInputHorizontal() {
-#if DEBUG_LAYOUT
-			PUIUtils.LogUIDebug("CalculateLayoutInputHorizontal for " + gameObject.name);
-#endif
 			var margin = parameters.Margin;
 			float gap = (margin == null) ? 0.0f : margin.left + margin.right;
 			horizontal = Calc(gameObject, parameters, PanelDirection.Horizontal);
 			var hTotal = horizontal.total;
 			minWidth = hTotal.min + gap;
 			preferredWidth = hTotal.preferred + gap;
+#if DEBUG_LAYOUT
+			PUIUtils.LogUIDebug("CalculateLayoutInputHorizontal for {0} preferred {1:F2}".F(
+				gameObject.name, preferredWidth));
+#endif
 		}
 
 		public void CalculateLayoutInputVertical() {
-#if DEBUG_LAYOUT
-			PUIUtils.LogUIDebug("CalculateLayoutInputVertical for " + gameObject.name);
-#endif
 			var margin = parameters.Margin;
 			float gap = (margin == null) ? 0.0f : margin.top + margin.bottom;
 			vertical = Calc(gameObject, parameters, PanelDirection.Vertical);
 			var vTotal = vertical.total;
 			minHeight = vTotal.min + gap;
 			preferredHeight = vTotal.preferred + gap;
+#if DEBUG_LAYOUT
+			PUIUtils.LogUIDebug("CalculateLayoutInputVertical for {0} preferred {1:F2}".F(
+				gameObject.name, preferredHeight));
+#endif
 		}
 
 		protected override void OnDidApplyAnimationProperties() {
@@ -376,12 +378,13 @@ namespace PeterHan.PLib.UI {
 			if (horizontal == null)
 				throw new InvalidOperationException("SetLayoutHorizontal before CalculateLayoutInputHorizontal");
 #endif
-#if DEBUG_LAYOUT
-			PUIUtils.LogUIDebug("SetLayoutHorizontal for " + gameObject.name);
-#endif
 			if (horizontal != null) {
 				var rt = gameObject.rectTransform();
-				DoLayout(parameters, horizontal, rt.rect.size.x);
+#if DEBUG_LAYOUT
+				PUIUtils.LogUIDebug("SetLayoutHorizontal for {0} resolved width to {1:F2}".F(
+					gameObject.name, rt.rect.width));
+#endif
+				DoLayout(parameters, horizontal, rt.rect.width);
 			}
 		}
 
@@ -390,12 +393,13 @@ namespace PeterHan.PLib.UI {
 			if (vertical == null)
 				throw new InvalidOperationException("SetLayoutVertical before CalculateLayoutInputVertical");
 #endif
-#if DEBUG_LAYOUT
-			PUIUtils.LogUIDebug("SetLayoutVertical for " + gameObject.name);
-#endif
 			if (vertical != null) {
 				var rt = gameObject.rectTransform();
-				DoLayout(parameters, vertical, rt.rect.size.y);
+#if DEBUG_LAYOUT
+				PUIUtils.LogUIDebug("SetLayoutVertical for {0} resolved height to {1:F2}".F(
+					gameObject.name, rt.rect.height));
+#endif
+				DoLayout(parameters, vertical, rt.rect.height);
 			}
 		}
 

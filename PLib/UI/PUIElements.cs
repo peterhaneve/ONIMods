@@ -165,7 +165,8 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
-		/// Sets the anchor location of a UI element.
+		/// Sets the anchor location of a UI element. The offsets will be reset, use
+		/// SetAnchorOffsets to adjust the offset from the new anchor locations.
 		/// </summary>
 		/// <param name="uiElement">The UI element to modify.</param>
 		/// <param name="horizAnchor">The horizontal anchor mode.</param>
@@ -174,6 +175,8 @@ namespace PeterHan.PLib.UI {
 		public static GameObject SetAnchors(GameObject uiElement, PUIAnchoring horizAnchor,
 				PUIAnchoring vertAnchor) {
 			Vector2 aMax = new Vector2(), aMin = new Vector2(), pivot = new Vector2();
+			if (uiElement == null)
+				throw new ArgumentNullException("uiElement");
 			var transform = uiElement.rectTransform();
 			// Anchor: horizontal
 			switch (horizAnchor) {
@@ -231,6 +234,22 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Sets the offsets of the UI component from its anchors. Positive for each value
+		/// denotes into the component, and negative out of the component.
+		/// </summary>
+		/// <param name="uiElement">The UI element to modify.</param>
+		/// <param name="border">The offset of each corner from the anchors.</param>
+		/// <returns>The UI element, for call chaining.</returns>
+		public static GameObject SetAnchorOffsets(GameObject uiElement, RectOffset border) {
+			if (uiElement == null)
+				throw new ArgumentNullException("uiElement");
+			var transform = uiElement.rectTransform();
+			transform.offsetMin = new Vector2(border.left, border.bottom);
+			transform.offsetMax = new Vector2(-border.right, -border.top);
+			return uiElement;
+		}
+
+		/// <summary>
 		/// Sets a UI element's parent.
 		/// </summary>
 		/// <param name="child">The UI element to modify.</param>
@@ -278,7 +297,7 @@ namespace PeterHan.PLib.UI {
 		/// <param name="parent">The dialog's parent.</param>
 		/// <param name="message">The message to display.</param>
 		/// <returns>The dialog created.</returns>
-		[Obsolete]
+		[Obsolete("Use ShowMessageDialog instead")]
 		public static ConfirmDialogScreen ShowConfirmDialog(GameObject parent, string message)
 		{
 			return ShowConfirmDialog(parent, message, DoNothing);

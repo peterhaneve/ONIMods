@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -208,6 +209,43 @@ namespace PeterHan.PLib.UI {
 			if (rt != null)
 				LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
 			return uiElement;
+		}
+
+		/// <summary>
+		/// Retrieves the estimated width of a single string character (uses 'm' as the
+		/// standard estimation character) in the given text style.
+		/// </summary>
+		/// <param name="style">The text style to use.</param>
+		/// <returns>The width in pixels that should be allocated.</returns>
+		public static float GetEmWidth(TextStyleSetting style) {
+			float width = 0.0f;
+			if (style == null)
+				throw new ArgumentNullException("style");
+			var font = style.sdfFont;
+			// Use the em width
+			if (font != null && font.characterDictionary.TryGetValue('m', out TMP_Glyph em)) {
+				var info = font.fontInfo;
+				float ptSize = style.fontSize / (info.PointSize * info.Scale);
+				width = em.width * ptSize + style.fontSize * 0.01f * font.normalSpacingOffset;
+			}
+			return width;
+		}
+
+		/// <summary>
+		/// Retrieves the estimated height of one line of text in the given text style.
+		/// </summary>
+		/// <param name="style">The text style to use.</param>
+		/// <returns>The height in pixels that should be allocated.</returns>
+		public static float GetLineHeight(TextStyleSetting style) {
+			float height = 0.0f;
+			if (style == null)
+				throw new ArgumentNullException("style");
+			var font = style.sdfFont;
+			if (font != null) {
+				var info = font.fontInfo;
+				height = info.LineHeight * style.fontSize / (info.Scale * info.PointSize);
+			}
+			return height;
 		}
 
 		/// <summary>
