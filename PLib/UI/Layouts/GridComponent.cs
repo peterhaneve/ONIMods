@@ -18,36 +18,24 @@
 
 using System;
 
-namespace PeterHan.PLib {
+namespace PeterHan.PLib.UI {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// A component in the grid with its placement information.
 	/// </summary>
-	public static class PVersion {
+	internal sealed class GridComponent<T> : GridComponentSpec where T : class {
 		/// <summary>
-		/// The PLib version.
+		/// The object to place here.
 		/// </summary>
-		public const string VERSION = "2.24.2.0";
+		public T Item { get; }
 
-		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in OnLoad, and will always return false in those cases.
-		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				bool latest = false;
-				try {
-					latest = new Version(VERSION) == PSharedData.GetData<Version>(PRegistry.
-						KEY_VERSION);
-				} catch (OverflowException) {
-				} catch (FormatException) {
-				} catch (ArgumentOutOfRangeException) {
-				}
-				return latest;
-			}
+		internal GridComponent(GridComponentSpec spec, T item) {
+			Alignment = spec.Alignment;
+			Item = item;
+			Column = spec.Column;
+			ColumnSpan = spec.ColumnSpan;
+			Margin = spec.Margin;
+			Row = spec.Row;
+			RowSpan = spec.RowSpan;
 		}
 	}
 }

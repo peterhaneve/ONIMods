@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Harmony;
 using System;
 
 namespace PeterHan.PLib {
@@ -25,6 +26,30 @@ namespace PeterHan.PLib {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
 	public sealed class LimitAttribute : Attribute {
+		/// <summary>
+		/// Creates a LimitAttribute using an object from another mod.
+		/// </summary>
+		/// <param name="attr">The attribute from the other mod.</param>
+		/// <returns>A LimitAttribute object with the values from that object, where
+		/// possible to retrieve; or null if none could be obtained.</returns>
+		internal static LimitAttribute CreateFrom(object attr) {
+			LimitAttribute la = null;
+			if (attr.GetType().Name == typeof(LimitAttribute).Name) {
+				// Has limit type
+				var trAttr = Traverse.Create(attr);
+				double min = 0.0, max = 0.0;
+				try {
+					min = trAttr.GetProperty<double>(nameof(Minimum));
+					max = trAttr.GetProperty<double>(nameof(Maximum));
+				} catch (Exception e) {
+					PUtil.LogExcWarn(e);
+				}
+				if (min != 0.0 || max != 0.0)
+					la = new LimitAttribute(min, max);
+			}
+			return la;
+		}
+
 		/// <summary>
 		/// The maximum value (inclusive).
 		/// </summary>

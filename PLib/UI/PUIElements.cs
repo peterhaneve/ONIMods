@@ -235,17 +235,33 @@ namespace PeterHan.PLib.UI {
 
 		/// <summary>
 		/// Sets the offsets of the UI component from its anchors. Positive for each value
-		/// denotes into the component, and negative out of the component.
+		/// denotes towards the component center, and negative away from the component center.
 		/// </summary>
 		/// <param name="uiElement">The UI element to modify.</param>
 		/// <param name="border">The offset of each corner from the anchors.</param>
 		/// <returns>The UI element, for call chaining.</returns>
 		public static GameObject SetAnchorOffsets(GameObject uiElement, RectOffset border) {
+			return SetAnchorOffsets(uiElement, border.left, border.right, border.top, border.
+				bottom);
+		}
+
+		/// <summary>
+		/// Sets the offsets of the UI component from its anchors. Positive for each value
+		/// denotes towards the component center, and negative away from the component center.
+		/// </summary>
+		/// <param name="uiElement">The UI element to modify.</param>
+		/// <param name="left">The left border in pixels.</param>
+		/// <param name="right">The right border in pixels.</param>
+		/// <param name="top">The top border in pixels.</param>
+		/// <param name="bottom">The bottom border in pixels.</param>
+		/// <returns>The UI element, for call chaining.</returns>
+		public static GameObject SetAnchorOffsets(GameObject uiElement, float left,
+				float right, float top, float bottom) {
 			if (uiElement == null)
 				throw new ArgumentNullException("uiElement");
 			var transform = uiElement.rectTransform();
-			transform.offsetMin = new Vector2(border.left, border.bottom);
-			transform.offsetMax = new Vector2(-border.right, -border.top);
+			transform.offsetMin = new Vector2(left, bottom);
+			transform.offsetMax = new Vector2(-right, -top);
 			return uiElement;
 		}
 

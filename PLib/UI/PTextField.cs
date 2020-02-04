@@ -163,7 +163,7 @@ namespace PeterHan.PLib.UI {
 			mask.enabled = true;
 			// Lay out - TMP_InputField does not support auto layout but we do!
 			var layout = textField.AddComponent<PTextFieldLayout>();
-			PUIElements.SetAnchorOffsets(textArea, new RectOffset(1, 1, 1, 1));
+			PUIElements.SetAnchorOffsets(textArea, 1.0f, 1.0f, 1.0f, 1.0f);
 			layout.minWidth = MinWidth;
 			layout.flexibleWidth = FlexSize.x;
 			layout.flexibleHeight = FlexSize.y;

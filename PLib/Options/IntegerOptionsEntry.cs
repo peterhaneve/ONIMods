@@ -55,14 +55,9 @@ namespace PeterHan.PLib.Options {
 
 		internal IntOptionsEntry(OptionAttribute oa, PropertyInfo prop) : base(prop?.Name, oa)
 		{
-			LimitAttribute fieldLimits = null;
 			textField = null;
 			value = 0;
-			// Look for limits
-			foreach (var attr in prop.GetCustomAttributes(false))
-				if ((fieldLimits = GetLimits(attr)) != null)
-					break;
-			limits = fieldLimits;
+			limits = FindLimitAttribute(prop);
 		}
 
 		protected override IUIComponent GetUIComponent() {

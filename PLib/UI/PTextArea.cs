@@ -145,7 +145,7 @@ namespace PeterHan.PLib.UI {
 			// Lay out
 			var element = textField.AddOrGet<LayoutElement>();
 			float height = Math.Max(LineCount, 1) * PUIUtils.GetLineHeight(style);
-			PUIElements.SetAnchorOffsets(textArea, new RectOffset(1, 1, 1, 1));
+			PUIElements.SetAnchorOffsets(textArea, 1.0f, 1.0f, 1.0f, 1.0f);
 			element.minHeight = height;
 			element.minWidth = MinWidth;
 			element.preferredHeight = height;

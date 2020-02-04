@@ -48,7 +48,7 @@ namespace PeterHan.PLib.UI {
 					components.Clear();
 					child.GetComponents(components);
 					child.SetActive(true);
-					var hc = PUIUtils.GetSize(child, direction, components);
+					var hc = PUIUtils.CalcSizes(child, direction, components);
 					result.Expand(hc);
 					result.children.Add(hc);
 					child.SetActive(active);
@@ -77,12 +77,7 @@ namespace PeterHan.PLib.UI {
 			foreach (var child in required.children) {
 				var obj = child.source;
 				if (obj != null) {
-					float compSize = child.min;
-					// Compute size: minimum guaranteed, then preferred, then flexible
-					if (compSize < size)
-						compSize = Math.Min(size, child.preferred);
-					if (compSize < size && child.flexible > 0.0f)
-						compSize = size;
+					float compSize = PUIUtils.GetProperSize(child, size);
 					// Place and size component
 					var transform = obj.AddOrGet<RectTransform>();
 					if (direction == PanelDirection.Horizontal)

@@ -53,6 +53,11 @@ namespace PeterHan.PLib.UI {
 		public Sprite InactiveSprite { get; set; }
 
 		/// <summary>
+		/// The initial state of the toggle button.
+		/// </summary>
+		public bool InitialState { get; set; }
+
+		/// <summary>
 		/// The margin around the component.
 		/// </summary>
 		public RectOffset Margin { get; set; }
@@ -82,6 +87,7 @@ namespace PeterHan.PLib.UI {
 		public PToggle(string name) {
 			ActiveSprite = PUITuning.Images.Contract;
 			Color = PUITuning.Colors.ComponentDarkStyle;
+			InitialState = false;
 			Margin = TOGGLE_MARGIN;
 			Name = name ?? "Toggle";
 			InactiveSprite = PUITuning.Images.Expand;
@@ -103,19 +109,24 @@ namespace PeterHan.PLib.UI {
 			var fgImage = toggle.AddComponent<KImage>();
 			fgImage.color = Color.activeColor;
 			fgImage.sprite = InactiveSprite;
+			toggle.SetActive(false);
 			// Toggled images
 			var toggleImage = toggle.AddComponent<ImageToggleState>();
 			toggleImage.TargetImage = fgImage;
 			toggleImage.useSprites = true;
 			toggleImage.InactiveSprite = InactiveSprite;
 			toggleImage.ActiveSprite = ActiveSprite;
-			toggleImage.startingState = ImageToggleState.State.Inactive;
+			toggleImage.startingState = InitialState ? ImageToggleState.State.Active :
+				ImageToggleState.State.Inactive;
+			toggleImage.useStartingState = true;
 			toggleImage.ActiveColour = Color.activeColor;
 			toggleImage.DisabledActiveColour = Color.disabledActiveColor;
 			toggleImage.InactiveColour = Color.inactiveColor;
 			toggleImage.DisabledColour = Color.disabledColor;
 			toggleImage.HoverColour = Color.hoverColor;
 			toggleImage.DisabledHoverColor = Color.disabledhoverColor;
+			kToggle.isOn = InitialState;
+			toggle.SetActive(true);
 			// Set size
 			if (Size.x > 0.0f && Size.y > 0.0f)
 				toggle.SetUISize(Size, true);

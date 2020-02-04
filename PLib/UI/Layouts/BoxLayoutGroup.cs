@@ -51,7 +51,7 @@ namespace PeterHan.PLib.UI {
 					// Only on active game objects
 					components.Clear();
 					child.GetComponents(components);
-					var hc = PUIUtils.GetSize(child, direction, components);
+					var hc = PUIUtils.CalcSizes(child, direction, components);
 					if (args.Direction == direction)
 						result.Accum(hc, args.Spacing);
 					else
@@ -101,7 +101,7 @@ namespace PeterHan.PLib.UI {
 				prefRatio = Math.Min(1.0f, (size - minSize) / (prefSize - minSize));
 			if (excess > 0.0f && flexTotal == 0.0f)
 				// If no components can be expanded, offset all
-				offset += GetOffset(args, status.direction, excess);
+				offset += PUIUtils.GetOffset(args.Alignment, status.direction, excess);
 			foreach (var child in required.children) {
 				var obj = child.source;
 				// Active objects only
@@ -149,8 +149,8 @@ namespace PeterHan.PLib.UI {
 					if (child.flexible <= 0.0f)
 						// Does not expand to all
 						compSize = Math.Min(compSize, child.preferred);
-					float offset = (size > compSize) ? GetOffset(args, status.direction,
-						size - compSize) : 0.0f;
+					float offset = (size > compSize) ? PUIUtils.GetOffset(args.Alignment,
+						status.direction, size - compSize) : 0.0f;
 					// Place and size component
 					obj.AddOrGet<RectTransform>().SetInsetAndSizeFromParentEdge(status.edge,
 						offset + status.offset, compSize);
@@ -167,50 +167,6 @@ namespace PeterHan.PLib.UI {
 				}
 			}
 			components.Recycle();
-		}
-
-		/// <summary>
-		/// Gets the offset required for a component in its box.
-		/// </summary>
-		/// <param name="args">The parameters to use for layout.</param>
-		/// <param name="direction">The direction of layout.</param>
-		/// <param name="delta">The remaining space.</param>
-		/// <returns>The offset from the edge.</returns>
-		private static float GetOffset(BoxLayoutParams args, PanelDirection direction,
-				float delta) {
-			float offset = 0.0f;
-			// Based on alignment, offset component
-			if (direction == PanelDirection.Horizontal)
-				switch (args.Alignment) {
-				case TextAnchor.LowerCenter:
-				case TextAnchor.MiddleCenter:
-				case TextAnchor.UpperCenter:
-					offset = delta * 0.5f;
-					break;
-				case TextAnchor.LowerRight:
-				case TextAnchor.MiddleRight:
-				case TextAnchor.UpperRight:
-					offset = delta;
-					break;
-				default:
-					break;
-				}
-			else
-				switch (args.Alignment) {
-				case TextAnchor.MiddleLeft:
-				case TextAnchor.MiddleCenter:
-				case TextAnchor.MiddleRight:
-					offset = delta * 0.5f;
-					break;
-				case TextAnchor.LowerLeft:
-				case TextAnchor.LowerCenter:
-				case TextAnchor.LowerRight:
-					offset = delta;
-					break;
-				default:
-					break;
-				}
-			return offset;
 		}
 
 		/// <summary>

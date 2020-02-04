@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Harmony;
 using System;
 
 namespace PeterHan.PLib.Options {
@@ -26,6 +27,33 @@ namespace PeterHan.PLib.Options {
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
 	public sealed class ConfigFileAttribute : Attribute {
+		/// <summary>
+		/// Creates a ConfigFileAttribute using an object from another mod.
+		/// </summary>
+		/// <param name="attr">The attribute from the other mod.</param>
+		/// <returns>A ConfigFileAttribute object with the values from that object, where
+		/// possible to retrieve; or null if none could be obtained.</returns>
+		internal static ConfigFileAttribute CreateFrom(object attr) {
+			ConfigFileAttribute cfa = null;
+			if (attr.GetType().Name == typeof(ConfigFileAttribute).Name) {
+				var trAttr = Traverse.Create(attr);
+				string file = null;
+				bool indent = false;
+				// Log any errors from obtaining these values
+				try {
+					file = trAttr.GetProperty<string>(nameof(ConfigFileName));
+					indent = trAttr.GetProperty<bool>(nameof(IndentOutput));
+				} catch (Exception e) {
+					PUtil.LogExcWarn(e);
+				}
+				// Remove invalid file names
+				if (!PUtil.IsValidFileName(file))
+					file = null;
+				cfa = new ConfigFileAttribute(file, indent);
+			}
+			return cfa;
+		}
+
 		/// <summary>
 		/// The configuration file name. If null, the default file name will be used.
 		/// </summary>
