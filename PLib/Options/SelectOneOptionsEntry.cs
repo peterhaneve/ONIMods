@@ -40,16 +40,14 @@ namespace PeterHan.PLib.Options {
 			foreach (var enumField in fieldType.GetMember(valueName, BindingFlags.Public |
 						BindingFlags.Static))
 				if (enumField.DeclaringType == fieldType) {
-					OptionAttribute oa = null;
+					OptionAttribute oa;
 					// Search for OptionsAttribute
 					foreach (var attrib in enumField.GetCustomAttributes(false))
-						if ((oa = GetOptionInfo(attrib)) != null)
+						if ((oa = OptionAttribute.CreateFrom(attrib)) != null) {
+							title = oa.Title;
+							tooltip = oa.Tooltip;
 							break;
-					// If not found, use the default
-					if (oa != null) {
-						title = oa.Title;
-						tooltip = oa.Tooltip;
-					}
+						}
 					break;
 				}
 			return new Option(title, tooltip, enumValue);
@@ -123,11 +121,11 @@ namespace PeterHan.PLib.Options {
 			return new PPanel("Select") {
 				Direction = PanelDirection.Horizontal, Spacing = 5
 			}.AddChild(new PButton("Previous") {
-				SpriteSize = ARROW_SIZE, OnClick = OnPrevious, ToolTip = POptions.
+				SpriteSize = ARROW_SIZE, OnClick = OnPrevious, ToolTip = PUIStrings.
 				TOOLTIP_PREVIOUS
 			}.SetKleiBlueStyle().SetImageLeftArrow()).AddChild(lbl).
 			AddChild(new PButton("Next") {
-				SpriteSize = ARROW_SIZE, OnClick = OnNext, ToolTip = POptions.TOOLTIP_NEXT
+				SpriteSize = ARROW_SIZE, OnClick = OnNext, ToolTip = PUIStrings.TOOLTIP_NEXT
 			}.SetKleiBlueStyle().SetImageRightArrow());
 		}
 

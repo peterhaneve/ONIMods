@@ -28,44 +28,16 @@ namespace PeterHan.PLib.Options {
 	/// </summary>
 	internal abstract class OptionsEntry : IComparable<OptionsEntry> {
 		/// <summary>
-		/// Tries to retrieve the limits for an option.
+		/// Searches for LimitAttribute attributes on the property wrapped by an OptionsEntry.
 		/// </summary>
-		/// <param name="attr">The annotation to check.</param>
-		/// <returns>The LimitAttribute matching that annotation, or null if it is not a LimitAttribute.</returns>
-		internal static LimitAttribute GetLimits(object attr) {
-			if (attr == null)
-				throw new ArgumentNullException("attr");
-			LimitAttribute la = null;
-			if (attr.GetType().Name == typeof(LimitAttribute).Name) {
-				// Has limit type
-				var trAttr = Traverse.Create(attr);
-				double min = trAttr.GetProperty<double>(nameof(LimitAttribute.Minimum)),
-					max = trAttr.GetProperty<double>(nameof(LimitAttribute.Maximum));
-				if (min != 0.0 || max != 0.0)
-					la = new LimitAttribute(min, max);
-			}
-			return la;
-		}
-
-		/// <summary>
-		/// Tries to retrieve the option's title and tool tip.
-		/// </summary>
-		/// <param name="attr">The annotation to check.</param>
-		/// <returns>The OptionAttribute matching that annotation, or null if it is not an OptionAttribute.</returns>
-		internal static OptionAttribute GetOptionInfo(object attr) {
-			if (attr == null)
-				throw new ArgumentNullException("attr");
-			OptionAttribute oa = null;
-			if (attr.GetType().Name == typeof(OptionAttribute).Name) {
-				// Has the Options attribute, but is cross-mod...
-				var trAttr = Traverse.Create(attr);
-				string title = trAttr.GetProperty<string>(nameof(OptionAttribute.Title)),
-					tt = trAttr.GetProperty<string>(nameof(OptionAttribute.Tooltip)) ?? "",
-					cat = trAttr.GetProperty<string>(nameof(OptionAttribute.Category)) ?? "";
-				if (!string.IsNullOrEmpty(title))
-					oa = new OptionAttribute(title, tt, cat);
-			}
-			return oa;
+		/// <param name="prop">The property with annotations.</param>
+		/// <returns>The Limit attribute if present, or null if none is.</returns>
+		protected static LimitAttribute FindLimitAttribute(PropertyInfo prop) {
+			LimitAttribute fieldLimits = null;
+			foreach (var attr in prop.GetCustomAttributes(false))
+				if ((fieldLimits = LimitAttribute.CreateFrom(attr)) != null)
+					break;
+			return fieldLimits;
 		}
 
 		/// <summary>
@@ -127,9 +99,9 @@ namespace PeterHan.PLib.Options {
 				Direction = PanelDirection.Horizontal, FlexSize = expandWidth,
 				Spacing = 5, Alignment = TextAnchor.MiddleCenter
 			}.AddChild(new PLabel("Label") {
-				Text = OptionsDialog.LookInStrings(Title), ToolTip = ToolTip, FlexSize =
-				expandWidth, TextAlignment = TextAnchor.MiddleLeft,
-				DynamicSize = true
+				Text = Title, ToolTip = ToolTip, FlexSize = new Vector2(1.0f, 0.0f),
+				TextAlignment = TextAnchor.MiddleLeft, DynamicSize = true, TextStyle =
+				PUITuning.Fonts.TextLightStyle
 			}).AddChild(GetUIComponent());
 		}
 

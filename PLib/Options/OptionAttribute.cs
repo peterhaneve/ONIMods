@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Harmony;
 using System;
 
 namespace PeterHan.PLib {
@@ -26,6 +27,27 @@ namespace PeterHan.PLib {
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false,
 		Inherited = true)]
 	public sealed class OptionAttribute : Attribute {
+		/// <summary>
+		/// Creates an OptionAttribute using an object from another mod.
+		/// </summary>
+		/// <param name="attr">The attribute from the other mod.</param>
+		/// <returns>An OptionAttribute object with the values from that object, where
+		/// possible to retrieve; or null if none could be obtained.</returns>
+		internal static OptionAttribute CreateFrom(object attr) {
+			string title = "", tt = "", cat = "";
+			if (attr.GetType().Name == typeof(OptionAttribute).Name) {
+				var trAttr = Traverse.Create(attr);
+				try {
+					title = trAttr.GetProperty<string>(nameof(Title));
+					tt = trAttr.GetProperty<string>(nameof(Tooltip)) ?? "";
+					cat = trAttr.GetProperty<string>(nameof(Category)) ?? "";
+				} catch (Exception e) {
+					PUtil.LogExcWarn(e);
+				}
+			}
+			return string.IsNullOrEmpty(title) ? null : new OptionAttribute(title, tt, cat);
+		}
+
 		/// <summary>
 		/// The option category.
 		/// </summary>

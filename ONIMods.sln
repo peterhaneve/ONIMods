@@ -55,6 +55,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlaidAsteroid", "PlaidAster
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThermalTooltips", "ThermalTooltips\ThermalTooltips.csproj", "{01184A60-E812-461A-97BF-8523723B68C4}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLibOptions", "PLibOptions\PLibOptions.csproj", "{0BED6413-DABC-4349-B047-547F4E125C3F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -165,6 +167,10 @@ Global
 		{01184A60-E812-461A-97BF-8523723B68C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{01184A60-E812-461A-97BF-8523723B68C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{01184A60-E812-461A-97BF-8523723B68C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BED6413-DABC-4349-B047-547F4E125C3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BED6413-DABC-4349-B047-547F4E125C3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BED6413-DABC-4349-B047-547F4E125C3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BED6413-DABC-4349-B047-547F4E125C3F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

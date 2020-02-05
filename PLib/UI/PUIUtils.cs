@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -165,6 +166,47 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Calculates the size of a single game object.
+		/// </summary>
+		/// <param name="obj">The object to calculate.</param>
+		/// <param name="direction">The direction to calculate.</param>
+		/// <param name="elements">The layout eligible components of this game object.</param>
+		/// <returns>The object's minimum and preferred size.</returns>
+		internal static LayoutSizes CalcSizes(GameObject obj, PanelDirection direction,
+				IEnumerable<ILayoutElement> elements) {
+			float min = 0.0f, preferred = 0.0f, flexible = 0.0f, scaleFactor;
+			int minPri = int.MinValue, prefPri = int.MinValue, flexPri = int.MinValue;
+			var scale = obj.transform.localScale;
+			// Find the correct scale direction
+			if (direction == PanelDirection.Horizontal)
+				scaleFactor = Math.Abs(scale.x);
+			else
+				scaleFactor = Math.Abs(scale.y);
+			foreach (var component in elements)
+				if (((component as Behaviour)?.isActiveAndEnabled ?? false) && !IgnoreLayout(
+						component)) {
+					// Calculate must come first
+					if (direction == PanelDirection.Horizontal)
+						component.CalculateLayoutInputHorizontal();
+					else // if (direction == PanelDirection.Vertical)
+						component.CalculateLayoutInputVertical();
+					int lp = component.layoutPriority;
+					// Larger values win
+					if (direction == PanelDirection.Horizontal) {
+						PriValue(ref min, component.minWidth, lp, ref minPri);
+						PriValue(ref preferred, component.preferredWidth, lp, ref prefPri);
+						PriValue(ref flexible, component.flexibleWidth, lp, ref flexPri);
+					} else {
+						PriValue(ref min, component.minHeight, lp, ref minPri);
+						PriValue(ref preferred, component.preferredHeight, lp, ref prefPri);
+						PriValue(ref flexible, component.flexibleHeight, lp, ref flexPri);
+					}
+				}
+			return new LayoutSizes(obj, min * scaleFactor, Math.Max(min, preferred) *
+				scaleFactor, flexible);
+		}
+
+		/// <summary>
 		/// Dumps information about the parent tree of the specified GameObject to the debug
 		/// log.
 		/// </summary>
@@ -208,6 +250,43 @@ namespace PeterHan.PLib.UI {
 			if (rt != null)
 				LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
 			return uiElement;
+		}
+
+		/// <summary>
+		/// Retrieves the estimated width of a single string character (uses 'm' as the
+		/// standard estimation character) in the given text style.
+		/// </summary>
+		/// <param name="style">The text style to use.</param>
+		/// <returns>The width in pixels that should be allocated.</returns>
+		public static float GetEmWidth(TextStyleSetting style) {
+			float width = 0.0f;
+			if (style == null)
+				throw new ArgumentNullException("style");
+			var font = style.sdfFont;
+			// Use the em width
+			if (font != null && font.characterDictionary.TryGetValue('m', out TMP_Glyph em)) {
+				var info = font.fontInfo;
+				float ptSize = style.fontSize / (info.PointSize * info.Scale);
+				width = em.width * ptSize + style.fontSize * 0.01f * font.normalSpacingOffset;
+			}
+			return width;
+		}
+
+		/// <summary>
+		/// Retrieves the estimated height of one line of text in the given text style.
+		/// </summary>
+		/// <param name="style">The text style to use.</param>
+		/// <returns>The height in pixels that should be allocated.</returns>
+		public static float GetLineHeight(TextStyleSetting style) {
+			float height = 0.0f;
+			if (style == null)
+				throw new ArgumentNullException("style");
+			var font = style.sdfFont;
+			if (font != null) {
+				var info = font.fontInfo;
+				height = info.LineHeight * style.fontSize / (info.Scale * info.PointSize);
+			}
+			return height;
 		}
 
 		/// <summary>
@@ -265,44 +344,78 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
-		/// Calculates the size of a single game object.
+		/// Determines the size for a component on a particular axis.
 		/// </summary>
-		/// <param name="obj">The object to calculate.</param>
-		/// <param name="direction">The direction to calculate.</param>
-		/// <param name="elements">The layout eligible components of this game object.</param>
-		/// <returns>The object's minimum and preferred size.</returns>
-		internal static LayoutSizes GetSize(GameObject obj, PanelDirection direction,
-				IEnumerable<ILayoutElement> elements) {
-			float min = 0.0f, preferred = 0.0f, flexible = 0.0f, scaleFactor;
-			int minPri = int.MinValue, prefPri = int.MinValue, flexPri = int.MinValue;
-			var scale = obj.transform.localScale;
-			// Find the correct scale direction
+		/// <param name="sizes">The declared sizes.</param>
+		/// <param name="allocated">The space allocated.</param>
+		/// <returns>The size that the component should be.</returns>
+		internal static float GetProperSize(LayoutSizes sizes, float allocated) {
+			float size = sizes.min, preferred = Math.Max(sizes.preferred, size);
+			// Compute size: minimum guaranteed, then preferred, then flexible
+			if (allocated > size)
+				size = Math.Min(preferred, allocated);
+			if (allocated > preferred && sizes.flexible > 0.0f)
+				size = allocated;
+			return size;
+		}
+
+		/// <summary>
+		/// Gets the offset required for a component in its box.
+		/// </summary>
+		/// <param name="alignment">The alignment to use.</param>
+		/// <param name="direction">The direction of layout.</param>
+		/// <param name="delta">The remaining space.</param>
+		/// <returns>The offset from the edge.</returns>
+		internal static float GetOffset(TextAnchor alignment, PanelDirection direction,
+				float delta) {
+			float offset = 0.0f;
+			// Based on alignment, offset component
 			if (direction == PanelDirection.Horizontal)
-				scaleFactor = Math.Abs(scale.x);
-			else
-				scaleFactor = Math.Abs(scale.y);
-			foreach (var component in elements)
-				if (((component as Behaviour)?.isActiveAndEnabled ?? false) && !IgnoreLayout(
-						component)) {
-					// Calculate must come first
-					if (direction == PanelDirection.Horizontal)
-						component.CalculateLayoutInputHorizontal();
-					else // if (direction == PanelDirection.Vertical)
-						component.CalculateLayoutInputVertical();
-					int lp = component.layoutPriority;
-					// Larger values win
-					if (direction == PanelDirection.Horizontal) {
-						PriValue(ref min, component.minWidth, lp, ref minPri);
-						PriValue(ref preferred, component.preferredWidth, lp, ref prefPri);
-						PriValue(ref flexible, component.flexibleWidth, lp, ref flexPri);
-					} else {
-						PriValue(ref min, component.minHeight, lp, ref minPri);
-						PriValue(ref preferred, component.preferredHeight, lp, ref prefPri);
-						PriValue(ref flexible, component.flexibleHeight, lp, ref flexPri);
-					}
+				switch (alignment) {
+				case TextAnchor.LowerCenter:
+				case TextAnchor.MiddleCenter:
+				case TextAnchor.UpperCenter:
+					offset = delta * 0.5f;
+					break;
+				case TextAnchor.LowerRight:
+				case TextAnchor.MiddleRight:
+				case TextAnchor.UpperRight:
+					offset = delta;
+					break;
+				default:
+					break;
+				} else
+				switch (alignment) {
+				case TextAnchor.MiddleLeft:
+				case TextAnchor.MiddleCenter:
+				case TextAnchor.MiddleRight:
+					offset = delta * 0.5f;
+					break;
+				case TextAnchor.LowerLeft:
+				case TextAnchor.LowerCenter:
+				case TextAnchor.LowerRight:
+					offset = delta;
+					break;
+				default:
+					break;
 				}
-			return new LayoutSizes(obj, min * scaleFactor, Math.Max(min, preferred) *
-				scaleFactor, flexible);
+			return offset;
+		}
+
+		/// <summary>
+		/// Retrieves the parent of the GameObject, or null if it does not have a parent.
+		/// </summary>
+		/// <param name="child">The child object.</param>
+		/// <returns>The parent of that object, or null if it does not have a parent.</returns>
+		public static GameObject GetParent(this GameObject child) {
+			GameObject parent = null;
+			if (child != null) {
+				var newParent = child.transform.parent?.gameObject;
+				// If parent is disposed, prevent crash
+				if (newParent != null)
+					parent = newParent;
+			}
+			return parent;
 		}
 
 		/// <summary>

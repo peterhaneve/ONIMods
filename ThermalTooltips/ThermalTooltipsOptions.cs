@@ -32,6 +32,60 @@ namespace PeterHan.ThermalTooltips {
 		[JsonProperty]
 		public bool AllUnits { get; set; }
 
+		[Option("Test 1", category: "Fake Options")]
+		public string String { get; set; }
+
+		[Option("Test 2", category: "Fake Options")]
+		public int Item1 { get; set; }
+
+		[Option("Test 3", category: "Fake Options")]
+		public int Item2 { get; set; }
+
+		[Option("Test 4", category: "Fake Options")]
+		public int Item3 { get; set; }
+
+		[Option("Test 5", category: "Fake Options")]
+		public int Item4 { get; set; }
+
+		[Option("Test 6", category: "Fake Options")]
+		public int Item5 { get; set; }
+
+		[Option("Test 7", category: "Fake Options")]
+		public int Item6 { get; set; }
+
+		[Option("Test 8", category: "Fake Options")]
+		public int Item7 { get; set; }
+
+		[Option("Test 9", category: "Fake Options")]
+		public int Item8 { get; set; }
+
+		[Option("Test 10", category: "Fake Options")]
+		public int Item9 { get; set; }
+
+		[Option("Test 11", category: "Fake Options")]
+		public int Item10 { get; set; }
+
+		[Option("Test 12", category: "Fake Options")]
+		public int Item11 { get; set; }
+
+		[Option("Test 13", category: "Fake Options")]
+		public int Item12 { get; set; }
+
+		[Option("Test 14", category: "Fake Options")]
+		public int Item13 { get; set; }
+
+		[Option("Test 15", category: "Fake Options")]
+		public int Item14 { get; set; }
+
+		[Option("Test 16", category: "Fake Options")]
+		public int Item15 { get; set; }
+
+		[Option("Test 17", category: "Fake Options")]
+		public int Item16 { get; set; }
+
+		[Option("Test 18", category: "Fake Options")]
+		public int Item17 { get; set; }
+
 		/// <summary>
 		/// Whether to only show tooltips on the thermal overlay.
 		/// </summary>

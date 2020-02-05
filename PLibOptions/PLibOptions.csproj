@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net35</TargetFramework>
+    <Title>PeterHan.PLib.Options</Title>
+    <AssemblyTitle>PeterHanLib Options</AssemblyTitle>
+    <Version>2.24.0.0</Version>
+    <UsesPLib>false</UsesPLib>
+    <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
+    <Copyright>Copyright 2020 Peter Han</Copyright>
+    <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
+    
+Contains functions aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
+    <AssemblyVersion>2.24.0.0</AssemblyVersion>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
+    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+    <DefineConstants>OPTIONS_ONLY</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\PLibOptions.xml</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\PLib\Options\CheckboxOptionsEntry.cs" Link="CheckboxOptionsEntry.cs" />
+    <Compile Include="..\PLib\Options\ConfigFileAttribute.cs" Link="ConfigFileAttribute.cs" />
+    <Compile Include="..\PLib\Options\FloatOptionsEntry.cs" Link="FloatOptionsEntry.cs" />
+    <Compile Include="..\PLib\Options\IntegerOptionsEntry.cs" Link="IntegerOptionsEntry.cs" />
+    <Compile Include="..\PLib\Options\LimitAttribute.cs" Link="LimitAttribute.cs" />
+    <Compile Include="..\PLib\Options\OptionAttribute.cs" Link="OptionAttribute.cs" />
+    <Compile Include="..\PLib\Options\OptionsDialog.cs" Link="OptionsDialog.cs" />
+    <Compile Include="..\PLib\Options\OptionsEntry.cs" Link="OptionsEntry.cs" />
+    <Compile Include="..\PLib\Options\POptions.cs" Link="POptions.cs" />
+    <Compile Include="..\PLib\Options\RestartRequiredAttribute.cs" Link="RestartRequiredAttribute.cs" />
+    <Compile Include="..\PLib\Options\SelectOneOptionsEntry.cs" Link="SelectOneOptionsEntry.cs" />
+    <Compile Include="..\PLib\Options\StringOptionsEntry.cs" Link="StringOptionsEntry.cs" />
+    <Compile Include="..\PLib\UI\BorderLayoutGroup.cs" Link="UI\BorderLayoutGroup.cs" />
+    <Compile Include="..\PLib\UI\BoxLayoutGroup.cs" Link="UI\BoxLayoutGroup.cs" />
+    <Compile Include="..\PLib\UI\CardLayoutGroup.cs" Link="UI\CardLayoutGroup.cs" />
+    <Compile Include="..\PLib\UI\IDynamicSizable.cs" Link="UI\IDynamicSizable.cs" />
+    <Compile Include="..\PLib\UI\ImageTransform.cs" Link="UI\ImageTransform.cs" />
+    <Compile Include="..\PLib\UI\ISettableFlexSize.cs" Link="UI\ISettableFlexSize.cs" />
+    <Compile Include="..\PLib\UI\IUIComponent.cs" Link="UI\IUIComponent.cs" />
+    <Compile Include="..\PLib\UI\LayoutSizes.cs" Link="UI\LayoutSizes.cs" />
+    <Compile Include="..\PLib\UI\PButton.cs" Link="UI\PButton.cs" />
+    <Compile Include="..\PLib\UI\PCheckBox.cs" Link="UI\PCheckBox.cs" />
+    <Compile Include="..\PLib\UI\PDialog.cs" Link="UI\PDialog.cs" />
+    <Compile Include="..\PLib\UI\PLabel.cs" Link="UI\PLabel.cs" />
+    <Compile Include="..\PLib\UI\PPanel.cs" Link="UI\PPanel.cs" />
+    <Compile Include="..\PLib\UI\PScrollPane.cs" Link="UI\PScrollPane.cs" />
+    <Compile Include="..\PLib\UI\PSpacer.cs" Link="UI\PSpacer.cs" />
+    <Compile Include="..\PLib\UI\PTextComponent.cs" Link="UI\PTextComponent.cs" />
+    <Compile Include="..\PLib\UI\PTextField.cs" Link="UI\PTextField.cs" />
+    <Compile Include="..\PLib\UI\PToggle.cs" Link="UI\PToggle.cs" />
+    <Compile Include="..\PLib\UI\PUIDelegates.cs" Link="UI\PUIDelegates.cs" />
+    <Compile Include="..\PLib\UI\PUIElements.cs" Link="UI\PUIElements.cs" />
+    <Compile Include="..\PLib\UI\PUITuning.cs" Link="UI\PUITuning.cs" />
+    <Compile Include="..\PLib\UI\PUIUtils.cs" Link="UI\PUIUtils.cs" />
+  </ItemGroup>
+</Project>

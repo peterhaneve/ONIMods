@@ -36,12 +36,12 @@ namespace PeterHan.PLib.Options {
 		/// <param name="forType">The type of the options class.</param>
 		/// <returns>A list of all public properties annotated for options dialogs.</returns>
 		private static IDictionary<string, OptionsList> BuildOptions(Type forType) {
-			var entries = new Dictionary<string, OptionsList>(4);
+			var entries = new SortedList<string, OptionsList>(8);
 			OptionAttribute oa;
 			foreach (var prop in forType.GetProperties())
 				// Must have the annotation
 				foreach (var attr in prop.GetCustomAttributes(false))
-					if ((oa = OptionsEntry.GetOptionInfo(attr)) != null) {
+					if ((oa = OptionAttribute.CreateFrom(attr)) != null) {
 						// Attempt to find a class that will represent it
 						var entry = CreateOptions(prop, oa);
 						if (entry != null) {
@@ -163,13 +163,25 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <param name="body">The parent of the header.</param>
 		/// <param name="category">The header title.</param>
-		private void AddCategoryHeader(PPanel body, string category) {
+		/// <param name="contents">The panel containing the options in this category.</param>
+		private void AddCategoryHeader(PPanel body, string category, PPanel contents) {
 			if (!string.IsNullOrEmpty(category))
-				body.AddChild(new PLabel("CategoryHeader_" + category) {
+				var handler = new CategoryExpandHandler();
+				body.AddChild(new PPanel("CategorySelect") {
+					FlexSize = Vector2.right, Alignment = TextAnchor.MiddleLeft, Spacing = 5,
+					Direction = PanelDirection.Horizontal, Margin = new RectOffset(0, 0, 0, 2)
+				}.AddChild(new PToggle("CategoryToggle") {
+					Color = PUITuning.Colors.ComponentDarkStyle, DynamicSize = false,
+					ToolTip = PUIStrings.TOOLTIP_TOGGLE, Size = new Vector2(12.0f, 12.0f),
+					InitialState = true, OnStateChanged = handler.OnExpandContract
+				}).AddChild(new PLabel("CategoryHeader") {
 					Text = LookInStrings(category), TextStyle = POptions.TITLE_STYLE,
 					TextAlignment = TextAnchor.LowerCenter, DynamicSize = true,
-					Margin = new RectOffset(0, 0, 0, 2), FlexSize = new Vector2(1.0f, 0.0f),
-				});
+					FlexSize = Vector2.right,
+				}));
+				if (contents != null)
+					contents.OnRealize += handler.OnRealizePanel;
+			body.AddChild(contents);
 		}
 
 		/// <summary>
@@ -188,8 +200,8 @@ namespace PeterHan.PLib.Options {
 					}
 				if (restartRequired)
 					// Prompt user to restart
-					PUIElements.ShowConfirmDialog(null, POptions.RESTART_REQUIRED,
-						SaveAndRestart, null, POptions.RESTART_OK, POptions.
+					PUIElements.ShowConfirmDialog(null, PUIStrings.RESTART_REQUIRED,
+						App.instance.Restart, null, PUIStrings.RESTART_OK, PUIStrings.
 						RESTART_CANCEL);
 			}
 		}
@@ -225,6 +237,51 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
+		/// Fills in the actual mod option fields.
+		/// </summary>
+		/// <param name="pDialog">The dialog to populate.</param>
+		private void FillModOptions(PDialog pDialog) {
+			PPanel body = pDialog.Body, current, contents;
+			var margin = body.Margin;
+			// For each option, add its UI component to panel
+			body.Margin = new RectOffset(0, 0, 10, 10);
+			var scrollBody = new PPanel("ScrollContent") {
+				Spacing = 10, Direction = PanelDirection.Vertical, Alignment = TextAnchor.
+				UpperCenter, FlexSize = Vector2.right, Margin = new RectOffset(10, 10, 0, 0)
+			};
+			// Display all categories
+			foreach (var catEntries in optionCategories) {
+				string category = catEntries.Key;
+				if (catEntries.Value.Count > 0) {
+					current = new PPanel("Category_" + category) {
+						Alignment = TextAnchor.UpperCenter, Spacing = 5, Margin = margin,
+						BackColor = PUITuning.Colors.DialogDarkBackground,
+						FlexSize = Vector2.right
+					};
+					contents = new PPanel("Entries") {
+						Alignment = TextAnchor.UpperCenter, Spacing = 5, FlexSize =
+						Vector2.right
+					};
+					AddCategoryHeader(current, catEntries.Key, contents);
+					foreach (var entry in catEntries.Value)
+						contents.AddChild(entry.GetUIEntry());
+					scrollBody.AddChild(current);
+				}
+			}
+			// Manual config button
+			scrollBody.AddChild(new PButton("ManualConfig") {
+				Text = PUIStrings.BUTTON_MANUAL, ToolTip = PUIStrings.TOOLTIP_MANUAL,
+				OnClick = OnManualConfig, TextAlignment = TextAnchor.MiddleCenter, Margin =
+				PDialog.BUTTON_MARGIN
+			}.SetKleiBlueStyle());
+			body.AddChild(new PScrollPane() {
+				ScrollHorizontal = false, ScrollVertical = true, Child = scrollBody,
+				FlexSize = Vector2.right, TrackSize = 8, AlwaysShowHorizontal = false,
+				AlwaysShowVertical = false
+			});
+		}
+
+		/// <summary>
 		/// Triggered when the Mod Options button is clicked.
 		/// </summary>
 		public void OnModOptions(GameObject _) {
@@ -233,31 +290,15 @@ namespace PeterHan.PLib.Options {
 				CloseDialog();
 				// Ensure that it is on top of other screens (which may be +100 modal)
 				var pDialog = new PDialog("ModOptions") {
-					Title = POptions.DIALOG_TITLE.text.F(modSpec.title), Size = POptions.
+					Title = PUIStrings.DIALOG_TITLE.text.F(modSpec.title), Size = POptions.
 					SETTINGS_DIALOG_SIZE, SortKey = 150.0f, DialogBackColor = PUITuning.Colors.
-					OptionsBackground, DialogClosed = OnOptionsSelected
-				}.AddButton("ok", STRINGS.UI.CONFIRMDIALOG.OK, POptions.TOOLTIP_OK);
-				pDialog.AddButton("manual", POptions.BUTTON_MANUAL, POptions.TOOLTIP_MANUAL).
-					AddButton(PDialog.DIALOG_KEY_CLOSE, STRINGS.UI.CONFIRMDIALOG.CANCEL,
-					POptions.TOOLTIP_CANCEL);
-				PPanel body = pDialog.Body, current;
-				var margin = body.Margin;
-				// For each option, add its UI component to panel
-				body.Spacing = 10;
-				body.Margin = new RectOffset(0, 0, 0, 0);
-				// Display all categories
-				foreach (var catEntries in optionCategories) {
-					string category = catEntries.Key;
-					current = new PPanel("Entries_" + category) {
-						Alignment = TextAnchor.UpperCenter, Spacing = 5,
-						BackColor = PUITuning.Colors.DialogDarkBackground,
-						FlexSize = new Vector2(1.0f, 0.0f), Margin = margin
-					};
-					AddCategoryHeader(current, catEntries.Key);
-					foreach (var entry in catEntries.Value)
-						current.AddChild(entry.GetUIEntry());
-					body.AddChild(current);
-				}
+					OptionsBackground, DialogClosed = OnOptionsSelected, MaxSize = POptions.
+					SETTINGS_DIALOG_MAX_SIZE
+				}.AddButton("ok", STRINGS.UI.CONFIRMDIALOG.OK, PUIStrings.TOOLTIP_OK,
+					PUITuning.Colors.ButtonPinkStyle).AddButton(PDialog.DIALOG_KEY_CLOSE,
+					STRINGS.UI.CONFIRMDIALOG.CANCEL, PUIStrings.TOOLTIP_CANCEL,
+					PUITuning.Colors.ButtonBlueStyle);
+				FillModOptions(pDialog);
 				options = POptions.ReadSettings(path, optionsType);
 				if (options == null)
 					CreateOptions();
@@ -270,6 +311,28 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
+		/// Invoked when the manual config button is pressed.
+		/// </summary>
+		private void OnManualConfig(GameObject _) {
+			string uri = null;
+			try {
+				uri = new Uri(Path.GetDirectoryName(path)).AbsoluteUri;
+			} catch (UriFormatException e) {
+				PUtil.LogWarning("Unable to convert parent of " + path + " to a URI:");
+				PUtil.LogExcWarn(e);
+			}
+			if (!string.IsNullOrEmpty(uri)) {
+				// Open the config folder, opening the file itself might start an unknown
+				// editor which could execute the json somehow...
+				WriteOptions();
+				CloseDialog();
+				PUtil.LogDebug("Opening config folder: " + uri);
+				Application.OpenURL(uri);
+				CheckForRestart();
+			}
+		}
+
+		/// <summary>
 		/// Invoked when the dialog is closed.
 		/// </summary>
 		/// <param name="action">The action key taken.</param>
@@ -278,22 +341,6 @@ namespace PeterHan.PLib.Options {
 				// Save changes to mod options
 				WriteOptions();
 				CheckForRestart();
-			} else if (action == "manual") {
-				string uri = null;
-				try {
-					uri = new Uri(Path.GetDirectoryName(path)).AbsoluteUri;
-				} catch (UriFormatException e) {
-					PUtil.LogWarning("Unable to convert parent of " + path + " to a URI:");
-					PUtil.LogExcWarn(e);
-				}
-				if (!string.IsNullOrEmpty(uri)) {
-					// Open the config folder, opening the file itself might start an unknown
-					// editor which could execute the json somehow...
-					WriteOptions();
-					PUtil.LogDebug("Opening config folder: " + uri);
-					Application.OpenURL(uri);
-					CheckForRestart();
-				}
 			}
 		}
 
@@ -318,6 +365,35 @@ namespace PeterHan.PLib.Options {
 					foreach (var option in catEntries.Value)
 						option.WriteTo(options);
 			POptions.WriteSettings(options, path, typeAttr?.IndentOutput ?? false);
+		}
+
+		/// <summary>
+		/// Handles events for expanding and contracting buttons.
+		/// </summary>
+		private sealed class CategoryExpandHandler {
+			/// <summary>
+			/// The realized panel containing the options.
+			/// </summary>
+			private GameObject contents;
+
+			/// <summary>
+			/// Fired when the button is expanded or contracted.
+			/// </summary>
+			/// <param name="on">true if the button is on, or false if it is off.</param>
+			public void OnExpandContract(GameObject _, bool on) {
+				// Set scale to 0% or 100% depending on "on"
+				var scale = on ? Vector3.one : Vector3.zero;
+				if (contents != null)
+					contents.transform.localScale = scale;
+			}
+
+			/// <summary>
+			/// Fired when the body is realized.
+			/// </summary>
+			/// <param name="panel">The realized body of the category.</param>
+			public void OnRealizePanel(GameObject panel) {
+				contents = panel;
+			}
 		}
 	}
 }

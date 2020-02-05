@@ -44,6 +44,8 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		public readonly GameObject source;
 
+		internal LayoutSizes(GameObject source) : this(source, 0.0f, 0.0f, 0.0f) { }
+
 		internal LayoutSizes(GameObject source, float min, float preferred,
 				float flexible) {
 			this.source = source;

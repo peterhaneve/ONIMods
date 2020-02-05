@@ -21,7 +21,6 @@ using PeterHan.PLib.UI;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace PeterHan.SweepByType {
 	/// <summary>
@@ -138,16 +137,6 @@ namespace PeterHan.SweepByType {
 		/// </summary>
 		private readonly SortedList<Tag, TypeSelectCategory> children;
 
-		/// <summary>
-		/// The scrollbar's last position.
-		/// </summary>
-		private Vector3 position;
-
-		/// <summary>
-		/// Caches the vertical scroll bar to avoid jumping around on open/close.
-		/// </summary>
-		private readonly GameObject vScroll;
-
 		public TypeSelectControl(bool disableIcons = false) {
 			DisableIcons = disableIcons;
 			// Select/deselect all types
@@ -185,14 +174,8 @@ namespace PeterHan.SweepByType {
 				ScrollVertical = true, AlwaysShowVertical = true, TrackSize = 8.0f,
 				FlexSize = Vector2.one, BackColor = PUITuning.Colors.BackgroundLight,
 			})).SetKleiBlueColor().BuildWithFixedSize(PANEL_SIZE);
-			// Cache the vertical scroll bar
-			var vst = RootPanel.transform.Find("TypeSelectControl/Scroll/Viewport/SelectType");
-#pragma warning disable IDE0031 // Use null propagation
-			vScroll = (vst == null) ? null : vst.gameObject;
-#pragma warning restore IDE0031 // Use null propagation
 			children = new SortedList<Tag, TypeSelectCategory>(16, TagAlphabetComparer.
 				INSTANCE);
-			position = Vector3.zero;
 			Screen = RootPanel.AddComponent<TypeSelectScreen>();
 		}
 
@@ -230,31 +213,6 @@ namespace PeterHan.SweepByType {
 			else
 				// Clicked when checked or partial, clear all
 				ClearAll();
-		}
-
-		/// <summary>
-		/// Waits one frame and restores the scrollbar position.
-		/// </summary>
-		/// <returns>An enumerator for the coroutine.</returns>
-		private System.Collections.IEnumerator ProcessScrollPosition() {
-			yield return new WaitForEndOfFrame();
-			if (vScroll != null)
-				vScroll.transform.SetPosition(position);
-		}
-
-		/// <summary>
-		/// Restores the scrollbar position.
-		/// </summary>
-		private void RestoreScrollPosition() {
-			RootPanel.GetComponent<TypeSelectScreen>()?.StartCoroutine(ProcessScrollPosition());
-		}
-
-		/// <summary>
-		/// Saves the current scrollbar position.
-		/// </summary>
-		private void SaveScrollPosition() {
-			if (vScroll != null)
-				position = vScroll.transform.GetPosition();
 		}
 
 		/// <summary>
@@ -417,12 +375,9 @@ namespace PeterHan.SweepByType {
 
 			private void OnToggle(GameObject source, bool open) {
 				var obj = ChildPanel;
-				if (obj != null) {
-					Control.SaveScrollPosition();
+				if (obj != null)
 					// Scale to 0x0 if not visible
 					obj.rectTransform().localScale = open ? Vector3.one : Vector3.zero;
-					Control.RestoreScrollPosition();
-				}
 			}
 
 			/// <summary>

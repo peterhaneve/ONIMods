@@ -22,7 +22,7 @@
         WorkingDirectory="$(GameFolder)" />
   </Target>
 
-  <Target Name="CopyArtifactsToInstallFolder" AfterTargets="ILRepack" Condition=" '$(AssemblyName)' != 'PLib' ">
+  <Target Name="CopyArtifactsToInstallFolder" AfterTargets="ILRepack" Condition=" '$(AssemblyName)' != 'PLib' And '$(AssemblyName)' != 'PLibOptions' ">
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
       <InstallFolder>..\Release\$(ProjectName)</InstallFolder>
     </PropertyGroup>

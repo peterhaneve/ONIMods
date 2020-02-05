@@ -135,7 +135,7 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// Builds this panel with a given default size.
 		/// </summary>
-		/// <param name="size">The fixed size to use if dynamic is false.</param>
+		/// <param name="size">The fixed size to use.</param>
 		/// <returns>The realized panel.</returns>
 		public GameObject BuildWithFixedSize(Vector2 size) {
 			return Build(size, false);

@@ -17,6 +17,7 @@
  */
 
 using PeterHan.PLib.UI;
+using System;
 using System.Reflection;
 using TMPro;
 using UnityEngine;
@@ -37,6 +38,11 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
+		/// The maximum entry length.
+		/// </summary>
+		private int maxLength;
+
+		/// <summary>
 		/// The realized text field.
 		/// </summary>
 		private GameObject textField;
@@ -48,6 +54,12 @@ namespace PeterHan.PLib.Options {
 
 		internal StringOptionsEntry(OptionAttribute oa, PropertyInfo prop) : base(prop?.Name,
 				oa) {
+			var limits = FindLimitAttribute(prop);
+			// Use the maximum limit value for the max length, if present
+			if (limits != null)
+				maxLength = Math.Max(2, (int)Math.Round(limits.Maximum));
+			else
+				maxLength = 256;
 			textField = null;
 			value = "";
 		}
@@ -57,8 +69,8 @@ namespace PeterHan.PLib.Options {
 				OnTextChanged = (obj, text) => {
 					value = text;
 					Update();
-				}, ToolTip = ToolTip, Text = value.ToString(), MinWidth = 128, MaxLength = 256,
-				Type = PTextField.FieldType.Text
+				}, ToolTip = ToolTip, Text = value.ToString(), MinWidth = 128,
+				Type = PTextField.FieldType.Text, MaxLength = maxLength
 			};
 			cb.OnRealize += OnRealizeTextField;
 			return cb;

@@ -34,21 +34,6 @@ namespace PeterHan.PLib.Options {
 	/// </summary>
 	public sealed class POptions {
 		/// <summary>
-		/// The button used to manually edit the mod configuration.
-		/// </summary>
-		public static LocString BUTTON_MANUAL = "MANUAL CONFIG";
-
-		/// <summary>
-		/// The text shown on the Done button.
-		/// </summary>
-		public static LocString BUTTON_OK = STRINGS.UI.FRONTEND.OPTIONS_SCREEN.BACK;
-
-		/// <summary>
-		/// The text shown on the Options button.
-		/// </summary>
-		public static LocString BUTTON_OPTIONS = STRINGS.UI.FRONTEND.MAINMENU.OPTIONS;
-
-		/// <summary>
 		/// The configuration file name to be used. This field is an alias to be binary
 		/// compatible with PLib <= 2.17. This file name is case sensitive.
 		/// </summary>
@@ -62,31 +47,10 @@ namespace PeterHan.PLib.Options {
 		public const string CONFIG_FILE_NAME = "config.json";
 
 		/// <summary>
-		/// The dialog title, where {0} is substituted with the mod friendly name.
-		/// </summary>
-		public static LocString DIALOG_TITLE = "Options for {0}";
-
-		/// <summary>
 		/// The maximum nested class depth which will be serialized in mod options to avoid
 		/// infinite loops.
 		/// </summary>
 		public const int MAX_SERIALIZATION_DEPTH = 8;
-
-		/// <summary>
-		/// The cancel button in the restart dialog.
-		/// </summary>
-		public static LocString RESTART_CANCEL = STRINGS.UI.FRONTEND.MOD_DIALOGS.RESTART.CANCEL;
-
-		/// <summary>
-		/// The OK button in the restart dialog.
-		/// </summary>
-		public static LocString RESTART_OK = STRINGS.UI.FRONTEND.MOD_DIALOGS.RESTART.OK;
-
-		/// <summary>
-		/// The message prompting the user to restart.
-		/// </summary>
-		public static LocString RESTART_REQUIRED = "Oxygen Not Included must be restarted " +
-			"for these options to take effect.";
 
 		/// <summary>
 		/// The default size of the Mod Settings dialog.
@@ -94,40 +58,19 @@ namespace PeterHan.PLib.Options {
 		internal static readonly Vector2 SETTINGS_DIALOG_SIZE = new Vector2(320.0f, 200.0f);
 
 		/// <summary>
+		/// The maximum size of the Mod Settings dialog before it gets scroll bars.
+		/// </summary>
+		internal static readonly Vector2 SETTINGS_DIALOG_MAX_SIZE = new Vector2(640.0f, 480.0f);
+
+		/// <summary>
 		/// The color of option category titles.
 		/// </summary>
-		internal static readonly Color TITLE_COLOR = new Color32(127, 127, 127, 255);
+		internal static readonly Color TITLE_COLOR = new Color32(143, 150, 175, 255);
 
 		/// <summary>
 		/// The text style applied to option category titles.
 		/// </summary>
 		internal static readonly TextStyleSetting TITLE_STYLE;
-
-		/// <summary>
-		/// The tooltip on the CANCEL button.
-		/// </summary>
-		public static LocString TOOLTIP_CANCEL = "Discard changes.";
-
-		/// <summary>
-		/// The tooltip on the MANUAL CONFIG button.
-		/// </summary>
-		public static LocString TOOLTIP_MANUAL = "Opens the folder containing the full mod configuration.";
-
-		/// <summary>
-		/// The tooltip for cycling to the next item.
-		/// </summary>
-		public static LocString TOOLTIP_NEXT = "Next";
-
-		/// <summary>
-		/// The tooltip on the OK button.
-		/// </summary>
-		public static LocString TOOLTIP_OK = "Save these options. Some mods may require " +
-			"a restart for the options to take effect.";
-
-		/// <summary>
-		/// The tooltip for cycling to the previous item.
-		/// </summary>
-		public static LocString TOOLTIP_PREVIOUS = "Previous";
 
 		/// <summary>
 		/// The mod options table.
@@ -162,10 +105,10 @@ namespace PeterHan.PLib.Options {
 					// Create delegate to spawn actions dialog
 					var action = new OptionsDialog(optionsType, modSpec);
 					new PButton("ModSettingsButton") {
-						FlexSize = new Vector2f(0.0f, 1.0f), OnClick = action.OnModOptions,
-						DynamicSize = true, ToolTip = DIALOG_TITLE.text.F(modSpec.title),
-						Text = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(BUTTON_OPTIONS.
-							text.ToLower())
+						FlexSize = Vector2.up, OnClick = action.OnModOptions,
+						DynamicSize = true, ToolTip = PUIStrings.DIALOG_TITLE.text.F(
+						modSpec.title), Text = CultureInfo.CurrentCulture.TextInfo.
+						ToTitleCase(PUIStrings.BUTTON_OPTIONS.text.ToLower())
 						// Move before the subscription and enable button
 					}.SetKleiPinkStyle().AddTo(transform.gameObject, 3);
 				}
@@ -194,25 +137,7 @@ namespace PeterHan.PLib.Options {
 			ConfigFileAttribute newAttr = null;
 			foreach (var attr in optionsType.GetCustomAttributes(true))
 				// Cross mod types need reflection
-				if (attr.GetType().Name == typeof(ConfigFileAttribute).Name) {
-					var trAttr = Traverse.Create(attr);
-					string file = null;
-					bool indent = false;
-					// Log any errors from obtaining these values
-					try {
-						file = trAttr.GetProperty<string>(nameof(ConfigFileAttribute.
-							ConfigFileName));
-						indent = trAttr.GetProperty<bool>(nameof(ConfigFileAttribute.
-							IndentOutput));
-					} catch (Exception e) {
-						PUtil.LogExcWarn(e);
-					}
-					// Remove invalid file names
-					if (!PUtil.IsValidFileName(file))
-						file = null;
-					newAttr = new ConfigFileAttribute(file, indent);
-					break;
-				}
+				if ((newAttr = ConfigFileAttribute.CreateFrom(attr)) != null) break;
 			return newAttr;
 		}
 
@@ -242,6 +167,7 @@ namespace PeterHan.PLib.Options {
 			return dir;
 		}
 
+#if !OPTIONS_ONLY
 		/// <summary>
 		/// Initializes and stores the options table for quicker lookups later.
 		/// </summary>
@@ -250,6 +176,7 @@ namespace PeterHan.PLib.Options {
 				modOptions = PSharedData.GetData<OptionsTable>(PRegistry.KEY_OPTIONS_TABLE);
 			}
 		}
+#endif
 
 		/// <summary>
 		/// Registers a class as a mod options class. The type is registered for its defining
@@ -259,6 +186,21 @@ namespace PeterHan.PLib.Options {
 		public static void RegisterOptions(Type optionsType) {
 			if (optionsType == null)
 				throw new ArgumentNullException("optionsType");
+#if OPTIONS_ONLY
+			var assembly = optionsType.Assembly;
+			var id = Path.GetFileName(GetModDir(assembly));
+			// Local options type
+			if (modOptions == null)
+				modOptions = new Dictionary<string, Type>(4);
+			if (modOptions.ContainsKey(id))
+				PUtil.LogWarning("Duplicate mod ID: " + id);
+			else {
+				// Add as options for this mod
+				modOptions.Add(id, optionsType);
+				PUtil.LogDebug("Registered mod options class {0} for {1}".F(optionsType.Name,
+					assembly.GetName()?.Name));
+			}
+#else
 			// In case this call is used before the library was initialized
 			if (!PUtil.PLibInit) {
 				PUtil.InitLibrary(false);
@@ -279,10 +221,11 @@ namespace PeterHan.PLib.Options {
 				else {
 					// Add as options for this mod
 					options.Add(id, optionsType);
-					PUtil.LogDebug("Registered mod options class {0} for {1}".F(
-						optionsType.Name, assembly.GetName()?.Name));
+					PUtil.LogDebug("Registered mod options class {0} for {1}".F(optionsType.
+						Name, assembly.GetName()?.Name));
 				}
 			}
+#endif
 		}
 
 		/// <summary>

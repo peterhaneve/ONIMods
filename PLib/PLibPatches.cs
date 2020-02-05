@@ -247,6 +247,18 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Applied to TMPro.TMP_InputField to fix a clipping bug inside of Scroll Rects.
+		/// 
+		/// https://forum.unity.com/threads/textmeshpro-text-still-visible-when-using-nested-rectmask2d.537967/
+		/// </summary>
+		private static void OnEnable_Postfix(UnityEngine.UI.Scrollbar ___m_VerticalScrollbar,
+				TMPro.TMP_Text ___m_TextComponent) {
+			var component = ___m_TextComponent;
+			if (component != null)
+				component.ignoreRectMaskCulling = ___m_VerticalScrollbar != null;
+		}
+
+		/// <summary>
 		/// Applied to Rotatable to rotate light previews if a visualizer is rotated.
 		/// </summary>
 		private static void OrientVisualizer_Postfix(Rotatable __instance) {
@@ -427,6 +439,15 @@ namespace PeterHan.PLib {
 					PatchMethod(nameof(LoadPreviewImage_Transpile)));
 			} catch (TypeLoadException) {
 				// Not a Steam install, ignoring
+			}
+
+			// TMPro.TMP_InputField
+			try {
+				instance.Patch(typeof(TMPro.TMP_InputField), "OnEnable", null,
+					PatchMethod(nameof(OnEnable_Postfix)));
+			} catch (Exception) {
+				PUtil.LogWarning("Unable to patch TextMeshPro bug, text fields may display " +
+					"improperly inside scroll areas");
 			}
 
 			// Postload
