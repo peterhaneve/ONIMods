@@ -101,6 +101,7 @@ namespace PeterHan.PLib.UI {
 			scroll.vertical = ScrollVertical;
 			// Viewport
 			var viewport = PUIElements.CreateUI(pane, "Viewport");
+			viewport.rectTransform().pivot = Vector2.up;
 			viewport.AddComponent<RectMask2D>().enabled = true;
 			viewport.AddComponent<ViewportLayoutGroup>();
 			scroll.viewport = viewport.rectTransform();
@@ -115,12 +116,14 @@ namespace PeterHan.PLib.UI {
 			if (ScrollVertical) {
 				scroll.verticalScrollbar = CreateScrollVert(pane);
 				scroll.verticalScrollbarVisibility = AlwaysShowVertical ? ScrollRect.
-					ScrollbarVisibility.Permanent : ScrollRect.ScrollbarVisibility.AutoHide;
+					ScrollbarVisibility.Permanent : ScrollRect.ScrollbarVisibility.
+					AutoHideAndExpandViewport;
 			}
 			if (ScrollHorizontal) {
 				scroll.horizontalScrollbar = CreateScrollHoriz(pane);
 				scroll.horizontalScrollbarVisibility = AlwaysShowHorizontal ? ScrollRect.
-					ScrollbarVisibility.Permanent : ScrollRect.ScrollbarVisibility.AutoHide;
+					ScrollbarVisibility.Permanent : ScrollRect.ScrollbarVisibility.
+					AutoHideAndExpandViewport;
 			}
 			pane.SetActive(true);
 			// Custom layout to pass child sizes to the scrol
@@ -279,9 +282,14 @@ namespace PeterHan.PLib.UI {
 			/// </summary>
 			private ILayoutController[] setElements;
 
+			/// <summary>
+			/// The viewport which clips the child rectangle.
+			/// </summary>
+			private GameObject viewport;
+
 			internal PScrollPaneLayout() {
 				minHeight = minWidth = 0.0f;
-				child = null;
+				child = viewport = null;
 			}
 
 			public void CalculateLayoutInputHorizontal() {
@@ -334,11 +342,10 @@ namespace PeterHan.PLib.UI {
 			}
 
 			public void SetLayoutHorizontal() {
-				var obj = gameObject;
-				if (obj != null && child != null) {
+				if (viewport != null && child != null) {
 					// Observe the flex width
 					float prefWidth = childHorizontal.preferred;
-					float actualWidth = obj.rectTransform().rect.width;
+					float actualWidth = viewport.rectTransform().rect.width;
 					if (prefWidth < actualWidth && childHorizontal.flexible > 0.0f)
 						prefWidth = actualWidth;
 					// Resize child
@@ -353,11 +360,10 @@ namespace PeterHan.PLib.UI {
 			}
 
 			public void SetLayoutVertical() {
-				var obj = gameObject;
-				if (obj != null && child != null && setElements != null) {
+				if (viewport != null && child != null && setElements != null) {
 					// Observe the flex height
 					float prefHeight = childVertical.preferred;
-					float actualHeight = obj.rectTransform().rect.height;
+					float actualHeight = viewport.rectTransform().rect.height;
 					if (prefHeight < actualHeight && childVertical.flexible > 0.0f)
 						prefHeight = actualHeight;
 					// Resize child
@@ -377,10 +383,11 @@ namespace PeterHan.PLib.UI {
 			private void UpdateComponents() {
 				var obj = gameObject;
 				ScrollRect sr;
-				if (obj != null && (sr = obj.GetComponent<ScrollRect>()) != null)
+				if (obj != null && (sr = obj.GetComponent<ScrollRect>()) != null) {
 					child = sr.content?.gameObject;
-				else
-					child = null;
+					viewport = sr.viewport?.gameObject;
+				} else
+					child = viewport = null;
 			}
 		}
 

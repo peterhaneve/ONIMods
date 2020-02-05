@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using PeterHan.PLib.UI;
 using System;
 using System.Reflection;
@@ -94,14 +93,13 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <returns>A UI component with both the title and editor.</returns>
 		internal IUIComponent GetUIEntry() {
-			var expandWidth = new Vector2(1.0f, 0.0f);
 			return new PPanel("Option_" + Field) {
-				Direction = PanelDirection.Horizontal, FlexSize = expandWidth,
+				Direction = PanelDirection.Horizontal, FlexSize = Vector2.right,
 				Spacing = 5, Alignment = TextAnchor.MiddleCenter
 			}.AddChild(new PLabel("Label") {
-				Text = Title, ToolTip = ToolTip, FlexSize = new Vector2(1.0f, 0.0f),
-				TextAlignment = TextAnchor.MiddleLeft, DynamicSize = true, TextStyle =
-				PUITuning.Fonts.TextLightStyle
+				Text = OptionsDialog.LookInStrings(Title), ToolTip = OptionsDialog.
+				LookInStrings(ToolTip), FlexSize = Vector2.right, TextAlignment = TextAnchor.
+				MiddleLeft, DynamicSize = true, TextStyle = PUITuning.Fonts.TextLightStyle
 			}).AddChild(GetUIComponent());
 		}
 

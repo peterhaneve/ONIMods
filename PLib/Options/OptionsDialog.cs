@@ -202,7 +202,7 @@ namespace PeterHan.PLib.Options {
 				if (restartRequired)
 					// Prompt user to restart
 					PUIElements.ShowConfirmDialog(null, PUIStrings.RESTART_REQUIRED,
-						App.instance.Restart, null, PUIStrings.RESTART_OK, PUIStrings.
+						SaveAndRestart, null, PUIStrings.RESTART_OK, PUIStrings.
 						RESTART_CANCEL);
 			}
 		}
@@ -245,10 +245,10 @@ namespace PeterHan.PLib.Options {
 			PPanel body = pDialog.Body, current, contents;
 			var margin = body.Margin;
 			// For each option, add its UI component to panel
-			body.Margin = new RectOffset(0, 0, 10, 10);
+			body.Margin = new RectOffset();
 			var scrollBody = new PPanel("ScrollContent") {
 				Spacing = 10, Direction = PanelDirection.Vertical, Alignment = TextAnchor.
-				UpperCenter, FlexSize = Vector2.right, Margin = new RectOffset(10, 10, 0, 0)
+				UpperCenter, FlexSize = Vector2.right
 			};
 			// Display all categories
 			foreach (var catEntries in optionCategories) {
