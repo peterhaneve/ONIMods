@@ -25,7 +25,7 @@ namespace PeterHan.Claustrophobia {
 	/// Stores information determined about a duplicant's claustrophobia to see if it will
 	/// trigger a confined or trapped notification.
 	/// </summary>
-	sealed class EntrapmentStatus {
+	internal sealed class EntrapmentStatus {
 		/// <summary>
 		/// Whether this Duplicant can reach their bed. Also true if they have no bed or
 		/// it is broken / disabled.
@@ -112,6 +112,10 @@ namespace PeterHan.Claustrophobia {
 
 		public override bool Equals(object obj) {
 			return obj is EntrapmentStatus other && Victim == other.Victim;
+		}
+
+		public override int GetHashCode() {
+			return VictimName.GetHashCode();
 		}
 
 		public override string ToString() {

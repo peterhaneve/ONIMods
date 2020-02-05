@@ -165,7 +165,7 @@ namespace PeterHan.PLib.Options {
 		/// <param name="category">The header title.</param>
 		/// <param name="contents">The panel containing the options in this category.</param>
 		private void AddCategoryHeader(PPanel body, string category, PPanel contents) {
-			if (!string.IsNullOrEmpty(category))
+			if (!string.IsNullOrEmpty(category)) {
 				var handler = new CategoryExpandHandler();
 				body.AddChild(new PPanel("CategorySelect") {
 					FlexSize = Vector2.right, Alignment = TextAnchor.MiddleLeft, Spacing = 5,
@@ -181,6 +181,7 @@ namespace PeterHan.PLib.Options {
 				}));
 				if (contents != null)
 					contents.OnRealize += handler.OnRealizePanel;
+			}
 			body.AddChild(contents);
 		}
 
