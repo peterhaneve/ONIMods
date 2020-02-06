@@ -24,7 +24,7 @@ The easiest way to do this is to use ILMerge and add the PLib project or DLL as 
 ILMerge is available as a [NuGet package](https://www.nuget.org/packages/ilmerge) and is best used as a post-build command.
 Suggested command:
 ```powershell
-"$(ILMergeConsolePath)" /ndebug /out:$(TargetName)Merged.dll $(TargetName).dll PLib.dll /targetplatform:v2,C:/Windows/Microsoft.NET/Framework64/v2.0.50727
+"$(ILMergeConsolePath)" /ndebug /out:$(TargetName)Merged.dll $(TargetName).dll PLib.dll  /targetplatform:v4,C:\Windows\Microsoft.NET\Framework64\v4.0.30319
 ```
 
 This helps ensure that each mod gets the version of PLib that it was built against, reducing the risk of breakage due to PLib changes.
