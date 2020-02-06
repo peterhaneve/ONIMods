@@ -38,31 +38,13 @@ namespace PeterHan.PLib {
 	sealed class PLibPatches {
 #region Patches
 
-#pragma warning disable IDE0051 // Remove unused private members
-
 		/// <summary>
 		/// Applied to modify SteamUGCService to silence "Preview image load failed".
 		/// </summary>
 		private static IEnumerable<CodeInstruction> LoadPreviewImage_Transpile(
 				IEnumerable<CodeInstruction> body) {
-			const string BLACKLIST = "LogFormat";
-			var returnBody = new List<CodeInstruction>(body);
-			int n = returnBody.Count;
-			// Look for "call Debug.LogFormat" and wipe it with NOP
-			for (int i = 0; i < n; i++) {
-				var instr = returnBody[i];
-				if (instr.opcode.Name == "call" && (instr.operand as MethodBase)?.Name ==
-						BLACKLIST && i > 3) {
-					// Patch this instruction and the 3 before it (ldstr, ldc, newarr)
-					for (int j = i - 3; j <= i; j++) {
-						instr = returnBody[j];
-						instr.opcode = OpCodes.Nop;
-						instr.operand = null;
-					}
-					PRegistry.LogPatchDebug("No more preview image load failure ({0:D})".F(i));
-				}
-			}
-			return returnBody;
+			return PPatchTools.ReplaceMethodCall(body, typeof(Debug).GetMethodSafe(nameof(
+				Debug.LogFormat), true, typeof(string), typeof(object[])));
 		}
 
 		/// <summary>
@@ -453,8 +435,6 @@ namespace PeterHan.PLib {
 			// Postload
 			PUtil.ExecutePostload();
 		}
-
-#pragma warning restore IDE0051 // Remove unused private members
 
 #endregion
 

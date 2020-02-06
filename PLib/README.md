@@ -11,6 +11,7 @@ PLib can be checked out and compiled from source (tested on Visual Studio Commun
 ### Binary
 
 DLL releases for major versions are available in the [releases](https://github.com/peterhaneve/ONIMods/releases) page.
+The lightweight PLib Options library (which includes only the options portion of PLib, and does not perform any forwarding) is also available in the releases section.
 
 ### NuGet
 
