@@ -318,21 +318,25 @@ namespace PeterHan.EfficientFetch {
 			}
 
 			public int Compare(Pickup a, Pickup b) {
-				if (a.tagBitsHash != b.tagBitsHash)
-					return a.tagBitsHash - b.tagBitsHash;
-				if (a.masterPriority != b.masterPriority)
-					return b.masterPriority - a.masterPriority;
+				int comp = a.tagBitsHash.CompareTo(b.tagBitsHash);
+				if (comp != 0)
+					return comp;
+				comp = b.masterPriority.CompareTo(a.masterPriority);
+				if (comp != 0)
+					return comp;
 				// Add comparison for threshold
 				float aq = a.pickupable.UnreservedAmount, bq = b.pickupable.UnreservedAmount;
 				if (aq > Threshold && bq < Threshold)
 					return -1;
 				else if (aq < Threshold && bq > Threshold)
 					return 1;
-				if (a.PathCost != b.PathCost)
-					return a.PathCost - b.PathCost;
-				if (a.foodQuality != b.foodQuality)
-					return b.foodQuality - a.foodQuality;
-				return b.freshness - a.freshness;
+				comp = a.PathCost.CompareTo(b.PathCost);
+				if (comp != 0)
+					return comp;
+				comp = b.foodQuality.CompareTo(a.foodQuality);
+				if (comp != 0)
+					return comp;
+				return b.freshness.CompareTo(a.freshness);
 			}
 		}
 	}

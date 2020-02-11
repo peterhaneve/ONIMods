@@ -16,38 +16,55 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Database;
+using Harmony;
 using System;
+using System.IO;
 
-namespace PeterHan.PLib {
+namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// Requires the Neural Vacillator to be used a specified number of times.
 	/// </summary>
-	public static class PVersion {
+	public sealed class UseGeneShufflerNTimes : ColonyAchievementRequirement {
 		/// <summary>
-		/// The PLib version.
+		/// The number of times that it must be used.
 		/// </summary>
-		public const string VERSION = "3.1.5.0";
+		private int required;
 
 		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in OnLoad, and will always return false in those cases.
+		/// The number of times that it has been used.
 		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				bool latest = false;
-				try {
-					latest = new Version(VERSION) == PSharedData.GetData<Version>(PRegistry.
-						KEY_VERSION);
-				} catch (OverflowException) {
-				} catch (FormatException) {
-				} catch (ArgumentOutOfRangeException) {
-				}
-				return latest;
-			}
+		private int used;
+
+		public UseGeneShufflerNTimes(int required) {
+			used = 0;
+			this.required = Math.Max(1, required);
+		}
+
+		/// <summary>
+		/// Adds a completed gene shuffler usage.
+		/// </summary>
+		public void AddUse() {
+			used++;
+		}
+
+		public override void Deserialize(IReader reader) {
+			required = Math.Max(reader.ReadInt32(), 1);
+			used = Math.Max(reader.ReadInt32(), 0);
+		}
+
+		public override string GetProgress(bool complete) {
+			return string.Format(AchievementStrings.THINKINGAHEAD.PROGRESS, complete ?
+				required : used, required);
+		}
+
+		public override void Serialize(BinaryWriter writer) {
+			writer.Write(required);
+			writer.Write(used);
+		}
+
+		public override bool Success() {
+			return used >= required;
 		}
 	}
 }

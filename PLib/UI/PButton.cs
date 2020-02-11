@@ -90,11 +90,15 @@ namespace PeterHan.PLib.UI {
 				Spacing = IconSpacing, Direction = PanelDirection.Horizontal, Margin = Margin,
 				Alignment = TextAlignment
 			};
-			if (DynamicSize)
-				button.AddComponent<BoxLayoutGroup>().Params = lp;
-			else
+			if (DynamicSize) {
+				var layout = button.AddComponent<BoxLayoutGroup>();
+				layout.Params = lp;
+				layout.flexibleWidth = FlexSize.x;
+				layout.flexibleHeight = FlexSize.y;
+			} else {
 				BoxLayoutGroup.LayoutNow(button, lp);
-			button.SetFlexUISize(FlexSize);
+				button.SetFlexUISize(FlexSize);
+			}
 			InvokeRealize(button);
 			return button;
 		}

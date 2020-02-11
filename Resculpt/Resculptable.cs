@@ -26,19 +26,6 @@ namespace PeterHan.Resculpt {
 	[SkipSaveFileSerialization]
 	public sealed class Resculptable : KMonoBehaviour {
 		/// <summary>
-		/// The event handler when the info menu is displayed.
-		/// </summary>
-		private static readonly EventSystem.IntraObjectHandler<Resculptable> OnRefreshDelegate =
-			new EventSystem.IntraObjectHandler<Resculptable>(OnRefreshUserMenu);
-
-		/// <summary>
-		/// The delegate called when the user menu is displayed.
-		/// </summary>
-		private static void OnRefreshUserMenu(Resculptable component, object _) {
-			component.OnRefreshUserMenu();
-		}
-
-		/// <summary>
 		/// The icon sprite shown on the repaint or resculpt button.
 		/// </summary>
 		[SerializeField]
@@ -59,13 +46,13 @@ namespace PeterHan.Resculpt {
 #pragma warning restore IDE0044 // Add readonly modifier
 
 		protected override void OnCleanUp() {
+			Unsubscribe((int)GameHashes.RefreshUserMenu);
 			base.OnCleanUp();
-			Unsubscribe((int)GameHashes.RefreshUserMenu, OnRefreshDelegate);
 		}
 
 		protected override void OnPrefabInit() {
 			base.OnPrefabInit();
-			Subscribe((int)GameHashes.RefreshUserMenu, OnRefreshDelegate);
+			Subscribe((int)GameHashes.RefreshUserMenu, OnRefreshUserMenu);
 		}
 
 		/// <summary>
@@ -100,7 +87,7 @@ namespace PeterHan.Resculpt {
 		/// <summary>
 		/// Called when the info screen for the decor item is refreshed.
 		/// </summary>
-		private void OnRefreshUserMenu() {
+		private void OnRefreshUserMenu(object _) {
 			if (artable != null && artable.CurrentStatus != Artable.Status.Ready) {
 				string text = ButtonText, icon = ButtonIcon;
 				// Set default name if not set

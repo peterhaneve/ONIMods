@@ -52,30 +52,39 @@ namespace PeterHan.PLib.Buildings {
 			float qty;
 			switch (tier) {
 			case -1:
+				// Tier -1: 5
 				qty = TUNING.BUILDINGS.CONSTRUCTION_MASS_KG.TIER_TINY[0];
 				break;
 			case 0:
+				// Tier 0: 25
 				qty = TUNING.BUILDINGS.CONSTRUCTION_MASS_KG.TIER0[0];
 				break;
 			case 1:
+				// Tier 1: 50
 				qty = TUNING.BUILDINGS.CONSTRUCTION_MASS_KG.TIER1[0];
 				break;
 			case 2:
+				// Tier 2: 100
 				qty = TUNING.BUILDINGS.CONSTRUCTION_MASS_KG.TIER2[0];
 				break;
 			case 3:
+				// Tier 3: 200
 				qty = TUNING.BUILDINGS.CONSTRUCTION_MASS_KG.TIER3[0];
 				break;
 			case 4:
+				// Tier 4: 400
 				qty = TUNING.BUILDINGS.CONSTRUCTION_MASS_KG.TIER4[0];
 				break;
 			case 5:
+				// Tier 5: 800
 				qty = TUNING.BUILDINGS.CONSTRUCTION_MASS_KG.TIER5[0];
 				break;
 			case 6:
+				// Tier 6: 1200
 				qty = TUNING.BUILDINGS.CONSTRUCTION_MASS_KG.TIER6[0];
 				break;
 			case 7:
+				// Tier 7: 2000
 				qty = TUNING.BUILDINGS.CONSTRUCTION_MASS_KG.TIER7[0];
 				break;
 			default:

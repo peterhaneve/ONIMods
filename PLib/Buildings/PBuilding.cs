@@ -238,6 +238,11 @@ namespace PeterHan.PLib.Buildings {
 		public IList<ConduitConnection> InputConduits { get; }
 
 		/// <summary>
+		/// Whether this building is (or can be) a solid tile.
+		/// </summary>
+		public bool IsSolidTile { get; set; }
+
+		/// <summary>
 		/// The logic ports.
 		/// </summary>
 		public IList<LogicPorts.Port> LogicIO { get; }
@@ -482,6 +487,13 @@ namespace PeterHan.PLib.Buildings {
 			var def = BuildingTemplates.CreateBuildingDef(ID, Width, Height, Animation, HP,
 				Math.Max(0.1f, ConstructionTime), quantity, tag, 2400.0f, Placement, Decor,
 				Noise);
+			// Solid tile
+			if (IsSolidTile) {
+				def.isSolidTile = true;
+				def.BaseTimeUntilRepair = -1.0f;
+				def.UseStructureTemperature = false;
+				BuildingTemplates.CreateFoundationTileDef(def);
+			}
 			def.AudioCategory = AudioCategory;
 			def.AudioSize = AudioSize;
 			if (OverheatTemperature != null) {

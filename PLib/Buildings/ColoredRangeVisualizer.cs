@@ -32,18 +32,6 @@ namespace PeterHan.PLib.Buildings {
 		private const string ANIM_NAME = "transferarmgrid_kanim";
 
 		/// <summary>
-		/// A delegate used when objects are selected.
-		/// </summary>
-		private static readonly EventSystem.IntraObjectHandler<ColoredRangeVisualizer> OnSelectDelegate =
-			new EventSystem.IntraObjectHandler<ColoredRangeVisualizer>(OnSelect);
-
-		/// <summary>
-		/// A delegate used when objects are rotated.
-		/// </summary>
-		private static readonly EventSystem.IntraObjectHandler<ColoredRangeVisualizer> OnRotatedDelegate =
-			new EventSystem.IntraObjectHandler<ColoredRangeVisualizer>(OnRotated);
-
-		/// <summary>
 		/// The animations to play when the visualization is created.
 		/// </summary>
 		private static readonly HashedString[] PRE_ANIMS = new HashedString[] {
@@ -55,33 +43,6 @@ namespace PeterHan.PLib.Buildings {
 		/// The animation to play when the visualization is destroyed.
 		/// </summary>
 		private static readonly HashedString POST_ANIM = "grid_pst";
-
-		/// <summary>
-		/// Called when the object is rotated.
-		/// </summary>
-		/// <param name="component">The component which was rotated.</param>
-		private static void OnRotated(ColoredRangeVisualizer component, object _) {
-			component?.CreateVisualizers();
-		}
-
-		/// <summary>
-		/// Called when the object is selected.
-		/// </summary>
-		/// <param name="component">The component which was selected.</param>
-		/// <param name="data">true if selected, or false if deselected.</param>
-		private static void OnSelect(ColoredRangeVisualizer component, object data) {
-			if (data is bool selected && component != null) {
-				var position = component.transform.position;
-				// Play the appropriate sound and update the visualizers
-				if (selected) {
-					PUtil.PlaySound("RadialGrid_form", position);
-					component.CreateVisualizers();
-				} else {
-					PUtil.PlaySound("RadialGrid_disappear", position);
-					component.RemoveVisualizers();
-				}
-			}
-		}
 
 		/// <summary>
 		/// The layer on which to display the visualizer.
@@ -147,26 +108,51 @@ namespace PeterHan.PLib.Buildings {
 		}
 
 		protected override void OnCleanUp() {
-			Unsubscribe((int)GameHashes.SelectObject, OnSelectDelegate, true);
+			Unsubscribe((int)GameHashes.SelectObject);
 			if (preview != null) {
 				Singleton<CellChangeMonitor>.Instance.UnregisterCellChangedHandler(transform,
 					OnCellChange);
 				if (rotatable != null)
-					Unsubscribe((int)GameHashes.Rotated, OnRotatedDelegate, true);
+					Unsubscribe((int)GameHashes.Rotated);
 			}
 			RemoveVisualizers();
 			base.OnCleanUp();
 		}
 
+		/// <summary>
+		/// Called when the object is rotated.
+		/// </summary>
+		private void OnRotated(object _) {
+			CreateVisualizers();
+		}
+
+		/// <summary>
+		/// Called when the object is selected.
+		/// </summary>
+		/// <param name="data">true if selected, or false if deselected.</param>
+		private void OnSelect(object data) {
+			if (data is bool selected) {
+				var position = transform.position;
+				// Play the appropriate sound and update the visualizers
+				if (selected) {
+					PUtil.PlaySound("RadialGrid_form", position);
+					CreateVisualizers();
+				} else {
+					PUtil.PlaySound("RadialGrid_disappear", position);
+					RemoveVisualizers();
+				}
+			}
+		}
+
 		protected override void OnSpawn() {
 			base.OnSpawn();
-			Subscribe((int)GameHashes.SelectObject, OnSelectDelegate);
+			Subscribe((int)GameHashes.SelectObject, OnSelect);
 			if (preview != null) {
 				// Previews can be moved
 				Singleton<CellChangeMonitor>.Instance.RegisterCellChangedHandler(transform,
 					OnCellChange, nameof(ColoredRangeVisualizer) + ".OnSpawn");
 				if (rotatable != null)
-					Subscribe((int)GameHashes.Rotated, OnRotatedDelegate);
+					Subscribe((int)GameHashes.Rotated, OnRotated);
 			}
 		}
 

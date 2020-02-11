@@ -99,6 +99,7 @@ namespace PeterHan.SweepByType {
 				var root = TypeSelect.RootPanel;
 				TypeSelect.Update();
 				root.SetParent(menu.gameObject);
+				root.SetActive(true);
 				root.transform.SetAsFirstSibling();
 			}
 			menu.PriorityScreen.Show(true);
@@ -117,8 +118,11 @@ namespace PeterHan.SweepByType {
 		protected override void OnDeactivateTool(InterfaceTool newTool) {
 			var menu = ToolMenu.Instance;
 			// Unparent but do not dispose
-			if (TypeSelect != null)
-				TypeSelect.RootPanel.SetParent(null);
+			if (TypeSelect != null) {
+				var root = TypeSelect.RootPanel;
+				root.SetActive(false);
+				root.SetParent(null);
+			}
 			menu.PriorityScreen.Show(false);
 			base.OnDeactivateTool(newTool);
 		}
@@ -182,6 +186,7 @@ namespace PeterHan.SweepByType {
 			// Allow icons to be disabled
 			TypeSelect = new TypeSelectControl(SweepByTypePatches.Options?.DisableIcons ??
 				false);
+			TypeSelect.RootPanel.SetActive(false);
 		}
 	}
 }

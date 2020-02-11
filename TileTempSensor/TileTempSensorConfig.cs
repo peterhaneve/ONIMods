@@ -66,6 +66,7 @@ namespace PeterHan.TileTempSensor {
 				Ingredients = {
 					new BuildIngredient(TUNING.MATERIALS.REFINED_METALS, tier: 2)
 				},
+				IsSolidTile = true,
 				LogicIO = {
 					 LogicPorts.Port.OutputPort(LogicSwitch.PORT_ID, new CellOffset(0, 0),
 					 STRINGS.BUILDINGS.PREFABS.LOGICTEMPERATURESENSOR.LOGIC_PORT,
@@ -84,10 +85,6 @@ namespace PeterHan.TileTempSensor {
 
 		public override BuildingDef CreateBuildingDef() {
 			var def = TileTempSensor.CreateDef();
-			def.isSolidTile = true;
-			def.BaseTimeUntilRepair = -1.0f;
-			def.UseStructureTemperature = false;
-			BuildingTemplates.CreateFoundationTileDef(def);
 			SoundEventVolumeCache.instance.AddVolume("thermo_tile_kanim", "PowerSwitch_on",
 				TUNING.NOISE_POLLUTION.NOISY.TIER3);
 			SoundEventVolumeCache.instance.AddVolume("thermo_tile_kanim", "PowerSwitch_off",

@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net40</TargetFramework>
+    <AssemblyTitle>One Giant Leap</AssemblyTitle>
+    <FileVersion>1.0.0.0</FileVersion>
+    <RootNamespace>PeterHan.MoreAchievements</RootNamespace>
+    <Description>Adds many new Colony Initiatives.</Description>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="images\im_gonna_be.png" />
+    <None Remove="images\im_gonna_be_locked.png" />
+    <None Remove="images\im_gonna_be_unlocked.png" />
+    <None Remove="images\isithot.png" />
+    <None Remove="images\isithot_locked.png" />
+    <None Remove="images\isithot_unlocked.png" />
+    <None Remove="images\reach_cycle1000.png" />
+    <None Remove="images\reach_cycle1000_locked.png" />
+    <None Remove="images\reach_cycle1000_unlocked.png" />
+    <None Remove="images\reach_cycle4000.png" />
+    <None Remove="images\reach_cycle4000_locked.png" />
+    <None Remove="images\reach_cycle4000_unlocked.png" />
+    <None Remove="images\small_world.png" />
+    <None Remove="images\small_world_locked.png" />
+    <None Remove="images\small_world_unlocked.png" />
+    <None Remove="images\youmonster.png" />
+    <None Remove="images\youmonster_locked.png" />
+    <None Remove="images\youmonster_unlocked.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="images\im_gonna_be.png" />
+    <EmbeddedResource Include="images\im_gonna_be_locked.png" />
+    <EmbeddedResource Include="images\im_gonna_be_unlocked.png" />
+    <EmbeddedResource Include="images\isithot.png" />
+    <EmbeddedResource Include="images\isithot_locked.png" />
+    <EmbeddedResource Include="images\isithot_unlocked.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="images\reach_cycle1000.png" />
+    <EmbeddedResource Include="images\reach_cycle1000_locked.png" />
+    <EmbeddedResource Include="images\reach_cycle1000_unlocked.png" />
+    <EmbeddedResource Include="images\reach_cycle4000.png" />
+    <EmbeddedResource Include="images\reach_cycle4000_locked.png" />
+    <EmbeddedResource Include="images\reach_cycle4000_unlocked.png" />
+    <EmbeddedResource Include="images\small_world.png" />
+    <EmbeddedResource Include="images\small_world_locked.png" />
+    <EmbeddedResource Include="images\small_world_unlocked.png" />
+    <EmbeddedResource Include="images\youmonster.png" />
+    <EmbeddedResource Include="images\youmonster_locked.png" />
+    <EmbeddedResource Include="images\youmonster_unlocked.png" />
+  </ItemGroup>
+</Project>

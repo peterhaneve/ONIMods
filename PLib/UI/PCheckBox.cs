@@ -213,11 +213,15 @@ namespace PeterHan.PLib.UI {
 				Margin = Margin, Spacing = Math.Max(IconSpacing, 0), Alignment = TextAnchor.
 				MiddleLeft
 			};
-			if (DynamicSize)
-				checkbox.AddComponent<BoxLayoutGroup>().Params = lp;
-			else
+			if (DynamicSize) {
+				var layout = checkbox.AddComponent<BoxLayoutGroup>();
+				layout.Params = lp;
+				layout.flexibleWidth = FlexSize.x;
+				layout.flexibleHeight = FlexSize.y;
+			} else {
 				BoxLayoutGroup.LayoutNow(checkbox, lp);
-			checkbox.SetFlexUISize(FlexSize);
+				checkbox.SetFlexUISize(FlexSize);
+			}
 			InvokeRealize(checkbox);
 			return checkbox;
 		}
