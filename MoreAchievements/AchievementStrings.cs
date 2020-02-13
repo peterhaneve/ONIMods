@@ -21,6 +21,9 @@ namespace PeterHan.MoreAchievements {
 	/// Strings used in One Giant Leap.
 	/// </summary>
 	public static class AchievementStrings {
+		public static LocString DEFAULT_PROGRESS = "Complete requirement";
+
+		// A Balanced Diet
 		public static class ABALANCEDDIET {
 			public static LocString NAME = "A Balanced Diet";
 			public static LocString DESC = "Eat " + GameUtil.GetFormattedCalories(KCAL *
@@ -238,6 +241,14 @@ namespace PeterHan.MoreAchievements {
 			public static LocString PROGRESS = "Highest Morale: {0:F0} / {1:F0}";
 
 			public const int MORALE = 60;
+		}
+
+		// Watch the World Burn
+		public static class WATCHTHEWORLDBURN {
+			public const string ID = "WatchTheWorldBurn";
+			public static LocString NAME = "Watch the World Burn";
+			public static LocString DESC = "Melt a building generated in a point of interest.";
+			public static LocString PROGRESS = "Melt a POI building";
 		}
 
 		// You Monster

@@ -28,11 +28,22 @@ namespace PeterHan.MoreAchievements {
 	/// </summary>
 	internal sealed class AD {
 		/// <summary>
+		/// Gets the achievement data for the specified achievement ID.
+		/// </summary>
+		/// <param name="id">The achievement ID.</param>
+		/// <returns>The achievement constant data, or null if no achievement with this ID
+		/// was found in AchievementStrings.</returns>
+		internal static Type GetAchievementData(string id) {
+			return typeof(AchievementStrings).GetNestedType(id.ToUpperInvariant(),
+				BindingFlags.Public | BindingFlags.Static | BindingFlags.NonPublic);
+		}
+
+		/// <summary>
 		/// Retrieves string data (possibly localized) from the achievement strings.
 		/// </summary>
 		/// <param name="key">The string name to retrieve.</param>
 		/// <returns>The value of that string.</returns>
-		private static string GetStringValue(Type type, string key) {
+		internal static string GetStringValue(Type type, string key) {
 			return type?.GetFieldSafe(key, true)?.GetValue(null)?.ToString() ?? "";
 		}
 
@@ -67,8 +78,7 @@ namespace PeterHan.MoreAchievements {
 		/// <returns>The colony achievement for this descriptor.</returns>
 		public ColonyAchievement GetColonyAchievement() {
 			// Get strings from the AchievementStrings class
-			var type = typeof(AchievementStrings).GetNestedType(ID.ToUpperInvariant(),
-				BindingFlags.Public | BindingFlags.Static | BindingFlags.NonPublic);
+			var type = GetAchievementData(ID);
 			return new ColonyAchievement(ID, "", GetStringValue(type, "NAME"), GetStringValue(
 				type, "DESC"), false, new List<ColonyAchievementRequirement>(requirements),
 				icon: Icon);

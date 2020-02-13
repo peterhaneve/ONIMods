@@ -58,11 +58,6 @@ namespace PeterHan.MoreAchievements {
 		public float MaxKelvinSeen { get; private set; }
 
 		/// <summary>
-		/// Cached acquire N artifacts requirements.
-		/// </summary>
-		private readonly List<CollectNArtifacts> artifactRequirements;
-
-		/// <summary>
 		/// Cached build N buildings requirements.
 		/// </summary>
 		private readonly List<BuildNBuildings> buildRequirements;
@@ -88,25 +83,11 @@ namespace PeterHan.MoreAchievements {
 		private readonly List<KillNCritters> killRequirements;
 
 		internal AchievementStateComponent() {
-			artifactRequirements = new List<CollectNArtifacts>(4);
 			buildRequirements = new List<BuildNBuildings>(8);
 			digRequirements = new List<DigNTiles>(8);
 			events = new Dictionary<string, TriggerEvent>(32);
 			geneRequirements = new List<UseGeneShufflerNTimes>(4);
 			killRequirements = new List<KillNCritters>(8);
-		}
-
-		/// <summary>
-		/// Checks to see if all artifacts have been collected.
-		/// </summary>
-		public void CheckArtifacts() {
-			int have = 0;
-			// Count artifacts discovered
-			foreach (string name in ArtifactConfig.artifactItems)
-				if (WorldInventory.Instance.IsDiscovered(Assets.GetPrefab(name).PrefabID()))
-					have++;
-			foreach (var requirement in artifactRequirements)
-				requirement.Obtained = have;
 		}
 
 		/// <summary>
@@ -117,15 +98,15 @@ namespace PeterHan.MoreAchievements {
 		/// </summary>
 		/// <param name="requirements">The location to save those requirements.</param>
 		private void CollectRequirements(IDictionary<Type, IOldList> requirements) {
-			var achievements = Db.Get().ColonyAchievements?.resources;
+			var achievements = SaveGame.Instance.GetComponent<ColonyAchievementTracker>();
 			if (requirements == null)
 				throw new ArgumentNullException("requirements");
 			if (achievements == null)
 				PUtil.LogError("Achievement list is not initialized!");
 			else
 				// Works with any number of achievements that use this type
-				foreach (var achievement in achievements)
-					foreach (var requirement in achievement.requirementChecklist)
+				foreach (var achievement in achievements.achievements.Values)
+					foreach (var requirement in achievement.Requirements)
 						if (requirement is TriggerEvent evt) {
 							string id = evt.ID;
 							// Add event trigger
@@ -161,9 +142,8 @@ namespace PeterHan.MoreAchievements {
 
 		protected override void OnPrefabInit() {
 			base.OnPrefabInit();
-			CollectRequirements(new Dictionary<Type, IOldList>(4) {
+			CollectRequirements(new Dictionary<Type, IOldList>(8) {
 				{ typeof(BuildNBuildings), buildRequirements },
-				{ typeof(CollectNArtifacts), artifactRequirements },
 				{ typeof(DigNTiles), digRequirements },
 				{ typeof(KillNCritters), killRequirements },
 				{ typeof(UseGeneShufflerNTimes), geneRequirements }
@@ -175,6 +155,10 @@ namespace PeterHan.MoreAchievements {
 			base.OnSpawn();
 			Subscribe((int)GameHashes.NewBuilding, OnBuildingCompleted);
 			Subscribe(DigNTiles.DigComplete, OnDigCompleted);
+			// Neutronium discovered in the past?
+			var neutronium = ElementLoader.FindElementByHash(SimHashes.Unobtanium);
+			if (neutronium != null && WorldInventory.Instance.IsDiscovered(neutronium.tag))
+				Trigger(AchievementStrings.ISEEWHATYOUDIDTHERE.ID);
 		}
 
 		/// <summary>

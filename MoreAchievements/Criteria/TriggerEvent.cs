@@ -35,25 +35,25 @@ namespace PeterHan.MoreAchievements.Criteria {
 		/// <summary>
 		/// The description (non serialized) of this event.
 		/// </summary>
-		private readonly string description;
+		private string description;
 
 		/// <summary>
 		/// Whether this event has been triggered.
 		/// </summary>
 		private bool triggered;
 
-		public TriggerEvent(string id, string description) {
+		public TriggerEvent(string id) {
 			if (string.IsNullOrEmpty(id))
 				throw new ArgumentNullException("id");
-			if (string.IsNullOrEmpty(description))
-				throw new ArgumentNullException("description");
 			ID = id;
-			this.description = description;
+			triggered = false;
+			UpdateDescription();
 		}
 
 		public override void Deserialize(IReader reader) {
 			ID = reader.ReadKleiString();
 			triggered = reader.ReadInt32() != 0;
+			UpdateDescription();
 		}
 
 		public override string GetProgress(bool complete) {
@@ -74,6 +74,19 @@ namespace PeterHan.MoreAchievements.Criteria {
 		/// </summary>
 		public void Trigger() {
 			triggered = true;
+		}
+
+		/// <summary>
+		/// Updates the description of this achievement.
+		/// </summary>
+		private void UpdateDescription() {
+			// Determine text from the achievement strings
+			var type = AD.GetAchievementData(ID);
+			if (type == null)
+				description = AchievementStrings.DEFAULT_PROGRESS;
+			else
+				description = AD.GetStringValue(type, "PROGRESS") ?? AchievementStrings.
+					DEFAULT_PROGRESS.text;
 		}
 	}
 }

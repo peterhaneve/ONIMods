@@ -18,7 +18,7 @@
 
 using Database;
 using PeterHan.MoreAchievements.Criteria;
-
+using System.Collections.Generic;
 using AS = PeterHan.MoreAchievements.AchievementStrings;
 
 namespace PeterHan.MoreAchievements {
@@ -30,6 +30,11 @@ namespace PeterHan.MoreAchievements {
 		/// The achievement list.
 		/// </summary>
 		internal static AD[] AllAchievements { get; private set; }
+
+		/// <summary>
+		/// The props eligible for melting.
+		/// </summary>
+		internal static readonly HashSet<string> POI_PROPS = new HashSet<string>();
 
 		/// <summary>
 		/// Initializes the achievement list, after the Db has been initialized.
@@ -52,6 +57,8 @@ namespace PeterHan.MoreAchievements {
 					TEMPERATURE)),
 				new AD("YouMonster", "youmonster", new KillNCritters(AS.YOUMONSTER.QUANTITY)),
 				new AD("BelongsInAMuseum", "all_artifacts", new CollectNArtifacts(28)),
+				new AD(AS.WATCHTHEWORLDBURN.ID, "check", new TriggerEvent(AS.WATCHTHEWORLDBURN.
+					ID)),
 				new AD("ABalancedDiet", "balanceddiet",
 					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FieldRationConfig.ID),
 					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, MushBarConfig.ID),
@@ -94,8 +101,28 @@ namespace PeterHan.MoreAchievements {
 					MORALE)),
 				new AD("HaveIWonYet", "reach_cycle4000", new CycleNumber(AS.HAVEIWONYET.CYCLE)),
 				new AD(AS.ISEEWHATYOUDIDTHERE.ID, "cheat", new TriggerEvent(AS.
-					ISEEWHATYOUDIDTHERE.ID, AS.ISEEWHATYOUDIDTHERE.PROGRESS))
+					ISEEWHATYOUDIDTHERE.ID)),
 			};
+			// Meltable props, but unfortunately the IDs are not constants
+			POI_PROPS.Add("PropDesk");
+			POI_PROPS.Add("PropElevator");
+			POI_PROPS.Add("PropFacilityChair");
+			POI_PROPS.Add("PropFacilityChairFlip");
+			POI_PROPS.Add("PropFacilityChandelier");
+			POI_PROPS.Add("PropFacilityCouch");
+			POI_PROPS.Add("PropFacilityDesk");
+			POI_PROPS.Add("PropFacilityDisplay");
+			POI_PROPS.Add("PropFacilityDisplay2");
+			POI_PROPS.Add("PropFacilityDisplay3");
+			POI_PROPS.Add("PropFacilityGlobeDroors");
+			POI_PROPS.Add("PropFacilityHangingLight");
+			POI_PROPS.Add("PropFacilityPainting");
+			POI_PROPS.Add("PropFacilityStatue");
+			POI_PROPS.Add("PropFacilityTable");
+			POI_PROPS.Add("PropFacilityWallDegree");
+			POI_PROPS.Add("PropLight");
+			POI_PROPS.Add("PropReceptionDesk");
+			POI_PROPS.Add("PropTallPlant");
 		}
 	}
 }

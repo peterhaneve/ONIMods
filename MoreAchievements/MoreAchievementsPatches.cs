@@ -20,6 +20,8 @@ using Harmony;
 using PeterHan.MoreAchievements.Criteria;
 using PeterHan.PLib;
 using PeterHan.PLib.Datafiles;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace PeterHan.MoreAchievements {
 	/// <summary>
@@ -50,6 +52,20 @@ namespace PeterHan.MoreAchievements {
 				added++;
 			}
 			PUtil.LogDebug("Added {0:D} achievements".F(added));
+		}
+
+		/// <summary>
+		/// Checks to see if the object that just got melted is a POI object.
+		/// 
+		/// Destroys the object before returning.
+		/// </summary>
+		/// <param name="obj">The object that just melted, before the melt actually completes.</param>
+		private static void CheckAndDestroy(GameObject obj) {
+			if (obj != null) {
+				if (Achievements.POI_PROPS.Contains(obj.PrefabID().Name))
+					AchievementStateComponent.Trigger(AchievementStrings.WATCHTHEWORLDBURN.ID);
+				Util.KDestroyGameObject(obj);
+			}
 		}
 
 		/// <summary>
@@ -176,6 +192,23 @@ namespace PeterHan.MoreAchievements {
 		}
 
 		/// <summary>
+		/// Applied to SimTemperatureTransfer to check for POIs melting down.
+		/// </summary>
+		[HarmonyPatch(typeof(SimTemperatureTransfer), "DoStateTransition")]
+		public static class SimTemperatureTransfer_DoStateTransition_Patch {
+			/// <summary>
+			/// Applied before DoStateTransition runs.
+			/// </summary>
+			internal static IEnumerable<CodeInstruction> Transpiler(
+					IEnumerable<CodeInstruction> method) {
+				return PPatchTools.ReplaceMethodCall(method, typeof(Util).GetMethodSafe(
+					nameof(Util.KDestroyGameObject), true, typeof(GameObject)),
+					typeof(MoreAchievementsPatches).GetMethodSafe(nameof(CheckAndDestroy),
+					true, typeof(GameObject)));
+			}
+		}
+
+		/// <summary>
 		/// Applied to WorldInventory to grant an achievement upon discovering items.
 		/// </summary>
 		[HarmonyPatch(typeof(WorldInventory), "Discover")]
@@ -183,15 +216,12 @@ namespace PeterHan.MoreAchievements {
 			/// <summary>
 			/// Applied after Discover runs.
 			/// </summary>
-			internal static void Postfix(Tag tag, Tag categoryTag) {
+			internal static void Postfix(Tag tag) {
 				var neutronium = ElementLoader.FindElementByHash(SimHashes.Unobtanium);
 				if (neutronium != null && tag.Equals(neutronium.tag))
 					// I See What You Did There
 					AchievementStateComponent.Trigger(AchievementStrings.ISEEWHATYOUDIDTHERE.
 						ID);
-				else if (categoryTag == GameTags.MiscPickupable)
-					// Artifact check
-					Game.Instance?.GetComponent<AchievementStateComponent>()?.CheckArtifacts();
 			}
 		}
 	}

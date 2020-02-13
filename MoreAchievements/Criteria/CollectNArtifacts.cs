@@ -28,7 +28,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 		/// <summary>
 		/// The number of artifact types obtained.
 		/// </summary>
-		internal int Obtained { get; set; }
+		private int obtained;
 
 		/// <summary>
 		/// The number of artifact types which must be collected.
@@ -36,18 +36,18 @@ namespace PeterHan.MoreAchievements.Criteria {
 		private int required;
 
 		public CollectNArtifacts(int required) {
-			Obtained = 0;
+			obtained = 0;
 			this.required = Math.Max(1, required);
 		}
 
 		public override void Deserialize(IReader reader) {
-			Obtained = 0;
+			obtained = 0;
 			required = Math.Max(1, reader.ReadInt32());
 		}
 
 		public override string GetProgress(bool complete) {
 			return string.Format(AchievementStrings.BELONGSINAMUSEUM.PROGRESS, complete ?
-				required : Obtained, required);
+				required : obtained, required);
 		}
 
 		public override void Serialize(BinaryWriter writer) {
@@ -55,7 +55,16 @@ namespace PeterHan.MoreAchievements.Criteria {
 		}
 
 		public override bool Success() {
-			return Obtained >= required;
+			return obtained >= required;
+		}
+
+		public override void Update() {
+			int have = 0;
+			// Count artifacts discovered
+			foreach (string name in ArtifactConfig.artifactItems)
+				if (WorldInventory.Instance.IsDiscovered(Assets.GetPrefab(name).PrefabID()))
+					have++;
+			obtained = have;
 		}
 	}
 }
