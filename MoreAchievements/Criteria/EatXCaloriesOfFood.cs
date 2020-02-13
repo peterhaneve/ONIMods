@@ -18,66 +18,62 @@
 
 using Database;
 using KSerialization;
-using PeterHan.PLib;
 using System;
 using System.IO;
 
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
-	/// Requires a Duplicant to reach the specified value in the specified attribute.
+	/// Requires the consumption of a specific quantity of calories of a given food type.
 	/// </summary>
-	public class ReachXAttributeValue : ColonyAchievementRequirement {
+	public class EatXCaloriesOfFood : ColonyAchievementRequirement {
 		/// <summary>
-		/// The attribute ID which is checked.
+		/// The food tag which must be consumed.
 		/// </summary>
-		protected string attribute;
+		private string foodTag;
 
 		/// <summary>
-		/// The maximum attribute value currently present in the colony.
+		/// The number of calories which must be eaten.
 		/// </summary>
-		protected float maxValue;
+		private float numCalories;
 
-		/// <summary>
-		/// The attribute value required.
-		/// </summary>
-		protected float required;
-
-		public ReachXAttributeValue(string attribute, float required) {
-			if (required.IsNaNOrInfinity())
-				throw new ArgumentOutOfRangeException("required");
-			this.attribute = attribute ?? throw new ArgumentNullException("attribute");
-			maxValue = 0;
-			this.required = Math.Max(0.0f, required);
+		public EatXCaloriesOfFood(float numKCal, string foodTag) {
+			if (string.IsNullOrEmpty(foodTag))
+				throw new ArgumentNullException("foodTag");
+			// kcal to cal
+			numCalories = Math.Max(1.0f, numKCal) * 1000.0f;
+			this.foodTag = foodTag;
 		}
 
 		public override void Deserialize(IReader reader) {
-			attribute = reader.ReadKleiString();
-			maxValue = 0;
-			required = Math.Max(0.0f, reader.ReadSingle());
+			numCalories = Math.Max(1.0f, reader.ReadSingle());
+			foodTag = reader.ReadKleiString();
+		}
+
+		/// <summary>
+		/// Retrieves the number of calories consumed of this food type.
+		/// </summary>
+		/// <returns>The calories consumed of this food type for the current colony.</returns>
+		private float GetCaloriesConsumed() {
+			var byFood = RationTracker.Get()?.caloriesConsumedByFood;
+			if (byFood == null || !byFood.TryGetValue(foodTag, out float calories))
+				calories = 0.0f;
+			return calories;
 		}
 
 		public override string GetProgress(bool complete) {
-			return string.Format(AchievementStrings.DESTROYEROFWORLDS.PROGRESS, complete ?
-				required : maxValue, required);
+			return string.Format(AchievementStrings.ABALANCEDDIET.PROGRESS,
+				TagManager.Create(foodTag).ProperName(), GameUtil.GetFormattedCalories(
+				complete ? numCalories : GetCaloriesConsumed()), GameUtil.GetFormattedCalories(
+				numCalories));
 		}
 
 		public override void Serialize(BinaryWriter writer) {
-			writer.WriteKleiString(attribute);
-			writer.Write(required);
+			writer.Write(numCalories);
+			writer.WriteKleiString(foodTag);
 		}
 
 		public override bool Success() {
-			return maxValue >= required;
-		}
-
-		public override void Update() {
-			// Check each duplicant for the best value
-			float best = 0.0f;
-			var attr = Db.Get().Attributes.Get(attribute);
-			foreach (var duplicant in Components.LiveMinionIdentities.Items)
-				if (duplicant != null)
-					best = Math.Max(best, attr.Lookup(duplicant).GetTotalValue());
-			maxValue = best;
+			return GetCaloriesConsumed() > numCalories;
 		}
 	}
 }

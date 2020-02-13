@@ -46,7 +46,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 
 		public override void Deserialize(IReader reader) {
 			maxValue = 0.0f;
-			required = reader.ReadSingle();
+			required = Math.Max(0.0f, reader.ReadSingle());
 		}
 
 		public override string GetProgress(bool complete) {

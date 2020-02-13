@@ -40,7 +40,7 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// The maximum entry length.
 		/// </summary>
-		private int maxLength;
+		private readonly int maxLength;
 
 		/// <summary>
 		/// The realized text field.
@@ -66,11 +66,8 @@ namespace PeterHan.PLib.Options {
 
 		protected override IUIComponent GetUIComponent() {
 			var cb = new PTextField() {
-				OnTextChanged = (obj, text) => {
-					value = text;
-					Update();
-				}, ToolTip = ToolTip, Text = value.ToString(), MinWidth = 128,
-				Type = PTextField.FieldType.Text, MaxLength = maxLength
+				OnTextChanged = OnTextChanged, ToolTip = ToolTip, Text = value.ToString(),
+				MinWidth = 128, Type = PTextField.FieldType.Text, MaxLength = maxLength
 			};
 			cb.OnRealize += OnRealizeTextField;
 			return cb;
@@ -85,8 +82,20 @@ namespace PeterHan.PLib.Options {
 			Update();
 		}
 
+		/// <summary>
+		/// Called when the input field's text is changed.
+		/// </summary>
+		/// <param name="text">The new text.</param>
+		private void OnTextChanged(GameObject _, string text) {
+			value = text;
+			Update();
+		}
+
+		/// <summary>
+		/// Updates the displayed value.
+		/// </summary>
 		private void Update() {
-			var field = textField.GetComponentInChildren<TMP_InputField>();
+			var field = textField?.GetComponentInChildren<TMP_InputField>();
 			if (field != null)
 				field.text = value;
 		}

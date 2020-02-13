@@ -9,6 +9,12 @@
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="images\balanceddiet.png" />
+    <None Remove="images\balanceddiet_locked.png" />
+    <None Remove="images\balanceddiet_unlocked.png" />
+    <None Remove="images\cheat.png" />
+    <None Remove="images\cheat_locked.png" />
+    <None Remove="images\cheat_unlocked.png" />
     <None Remove="images\im_gonna_be.png" />
     <None Remove="images\im_gonna_be_locked.png" />
     <None Remove="images\im_gonna_be_unlocked.png" />
@@ -29,6 +35,12 @@
     <None Remove="images\youmonster_unlocked.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="images\balanceddiet.png" />
+    <EmbeddedResource Include="images\balanceddiet_locked.png" />
+    <EmbeddedResource Include="images\balanceddiet_unlocked.png" />
+    <EmbeddedResource Include="images\cheat.png" />
+    <EmbeddedResource Include="images\cheat_locked.png" />
+    <EmbeddedResource Include="images\cheat_unlocked.png" />
     <EmbeddedResource Include="images\im_gonna_be.png" />
     <EmbeddedResource Include="images\im_gonna_be_locked.png" />
     <EmbeddedResource Include="images\im_gonna_be_unlocked.png" />

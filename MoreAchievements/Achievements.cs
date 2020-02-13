@@ -19,6 +19,8 @@
 using Database;
 using PeterHan.MoreAchievements.Criteria;
 
+using AS = PeterHan.MoreAchievements.AchievementStrings;
+
 namespace PeterHan.MoreAchievements {
 	/// <summary>
 	/// Lists all achievements added by this mod.
@@ -35,41 +37,64 @@ namespace PeterHan.MoreAchievements {
 		internal static void InitAchievements() {
 			var db = Db.Get();
 			AllAchievements = new AD[] {
-				new AD("EmpireBuilder", "build_2500", new BuildNBuildings(2500)),
-				new AD("JohnHenry", "dig_10k", new DigNTiles(10000)),
-				new AD("TestOfTime", "reach_cycle1000", new CycleNumber(1000)),
-				new AD("ThinkingAhead", "thinking_ahead", new UseGeneShufflerNTimes(10)),
+				new AD("EmpireBuilder", "build_2500", new BuildNBuildings(AS.EMPIREBUILDER.
+					QUANTITY)),
+				new AD("JohnHenry", "dig_10k", new DigNTiles(AS.JOHNHENRY.QUANTITY)),
+				new AD("TestOfTime", "reach_cycle1000", new CycleNumber(AS.TESTOFTIME.CYCLE)),
+				new AD("ThinkingAhead", "thinking_ahead", new UseGeneShufflerNTimes(AS.
+					THINKINGAHEAD.QUANTITY)),
 				new AD("ChutesAndLadders", "firepole_travel", new TravelXUsingTransitTubes(
-					NavType.Pole, 10000)),
+					NavType.Pole, AS.CHUTESANDLADDERS.DISTANCE)),
 				new AD("ImGonnaBe", "im_gonna_be", new TravelXUsingTransitTubes(NavType.Floor,
-					1609000)),
-				new AD("SmallWorld", "small_world", new NumberOfDupes(35)),
-				new AD("IsItHotInHere", "isithot", new HeatBuildingToXKelvin(2500.0f)),
-				new AD("YouMonster", "youmonster", new KillNCritters(100)),
+					AS.IMGONNABE.DISTANCE)),
+				new AD("SmallWorld", "small_world", new NumberOfDupes(AS.SMALLWORLD.QUANTITY)),
+				new AD("IsItHotInHere", "isithot", new HeatBuildingToXKelvin(AS.ISITHOTINHERE.
+					TEMPERATURE)),
+				new AD("YouMonster", "youmonster", new KillNCritters(AS.YOUMONSTER.QUANTITY)),
+				new AD("BelongsInAMuseum", "all_artifacts", new CollectNArtifacts(28)),
+				new AD("ABalancedDiet", "balanceddiet",
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FieldRationConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, MushBarConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FriedMushBarConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, BasicPlantFoodConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, BasicPlantBarConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, PickledMealConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, PrickleFruitConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, GrilledPrickleFruitConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, CookedEggConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, MeatConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, CookedMeatConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, ColdWheatBreadConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, SpiceBreadConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FruitCakeConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, SalsaConfig.ID)),
 				new AD("DestroyerOfWorlds", "check", new ReachXAttributeValue(db.Attributes.
-					Digging.Id, 20.0f)),
+					Digging.Id, AS.DESTROYEROFWORLDS.LEVEL)),
 				new AD("SmoothOperator", "check", new ReachXAttributeValue(db.Attributes.
-					Machinery.Id, 20.0f)),
+					Machinery.Id, AS.SMOOTHOPERATOR.LEVEL)),
 				new AD("Olympian", "check", new ReachXAttributeValue(db.Attributes.Athletics.
-					Id, 20.0f)),
+					Id, AS.OLYMPIAN.LEVEL)),
 				new AD("AdaLovelace", "check", new ReachXAttributeValue(db.Attributes.
-					Learning.Id, 20.0f)),
+					Learning.Id, AS.ADALOVELACE.LEVEL)),
 				new AD("MasterChef", "check", new ReachXAttributeValue(db.Attributes.
-					Cooking.Id, 20.0f)),
+					Cooking.Id, AS.MASTERCHEF.LEVEL)),
 				new AD("MasterBuilder", "check", new ReachXAttributeValue(db.Attributes.
-					Construction.Id, 20.0f)),
+					Construction.Id, AS.MASTERBUILDER.LEVEL)),
 				new AD("MountainMover", "check", new ReachXAttributeValue(db.Attributes.
-					Strength.Id, 20.0f)),
+					Strength.Id, AS.MOUNTAINMOVER.LEVEL)),
 				new AD("Cowboy", "Animal_friends", new ReachXAttributeValue(db.Attributes.
-					Ranching.Id, 20.0f)),
+					Ranching.Id, AS.COWBOY.LEVEL)),
 				new AD("MotherEarth", "check", new ReachXAttributeValue(db.Attributes.
-					Botanist.Id, 20.0f)),
+					Botanist.Id, AS.MOTHEREARTH.LEVEL)),
 				new AD("Michelangelo", "check", new ReachXAttributeValue(db.Attributes.
-					Art.Id, 20.0f)),
+					Art.Id, AS.MICHELANGELO.LEVEL)),
 				new AD("FirstDoNoHarm", "check", new ReachXAttributeValue(db.Attributes.
-					Caring.Id, 20.0f)),
-				new AD("TotallyEcstatic", "check", new ReachXMoraleValue(60.0f)),
-				new AD("HaveIWonYet", "reach_cycle4000", new CycleNumber(4000)),
+					Caring.Id, AS.FIRSTDONOHARM.LEVEL)),
+				new AD("TotallyEcstatic", "check", new ReachXMoraleValue(AS.TOTALLYECSTATIC.
+					MORALE)),
+				new AD("HaveIWonYet", "reach_cycle4000", new CycleNumber(AS.HAVEIWONYET.CYCLE)),
+				new AD(AS.ISEEWHATYOUDIDTHERE.ID, "cheat", new TriggerEvent(AS.
+					ISEEWHATYOUDIDTHERE.ID, AS.ISEEWHATYOUDIDTHERE.PROGRESS))
 			};
 		}
 	}

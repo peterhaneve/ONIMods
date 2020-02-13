@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.UI.Layouts;
 using System;
 using TMPro;
 using UnityEngine;
@@ -239,72 +240,10 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// Handles layout for text boxes. Not freezable.
 		/// </summary>
-		private sealed class PTextFieldLayout : UIBehaviour, ILayoutElement, ISettableFlexSize
-		{
-			/// <summary>
-			/// The flexible height of the text box.
-			/// </summary>
-			public float flexibleHeight { get; set; }
+		private sealed class PTextFieldLayout : AbstractTextFieldLayout {
+			protected override float BorderSize => 1.0f;
 
-			/// <summary>
-			/// The flexible width of the text box.
-			/// </summary>
-			public float flexibleWidth { get; set; }
-
-			/// <summary>
-			/// The minimum height of the text box.
-			/// </summary>
-			public float minHeight { get; private set; }
-
-			/// <summary>
-			/// The minimum width of the text box.
-			/// </summary>
-			public float minWidth { get; set; }
-
-			/// <summary>
-			/// The preferred height of the text box.
-			/// </summary>
-			public float preferredHeight { get; private set; }
-
-			/// <summary>
-			/// The preferred width of the text box.
-			/// </summary>
-			public float preferredWidth { get; set; }
-
-			public int layoutPriority => 1;
-
-			/// <summary>
-			/// Caches elements when calculating layout to improve performance.
-			/// </summary>
-			private ILayoutElement[] calcElements;
-
-			/// <summary>
-			/// Caches elements when setting layout to improve performance.
-			/// </summary>
-			private ILayoutController[] setElements;
-
-			/// <summary>
-			/// The text area where the mask is displayed.
-			/// </summary>
-			private GameObject textArea;
-
-			/// <summary>
-			/// The text box component used to determine the size of the overall layout.
-			/// </summary>
-			private GameObject textBox;
-
-			public void CalculateLayoutInputHorizontal() {
-				if (textArea != null) {
-					calcElements = textArea.GetComponents<ILayoutElement>();
-					// Lay out children
-					foreach (var component in calcElements)
-						if (!PUIUtils.IgnoreLayout(component))
-							component.CalculateLayoutInputHorizontal();
-				}
-				preferredWidth = minWidth;
-			}
-
-			public void CalculateLayoutInputVertical() {
+			public override void CalculateLayoutInputVertical() {
 #pragma warning disable IDE0031 // Use null propagation
 				var child = (textBox == null) ? null : textBox.rectTransform();
 #pragma warning restore IDE0031
@@ -322,73 +261,6 @@ namespace PeterHan.PLib.UI {
 				} else
 					// Fallback if text box is somehow not set
 					minHeight = preferredHeight = 1.0f;
-			}
-
-			protected override void OnDidApplyAnimationProperties() {
-				base.OnDidApplyAnimationProperties();
-				SetDirty();
-			}
-
-			protected override void OnDisable() {
-				base.OnEnable();
-				SetDirty();
-			}
-
-			protected override void OnEnable() {
-				base.OnEnable();
-				UpdateComponents();
-				SetDirty();
-			}
-
-			protected override void OnRectTransformDimensionsChange() {
-				base.OnRectTransformDimensionsChange();
-				SetDirty();
-			}
-
-			public void SetLayoutHorizontal() {
-				if (textArea != null) {
-					setElements = textArea.GetComponents<ILayoutController>();
-					// Lay out descendents
-					foreach (var component in setElements)
-						if (!PUIUtils.IgnoreLayout(component))
-							component.SetLayoutHorizontal();
-				}
-			}
-
-			public void SetLayoutVertical() {
-				if (textArea != null && setElements != null) {
-					// Lay out descendents
-					foreach (var component in setElements)
-						if (!PUIUtils.IgnoreLayout(component))
-							component.SetLayoutVertical();
-					setElements = null;
-				}
-			}
-
-			/// <summary>
-			/// Sets this layout as dirty.
-			/// </summary>
-			private void SetDirty() {
-				if (gameObject != null && IsActive())
-					LayoutRebuilder.MarkLayoutForRebuild(gameObject.rectTransform());
-			}
-
-			/// <summary>
-			/// Caches the child components for performance reasons at runtime.
-			/// </summary>
-			private void UpdateComponents() {
-				var obj = gameObject;
-				if (obj != null) {
-					var transform = obj.transform;
-					textBox = obj.GetComponentInChildren<TextMeshProUGUI>()?.gameObject;
-					if (transform != null && transform.childCount > 0)
-						textArea = transform.GetChild(0)?.gameObject;
-					else
-						textArea = null;
-				} else {
-					textBox = null;
-					textArea = null;
-				}
 			}
 		}
 	}

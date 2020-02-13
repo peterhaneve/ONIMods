@@ -17,67 +17,45 @@
  */
 
 using Database;
-using KSerialization;
-using PeterHan.PLib;
 using System;
 using System.IO;
 
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
-	/// Requires a Duplicant to reach the specified value in the specified attribute.
+	/// Requires the collection of the specified number of artifact types.
 	/// </summary>
-	public class ReachXAttributeValue : ColonyAchievementRequirement {
+	public sealed class CollectNArtifacts : ColonyAchievementRequirement {
 		/// <summary>
-		/// The attribute ID which is checked.
+		/// The number of artifact types obtained.
 		/// </summary>
-		protected string attribute;
+		internal int Obtained { get; set; }
 
 		/// <summary>
-		/// The maximum attribute value currently present in the colony.
+		/// The number of artifact types which must be collected.
 		/// </summary>
-		protected float maxValue;
+		private int required;
 
-		/// <summary>
-		/// The attribute value required.
-		/// </summary>
-		protected float required;
-
-		public ReachXAttributeValue(string attribute, float required) {
-			if (required.IsNaNOrInfinity())
-				throw new ArgumentOutOfRangeException("required");
-			this.attribute = attribute ?? throw new ArgumentNullException("attribute");
-			maxValue = 0;
-			this.required = Math.Max(0.0f, required);
+		public CollectNArtifacts(int required) {
+			Obtained = 0;
+			this.required = Math.Max(1, required);
 		}
 
 		public override void Deserialize(IReader reader) {
-			attribute = reader.ReadKleiString();
-			maxValue = 0;
-			required = Math.Max(0.0f, reader.ReadSingle());
+			Obtained = 0;
+			required = Math.Max(1, reader.ReadInt32());
 		}
 
 		public override string GetProgress(bool complete) {
-			return string.Format(AchievementStrings.DESTROYEROFWORLDS.PROGRESS, complete ?
-				required : maxValue, required);
+			return string.Format(AchievementStrings.BELONGSINAMUSEUM.PROGRESS, complete ?
+				required : Obtained, required);
 		}
 
 		public override void Serialize(BinaryWriter writer) {
-			writer.WriteKleiString(attribute);
 			writer.Write(required);
 		}
 
 		public override bool Success() {
-			return maxValue >= required;
-		}
-
-		public override void Update() {
-			// Check each duplicant for the best value
-			float best = 0.0f;
-			var attr = Db.Get().Attributes.Get(attribute);
-			foreach (var duplicant in Components.LiveMinionIdentities.Items)
-				if (duplicant != null)
-					best = Math.Max(best, attr.Lookup(duplicant).GetTotalValue());
-			maxValue = best;
+			return Obtained >= required;
 		}
 	}
 }

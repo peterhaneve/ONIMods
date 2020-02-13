@@ -62,16 +62,8 @@ namespace PeterHan.PLib.Options {
 
 		protected override IUIComponent GetUIComponent() {
 			var cb = new PTextField() {
-				OnTextChanged = (obj, text) => {
-					if (float.TryParse(text, out float newValue)) {
-						if (limits != null)
-							newValue = limits.ClampToRange(newValue);
-						// Record the valid value
-						value = newValue;
-					}
-					Update();
-				}, ToolTip = ToolTip, Text = value.ToString(), MinWidth = 64, MaxLength = 16,
-				Type = PTextField.FieldType.Float
+				OnTextChanged = OnTextChanged, ToolTip = ToolTip, Text = value.ToString(),
+				MinWidth = 64, MaxLength = 16, Type = PTextField.FieldType.Float
 			};
 			cb.OnRealize += OnRealizeTextField;
 			return cb;
@@ -86,8 +78,25 @@ namespace PeterHan.PLib.Options {
 			Update();
 		}
 
+		/// <summary>
+		/// Called when the input field's text is changed.
+		/// </summary>
+		/// <param name="text">The new text.</param>
+		private void OnTextChanged(GameObject _, string text) {
+			if (float.TryParse(text, out float newValue)) {
+				if (limits != null)
+					newValue = limits.ClampToRange(newValue);
+				// Record the valid value
+				value = newValue;
+			}
+			Update();
+		}
+
+		/// <summary>
+		/// Updates the displayed value.
+		/// </summary>
 		private void Update() {
-			var field = textField.GetComponentInChildren<TMP_InputField>();
+			var field = textField?.GetComponentInChildren<TMP_InputField>();
 			if (field != null)
 				field.text = value.ToString();
 		}

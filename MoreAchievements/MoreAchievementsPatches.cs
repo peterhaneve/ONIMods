@@ -174,5 +174,25 @@ namespace PeterHan.MoreAchievements {
 					OnGeneShuffleComplete();
 			}
 		}
+
+		/// <summary>
+		/// Applied to WorldInventory to grant an achievement upon discovering items.
+		/// </summary>
+		[HarmonyPatch(typeof(WorldInventory), "Discover")]
+		public static class WorldInventory_Discover_Patch {
+			/// <summary>
+			/// Applied after Discover runs.
+			/// </summary>
+			internal static void Postfix(Tag tag, Tag categoryTag) {
+				var neutronium = ElementLoader.FindElementByHash(SimHashes.Unobtanium);
+				if (neutronium != null && tag.Equals(neutronium.tag))
+					// I See What You Did There
+					AchievementStateComponent.Trigger(AchievementStrings.ISEEWHATYOUDIDTHERE.
+						ID);
+				else if (categoryTag == GameTags.MiscPickupable)
+					// Artifact check
+					Game.Instance?.GetComponent<AchievementStateComponent>()?.CheckArtifacts();
+			}
+		}
 	}
 }

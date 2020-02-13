@@ -75,7 +75,7 @@ namespace PeterHan.PLib.Options {
 		}
 
 		private void Update() {
-			var toggle = checkbox.GetComponent<MultiToggle>();
+			var toggle = checkbox?.GetComponent<MultiToggle>();
 			if (toggle != null)
 				toggle.ChangeState(check ? PCheckBox.STATE_CHECKED : PCheckBox.STATE_UNCHECKED);
 		}

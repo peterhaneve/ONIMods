@@ -18,66 +18,62 @@
 
 using Database;
 using KSerialization;
-using PeterHan.PLib;
 using System;
 using System.IO;
 
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
-	/// Requires a Duplicant to reach the specified value in the specified attribute.
+	/// Requires an event to be triggered through the achievement state component.
 	/// </summary>
-	public class ReachXAttributeValue : ColonyAchievementRequirement {
+	public sealed class TriggerEvent : ColonyAchievementRequirement {
 		/// <summary>
-		/// The attribute ID which is checked.
+		/// The ID of the event to trigger. Should be the achievement ID for simple
+		/// achievements.
 		/// </summary>
-		protected string attribute;
+		public string ID { get; private set; }
 
 		/// <summary>
-		/// The maximum attribute value currently present in the colony.
+		/// The description (non serialized) of this event.
 		/// </summary>
-		protected float maxValue;
+		private readonly string description;
 
 		/// <summary>
-		/// The attribute value required.
+		/// Whether this event has been triggered.
 		/// </summary>
-		protected float required;
+		private bool triggered;
 
-		public ReachXAttributeValue(string attribute, float required) {
-			if (required.IsNaNOrInfinity())
-				throw new ArgumentOutOfRangeException("required");
-			this.attribute = attribute ?? throw new ArgumentNullException("attribute");
-			maxValue = 0;
-			this.required = Math.Max(0.0f, required);
+		public TriggerEvent(string id, string description) {
+			if (string.IsNullOrEmpty(id))
+				throw new ArgumentNullException("id");
+			if (string.IsNullOrEmpty(description))
+				throw new ArgumentNullException("description");
+			ID = id;
+			this.description = description;
 		}
 
 		public override void Deserialize(IReader reader) {
-			attribute = reader.ReadKleiString();
-			maxValue = 0;
-			required = Math.Max(0.0f, reader.ReadSingle());
+			ID = reader.ReadKleiString();
+			triggered = reader.ReadInt32() != 0;
 		}
 
 		public override string GetProgress(bool complete) {
-			return string.Format(AchievementStrings.DESTROYEROFWORLDS.PROGRESS, complete ?
-				required : maxValue, required);
+			return description;
 		}
 
 		public override void Serialize(BinaryWriter writer) {
-			writer.WriteKleiString(attribute);
-			writer.Write(required);
+			writer.WriteKleiString(ID);
+			writer.Write(triggered ? 1 : 0);
 		}
 
 		public override bool Success() {
-			return maxValue >= required;
+			return triggered;
 		}
 
-		public override void Update() {
-			// Check each duplicant for the best value
-			float best = 0.0f;
-			var attr = Db.Get().Attributes.Get(attribute);
-			foreach (var duplicant in Components.LiveMinionIdentities.Items)
-				if (duplicant != null)
-					best = Math.Max(best, attr.Lookup(duplicant).GetTotalValue());
-			maxValue = best;
+		/// <summary>
+		/// Triggers the event for this achievement.
+		/// </summary>
+		public void Trigger() {
+			triggered = true;
 		}
 	}
 }

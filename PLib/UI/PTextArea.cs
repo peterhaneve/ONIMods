@@ -16,9 +16,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.UI.Layouts;
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace PeterHan.PLib.UI {
@@ -107,15 +109,14 @@ namespace PeterHan.PLib.UI {
 			// Background
 			var style = TextStyle ?? PUITuning.Fonts.TextLightStyle;
 			textField.AddComponent<Image>().color = style.textColor;
-			// Text box with rectangular clipping area
+			// Text box with rectangular clipping area; put pivot in upper left
 			var textArea = PUIElements.CreateUI(textField, "Text Area", false);
+			textArea.rectTransform().pivot = Vector2.up;
 			textArea.AddComponent<Image>().color = BackColor;
-			var rt = textArea.rectTransform();
-			rt.offsetMax = Vector2.one;
-			rt.offsetMin = Vector2.one;
 			var mask = textArea.AddComponent<RectMask2D>();
 			// Scrollable text
-			var textBox = PUIElements.CreateUI(textArea, "Text");
+			var textBox = PUIElements.CreateUI(textArea, "Text", true, PUIAnchoring.Beginning,
+				PUIAnchoring.End);
 			// Text to display
 			var textDisplay = textBox.AddComponent<TextMeshProUGUI>();
 			textDisplay.alignment = TextAlignment;
@@ -142,14 +143,11 @@ namespace PeterHan.PLib.UI {
 			if (!string.IsNullOrEmpty(ToolTip))
 				textField.AddComponent<ToolTip>().toolTip = ToolTip;
 			mask.enabled = true;
-			// Lay out
-			var element = textField.AddOrGet<LayoutElement>();
-			float height = Math.Max(LineCount, 1) * PUIUtils.GetLineHeight(style);
+			// Lay out - TMP_InputField does not support auto layout but we do!
+			var element = textField.AddOrGet<PTextAreaLayout>();
 			PUIElements.SetAnchorOffsets(textArea, 1.0f, 1.0f, 1.0f, 1.0f);
-			element.minHeight = height;
 			element.minWidth = MinWidth;
-			element.preferredHeight = height;
-			element.preferredWidth = MinWidth;
+			element.CalculatedHeight = Math.Max(LineCount, 1) * PUIUtils.GetLineHeight(style);
 			element.flexibleHeight = FlexSize.y;
 			element.flexibleWidth = FlexSize.x;
 			OnRealize?.Invoke(textField);
@@ -211,6 +209,40 @@ namespace PeterHan.PLib.UI {
 
 		public override string ToString() {
 			return "PTextArea[Name={0}]".F(Name);
+		}
+
+		/// <summary>
+		/// Handles layout for text areas. Not freezable.
+		/// </summary>
+		private sealed class PTextAreaLayout : AbstractTextFieldLayout {
+			protected override float BorderSize => 1.0f;
+
+			/// <summary>
+			/// The calculated height of the text box according to the line count set.
+			/// </summary>
+			internal float CalculatedHeight { get; set; }
+
+			public override void CalculateLayoutInputVertical() {
+#pragma warning disable IDE0031 // Use null propagation
+				var child = (textBox == null) ? null : textBox.rectTransform();
+#pragma warning restore IDE0031
+				if (textArea != null && calcElements != null) {
+					// Lay out children
+					foreach (var component in calcElements)
+						if (!PUIUtils.IgnoreLayout(component))
+							component.CalculateLayoutInputVertical();
+					calcElements = null;
+				}
+				if (child != null) {
+					float height = CalculatedHeight;
+					if (height.IsNaNOrInfinity() || height <= 0.0f)
+						height = LayoutUtility.GetPreferredHeight(child);
+					// 1px for the border
+					minHeight = preferredHeight = height + 2.0f;
+				} else
+					// Fallback if text box is somehow not set
+					minHeight = preferredHeight = 1.0f;
+			}
 		}
 	}
 }

@@ -16,11 +16,12 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Database;
 using PeterHan.MoreAchievements.Criteria;
 using PeterHan.PLib;
 using System;
 using System.Collections.Generic;
+
+using IOldList = System.Collections.IList;
 
 namespace PeterHan.MoreAchievements {
 	/// <summary>
@@ -28,25 +29,15 @@ namespace PeterHan.MoreAchievements {
 	/// </summary>
 	public sealed class AchievementStateComponent : KMonoBehaviour {
 		/// <summary>
-		/// Collects and caches colony achievement requirements of the parameter type.
-		/// 
-		/// Achievements cannot change during a game so cache the requirements that need to be
-		/// updated.
+		/// Triggers the colony achievement requirement with the specified ID.
 		/// </summary>
-		/// <typeparam name="T">The type of requirement to collect.</typeparam>
-		/// <param name="requirements">The location to save those requirements.</param>
-		private static void CollectRequirements<T>(ICollection<T> requirements) where T :
-				ColonyAchievementRequirement {
-			var achievements = Db.Get().ColonyAchievements.resources;
-			if (requirements == null)
-				throw new ArgumentNullException("requirements");
-			requirements.Clear();
-			if (achievements != null)
-				// Works with any number of achievements that use this type
-				foreach (var achievement in achievements)
-					foreach (var requirement in achievement.requirementChecklist)
-						if (requirement is T ourRequirement)
-							requirements.Add(ourRequirement);
+		/// <param name="achievement">The requirement ID to trigger.</param>
+		public static void Trigger(string achievement) {
+			if (!string.IsNullOrEmpty(achievement)) {
+				var asc = Game.Instance?.GetComponent<AchievementStateComponent>();
+				if (asc != null && asc.events.TryGetValue(achievement, out TriggerEvent evt))
+					evt.Trigger();
+			}
 		}
 
 		/// <summary>
@@ -67,30 +58,83 @@ namespace PeterHan.MoreAchievements {
 		public float MaxKelvinSeen { get; private set; }
 
 		/// <summary>
+		/// Cached acquire N artifacts requirements.
+		/// </summary>
+		private readonly List<CollectNArtifacts> artifactRequirements;
+
+		/// <summary>
 		/// Cached build N buildings requirements.
 		/// </summary>
-		private readonly ICollection<BuildNBuildings> buildRequirements;
+		private readonly List<BuildNBuildings> buildRequirements;
 
 		/// <summary>
 		/// Cached dig N tiles requirements.
 		/// </summary>
-		private readonly ICollection<DigNTiles> digRequirements;
+		private readonly List<DigNTiles> digRequirements;
+
+		/// <summary>
+		/// Cached events which can be triggered.
+		/// </summary>
+		private readonly IDictionary<string, TriggerEvent> events;
 
 		/// <summary>
 		/// Cached use neural vacillator N times requirements.
 		/// </summary>
-		private readonly ICollection<UseGeneShufflerNTimes> geneRequirements;
+		private readonly List<UseGeneShufflerNTimes> geneRequirements;
 
 		/// <summary>
 		/// Cached kill N critters requirements.
 		/// </summary>
-		private readonly ICollection<KillNCritters> killRequirements;
+		private readonly List<KillNCritters> killRequirements;
 
 		internal AchievementStateComponent() {
+			artifactRequirements = new List<CollectNArtifacts>(4);
 			buildRequirements = new List<BuildNBuildings>(8);
 			digRequirements = new List<DigNTiles>(8);
+			events = new Dictionary<string, TriggerEvent>(32);
 			geneRequirements = new List<UseGeneShufflerNTimes>(4);
 			killRequirements = new List<KillNCritters>(8);
+		}
+
+		/// <summary>
+		/// Checks to see if all artifacts have been collected.
+		/// </summary>
+		public void CheckArtifacts() {
+			int have = 0;
+			// Count artifacts discovered
+			foreach (string name in ArtifactConfig.artifactItems)
+				if (WorldInventory.Instance.IsDiscovered(Assets.GetPrefab(name).PrefabID()))
+					have++;
+			foreach (var requirement in artifactRequirements)
+				requirement.Obtained = have;
+		}
+
+		/// <summary>
+		/// Collects and caches colony achievement requirements of the parameter type.
+		/// 
+		/// Achievements cannot change during a game so cache the requirements that need to be
+		/// updated.
+		/// </summary>
+		/// <param name="requirements">The location to save those requirements.</param>
+		private void CollectRequirements(IDictionary<Type, IOldList> requirements) {
+			var achievements = Db.Get().ColonyAchievements?.resources;
+			if (requirements == null)
+				throw new ArgumentNullException("requirements");
+			if (achievements == null)
+				PUtil.LogError("Achievement list is not initialized!");
+			else
+				// Works with any number of achievements that use this type
+				foreach (var achievement in achievements)
+					foreach (var requirement in achievement.requirementChecklist)
+						if (requirement is TriggerEvent evt) {
+							string id = evt.ID;
+							// Add event trigger
+							if (events.ContainsKey(id))
+								PUtil.LogWarning("Duplicant trigger event ID: " + id);
+							events[id] = evt;
+						} else if (requirements.TryGetValue(requirement.GetType(), out
+								IOldList ofThisType))
+							ofThisType.Add(requirement);
 		}
 
 		/// <summary>
@@ -117,10 +161,13 @@ namespace PeterHan.MoreAchievements {
 
 		protected override void OnPrefabInit() {
 			base.OnPrefabInit();
-			CollectRequirements(buildRequirements);
-			CollectRequirements(digRequirements);
-			CollectRequirements(geneRequirements);
-			CollectRequirements(killRequirements);
+			CollectRequirements(new Dictionary<Type, IOldList>(4) {
+				{ typeof(BuildNBuildings), buildRequirements },
+				{ typeof(CollectNArtifacts), artifactRequirements },
+				{ typeof(DigNTiles), digRequirements },
+				{ typeof(KillNCritters), killRequirements },
+				{ typeof(UseGeneShufflerNTimes), geneRequirements }
+			});
 			MaxKelvinSeen = 0.0f;
 		}
 
