@@ -17,59 +17,54 @@
  */
 
 using Database;
-using Harmony;
-using System;
 using System.IO;
 
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
-	/// Requires the digging of a specified total number of tiles.
+	/// Requires a wire of a specific type to take overload damage.
 	/// </summary>
-	public class DigNTiles : ColonyAchievementRequirement {
+	public sealed class OverloadWire : ColonyAchievementRequirement {
 		/// <summary>
-		/// The event ID for completing a dig. Obtained via Hash.SDBMLower("DigComplete").
+		/// Whether the wire has been overloaded.
 		/// </summary>
-		public const int DigComplete = -1485451493;
+		private bool overloaded;
 
 		/// <summary>
-		/// The number of tiles dug.
+		/// The wire type that must be overloaded.
 		/// </summary>
-		protected int dug;
+		private Wire.WattageRating type;
 
-		/// <summary>
-		/// The number of tiles which must be dug.
-		/// </summary>
-		protected int required;
-
-		public DigNTiles(int required) {
-			dug = 0;
-			this.required = Math.Max(1, required);
+		public OverloadWire(Wire.WattageRating type) {
+			this.type = type;
+			overloaded = false;
 		}
 
 		/// <summary>
-		/// Adds a dug tile.
+		/// Triggered when overload occurs on a wire. Updates the result of this requirement if
+		/// it is tracking that wire type.
 		/// </summary>
-		public void AddDugTile() {
-			dug++;
+		/// <param name="type">The type of wire that overloaded.</param>
+		public void CheckOverload(Wire.WattageRating type) {
+			if (this.type == type)
+				overloaded = true;
 		}
 
 		public override void Deserialize(IReader reader) {
-			required = Math.Max(reader.ReadInt32(), 1);
-			dug = Math.Max(reader.ReadInt32(), 0);
+			type = (Wire.WattageRating)reader.ReadInt32();
+			overloaded = false;
 		}
 
 		public override string GetProgress(bool complete) {
-			return string.Format(AchievementStrings.JOHNHENRY.PROGRESS, complete ?
-				required : dug, required);
+			return string.Format(AchievementStrings.POWEROVERWHELMING.PROGRESS, GameUtil.
+				GetFormattedWattage(Wire.GetMaxWattageAsFloat(type)));
 		}
 
 		public override void Serialize(BinaryWriter writer) {
-			writer.Write(required);
-			writer.Write(dug);
+			writer.Write((int)type);
 		}
 
 		public override bool Success() {
-			return dug >= required;
+			return overloaded;
 		}
 	}
 }

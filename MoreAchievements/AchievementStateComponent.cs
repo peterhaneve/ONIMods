@@ -29,12 +29,84 @@ namespace PeterHan.MoreAchievements {
 	/// </summary>
 	public sealed class AchievementStateComponent : KMonoBehaviour {
 		/// <summary>
+		/// Retrieves the singleton instance of this component, which is created when a game
+		/// is loaded or started.
+		/// </summary>
+		internal static AchievementStateComponent Instance { get; private set; }
+
+		/// <summary>
+		/// Destroys the singleton instance of this component.
+		/// </summary>
+		internal static void DestroyInstance() {
+			Instance = null;
+		}
+
+		/// <summary>
+		/// Triggered when a critter dies of non-natural (old age) causes.
+		/// </summary>
+		public static void OnCritterKilled() {
+			var asc = Instance;
+			if (asc != null)
+				foreach (var requirement in asc.killRequirements)
+					requirement.AddKilledCritter();
+		}
+
+		/// <summary>
+		/// Triggered when a Duplicant dies.
+		/// </summary>
+		/// <param name="cause">The cause of death.</param>
+		public static void OnDeath(Death cause) {
+			var asc = Instance;
+			if (cause != null && asc != null) {
+				foreach (var requirement in asc.deathRequirements)
+					requirement.OnDeath(cause);
+				foreach (var requirement in asc.noDeathRequirements)
+					requirement.OnDeath(cause);
+			}
+		}
+
+		/// <summary>
+		/// Triggered when a neural vacillator completes.
+		/// </summary>
+		public static void OnGeneShuffleComplete() {
+			var asc = Instance;
+			if (asc != null)
+				foreach (var requirement in asc.geneRequirements)
+					requirement.AddUse();
+		}
+
+		/// <summary>
+		/// Triggered when a wire overloads.
+		/// </summary>
+		/// <param name="rating">The rating of the overloaded wire.</param>
+		public static void OnOverload(Wire.WattageRating rating) {
+			var asc = Instance;
+			if (asc != null)
+				foreach (var requirement in asc.overloadRequirements)
+					requirement.CheckOverload(rating);
+		}
+
+		/// <summary>
+		/// Triggered when a rocket visits, or returns from, a space destination.
+		/// </summary>
+		/// <param name="destination">The destination of the mission.</param>
+		public static void OnVisit(int destination) {
+			var asc = Instance;
+			if (asc != null)
+				foreach (var requirement in asc.visitPlanetRequirements)
+					requirement.OnVisit(destination);
+		}
+
+		/// <summary>
 		/// Triggers the colony achievement requirement with the specified ID.
 		/// </summary>
 		/// <param name="achievement">The requirement ID to trigger.</param>
 		public static void Trigger(string achievement) {
 			if (!string.IsNullOrEmpty(achievement)) {
-				var asc = Game.Instance?.GetComponent<AchievementStateComponent>();
+#if DEBUG
+				PUtil.LogDebug("Achievement requirement triggered: " + achievement);
+#endif
+				var asc = Instance;
 				if (asc != null && asc.events.TryGetValue(achievement, out TriggerEvent evt))
 					evt.Trigger();
 			}
@@ -46,7 +118,7 @@ namespace PeterHan.MoreAchievements {
 		/// <param name="temp">The temperature in Kelvin.</param>
 		public static void UpdateMaxKelvin(float temp) {
 			if (temp > 0.0f && !temp.IsNaNOrInfinity()) {
-				var asc = Game.Instance?.GetComponent<AchievementStateComponent>();
+				var asc = Instance;
 				if (asc != null)
 					asc.MaxKelvinSeen = Math.Max(asc.MaxKelvinSeen, temp);
 			}
@@ -61,6 +133,11 @@ namespace PeterHan.MoreAchievements {
 		/// Cached build N buildings requirements.
 		/// </summary>
 		private readonly List<BuildNBuildings> buildRequirements;
+
+		/// <summary>
+		/// Cached death from cause requirements.
+		/// </summary>
+		private readonly List<DeathFromCause> deathRequirements;
 
 		/// <summary>
 		/// Cached dig N tiles requirements.
@@ -82,12 +159,31 @@ namespace PeterHan.MoreAchievements {
 		/// </summary>
 		private readonly List<KillNCritters> killRequirements;
 
+		/// <summary>
+		/// Cached no deaths for N cycles requirements.
+		/// </summary>
+		private readonly List<NoDeathsForNCycles> noDeathRequirements;
+
+		/// <summary>
+		/// Cached overload X wire requirements.
+		/// </summary>
+		private readonly List<OverloadWire> overloadRequirements;
+
+		/// <summary>
+		/// Cached visit all planets requirements.
+		/// </summary>
+		private readonly List<VisitAllPlanets> visitPlanetRequirements;
+
 		internal AchievementStateComponent() {
 			buildRequirements = new List<BuildNBuildings>(8);
+			deathRequirements = new List<DeathFromCause>(8);
 			digRequirements = new List<DigNTiles>(8);
 			events = new Dictionary<string, TriggerEvent>(32);
 			geneRequirements = new List<UseGeneShufflerNTimes>(4);
 			killRequirements = new List<KillNCritters>(8);
+			noDeathRequirements = new List<NoDeathsForNCycles>(4);
+			overloadRequirements = new List<OverloadWire>(8);
+			visitPlanetRequirements = new List<VisitAllPlanets>(4);
 		}
 
 		/// <summary>
@@ -103,7 +199,9 @@ namespace PeterHan.MoreAchievements {
 				throw new ArgumentNullException("requirements");
 			if (achievements == null)
 				PUtil.LogError("Achievement list is not initialized!");
-			else
+			else {
+				foreach (var list in requirements.Values)
+					list.Clear();
 				// Works with any number of achievements that use this type
 				foreach (var achievement in achievements.achievements.Values)
 					foreach (var requirement in achievement.Requirements)
@@ -116,6 +214,23 @@ namespace PeterHan.MoreAchievements {
 						} else if (requirements.TryGetValue(requirement.GetType(), out
 								IOldList ofThisType))
 							ofThisType.Add(requirement);
+			}
+		}
+
+		/// <summary>
+		/// Collects and caches the required colony achievement requirements.
+		/// </summary>
+		internal void CollectRequirements() {
+			CollectRequirements(new Dictionary<Type, IOldList>(16) {
+				{ typeof(BuildNBuildings), buildRequirements },
+				{ typeof(DeathFromCause), deathRequirements },
+				{ typeof(DigNTiles), digRequirements },
+				{ typeof(KillNCritters), killRequirements },
+				{ typeof(NoDeathsForNCycles), noDeathRequirements },
+				{ typeof(OverloadWire), overloadRequirements },
+				{ typeof(UseGeneShufflerNTimes), geneRequirements },
+				{ typeof(VisitAllPlanets), visitPlanetRequirements }
+			});
 		}
 
 		/// <summary>
@@ -142,12 +257,7 @@ namespace PeterHan.MoreAchievements {
 
 		protected override void OnPrefabInit() {
 			base.OnPrefabInit();
-			CollectRequirements(new Dictionary<Type, IOldList>(8) {
-				{ typeof(BuildNBuildings), buildRequirements },
-				{ typeof(DigNTiles), digRequirements },
-				{ typeof(KillNCritters), killRequirements },
-				{ typeof(UseGeneShufflerNTimes), geneRequirements }
-			});
+			Instance = this;
 			MaxKelvinSeen = 0.0f;
 		}
 
@@ -159,22 +269,6 @@ namespace PeterHan.MoreAchievements {
 			var neutronium = ElementLoader.FindElementByHash(SimHashes.Unobtanium);
 			if (neutronium != null && WorldInventory.Instance.IsDiscovered(neutronium.tag))
 				Trigger(AchievementStrings.ISEEWHATYOUDIDTHERE.ID);
-		}
-
-		/// <summary>
-		/// Triggered when a critter dies of non-natural (old age) causes.
-		/// </summary>
-		public void OnCritterKilled() {
-			foreach (var requirement in killRequirements)
-				requirement.AddKilledCritter();
-		}
-
-		/// <summary>
-		/// Triggered when a neural vacillator completes.
-		/// </summary>
-		public void OnGeneShuffleComplete() {
-			foreach (var requirement in geneRequirements)
-				requirement.AddUse();
 		}
 	}
 }

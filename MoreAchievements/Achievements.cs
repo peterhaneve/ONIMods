@@ -18,6 +18,7 @@
 
 using Database;
 using PeterHan.MoreAchievements.Criteria;
+using System;
 using System.Collections.Generic;
 using AS = PeterHan.MoreAchievements.AchievementStrings;
 
@@ -37,6 +38,21 @@ namespace PeterHan.MoreAchievements {
 		internal static readonly HashSet<string> POI_PROPS = new HashSet<string>();
 
 		/// <summary>
+		/// Creates a "tame critter type" achievement requirement.
+		/// </summary>
+		/// <param name="ids">The critter tag IDs which must be tamed.</param>
+		/// <returns>A requirement which requries taming these critter prefab IDs.</returns>
+		private static CritterTypesWithTraits CritterTypeRequirement(params string[] ids) {
+			if (ids == null || ids.Length < 1)
+				throw new ArgumentException("No critter IDs specified");
+			// Convert to tags
+			var tags = new List<Tag>(ids.Length);
+			foreach (string id in ids)
+				tags.Add(TagManager.Create(id));
+			return new CritterTypesWithTraits(tags, false);
+		}
+
+		/// <summary>
 		/// Initializes the achievement list, after the Db has been initialized.
 		/// </summary>
 		internal static void InitAchievements() {
@@ -53,13 +69,42 @@ namespace PeterHan.MoreAchievements {
 				new AD("ImGonnaBe", "im_gonna_be", new TravelXUsingTransitTubes(NavType.Floor,
 					AS.IMGONNABE.DISTANCE)),
 				new AD("SmallWorld", "small_world", new NumberOfDupes(AS.SMALLWORLD.QUANTITY)),
-				new AD("IsItHotInHere", "isithot", new HeatBuildingToXKelvin(AS.ISITHOTINHERE.
-					TEMPERATURE)),
 				new AD("YouMonster", "youmonster", new KillNCritters(AS.YOUMONSTER.QUANTITY)),
 				new AD("BelongsInAMuseum", "all_artifacts", new CollectNArtifacts(28)),
-				new AD(AS.WATCHTHEWORLDBURN.ID, "check", new TriggerEvent(AS.WATCHTHEWORLDBURN.
-					ID)),
-				new AD("ABalancedDiet", "balanceddiet",
+				new AD("WholeNewWorlds", "rocket", new VisitAllPlanets()),
+				new AD(AS.FINALBREATH.ID, "final_breath", new TriggerEvent(AS.FINALBREATH.ID)),
+				new AD(AS.SAVINGMEEP.ID, "saving_meep", new TriggerEvent(AS.SAVINGMEEP.ID)),
+				new AD("PowerOverwhelming", "power_overwhelm", new OverloadWire(Wire.
+					WattageRating.Max50000)),
+				new AD("IsItHotInHere", "isithot", new HeatBuildingToXKelvin(AS.ISITHOTINHERE.
+					TEMPERATURE)),
+				new AD(AS.WATCHTHEWORLDBURN.ID, "burn_gravitas", new TriggerEvent(AS.
+					WATCHTHEWORLDBURN.ID)),
+				new AD("SafeSpace", "safe_space", new NoDeathsForNCycles(AS.SAFESPACE.CYCLES),
+					new CycleNumber(AS.SAFESPACE.CYCLES)),
+				new AD("CritterSinger", "Animal_friends",
+					CritterTypeRequirement(HatchConfig.ID, HatchHardConfig.ID,
+					HatchMetalConfig.ID, HatchVeggieConfig.ID),
+					CritterTypeRequirement(PacuConfig.ID, PacuTropicalConfig.ID,
+					PacuCleanerConfig.ID),
+					CritterTypeRequirement(LightBugConfig.ID, LightBugBlueConfig.ID,
+					LightBugOrangeConfig.ID, LightBugPinkConfig.ID, LightBugPurpleConfig.ID,
+					LightBugCrystalConfig.ID, LightBugBlackConfig.ID),
+					CritterTypeRequirement(PuftConfig.ID, PuftOxyliteConfig.ID,
+					PuftBleachstoneConfig.ID, PuftAlphaConfig.ID),
+					CritterTypeRequirement(DreckoConfig.ID, DreckoPlasticConfig.ID),
+					CritterTypeRequirement(OilFloaterConfig.ID, OilFloaterDecorConfig.ID,
+					OilFloaterHighTempConfig.ID),
+					CritterTypeRequirement(MoleConfig.ID),
+					CritterTypeRequirement(MooConfig.ID),
+					CritterTypeRequirement(CrabConfig.ID),
+					CritterTypeRequirement(SquirrelConfig.ID)),
+				new AD("MasterOfDisaster", "master_of_disaster",
+					new DeathFromCause(db.Deaths.Overheating.Id),
+					new DeathFromCause(db.Deaths.Slain.Id),
+					new DeathFromCause(db.Deaths.Suffocation.Id),
+					new DeathFromCause(db.Deaths.Starvation.Id)),
+				new AD("ABalancedDiet", "balanced_diet",
 					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FieldRationConfig.ID),
 					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, MushBarConfig.ID),
 					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FriedMushBarConfig.ID),
@@ -68,38 +113,50 @@ namespace PeterHan.MoreAchievements {
 					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, PickledMealConfig.ID),
 					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, PrickleFruitConfig.ID),
 					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, GrilledPrickleFruitConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, SalsaConfig.ID),
 					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, CookedEggConfig.ID),
 					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, MeatConfig.ID),
 					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, CookedMeatConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FishMeatConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, CookedFishConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, SurfAndTurfConfig.ID),
 					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, ColdWheatBreadConfig.ID),
 					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, SpiceBreadConfig.ID),
 					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FruitCakeConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, SalsaConfig.ID)),
-				new AD("DestroyerOfWorlds", "check", new ReachXAttributeValue(db.Attributes.
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, MushroomConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FriedMushroomConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, MushroomWrapConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, LettuceConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, BurgerConfig.ID)),
+				new AD("JackOfAllTrades", "well_rounded", new ReachXAllAttributes(AS.
+					JACKOFALLTRADES.LEVEL)),
+				new AD("DestroyerOfWorlds", "dig_20", new ReachXAttributeValue(db.Attributes.
 					Digging.Id, AS.DESTROYEROFWORLDS.LEVEL)),
-				new AD("SmoothOperator", "check", new ReachXAttributeValue(db.Attributes.
+				new AD("SmoothOperator", "operate_20", new ReachXAttributeValue(db.Attributes.
 					Machinery.Id, AS.SMOOTHOPERATOR.LEVEL)),
-				new AD("Olympian", "check", new ReachXAttributeValue(db.Attributes.Athletics.
+				new AD("Olympian", "athletics_20", new ReachXAttributeValue(db.Attributes.Athletics.
 					Id, AS.OLYMPIAN.LEVEL)),
-				new AD("AdaLovelace", "check", new ReachXAttributeValue(db.Attributes.
+				new AD("AdaLovelace", "science_20", new ReachXAttributeValue(db.Attributes.
 					Learning.Id, AS.ADALOVELACE.LEVEL)),
-				new AD("MasterChef", "check", new ReachXAttributeValue(db.Attributes.
+				new AD("MasterChef", "cook_20", new ReachXAttributeValue(db.Attributes.
 					Cooking.Id, AS.MASTERCHEF.LEVEL)),
-				new AD("MasterBuilder", "check", new ReachXAttributeValue(db.Attributes.
+				new AD("MasterBuilder", "build_20", new ReachXAttributeValue(db.Attributes.
 					Construction.Id, AS.MASTERBUILDER.LEVEL)),
-				new AD("MountainMover", "check", new ReachXAttributeValue(db.Attributes.
+				new AD("MountainMover", "athletics_20", new ReachXAttributeValue(db.Attributes.
 					Strength.Id, AS.MOUNTAINMOVER.LEVEL)),
-				new AD("Cowboy", "Animal_friends", new ReachXAttributeValue(db.Attributes.
+				new AD("Cowboy", "ranch_20", new ReachXAttributeValue(db.Attributes.
 					Ranching.Id, AS.COWBOY.LEVEL)),
-				new AD("MotherEarth", "check", new ReachXAttributeValue(db.Attributes.
+				new AD("MotherEarth", "farm_20", new ReachXAttributeValue(db.Attributes.
 					Botanist.Id, AS.MOTHEREARTH.LEVEL)),
-				new AD("Michelangelo", "check", new ReachXAttributeValue(db.Attributes.
+				new AD("Michelangelo", "art_20", new ReachXAttributeValue(db.Attributes.
 					Art.Id, AS.MICHELANGELO.LEVEL)),
-				new AD("FirstDoNoHarm", "check", new ReachXAttributeValue(db.Attributes.
+				new AD("FirstDoNoHarm", "care_20", new ReachXAttributeValue(db.Attributes.
 					Caring.Id, AS.FIRSTDONOHARM.LEVEL)),
-				new AD("TotallyEcstatic", "check", new ReachXMoraleValue(AS.TOTALLYECSTATIC.
+				new AD("TotallyEcstatic", "ecstatic", new ReachXMoraleValue(AS.TOTALLYECSTATIC.
 					MORALE)),
-				new AD("HaveIWonYet", "reach_cycle4000", new CycleNumber(AS.HAVEIWONYET.CYCLE)),
+				new AD(AS.HAVEIWONYET.ID, "reach_cycle4000", new CycleNumber(AS.HAVEIWONYET.
+					CYCLE)),
+				new AD(AS.ALLTHEDUPLICANTS.ID, "dupes_100", new NumberOfDupes(100)),
 				new AD(AS.ISEEWHATYOUDIDTHERE.ID, "cheat", new TriggerEvent(AS.
 					ISEEWHATYOUDIDTHERE.ID)),
 			};
@@ -123,6 +180,10 @@ namespace PeterHan.MoreAchievements {
 			POI_PROPS.Add("PropLight");
 			POI_PROPS.Add("PropReceptionDesk");
 			POI_PROPS.Add("PropTallPlant");
+			// Set hidden achievements
+			MoreAchievementsAPI.SetAchievementHidden(AS.HAVEIWONYET.ID);
+			MoreAchievementsAPI.SetAchievementHidden(AS.ALLTHEDUPLICANTS.ID);
+			MoreAchievementsAPI.SetAchievementHidden(AS.ISEEWHATYOUDIDTHERE.ID);
 		}
 	}
 }

@@ -17,59 +17,55 @@
  */
 
 using Database;
-using Harmony;
+using KSerialization;
 using System;
 using System.IO;
 
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
-	/// Requires the digging of a specified total number of tiles.
+	/// Requires a Duplicant death from the specified cause.
 	/// </summary>
-	public class DigNTiles : ColonyAchievementRequirement {
+	public class DeathFromCause : ColonyAchievementRequirement, IDeathRequirement {
 		/// <summary>
-		/// The event ID for completing a dig. Obtained via Hash.SDBMLower("DigComplete").
+		/// The cause of death which must occur.
 		/// </summary>
-		public const int DigComplete = -1485451493;
+		private string cause;
 
 		/// <summary>
-		/// The number of tiles dug.
+		/// Whether this death has occurred.
 		/// </summary>
-		protected int dug;
+		private bool triggered;
 
-		/// <summary>
-		/// The number of tiles which must be dug.
-		/// </summary>
-		protected int required;
-
-		public DigNTiles(int required) {
-			dug = 0;
-			this.required = Math.Max(1, required);
-		}
-
-		/// <summary>
-		/// Adds a dug tile.
-		/// </summary>
-		public void AddDugTile() {
-			dug++;
+		public DeathFromCause(string cause) {
+			if (string.IsNullOrEmpty(cause))
+				throw new ArgumentNullException("cause");
+			this.cause = cause;
+			triggered = false;
 		}
 
 		public override void Deserialize(IReader reader) {
-			required = Math.Max(reader.ReadInt32(), 1);
-			dug = Math.Max(reader.ReadInt32(), 0);
+			cause = reader.ReadKleiString();
+			triggered = reader.ReadInt32() != 0;
 		}
 
 		public override string GetProgress(bool complete) {
-			return string.Format(AchievementStrings.JOHNHENRY.PROGRESS, complete ?
-				required : dug, required);
+			var death = Db.Get().Deaths.Get(cause);
+			return string.Format(AchievementStrings.MASTEROFDISASTER.PROGRESS, (death ==
+				null) ? cause : death.Name);
+		}
+
+		public void OnDeath(Death cause) {
+			if (cause.Id == this.cause)
+				triggered = true;
 		}
 
 		public override void Serialize(BinaryWriter writer) {
-			writer.Write(required);
-			writer.Write(dug);
+			writer.WriteKleiString(cause);
+			writer.Write(triggered ? 1 : 0);
 		}
 
 		public override bool Success() {
-			return dug >= required;
+			return triggered;
 		}
 	}
 }

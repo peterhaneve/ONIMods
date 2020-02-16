@@ -22,12 +22,13 @@ namespace PeterHan.MoreAchievements {
 	/// </summary>
 	public static class AchievementStrings {
 		public static LocString DEFAULT_PROGRESS = "Complete requirement";
+		public static LocString SCALDED = "Badly Burned";
 
 		// A Balanced Diet
 		public static class ABALANCEDDIET {
 			public static LocString NAME = "A Balanced Diet";
 			public static LocString DESC = "Eat " + GameUtil.GetFormattedCalories(KCAL *
-				1000.0f) + " of each Food type available on all basic asteroid types.";
+				1000.0f) + " of each Food type available on Terra or through care packages.";
 			public static LocString PROGRESS = "Calories from {0}: {1} / {2}";
 
 			public const float KCAL = 1000.0f;
@@ -40,6 +41,13 @@ namespace PeterHan.MoreAchievements {
 				LEVEL + ".";
 
 			public const int LEVEL = 20;
+		}
+
+		// All The Duplicants
+		public static class ALLTHEDUPLICANTS {
+			public const string ID = "AllTheDuplicants";
+			public static LocString NAME = "ALL the Duplicants!";
+			public static LocString DESC = "Have at least 100 living Duplicants living in the colony at one time.";
 		}
 
 		// That Belongs in a Museum
@@ -68,6 +76,14 @@ namespace PeterHan.MoreAchievements {
 			public const int LEVEL = 20;
 		}
 
+		// Critter Ventriloquist
+		public static class CRITTERSINGER {
+			public static LocString NAME = "Critter Ventriloquist";
+			// Yes this will be impossible on some maps without care packages, but in that
+			// case, "Critter Whisperer" would have been impossible too
+			public static LocString DESC = "Tame at least one of every critter morph of each critter species in the world.";
+		}
+
 		// Destroyer of Worlds
 		public static class DESTROYEROFWORLDS {
 			public static LocString NAME = "Destroyer of Worlds";
@@ -88,6 +104,18 @@ namespace PeterHan.MoreAchievements {
 			public const int QUANTITY = 2500;
 		}
 
+		// Final Breath
+		public static class FINALBREATH {
+			public const string ID = "FinalBreath";
+			public static LocString NAME = "Final Breath";
+			public static LocString DESC = "Have a Duplicant reach oxygen with less than " +
+				GameUtil.GetFormattedSimple(THRESHOLD) + " seconds left until suffocation.";
+			public static LocString PROGRESS = "Reached breathable area with less than " +
+				GameUtil.GetFormattedTime(THRESHOLD) + " until death";
+
+			public const float THRESHOLD = 5.0f;
+		}
+
 		// First Do No Harm
 		public static class FIRSTDONOHARM {
 			public static LocString NAME = "First Do No Harm";
@@ -99,6 +127,7 @@ namespace PeterHan.MoreAchievements {
 
 		// Have I Won Yet?
 		public static class HAVEIWONYET {
+			public const string ID = "HaveIWonYet";
 			public static LocString NAME = "Have I Won Yet?";
 			public static LocString DESC = "Reach cycle " + GameUtil.GetFormattedSimple(
 				CYCLE) + " with at least one living Duplicant.";
@@ -134,6 +163,16 @@ namespace PeterHan.MoreAchievements {
 			public const float TEMPERATURE = 2500.0f;
 		}
 
+		// Jack of All Trades
+		public static class JACKOFALLTRADES {
+			public static LocString NAME = "Jack of All Trades";
+			public static LocString DESC = "Raise all of a single Duplicant's attributes to " +
+				LEVEL + ".";
+			public static LocString PROGRESS = "Raise attributes to {0:F0}";
+
+			public const int LEVEL = 10;
+		}
+
 		// John Henry
 		public static class JOHNHENRY {
 			public static LocString NAME = "John Henry";
@@ -160,6 +199,13 @@ namespace PeterHan.MoreAchievements {
 				LEVEL + ".";
 
 			public const int LEVEL = 20;
+		}
+
+		// Master of Disaster
+		public static class MASTEROFDISASTER {
+			public static LocString NAME = "Master of Disaster";
+			public static LocString DESC = "Lose a Duplicant to each (stock game) cause of death.";
+			public static LocString PROGRESS = "Duplicant died due to {0}";
 		}
 
 		// Michelangelo
@@ -196,6 +242,35 @@ namespace PeterHan.MoreAchievements {
 				LEVEL + ".";
 
 			public const int LEVEL = 20;
+		}
+
+		// Power Overwhelming
+		public static class POWEROVERWHELMING {
+			public static LocString NAME = "Power Overwhelming";
+			public static LocString DESC = "Overload a Heavi-Watt Conductive Wire.";
+			public static LocString PROGRESS = "Overload wire with {0}";
+		}
+
+		// Safe Space
+		public static class SAFESPACE {
+			public static LocString NAME = "Safe Space";
+			public static LocString DESC = "Avoid any Duplicant deaths for " + CYCLES +
+				" consecutive cycles.";
+			public static LocString PROGRESS = "Last Duplicant death: Cycle {0:D}";
+
+			public const int CYCLES = 100;
+		}
+
+		// Saving Private Meep
+		public static class SAVINGMEEP {
+			public const string ID = "SavingMeep";
+			public static LocString NAME = "Saving Private Meep";
+			public static LocString DESC = "Have a Duplicant reach a Triage Cot under their own power with no more than " +
+				THRESHOLD + " Hit Points remaining.";
+			public static LocString PROGRESS = "Reached Triage Cot with less than or equal to " +
+				THRESHOLD + " health without being Incapacitated";
+
+			public const int THRESHOLD = 10;
 		}
 
 		// Small World After All
@@ -249,6 +324,13 @@ namespace PeterHan.MoreAchievements {
 			public static LocString NAME = "Watch the World Burn";
 			public static LocString DESC = "Melt a building generated in a point of interest.";
 			public static LocString PROGRESS = "Melt a POI building";
+		}
+
+		// Whole New Worlds
+		public static class WHOLENEWWORLDS {
+			public static LocString NAME = "Whole New Worlds";
+			public static LocString DESC = "Send a Space Mission to each destination on the Starmap.";
+			public static LocString PROGRESS = "Destinations visited: {0:D} / {1:D}";
 		}
 
 		// You Monster

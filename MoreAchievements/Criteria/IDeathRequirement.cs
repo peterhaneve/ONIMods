@@ -16,60 +16,15 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Database;
-using Harmony;
-using System;
-using System.IO;
-
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
-	/// Requires the digging of a specified total number of tiles.
+	/// A requirement triggered when Duplicants die.
 	/// </summary>
-	public class DigNTiles : ColonyAchievementRequirement {
+	public interface IDeathRequirement {
 		/// <summary>
-		/// The event ID for completing a dig. Obtained via Hash.SDBMLower("DigComplete").
+		/// Triggered when a Duplicant dies.
 		/// </summary>
-		public const int DigComplete = -1485451493;
-
-		/// <summary>
-		/// The number of tiles dug.
-		/// </summary>
-		protected int dug;
-
-		/// <summary>
-		/// The number of tiles which must be dug.
-		/// </summary>
-		protected int required;
-
-		public DigNTiles(int required) {
-			dug = 0;
-			this.required = Math.Max(1, required);
-		}
-
-		/// <summary>
-		/// Adds a dug tile.
-		/// </summary>
-		public void AddDugTile() {
-			dug++;
-		}
-
-		public override void Deserialize(IReader reader) {
-			required = Math.Max(reader.ReadInt32(), 1);
-			dug = Math.Max(reader.ReadInt32(), 0);
-		}
-
-		public override string GetProgress(bool complete) {
-			return string.Format(AchievementStrings.JOHNHENRY.PROGRESS, complete ?
-				required : dug, required);
-		}
-
-		public override void Serialize(BinaryWriter writer) {
-			writer.Write(required);
-			writer.Write(dug);
-		}
-
-		public override bool Success() {
-			return dug >= required;
-		}
+		/// <param name="cause">The root cause of the Duplicant's death.</param>
+		void OnDeath(Death cause);
 	}
 }
