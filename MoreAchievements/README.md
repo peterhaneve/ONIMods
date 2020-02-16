@@ -33,6 +33,6 @@
 | Thinking Ahead | Use the Neural Vacillator 10 times. | Does *not* count uses from before this mod is installed. |
 | To Stand the Test of Time | Reach cycle 1000 with at least one living Duplicant. | |
 | Totally Ecstatic | Raise a Duplicant's Morale to 60. | Only required on one Duplicant. |
-| Watch the World Burn | Melt a building generated in a point of interest. | |
+| Watch the World Burn | Melt a building generated in a point of interest. | <ul><li>Only applies to unique buildings not normally player-constructable such as **Gravitas Monument**.</li><li>Does not count **Tiles** found in some Points of Interest.</li></ul> |
 | Whole New Worlds | Send a Space Mission to each destination on the Starmap. | Excludes **Earth** but includes **Temporal Tear**. |
 | You Monster | Kill 100 critters before they die of old age. | <ul><li>Does *not* count kills from before this mod is installed.</li><li>Drowning, heat, cold, or attack damage must deal the final blow.</li><li>Baby critters are counted for this achievement.</li></ul> |
