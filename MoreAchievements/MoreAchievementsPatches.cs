@@ -20,8 +20,11 @@ using Harmony;
 using PeterHan.MoreAchievements.Criteria;
 using PeterHan.PLib;
 using PeterHan.PLib.Datafiles;
+using PeterHan.PLib.Options;
 using System.Collections.Generic;
 using UnityEngine;
+
+using AchieveDict = System.Collections.Generic.IDictionary<string, ColonyAchievementStatus>;
 
 namespace PeterHan.MoreAchievements {
 	/// <summary>
@@ -32,6 +35,11 @@ namespace PeterHan.MoreAchievements {
 		/// The base path to the embedded images.
 		/// </summary>
 		private const string BASE_PATH = "PeterHan.MoreAchievements.images.";
+
+		/// <summary>
+		/// The current options used for the mod.
+		/// </summary>
+		internal static MoreAchievementsOptions Options { get; private set; }
 
 		/// <summary>
 		/// The tag used when a Duplicant is incapacitated due to scalding.
@@ -113,6 +121,32 @@ namespace PeterHan.MoreAchievements {
 		public static void OnLoad() {
 			PUtil.InitLibrary();
 			PLocalization.Register();
+			POptions.RegisterOptions(typeof(MoreAchievementsOptions));
+			Options = new MoreAchievementsOptions();
+		}
+
+		/// <summary>
+		/// Pushes achievements from this mod onto the temporary dictionary and removes them
+		/// from the original dictionary.
+		/// </summary>
+		/// <param name="achievements">The original achievement list.</param>
+		/// <param name="state">The temporary location to store them.</param>
+		private static void PushAchievements(AchieveDict achievements, AchieveDict state) {
+			var ourAssembly = typeof(MoreAchievementsAPI).Assembly;
+			// Strip out and save achievements from our assembly
+			foreach (var achievement in achievements) {
+				bool ourMod = false;
+				foreach (var requirement in achievement.Value.Requirements)
+					if (requirement.GetType().Assembly == ourAssembly) {
+						ourMod = true;
+						break;
+					}
+				// If from our mod, nuke it
+				if (ourMod)
+					state[achievement.Key] = achievement.Value;
+			}
+			foreach (var remove in state)
+				achievements.Remove(remove.Key);
 		}
 
 		/// <summary>
@@ -233,6 +267,43 @@ namespace PeterHan.MoreAchievements {
 		}
 
 		/// <summary>
+		/// Applied to ColonyAchievementTracker to properly remove achievements used by this
+		/// mod if the "do not serialize" is selected.
+		/// </summary>
+		[HarmonyPatch(typeof(ColonyAchievementTracker), "Serialize")]
+		public static class ColonyAchievementTracker_Serialize_Patch {
+			/// <summary>
+			/// Applied before Serialize runs.
+			/// </summary>
+			internal static void Prefix(ColonyAchievementTracker __instance,
+					ref AchieveDict __state) {
+				AchieveDict achievements;
+				if (__instance != null && Options.DoNotSerialize && (achievements = __instance.
+						achievements) != null) {
+					PushAchievements(achievements, __state = new Dictionary<string,
+						ColonyAchievementStatus>(achievements.Count));
+#if DEBUG
+					PUtil.LogDebug("Removed achievements from save: {0:D}".F(__state.Count));
+#endif
+				} else
+					__state = null;
+			}
+
+			/// <summary>
+			/// Applied after Serialize runs.
+			/// </summary>
+			internal static void Postfix(ColonyAchievementTracker __instance,
+					AchieveDict __state) {
+				if (__instance != null && __state != null) {
+					// Reinstate everything
+					foreach (var achievement in __state)
+						__instance.achievements[achievement.Key] = achievement.Value;
+					__state.Clear();
+				}
+			}
+		}
+
+		/// <summary>
 		/// Applied to Db to add colony achievements.
 		/// </summary>
 		[HarmonyPatch(typeof(Db), "Initialize")]
@@ -303,6 +374,10 @@ namespace PeterHan.MoreAchievements {
 			/// </summary>
 			internal static void Postfix(Game __instance) {
 				var obj = __instance.gameObject;
+				// Reload options
+				var newOptions = POptions.ReadSettings<MoreAchievementsOptions>();
+				if (newOptions != null)
+					Options = newOptions;
 				if (obj != null)
 					obj.AddOrGet<AchievementStateComponent>();
 			}
