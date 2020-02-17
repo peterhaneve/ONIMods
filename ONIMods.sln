@@ -63,6 +63,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GlassDoor", "GlassDoor\Glas
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoreAchievements", "MoreAchievements\MoreAchievements.csproj", "{39240357-3820-4F3E-9D4C-51215C225388}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DebugNotIncluded", "DebugNotIncluded\DebugNotIncluded.csproj", "{121FD801-8404-419F-BB58-47BED5737F04}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaughtyMod", "NaughtyMod\NaughtyMod.csproj", "{7DD1C5EB-0394-4741-B54C-10209CCE2498}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -189,6 +193,14 @@ Global
 		{39240357-3820-4F3E-9D4C-51215C225388}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39240357-3820-4F3E-9D4C-51215C225388}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39240357-3820-4F3E-9D4C-51215C225388}.Release|Any CPU.Build.0 = Release|Any CPU
+		{121FD801-8404-419F-BB58-47BED5737F04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{121FD801-8404-419F-BB58-47BED5737F04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{121FD801-8404-419F-BB58-47BED5737F04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{121FD801-8404-419F-BB58-47BED5737F04}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7DD1C5EB-0394-4741-B54C-10209CCE2498}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7DD1C5EB-0394-4741-B54C-10209CCE2498}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7DD1C5EB-0394-4741-B54C-10209CCE2498}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7DD1C5EB-0394-4741-B54C-10209CCE2498}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

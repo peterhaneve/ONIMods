@@ -250,7 +250,7 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
-		/// Loads a sprite embedded in the current assembly.
+		/// Loads a sprite embedded in the calling assembly.
 		/// 
 		/// It may be encoded using PNG, DXT5, or JPG format.
 		/// </summary>
@@ -260,11 +260,12 @@ namespace PeterHan.PLib {
 		/// <returns>The sprite thus loaded.</returns>
 		/// <exception cref="ArgumentException">If the image could not be loaded.</exception>
 		public static Sprite LoadSprite(string path, Vector4 border = default, bool log = true) {
-			return UI.PUIUtils.LoadSprite(path, border, log);
+			var assembly = Assembly.GetCallingAssembly() ?? Assembly.GetExecutingAssembly();
+			return UI.PUIUtils.LoadSprite(assembly, path, border, log);
 		}
 
 		/// <summary>
-		/// Loads a DDS sprite embedded in the current assembly.
+		/// Loads a DDS sprite embedded in the calling assembly.
 		/// 
 		/// It must be encoded using the DXT5 format.
 		/// </summary>
@@ -275,11 +276,12 @@ namespace PeterHan.PLib {
 		/// <exception cref="ArgumentException">If the image could not be loaded.</exception>
 		[Obsolete("LoadSprite(path, Vector4, bool) allows the use of PNG/JPG images which scale far better")]
 		public static Sprite LoadSprite(string path, int width, int height) {
-			return UI.PUIUtils.LoadSpriteLegacy(path, width, height, default(Vector4));
+			var assembly = Assembly.GetCallingAssembly() ?? Assembly.GetExecutingAssembly();
+			return UI.PUIUtils.LoadSpriteLegacy(assembly, path, width, height, default);
 		}
 
 		/// <summary>
-		/// Loads a DDS sprite embedded in the current assembly as a 9-slice sprite.
+		/// Loads a DDS sprite embedded in the calling assembly as a 9-slice sprite.
 		/// 
 		/// It must be encoded using the DXT5 format.
 		/// </summary>
@@ -291,7 +293,8 @@ namespace PeterHan.PLib {
 		/// <exception cref="ArgumentException">If the image could not be loaded.</exception>
 		[Obsolete("LoadSprite(path, Vector4, bool) allows the use of PNG/JPG images which scale far better")]
 		public static Sprite LoadSprite(string path, int width, int height, Vector4 border) {
-			return UI.PUIUtils.LoadSpriteLegacy(path, width, height, border);
+			var assembly = Assembly.GetCallingAssembly() ?? Assembly.GetExecutingAssembly();
+			return UI.PUIUtils.LoadSpriteLegacy(assembly, path, width, height, border);
 		}
 
 		/// <summary>

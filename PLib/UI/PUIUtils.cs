@@ -476,20 +476,21 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
-		/// Loads a sprite embedded in the current assembly as a 9-slice sprite.
+		/// Loads a sprite embedded in the specified assembly as a 9-slice sprite.
 		/// 
 		/// It may be encoded using PNG, DXT5, or JPG format.
 		/// </summary>
+		/// <param name="assembly">The assembly containing the image.</param>
 		/// <param name="path">The fully qualified path to the image to load.</param>
 		/// <param name="border">The sprite border.</param>
 		/// <param name="log">true to log the load, or false otherwise.</param>
 		/// <returns>The sprite thus loaded.</returns>
 		/// <exception cref="ArgumentException">If the image could not be loaded.</exception>
-		internal static Sprite LoadSprite(string path, Vector4 border = default, bool log = false) {
+		internal static Sprite LoadSprite(Assembly assembly, string path, Vector4 border =
+				default, bool log = false) {
 			// Open a stream to the image
 			try {
-				using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(
-						path)) {
+				using (var stream = assembly.GetManifestResourceStream(path)) {
 					if (stream == null)
 						throw new ArgumentException("Could not load image: " + path);
 					// If len > int.MaxValue we will not go to space today
@@ -517,10 +518,11 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
-		/// Loads a DDS sprite embedded in the current assembly as a 9-slice sprite.
+		/// Loads a DDS sprite embedded in the specified assembly as a 9-slice sprite.
 		/// 
 		/// It must be encoded using the DXT5 format.
 		/// </summary>
+		/// <param name="assembly">The assembly containing the image.</param>
 		/// <param name="path">The fully qualified path to the DDS image to load.</param>
 		/// <param name="width">The desired width.</param>
 		/// <param name="height">The desired height.</param>
@@ -528,12 +530,11 @@ namespace PeterHan.PLib.UI {
 		/// <param name="log">true to log the load, or false otherwise.</param>
 		/// <returns>The sprite thus loaded.</returns>
 		/// <exception cref="ArgumentException">If the image could not be loaded.</exception>
-		internal static Sprite LoadSpriteLegacy(string path, int width, int height,
-				Vector4 border = default) {
+		internal static Sprite LoadSpriteLegacy(Assembly assembly, string path, int width,
+				int height, Vector4 border = default) {
 			// Open a stream to the image
 			try {
-				using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(
-						path)) {
+				using (var stream = assembly.GetManifestResourceStream(path)) {
 					const int SKIP = 128;
 					if (stream == null)
 						throw new ArgumentException("Could not load image: " + path);

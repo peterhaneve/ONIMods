@@ -17,37 +17,33 @@
  */
 
 using System;
+using UnityEngine;
 
-namespace PeterHan.PLib {
+namespace PeterHan.DebugNotIncluded {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// Wraps the Unity DebugLogHandler with a handler that better handles our exceptions.
 	/// </summary>
-	public static class PVersion {
+	internal sealed class WrapLogHandler : ILogHandler {
 		/// <summary>
-		/// The PLib version.
+		/// The default log handler.
 		/// </summary>
-		public const string VERSION = "3.2.5.0";
+		internal ILogHandler Wrapped { get; }
 
-		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in OnLoad, and will always return false in those cases.
-		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				bool latest = false;
-				try {
-					latest = new Version(VERSION) == PSharedData.GetData<Version>(PRegistry.
-						KEY_VERSION);
-				} catch (OverflowException) {
-				} catch (FormatException) {
-				} catch (ArgumentOutOfRangeException) {
-				}
-				return latest;
-			}
+		internal WrapLogHandler(ILogHandler wrapped) {
+			this.Wrapped = wrapped ?? throw new ArgumentNullException("wrapped");
+		}
+
+		public void LogException(Exception exception, UnityEngine.Object context) {
+			DebugLogger.LogException(exception);
+		}
+
+		public void LogFormat(LogType logType, UnityEngine.Object context, string format,
+				params object[] args) {
+			Wrapped.LogFormat(logType, context, format, args);
+		}
+
+		public override string ToString() {
+			return Wrapped.ToString();
 		}
 	}
 }
