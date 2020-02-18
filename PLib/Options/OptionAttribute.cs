@@ -69,6 +69,14 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <param name="title">The field title to display.</param>
 		/// <param name="tooltip">The tool tip for the field.</param>
+		public OptionAttribute(string title, string tooltip = null) : this(title, tooltip, null) { }
+
+		/// <summary>
+		/// Denotes a mod option field. Can also be used on members of an Enum type to give
+		/// them a friendly display name.
+		/// </summary>
+		/// <param name="title">The field title to display.</param>
+		/// <param name="tooltip">The tool tip for the field.</param>
 		/// <param name="category">The category to use, or null for the default category.</param>
 		public OptionAttribute(string title, string tooltip = null, string category = null) {
 			if (string.IsNullOrEmpty(title))

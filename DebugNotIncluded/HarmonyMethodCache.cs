@@ -34,7 +34,8 @@ namespace PeterHan.DebugNotIncluded {
 		/// 
 		/// GeneratedBuildings.LoadGeneratedBuildings_Patch6(System.Collections.Generic.List`1&lt;System.Type&gt;)
 		/// </summary>
-		private static readonly Regex DYNAMIC_METHOD = new Regex(@"\(wrapper dynamic-method\) ([^\(\)]+?)_Patch[0-9]*\(([^\(\)]*)\)",
+		private static readonly Regex DYNAMIC_METHOD = new Regex(
+			@"\(wrapper dynamic-method\) ([^\(\)]+?)_Patch[0-9]*\(([^\(\)]*)\)",
 			RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
 		/// <summary>
@@ -62,21 +63,6 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
-		/// Gets the possible candidates for the specified method.
-		/// </summary>
-		/// <param name="name">The method name to look up.</param>
-		/// <returns>The patched method(s) with the same type and name.</returns>
-		internal MethodBase[] GetCandidatesFor(string name) {
-			MethodBase[] methodList;
-			if (cache.TryGetValue(name, out ICollection<MethodBase> methods)) {
-				methodList = new MethodBase[methods.Count];
-				methods.CopyTo(methodList, 0);
-			} else
-				methodList = new MethodBase[0];
-			return methodList;
-		}
-
-		/// <summary>
 		/// Handles stack frames with missing method information by attempting to parse the
 		/// internal method name and look it up in Harmony.
 		/// </summary>
@@ -101,7 +87,7 @@ namespace PeterHan.DebugNotIncluded {
 					// Convert each type, strip the spaces between them
 					var paramTypes = new Type[nTypes];
 					for (int i = 0; i < nTypes; i++)
-						paramTypes[i] = DebugUtils.GetTypeByUnityName(typeNames[i].Trim());
+						paramTypes[i] = typeNames[i].Trim().GetTypeByUnityName();
 					method = DebugUtils.BestEffortMatch(methods, paramTypes);
 				} else {
 					// All else fails, log the internal name

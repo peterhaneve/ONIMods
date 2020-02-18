@@ -79,6 +79,7 @@ namespace PeterHan.DebugNotIncluded {
 		
 		public static void OnLoad() {
 			PUtil.InitLibrary();
+			DebugLogger.InstallExceptionLogger();
 			LogAllFailedAsserts();
 		}
 
@@ -145,7 +146,7 @@ namespace PeterHan.DebugNotIncluded {
 				// have more information on each mod
 				for (int i = instructions.Count - 1; i > 0; i--) {
 					var instr = instructions[i];
-					if (instr.opcode == OpCodes.Pop) {
+					if (instr.opcode == OpCodes.Pop && !patchException) {
 						instr.opcode = OpCodes.Call;
 						// Call our method instead
 						instr.operand = typeof(ModLoadHandler).GetMethodSafe(nameof(
@@ -207,6 +208,21 @@ namespace PeterHan.DebugNotIncluded {
 				DebugLogger.LogDebug("Transpiling Spawn()");
 #endif
 				return TranspileSpawn(method);
+			}
+		}
+
+		/// <summary>
+		/// Applied to Manager to make the mod events dialog more user friendly.
+		/// </summary>
+		[HarmonyPatch(typeof(Manager), "MakeEventList")]
+		public static class Manager_MakeEventList_Patch {
+			/// <summary>
+			/// Applied after MakeEventList runs.
+			/// </summary>
+			internal static void Postfix(List<Event> events, ref string __result) {
+				string result = ModEvents.Describe(events);
+				if (!string.IsNullOrEmpty(result))
+					__result = result;
 			}
 		}
 

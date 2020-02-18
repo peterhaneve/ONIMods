@@ -115,15 +115,17 @@ namespace PeterHan.DebugNotIncluded {
 						message.AppendFormat(" [{0:D}]", frame.GetILOffset());
 					// The blame game
 					var type = method.DeclaringType;
+					var asm = type.Assembly;
 					if (type.IsBaseGameType())
 						message.Append(" <Klei>");
-					else if (type.Assembly == typeof(string).Assembly) {
+					else if (asm == typeof(string).Assembly) {
 						message.Append(" <mscorlib>");
 					} else if ((mod = registry.OwnerOfType(type)) != null) {
 						message.Append(" <");
 						message.Append(mod.ModName ?? "unknown");
 						message.Append(">");
-					}
+					} else if (asm.FullName.Contains("Unity"))
+						message.Append(" <Unity>");
 					// If the method shows up, then it was not a patched method, but never
 					// hurts to try anyways
 					message.AppendLine();

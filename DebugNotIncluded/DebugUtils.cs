@@ -192,6 +192,23 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
+		/// Checks for a mod in a list of mod events.
+		/// </summary>
+		/// <param name="events">The mod events which occurred.</param>
+		/// <param name="mod">The mod for which to look.</param>
+		/// <returns>true if that mod is in the list, or false otherwise.</returns>
+		internal static bool IncludesMod(this IEnumerable<Event> events, Label mod) {
+			bool includes = false;
+			if (events != null)
+				foreach (var evt in events)
+					if (mod.Match(evt.mod)) {
+						includes = true;
+						break;
+					}
+			return includes;
+		}
+
+		/// <summary>
 		/// Returns whether the type is included in the base game assemblies.
 		/// </summary>
 		/// <param name="type">The type to check.</param>
