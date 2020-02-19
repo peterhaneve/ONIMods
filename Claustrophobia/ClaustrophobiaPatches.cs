@@ -26,10 +26,16 @@ namespace PeterHan.Claustrophobia {
 	/// Patches which will be applied via annotations for Claustrophobia.
 	/// </summary>
 	public static class ClaustrophobiaPatches {
+		/// <summary>
+		/// The current options.
+		/// </summary>
+		internal static ClaustrophobiaOptions Options { get; private set; }
+
 		public static void OnLoad() {
 			PUtil.InitLibrary();
 			POptions.RegisterOptions(typeof(ClaustrophobiaOptions));
 			PLocalization.Register();
+			Options = new ClaustrophobiaOptions();
 		}
 
 		/// <summary>
@@ -42,7 +48,29 @@ namespace PeterHan.Claustrophobia {
 			/// </summary>
 			/// <param name="__instance">The current game.</param>
 			internal static void Postfix(Game __instance) {
-				__instance.gameObject.AddComponent<ClaustrophobiaChecker>();
+				var obj = __instance.gameObject;
+				if (obj != null)
+					obj.AddOrGet<ClaustrophobiaChecker>();
+				var newOptions = POptions.ReadSettings<ClaustrophobiaOptions>();
+				if (newOptions != null)
+					Options = newOptions;
+				PUtil.LogDebug("Claustrophobia Options: Strict Mode = {0}, Threshold = {1:D}".
+					F(Options.StrictConfined, Options.StuckThreshold));
+			}
+		}
+
+		/// <summary>
+		/// Applied to MinionIdentity to add claustrophobia state machines to each Duplicant.
+		/// </summary>
+		[HarmonyPatch(typeof(MinionIdentity), "OnSpawn")]
+		public static class MinionIdentity_OnSpawn_Patch {
+			/// <summary>
+			/// Applied after OnSpawn runs.
+			/// </summary>
+			internal static void Postfix(MinionIdentity __instance) {
+				var obj = __instance.gameObject;
+				if (obj != null)
+					obj.AddOrGet<ClaustrophobiaMonitor>();
 			}
 		}
 	}

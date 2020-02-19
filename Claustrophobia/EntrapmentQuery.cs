@@ -25,7 +25,7 @@ namespace PeterHan.Claustrophobia {
 	/// Counts the total number of pathable cells that a Duplicant can reach, and checks to
 	/// see if their bed / mess table / toilet is pathable.
 	/// </summary>
-	sealed class EntrapmentQuery : PathFinderQuery {
+	internal sealed class EntrapmentQuery : PathFinderQuery {
 		/// <summary>
 		/// Whether the bed is reachable.
 		/// </summary>
@@ -59,6 +59,25 @@ namespace PeterHan.Claustrophobia {
 		public int ReachableCells { get; private set; }
 
 		/// <summary>
+		/// The Duplicant which was queried.
+		/// </summary>
+		public GameObject Victim { get; }
+
+		/// <summary>
+		/// Retrieves the "trapped score" of this Duplicant, gaining one point for each
+		/// inaccessible essential colony item.
+		/// </summary>
+		public int TrappedScore {
+			get {
+				int score = 0;
+				if (!CanReachBed) score++;
+				if (!CanReachMess) score++;
+				if (!CanReachToilet) score++;
+				return score;
+			}
+		}
+
+		/// <summary>
 		/// The location of this Duplicant's bed.
 		/// </summary>
 		private readonly int bedCell;
@@ -88,10 +107,12 @@ namespace PeterHan.Claustrophobia {
 		/// </summary>
 		private bool toiletReachable;
 
-		public EntrapmentQuery(int bedCell, int messCell, int[] toiletCells) {
+		public EntrapmentQuery(GameObject victim, int bedCell, int messCell, int[] toiletCells)
+		{
 			ReachableCells = 0;
 			if (toiletCells == null)
 				throw new ArgumentNullException("toiletCells");
+			Victim = victim;
 			int len = toiletCells.Length;
 			this.bedCell = bedCell;
 			this.messCell = messCell;
@@ -113,7 +134,8 @@ namespace PeterHan.Claustrophobia {
 					messReachable = true;
 				int len = toiletCells.Length, tc;
 				// Any reachable toilet
-				for (int i = 0; i < len && !toiletReachable && (tc = toiletCells[i]) <= cell; i++)
+				for (int i = 0; i < len && !toiletReachable && (tc = toiletCells[i]) <= cell;
+						i++)
 					if (tc == cell)
 						toiletReachable = true;
 			}
@@ -121,7 +143,7 @@ namespace PeterHan.Claustrophobia {
 		}
 
 		public override string ToString() {
-			return "EntrapmentQuery: {0:D} cells".F(ReachableCells);
+			return "EntrapmentQuery: {1} reaches {0:D} cells".F(ReachableCells, Victim?.name);
 		}
 	}
 }

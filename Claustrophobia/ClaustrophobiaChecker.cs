@@ -17,7 +17,6 @@
  */
 
 using PeterHan.PLib;
-using PeterHan.PLib.Options;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -26,7 +25,7 @@ namespace PeterHan.Claustrophobia {
 	/// <summary>
 	/// Checks for trapped or confined Duplicants and spawns notifications for them.
 	/// </summary>
-	sealed class ClaustrophobiaChecker : KMonoBehaviour, ISim1000ms {
+	internal sealed class ClaustrophobiaChecker : KMonoBehaviour, ISim1000ms {
 		/// <summary>
 		/// Duplicants are considered confined if they can reach less than 10% of the cell
 		/// count that the most mobile Duplicant can, or are confined to this many cells and
@@ -40,6 +39,11 @@ namespace PeterHan.Claustrophobia {
 		/// few every second.
 		/// </summary>
 		private const int PACE_CYCLE_TIME = 15;
+
+		/// <summary>
+		/// The singleton instance of this class.
+		/// </summary>
+		internal static ClaustrophobiaChecker Instance { get; private set; }
 
 		/// <summary>
 		/// Checks assigned objects and determines their locations.
@@ -63,7 +67,7 @@ namespace PeterHan.Claustrophobia {
 		/// </summary>
 		/// <param name="victim">The Duplicant to check.</param>
 		/// <returns>The results of the entrapment query, or null if they could not be determined.</returns>
-		internal static EntrapmentQuery CheckEntrapment(GameObject victim) {
+		private static EntrapmentQuery CheckEntrapment(GameObject victim) {
 			EntrapmentQuery result = null;
 			MinionIdentity mi;
 			if (victim != null && (mi = victim.GetComponent<MinionIdentity>()) != null) {
@@ -81,8 +85,8 @@ namespace PeterHan.Claustrophobia {
 				int[] toiletCells = cells.ToArray();
 				var navigator = victim.GetComponent<Navigator>();
 				if (navigator != null) {
-					// The result will always be null, just keep the navigable cell total
-					result = new EntrapmentQuery(bedCell, messCell, toiletCells);
+					// The query will always return null, just keep the navigable cell total
+					result = new EntrapmentQuery(victim, bedCell, messCell, toiletCells);
 					navigator.RunQuery(result);
 				}
 				cells.Recycle();
@@ -93,12 +97,17 @@ namespace PeterHan.Claustrophobia {
 		/// <summary>
 		/// These Duplicants will be immediately rechecked on the next pass.
 		/// </summary>
-		private readonly IList<GameObject> checkNextFrame;
+		private readonly ICollection<GameObject> checkNextTime;
 
 		/// <summary>
 		/// Limits performance impact by cycling through duplicants.
 		/// </summary>
-		private int minionPacer;
+		private volatile int minionPacer;
+
+		/// <summary>
+		/// The number of pathable tiles the most free Duplicant can currently reach.
+		/// </summary>
+		private volatile int mostReachable;
 
 		/// <summary>
 		/// Cached Duplicants refreshed on every recycle of the pacer.
@@ -106,161 +115,75 @@ namespace PeterHan.Claustrophobia {
 		private readonly IList<GameObject> minionCache;
 
 		/// <summary>
-		/// The current options.
+		/// The value of mostReachable which is still being calculated.
 		/// </summary>
-		private readonly ClaustrophobiaOptions options;
+		private volatile int pendingReachable;
 
-		/// <summary>
-		/// Stores the status of each living Duplicant.
-		/// </summary>
-		private readonly IDictionary<GameObject, EntrapmentStatus> statusCache;
-
-		public ClaustrophobiaChecker() {
-			checkNextFrame = new List<GameObject>(8);
+		internal ClaustrophobiaChecker() {
+			checkNextTime = new HashSet<GameObject>();
 			minionCache = new List<GameObject>(64);
 			minionPacer = 0;
-			// PooledDictionary is useless since this dictionary is created once per load
-			statusCache = new Dictionary<GameObject, EntrapmentStatus>(64);
-			// Read config
-			options = POptions.ReadSettings<ClaustrophobiaOptions>();
-			if (options == null)
-				options = new ClaustrophobiaOptions();
-			PUtil.LogDebug("Claustrophobia Options: Strict Mode = {0}, Threshold = {1:D}".F(
-				options.StrictConfined, options.StuckThreshold));
+			mostReachable = pendingReachable = 0;
 		}
 
 		/// <summary>
-		/// Determines the approximate reachable colony size by finding the Duplicant which can
-		/// reach the most locations.
+		/// Calculates the Duplicants which will be checked this time for confinement.
 		/// </summary>
-		/// <returns>The number of locations reachable by the most free Duplicant.</returns>
-		private int CalculateColonySize() {
-			int mostReachable = 0;
-			// Find most free dupe
-			foreach (var pair in statusCache) {
-				int reachable = pair.Value.ReachableCells;
-				if (reachable > mostReachable)
-					mostReachable = reachable;
-			}
-			return mostReachable;
-		}
-
-		/// <summary>
-		/// Checks the specified entrapment status and creates the notifications if Duplicants
-		/// are trapped or confined.
-		/// </summary>
-		/// <param name="toCheck">The entrapment status to check.</param>
-		private void CheckNotifications(ICollection<EntrapmentStatus> toCheck) {
-			int mostReachable = CalculateColonySize(), threshold = (mostReachable + 5) / 10;
-			// Using summary stats, check all dupes
-			foreach (var status in toCheck) {
-				var victim = status.Victim;
-				var obj = victim.gameObject;
-				int reachable = status.ReachableCells, time = status.TimeInState;
-				var lastStatus = status.LastStatus;
-				// Create notifications if not yet present
-				var confined = obj.AddOrGet<ConfinedNotification>();
-				var trapped = obj.AddOrGet<TrappedNotification>();
-				bool rawConfined = (mostReachable > MIN_CONFINED && reachable <
-					MIN_CONFINED) || reachable < threshold;
-				if (rawConfined && (!options.StrictConfined || status.TrappedScore > 1)) {
-					if (lastStatus == EntrapmentState.Confined)
-						time++;
-					else
-						time = 0;
-					// Confined
-					if (time >= options.StuckThreshold) {
-						PUtil.LogDebug(("{0} is confined ({3} last), reaches {1:D}, " +
-							"best reach {2:D}").F(status.VictimName, reachable, mostReachable,
-							lastStatus));
-						confined.Show();
-						trapped.Hide();
-					} else
-						checkNextFrame.Add(victim);
-					lastStatus = EntrapmentState.Confined;
-				} else if (status.TrappedScore > 1) {
-					if (lastStatus == EntrapmentState.Trapped)
-						time++;
-					else
-						time = 0;
-					// Trapped
-					if (time >= options.StuckThreshold) {
-						PUtil.LogDebug(("{0} is trapped ({4} last), bed? {1}, mess? {2}, " +
-							"toilet? {3}").F(status.VictimName, status.CanReachBed,
-							status.CanReachMess, status.CanReachToilet, lastStatus));
-						confined.Hide();
-						trapped.Show();
-					} else
-						checkNextFrame.Add(victim);
-					lastStatus = EntrapmentState.Trapped;
-				} else {
-					// Neither
-					trapped.Hide();
-					confined.Hide();
-					lastStatus = EntrapmentState.None;
-					time = 0;
+		/// <param name="toDo">The location where the Duplicants to check will be stored.</param>
+		private void FillDuplicantList(ICollection<GameObject> toDo) {
+			lock (checkNextTime) {
+				int pacer = minionPacer;
+				// Refresh Duplicant cache if necessary
+				if (pacer < 0 || pacer >= minionCache.Count) {
+					minionCache.Clear();
+					mostReachable = pendingReachable;
+					pendingReachable = 0;
+					// First iterate living duplicants and add valid entries to the list
+					GameObject obj;
+					foreach (var dupe in Components.LiveMinionIdentities.Items)
+						// Do not replace with ?. since Unity overloads "=="
+						if (dupe != null && (obj = dupe.gameObject) != null && dupe.isSpawned)
+							minionCache.Add(obj);
+					pacer = 0;
 				}
-				status.TimeInState = time;
-				status.LastStatus = lastStatus;
+				int len = minionCache.Count, step = 1 + Math.Max(0, len - 1) / PACE_CYCLE_TIME;
+				// Add periodic duplicants to refresh
+				for (int i = 0; i < step && pacer < len; i++) {
+					var dupe = minionCache[pacer++];
+					if (dupe != null && !checkNextTime.Contains(dupe))
+						toDo.Add(dupe);
+				}
+				// Add forced duplicants
+				foreach (var dupe in checkNextTime)
+					toDo.Add(dupe);
+				checkNextTime.Clear();
+				minionPacer = pacer;
 			}
 		}
 
 		/// <summary>
-		/// At the start of an entrapment cycle check, refreshes the cached list of living
-		/// Duplicants and clears old entries.
+		/// Forces a Duplicant to be checked on the next iteration. Used when a Duplicant
+		/// enters a trapped or confined state and is pending a recheck.
 		/// </summary>
-		private void FillDuplicantList() {
-			var enumerator = Components.LiveMinionIdentities.GetEnumerator();
-			minionCache.Clear();
-			// Invalidate all entries
-			foreach (var pair in statusCache)
-				pair.Value.StillLiving = false;
-			// First iterate living duplicants and add valid entries to the list
-			try {
-				GameObject obj;
-				while (enumerator.MoveNext()) {
-					var dupe = enumerator.Current as MinionIdentity;
-					// Do not replace with ?. since Unity overloads "=="
-					if (dupe != null && (obj = dupe.gameObject) != null && dupe.isSpawned) {
-						minionCache.Add(obj);
-						// Mark entry as valid
-						if (statusCache.TryGetValue(obj, out EntrapmentStatus entry))
-							entry.StillLiving = true;
-					}
-				}
-			} finally {
-				(enumerator as IDisposable)?.Dispose();
-			}
-			int living = statusCache.Count;
-			// Clear entries from the cache of deleted / deceased dupes
-			if (living > 0) {
-				var oldDupes = new GameObject[living];
-				statusCache.Keys.CopyTo(oldDupes, 0);
-				foreach (var oldDupe in oldDupes)
-					if (statusCache.TryGetValue(oldDupe, out EntrapmentStatus entry) && !entry.
-							StillLiving) {
-						statusCache.Remove(oldDupe);
+		/// <param name="duplicant">The Duplicant to recheck.</param>
+		internal void ForceCheckDuplicant(GameObject duplicant) {
+			if (duplicant != null)
+				lock (checkNextTime) {
 #if DEBUG
-						PUtil.LogDebug("Removing {0} from cache".F(entry.VictimName));
+					PUtil.LogDebug("Force check " + duplicant?.name);
 #endif
-					}
-			}
+					checkNextTime.Add(duplicant);
+				}
 		}
 
-		/// <summary>
-		/// Checks Duplicants who need to be rechecked from the previous frame.
-		/// </summary>
-		/// <param name="checkThisFrame">The Duplicants to check for this frame.</param>
-		private void RecheckLastFrame(IList<EntrapmentStatus> checkThisFrame) {
-			foreach (var dupe in checkNextFrame)
-				// Do not replace with ?. since Unity overloads "=="
-				if (dupe != null && dupe.activeInHierarchy) {
-#if DEBUG
-					PUtil.LogDebug("Rechecking " + dupe.name);
-#endif
-					checkThisFrame.Add(UpdateStatus(dupe));
-				}
-			checkNextFrame.Clear();
+		protected override void OnCleanUp() {
+			Instance = null;
+			base.OnCleanUp();
+		}
+
+		protected override void OnPrefabInit() {
+			base.OnPrefabInit();
+			Instance = this;
 		}
 
 		/// <summary>
@@ -268,49 +191,50 @@ namespace PeterHan.Claustrophobia {
 		/// </summary>
 		/// <param name="delta">The actual time since the last check.</param>
 		public void Sim1000ms(float delta) {
-			var checkThisFrame = ListPool<EntrapmentStatus, ClaustrophobiaChecker>.Allocate();
-			int pacer = minionPacer;
-			// Refresh Duplicant cache if necessary
-			if (pacer < 0 || pacer >= minionCache.Count) {
-				FillDuplicantList();
-				pacer = 0;
-			}
-			int len = minionCache.Count, step = 1 + Math.Max(0, len - 1) / PACE_CYCLE_TIME;
-			RecheckLastFrame(checkThisFrame);
-			// Add periodic duplicants to check this time
-			for (int i = 0; i < step && pacer < len; i++) {
-				var dupe = minionCache[pacer++];
+			var results = ListPool<EntrapmentQuery, ClaustrophobiaChecker>.Allocate();
+			var toDo = ListPool<GameObject, ClaustrophobiaChecker>.Allocate();
+			FillDuplicantList(toDo);
+			foreach (var dupe in toDo)
 				// Do not replace with ?. since Unity overloads "=="
-				if (dupe != null && dupe.activeInHierarchy && !dupe.IsFalling()) {
-					// Exclude falling Duplicants, they have no pathing
-					var status = UpdateStatus(dupe);
-					if (!checkThisFrame.Contains(status))
-						checkThisFrame.Add(status);
+				// Exclude falling Duplicants, they have no pathing
+				if (dupe != null && dupe.activeInHierarchy && !dupe.IsFalling())
+					results.Add(CheckEntrapment(dupe));
+			int threshold = (mostReachable + 5) / 10, pend = pendingReachable;
+			bool strict = ClaustrophobiaPatches.Options.StrictConfined;
+			foreach (var result in results) {
+				var obj = result.Victim;
+				int reachable = result.ReachableCells;
+				pend = Math.Max(reachable, pend);
+				var smi = obj.GetSMI<ClaustrophobiaMonitor.Instance>();
+				if (smi != null) {
+					if (((mostReachable > MIN_CONFINED && reachable < MIN_CONFINED) ||
+							reachable < threshold) && (!strict || result.TrappedScore > 1)) {
+						// Confined
+						smi.sm.IsTrapped.Set(false, smi);
+						smi.sm.IsConfined.Set(true, smi);
+#if DEBUG
+						PUtil.LogDebug("{0} is confined: reaches {1:D}, best reach {2:D}".F(
+							obj?.name, reachable, mostReachable));
+#endif
+					} else if (result.TrappedScore > 1) {
+						// Trapped
+						smi.sm.IsConfined.Set(false, smi);
+						smi.sm.IsTrapped.Set(true, smi);
+#if DEBUG
+						PUtil.LogDebug("{0} is trapped: bed? {1}, mess? {2}, toilet? {3}".F(
+							obj?.name, result.CanReachBed, result.CanReachMess, result.
+							CanReachToilet));
+#endif
+					} else {
+						// Neither
+						smi.sm.IsConfined.Set(false, smi);
+						smi.sm.IsTrapped.Set(false, smi);
+					}
 				}
 			}
-			CheckNotifications(checkThisFrame);
-			checkThisFrame.Recycle();
-			minionPacer = pacer;
-		}
-
-		/// <summary>
-		/// Updates a Duplicant's entrapment status.
-		/// </summary>
-		/// <param name="dupe">The Duplicant to check.</param>
-		/// <returns>The status calculated for this Duplicant.</returns>
-		private EntrapmentStatus UpdateStatus(GameObject dupe) {
-			var status = new EntrapmentStatus(dupe);
-			if (statusCache.TryGetValue(dupe, out EntrapmentStatus oldStatus)) {
-				// Copy status from previous entry
-				status.LastStatus = oldStatus.LastStatus;
-				status.TimeInState = oldStatus.TimeInState;
-				statusCache[dupe] = status;
-			} else {
-				// Add to cache if missing
-				statusCache.Add(dupe, status);
-				PUtil.LogDebug("Adding " + status);
-			}
-			return status;
+			pendingReachable = pend;
+			toDo.Recycle();
+			results.Recycle();
 		}
 	}
 }

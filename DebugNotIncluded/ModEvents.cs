@@ -54,38 +54,44 @@ namespace PeterHan.DebugNotIncluded {
 				message.AppendLine();
 				// Determine how many events can be shown per category
 				var types = modEvents.EventTypes;
-				int between = types.Count, leftover = MAX_EVENTS, perType = Math.Max(
-					SMALL_EVENT_THRESHOLD, leftover / between);
-				// If any events have very few items, give their remaining space to others
-				foreach (var type in types) {
-					int count = modEvents.GetEventsOfType(type)?.Count ?? 0;
-					if (count < perType) {
-						between--;
-						leftover -= count;
-					}
-				}
-				perType = Math.Max(1, leftover / between);
-				// For each event type, list its elements
-				foreach (var type in types) {
-					int count = perType;
-					message.Append("<size=16>");
-					message.Append(GetProperTitle(type, ti));
-					message.AppendLine("</size>:");
-					// Append the events
-					foreach (var evt in modEvents.GetEventsOfType(type)) {
-						message.Append(evt.mod.title);
-						// More information for some events
-						if (!string.IsNullOrEmpty(evt.details)) {
-							message.Append(" (");
-							message.Append(evt.details);
-							message.Append(")");
+				int between = types.Count;
+				if (between > 0) {
+					int leftover = MAX_EVENTS, perType = Math.Max(SMALL_EVENT_THRESHOLD,
+						leftover / between);
+					// If any events have very few items, give their remaining space to others
+					foreach (var type in types) {
+						int count = modEvents.GetEventsOfType(type)?.Count ?? 0;
+						if (count < perType) {
+							between--;
+							leftover -= count;
 						}
-						message.AppendLine();
-						// ... if too many
-						if (--count <= 0) {
-							message.AppendLine(STRINGS.UI.FRONTEND.MOD_DIALOGS.
-								ADDITIONAL_MOD_EVENTS);
-							break;
+					}
+					if (between < 1)
+						perType = MAX_EVENTS;
+					else
+						perType = Math.Max(1, leftover / between);
+					// For each event type, list its elements
+					foreach (var type in types) {
+						int count = perType;
+						message.Append("<size=16>");
+						message.Append(GetProperTitle(type, ti));
+						message.AppendLine("</size>:");
+						// Append the events
+						foreach (var evt in modEvents.GetEventsOfType(type)) {
+							message.Append(evt.mod.title);
+							// More information for some events
+							if (!string.IsNullOrEmpty(evt.details)) {
+								message.Append(" (");
+								message.Append(evt.details);
+								message.Append(")");
+							}
+							message.AppendLine();
+							// ... if too many
+							if (--count <= 0) {
+								message.AppendLine(STRINGS.UI.FRONTEND.MOD_DIALOGS.
+									ADDITIONAL_MOD_EVENTS);
+								break;
+							}
 						}
 					}
 				}
@@ -110,12 +116,12 @@ namespace PeterHan.DebugNotIncluded {
 			else if (type == EventType.ExpectedActive)
 				title = DebugNotIncludedStrings.MOD_DEACTIVATED;
 			else if (type == EventType.LoadError)
-				title = DebugNotIncludedStrings.MOD_LOADERROR;
+				title = DebugNotIncludedStrings.MOD_NOTLOADED;
 			else if (type == EventType.ExpectedInactive)
 				title = DebugNotIncludedStrings.MOD_ACTIVATED;
 			else
 				// Bold the title
-				title = "<b>" + title + "</b>";
+				title = "<b><color=#DEDEFF>" + title + "</color></b>";
 			return title;
 		}
 

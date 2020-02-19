@@ -115,21 +115,26 @@ namespace PeterHan.DebugNotIncluded {
 		internal static MethodBase BestEffortMatch(IEnumerable<MethodBase> candidates,
 				Type[] paramTypes) {
 			MethodBase method = null;
-			ParameterInfo[] parameters;
-			int nArgs = paramTypes.Length, bestMatch = -1;
-			foreach (var candidate in candidates)
-				// Argument count must match
-				if ((parameters = candidate.GetParameters()).Length == nArgs) {
+			int bestMatch = -1, nArgs = paramTypes.Length;
+			foreach (var candidate in candidates) {
+				// Argument count must match, with <object> as first parameter for instance
+				var parameters = candidate.GetParameters();
+				int offset = (!candidate.IsStatic && nArgs > 0 && paramTypes[0] ==
+					typeof(object)) ? 1 : 0, nParams = parameters.Length;
+				//DebugLogger.LogDebug("In params: {0:D} Test params: {1:D} Offset: {2:D}".F(nArgs, nParams, offset));
+				// With offset taken into account
+				if (nParams == nArgs - offset) {
 					int matched = 0;
-					// Count types which match exactly
-					for (int i = 0; i < nArgs; i++)
-						if (paramTypes[i] == parameters[i].ParameterType)
+					// Count argument types which match exactly
+					for (int i = 0; i < nParams; i++)
+						if (paramTypes[i + offset] == parameters[i].ParameterType)
 							matched++;
 					if (matched > bestMatch) {
 						bestMatch = matched;
 						method = candidate;
 					}
 				}
+			}
 			return method;
 		}
 

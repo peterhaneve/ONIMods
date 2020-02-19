@@ -18,33 +18,43 @@
 
 using Newtonsoft.Json;
 using PeterHan.PLib;
+using PeterHan.PLib.Options;
 
-namespace PeterHan.Claustrophobia {
+namespace PeterHan.DebugNotIncluded {
 	/// <summary>
-	/// The options class used for Claustrophobia.
+	/// The options class used for Debug Not Included.
 	/// </summary>
-	[ModInfo("Claustrophobia - Stuck Duplicant Alert", "https://github.com/peterhaneve/ONIMods", "preview.png")]
+	[ModInfo("Debug Not Included", "https://github.com/peterhaneve/ONIMods", "preview.png")]
 	[JsonObject(MemberSerialization.OptIn)]
-	public sealed class ClaustrophobiaOptions {
-		[Option("Strict Confined Warning", "If true, Confined notifications will " +
-			"only\r\nbe shown for Duplicants who are also Trapped.")]
+	[RestartRequired]
+	public sealed class DebugNotIncludedOptions : POptions.SingletonOptions<
+			DebugNotIncludedOptions> {
+		[Option("Log Assert Failures", "Logs a stack trace of every failing assert to the log.")]
 		[JsonProperty]
-		public bool StrictConfined { get; set; }
+		public bool LogAsserts { get; set; }
 
-		[Option("Stuck Threshold (s)", "The minimum time for which a Duplicant must be " +
-			"stuck before a notification is displayed.")]
-		[Limit(0.0, 30.0)]
+		[Option("Log Detailed Backtrace", "Adds more information to stack traces from crashes.")]
 		[JsonProperty]
-		public int StuckThreshold { get; set; }
+		public bool DetailedBacktrace { get; set; }
 
-		public ClaustrophobiaOptions() {
-			StrictConfined = false;
-			StuckThreshold = 3;
+		[Option("Log Sound Info", "Logs each assignment of sounds to an animation.")]
+		[JsonProperty]
+		public bool LogSounds { get; set; }
+
+		[Option("Show Log Senders", "Includes the source method name on every log message.")]
+		[JsonProperty]
+		public bool ShowLogSenders { get; set; }
+
+		public DebugNotIncludedOptions() {
+			DetailedBacktrace = true;
+			LogAsserts = true;
+			LogSounds = false;
+			ShowLogSenders = false;
 		}
 
 		public override string ToString() {
-			return "ClaustrophobiaOptions[strict={0},threshold{1:D}]".F(StrictConfined,
-				StuckThreshold);
+			return "DebugNotIncludedOptions[senders={0},assert={1},backtrace={2},sounds={3}]".
+				F(ShowLogSenders, LogAsserts, DetailedBacktrace, LogSounds);
 		}
 	}
 }

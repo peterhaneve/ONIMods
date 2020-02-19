@@ -89,7 +89,8 @@ namespace PeterHan.DebugNotIncluded {
 					for (int i = 0; i < nTypes; i++)
 						paramTypes[i] = typeNames[i].Trim().GetTypeByUnityName();
 					method = DebugUtils.BestEffortMatch(methods, paramTypes);
-				} else {
+				}
+				if (method == null) {
 					// All else fails, log the internal name
 					message.Append("  at ");
 					message.AppendLine(internalName);

@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib;
 using PeterHan.PLib.Buildings;
 using UnityEngine;
 
@@ -67,11 +68,18 @@ namespace PeterHan.SmartPumps {
 				Placement = BuildLocationRule.Anywhere,
 				PowerInput = new PowerRequirement(240.0f, new CellOffset(0, 1)),
 				Tech = "ValveMiniaturization",
+				ViewMode = OverlayModes.GasConduits.ID,
 				Width = 2
 			});
 		}
 
+		public override void ConfigureBuildingTemplate(GameObject go, Tag prefab_tag) {
+			base.ConfigureBuildingTemplate(go, prefab_tag);
+			GasPumpFiltered?.ConfigureBuildingTemplate(go);
+		}
+
 		public override BuildingDef CreateBuildingDef() {
+			PUtil.CopySoundsToAnim(GasPumpFiltered.Animation, "pumpgas_kanim");
 			return GasPumpFiltered?.CreateDef();
 		}
 

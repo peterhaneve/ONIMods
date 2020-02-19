@@ -86,6 +86,25 @@ namespace PeterHan.PLib.Buildings {
 		}
 
 		/// <summary>
+		/// Makes the building always operational without triggering a warning in both the
+		/// new Automation Update and before.
+		/// </summary>
+		/// <param name="go">The game object to configure.</param>
+		private void ApplyAlwaysOperational(GameObject go) {
+			Component comp;
+			// Remove default components that could make a building non-operational
+			comp = go.GetComponent<BuildingEnabledButton>();
+			if (comp != null)
+				UnityEngine.Object.DestroyImmediate(comp);
+			comp = go.GetComponent<Operational>();
+			if (comp != null)
+				UnityEngine.Object.DestroyImmediate(comp);
+			comp = go.GetComponent<LogicPorts>();
+			if (comp != null)
+				UnityEngine.Object.DestroyImmediate(comp);
+		}
+
+		/// <summary>
 		/// Checks for globally registered buildings and puts them into this assembly's
 		/// building cache if present.
 		/// </summary>
@@ -478,18 +497,6 @@ namespace PeterHan.PLib.Buildings {
 		}
 
 		/// <summary>
-		/// Applies the Always Operational status of this building to the template game object.
-		/// 
-		/// Must be used in ConfigureBuildingTemplate, in versions prior to the new
-		/// Automation Update. This method is not required and has no effect otherwise.
-		/// </summary>
-		/// <param name="template">The template building object.</param>
-		public void ApplyAlwaysOperational(GameObject template) {
-			if (AlwaysOperational && PUtil.GameVersion < PUtil.VERSION_AP_PREVIEW)
-				GeneratedBuildings.MakeBuildingAlwaysOperational(template);
-		}
-
-		/// <summary>
 		/// Creates the building def from this class.
 		/// </summary>
 		/// <returns>The Klei building def.</returns>
@@ -567,31 +574,37 @@ namespace PeterHan.PLib.Buildings {
 				def.UtilityOutputOffset = conduit.Location;
 				def.OutputConduitType = conduit.Type;
 			}
-			// Logic ports, new edition
-			if (PUtil.GameVersion >= PUtil.VERSION_AP_PREVIEW)
-				SetupNewLogicPorts(def);
 			return def;
 		}
 
 		/// <summary>
-		/// Populates the logic ports of this building. Should be called in
-		/// DoPostConfigureComplete, DoPostConfigurePreview, and
-		/// DoPostConfigureUnderConstruction.
+		/// Configures the building template of this building. Should be called in
+		/// ConfigureBuildingTemplate.
+		/// </summary>
+		/// <param name="go">The game object to configure.</param>
+		public void ConfigureBuildingTemplate(GameObject go) {
+			if (AlwaysOperational)
+				ApplyAlwaysOperational(go);
+		}
+
+		/// <summary>
+		/// Populates the logic ports of this building. Must be used <b>after</b> the
+		/// PBuilding.DoPostConfigureComplete method if logic ports are required.
 		/// 
-		/// This method is no longer required after the new Automation Update, but can be
-		/// called for compatibility reasons and will simply do nothing in that case.
+		/// Should be called in DoPostConfigureComplete, DoPostConfigurePreview, and
+		/// DoPostConfigureUnderConstruction.
 		/// </summary>
 		/// <param name="go">The game object to configure.</param>
 		public void CreateLogicPorts(GameObject go) {
-			if (PUtil.GameVersion < PUtil.VERSION_AP_PREVIEW)
-				SetupOldLogicPorts(go);
+			SplitLogicPorts(go);
 		}
 
 		/// <summary>
 		/// Performs the post-configure complete steps that this building object can do.
 		/// Not exhaustive! Other components must likely be added.
 		/// 
-		/// This method does NOT add the logic ports. Use CreateLogicPorts to do so.
+		/// This method does NOT add the logic ports. Use CreateLogicPorts to do so,
+		/// <b>after</b> this method has been invoked.
 		/// </summary>
 		/// <param name="go">The game object to configure.</param>
 		public void DoPostConfigureComplete(GameObject go) {
@@ -628,46 +641,24 @@ namespace PeterHan.PLib.Buildings {
 		}
 
 		/// <summary>
-		/// Splits up logic input/output ports.
+		/// Splits up logic input/output ports and configures the game object with them.
 		/// </summary>
-		/// <param name="inputs">The location where logic inputs will be stored.</param>
-		/// <param name="outputs">The location where logic outputs will be stored.</param>
-		private void SplitLogicPorts(out List<LogicPorts.Port> inputs,
-				out List<LogicPorts.Port> outputs) {
+		/// <param name="go">The game object to configure.</param>
+		private void SplitLogicPorts(GameObject go) {
 			int n = LogicIO.Count;
-			inputs = new List<LogicPorts.Port>(n);
-			outputs = new List<LogicPorts.Port>(n);
+			var inputs = new List<LogicPorts.Port>(n);
+			var outputs = new List<LogicPorts.Port>(n);
 			foreach (var port in LogicIO)
 				if (port.spriteType == LogicPortSpriteType.Output)
 					outputs.Add(port);
 				else
 					inputs.Add(port);
-		}
-
-		/// <summary>
-		/// Configures logic ports in the new Automation Update.
-		/// </summary>
-		/// <param name="def">The building definition to configure.</param>
-		private void SetupNewLogicPorts(BuildingDef def) {
-			SplitLogicPorts(out def.LogicInputPorts, out def.LogicOutputPorts);
-			if (AlwaysOperational)
-				def.AlwaysOperational = true;
-		}
-
-		/// <summary>
-		/// Configures logic ports in versions before the Automation Update.
-		/// </summary>
-		/// <param name="go">The game object to configure.</param>
-		private void SetupOldLogicPorts(GameObject go) {
-			SplitLogicPorts(out List<LogicPorts.Port> inputs, out List<LogicPorts.Port>
-				outputs);
-			// Can be slow, executes once and only on old editions
-			var method = typeof(GeneratedBuildings).GetMethodSafe("RegisterLogicPorts",
-				true, typeof(GameObject), typeof(LogicPorts.Port[]), typeof(LogicPorts.Port[]));
-			if (method == null)
-				PUtil.LogWarning("Unable to add logic ports: RegisterLogicPorts not found!");
-			else
-				method.Invoke(null, new object[] { go, inputs.ToArray(), outputs.ToArray() });
+			// This works in both the old and new versions
+			var ports = go.AddOrGet<LogicPorts>();
+			if (inputs.Count > 0)
+				ports.inputPortInfo = inputs.ToArray();
+			if (outputs.Count > 0)
+				ports.outputPortInfo = outputs.ToArray();
 		}
 
 		public override string ToString() {

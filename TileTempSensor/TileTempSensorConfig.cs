@@ -82,17 +82,22 @@ namespace PeterHan.TileTempSensor {
 		}
 
 		public override BuildingDef CreateBuildingDef() {
-			var def = TileTempSensor.CreateDef();
-			SoundEventVolumeCache.instance.AddVolume("thermo_tile_kanim", "PowerSwitch_on",
+#if false
+			// An honest effort, but the thermo sensor has no sounds anyways
+			string animName = TileTempSensor.Animation;
+			PUtil.CopySoundsToAnim(animName, "switchthermal_kanim");
+			SoundEventVolumeCache.instance.AddVolume(animName, "PowerSwitch_on",
 				TUNING.NOISE_POLLUTION.NOISY.TIER3);
-			SoundEventVolumeCache.instance.AddVolume("thermo_tile_kanim", "PowerSwitch_off",
+			SoundEventVolumeCache.instance.AddVolume(animName, "PowerSwitch_off",
 				TUNING.NOISE_POLLUTION.NOISY.TIER3);
+#endif
 			GeneratedBuildings.RegisterWithOverlay(OverlayModes.Logic.HighlightItemIDs, ID);
-			return def;
+			return TileTempSensor.CreateDef();
 		}
 
 		public override void ConfigureBuildingTemplate(GameObject go, Tag prefab_tag) {
 			base.ConfigureBuildingTemplate(go, prefab_tag);
+			TileTempSensor?.ConfigureBuildingTemplate(go);
 			BuildingConfigManager.Instance.IgnoreDefaultKComponent(typeof(RequiresFoundation),
 				prefab_tag);
 			// Must occupy the tile to transfer heat
@@ -104,8 +109,8 @@ namespace PeterHan.TileTempSensor {
 		}
 
 		public override void DoPostConfigureComplete(GameObject go) {
-			TileTempSensor.ApplyAlwaysOperational(go);
-			TileTempSensor.CreateLogicPorts(go);
+			TileTempSensor?.DoPostConfigureComplete(go);
+			TileTempSensor?.CreateLogicPorts(go);
 			var tempSensor = go.AddOrGet<LogicTemperatureSensor>();
 			tempSensor.manuallyControlled = false;
 			tempSensor.minTemp = 0f;
@@ -114,11 +119,11 @@ namespace PeterHan.TileTempSensor {
 		}
 
 		public override void DoPostConfigurePreview(BuildingDef def, GameObject go) {
-			TileTempSensor.CreateLogicPorts(go);
+			TileTempSensor?.CreateLogicPorts(go);
 		}
 
 		public override void DoPostConfigureUnderConstruction(GameObject go) {
-			TileTempSensor.CreateLogicPorts(go);
+			TileTempSensor?.CreateLogicPorts(go);
 		}
 	}
 }

@@ -94,7 +94,7 @@ namespace PeterHan.ThermalPlate {
 		}
 
 		public override void ConfigureBuildingTemplate(GameObject go, Tag prefabTag) {
-			ThermalInterfacePlate.ApplyAlwaysOperational(go);
+			ThermalInterfacePlate?.ConfigureBuildingTemplate(go);
 			go.AddOrGet<AnimTileable>().objectLayer = ObjectLayer.Backwall;
 			go.AddComponent<ZoneTile>();
 			BuildingConfigManager.Instance.IgnoreDefaultKComponent(typeof(RequiresFoundation),
@@ -102,6 +102,7 @@ namespace PeterHan.ThermalPlate {
 		}
 
 		public override void DoPostConfigureComplete(GameObject go) {
+			ThermalInterfacePlate?.DoPostConfigureComplete(go);
 			GeneratedBuildings.RemoveLoopingSounds(go);
 			go.AddComponent<ThermalInterfacePlate>();
 		}

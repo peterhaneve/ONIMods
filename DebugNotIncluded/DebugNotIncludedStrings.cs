@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
 using STRINGS;
 
 using AutomationState = STRINGS.UI.AutomationState;
@@ -29,6 +28,6 @@ namespace PeterHan.DebugNotIncluded {
 		// Mod status changes
 		public static LocString MOD_ACTIVATED = UI.FormatAsAutomationState("Activated", AutomationState.Active);
 		public static LocString MOD_DEACTIVATED = UI.FormatAsAutomationState("Deactivated", AutomationState.Standby);
-		public static LocString MOD_LOADERROR = UI.FormatAsAutomationState("Failed to load", AutomationState.Standby);
+		public static LocString MOD_NOTLOADED = UI.FormatAsAutomationState("Not loaded", AutomationState.Standby);
 	}
 }

@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib;
 using PeterHan.PLib.Buildings;
 using UnityEngine;
 
@@ -41,7 +42,7 @@ namespace PeterHan.SmartPumps {
 		internal static void RegisterBuilding() {
 			// Inititialize it here to allow localization to change the strings
 			PBuilding.Register(VacuumPump = new PBuilding(ID,
-				SmartPumpsStrings.VACUUMPUMP_NAME) {
+					SmartPumpsStrings.VACUUMPUMP_NAME) {
 				AddAfter = FilteredGasPumpConfig.ID,
 				Animation = "pumpVacuum_kanim",
 				Category = "HVAC",
@@ -69,11 +70,18 @@ namespace PeterHan.SmartPumps {
 				PowerInput = new PowerRequirement(90.0f, CellOffset.none),
 				RotateMode = PermittedRotations.R360,
 				Tech = "ValveMiniaturization",
+				ViewMode = OverlayModes.GasConduits.ID,
 				Width = 1
 			});
 		}
 
+		public override void ConfigureBuildingTemplate(GameObject go, Tag prefab_tag) {
+			base.ConfigureBuildingTemplate(go, prefab_tag);
+			VacuumPump?.ConfigureBuildingTemplate(go);
+		}
+
 		public override BuildingDef CreateBuildingDef() {
+			PUtil.CopySoundsToAnim(VacuumPump.Animation, "pumpgas_kanim");
 			return VacuumPump?.CreateDef();
 		}
 

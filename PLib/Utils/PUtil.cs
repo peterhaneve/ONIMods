@@ -100,6 +100,37 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Copies the sounds from one animation to another animation.
+		/// </summary>
+		/// <param name="dstAnim">The destination anim file name.</param>
+		/// <param name="srcAnim">The source anim file name.</param>
+		public static void CopySoundsToAnim(string dstAnim, string srcAnim) {
+			if (string.IsNullOrEmpty(dstAnim))
+				throw new ArgumentNullException("dstAnim");
+			if (string.IsNullOrEmpty(srcAnim))
+				throw new ArgumentNullException("srcAnim");
+			var anim = Assets.GetAnim(dstAnim);
+			if (anim != null) {
+				var audioSheet = GameAudioSheets.Get();
+				var animData = anim.GetData();
+				// For each anim in the kanim, look for existing sound events under the old
+				// anim's file name
+				for (int i = 0; i < animData.animCount; i++) {
+					string animName = animData.GetAnim(i)?.name ?? "";
+					var events = audioSheet.GetEvents(srcAnim + "." + animName);
+					if (events != null) {
+#if DEBUG
+						LogDebug("Adding {0:D} audio event(s) to anim {1}.{2}".F(events.Count,
+							dstAnim, animName));
+#endif
+						audioSheet.events[dstAnim + "." + animName] = events;
+					}
+				}
+			} else
+				LogWarning("Destination animation \"{0}\" not found!".F(dstAnim));
+		}
+
+		/// <summary>
 		/// Creates a popup message at the specified cell location on the Move layer.
 		/// </summary>
 		/// <param name="image">The image to display, likely from PopFXManager.Instance.</param>

@@ -19,6 +19,7 @@
 using Harmony;
 using KMod;
 using PeterHan.PLib;
+using PeterHan.PLib.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -79,8 +80,13 @@ namespace PeterHan.DebugNotIncluded {
 		
 		public static void OnLoad() {
 			PUtil.InitLibrary();
-			DebugLogger.InstallExceptionLogger();
-			LogAllFailedAsserts();
+			if (DebugNotIncludedOptions.Instance?.DetailedBacktrace ?? true)
+				DebugLogger.InstallExceptionLogger();
+			POptions.RegisterOptions(typeof(DebugNotIncludedOptions));
+			if (DebugNotIncludedOptions.Instance?.LogAsserts ?? true)
+				LogAllFailedAsserts();
+			// XXX There is an exception logger in StateMachine.2.cs (GenericInstance.
+			// ExecuteActions) but open generic methods supposedly cannot be patched
 		}
 
 		/// <summary>
@@ -103,6 +109,49 @@ namespace PeterHan.DebugNotIncluded {
 				}
 			}
 			return instructions;
+		}
+
+		/// <summary>
+		/// Applied to Debug to log which methods are actually sending log messages.
+		/// </summary>
+		[HarmonyPatch(typeof(Debug), "TimeStamp")]
+		public static class DebugUtil_TimeStamp_Patch {
+			internal static bool Prepare() {
+				return DebugNotIncludedOptions.Instance?.ShowLogSenders ?? false;
+			}
+
+			/// <summary>
+			/// Applied after TimeStamp runs.
+			/// </summary>
+			internal static void Postfix(ref string __result) {
+				/*
+				 * Postfix()
+				 * TimeStamp_Patch1()
+				 * WriteTimeStamped
+				 * Log/LogFormat/...
+				 */
+				__result = DebugLogger.AddCallingLocation(__result, new System.Diagnostics.
+					StackTrace(4));
+			}
+		}
+
+		/// <summary>
+		/// Applied to AudioSheets to log audio event information.
+		/// </summary>
+		[HarmonyPatch(typeof(AudioSheets), "CreateSound")]
+		public static class AudioSheets_CreateSound_Patch {
+			internal static bool Prepare() {
+				return DebugNotIncludedOptions.Instance?.LogSounds ?? false;
+			}
+
+			/// <summary>
+			/// Applied after CreateSound runs.
+			/// </summary>
+			internal static void Postfix(string file_name, string anim_name, string sound_name) {
+				// Add sound "GasPump_intake" to anim pumpgas_kanim.working_loop
+				DebugLogger.LogDebug("Add sound \"{0}\" to anim {1}.{2}".F(sound_name,
+					file_name, anim_name));
+			}
 		}
 
 		/// <summary>
@@ -182,6 +231,10 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		[HarmonyPatch(typeof(KMonoBehaviour), "InitializeComponent")]
 		public static class KMonoBehaviour_InitializeComponent_Patch {
+			internal static bool Prepare() {
+				return DebugNotIncludedOptions.Instance?.DetailedBacktrace ?? false;
+			}
+
 			/// <summary>
 			/// Transpiles InitializeComponent to add more error logging.
 			/// </summary>
@@ -199,6 +252,10 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		[HarmonyPatch(typeof(KMonoBehaviour), "Spawn")]
 		public static class KMonoBehaviour_Spawn_Patch {
+			internal static bool Prepare() {
+				return DebugNotIncludedOptions.Instance?.DetailedBacktrace ?? false;
+			}
+
 			/// <summary>
 			/// Transpiles Spawn to add more error logging.
 			/// </summary>

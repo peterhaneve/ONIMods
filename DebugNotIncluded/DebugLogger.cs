@@ -38,6 +38,39 @@ namespace PeterHan.DebugNotIncluded {
 		internal static WrapLogHandler Handler { get; private set; }
 
 		/// <summary>
+		/// Inserts the calling method into the debug log output.
+		/// </summary>
+		/// <param name="message">The original message.</param>
+		/// <param name="caller">The stack trace when inside the patch.</param>
+		/// <returns>The new message.</returns>
+		internal static string AddCallingLocation(string message, StackTrace caller) {
+			int n = caller.FrameCount;
+			if (n > 0) {
+				StackFrame frame;
+				int i = 0;
+				do {
+					frame = caller.GetFrame(i++);
+					var method = frame.GetMethod();
+					// Valid method?
+					if (method != null) {
+						var type = method.DeclaringType;
+						string typeName = type.Name, mName = method.Name;
+						// Do not add info to messages from this mod
+						if (type == typeof(DebugLogger)) break;
+						if ((typeName != nameof(PLib.PUtil) && type != typeof(DebugUtil)) ||
+								!mName.StartsWith("Log")) {
+							// Found the caller
+							message = string.Format("[{0}] [{2}.{3}|{1:D}] ", GetTimeStamp(),
+								Thread.CurrentThread.ManagedThreadId, typeName, mName);
+							break;
+						}
+					}
+				} while (i < n);
+			}
+			return message;
+		}
+
+		/// <summary>
 		/// Logs the exception using the default handler.
 		/// </summary>
 		/// <param name="e">The exception thrown.</param>
@@ -135,6 +168,14 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
+		/// Gets the current time stamp in the format the ONI log usually uses.
+		/// </summary>
+		/// <returns>The UTC time formatted as a time stamp.</returns>
+		internal static string GetTimeStamp() {
+			return System.DateTime.Now.ToString("HH:mm:ss.fff");
+		}
+
+		/// <summary>
 		/// Wraps the default debug log handler, providing better debug support of exceptions.
 		/// </summary>
 		internal static void InstallExceptionLogger() {
@@ -171,8 +212,8 @@ namespace PeterHan.DebugNotIncluded {
 		/// <param name="message">The message to log.</param>
 		public static void LogError(string message) {
 			// Avoid duplicate messages by replicating the Debug log statement
-			UnityEngine.Debug.LogErrorFormat("[{0:HH:mm:ss.fff}] [{1:D}] [ERROR] {2}{3}",
-				System.DateTime.UtcNow, Thread.CurrentThread.ManagedThreadId, HEADER, message);
+			UnityEngine.Debug.LogErrorFormat("[{0}] [{1}] [ERROR] {2}{3}", GetTimeStamp(),
+				Thread.CurrentThread.ManagedThreadId, HEADER, message);
 		}
 
 		/// <summary>
