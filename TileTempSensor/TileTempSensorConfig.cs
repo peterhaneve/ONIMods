@@ -104,7 +104,7 @@ namespace PeterHan.TileTempSensor {
 		}
 
 		public override void DoPostConfigureComplete(GameObject go) {
-			GeneratedBuildings.MakeBuildingAlwaysOperational(go);
+			TileTempSensor.ApplyAlwaysOperational(go);
 			TileTempSensor.CreateLogicPorts(go);
 			var tempSensor = go.AddOrGet<LogicTemperatureSensor>();
 			tempSensor.manuallyControlled = false;

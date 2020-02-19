@@ -152,6 +152,11 @@ namespace PeterHan.PLib.Buildings {
 		public string AddAfter { get; set; }
 
 		/// <summary>
+		/// Whether the building is always operational.
+		/// </summary>
+		public bool AlwaysOperational { get; set; }
+
+		/// <summary>
 		/// The building's animation.
 		/// </summary>
 		public string Animation { get; set; }
@@ -358,6 +363,7 @@ namespace PeterHan.PLib.Buildings {
 			if (string.IsNullOrEmpty(name))
 				throw new ArgumentNullException("anim");
 			AddAfter = null;
+			AlwaysOperational = false;
 			Animation = "";
 			AudioCategory = "Metal";
 			AudioSize = "medium";
@@ -469,6 +475,18 @@ namespace PeterHan.PLib.Buildings {
 					PUtil.LogWarning("Unknown technology " + Tech);
 				addedTech = true;
 			}
+		}
+
+		/// <summary>
+		/// Applies the Always Operational status of this building to the template game object.
+		/// 
+		/// Must be used in ConfigureBuildingTemplate, in versions prior to the new
+		/// Automation Update. This method is not required and has no effect otherwise.
+		/// </summary>
+		/// <param name="template">The template building object.</param>
+		public void ApplyAlwaysOperational(GameObject template) {
+			if (AlwaysOperational && PUtil.GameVersion < PUtil.VERSION_AP_PREVIEW)
+				GeneratedBuildings.MakeBuildingAlwaysOperational(template);
 		}
 
 		/// <summary>
@@ -632,6 +650,8 @@ namespace PeterHan.PLib.Buildings {
 		/// <param name="def">The building definition to configure.</param>
 		private void SetupNewLogicPorts(BuildingDef def) {
 			SplitLogicPorts(out def.LogicInputPorts, out def.LogicOutputPorts);
+			if (AlwaysOperational)
+				def.AlwaysOperational = true;
 		}
 
 		/// <summary>

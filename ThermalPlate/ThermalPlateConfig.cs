@@ -49,6 +49,7 @@ namespace PeterHan.ThermalPlate {
 			PBuilding.Register(ThermalInterfacePlate = new PBuilding(ID,
 					ThermalPlateStrings.THERMALPLATE_NAME) {
 				AddAfter = "ExteriorWall",
+				AlwaysOperational = true,
 				Animation = "thermalPlate_kanim",
 				AudioCategory = "Metal",
 				Category = "Utilities",
@@ -93,7 +94,7 @@ namespace PeterHan.ThermalPlate {
 		}
 
 		public override void ConfigureBuildingTemplate(GameObject go, Tag prefabTag) {
-			GeneratedBuildings.MakeBuildingAlwaysOperational(go);
+			ThermalInterfacePlate.ApplyAlwaysOperational(go);
 			go.AddOrGet<AnimTileable>().objectLayer = ObjectLayer.Backwall;
 			go.AddComponent<ZoneTile>();
 			BuildingConfigManager.Instance.IgnoreDefaultKComponent(typeof(RequiresFoundation),
