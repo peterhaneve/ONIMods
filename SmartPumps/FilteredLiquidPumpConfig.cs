@@ -54,7 +54,7 @@ namespace PeterHan.SmartPumps {
 				Height = 2,
 				HP = 100,
 				LogicIO = {
-					LogicOperationalController.INPUT_PORTS_0_1[0]
+					PBuilding.CompatLogicPort(LogicPortSpriteType.Input, new CellOffset(0, 1))
 				},
 				Ingredients = {
 					new BuildIngredient(TUNING.MATERIALS.REFINED_METAL, tier: 3),

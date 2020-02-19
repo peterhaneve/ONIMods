@@ -19,7 +19,6 @@
 using PeterHan.PLib;
 using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Datafiles;
-using System;
 using UnityEngine;
 
 namespace PeterHan.TileTempSensor {
@@ -68,11 +67,10 @@ namespace PeterHan.TileTempSensor {
 				},
 				IsSolidTile = true,
 				LogicIO = {
-					 LogicPorts.Port.OutputPort(LogicSwitch.PORT_ID, new CellOffset(0, 0),
-					 STRINGS.BUILDINGS.PREFABS.LOGICTEMPERATURESENSOR.LOGIC_PORT,
-					 STRINGS.BUILDINGS.PREFABS.LOGICTEMPERATURESENSOR.LOGIC_PORT_ACTIVE,
-					 STRINGS.BUILDINGS.PREFABS.LOGICTEMPERATURESENSOR.LOGIC_PORT_INACTIVE,
-					 true)
+					LogicPorts.Port.OutputPort(LogicSwitch.PORT_ID, new CellOffset(0, 0),
+					STRINGS.BUILDINGS.PREFABS.LOGICTEMPERATURESENSOR.LOGIC_PORT,
+					STRINGS.BUILDINGS.PREFABS.LOGICTEMPERATURESENSOR.LOGIC_PORT_ACTIVE,
+					STRINGS.BUILDINGS.PREFABS.LOGICTEMPERATURESENSOR.LOGIC_PORT_INACTIVE, true)
 				},
 				ObjectLayer = ObjectLayer.Backwall,
 				Placement = BuildLocationRule.Tile,

@@ -104,6 +104,20 @@ namespace PeterHan.PLib.Buildings {
 		}
 
 		/// <summary>
+		/// Creates a logic port, in a method compatible with both the new and old Automation
+		/// updates. The port will have the default strings which fit well with the
+		/// LogicOperationalController.
+		/// </summary>
+		/// <returns>A logic port compatible with both editions.</returns>
+		public static LogicPorts.Port CompatLogicPort(LogicPortSpriteType type,
+				CellOffset offset) {
+			return new LogicPorts.Port(LogicOperationalController.PORT_ID, offset,
+				STRINGS.UI.LOGIC_PORTS.CONTROL_OPERATIONAL,
+				STRINGS.UI.LOGIC_PORTS.CONTROL_OPERATIONAL_ACTIVE,
+				STRINGS.UI.LOGIC_PORTS.CONTROL_OPERATIONAL_INACTIVE, false, type);
+		}
+
+		/// <summary>
 		/// Registers a building to properly display its name, description, and tech tree
 		/// entry. PLib must be initialized using InitLibrary before using this method. Each
 		/// building should only be registered once, either in OnLoad or a post-load patch.
@@ -535,6 +549,9 @@ namespace PeterHan.PLib.Buildings {
 				def.UtilityOutputOffset = conduit.Location;
 				def.OutputConduitType = conduit.Type;
 			}
+			// Logic ports, new edition
+			if (PUtil.GameVersion >= PUtil.VERSION_AP_PREVIEW)
+				SetupNewLogicPorts(def);
 			return def;
 		}
 
@@ -542,18 +559,14 @@ namespace PeterHan.PLib.Buildings {
 		/// Populates the logic ports of this building. Should be called in
 		/// DoPostConfigureComplete, DoPostConfigurePreview, and
 		/// DoPostConfigureUnderConstruction.
+		/// 
+		/// This method is no longer required after the new Automation Update, but can be
+		/// called for compatibility reasons and will simply do nothing in that case.
 		/// </summary>
 		/// <param name="go">The game object to configure.</param>
 		public void CreateLogicPorts(GameObject go) {
-			int n = LogicIO.Count;
-			var inputs = new List<LogicPorts.Port>(n);
-			var outputs = new List<LogicPorts.Port>(n);
-			foreach (var port in LogicIO)
-				if (port.spriteType == LogicPortSpriteType.Output)
-					outputs.Add(port);
-				else
-					inputs.Add(port);
-			GeneratedBuildings.RegisterLogicPorts(go, inputs.ToArray(), outputs.ToArray());
+			if (PUtil.GameVersion < PUtil.VERSION_AP_PREVIEW)
+				SetupOldLogicPorts(go);
 		}
 
 		/// <summary>
@@ -594,6 +607,47 @@ namespace PeterHan.PLib.Buildings {
 				go.GetComponent<Prioritizable>().SetMasterPriority(new PrioritySetting(
 					PriorityScreen.PriorityClass.basic, DefaultPriority ?? 5));
 			}
+		}
+
+		/// <summary>
+		/// Splits up logic input/output ports.
+		/// </summary>
+		/// <param name="inputs">The location where logic inputs will be stored.</param>
+		/// <param name="outputs">The location where logic outputs will be stored.</param>
+		private void SplitLogicPorts(out List<LogicPorts.Port> inputs,
+				out List<LogicPorts.Port> outputs) {
+			int n = LogicIO.Count;
+			inputs = new List<LogicPorts.Port>(n);
+			outputs = new List<LogicPorts.Port>(n);
+			foreach (var port in LogicIO)
+				if (port.spriteType == LogicPortSpriteType.Output)
+					outputs.Add(port);
+				else
+					inputs.Add(port);
+		}
+
+		/// <summary>
+		/// Configures logic ports in the new Automation Update.
+		/// </summary>
+		/// <param name="def">The building definition to configure.</param>
+		private void SetupNewLogicPorts(BuildingDef def) {
+			SplitLogicPorts(out def.LogicInputPorts, out def.LogicOutputPorts);
+		}
+
+		/// <summary>
+		/// Configures logic ports in versions before the Automation Update.
+		/// </summary>
+		/// <param name="go">The game object to configure.</param>
+		private void SetupOldLogicPorts(GameObject go) {
+			SplitLogicPorts(out List<LogicPorts.Port> inputs, out List<LogicPorts.Port>
+				outputs);
+			// Can be slow, executes once and only on old editions
+			var method = typeof(GeneratedBuildings).GetMethodSafe("RegisterLogicPorts",
+				true, typeof(GameObject), typeof(LogicPorts.Port[]), typeof(LogicPorts.Port[]));
+			if (method == null)
+				PUtil.LogWarning("Unable to add logic ports: RegisterLogicPorts not found!");
+			else
+				method.Invoke(null, new object[] { go, inputs.ToArray(), outputs.ToArray() });
 		}
 
 		public override string ToString() {

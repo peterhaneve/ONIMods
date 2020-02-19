@@ -39,6 +39,11 @@ namespace PeterHan.PLib {
 		public static uint GameVersion { get; }
 
 		/// <summary>
+		/// The first released version of the new Automation Update.
+		/// </summary>
+		public const uint VERSION_AP_PREVIEW = 395113u;
+
+		/// <summary>
 		/// Whether PLib has been initialized.
 		/// </summary>
 		internal static bool PLibInit { get; private set; }
