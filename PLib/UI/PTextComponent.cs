@@ -120,17 +120,17 @@ namespace PeterHan.PLib.UI {
 		public ImageTransform SpriteTransform { get; set; }
 
 		/// <summary>
-		/// The label's text.
+		/// The component's text.
 		/// </summary>
 		public string Text { get; set; }
 
 		/// <summary>
-		/// The text alignment in the label.
+		/// The text alignment in the component.
 		/// </summary>
 		public TextAnchor TextAlignment { get; set; }
 
 		/// <summary>
-		/// The label's text color, font, word wrap settings, and font size.
+		/// The component's text color, font, word wrap settings, and font size.
 		/// </summary>
 		public TextStyleSetting TextStyle { get; set; }
 

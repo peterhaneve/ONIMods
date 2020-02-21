@@ -94,8 +94,20 @@ namespace PeterHan.DebugNotIncluded {
 			message.Append("Patches for ");
 			message.Append(method.ToString());
 			message.AppendLine(":");
-			DebugUtils.GetPatchInfo(method, message);
+			DebugUtils.GetPatchInfo(DebugUtils.GetOriginalMethod(method), message);
 			LogDebug(message.ToString());
+		}
+
+		/// <summary>
+		/// Dumps the current stack trace to the log.
+		/// </summary>
+		public static void DumpStack() {
+			var message = new StringBuilder(1024);
+			message.AppendLine("Stack trace:");
+			// Better stack traces!
+			GetStackTraceLog(new StackTrace(1), new HarmonyMethodCache(), message);
+			LogWarning(message.ToString());
+			message.Clear();
 		}
 
 		/// <summary>
@@ -141,6 +153,7 @@ namespace PeterHan.DebugNotIncluded {
 					// Try to give as much debug info as possible
 					int line = frame.GetFileLineNumber(), chr = frame.GetFileColumnNumber();
 					message.Append("  at ");
+					method = DebugUtils.GetOriginalMethod(method);
 					DebugUtils.AppendMethod(message, method);
 					if (line > 0 || chr > 0)
 						message.AppendFormat(" ({0:D}, {1:D})", line, chr);

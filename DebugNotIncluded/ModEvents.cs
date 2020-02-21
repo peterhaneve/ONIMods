@@ -158,7 +158,7 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
-		/// Adds a mod event. This method is not thread safe.
+		/// Adds a mod event.
 		/// </summary>
 		/// <param name="evt">The event which occurred.</param>
 		public void AddEvent(Event evt) {
@@ -172,31 +172,42 @@ namespace PeterHan.DebugNotIncluded {
 		/// <summary>
 		/// Deduplicates events of the specified type.
 		/// 
-		/// If ExpectedActive, ExpectedInactive, or Deactivate events also reference the same
-		/// mod, the duplicate event will be removed.
+		/// If ExpectedActive, ExpectedInactive, VersionUpdate, or Deactivate events also
+		/// reference the same mod, the duplicate event will be removed.
 		/// </summary>
 		/// <param name="type">The type of events to remove if duplicated.</param>
 		private void Dedupe(EventType type) {
 			if (eventsByType.TryGetValue(type, out IList<Event> victims)) {
 				int n = victims.Count;
-				// Events for Add, Remove, and Reinstall
+				var allEvents = ListPool<Event, ModEvents>.Allocate();
+				// Events for Add, Remove, Update, and Reinstall
 				eventsByType.TryGetValue(EventType.ExpectedActive, out IList<Event> addEvents);
-				eventsByType.TryGetValue(EventType.ExpectedInactive, out IList<Event>
-					removeEvents);
-				eventsByType.TryGetValue(EventType.Deactivated, out IList<Event> deactEvents);
+				if (addEvents != null)
+					allEvents.AddRange(addEvents);
+				eventsByType.TryGetValue(EventType.ExpectedInactive, out addEvents);
+				if (addEvents != null)
+					allEvents.AddRange(addEvents);
+				eventsByType.TryGetValue(EventType.Deactivated, out addEvents);
+				if (addEvents != null)
+					allEvents.AddRange(addEvents);
+				eventsByType.TryGetValue(EventType.VersionUpdate, out addEvents);
+				if (addEvents != null)
+					allEvents.AddRange(addEvents);
 				for (int i = 0; i < n; i++) {
 					var mod = victims[i].mod;
-					// IncludesMod is an extension method and will not crash on null
-					if (addEvents.IncludesMod(mod) || removeEvents.IncludesMod(mod) ||
-							deactEvents.IncludesMod(mod)) {
-						victims.RemoveAt(i);
-						n--;
-						EventCount--;
-					}
+					// Is this item included in the events that imply it?
+					foreach (var evt in allEvents)
+						if (mod.Match(evt.mod)) {
+							victims.RemoveAt(i);
+							n--;
+							EventCount--;
+							break;
+						}
 				}
 				if (n == 0)
 					// All gone!
 					eventsByType.Remove(type);
+				allEvents.Recycle();
 			}
 		}
 

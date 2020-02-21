@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
+using UnityEngine;
 
 namespace PeterHan.DebugNotIncluded {
 	/// <summary>
@@ -47,6 +48,11 @@ namespace PeterHan.DebugNotIncluded {
 		 * CustomGameSettings
 		 */
 
+		/// <summary>
+		/// The KMod which describes this mod.
+		/// </summary>
+		internal static Mod ThisMod { get; private set; }
+		
 		/// <summary>
 		/// Logs all failed asserts to the error log.
 		/// </summary>
@@ -78,7 +84,7 @@ namespace PeterHan.DebugNotIncluded {
 			}
 		}
 		
-		public static void OnLoad() {
+		public static void OnLoad(string path) {
 			PUtil.InitLibrary();
 			if (DebugNotIncludedOptions.Instance?.DetailedBacktrace ?? true)
 				DebugLogger.InstallExceptionLogger();
@@ -87,6 +93,13 @@ namespace PeterHan.DebugNotIncluded {
 				LogAllFailedAsserts();
 			// XXX There is an exception logger in StateMachine.2.cs (GenericInstance.
 			// ExecuteActions) but open generic methods supposedly cannot be patched
+			foreach (var mod in Global.Instance.modManager?.mods)
+				if (mod.label.install_path == path) {
+					ThisMod = mod;
+					break;
+				}
+			if (ThisMod == null)
+				DebugLogger.LogWarning("Unable to determine KMod instance!");
 		}
 
 		/// <summary>
@@ -269,6 +282,20 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
+		/// Applied to MainMenu to display a queued Steam mod status report if pending.
+		/// </summary>
+		[HarmonyPatch(typeof(MainMenu), "Update")]
+		public static class MainMenu_Update_Patch {
+			/// <summary>
+			/// Applied after Update runs.
+			/// </summary>
+			internal static void Postfix(MainMenu __instance) {
+				if (__instance != null)
+					QueuedReportManager.Instance.CheckQueuedReport(__instance.gameObject);
+			}
+		}
+
+		/// <summary>
 		/// Applied to Manager to make the mod events dialog more user friendly.
 		/// </summary>
 		[HarmonyPatch(typeof(Manager), "MakeEventList")]
@@ -284,6 +311,19 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
+		/// Applied to Mod to avoid disabling this mod on crash.
+		/// </summary>
+		[HarmonyPatch(typeof(Mod), "Crash")]
+		public static class Mod_Crash_Patch {
+			/// <summary>
+			/// Applied before Crash runs.
+			/// </summary>
+			internal static bool Prefix(Mod __instance) {
+				return ThisMod == null || !__instance.label.Match(ThisMod.label);
+			}
+		}
+
+		/// <summary>
 		/// Applied to Mod to set the active mod when loading.
 		/// </summary>
 		[HarmonyPatch(typeof(Mod), "Load")]
@@ -295,6 +335,39 @@ namespace PeterHan.DebugNotIncluded {
 				if (__instance != null)
 					ModLoadHandler.CurrentMod = ModDebugRegistry.Instance.GetDebugInfo(
 						__instance);
+			}
+		}
+
+		/// <summary>
+		/// Applied to Steam to avoid dialog spam on startup if many mods are updated or
+		/// installed.
+		/// </summary>
+		[HarmonyPatch(typeof(Steam), "UpdateMods")]
+		public static class Steam_UpdateMods_Patch {
+			/// <summary>
+			/// Transpiles UpdateMods to postpone the report.
+			/// </summary>
+			internal static IEnumerable<CodeInstruction> Transpiler(
+					IEnumerable<CodeInstruction> method) {
+#if DEBUG
+				DebugLogger.LogDebug("Transpiling Steam.UpdateMods()");
+#endif
+				var report = typeof(Manager).GetMethodSafe(nameof(Manager.Report), false,
+					typeof(GameObject));
+				var sanitize = typeof(Manager).GetMethodSafe(nameof(Manager.Sanitize), false,
+					typeof(GameObject));
+				var replacement = typeof(QueuedReportManager).GetMethodSafe(nameof(
+					QueuedReportManager.QueueDelayedReport), true, typeof(Manager),
+					typeof(GameObject));
+				foreach (var instruction in method) {
+					var callee = instruction.operand as MethodInfo;
+					if (instruction.opcode == OpCodes.Callvirt && (callee == report ||
+							callee == sanitize) && replacement != null) {
+						instruction.opcode = OpCodes.Call;
+						instruction.operand = replacement;
+					}
+					yield return instruction;
+				}
 			}
 		}
 	}

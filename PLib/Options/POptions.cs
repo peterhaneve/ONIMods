@@ -95,8 +95,8 @@ namespace PeterHan.PLib.Options {
 		/// <param name="modEntry">The mod entry where the button should be added.</param>
 		private static void AddModOptions(Traverse modEntry) {
 			int index = modEntry.GetField<int>("mod_index");
-			var mods = Global.Instance.modManager.mods;
-			if (index >= 0 && index < mods.Count) {
+			var mods = Global.Instance.modManager?.mods;
+			if (mods != null && index >= 0 && index < mods.Count) {
 				var modSpec = mods[index];
 				var transform = modEntry.GetField<RectTransform>("rect_transform");
 				string modID = modSpec.label.id;

@@ -70,7 +70,9 @@ namespace PeterHan.PLib.UI {
 		/// behavior should be defined in a class inherited from SideScreenContent.
 		/// 
 		/// The side screen will be added at the end of the list, which will cause it to
-		/// appear previous side screens in the details panel.
+		/// appear above previous side screens in the details panel.
+		/// 
+		/// This method should be used in a postfix on DetailsScreen.OnPrefabInit.
 		/// </summary>
 		/// <typeparam name="T">The type of the controller that will determine how the side
 		/// screen works. A new instance will be created and added as a component to the new
@@ -86,6 +88,8 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// Adds the specified side screen content to the side screen list. The side screen
 		/// behavior should be defined in a class inherited from SideScreenContent.
+		/// 
+		/// This method should be used in a postfix on DetailsScreen.OnPrefabInit.
 		/// </summary>
 		/// <typeparam name="T">The type of the controller that will determine how the side
 		/// screen works. A new instance will be created and added as a component to the new
