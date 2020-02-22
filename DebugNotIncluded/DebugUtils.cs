@@ -26,6 +26,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using UnityEngine;
 
 namespace PeterHan.DebugNotIncluded {
 	/// <summary>
@@ -133,16 +134,17 @@ namespace PeterHan.DebugNotIncluded {
 		internal static MethodBase BestEffortMatch(IEnumerable<MethodBase> candidates,
 				Type[] paramTypes) {
 			MethodBase method = null;
-			int bestMatch = -1, nArgs = paramTypes.Length;
+			int bestMatch = -1, originalLength = paramTypes.Length;
 			foreach (var candidate in candidates) {
 				// Argument count must match, with <object> as first parameter for instance
 				var parameters = candidate.GetParameters();
 				var checkTypes = StripThisObject(paramTypes, !candidate.IsStatic);
-				if (nArgs == checkTypes.Length) {
-					int matched = 0;
+				int nArgs = checkTypes.Length;
+				if (parameters.Length == nArgs) {
+					int matched = (originalLength == nArgs) ? 0 : 1;
 					// Count argument types which match exactly
 					for (int i = 0; i < nArgs; i++)
-						if (paramTypes[i] == parameters[i].ParameterType)
+						if (checkTypes[i] == parameters[i].ParameterType)
 							matched++;
 					if (matched > bestMatch) {
 						bestMatch = matched;
@@ -154,22 +156,20 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
-		/// Gets the mod that most recently appeared on the call stack in the provided
-		/// exception.
+		/// Gets the mod that most recently appeared on the provided call stack.
 		/// </summary>
-		/// <param name="e">The exception thrown.</param>
+		/// <param name="stackTrace">The call stack of the exception thrown.</param>
 		/// <returns>The mod that is most likely at fault, or null if no mods appear on the stack.</returns>
-		internal static Mod GetFirstModOnCallStack(this Exception e) {
-			Mod mod = null;
-			if (e != null) {
-				var stackTrace = new StackTrace(e);
+		internal static ModDebugInfo GetFirstModOnCallStack(this StackTrace stackTrace) {
+			ModDebugInfo mod = null;
+			if (stackTrace != null) {
 				var registry = ModDebugRegistry.Instance;
 				int n = stackTrace.FrameCount;
 				// Search for first method that has a mod in the registry
 				for (int i = 0; i < n && mod == null; i++) {
 					var method = stackTrace.GetFrame(i)?.GetMethod();
 					if (method != null)
-						mod = registry.OwnerOfType(method.DeclaringType)?.Mod;
+						mod = registry.OwnerOfType(method.DeclaringType);
 				}
 			}
 			return mod;
@@ -185,6 +185,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// <param name="patched">The potentially patched method.</param>
 		/// <returns>The original method which was targeted by the patch.</returns>
 		internal static MethodBase GetOriginalMethod(MethodBase patched) {
+			MethodBase newMethod = null;
 			if (patched == null)
 				throw new ArgumentNullException("patched");
 			// If the method ends with "_PatchNNN", then strip that
@@ -199,16 +200,17 @@ namespace PeterHan.DebugNotIncluded {
 					paramTypes[i] = parameters[i].ParameterType;
 				// Look for the new method that does not have the _Patch suffix
 				try {
-					var newMethod = patched.DeclaringType.GetMethod(name, PUBLIC_PRIVATE |
+					newMethod = patched.DeclaringType.GetMethod(name, PUBLIC_PRIVATE |
 						BindingFlags.Instance, null, StripThisObject(paramTypes, true), null);
-					if (newMethod == null)
+				} catch (AmbiguousMatchException) { }
+				if (newMethod == null)
+					try {
 						newMethod = patched.DeclaringType.GetMethod(name, PUBLIC_PRIVATE |
 							BindingFlags.Static, null, paramTypes, null);
-					if (newMethod != null)
-						patched = newMethod;
-				} catch (AmbiguousMatchException) {
-					// Do not make an attempt to find another method
-				}
+					} catch (AmbiguousMatchException) { }
+				if (newMethod != null)
+					// Found a better match!
+					patched = newMethod;
 			}
 			return patched;
 		}
@@ -292,6 +294,37 @@ namespace PeterHan.DebugNotIncluded {
 					type = AccessTools.TypeByName(typeName);
 			}
 			return type;
+		}
+
+		/// <summary>
+		/// Opens the output log file.
+		/// </summary>
+		internal static void OpenOutputLog() {
+			// Ugly but true!
+			var platform = Environment.OSVersion.Platform;
+			string path = "";
+			switch (platform) {
+			case PlatformID.MacOSX:
+				// https://answers.unity.com/questions/1484445/how-do-i-find-the-player-log-file-from-code.html
+				path = "~/Library/Logs/Unity/Player.log";
+				break;
+			case PlatformID.Unix:
+				path = Path.Combine("~/.config/unity3d", Application.companyName, Application.
+					productName, "Player.log");
+				break;
+			case PlatformID.Win32NT:
+			case PlatformID.Win32S:
+			case PlatformID.Win32Windows:
+				path = Path.Combine(Environment.GetEnvironmentVariable("AppData"),
+					"..", "LocalLow", Application.companyName, Application.productName,
+					"output_log.txt");
+				break;
+			default:
+				DebugLogger.LogWarning("Unable to open the output log on: {0}", platform);
+				break;
+			}
+			if (!string.IsNullOrEmpty(path))
+				Application.OpenURL(Path.GetFullPath(path));
 		}
 
 		/// <summary>

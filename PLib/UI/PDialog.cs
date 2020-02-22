@@ -42,6 +42,20 @@ namespace PeterHan.PLib.UI {
 		public const string DIALOG_KEY_CLOSE = "close";
 
 		/// <summary>
+		/// Rounds the size up to the nearest even integer.
+		/// </summary>
+		/// <param name="size">The current size.</param>
+		/// <param name="maxSize">The maximum allowed size.</param>
+		/// <returns>The rounded size.</returns>
+		private static float RoundUpSize(float size, float maxSize) {
+			int upOne = Mathf.CeilToInt(size);
+			if (upOne % 2 == 1) upOne++;
+			if (upOne > maxSize && maxSize > 0.0f)
+				upOne -= 2;
+			return upOne;
+		}
+
+		/// <summary>
 		/// The dialog body panel.
 		/// </summary>
 		public PPanel Body { get; }
@@ -64,6 +78,16 @@ namespace PeterHan.PLib.UI {
 		/// The dialog's parent.
 		/// </summary>
 		public GameObject Parent { get; set; }
+
+		/// <summary>
+		/// If a dialog with an odd width/height is displayed, all offsets will end up on a
+		/// half pixel offset, which may cause unusual display artifacts as Banker's Rounding
+		/// will round values that are supposed to be 1.0 units apart into integer values 2
+		/// units apart. If set, this flag will cause Build to round the dialog's size up to
+		/// the nearest even integer. If the dialog is already at its maximum size and is still
+		/// an odd integer in size, it is rounded down one instead.
+		/// </summary>
+		public bool RoundToNearestEven { get; set; }
 
 		/// <summary>
 		/// The dialog's minimum size. If the dialog preferred size is bigger than this size,
@@ -104,6 +128,7 @@ namespace PeterHan.PLib.UI {
 			MaxSize = Vector2.zero;
 			Name = name ?? "Dialog";
 			Parent = FrontEndManager.Instance.gameObject;
+			RoundToNearestEven = false;
 			Size = Vector2.zero;
 			SortKey = 0.0f;
 			Title = "Dialog";
@@ -163,13 +188,19 @@ namespace PeterHan.PLib.UI {
 			// Calculate the final dialog size
 			var dialogRT = dialog.rectTransform();
 			LayoutRebuilder.ForceRebuildLayoutImmediate(dialogRT);
-			float bodyWidth = Math.Max(Size.x, LayoutUtility.GetPreferredWidth(dialogRT));
-			float bodyHeight = Math.Max(Size.y, LayoutUtility.GetPreferredHeight(dialogRT));
+			float bodyWidth = Math.Max(Size.x, LayoutUtility.GetPreferredWidth(dialogRT)),
+				bodyHeight = Math.Max(Size.y, LayoutUtility.GetPreferredHeight(dialogRT)),
+				maxX = MaxSize.x, maxY = MaxSize.y;
 			// Maximum size constraint
-			if (MaxSize.x > 0.0f)
-				bodyWidth = Math.Min(bodyWidth, MaxSize.x);
-			if (MaxSize.y > 0.0f)
-				bodyHeight = Math.Min(bodyHeight, MaxSize.y);
+			if (maxX > 0.0f)
+				bodyWidth = Math.Min(bodyWidth, maxX);
+			if (maxY > 0.0f)
+				bodyHeight = Math.Min(bodyHeight, maxY);
+			if (RoundToNearestEven) {
+				// Round up the size to odd integers, even if currently fractional
+				bodyWidth = RoundUpSize(bodyWidth, maxX);
+				bodyHeight = RoundUpSize(bodyHeight, maxY);
+			}
 			dialogRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, bodyWidth);
 			dialogRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, bodyHeight);
 			// Dialog is realized

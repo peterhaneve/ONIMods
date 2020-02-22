@@ -73,10 +73,6 @@ namespace PeterHan.DebugNotIncluded {
 				if (time > 0.0f && (Time.unscaledTime - lastReportTime) >
 						QUEUED_REPORT_DELAY) {
 					report = true;
-#if DEBUG
-					DebugLogger.LogDebug("Reporting {0:D} queued mod event(s)", Global.
-						Instance.modManager?.events?.Count ?? 0);
-#endif
 					lastReportTime = 0.0f;
 				}
 			}
@@ -91,9 +87,6 @@ namespace PeterHan.DebugNotIncluded {
 		internal void QueueReport() {
 			lock (reportLock) {
 				lastReportTime = Time.unscaledTime;
-#if DEBUG
-				DebugLogger.LogDebug("Queue Steam report at {0:F1}", lastReportTime);
-#endif
 			}
 		}
 	}

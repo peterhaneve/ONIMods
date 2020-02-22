@@ -26,6 +26,22 @@ namespace PeterHan.DebugNotIncluded {
 	/// </summary>
 	internal static class ModLoadHandler {
 		/// <summary>
+		/// The mod which caused the first unhandled crash. Clears the crash when accessed,
+		/// allowing the next unhandled crash to again be logged.
+		/// </summary>
+		internal static ModDebugInfo CrashingMod {
+			get {
+				var mod = lastCrashedMod;
+				lastCrashedMod = null;
+				return mod;
+			}
+			set {
+				if (value != null && lastCrashedMod == null)
+					lastCrashedMod = value;
+			}
+		}
+
+		/// <summary>
 		/// The last mod which began loading content.
 		/// </summary>
 		internal static ModDebugInfo CurrentMod { get; set; }
@@ -34,6 +50,11 @@ namespace PeterHan.DebugNotIncluded {
 		/// The title of the current mod.
 		/// </summary>
 		internal static string CurrentModTitle => CurrentMod?.ModName;
+
+		/// <summary>
+		/// The last mod which crashed, or null if none have / the crash has been cleared.
+		/// </summary>
+		private static ModDebugInfo lastCrashedMod;
 
 		/// <summary>
 		/// When creating a Harmony instance, ignores the silly constant OxygenNotIncluded_v0.1

@@ -20,6 +20,7 @@ using Harmony;
 using KMod;
 using PeterHan.PLib;
 using PeterHan.PLib.Options;
+using PeterHan.PLib.UI;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -52,7 +53,17 @@ namespace PeterHan.DebugNotIncluded {
 		/// The KMod which describes this mod.
 		/// </summary>
 		internal static Mod ThisMod { get; private set; }
-		
+
+		/// <summary>
+		/// Applied to ModsScreen to add our buttons and otherwise tweak the dialog.
+		/// </summary>
+		private static void BuildDisplay(ModsScreen __instance, object ___displayedMods) {
+			// Must cast the type because ModsScreen.DisplayedMod is private
+			foreach (var displayedMod in (System.Collections.IEnumerable)___displayedMods)
+				ModDialogs.ConfigureRowInstance(Traverse.Create(displayedMod));
+			__instance?.GetComponent<AllModsHandler>()?.UpdateCheckedState();
+		}
+
 		/// <summary>
 		/// Logs all failed asserts to the error log.
 		/// </summary>
@@ -74,6 +85,11 @@ namespace PeterHan.DebugNotIncluded {
 				// Assert(bool, object, UnityEngine.Object)
 				assert = typeof(Debug).GetMethodSafe("Assert", true, typeof(bool), typeof(
 					object), typeof(UnityEngine.Object));
+				if (assert != null)
+					inst.Patch(assert, handler);
+				// Assert(bool, string)
+				assert = typeof(KCrashReporter).GetMethodSafe("Assert", true, typeof(bool),
+					typeof(string));
 				if (assert != null)
 					inst.Patch(assert, handler);
 #if DEBUG
@@ -100,6 +116,18 @@ namespace PeterHan.DebugNotIncluded {
 				}
 			if (ThisMod == null)
 				DebugLogger.LogWarning("Unable to determine KMod instance!");
+			// Must postload the mods dialog to come out after aki's mods, ony's mods, PLib
+			// options, and so forth
+			PUtil.RegisterPostload(PostloadHandler);
+		}
+
+		/// <summary>
+		/// Runs the required postload patches after all other mods load.
+		/// </summary>
+		/// <param name="instance">The Harmony instance to execute patches.</param>
+		private static void PostloadHandler(HarmonyInstance instance) {
+			instance.Patch(typeof(ModsScreen), "BuildDisplay", postfix:
+				new HarmonyMethod(typeof(DebugNotIncludedPatches), nameof(BuildDisplay)));
 		}
 
 		/// <summary>
@@ -122,6 +150,25 @@ namespace PeterHan.DebugNotIncluded {
 				}
 			}
 			return instructions;
+		}
+
+		/// <summary>
+		/// Applied to AudioSheets to log audio event information.
+		/// </summary>
+		[HarmonyPatch(typeof(AudioSheets), "CreateSound")]
+		public static class AudioSheets_CreateSound_Patch {
+			internal static bool Prepare() {
+				return DebugNotIncludedOptions.Instance?.LogSounds ?? false;
+			}
+
+			/// <summary>
+			/// Applied after CreateSound runs.
+			/// </summary>
+			internal static void Postfix(string file_name, string anim_name, string sound_name) {
+				// Add sound "GasPump_intake" to anim pumpgas_kanim.working_loop
+				DebugLogger.LogDebug("Add sound \"{0}\" to anim {1}.{2}".F(sound_name,
+					file_name, anim_name));
+			}
 		}
 
 		/// <summary>
@@ -149,29 +196,10 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
-		/// Applied to AudioSheets to log audio event information.
-		/// </summary>
-		[HarmonyPatch(typeof(AudioSheets), "CreateSound")]
-		public static class AudioSheets_CreateSound_Patch {
-			internal static bool Prepare() {
-				return DebugNotIncludedOptions.Instance?.LogSounds ?? false;
-			}
-
-			/// <summary>
-			/// Applied after CreateSound runs.
-			/// </summary>
-			internal static void Postfix(string file_name, string anim_name, string sound_name) {
-				// Add sound "GasPump_intake" to anim pumpgas_kanim.working_loop
-				DebugLogger.LogDebug("Add sound \"{0}\" to anim {1}.{2}".F(sound_name,
-					file_name, anim_name));
-			}
-		}
-
-		/// <summary>
 		/// Applied to ModLoader to patch in our handling to LoadDLLs.
 		/// </summary>
 		[HarmonyPatch]
-		public static class Game_OnPrefabInit_Patch {
+		public static class DLLLoader_LoadDLLs_Patch {
 			/// <summary>
 			/// Applied before OnPrefabInit runs.
 			/// </summary>
@@ -187,7 +215,7 @@ namespace PeterHan.DebugNotIncluded {
 						DebugLogger.LogError("Unable to transpile LoadDLLs: Method not found");
 				} catch (IOException e) {
 					// This should theoretically be impossible since the type is loaded
-					PUtil.LogException(e);
+					DebugLogger.BaseLogException(e, null);
 				}
 				return target;
 			}
@@ -232,7 +260,7 @@ namespace PeterHan.DebugNotIncluded {
 				if (!patchException)
 					DebugLogger.LogError("Unable to transpile LoadDLLs: Could not find exception handler");
 				if (!patchAssembly)
-					DebugLogger.LogError("Unable to transpile LoadDLLs: No calls to Assembly.LoadFrom found");
+					DebugLogger.LogWarning("Unable to transpile LoadDLLs: No calls to Assembly.LoadFrom found");
 				if (!patchCreate)
 					DebugLogger.LogWarning("Unable to transpile LoadDLLs: No calls to HarmonyInstance.Create found");
 				return instructions;
@@ -282,6 +310,20 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
+		/// Applied to MainMenu to check and move this mod to the top.
+		/// </summary>
+		[HarmonyPatch(typeof(MainMenu), "OnSpawn")]
+		public static class MainMenu_OnSpawn_Patch {
+			/// <summary>
+			/// Applied after Update runs.
+			/// </summary>
+			internal static void Postfix(MainMenu __instance) {
+				if (DebugNotIncludedOptions.Instance?.SkipFirstModCheck != true)
+					ModDialogs.CheckFirstMod(__instance?.gameObject);
+			}
+		}
+
+		/// <summary>
 		/// Applied to MainMenu to display a queued Steam mod status report if pending.
 		/// </summary>
 		[HarmonyPatch(typeof(MainMenu), "Update")]
@@ -292,6 +334,26 @@ namespace PeterHan.DebugNotIncluded {
 			internal static void Postfix(MainMenu __instance) {
 				if (__instance != null)
 					QueuedReportManager.Instance.CheckQueuedReport(__instance.gameObject);
+			}
+		}
+
+		/// <summary>
+		/// Applied to Manager to make the crash and restart dialog better.
+		/// </summary>
+		[HarmonyPatch(typeof(Manager), "DevRestartDialog")]
+		public static class Manager_DevRestartDialog_Patch {
+			/// <summary>
+			/// Applied before DevRestartDialog runs.
+			/// </summary>
+			internal static bool Prefix(Manager __instance, GameObject parent, bool is_crash) {
+				var events = __instance.events;
+				bool cont = true;
+				if (events != null && events.Count > 0 && is_crash) {
+					ModDialogs.BlameFailedMod(parent);
+					events.Clear();
+					cont = false;
+				}
+				return cont;
 			}
 		}
 
@@ -335,6 +397,38 @@ namespace PeterHan.DebugNotIncluded {
 				if (__instance != null)
 					ModLoadHandler.CurrentMod = ModDebugRegistry.Instance.GetDebugInfo(
 						__instance);
+			}
+		}
+
+		/// <summary>
+		/// Applied to ModsScreen to add UI for saving and restoring mod lists.
+		/// </summary>
+		[HarmonyPatch(typeof(ModsScreen), "OnActivate")]
+		[HarmonyPriority(Priority.Last)]
+		public static class ModsScreen_OnActivate_Patch {
+			/// <summary>
+			/// Applied before OnActivate runs.
+			/// </summary>
+			/// <param name="___entryPrefab"></param>
+			internal static void Prefix(GameObject ___entryPrefab) {
+				if (___entryPrefab != null)
+					ModDialogs.ConfigureRowPrefab(___entryPrefab);
+			}
+
+			/// <summary>
+			/// Applied after OnActivate runs.
+			/// </summary>
+			internal static void Postfix(KButton ___workshopButton, ModsScreen __instance) {
+				if (___workshopButton != null && __instance != null) {
+					// Hide the "STEAM WORKSHOP" button
+					var obj = ___workshopButton.gameObject;
+					obj.SetActive(false);
+					// Drop a checkbox "All" there instead
+					var parent = obj.GetParent();
+					obj = __instance.gameObject;
+					if (parent != null && obj != null)
+						ModDialogs.AddExtraButtons(obj, parent);
+				}
 			}
 		}
 

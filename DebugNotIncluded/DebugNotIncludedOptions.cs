@@ -45,11 +45,16 @@ namespace PeterHan.DebugNotIncluded {
 		[JsonProperty]
 		public bool ShowLogSenders { get; set; }
 
+		[Option("Skip First Mod Check", "Suppresses the warning dialog if Debug Not Included is not the first mod in the load order.")]
+		[JsonProperty]
+		public bool SkipFirstModCheck { get; set; }
+
 		public DebugNotIncludedOptions() {
 			DetailedBacktrace = true;
 			LogAsserts = true;
 			LogSounds = false;
 			ShowLogSenders = false;
+			SkipFirstModCheck = false;
 		}
 
 		public override string ToString() {

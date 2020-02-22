@@ -119,7 +119,8 @@ namespace PeterHan.DebugNotIncluded {
 				DebugLogger.LogDebug("Assembly \"{0}\" is used by multiple mods:", fullName);
 				DebugLogger.LogDebug("First loaded by {0} (used), also loaded by {1} (ignored)",
 					oldMod.ModName, owner.ModName);
-			}
+			} else
+				owner.ModAssemblies.Add(assembly);
 		}
 	}
 }

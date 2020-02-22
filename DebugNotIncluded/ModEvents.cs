@@ -198,7 +198,7 @@ namespace PeterHan.DebugNotIncluded {
 					// Is this item included in the events that imply it?
 					foreach (var evt in allEvents)
 						if (mod.Match(evt.mod)) {
-							victims.RemoveAt(i);
+							victims.RemoveAt(i--);
 							n--;
 							EventCount--;
 							break;

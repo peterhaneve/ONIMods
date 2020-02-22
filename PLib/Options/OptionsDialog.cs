@@ -294,7 +294,7 @@ namespace PeterHan.PLib.Options {
 					Title = PUIStrings.DIALOG_TITLE.text.F(modSpec.title), Size = POptions.
 					SETTINGS_DIALOG_SIZE, SortKey = 150.0f, DialogBackColor = PUITuning.Colors.
 					OptionsBackground, DialogClosed = OnOptionsSelected, MaxSize = POptions.
-					SETTINGS_DIALOG_MAX_SIZE
+					SETTINGS_DIALOG_MAX_SIZE, RoundToNearestEven = true
 				}.AddButton("ok", STRINGS.UI.CONFIRMDIALOG.OK, PUIStrings.TOOLTIP_OK,
 					PUITuning.Colors.ButtonPinkStyle).AddButton(PDialog.DIALOG_KEY_CLOSE,
 					STRINGS.UI.CONFIRMDIALOG.CANCEL, PUIStrings.TOOLTIP_CANCEL,

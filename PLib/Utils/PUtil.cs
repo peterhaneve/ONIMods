@@ -404,6 +404,11 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Registers a method which will be run after PLib and all mods load. It will be
 		/// passed a HarmonyInstance which can be used to make late patches.
+		/// 
+		/// Unlike [HarmonyPriority(Priority.Last)] which also has use cases, this method will
+		/// only exceute the handler after all mods have been loaded. This is intended for
+		/// checking to see if other mods are installed and performing compatibility changes
+		/// if necessary.
 		/// </summary>
 		/// <param name="callback">The method to invoke.</param>
 		public static void RegisterPostload(PostLoadHandler callback) {

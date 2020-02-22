@@ -30,6 +30,17 @@ namespace PeterHan.PLib.UI {
 		internal static readonly RectOffset BUTTON_MARGIN = new RectOffset(7, 7, 5, 5);
 
 		/// <summary>
+		/// Enables or disables a realized button.
+		/// </summary>
+		/// <param name="obj">The realized button object.</param>
+		/// <param name="enabled">true to make it enabled, or false to make it disabled (greyed out).</param>
+		public static void SetButtonEnabled(GameObject obj, bool enabled) {
+			var button = obj.GetComponentSafe<KButton>();
+			if (button != null)
+				button.isInteractable = enabled;
+		}
+
+		/// <summary>
 		/// The button's background color.
 		/// </summary>
 		public ColorStyleSetting Color { get; set; }

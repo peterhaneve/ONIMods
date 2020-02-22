@@ -19,6 +19,8 @@
 using Harmony;
 using KMod;
 using System;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace PeterHan.DebugNotIncluded {
 	/// <summary>
@@ -52,6 +54,13 @@ namespace PeterHan.DebugNotIncluded {
 		public Mod Mod { get; }
 
 		/// <summary>
+		/// The assemblies loaded by this mod. Since the assemblies all have a ref in the
+		/// current appdomain until restarted anyways, this will not leak any more memory
+		/// than is already done.
+		/// </summary>
+		public ICollection<Assembly> ModAssemblies { get; }
+
+		/// <summary>
 		/// The display name for this mod.
 		/// </summary>
 		public string ModName { get; }
@@ -62,6 +71,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// <param name="mod">The mod which this object represents.</param>
 		internal ModDebugInfo(Mod mod) {
 			Mod = mod ?? throw new ArgumentNullException("mod");
+			ModAssemblies = new HashSet<Assembly>();
 			ModName = mod.title ?? "unknown";
 			HarmonyIdentifier = GetIdentifier(mod);
 			HarmonyInstance = null;

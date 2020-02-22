@@ -122,6 +122,7 @@ namespace PeterHan.DebugNotIncluded {
 			var stackTrace = new StackTrace(e);
 			message.AppendFormat("{0}: {1}", e.GetType().Name, e.Message ?? "<no message>");
 			message.AppendLine();
+			ModLoadHandler.CrashingMod = DebugUtils.GetFirstModOnCallStack(stackTrace);
 			GetStackTraceLog(stackTrace, cache, message);
 			// Log the root cause
 			var cause = e.GetBaseException();
@@ -149,11 +150,12 @@ namespace PeterHan.DebugNotIncluded {
 				if (method == null)
 					// Try to output as much as possible
 					method = cache.ParseInternalName(frame, message);
+				else
+					method = DebugUtils.GetOriginalMethod(method);
 				if (method != null) {
 					// Try to give as much debug info as possible
 					int line = frame.GetFileLineNumber(), chr = frame.GetFileColumnNumber();
 					message.Append("  at ");
-					method = DebugUtils.GetOriginalMethod(method);
 					DebugUtils.AppendMethod(message, method);
 					if (line > 0 || chr > 0)
 						message.AppendFormat(" ({0:D}, {1:D})", line, chr);
@@ -172,8 +174,6 @@ namespace PeterHan.DebugNotIncluded {
 						message.Append(">");
 					} else if (asm.FullName.Contains("Unity"))
 						message.Append(" <Unity>");
-					// If the method shows up, then it was not a patched method, but never
-					// hurts to try anyways
 					message.AppendLine();
 					DebugUtils.GetPatchInfo(method, message);
 				}
@@ -298,9 +298,11 @@ namespace PeterHan.DebugNotIncluded {
 		internal static void OnAssertFailed(bool condition) {
 			if (!condition) {
 				var message = new StringBuilder(1024);
+				var trace = new StackTrace(2);
 				message.AppendLine("An assert is about to fail:");
 				// Better stack traces!
-				GetStackTraceLog(new StackTrace(2), new HarmonyMethodCache(), message);
+				ModLoadHandler.CrashingMod = DebugUtils.GetFirstModOnCallStack(trace);
+				GetStackTraceLog(trace, new HarmonyMethodCache(), message);
 				LogError(message.ToString());
 				message.Clear();
 			}
