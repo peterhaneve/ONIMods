@@ -197,8 +197,8 @@ namespace PeterHan.TraitRework {
 		/// <param name="locator">The locator for the pending sleep chore.</param>
 		internal static void RemoveSoreBack(SleepChoreMonitor.Instance monitor,
 				GameObject locator) {
-			var sleepable = locator.GetComponent<Sleepable>();
-			var traits = monitor.gameObject?.GetComponent<Traits>();
+			var sleepable = locator.GetComponentSafe<Sleepable>();
+			var traits = monitor.gameObject.GetComponentSafe<Traits>();
 			if (traits != null && sleepable != null && traits.HasTrait("Narcolepsy"))
 				sleepable.wakeEffects = null;
 		}

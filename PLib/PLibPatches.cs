@@ -54,11 +54,10 @@ namespace PeterHan.PLib {
 				ref IntHandle ___solidPartitionerEntry,
 				ref IntHandle ___liquidPartitionerEntry) {
 			var lm = PLightManager.Instance;
-			var obj = __instance.gameObject;
 			bool cont = true;
-			if (lm != null && obj != null) {
+			if (lm != null) {
 				// Replace the whole method since the radius could use different algorithms
-				lm.CallingObject = obj;
+				lm.CallingObject = __instance.gameObject;
 				cont = !PLightManager.AddScenePartitioner(__instance,
 					ref ___solidPartitionerEntry, ref ___liquidPartitionerEntry);
 			}
@@ -216,9 +215,8 @@ namespace PeterHan.PLib {
 		/// </summary>
 		private static void LightShapePreview_Update_Prefix(LightShapePreview __instance) {
 			var lm = PLightManager.Instance;
-			var obj = __instance.gameObject;
-			if (lm != null && obj != null)
-				lm.CallingObject = obj;
+			if (lm != null)
+				lm.CallingObject = __instance.gameObject;
 		}
 
 		/// <summary>
@@ -244,10 +242,9 @@ namespace PeterHan.PLib {
 		/// Applied to Rotatable to rotate light previews if a visualizer is rotated.
 		/// </summary>
 		private static void OrientVisualizer_Postfix(Rotatable __instance) {
-			var obj = __instance.gameObject;
-			LightShapePreview preview;
+			var preview = __instance.gameObject.GetComponentSafe<LightShapePreview>();
 			// Force regeneration on next Update()
-			if (obj != null && (preview = obj.GetComponent<LightShapePreview>()) != null)
+			if (preview != null)
 				Traverse.Create(preview).SetField("previousCell", -1);
 		}
 
@@ -268,9 +265,8 @@ namespace PeterHan.PLib {
 		/// </summary>
 		private static void RefreshShapeAndPosition_Postfix(Light2D __instance) {
 			var lm = PLightManager.Instance;
-			var obj = __instance.gameObject;
-			if (lm != null && obj != null)
-				lm.CallingObject = obj;
+			if (lm != null)
+				lm.CallingObject = __instance.gameObject;
 		}
 
 		/// <summary>

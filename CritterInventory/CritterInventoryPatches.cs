@@ -55,7 +55,7 @@ namespace PeterHan.CritterInventory {
 			/// <param name="___HighlightColor">The highlight color from the instance.</param>
 			internal static void Postfix(ResourceEntry __instance, bool is_hovering,
 					Color ___HighlightColor) {
-				var info = __instance.gameObject.GetComponent<CritterResourceInfo>();
+				var info = __instance.gameObject.GetComponentSafe<CritterResourceInfo>();
 				if (info != null) {
 					var hlc = ___HighlightColor;
 					CritterType type = info.CritterType;
@@ -80,7 +80,7 @@ namespace PeterHan.CritterInventory {
 			/// <param name="___selectionIdx">The current selection index.</param>
 			internal static void Postfix(ResourceEntry __instance, ref int ___selectionIdx)
 			{
-				var info = __instance.gameObject.GetComponent<CritterResourceInfo>();
+				var info = __instance.gameObject.GetComponentSafe<CritterResourceInfo>();
 				if (info != null) {
 					var creaturesOfType = ListPool<CreatureBrain, ResourceCategoryHeader>.
 						Allocate();
@@ -114,7 +114,7 @@ namespace PeterHan.CritterInventory {
 			/// <param name="___highlightColour">The highlight color from the instance.</param>
 			internal static void Postfix(ResourceCategoryHeader __instance,
 					bool is_hovering, Color ___highlightColour) {
-				var info = __instance.gameObject.GetComponent<CritterResourceInfo>();
+				var info = __instance.gameObject.GetComponentSafe<CritterResourceInfo>();
 				if (info != null) {
 					CritterType type = info.CritterType;
 					// It is a creature header, highlight all matching
@@ -141,7 +141,7 @@ namespace PeterHan.CritterInventory {
 			/// </summary>
 			/// <param name="__instance">The current resource category header.</param>
 			internal static bool Prefix(ResourceCategoryHeader __instance) {
-				var info = __instance.gameObject.GetComponent<CritterResourceInfo>();
+				var info = __instance.gameObject.GetComponentSafe<CritterResourceInfo>();
 				// UpdateContents adds spurious entries (e.g. babies when only adults ever
 				// discovered) on critters
 				if (info != null)

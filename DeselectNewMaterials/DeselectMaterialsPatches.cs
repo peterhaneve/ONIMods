@@ -19,7 +19,7 @@
 using Harmony;
 using PeterHan.PLib;
 using PeterHan.PLib.Options;
-using UnityEngine;
+using System.Collections;
 
 namespace PeterHan.DeselectNewMaterials {
 	/// <summary>
@@ -29,11 +29,11 @@ namespace PeterHan.DeselectNewMaterials {
 		/// <summary>
 		/// The options for this mod.
 		/// </summary>
-		private static DeselectMaterialsOptions options;
+		internal static DeselectMaterialsOptions Options { get; private set; }
 
 		public static void OnLoad() {
 			PUtil.InitLibrary();
-			options = new DeselectMaterialsOptions();
+			Options = new DeselectMaterialsOptions();
 			POptions.RegisterOptions(typeof(DeselectMaterialsOptions));
 		}
 
@@ -46,9 +46,10 @@ namespace PeterHan.DeselectNewMaterials {
 			/// Applied before OnPrefabInit runs.
 			/// </summary>
 			internal static void Prefix() {
-				options = POptions.ReadSettings<DeselectMaterialsOptions>() ??
-					new DeselectMaterialsOptions();
-				PUtil.LogDebug("DeselectNewMaterials settings: Ignore Food = {0}".F(options.
+				var newOptions = POptions.ReadSettings<DeselectMaterialsOptions>();
+				if (newOptions != null)
+					Options = newOptions;
+				PUtil.LogDebug("DeselectNewMaterials settings: Ignore Food = {0}".F(Options.
 					IgnoreFoodBoxes));
 			}
 		}
@@ -63,15 +64,25 @@ namespace PeterHan.DeselectNewMaterials {
 			/// </summary>
 			internal static void Postfix(TreeFilterable __instance, Storage ___storage,
 					Tag category_tag, Tag tag) {
-				GameObject obj;
-				if ((obj = __instance.gameObject) != null) {
-					// Ignore fridges and ration boxes if the check box is set
-					bool isFood = obj.GetComponent<Refrigerator>() != null || obj.
-						GetComponent<RationBox>() != null;
-					if (obj != null && (!options.IgnoreFoodBoxes || !isFood) && ___storage.
-							storageFilters.Contains(category_tag))
-						__instance.RemoveTagFromFilter(tag);
-				}
+				// Check the value of the storage-specific accepts/rejects new materials
+				bool accept = ___storage.gameObject.GetComponentSafe<NewMaterialsSettings>()?.
+					AcceptsNewMaterials ?? false;
+				if (!accept &&  ___storage.storageFilters.Contains(category_tag))
+					__instance.RemoveTagFromFilter(tag);
+			}
+		}
+
+		/// <summary>
+		/// Applied to Storage to ensure that new TreeFilterable objects get a
+		/// NewMaterialsSettings.
+		/// </summary>
+		[HarmonyPatch(typeof(TreeFilterable), "OnPrefabInit")]
+		public static class TreeFilterable_OnPrefabInit_Patch {
+			/// <summary>
+			/// Applied after OnPrefabInit runs.
+			/// </summary>
+			internal static void Postfix(TreeFilterable __instance) {
+				__instance.gameObject.AddOrGet<NewMaterialsSettings>();
 			}
 		}
 	}

@@ -74,11 +74,10 @@ namespace PeterHan.ResearchQueue {
 		/// <summary>
 		/// When a research is cancelled, removes from the queue if SHIFT clicked.
 		/// </summary>
-		/// <param name="entry">The entry that was clicked.</param>
 		/// <param name="targetTech">The technology to queue.</param>
 		/// <returns>true to remove the technology normally, or false if this method already
 		/// removed the technology.</returns>
-		private static bool OnResearchCanceled(ResearchEntry entry, Tech targetTech) {
+		private static bool OnResearchCanceled(Tech targetTech) {
 			var controller = Global.Instance.GetInputManager()?.GetDefaultController();
 			var screen = ManagementMenu.Instance?.researchScreen as ResearchScreen;
 			var research = Research.Instance;
@@ -105,11 +104,10 @@ namespace PeterHan.ResearchQueue {
 		/// <summary>
 		/// When a research is clicked, adds to the queue if SHIFT clicked.
 		/// </summary>
-		/// <param name="entry">The entry that was clicked.</param>
 		/// <param name="targetTech">The technology to queue.</param>
 		/// <returns>true to add the technology normally, or false if this method already
 		/// added the technology.</returns>
-		private static bool OnResearchClicked(ResearchEntry entry, Tech targetTech) {
+		private static bool OnResearchClicked(Tech targetTech) {
 			var controller = Global.Instance.GetInputManager()?.GetDefaultController();
 			var screen = ManagementMenu.Instance?.researchScreen as ResearchScreen;
 			var research = Research.Instance;
@@ -248,8 +246,8 @@ namespace PeterHan.ResearchQueue {
 			/// <summary>
 			/// Applied before OnResearchCanceled runs.
 			/// </summary>
-			internal static bool Prefix(ResearchEntry __instance, Tech ___targetTech) {
-				return OnResearchCanceled(__instance, ___targetTech);
+			internal static bool Prefix(Tech ___targetTech) {
+				return OnResearchCanceled(___targetTech);
 			}
 		}
 
@@ -261,8 +259,8 @@ namespace PeterHan.ResearchQueue {
 			/// <summary>
 			/// Applied before OnResearchClicked runs.
 			/// </summary>
-			internal static bool Prefix(ResearchEntry __instance, Tech ___targetTech) {
-				return OnResearchClicked(__instance, ___targetTech);
+			internal static bool Prefix(Tech ___targetTech) {
+				return OnResearchClicked(___targetTech);
 			}
 		}
 
@@ -320,7 +318,7 @@ namespace PeterHan.ResearchQueue {
 			/// </summary>
 			internal static void Postfix(SaveGame __instance) {
 				// Add a component for saving the research queue
-				__instance.gameObject?.AddOrGet<SavedResearchQueue>();
+				__instance.gameObject.AddOrGet<SavedResearchQueue>();
 			}
 		}
 	}

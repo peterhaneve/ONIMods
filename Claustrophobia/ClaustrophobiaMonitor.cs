@@ -25,6 +25,7 @@ namespace PeterHan.Claustrophobia {
 	/// <summary>
 	/// The proper way to monitor stuck Duplicants, as a state machine!
 	/// </summary>
+	[SkipSaveFileSerialization]
 	public sealed class ClaustrophobiaMonitor : StateMachineComponent<ClaustrophobiaMonitor.
 			Instance> {
 		/// <summary>

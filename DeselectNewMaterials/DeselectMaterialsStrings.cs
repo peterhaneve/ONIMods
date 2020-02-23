@@ -16,25 +16,15 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Newtonsoft.Json;
-using PeterHan.PLib;
-
 namespace PeterHan.DeselectNewMaterials {
 	/// <summary>
-	/// The options class used for Deselect New Materials.
+	/// Stores the strings used in Deselect New Materials.
 	/// </summary>
-	[JsonObject(MemberSerialization.OptIn)]
-	public sealed class DeselectMaterialsOptions {
-		[Option("Food Storage Accepts By Default", "Sets the default setting on Ration Boxes and Refrigerators to Accepts New Materials.")]
-		[JsonProperty]
-		public bool IgnoreFoodBoxes { get; set; }
+	public static class DeselectMaterialsStrings {
+		// The button in the user menu to accept or reject new item types
+		public static readonly LocString ACCEPTS_MATERIALS = "Accepts New Types";
+		public static readonly LocString REJECTS_MATERIALS = "Rejects New Types";
 
-		public DeselectMaterialsOptions() {
-			IgnoreFoodBoxes = false;
-		}
-
-		public override string ToString() {
-			return "DeselectMaterialsOptions[ignoreFood={0}]".F(IgnoreFoodBoxes);
-		}
+		public static readonly LocString ACCEPT_TOOLTIP = "Toggles whether this storage Accepts or Rejects newly discovered materials";
 	}
 }

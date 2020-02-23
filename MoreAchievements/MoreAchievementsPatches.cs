@@ -237,7 +237,7 @@ namespace PeterHan.MoreAchievements {
 			/// Applied after OnStartWork runs.
 			/// </summary>
 			internal static void Postfix(Clinic __instance, Worker worker) {
-				var building = __instance?.gameObject.GetComponentSafe<Building>();
+				var building = __instance.gameObject.GetComponentSafe<Building>();
 				var hp = Db.Get().Amounts.HitPoints.Lookup(worker);
 #if DEBUG
 				if (hp != null)
@@ -277,11 +277,10 @@ namespace PeterHan.MoreAchievements {
 			/// </summary>
 			internal static void Prefix(ColonyAchievementTracker __instance,
 					ref AchieveDict __state) {
-				AchieveDict achievements;
-				if (__instance != null && Options.DoNotSerialize && (achievements = __instance.
-						achievements) != null) {
-					PushAchievements(achievements, __state = new Dictionary<string,
-						ColonyAchievementStatus>(achievements.Count));
+				AchieveDict achieves;
+				if (Options.DoNotSerialize && (achieves = __instance.achievements) != null) {
+					PushAchievements(achieves, __state = new Dictionary<string,
+						ColonyAchievementStatus>(achieves.Count));
 #if DEBUG
 					PUtil.LogDebug("Removed achievements from save: {0:D}".F(__state.Count));
 #endif
@@ -294,7 +293,7 @@ namespace PeterHan.MoreAchievements {
 			/// </summary>
 			internal static void Postfix(ColonyAchievementTracker __instance,
 					AchieveDict __state) {
-				if (__instance != null && __state != null) {
+				if (__state != null) {
 					// Reinstate everything
 					foreach (var achievement in __state)
 						__instance.achievements[achievement.Key] = achievement.Value;
@@ -328,7 +327,7 @@ namespace PeterHan.MoreAchievements {
 #if DEBUG
 				PUtil.LogDebug("Duplicant died: " + death?.Id);
 #endif
-				if (__instance?.IsDuplicant == true)
+				if (__instance.IsDuplicant)
 					AchievementStateComponent.OnDeath(death);
 			}
 		}
@@ -342,7 +341,7 @@ namespace PeterHan.MoreAchievements {
 			/// Applied after OnSolidChanged runs.
 			/// </summary>
 			internal static void Postfix(bool ___isDigComplete, Diggable __instance) {
-				if (___isDigComplete && __instance != null) {
+				if (___isDigComplete) {
 #if DEBUG
 					PUtil.LogDebug("Tile dug: " + Grid.PosToCell(__instance));
 #endif
@@ -378,8 +377,7 @@ namespace PeterHan.MoreAchievements {
 				var newOptions = POptions.ReadSettings<MoreAchievementsOptions>();
 				if (newOptions != null)
 					Options = newOptions;
-				if (obj != null)
-					obj.AddOrGet<AchievementStateComponent>();
+				__instance.gameObject.AddOrGet<AchievementStateComponent>();
 			}
 		}
 
@@ -408,10 +406,9 @@ namespace PeterHan.MoreAchievements {
 			/// Applied after Incapacitate runs.
 			/// </summary>
 			internal static void Postfix(Health __instance) {
-				KSelectable selectable;
-				if (__instance != null && ScaldedTag != null && (selectable = __instance.
-						GetComponent<KSelectable>()) != null && selectable.HasStatusItem(
-						Db.Get().CreatureStatusItems.Scalding))
+				KSelectable target;
+				if (ScaldedTag != null && (target = __instance.GetComponent<KSelectable>()) !=
+						null && target.HasStatusItem(Db.Get().CreatureStatusItems.Scalding))
 					__instance.GetComponent<KPrefabID>()?.AddTag(ScaldedTag);
 			}
 		}
@@ -425,8 +422,8 @@ namespace PeterHan.MoreAchievements {
 			/// Applied before OnHealthChanged runs.
 			/// </summary>
 			internal static void Prefix(Health __instance) {
-				if (__instance != null && __instance.State != Health.HealthState.Invincible &&
-						__instance.hitPoints > 0.0f)
+				if (__instance.State != Health.HealthState.Invincible && __instance.hitPoints >
+						0.0f)
 					__instance.GetComponent<KPrefabID>()?.RemoveTag(ScaldedTag);
 			}
 		}
@@ -440,8 +437,7 @@ namespace PeterHan.MoreAchievements {
 			/// Applied after Recover runs.
 			/// </summary>
 			internal static void Postfix(Health __instance) {
-				if (__instance != null)
-					__instance.GetComponent<KPrefabID>()?.RemoveTag(ScaldedTag);
+				__instance.GetComponent<KPrefabID>()?.RemoveTag(ScaldedTag);
 			}
 		}
 
@@ -455,7 +451,7 @@ namespace PeterHan.MoreAchievements {
 			/// </summary>
 			internal static void Postfix(IncapacitationMonitor.Instance __instance,
 					ref Death __result) {
-				var id = __instance?.GetComponent<KPrefabID>();
+				var id = __instance.GetComponent<KPrefabID>();
 				if (id != null && id.HasTag(ScaldedTag))
 					__result = Db.Get().Deaths.Overheating;
 			}
@@ -545,8 +541,7 @@ namespace PeterHan.MoreAchievements {
 			internal static void Postfix(Spacecraft __instance) {
 				var instance = SpacecraftManager.instance;
 				SpaceDestination destination;
-				if (instance != null && (destination = instance.GetSpacecraftDestination(
-						__instance.id)) != null)
+				if ((destination = instance.GetSpacecraftDestination(__instance.id)) != null)
 					AchievementStateComponent.OnVisit(destination.id);
 			}
 		}

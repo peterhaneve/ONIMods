@@ -217,7 +217,7 @@ namespace PeterHan.TraitRework {
 				bool cont = true;
 				var equipper = obj.GetComponent<SuitEquipper>();
 				// Always fart if wearing a suit
-				if (obj != null && (equipper == null || !equipper.IsWearingAirtightSuit())) {
+				if (equipper == null || !equipper.IsWearingAirtightSuit()) {
 					cont = !obj.HasTag(GameTags.NoOxygen);
 #if DEBUG
 					if (!cont)
@@ -247,7 +247,7 @@ namespace PeterHan.TraitRework {
 			/// Applied after OnSpawn runs.
 			/// </summary>
 			internal static void Postfix(MinionIdentity __instance) {
-				var cc = __instance.gameObject?.GetComponent<ConsumableConsumer>();
+				var cc = __instance.gameObject.GetComponentSafe<ConsumableConsumer>();
 				if (cc != null)
 					TraitReworkUtils.ApplyBannedFoods(cc);
 			}

@@ -162,8 +162,7 @@ namespace PeterHan.StockBugFix {
 			/// </summary>
 			internal static void Postfix(FuelTank __instance) {
 				var obj = __instance.gameObject;
-				if (obj != null)
-					obj.GetComponent<Storage>()?.Trigger((int)GameHashes.OnStorageChange, obj);
+				obj.GetComponentSafe<Storage>()?.Trigger((int)GameHashes.OnStorageChange, obj);
 			}
 		}
 
@@ -186,8 +185,7 @@ namespace PeterHan.StockBugFix {
 			/// </summary>
 			internal static void Postfix(OxidizerTank __instance) {
 				var obj = __instance.gameObject;
-				if (obj != null)
-					obj.GetComponent<Storage>()?.Trigger((int)GameHashes.OnStorageChange, obj);
+				obj.GetComponentSafe<Storage>()?.Trigger((int)GameHashes.OnStorageChange, obj);
 			}
 		}
 
@@ -248,14 +246,12 @@ namespace PeterHan.StockBugFix {
 			/// Applied after OnSpawn runs.
 			/// </summary>
 			internal static void Postfix(FuelTank __instance) {
-				var obj = __instance?.gameObject;
-				if (obj != null)
-					obj.Subscribe((int)GameHashes.LaunchRocket, (_) => {
-						// Clear the contents
-						foreach (var item in __instance.items)
-							Util.KDestroyGameObject(item);
-						__instance.items.Clear();
-					});
+				__instance.gameObject.Subscribe((int)GameHashes.LaunchRocket, (_) => {
+					// Clear the contents
+					foreach (var item in __instance.items)
+						Util.KDestroyGameObject(item);
+					__instance.items.Clear();
+				});
 			}
 		}
 
@@ -268,15 +264,13 @@ namespace PeterHan.StockBugFix {
 			/// Applied after OnSpawn runs.
 			/// </summary>
 			internal static void Postfix(OxidizerTank __instance) {
-				var obj = __instance?.gameObject;
-				var storage = __instance?.storage;
-				if (obj != null)
-					obj.Subscribe((int)GameHashes.LaunchRocket, (_) => {
-						// Clear the contents
-						foreach (var item in storage.items)
-							Util.KDestroyGameObject(item);
-						storage.items.Clear();
-					});
+				var storage = __instance.storage;
+				__instance.gameObject.Subscribe((int)GameHashes.LaunchRocket, (_) => {
+					// Clear the contents
+					foreach (var item in storage.items)
+						Util.KDestroyGameObject(item);
+					storage.items.Clear();
+				});
 			}
 		}
 
@@ -294,9 +288,7 @@ namespace PeterHan.StockBugFix {
 					Invalid, (notificationList, data) => STRINGS.BUILDING.STATUSITEMS.
 					SPACECRAFTREADYTOLAND.NOTIFICATION_TOOLTIP + notificationList.
 					ReduceMessages(false), spacecraft.launchConditions.GetProperName(), true);
-				var obj = __instance.gameObject;
-				if (obj != null)
-					obj.AddOrGet<Notifier>().Add(notification);
+				__instance.gameObject.AddOrGet<Notifier>().Add(notification);
 				return false;
 			}
 		}
@@ -310,10 +302,8 @@ namespace PeterHan.StockBugFix {
 			/// Applied after Recharge runs.
 			/// </summary>
 			internal static void Postfix(GeneShuffler.GeneShufflerSM.Instance ___geneShufflerSMI) {
-				if (___geneShufflerSMI != null) {
-					var sm = ___geneShufflerSMI.sm;
-					___geneShufflerSMI.GoTo(sm.recharging);
-				}
+				if (___geneShufflerSMI != null)
+					___geneShufflerSMI.GoTo(___geneShufflerSMI.sm.recharging);
 			}
 		}
 

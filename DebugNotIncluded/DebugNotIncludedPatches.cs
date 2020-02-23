@@ -61,7 +61,7 @@ namespace PeterHan.DebugNotIncluded {
 			// Must cast the type because ModsScreen.DisplayedMod is private
 			foreach (var displayedMod in (System.Collections.IEnumerable)___displayedMods)
 				ModDialogs.ConfigureRowInstance(Traverse.Create(displayedMod));
-			__instance?.GetComponent<AllModsHandler>()?.UpdateCheckedState();
+			__instance.GetComponent<AllModsHandler>()?.UpdateCheckedState();
 		}
 
 		/// <summary>
@@ -118,7 +118,8 @@ namespace PeterHan.DebugNotIncluded {
 				DebugLogger.LogWarning("Unable to determine KMod instance!");
 			// Must postload the mods dialog to come out after aki's mods, ony's mods, PLib
 			// options, and so forth
-			PUtil.RegisterPostload(PostloadHandler);
+			if (DebugNotIncludedOptions.Instance?.PowerUserMode ?? false)
+				PUtil.RegisterPostload(PostloadHandler);
 		}
 
 		/// <summary>
@@ -319,7 +320,7 @@ namespace PeterHan.DebugNotIncluded {
 			/// </summary>
 			internal static void Postfix(MainMenu __instance) {
 				if (DebugNotIncludedOptions.Instance?.SkipFirstModCheck != true)
-					ModDialogs.CheckFirstMod(__instance?.gameObject);
+					ModDialogs.CheckFirstMod(__instance.gameObject);
 			}
 		}
 
@@ -394,9 +395,7 @@ namespace PeterHan.DebugNotIncluded {
 			/// Applied before Load runs.
 			/// </summary>
 			internal static void Prefix(Mod __instance) {
-				if (__instance != null)
-					ModLoadHandler.CurrentMod = ModDebugRegistry.Instance.GetDebugInfo(
-						__instance);
+				ModLoadHandler.CurrentMod = ModDebugRegistry.Instance.GetDebugInfo(__instance);
 			}
 		}
 
@@ -415,19 +414,22 @@ namespace PeterHan.DebugNotIncluded {
 					ModDialogs.ConfigureRowPrefab(___entryPrefab);
 			}
 
+			internal static bool Prepare() {
+				return DebugNotIncludedOptions.Instance?.PowerUserMode ?? false;
+			}
+
 			/// <summary>
 			/// Applied after OnActivate runs.
 			/// </summary>
 			internal static void Postfix(KButton ___workshopButton, ModsScreen __instance) {
-				if (___workshopButton != null && __instance != null) {
+				if (___workshopButton != null) {
 					// Hide the "STEAM WORKSHOP" button
 					var obj = ___workshopButton.gameObject;
 					obj.SetActive(false);
 					// Drop a checkbox "All" there instead
 					var parent = obj.GetParent();
-					obj = __instance.gameObject;
 					if (parent != null && obj != null)
-						ModDialogs.AddExtraButtons(obj, parent);
+						ModDialogs.AddExtraButtons(__instance.gameObject, parent);
 				}
 			}
 		}

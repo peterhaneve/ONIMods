@@ -76,8 +76,8 @@ namespace PeterHan.BulkSettingsChange {
 				bulkChangeTool.AddComponent<BulkChangeTool>();
 				// Reparent tool to the player controller, then enable/disable to load it
 				bulkChangeTool.transform.SetParent(__instance.gameObject.transform);
-				bulkChangeTool.gameObject.SetActive(true);
-				bulkChangeTool.gameObject.SetActive(false);
+				bulkChangeTool.SetActive(true);
+				bulkChangeTool.SetActive(false);
 				PUtil.LogDebug("Created BulkChangeTool");
 				// Add tool to tool list
 				interfaceTools.Add(bulkChangeTool.GetComponent<InterfaceTool>());
@@ -95,7 +95,7 @@ namespace PeterHan.BulkSettingsChange {
 			/// </summary>
 			/// <param name="___icons">The icon list where the icon can be added.</param>
 			internal static void Postfix(List<Sprite> ___icons) {
-				___icons.Add(SpriteRegistry.GetToolIcon());
+				___icons?.Add(SpriteRegistry.GetToolIcon());
 			}
 		}
 

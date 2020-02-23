@@ -48,9 +48,7 @@ namespace PeterHan.Claustrophobia {
 			/// </summary>
 			/// <param name="__instance">The current game.</param>
 			internal static void Postfix(Game __instance) {
-				var obj = __instance.gameObject;
-				if (obj != null)
-					obj.AddOrGet<ClaustrophobiaChecker>();
+				__instance.gameObject.AddOrGet<ClaustrophobiaChecker>();
 				var newOptions = POptions.ReadSettings<ClaustrophobiaOptions>();
 				if (newOptions != null)
 					Options = newOptions;
@@ -68,9 +66,7 @@ namespace PeterHan.Claustrophobia {
 			/// Applied after OnSpawn runs.
 			/// </summary>
 			internal static void Postfix(MinionIdentity __instance) {
-				var obj = __instance.gameObject;
-				if (obj != null)
-					obj.AddOrGet<ClaustrophobiaMonitor>();
+				__instance.gameObject.AddOrGet<ClaustrophobiaMonitor>();
 			}
 		}
 	}

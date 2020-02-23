@@ -30,7 +30,7 @@ namespace PeterHan.FoodTooltip {
 		[MyCmpGet]
 		private SimpleInfoScreen infoScreen;
 #pragma warning restore CS0649
-#pragma warning restore IDE0044 // Add readonly modifier
+#pragma warning restore IDE0044
 
 		/// <summary>
 		/// Refreshes the information panel only if a happiness or farmer's touch effect is

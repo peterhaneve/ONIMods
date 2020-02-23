@@ -179,14 +179,13 @@ namespace ReimaginationTeam.DecorRework {
 					Klei.AI.AmountInstance ___amount, Klei.AI.AttributeModifier ___modifier,
 					ref float ___cycleTotalDecor) {
 				bool cont = true;
-				var obj = __instance.gameObject;
 				ChoreDriver driver;
 				// If no chore driver, allow stock implementation
-				if (obj != null && (driver = obj.GetComponent<ChoreDriver>()) != null) {
+				if ((driver = obj.GetComponent<ChoreDriver>()) != null) {
 					var chore = driver.GetCurrentChore();
 					cont = false;
 					// Slew to zero decor if sleeping
-					float decorAtCell = GameUtil.GetDecorAtCell(Grid.PosToCell(obj));
+					float decorAtCell = GameUtil.GetDecorAtCell(Grid.PosToCell(__instance));
 					if (chore != null && chore.choreType == Db.Get().ChoreTypes.Sleep)
 						decorAtCell *= DecorTuning.DECOR_FRACTION_SLEEP;
 					___cycleTotalDecor += decorAtCell * dt;

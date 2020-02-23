@@ -55,13 +55,12 @@ namespace PeterHan.SmartPumps {
 			/// </summary>
 			internal static void Postfix(FilterSideScreen __instance, GameObject target,
 					ref bool __result) {
-				KPrefabID prefabID;
-				if (target != null && (prefabID = target.GetComponent<KPrefabID>()) != null) {
+				var prefabID = target.GetComponentSafe<KPrefabID>();
+				if (target.GetComponent<Filterable>() != null && __instance.isLogicFilter &&
+						prefabID != null) {
 					// Some targets do not have an ID?
 					var id = prefabID.PrefabTag;
-					bool isFilter = __instance.isLogicFilter;
-					if (target.GetComponent<Filterable>() != null && isFilter && (id ==
-							FilteredGasPumpConfig.ID || id == FilteredLiquidPumpConfig.ID))
+					if (id == FilteredGasPumpConfig.ID || id == FilteredLiquidPumpConfig.ID)
 						__result = true;
 				}
 			}

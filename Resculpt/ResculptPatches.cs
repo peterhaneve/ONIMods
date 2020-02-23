@@ -66,14 +66,11 @@ namespace PeterHan.Resculpt {
 			/// Applied after OnSpawn runs.
 			/// </summary>
 			internal static void Postfix(Artable __instance) {
-				var go = __instance.gameObject;
-				if (go != null) {
-					var rs = go.AddOrGet<Resculptable>();
-					// Is it a painting?
-					if (__instance is Painting) {
-						rs.ButtonText = ResculptStrings.REPAINT_BUTTON;
-						rs.ButtonIcon = ResculptStrings.REPAINT_SPRITE;
-					}
+				var rs = __instance.gameObject.AddOrGet<Resculptable>();
+				// Is it a painting?
+				if (__instance is Painting) {
+					rs.ButtonText = ResculptStrings.REPAINT_BUTTON;
+					rs.ButtonIcon = ResculptStrings.REPAINT_SPRITE;
 				}
 			}
 		}

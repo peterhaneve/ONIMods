@@ -29,6 +29,10 @@ namespace PeterHan.DebugNotIncluded {
 	[RestartRequired]
 	public sealed class DebugNotIncludedOptions : POptions.SingletonOptions<
 			DebugNotIncludedOptions> {
+		[Option("Extended Features", "Enables extra features of this mod.")]
+		[JsonProperty]
+		public bool PowerUserMode { get; set; }
+
 		[Option("Log Assert Failures", "Logs a stack trace of every failing assert to the log.")]
 		[JsonProperty]
 		public bool LogAsserts { get; set; }
@@ -53,6 +57,7 @@ namespace PeterHan.DebugNotIncluded {
 			DetailedBacktrace = true;
 			LogAsserts = true;
 			LogSounds = false;
+			PowerUserMode = false;
 			ShowLogSenders = false;
 			SkipFirstModCheck = false;
 		}

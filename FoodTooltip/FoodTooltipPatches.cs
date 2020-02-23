@@ -109,9 +109,7 @@ namespace PeterHan.FoodTooltip {
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
 			internal static void Postfix(SimpleInfoScreen __instance) {
-				var obj = __instance.gameObject;
-				if (obj != null)
-					obj.AddOrGet<InfoScreenRefresher>();
+				__instance.gameObject.AddOrGet<InfoScreenRefresher>();
 			}
 		}
 

@@ -38,7 +38,7 @@ namespace PeterHan.QueueForSinks {
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
 			internal static void Postfix(HandSanitizer.Work __instance) {
-				__instance.gameObject?.AddComponent<SinkCheckpoint>();
+				__instance.gameObject.AddOrGet<SinkCheckpoint>();
 			}
 		}
 
@@ -51,7 +51,7 @@ namespace PeterHan.QueueForSinks {
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
 			internal static void Postfix(OreScrubber.Work __instance) {
-				__instance.gameObject?.AddComponent<ScrubberCheckpoint>();
+				__instance.gameObject.AddOrGet<ScrubberCheckpoint>();
 			}
 		}
 	}

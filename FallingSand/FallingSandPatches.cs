@@ -79,6 +79,19 @@ namespace PeterHan.FallingSand {
 		}
 
 		/// <summary>
+		/// Applied to UnstableGroundManager to actually place the digs, now that the blocks
+		/// are solidified.
+		/// </summary>
+		[HarmonyPatch(typeof(UnstableGroundManager), "RemoveFromPending")]
+		public static class UnstableGroundManager_RemoveFromPending_Patch {
+			internal static void Postfix(int cell, List<int> ___pendingCells) {
+				FallingSandManager.Instance.CheckDigQueue(cell);
+				if (___pendingCells.Count < 1)
+					FallingSandManager.Instance.ClearDig();
+			}
+		}
+
+		/// <summary>
 		/// Applied to UnstableGroundManager to flag spawned falling objects with the
 		/// appropriate component.
 		/// </summary>
@@ -102,19 +115,6 @@ namespace PeterHan.FallingSand {
 					if (digPri != null)
 						component.Priority = digPri.GetMasterPriority();
 				}
-			}
-		}
-
-		/// <summary>
-		/// Applied to UnstableGroundManager to actually place the digs, now that the blocks
-		/// are solidified.
-		/// </summary>
-		[HarmonyPatch(typeof(UnstableGroundManager), "RemoveFromPending")]
-		public static class UnstableGroundManager_RemoveFromPending_Patch {
-			internal static void Postfix(int cell, List<int> ___pendingCells) {
-				FallingSandManager.Instance.CheckDigQueue(cell);
-				if (___pendingCells.Count < 1)
-					FallingSandManager.Instance.ClearDig();
 			}
 		}
 
