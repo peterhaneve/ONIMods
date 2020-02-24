@@ -32,6 +32,15 @@ namespace PeterHan.PLib.UI {
 		public Color BackColor { get; set; }
 
 		/// <summary>
+		/// The background image of this panel. Tinted by the background color, acts as all
+		/// white if left null.
+		/// 
+		/// Note that the default background color is transparent, so unless it is set to
+		/// some other color this image will be invisible!
+		/// </summary>
+		public Sprite BackImage { get; set; }
+
+		/// <summary>
 		/// The number of columns currently defined.
 		/// </summary>
 		public int Columns => columns.Count;
@@ -80,6 +89,7 @@ namespace PeterHan.PLib.UI {
 			FlexSize = Vector2.zero;
 			Name = name ?? "GridPanel";
 			BackColor = PUITuning.Colors.Transparent;
+			BackImage = null;
 			Margin = null;
 		}
 
@@ -128,8 +138,12 @@ namespace PeterHan.PLib.UI {
 			if (Rows < 1)
 				throw new InvalidOperationException("At least one row must be defined");
 			var panel = PUIElements.CreateUI(null, Name);
-			if (BackColor.a > 0.0f)
-				panel.AddComponent<Image>().color = BackColor;
+			if (BackColor.a > 0.0f || BackImage != null) {
+				var img = panel.AddComponent<Image>();
+				img.color = BackColor;
+				if (BackImage != null)
+					img.sprite = BackImage;
+			}
 			// Add layout component
 			var layout = panel.AddComponent<PGridLayoutGroup>();
 			foreach (var column in columns)

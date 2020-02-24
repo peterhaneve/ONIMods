@@ -38,6 +38,15 @@ namespace PeterHan.PLib.UI {
 		public Color BackColor { get; set; }
 
 		/// <summary>
+		/// The background image of this panel. Tinted by the background color, acts as all
+		/// white if left null.
+		/// 
+		/// Note that the default background color is transparent, so unless it is set to
+		/// some other color this image will be invisible!
+		/// </summary>
+		public Sprite BackImage { get; set; }
+
+		/// <summary>
 		/// The direction in which components will be laid out.
 		/// </summary>
 		public PanelDirection Direction { get; set; }
@@ -75,11 +84,12 @@ namespace PeterHan.PLib.UI {
 		public PPanel(string name) {
 			Alignment = TextAnchor.MiddleCenter;
 			children = new List<IUIComponent>();
-			FlexSize = Vector2.zero;
-			Name = name ?? "Panel";
 			BackColor = PUITuning.Colors.Transparent;
+			BackImage = null;
 			Direction = PanelDirection.Vertical;
+			FlexSize = Vector2.zero;
 			Margin = null;
+			Name = name ?? "Panel";
 			Spacing = 0;
 		}
 
@@ -107,8 +117,12 @@ namespace PeterHan.PLib.UI {
 		/// <returns>The realized panel.</returns>
 		private GameObject Build(Vector2 size, bool dynamic) {
 			var panel = PUIElements.CreateUI(null, Name);
-			if (BackColor.a > 0.0f)
-				panel.AddComponent<Image>().color = BackColor;
+			if (BackColor.a > 0.0f || BackImage != null) {
+				var img = panel.AddComponent<Image>();
+				img.color = BackColor;
+				if (BackImage != null)
+					img.sprite = BackImage;
+			}
 			// Add children
 			foreach (var child in children) {
 				var obj = child.Build();

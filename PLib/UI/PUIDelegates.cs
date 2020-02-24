@@ -44,6 +44,15 @@ namespace PeterHan.PLib.UI {
 		public delegate void OnChecked(GameObject source, int state);
 
 		/// <summary>
+		/// The delegate type invoked when an option is selected from a combo box.
+		/// </summary>
+		/// <param name="source">The source dropdown.</param>
+		/// <param name="choice">The option chosen.</param>
+		/// <typeparam name="T">The type of the objects in the drop down.</typeparam>
+		public delegate void OnDropdownChanged<T>(GameObject source, T choice) where T :
+			class, IListableOption;
+
+		/// <summary>
 		/// The delegate type invoked when components are converted into Unity game objects.
 		/// </summary>
 		/// <param name="realized">The realized object.</param>

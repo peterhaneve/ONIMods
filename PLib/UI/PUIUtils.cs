@@ -42,7 +42,7 @@ namespace PeterHan.PLib.UI {
 			var fields = component.GetType().GetFields(BindingFlags.DeclaredOnly |
 				BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 			// Class specific
-			if (component is TMPro.TMP_Text lt)
+			if (component is TMP_Text lt)
 				result.AppendFormat(", Text={0}, Color={1}, Font={2}", lt.text, lt.color,
 					lt.font);
 			else if (component is Image im) {
@@ -174,10 +174,10 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <param name="obj">The object to calculate.</param>
 		/// <param name="direction">The direction to calculate.</param>
-		/// <param name="elements">The layout eligible components of this game object.</param>
+		/// <param name="components">The components of this game object.</param>
 		/// <returns>The object's minimum and preferred size.</returns>
 		internal static LayoutSizes CalcSizes(GameObject obj, PanelDirection direction,
-				IEnumerable<ILayoutElement> elements) {
+				IEnumerable<Component> components) {
 			float min = 0.0f, preferred = 0.0f, flexible = 0.0f, scaleFactor;
 			int minPri = int.MinValue, prefPri = int.MinValue, flexPri = int.MinValue;
 			var scale = obj.transform.localScale;
@@ -186,28 +186,34 @@ namespace PeterHan.PLib.UI {
 				scaleFactor = Math.Abs(scale.x);
 			else
 				scaleFactor = Math.Abs(scale.y);
-			foreach (var component in elements)
-				if (((component as Behaviour)?.isActiveAndEnabled ?? false) && !IgnoreLayout(
-						component)) {
+			bool ignore = false;
+			foreach (var component in components) {
+				if ((component as ILayoutIgnorer)?.ignoreLayout == true) {
+					ignore = true;
+					break;
+				}
+				if ((component as Behaviour)?.isActiveAndEnabled != false && component is
+						ILayoutElement le) {
 					// Calculate must come first
 					if (direction == PanelDirection.Horizontal)
-						component.CalculateLayoutInputHorizontal();
+						le.CalculateLayoutInputHorizontal();
 					else // if (direction == PanelDirection.Vertical)
-						component.CalculateLayoutInputVertical();
-					int lp = component.layoutPriority;
+						le.CalculateLayoutInputVertical();
+					int lp = le.layoutPriority;
 					// Larger values win
 					if (direction == PanelDirection.Horizontal) {
-						PriValue(ref min, component.minWidth, lp, ref minPri);
-						PriValue(ref preferred, component.preferredWidth, lp, ref prefPri);
-						PriValue(ref flexible, component.flexibleWidth, lp, ref flexPri);
+						PriValue(ref min, le.minWidth, lp, ref minPri);
+						PriValue(ref preferred, le.preferredWidth, lp, ref prefPri);
+						PriValue(ref flexible, le.flexibleWidth, lp, ref flexPri);
 					} else {
-						PriValue(ref min, component.minHeight, lp, ref minPri);
-						PriValue(ref preferred, component.preferredHeight, lp, ref prefPri);
-						PriValue(ref flexible, component.flexibleHeight, lp, ref flexPri);
+						PriValue(ref min, le.minHeight, lp, ref minPri);
+						PriValue(ref preferred, le.preferredHeight, lp, ref prefPri);
+						PriValue(ref flexible, le.flexibleHeight, lp, ref flexPri);
 					}
 				}
+			}
 			return new LayoutSizes(obj, min * scaleFactor, Math.Max(min, preferred) *
-				scaleFactor, flexible);
+				scaleFactor, flexible) { ignore = ignore };
 		}
 
 		/// <summary>
@@ -319,10 +325,12 @@ namespace PeterHan.PLib.UI {
 			foreach (var component in root.GetComponents<Component>()) {
 				if (component is RectTransform rt) {
 					// UI rectangle
-					Vector2 size = rt.sizeDelta;
+					Vector2 size = rt.rect.size, aMin = rt.anchorMin, aMax = rt.anchorMax;
 					result.Append(sol).AppendFormat(" Rect[Size=({0:F2},{1:F2}) Min=" +
 						"({2:F2},{3:F2}) ", size.x, size.y, LayoutUtility.GetMinWidth(rt),
 						LayoutUtility.GetMinHeight(rt));
+					result.AppendFormat("AnchorMin=({0:F2},{1:F2}) AnchorMax=({2:F2}," +
+						"{3:F2}) ", aMin.x, aMin.y, aMax.x, aMax.y);
 					result.AppendFormat("Preferred=({0:F2},{1:F2}) Flexible=({2:F2}," +
 						"{3:F2})]", LayoutUtility.GetPreferredWidth(rt), LayoutUtility.
 						GetPreferredHeight(rt), LayoutUtility.GetFlexibleWidth(rt),
@@ -420,15 +428,6 @@ namespace PeterHan.PLib.UI {
 					parent = newParent;
 			}
 			return parent;
-		}
-
-		/// <summary>
-		/// Reports whether the component should be ignored for layout.
-		/// </summary>
-		/// <param name="component">The component to check.</param>
-		/// <returns>true if it specifies to ignore layout, or false otherwise.</returns>
-		internal static bool IgnoreLayout(object component) {
-			return (component as ILayoutIgnorer)?.ignoreLayout ?? false;
 		}
 
 		/// <summary>
@@ -647,7 +646,10 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
-		/// Immediately resizes a UI element.
+		/// Immediately resizes a UI element. Uses the element's current anchors.
+		/// 
+		/// If addLayout is true, a layout element is also added so that future auto layout
+		/// calls will try to maintain that size.
 		/// </summary>
 		/// <param name="uiElement">The UI element to modify.</param>
 		/// <param name="size">The new element size.</param>

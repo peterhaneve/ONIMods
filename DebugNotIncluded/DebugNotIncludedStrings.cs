@@ -56,5 +56,8 @@ namespace PeterHan.DebugNotIncluded {
 		public static LocString LOADERR_UNKNOWN = "It is not clear which mod caused the error.";
 		public static LocString LOADERR_DISABLEMOD = "DISABLE AND RESTART";
 		public static LocString LOADERR_OPENLOG = "OPEN OUTPUT LOG";
+
+		// Key binding to snapshot item under cursor
+		public static LocString KEY_SNAPSHOT = "Log UI element under cursor";
 	}
 }

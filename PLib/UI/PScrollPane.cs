@@ -91,7 +91,19 @@ namespace PeterHan.PLib.UI {
 		public GameObject Build() {
 			if (Child == null)
 				throw new InvalidOperationException("No child component");
-			var pane = PUIElements.CreateUI(null, Name);
+			var pane = BuildScrollPane(null, Child.Build());
+			OnRealize?.Invoke(pane);
+			return pane;
+		}
+
+		/// <summary>
+		/// Builds the actual scroll pane object.
+		/// </summary>
+		/// <param name="parent">The parent of this scroll pane.</param>
+		/// <param name="child">The child element of this scroll pane.</param>
+		/// <returns>The realized scroll pane.</returns>
+		internal GameObject BuildScrollPane(GameObject parent, GameObject child) {
+			var pane = PUIElements.CreateUI(parent, Name);
 			if (BackColor.a > 0.0f)
 				pane.AddComponent<Image>().color = BackColor;
 			pane.SetActive(false);
@@ -105,8 +117,7 @@ namespace PeterHan.PLib.UI {
 			viewport.AddComponent<RectMask2D>().enabled = true;
 			viewport.AddComponent<ViewportLayoutGroup>();
 			scroll.viewport = viewport.rectTransform();
-			// Make the child; give it a separate Canvas to reduce layout rebuilds
-			var child = Child.Build();
+			// Give the Child a separate Canvas to reduce layout rebuilds
 			child.AddOrGet<Canvas>().pixelPerfect = false;
 			child.AddOrGet<GraphicRaycaster>();
 			PUIElements.SetAnchors(child.SetParent(viewport), PUIAnchoring.Beginning,
@@ -126,11 +137,10 @@ namespace PeterHan.PLib.UI {
 					AutoHideAndExpandViewport;
 			}
 			pane.SetActive(true);
-			// Custom layout to pass child sizes to the scrol
+			// Custom layout to pass child sizes to the scroll pane
 			var layout = pane.AddComponent<PScrollPaneLayout>();
 			layout.flexibleHeight = FlexSize.y;
 			layout.flexibleWidth = FlexSize.x;
-			OnRealize?.Invoke(pane);
 			return pane;
 		}
 
@@ -260,7 +270,7 @@ namespace PeterHan.PLib.UI {
 			/// <summary>
 			/// Caches elements when calculating layout to improve performance.
 			/// </summary>
-			private ILayoutElement[] calcElements;
+			private Component[] calcElements;
 
 			/// <summary>
 			/// The calculated horizontal size of the child element.
@@ -294,10 +304,12 @@ namespace PeterHan.PLib.UI {
 
 			public void CalculateLayoutInputHorizontal() {
 				if (child != null) {
-					calcElements = child.GetComponents<ILayoutElement>();
+					calcElements = child.GetComponents<Component>();
 					// Lay out children
 					childHorizontal = PUIUtils.CalcSizes(child, PanelDirection.Horizontal,
 						calcElements);
+					if (childHorizontal.ignore)
+						throw new InvalidOperationException("ScrollPane child ignores layout!");
 					preferredWidth = childHorizontal.preferred;
 				}
 			}
@@ -354,8 +366,7 @@ namespace PeterHan.PLib.UI {
 						Horizontal, prefWidth);
 					// ScrollRect does not rebuild the child's layout
 					foreach (var component in setElements)
-						if (!PUIUtils.IgnoreLayout(component))
-							component.SetLayoutHorizontal();
+						component.SetLayoutHorizontal();
 				}
 			}
 
@@ -371,8 +382,7 @@ namespace PeterHan.PLib.UI {
 						Vertical, prefHeight);
 					// ScrollRect does not rebuild the child's layout
 					foreach (var component in setElements)
-						if (!PUIUtils.IgnoreLayout(component))
-							component.SetLayoutVertical();
+						component.SetLayoutVertical();
 					setElements = null;
 				}
 			}

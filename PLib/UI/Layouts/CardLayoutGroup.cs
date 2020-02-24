@@ -39,7 +39,7 @@ namespace PeterHan.PLib.UI {
 			var transform = obj.AddOrGet<RectTransform>();
 			int n = transform.childCount;
 			var result = new LayoutResults(direction, n);
-			var components = ListPool<ILayoutElement, BoxLayoutGroup>.Allocate();
+			var components = ListPool<Component, BoxLayoutGroup>.Allocate();
 			for (int i = 0; i < n; i++) {
 				var child = transform.GetChild(i)?.gameObject;
 				if (child != null) {
@@ -49,8 +49,10 @@ namespace PeterHan.PLib.UI {
 					child.GetComponents(components);
 					child.SetActive(true);
 					var hc = PUIUtils.CalcSizes(child, direction, components);
-					result.Expand(hc);
-					result.children.Add(hc);
+					if (!hc.ignore) {
+						result.Expand(hc);
+						result.children.Add(hc);
+					}
 					child.SetActive(active);
 				}
 			}
@@ -90,12 +92,10 @@ namespace PeterHan.PLib.UI {
 					components.Clear();
 					obj.GetComponents(components);
 					foreach (var component in components)
-						if (!PUIUtils.IgnoreLayout(component)) {
-							if (direction == PanelDirection.Horizontal)
-								component.SetLayoutHorizontal();
-							else // if (direction == PanelDirection.Vertical)
-								component.SetLayoutVertical();
-						}
+						if (direction == PanelDirection.Horizontal)
+							component.SetLayoutHorizontal();
+						else // if (direction == PanelDirection.Vertical)
+							component.SetLayoutVertical();
 				}
 			}
 			components.Recycle();

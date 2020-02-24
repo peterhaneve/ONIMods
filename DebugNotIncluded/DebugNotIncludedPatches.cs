@@ -27,6 +27,7 @@ using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace PeterHan.DebugNotIncluded {
 	/// <summary>
@@ -53,6 +54,11 @@ namespace PeterHan.DebugNotIncluded {
 		/// The KMod which describes this mod.
 		/// </summary>
 		internal static Mod ThisMod { get; private set; }
+
+		/// <summary>
+		/// The Action used when "UI Debug" is pressed.
+		/// </summary>
+		internal static PAction UIDebugAction { get; private set; }
 
 		/// <summary>
 		/// Applied to ModsScreen to add our buttons and otherwise tweak the dialog.
@@ -114,12 +120,15 @@ namespace PeterHan.DebugNotIncluded {
 					ThisMod = mod;
 					break;
 				}
+			// Default UI debug key is ALT+U
+			UIDebugAction = PAction.Register("DebugNotIncluded.UIDebugAction",
+				DebugNotIncludedStrings.KEY_SNAPSHOT, new PKeyBinding(KKeyCode.U,
+				Modifier.Alt));
 			if (ThisMod == null)
 				DebugLogger.LogWarning("Unable to determine KMod instance!");
 			// Must postload the mods dialog to come out after aki's mods, ony's mods, PLib
 			// options, and so forth
-			if (DebugNotIncludedOptions.Instance?.PowerUserMode ?? false)
-				PUtil.RegisterPostload(PostloadHandler);
+			PUtil.RegisterPostload(PostloadHandler);
 		}
 
 		/// <summary>
@@ -127,8 +136,11 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		/// <param name="instance">The Harmony instance to execute patches.</param>
 		private static void PostloadHandler(HarmonyInstance instance) {
-			instance.Patch(typeof(ModsScreen), "BuildDisplay", postfix:
-				new HarmonyMethod(typeof(DebugNotIncludedPatches), nameof(BuildDisplay)));
+			if (DebugNotIncludedOptions.Instance?.PowerUserMode ?? false)
+				instance.Patch(typeof(ModsScreen), "BuildDisplay", postfix:
+					new HarmonyMethod(typeof(DebugNotIncludedPatches), nameof(BuildDisplay)));
+			KInputHandler.Add(Global.Instance.GetInputManager().GetDefaultController(),
+				new UISnapshotHandler(), 1024);
 		}
 
 		/// <summary>

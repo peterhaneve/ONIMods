@@ -139,7 +139,7 @@ namespace PeterHan.PLib.UI {
 
 		public void CalculateLayoutInputHorizontal() {
 			results = new LayoutResults(rows, columns, children);
-			var elements = ListPool<ILayoutElement, PGridLayoutGroup>.Allocate();
+			var elements = ListPool<Component, PGridLayoutGroup>.Allocate();
 			foreach (var component in results.Components) {
 				// Cache size of children
 				var obj = component.HorizontalSize.source;
@@ -147,10 +147,12 @@ namespace PeterHan.PLib.UI {
 				elements.Clear();
 				obj.GetComponents(elements);
 				var sz = PUIUtils.CalcSizes(obj, PanelDirection.Horizontal, elements);
-				// Add borders
-				int border = (margin == null) ? 0 : margin.left + margin.right;
-				sz.min += border;
-				sz.preferred += border;
+				if (!sz.ignore) {
+					// Add borders
+					int border = (margin == null) ? 0 : margin.left + margin.right;
+					sz.min += border;
+					sz.preferred += border;
+				}
 				component.HorizontalSize = sz;
 			}
 			elements.Recycle();
@@ -167,7 +169,7 @@ namespace PeterHan.PLib.UI {
 				throw new InvalidOperationException("CalculateLayoutInputVertical before CalculateLayoutInputHorizontal");
 #endif
 			if (results != null) {
-				var elements = ListPool<ILayoutElement, PGridLayoutGroup>.Allocate();
+				var elements = ListPool<Component, PGridLayoutGroup>.Allocate();
 				foreach (var component in results.Components) {
 					// Cache size of children
 					var obj = component.VerticalSize.source;
@@ -175,10 +177,12 @@ namespace PeterHan.PLib.UI {
 					elements.Clear();
 					obj.GetComponents(elements);
 					var sz = PUIUtils.CalcSizes(obj, PanelDirection.Vertical, elements);
-					// Add borders
-					int border = (margin == null) ? 0 : margin.top + margin.bottom;
-					sz.min += border;
-					sz.preferred += border;
+					if (!sz.ignore) {
+						// Add borders
+						int border = (margin == null) ? 0 : margin.top + margin.bottom;
+						sz.min += border;
+						sz.preferred += border;
+					}
 					component.VerticalSize = sz;
 				}
 				elements.Recycle();
@@ -246,19 +250,19 @@ namespace PeterHan.PLib.UI {
 				foreach (var component in results.Components) {
 					var sizes = component.HorizontalSize;
 					var item = sizes.source;
-					var margin = component.Margin;
-					// Clamp first and last column occupied by this object
-					int first = component.Column, last = first + component.ColumnSpan;
-					first = first.InRange(0, columns - 1);
-					last = last.InRange(1, columns);
-					// Align correctly in the cell box
-					float x = colX[first], width = colX[last] - x;
-					if (margin != null) {
-						x += margin.left;
-						width -= margin.left + margin.right;
-					}
-					float setWidth = PUIUtils.GetProperSize(sizes, width);
-					if (item != null) {
+					if (!sizes.ignore && item != null) {
+						var margin = component.Margin;
+						// Clamp first and last column occupied by this object
+						int first = component.Column, last = first + component.ColumnSpan;
+						first = first.InRange(0, columns - 1);
+						last = last.InRange(1, columns);
+						// Align correctly in the cell box
+						float x = colX[first], width = colX[last] - x;
+						if (margin != null) {
+							x += margin.left;
+							width -= margin.left + margin.right;
+						}
+						float setWidth = PUIUtils.GetProperSize(sizes, width);
 						item.rectTransform().SetInsetAndSizeFromParentEdge(RectTransform.Edge.
 							Left, x + PUIUtils.GetOffset(component.Alignment, PanelDirection.
 							Horizontal, width - setWidth), setWidth);
@@ -298,19 +302,19 @@ namespace PeterHan.PLib.UI {
 				foreach (var component in results.Components) {
 					var sizes = component.VerticalSize;
 					var item = sizes.source;
-					var margin = component.Margin;
-					// Clamp first and last row occupied by this object
-					int first = component.Row, last = first + component.RowSpan;
-					first = first.InRange(0, rows - 1);
-					last = last.InRange(1, rows);
-					// Align correctly in the cell box
-					float y = rowY[first], height = rowY[last] - y;
-					if (margin != null) {
-						y += margin.top;
-						height -= margin.top + margin.bottom;
-					}
-					float setHeight = PUIUtils.GetProperSize(sizes, height);
-					if (item != null) {
+					if (!sizes.ignore && item != null) {
+						var margin = component.Margin;
+						// Clamp first and last row occupied by this object
+						int first = component.Row, last = first + component.RowSpan;
+						first = first.InRange(0, rows - 1);
+						last = last.InRange(1, rows);
+						// Align correctly in the cell box
+						float y = rowY[first], height = rowY[last] - y;
+						if (margin != null) {
+							y += margin.top;
+							height -= margin.top + margin.bottom;
+						}
+						float setHeight = PUIUtils.GetProperSize(sizes, height);
 						item.rectTransform().SetInsetAndSizeFromParentEdge(RectTransform.Edge.
 							Top, y + PUIUtils.GetOffset(component.Alignment, PanelDirection.
 							Vertical, height - setHeight), setHeight);

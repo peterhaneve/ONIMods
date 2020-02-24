@@ -172,7 +172,7 @@ namespace PeterHan.PLib.UI {
 			dialog.SetParent(Parent);
 			// Background
 			dialog.AddComponent<Image>().color = PUITuning.Colors.DialogBackground;
-			dialog.AddComponent<Canvas>().pixelPerfect = false;
+			dialog.AddComponent<Canvas>();
 			dialog.AddComponent<GraphicRaycaster>();
 			// Title bar
 			var layout = LayoutTitle(dialog, dComponent.DoButton);

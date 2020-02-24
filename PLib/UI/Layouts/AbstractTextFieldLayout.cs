@@ -89,8 +89,7 @@ namespace PeterHan.PLib.UI.Layouts {
 				calcElements = textArea.GetComponents<ILayoutElement>();
 				// Lay out children
 				foreach (var component in calcElements)
-					if (!PUIUtils.IgnoreLayout(component))
-						component.CalculateLayoutInputHorizontal();
+					component.CalculateLayoutInputHorizontal();
 			}
 			preferredWidth = minWidth;
 		}
@@ -123,8 +122,7 @@ namespace PeterHan.PLib.UI.Layouts {
 				setElements = textArea.GetComponents<ILayoutController>();
 				// Lay out descendents
 				foreach (var component in setElements)
-					if (!PUIUtils.IgnoreLayout(component))
-						component.SetLayoutHorizontal();
+					component.SetLayoutHorizontal();
 			}
 		}
 
@@ -132,8 +130,7 @@ namespace PeterHan.PLib.UI.Layouts {
 			if (textArea != null && setElements != null) {
 				// Lay out descendents
 				foreach (var component in setElements)
-					if (!PUIUtils.IgnoreLayout(component))
-						component.SetLayoutVertical();
+					component.SetLayoutVertical();
 				setElements = null;
 			}
 		}

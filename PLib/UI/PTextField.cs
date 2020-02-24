@@ -250,8 +250,7 @@ namespace PeterHan.PLib.UI {
 				if (textArea != null && calcElements != null) {
 					// Lay out children
 					foreach (var component in calcElements)
-						if (!PUIUtils.IgnoreLayout(component))
-							component.CalculateLayoutInputVertical();
+						component.CalculateLayoutInputVertical();
 					calcElements = null;
 				}
 				if (child != null) {

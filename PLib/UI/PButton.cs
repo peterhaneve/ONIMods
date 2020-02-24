@@ -30,6 +30,27 @@ namespace PeterHan.PLib.UI {
 		internal static readonly RectOffset BUTTON_MARGIN = new RectOffset(7, 7, 5, 5);
 
 		/// <summary>
+		/// Sets up the button to have the right sound and .
+		/// </summary>
+		/// <param name="button">The button to set up.</param>
+		/// <param name="bgImage">The background image.</param>
+		internal static void SetupButton(KButton button, KImage bgImage) {
+			button.additionalKImages = new KImage[0];
+			button.soundPlayer = PUITuning.ButtonSounds;
+			button.bgImage = bgImage;
+		}
+
+		/// <summary>
+		/// Sets up the background image to have the right sprite and slice type.
+		/// </summary>
+		/// <param name="bgImage">The image that forms the button background.</param>
+		internal static void SetupButtonBackground(KImage bgImage) {
+			bgImage.ApplyColorStyleSetting();
+			bgImage.sprite = PUITuning.Images.ButtonBorder;
+			bgImage.type = Image.Type.Sliced;
+		}
+
+		/// <summary>
 		/// Enables or disables a realized button.
 		/// </summary>
 		/// <param name="obj">The realized button object.</param>
@@ -67,12 +88,9 @@ namespace PeterHan.PLib.UI {
 		public override GameObject Build() {
 			var button = PUIElements.CreateUI(null, Name);
 			// Background
-			var kImage = button.AddComponent<KImage>();
-			var trueColor = Color ?? PUITuning.Colors.ButtonPinkStyle;
-			kImage.colorStyleSetting = trueColor;
-			kImage.color = trueColor.inactiveColor;
-			kImage.sprite = PUITuning.Images.ButtonBorder;
-			kImage.type = Image.Type.Sliced;
+			var bgImage = button.AddComponent<KImage>();
+			bgImage.colorStyleSetting = Color ?? PUITuning.Colors.ButtonPinkStyle;
+			SetupButtonBackground(bgImage);
 			// Set on click event
 			var kButton = button.AddComponent<KButton>();
 			var evt = OnClick;
@@ -80,14 +98,10 @@ namespace PeterHan.PLib.UI {
 				kButton.onClick += () => {
 					evt?.Invoke(button);
 				};
-			kButton.additionalKImages = new KImage[0];
-			kButton.soundPlayer = PUITuning.ButtonSounds;
-			kButton.bgImage = kImage;
+			SetupButton(kButton, bgImage);
 			// Add foreground image since the background already has one
 			if (Sprite != null)
 				kButton.fgImage = ImageChildHelper(button, this);
-			// Set colors
-			kButton.colorStyleSetting = trueColor;
 			// Add text
 			if (!string.IsNullOrEmpty(Text))
 				TextChildHelper(button, TextStyle ?? PUITuning.Fonts.UILightStyle, Text);

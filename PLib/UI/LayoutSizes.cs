@@ -30,6 +30,11 @@ namespace PeterHan.PLib.UI {
 		public float flexible;
 
 		/// <summary>
+		/// If true, this component should be ignored completely.
+		/// </summary>
+		public bool ignore;
+
+		/// <summary>
 		/// The minimum dimension value.
 		/// </summary>
 		public float min;
@@ -48,6 +53,7 @@ namespace PeterHan.PLib.UI {
 
 		internal LayoutSizes(GameObject source, float min, float preferred,
 				float flexible) {
+			ignore = false;
 			this.source = source;
 			this.flexible = flexible;
 			this.min = min;

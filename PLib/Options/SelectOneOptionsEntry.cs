@@ -106,6 +106,7 @@ namespace PeterHan.PLib.Options {
 		}
 
 		protected override IUIComponent GetUIComponent() {
+#if false
 			// Find largest option to size the label appropriately
 			string longestText = " ";
 			foreach (var option in options) {
@@ -127,6 +128,25 @@ namespace PeterHan.PLib.Options {
 			AddChild(new PButton("Next") {
 				SpriteSize = ARROW_SIZE, OnClick = OnNext, ToolTip = PUIStrings.TOOLTIP_NEXT
 			}.SetKleiBlueStyle().SetImageRightArrow());
+#endif
+			// Find largest option to size the label appropriately
+			Option longestOption = null;
+			string longestText = " ";
+			foreach (var option in options) {
+				string optionText = option.Title;
+				if (optionText.Length > longestText.Length) {
+					longestText = optionText;
+					longestOption = option;
+				}
+			}
+			var dd = new PComboBox<Option>("Select") {
+				BackColor = PUITuning.Colors.ButtonPinkStyle,
+				DynamicSize = false, InitialItem = longestOption,
+				Content = options, EntryColor = PUITuning.Colors.ButtonBlueStyle,
+				TextStyle = PUITuning.Fonts.TextLightStyle
+			};
+			dd.OnRealize += OnRealizeItemLabel;
+			return dd;
 		}
 
 		/// <summary>
@@ -166,15 +186,16 @@ namespace PeterHan.PLib.Options {
 		private void Update() {
 			if (label != null) {
 				var option = options[index];
-				PUIElements.SetText(label, option.Title);
-				PUIElements.SetToolTip(label, option.ToolTip);
+				/*PUIElements.SetText(label, option.Title);
+				PUIElements.SetToolTip(label, option.ToolTip);*/
+				PComboBox<Option>.SetSelectedItem(label, option, false);
 			}
 		}
 
 		/// <summary>
 		/// Represents a selectable option.
 		/// </summary>
-		private sealed class Option {
+		private sealed class Option : IListableOption {
 			/// <summary>
 			/// The option title.
 			/// </summary>
@@ -198,6 +219,10 @@ namespace PeterHan.PLib.Options {
 
 			public override string ToString() {
 				return "Option[Title={0},Value={1}]".F(Title, Value);
+			}
+
+			public string GetProperName() {
+				return Title;
 			}
 		}
 	}

@@ -30,17 +30,20 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// Safely adds a LocText to a game object without throwing an NRE on construction.
 		/// </summary>
-		/// <param name="obj">The game object to add the LocText.</param>
+		/// <param name="parent">The game object to add the LocText.</param>
 		/// <param name="setting">The text style.</param>
 		/// <returns>The added LocText object.</returns>
-		internal static LocText AddLocText(GameObject obj, TextStyleSetting setting = null) {
-			bool active = obj.activeSelf;
-			obj.SetActive(false);
-			var text = obj.AddComponent<LocText>();
+		internal static LocText AddLocText(GameObject parent, TextStyleSetting setting = null)
+		{
+			if (parent == null)
+				throw new ArgumentNullException("parent");
+			bool active = parent.activeSelf;
+			parent.SetActive(false);
+			var text = parent.AddComponent<LocText>();
 			// This is enough to let it activate
 			text.key = string.Empty;
 			text.textStyleSetting = setting ?? PUITuning.Fonts.UIDarkStyle;
-			obj.SetActive(active);
+			parent.SetActive(active);
 			return text;
 		}
 
