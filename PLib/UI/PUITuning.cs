@@ -38,6 +38,11 @@ namespace PeterHan.PLib.UI {
 			public static Sprite Arrow { get; }
 
 			/// <summary>
+			/// The image used to make a 1px solid border.
+			/// </summary>
+			public static Sprite BoxBorder { get; }
+
+			/// <summary>
 			/// The default image used for button appearance.
 			/// </summary>
 			public static Sprite ButtonBorder { get; }
@@ -107,6 +112,7 @@ namespace PeterHan.PLib.UI {
 				}
 
 				Arrow = GetSpriteByName("game_speed_play");
+				BoxBorder = GetSpriteByName("web_box");
 				ButtonBorder = GetSpriteByName("web_button");
 				CheckBorder = GetSpriteByName("overview_jobs_skill_box");
 				Checked = GetSpriteByName("overview_jobs_icon_checkmark");

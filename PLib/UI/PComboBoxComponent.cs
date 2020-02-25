@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace PeterHan.PLib.UI {
@@ -31,6 +32,11 @@ namespace PeterHan.PLib.UI {
 		/// The container where the combo box items will be placed.
 		/// </summary>
 		internal RectTransform ContentContainer { get; set; }
+
+		/// <summary>
+		/// The color for the checkbox if it is selected.
+		/// </summary>
+		internal Color CheckColor { get; set; }
 
 		/// <summary>
 		/// The prefab used to display each row.
@@ -73,6 +79,7 @@ namespace PeterHan.PLib.UI {
 		private bool open;
 
 		internal PComboBoxComponent() {
+			CheckColor = Color.white;
 			currentItems = new List<ComboBoxItem>(32);
 			handler = null;
 			MaxRowsShown = 8;
@@ -106,6 +113,7 @@ namespace PeterHan.PLib.UI {
 				float rowHeight = 0.0f;
 				int itemCount = currentItems.Count, rows = Math.Min(MaxRowsShown, itemCount);
 				var canvas = pdn.AddOrGet<Canvas>();
+				var sp = pdn.GetComponent<ScrollRect>();
 				pdn.SetActive(true);
 				// Calculate desired height of scroll pane
 				if (itemCount > 0) {
@@ -113,11 +121,14 @@ namespace PeterHan.PLib.UI {
 					LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
 					rowHeight = LayoutUtility.GetPreferredHeight(rt);
 				}
-				PUIUtils.SetUISize(pdn, new Vector2(0.0f, rows * rowHeight));
-				// Move to top of stack
+				// Update size and enable/disable scrolling if not needed
+				pdn.SetUISize(new Vector2(-1.0f, rows * rowHeight));
+				if (sp != null)
+					sp.vertical = itemCount >= MaxRowsShown;
+				// Move above normal UI elements but below the tooltips
 				if (canvas != null) {
 					canvas.overrideSorting = true;
-					canvas.sortingOrder = 32766;
+					canvas.sortingOrder = 2;
 				}
 			}
 			open = true;
@@ -134,14 +145,15 @@ namespace PeterHan.PLib.UI {
 				int n = content.childCount;
 				var prefab = EntryPrefab;
 				bool wasOpen = open;
-				// Destroy only destroys it at end of frame!
 				if (wasOpen)
 					Close();
+				// Destroy only destroys it at end of frame!
 				for (int i = 0; i < n; i++)
 					Destroy(content.GetChild(i));
 				currentItems.Clear();
-				//handler = pdn.AddOrGet<MouseEventHandler>();
+				handler = pdn.AddOrGet<MouseEventHandler>();
 				foreach (var item in items) {
+					string tooltip = "";
 					var rowInstance = Util.KInstantiate(prefab, content.gameObject);
 					// Update the text shown
 					rowInstance.GetComponentInChildren<TextMeshProUGUI>().SetText(item.
@@ -153,6 +165,14 @@ namespace PeterHan.PLib.UI {
 						SetSelectedItem(item, true);
 						Close();
 					};
+					// Assign the tooltip if possible
+					if (item is ITooltipListableOption extended)
+						tooltip = extended.GetToolTipText();
+					var tt = rowInstance.GetComponent<ToolTip>();
+					if (string.IsNullOrEmpty(tooltip))
+						tt.ClearMultiStringTooltip();
+					else
+						tt.SetSimpleTooltip(tooltip);
 					rowInstance.SetActive(true);
 					currentItems.Add(new ComboBoxItem(item, rowInstance));
 				}
@@ -174,7 +194,7 @@ namespace PeterHan.PLib.UI {
 				// No guarantee that the options are hashable
 				foreach (var item in currentItems)
 					// Show or hide the check mark next to the selected option
-					item.rowImage.color = (item.data == option) ? Color.white : PUITuning.
+					item.rowImage.color = (item.data == option) ? CheckColor : PUITuning.
 						Colors.Transparent;
 				if (fireListener)
 					OnSelectionChanged?.Invoke(this, option);
@@ -210,7 +230,8 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// Handles mouse events on the pulldown.
 		/// </summary>
-		private sealed class MouseEventHandler : MonoBehaviour {
+		private sealed class MouseEventHandler : MonoBehaviour, IPointerEnterHandler,
+				IPointerExitHandler {
 			/// <summary>
 			/// Whether the mouse is over this component.
 			/// </summary>
@@ -220,11 +241,11 @@ namespace PeterHan.PLib.UI {
 				IsOver = true;
 			}
 
-			public void OnMouseOver() {
+			public void OnPointerEnter(PointerEventData data) {
 				IsOver = true;
 			}
 
-			public void OnMouseExit() {
+			public void OnPointerExit(PointerEventData data) {
 				IsOver = false;
 			}
 		}

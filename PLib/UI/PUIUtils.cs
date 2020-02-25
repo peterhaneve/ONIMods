@@ -329,12 +329,12 @@ namespace PeterHan.PLib.UI {
 					result.Append(sol).AppendFormat(" Rect[Size=({0:F2},{1:F2}) Min=" +
 						"({2:F2},{3:F2}) ", size.x, size.y, LayoutUtility.GetMinWidth(rt),
 						LayoutUtility.GetMinHeight(rt));
-					result.AppendFormat("AnchorMin=({0:F2},{1:F2}) AnchorMax=({2:F2}," +
-						"{3:F2}) ", aMin.x, aMin.y, aMax.x, aMax.y);
 					result.AppendFormat("Preferred=({0:F2},{1:F2}) Flexible=({2:F2}," +
-						"{3:F2})]", LayoutUtility.GetPreferredWidth(rt), LayoutUtility.
+						"{3:F2}) ", LayoutUtility.GetPreferredWidth(rt), LayoutUtility.
 						GetPreferredHeight(rt), LayoutUtility.GetFlexibleWidth(rt),
-						LayoutUtility.GetFlexibleHeight(rt)).AppendLine();
+						LayoutUtility.GetFlexibleHeight(rt));
+					result.AppendFormat("AnchorMin=({0:F2},{1:F2}) AnchorMax=({2:F2}," +
+						"{3:F2})]", aMin.x, aMin.y, aMax.x, aMax.y).AppendLine();
 				} else if (component != null && !(component is Transform)) {
 					// Exclude destroyed components and Transform objects
 					result.Append(sol).Append(" Component[").Append(component.GetType().
@@ -646,7 +646,9 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
-		/// Immediately resizes a UI element. Uses the element's current anchors.
+		/// Immediately resizes a UI element. Uses the element's current anchors. If a
+		/// dimension of the size is negative, the component will not be resized in that
+		/// dimension.
 		/// 
 		/// If addLayout is true, a layout element is also added so that future auto layout
 		/// calls will try to maintain that size.

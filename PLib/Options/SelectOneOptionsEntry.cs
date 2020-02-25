@@ -53,22 +53,16 @@ namespace PeterHan.PLib.Options {
 			return new Option(title, tooltip, enumValue);
 		}
 
-		/// <summary>
-		/// The size of the arrows.
-		/// </summary>
-		private static readonly Vector2 ARROW_SIZE = new Vector2(16.0f, 16.0f);
-
 		protected override object Value {
 			get {
-				return options[index].Value;
+				return chosen?.Value;
 			}
 			set {
-				int n = options.Count;
-				string valueStr = value?.ToString();
-				// Find the matching value in the enum tree
-				for (int i = 0; i < n; i++)
-					if (options[i].Value.ToString() == valueStr) {
-						index = i;
+				// Find a matching value, if possible
+				string valueStr = value?.ToString() ?? "";
+				foreach (var option in options)
+					if (valueStr == option.Value.ToString()) {
+						chosen = option;
 						Update();
 						break;
 					}
@@ -76,14 +70,14 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
-		/// The current index in the array.
+		/// The chosen item in the array.
 		/// </summary>
-		private int index;
+		private Option chosen;
 
 		/// <summary>
 		/// The realized item label.
 		/// </summary>
-		private GameObject label;
+		private GameObject comboBox;
 		
 		/// <summary>
 		/// The available options to cycle through.
@@ -98,37 +92,14 @@ namespace PeterHan.PLib.Options {
 			int n = eval.Length;
 			if (n == 0)
 				throw new ArgumentException("Enum has no declared members");
-			index = 0;
-			label = null;
+			chosen = null;
+			comboBox = null;
 			options = new List<Option>(n);
 			for (int i = 0; i < n; i++)
 				options.Add(GetAttribute(eval.GetValue(i), fieldType));
 		}
 
 		protected override IUIComponent GetUIComponent() {
-#if false
-			// Find largest option to size the label appropriately
-			string longestText = " ";
-			foreach (var option in options) {
-				string optionText = option.Title;
-				if (optionText.Length > longestText.Length)
-					longestText = optionText;
-			}
-			var lbl = new PLabel("Item") {
-				ToolTip = "Loading", Text = longestText
-			};
-			lbl.OnRealize += OnRealizeItemLabel;
-			// Build UI with 2 arrow buttons and a label to display the option
-			return new PPanel("Select") {
-				Direction = PanelDirection.Horizontal, Spacing = 5
-			}.AddChild(new PButton("Previous") {
-				SpriteSize = ARROW_SIZE, OnClick = OnPrevious, ToolTip = PUIStrings.
-				TOOLTIP_PREVIOUS
-			}.SetKleiBlueStyle().SetImageLeftArrow()).AddChild(lbl).
-			AddChild(new PButton("Next") {
-				SpriteSize = ARROW_SIZE, OnClick = OnNext, ToolTip = PUIStrings.TOOLTIP_NEXT
-			}.SetKleiBlueStyle().SetImageRightArrow());
-#endif
 			// Find largest option to size the label appropriately
 			Option longestOption = null;
 			string longestText = " ";
@@ -140,62 +111,44 @@ namespace PeterHan.PLib.Options {
 				}
 			}
 			var dd = new PComboBox<Option>("Select") {
-				BackColor = PUITuning.Colors.ButtonPinkStyle,
-				DynamicSize = false, InitialItem = longestOption,
+				BackColor = PUITuning.Colors.ButtonPinkStyle, InitialItem = longestOption,
 				Content = options, EntryColor = PUITuning.Colors.ButtonBlueStyle,
-				TextStyle = PUITuning.Fonts.TextLightStyle
+				TextStyle = PUITuning.Fonts.TextLightStyle, OnOptionSelected = UpdateValue,
 			};
-			dd.OnRealize += OnRealizeItemLabel;
+			dd.OnRealize += OnRealize;
 			return dd;
 		}
 
 		/// <summary>
-		/// Goes to the next option.
+		/// Called when the item combo box is realized.
 		/// </summary>
-		/// <param name="source">The source button.</param>
-		private void OnNext(GameObject source) {
-			index++;
-			if (index >= options.Count)
-				index = 0;
+		/// <param name="obj">The actual combo box.</param>
+		private void OnRealize(GameObject obj) {
+			comboBox = obj;
 			Update();
 		}
 
 		/// <summary>
-		/// Called when the item label is realized.
-		/// </summary>
-		/// <param name="obj">The actual item label.</param>
-		private void OnRealizeItemLabel(GameObject obj) {
-			label = obj;
-			Update();
-		}
-
-		/// <summary>
-		/// Goes to the previous option.
-		/// </summary>
-		/// <param name="source">The source button.</param>
-		private void OnPrevious(GameObject source) {
-			index--;
-			if (index < 0)
-				index = options.Count - 1;
-			Update();
-		}
-
-		/// <summary>
-		/// Updates the displayed tool tip and text to match the current item.
+		/// Updates the displayed text to match the current item.
 		/// </summary>
 		private void Update() {
-			if (label != null) {
-				var option = options[index];
-				/*PUIElements.SetText(label, option.Title);
-				PUIElements.SetToolTip(label, option.ToolTip);*/
-				PComboBox<Option>.SetSelectedItem(label, option, false);
-			}
+			if (comboBox != null && chosen != null)
+				PComboBox<Option>.SetSelectedItem(comboBox, chosen, false);
+		}
+
+		/// <summary>
+		/// Triggered when the value chosen from the combo box has been changed.
+		/// </summary>
+		/// <param name="selected">The value selected by the user.</param>
+		private void UpdateValue(GameObject _, Option selected) {
+			if (selected != null)
+				chosen = selected;
 		}
 
 		/// <summary>
 		/// Represents a selectable option.
 		/// </summary>
-		private sealed class Option : IListableOption {
+		private sealed class Option : ITooltipListableOption {
 			/// <summary>
 			/// The option title.
 			/// </summary>
@@ -217,12 +170,16 @@ namespace PeterHan.PLib.Options {
 				Value = value;
 			}
 
-			public override string ToString() {
-				return "Option[Title={0},Value={1}]".F(Title, Value);
-			}
-
 			public string GetProperName() {
 				return Title;
+			}
+
+			public string GetToolTipText() {
+				return ToolTip;
+			}
+
+			public override string ToString() {
+				return "Option[Title={0},Value={1}]".F(Title, Value);
 			}
 		}
 	}

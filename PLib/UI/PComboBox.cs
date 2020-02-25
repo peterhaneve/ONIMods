@@ -54,6 +54,11 @@ namespace PeterHan.PLib.UI {
 		public ColorStyleSetting BackColor { get; set; }
 
 		/// <summary>
+		/// The size of the check mark sprite used on the selected option.
+		/// </summary>
+		public Vector2 CheckSize { get; set; }
+
+		/// <summary>
 		/// The content of this combo box.
 		/// </summary>
 		public IEnumerable<T> Content { get; set; }
@@ -85,6 +90,11 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		public RectOffset Margin { get; set; }
 
+		/// <summary>
+		/// The maximum number of items to be shown at once before a scroll bar is added.
+		/// </summary>
+		public int MaxRowsShown { get; set; }
+
 		public string Name { get; }
 
 		/// <summary>
@@ -115,12 +125,14 @@ namespace PeterHan.PLib.UI {
 		public PComboBox(string name) {
 			ArrowSize = new Vector2(8.0f, 8.0f);
 			BackColor = null;
+			CheckSize = new Vector2(12.0f, 12.0f);
 			Content = null;
 			DynamicSize = false;
 			FlexSize = Vector2.zero;
 			InitialItem = null;
 			ItemMargin = DEFAULT_ITEM_MARGIN;
 			Margin = PButton.BUTTON_MARGIN;
+			MaxRowsShown = 6;
 			Name = name;
 			TextAlignment = TextAnchor.MiddleLeft;
 			TextStyle = null;
@@ -148,11 +160,19 @@ namespace PeterHan.PLib.UI {
 				FlexSize = Vector2.right, TrackSize = 8.0f, BackColor = entryColor.
 				inactiveColor
 			}.BuildScrollPane(combo, contentContainer);
+			// Add a black border (Does not work, covered by the combo box buttons...)
+#if false
+			var pdImage = pullDown.GetComponent<Image>();
+			pdImage.sprite = PUITuning.Images.BoxBorder;
+			pdImage.type = Image.Type.Sliced;
+#endif
 			pullDown.rectTransform().pivot = new Vector2(0.5f, 1.0f);
 			// Initialize the drop down
 			var comboBox = combo.AddComponent<PComboBoxComponent>();
+			comboBox.CheckColor = style.textColor;
 			comboBox.ContentContainer = contentContainer.rectTransform();
 			comboBox.EntryPrefab = BuildRowPrefab(style, entryColor);
+			comboBox.MaxRowsShown = MaxRowsShown;
 			comboBox.Pulldown = pullDown;
 			comboBox.SelectedLabel = selectedLabel;
 			comboBox.SetItems(Content);
@@ -171,7 +191,7 @@ namespace PeterHan.PLib.UI {
 			dropButton.onClick += comboBox.OnClick;
 			// Add tooltip
 			if (!string.IsNullOrEmpty(ToolTip))
-				combo.AddComponent<ToolTip>().toolTip = ToolTip;
+				selection.AddComponent<ToolTip>().toolTip = ToolTip;
 			combo.SetActive(true);
 			// Button gets laid out on the right, rest of space goes to the label
 			// Scroll pane is laid out on the bottom
@@ -180,7 +200,7 @@ namespace PeterHan.PLib.UI {
 				image, fraction: 1.0f).SetMargin(selection, new RectOffset(margin.left,
 				im.right, margin.top, margin.bottom)).SetMargin(image, new RectOffset(0,
 				margin.right, margin.top, margin.bottom)).OverrideSize(image, ArrowSize).
-				AnchorYAxis(pullDown, 0.0f).OverrideSize(pullDown, new Vector2(100.0f, 1.0f)).Execute(true);
+				AnchorYAxis(pullDown, 0.0f).OverrideSize(pullDown, Vector2.up).Execute(true);
 			// Scroll pane is hidden right away
 			pullDown.SetActive(false);
 			combo.SetFlexUISize(FlexSize);
@@ -205,27 +225,30 @@ namespace PeterHan.PLib.UI {
 			// Checkmark for the front of the entry
 			var isSelected = PUIElements.CreateUI(rowPrefab, "Selected");
 			var fgImage = isSelected.AddComponent<Image>();
-			fgImage.color = Color.white;
+			fgImage.color = style.textColor;
+			fgImage.preserveAspect = true;
 			fgImage.sprite = PUITuning.Images.Checked;
 			// Button for the entry to select it
 			var entryButton = rowPrefab.AddComponent<KButton>();
 			PButton.SetupButton(entryButton, bgImage);
 			entryButton.fgImage = fgImage;
+			// Tooltip for the entry
+			rowPrefab.AddComponent<ToolTip>();
 			// Text for the entry
 			var textContainer = PUIElements.CreateUI(rowPrefab, "Text");
 			PUIElements.AddLocText(textContainer, style).SetText(" ");
 			// Configure the entire layout in 1 statement! (jk this is awful)
 			new RelativeLayout(rowPrefab).AnchorYAxis(isSelected).OverrideSize(
-				isSelected, new Vector2(12.0f, 12.0f)).SetLeftEdge(isSelected, fraction: 0.0f).
-				SetMargin(isSelected, im).AnchorYAxis(textContainer).SetLeftEdge(textContainer,
-				toRight: isSelected).SetRightEdge(textContainer, 1.0f).SetMargin(textContainer,
+				isSelected, CheckSize).SetLeftEdge(isSelected, fraction: 0.0f).SetMargin(
+				isSelected, im).AnchorYAxis(textContainer).SetLeftEdge(textContainer, toRight:
+				isSelected).SetRightEdge(textContainer, 1.0f).SetMargin(textContainer,
 				new RectOffset(0, im.right, im.top, im.bottom)).Execute(true);
 			rowPrefab.SetActive(false);
 			return rowPrefab;
 		}
 
 		public override string ToString() {
-			return "PDropdown[Name={0}]".F(Name);
+			return "PComboBox[Name={0}]".F(Name);
 		}
 	}
 }

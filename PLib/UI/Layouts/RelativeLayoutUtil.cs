@@ -31,6 +31,12 @@ namespace PeterHan.PLib.UI.Layouts {
 	/// </summary>
 	internal static class RelativeLayoutUtil {
 		/// <summary>
+		/// Avoids a crash when attempting to lay out very wide panels by limiting anchor
+		/// ratios to this value.
+		/// </summary>
+		private const float MIN_SIZE_RATIO = 0.01f;
+
+		/// <summary>
 		/// Initializes and computes horizontal sizes for the components in this relative
 		/// layout.
 		/// </summary>
@@ -121,8 +127,8 @@ namespace PeterHan.PLib.UI.Layouts {
 				var insets = child.Insets;
 				EdgeStatus l = child.LeftEdge, r = child.RightEdge;
 				// Set corner positions
-				rt.anchorMin = new Vector2(l.FromAnchor, rt.anchorMin.y);
-				rt.anchorMax = new Vector2(r.FromAnchor, rt.anchorMax.y);
+				rt.anchorMin = new Vector2(l.FromAnchor, 0.0f);
+				rt.anchorMax = new Vector2(r.FromAnchor, 1.0f);
 				// If anchored by pivot, resize with current anchors
 				if (child.UseSizeDeltaX)
 					rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, child.
@@ -179,15 +185,33 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// <param name="children">The components to lay out.</param>
 		/// <returns>The minimum horizontal size.</returns>
 		internal static float GetMinSizeX(this IEnumerable<RelativeLayoutIP> children) {
-			float maxOffset = 0.0f, offset;
+			float maxWidth = 0.0f, width;
 			foreach (var child in children) {
 				var insets = child.Insets;
-				offset = Mathf.Abs(child.LeftEdge.Offset + insets.left);
-				if (offset > maxOffset) maxOffset = offset;
-				offset = Mathf.Abs(child.RightEdge.Offset - insets.right);
-				if (offset > maxOffset) maxOffset = offset;
+				EdgeStatus left = child.LeftEdge, right = child.RightEdge;
+				float aMin = left.FromAnchor, aMax = right.FromAnchor;
+				if (aMax > aMin)
+					// "Elbow room" method
+					width = (child.EffectiveWidth + left.Offset - right.Offset) /
+						(aMax - aMin);
+				else {
+					// Anchors are together
+					float oMin = left.Offset, oMax = right.Offset;
+					if (oMin == oMax)
+						oMin = oMax = child.EffectiveWidth * 0.5f;
+					if (oMin < 0.0f)
+						oMin /= -Math.Max(MIN_SIZE_RATIO, aMax);
+					else
+						oMin /= Math.Max(MIN_SIZE_RATIO, 1.0f - aMax);
+					if (oMax < 0.0f)
+						oMax /= -Math.Max(MIN_SIZE_RATIO, aMax);
+					else
+						oMax /= Math.Max(MIN_SIZE_RATIO, 1.0f - aMax);
+					width = Math.Max(oMin, oMax);
+				}
+				if (width > maxWidth) maxWidth = width;
 			}
-			return maxOffset;
+			return maxWidth;
 		}
 
 		/// <summary>
@@ -196,15 +220,33 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// <param name="children">The components to lay out.</param>
 		/// <returns>The minimum vertical size.</returns>
 		internal static float GetMinSizeY(this IEnumerable<RelativeLayoutIP> children) {
-			float maxOffset = 0.0f, offset;
+			float maxHeight = 0.0f, height;
 			foreach (var child in children) {
 				var insets = child.Insets;
-				offset = Mathf.Abs(child.BottomEdge.Offset + insets.bottom);
-				if (offset > maxOffset) maxOffset = offset;
-				offset = Mathf.Abs(child.TopEdge.Offset - insets.top);
-				if (offset > maxOffset) maxOffset = offset;
+				EdgeStatus bottom = child.BottomEdge, top = child.TopEdge;
+				float aMin = bottom.FromAnchor, aMax = top.FromAnchor;
+				if (aMax > aMin)
+					// "Elbow room" method
+					height = (child.EffectiveHeight + bottom.Offset - top.Offset) /
+						(aMax - aMin);
+				else {
+					// Anchors are together
+					float oMin = bottom.Offset, oMax = top.Offset;
+					if (oMin == oMax)
+						oMin = oMax = child.EffectiveHeight * 0.5f;
+					if (oMin < 0.0f)
+						oMin /= -Math.Max(MIN_SIZE_RATIO, aMax);
+					else
+						oMin /= Math.Max(MIN_SIZE_RATIO, 1.0f - aMax);
+					if (oMax < 0.0f)
+						oMax /= -Math.Max(MIN_SIZE_RATIO, aMax);
+					else
+						oMax /= Math.Max(MIN_SIZE_RATIO, 1.0f - aMax);
+					height = Math.Max(oMin, oMax);
+				}
+				if (height > maxHeight) maxHeight = height;
 			}
-			return maxOffset;
+			return maxHeight;
 		}
 
 		/// <summary>
