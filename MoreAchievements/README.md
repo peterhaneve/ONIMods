@@ -4,13 +4,13 @@
 
 |  **Name**  |  **Description**  |  **Details**  |
 | ---------: | :---------------- | :------------ |
-| A Balanced Diet | Eat 1000 kcal of each Food type available on Terra or through care packages. | <ul><li>Possible on **Terra** without any care packages.</li><li>May require care packages on other asteroids.</li><li>Does not included modded foods.</li><li>Excludes **Tofu** and **Spicy Tofu**.</li><li>Counts food eaten before this mod is installed.</li></ul> |
+| A Balanced Diet | Eat 1000 kcal of each Food type available on Terra or through care packages. | <ul><li>Possible on **Terra** without any care packages.</li><li>May require care packages on other asteroids.</li><li>Ignores foods added by other mods.</li><li>Excludes **Tofu** and **Spicy Tofu**.</li><li>Counts food eaten before this mod is installed.</li></ul> |
 | Ada Lovelace | Raise a Duplicant's Science attribute to 20. | |
 | Chutes and Ladders | Have Duplicants travel 10,000 m by Fire Pole. | <ul><li>Counts distance travelled before this mod is installed.</li><li>One tile is considered 1 meter.</li></ul> |
 | Cowboy | Raise a Duplicant's Ranching attribute to 20. | **Ranching** skill increases from other mods count towards this achievement. |
 | Critter Ventriloquist | Tame at least one of every critter morph of each critter species in the world. | <ul><li>May require care packages on some asteroids, but no more than *Critter Whisperer* would have required.</li><li>Ignores critters added by other mods.</li></ul> |
 | Destroyer of Worlds | Raise a Duplicant's Excavation attribute to 20. | |
-| Empire Builder | Build 2,500 buildings. | <ul><li>Counts buildings built before this mod is installed.</li><li>Buildings are counted even if deconstructed later.</li></ul> |
+| Empire Builder | Build 2,500 buildings. | <ul><li>Counts buildings built before this mod is installed.</li><li>Buildings are counted when they are built, even if deconstructed later.</li></ul> |
 | Final Breath | Have a Duplicant reach oxygen with less than 5 seconds left until suffocation. | <ul><li>The condition is checked when the Duplicant starts gasping for air.</li><li>The time is scaled to the current game speed.</li></ul> |
 | First Do No Harm | Raise a Duplicant's Doctoring attribute to 20. | |
 | I'm Gonna Be | Have Duplicants travel 1,609,000 m by walking. | <ul><li>Counts distance travelled before this mod is installed.</li><li>Counts total distance regardless of the speed bonus or penalty of **Tile**.</li><li>Does not count distance flown using **Jet Suit**.</li></ul> |
@@ -32,7 +32,7 @@
 | That Belongs in a Museum | Obtain at least one of each space artifact. | <ul><li>At least one of each **Artifact** type is required.</li><li>The artifacts do not need to be on a **Pedestal** or in storage to count.</li></ul> |
 | Thinking Ahead | Use the Neural Vacillator 10 times. | <ul><li>Does *not* count uses from before this mod is installed.</li><li>The neural process must complete to be counted.</li></ul> |
 | To Stand the Test of Time | Reach cycle 1000 with at least one living Duplicant. | |
-| Totally Ecstatic | Raise a Duplicant's Morale to 60. | <ul><li>Only required on one Duplicant.</li><li>Does not require 60 or more skill points on that Duplicant to be unlocked.</li><li>Sources of **Morale** from other mods count for this achievement.</ul> |
-| Watch the World Burn | Melt a building generated in a point of interest. | <ul><li>Only applies to unique buildings not normally player-constructable such as **Gravitas Monument**.</li><li>Does not count **Tiles** found in some Points of Interest.</li><li>Ignores Points of Interest added by other mods.</li></ul> |
+| Totally Ecstatic | Raise a single Duplicant's Morale to 60. | <ul><li>Only required on one Duplicant.</li><li>Does not require 60 or more skill points on that Duplicant to be unlocked.</li><li>Sources of **Morale** from other mods count for this achievement.</ul> |
+| Watch the World Burn | Melt a unique building generated in a point of interest. | <ul><li>Only applies to unique buildings not normally player-constructable such as **Gravitas Monument**.</li><li>Does not count **Tiles** found in some Points of Interest.</li><li>Ignores Points of Interest added by other mods.</li></ul> |
 | Whole New Worlds | Send a Space Mission to each destination on the Starmap. | <ul><li>Excludes **Earth** but includes **Temporal Tear**.</li><li>Includes reachable planets added by other mods.</li></ul> |
-| You Monster | Kill 100 critters before they die of old age. | <ul><li>Does *not* count kills from before this mod is installed.</li><li>Drowning, heat, cold, or attack damage must deal the final blow.</li><li>Baby and wild critters are counted for this achievement.</li></ul> |
+| You Monster | Kill 100 critters before they die of old age. | <ul><li>Does *not* count kills from before this mod is installed.</li><li>Drowning, heat, cold, or attack damage must deal the final blow.</li><li>Baby and wild critters are counted for this achievement.</li><li>Critters added by other mods are counted for this achievement.</li></ul> |

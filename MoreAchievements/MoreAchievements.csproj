@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>One Giant Leap</AssemblyTitle>
-    <FileVersion>1.0.0.0</FileVersion>
+    <FileVersion>1.1.0.0</FileVersion>
     <RootNamespace>PeterHan.MoreAchievements</RootNamespace>
     <Description>Adds many new Colony Initiatives.</Description>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>

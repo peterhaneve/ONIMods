@@ -111,7 +111,7 @@ namespace PeterHan.MoreAchievements {
 			public static LocString DESC = "Have a Duplicant reach oxygen with less than " +
 				GameUtil.GetFormattedSimple(THRESHOLD) + " seconds left until suffocation.";
 			public static LocString PROGRESS = "Reached breathable area with less than " +
-				GameUtil.GetFormattedTime(THRESHOLD) + " until death";
+				GameUtil.GetFormattedSimple(THRESHOLD) + " seconds until death";
 
 			public const float THRESHOLD = 5.0f;
 		}
@@ -312,7 +312,7 @@ namespace PeterHan.MoreAchievements {
 		// Totally Ecstatic
 		public static class TOTALLYECSTATIC {
 			public static LocString NAME = "Totally Ecstatic";
-			public static LocString DESC = "Raise a Duplicant's Morale to " + MORALE + ".";
+			public static LocString DESC = "Raise a single Duplicant's Morale to " + MORALE + ".";
 			public static LocString PROGRESS = "Highest Morale: {0:F0} / {1:F0}";
 
 			public const int MORALE = 60;
@@ -322,8 +322,8 @@ namespace PeterHan.MoreAchievements {
 		public static class WATCHTHEWORLDBURN {
 			public const string ID = "WatchTheWorldBurn";
 			public static LocString NAME = "Watch the World Burn";
-			public static LocString DESC = "Melt a building generated in a point of interest.";
-			public static LocString PROGRESS = "Melt a POI building";
+			public static LocString DESC = "Melt a unique building generated in a point of interest.";
+			public static LocString PROGRESS = "Melt a normally non-constructable POI building";
 		}
 
 		// Whole New Worlds
