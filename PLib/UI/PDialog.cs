@@ -264,8 +264,7 @@ namespace PeterHan.PLib.UI {
 			layout.AddComponent(close, new GridComponentSpec(0, 1));
 			// Title text, expand to width
 			var title = new PLabel("Title") {
-				Margin = new RectOffset(3, 3, 0, 0), Text = Title, FlexSize = Vector2.one,
-				DynamicSize = true
+				Margin = new RectOffset(3, 3, 0, 0), Text = Title, FlexSize = Vector2.one
 			}.SetKleiPinkColor().Build();
 			layout.AddComponent(title, new GridComponentSpec(0, 0) {
 				Margin = new RectOffset(1, 0, 1, 1)

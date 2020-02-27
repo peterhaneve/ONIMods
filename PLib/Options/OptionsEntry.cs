@@ -99,7 +99,7 @@ namespace PeterHan.PLib.Options {
 			}.AddChild(new PLabel("Label") {
 				Text = OptionsDialog.LookInStrings(Title), ToolTip = OptionsDialog.
 				LookInStrings(ToolTip), FlexSize = Vector2.right, TextAlignment = TextAnchor.
-				MiddleLeft, DynamicSize = true, TextStyle = PUITuning.Fonts.TextLightStyle
+				MiddleLeft, TextStyle = PUITuning.Fonts.TextLightStyle
 			}).AddChild(GetUIComponent());
 		}
 

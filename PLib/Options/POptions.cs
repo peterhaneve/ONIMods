@@ -106,11 +106,11 @@ namespace PeterHan.PLib.Options {
 					var action = new OptionsDialog(optionsType, modSpec);
 					new PButton("ModSettingsButton") {
 						FlexSize = Vector2.up, OnClick = action.OnModOptions,
-						DynamicSize = true, ToolTip = PUIStrings.DIALOG_TITLE.text.F(
-						modSpec.title), Text = CultureInfo.CurrentCulture.TextInfo.
-						ToTitleCase(PUIStrings.BUTTON_OPTIONS.text.ToLower())
-						// Move before the subscription and enable button
+						ToolTip = PUIStrings.DIALOG_TITLE.text.F(modSpec.title), Text =
+						CultureInfo.CurrentCulture.TextInfo.ToTitleCase(PUIStrings.
+						BUTTON_OPTIONS.text.ToLower())
 					}.SetKleiPinkStyle().AddTo(transform.gameObject, 3);
+					// Move before the subscription and enable button
 				}
 			}
 		}

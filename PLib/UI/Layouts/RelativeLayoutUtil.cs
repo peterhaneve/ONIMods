@@ -43,14 +43,12 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// <param name="children">The location to store information about these components.</param>
 		/// <param name="all">The components to lay out.</param>
 		/// <param name="constraints">The constraints defined for these components.</param>
-		/// <returns>The initial minimum width of the parent component.</returns>
-		internal static float CalcX(this ICollection<RelativeLayoutIP> children,
+		internal static void CalcX(this ICollection<RelativeLayoutIP> children,
 				RectTransform all, IDictionary<GameObject, RelativeLayoutParams> constraints) {
 			var comps = ListPool<Component, RelativeLayout>.Allocate();
 			var paramMap = DictionaryPool<GameObject, RelativeLayoutIP, RelativeLayout>.
 				Allocate();
 			int n = all.childCount;
-			float minWidth = 0.0f;
 			for (int i = 0; i < n; i++) {
 				var child = all.GetChild(i)?.gameObject;
 				if (child != null) {
@@ -73,7 +71,6 @@ namespace PeterHan.PLib.UI.Layouts {
 							// Default its layout to fill all
 							ip = new RelativeLayoutIP(child.rectTransform(), null);
 						children.Add(ip);
-						minWidth = Math.Max(minWidth, ip.EffectiveWidth);
 					}
 				}
 			}
@@ -87,17 +84,14 @@ namespace PeterHan.PLib.UI.Layouts {
 			}
 			paramMap.Recycle();
 			comps.Recycle();
-			return minWidth;
 		}
 
 		/// <summary>
 		/// Computes vertical sizes for the components in this relative layout.
 		/// </summary>
 		/// <param name="children">The location to store information about these components.</param>
-		/// <returns>The initial minimum height of the parent component.</returns>
-		internal static float CalcY(this ICollection<RelativeLayoutIP> children) {
+		internal static void CalcY(this ICollection<RelativeLayoutIP> children) {
 			var comps = ListPool<Component, RelativeLayout>.Allocate();
-			float minHeight = 0.0f;
 			foreach (var ip in children) {
 				var child = ip.Transform.gameObject;
 				var overrideSize = ip.OverrideSize;
@@ -109,10 +103,8 @@ namespace PeterHan.PLib.UI.Layouts {
 				if (overrideSize.y > 0.0f)
 					h = overrideSize.y;
 				ip.PreferredHeight = h;
-				minHeight = Math.Max(minHeight, ip.EffectiveHeight);
 			}
 			comps.Recycle();
-			return minHeight;
 		}
 
 		/// <summary>
@@ -120,8 +112,10 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// </summary>
 		/// <param name="children">The components to lay out.</param>
 		/// <param name="scratch">The location where components will be temporarily stored.</param>
+		/// <param name="mLeft">The left margin.</param>
+		/// <param name="mRight">The right margin.</param>
 		internal static void ExecuteX(this IEnumerable<RelativeLayoutIP> children,
-				List<ILayoutController> scratch) {
+				List<ILayoutController> scratch, float mLeft = 0.0f, float mRight = 0.0f) {
 			foreach (var child in children) {
 				var rt = child.Transform;
 				var insets = child.Insets;
@@ -135,9 +129,11 @@ namespace PeterHan.PLib.UI.Layouts {
 						PreferredWidth);
 				else {
 					// Left
-					rt.offsetMin = new Vector2(l.Offset + insets.left, rt.offsetMin.y);
+					rt.offsetMin = new Vector2(l.Offset + insets.left + (l.FromAnchor <= 0.0f ?
+						mLeft : 0.0f), rt.offsetMin.y);
 					// Right
-					rt.offsetMax = new Vector2(r.Offset - insets.right, rt.offsetMax.y);
+					rt.offsetMax = new Vector2(r.Offset - insets.right - (r.FromAnchor >=
+						1.0f ? mRight : 0.0f), rt.offsetMax.y);
 				}
 				// Execute layout controllers if present
 				scratch.Clear();
@@ -152,8 +148,10 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// </summary>
 		/// <param name="children">The components to lay out.</param>
 		/// <param name="scratch">The location where components will be temporarily stored.</param>
+		/// <param name="mBottom">The bottom margin.</param>
+		/// <param name="mTop">The top margin.</param>
 		internal static void ExecuteY(this IEnumerable<RelativeLayoutIP> children,
-				List<ILayoutController> scratch) {
+				List<ILayoutController> scratch, float mBottom = 0.0f, float mTop = 0.0f) {
 			foreach (var child in children) {
 				var rt = child.Transform;
 				var insets = child.Insets;
@@ -167,9 +165,11 @@ namespace PeterHan.PLib.UI.Layouts {
 						PreferredHeight);
 				else {
 					// Bottom
-					rt.offsetMin = new Vector2(rt.offsetMin.x, b.Offset + insets.bottom);
+					rt.offsetMin = new Vector2(rt.offsetMin.x, b.Offset + insets.bottom +
+						(b.FromAnchor <= 0.0f ? mBottom : 0.0f));
 					// Top
-					rt.offsetMax = new Vector2(rt.offsetMax.x, t.Offset - insets.top);
+					rt.offsetMax = new Vector2(rt.offsetMax.x, t.Offset - insets.top -
+						(t.FromAnchor >= 1.0f ? mTop : 0.0f));
 				}
 				// Execute layout controllers if present
 				scratch.Clear();

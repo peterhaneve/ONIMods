@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,47 +29,34 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		public Color BackColor { get; set; }
 
-		/// <summary>
-		/// The margin around the component.
-		/// </summary>
-		public RectOffset Margin { get; set; }
-
 		public PLabel() : this(null) { }
 
 		public PLabel(string name) : base(name ?? "Label") {
 			BackColor = PUITuning.Colors.Transparent;
-			Margin = null;
 		}
 
 		public override GameObject Build() {
 			var label = PUIElements.CreateUI(null, Name);
+			GameObject sprite = null, text = null;
 			// Background
 			if (BackColor.a > 0)
 				label.AddComponent<Image>().color = BackColor;
 			// Add foreground image
 			if (Sprite != null)
-				ImageChildHelper(label, this);
+				sprite = ImageChildHelper(label, this).gameObject;
 			// Add text
 			if (!string.IsNullOrEmpty(Text))
-				TextChildHelper(label, TextStyle ?? PUITuning.Fonts.UILightStyle, Text);
+				text = TextChildHelper(label, TextStyle ?? PUITuning.Fonts.UILightStyle,
+					Text).gameObject;
 			// Add tooltip
 			if (!string.IsNullOrEmpty(ToolTip))
 				label.AddComponent<ToolTip>().toolTip = ToolTip;
 			label.SetActive(true);
-			// Icon and text are side by side
-			var lp = new BoxLayoutParams() {
-				Spacing = IconSpacing, Direction = PanelDirection.Horizontal, Margin = Margin,
-				Alignment = TextAlignment
-			};
-			if (DynamicSize) {
-				var layout = label.AddComponent<BoxLayoutGroup>();
-				layout.Params = lp;
-				layout.flexibleWidth = FlexSize.x;
-				layout.flexibleHeight = FlexSize.y;
-			} else {
-				BoxLayoutGroup.LayoutNow(label, lp);
-				label.SetFlexUISize(FlexSize);
-			}
+			// Arrange the icon and text
+			var layout = new RelativeLayout(label) { OverallMargin = Margin };
+			ArrangeComponent(layout, WrapTextAndSprite(text, sprite), TextAlignment);
+			layout.Execute(true);
+			label.SetFlexUISize(FlexSize);
 			InvokeRealize(label);
 			return label;
 		}

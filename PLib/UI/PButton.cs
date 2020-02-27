@@ -30,7 +30,7 @@ namespace PeterHan.PLib.UI {
 		internal static readonly RectOffset BUTTON_MARGIN = new RectOffset(7, 7, 5, 5);
 
 		/// <summary>
-		/// Sets up the button to have the right sound and .
+		/// Sets up the button to have the right sound and background image.
 		/// </summary>
 		/// <param name="button">The button to set up.</param>
 		/// <param name="bgImage">The background image.</param>
@@ -67,11 +67,6 @@ namespace PeterHan.PLib.UI {
 		public ColorStyleSetting Color { get; set; }
 
 		/// <summary>
-		/// The margin around the component.
-		/// </summary>
-		public RectOffset Margin { get; set; }
-
-		/// <summary>
 		/// The action to trigger on click. It is passed the realized source object.
 		/// </summary>
 		public PUIDelegates.OnButtonPressed OnClick { get; set; }
@@ -87,6 +82,7 @@ namespace PeterHan.PLib.UI {
 
 		public override GameObject Build() {
 			var button = PUIElements.CreateUI(null, Name);
+			GameObject sprite = null, text = null;
 			// Background
 			var bgImage = button.AddComponent<KImage>();
 			bgImage.colorStyleSetting = Color ?? PUITuning.Colors.ButtonPinkStyle;
@@ -95,34 +91,27 @@ namespace PeterHan.PLib.UI {
 			var kButton = button.AddComponent<KButton>();
 			var evt = OnClick;
 			if (evt != null)
-				kButton.onClick += () => {
-					evt?.Invoke(button);
-				};
+				kButton.onClick += () => evt?.Invoke(button);
 			SetupButton(kButton, bgImage);
 			// Add foreground image since the background already has one
-			if (Sprite != null)
-				kButton.fgImage = ImageChildHelper(button, this);
+			if (Sprite != null) {
+				var fgImage = ImageChildHelper(button, this);
+				kButton.fgImage = fgImage;
+				sprite = fgImage.gameObject;
+			}
 			// Add text
 			if (!string.IsNullOrEmpty(Text))
-				TextChildHelper(button, TextStyle ?? PUITuning.Fonts.UILightStyle, Text);
+				text = TextChildHelper(button, TextStyle ?? PUITuning.Fonts.UILightStyle,
+					Text).gameObject;
 			// Add tooltip
 			if (!string.IsNullOrEmpty(ToolTip))
 				button.AddComponent<ToolTip>().toolTip = ToolTip;
 			button.SetActive(true);
-			// Icon and text are side by side
-			var lp = new BoxLayoutParams() {
-				Spacing = IconSpacing, Direction = PanelDirection.Horizontal, Margin = Margin,
-				Alignment = TextAlignment
-			};
-			if (DynamicSize) {
-				var layout = button.AddComponent<BoxLayoutGroup>();
-				layout.Params = lp;
-				layout.flexibleWidth = FlexSize.x;
-				layout.flexibleHeight = FlexSize.y;
-			} else {
-				BoxLayoutGroup.LayoutNow(button, lp);
-				button.SetFlexUISize(FlexSize);
-			}
+			// Arrange the icon and text
+			var layout = new RelativeLayout(button) { OverallMargin = Margin };
+			ArrangeComponent(layout, WrapTextAndSprite(text, sprite), TextAlignment);
+			layout.Execute(true);
+			button.SetFlexUISize(FlexSize);
 			InvokeRealize(button);
 			return button;
 		}

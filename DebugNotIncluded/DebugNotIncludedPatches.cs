@@ -447,6 +447,23 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
+		/// Applied to ModsScreen to update the All checkbox when mods are toggled.
+		/// </summary>
+		[HarmonyPatch(typeof(ModsScreen), "OnToggleClicked")]
+		public static class ModsScreen_OnToggleClicked_Patch {
+			internal static bool Prepare() {
+				return DebugNotIncludedOptions.Instance?.PowerUserMode ?? false;
+			}
+
+			/// <summary>
+			/// Applied after OnToggleClicked runs.
+			/// </summary>
+			internal static void Postfix(ModsScreen __instance) {
+				__instance?.GetComponent<AllModsHandler>()?.UpdateCheckedState();
+			}
+		}
+
+		/// <summary>
 		/// Applied to Steam to avoid dialog spam on startup if many mods are updated or
 		/// installed.
 		/// </summary>

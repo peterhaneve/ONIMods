@@ -118,6 +118,8 @@ namespace PeterHan.PLib.UI {
 
 		/// <summary>
 		/// The check box's background color.
+		/// 
+		/// Unlike other components, this color applies only to the check box itself.
 		/// </summary>
 		public Color BackColor { get; set; }
 
@@ -127,14 +129,14 @@ namespace PeterHan.PLib.UI {
 		public Vector2 CheckSize { get; set; }
 
 		/// <summary>
+		/// The background color of everything that is not the check box.
+		/// </summary>
+		public Color ComponentBackColor { get; set; }
+
+		/// <summary>
 		/// The initial check box state.
 		/// </summary>
 		public int InitialState { get; set; }
-
-		/// <summary>
-		/// The margin around the component.
-		/// </summary>
-		public RectOffset Margin { get; set; }
 
 		/// <summary>
 		/// The action to trigger on click. It is passed the realized source object.
@@ -147,9 +149,9 @@ namespace PeterHan.PLib.UI {
 			BackColor = PUITuning.Colors.BackgroundLight;
 			CheckColor = null;
 			CheckSize = new Vector2(16.0f, 16.0f);
+			ComponentBackColor = PUITuning.Colors.Transparent;
 			IconSpacing = 3;
 			InitialState = STATE_UNCHECKED;
-			Margin = new RectOffset();
 			Sprite = null;
 			Text = null;
 			ToolTip = "";
@@ -157,37 +159,25 @@ namespace PeterHan.PLib.UI {
 
 		public override GameObject Build() {
 			var checkbox = PUIElements.CreateUI(null, Name);
+			var actualSize = CheckSize;
+			GameObject sprite = null, text = null;
 			// Background
+			if (ComponentBackColor.a > 0)
+				checkbox.AddComponent<Image>().color = ComponentBackColor;
 			var trueColor = CheckColor ?? PUITuning.Colors.ComponentLightStyle;
 			// Checkbox background
-			var checkBack = PUIElements.CreateUI(checkbox, "CheckBox");
-			checkBack.AddComponent<Image>().color = BackColor;
-			// Checkbox border
-			var checkBorder = PUIElements.CreateUI(checkBack, "CheckBorder");
-			var borderImg = checkBorder.AddComponent<Image>();
-			borderImg.sprite = PUITuning.Images.CheckBorder;
-			borderImg.color = trueColor.activeColor;
-			borderImg.type = Image.Type.Sliced;
-			// Checkbox foreground
-			var imageChild = PUIElements.CreateUI(checkBorder, "CheckMark", true, PUIAnchoring.
-				Center, PUIAnchoring.Center);
-			var img = imageChild.AddComponent<Image>();
-			img.sprite = PUITuning.Images.Checked;
-			img.preserveAspect = true;
-			// Determine the checkbox size
-			var actualSize = CheckSize;
-			if (actualSize.x <= 0.0f || actualSize.y <= 0.0f) {
-				var rt = imageChild.rectTransform();
-				actualSize.x = LayoutUtility.GetPreferredWidth(rt);
-				actualSize.y = LayoutUtility.GetPreferredHeight(rt);
-			}
-			imageChild.SetUISize(CheckSize, false);
-			// Add foreground image since the background already has one
+			var checkBG = PUIElements.CreateUI(checkbox, "CheckBox");
+			checkBG.AddComponent<Image>().color = BackColor;
+			var checkImage = CreateCheckImage(checkBG, trueColor, ref actualSize);
+			checkBG.SetUISize(new Vector2(actualSize.x + 2.0f * CHECKBOX_MARGIN,
+				actualSize.y + 2.0f * CHECKBOX_MARGIN), true);
+			// Add foreground image
 			if (Sprite != null)
-				ImageChildHelper(checkbox, this);
+				sprite = ImageChildHelper(checkbox, this).gameObject;
 			// Add text
 			if (!string.IsNullOrEmpty(Text))
-				TextChildHelper(checkbox, TextStyle ?? PUITuning.Fonts.UILightStyle, Text);
+				text = TextChildHelper(checkbox, TextStyle ?? PUITuning.Fonts.UILightStyle,
+					Text).gameObject;
 			// Add tooltip
 			if (!string.IsNullOrEmpty(ToolTip))
 				checkbox.AddComponent<ToolTip>().toolTip = ToolTip;
@@ -195,35 +185,53 @@ namespace PeterHan.PLib.UI {
 			var mToggle = checkbox.AddComponent<MultiToggle>();
 			var evt = OnChecked;
 			if (evt != null)
-				mToggle.onClick += () => {
-					evt?.Invoke(checkbox, mToggle.CurrentState);
-				};
+				mToggle.onClick += () => evt?.Invoke(checkbox, mToggle.CurrentState);
 			mToggle.play_sound_on_click = true;
 			mToggle.play_sound_on_release = false;
 			mToggle.states = GenerateStates(trueColor);
-			mToggle.toggle_image = img;
+			mToggle.toggle_image = checkImage;
 			mToggle.ChangeState(InitialState);
 			checkbox.SetActive(true);
-			// Lay out the checkbox using anchors only
-			checkBack.SetUISize(new Vector2(CheckSize.x + 2.0f * CHECKBOX_MARGIN, CheckSize.y +
-				2.0f * CHECKBOX_MARGIN), true);
-			imageChild.SetUISize(CheckSize);
-			// Icon and text are side by side
-			var lp = new BoxLayoutParams() {
-				Margin = Margin, Spacing = Math.Max(IconSpacing, 0), Alignment = TextAnchor.
-				MiddleLeft
-			};
-			if (DynamicSize) {
-				var layout = checkbox.AddComponent<BoxLayoutGroup>();
-				layout.Params = lp;
-				layout.flexibleWidth = FlexSize.x;
-				layout.flexibleHeight = FlexSize.y;
-			} else {
-				BoxLayoutGroup.LayoutNow(checkbox, lp);
-				checkbox.SetFlexUISize(FlexSize);
-			}
+			// Faster than ever!
+			var subLabel = WrapTextAndSprite(text, sprite);
+			var layout = new RelativeLayout(checkbox) { OverallMargin = Margin };
+			ArrangeComponent(layout, WrapTextAndSprite(subLabel, checkBG), TextAlignment);
+			layout.Execute(true);
+			checkbox.SetFlexUISize(FlexSize);
 			InvokeRealize(checkbox);
 			return checkbox;
+		}
+
+		/// <summary>
+		/// Creates the actual image that shows the checkbox graphically.
+		/// </summary>
+		/// <param name="checkbox">The parent object to add the image.</param>
+		/// <param name="color">The color style for the box border.</param>
+		/// <param name="actualSize">The actual check mark size, which will be updated if it
+		/// is 0x0 to the default size.</param>
+		/// <returns>The image reference to the checkmark image itself.</returns>
+		private Image CreateCheckImage(GameObject checkbox, ColorStyleSetting color,
+				ref Vector2 actualSize) {
+			// Checkbox border (grr rule of only one Graphics per GO...)
+			var checkBorder = PUIElements.CreateUI(checkbox, "CheckBorder");
+			var borderImg = checkBorder.AddComponent<Image>();
+			borderImg.sprite = PUITuning.Images.CheckBorder;
+			borderImg.color = color.activeColor;
+			borderImg.type = Image.Type.Sliced;
+			// Checkbox foreground
+			var imageChild = PUIElements.CreateUI(checkbox, "CheckMark", true, PUIAnchoring.
+				Center, PUIAnchoring.Center);
+			var checkImage = imageChild.AddComponent<Image>();
+			checkImage.sprite = PUITuning.Images.Checked;
+			checkImage.preserveAspect = true;
+			// Determine the checkbox size
+			if (actualSize.x <= 0.0f || actualSize.y <= 0.0f) {
+				var rt = imageChild.rectTransform();
+				actualSize.x = LayoutUtility.GetPreferredWidth(rt);
+				actualSize.y = LayoutUtility.GetPreferredHeight(rt);
+			}
+			imageChild.SetUISize(CheckSize, false);
+			return checkImage;
 		}
 
 		/// <summary>

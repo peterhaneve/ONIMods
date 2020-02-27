@@ -171,13 +171,12 @@ namespace PeterHan.PLib.Options {
 					FlexSize = Vector2.right, Alignment = TextAnchor.MiddleLeft, Spacing = 5,
 					Direction = PanelDirection.Horizontal, Margin = new RectOffset(0, 0, 0, 2)
 				}.AddChild(new PToggle("CategoryToggle") {
-					Color = PUITuning.Colors.ComponentDarkStyle, DynamicSize = false,
+					Color = PUITuning.Colors.ComponentDarkStyle, InitialState = true,
 					ToolTip = PUIStrings.TOOLTIP_TOGGLE, Size = new Vector2(12.0f, 12.0f),
-					InitialState = true, OnStateChanged = handler.OnExpandContract
+					OnStateChanged = handler.OnExpandContract
 				}).AddChild(new PLabel("CategoryHeader") {
 					Text = LookInStrings(category), TextStyle = POptions.TITLE_STYLE,
-					TextAlignment = TextAnchor.LowerCenter, DynamicSize = true,
-					FlexSize = Vector2.right,
+					TextAlignment = TextAnchor.LowerCenter, FlexSize = Vector2.right,
 				}));
 				if (contents != null)
 					contents.OnRealize += handler.OnRealizePanel;

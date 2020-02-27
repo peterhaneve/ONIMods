@@ -158,8 +158,8 @@ namespace PeterHan.SweepByType {
 			}.AddChild(new PLabel("Title") {
 				// Title bar
 				TextAlignment = TextAnchor.MiddleCenter, Text = SweepByTypeStrings.
-				DIALOG_TITLE, FlexSize = new Vector2(1.0f, 0.0f), DynamicSize = true,
-				Margin = new RectOffset(1, 1, 1, 1)
+				DIALOG_TITLE, FlexSize = new Vector2(1.0f, 0.0f), Margin =
+				new RectOffset(1, 1, 1, 1)
 			}.SetKleiPinkColor()).AddChild(new PPanel("TypeSelectControl") {
 				// White background for scroll bar
 				Direction = PanelDirection.Vertical, Margin = OUTER_MARGIN,

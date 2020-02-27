@@ -51,7 +51,8 @@ namespace PeterHan.DebugNotIncluded {
 			var handler = instance.AddOrGet<AllModsHandler>();
 			var cb = new PCheckBox("AllMods") {
 				CheckSize = new Vector2(24.0f, 24.0f), Text = DebugNotIncludedStrings.
-				BUTTON_ALL, ToolTip = DebugNotIncludedStrings.TOOLTIP_ALL
+				BUTTON_ALL, ToolTip = DebugNotIncludedStrings.TOOLTIP_ALL, Margin =
+				new RectOffset(5, 5, 0, 0)
 			};
 			// When clicked, enable/disable all
 			if (handler != null)

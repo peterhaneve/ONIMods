@@ -25,26 +25,12 @@ namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// A custom UI panel factory which can arrange its children horizontally or vertically.
 	/// </summary>
-	public class PPanel : IUIComponent {
+	public class PPanel : PContainer {
 		/// <summary>
 		/// The alignment position to use for child elements if they are smaller than the
 		/// required size.
 		/// </summary>
 		public TextAnchor Alignment { get; set; }
-
-		/// <summary>
-		/// The background color of this panel.
-		/// </summary>
-		public Color BackColor { get; set; }
-
-		/// <summary>
-		/// The background image of this panel. Tinted by the background color, acts as all
-		/// white if left null.
-		/// 
-		/// Note that the default background color is transparent, so unless it is set to
-		/// some other color this image will be invisible!
-		/// </summary>
-		public Sprite BackImage { get; set; }
 
 		/// <summary>
 		/// The direction in which components will be laid out.
@@ -53,19 +39,6 @@ namespace PeterHan.PLib.UI {
 
 		[Obsolete("PPanel always is dynamically sized now, unless built using BuildWithFixedSize.")]
 		public bool DynamicSize { get; set; }
-
-		/// <summary>
-		/// The flexible size bounds of this component.
-		/// </summary>
-		public Vector2 FlexSize { get; set; }
-		
-		/// <summary>
-		/// The margin left around the contained components in pixels. If null, no margin will
-		/// be used.
-		/// </summary>
-		public RectOffset Margin { get; set; }
-
-		public string Name { get; }
 
 		/// <summary>
 		/// The spacing between components in pixels.
@@ -77,19 +50,12 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		protected readonly ICollection<IUIComponent> children;
 
-		public event PUIDelegates.OnRealize OnRealize;
-
 		public PPanel() : this(null) { }
 
-		public PPanel(string name) {
+		public PPanel(string name) : base(name ?? "Panel") {
 			Alignment = TextAnchor.MiddleCenter;
 			children = new List<IUIComponent>();
-			BackColor = PUITuning.Colors.Transparent;
-			BackImage = null;
 			Direction = PanelDirection.Vertical;
-			FlexSize = Vector2.zero;
-			Margin = null;
-			Name = name ?? "Panel";
 			Spacing = 0;
 		}
 
@@ -105,7 +71,7 @@ namespace PeterHan.PLib.UI {
 			return this;
 		}
 
-		public GameObject Build() {
+		public override GameObject Build() {
 			return Build(default, true);
 		}
 
@@ -117,12 +83,7 @@ namespace PeterHan.PLib.UI {
 		/// <returns>The realized panel.</returns>
 		private GameObject Build(Vector2 size, bool dynamic) {
 			var panel = PUIElements.CreateUI(null, Name);
-			if (BackColor.a > 0.0f || BackImage != null) {
-				var img = panel.AddComponent<Image>();
-				img.color = BackColor;
-				if (BackImage != null)
-					img.sprite = BackImage;
-			}
+			SetImage(panel);
 			// Add children
 			foreach (var child in children) {
 				var obj = child.Build();
@@ -142,7 +103,7 @@ namespace PeterHan.PLib.UI {
 				lg.flexibleHeight = FlexSize.y;
 			} else
 				BoxLayoutGroup.LayoutNow(panel, args, size).SetFlexUISize(FlexSize);
-			OnRealize?.Invoke(panel);
+			InvokeRealize(panel);
 			return panel;
 		}
 

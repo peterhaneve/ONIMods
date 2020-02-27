@@ -44,13 +44,29 @@ namespace PeterHan.PLib.UI {
 		internal GameObject Parent { get; }
 
 		/// <summary>
+		/// The margin added around all components in the layout. This is in addition to any
+		/// margins around the components.
+		/// 
+		/// Note that this margin is not taken into account with percentage based anchors.
+		/// Items anchored to the extremes will always work fine. Items anchored in the middle
+		/// will use the middle <b>before</b> margins are effective.
+		/// </summary>
+		public RectOffset OverallMargin { get; set; }
+
+		/// <summary>
 		/// Constraints for each object are stored here.
 		/// </summary>
-		private readonly IDictionary<GameObject, RelativeLayoutParams> constraints;
+		private readonly IDictionary<GameObject, RelativeLayoutParams> locConstraints;
 
+		/// <summary>
+		/// Creates a new relative layout. This class is not a layout group as it does not
+		/// remain attached to the parent post execution.
+		/// </summary>
+		/// <param name="parent">The object to lay out.</param>
 		public RelativeLayout(GameObject parent) {
+			OverallMargin = null;
 			Parent = parent ?? throw new ArgumentNullException("parent");
-			constraints = new Dictionary<GameObject, RelativeLayoutParams>(32);
+			locConstraints = new Dictionary<GameObject, RelativeLayoutParams>(32);
 		}
 
 		/// <summary>
@@ -60,8 +76,8 @@ namespace PeterHan.PLib.UI {
 		/// <param name="item">The item to look up.</param>
 		/// <returns>The parameters for that object.</returns>
 		private RelativeLayoutParams AddOrGet(GameObject item) {
-			if (!constraints.TryGetValue(item, out RelativeLayoutParams param))
-				constraints[item] = param = new RelativeLayoutParams();
+			if (!locConstraints.TryGetValue(item, out RelativeLayoutParams param))
+				locConstraints[item] = param = new RelativeLayoutParams();
 			return param;
 		}
 
@@ -100,14 +116,18 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
-		/// Executes the layout.
+		/// Executes the relative layout with the current constraints and children. The
+		/// objects will be arranged using Unity anchors which allows the layout to adapt to
+		/// changes in size without rebuilding or invoking auto-layout again, increasing
+		/// performance greatly over layout managers.
 		/// </summary>
 		/// <param name="addLayoutElement">If true, adds a LayoutElement to the parent
 		/// indicating its preferred and minimum size. Even if the resulting layout could be
 		/// expanded, its flexible size will always default to zero, although it can be changed
 		/// after construction using SetFlexUISize.</param>
 		/// <exception cref="InvalidOperationException">If the layout constraints cannot
-		/// be successfully resolved.</exception>
+		/// be successfully resolved to final positions - for example, if components depend
+		/// on each other in a cycle.</exception>
 		/// <returns>The parent game object.</returns>
 		public GameObject Execute(bool addLayoutElement = false) {
 			if (Parent == null)
@@ -115,24 +135,27 @@ namespace PeterHan.PLib.UI {
 			var all = Parent.rectTransform();
 			var children = RelativeLayoutData.Allocate();
 			var components = ListPool<ILayoutController, RelativeLayout>.Allocate();
+			// Calculate overall margins
+			int ml = OverallMargin?.left ?? 0, mr = OverallMargin?.right ?? 0,
+				mt = OverallMargin?.top ?? 0, mb = OverallMargin?.bottom ?? 0;
 			// Gather the children!
-			float minX = children.CalcX(all, constraints);
+			children.CalcX(all, locConstraints);
 			int passes, limit = 2 * children.Count;
 			// X layout
 			for (passes = 0; passes < limit && !children.RunPassX(); passes++) ;
 			if (passes >= limit)
 				children.ThrowUnresolvable(passes, PanelDirection.Horizontal);
-			minX = Math.Max(minX, children.GetMinSizeX());
+			float minX = children.GetMinSizeX() + ml + mr;
 			all.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, minX);
-			children.ExecuteX(components);
+			children.ExecuteX(components, ml, mr);
 			// Y layout
-			float minY = children.CalcY();
+			children.CalcY();
 			for (passes = 0; passes < limit && !children.RunPassY(); passes++) ;
 			if (passes >= limit)
 				children.ThrowUnresolvable(passes, PanelDirection.Vertical);
-			minY = Math.Max(minY, children.GetMinSizeY());
+			float minY = children.GetMinSizeY() + mb + mt;
 			all.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, minY);
-			children.ExecuteY(components);
+			children.ExecuteY(components, mb, mt);
 			components.Recycle();
 			children.Recycle();
 			if (addLayoutElement)
@@ -171,8 +194,11 @@ namespace PeterHan.PLib.UI {
 		/// <returns>This object, for call chaining.</returns>
 		public RelativeLayout SetBottomEdge(GameObject item, float fraction = -1.0f,
 				GameObject above = null) {
-			if (item != null)
+			if (item != null) {
+				if (above == item)
+					throw new ArgumentException("Component cannot refer directly to itself");
 				SetEdge(AddOrGet(item).BottomEdge, fraction, above);
+			}
 			return this;
 		}
 
@@ -213,8 +239,11 @@ namespace PeterHan.PLib.UI {
 		/// <returns>This object, for call chaining.</returns>
 		public RelativeLayout SetLeftEdge(GameObject item, float fraction = -1.0f,
 				GameObject toRight = null) {
-			if (item != null)
+			if (item != null) {
+				if (toRight == item)
+					throw new ArgumentException("Component cannot refer directly to itself");
 				SetEdge(AddOrGet(item).LeftEdge, fraction, toRight);
+			}
 			return this;
 		}
 
@@ -226,7 +255,7 @@ namespace PeterHan.PLib.UI {
 		/// All components default to no insets.
 		/// 
 		/// Any reference to a component's edge using other constraints always refers to its
-		/// edge <b>after</b> insets are applied.
+		/// edge <b>before</b> insets are applied.
 		/// </summary>
 		/// <param name="item">The component to adjust.</param>
 		/// <param name="insets">The insets to apply. If null, the insets will be set to zero.</param>
@@ -253,8 +282,11 @@ namespace PeterHan.PLib.UI {
 		/// <returns>This object, for call chaining.</returns>
 		public RelativeLayout SetRightEdge(GameObject item, float fraction = -1.0f,
 				GameObject toLeft = null) {
-			if (item != null)
+			if (item != null) {
+				if (toLeft == item)
+					throw new ArgumentException("Component cannot refer directly to itself");
 				SetEdge(AddOrGet(item).RightEdge, fraction, toLeft);
+			}
 			return this;
 		}
 
@@ -276,8 +308,11 @@ namespace PeterHan.PLib.UI {
 		/// <returns>This object, for call chaining.</returns>
 		public RelativeLayout SetTopEdge(GameObject item, float fraction = -1.0f,
 				GameObject below = null) {
-			if (item != null)
+			if (item != null) {
+				if (below == item)
+					throw new ArgumentException("Component cannot refer directly to itself");
 				SetEdge(AddOrGet(item).TopEdge, fraction, below);
+			}
 			return this;
 		}
 	}

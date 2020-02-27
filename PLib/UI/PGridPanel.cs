@@ -25,38 +25,11 @@ namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// A panel which lays out its components using grid-type constraints.
 	/// </summary>
-	public class PGridPanel : IUIComponent {
-		/// <summary>
-		/// The background color of this panel.
-		/// </summary>
-		public Color BackColor { get; set; }
-
-		/// <summary>
-		/// The background image of this panel. Tinted by the background color, acts as all
-		/// white if left null.
-		/// 
-		/// Note that the default background color is transparent, so unless it is set to
-		/// some other color this image will be invisible!
-		/// </summary>
-		public Sprite BackImage { get; set; }
-
+	public class PGridPanel : PContainer {
 		/// <summary>
 		/// The number of columns currently defined.
 		/// </summary>
 		public int Columns => columns.Count;
-
-		/// <summary>
-		/// The flexible size bounds of this component.
-		/// </summary>
-		public Vector2 FlexSize { get; set; }
-
-		/// <summary>
-		/// The margin left around the contained components in pixels. If null, no margin will
-		/// be used.
-		/// </summary>
-		public RectOffset Margin { get; set; }
-
-		public string Name { get; }
 
 		/// <summary>
 		/// The number of rows currently defined.
@@ -78,18 +51,12 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		private readonly IList<GridRowSpec> rows;
 
-		public event PUIDelegates.OnRealize OnRealize;
-
 		public PGridPanel() : this(null) { }
 
-		public PGridPanel(string name) {
+		public PGridPanel(string name) : base(name ?? "GridPanel") {
 			children = new List<GridComponent<IUIComponent>>(16);
 			columns = new List<GridColumnSpec>(16);
 			rows = new List<GridRowSpec>(16);
-			FlexSize = Vector2.zero;
-			Name = name ?? "GridPanel";
-			BackColor = PUITuning.Colors.Transparent;
-			BackImage = null;
 			Margin = null;
 		}
 
@@ -132,18 +99,13 @@ namespace PeterHan.PLib.UI {
 			return this;
 		}
 
-		public GameObject Build() {
+		public override GameObject Build() {
 			if (Columns < 1)
 				throw new InvalidOperationException("At least one column must be defined");
 			if (Rows < 1)
 				throw new InvalidOperationException("At least one row must be defined");
 			var panel = PUIElements.CreateUI(null, Name);
-			if (BackColor.a > 0.0f || BackImage != null) {
-				var img = panel.AddComponent<Image>();
-				img.color = BackColor;
-				if (BackImage != null)
-					img.sprite = BackImage;
-			}
+			SetImage(panel);
 			// Add layout component
 			var layout = panel.AddComponent<PGridLayoutGroup>();
 			foreach (var column in columns)
@@ -155,7 +117,7 @@ namespace PeterHan.PLib.UI {
 				layout.AddComponent(child.Item.Build(), child);
 			layout.flexibleWidth = FlexSize.x;
 			layout.flexibleHeight = FlexSize.y;
-			OnRealize?.Invoke(panel);
+			InvokeRealize(panel);
 			return panel;
 		}
 
