@@ -259,8 +259,11 @@ namespace PeterHan.PLib.UI {
 						// Align correctly in the cell box
 						float x = colX[first], width = colX[last] - x;
 						if (margin != null) {
+							float border = margin.left + margin.right;
 							x += margin.left;
-							width -= margin.left + margin.right;
+							width -= border;
+							sizes.min -= border;
+							sizes.preferred -= border;
 						}
 						float setWidth = PUIUtils.GetProperSize(sizes, width);
 						item.rectTransform().SetInsetAndSizeFromParentEdge(RectTransform.Edge.
@@ -311,8 +314,11 @@ namespace PeterHan.PLib.UI {
 						// Align correctly in the cell box
 						float y = rowY[first], height = rowY[last] - y;
 						if (margin != null) {
+							float border = margin.top + margin.bottom;
 							y += margin.top;
-							height -= margin.top + margin.bottom;
+							height -= border;
+							sizes.min -= border;
+							sizes.preferred -= border;
 						}
 						float setHeight = PUIUtils.GetProperSize(sizes, height);
 						item.rectTransform().SetInsetAndSizeFromParentEdge(RectTransform.Edge.

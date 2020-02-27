@@ -24,7 +24,7 @@ namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// A custom UI combo box factory class.
 	/// </summary>
-	public sealed class PComboBox<T> : IDynamicSizable where T : class, IListableOption {
+	public sealed class PComboBox<T> : IUIComponent where T : class, IListableOption {
 		/// <summary>
 		/// The default margin around items in the pulldown.
 		/// </summary>
@@ -62,8 +62,6 @@ namespace PeterHan.PLib.UI {
 		/// The content of this combo box.
 		/// </summary>
 		public IEnumerable<T> Content { get; set; }
-
-		public bool DynamicSize { get; set; }
 
 		/// <summary>
 		/// The background color for each entry in the combo box pulldown.
@@ -127,7 +125,6 @@ namespace PeterHan.PLib.UI {
 			BackColor = null;
 			CheckSize = new Vector2(12.0f, 12.0f);
 			Content = null;
-			DynamicSize = false;
 			FlexSize = Vector2.zero;
 			InitialItem = null;
 			ItemMargin = DEFAULT_ITEM_MARGIN;
