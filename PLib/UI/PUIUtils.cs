@@ -128,8 +128,12 @@ namespace PeterHan.PLib.UI {
 					// Mimic the basic screens
 					var rootObject = new GameObject(name);
 					rootObject.SetParent(body);
-					rootObject.AddComponent<LayoutElement>();
-					rootObject.AddComponent<VerticalLayoutGroup>();
+					// Preserve the border by fitting the child
+					var fitter = rootObject.AddComponent<ContentSizeFitter>();
+					fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+					fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+					rootObject.AddComponent<VerticalLayoutGroup>().childAlignment =
+						TextAnchor.MiddleCenter;
 					rootObject.AddComponent<CanvasRenderer>();
 					var controller = rootObject.AddComponent<T>();
 					if (uiPrefab != null) {
