@@ -47,8 +47,8 @@ namespace PeterHan.PLib.UI {
 					lt.font);
 			else if (component is Image im) {
 				result.AppendFormat(", Color={0}", im.color);
-				if (im is KImage ki)
-					result.AppendFormat(", Sprite={0}", ki.sprite);
+				if (im.sprite != null)
+					result.AppendFormat(", Sprite={0}", im.sprite);
 			} else if (component is HorizontalOrVerticalLayoutGroup lg)
 				result.AppendFormat(", Child Align={0}, Control W={1}, Control H={2}",
 					lg.childAlignment, lg.childControlWidth, lg.childControlHeight);
@@ -129,11 +129,10 @@ namespace PeterHan.PLib.UI {
 					var rootObject = new GameObject(name);
 					rootObject.SetParent(body);
 					// Preserve the border by fitting the child
-					var fitter = rootObject.AddComponent<ContentSizeFitter>();
-					fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-					fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-					rootObject.AddComponent<VerticalLayoutGroup>().childAlignment =
-						TextAnchor.MiddleCenter;
+					rootObject.AddComponent<BoxLayoutGroup>().Params = new BoxLayoutParams() {
+						Direction = PanelDirection.Vertical, Alignment = TextAnchor.
+						UpperCenter, Margin = new RectOffset(1, 1, 0, 1)
+					};
 					rootObject.AddComponent<CanvasRenderer>();
 					var controller = rootObject.AddComponent<T>();
 					if (uiPrefab != null) {

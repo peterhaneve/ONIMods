@@ -27,7 +27,6 @@ using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 namespace PeterHan.DebugNotIncluded {
 	/// <summary>
@@ -113,8 +112,12 @@ namespace PeterHan.DebugNotIncluded {
 			POptions.RegisterOptions(typeof(DebugNotIncludedOptions));
 			if (DebugNotIncludedOptions.Instance?.LogAsserts ?? true)
 				LogAllFailedAsserts();
-			// XXX There is an exception logger in StateMachine.2.cs (GenericInstance.
-			// ExecuteActions) but open generic methods supposedly cannot be patched
+			// Patch the exception logger for state machines
+			var logException = typeof(DebugUtil).GetMethodSafe("LogException", true,
+				PPatchTools.AnyArguments);
+			if (logException != null)
+				ModDebugRegistry.Instance.DebugInstance.Patch(logException, prefix:
+					new HarmonyMethod(typeof(DebugLogger), nameof(DebugLogger.LogException)));
 			foreach (var mod in Global.Instance.modManager?.mods)
 				if (mod.label.install_path == path) {
 					ThisMod = mod;
@@ -223,7 +226,7 @@ namespace PeterHan.DebugNotIncluded {
 #endif
 				try {
 					target = typeof(Mod).Assembly.GetType("KMod.DLLLoader", false)?.
-						GetMethodSafe("LoadDLLs", true, typeof(string));
+						GetMethodSafe("LoadDLLs", true, PPatchTools.AnyArguments);
 					if (target == null)
 						DebugLogger.LogError("Unable to transpile LoadDLLs: Method not found");
 				} catch (IOException e) {
