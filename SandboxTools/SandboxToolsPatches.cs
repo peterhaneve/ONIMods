@@ -20,6 +20,7 @@ using Harmony;
 using PeterHan.PLib;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 using SearchFilter = SandboxToolParameterMenu.SelectorValue.SearchFilter;
@@ -29,6 +30,11 @@ namespace PeterHan.SandboxTools {
 	/// Patches which will be applied via annotations for Sandbox Tools.
 	/// </summary>
 	public static class SandboxToolsPatches {
+		/// <summary>
+		/// The method to invoke to set a slider's value.
+		/// </summary>
+		private static MethodInfo sliderSetValue;
+
 		/// <summary>
 		/// Adds more items to the spawner list, including geysers, artifacts, and POI items.
 		/// </summary>
@@ -135,8 +141,28 @@ namespace PeterHan.SandboxTools {
 			return def.Build(cell, orient, storage, elements, temperature, sound, timeBuilt);
 		}
 
+		/// <summary>
+		/// Sets the value of a slider in the sandbox tools menu.
+		/// </summary>
+		/// <param name="slider">The slider value to adjust.</param>
+		/// <param name="value">The new value.</param>
+		private static void CallSetValue(SandboxToolParameterMenu.SliderValue slider,
+				float value) {
+			if (slider != null && sliderSetValue != null) {
+				int n = sliderSetValue.GetParameters().Length;
+				object[] parameters = new object[n];
+				// Could be float, or float,bool
+				parameters[0] = value;
+				if (n > 1)
+					parameters[1] = true;
+				sliderSetValue.Invoke(slider, parameters);
+			}
+		}
+
 		public static void OnLoad() {
 			PUtil.InitLibrary();
+			sliderSetValue = typeof(SandboxToolParameterMenu.SliderValue).GetMethodSafe(
+				"SetValue", false, PPatchTools.AnyArguments);
 		}
 
 		/// <summary>
@@ -194,6 +220,11 @@ namespace PeterHan.SandboxTools {
 		/// </summary>
 		[HarmonyPatch(typeof(SandboxToolParameterMenu), "OnSpawn")]
 		public static class SandboxToolParameterMenu_OnSpawn_Patch {
+			internal static bool Prepare() {
+				// Both of these patches became vanilla as of 397241
+				return PUtil.GameVersion < 397241u;
+			}
+
 			/// <summary>
 			/// Applied after OnSpawn runs.
 			/// </summary>
@@ -201,9 +232,9 @@ namespace PeterHan.SandboxTools {
 				var settings = __instance.settings;
 				settings.OnChangeDisease += delegate {
 					// Use same instance as the default handler
-					SandboxToolParameterMenu.instance?.diseaseCountSlider?.SetValue(0.0f);
+					CallSetValue(SandboxToolParameterMenu.instance?.diseaseCountSlider, 0.0f);
 				};
-				__instance.diseaseCountSlider.SetValue(0.0f);
+				CallSetValue(__instance.diseaseCountSlider, 0.0f);
 				// Mass slider no longer rounds to nearest 1 kg if typed in, only to 0.01 kg
 				var massSlider = __instance.massSlider;
 				var massField = massSlider.inputField;
