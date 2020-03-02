@@ -28,7 +28,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// 
 		/// Only reports on the main menu.
 		/// </summary>
-		internal const float QUEUED_REPORT_DELAY = 2.0f;
+		internal const float QUEUED_REPORT_DELAY = 3.0f;
 
 		/// <summary>
 		/// The singleton instance of this class.
@@ -36,12 +36,21 @@ namespace PeterHan.DebugNotIncluded {
 		internal static QueuedReportManager Instance { get; } = new QueuedReportManager();
 
 		/// <summary>
-		/// Queues a delayed report. If no more delayed reports occur for 2 seconds after the
+		/// Queues a delayed report. If no more delayed reports occur for 3 seconds after the
 		/// main menu loads, the report will be executed.
 		/// </summary>
 		/// <param name="manager">The active mod manager.</param>
 		internal static void QueueDelayedReport(KMod.Manager manager, GameObject _) {
-			Instance.QueueReport();
+			Instance.QueueReport(false);
+		}
+
+		/// <summary>
+		/// Queues a delayed sanitize. If no more delayed reports occur for 3 seconds after the
+		/// main menu loads, the report will be executed.
+		/// </summary>
+		/// <param name="manager">The active mod manager.</param>
+		internal static void QueueDelayedSanitize(KMod.Manager manager, GameObject _) {
+			Instance.QueueReport(true);
 		}
 
 		/// <summary>
@@ -55,9 +64,15 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		private readonly object reportLock;
 
+		/// <summary>
+		/// Whether a sanitization pass was requested by Steam.
+		/// </summary>
+		private bool sanitizeRequested;
+
 		private QueuedReportManager() {
 			lastReportTime = 0.0f;
 			reportLock = new object();
+			sanitizeRequested = false;
 		}
 
 		/// <summary>
@@ -66,27 +81,35 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		/// <param name="parent">The parent of the dialog if necessary.</param>
 		internal void CheckQueuedReport(GameObject parent) {
-			bool report = false;
+			bool report = false, sanitize = false;
 			lock (reportLock) {
 				float time = lastReportTime;
 				// Due for a report?
 				if (time > 0.0f && (Time.unscaledTime - lastReportTime) >
 						QUEUED_REPORT_DELAY) {
+					sanitize = sanitizeRequested;
 					report = true;
 					lastReportTime = 0.0f;
+					sanitizeRequested = false;
 				}
 			}
-			if (report)
+			if (report) {
 				// Automatically does nothing if 0 events
-				Global.Instance.modManager?.Sanitize(parent);
+				if (sanitize)
+					Global.Instance.modManager.Sanitize(parent);
+				else
+					Global.Instance.modManager.Report(parent);
+			}
 		}
 
 		/// <summary>
 		/// Queues a request for a mod status report dialog.
 		/// </summary>
-		internal void QueueReport() {
+		internal void QueueReport(bool sanitize) {
 			lock (reportLock) {
 				lastReportTime = Time.unscaledTime;
+				if (sanitize)
+					sanitizeRequested = true;
 			}
 		}
 	}

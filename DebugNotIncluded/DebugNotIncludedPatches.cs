@@ -484,15 +484,22 @@ namespace PeterHan.DebugNotIncluded {
 					typeof(GameObject));
 				var sanitize = typeof(Manager).GetMethodSafe(nameof(Manager.Sanitize), false,
 					typeof(GameObject));
-				var replacement = typeof(QueuedReportManager).GetMethodSafe(nameof(
+				var newReport = typeof(QueuedReportManager).GetMethodSafe(nameof(
 					QueuedReportManager.QueueDelayedReport), true, typeof(Manager),
 					typeof(GameObject));
+				var newSanitize = typeof(QueuedReportManager).GetMethodSafe(nameof(
+					QueuedReportManager.QueueDelayedSanitize), true, typeof(Manager),
+					typeof(GameObject));
 				foreach (var instruction in method) {
-					var callee = instruction.operand as MethodInfo;
-					if (instruction.opcode == OpCodes.Callvirt && (callee == report ||
-							callee == sanitize) && replacement != null) {
-						instruction.opcode = OpCodes.Call;
-						instruction.operand = replacement;
+					if (instruction.opcode == OpCodes.Callvirt) {
+						var callee = instruction.operand as MethodInfo;
+						if (callee == report && newReport != null) {
+							instruction.opcode = OpCodes.Call;
+							instruction.operand = newReport;
+						} else if (callee == sanitize && newSanitize != null) {
+							instruction.opcode = OpCodes.Call;
+							instruction.operand = newSanitize;
+						}
 					}
 					yield return instruction;
 				}
