@@ -28,7 +28,7 @@ Mods should remain in their own subfolder.
 | :--------: | :---------------: |
 | [Claustrophobia](https://steamcommunity.com/sharedfiles/filedetails/?id=1836997281) | Triggers a warning if Duplicants are stuck or unable to access your colony |
 | [Critter Inventory](https://steamcommunity.com/sharedfiles/filedetails/?id=1831438994) | Adds tame and wild critters to the inventory list |
-| [Deselect New Materials](https://steamcommunity.com/sharedfiles/filedetails/?id=1863598374) | Deselects newly discovered materials from all storage compactors |
+| [Deselect New Materials](https://steamcommunity.com/sharedfiles/filedetails/?id=1863598374) | Optionally deselects newly discovered materials from storage buildings |
 | [Efficient Supply](https://steamcommunity.com/sharedfiles/filedetails/?id=1874600082) | Optimizes Supply errands by preventing the use of tiny item stacks |
 | [Falling Sand](https://steamcommunity.com/sharedfiles/filedetails/?id=1855163252) | Automatically places Dig errands on fallen unstable tiles caused by mining |
 | [Fast Save](https://steamcommunity.com/sharedfiles/filedetails/?id=1867707267) | Increases performance when loading, saving, or automatically saving the game |
