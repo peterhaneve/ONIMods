@@ -112,6 +112,7 @@ namespace PeterHan.FastSave {
 					screenData.Apply();
 					BackgroundTimelapser.Instance.Start(___previewSaveGamePath, screenData,
 						___previewScreenshot);
+					Object.Destroy(screenData);
 				}
 				return false;
 			}

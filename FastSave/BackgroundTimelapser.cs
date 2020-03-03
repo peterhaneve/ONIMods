@@ -18,9 +18,11 @@
 
 using PeterHan.PLib;
 using System;
+using System.Collections;
 using System.IO;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace PeterHan.FastSave {
 	/// <summary>
@@ -39,19 +41,10 @@ namespace PeterHan.FastSave {
 		/// </summary>
 		/// <param name="data">The uncompressed preview image data.</param>
 		private void DoSave(BackgroundTimelapseData data) {
-			var screenData = data.TextureData;
+			var screenData = data.RawData;
 			string previewPath = data.SaveGamePath;
 			bool preview = data.Preview;
-			byte[] rawPNG;
-			// Encode PNG (this is the woofy part on high resolution)
-#if DEBUG
-			PUtil.LogDebug("Encoding preview image");
-#endif
-			try {
-				rawPNG = screenData.EncodeToPNG();
-			} finally {
-				data.Dispose();
-			}
+			byte[] rawPNG = data.RawData;
 			try {
 				string retiredPath = Path.Combine(Util.RootFolder(), Util.
 					GetRetiredColoniesFolderName());
@@ -74,7 +67,6 @@ namespace PeterHan.FastSave {
 				}
 				PUtil.LogDebug("Saving screenshot to " + path);
 				File.WriteAllBytes(path, rawPNG);
-				rawPNG = null;
 #if DEBUG
 				PUtil.LogDebug("Background screenshot save complete");
 #endif
@@ -90,27 +82,40 @@ namespace PeterHan.FastSave {
 		/// <summary>
 		/// Starts saving the colony preview image in the background.
 		/// </summary>
-		/// <param name="preview">true if the image is a colony preview, or false otherwise.</param>
 		/// <param name="previewPath">The path to save the preview; ignored if saving a colony summary / timelapse image.</param>
-		/// <param name="textureData">The texture data to save.</param>
-		public void Start(string previewPath, Texture2D textureData, bool preview) {
+		/// <param name="rawData">The raw, unencoded image data to save.</param>
+		/// <param name="preview">true if the image is a colony preview, or false otherwise.</param>
+		private void Save(string previewPath, byte[] rawData, bool preview) {
 #if DEBUG
 			PUtil.LogDebug("Starting preview image save");
 #endif
 			var task = new Thread(() => DoSave(new BackgroundTimelapseData(previewPath,
-				textureData, preview)));
+				rawData, preview)));
 			Util.ApplyInvariantCultureToThread(task);
 			task.Priority = System.Threading.ThreadPriority.BelowNormal;
 			task.Name = "Background Timelapser";
 			Thread.MemoryBarrier();
 			task.Start();
 		}
+
+		/// <summary>
+		/// Starts saving the colony preview image in the background.
+		/// </summary>
+		/// <param name="previewPath">The path to save the preview; ignored if saving a colony summary / timelapse image.</param>
+		/// <param name="target">The image data to save.</param>
+		/// <param name="preview">true if the image is a colony preview, or false otherwise.</param>
+		public void Start(string previewPath, Texture2D target, bool preview) {
+#if DEBUG
+			PUtil.LogDebug("Encoding preview image");
+#endif
+			Save(previewPath, target.EncodeToPNG(), preview);
+		}
 	}
 
 	/// <summary>
 	/// Stores information for the handoff to PNG file writing in the background.
 	/// </summary>
-	internal sealed class BackgroundTimelapseData : IDisposable {
+	internal sealed class BackgroundTimelapseData {
 		/// <summary>
 		/// The timelapse preview path to be written. Only valid if Preview is true.
 		/// </summary>
@@ -124,18 +129,14 @@ namespace PeterHan.FastSave {
 		/// <summary>
 		/// The screenshot data.
 		/// </summary>
-		internal Texture2D TextureData { get; }
+		internal byte[] RawData { get; }
 
-		public BackgroundTimelapseData(string savePath, Texture2D textureData, bool preview) {
+		public BackgroundTimelapseData(string savePath, byte[] rawData, bool preview) {
 			if (string.IsNullOrEmpty(savePath) && preview)
 				throw new ArgumentNullException("savePath");
 			SaveGamePath = savePath;
 			Preview = preview;
-			TextureData = textureData ?? throw new ArgumentNullException("textureData");
-		}
-
-		public void Dispose() {
-			UnityEngine.Object.Destroy(TextureData);
+			RawData = rawData ?? throw new ArgumentNullException("rawData");
 		}
 	}
 }
