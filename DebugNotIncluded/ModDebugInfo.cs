@@ -40,7 +40,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// <summary>
 		/// The Harmony identifier which would be used for this mod's annotation patches.
 		/// </summary>
-		public string HarmonyIdentifier { get; }
+		public string HarmonyIdentifier { get; internal set; }
 
 		/// <summary>
 		/// The Harmony instance used for this mod's annotation patches. Can be null if no

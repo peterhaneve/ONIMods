@@ -242,7 +242,7 @@ namespace PeterHan.DebugNotIncluded {
 				GameObject rowPrefab) {
 			return new ElementReference() {
 				Name = name, behaviour = new PButton(name) {
-					DynamicSize = false, SpriteSize = SPRITE_SIZE, Sprite = sprite
+					SpriteSize = SPRITE_SIZE, Sprite = sprite
 				}.SetKleiPinkStyle().AddTo(rowPrefab).GetComponent<KButton>()
 			};
 		}

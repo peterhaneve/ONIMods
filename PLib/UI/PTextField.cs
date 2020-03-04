@@ -16,11 +16,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.UI.Layouts;
 using System;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace PeterHan.PLib.UI {
@@ -162,12 +160,14 @@ namespace PeterHan.PLib.UI {
 			if (!string.IsNullOrEmpty(ToolTip))
 				textField.AddComponent<ToolTip>().toolTip = ToolTip;
 			mask.enabled = true;
-			// Lay out - TMP_InputField does not support auto layout but we do!
-			var layout = textField.AddComponent<PTextFieldLayout>();
-			PUIElements.SetAnchorOffsets(textArea, 1.0f, 1.0f, 1.0f, 1.0f);
-			layout.minWidth = MinWidth;
-			layout.flexibleWidth = FlexSize.x;
-			layout.flexibleHeight = FlexSize.y;
+			// Lay out, even better than before
+			var tbTransform = textBox.rectTransform();
+			LayoutRebuilder.ForceRebuildLayoutImmediate(tbTransform);
+			new RelativeLayout(textField).SetTopEdge(textArea, fraction: 1.0f).SetBottomEdge(
+				textArea, fraction: 0.0f).SetMargin(textArea, new RectOffset(1, 1, 1, 1)).
+				OverrideSize(textArea, new Vector2(MinWidth, LayoutUtility.GetPreferredHeight(
+				tbTransform))).Execute(true);
+			textField.SetFlexUISize(FlexSize);
 			OnRealize?.Invoke(textField);
 			return textField;
 		}
@@ -235,32 +235,6 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		public enum FieldType {
 			Text, Integer, Float
-		}
-
-		/// <summary>
-		/// Handles layout for text boxes. Not freezable.
-		/// </summary>
-		private sealed class PTextFieldLayout : AbstractTextFieldLayout {
-			protected override float BorderSize => 1.0f;
-
-			public override void CalculateLayoutInputVertical() {
-#pragma warning disable IDE0031 // Use null propagation
-				var child = (textBox == null) ? null : textBox.rectTransform();
-#pragma warning restore IDE0031
-				if (textArea != null && calcElements != null) {
-					// Lay out children
-					foreach (var component in calcElements)
-						component.CalculateLayoutInputVertical();
-					calcElements = null;
-				}
-				if (child != null) {
-					float height = LayoutUtility.GetPreferredHeight(child);
-					// 1px for the border
-					minHeight = preferredHeight = height + 2.0f;
-				} else
-					// Fallback if text box is somehow not set
-					minHeight = preferredHeight = 1.0f;
-			}
 		}
 	}
 }

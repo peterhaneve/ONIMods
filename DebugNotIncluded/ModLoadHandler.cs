@@ -17,6 +17,7 @@
  */
 
 using Harmony;
+using PeterHan.PLib;
 using System;
 using System.Reflection;
 
@@ -62,14 +63,19 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		internal static HarmonyInstance CreateHarmonyInstance(string name) {
 			HarmonyInstance instance;
+			if (CurrentMod != null) {
+				// This mod's changes to names were integrated into the game!
+				if (PUtil.GameVersion >= 397125u)
+					CurrentMod.HarmonyIdentifier = name;
+				else
+					name = CurrentMod.HarmonyIdentifier;
+			}
+			instance = HarmonyInstance.Create(name);
 			if (CurrentMod != null)
-				instance = CurrentMod.HarmonyInstance = HarmonyInstance.Create(CurrentMod.
-					HarmonyIdentifier);
-			else
-				instance = HarmonyInstance.Create(name);
+				CurrentMod.HarmonyInstance = instance;
 #if DEBUG
 			DebugLogger.LogDebug("Created Harmony instance with ID {0} for mod {1}",
-				instance.Id, CurrentModTitle);
+				name, CurrentModTitle);
 #endif
 			return instance;
 		}

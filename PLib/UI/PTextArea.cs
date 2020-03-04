@@ -143,13 +143,12 @@ namespace PeterHan.PLib.UI {
 			if (!string.IsNullOrEmpty(ToolTip))
 				textField.AddComponent<ToolTip>().toolTip = ToolTip;
 			mask.enabled = true;
-			// Lay out - TMP_InputField does not support auto layout but we do!
-			var element = textField.AddOrGet<PTextAreaLayout>();
-			PUIElements.SetAnchorOffsets(textArea, 1.0f, 1.0f, 1.0f, 1.0f);
-			element.minWidth = MinWidth;
-			element.CalculatedHeight = Math.Max(LineCount, 1) * PUIUtils.GetLineHeight(style);
-			element.flexibleHeight = FlexSize.y;
-			element.flexibleWidth = FlexSize.x;
+			// Lay out, even better than before
+			new RelativeLayout(textField).SetTopEdge(textArea, fraction: 1.0f).SetBottomEdge(
+				textArea, fraction: 0.0f).SetMargin(textArea, new RectOffset(1, 1, 1, 1)).
+				OverrideSize(textArea, new Vector2(MinWidth, Math.Max(LineCount, 1) * PUIUtils.
+				GetLineHeight(style))).Execute(true);
+			textField.SetFlexUISize(FlexSize);
 			OnRealize?.Invoke(textField);
 			return textField;
 		}
@@ -209,39 +208,6 @@ namespace PeterHan.PLib.UI {
 
 		public override string ToString() {
 			return "PTextArea[Name={0}]".F(Name);
-		}
-
-		/// <summary>
-		/// Handles layout for text areas. Not freezable.
-		/// </summary>
-		private sealed class PTextAreaLayout : AbstractTextFieldLayout {
-			protected override float BorderSize => 1.0f;
-
-			/// <summary>
-			/// The calculated height of the text box according to the line count set.
-			/// </summary>
-			internal float CalculatedHeight { get; set; }
-
-			public override void CalculateLayoutInputVertical() {
-#pragma warning disable IDE0031 // Use null propagation
-				var child = (textBox == null) ? null : textBox.rectTransform();
-#pragma warning restore IDE0031
-				if (textArea != null && calcElements != null) {
-					// Lay out children
-					foreach (var component in calcElements)
-						component.CalculateLayoutInputVertical();
-					calcElements = null;
-				}
-				if (child != null) {
-					float height = CalculatedHeight;
-					if (height.IsNaNOrInfinity() || height <= 0.0f)
-						height = LayoutUtility.GetPreferredHeight(child);
-					// 1px for the border
-					minHeight = preferredHeight = height + 2.0f;
-				} else
-					// Fallback if text box is somehow not set
-					minHeight = preferredHeight = 1.0f;
-			}
 		}
 	}
 }

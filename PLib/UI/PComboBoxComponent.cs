@@ -192,10 +192,12 @@ namespace PeterHan.PLib.UI {
 			if (option != null) {
 				SelectedLabel?.SetText(option.GetProperName());
 				// No guarantee that the options are hashable
-				foreach (var item in currentItems)
+				foreach (var item in currentItems) {
+					var data = item.data;
 					// Show or hide the check mark next to the selected option
-					item.rowImage.color = (item.data == option) ? CheckColor : PUITuning.
-						Colors.Transparent;
+					item.rowImage.color = (data != null && data.Equals(option)) ? CheckColor :
+						PUITuning.Colors.Transparent;
+				}
 				if (fireListener)
 					OnSelectionChanged?.Invoke(this, option);
 			}

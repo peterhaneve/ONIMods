@@ -247,7 +247,8 @@ namespace PeterHan.DebugNotIncluded {
 					HarmonyInstance.Create), true, typeof(string));
 				var loadFrom = typeof(Assembly).GetMethodSafe(nameof(Assembly.LoadFrom), true,
 					typeof(string));
-				bool patchException = false, patchAssembly = false, patchCreate = false;
+				bool patchException = PUtil.GameVersion >= 397125u, patchAssembly = false,
+					patchCreate = false;
 				// Add call to our handler in exception block, and wrap harmony instances to
 				// have more information on each mod
 				for (int i = instructions.Count - 1; i > 0; i--) {

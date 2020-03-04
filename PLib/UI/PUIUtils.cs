@@ -126,14 +126,12 @@ namespace PeterHan.PLib.UI {
 					// The ref normally contains a prefab which is instantiated
 					var newScreen = new SideScreenRef();
 					// Mimic the basic screens
-					var rootObject = new GameObject(name);
-					rootObject.SetParent(body);
+					var rootObject = PUIElements.CreateUI(body, name);
 					// Preserve the border by fitting the child
 					rootObject.AddComponent<BoxLayoutGroup>().Params = new BoxLayoutParams() {
 						Direction = PanelDirection.Vertical, Alignment = TextAnchor.
 						UpperCenter, Margin = new RectOffset(1, 1, 0, 1)
 					};
-					rootObject.AddComponent<CanvasRenderer>();
 					var controller = rootObject.AddComponent<T>();
 					if (uiPrefab != null) {
 						// Add prefab if supplied
@@ -197,18 +195,15 @@ namespace PeterHan.PLib.UI {
 				}
 				if ((component as Behaviour)?.isActiveAndEnabled != false && component is
 						ILayoutElement le) {
-					// Calculate must come first
-					if (direction == PanelDirection.Horizontal)
-						le.CalculateLayoutInputHorizontal();
-					else // if (direction == PanelDirection.Vertical)
-						le.CalculateLayoutInputVertical();
 					int lp = le.layoutPriority;
-					// Larger values win
+					// Calculate must come first
 					if (direction == PanelDirection.Horizontal) {
+						le.CalculateLayoutInputHorizontal();
 						PriValue(ref min, le.minWidth, lp, ref minPri);
 						PriValue(ref preferred, le.preferredWidth, lp, ref prefPri);
 						PriValue(ref flexible, le.flexibleWidth, lp, ref flexPri);
-					} else {
+					} else { // if (direction == PanelDirection.Vertical)
+						le.CalculateLayoutInputVertical();
 						PriValue(ref min, le.minHeight, lp, ref minPri);
 						PriValue(ref preferred, le.preferredHeight, lp, ref prefPri);
 						PriValue(ref flexible, le.flexibleHeight, lp, ref flexPri);
