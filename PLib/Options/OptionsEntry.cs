@@ -18,14 +18,69 @@
 
 using PeterHan.PLib.UI;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+
+using OptionsList = System.Collections.Generic.ICollection<PeterHan.PLib.Options.OptionsEntry>;
 
 namespace PeterHan.PLib.Options {
 	/// <summary>
 	/// An entry in the Options screen for one particular setting.
 	/// </summary>
 	internal abstract class OptionsEntry : IComparable<OptionsEntry> {
+		/// <summary>
+		/// Builds the options entries from the type.
+		/// </summary>
+		/// <param name="forType">The type of the options class.</param>
+		/// <returns>A list of all public properties annotated for options dialogs.</returns>
+		internal static IDictionary<string, OptionsList> BuildOptions(Type forType) {
+			var entries = new SortedList<string, OptionsList>(8);
+			OptionAttribute oa;
+			foreach (var prop in forType.GetProperties())
+				// Must have the annotation
+				foreach (var attr in prop.GetCustomAttributes(false))
+					if ((oa = OptionAttribute.CreateFrom(attr)) != null) {
+						// Attempt to find a class that will represent it
+						var entry = CreateOptions(prop, oa);
+						if (entry != null) {
+							string category = entry.Category ?? "";
+							// Add this category if it does not exist
+							if (!entries.TryGetValue(category, out OptionsList inCat)) {
+								inCat = new List<OptionsEntry>(16);
+								entries.Add(category, inCat);
+							}
+							inCat.Add(entry);
+						}
+						break;
+					}
+			return entries;
+		}
+
+		/// <summary>
+		/// Creates an options entry wrapper for the specified property.
+		/// </summary>
+		/// <param name="info">The property to wrap.</param>
+		/// <param name="oa">The option title and tool tip.</param>
+		/// <returns>An options wrapper, or null if none can handle this type.</returns>
+		private static OptionsEntry CreateOptions(PropertyInfo info, OptionAttribute oa) {
+			OptionsEntry entry = null;
+			Type type = info.PropertyType;
+			string field = info.Name;
+			// Enumeration type
+			if (type.IsEnum)
+				entry = new SelectOneOptionsEntry(field, oa, type);
+			else if (type == typeof(bool))
+				entry = new CheckboxOptionsEntry(field, oa);
+			else if (type == typeof(int))
+				entry = new IntOptionsEntry(oa, info);
+			else if (type == typeof(float))
+				entry = new FloatOptionsEntry(oa, info);
+			else if (type == typeof(string))
+				entry = new StringOptionsEntry(oa, info);
+			return entry;
+		}
+
 		/// <summary>
 		/// Searches for LimitAttribute attributes on the property wrapped by an OptionsEntry.
 		/// </summary>
@@ -37,6 +92,23 @@ namespace PeterHan.PLib.Options {
 				if ((fieldLimits = LimitAttribute.CreateFrom(attr)) != null)
 					break;
 			return fieldLimits;
+		}
+
+		/// <summary>
+		/// First looks to see if the string exists in the string database; if it does, returns
+		/// the localized value, otherwise returns the string unmodified.
+		/// 
+		/// This method is somewhat slow. Cache the result if possible.
+		/// </summary>
+		/// <param name="keyOrValue">The string key to check.</param>
+		/// <returns>The string value with that key, or the key if there is no such localized
+		/// string value.</returns>
+		internal static string LookInStrings(string keyOrValue) {
+			string result = keyOrValue;
+			if (!string.IsNullOrEmpty(keyOrValue) && Strings.TryGet(keyOrValue, out StringEntry
+					entry))
+				result = entry.String;
+			return result;
 		}
 
 		/// <summary>
@@ -97,9 +169,9 @@ namespace PeterHan.PLib.Options {
 				Direction = PanelDirection.Horizontal, FlexSize = Vector2.right,
 				Spacing = 5, Alignment = TextAnchor.MiddleCenter
 			}.AddChild(new PLabel("Label") {
-				Text = OptionsDialog.LookInStrings(Title), ToolTip = OptionsDialog.
-				LookInStrings(ToolTip), FlexSize = Vector2.right, TextAlignment = TextAnchor.
-				MiddleLeft, TextStyle = PUITuning.Fonts.TextLightStyle
+				Text = LookInStrings(Title), ToolTip = LookInStrings(ToolTip), FlexSize =
+				Vector2.right, TextAlignment = TextAnchor.MiddleLeft, TextStyle = PUITuning.
+				Fonts.TextLightStyle
 			}).AddChild(GetUIComponent());
 		}
 

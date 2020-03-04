@@ -44,6 +44,23 @@ namespace PeterHan.PLib.UI {
 		public static LocString DIALOG_TITLE = "Options for {0}";
 
 		/// <summary>
+		/// The mod version in Mod Options if retrieved from the default AssemblyVersion, where
+		/// {0} is substituted with the version text.
+		/// </summary>
+		public static LocString MOD_ASSEMBLY_VERSION = "Assembly Version: {0}";
+
+		/// <summary>
+		/// The button text which goes to the mod's home page when clicked.
+		/// </summary>
+		public static LocString MOD_HOMEPAGE = "Mod Homepage";
+
+		/// <summary>
+		/// The mod version in Mod Options if specified via AssemblyFileVersion, where {0} is
+		/// substituted with the version text.
+		/// </summary>
+		public static LocString MOD_VERSION = "Mod Version: {0}";
+
+		/// <summary>
 		/// The cancel button in the restart dialog.
 		/// </summary>
 		public static LocString RESTART_CANCEL = STRINGS.UI.FRONTEND.MOD_DIALOGS.RESTART.CANCEL;
@@ -63,6 +80,11 @@ namespace PeterHan.PLib.UI {
 		/// The tooltip on the CANCEL button.
 		/// </summary>
 		public static LocString TOOLTIP_CANCEL = "Discard changes.";
+
+		/// <summary>
+		/// The tooltip on the Mod Homepage button.
+		/// </summary>
+		public static LocString TOOLTIP_HOMEPAGE = "Visit the mod's website.";
 
 		/// <summary>
 		/// The tooltip on the MANUAL CONFIG button.
@@ -89,5 +111,10 @@ namespace PeterHan.PLib.UI {
 		/// The tooltip for each category visibility toggle.
 		/// </summary>
 		public static LocString TOOLTIP_TOGGLE = "Show or hide this options category";
+
+		/// <summary>
+		/// The tooltip for the mod version.
+		/// </summary>
+		public static LocString TOOLTIP_VERSION = "The currently installed version of this mod.\n\nCompare this version with the mod's Release Notes to see if it is outdated.";
 	}
 }

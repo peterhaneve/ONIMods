@@ -23,79 +23,38 @@ using System.IO;
 using System.Reflection;
 using UnityEngine;
 
-using OptionsList = System.Collections.Generic.ICollection<PeterHan.PLib.Options.OptionsEntry>;
-
 namespace PeterHan.PLib.Options {
 	/// <summary>
 	/// A dialog for handling mod options events.
 	/// </summary>
 	internal sealed class OptionsDialog {
 		/// <summary>
-		/// Builds the options entries from the type.
+		/// The color of option category titles.
 		/// </summary>
-		/// <param name="forType">The type of the options class.</param>
-		/// <returns>A list of all public properties annotated for options dialogs.</returns>
-		private static IDictionary<string, OptionsList> BuildOptions(Type forType) {
-			var entries = new SortedList<string, OptionsList>(8);
-			OptionAttribute oa;
-			foreach (var prop in forType.GetProperties())
-				// Must have the annotation
-				foreach (var attr in prop.GetCustomAttributes(false))
-					if ((oa = OptionAttribute.CreateFrom(attr)) != null) {
-						// Attempt to find a class that will represent it
-						var entry = CreateOptions(prop, oa);
-						if (entry != null) {
-							string category = entry.Category ?? "";
-							// Add this category if it does not exist
-							if (!entries.TryGetValue(category, out OptionsList inCat)) {
-								inCat = new List<OptionsEntry>(16);
-								entries.Add(category, inCat);
-							}
-							inCat.Add(entry);
-						}
-						break;
-					}
-			return entries;
-		}
+		private static readonly Color CATEGORY_TITLE_COLOR = new Color32(143, 150, 175, 255);
 
 		/// <summary>
-		/// First looks to see if the string exists in the string database; if it does, returns
-		/// the localized value, otherwise returns the string unmodified.
-		/// 
-		/// This method is somewhat slow. Cache the result if possible.
+		/// The text style applied to option category titles.
 		/// </summary>
-		/// <param name="keyOrValue">The string key to check.</param>
-		/// <returns>The string value with that key, or the key if there is no such localized
-		/// string value.</returns>
-		internal static string LookInStrings(string keyOrValue) {
-			string result = keyOrValue;
-			if (Strings.TryGet(keyOrValue, out StringEntry entry))
-				result = entry.String;
-			return result;
-		}
+		private static readonly TextStyleSetting CATEGORY_TITLE_STYLE;
 
 		/// <summary>
-		/// Creates an options entry wrapper for the specified property.
+		/// The size of the mod preview image displayed.
 		/// </summary>
-		/// <param name="info">The property to wrap.</param>
-		/// <param name="oa">The option title and tool tip.</param>
-		/// <returns>An options wrapper, or null if none can handle this type.</returns>
-		private static OptionsEntry CreateOptions(PropertyInfo info, OptionAttribute oa) {
-			OptionsEntry entry = null;
-			Type type = info.PropertyType;
-			string field = info.Name;
-			// Enumeration type
-			if (type.IsEnum)
-				entry = new SelectOneOptionsEntry(field, oa, type);
-			else if (type == typeof(bool))
-				entry = new CheckboxOptionsEntry(field, oa);
-			else if (type == typeof(int))
-				entry = new IntOptionsEntry(oa, info);
-			else if (type == typeof(float))
-				entry = new FloatOptionsEntry(oa, info);
-			else if (type == typeof(string))
-				entry = new StringOptionsEntry(oa, info);
-			return entry;
+		private static readonly Vector2 MOD_IMAGE_SIZE = new Vector2(192.0f, 192.0f);
+
+		/// The default size of the Mod Settings dialog.
+		/// </summary>
+		private static readonly Vector2 SETTINGS_DIALOG_SIZE = new Vector2(320.0f, 200.0f);
+
+		/// <summary>
+		/// The maximum size of the Mod Settings dialog before it gets scroll bars.
+		/// </summary>
+		private static readonly Vector2 SETTINGS_DIALOG_MAX_SIZE = new Vector2(640.0f, 480.0f);
+
+		static OptionsDialog() {
+			CATEGORY_TITLE_STYLE = PUITuning.Fonts.UILightStyle.DeriveStyle(newColor:
+				CATEGORY_TITLE_COLOR, style: TMPro.FontStyles.Bold);
 		}
 
 		/// <summary>
@@ -112,14 +71,30 @@ namespace PeterHan.PLib.Options {
 		private KScreen dialog;
 
 		/// <summary>
+		/// The mod information attribute for the options type, if present.
+		/// </summary>
+		private readonly ModInfoAttribute infoAttr;
+
+		/// <summary>
+		/// The sprite to display for this mod.
+		/// </summary>
+		private Sprite modImage;
+
+		/// <summary>
 		/// The mod whose settings are being modified.
 		/// </summary>
 		private readonly KMod.Mod modSpec;
 
 		/// <summary>
+		/// The URL to open if the Mod Homepage button is pressed. The button will be hidden
+		/// if this is calculated to be null or empty.
+		/// </summary>
+		private readonly string modURL;
+
+		/// <summary>
 		/// The option entries in the dialog.
 		/// </summary>
-		private readonly IDictionary<string, OptionsList> optionCategories;
+		private readonly IDictionary<string, ICollection<OptionsEntry>> optionCategories;
 
 		/// <summary>
 		/// The options read from the config. It might contain hidden options so preserve its
@@ -144,11 +119,13 @@ namespace PeterHan.PLib.Options {
 
 		internal OptionsDialog(Type optionsType, KMod.Mod modSpec) {
 			dialog = null;
+			modImage = null;
 			this.modSpec = modSpec ?? throw new ArgumentNullException("modSpec");
 			this.optionsType = optionsType ?? throw new ArgumentNullException("optionsType");
-			optionCategories = BuildOptions(optionsType);
+			optionCategories = OptionsEntry.BuildOptions(optionsType);
 			options = null;
 			// Determine config location
+			infoAttr = POptions.GetModInfoAttribute(optionsType);
 			typeAttr = POptions.GetConfigFileAttribute(optionsType);
 			var src = modSpec.file_source;
 			if (src == null)
@@ -156,6 +133,14 @@ namespace PeterHan.PLib.Options {
 			else
 				path = Path.Combine(src.GetRoot(), typeAttr?.ConfigFileName ?? POptions.
 					CONFIG_FILE_NAME);
+			// Find mod home page
+			string url = infoAttr?.URL;
+			var label = modSpec.label;
+			if (string.IsNullOrEmpty(url) && label.distribution_platform == KMod.Label.
+					DistributionPlatform.Steam)
+				// Steam mods use their workshop ID as the label
+				url = "https://steamcommunity.com/sharedfiles/filedetails/?id=" + label.id;
+			modURL = url;
 		}
 
 		/// <summary>
@@ -166,22 +151,74 @@ namespace PeterHan.PLib.Options {
 		/// <param name="contents">The panel containing the options in this category.</param>
 		private void AddCategoryHeader(PPanel body, string category, PPanel contents) {
 			if (!string.IsNullOrEmpty(category)) {
-				var handler = new CategoryExpandHandler();
+				bool state = !(infoAttr?.ForceCollapseCategories ?? false);
+				var handler = new CategoryExpandHandler(state);
 				body.AddChild(new PPanel("CategorySelect") {
 					FlexSize = Vector2.right, Alignment = TextAnchor.MiddleLeft, Spacing = 5,
 					Direction = PanelDirection.Horizontal, Margin = new RectOffset(0, 0, 0, 2)
 				}.AddChild(new PToggle("CategoryToggle") {
-					Color = PUITuning.Colors.ComponentDarkStyle, InitialState = true,
+					Color = PUITuning.Colors.ComponentDarkStyle, InitialState = state,
 					ToolTip = PUIStrings.TOOLTIP_TOGGLE, Size = new Vector2(12.0f, 12.0f),
 					OnStateChanged = handler.OnExpandContract
 				}).AddChild(new PLabel("CategoryHeader") {
-					Text = LookInStrings(category), TextStyle = POptions.TITLE_STYLE,
-					TextAlignment = TextAnchor.LowerCenter, FlexSize = Vector2.right,
+					Text = OptionsEntry.LookInStrings(category), FlexSize = Vector2.right,
+					TextAlignment = TextAnchor.LowerCenter, TextStyle = CATEGORY_TITLE_STYLE
 				}));
 				if (contents != null)
 					contents.OnRealize += handler.OnRealizePanel;
 			}
 			body.AddChild(contents);
+		}
+
+		/// <summary>
+		/// Fills in the mod info screen, assuming that infoAttr is non-null.
+		/// </summary>
+		/// <param name="dialog">The dialog to populate.</param>
+		private void AddModInfoScreen(PDialog dialog) {
+			var asm = optionsType.Assembly;
+			string image = infoAttr.Image, version = asm.GetFileVersion();
+			var body = dialog.Body;
+			// Use FileVersion if available, else assembly version
+			if (string.IsNullOrEmpty(version))
+				version = string.Format(PUIStrings.MOD_ASSEMBLY_VERSION, asm.GetName().
+					Version);
+			else
+				version = string.Format(PUIStrings.MOD_VERSION, version);
+			// Try to load the mod image sprite if possible
+			if (modImage == null && !string.IsNullOrEmpty(image)) {
+				string rootDir = modSpec.file_source?.GetRoot();
+				modImage = PUIUtils.LoadSprite(rootDir == null ? image : Path.Combine(rootDir,
+					image));
+			}
+			var websiteButton = new PButton("ModSite") {
+				Text = PUIStrings.MOD_HOMEPAGE, ToolTip = PUIStrings.TOOLTIP_HOMEPAGE,
+				OnClick = VisitModHomepage
+			};
+			var versionLabel = new PLabel("ModVersion") {
+				Text = version, ToolTip = PUIStrings.TOOLTIP_VERSION, TextStyle = PUITuning.
+				Fonts.UILightStyle, Margin = new RectOffset(0, 0, 5, 0)
+			};
+			if (modImage != null) {
+				// 2 rows and 1 column
+				if (optionCategories.Count > 0)
+					body.Direction = PanelDirection.Horizontal;
+				var infoPanel = new PPanel("ModInfo") {
+					FlexSize = Vector2.up, Direction = PanelDirection.Vertical,
+					Alignment = TextAnchor.UpperCenter
+				}.AddChild(new PLabel("ModImage") {
+					Sprite = modImage, SpriteSize = MOD_IMAGE_SIZE, Margin =
+					new RectOffset(0, 0, 0, 10), TextAlignment = TextAnchor.UpperCenter
+				});
+				if (!string.IsNullOrEmpty(modURL))
+					infoPanel.AddChild(websiteButton);
+				infoPanel.AddChild(versionLabel);
+				body.AddChild(infoPanel);
+			} else {
+				if (!string.IsNullOrEmpty(modURL))
+					body.AddChild(websiteButton);
+				body.AddChild(versionLabel);
+			}
+			body.AddChild(new PSpacer() { PreferredSize = new Vector2(10.0f, 5.0f) });
 		}
 
 		/// <summary>
@@ -212,7 +249,12 @@ namespace PeterHan.PLib.Options {
 		private void CloseDialog() {
 			if (dialog != null) {
 				dialog.Deactivate();
+				// dialog's game object is destroyed by Deactivate()
 				dialog = null;
+			}
+			if (modImage != null) {
+				UnityEngine.Object.Destroy(modImage);
+				modImage = null;
 			}
 		}
 
@@ -239,9 +281,9 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// Fills in the actual mod option fields.
 		/// </summary>
-		/// <param name="pDialog">The dialog to populate.</param>
-		private void FillModOptions(PDialog pDialog) {
-			PPanel body = pDialog.Body, current, contents;
+		/// <param name="dialog">The dialog to populate.</param>
+		private void FillModOptions(PDialog dialog) {
+			PPanel body = dialog.Body, current, contents;
 			var margin = body.Margin;
 			// For each option, add its UI component to panel
 			body.Margin = new RectOffset();
@@ -253,7 +295,8 @@ namespace PeterHan.PLib.Options {
 			foreach (var catEntries in optionCategories) {
 				string category = catEntries.Key;
 				if (catEntries.Value.Count > 0) {
-					current = new PPanel("Category_" + category) {
+					current = new PPanel("Category_" + (string.IsNullOrEmpty(category) ?
+						"Default" : category)) {
 						Alignment = TextAnchor.UpperCenter, Spacing = 5, Margin = margin,
 						BackColor = PUITuning.Colors.DialogDarkBackground,
 						FlexSize = Vector2.right
@@ -275,9 +318,9 @@ namespace PeterHan.PLib.Options {
 				PDialog.BUTTON_MARGIN
 			}.SetKleiBlueStyle());
 			body.AddChild(new PScrollPane() {
-				ScrollHorizontal = false, ScrollVertical = true, Child = scrollBody,
-				FlexSize = Vector2.right, TrackSize = 8, AlwaysShowHorizontal = false,
-				AlwaysShowVertical = false
+				ScrollHorizontal = false, ScrollVertical = optionCategories.Count > 0,
+				Child = scrollBody, FlexSize = Vector2.right, TrackSize = 8,
+				AlwaysShowHorizontal = false, AlwaysShowVertical = false
 			});
 		}
 
@@ -286,18 +329,23 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		public void OnModOptions(GameObject _) {
 			if (path != null) {
+				string title = OptionsEntry.LookInStrings(infoAttr?.Title);
+				if (string.IsNullOrEmpty(title))
+					title = modSpec.title;
 				// Close current dialog if open
 				CloseDialog();
 				// Ensure that it is on top of other screens (which may be +100 modal)
 				var pDialog = new PDialog("ModOptions") {
-					Title = PUIStrings.DIALOG_TITLE.text.F(modSpec.title), Size = POptions.
+					Title = PUIStrings.DIALOG_TITLE.text.F(title), Size =
 					SETTINGS_DIALOG_SIZE, SortKey = 150.0f, DialogBackColor = PUITuning.Colors.
-					OptionsBackground, DialogClosed = OnOptionsSelected, MaxSize = POptions.
+					OptionsBackground, DialogClosed = OnOptionsSelected, MaxSize =
 					SETTINGS_DIALOG_MAX_SIZE, RoundToNearestEven = true
 				}.AddButton("ok", STRINGS.UI.CONFIRMDIALOG.OK, PUIStrings.TOOLTIP_OK,
 					PUITuning.Colors.ButtonPinkStyle).AddButton(PDialog.DIALOG_KEY_CLOSE,
 					STRINGS.UI.CONFIRMDIALOG.CANCEL, PUIStrings.TOOLTIP_CANCEL,
 					PUITuning.Colors.ButtonBlueStyle);
+				if (infoAttr != null)
+					AddModInfoScreen(pDialog);
 				FillModOptions(pDialog);
 				options = POptions.ReadSettings(path, optionsType);
 				if (options == null)
@@ -356,6 +404,14 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
+		/// If configured, opens the mod's home page in the default browser.
+		/// </summary>
+		private void VisitModHomepage(GameObject _) {
+			if (!string.IsNullOrWhiteSpace(modURL))
+				Application.OpenURL(modURL);
+		}
+
+		/// <summary>
 		/// Writes the mod options to its config file.
 		/// </summary>
 		private void WriteOptions() {
@@ -377,6 +433,15 @@ namespace PeterHan.PLib.Options {
 			private GameObject contents;
 
 			/// <summary>
+			/// The initial state of the button.
+			/// </summary>
+			private readonly bool initialState;
+
+			public CategoryExpandHandler(bool initialState = true) {
+				this.initialState = initialState;
+			}
+
+			/// <summary>
 			/// Fired when the button is expanded or contracted.
 			/// </summary>
 			/// <param name="on">true if the button is on, or false if it is off.</param>
@@ -393,6 +458,7 @@ namespace PeterHan.PLib.Options {
 			/// <param name="panel">The realized body of the category.</param>
 			public void OnRealizePanel(GameObject panel) {
 				contents = panel;
+				OnExpandContract(null, initialState);
 			}
 		}
 	}

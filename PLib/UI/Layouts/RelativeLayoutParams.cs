@@ -23,7 +23,13 @@ namespace PeterHan.PLib.UI.Layouts {
 	/// <summary>
 	/// Stores constraints applied to a game object in a relative layout.
 	/// </summary>
-	internal class RelativeLayoutParams {
+	internal sealed class RelativeLayoutParams : RelativeLayoutParamsBase<GameObject> { }
+
+	/// <summary>
+	/// Stores constraints applied to an object in a relative layout.
+	/// </summary>
+	/// <typeparam name="T">The type of the target object.</typeparam>
+	internal class RelativeLayoutParamsBase<T> {
 		/// <summary>
 		/// The anchored position of the bottom edge.
 		/// </summary>
@@ -54,7 +60,7 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// </summary>
 		internal EdgeStatus TopEdge { get; }
 
-		public RelativeLayoutParams() {
+		internal RelativeLayoutParamsBase() {
 			Insets = null;
 			BottomEdge = new EdgeStatus();
 			LeftEdge = new EdgeStatus();
@@ -64,20 +70,13 @@ namespace PeterHan.PLib.UI.Layouts {
 		}
 
 		/// <summary>
-		/// The types of constraints which can be applied to components in a relative layout.
-		/// </summary>
-		internal enum ConstraintType {
-			Unconstrained, ToComponent, ToAnchor, Locked
-		}
-
-		/// <summary>
 		/// The edge position determined for a component.
 		/// </summary>
 		internal sealed class EdgeStatus {
 			/// <summary>
 			/// The type of constraint to use for this relative layout.
 			/// </summary>
-			internal ConstraintType Constraint { get; set; }
+			internal RelativeConstraintType Constraint;
 
 			/// <summary>
 			/// The anchor position in the component that sets the relative anchor.
@@ -89,7 +88,7 @@ namespace PeterHan.PLib.UI.Layouts {
 			/// <summary>
 			/// The component to which this edge is anchored.
 			/// </summary>
-			internal GameObject FromComponent;
+			internal T FromComponent;
 
 			/// <summary>
 			/// The offset in pixels from the anchor. + is upwards/rightwards, - is downwards/
@@ -103,7 +102,7 @@ namespace PeterHan.PLib.UI.Layouts {
 			/// </summary>
 			public bool Locked {
 				get {
-					return Constraint == ConstraintType.Locked;
+					return Constraint == RelativeConstraintType.Locked;
 				}
 			}
 
@@ -112,15 +111,15 @@ namespace PeterHan.PLib.UI.Layouts {
 			/// </summary>
 			public bool Unconstrained {
 				get {
-					return Constraint == ConstraintType.Unconstrained;
+					return Constraint == RelativeConstraintType.Unconstrained;
 				}
 			}
 
 			internal EdgeStatus() {
 				FromAnchor = 0.0f;
-				FromComponent = null;
+				FromComponent = default;
 				Offset = 0.0f;
-				Constraint = ConstraintType.Unconstrained;
+				Constraint = RelativeConstraintType.Unconstrained;
 			}
 
 			/// <summary>
@@ -131,17 +130,17 @@ namespace PeterHan.PLib.UI.Layouts {
 				if (other == null)
 					throw new ArgumentNullException("other");
 				switch (Constraint = other.Constraint) {
-				case ConstraintType.ToComponent:
+				case RelativeConstraintType.ToComponent:
 					FromComponent = other.FromComponent;
 					break;
-				case ConstraintType.ToAnchor:
+				case RelativeConstraintType.ToAnchor:
 					FromAnchor = other.FromAnchor;
 					break;
-				case ConstraintType.Locked:
+				case RelativeConstraintType.Locked:
 					FromAnchor = other.FromAnchor;
 					Offset = other.Offset;
 					break;
-				case ConstraintType.Unconstrained:
+				case RelativeConstraintType.Unconstrained:
 				default:
 					break;
 				}
@@ -162,10 +161,10 @@ namespace PeterHan.PLib.UI.Layouts {
 			/// Resets these offsets to unlocked.
 			/// </summary>
 			public void Reset() {
-				Constraint = ConstraintType.Unconstrained;
+				Constraint = RelativeConstraintType.Unconstrained;
 				Offset = 0.0f;
 				FromAnchor = 0.0f;
-				FromComponent = null;
+				FromComponent = default;
 			}
 
 			public override string ToString() {
@@ -173,5 +172,12 @@ namespace PeterHan.PLib.UI.Layouts {
 					Offset, Constraint);
 			}
 		}
+	}
+
+	/// <summary>
+	/// The types of constraints which can be applied to components in a relative layout.
+	/// </summary>
+	internal enum RelativeConstraintType {
+		Unconstrained, ToComponent, ToAnchor, Locked
 	}
 }

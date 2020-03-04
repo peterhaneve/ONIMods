@@ -90,7 +90,7 @@ namespace PeterHan.PLib.UI {
 			img.color = settings.SpriteTint;
 			img.sprite = settings.Sprite;
 			img.type = settings.SpriteMode;
-			img.preserveAspect = true;
+			img.preserveAspect = settings.MaintainSpriteAspect;
 			// Set up transform
 			var scale = Vector3.one;
 			float rot = 0.0f;
@@ -143,6 +143,11 @@ namespace PeterHan.PLib.UI {
 		/// The spacing between text and icon.
 		/// </summary>
 		public int IconSpacing { get; set; }
+
+		/// <summary>
+		/// If true, the sprite aspect ratio will be maintained even if it is resized.
+		/// </summary>
+		public bool MaintainSpriteAspect { get; set; }
 
 		/// <summary>
 		/// The margin around the component.
@@ -221,6 +226,7 @@ namespace PeterHan.PLib.UI {
 		protected PTextComponent(string name) {
 			FlexSize = Vector2.zero;
 			IconSpacing = 0;
+			MaintainSpriteAspect = true;
 			Margin = null;
 			Name = name;
 			Sprite = null;

@@ -23,7 +23,7 @@ namespace PeterHan.PLib.UI.Layouts {
 	/// <summary>
 	/// Parameters used to store the dynamic data of an object during layout.
 	/// </summary>
-	internal sealed class RelativeLayoutIP : RelativeLayoutParams {
+	internal sealed class RelativeLayoutIP : RelativeLayoutParamsBase<GameObject> {
 		/// <summary>
 		/// A set of insets that are always zero.
 		/// </summary>

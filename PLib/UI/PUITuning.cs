@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -350,24 +349,14 @@ namespace PeterHan.PLib.UI {
 				TextDarkStyle.sdfFont = Text;
 				TextDarkStyle.style = FontStyles.Normal;
 				TextDarkStyle.textColor = Colors.UITextDark;
-				TextLightStyle = ScriptableObject.CreateInstance<TextStyleSetting>();
-				TextLightStyle.enableWordWrapping = false;
-				TextLightStyle.fontSize = DefaultSize;
-				TextLightStyle.sdfFont = Text;
-				TextLightStyle.style = FontStyles.Normal;
-				TextLightStyle.textColor = Colors.UITextLight;
+				TextLightStyle = TextDarkStyle.DeriveStyle(newColor: Colors.UITextLight);
 				UIDarkStyle = ScriptableObject.CreateInstance<TextStyleSetting>();
 				UIDarkStyle.enableWordWrapping = false;
 				UIDarkStyle.fontSize = DefaultSize;
 				UIDarkStyle.sdfFont = UI;
 				UIDarkStyle.style = FontStyles.Normal;
 				UIDarkStyle.textColor = Colors.UITextDark;
-				UILightStyle = ScriptableObject.CreateInstance<TextStyleSetting>();
-				UILightStyle.enableWordWrapping = false;
-				UILightStyle.fontSize = DefaultSize;
-				UILightStyle.sdfFont = UI;
-				UILightStyle.style = FontStyles.Normal;
-				UILightStyle.textColor = Colors.UITextLight;
+				UILightStyle = UIDarkStyle.DeriveStyle(newColor: Colors.UITextLight);
 			}
 
 			/// <summary>

@@ -32,9 +32,14 @@ namespace PeterHan.PLib.UI {
 		internal static readonly RectOffset BUTTON_MARGIN = new RectOffset(10, 10, 10, 10);
 
 		/// <summary>
+		/// The margin inside the dialog close button.
+		/// </summary>
+		private static readonly RectOffset CLOSE_ICON_MARGIN = new RectOffset(4, 4, 4, 4);
+
+		/// <summary>
 		/// The size of the dialog close button's icon.
 		/// </summary>
-		internal static readonly Vector2 CLOSE_ICON_SIZE = new Vector2f(16.0f, 16.0f);
+		private static readonly Vector2 CLOSE_ICON_SIZE = new Vector2f(16.0f, 16.0f);
 
 		/// <summary>
 		/// The dialog key returned if the user closes the dialog with [ESC] or the X.
@@ -167,42 +172,24 @@ namespace PeterHan.PLib.UI {
 		public GameObject Build() {
 			if (Parent == null)
 				throw new InvalidOperationException("Parent for dialog may not be null");
-			var dialog = PUIElements.CreateUI(null, Name);
+			var dialog = PUIElements.CreateUI(Parent, Name);
 			var dComponent = dialog.AddComponent<PDialogComp>();
-			dialog.SetParent(Parent);
 			// Background
-			dialog.AddComponent<Image>().color = PUITuning.Colors.DialogBackground;
 			dialog.AddComponent<Canvas>();
 			dialog.AddComponent<GraphicRaycaster>();
-			// Title bar
-			var layout = LayoutTitle(dialog, dComponent.DoButton);
-			// Body, make it fill the flexible space
-			var body = new PPanel("BodyAndButtons") {
-				Alignment = TextAnchor.MiddleCenter, Spacing = 5, Direction = PanelDirection.
-				Vertical, Margin = new RectOffset(10, 10, 10, 5), FlexSize = Vector2.one,
-				BackColor = DialogBackColor
-			}.AddChild(Body).AddChild(CreateUserButtons(dComponent.DoButton)).Build();
-			layout.AddComponent(body, new GridComponentSpec(1, 0) {
-				ColumnSpan = 2, Margin = new RectOffset(1, 1, 0, 1)
-			});
-			// Calculate the final dialog size
-			var dialogRT = dialog.rectTransform();
-			LayoutRebuilder.ForceRebuildLayoutImmediate(dialogRT);
-			float bodyWidth = Math.Max(Size.x, LayoutUtility.GetPreferredWidth(dialogRT)),
-				bodyHeight = Math.Max(Size.y, LayoutUtility.GetPreferredHeight(dialogRT)),
-				maxX = MaxSize.x, maxY = MaxSize.y;
-			// Maximum size constraint
-			if (maxX > 0.0f)
-				bodyWidth = Math.Min(bodyWidth, maxX);
-			if (maxY > 0.0f)
-				bodyHeight = Math.Min(bodyHeight, maxY);
-			if (RoundToNearestEven) {
-				// Round up the size to odd integers, even if currently fractional
-				bodyWidth = RoundUpSize(bodyWidth, maxX);
-				bodyHeight = RoundUpSize(bodyHeight, maxY);
-			}
-			dialogRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, bodyWidth);
-			dialogRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, bodyHeight);
+			var bg = dialog.AddComponent<Image>();
+			bg.color = DialogBackColor;
+			bg.sprite = PUITuning.Images.BoxBorder;
+			bg.type = Image.Type.Sliced;
+			// Add each component
+			var layout = new RelativeLayout(dialog);
+			var title = LayoutTitle(layout, dComponent.DoButton);
+			var body = Body.AddTo(dialog);
+			var buttons = CreateUserButtons(layout, dComponent.DoButton);
+			// Configure body position
+			layout.SetTopEdge(body, below: title).SetMargin(body, new RectOffset(
+				10, 10, 10, 10)).SetBottomEdge(body, above: buttons);
+			SetDialogSize(layout.Execute(true));
 			// Dialog is realized
 			dComponent.dialog = this;
 			dComponent.sortKey = SortKey;
@@ -213,12 +200,14 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// Creates the user buttons.
 		/// </summary>
+		/// <param name="layout">The location to add the buttons.</param>
 		/// <param name="onPressed">The handler to call when any button is pressed.</param>
-		/// <returns>The panel containing the user buttons.</returns>
-		private PPanel CreateUserButtons(PUIDelegates.OnButtonPressed onPressed) {
+		/// <returns>The realized panel containing the user buttons.</returns>
+		private GameObject CreateUserButtons(RelativeLayout layout,
+				PUIDelegates.OnButtonPressed onPressed) {
 			var buttonPanel = new PPanel("Buttons") {
 				Alignment = TextAnchor.LowerCenter, Spacing = 7, Direction = PanelDirection.
-				Horizontal, Margin = new RectOffset(5, 5, 5, 5)
+				Horizontal, Margin = new RectOffset(5, 5, 0, 10)
 			};
 			int i = 0;
 			// Add each user button
@@ -239,37 +228,63 @@ namespace PeterHan.PLib.UI {
 				}
 				buttonPanel.AddChild(db);
 			}
-			return buttonPanel;
+			var realized = buttonPanel.AddTo(layout.Parent);
+			layout.SetBottomEdge(realized, fraction: 0.0f);
+			return realized;
 		}
 
 		/// <summary>
 		/// Lays out the dialog title bar and close button.
 		/// </summary>
-		/// <param name="dialog">The dialog where the title will be added.</param>
+		/// <param name="layout">The layout manager for the dialog.</param>
 		/// <param name="onClose">The action to invoke when close is pressed.</param>
-		/// <returns>The layout in progress.</returns>
-		private PGridLayoutGroup LayoutTitle(GameObject dialog, PUIDelegates.
-				OnButtonPressed onClose) {
-			var layout = dialog.AddComponent<PGridLayoutGroup>();
-			layout.AddRow(new GridRowSpec());
-			layout.AddRow(new GridRowSpec(flex: 1.0f));
-			layout.AddColumn(new GridColumnSpec(flex: 1.0f));
-			layout.AddColumn(new GridColumnSpec());
-			// Close button
-			var close = new PButton(DIALOG_KEY_CLOSE) {
-				Sprite = PUITuning.Images.Close, Margin = new RectOffset(3, 3, 3, 3),
-				SpriteSize = CLOSE_ICON_SIZE, OnClick = onClose, ToolTip = STRINGS.UI.
-				TOOLTIPS.CLOSETOOLTIP
-			}.SetKleiBlueStyle().Build();
-			layout.AddComponent(close, new GridComponentSpec(0, 1));
+		/// <returns>The realized title label.</returns>
+		private GameObject LayoutTitle(RelativeLayout layout, PUIDelegates.OnButtonPressed
+				onClose) {
 			// Title text, expand to width
 			var title = new PLabel("Title") {
-				Margin = new RectOffset(3, 3, 0, 0), Text = Title, FlexSize = Vector2.one
-			}.SetKleiPinkColor().Build();
-			layout.AddComponent(title, new GridComponentSpec(0, 0) {
-				Margin = new RectOffset(1, 0, 1, 1)
-			});
-			return layout;
+				Margin = new RectOffset(3, 4, 0, 0), Text = Title, FlexSize = Vector2.one,
+			}.SetKleiPinkColor().AddTo(layout.Parent);
+			// Black border on the title bar overlaps the edge, but 0 margins so should be OK
+			// Fixes the 2px bug handily!
+			var titleBG = title.AddOrGet<Image>();
+			titleBG.sprite = PUITuning.Images.BoxBorder;
+			titleBG.type = Image.Type.Sliced;
+			// Close button
+			var close = new PButton(DIALOG_KEY_CLOSE) {
+				Sprite = PUITuning.Images.Close, Margin = CLOSE_ICON_MARGIN, OnClick = onClose,
+				SpriteSize = CLOSE_ICON_SIZE, ToolTip = STRINGS.UI.TOOLTIPS.CLOSETOOLTIP
+			}.SetKleiBlueStyle().AddTo(layout.Parent);
+			layout.SetTopEdge(title, fraction: 1.0f).SetTopEdge(close, fraction: 1.0f).
+				SetLeftEdge(title, fraction: 0.0f).SetRightEdge(title, toLeft: close).
+				SetRightEdge(close, fraction: 1.0f).SetMargin(title, new RectOffset(
+				0, -2, 0, 0)).OverrideSize(title, new Vector2(0.0f, 6.0f + CLOSE_ICON_SIZE.y));
+			return title;
+		}
+
+		/// <summary>
+		/// Sets the final size of the dialog using its current position.
+		/// </summary>
+		/// <param name="dialog">The realized dialog with all components populated.</param>
+		private void SetDialogSize(GameObject dialog) {
+			// Calculate the final dialog size
+			var dialogRT = dialog.rectTransform();
+			LayoutRebuilder.ForceRebuildLayoutImmediate(dialogRT);
+			float bodyWidth = Math.Max(Size.x, LayoutUtility.GetPreferredWidth(dialogRT)),
+				bodyHeight = Math.Max(Size.y, LayoutUtility.GetPreferredHeight(dialogRT)),
+				maxX = MaxSize.x, maxY = MaxSize.y;
+			// Maximum size constraint
+			if (maxX > 0.0f)
+				bodyWidth = Math.Min(bodyWidth, maxX);
+			if (maxY > 0.0f)
+				bodyHeight = Math.Min(bodyHeight, maxY);
+			if (RoundToNearestEven) {
+				// Round up the size to even integers, even if currently fractional
+				bodyWidth = RoundUpSize(bodyWidth, maxX);
+				bodyHeight = RoundUpSize(bodyHeight, maxY);
+			}
+			dialogRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, bodyWidth);
+			dialogRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, bodyHeight);
 		}
 
 		/// <summary>

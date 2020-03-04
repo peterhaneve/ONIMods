@@ -22,7 +22,6 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
-using ConstraintType = PeterHan.PLib.UI.Layouts.RelativeLayoutParams.ConstraintType;
 using EdgeStatus = PeterHan.PLib.UI.Layouts.RelativeLayoutParams.EdgeStatus;
 
 namespace PeterHan.PLib.UI.Layouts {
@@ -258,9 +257,9 @@ namespace PeterHan.PLib.UI.Layouts {
 		private static RelativeLayoutIP InitResolve(EdgeStatus edge,
 				IDictionary<GameObject, RelativeLayoutIP> lookup) {
 			RelativeLayoutIP result = null;
-			if (edge.Constraint == ConstraintType.ToComponent)
+			if (edge.Constraint == RelativeConstraintType.ToComponent)
 				if (!lookup.TryGetValue(edge.FromComponent, out result))
-					edge.Constraint = ConstraintType.Unconstrained;
+					edge.Constraint = RelativeConstraintType.Unconstrained;
 			return result;
 		}
 
@@ -271,12 +270,12 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// <param name="otherEdge">The other edge to check.</param>
 		/// <returns>true if it was able to lock, or false otherwise.</returns>
 		private static bool LockEdgeAnchor(EdgeStatus edge, EdgeStatus otherEdge) {
-			bool useDelta = edge.Constraint == ConstraintType.ToAnchor && otherEdge.
-				Constraint == ConstraintType.ToAnchor && edge.FromAnchor == otherEdge.
+			bool useDelta = edge.Constraint == RelativeConstraintType.ToAnchor && otherEdge.
+				Constraint == RelativeConstraintType.ToAnchor && edge.FromAnchor == otherEdge.
 				FromAnchor;
 			if (useDelta) {
-				edge.Constraint = ConstraintType.Locked;
-				otherEdge.Constraint = ConstraintType.Locked;
+				edge.Constraint = RelativeConstraintType.Locked;
+				otherEdge.Constraint = RelativeConstraintType.Locked;
 				edge.Offset = 0.0f;
 				otherEdge.Offset = 0.0f;
 			}
@@ -288,8 +287,8 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// </summary>
 		/// <param name="edge">The edge to check.</param>
 		private static void LockEdgeAnchor(EdgeStatus edge) {
-			if (edge.Constraint == ConstraintType.ToAnchor) {
-				edge.Constraint = ConstraintType.Locked;
+			if (edge.Constraint == RelativeConstraintType.ToAnchor) {
+				edge.Constraint = RelativeConstraintType.Locked;
 				edge.Offset = 0.0f;
 			}
 		}
@@ -301,8 +300,8 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// <param name="offset">The component's offset in that direction.</param>
 		/// <param name="otherEdge">The opposing edge of the referenced component.</param>
 		private static void LockEdgeComponent(EdgeStatus edge, EdgeStatus otherEdge) {
-			if (edge.Constraint == ConstraintType.ToComponent && otherEdge.Locked) {
-				edge.Constraint = ConstraintType.Locked;
+			if (edge.Constraint == RelativeConstraintType.ToComponent && otherEdge.Locked) {
+				edge.Constraint = RelativeConstraintType.Locked;
 				edge.FromAnchor = otherEdge.FromAnchor;
 				edge.Offset = otherEdge.Offset;
 			}
@@ -316,17 +315,17 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// <param name="opposing">The component's other edge.</param>
 		private static void LockEdgeRelative(EdgeStatus edge, float size, EdgeStatus opposing)
 		{
-			if (edge.Constraint == ConstraintType.Unconstrained) {
+			if (edge.Constraint == RelativeConstraintType.Unconstrained) {
 				if (opposing.Locked) {
-					edge.Constraint = ConstraintType.Locked;
+					edge.Constraint = RelativeConstraintType.Locked;
 					edge.FromAnchor = opposing.FromAnchor;
 					edge.Offset = opposing.Offset + size;
-				} else if (opposing.Constraint == ConstraintType.Unconstrained) {
+				} else if (opposing.Constraint == RelativeConstraintType.Unconstrained) {
 					// Both unconstrained, full size
-					edge.Constraint = ConstraintType.Locked;
+					edge.Constraint = RelativeConstraintType.Locked;
 					edge.FromAnchor = 0.0f;
 					edge.Offset = 0.0f;
-					opposing.Constraint = ConstraintType.Locked;
+					opposing.Constraint = RelativeConstraintType.Locked;
 					opposing.FromAnchor = 1.0f;
 					opposing.Offset = 0.0f;
 				}

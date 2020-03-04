@@ -53,41 +53,9 @@ namespace PeterHan.PLib.Options {
 		public const int MAX_SERIALIZATION_DEPTH = 8;
 
 		/// <summary>
-		/// The default size of the Mod Settings dialog.
-		/// </summary>
-		internal static readonly Vector2 SETTINGS_DIALOG_SIZE = new Vector2(320.0f, 200.0f);
-
-		/// <summary>
-		/// The maximum size of the Mod Settings dialog before it gets scroll bars.
-		/// </summary>
-		internal static readonly Vector2 SETTINGS_DIALOG_MAX_SIZE = new Vector2(640.0f, 480.0f);
-
-		/// <summary>
-		/// The color of option category titles.
-		/// </summary>
-		internal static readonly Color TITLE_COLOR = new Color32(143, 150, 175, 255);
-
-		/// <summary>
-		/// The text style applied to option category titles.
-		/// </summary>
-		internal static readonly TextStyleSetting TITLE_STYLE;
-
-		/// <summary>
 		/// The mod options table.
 		/// </summary>
-		private static OptionsTable modOptions;
-
-		static POptions() {
-			var baseStyle = PUITuning.Fonts.UILightStyle;
-			// Initialize the title font style
-			TITLE_STYLE = ScriptableObject.CreateInstance<TextStyleSetting>();
-			TITLE_STYLE.enableWordWrapping = false;
-			TITLE_STYLE.fontSize = baseStyle.fontSize;
-			TITLE_STYLE.sdfFont = baseStyle.sdfFont;
-			TITLE_STYLE.style = TMPro.FontStyles.Bold;
-			TITLE_STYLE.textColor = TITLE_COLOR;
-			modOptions = null;
-		}
+		private static OptionsTable modOptions = null;
 
 		/// <summary>
 		/// Adds the Options button to the Mods screen.
@@ -138,6 +106,22 @@ namespace PeterHan.PLib.Options {
 			foreach (var attr in optionsType.GetCustomAttributes(true))
 				// Cross mod types need reflection
 				if ((newAttr = ConfigFileAttribute.CreateFrom(attr)) != null) break;
+			return newAttr;
+		}
+
+		/// <summary>
+		/// Retrieves the information attribute a mod config.
+		/// </summary>
+		/// <param name="optionsType">The type potentially containing the mod info attribute.</param>
+		/// <returns>The ModInfoAttribute (in this mod's assembly) applied to that type,
+		/// or null if none is present.</returns>
+		internal static ModInfoAttribute GetModInfoAttribute(Type optionsType) {
+			if (optionsType == null)
+				throw new ArgumentNullException("optionsType");
+			ModInfoAttribute newAttr = null;
+			foreach (var attr in optionsType.GetCustomAttributes(true))
+				// Cross mod types need reflection
+				if ((newAttr = ModInfoAttribute.CreateFrom(attr)) != null) break;
 			return newAttr;
 		}
 

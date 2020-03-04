@@ -46,8 +46,8 @@ namespace PeterHan.PLib {
 					PUtil.LogExcWarn(e);
 				}
 			}
-			return string.IsNullOrEmpty(title) ? null : new ModInfoAttribute(title, image,
-				url, collapse);
+			return string.IsNullOrEmpty(title) ? null : new ModInfoAttribute(title, url,
+				image, collapse);
 		}
 
 		/// <summary>

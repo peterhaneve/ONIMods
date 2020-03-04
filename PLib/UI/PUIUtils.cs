@@ -19,6 +19,7 @@
 using Harmony;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Text;
 using TMPro;
@@ -244,6 +245,28 @@ namespace PeterHan.PLib.UI {
 			if (root != null)
 				info = GetObjectTree(root, 0);
 			LogUIDebug("Object Dump:" + Environment.NewLine + info);
+		}
+
+		/// <summary>
+		/// Derives a font style from an existing style. The font face is copied unchanged,
+		/// but the other settings can be optionally modified.
+		/// </summary>
+		/// <param name="root">The style to use as a template.</param>
+		/// <param name="size">The font size, or 0 to use the template size.</param>
+		/// <param name="newColor">The font color, or null to use the template color.</param>
+		/// <param name="style">The font style, or null to use the template style.</param>
+		/// <returns>A copy of the root style with the specified parameters altered.</returns>
+		public static TextStyleSetting DeriveStyle(this TextStyleSetting root, int size = 0,
+				Color? newColor = null, FontStyles? style = null) {
+			if (root == null)
+				throw new ArgumentNullException("root");
+			var newStyle = ScriptableObject.CreateInstance<TextStyleSetting>();
+			newStyle.enableWordWrapping = root.enableWordWrapping;
+			newStyle.style = (style == null) ? root.style : (FontStyles)style;
+			newStyle.fontSize = (size > 0) ? size : root.fontSize;
+			newStyle.sdfFont = root.sdfFont;
+			newStyle.textColor = (newColor == null) ? root.textColor : (Color)newColor;
+			return newStyle;
 		}
 
 		/// <summary>
@@ -513,9 +536,43 @@ namespace PeterHan.PLib.UI {
 					return Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(
 						0.5f, 0.5f), 100.0f, 0, SpriteMeshType.FullRect, border);
 				}
-			} catch (System.IO.IOException e) {
+			} catch (IOException e) {
 				throw new ArgumentException("Could not load image: " + path, e);
 			}
+		}
+
+		/// <summary>
+		/// Loads a sprite from the file system as a 9-slice sprite.
+		/// 
+		/// It may be encoded using PNG, DXT5, or JPG format.
+		/// </summary>
+		/// <param name="path">The path to the image to load.</param>
+		/// <param name="border">The sprite border.</param>
+		/// <param name="log">true to log the load, or false otherwise.</param>
+		/// <returns>The sprite thus loaded, or null if it could not be loaded.</returns>
+		internal static Sprite LoadSprite(string path, Vector4 border = default) {
+			Sprite sprite = null;
+			// Open a stream to the image
+			try {
+				using (var stream = new FileStream(path, FileMode.Open)) {
+					// If len > int.MaxValue we will not go to space today
+					int len = (int)stream.Length;
+					byte[] buffer = new byte[len];
+					var texture = new Texture2D(2, 2);
+					// Load the texture from the stream
+					stream.Read(buffer, 0, len);
+					ImageConversion.LoadImage(texture, buffer, false);
+					// Create a sprite centered on the texture
+					int width = texture.width, height = texture.height;
+					sprite = Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(
+						0.5f, 0.5f), 100.0f, 0, SpriteMeshType.FullRect, border);
+				}
+			} catch (IOException e) {
+#if DEBUG
+				PUtil.LogExcWarn(e);
+#endif
+			}
+			return sprite;
 		}
 
 		/// <summary>
@@ -558,7 +615,7 @@ namespace PeterHan.PLib.UI {
 					return Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(
 						0.5f, 0.5f), 100.0f, 0, SpriteMeshType.FullRect, border);
 				}
-			} catch (System.IO.IOException e) {
+			} catch (IOException e) {
 				throw new ArgumentException("Could not load image: " + path, e);
 			}
 		}
