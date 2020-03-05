@@ -43,6 +43,11 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		private static readonly Vector2 MOD_IMAGE_SIZE = new Vector2(192.0f, 192.0f);
 
+		/// <summary>
+		/// The margins between the dialog edge and the colored boxes in each config section.
+		/// </summary>
+		private static readonly int OUTER_MARGIN = 10;
+
 		/// The default size of the Mod Settings dialog.
 		/// </summary>
 		private static readonly Vector2 SETTINGS_DIALOG_SIZE = new Vector2(320.0f, 200.0f);
@@ -52,9 +57,31 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		private static readonly Vector2 SETTINGS_DIALOG_MAX_SIZE = new Vector2(640.0f, 480.0f);
 
+		/// <summary>
+		/// The size of the toggle button on each (non-default) config section.
+		/// </summary>
+		private static readonly Vector2 TOGGLE_SIZE = new Vector2(12.0f, 12.0f);
+
 		static OptionsDialog() {
 			CATEGORY_TITLE_STYLE = PUITuning.Fonts.UILightStyle.DeriveStyle(newColor:
 				CATEGORY_TITLE_COLOR, style: TMPro.FontStyles.Bold);
+		}
+
+		/// <summary>
+		/// Gets the text shown for a mod's version.
+		/// </summary>
+		/// <param name="optionsType">The type used for the mod settings.</param>
+		/// <returns>The mod version description.</returns>
+		private static string GetModVersionText(Type optionsType) {
+			var asm = optionsType.Assembly;
+			string version = asm.GetFileVersion();
+			// Use FileVersion if available, else assembly version
+			if (string.IsNullOrEmpty(version))
+				version = string.Format(PUIStrings.MOD_ASSEMBLY_VERSION, asm.GetName().
+					Version);
+			else
+				version = string.Format(PUIStrings.MOD_VERSION, version);
+			return version;
 		}
 
 		/// <summary>
@@ -146,28 +173,35 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// Adds a category header to the dialog.
 		/// </summary>
-		/// <param name="body">The parent of the header.</param>
+		/// <param name="container">The parent of the header.</param>
 		/// <param name="category">The header title.</param>
 		/// <param name="contents">The panel containing the options in this category.</param>
-		private void AddCategoryHeader(PPanel body, string category, PPanel contents) {
+		private void AddCategoryHeader(PGridPanel container, string category,
+				PGridPanel contents) {
+			contents.AddColumn(new GridColumnSpec(flex: 1.0f)).AddColumn(new GridColumnSpec());
 			if (!string.IsNullOrEmpty(category)) {
 				bool state = !(infoAttr?.ForceCollapseCategories ?? false);
 				var handler = new CategoryExpandHandler(state);
-				body.AddChild(new PPanel("CategorySelect") {
-					FlexSize = Vector2.right, Alignment = TextAnchor.MiddleLeft, Spacing = 5,
-					Direction = PanelDirection.Horizontal, Margin = new RectOffset(0, 0, 0, 2)
-				}.AddChild(new PToggle("CategoryToggle") {
+				container.AddColumn(new GridColumnSpec()).AddColumn(new GridColumnSpec(
+					flex: 1.0f)).AddRow(new GridRowSpec()).AddRow(new GridRowSpec(flex: 1.0f));
+				// Toggle is upper left, header is upper right
+				container.AddChild(new PLabel("CategoryHeader") {
+					Text = OptionsEntry.LookInStrings(category), TextStyle =
+					CATEGORY_TITLE_STYLE, TextAlignment = TextAnchor.LowerCenter
+				}, new GridComponentSpec(0, 1) {
+					Margin = new RectOffset(OUTER_MARGIN, OUTER_MARGIN, 0, 0)
+				}).AddChild(new PToggle("CategoryToggle") {
 					Color = PUITuning.Colors.ComponentDarkStyle, InitialState = state,
-					ToolTip = PUIStrings.TOOLTIP_TOGGLE, Size = new Vector2(12.0f, 12.0f),
+					ToolTip = PUIStrings.TOOLTIP_TOGGLE, Size = TOGGLE_SIZE,
 					OnStateChanged = handler.OnExpandContract
-				}).AddChild(new PLabel("CategoryHeader") {
-					Text = OptionsEntry.LookInStrings(category), FlexSize = Vector2.right,
-					TextAlignment = TextAnchor.LowerCenter, TextStyle = CATEGORY_TITLE_STYLE
-				}));
+				}, new GridComponentSpec(0, 0));
 				if (contents != null)
 					contents.OnRealize += handler.OnRealizePanel;
-			}
-			body.AddChild(contents);
+				container.AddChild(contents, new GridComponentSpec(1, 0) { ColumnSpan = 2 });
+			} else
+				// Default of unconstrained fills the whole panel
+				container.AddColumn(new GridColumnSpec(flex: 1.0f)).AddRow(new GridRowSpec(
+					flex: 1.0f)).AddChild(contents, new GridComponentSpec(0, 0));
 		}
 
 		/// <summary>
@@ -175,15 +209,8 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <param name="dialog">The dialog to populate.</param>
 		private void AddModInfoScreen(PDialog dialog) {
-			var asm = optionsType.Assembly;
-			string image = infoAttr.Image, version = asm.GetFileVersion();
+			string image = infoAttr.Image, version = GetModVersionText(optionsType);
 			var body = dialog.Body;
-			// Use FileVersion if available, else assembly version
-			if (string.IsNullOrEmpty(version))
-				version = string.Format(PUIStrings.MOD_ASSEMBLY_VERSION, asm.GetName().
-					Version);
-			else
-				version = string.Format(PUIStrings.MOD_VERSION, version);
 			// Try to load the mod image sprite if possible
 			if (modImage == null && !string.IsNullOrEmpty(image)) {
 				string rootDir = modSpec.file_source?.GetRoot();
@@ -192,11 +219,11 @@ namespace PeterHan.PLib.Options {
 			}
 			var websiteButton = new PButton("ModSite") {
 				Text = PUIStrings.MOD_HOMEPAGE, ToolTip = PUIStrings.TOOLTIP_HOMEPAGE,
-				OnClick = VisitModHomepage
-			};
+				OnClick = VisitModHomepage, Margin = PDialog.BUTTON_MARGIN
+			}.SetKleiBlueStyle();
 			var versionLabel = new PLabel("ModVersion") {
 				Text = version, ToolTip = PUIStrings.TOOLTIP_VERSION, TextStyle = PUITuning.
-				Fonts.UILightStyle, Margin = new RectOffset(0, 0, 5, 0)
+				Fonts.UILightStyle, Margin = new RectOffset(0, 0, OUTER_MARGIN, 0)
 			};
 			if (modImage != null) {
 				// 2 rows and 1 column
@@ -206,19 +233,18 @@ namespace PeterHan.PLib.Options {
 					FlexSize = Vector2.up, Direction = PanelDirection.Vertical,
 					Alignment = TextAnchor.UpperCenter
 				}.AddChild(new PLabel("ModImage") {
-					Sprite = modImage, SpriteSize = MOD_IMAGE_SIZE, Margin =
-					new RectOffset(0, 0, 0, 10), TextAlignment = TextAnchor.UpperCenter
+					SpriteSize = MOD_IMAGE_SIZE, TextAlignment = TextAnchor.UpperLeft,
+					Margin = new RectOffset(0, OUTER_MARGIN, 0, OUTER_MARGIN),
+					Sprite = modImage
 				});
 				if (!string.IsNullOrEmpty(modURL))
 					infoPanel.AddChild(websiteButton);
-				infoPanel.AddChild(versionLabel);
-				body.AddChild(infoPanel);
+				body.AddChild(infoPanel.AddChild(versionLabel));
 			} else {
 				if (!string.IsNullOrEmpty(modURL))
 					body.AddChild(websiteButton);
 				body.AddChild(versionLabel);
 			}
-			body.AddChild(new PSpacer() { PreferredSize = new Vector2(10.0f, 5.0f) });
 		}
 
 		/// <summary>
@@ -283,32 +309,34 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <param name="dialog">The dialog to populate.</param>
 		private void FillModOptions(PDialog dialog) {
-			PPanel body = dialog.Body, current, contents;
+			PPanel body = dialog.Body;
 			var margin = body.Margin;
 			// For each option, add its UI component to panel
 			body.Margin = new RectOffset();
 			var scrollBody = new PPanel("ScrollContent") {
-				Spacing = 10, Direction = PanelDirection.Vertical, Alignment = TextAnchor.
-				UpperCenter, FlexSize = Vector2.right
+				Spacing = OUTER_MARGIN, Direction = PanelDirection.Vertical, Alignment =
+				TextAnchor.UpperCenter, FlexSize = Vector2.right
 			};
 			// Display all categories
 			foreach (var catEntries in optionCategories) {
 				string category = catEntries.Key;
 				if (catEntries.Value.Count > 0) {
-					current = new PPanel("Category_" + (string.IsNullOrEmpty(category) ?
-						"Default" : category)) {
-						Alignment = TextAnchor.UpperCenter, Spacing = 5, Margin = margin,
-						BackColor = PUITuning.Colors.DialogDarkBackground,
+					string name = string.IsNullOrEmpty(category) ? "Default" : category;
+					int i = 0;
+					// Not optimal for layout performance, but the panel is needed to have a
+					// different background color for each category "box"
+					var container = new PGridPanel("Category_" + name) {
+						Margin = margin, BackColor = PUITuning.Colors.DialogDarkBackground,
 						FlexSize = Vector2.right
 					};
-					contents = new PPanel("Entries") {
-						Alignment = TextAnchor.UpperCenter, Spacing = 5, FlexSize =
-						Vector2.right
-					};
-					AddCategoryHeader(current, catEntries.Key, contents);
-					foreach (var entry in catEntries.Value)
-						contents.AddChild(entry.GetUIEntry());
-					scrollBody.AddChild(current);
+					// Needs to be a separate panel so that it can be collapsed
+					var contents = new PGridPanel("Entries") { FlexSize = Vector2.right };
+					AddCategoryHeader(container, catEntries.Key, contents);
+					foreach (var entry in catEntries.Value) {
+						contents.AddRow(new GridRowSpec());
+						entry.CreateUIEntry(contents, i++);
+					}
+					scrollBody.AddChild(container);
 				}
 			}
 			// Manual config button
@@ -446,7 +474,6 @@ namespace PeterHan.PLib.Options {
 			/// </summary>
 			/// <param name="on">true if the button is on, or false if it is off.</param>
 			public void OnExpandContract(GameObject _, bool on) {
-				// Set scale to 0% or 100% depending on "on"
 				var scale = on ? Vector3.one : Vector3.zero;
 				if (contents != null)
 					contents.transform.localScale = scale;

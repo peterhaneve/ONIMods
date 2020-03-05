@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.UI.Layouts;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -28,27 +29,129 @@ namespace PeterHan.PLib.UI {
 	/// </summary>
 	public sealed class PGridLayoutGroup : UIBehaviour, ISettableFlexSize, ILayoutElement {
 		/// <summary>
-		/// Builds a matrix of the components at each given location. Components only are
-		/// entered at their origin cell (ignoring row and column span).
+		/// Calculates all column widths.
 		/// </summary>
-		/// <param name="rows">The maximum number of rows.</param>
-		/// <param name="columns">The maximum number of columns.</param>
-		/// <param name="components">The components to add.</param>
-		/// <returns>A 2-D array of the components at a given row/column location.</returns>
-		private static ICollection<SizedGridComponent>[,] GetMatrix(int rows, int columns,
-				ICollection<SizedGridComponent> components) {
-			var spec = new ICollection<SizedGridComponent>[rows, columns];
-			foreach (var component in components) {
-				int x = component.Row, y = component.Column;
-				if (x >= 0 && x < rows && y >= 0 && y < columns) {
-					// Multiple components are allowed at a given cell
-					var atLocation = spec[x, y];
-					if (atLocation == null)
-						spec[x, y] = atLocation = new List<SizedGridComponent>(8);
-					atLocation.Add(component);
-				}
+		/// <param name="results">The results from layout.</param>
+		/// <param name="obj">The object to lay out.</param>
+		/// <param name="margin">The margins within the borders.</param>
+		/// <returns>The column widths.</returns>
+		private static float[] GetColumnWidths(GridLayoutResults results, GameObject obj,
+				RectOffset margin) {
+			int columns = results.Columns;
+			// Find out how much flexible size can be given out
+			float position = margin?.left ?? 0, right = margin?.right ?? 0;
+			float actualWidth = obj.rectTransform().rect.width - position - right,
+				totalFlex = results.TotalFlexWidth, excess = (totalFlex > 0.0f) ?
+				(actualWidth - results.MinWidth) / totalFlex : 0.0f;
+			float[] colX = new float[columns + 1];
+			// Determine start of columns
+			for (int i = 0; i < columns; i++) {
+				var spec = results.ComputedColumnSpecs[i];
+				colX[i] = position;
+				position += spec.Width + spec.FlexWidth * excess;
 			}
-			return spec;
+			colX[columns] = position;
+			return colX;
+		}
+
+		/// <summary>
+		/// Calculates all row heights.
+		/// </summary>
+		/// <param name="results">The results from layout.</param>
+		/// <param name="obj">The object to lay out.</param>
+		/// <param name="margin">The margins within the borders.</param>
+		/// <returns>The row heights.</returns>
+		private static float[] GetRowHeights(GridLayoutResults results, GameObject obj,
+				RectOffset margin) {
+			int rows = results.Rows;
+			// Find out how much flexible size can be given out
+			float position = margin?.bottom ?? 0, top = margin?.top ?? 0;
+			float actualWidth = obj.rectTransform().rect.height - position - top,
+				totalFlex = results.TotalFlexHeight, excess = (totalFlex > 0.0f) ?
+				(actualWidth - results.MinHeight) / totalFlex : 0.0f;
+			float[] rowY = new float[rows + 1];
+			// Determine start of rows
+			for (int i = 0; i < rows; i++) {
+				var spec = results.ComputedRowSpecs[i];
+				rowY[i] = position;
+				position += spec.Height + spec.FlexHeight * excess;
+			}
+			rowY[rows] = position;
+			return rowY;
+		}
+
+		/// <summary>
+		/// Calculates the final height of this component and applies it to the component.
+		/// </summary>
+		/// <param name="component">The component to calculate.</param>
+		/// <param name="rowY">The row locations from GetRowHeights.</param>
+		/// <returns>true if the height was applied, or false if the component was not laid out
+		/// due to being disposed or set to ignore layout.</returns>
+		private static bool SetFinalHeight(SizedGridComponent component, float[] rowY) {
+			var margin = component.Margin;
+			var sizes = component.VerticalSize;
+			var target = sizes.source;
+			bool ok = !sizes.ignore && target != null;
+			if (ok) {
+				int rows = rowY.Length - 1;
+				// Clamp first and last row occupied by this object
+				int first = component.Row, last = first + component.RowSpan;
+				first = first.InRange(0, rows - 1);
+				last = last.InRange(1, rows);
+				// Align correctly in the cell box
+				float y = rowY[first], rowHeight = rowY[last] - y;
+				if (margin != null) {
+					float border = margin.top + margin.bottom;
+					y += margin.top;
+					rowHeight -= border;
+					sizes.min -= border;
+					sizes.preferred -= border;
+				}
+				float actualHeight = PUIUtils.GetProperSize(sizes, rowHeight);
+				// Take alignment into account
+				y += PUIUtils.GetOffset(component.Alignment, PanelDirection.Vertical,
+					rowHeight - actualHeight);
+				target.rectTransform().SetInsetAndSizeFromParentEdge(RectTransform.Edge.
+					Top, y, actualHeight);
+			}
+			return ok;
+		}
+
+		/// <summary>
+		/// Calculates the final width of this component and applies it to the component.
+		/// </summary>
+		/// <param name="component">The component to calculate.</param>
+		/// <param name="colX">The column locations from GetColumnWidths.</param>
+		/// <returns>true if the width was applied, or false if the component was not laid out
+		/// due to being disposed or set to ignore layout.</returns>
+		private static bool SetFinalWidth(SizedGridComponent component, float[] colX) {
+			var margin = component.Margin;
+			var sizes = component.HorizontalSize;
+			var target = sizes.source;
+			bool ok = !sizes.ignore && target != null;
+			if (ok) {
+				int columns = colX.Length - 1;
+				// Clamp first and last column occupied by this object
+				int first = component.Column, last = first + component.ColumnSpan;
+				first = first.InRange(0, columns - 1);
+				last = last.InRange(1, columns);
+				// Align correctly in the cell box
+				float x = colX[first], colWidth = colX[last] - x;
+				if (margin != null) {
+					float border = margin.left + margin.right;
+					x += margin.left;
+					colWidth -= border;
+					sizes.min -= border;
+					sizes.preferred -= border;
+				}
+				float actualWidth = PUIUtils.GetProperSize(sizes, colWidth);
+				// Take alignment into account
+				x += PUIUtils.GetOffset(component.Alignment, PanelDirection.Horizontal,
+					colWidth - actualWidth);
+				target.rectTransform().SetInsetAndSizeFromParentEdge(RectTransform.Edge.
+					Left, x, actualWidth);
+			}
+			return ok;
 		}
 
 		/// <summary>
@@ -75,6 +178,11 @@ namespace PeterHan.PLib.UI {
 		public int layoutPriority { get; set; }
 
 		/// <summary>
+		/// The margin around the components as a whole.
+		/// </summary>
+		public RectOffset Margin { get; set; }
+
+		/// <summary>
 		/// The children of this panel.
 		/// </summary>
 		private readonly ICollection<GridComponent<GameObject>> children;
@@ -87,7 +195,7 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// The current layout status.
 		/// </summary>
-		private LayoutResults results;
+		private GridLayoutResults results;
 
 		/// <summary>
 		/// The rows in this panel.
@@ -99,6 +207,7 @@ namespace PeterHan.PLib.UI {
 			columns = new List<GridColumnSpec>(16);
 			rows = new List<GridRowSpec>(16);
 			layoutPriority = 1;
+			Margin = null;
 			results = null;
 		}
 
@@ -138,7 +247,7 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public void CalculateLayoutInputHorizontal() {
-			results = new LayoutResults(rows, columns, children);
+			results = new GridLayoutResults(rows, columns, children);
 			var elements = ListPool<Component, PGridLayoutGroup>.Allocate();
 			foreach (var component in results.Components) {
 				// Cache size of children
@@ -158,8 +267,10 @@ namespace PeterHan.PLib.UI {
 			elements.Recycle();
 			// Calculate columns sizes and our size
 			results.CalcBaseWidths();
-			minWidth = results.MinWidth;
-			preferredWidth = results.MinWidth;
+			float width = results.MinWidth;
+			if (Margin != null)
+				width += Margin.left + Margin.right;
+			minWidth = preferredWidth = width;
 			flexibleWidth = (results.TotalFlexWidth > 0.0f) ? 1.0f : 0.0f;
 		}
 
@@ -188,8 +299,10 @@ namespace PeterHan.PLib.UI {
 				elements.Recycle();
 				// Calculate row sizes and our size
 				results.CalcBaseHeights();
-				minHeight = results.MinHeight;
-				preferredHeight = results.MinHeight;
+				float height = results.MinHeight;
+				if (Margin != null)
+					height += Margin.bottom + Margin.top;
+				minHeight = preferredHeight = height;
 				flexibleHeight = (results.TotalFlexHeight > 0.0f) ? 1.0f : 0.0f;
 			}
 		}
@@ -227,55 +340,22 @@ namespace PeterHan.PLib.UI {
 
 		public void SetLayoutHorizontal() {
 			var obj = gameObject;
-			int columns;
 #if DEBUG
 			if (results == null)
 				throw new InvalidOperationException("SetLayoutHorizontal before CalculateLayoutInputHorizontal");
 #endif
-			if (results != null && obj != null && (columns = results.Columns) > 0) {
-				// Find out how much flexible size can be given out
-				float actualWidth = obj.rectTransform().rect.width, position = 0.0f;
-				float totalFlex = results.TotalFlexWidth, excess = (totalFlex > 0.0f) ?
-					(actualWidth - results.MinWidth) / totalFlex : 0.0f;
-				float[] colX = new float[columns + 1];
-				// Determine start of columns
-				for (int i = 0; i < columns; i++) {
-					var spec = results.ColumnSpecs[i];
-					colX[i] = position;
-					position += spec.Width + spec.FlexWidth * excess;
-				}
-				colX[columns] = position;
+			if (results != null && obj != null && results.Columns > 0) {
+				float[] colX = GetColumnWidths(results, obj, Margin);
 				// All components lay out
 				var controllers = ListPool<ILayoutController, PGridLayoutGroup>.Allocate();
-				foreach (var component in results.Components) {
-					var sizes = component.HorizontalSize;
-					var item = sizes.source;
-					if (!sizes.ignore && item != null) {
-						var margin = component.Margin;
-						// Clamp first and last column occupied by this object
-						int first = component.Column, last = first + component.ColumnSpan;
-						first = first.InRange(0, columns - 1);
-						last = last.InRange(1, columns);
-						// Align correctly in the cell box
-						float x = colX[first], width = colX[last] - x;
-						if (margin != null) {
-							float border = margin.left + margin.right;
-							x += margin.left;
-							width -= border;
-							sizes.min -= border;
-							sizes.preferred -= border;
-						}
-						float setWidth = PUIUtils.GetProperSize(sizes, width);
-						item.rectTransform().SetInsetAndSizeFromParentEdge(RectTransform.Edge.
-							Left, x + PUIUtils.GetOffset(component.Alignment, PanelDirection.
-							Horizontal, width - setWidth), setWidth);
+				foreach (var component in results.Components)
+					if (SetFinalWidth(component, colX)) {
 						// Lay out all children
 						controllers.Clear();
-						item.GetComponents(controllers);
+						component.HorizontalSize.source.GetComponents(controllers);
 						foreach (var controller in controllers)
 							controller.SetLayoutHorizontal();
 					}
-				}
 				controllers.Recycle();
 			}
 		}
@@ -288,232 +368,18 @@ namespace PeterHan.PLib.UI {
 				throw new InvalidOperationException("SetLayoutVertical before CalculateLayoutInputVertical");
 #endif
 			if (results != null && obj != null && (rows = results.Rows) > 0) {
-				// Find out how much flexible size can be given out
-				float actualWidth = obj.rectTransform().rect.height, position = 0.0f;
-				float totalFlex = results.TotalFlexHeight, excess = (totalFlex > 0.0f) ?
-					(actualWidth - results.MinHeight) / totalFlex : 0.0f;
-				float[] rowY = new float[rows + 1];
-				// Determine start of rows
-				for (int i = 0; i < rows; i++) {
-					var spec = results.RowSpecs[i];
-					rowY[i] = position;
-					position += spec.Height + spec.FlexHeight * excess;
-				}
-				rowY[rows] = position;
+				float[] rowY = GetRowHeights(results, obj, Margin);
 				// All components lay out
 				var controllers = ListPool<ILayoutController, PGridLayoutGroup>.Allocate();
-				foreach (var component in results.Components) {
-					var sizes = component.VerticalSize;
-					var item = sizes.source;
-					if (!sizes.ignore && item != null) {
-						var margin = component.Margin;
-						// Clamp first and last row occupied by this object
-						int first = component.Row, last = first + component.RowSpan;
-						first = first.InRange(0, rows - 1);
-						last = last.InRange(1, rows);
-						// Align correctly in the cell box
-						float y = rowY[first], height = rowY[last] - y;
-						if (margin != null) {
-							float border = margin.top + margin.bottom;
-							y += margin.top;
-							height -= border;
-							sizes.min -= border;
-							sizes.preferred -= border;
-						}
-						float setHeight = PUIUtils.GetProperSize(sizes, height);
-						item.rectTransform().SetInsetAndSizeFromParentEdge(RectTransform.Edge.
-							Top, y + PUIUtils.GetOffset(component.Alignment, PanelDirection.
-							Vertical, height - setHeight), setHeight);
+				foreach (var component in results.Components)
+					if (!SetFinalHeight(component, rowY)) {
 						// Lay out all children
 						controllers.Clear();
-						item.GetComponents(controllers);
+						component.VerticalSize.source.GetComponents(controllers);
 						foreach (var controller in controllers)
 							controller.SetLayoutVertical();
 					}
-				}
 				controllers.Recycle();
-			}
-		}
-
-		/// <summary>
-		/// A component in the grid with its sizes computed.
-		/// </summary>
-		private sealed class SizedGridComponent : GridComponentSpec {
-			/// <summary>
-			/// The object and its computed horizontal sizes.
-			/// </summary>
-			public LayoutSizes HorizontalSize { get; set; }
-
-			/// <summary>
-			/// The object and its computed vertical sizes.
-			/// </summary>
-			public LayoutSizes VerticalSize { get; set; }
-
-			internal SizedGridComponent(GridComponentSpec spec, GameObject item) {
-				Alignment = spec.Alignment;
-				Column = spec.Column;
-				ColumnSpan = spec.ColumnSpan;
-				Margin = spec.Margin;
-				Row = spec.Row;
-				RowSpan = spec.RowSpan;
-				HorizontalSize = new LayoutSizes(item);
-				VerticalSize = new LayoutSizes(item);
-			}
-		}
-
-		/// <summary>
-		/// A class which stores the results of a single layout calculation pass.
-		/// </summary>
-		private sealed class LayoutResults {
-			/// <summary>
-			/// The columns in the grid.
-			/// </summary>
-			public IList<GridColumnSpec> ColumnSpecs { get; }
-
-			/// <summary>
-			/// The components in the grid, in order of addition.
-			/// </summary>
-			public ICollection<SizedGridComponent> Components { get; }
-
-			/// <summary>
-			/// The number of columns in the grid.
-			/// </summary>
-			public int Columns { get; }
-
-			/// <summary>
-			/// The minimum total height.
-			/// </summary>
-			public float MinHeight { get; private set; }
-
-			/// <summary>
-			/// The minimum total width.
-			/// </summary>
-			public float MinWidth { get; private set; }
-
-			/// <summary>
-			/// The components which were laid out.
-			/// </summary>
-			public ICollection<SizedGridComponent>[,] Matrix { get; }
-
-			/// <summary>
-			/// The rows in the grid.
-			/// </summary>
-			public IList<GridRowSpec> RowSpecs { get; }
-
-			/// <summary>
-			/// The number of rows in the grid.
-			/// </summary>
-			public int Rows { get; }
-
-			/// <summary>
-			/// The total flexible height weights.
-			/// </summary>
-			public float TotalFlexHeight { get; private set; }
-
-			/// <summary>
-			/// The total flexible width weights.
-			/// </summary>
-			public float TotalFlexWidth { get; private set; }
-
-			internal LayoutResults(IList<GridRowSpec> rows, IList<GridColumnSpec> columns,
-					ICollection<GridComponent<GameObject>> components) {
-				if (rows == null)
-					throw new ArgumentNullException("rows");
-				if (columns == null)
-					throw new ArgumentNullException("columns");
-				if (components == null)
-					throw new ArgumentNullException("components");
-				Columns = columns.Count;
-				Rows = rows.Count;
-				ColumnSpecs = columns;
-				MinHeight = MinWidth = 0.0f;
-				RowSpecs = rows;
-				TotalFlexHeight = TotalFlexWidth = 0.0f;
-				// Populate alive components
-				int n = Math.Max(components.Count, 8);
-				Components = new List<SizedGridComponent>(n);
-				foreach (var component in components) {
-					var item = component.Item;
-					if (item != null)
-						Components.Add(new SizedGridComponent(component, item));
-				}
-				Matrix = GetMatrix(Rows, Columns, Components);
-			}
-
-			/// <summary>
-			/// Calculates the base height of each row, the minimum it gets before extra space
-			/// is distributed.
-			/// </summary>
-			internal void CalcBaseHeights() {
-				MinHeight = TotalFlexHeight = 0.0f;
-				for (int row = 0; row < Rows; row++) {
-					var spec = RowSpecs[row];
-					float height = spec.Height, flex = spec.FlexHeight;
-					if (height <= 0.0f)
-						// Auto height
-						for (int i = 0; i < Columns; i++)
-							height = Math.Max(height, PreferredHeightAt(row, i));
-					MinHeight += height;
-					if (flex > 0.0f)
-						TotalFlexHeight += flex;
-					RowSpecs[row] = new GridRowSpec(height, flex);
-				}
-			}
-
-			/// <summary>
-			/// Calculates the base width of each row, the minimum it gets before extra space
-			/// is distributed.
-			/// </summary>
-			internal void CalcBaseWidths() {
-				MinWidth = TotalFlexWidth = 0.0f;
-				for (int column = 0; column < Columns; column++) {
-					var spec = ColumnSpecs[column];
-					float width = spec.Width, flex = spec.FlexWidth;
-					if (width <= 0.0f)
-						// Auto width
-						for (int i = 0; i < Rows; i++)
-							width = Math.Max(width, PreferredWidthAt(i, column));
-					MinWidth += width;
-					if (flex > 0.0f)
-						TotalFlexWidth += flex;
-					ColumnSpecs[column] = new GridColumnSpec(width, flex);
-				}
-			}
-
-			/// <summary>
-			/// Retrieves the preferred height of a cell.
-			/// </summary>
-			/// <param name="row">The cell's row.</param>
-			/// <param name="column">The cell's column.</param>
-			/// <returns>The preferred height.</returns>
-			private float PreferredHeightAt(int row, int column) {
-				float size = 0.0f;
-				var atLocation = Matrix[row, column];
-				if (atLocation != null && atLocation.Count > 0)
-					foreach (var component in atLocation) {
-						var sizes = component.VerticalSize;
-						if (component.RowSpan < 2)
-							size = Math.Max(size, sizes.preferred);
-					}
-				return size;
-			}
-
-			/// <summary>
-			/// Retrieves the preferred width of a cell.
-			/// </summary>
-			/// <param name="row">The cell's row.</param>
-			/// <param name="column">The cell's column.</param>
-			/// <returns>The preferred width.</returns>
-			private float PreferredWidthAt(int row, int column) {
-				float size = 0.0f;
-				var atLocation = Matrix[row, column];
-				if (atLocation != null && atLocation.Count > 0)
-					foreach (var component in atLocation) {
-						var sizes = component.HorizontalSize;
-						if (component.ColumnSpan < 2)
-							size = Math.Max(size, sizes.preferred);
-					}
-				return size;
 			}
 		}
 	}

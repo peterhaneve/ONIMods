@@ -17,8 +17,8 @@
  */
 
 //#define DEBUG_LAYOUT
+using PeterHan.PLib.UI.Layouts;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -39,11 +39,11 @@ namespace PeterHan.PLib.UI {
 		/// <param name="args">The parameters to use for layout.</param>
 		/// <param name="direction">The direction which is being calculated.</param>
 		/// <returns>The minimum and preferred box layout size.</returns>
-		private static LayoutResults Calc(GameObject obj, BoxLayoutParams args,
+		private static BoxLayoutResults Calc(GameObject obj, BoxLayoutParams args,
 				PanelDirection direction) {
 			var transform = obj.AddOrGet<RectTransform>();
 			int n = transform.childCount;
-			var result = new LayoutResults(direction, n);
+			var result = new BoxLayoutResults(direction, n);
 			var components = ListPool<Component, BoxLayoutGroup>.Allocate();
 			for (int i = 0; i < n; i++) {
 				var child = transform.GetChild(i)?.gameObject;
@@ -71,12 +71,12 @@ namespace PeterHan.PLib.UI {
 		/// <param name="args">The parameters to use for layout.</param>
 		/// <param name="required">The calculated minimum and preferred sizes.</param>
 		/// <param name="size">The total available size in this dimension.</param>
-		private static void DoLayout(BoxLayoutParams args, LayoutResults required, float size)
-		{
+		private static void DoLayout(BoxLayoutParams args, BoxLayoutResults required,
+				float size) {
 			if (required == null)
 				throw new ArgumentNullException("required");
 			var direction = required.direction;
-			var status = new LayoutStatus(direction, args.Margin ?? new RectOffset(), size);
+			var status = new BoxLayoutStatus(direction, args.Margin ?? new RectOffset(), size);
 			if (args.Direction == direction)
 				DoLayoutLinear(required, args, status);
 			else
@@ -89,8 +89,8 @@ namespace PeterHan.PLib.UI {
 		/// <param name="required">The calculated minimum and preferred sizes.</param>
 		/// <param name="args">The parameters to use for layout.</param>
 		/// <param name="status">The current status of layout.</param>
-		private static void DoLayoutLinear(LayoutResults required, BoxLayoutParams args,
-				LayoutStatus status) {
+		private static void DoLayoutLinear(BoxLayoutResults required, BoxLayoutParams args,
+				BoxLayoutStatus status) {
 			var total = required.total;
 			var components = ListPool<ILayoutController, BoxLayoutGroup>.Allocate();
 			var direction = args.Direction;
@@ -136,8 +136,8 @@ namespace PeterHan.PLib.UI {
 		/// <param name="required">The calculated minimum and preferred sizes.</param>
 		/// <param name="args">The parameters to use for layout.</param>
 		/// <param name="status">The current status of layout.</param>
-		private static void DoLayoutPerp(LayoutResults required, BoxLayoutParams args,
-				LayoutStatus status) {
+		private static void DoLayoutPerp(BoxLayoutResults required, BoxLayoutParams args,
+				BoxLayoutStatus status) {
 			var components = ListPool<ILayoutController, BoxLayoutGroup>.Allocate();
 			var direction = args.Direction;
 			float size = status.size;
@@ -250,7 +250,7 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// Results from the horizontal calculation pass.
 		/// </summary>
-		private LayoutResults horizontal;
+		private BoxLayoutResults horizontal;
 
 		/// <summary>
 		/// The parameters used to set up this box layout.
@@ -260,7 +260,7 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// Results from the vertical calculation pass.
 		/// </summary>
-		private LayoutResults vertical;
+		private BoxLayoutResults vertical;
 
 		internal BoxLayoutGroup() {
 			horizontal = null;
@@ -355,168 +355,6 @@ namespace PeterHan.PLib.UI {
 #endif
 				DoLayout(parameters, vertical, rt.rect.height);
 			}
-		}
-
-		/// <summary>
-		/// A class which stores the results of a single layout calculation pass.
-		/// </summary>
-		private sealed class LayoutResults {
-			/// <summary>
-			/// The components which were laid out.
-			/// </summary>
-			public readonly ICollection<LayoutSizes> children;
-
-			/// <summary>
-			/// The current direction of flow.
-			/// </summary>
-			public readonly PanelDirection direction;
-
-			/// <summary>
-			/// Whether any spaces have been added yet for minimum size.
-			/// </summary>
-			private bool haveMinSpace;
-
-			/// <summary>
-			/// Whether any spaces have been added yet for preferred size.
-			/// </summary>
-			private bool havePrefSpace;
-
-			/// <summary>
-			/// The total sizes.
-			/// </summary>
-			public LayoutSizes total;
-
-			internal LayoutResults(PanelDirection direction, int presize) {
-				children = new List<LayoutSizes>(presize);
-				this.direction = direction;
-				haveMinSpace = false;
-				havePrefSpace = false;
-				total = new LayoutSizes();
-			}
-
-			/// <summary>
-			/// Accumulates another component into the results.
-			/// </summary>
-			/// <param name="sizes">The size of the component to add.</param>
-			/// <param name="spacing">The component spacing.</param>
-			public void Accum(LayoutSizes sizes, float spacing) {
-				float newMin = sizes.min, newPreferred = sizes.preferred;
-				if (newMin > 0.0f) {
-					// Skip one space
-					if (haveMinSpace)
-						newMin += spacing;
-					haveMinSpace = true;
-				}
-				total.min += newMin;
-				if (newPreferred > 0.0f) {
-					// Skip one space
-					if (havePrefSpace)
-						newPreferred += spacing;
-					havePrefSpace = true;
-				}
-				total.preferred += newPreferred;
-				total.flexible += sizes.flexible;
-			}
-
-			/// <summary>
-			/// Expands the results around another component.
-			/// </summary>
-			/// <param name="sizes">The size of the component to expand to.</param>
-			public void Expand(LayoutSizes sizes) {
-				float newMin = sizes.min, newPreferred = sizes.preferred, newFlexible =
-					sizes.flexible;
-				if (newMin > total.min)
-					total.min = newMin;
-				if (newPreferred > total.preferred)
-					total.preferred = newPreferred;
-				if (newFlexible > total.flexible)
-					total.flexible = newFlexible;
-			}
-
-			public override string ToString() {
-				return direction + " " + total;
-			}
-		}
-
-		/// <summary>
-		/// Maintains the status of a layout in progress.
-		/// </summary>
-		private sealed class LayoutStatus {
-			/// <summary>
-			/// The current direction of flow.
-			/// </summary>
-			public readonly PanelDirection direction;
-
-			/// <summary>
-			/// The edge from where layout started.
-			/// </summary>
-			public readonly RectTransform.Edge edge;
-
-			/// <summary>
-			/// The next component's offset.
-			/// </summary>
-			public readonly float offset;
-
-			/// <summary>
-			/// The component size in that direction minus margins.
-			/// </summary>
-			public readonly float size;
-
-			internal LayoutStatus(PanelDirection direction, RectOffset margins, float size) {
-				this.direction = direction;
-				switch (direction) {
-				case PanelDirection.Horizontal:
-					edge = RectTransform.Edge.Left;
-					offset = margins.left;
-					this.size = size - offset - margins.right;
-					break;
-				case PanelDirection.Vertical:
-					edge = RectTransform.Edge.Top;
-					offset = margins.top;
-					this.size = size - offset - margins.bottom;
-					break;
-				default:
-					throw new ArgumentException("direction");
-				}
-			}
-		}
-	}
-
-	/// <summary>
-	/// The parameters actually used for laying out a box layout.
-	/// </summary>
-	public sealed class BoxLayoutParams {
-		/// <summary>
-		/// The alignment to use for components that are not big enough to fit and have no
-		/// flexible width.
-		/// </summary>
-		public TextAnchor Alignment { get; set; }
-
-		/// <summary>
-		/// The direction of layout.
-		/// </summary>
-		public PanelDirection Direction { get; set; }
-
-		/// <summary>
-		/// The margin between the children and the component edge.
-		/// </summary>
-		public RectOffset Margin { get; set; }
-
-		/// <summary>
-		/// The spacing between components.
-		/// </summary>
-		public float Spacing { get; set; }
-
-		public BoxLayoutParams() {
-			Alignment = TextAnchor.MiddleCenter;
-			Direction = PanelDirection.Horizontal;
-			Margin = null;
-			Spacing = 0.0f;
-		}
-
-		public override string ToString() {
-			return "BoxLayoutParams[Alignment={0},Direction={1},Spacing={2:F2}]".F(Alignment,
-				Direction, Spacing);
 		}
 	}
 }

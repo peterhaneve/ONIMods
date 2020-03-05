@@ -107,6 +107,7 @@ namespace PeterHan.PLib.UI {
 			SetImage(panel);
 			// Add layout component
 			var layout = panel.AddComponent<PGridLayoutGroup>();
+			layout.Margin = Margin;
 			foreach (var column in columns)
 				layout.AddColumn(column);
 			foreach (var row in rows)

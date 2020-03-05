@@ -29,27 +29,27 @@ namespace PeterHan.DebugNotIncluded {
 	[RestartRequired]
 	public sealed class DebugNotIncludedOptions : POptions.SingletonOptions<
 			DebugNotIncludedOptions> {
-		[Option("Extended Features", "Enables extra features of this mod.")]
+		[Option("Extended Features", "Enables extra features of this mod.", "Quality of Life")]
 		[JsonProperty]
 		public bool PowerUserMode { get; set; }
 
-		[Option("Log Assert Failures", "Logs a stack trace of every failing assert to the log.")]
+		[Option("Log Assert Failures", "Logs a stack trace of every failing assert to the log.", "Debugging")]
 		[JsonProperty]
 		public bool LogAsserts { get; set; }
 
-		[Option("Log Detailed Backtrace", "Adds more information to stack traces from crashes.")]
+		[Option("Log Detailed Backtrace", "Adds more information to stack traces from crashes.", "Debugging")]
 		[JsonProperty]
 		public bool DetailedBacktrace { get; set; }
 
-		[Option("Log Sound Info", "Logs each assignment of sounds to an animation.")]
+		[Option("Log Sound Info", "Logs each assignment of sounds to an animation.", "Debugging")]
 		[JsonProperty]
 		public bool LogSounds { get; set; }
 
-		[Option("Show Log Senders", "Includes the source method name on every log message.")]
+		[Option("Show Log Senders", "Includes the source method name on every log message.", "Debugging")]
 		[JsonProperty]
 		public bool ShowLogSenders { get; set; }
 
-		[Option("Skip First Mod Check", "Suppresses the warning dialog if Debug Not Included is not the first mod in the load order.")]
+		[Option("Skip First Mod Check", "Suppresses the warning dialog if Debug Not Included is not the first mod in the load order.", "Quality of Life")]
 		[JsonProperty]
 		public bool SkipFirstModCheck { get; set; }
 

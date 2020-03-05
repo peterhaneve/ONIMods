@@ -83,6 +83,11 @@ namespace PeterHan.PLib.Datafiles {
 		/// </summary>
 		/// <param name="assembly">The assembly to register for PLib localization.</param>
 		public static void Register(Assembly assembly = null) {
+			if (!PUtil.PLibInit) {
+				PUtil.InitLibrary(false);
+				PUtil.LogWarning("PUtil.InitLibrary was not called before using " +
+					"PLocalization.Register!");
+			}
 			if (assembly == null)
 				assembly = Assembly.GetCallingAssembly();
 			lock (PSharedData.GetLock(PRegistry.KEY_LOCALE_LOCK)) {

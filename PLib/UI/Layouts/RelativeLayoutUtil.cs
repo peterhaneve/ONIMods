@@ -42,10 +42,10 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// <param name="children">The location to store information about these components.</param>
 		/// <param name="all">The components to lay out.</param>
 		/// <param name="constraints">The constraints defined for these components.</param>
-		internal static void CalcX(this ICollection<RelativeLayoutIP> children,
+		internal static void CalcX(this ICollection<RelativeLayoutResults> children,
 				RectTransform all, IDictionary<GameObject, RelativeLayoutParams> constraints) {
 			var comps = ListPool<Component, RelativeLayout>.Allocate();
-			var paramMap = DictionaryPool<GameObject, RelativeLayoutIP, RelativeLayout>.
+			var paramMap = DictionaryPool<GameObject, RelativeLayoutResults, RelativeLayout>.
 				Allocate();
 			int n = all.childCount;
 			for (int i = 0; i < n; i++) {
@@ -56,10 +56,10 @@ namespace PeterHan.PLib.UI.Layouts {
 					child.GetComponents(comps);
 					var horiz = PUIUtils.CalcSizes(child, PanelDirection.Horizontal, comps);
 					if (!horiz.ignore) {
-						RelativeLayoutIP ip;
+						RelativeLayoutResults ip;
 						float w = horiz.preferred;
 						if (constraints.TryGetValue(child, out RelativeLayoutParams cons)) {
-							ip = new RelativeLayoutIP(child.rectTransform(), cons);
+							ip = new RelativeLayoutResults(child.rectTransform(), cons);
 							// Set override size by axis if necessary
 							var overrideSize = ip.OverrideSize;
 							if (overrideSize.x > 0.0f)
@@ -68,7 +68,7 @@ namespace PeterHan.PLib.UI.Layouts {
 							paramMap[child] = ip;
 						} else
 							// Default its layout to fill all
-							ip = new RelativeLayoutIP(child.rectTransform(), null);
+							ip = new RelativeLayoutResults(child.rectTransform(), null);
 						children.Add(ip);
 					}
 				}
@@ -89,7 +89,7 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// Computes vertical sizes for the components in this relative layout.
 		/// </summary>
 		/// <param name="children">The location to store information about these components.</param>
-		internal static void CalcY(this ICollection<RelativeLayoutIP> children) {
+		internal static void CalcY(this ICollection<RelativeLayoutResults> children) {
 			var comps = ListPool<Component, RelativeLayout>.Allocate();
 			foreach (var ip in children) {
 				var child = ip.Transform.gameObject;
@@ -113,7 +113,7 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// <param name="scratch">The location where components will be temporarily stored.</param>
 		/// <param name="mLeft">The left margin.</param>
 		/// <param name="mRight">The right margin.</param>
-		internal static void ExecuteX(this IEnumerable<RelativeLayoutIP> children,
+		internal static void ExecuteX(this IEnumerable<RelativeLayoutResults> children,
 				List<ILayoutController> scratch, float mLeft = 0.0f, float mRight = 0.0f) {
 			foreach (var child in children) {
 				var rt = child.Transform;
@@ -149,7 +149,7 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// <param name="scratch">The location where components will be temporarily stored.</param>
 		/// <param name="mBottom">The bottom margin.</param>
 		/// <param name="mTop">The top margin.</param>
-		internal static void ExecuteY(this IEnumerable<RelativeLayoutIP> children,
+		internal static void ExecuteY(this IEnumerable<RelativeLayoutResults> children,
 				List<ILayoutController> scratch, float mBottom = 0.0f, float mTop = 0.0f) {
 			foreach (var child in children) {
 				var rt = child.Transform;
@@ -183,7 +183,7 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// </summary>
 		/// <param name="children">The components to lay out.</param>
 		/// <returns>The minimum horizontal size.</returns>
-		internal static float GetMinSizeX(this IEnumerable<RelativeLayoutIP> children) {
+		internal static float GetMinSizeX(this IEnumerable<RelativeLayoutResults> children) {
 			float maxWidth = 0.0f, width;
 			foreach (var child in children) {
 				var insets = child.Insets;
@@ -218,7 +218,7 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// </summary>
 		/// <param name="children">The components to lay out.</param>
 		/// <returns>The minimum vertical size.</returns>
-		internal static float GetMinSizeY(this IEnumerable<RelativeLayoutIP> children) {
+		internal static float GetMinSizeY(this IEnumerable<RelativeLayoutResults> children) {
 			float maxHeight = 0.0f, height;
 			foreach (var child in children) {
 				var insets = child.Insets;
@@ -254,9 +254,9 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// <param name="edge">The edge to resolve.</param>
 		/// <param name="lookup">The location where the component can be looked up.</param>
 		/// <returns>The linked parameters for that edge if needed.</returns>
-		private static RelativeLayoutIP InitResolve(EdgeStatus edge,
-				IDictionary<GameObject, RelativeLayoutIP> lookup) {
-			RelativeLayoutIP result = null;
+		private static RelativeLayoutResults InitResolve(EdgeStatus edge,
+				IDictionary<GameObject, RelativeLayoutResults> lookup) {
+			RelativeLayoutResults result = null;
 			if (edge.Constraint == RelativeConstraintType.ToComponent)
 				if (!lookup.TryGetValue(edge.FromComponent, out result))
 					edge.Constraint = RelativeConstraintType.Unconstrained;
@@ -337,7 +337,7 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// </summary>
 		/// <param name="children">The children to resolve.</param>
 		/// <returns>true if all children have all X edges constrained, or false otherwise.</returns>
-		internal static bool RunPassX(this IEnumerable<RelativeLayoutIP> children) {
+		internal static bool RunPassX(this IEnumerable<RelativeLayoutResults> children) {
 			bool done = true;
 			foreach (var child in children) {
 				float width = child.EffectiveWidth;
@@ -363,7 +363,7 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// </summary>
 		/// <param name="children">The children to resolve.</param>
 		/// <returns>true if all children have all Y edges constrained, or false otherwise.</returns>
-		internal static bool RunPassY(this IEnumerable<RelativeLayoutIP> children) {
+		internal static bool RunPassY(this IEnumerable<RelativeLayoutResults> children) {
 			bool done = true;
 			foreach (var child in children) {
 				float height = child.EffectiveHeight;
@@ -390,7 +390,7 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// <param name="children">The children, some of which failed to resolve.</param>
 		/// <param name="limit">The number of passes executed before failing.</param>
 		/// <param name="direction">The direction that failed.</param>
-		internal static void ThrowUnresolvable(this IEnumerable<RelativeLayoutIP> children,
+		internal static void ThrowUnresolvable(this IEnumerable<RelativeLayoutResults> children,
 				int limit, PanelDirection direction) {
 			var message = new StringBuilder(256);
 			message.Append("After ").Append(limit);

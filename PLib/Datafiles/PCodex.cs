@@ -77,6 +77,11 @@ namespace PeterHan.PLib.Datafiles {
 		/// be read from the mod directory in the "codex/Creatures" subfolder.
 		/// </summary>
 		public static void RegisterCreatures() {
+			if (!PUtil.PLibInit) {
+				PUtil.InitLibrary(false);
+				PUtil.LogWarning("PUtil.InitLibrary was not called before using " +
+					"RegisterCreatures!");
+			}
 			RegisterEntry(Assembly.GetCallingAssembly(), PRegistry.KEY_CODEX_CREATURES_LOCK,
 				PRegistry.KEY_CODEX_CREATURES_TABLE, CREATURES_DIR,
 				"Registered codex creatures directory: {0}");
@@ -87,6 +92,11 @@ namespace PeterHan.PLib.Datafiles {
 		/// be read from the mod directory in the "codex/Plants" subfolder.
 		/// </summary>
 		public static void RegisterPlants() {
+			if (!PUtil.PLibInit) {
+				PUtil.InitLibrary(false);
+				PUtil.LogWarning("PUtil.InitLibrary was not called before using " +
+					"RegisterPlants!");
+			}
 			RegisterEntry(Assembly.GetCallingAssembly(), PRegistry.KEY_CODEX_PLANTS_LOCK,
 				PRegistry.KEY_CODEX_PLANTS_TABLE, PLANTS_DIR,
 				"Registered codex plants directory: {0}");
@@ -149,6 +159,40 @@ namespace PeterHan.PLib.Datafiles {
 		}
 
 		/// <summary>
+		/// Loads codex entries from the specified directory.
+		/// </summary>
+		/// <param name="entries">The location where the data will be placed.</param>
+		/// <param name="dir">The directory to load.</param>
+		private static void LoadFromDirectory(ICollection<SubEntry> entries, string dir) {
+			string[] codexFiles = new string[0];
+			try {
+				// List codex data files in the codex directory
+				codexFiles = Directory.GetFiles(dir, CODEX_FILES, SearchOption.
+					AllDirectories);
+			} catch (UnauthorizedAccessException ex) {
+				PUtil.LogExcWarn(ex);
+			} catch (IOException ex) {
+				PUtil.LogExcWarn(ex);
+			}
+			var widgetTagMappings = Traverse.Create(typeof(CodexCache)).
+				GetField<List<Tuple<string, Type>>>("widgetTagMappings");
+			foreach (string filename in codexFiles)
+				try {
+					var subEntry = YamlIO.LoadFile<SubEntry>(filename, PUtil.
+						YamlParseErrorCB, widgetTagMappings);
+					if (entries != null)
+						entries.Add(subEntry);
+				} catch (IOException ex) {
+					PUtil.LogException(ex);
+				} catch (InvalidDataException ex) {
+					PUtil.LogException(ex);
+				}
+#if DEBUG
+			PUtil.LogDebug("Loaded codex sub entries from directory: {0}".F(dir));
+#endif
+		}
+
+		/// <summary>
 		/// Loads the mod plant entries.
 		/// </summary>
 		/// <returns>The list of all plant entries loaded from mods.</returns>
@@ -168,34 +212,8 @@ namespace PeterHan.PLib.Datafiles {
 			lock (PSharedData.GetLock(lockKey)) {
 				var table = PSharedData.GetData<List<string>>(tableKey);
 				if (table != null)
-					foreach (string dir in table) {
-#if DEBUG
-						PUtil.LogDebug("Loaded codex sub entries from directory: {0}".F(dir));
-#endif
-						string[] codexFiles = new string[0];
-						try {
-							// List codex data files in the codex directory
-							codexFiles = Directory.GetFiles(dir, CODEX_FILES, SearchOption.
-								AllDirectories);
-						} catch (UnauthorizedAccessException ex) {
-							PUtil.LogExcWarn(ex);
-						} catch (IOException ex) {
-							PUtil.LogExcWarn(ex);
-						}
-						var widgetTagMappings = Traverse.Create(typeof(CodexCache)).
-							GetField<List<Tuple<string, Type>>>("widgetTagMappings");
-						foreach (string filename in codexFiles)
-							try {
-								var subEntry = YamlIO.LoadFile<SubEntry>(filename, PUtil.
-									YamlParseErrorCB, widgetTagMappings);
-								if (entries != null)
-									entries.Add(subEntry);
-							} catch (IOException ex) {
-								PUtil.LogException(ex);
-							} catch (InvalidDataException ex) {
-								PUtil.LogException(ex);
-							}
-					}
+					foreach (string dir in table)
+						LoadFromDirectory(entries, dir);
 			}
 			return entries;
 		}

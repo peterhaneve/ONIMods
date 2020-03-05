@@ -30,6 +30,16 @@ namespace PeterHan.PLib.Options {
 	/// </summary>
 	internal abstract class OptionsEntry : IComparable<OptionsEntry> {
 		/// <summary>
+		/// The margins around the control used in each entry.
+		/// </summary>
+		private static readonly RectOffset CONTROL_MARGIN = new RectOffset(0, 0, 2, 2);
+
+		/// <summary>
+		/// The margins around the label for each entry.
+		/// </summary>
+		private static readonly RectOffset LABEL_MARGIN = new RectOffset(0, 5, 2, 2);
+
+		/// <summary>
 		/// Builds the options entries from the type.
 		/// </summary>
 		/// <param name="forType">The type of the options class.</param>
@@ -161,18 +171,20 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
-		/// Retrieves the full line item entry for this options entry.
+		/// Adds the line item entry for this options entry.
 		/// </summary>
-		/// <returns>A UI component with both the title and editor.</returns>
-		internal IUIComponent GetUIEntry() {
-			return new PPanel("Option_" + Field) {
-				Direction = PanelDirection.Horizontal, FlexSize = Vector2.right,
-				Spacing = 5, Alignment = TextAnchor.MiddleCenter
-			}.AddChild(new PLabel("Label") {
-				Text = LookInStrings(Title), ToolTip = LookInStrings(ToolTip), FlexSize =
-				Vector2.right, TextAlignment = TextAnchor.MiddleLeft, TextStyle = PUITuning.
-				Fonts.TextLightStyle
-			}).AddChild(GetUIComponent());
+		/// <param name="parent">The location to add this entry.</param>
+		/// <param name="row">The layout row index to use.</param>
+		internal void CreateUIEntry(PGridPanel parent, int row) {
+			parent.AddChild(new PLabel("Label") {
+				Text = LookInStrings(Title), ToolTip = LookInStrings(ToolTip),
+				TextStyle = PUITuning.Fonts.TextLightStyle
+			}, new GridComponentSpec(row, 0) {
+				Margin = LABEL_MARGIN, Alignment = TextAnchor.MiddleLeft
+			});
+			parent.AddChild(GetUIComponent(), new GridComponentSpec(row, 1) {
+				Alignment = TextAnchor.MiddleRight, Margin = CONTROL_MARGIN
+			});
 		}
 
 		/// <summary>
@@ -228,12 +240,5 @@ namespace PeterHan.PLib.Options {
 				PUtil.LogException(e);
 			}
 		}
-	}
-
-	/// <summary>
-	/// The types of options which are available.
-	/// </summary>
-	internal enum OptionsType {
-		YesNo, SelectOne
 	}
 }

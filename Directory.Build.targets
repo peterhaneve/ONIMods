@@ -6,7 +6,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="ILRepack" AfterTargets="Build">
+  <Target Name="ILRepack" AfterTargets="Build" Condition=" '$(AssemblyName)' != 'PLib' ">
     <ItemGroup>
       <InputAssemblies Include="$(TargetDir)\*.dll"
         Exclude="**\0Harmony.dll" />

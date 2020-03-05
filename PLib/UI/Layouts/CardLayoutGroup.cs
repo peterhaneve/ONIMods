@@ -16,8 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.UI.Layouts;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -35,10 +35,10 @@ namespace PeterHan.PLib.UI {
 		/// <param name="args">The parameters to use for layout.</param>
 		/// <param name="direction">The direction which is being calculated.</param>
 		/// <returns>The minimum and preferred box layout size.</returns>
-		private static LayoutResults Calc(GameObject obj, PanelDirection direction) {
+		private static CardLayoutResults Calc(GameObject obj, PanelDirection direction) {
 			var transform = obj.AddOrGet<RectTransform>();
 			int n = transform.childCount;
-			var result = new LayoutResults(direction, n);
+			var result = new CardLayoutResults(direction, n);
 			var components = ListPool<Component, BoxLayoutGroup>.Allocate();
 			for (int i = 0; i < n; i++) {
 				var child = transform.GetChild(i)?.gameObject;
@@ -66,7 +66,8 @@ namespace PeterHan.PLib.UI {
 		/// <param name="margin">The margin to allow around the components.</param>
 		/// <param name="required">The calculated minimum and preferred sizes.</param>
 		/// <param name="size">The total available size in this dimension.</param>
-		private static void DoLayout(RectOffset margin, LayoutResults required, float size) {
+		private static void DoLayout(RectOffset margin, CardLayoutResults required, float size)
+		{
 			if (required == null)
 				throw new ArgumentNullException("required");
 			var direction = required.direction;
@@ -178,12 +179,12 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// Results from the horizontal calculation pass.
 		/// </summary>
-		private LayoutResults horizontal;
+		private CardLayoutResults horizontal;
 
 		/// <summary>
 		/// Results from the vertical calculation pass.
 		/// </summary>
-		private LayoutResults vertical;
+		private CardLayoutResults vertical;
 
 		internal CardLayoutGroup() {
 			horizontal = null;
@@ -286,51 +287,6 @@ namespace PeterHan.PLib.UI {
 			if (vertical != null) {
 				var rt = gameObject.rectTransform();
 				DoLayout(Margin ?? new RectOffset(), vertical, rt.rect.height);
-			}
-		}
-
-		/// <summary>
-		/// A class which stores the results of a single layout calculation pass.
-		/// </summary>
-		private sealed class LayoutResults {
-			/// <summary>
-			/// The components which were laid out.
-			/// </summary>
-			public readonly ICollection<LayoutSizes> children;
-
-			/// <summary>
-			/// The current direction of flow.
-			/// </summary>
-			public readonly PanelDirection direction;
-
-			/// <summary>
-			/// The total sizes.
-			/// </summary>
-			public LayoutSizes total;
-
-			internal LayoutResults(PanelDirection direction, int presize) {
-				children = new List<LayoutSizes>(presize);
-				this.direction = direction;
-				total = new LayoutSizes();
-			}
-
-			/// <summary>
-			/// Expands the results around another component.
-			/// </summary>
-			/// <param name="sizes">The size of the component to expand to.</param>
-			public void Expand(LayoutSizes sizes) {
-				float newMin = sizes.min, newPreferred = sizes.preferred, newFlexible =
-					sizes.flexible;
-				if (newMin > total.min)
-					total.min = newMin;
-				if (newPreferred > total.preferred)
-					total.preferred = newPreferred;
-				if (newFlexible > total.flexible)
-					total.flexible = newFlexible;
-			}
-
-			public override string ToString() {
-				return direction + " " + total;
 			}
 		}
 	}

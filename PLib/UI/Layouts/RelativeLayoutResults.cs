@@ -21,9 +21,9 @@ using UnityEngine;
 
 namespace PeterHan.PLib.UI.Layouts {
 	/// <summary>
-	/// Parameters used to store the dynamic data of an object during layout.
+	/// Parameters used to store the dynamic data of an object during a relative layout.
 	/// </summary>
-	internal sealed class RelativeLayoutIP : RelativeLayoutParamsBase<GameObject> {
+	internal sealed class RelativeLayoutResults : RelativeLayoutParamsBase<GameObject> {
 		/// <summary>
 		/// A set of insets that are always zero.
 		/// </summary>
@@ -32,7 +32,7 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// <summary>
 		/// The instance parameters of the bottom edge's component.
 		/// </summary>
-		internal RelativeLayoutIP BottomParams { get; set; }
+		internal RelativeLayoutResults BottomParams { get; set; }
 
 		/// <summary>
 		/// The height of the component plus its margin box.
@@ -47,7 +47,7 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// <summary>
 		/// The instance parameters of the left edge's component.
 		/// </summary>
-		internal RelativeLayoutIP LeftParams { get; set; }
+		internal RelativeLayoutResults LeftParams { get; set; }
 
 		/// <summary>
 		/// The preferred height at which this component will be laid out, unless both
@@ -80,12 +80,12 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// <summary>
 		/// The instance parameters of the right edge's component.
 		/// </summary>
-		internal RelativeLayoutIP RightParams { get; set; }
+		internal RelativeLayoutResults RightParams { get; set; }
 
 		/// <summary>
 		/// The instance parameters of the top edge's component.
 		/// </summary>
-		internal RelativeLayoutIP TopParams { get; set; }
+		internal RelativeLayoutResults TopParams { get; set; }
 
 		/// <summary>
 		/// The object to lay out.
@@ -107,8 +107,8 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// </summary>
 		private Vector2 prefSize;
 
-		internal RelativeLayoutIP(RectTransform rt, RelativeLayoutParams other) : base() {
-			Transform = rt ?? throw new ArgumentNullException("rt");
+		internal RelativeLayoutResults(RectTransform transform, RelativeLayoutParams other) {
+			Transform = transform ?? throw new ArgumentNullException("transform");
 			if (other != null) {
 				BottomEdge.CopyFrom(other.BottomEdge);
 				TopEdge.CopyFrom(other.TopEdge);

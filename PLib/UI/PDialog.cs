@@ -182,14 +182,19 @@ namespace PeterHan.PLib.UI {
 			bg.sprite = PUITuning.Images.BoxBorder;
 			bg.type = Image.Type.Sliced;
 			// Add each component
-			var layout = new RelativeLayout(dialog);
-			var title = LayoutTitle(layout, dComponent.DoButton);
-			var body = Body.AddTo(dialog);
-			var buttons = CreateUserButtons(layout, dComponent.DoButton);
+			var layout = dialog.AddComponent<PGridLayoutGroup>();
+			layout.AddRow(new GridRowSpec());
+			layout.AddRow(new GridRowSpec(flex: 1.0f));
+			layout.AddRow(new GridRowSpec());
+			layout.AddColumn(new GridColumnSpec(flex: 1.0f));
+			layout.AddColumn(new GridColumnSpec());
+			LayoutTitle(layout, dComponent.DoButton);
+			layout.AddComponent(Body.Build(), new GridComponentSpec(1, 0) {
+				ColumnSpan = 2, Margin = new RectOffset(10, 10, 10, 10)
+			});
+			CreateUserButtons(layout, dComponent.DoButton);
 			// Configure body position
-			layout.SetTopEdge(body, below: title).SetMargin(body, new RectOffset(
-				10, 10, 10, 10)).SetBottomEdge(body, above: buttons);
-			SetDialogSize(layout.Execute(true));
+			SetDialogSize(dialog);
 			// Dialog is realized
 			dComponent.dialog = this;
 			dComponent.sortKey = SortKey;
@@ -202,8 +207,7 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <param name="layout">The location to add the buttons.</param>
 		/// <param name="onPressed">The handler to call when any button is pressed.</param>
-		/// <returns>The realized panel containing the user buttons.</returns>
-		private GameObject CreateUserButtons(RelativeLayout layout,
+		private void CreateUserButtons(PGridLayoutGroup layout,
 				PUIDelegates.OnButtonPressed onPressed) {
 			var buttonPanel = new PPanel("Buttons") {
 				Alignment = TextAnchor.LowerCenter, Spacing = 7, Direction = PanelDirection.
@@ -228,9 +232,9 @@ namespace PeterHan.PLib.UI {
 				}
 				buttonPanel.AddChild(db);
 			}
-			var realized = buttonPanel.AddTo(layout.Parent);
-			layout.SetBottomEdge(realized, fraction: 0.0f);
-			return realized;
+			layout.AddComponent(buttonPanel.Build(), new GridComponentSpec(2, 0) {
+				ColumnSpan = 2
+			});
 		}
 
 		/// <summary>
@@ -238,28 +242,25 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <param name="layout">The layout manager for the dialog.</param>
 		/// <param name="onClose">The action to invoke when close is pressed.</param>
-		/// <returns>The realized title label.</returns>
-		private GameObject LayoutTitle(RelativeLayout layout, PUIDelegates.OnButtonPressed
+		private void LayoutTitle(PGridLayoutGroup layout, PUIDelegates.OnButtonPressed
 				onClose) {
 			// Title text, expand to width
 			var title = new PLabel("Title") {
-				Margin = new RectOffset(3, 4, 0, 0), Text = Title, FlexSize = Vector2.one,
-			}.SetKleiPinkColor().AddTo(layout.Parent);
+				Margin = new RectOffset(3, 4, 0, 0), Text = Title, FlexSize = Vector2.one
+			}.SetKleiPinkColor().Build();
+			layout.AddComponent(title, new GridComponentSpec(0, 0) {
+				Margin = new RectOffset(0, -2, 0, 0)
+			});
 			// Black border on the title bar overlaps the edge, but 0 margins so should be OK
 			// Fixes the 2px bug handily!
 			var titleBG = title.AddOrGet<Image>();
 			titleBG.sprite = PUITuning.Images.BoxBorder;
 			titleBG.type = Image.Type.Sliced;
 			// Close button
-			var close = new PButton(DIALOG_KEY_CLOSE) {
+			layout.AddComponent(new PButton(DIALOG_KEY_CLOSE) {
 				Sprite = PUITuning.Images.Close, Margin = CLOSE_ICON_MARGIN, OnClick = onClose,
 				SpriteSize = CLOSE_ICON_SIZE, ToolTip = STRINGS.UI.TOOLTIPS.CLOSETOOLTIP
-			}.SetKleiBlueStyle().AddTo(layout.Parent);
-			layout.SetTopEdge(title, fraction: 1.0f).SetTopEdge(close, fraction: 1.0f).
-				SetLeftEdge(title, fraction: 0.0f).SetRightEdge(title, toLeft: close).
-				SetRightEdge(close, fraction: 1.0f).SetMargin(title, new RectOffset(
-				0, -2, 0, 0)).OverrideSize(title, new Vector2(0.0f, 6.0f + CLOSE_ICON_SIZE.y));
-			return title;
+			}.SetKleiBlueStyle().Build(), new GridComponentSpec(0, 1));
 		}
 
 		/// <summary>

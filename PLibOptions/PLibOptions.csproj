@@ -25,6 +25,7 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
     <Compile Include="..\PLib\Options\FloatOptionsEntry.cs" Link="FloatOptionsEntry.cs" />
     <Compile Include="..\PLib\Options\IntegerOptionsEntry.cs" Link="IntegerOptionsEntry.cs" />
     <Compile Include="..\PLib\Options\LimitAttribute.cs" Link="LimitAttribute.cs" />
+    <Compile Include="..\PLib\Options\ModInfoAttribute.cs" Link="ModInfoAttribute.cs" />
     <Compile Include="..\PLib\Options\OptionAttribute.cs" Link="OptionAttribute.cs" />
     <Compile Include="..\PLib\Options\OptionsDialog.cs" Link="OptionsDialog.cs" />
     <Compile Include="..\PLib\Options\OptionsEntry.cs" Link="OptionsEntry.cs" />
@@ -35,20 +36,32 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
     <Compile Include="..\PLib\UI\IDynamicSizable.cs" Link="UI\IDynamicSizable.cs" />
     <Compile Include="..\PLib\UI\ImageTransform.cs" Link="UI\ImageTransform.cs" />
     <Compile Include="..\PLib\UI\ISettableFlexSize.cs" Link="UI\ISettableFlexSize.cs" />
+    <Compile Include="..\PLib\UI\ITooltipListableOption.cs" Link="UI\ITooltipListableOption.cs" />
     <Compile Include="..\PLib\UI\IUIComponent.cs" Link="UI\IUIComponent.cs" />
     <Compile Include="..\PLib\UI\LayoutSizes.cs" Link="UI\LayoutSizes.cs" />
-    <Compile Include="..\PLib\UI\Layouts\AbstractTextFieldLayout.cs" Link="UI\AbstractTextFieldLayout.cs" />
     <Compile Include="..\PLib\UI\Layouts\BoxLayoutGroup.cs" Link="UI\BoxLayoutGroup.cs" />
+    <Compile Include="..\PLib\UI\Layouts\BoxLayoutParams.cs" Link="UI\BoxLayoutParams.cs" />
+    <Compile Include="..\PLib\UI\Layouts\BoxLayoutResults.cs" Link="UI\BoxLayoutResults.cs" />
     <Compile Include="..\PLib\UI\Layouts\CardLayoutGroup.cs" Link="UI\CardLayoutGroup.cs" />
+    <Compile Include="..\PLib\UI\Layouts\CardLayoutResults.cs" Link="UI\CardLayoutResults.cs" />
     <Compile Include="..\PLib\UI\Layouts\GridComponent.cs" Link="UI\GridComponent.cs" />
     <Compile Include="..\PLib\UI\Layouts\GridComponentSpec.cs" Link="UI\GridComponentSpec.cs" />
+    <Compile Include="..\PLib\UI\Layouts\GridLayoutResults.cs" Link="UI\GridLayoutResults.cs" />
     <Compile Include="..\PLib\UI\Layouts\PGridLayoutGroup.cs" Link="UI\PGridLayoutGroup.cs" />
+    <Compile Include="..\PLib\UI\Layouts\RelativeLayout.cs" Link="UI\RelativeLayout.cs" />
+    <Compile Include="..\PLib\UI\Layouts\RelativeLayoutParams.cs" Link="UI\RelativeLayoutParams.cs" />
+    <Compile Include="..\PLib\UI\Layouts\RelativeLayoutResults.cs" Link="UI\RelativeLayoutResults.cs" />
+    <Compile Include="..\PLib\UI\Layouts\RelativeLayoutUtil.cs" Link="UI\RelativeLayoutUtil.cs" />
     <Compile Include="..\PLib\UI\PButton.cs" Link="UI\PButton.cs" />
     <Compile Include="..\PLib\UI\PCheckBox.cs" Link="UI\PCheckBox.cs" />
+    <Compile Include="..\PLib\UI\PComboBox.cs" Link="UI\PComboBox.cs" />
+    <Compile Include="..\PLib\UI\PComboBoxComponent.cs" Link="UI\PComboBoxComponent.cs" />
+    <Compile Include="..\PLib\UI\PContainer.cs" Link="UI\PContainer.cs" />
     <Compile Include="..\PLib\UI\PDialog.cs" Link="UI\PDialog.cs" />
     <Compile Include="..\PLib\UI\PGridPanel.cs" Link="UI\PGridPanel.cs" />
     <Compile Include="..\PLib\UI\PLabel.cs" Link="UI\PLabel.cs" />
     <Compile Include="..\PLib\UI\PPanel.cs" Link="UI\PPanel.cs" />
+    <Compile Include="..\PLib\UI\PRelativePanel.cs" Link="UI\PRelativePanel.cs" />
     <Compile Include="..\PLib\UI\PScrollPane.cs" Link="UI\PScrollPane.cs" />
     <Compile Include="..\PLib\UI\PSpacer.cs" Link="UI\PSpacer.cs" />
     <Compile Include="..\PLib\UI\PTextArea.cs" Link="UI\PTextArea.cs" />
@@ -61,5 +74,6 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
     <Compile Include="..\PLib\UI\PUIStrings.cs" Link="UI\PUIStrings.cs" />
     <Compile Include="..\PLib\UI\PUITuning.cs" Link="UI\PUITuning.cs" />
     <Compile Include="..\PLib\UI\PUIUtils.cs" Link="UI\PUIUtils.cs" />
+    <Compile Include="..\PLib\UI\TextAnchorUtils.cs" Link="UI\TextAnchorUtils.cs" />
   </ItemGroup>
 </Project>

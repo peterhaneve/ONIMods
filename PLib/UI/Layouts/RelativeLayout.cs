@@ -22,7 +22,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using PeterHan.PLib.UI.Layouts;
 
-using RelativeLayoutData = ListPool<PeterHan.PLib.UI.Layouts.RelativeLayoutIP,
+using RelativeLayoutData = ListPool<PeterHan.PLib.UI.Layouts.RelativeLayoutResults,
 	PeterHan.PLib.UI.RelativeLayout>;
 
 namespace PeterHan.PLib.UI {
