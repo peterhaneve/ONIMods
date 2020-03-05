@@ -21,8 +21,9 @@ using PeterHan.PLib;
 
 namespace PeterHan.EfficientFetch {
 	/// <summary>
-	/// The options class used for Efficient Fetch.
+	/// The options class used for Efficient Supply.
 	/// </summary>
+	[ModInfo("Efficient Supply", "https://github.com/peterhaneve/ONIMods", "preview.png")]
 	[JsonObject(MemberSerialization.OptIn)]
 	public sealed class EfficientFetchOptions {
 		[Option("Minimum Amount (%)", "The minimum percentage of material required to\r\n" +

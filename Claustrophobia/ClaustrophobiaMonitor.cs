@@ -29,16 +29,6 @@ namespace PeterHan.Claustrophobia {
 	public sealed class ClaustrophobiaMonitor : StateMachineComponent<ClaustrophobiaMonitor.
 			Instance> {
 		/// <summary>
-		/// The types used in the new Notification constructor.
-		/// </summary>
-		private static readonly Type[] NEW_NOTIFICATION_TYPES = {
-			typeof(string), typeof(NotificationType), typeof(HashedString),
-			typeof(Func<List<Notification>, object, string>), typeof(object), typeof(bool),
-			typeof(float), typeof(Notification.ClickCallback), typeof(object),
-			typeof(UnityEngine.Transform), typeof(bool)
-		};
-
-		/// <summary>
 		/// Consolidates "Confined!" notification messages.
 		/// </summary>
 		/// <param name="present">The available notifications.</param>
@@ -65,43 +55,6 @@ namespace PeterHan.Claustrophobia {
 		/// <param name="onClick">The function to call when the notification is selected.</param>
 		/// <returns>The resulting notification.</returns>
 		private static Notification CreateNotification(string title, NotificationType type,
-				Func<List<Notification>, object, string> consolidate,
-				Notification.ClickCallback onClick) {
-			Notification notify = null;
-			try {
-				// A bit expensive to catch the exception vs testing the version, but it runs
-				// only on the testing release, and does not happen often
-				notify = DoCreateNotification(title, type, consolidate, onClick);
-			} catch (MissingMethodException) {
-				// Use reflection!
-				var constructor = typeof(Notification).GetConstructor(BindingFlags.Instance |
-					BindingFlags.Public | BindingFlags.NonPublic, null, NEW_NOTIFICATION_TYPES,
-					null);
-				if (constructor != null)
-					try {
-						notify = constructor.Invoke(new object[] {
-							// New signature adds volume_attenuation (set it false)
-							title, type, HashedString.Invalid, consolidate, null, false, 0.0f,
-							onClick, null, null, false
-						}) as Notification;
-					} catch (Exception e) {
-						PUtil.LogException(e);
-					}
-				if (notify == null)
-					PUtil.LogWarning("Unable to create notification - no constructor");
-			}
-			return notify;
-		}
-
-		/// <summary>
-		/// Creates a notification, with a workaround for the new Automation Update.
-		/// </summary>
-		/// <param name="title">The notification title.</param>
-		/// <param name="type">The notification type.</param>
-		/// <param name="consolidate">The function to consolidate stacked notifications.</param>
-		/// <param name="onClick">The function to call when the notification is selected.</param>
-		/// <returns>The resulting notification.</returns>
-		private static Notification DoCreateNotification(string title, NotificationType type,
 				Func<List<Notification>, object, string> consolidate,
 				Notification.ClickCallback onClick) {
 			return new Notification(title, type, HashedString.Invalid, consolidate,

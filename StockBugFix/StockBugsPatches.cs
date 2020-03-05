@@ -274,6 +274,7 @@ namespace PeterHan.StockBugFix {
 			}
 		}
 
+#if false
 		/// <summary>
 		/// Applied to SpacecraftManager to make the "Ready to land" message expire.
 		/// </summary>
@@ -292,6 +293,7 @@ namespace PeterHan.StockBugFix {
 				return false;
 			}
 		}
+#endif
 
 		/// <summary>
 		/// Applied to GeneShuffler to fix a bug where it would not update after recharging.
@@ -307,6 +309,7 @@ namespace PeterHan.StockBugFix {
 			}
 		}
 
+#if false
 		/// <summary>
 		/// Applied to LaunchableRocket to not dupe materials when launched through a door.
 		/// </summary>
@@ -352,5 +355,6 @@ namespace PeterHan.StockBugFix {
 				}
 			}
 		}
+#endif
 	}
 }

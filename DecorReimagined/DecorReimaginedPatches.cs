@@ -181,7 +181,7 @@ namespace ReimaginationTeam.DecorRework {
 				bool cont = true;
 				ChoreDriver driver;
 				// If no chore driver, allow stock implementation
-				if ((driver = obj.GetComponent<ChoreDriver>()) != null) {
+				if ((driver = __instance.GetComponent<ChoreDriver>()) != null) {
 					var chore = driver.GetCurrentChore();
 					cont = false;
 					// Slew to zero decor if sleeping

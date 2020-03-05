@@ -3,9 +3,10 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Deselect New Materials</AssemblyTitle>
-    <FileVersion>2.0.0.0</FileVersion>
+    <FileVersion>2.2.0.0</FileVersion>
     <RootNamespace>PeterHan.DeselectNewMaterials</RootNamespace>
     <Description>Deselects all newly discovered materials from storage buildings even if their category was checked.</Description>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <CopyPreview>true</CopyPreview>
   </PropertyGroup>
 </Project>

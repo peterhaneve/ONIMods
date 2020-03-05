@@ -60,6 +60,11 @@ namespace PeterHan.SandboxTools {
 		/// </summary>
 		private readonly Color pendingHighlightColor;
 
+		/// <summary>
+		/// The last used tool mode.
+		/// </summary>
+		private string selectedTool;
+
 		internal FilteredDestroyTool() {
 			Color color;
 			modes = new List<DestroyFilter>(12) {
@@ -80,6 +85,7 @@ namespace PeterHan.SandboxTools {
 				new DestroyFilter("SolidConduits", SandboxToolsStrings.DESTROY_SHIPPING)
 			};
 			pendingCells = new HashSet<int>();
+			selectedTool = modes[0].ID;
 			try {
 				// Take from stock tool if possible
 				color = Traverse.Create(SandboxDestroyerTool.instance).GetField<Color>(
@@ -233,24 +239,36 @@ namespace PeterHan.SandboxTools {
 		protected override void OnActivateTool() {
 			var menu = ToolMenu.Instance.toolParameterMenu;
 			var toolModes = ListPool<PToolMode, PToolMode>.Allocate();
-			int index = 0;
 			base.OnActivateTool();
 			// Create list of layers which can be destroyed
-			foreach (var mode in modes)
-				toolModes.Add(mode.GetMode((index++ == 0) ? ToolParameterMenu.ToggleState.On :
-					ToolParameterMenu.ToggleState.Off));
-			if (menu != null)
+			bool found = false;
+			foreach (var mode in modes) {
+				var enable = ToolParameterMenu.ToggleState.Off;
+				if (mode.ID == selectedTool && !found) {
+					enable = ToolParameterMenu.ToggleState.On;
+					found = true;
+				}
+				toolModes.Add(mode.GetMode(enable));
+			}
+			if (menu != null) {
 				options = PToolMode.PopulateMenu(menu, toolModes);
+				menu.onParametersChanged += SaveToolMode;
+			}
 			toolModes.Recycle();
 			// Show the radius slider
-			SandboxToolParameterMenu.instance.gameObject.SetActive(true);
-			SandboxToolParameterMenu.instance.DisableParameters();
-			SandboxToolParameterMenu.instance.brushRadiusSlider.row.SetActive(true);
+			var sandboxMenu = SandboxToolParameterMenu.instance;
+			sandboxMenu.gameObject.SetActive(true);
+			sandboxMenu.DisableParameters();
+			sandboxMenu.brushRadiusSlider.row.SetActive(true);
 		}
 
 		protected override void OnDeactivateTool(InterfaceTool newTool) {
+			var menu = ToolMenu.Instance.toolParameterMenu;
 			base.OnDeactivateTool(newTool);
-			ToolMenu.Instance.toolParameterMenu?.ClearMenu();
+			if (menu != null) {
+				menu.onParametersChanged -= SaveToolMode;
+				menu.ClearMenu();
+			}
 			SandboxToolParameterMenu.instance.gameObject.SetActive(false);
 		}
 
@@ -264,6 +282,18 @@ namespace PeterHan.SandboxTools {
 						handler(cell);
 					else
 						DestroyBuildings(cell, mode.ID);
+				}
+		}
+
+		/// <summary>
+		/// Saves the current tool mode.
+		/// </summary>
+		private void SaveToolMode() {
+			foreach (var mode in modes)
+				// Look for the enabled layer
+				if (options[mode.ID] == ToolParameterMenu.ToggleState.On) {
+					selectedTool = mode.ID;
+					break;
 				}
 		}
 

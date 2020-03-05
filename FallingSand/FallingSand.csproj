@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Falling Sand</AssemblyTitle>
-    <FileVersion>2.0.0.0</FileVersion>
+    <FileVersion>2.1.0.0</FileVersion>
     <RootNamespace>PeterHan.FallingSand</RootNamespace>
     <Description>Places Dig errands on unstable materials which fall during mining.</Description>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>

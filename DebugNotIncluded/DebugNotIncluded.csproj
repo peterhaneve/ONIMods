@@ -7,6 +7,7 @@
     <RootNamespace>PeterHan.DebugNotIncluded</RootNamespace>
     <Description>Aids with mod debugging and management. Not intended to be a production mod manager.</Description>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <CopyPreview>true</CopyPreview>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="images\icon_mods_bottom.png" />

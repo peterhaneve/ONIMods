@@ -26,6 +26,7 @@ namespace ReimaginationTeam.DecorRework {
 	/// The options class used for Decor Reimagined.
 	/// </summary>
 	[JsonObject(MemberSerialization.OptIn)]
+	[ModInfo("Decor Reimagined", "https://github.com/peterhaneve/ONIMods", "preview.png")]
 	[RestartRequired]
 	public sealed class DecorReimaginedOptions {
 		// String names for the art stages.

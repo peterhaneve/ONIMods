@@ -24,6 +24,7 @@ namespace PeterHan.FastSave {
 	/// <summary>
 	/// The options class used for Fast Save.
 	/// </summary>
+	[ModInfo("Fast Save Enhanced", "https://github.com/peterhaneve/ONIMods", "preview.png")]
 	[JsonObject(MemberSerialization.OptIn)]
 	[RestartRequired]
 	public sealed class FastSaveOptions : POptions.SingletonOptions<FastSaveOptions> {

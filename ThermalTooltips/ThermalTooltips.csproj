@@ -3,9 +3,10 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Thermal Tooltips</AssemblyTitle>
-    <FileVersion>2.0.0.0</FileVersion>
+    <FileVersion>2.2.0.0</FileVersion>
     <RootNamespace>PeterHan.ThermalTooltips</RootNamespace>
     <Description>Adds additional information to tooltips on the Thermal overlay.</Description>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <CopyPreview>true</CopyPreview>
   </PropertyGroup>
 </Project>

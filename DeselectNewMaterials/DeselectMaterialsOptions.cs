@@ -23,6 +23,7 @@ namespace PeterHan.DeselectNewMaterials {
 	/// <summary>
 	/// The options class used for Deselect New Materials.
 	/// </summary>
+	[ModInfo("Deselect New Materials", "https://github.com/peterhaneve/ONIMods", "preview.png")]
 	[JsonObject(MemberSerialization.OptIn)]
 	public sealed class DeselectMaterialsOptions {
 		[Option("Food Storage Accepts By Default", "Sets the default setting on Ration Boxes and Refrigerators to Accepts New Materials.")]

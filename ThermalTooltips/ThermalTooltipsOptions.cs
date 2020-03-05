@@ -24,6 +24,7 @@ namespace PeterHan.ThermalTooltips {
 	/// The options class used for Thermal Tooltips.
 	/// </summary>
 	[JsonObject(MemberSerialization.OptIn)]
+	[ModInfo("Thermal Tooltips", "https://github.com/peterhaneve/ONIMods", "preview.png")]
 	public sealed class ThermalTooltipsOptions {
 		/// <summary>
 		/// Whether to display all temperature units.

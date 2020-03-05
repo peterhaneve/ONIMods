@@ -25,6 +25,7 @@ namespace PeterHan.StockBugFix {
 	/// The options class used for Stock Bug Fix.
 	/// </summary>
 	[JsonObject(MemberSerialization.OptIn)]
+	[ModInfo("Stock Bug Fix", "https://github.com/peterhaneve/ONIMods", "preview.png")]
 	[RestartRequired]
 	public sealed class StockBugFixOptions : POptions.SingletonOptions<StockBugFixOptions> {
 		/// <summary>
