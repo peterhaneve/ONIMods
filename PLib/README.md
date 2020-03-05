@@ -59,6 +59,12 @@ Register a mod by invoking `POptions.RegisterOptions(Type settingtype)` in `OnLo
 The argument should be the type of the class the mod uses for its options, and must be JSON serializable.
 `Newtonsoft.Json` is bundled with the game and can be referenced.
 
+The class used for mod options can also contain a `PLib.ModInfo(string title, [string url=""], [string image=""])` annotation to display additional mod information.
+The title overrides the default mod title in the options dialog only.
+If a valid localization string key name is used for `title` (such as `STRINGS.YOURMOD.OPTIONS.TITLE`), the localized value of that string from the strings database is used as the display text.
+The URL can be used to specify a custom website for the mod's home page; if left empty, it defaults to the Steam Workshop page for the mod.
+The image, if specified, will attempt to load a preview image (best size is 192x192) with that name from the mod's data folder and display it in the settings dialog.
+
 Fields must be a property, not a member, and should be annotated with `PLib.Option(string displaytext, [string tooltip=""])` to be visible in the mod config menu.
 Currently supported types are: `int`, `float`, `string`, `bool`, and `Enum`.
 If a valid localization string key name is used for `displaytext` (such as `STRINGS.YOURMOD.OPTIONS.YOUROPTION`), the localized value of that string from the strings database is used as the display text.
@@ -165,3 +171,7 @@ The optional argument can be used to set an existing UI `GameObject` as the UI t
 
 If the argument is `null`, create the UI in the **constructor** of the side screen content class, and use `AddTo(gameObject, 0)` on the root PPanel to add it to the side screen content.
 A reference to the UI `GameObject` created by `AddTo` should also be stored in the `ContentContainer` property of the side screen content class.
+
+### Other
+
+PLib contains a comprehensive UI library for making user interfaces dynamically at runtime. Consult the XML documentation for more details.
