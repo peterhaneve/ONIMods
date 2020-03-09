@@ -61,10 +61,13 @@ namespace PeterHan.DebugNotIncluded {
 			handler.UpdateCheckedState();
 			// Current PLib version
 			string version = PSharedData.GetData<string>("PLib.Version");
+			string name = ModDebugRegistry.Instance.OwnerOfAssembly(DebugNotIncludedPatches.
+				RunningPLibAssembly)?.ModName ?? "Unknown";
 			new PLabel("PLibVersion") {
 				TextStyle = PUITuning.Fonts.UILightStyle, Text = string.Format(
 				DebugNotIncludedStrings.LABEL_PLIB, version ?? PVersion.VERSION), ToolTip =
-				DebugNotIncludedStrings.TOOLTIP_PLIB, Margin = new RectOffset(5, 5, 0, 0)
+				string.Format(DebugNotIncludedStrings.TOOLTIP_PLIB, name),
+				Margin = new RectOffset(5, 5, 0, 0)
 			}.AddTo(bottom, 0);
 		}
 

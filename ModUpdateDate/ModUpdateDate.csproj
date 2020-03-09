@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net40</TargetFramework>
+    <AssemblyTitle>Mod Update Date</AssemblyTitle>
+    <FileVersion>0.5.0.0</FileVersion>
+    <RootNamespace>PeterHan.ModUpdateDate</RootNamespace>
+    <Description>An attempt to identify mods that Steam is not updating.</Description>
+    <AssemblyVersion>0.5.0.0</AssemblyVersion>
+  </PropertyGroup>
+</Project>

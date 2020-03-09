@@ -50,6 +50,11 @@ namespace PeterHan.DebugNotIncluded {
 		 */
 
 		/// <summary>
+		/// The assembly which is running the current version of PLib.
+		/// </summary>
+		internal static Assembly RunningPLibAssembly { get; private set; }
+		
+		/// <summary>
 		/// The KMod which describes this mod.
 		/// </summary>
 		internal static Mod ThisMod { get; private set; }
@@ -106,6 +111,7 @@ namespace PeterHan.DebugNotIncluded {
 		}
 		
 		public static void OnLoad(string path) {
+			RunningPLibAssembly = typeof(PUtil).Assembly;
 			PUtil.InitLibrary();
 			if (DebugNotIncludedOptions.Instance?.DetailedBacktrace ?? true)
 				DebugLogger.InstallExceptionLogger();
@@ -144,6 +150,11 @@ namespace PeterHan.DebugNotIncluded {
 					new HarmonyMethod(typeof(DebugNotIncludedPatches), nameof(BuildDisplay)));
 			KInputHandler.Add(Global.Instance.GetInputManager().GetDefaultController(),
 				new UISnapshotHandler(), 1024);
+			// Log which mod is running PLib
+			RunningPLibAssembly = Assembly.GetCallingAssembly();
+			var latest = ModDebugRegistry.Instance.OwnerOfAssembly(RunningPLibAssembly);
+			if (latest != null)
+				DebugLogger.LogDebug("Executing version of PLib is from: " + latest.ModName);
 		}
 
 		/// <summary>

@@ -65,6 +65,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaughtyMod", "NaughtyMod\Na
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NeonSigns", "NeonSigns\NeonSigns.csproj", "{D3E8C20B-FADC-4DF5-BEBF-DFD136EB306E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AirlockDoor", "AirlockDoor\AirlockDoor.csproj", "{9F9A55F7-EB51-4CC3-8B99-9735F020217B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModUpdateDate", "ModUpdateDate\ModUpdateDate.csproj", "{650A16F4-9A85-446B-B46A-2811715D4C6D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -195,6 +199,14 @@ Global
 		{D3E8C20B-FADC-4DF5-BEBF-DFD136EB306E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3E8C20B-FADC-4DF5-BEBF-DFD136EB306E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D3E8C20B-FADC-4DF5-BEBF-DFD136EB306E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F9A55F7-EB51-4CC3-8B99-9735F020217B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F9A55F7-EB51-4CC3-8B99-9735F020217B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F9A55F7-EB51-4CC3-8B99-9735F020217B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F9A55F7-EB51-4CC3-8B99-9735F020217B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{650A16F4-9A85-446B-B46A-2811715D4C6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{650A16F4-9A85-446B-B46A-2811715D4C6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{650A16F4-9A85-446B-B46A-2811715D4C6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{650A16F4-9A85-446B-B46A-2811715D4C6D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

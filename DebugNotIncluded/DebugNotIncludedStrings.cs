@@ -36,7 +36,7 @@ namespace PeterHan.DebugNotIncluded {
 		public static LocString TOOLTIP_DOWNONE = "Move down 10 slots";
 		public static LocString TOOLTIP_BOTTOM = "Move to bottom";
 		public static LocString TOOLTIP_ALL = "Enable or disable all";
-		public static LocString TOOLTIP_PLIB = "The currently active version of PLib";
+		public static LocString TOOLTIP_PLIB = "The currently active version of PLib\nFrom Mod: {0}";
 		public static LocString BUTTON_ALL = "ALL";
 		public static LocString LABEL_PLIB = "PLib Version: {0}";
 		public static LocString LABEL_DESCRIPTION = "Mod ID: {0}\r\nDescription: {1}\r\n";
