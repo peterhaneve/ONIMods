@@ -23,10 +23,10 @@ using System.Collections.Generic;
 
 namespace PeterHan.ModUpdateDate {
 	/// <summary>
-	/// The options class for Steam Mod Updater.
+	/// The options class for Mod Updater.
 	/// </summary>
 	[JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-	[ModInfo("Steam Mod Updater", "https://github.com/peterhaneve/ONIMods")]
+	[ModInfo("Mod Updater", "https://github.com/peterhaneve/ONIMods")]
 	[RestartRequired]
 	public sealed class ModUpdateInfo {
 		/// <summary>

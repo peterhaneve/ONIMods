@@ -26,14 +26,9 @@ using System.Collections.Generic;
 
 namespace PeterHan.ModUpdateDate {
 	/// <summary>
-	/// Patches which will be applied via annotations for Steam Mod Updater.
+	/// Patches which will be applied via annotations for Mod Updater.
 	/// </summary>
 	public static class ModUpdateDatePatches {
-		/// <summary>
-		/// The path to our mod's data directory.
-		/// </summary>
-		internal static string OurModPath { get; private set; }
-
 		/// <summary>
 		/// The KMod which describes this mod.
 		/// </summary>
@@ -50,7 +45,6 @@ namespace PeterHan.ModUpdateDate {
 		}
 
 		public static void OnLoad(string path) {
-			OurModPath = path;
 			PUtil.InitLibrary();
 			POptions.RegisterOptions(typeof(ModUpdateInfo));
 			PLocalization.Register();
