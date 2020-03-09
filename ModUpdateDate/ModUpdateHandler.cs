@@ -102,7 +102,7 @@ namespace PeterHan.ModUpdateDate {
 					updated = AddSteamTooltip(tooltip, mod, localDate, out System.DateTime
 						globalDate);
 					if (updated != ModStatus.Disabled)
-						addButton.OnClick = (_) => UpdateMod(mod, globalDate);
+						addButton.OnClick = (_) => TryUpdateMod(mod, globalDate);
 				} else
 					tooltip.AppendFormat(ModUpdateDateStrings.LOCAL_UPDATE, localDate);
 				// Icon, color, and tooltip
@@ -151,7 +151,6 @@ namespace PeterHan.ModUpdateDate {
 				tooltip.AppendFormat(ModUpdateDateStrings.LOCAL_UPDATE, localDate);
 				tooltip.Append("\n");
 				tooltip.AppendFormat(ModUpdateDateStrings.STEAM_UPDATE, globalDate);
-				tooltip.Append(ModUpdateDateStrings.CONFIG_WARNING);
 			} else {
 				tooltip.AppendFormat(ModUpdateDateStrings.LOCAL_UPDATE, localDate);
 				tooltip.Append("\n");
@@ -186,6 +185,20 @@ namespace PeterHan.ModUpdateDate {
 		/// Does nothing.
 		/// </summary>
 		private static void DoNothing() { }
+
+		/// <summary>
+		/// Shows a confirmation dialog to force update the specified mod.
+		/// </summary>
+		/// <param name="mod">The mod to update.</param>
+		/// <param name="globalDate">The update date as reported by Steam.</param>
+		private static void TryUpdateMod(Mod mod, System.DateTime globalDate) {
+			if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift))
+				UpdateMod(mod, globalDate);
+			else
+				PUIElements.ShowConfirmDialog(null, ModUpdateDateStrings.CONFIG_WARNING,
+					() => UpdateMod(mod, globalDate), DoNothing, ModUpdateDateStrings.
+					UPDATE_CONTINUE, ModUpdateDateStrings.UPDATE_CANCEL);
+		}
 
 		/// <summary>
 		/// Force updates the specified mod.
@@ -295,6 +308,7 @@ namespace PeterHan.ModUpdateDate {
 				error = ModUpdateDateStrings.UPDATE_NOFILE;
 			else {
 				ulong id = details.m_nPublishedFileId.m_PublishedFileId;
+				downloadPath = ExtensionMethods.GetDownloadPath(id);
 				ExtensionMethods.RemoveOldDownload(id);
 				// The game should already raise an error if insufficient space / access
 				// errors on the saves and mods folder
@@ -303,7 +317,8 @@ namespace PeterHan.ModUpdateDate {
 					error = ModUpdateDateStrings.UPDATE_CANTSTART;
 				else {
 					caller.Set(res);
-					downloadPath = ExtensionMethods.GetDownloadPath(id);
+					PUtil.LogDebug("Start download of file {0:D} to {1}".F(content.m_UGCHandle,
+						downloadPath));
 					updateTime = globalDate;
 					this.mod = mod;
 				}

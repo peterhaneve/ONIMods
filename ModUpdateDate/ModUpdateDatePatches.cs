@@ -17,6 +17,7 @@
  */
 
 using Harmony;
+using KMod;
 using PeterHan.PLib;
 using PeterHan.PLib.Datafiles;
 using PeterHan.PLib.Options;
@@ -34,6 +35,11 @@ namespace PeterHan.ModUpdateDate {
 		internal static string OurModPath { get; private set; }
 
 		/// <summary>
+		/// The KMod which describes this mod.
+		/// </summary>
+		internal static Mod ThisMod { get; private set; }
+
+		/// <summary>
 		/// Configures the request to limit the cache time to 1 hour, then sends it.
 		/// </summary>
 		/// <param name="query">The UGC query to send.</param>
@@ -49,6 +55,28 @@ namespace PeterHan.ModUpdateDate {
 			POptions.RegisterOptions(typeof(ModUpdateInfo));
 			PLocalization.Register();
 			ModUpdateInfo.LoadSettings();
+			// Find our mod
+			foreach (var mod in Global.Instance.modManager?.mods)
+				if (mod.label.install_path == path) {
+					ThisMod = mod;
+					break;
+				}
+		}
+
+		/// <summary>
+		/// Applied to Mod to avoid disabling this mod on crash.
+		/// 
+		/// If this mod gets disabled on crash, Steam might then downgrade a bunch of other
+		/// mods and cause out of control follow on crashes.
+		/// </summary>
+		[HarmonyPatch(typeof(Mod), "Crash")]
+		public static class Mod_Crash_Patch {
+			/// <summary>
+			/// Applied before Crash runs.
+			/// </summary>
+			internal static bool Prefix(Mod __instance) {
+				return ThisMod == null || !__instance.label.Match(ThisMod.label);
+			}
 		}
 
 		/// <summary>
