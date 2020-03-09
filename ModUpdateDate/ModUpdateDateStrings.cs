@@ -18,7 +18,7 @@
 
 namespace PeterHan.ModUpdateDate {
 	/// <summary>
-	/// Strings used in Mod Update Date.
+	/// Strings used in Steam Mod Updater.
 	/// </summary>
 	public static class ModUpdateDateStrings {
 		// Config erase warning
@@ -31,7 +31,7 @@ namespace PeterHan.ModUpdateDate {
 
 		// Mod update status
 		public static readonly LocString MOD_UPDATED = "This mod appears to be up to date.";
-		public static readonly LocString MOD_UPDATED_BYUS = "This mod was locally updated by Mod Update Date.";
+		public static readonly LocString MOD_UPDATED_BYUS = "This mod was locally updated by Steam Mod Updater.";
 		public static readonly LocString MOD_OUTDATED = "This mod appears to be out of date!";
 
 		// Steam update date
@@ -47,6 +47,7 @@ namespace PeterHan.ModUpdateDate {
 		public static readonly LocString UPDATE_INPROGRESS = "An update for another mod is already in progress.";
 		public static readonly LocString UPDATE_NOFILE = "Mod main file reported by Steam is invalid!";
 		public static readonly LocString UPDATE_CANTSTART = "Unable to start mod download.\nCheck your connection, and that the mods directory has sufficient disk space and permissions.";
-		public static readonly LocString UPDATE_OK = "Downloaded mod <b>{0}</b>.\nIt will be updated on the next restart.";
+		public static readonly LocString UPDATE_OK = "Downloaded mod <b>{0}</b>.\n<color=#00CC00>{1:D} custom mod option file{2} will be restored on reinstall.</color>\nIt will be updated on the next restart.";
+		public static readonly LocString UPDATE_OK_NOBACKUP = "Downloaded mod <b>{0}</b>.\n<color=#FF0000>Steam Mod Updater was unable to back up mod options.\nIf they are valuable, back them up now manually!</color>\nIt will be updated on the next restart.";
 	}
 }

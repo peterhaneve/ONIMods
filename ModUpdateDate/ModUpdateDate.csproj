@@ -2,10 +2,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
-    <AssemblyTitle>Mod Update Date</AssemblyTitle>
+    <AssemblyTitle>Steam Mod Updater</AssemblyTitle>
     <FileVersion>1.0.0.0</FileVersion>
     <RootNamespace>PeterHan.ModUpdateDate</RootNamespace>
     <Description>Identifies mods that Steam is not updating and allows them to be manually updated.</Description>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
   </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Ionic.Zip" HintPath="$(GameFolder)/Ionic.Zip.dll" />
+  </ItemGroup>
 </Project>

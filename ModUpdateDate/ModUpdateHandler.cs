@@ -112,7 +112,7 @@ namespace PeterHan.ModUpdateDate {
 				// Icon, color, and tooltip
 				addButton.Sprite = (updated == ModStatus.UpToDate || updated == ModStatus.
 					Disabled) ? PUITuning.Images.Checked : PUITuning.Images.GetSpriteByName(
-					"priority_max");
+					"iconWarning");
 				addButton.Color = (updated == ModStatus.Outdated) ? COLOR_OUTDATED :
 					COLOR_UPDATED;
 				addButton.ToolTip = tooltip.ToString();
@@ -195,6 +195,31 @@ namespace PeterHan.ModUpdateDate {
 		}
 
 		/// <summary>
+		/// Attempts to back up the mod configs into the downloaded zip file.
+		/// </summary>
+		/// <param name="id">The Steam mod ID.</param>
+		/// <param name="copied">The number of configuration files saved.</param>
+		/// <returns>true if backup was OK, or false if it failed.</returns>
+		private bool BackupConfigs(ulong id, out int copied) {
+			// Attempt config backup
+			var tempPath = ExtensionMethods.GetDownloadPath(id, true);
+			var backup = new ConfigBackupUtility(mod, downloadPath, tempPath);
+			bool success;
+			copied = 0;
+			try {
+				success = backup.CreateMergedPackage(out copied);
+				if (success)
+					backup.CommitUpdate();
+				else
+					backup.RollbackUpdate();
+			} catch {
+				backup.RollbackUpdate();
+				throw;
+			}
+			return success;
+		}
+
+		/// <summary>
 		/// Called when a download completes.
 		/// </summary>
 		/// <param name="result">The downloaded mod information.</param>
@@ -202,24 +227,32 @@ namespace PeterHan.ModUpdateDate {
 		private void OnDownloadComplete(RemoteStorageDownloadUGCResult_t result, bool failed) {
 			var status = result.m_eResult;
 			if (mod != null) {
-				var label = mod.label;
+				string title = mod.label.title;
+				ulong id = mod.GetSteamModID().m_PublishedFileId;
 				if (failed || (status != EResult.k_EResultAdministratorOK && status != EResult.
-						k_EResultOK))
+						k_EResultOK)) {
 					// Failed to update
 					PUIElements.ShowMessageDialog(null, string.Format(ModUpdateDateStrings.
-						UPDATE_ERROR, label.title, status));
-				else if (!string.IsNullOrEmpty(downloadPath)) {
+						UPDATE_ERROR, title, status));
+					// Clean the trash
+					ExtensionMethods.RemoveOldDownload(id);
+				} else if (!string.IsNullOrEmpty(downloadPath)) {
+					string text;
+					// Try to salvage the configs
+					if (BackupConfigs(id, out int copied))
+						text = string.Format(ModUpdateDateStrings.UPDATE_OK, title, copied,
+							(copied == 1) ? "" : "s");
+					else
+						text = string.Format(ModUpdateDateStrings.UPDATE_OK_NOBACKUP, title);
 					// Mod has been updated
 					mod.status = Mod.Status.ReinstallPending;
 					mod.reinstall_path = downloadPath;
 					Global.Instance.modManager?.Save();
 					// Update the config
 					if (updateTime > System.DateTime.MinValue)
-						ModUpdateDetails.UpdateConfigFor(mod.GetSteamModID().m_PublishedFileId,
-							updateTime);
+						ModUpdateDetails.UpdateConfigFor(id, updateTime);
 					// Tell the user
-					PUIElements.ShowConfirmDialog(null, string.Format(ModUpdateDateStrings.
-						UPDATE_OK, label.title), App.instance.Restart, null,
+					PUIElements.ShowConfirmDialog(null, text, App.instance.Restart, null,
 						STRINGS.UI.FRONTEND.MOD_DIALOGS.RESTART.OK,
 						STRINGS.UI.FRONTEND.MOD_DIALOGS.RESTART.CANCEL);
 				}

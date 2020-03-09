@@ -18,7 +18,6 @@
 
 using Harmony;
 using PeterHan.PLib;
-using System;
 
 namespace PeterHan.AirlockDoor {
 	/// <summary>

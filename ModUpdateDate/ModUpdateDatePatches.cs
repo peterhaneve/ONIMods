@@ -26,7 +26,7 @@ using System.Collections.Generic;
 
 namespace PeterHan.ModUpdateDate {
 	/// <summary>
-	/// Patches which will be applied via annotations for Mod Update Date.
+	/// Patches which will be applied via annotations for Steam Mod Updater.
 	/// </summary>
 	public static class ModUpdateDatePatches {
 		/// <summary>

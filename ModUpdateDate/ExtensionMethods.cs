@@ -25,7 +25,7 @@ using System.Reflection;
 
 namespace PeterHan.ModUpdateDate {
 	/// <summary>
-	/// Extension methods for Mod Update Date.
+	/// Extension methods for Steam Mod Updater.
 	/// </summary>
 	internal static class ExtensionMethods {
 		/// <summary>
@@ -59,10 +59,11 @@ namespace PeterHan.ModUpdateDate {
 		/// Gets the temporary download path for a mod.
 		/// </summary>
 		/// <param name="id">The Steam mod ID.</param>
+		/// <param name="temp">true for the temporary location, or false for the real one.</param>
 		/// <returns>The path where its temporary download will be stored.</returns>
-		internal static string GetDownloadPath(ulong id) {
+		internal static string GetDownloadPath(ulong id, bool temp = false) {
 			return Path.Combine(ModUpdateDatePatches.OurModPath ?? Path.GetDirectoryName(
-				Assembly.GetExecutingAssembly().Location), id + ".zip");
+				Assembly.GetExecutingAssembly().Location), id + (temp ? ".tmp" : ".zip"));
 		}
 
 		/// <summary>
