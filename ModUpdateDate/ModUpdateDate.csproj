@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Mod Update Date</AssemblyTitle>
-    <FileVersion>0.7.0.0</FileVersion>
+    <FileVersion>1.0.0.0</FileVersion>
     <RootNamespace>PeterHan.ModUpdateDate</RootNamespace>
-    <Description>An attempt to identify mods that Steam is not updating.</Description>
-    <AssemblyVersion>0.7.0.0</AssemblyVersion>
+    <Description>Identifies mods that Steam is not updating and allows them to be manually updated.</Description>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
   </PropertyGroup>
 </Project>

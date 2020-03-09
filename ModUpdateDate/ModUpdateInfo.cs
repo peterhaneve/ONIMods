@@ -16,11 +16,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using KMod;
 using Newtonsoft.Json;
 using PeterHan.PLib;
 using PeterHan.PLib.Options;
-using Steamworks;
 using System.Collections.Generic;
 
 namespace PeterHan.ModUpdateDate {

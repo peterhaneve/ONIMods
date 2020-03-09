@@ -22,7 +22,9 @@ namespace PeterHan.ModUpdateDate {
 	/// </summary>
 	public static class ModUpdateDateStrings {
 		// Config erase warning
-		public static readonly LocString CONFIG_WARNING = "<b><color=#FF0000>Continuing will reset this mod's options\nand reinstall the latest version of this mod!</color></b>\n\nThe mod must be enabled again after updating.";
+		public static readonly LocString CONFIG_WARNING = "Continuing will reinstall the latest version of\n" +
+			"<b>{0}</b> from the Workshop.\n<color=#FFCC00>A best effort will be made to preserve mod options.</color>\n\n" +
+			"Check again after updating and enable the mod if necessary.";
 
 		// Local update date
 		public static readonly LocString LOCAL_UPDATE = "Local Updated: {0:g}";
@@ -43,7 +45,7 @@ namespace PeterHan.ModUpdateDate {
 		public static readonly LocString UPDATE_CONTINUE = "FORCE UPDATE MOD";
 		public static readonly LocString UPDATE_ERROR = "Unable to update mod <b>{0}</b>: {1}";
 		public static readonly LocString UPDATE_INPROGRESS = "An update for another mod is already in progress.";
-		public static readonly LocString UPDATE_NOFILE = "Mod main file is invalid!";
+		public static readonly LocString UPDATE_NOFILE = "Mod main file reported by Steam is invalid!";
 		public static readonly LocString UPDATE_CANTSTART = "Unable to start mod download.\nCheck your connection, and that the mods directory has sufficient disk space and permissions.";
 		public static readonly LocString UPDATE_OK = "Downloaded mod <b>{0}</b>.\nIt will be updated on the next restart.";
 	}

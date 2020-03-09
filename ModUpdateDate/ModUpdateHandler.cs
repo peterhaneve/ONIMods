@@ -19,11 +19,9 @@
 using Harmony;
 using KMod;
 using PeterHan.PLib;
-using PeterHan.PLib.Options;
 using PeterHan.PLib.UI;
 using Steamworks;
 using System;
-using System.IO;
 using System.Text;
 using UnityEngine;
 
@@ -32,6 +30,11 @@ namespace PeterHan.ModUpdateDate {
 	/// Adds an update button to the mod menu.
 	/// </summary>
 	public sealed class ModUpdateHandler {
+		/// <summary>
+		/// The singleton instance of this class.
+		/// </summary>
+		internal static ModUpdateHandler Instance { get; }
+
 		/// <summary>
 		/// The margin inside the update button around the icon.
 		/// </summary>
@@ -55,12 +58,7 @@ namespace PeterHan.ModUpdateDate {
 		/// <summary>
 		/// The number of minutes allowed before a mod is considered out of date.
 		/// </summary>
-		internal static double UPDATE_JITTER = 10.0;
-
-		/// <summary>
-		/// The singleton instance of this class.
-		/// </summary>
-		internal static ModUpdateHandler Instance { get; }
+		internal const double UPDATE_JITTER = 10.0;
 
 		static ModUpdateHandler() {
 			COLOR_OUTDATED = ScriptableObject.CreateInstance<ColorStyleSetting>();
@@ -97,18 +95,24 @@ namespace PeterHan.ModUpdateDate {
 					Margin = BUTTON_MARGIN, SpriteSize = ICON_SIZE,
 					MaintainSpriteAspect = true
 				};
-				// Steam mods only get the steam date
 				if (mod.label.distribution_platform == Label.DistributionPlatform.Steam) {
-					updated = AddSteamTooltip(tooltip, mod, localDate, out System.DateTime
-						globalDate);
-					if (updated != ModStatus.Disabled)
-						addButton.OnClick = (_) => TryUpdateMod(mod, globalDate);
+					var exec = new ModUpdateExecutor(mod);
+					if (exec.LastSteamUpdate > System.DateTime.MinValue) {
+						// Generate tooltip for mod's current date and last Steam update
+						updated = AddSteamTooltip(tooltip, exec, localDate);
+						addButton.OnClick = exec.TryUpdateMod;
+					} else {
+						// Steam update could not be determined
+						tooltip.AppendFormat(ModUpdateDateStrings.LOCAL_UPDATE, localDate);
+						tooltip.Append("\n");
+						tooltip.AppendFormat(ModUpdateDateStrings.STEAM_UPDATE_UNKNOWN);
+					}
 				} else
 					tooltip.AppendFormat(ModUpdateDateStrings.LOCAL_UPDATE, localDate);
 				// Icon, color, and tooltip
 				addButton.Sprite = (updated == ModStatus.UpToDate || updated == ModStatus.
-					Disabled) ? PUITuning.Images.Checked : PUITuning.Images.
-					GetSpriteByName("iconWarning");
+					Disabled) ? PUITuning.Images.Checked : PUITuning.Images.GetSpriteByName(
+					"priority_max");
 				addButton.Color = (updated == ModStatus.Outdated) ? COLOR_OUTDATED :
 					COLOR_UPDATED;
 				addButton.ToolTip = tooltip.ToString();
@@ -122,101 +126,36 @@ namespace PeterHan.ModUpdateDate {
 		/// Adds a tooltip to a Steam mod showing its update status.
 		/// </summary>
 		/// <param name="tooltip">The tooltip under construction.</param>
-		/// <param name="mod">The mod to query.</param>
+		/// <param name="exec">The mod update executor which can update this mod.</param>
 		/// <param name="localDate">The local last update date.</param>
 		/// <returns>The status of the Steam mod.</returns>
-		private static ModStatus AddSteamTooltip(StringBuilder tooltip, Mod mod,
-				System.DateTime localDate, out System.DateTime globalDate) {
-			var id = mod.GetSteamModID();
-			var updated = ModStatus.Disabled;
-			if (id.GetGlobalLastModified(out globalDate)) {
-				var ours = ModUpdateInfo.FindModInConfig(id.m_PublishedFileId);
-				var ourDate = System.DateTime.MinValue;
-				// Do we have a better estimate?
-				if (ours != null)
-					ourDate = new System.DateTime(ours.LastUpdated, DateTimeKind.Utc);
-				// Allow some time for download delays etc
-				if (localDate.AddMinutes(UPDATE_JITTER) >= globalDate) {
-					tooltip.Append(ModUpdateDateStrings.MOD_UPDATED);
-					updated = ModStatus.UpToDate;
-				} else if (ourDate.AddMinutes(UPDATE_JITTER) >= globalDate) {
-					tooltip.Append(ModUpdateDateStrings.MOD_UPDATED_BYUS);
-					localDate = ourDate;
-					updated = ModStatus.UpToDateLocal;
-				} else {
-					tooltip.Append(ModUpdateDateStrings.MOD_OUTDATED);
-					updated = ModStatus.Outdated;
-				}
-				tooltip.Append("\n");
-				tooltip.AppendFormat(ModUpdateDateStrings.LOCAL_UPDATE, localDate);
-				tooltip.Append("\n");
-				tooltip.AppendFormat(ModUpdateDateStrings.STEAM_UPDATE, globalDate);
+		private static ModStatus AddSteamTooltip(StringBuilder tooltip, ModUpdateExecutor exec,
+				System.DateTime localDate) {
+			var ours = ModUpdateInfo.FindModInConfig(exec.SteamID.m_PublishedFileId);
+			var ourDate = System.DateTime.MinValue;
+			var globalDate = exec.LastSteamUpdate;
+			ModStatus updated;
+			// Do we have a better estimate?
+			if (ours != null)
+				ourDate = new System.DateTime(ours.LastUpdated, DateTimeKind.Utc);
+			// Allow some time for download delays etc
+			if (localDate.AddMinutes(UPDATE_JITTER) >= globalDate) {
+				tooltip.Append(ModUpdateDateStrings.MOD_UPDATED);
+				updated = ModStatus.UpToDate;
+			} else if (ourDate.AddMinutes(UPDATE_JITTER) >= globalDate) {
+				tooltip.Append(ModUpdateDateStrings.MOD_UPDATED_BYUS);
+				localDate = ourDate;
+				updated = ModStatus.UpToDateLocal;
 			} else {
-				tooltip.AppendFormat(ModUpdateDateStrings.LOCAL_UPDATE, localDate);
-				tooltip.Append("\n");
-				tooltip.AppendFormat(ModUpdateDateStrings.STEAM_UPDATE_UNKNOWN);
+				tooltip.Append(ModUpdateDateStrings.MOD_OUTDATED);
+				updated = ModStatus.Outdated;
 			}
+			// AppendLine appends platform specific separator
+			tooltip.Append("\n");
+			tooltip.AppendFormat(ModUpdateDateStrings.LOCAL_UPDATE, localDate);
+			tooltip.Append("\n");
+			tooltip.AppendFormat(ModUpdateDateStrings.STEAM_UPDATE, globalDate);
 			return updated;
-		}
-
-#if false
-		/// <summary>
-		/// Gets the mod's current Steam state.
-		/// </summary>
-		/// <param name="mod">The mod to check.</param>
-		/// <returns>The status that Steam thinks it is in.</returns>
-		internal static EItemState GetItemState(Mod mod) {
-			if (mod == null)
-				throw new ArgumentNullException("mod");
-			var state = EItemState.k_EItemStateNone;
-			var label = mod.label;
-			if (label.distribution_platform == Label.DistributionPlatform.Steam) {
-				string id = label.id;
-				// This should never fail
-				if (!ulong.TryParse(id, out ulong idLong))
-					throw new InvalidOperationException("Steam mod with invalid ID " + id);
-				state = (EItemState)SteamUGC.GetItemState(new PublishedFileId_t(idLong));
-			}
-			return state;
-		}
-#endif
-
-		/// <summary>
-		/// Does nothing.
-		/// </summary>
-		private static void DoNothing() { }
-
-		/// <summary>
-		/// Shows a confirmation dialog to force update the specified mod.
-		/// </summary>
-		/// <param name="mod">The mod to update.</param>
-		/// <param name="globalDate">The update date as reported by Steam.</param>
-		private static void TryUpdateMod(Mod mod, System.DateTime globalDate) {
-			if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift))
-				UpdateMod(mod, globalDate);
-			else
-				PUIElements.ShowConfirmDialog(null, ModUpdateDateStrings.CONFIG_WARNING,
-					() => UpdateMod(mod, globalDate), DoNothing, ModUpdateDateStrings.
-					UPDATE_CONTINUE, ModUpdateDateStrings.UPDATE_CANCEL);
-		}
-
-		/// <summary>
-		/// Force updates the specified mod.
-		/// </summary>
-		/// <param name="mod">The mod to update.</param>
-		/// <param name="globalDate">The update date as reported by Steam.</param>
-		private static void UpdateMod(Mod mod, System.DateTime globalDate) {
-			if (mod == null)
-				throw new ArgumentNullException("mod");
-			var label = mod.label;
-			if (label.distribution_platform != Label.DistributionPlatform.Steam)
-				PUtil.LogWarning("Mod to update is invalid!");
-			else if (ModUpdateDetails.Details.TryGetValue(mod.GetSteamModID().m_PublishedFileId,
-					out SteamUGCDetails_t details))
-				Instance.StartModUpdate(mod, details, globalDate);
-			else
-				// Uninstalled?
-				PUtil.LogWarning("Unable to find details for mod: " + label.title);
 		}
 
 		/// <summary>
@@ -280,7 +219,7 @@ namespace PeterHan.ModUpdateDate {
 							updateTime);
 					// Tell the user
 					PUIElements.ShowConfirmDialog(null, string.Format(ModUpdateDateStrings.
-						UPDATE_OK, label.title), App.instance.Restart, DoNothing,
+						UPDATE_OK, label.title), App.instance.Restart, null,
 						STRINGS.UI.FRONTEND.MOD_DIALOGS.RESTART.OK,
 						STRINGS.UI.FRONTEND.MOD_DIALOGS.RESTART.CANCEL);
 				}
@@ -296,7 +235,7 @@ namespace PeterHan.ModUpdateDate {
 		/// <param name="mod">The mod to update.</param>
 		/// <param name="details">The mod details to force update.</param>
 		/// <param name="globalDate">The update date as reported by Steam.</param>
-		private void StartModUpdate(Mod mod, SteamUGCDetails_t details,
+		internal void StartModUpdate(Mod mod, SteamUGCDetails_t details,
 				System.DateTime globalDate) {
 			if (mod == null)
 				throw new ArgumentNullException("mod");
