@@ -1,10 +1,12 @@
 # Peter Han&#39;s Mods for Oxygen Not Included
 
-Last tested on game version: **RP-394616**; *preliminary* support for **AP-397624**
+Last tested on game version: **AP-398142**
 
 Steam Workshop: https://steamcommunity.com/profiles/76561198025154321/myworkshopfiles/?appid=457140
 
 ## Local Downloads
+
+Steam users: Before trying a local download or reporting an issue, use [Mod Updater](https://steamcommunity.com/sharedfiles/filedetails/?id=2018291283) to see if the mod is out of date.
 
 Steam sometimes serves outdated mod versions, and Oxygen Not Included is also available on the Epic Games Store.
 Local copies of these mods are available in the [Releases](https://github.com/peterhaneve/ONIMods/releases/tag/ModsLatest) section.

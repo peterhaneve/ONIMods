@@ -79,7 +79,7 @@ namespace PeterHan.ModUpdateDate {
 				// 260 = MAX_PATH
 				if (SteamUGC.GetItemInstallInfo(mod.GetSteamModID(), out _,
 						out string _, 260U, out uint timestamp) && timestamp > 0U)
-					result = timestamp.UnixEpochToDateTime();
+					result = ((ulong)timestamp).UnixEpochToDateTime();
 				else
 					PUtil.LogWarning("Unable to get Steam install information for " +
 						label.title);
@@ -106,8 +106,9 @@ namespace PeterHan.ModUpdateDate {
 			bool result = false;
 			var steamMod = SteamUGCService.Instance?.FindMod(id);
 			if (steamMod != null) {
+				ulong ticks = steamMod.lastUpdateTime;
 				result = true;
-				when = ((uint)steamMod.lastUpdateTime).UnixEpochToDateTime();
+				when = (ticks == 0U) ? System.DateTime.MinValue : ticks.UnixEpochToDateTime();
 			} else
 				// Mod was not found
 				when = System.DateTime.UtcNow;
@@ -146,7 +147,7 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		/// <param name="timeSeconds">The timestamp since the epoch.</param>
 		/// <returns>The UTC date and time that it represents.</returns>
-		internal static System.DateTime UnixEpochToDateTime(this uint timeSeconds) {
+		internal static System.DateTime UnixEpochToDateTime(this ulong timeSeconds) {
 			return UNIX_EPOCH.AddSeconds(timeSeconds);
 		}
 	}
