@@ -437,24 +437,49 @@ namespace PeterHan.PLib {
 		/// exactly match the old method's argument types.</exception>
 		public static TranspiledMethod ReplaceMethodCall(TranspiledMethod method,
 				MethodInfo victim, MethodInfo newMethod = null) {
+			return ReplaceMethodCall(method, new Dictionary<MethodInfo, MethodInfo>() {
+				{ victim, newMethod }
+			});
+		}
+
+		/// <summary>
+		/// Transpiles a method to replace calls to the specified victim methods with
+		/// replacement methods, altering the call type if necessary.
+		/// 
+		/// Each key to value pair must meet the criteria defined in ReplaceMethodCall.
+		/// </summary>
+		/// <param name="method">The method to patch.</param>
+		/// <param name="victim">The old method calls to remove.</param>
+		/// <param name="newMethod">The new method to replace, or null to delete the calls.</param>
+		/// <returns>A transpiled version of that method that replaces or removes all calls
+		/// to the specified methods.</returns>
+		/// <exception cref="ArgumentException">If any of the new methods' argument types do
+		/// not exactly match the old methods' argument types.</exception>
+		public static TranspiledMethod ReplaceMethodCall(TranspiledMethod method,
+				IDictionary<MethodInfo, MethodInfo> translation) {
 			if (method == null)
 				throw new ArgumentNullException("method");
-			if (victim == null)
-				throw new ArgumentNullException("victim");
+			if (translation == null)
+				throw new ArgumentNullException("translation");
 			// Sanity check arguments
-			var types = victim.GetParameterTypes();
-			int n = types.Length, replaced = 0;
-			if (newMethod != null)
-				CompareMethodParams(victim, types, newMethod);
-			else if (victim.ReturnType != typeof(void))
-				throw new ArgumentException("Cannot remove method {0} with a return value".F(
-					victim.Name));
-			// Pop "this" in removal cases
-			if (!victim.IsStatic) n++;
+			int replaced = 0;
+			foreach (var pair in translation) {
+				var victim = pair.Key;
+				var newMethod = pair.Value;
+				if (victim == null)
+					throw new ArgumentNullException("victim");
+				if (newMethod != null)
+					CompareMethodParams(victim, victim.GetParameterTypes(), newMethod);
+				else if (victim.ReturnType != typeof(void))
+					throw new ArgumentException("Cannot remove method {0} with a return value".
+						F(victim.Name));
+			}
 			foreach (var instruction in method) {
 				var opcode = instruction.opcode;
+				MethodInfo target;
 				if ((opcode == OpCodes.Call || opcode == OpCodes.Calli || opcode == OpCodes.
-						Callvirt) && (instruction.operand as MethodInfo) == victim) {
+						Callvirt) && translation.TryGetValue(target = instruction.operand as
+						MethodInfo, out MethodInfo newMethod)) {
 					if (newMethod != null) {
 						// Replace with new method
 						instruction.opcode = newMethod.IsStatic ? OpCodes.Call :
@@ -462,6 +487,9 @@ namespace PeterHan.PLib {
 						instruction.operand = newMethod;
 						yield return instruction;
 					} else {
+						// Pop "this" if needed
+						int n = target.GetParameters().Length;
+						if (!target.IsStatic) n++;
 						// Pop the arguments off the stack
 						instruction.opcode = (n == 0) ? OpCodes.Nop : OpCodes.Pop;
 						instruction.operand = null;
@@ -475,9 +503,7 @@ namespace PeterHan.PLib {
 			}
 #if DEBUG
 			if (replaced == 0)
-				PUtil.LogWarning("No method calls replaced: {0}.{1} to {2}.{3}".F(victim.
-					DeclaringType.Name, victim.Name, newMethod?.DeclaringType?.Name ?? "None",
-					newMethod?.Name));
+				PUtil.LogWarning("No method calls replaced (multiple replacements)");
 #endif
 		}
 

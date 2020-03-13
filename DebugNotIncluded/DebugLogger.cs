@@ -203,6 +203,38 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
+		/// Logs an exception with a detailed breakdown. This overload is used in building
+		/// patches.
+		/// </summary>
+		/// <param name="e">The exception to log.</param>
+		/// <param name="config">The building config that failed to load.</param>
+		internal static void LogBuildingException(Exception e, IBuildingConfig config) {
+			var cause = e.InnerException ?? e;
+			try {
+				var message = new StringBuilder(256);
+				if (config != null) {
+					var type = config.GetType();
+					message.Append("Error when creating building ");
+					message.Append(type.Name);
+					// Name and shame!
+					var mod = ModDebugRegistry.Instance.OwnerOfType(type);
+					if (mod != null) {
+						message.Append(" from mod ");
+						message.Append(mod.ModName);
+						ModLoadHandler.CrashingMod = mod;
+					}
+					message.AppendLine(":");
+				}
+				message.Append(GetExceptionLog(cause, new HarmonyMethodCache()));
+				LogError(message.ToString());
+			} catch {
+				// Ensure it gets logged at all costs
+				BaseLogException(cause, null);
+				throw;
+			}
+		}
+
+		/// <summary>
 		/// Logs a debug message.
 		/// </summary>
 		/// <param name="message">The message to log.</param>

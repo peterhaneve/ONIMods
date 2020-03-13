@@ -48,6 +48,11 @@ namespace PeterHan.AirlockDoor {
 			new EventSystem.IntraObjectHandler<AirlockDoor>(OnCopySettings);
 
 		/// <summary>
+		/// The port ID of the automation input port.
+		/// </summary>
+		internal static readonly HashedString OPEN_CLOSE_PORT_ID = "DoorOpenClose";
+
+		/// <summary>
 		/// The basic sim flags applied to the door while it is open and isolating gas/liquid.
 		/// </summary>
 		private const int SIM_FLAGS_AIRLOCK = (int)(Sim.Cell.Properties.GasImpermeable |
@@ -67,15 +72,6 @@ namespace PeterHan.AirlockDoor {
 		/// The parameter for the sound indicating the progress of the door close.
 		/// </summary>
 		private static readonly HashedString SOUND_PROGRESS_PARAMETER = "doorProgress";
-
-		/// <summary>
-		/// Cycles to the next door control state.
-		/// </summary>
-		/// <param name="state">The current control state.</param>
-		/// <returns>The next control state, wrapping around if necessary.</returns>
-		private static Door.ControlState GetNextState(Door.ControlState state) {
-			return (Door.ControlState)(((int)state + 1) % (int)Door.ControlState.NumStates);
-		}
 
 		private static void OnCopySettings(AirlockDoor target, object data) {
 			var otherDoor = (data as GameObject).GetComponentSafe<AirlockDoor>();
@@ -197,9 +193,6 @@ namespace PeterHan.AirlockDoor {
 		[MyCmpReq]
 		private PrimaryElement pe;
 
-		[MyCmpReq]
-		private Rotatable rotatable;
-
 		[MyCmpGet]
 		private KSelectable selectable;
 #pragma warning restore CS0649
@@ -285,7 +278,6 @@ namespace PeterHan.AirlockDoor {
 			ApplyRequestedControlState(true);
 			var access = GetComponent<AccessControl>() != null;
 			foreach (int cell in building.PlacementCells) {
-				Grid.FakeFloor[cell] = true;
 				Grid.HasDoor[cell] = true;
 				Grid.HasAccessDoor[cell] = access;
 				Grid.RenderedByWorld[cell] = false;
@@ -307,10 +299,8 @@ namespace PeterHan.AirlockDoor {
 				Grid.RenderedByWorld[cell] = Traverse.Create(element.substance).
 					GetField<bool>("renderedByWorld");
 				if (element.IsSolid)
-					// Not sure how a solid got inside of our door
 					SimMessages.ReplaceAndDisplaceElement(cell, SimHashes.Vacuum,
-						CellEventLogger.Instance.DoorOpen, 0f, -1f, byte.MaxValue, 0, -1);
-				Grid.FakeFloor[cell] = false;
+						CellEventLogger.Instance.DoorOpen, 0f);
 				Grid.HasDoor[cell] = false;
 				Grid.HasAccessDoor[cell] = false;
 				Game.Instance.SetDupePassableSolid(cell, false, Grid.Solid[cell]);
@@ -333,7 +323,7 @@ namespace PeterHan.AirlockDoor {
 
 		private void OnLogicValueChanged(object data) {
 			var logicValueChanged = (LogicValueChanged)data;
-			if (logicValueChanged.portID == Door.OPEN_CLOSE_PORT_ID) {
+			if (logicValueChanged.portID == OPEN_CLOSE_PORT_ID) {
 				int newValue = logicValueChanged.newValue;
 				if (changeStateChore != null) {
 					changeStateChore.Cancel("Automation state change");
@@ -464,9 +454,11 @@ namespace PeterHan.AirlockDoor {
 				World.Instance.groundRenderer.MarkDirty(cell);
 				if (open) {
 					// Remove the solids that make up this door
-					SimMessages.Dig(cell, Game.Instance.callbackManager.Add(
-						new Game.CallbackInfo(OnSimDoorOpened)).index);
-					// Remove flags to allow liquids and gases to pass
+					var handle = Game.Instance.callbackManager.Add(new Game.CallbackInfo(
+						OnSimDoorOpened));
+					SimMessages.ReplaceAndDisplaceElement(cell, SimHashes.Vacuum,
+						CellEventLogger.Instance.DoorOpen, 0f, callbackIdx: handle.index);
+					// Adjust flags to allow liquids and gases to pass or not pass
 					if (isolate) {
 						SimMessages.ClearCellProperties(cell, SIM_FLAGS_BASE);
 						SimMessages.SetCellProperties(cell, SIM_FLAGS_AIRLOCK);

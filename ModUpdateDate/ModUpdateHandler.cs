@@ -101,6 +101,12 @@ namespace PeterHan.ModUpdateDate {
 						// Generate tooltip for mod's current date and last Steam update
 						updated = AddSteamTooltip(tooltip, exec, localDate);
 						addButton.OnClick = exec.TryUpdateMod;
+#if false
+						if (ModUpdateDetails.Details.TryGetValue(exec.SteamID.
+								m_PublishedFileId, out SteamUGCDetails_t details))
+							tooltip.AppendFormat("\nRating: {0:F6} ({1:D} up {2:D} down)",
+								details.m_flScore, details.m_unVotesUp, details.m_unVotesDown);
+#endif
 					} else {
 						// Steam update could not be determined
 						tooltip.AppendFormat(ModUpdateDateStrings.LOCAL_UPDATE, localDate);

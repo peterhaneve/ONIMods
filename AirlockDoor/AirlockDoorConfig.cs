@@ -30,14 +30,14 @@ namespace PeterHan.AirlockDoor {
 		/// <summary>
 		/// The completed building template.
 		/// </summary>
-		internal static PBuilding AirlockDoor;
+		internal static PBuilding AirlockDoorTemplate;
 
 		/// <summary>
 		/// Registers this building.
 		/// </summary>
 		internal static void RegisterBuilding() {
 			// Inititialize it here to allow localization to change the strings
-			PBuilding.Register(AirlockDoor = new PBuilding(ID,
+			PBuilding.Register(AirlockDoorTemplate = new PBuilding(ID,
 					AirlockDoorStrings.AIRLOCKDOOR_NAME) {
 				AddAfter = PressureDoorConfig.ID,
 				Animation = "door_external_kanim",
@@ -51,7 +51,7 @@ namespace PeterHan.AirlockDoor {
 				Height = 2,
 				HP = 30,
 				LogicIO = {
-					LogicPorts.Port.InputPort(Door.OPEN_CLOSE_PORT_ID, CellOffset.none,
+					LogicPorts.Port.InputPort(AirlockDoor.OPEN_CLOSE_PORT_ID, CellOffset.none,
 						AirlockDoorStrings.AIRLOCKDOOR_LOGIC_OPEN,
 						AirlockDoorStrings.AIRLOCKDOOR_LOGIC_OPEN_ACTIVE,
 						AirlockDoorStrings.AIRLOCKDOOR_LOGIC_OPEN_INACTIVE)
@@ -63,7 +63,6 @@ namespace PeterHan.AirlockDoor {
 				OverheatTemperature = 75.0f + Constants.CELSIUS2KELVIN,
 				Placement = BuildLocationRule.Tile,
 				PowerInput = new PowerRequirement(120.0f, new CellOffset(0, 1)),
-				RotateMode = PermittedRotations.R90,
 				SceneLayer = Grid.SceneLayer.TileMain,
 				Tech = "ValveMiniaturization",
 				Width = 1
@@ -72,27 +71,27 @@ namespace PeterHan.AirlockDoor {
 
 		public override void ConfigureBuildingTemplate(GameObject go, Tag prefab_tag) {
 			base.ConfigureBuildingTemplate(go, prefab_tag);
-			AirlockDoor?.ConfigureBuildingTemplate(go);
+			AirlockDoorTemplate?.ConfigureBuildingTemplate(go);
 		}
 
 		public override BuildingDef CreateBuildingDef() {
-			var def = AirlockDoor?.CreateDef();
+			var def = AirlockDoorTemplate?.CreateDef();
 			def.ForegroundLayer = Grid.SceneLayer.InteriorWall;
 			def.TileLayer = ObjectLayer.FoundationTile;
 			return def;
 		}
 
 		public override void DoPostConfigureUnderConstruction(GameObject go) {
-			AirlockDoor?.CreateLogicPorts(go);
+			AirlockDoorTemplate?.CreateLogicPorts(go);
 		}
 
 		public override void DoPostConfigurePreview(BuildingDef def, GameObject go) {
-			AirlockDoor?.CreateLogicPorts(go);
+			AirlockDoorTemplate?.CreateLogicPorts(go);
 		}
 
 		public override void DoPostConfigureComplete(GameObject go) {
-			AirlockDoor?.DoPostConfigureComplete(go);
-			AirlockDoor?.CreateLogicPorts(go);
+			AirlockDoorTemplate?.DoPostConfigureComplete(go);
+			AirlockDoorTemplate?.CreateLogicPorts(go);
 			go.AddOrGet<AirlockDoor>();
 			go.AddOrGet<ZoneTile>();
 			go.AddOrGet<AccessControl>().controlEnabled = true;

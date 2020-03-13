@@ -17,6 +17,7 @@
  */
 
 using Harmony;
+using Harmony.ILCopying;
 using KMod;
 using PeterHan.PLib;
 using PeterHan.PLib.Options;
@@ -199,6 +200,79 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
+		/// Applied to BuildingConfigManager to catch and report errors when initializing
+		/// buildings.
+		/// </summary>
+		[HarmonyPatch(typeof(BuildingConfigManager), "RegisterBuilding")]
+		public static class BuildingConfigManager_RegisterBuilding_Patch {
+			/// <summary>
+			/// Transpiles RegisterBuilding to catch exceptions and log them.
+			/// </summary>
+			internal static IEnumerable<CodeInstruction> Transpiler(ILGenerator generator,
+					IEnumerable<CodeInstruction> method) {
+#if DEBUG
+				DebugLogger.LogDebug("Transpiling BuildingConfigManager.RegisterBuilding()");
+#endif
+				var logger = typeof(DebugLogger).GetMethodSafe(nameof(DebugLogger.
+					LogBuildingException), true, typeof(Exception), typeof(IBuildingConfig));
+				var ee = method.GetEnumerator();
+				CodeInstruction last = null;
+				bool hasNext, isFirst = true;
+				var endMethod = generator.DefineLabel();
+				// Emit all but the last instruction
+				if (ee.MoveNext())
+					do {
+						last = ee.Current;
+						if (isFirst)
+							last.blocks.Add(new ExceptionBlock(ExceptionBlockType.
+								BeginExceptionBlock, null));
+						hasNext = ee.MoveNext();
+						isFirst = false;
+						if (hasNext)
+							yield return last;
+					} while (hasNext);
+				if (last != null) {
+					// Preserves the labels "ret" might have had
+					last.opcode = OpCodes.Nop;
+					last.operand = null;
+					yield return last;
+					// Add a "leave"
+					yield return new CodeInstruction(OpCodes.Leave, endMethod);
+					// The exception is already on the stack
+					var startHandler = new CodeInstruction(OpCodes.Ldarg_1);
+					startHandler.blocks.Add(new ExceptionBlock(ExceptionBlockType.
+						BeginCatchBlock, typeof(Exception)));
+					yield return startHandler;
+					yield return new CodeInstruction(OpCodes.Call, logger);
+					// End catch block, quash the exception
+					var endCatch = new CodeInstruction(OpCodes.Leave, endMethod);
+					endCatch.blocks.Add(new ExceptionBlock(ExceptionBlockType.
+						EndExceptionBlock, null));
+					yield return endCatch;
+					// Actual new ret
+					var ret = new CodeInstruction(OpCodes.Ret);
+					ret.labels.Add(endMethod);
+					yield return ret;
+				} // Otherwise, there were no instructions to wrap
+			}
+		}
+
+		/// <summary>
+		/// Applied to DebugUtil to log exceptions more cleanly.
+		/// </summary>
+		[HarmonyPatch(typeof(DebugUtil), "LogException")]
+		public static class DebugUtil_LogException_Patch {
+			/// <summary>
+			/// Applied before LogException runs.
+			/// </summary>
+			internal static bool Prefix(Exception e, string errorMessage) {
+				DebugLogger.LogError(errorMessage);
+				DebugLogger.LogException(e);
+				return false;
+			}
+		}
+
+		/// <summary>
 		/// Applied to Debug to log which methods are actually sending log messages.
 		/// </summary>
 		[HarmonyPatch(typeof(Debug), "TimeStamp")]
@@ -252,46 +326,15 @@ namespace PeterHan.DebugNotIncluded {
 			/// </summary>
 			private static IEnumerable<CodeInstruction> Transpiler(
 					IEnumerable<CodeInstruction> method) {
-				var instructions = new List<CodeInstruction>(method);
-				// HarmonyInstance.Create and Assembly.LoadFrom will be wrapped
-				var harmonyCreate = typeof(HarmonyInstance).GetMethodSafe(nameof(
-					HarmonyInstance.Create), true, typeof(string));
-				var loadFrom = typeof(Assembly).GetMethodSafe(nameof(Assembly.LoadFrom), true,
-					typeof(string));
-				bool patchException = PUtil.GameVersion >= 397125u, patchAssembly = false,
-					patchCreate = false;
-				// Add call to our handler in exception block, and wrap harmony instances to
-				// have more information on each mod
-				for (int i = instructions.Count - 1; i > 0; i--) {
-					var instr = instructions[i];
-					if (instr.opcode == OpCodes.Pop && !patchException) {
-						instr.opcode = OpCodes.Call;
-						// Call our method instead
-						instr.operand = typeof(ModLoadHandler).GetMethodSafe(nameof(
-							ModLoadHandler.HandleModException), true, typeof(object));
-						patchException = true;
-					} else if (instr.opcode == OpCodes.Call) {
-						var target = instr.operand as MethodInfo;
-						if (target == harmonyCreate && harmonyCreate != null) {
-							// Reroute HarmonyInstance.Create
-							instr.operand = typeof(ModLoadHandler).GetMethodSafe(nameof(
-								ModLoadHandler.CreateHarmonyInstance), true, typeof(string));
-							patchCreate = true;
-						} else if (target == loadFrom && loadFrom != null) {
-							// Reroute Assembly.LoadFrom
-							instr.operand = typeof(ModLoadHandler).GetMethodSafe(nameof(
-								ModLoadHandler.LoadAssembly), true, typeof(string));
-							patchAssembly = true;
-						}
-					}
-				}
-				if (!patchException)
-					DebugLogger.LogError("Unable to transpile LoadDLLs: Could not find exception handler");
-				if (!patchAssembly)
-					DebugLogger.LogWarning("Unable to transpile LoadDLLs: No calls to Assembly.LoadFrom found");
-				if (!patchCreate)
-					DebugLogger.LogWarning("Unable to transpile LoadDLLs: No calls to HarmonyInstance.Create found");
-				return instructions;
+				return PPatchTools.ReplaceMethodCall(method, new Dictionary<MethodInfo,
+						MethodInfo>() {
+					{ typeof(HarmonyInstance).GetMethodSafe(nameof(HarmonyInstance.Create),
+						true, typeof(string)), typeof(ModLoadHandler).GetMethodSafe(nameof(
+						ModLoadHandler.CreateHarmonyInstance), true, typeof(string)) },
+					{ typeof(Assembly).GetMethodSafe(nameof(Assembly.LoadFrom), true,
+						typeof(string)), typeof(ModLoadHandler).GetMethodSafe(nameof(
+						ModLoadHandler.LoadAssembly), true, typeof(string)) }
+				});
 			}
 		}
 
@@ -492,29 +535,17 @@ namespace PeterHan.DebugNotIncluded {
 #if DEBUG
 				DebugLogger.LogDebug("Transpiling Steam.UpdateMods()");
 #endif
-				var report = typeof(Manager).GetMethodSafe(nameof(Manager.Report), false,
-					typeof(GameObject));
-				var sanitize = typeof(Manager).GetMethodSafe(nameof(Manager.Sanitize), false,
-					typeof(GameObject));
-				var newReport = typeof(QueuedReportManager).GetMethodSafe(nameof(
-					QueuedReportManager.QueueDelayedReport), true, typeof(Manager),
-					typeof(GameObject));
-				var newSanitize = typeof(QueuedReportManager).GetMethodSafe(nameof(
-					QueuedReportManager.QueueDelayedSanitize), true, typeof(Manager),
-					typeof(GameObject));
-				foreach (var instruction in method) {
-					if (instruction.opcode == OpCodes.Callvirt) {
-						var callee = instruction.operand as MethodInfo;
-						if (callee == report && newReport != null) {
-							instruction.opcode = OpCodes.Call;
-							instruction.operand = newReport;
-						} else if (callee == sanitize && newSanitize != null) {
-							instruction.opcode = OpCodes.Call;
-							instruction.operand = newSanitize;
-						}
-					}
-					yield return instruction;
-				}
+				return PPatchTools.ReplaceMethodCall(method, new Dictionary<MethodInfo,
+						MethodInfo>() {
+					{ typeof(Manager).GetMethodSafe(nameof(Manager.Report), false,
+						typeof(GameObject)), typeof(QueuedReportManager).GetMethodSafe(nameof(
+						QueuedReportManager.QueueDelayedReport), true, typeof(Manager),
+						typeof(GameObject)) },
+					{ typeof(Manager).GetMethodSafe(nameof(Manager.Sanitize), false,
+						typeof(GameObject)), typeof(QueuedReportManager).GetMethodSafe(nameof(
+						QueuedReportManager.QueueDelayedSanitize), true, typeof(Manager),
+						typeof(GameObject)) }
+				});
 			}
 		}
 	}
