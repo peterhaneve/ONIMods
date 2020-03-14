@@ -112,6 +112,7 @@ namespace PeterHan.DebugNotIncluded {
 		}
 		
 		public static void OnLoad(string path) {
+			var inst = ModDebugRegistry.Instance;
 			RunningPLibAssembly = typeof(PUtil).Assembly;
 			PUtil.InitLibrary();
 			if (DebugNotIncludedOptions.Instance?.DetailedBacktrace ?? true)
@@ -123,19 +124,22 @@ namespace PeterHan.DebugNotIncluded {
 			var logException = typeof(DebugUtil).GetMethodSafe("LogException", true,
 				PPatchTools.AnyArguments);
 			if (logException != null)
-				ModDebugRegistry.Instance.DebugInstance.Patch(logException, prefix:
-					new HarmonyMethod(typeof(DebugLogger), nameof(DebugLogger.LogException)));
+				inst.DebugInstance.Patch(logException, prefix: new HarmonyMethod(typeof(
+					DebugLogger), nameof(DebugLogger.LogException)));
 			foreach (var mod in Global.Instance.modManager?.mods)
 				if (mod.label.install_path == path) {
 					ThisMod = mod;
 					break;
 				}
+			if (ThisMod == null)
+				DebugLogger.LogWarning("Unable to determine KMod instance!");
+			else
+				inst.RegisterModAssembly(Assembly.GetExecutingAssembly(), inst.GetDebugInfo(
+					ThisMod));
 			// Default UI debug key is ALT+U
 			UIDebugAction = PAction.Register("DebugNotIncluded.UIDebugAction",
 				DebugNotIncludedStrings.KEY_SNAPSHOT, new PKeyBinding(KKeyCode.U,
 				Modifier.Alt));
-			if (ThisMod == null)
-				DebugLogger.LogWarning("Unable to determine KMod instance!");
 			// Must postload the mods dialog to come out after aki's mods, ony's mods, PLib
 			// options, and so forth
 			PUtil.RegisterPostload(PostloadHandler);

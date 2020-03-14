@@ -18,10 +18,6 @@
 
 using Harmony;
 using PeterHan.PLib;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Reflection.Emit;
 using UnityEngine;
 
 namespace PeterHan.AirlockDoor {
@@ -32,6 +28,8 @@ namespace PeterHan.AirlockDoor {
 		public static void OnLoad() {
 			PUtil.InitLibrary();
 			AirlockDoorConfig.RegisterBuilding();
+			LocString.CreateLocStringKeys(typeof(AirlockDoorStrings.BUILDING));
+			LocString.CreateLocStringKeys(typeof(AirlockDoorStrings.BUILDINGS));
 		}
 
 		/// <summary>
@@ -43,17 +41,18 @@ namespace PeterHan.AirlockDoor {
 			/// <summary>
 			/// Applied after OnSpawn runs.
 			/// </summary>
-			internal static void Postfix(Constructable __instance) {
+			internal static void Postfix(Constructable __instance,
+					ref bool ___waitForFetchesBeforeDigging) {
 				var building = __instance.GetComponent<Building>();
 				// Does it have an airlock door?
-				if (building != null && building.Def.BuildingComplete.
-						GetComponent<AirlockDoor>() != null)
-					Traverse.Create(__instance).SetField("waitForFetchesBeforeDigging", true);
+				if (building != null && building.Def.BuildingComplete.GetComponent<
+						AirlockDoor>() != null)
+					___waitForFetchesBeforeDigging = true;
 			}
 		}
 
 		/// <summary>
-		/// Applied to MinionConfig to add the transition driver for airlocks.
+		/// Applied to MinionConfig to add the navigator transition for airlocks.
 		/// </summary>
 		[HarmonyPatch(typeof(MinionConfig), "OnSpawn")]
 		public static class MinionConfig_OnSpawn_Patch {
@@ -65,6 +64,7 @@ namespace PeterHan.AirlockDoor {
 				nav.transitionDriver.overrideLayers.Add(new AirlockDoorTransitionLayer(nav));
 			}
 		}
+
 #if false
 		[HarmonyPatch(typeof(TreeFilterableSideScreen), "CreateCategories")]
 		public static class TreeFilterableSideScreen_CreateCategories_Patch {

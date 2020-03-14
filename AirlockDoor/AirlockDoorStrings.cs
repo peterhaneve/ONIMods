@@ -21,25 +21,50 @@ namespace PeterHan.AirlockDoor {
 	/// Strings used in Airlock Door.
 	/// </summary>
 	public static class AirlockDoorStrings {
-		// Airlock Door
-		public static LocString AIRLOCKDOOR_NAME = STRINGS.UI.FormatAsLink("True Airlock", AirlockDoorConfig.ID);
-		public static LocString AIRLOCKDOOR_DESCRIPTION = "Sucking Duplicants that have nowhere to go into space through " +
-			STRINGS.UI.FormatAsLink("Mechanized Airlocks", PressureDoorConfig.ID) +
-			" is poor taste. Now they can suffocate quietly on the other side of an airlock.";
-		public static LocString AIRLOCKDOOR_EFFECT = string.Concat("Blocks ",
-			STRINGS.UI.FormatAsLink("Liquid", "ELEMENTS_LIQUID"),
-			" and ",
-			STRINGS.UI.FormatAsLink("Gas", "ELEMENTS_GAS"),
-			" flow, even while Duplicants are passing.\n\nWill not allow passage when no ",
-			STRINGS.UI.FormatAsLink("Power", "POWER"),
-			" is available.\n\n",
-			STRINGS.UI.FormatAsLink("Critters", "CRITTERS"),
-			" cannot pass through this door unless it is set to Open.");
+		public static class BUILDING {
+			public static class STATUSITEMS {
+				/// <summary>
+				/// The charge available in an airlock door.
+				/// </summary>
+				public static class AIRLOCKSTOREDCHARGE {
+					public static LocString NAME = "Charge Available: {0}/{1}";
 
-		public static LocString AIRLOCKDOOR_LOGIC_OPEN = "Open/Close";
-		public static LocString AIRLOCKDOOR_LOGIC_OPEN_ACTIVE = STRINGS.UI.FormatAsAutomationState(
-			"Green Signal", STRINGS.UI.AutomationState.Active) + ": Unlock and set to automatic";
-		public static LocString AIRLOCKDOOR_LOGIC_OPEN_INACTIVE = STRINGS.UI.FormatAsAutomationState(
-			"Red Signal", STRINGS.UI.AutomationState.Standby) + ": Close and lock";
+					public static LocString TOOLTIP = string.Concat(
+						"This Airlock has <b>{0}</b> of stored ",
+						STRINGS.UI.PRE_KEYWORD,
+						"Power",
+						STRINGS.UI.PST_KEYWORD,
+						"\n\nIt consumes ",
+						STRINGS.UI.FormatAsNegativeRate("{2}"),
+						" per use");
+				}
+			}
+		}
+
+		public static class BUILDINGS {
+			public static class PREFABS {
+				public static class PAIRLOCKDOOR {
+					public static LocString NAME = STRINGS.UI.FormatAsLink("True Airlock", AirlockDoorConfig.ID);
+					public static LocString DESC = string.Concat("Sucking Duplicants that have nowhere to go into space through ",
+						STRINGS.UI.FormatAsLink("Mechanized Airlocks", PressureDoorConfig.ID),
+						" is poor taste. Now they can suffocate quietly on the other side of an airlock.");
+					public static LocString EFFECT = string.Concat("Blocks ",
+						STRINGS.UI.FormatAsLink("Liquid", "ELEMENTS_LIQUID"),
+						" and ",
+						STRINGS.UI.FormatAsLink("Gas", "ELEMENTS_GAS"),
+						" flow, even while Duplicants are passing.\n\nWill not allow passage when no ",
+						STRINGS.UI.FormatAsLink("Power", "POWER"),
+						" is available.\n\n",
+						STRINGS.UI.FormatAsLink("Critters", "CRITTERS"),
+						" cannot pass through this door.");
+
+					public static LocString LOGIC_OPEN = "Open/Close";
+					public static LocString LOGIC_OPEN_ACTIVE = STRINGS.UI.FormatAsAutomationState(
+						"Green Signal", STRINGS.UI.AutomationState.Active) + ": Unlock door";
+					public static LocString LOGIC_OPEN_INACTIVE = STRINGS.UI.FormatAsAutomationState(
+						"Red Signal", STRINGS.UI.AutomationState.Standby) + ": Lock door";
+				}
+			}
+		}
 	}
 }

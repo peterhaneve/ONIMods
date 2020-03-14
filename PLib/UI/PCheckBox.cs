@@ -194,10 +194,12 @@ namespace PeterHan.PLib.UI {
 			checkbox.SetActive(true);
 			// Faster than ever!
 			var subLabel = WrapTextAndSprite(text, sprite);
-			var layout = new RelativeLayout(checkbox) { OverallMargin = Margin };
+			var layout = checkbox.AddComponent<RelativeLayoutGroup>();
+			layout.Margin = Margin;
 			ArrangeComponent(layout, WrapTextAndSprite(subLabel, checkBG), TextAlignment);
-			layout.Execute(true);
-			checkbox.SetFlexUISize(FlexSize);
+			if (!DynamicSize) layout.LockLayout();
+			layout.flexibleWidth = FlexSize.x;
+			layout.flexibleHeight = FlexSize.y;
 			InvokeRealize(checkbox);
 			return checkbox;
 		}

@@ -23,6 +23,7 @@ namespace PeterHan.PLib.UI.Layouts {
 	/// <summary>
 	/// Stores constraints applied to a game object in a relative layout.
 	/// </summary>
+	[Serializable]
 	internal sealed class RelativeLayoutParams : RelativeLayoutParamsBase<GameObject> { }
 
 	/// <summary>
@@ -72,6 +73,7 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// <summary>
 		/// The edge position determined for a component.
 		/// </summary>
+		[Serializable]
 		internal sealed class EdgeStatus {
 			/// <summary>
 			/// The type of constraint to use for this relative layout.

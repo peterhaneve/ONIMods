@@ -16,11 +16,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.UI.Layouts;
 using System;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace PeterHan.PLib.UI {
@@ -144,11 +142,13 @@ namespace PeterHan.PLib.UI {
 				textField.AddComponent<ToolTip>().toolTip = ToolTip;
 			mask.enabled = true;
 			// Lay out, even better than before
-			new RelativeLayout(textField).SetTopEdge(textArea, fraction: 1.0f).SetBottomEdge(
-				textArea, fraction: 0.0f).SetMargin(textArea, new RectOffset(1, 1, 1, 1)).
-				OverrideSize(textArea, new Vector2(MinWidth, Math.Max(LineCount, 1) * PUIUtils.
-				GetLineHeight(style))).Execute(true);
-			textField.SetFlexUISize(FlexSize);
+			var layout = textField.AddComponent<RelativeLayoutGroup>();
+			layout.SetTopEdge(textArea, fraction: 1.0f).SetBottomEdge(textArea, fraction: 0.0f).
+				SetMargin(textArea, new RectOffset(1, 1, 1, 1)).OverrideSize(textArea,
+				new Vector2(MinWidth, Math.Max(LineCount, 1) * PUIUtils.GetLineHeight(style))).
+				LockLayout();
+			layout.flexibleWidth = FlexSize.x;
+			layout.flexibleHeight = FlexSize.y;
 			OnRealize?.Invoke(textField);
 			return textField;
 		}

@@ -19,7 +19,6 @@
 using PeterHan.PLib.UI.Layouts;
 using System;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace PeterHan.PLib.UI {
@@ -27,7 +26,7 @@ namespace PeterHan.PLib.UI {
 	/// A freezable layout manager that displays one of its contained objects at a time.
 	/// Unlike other layout groups, even inactive children are considered for sizing.
 	/// </summary>
-	public sealed class CardLayoutGroup : UIBehaviour, ISettableFlexSize, ILayoutElement {
+	public sealed class CardLayoutGroup : AbstractLayoutGroup {
 		/// <summary>
 		/// Calculates the size of the card layout container.
 		/// </summary>
@@ -148,38 +147,28 @@ namespace PeterHan.PLib.UI {
 			return obj;
 		}
 
-		public float minWidth { get; private set; }
-
-		public float preferredWidth { get; private set; }
-
 		/// <summary>
-		/// The flexible width of the completed layout group can be set.
+		/// The margin around the components as a whole.
 		/// </summary>
-		public float flexibleWidth { get; set; }
-
-		public float minHeight { get; private set; }
-
-		public float preferredHeight { get; private set; }
-
-		/// <summary>
-		/// The flexible height of the completed layout group can be set.
-		/// </summary>
-		public float flexibleHeight { get; set; }
-
-		/// <summary>
-		/// The priority of this layout group.
-		/// </summary>
-		public int layoutPriority { get; set; }
-
-		/// <summary>
-		/// The margin to allow around the components.
-		/// </summary>
-		public RectOffset Margin { get; set; }
+		public RectOffset Margin {
+			get {
+				return margin;
+			}
+			set {
+				margin = value;
+			}
+		}
 
 		/// <summary>
 		/// Results from the horizontal calculation pass.
 		/// </summary>
 		private CardLayoutResults horizontal;
+
+		/// <summary>
+		/// The margin around the components as a whole.
+		/// </summary>
+		[SerializeField]
+		private RectOffset margin;
 
 		/// <summary>
 		/// Results from the vertical calculation pass.
@@ -192,7 +181,7 @@ namespace PeterHan.PLib.UI {
 			vertical = null;
 		}
 
-		public void CalculateLayoutInputHorizontal() {
+		public override void CalculateLayoutInputHorizontal() {
 			var margin = Margin;
 			float gap = (margin == null) ? 0.0f : margin.left + margin.right;
 			horizontal = Calc(gameObject, PanelDirection.Horizontal);
@@ -201,7 +190,7 @@ namespace PeterHan.PLib.UI {
 			preferredWidth = hTotal.preferred + gap;
 		}
 
-		public void CalculateLayoutInputVertical() {
+		public override void CalculateLayoutInputVertical() {
 			var margin = Margin;
 			float gap = (margin == null) ? 0.0f : margin.top + margin.bottom;
 			vertical = Calc(gameObject, PanelDirection.Vertical);
@@ -268,7 +257,7 @@ namespace PeterHan.PLib.UI {
 			}
 		}
 
-		public void SetLayoutHorizontal() {
+		public override void SetLayoutHorizontal() {
 #if DEBUG
 			if (horizontal == null)
 				throw new InvalidOperationException("SetLayoutHorizontal before CalculateLayoutInputHorizontal");
@@ -279,7 +268,7 @@ namespace PeterHan.PLib.UI {
 			}
 		}
 
-		public void SetLayoutVertical() {
+		public override void SetLayoutVertical() {
 #if DEBUG
 			if (vertical == null)
 				throw new InvalidOperationException("SetLayoutVertical before CalculateLayoutInputVertical");

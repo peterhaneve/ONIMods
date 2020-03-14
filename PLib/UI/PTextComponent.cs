@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
+using PeterHan.PLib.UI.Layouts;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -36,8 +36,8 @@ namespace PeterHan.PLib.UI {
 		/// <param name="layout">The layout to modify.</param>
 		/// <param name="target">The target object to arrange.</param>
 		/// <param name="alignment">The object alignment to use.</param>
-		protected static void ArrangeComponent(RelativeLayout layout, GameObject target,
-				TextAnchor alignment) {
+		protected static void ArrangeComponent<T>(IRelativeLayout<T, GameObject> layout,
+				GameObject target, TextAnchor alignment) where T : class {
 			// X
 			switch (alignment) {
 			case TextAnchor.LowerLeft:
@@ -131,7 +131,6 @@ namespace PeterHan.PLib.UI {
 			return locText;
 		}
 
-		[Obsolete("Text components always dynamically size despite using frozen layouts!")]
 		public bool DynamicSize { get; set; }
 
 		/// <summary>
@@ -269,7 +268,7 @@ namespace PeterHan.PLib.UI {
 				result = PUIElements.CreateUI(text.GetParent(), "AlignmentWrapper");
 				text.SetParent(result);
 				sprite.SetParent(result);
-				var layout = new RelativeLayout(result);
+				var layout = result.AddOrGet<RelativeLayoutGroup>();
 				// X
 				switch (SpritePosition) {
 				case TextAnchor.MiddleLeft:
@@ -308,7 +307,6 @@ namespace PeterHan.PLib.UI {
 					layout.AnchorYAxis(text).AnchorYAxis(sprite);
 					break;
 				}
-				layout.Execute(true);
 			} else if (text != null)
 				result = text;
 			else if (sprite != null)

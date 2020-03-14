@@ -53,10 +53,12 @@ namespace PeterHan.PLib.UI {
 				label.AddComponent<ToolTip>().toolTip = ToolTip;
 			label.SetActive(true);
 			// Arrange the icon and text
-			var layout = new RelativeLayout(label) { OverallMargin = Margin };
+			var layout = label.AddComponent<RelativeLayoutGroup>();
+			layout.Margin = Margin;
 			ArrangeComponent(layout, WrapTextAndSprite(text, sprite), TextAlignment);
-			layout.Execute(true);
-			label.SetFlexUISize(FlexSize);
+			if (!DynamicSize) layout.LockLayout();
+			layout.flexibleWidth = FlexSize.x;
+			layout.flexibleHeight = FlexSize.y;
 			InvokeRealize(label);
 			return label;
 		}

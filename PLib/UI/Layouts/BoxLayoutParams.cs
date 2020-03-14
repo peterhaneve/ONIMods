@@ -16,12 +16,14 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
 using UnityEngine;
 
 namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// The parameters used for laying out a box layout.
 	/// </summary>
+	[Serializable]
 	public sealed class BoxLayoutParams {
 		/// <summary>
 		/// The alignment to use for components that are not big enough to fit and have no

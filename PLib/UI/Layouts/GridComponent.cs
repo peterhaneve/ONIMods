@@ -22,6 +22,7 @@ namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// A component in the grid with its placement information.
 	/// </summary>
+	[Serializable]
 	internal sealed class GridComponent<T> : GridComponentSpec where T : class {
 		/// <summary>
 		/// The object to place here.

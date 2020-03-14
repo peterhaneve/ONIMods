@@ -163,11 +163,13 @@ namespace PeterHan.PLib.UI {
 			// Lay out, even better than before
 			var tbTransform = textBox.rectTransform();
 			LayoutRebuilder.ForceRebuildLayoutImmediate(tbTransform);
-			new RelativeLayout(textField).SetTopEdge(textArea, fraction: 1.0f).SetBottomEdge(
-				textArea, fraction: 0.0f).SetMargin(textArea, new RectOffset(1, 1, 1, 1)).
-				OverrideSize(textArea, new Vector2(MinWidth, LayoutUtility.GetPreferredHeight(
-				tbTransform))).Execute(true);
-			textField.SetFlexUISize(FlexSize);
+			var layout = textField.AddComponent<RelativeLayoutGroup>();
+			layout.SetTopEdge(textArea, fraction: 1.0f).SetBottomEdge(textArea, fraction: 0.0f).
+				SetMargin(textArea, new RectOffset(1, 1, 1, 1)).OverrideSize(textArea,
+				new Vector2(MinWidth, LayoutUtility.GetPreferredHeight(tbTransform))).
+				LockLayout();
+			layout.flexibleWidth = FlexSize.x;
+			layout.flexibleHeight = FlexSize.y;
 			OnRealize?.Invoke(textField);
 			return textField;
 		}

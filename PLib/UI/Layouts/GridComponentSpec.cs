@@ -84,6 +84,7 @@ namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// The specifications for one column in a grid layout.
 	/// </summary>
+	[Serializable]
 	public sealed class GridColumnSpec {
 		/// <summary>
 		/// The flexible width of this grid column. If there is space left after all
@@ -124,6 +125,7 @@ namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// The specifications for one row in a grid layout.
 	/// </summary>
+	[Serializable]
 	public sealed class GridRowSpec {
 		/// <summary>
 		/// The flexible height of this grid row. If there is space left after all rows

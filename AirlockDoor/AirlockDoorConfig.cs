@@ -38,34 +38,34 @@ namespace PeterHan.AirlockDoor {
 		internal static void RegisterBuilding() {
 			// Inititialize it here to allow localization to change the strings
 			PBuilding.Register(AirlockDoorTemplate = new PBuilding(ID,
-					AirlockDoorStrings.AIRLOCKDOOR_NAME) {
+					AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.NAME) {
 				AddAfter = PressureDoorConfig.ID,
 				Animation = "door_external_kanim",
 				Category = "Base",
 				ConstructionTime = 60.0f,
 				Decor = TUNING.BUILDINGS.DECOR.PENALTY.TIER1,
-				Description = AirlockDoorStrings.AIRLOCKDOOR_DESCRIPTION,
-				EffectText = AirlockDoorStrings.AIRLOCKDOOR_EFFECT,
+				Description = null, EffectText = null,
 				Entombs = false,
 				Floods = false,
 				Height = 2,
 				HP = 30,
 				LogicIO = {
 					LogicPorts.Port.InputPort(AirlockDoor.OPEN_CLOSE_PORT_ID, CellOffset.none,
-						AirlockDoorStrings.AIRLOCKDOOR_LOGIC_OPEN,
-						AirlockDoorStrings.AIRLOCKDOOR_LOGIC_OPEN_ACTIVE,
-						AirlockDoorStrings.AIRLOCKDOOR_LOGIC_OPEN_INACTIVE)
+						AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.LOGIC_OPEN,
+						AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.LOGIC_OPEN_ACTIVE,
+						AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.LOGIC_OPEN_INACTIVE)
 				},
 				Ingredients = {
 					new BuildIngredient(TUNING.MATERIALS.REFINED_METAL, tier: 4),
 					new BuildIngredient(TUNING.MATERIALS.PLASTIC, tier: 0)
 				},
-				OverheatTemperature = 75.0f + Constants.CELSIUS2KELVIN,
+				// Overheating is not possible on solid tile buildings because they bypass
+				// structure temperatures so sim will never send the overheat notification
 				Placement = BuildLocationRule.Tile,
 				PowerInput = new PowerRequirement(120.0f, new CellOffset(0, 1)),
 				SceneLayer = Grid.SceneLayer.TileMain,
 				Tech = "ValveMiniaturization",
-				Width = 1
+				Width = 2
 			});
 		}
 
@@ -92,12 +92,18 @@ namespace PeterHan.AirlockDoor {
 		public override void DoPostConfigureComplete(GameObject go) {
 			AirlockDoorTemplate?.DoPostConfigureComplete(go);
 			AirlockDoorTemplate?.CreateLogicPorts(go);
-			go.AddOrGet<AirlockDoor>();
-			go.AddOrGet<ZoneTile>();
+			var ad = go.AddOrGet<AirlockDoor>();
+			ad.EnergyCapacity = 10000.0f;
+			ad.EnergyPerUse = 1000.0f;
+			var occupier = go.AddOrGet<SimCellOccupier>();
+			occupier.doReplaceElement = true;
+			occupier.notifyOnMelt = true;
+			go.AddOrGet<TileTemperature>();
 			go.AddOrGet<AccessControl>().controlEnabled = true;
 			go.AddOrGet<KBoxCollider2D>();
+			go.AddOrGet<BuildingHP>().destroyOnDamaged = true;
 			Prioritizable.AddRef(go);
-			go.AddOrGet<CopyBuildingSettings>();
+			go.AddOrGet<CopyBuildingSettings>().copyGroupTag = GameTags.Door;
 			go.AddOrGet<Workable>().workTime = 3f;
 			UnityEngine.Object.DestroyImmediate(go.GetComponent<BuildingEnabledButton>());
 			go.GetComponent<KBatchedAnimController>().initialAnim = "closed";

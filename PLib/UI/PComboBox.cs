@@ -24,7 +24,8 @@ namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// A custom UI combo box factory class.
 	/// </summary>
-	public sealed class PComboBox<T> : IUIComponent where T : class, IListableOption {
+	public sealed class PComboBox<T> : IUIComponent, IDynamicSizable where T : class,
+			IListableOption {
 		/// <summary>
 		/// The default margin around items in the pulldown.
 		/// </summary>
@@ -62,6 +63,8 @@ namespace PeterHan.PLib.UI {
 		/// The content of this combo box.
 		/// </summary>
 		public IEnumerable<T> Content { get; set; }
+
+		public bool DynamicSize { get; set; }
 
 		/// <summary>
 		/// The background color for each entry in the combo box pulldown.
@@ -125,6 +128,7 @@ namespace PeterHan.PLib.UI {
 			BackColor = null;
 			CheckSize = new Vector2(12.0f, 12.0f);
 			Content = null;
+			DynamicSize = false;
 			FlexSize = Vector2.zero;
 			InitialItem = null;
 			ItemMargin = DEFAULT_ITEM_MARGIN;
@@ -192,15 +196,18 @@ namespace PeterHan.PLib.UI {
 			combo.SetActive(true);
 			// Button gets laid out on the right, rest of space goes to the label
 			// Scroll pane is laid out on the bottom
-			new RelativeLayout(combo).AnchorYAxis(selection).SetLeftEdge(selection, fraction:
+			var layout = combo.AddComponent<RelativeLayoutGroup>();
+			layout.AnchorYAxis(selection).SetLeftEdge(selection, fraction:
 				0.0f).SetRightEdge(selection, toLeft: image).AnchorYAxis(image).SetRightEdge(
 				image, fraction: 1.0f).SetMargin(selection, new RectOffset(margin.left,
 				im.right, margin.top, margin.bottom)).SetMargin(image, new RectOffset(0,
 				margin.right, margin.top, margin.bottom)).OverrideSize(image, ArrowSize).
-				AnchorYAxis(pullDown, 0.0f).OverrideSize(pullDown, Vector2.up).Execute(true);
+				AnchorYAxis(pullDown, 0.0f).OverrideSize(pullDown, Vector2.up);
+			if (!DynamicSize) layout.LockLayout();
 			// Scroll pane is hidden right away
 			pullDown.SetActive(false);
-			combo.SetFlexUISize(FlexSize);
+			layout.flexibleWidth = FlexSize.x;
+			layout.flexibleHeight = FlexSize.y;
 			OnRealize?.Invoke(combo);
 			return combo;
 		}
@@ -235,11 +242,12 @@ namespace PeterHan.PLib.UI {
 			var textContainer = PUIElements.CreateUI(rowPrefab, "Text");
 			PUIElements.AddLocText(textContainer, style).SetText(" ");
 			// Configure the entire layout in 1 statement! (jk this is awful)
-			new RelativeLayout(rowPrefab).AnchorYAxis(isSelected).OverrideSize(
-				isSelected, CheckSize).SetLeftEdge(isSelected, fraction: 0.0f).SetMargin(
-				isSelected, im).AnchorYAxis(textContainer).SetLeftEdge(textContainer, toRight:
-				isSelected).SetRightEdge(textContainer, 1.0f).SetMargin(textContainer,
-				new RectOffset(0, im.right, im.top, im.bottom)).Execute(true);
+			var group = rowPrefab.AddComponent<RelativeLayoutGroup>();
+			group.AnchorYAxis(isSelected).OverrideSize(isSelected, CheckSize).SetLeftEdge(
+				isSelected, fraction: 0.0f).SetMargin(isSelected, im).AnchorYAxis(
+				textContainer).SetLeftEdge(textContainer, toRight: isSelected).SetRightEdge(
+				textContainer, 1.0f).SetMargin(textContainer, new RectOffset(0, im.right,
+				im.top, im.bottom)).LockLayout();
 			rowPrefab.SetActive(false);
 			return rowPrefab;
 		}

@@ -20,7 +20,6 @@
 using PeterHan.PLib.UI.Layouts;
 using System;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace PeterHan.PLib.UI {
@@ -31,7 +30,7 @@ namespace PeterHan.PLib.UI {
 	/// 
 	/// Intended to work something like Java's BoxLayout...
 	/// </summary>
-	public sealed class BoxLayoutGroup : UIBehaviour, ISettableFlexSize, ILayoutElement {
+	public sealed class BoxLayoutGroup : AbstractLayoutGroup {
 		/// <summary>
 		/// Calculates the size of the box layout container.
 		/// </summary>
@@ -212,29 +211,6 @@ namespace PeterHan.PLib.UI {
 			return obj;
 		}
 
-		public float minWidth { get; private set; }
-
-		public float preferredWidth { get; private set; }
-
-		/// <summary>
-		/// The flexible width of the completed layout group can be set.
-		/// </summary>
-		public float flexibleWidth { get; set; }
-
-		public float minHeight { get; private set; }
-
-		public float preferredHeight { get; private set; }
-
-		/// <summary>
-		/// The flexible height of the completed layout group can be set.
-		/// </summary>
-		public float flexibleHeight { get; set; }
-
-		/// <summary>
-		/// The priority of this layout group.
-		/// </summary>
-		public int layoutPriority { get; set; }
-
 		/// <summary>
 		/// The parameters used to set up this box layout.
 		/// </summary>
@@ -255,6 +231,7 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// The parameters used to set up this box layout.
 		/// </summary>
+		[SerializeField]
 		private BoxLayoutParams parameters;
 
 		/// <summary>
@@ -269,7 +246,7 @@ namespace PeterHan.PLib.UI {
 			vertical = null;
 		}
 
-		public void CalculateLayoutInputHorizontal() {
+		public override void CalculateLayoutInputHorizontal() {
 			var margin = parameters.Margin;
 			float gap = (margin == null) ? 0.0f : margin.left + margin.right;
 			horizontal = Calc(gameObject, parameters, PanelDirection.Horizontal);
@@ -282,7 +259,7 @@ namespace PeterHan.PLib.UI {
 #endif
 		}
 
-		public void CalculateLayoutInputVertical() {
+		public override void CalculateLayoutInputVertical() {
 			var margin = parameters.Margin;
 			float gap = (margin == null) ? 0.0f : margin.top + margin.bottom;
 			vertical = Calc(gameObject, parameters, PanelDirection.Vertical);
@@ -327,7 +304,7 @@ namespace PeterHan.PLib.UI {
 				LayoutRebuilder.MarkLayoutForRebuild(gameObject.rectTransform());
 		}
 
-		public void SetLayoutHorizontal() {
+		public override void SetLayoutHorizontal() {
 #if DEBUG
 			if (horizontal == null)
 				throw new InvalidOperationException("SetLayoutHorizontal before CalculateLayoutInputHorizontal");
@@ -342,7 +319,7 @@ namespace PeterHan.PLib.UI {
 			}
 		}
 
-		public void SetLayoutVertical() {
+		public override void SetLayoutVertical() {
 #if DEBUG
 			if (vertical == null)
 				throw new InvalidOperationException("SetLayoutVertical before CalculateLayoutInputVertical");

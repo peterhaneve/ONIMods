@@ -20,14 +20,13 @@ using PeterHan.PLib.UI.Layouts;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// Implements a flexible version of the base GridLayout.
 	/// </summary>
-	public sealed class PGridLayoutGroup : UIBehaviour, ISettableFlexSize, ILayoutElement {
+	public sealed class PGridLayoutGroup : AbstractLayoutGroup {
 		/// <summary>
 		/// Calculates all column widths.
 		/// </summary>
@@ -155,42 +154,35 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
-		/// The flexible height of the completed layout group can be set.
-		/// </summary>
-		public float flexibleHeight { get; set; }
-
-		/// <summary>
-		/// The flexible width of the completed layout group can be set.
-		/// </summary>
-		public float flexibleWidth { get; set; }
-
-		public float minWidth { get; private set; }
-
-		public float preferredWidth { get; private set; }
-
-		public float minHeight { get; private set; }
-
-		public float preferredHeight { get; private set; }
-
-		/// <summary>
-		/// The priority of this layout group.
-		/// </summary>
-		public int layoutPriority { get; set; }
-
-		/// <summary>
 		/// The margin around the components as a whole.
 		/// </summary>
-		public RectOffset Margin { get; set; }
+		public RectOffset Margin {
+			get {
+				return margin;
+			}
+			set {
+				margin = value;
+			}
+		}
 
+#pragma warning disable IDE0044 // Cannot be readonly for Unity serialization to work
 		/// <summary>
 		/// The children of this panel.
 		/// </summary>
-		private readonly ICollection<GridComponent<GameObject>> children;
+		[SerializeField]
+		private IList<GridComponent<GameObject>> children;
 
 		/// <summary>
 		/// The columns in this panel.
 		/// </summary>
-		private readonly IList<GridColumnSpec> columns;
+		[SerializeField]
+		private IList<GridColumnSpec> columns;
+
+		/// <summary>
+		/// The margin around the components as a whole.
+		/// </summary>
+		[SerializeField]
+		private RectOffset margin;
 
 		/// <summary>
 		/// The current layout status.
@@ -200,7 +192,9 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// The rows in this panel.
 		/// </summary>
-		private readonly IList<GridRowSpec> rows;
+		[SerializeField]
+		private IList<GridRowSpec> rows;
+#pragma warning restore IDE0044
 
 		internal PGridLayoutGroup() {
 			children = new List<GridComponent<GameObject>>(16);
@@ -246,7 +240,7 @@ namespace PeterHan.PLib.UI {
 			rows.Add(row);
 		}
 
-		public void CalculateLayoutInputHorizontal() {
+		public override void CalculateLayoutInputHorizontal() {
 			results = new GridLayoutResults(rows, columns, children);
 			var elements = ListPool<Component, PGridLayoutGroup>.Allocate();
 			foreach (var component in results.Components) {
@@ -274,7 +268,7 @@ namespace PeterHan.PLib.UI {
 			flexibleWidth = (results.TotalFlexWidth > 0.0f) ? 1.0f : 0.0f;
 		}
 
-		public void CalculateLayoutInputVertical() {
+		public override void CalculateLayoutInputVertical() {
 #if DEBUG
 			if (results == null)
 				throw new InvalidOperationException("CalculateLayoutInputVertical before CalculateLayoutInputHorizontal");
@@ -338,7 +332,7 @@ namespace PeterHan.PLib.UI {
 				LayoutRebuilder.MarkLayoutForRebuild(gameObject.rectTransform());
 		}
 
-		public void SetLayoutHorizontal() {
+		public override void SetLayoutHorizontal() {
 			var obj = gameObject;
 #if DEBUG
 			if (results == null)
@@ -360,7 +354,7 @@ namespace PeterHan.PLib.UI {
 			}
 		}
 
-		public void SetLayoutVertical() {
+		public override void SetLayoutVertical() {
 			var obj = gameObject;
 			int rows;
 #if DEBUG

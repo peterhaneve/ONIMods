@@ -36,8 +36,13 @@ namespace PeterHan.PLib.UI {
 	/// constraints in this layout manager. Objects which lack constraints for any edge will
 	/// have that edge automatically constrained to the edge of the parent object, including
 	/// any insets.
+	/// 
+	/// The resulting layout may not update correctly if the sizes of child components change,
+	/// particularly if the minimum bounds of the parent must be resized. To allow more
+	/// flexibility in these circumstances, use RelativeLayoutGroup.
 	/// </summary>
-	public sealed class RelativeLayout {
+	[Obsolete("This class is obsolete. Use RelativeLayoutGroup.LockLayout().")]
+	public sealed class RelativeLayout : IRelativeLayout<RelativeLayout, GameObject> {
 		/// <summary>
 		/// The parent game object where the layout will be performed.
 		/// </summary>
@@ -81,35 +86,11 @@ namespace PeterHan.PLib.UI {
 			return param;
 		}
 
-		/// <summary>
-		/// Anchors the component's pivot in the X axis to the specified anchor position.
-		/// The component will be laid out at its preferred (or overridden) width with its
-		/// pivot locked to the specified relative fraction of the parent component's width.
-		/// 
-		/// Any other existing left or right edge constraints will be overwritten. This method
-		/// is equivalent to setting both the left and right edges to the same fraction.
-		/// </summary>
-		/// <param name="item">The component to adjust.</param>
-		/// <param name="anchor">The fraction to which to align the pivot, with 0.0f
-		/// being the left and 1.0f being the right.</param>
-		/// <returns>This object, for call chaining.</returns>
 		public RelativeLayout AnchorXAxis(GameObject item, float anchor = 0.5f) {
 			SetLeftEdge(item, fraction: anchor);
 			return SetRightEdge(item, fraction: anchor);
 		}
 
-		/// <summary>
-		/// Anchors the component's pivot in the Y axis to the specified anchor position.
-		/// The component will be laid out at its preferred (or overridden) height with its
-		/// pivot locked to the specified relative fraction of the parent component's height.
-		/// 
-		/// Any other existing top or bottom edge constraints will be overwritten. This method
-		/// is equivalent to setting both the top and bottom edges to the same fraction.
-		/// </summary>
-		/// <param name="item">The component to adjust.</param>
-		/// <param name="anchor">The fraction to which to align the pivot, with 0.0f
-		/// being the bottom and 1.0f being the top.</param>
-		/// <returns>This object, for call chaining.</returns>
 		public RelativeLayout AnchorYAxis(GameObject item, float anchor = 0.5f) {
 			SetTopEdge(item, fraction: anchor);
 			return SetBottomEdge(item, fraction: anchor);
@@ -132,66 +113,19 @@ namespace PeterHan.PLib.UI {
 		public GameObject Execute(bool addLayoutElement = false) {
 			if (Parent == null)
 				throw new InvalidOperationException("Parent was disposed");
-			var all = Parent.rectTransform();
-			var children = RelativeLayoutData.Allocate();
-			var components = ListPool<ILayoutController, RelativeLayout>.Allocate();
-			// Calculate overall margins
-			int ml = OverallMargin?.left ?? 0, mr = OverallMargin?.right ?? 0,
-				mt = OverallMargin?.top ?? 0, mb = OverallMargin?.bottom ?? 0;
-			// Gather the children!
-			children.CalcX(all, locConstraints);
-			int passes, limit = 2 * children.Count;
-			// X layout
-			for (passes = 0; passes < limit && !children.RunPassX(); passes++) ;
-			if (passes >= limit)
-				children.ThrowUnresolvable(passes, PanelDirection.Horizontal);
-			float minX = children.GetMinSizeX() + ml + mr;
-			all.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, minX);
-			children.ExecuteX(components, ml, mr);
-			// Y layout
-			children.CalcY();
-			for (passes = 0; passes < limit && !children.RunPassY(); passes++) ;
-			if (passes >= limit)
-				children.ThrowUnresolvable(passes, PanelDirection.Vertical);
-			float minY = children.GetMinSizeY() + mb + mt;
-			all.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, minY);
-			children.ExecuteY(components, mb, mt);
-			components.Recycle();
-			children.Recycle();
+			var group = Parent.AddOrGet<RelativeLayoutGroup>();
+			group.Import(locConstraints);
 			if (addLayoutElement)
-				Parent.SetUISize(new Vector2(minX, minY), true);
+				group.LockLayout();
 			return Parent;
 		}
 
-		/// <summary>
-		/// Overrides the preferred size of a component. If set, instead of looking at layout
-		/// sizes of the component, the specified size will be used instead.
-		/// </summary>
-		/// <param name="item">The component to adjust.</param>
-		/// <param name="size">The size to apply. Only dimensions greater than zero will be used.</param>
-		/// <returns>This object, for call chaining.</returns>
 		public RelativeLayout OverrideSize(GameObject item, Vector2 size) {
 			if (item != null)
 				AddOrGet(item).OverrideSize = size;
 			return this;
 		}
 
-		/// <summary>
-		/// Sets the bottom edge of a game object. If the fraction is supplied, the component
-		/// will be laid out with the bottom edge anchored to that fraction of the parent's
-		/// height. If a component is specified and no fraction is specified, the component
-		/// will be anchored with its bottom edge above the top edge of that component.
-		/// If neither is specified, all bottom edge constraints will be removed.
-		/// 
-		/// Any other existing bottom edge constraint will be overwritten.
-		/// 
-		/// Remember that +Y is in the upwards direction.
-		/// </summary>
-		/// <param name="item">The component to adjust.</param>
-		/// <param name="fraction">The fraction to which to align the bottom edge, with 0.0f
-		/// being the bottom and 1.0f being the top.</param>
-		/// <param name="above">The game object which this component must be above.</param>
-		/// <returns>This object, for call chaining.</returns>
 		public RelativeLayout SetBottomEdge(GameObject item, float fraction = -1.0f,
 				GameObject above = null) {
 			if (item != null) {
@@ -223,20 +157,6 @@ namespace PeterHan.PLib.UI {
 			}
 		}
 
-		/// <summary>
-		/// Sets the left edge of a game object. If the fraction is supplied, the component
-		/// will be laid out with the left edge anchored to that fraction of the parent's
-		/// width. If a component is specified and no fraction is specified, the component
-		/// will be anchored with its left edge to the right of that component.
-		/// If neither is specified, all left edge constraints will be removed.
-		/// 
-		/// Any other existing left edge constraint will be overwritten.
-		/// </summary>
-		/// <param name="item">The component to adjust.</param>
-		/// <param name="fraction">The fraction to which to align the left edge, with 0.0f
-		/// being the left and 1.0f being the right.</param>
-		/// <param name="toLeft">The game object which this component must be to the right of.</param>
-		/// <returns>This object, for call chaining.</returns>
 		public RelativeLayout SetLeftEdge(GameObject item, float fraction = -1.0f,
 				GameObject toRight = null) {
 			if (item != null) {
@@ -247,49 +167,12 @@ namespace PeterHan.PLib.UI {
 			return this;
 		}
 
-		/// <summary>
-		/// Sets the insets of a component from its anchor points. A positive number insets the
-		/// component away from the edge, whereas a negative number out-sets the component
-		/// across the edge.
-		/// 
-		/// All components default to no insets.
-		/// 
-		/// Any reference to a component's edge using other constraints always refers to its
-		/// edge <b>before</b> insets are applied.
-		/// </summary>
-		/// <param name="item">The component to adjust.</param>
-		/// <param name="insets">The insets to apply. If null, the insets will be set to zero.</param>
-		/// <returns>This object, for call chaining.</returns>
 		public RelativeLayout SetMargin(GameObject item, RectOffset insets) {
 			if (item != null)
 				AddOrGet(item).Insets = insets;
 			return this;
 		}
 
-		/// <summary>
-		/// Sets all layout parameters of an object at once.
-		/// </summary>
-		/// <param name="item">The item to configure.</param>
-		/// <param name="rawParams">The raw parameters to use.</param>
-		internal void SetRaw(GameObject item, RelativeLayoutParams rawParams) {
-			if (item != null && rawParams != null)
-				locConstraints[item] = rawParams;
-		}
-
-		/// <summary>
-		/// Sets the right edge of a game object. If the fraction is supplied, the component
-		/// will be laid out with the right edge anchored to that fraction of the parent's
-		/// width. If a component is specified and no fraction is specified, the component
-		/// will be anchored with its right edge to the left of that component.
-		/// If neither is specified, all right edge constraints will be removed.
-		/// 
-		/// Any other existing right edge constraint will be overwritten.
-		/// </summary>
-		/// <param name="item">The component to adjust.</param>
-		/// <param name="fraction">The fraction to which to align the right edge, with 0.0f
-		/// being the left and 1.0f being the right.</param>
-		/// <param name="toLeft">The game object which this component must be to the left of.</param>
-		/// <returns>This object, for call chaining.</returns>
 		public RelativeLayout SetRightEdge(GameObject item, float fraction = -1.0f,
 				GameObject toLeft = null) {
 			if (item != null) {
@@ -300,22 +183,6 @@ namespace PeterHan.PLib.UI {
 			return this;
 		}
 
-		/// <summary>
-		/// Sets the top edge of a game object. If the fraction is supplied, the component
-		/// will be laid out with the top edge anchored to that fraction of the parent's
-		/// height. If a component is specified and no fraction is specified, the component
-		/// will be anchored with its top edge above the bottom edge of that component.
-		/// If neither is specified, all top edge constraints will be removed.
-		/// 
-		/// Any other existing top edge constraint will be overwritten.
-		/// 
-		/// Remember that +Y is in the upwards direction.
-		/// </summary>
-		/// <param name="item">The component to adjust.</param>
-		/// <param name="fraction">The fraction to which to align the top edge, with 0.0f
-		/// being the bottom and 1.0f being the top.</param>
-		/// <param name="below">The game object which this component must be below.</param>
-		/// <returns>This object, for call chaining.</returns>
 		public RelativeLayout SetTopEdge(GameObject item, float fraction = -1.0f,
 				GameObject below = null) {
 			if (item != null) {

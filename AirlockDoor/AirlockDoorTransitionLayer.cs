@@ -27,7 +27,7 @@ namespace PeterHan.AirlockDoor {
 		/// <summary>
 		/// The doors to be opened.
 		/// </summary>
-		private readonly List<AirlockDoor> doors;
+		private readonly ICollection<AirlockDoor> doors;
 
 		public AirlockDoorTransitionLayer(Navigator navigator) : base(navigator) {
 			doors = new List<AirlockDoor>(4);
@@ -80,7 +80,7 @@ namespace PeterHan.AirlockDoor {
 				transition.y = 0;
 				transition.isCompleteCB = AreAllDoorsOpen;
 			}
-			foreach (var door in this.doors)
+			foreach (var door in doors)
 				door.Open();
 		}
 
