@@ -96,6 +96,11 @@ namespace PeterHan.PLib {
 		public const string KEY_LOCALE_TABLE = "PLib.Localization.Table";
 
 		/// <summary>
+		/// Stores a reference to the type of POptions in the forwarded copy of PLib.
+		/// </summary>
+		public const string KEY_OPTIONS_LATEST = "PLib.Options.Latest";
+
+		/// <summary>
 		/// Used to synchronize access to PLib options data.
 		/// </summary>
 		public const string KEY_OPTIONS_LOCK = "PLib.Options.Lock";

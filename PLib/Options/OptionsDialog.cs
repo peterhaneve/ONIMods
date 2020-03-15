@@ -108,15 +108,9 @@ namespace PeterHan.PLib.Options {
 		private Sprite modImage;
 
 		/// <summary>
-		/// The mod whose settings are being modified.
+		/// The handler for settings changes.
 		/// </summary>
-		private readonly KMod.Mod modSpec;
-
-		/// <summary>
-		/// The URL to open if the Mod Homepage button is pressed. The button will be hidden
-		/// if this is calculated to be null or empty.
-		/// </summary>
-		private readonly string modURL;
+		private readonly IOptionsHandler handler;
 
 		/// <summary>
 		/// The option entries in the dialog.
@@ -135,7 +129,7 @@ namespace PeterHan.PLib.Options {
 		private readonly Type optionsType;
 
 		/// <summary>
-		/// The path to the options file. It may not exist.
+		/// The path to the options file. It might not exist.
 		/// </summary>
 		private readonly string path;
 
@@ -144,30 +138,22 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		private readonly ConfigFileAttribute typeAttr;
 
-		internal OptionsDialog(Type optionsType, KMod.Mod modSpec) {
+		internal OptionsDialog(Type optionsType, IOptionsHandler handler) {
 			dialog = null;
 			modImage = null;
-			this.modSpec = modSpec ?? throw new ArgumentNullException("modSpec");
+			this.handler = handler ?? throw new ArgumentNullException("handler");
 			this.optionsType = optionsType ?? throw new ArgumentNullException("optionsType");
 			optionCategories = OptionsEntry.BuildOptions(optionsType);
 			options = null;
 			// Determine config location
 			infoAttr = POptions.GetModInfoAttribute(optionsType);
 			typeAttr = POptions.GetConfigFileAttribute(optionsType);
-			var src = modSpec.file_source;
-			if (src == null)
+			string root = handler.ConfigPath;
+			if (root == null)
 				path = null;
 			else
-				path = Path.Combine(src.GetRoot(), typeAttr?.ConfigFileName ?? POptions.
+				path = Path.Combine(root, typeAttr?.ConfigFileName ?? POptions.
 					CONFIG_FILE_NAME);
-			// Find mod home page
-			string url = infoAttr?.URL;
-			var label = modSpec.label;
-			if (string.IsNullOrEmpty(url) && label.distribution_platform == KMod.Label.
-					DistributionPlatform.Steam)
-				// Steam mods use their workshop ID as the label
-				url = "https://steamcommunity.com/sharedfiles/filedetails/?id=" + label.id;
-			modURL = url;
 		}
 
 		/// <summary>
@@ -213,7 +199,7 @@ namespace PeterHan.PLib.Options {
 			var body = dialog.Body;
 			// Try to load the mod image sprite if possible
 			if (modImage == null && !string.IsNullOrEmpty(image)) {
-				string rootDir = modSpec.file_source?.GetRoot();
+				string rootDir = handler.ConfigPath;
 				modImage = PUIUtils.LoadSprite(rootDir == null ? image : Path.Combine(rootDir,
 					image));
 			}
@@ -225,6 +211,10 @@ namespace PeterHan.PLib.Options {
 				Text = version, ToolTip = PUIStrings.TOOLTIP_VERSION, TextStyle = PUITuning.
 				Fonts.UILightStyle, Margin = new RectOffset(0, 0, OUTER_MARGIN, 0)
 			};
+			// Find mod URL
+			string modURL = infoAttr?.URL;
+			if (string.IsNullOrEmpty(modURL))
+				modURL = handler.DefaultURL;
 			if (modImage != null) {
 				// 2 rows and 1 column
 				if (optionCategories.Count > 0)
@@ -357,17 +347,17 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		public void OnModOptions(GameObject _) {
 			if (path != null) {
-				string title = OptionsEntry.LookInStrings(infoAttr?.Title);
+				string title = handler.GetTitle(OptionsEntry.LookInStrings(infoAttr?.Title));
 				if (string.IsNullOrEmpty(title))
-					title = modSpec.title;
+					title = PUIStrings.BUTTON_OPTIONS;
 				// Close current dialog if open
 				CloseDialog();
 				// Ensure that it is on top of other screens (which may be +100 modal)
 				var pDialog = new PDialog("ModOptions") {
-					Title = PUIStrings.DIALOG_TITLE.text.F(title), Size =
-					SETTINGS_DIALOG_SIZE, SortKey = 150.0f, DialogBackColor = PUITuning.Colors.
-					OptionsBackground, DialogClosed = OnOptionsSelected, MaxSize =
-					SETTINGS_DIALOG_MAX_SIZE, RoundToNearestEven = true
+					Title = title, Size = SETTINGS_DIALOG_SIZE, SortKey = 150.0f,
+					DialogBackColor = PUITuning.Colors.OptionsBackground,
+					DialogClosed = OnOptionsSelected, MaxSize = SETTINGS_DIALOG_MAX_SIZE,
+					RoundToNearestEven = true
 				}.AddButton("ok", STRINGS.UI.CONFIRMDIALOG.OK, PUIStrings.TOOLTIP_OK,
 					PUITuning.Colors.ButtonPinkStyle).AddButton(PDialog.DIALOG_KEY_CLOSE,
 					STRINGS.UI.CONFIRMDIALOG.CANCEL, PUIStrings.TOOLTIP_CANCEL,
@@ -417,7 +407,8 @@ namespace PeterHan.PLib.Options {
 				// Save changes to mod options
 				WriteOptions();
 				CheckForRestart();
-			}
+			} else if (action == PDialog.DIALOG_KEY_CLOSE)
+				handler.OnCancel(options);
 		}
 
 		/// <summary>
@@ -435,6 +426,9 @@ namespace PeterHan.PLib.Options {
 		/// If configured, opens the mod's home page in the default browser.
 		/// </summary>
 		private void VisitModHomepage(GameObject _) {
+			string modURL = infoAttr?.URL;
+			if (string.IsNullOrEmpty(modURL))
+				modURL = handler.DefaultURL;
 			if (!string.IsNullOrWhiteSpace(modURL))
 				Application.OpenURL(modURL);
 		}
@@ -443,12 +437,14 @@ namespace PeterHan.PLib.Options {
 		/// Writes the mod options to its config file.
 		/// </summary>
 		private void WriteOptions() {
-			if (options != null)
+			if (options != null) {
 				// Update from local options
 				foreach (var catEntries in optionCategories)
 					foreach (var option in catEntries.Value)
 						option.WriteTo(options);
-			POptions.WriteSettings(options, path, typeAttr?.IndentOutput ?? false);
+				POptions.WriteSettings(options, path, typeAttr?.IndentOutput ?? false);
+				handler.OnSaveOptions(options);
+			}
 		}
 
 		/// <summary>

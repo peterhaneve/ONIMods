@@ -16,8 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
-
 namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// Strings used in PLib UI and Options.
@@ -39,7 +37,7 @@ namespace PeterHan.PLib.UI {
 		public static LocString BUTTON_OPTIONS = STRINGS.UI.FRONTEND.MAINMENU.OPTIONS;
 
 		/// <summary>
-		/// The dialog title, where {0} is substituted with the mod friendly name.
+		/// The dialog title used for options, where {0} is substituted with the mod friendly name.
 		/// </summary>
 		public static LocString DIALOG_TITLE = "Options for {0}";
 

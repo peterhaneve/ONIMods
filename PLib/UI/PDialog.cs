@@ -132,7 +132,18 @@ namespace PeterHan.PLib.UI {
 			buttons = new List<DialogButton>(4);
 			MaxSize = Vector2.zero;
 			Name = name ?? "Dialog";
-			Parent = FrontEndManager.Instance.gameObject;
+			// First try the front end manager (menu), then the in-game (game)
+			GameObject parent = null;
+			var fi = FrontEndManager.Instance;
+			if (fi != null)
+				parent = fi.gameObject;
+			else {
+				// Grr unity
+				var gi = GameScreenManager.Instance;
+				if (gi != null)
+					parent = gi.ssOverlayCanvas;
+			}
+			Parent = parent;
 			RoundToNearestEven = false;
 			Size = Vector2.zero;
 			SortKey = 0.0f;

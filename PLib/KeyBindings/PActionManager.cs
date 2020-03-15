@@ -93,6 +93,9 @@ namespace PeterHan.PLib {
 			case KKeyCode.End:
 				localCode = KeyCodeStrings.END;
 				break;
+			case KKeyCode.Delete:
+				localCode = KeyCodeStrings.DELETE;
+				break;
 			case KKeyCode.PageDown:
 				localCode = KeyCodeStrings.PAGEDOWN;
 				break;

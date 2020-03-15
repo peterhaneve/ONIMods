@@ -69,9 +69,9 @@ namespace PeterHan.PLib.Options {
 				var transform = modEntry.GetField<RectTransform>("rect_transform");
 				string modID = modSpec.label.id;
 				if (modSpec.enabled && !string.IsNullOrEmpty(modID) && modOptions.TryGetValue(
-						modID, out Type optionsType) && transform != null) {
+						modID, out Type oType) && transform != null) {
 					// Create delegate to spawn actions dialog
-					var action = new OptionsDialog(optionsType, modSpec);
+					var action = new OptionsDialog(oType, new ModOptionsHandler(modSpec));
 					new PButton("ModSettingsButton") {
 						FlexSize = Vector2.up, OnClick = action.OnModOptions,
 						ToolTip = PUIStrings.DIALOG_TITLE.text.F(modSpec.title), Text =
@@ -158,6 +158,7 @@ namespace PeterHan.PLib.Options {
 		internal static void Init() {
 			lock (PSharedData.GetLock(PRegistry.KEY_OPTIONS_LOCK)) {
 				modOptions = PSharedData.GetData<OptionsTable>(PRegistry.KEY_OPTIONS_TABLE);
+				PSharedData.PutData(PRegistry.KEY_OPTIONS_LATEST, typeof(POptions));
 			}
 		}
 #endif
@@ -273,6 +274,58 @@ namespace PeterHan.PLib.Options {
 				PUtil.LogExcWarn(e);
 			}
 			return options;
+		}
+
+		/// <summary>
+		/// Shows a mod options dialog now, as if Options was used inside the Mods menu.
+		/// </summary>
+		/// <param name="optionsType">The type of the options to show.</param>
+		/// <param name="title">The title to show in the dialog.</param>
+		/// <param name="onClose">The method to call when the dialog is closed.</param>
+		private static void ShowDialog(Type optionsType, string title, Action<object> onClose)
+		{
+			var handler = new RuntimeOptionsHandler(Path.GetDirectoryName(optionsType.Assembly.
+				Location), title) { OnClose = onClose };
+			new OptionsDialog(optionsType, handler).OnModOptions(null);
+		}
+
+		/// <summary>
+		/// Shows a mod options dialog now, as if Options was used inside the Mods menu.
+		/// </summary>
+		/// <param name="optionsType">The type of the options to show. The mod to configure,
+		/// configuration directory, and so forth will be retrieved from the provided type.</param>
+		/// <param name="title">The title to show in the dialog. If null, a default title
+		/// will be used.</param>
+		/// <param name="onClose">The method to call when the dialog is closed.</param>
+		public static void ShowNow(Type optionsType, string title = null,
+				Action<object> onClose = null) {
+#if OPTIONS_ONLY
+			ShowDialog(optionsType, title, onClose);
+#else
+			Type forwardType;
+			if (optionsType == null)
+				throw new ArgumentNullException("optionsType");
+			// Find latest version if possible
+			lock (PSharedData.GetLock(PRegistry.KEY_OPTIONS_LOCK)) {
+				forwardType = PSharedData.GetData<Type>(PRegistry.KEY_OPTIONS_LATEST);
+			}
+			if (forwardType == null)
+				forwardType = typeof(POptions);
+			try {
+				var method = forwardType.GetMethod(nameof(ShowDialog), BindingFlags.Static |
+					BindingFlags.NonPublic, null, new Type[] { typeof(Type), typeof(string),
+					typeof(Action<object>) }, null);
+				// Forward call to that version
+				if (method != null)
+					method.Invoke(null, new object[] { optionsType, title, onClose });
+				else {
+					PUtil.LogWarning("No call to show options dialog found!");
+					ShowDialog(optionsType, title, onClose);
+				}
+			} catch (AmbiguousMatchException e) {
+				PUtil.LogException(e);
+			}
+#endif
 		}
 
 		/// <summary>
