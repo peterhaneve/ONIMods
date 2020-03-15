@@ -39,7 +39,7 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		internal static string BackupConfigPath {
 			get {
-				return Path.Combine(Manager.GetDirectory(), POptions.CONFIG_FILE_NAME);
+				return Path.Combine(Manager.GetDirectory(), "modUpdaterConfig.json");
 			}
 		}
 

@@ -181,8 +181,8 @@ namespace PeterHan.ModUpdateDate {
 				new PButton("UpdateAll") {
 					Margin = BUTTON_MARGIN, SpriteSize = ICON_SIZE, Text = n.ToString(),
 					MaintainSpriteAspect = true, Color = COLOR_OUTDATED, IconSpacing = 4,
-					ToolTip = string.Format(ModUpdateDateStrings.MOD_UPDATE_ALL, n, n == 1 ?
-					"" : ModUpdateDateStrings.PLURAL.text),
+					ToolTip = string.Format(n == 1 ? ModUpdateDateStrings.MOD_UPDATE_1 :
+					ModUpdateDateStrings.MOD_UPDATE_ALL, n),
 					OnClick = new ModUpdateTask(outdated).TryUpdateMods,
 					Sprite = PUITuning.Images.GetSpriteByName("iconWarning"),
 				}.AddTo(parent, 0);
@@ -254,7 +254,10 @@ namespace PeterHan.ModUpdateDate {
 		private void BackupOurConfig() {
 			// Path to our config
 			try {
-				File.Copy(ExtensionMethods.ConfigPath, ExtensionMethods.BackupConfigPath, true);
+				var backup = ExtensionMethods.BackupConfigPath;
+				File.Copy(ExtensionMethods.ConfigPath, backup, true);
+				PUtil.LogDebug("Mod Updater self updating, backing up config file to {0}".F(
+					backup));
 			} catch (IOException) {
 				// I wish for multi catch
 				PUtil.LogWarning("Unable to back up configuration for Mod Updater; some mods may have the wrong status after restart");

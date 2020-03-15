@@ -86,10 +86,9 @@ namespace PeterHan.ModUpdateDate {
 				// Success!
 				int configs = result.ConfigsRestored;
 				if (configs > 0)
-					resultText.AppendFormat(ModUpdateDateStrings.UPDATE_OK_CONFIG, title,
-						configs, configs > 1 ? ModUpdateDateStrings.PLURAL.text : "");
-				else
-					resultText.AppendFormat(ModUpdateDateStrings.UPDATE_OK, title);
+					resultText.AppendFormat(configs == 1 ? ModUpdateDateStrings.
+						UPDATE_OK_CONFIG : ModUpdateDateStrings.UPDATE_OK_CONFIG_1, title,
+						configs);
 				break;
 			case ModDownloadStatus.NoSteamFile:
 				// Steam data not found
@@ -138,7 +137,8 @@ namespace PeterHan.ModUpdateDate {
 					n++;
 					// (and N more...)
 					if (n >= ModUpdateDateStrings.MAX_LINES) {
-						modList.AppendFormat(ModUpdateDateStrings.CONFIRM_MORE, Mods.Count - n);
+						modList.AppendFormat(ModUpdateDateStrings.CONFIRM_MORE, Mods.Count -
+							n);
 						break;
 					}
 				}
@@ -164,27 +164,42 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		internal void OnComplete() {
 			bool errors = false, configFail = false;
-			int updated = 0, n = 0;
+			int updated = 0, nominal = 0, n = 0;
 			var resultText = new StringBuilder(512);
 			resultText.Append(ModUpdateDateStrings.UPDATE_HEADER);
 			Results.Sort();
 			foreach (var result in Results) {
 				// Update cumulative status
-				if (result.Status != ModDownloadStatus.ConfigError && result.Status !=
-						ModDownloadStatus.OK)
-					errors = true;
-				else
-					updated++;
-				if (result.Status == ModDownloadStatus.ConfigError)
+				if (result.Status == ModDownloadStatus.ConfigError) {
 					configFail = true;
-				// Only add the maximum number of lines
-				if (n < ModUpdateDateStrings.MAX_LINES)
-					AddText(resultText, result);
-				else if (n == ModUpdateDateStrings.MAX_LINES)
-					// (and N more...)
-					resultText.AppendFormat(ModUpdateDateStrings.CONFIRM_MORE, Results.Count -
-						n);
-				n++;
+					updated++;
+				} else if (result.Status == ModDownloadStatus.OK)
+					updated++;
+				else
+					errors = true;
+				// Reduce clutter from no-config mods successfully updated
+				if (result.Status == ModDownloadStatus.OK && result.ConfigsRestored == 0)
+					nominal++;
+				else {
+					// Only add the maximum number of lines
+					if (n < ModUpdateDateStrings.MAX_LINES)
+						AddText(resultText, result);
+					n++;
+				}
+			}
+			if (n > ModUpdateDateStrings.MAX_LINES)
+				// (and N more...)
+				resultText.AppendFormat(ModUpdateDateStrings.CONFIRM_MORE, n -
+					ModUpdateDateStrings.MAX_LINES);
+			if (nominal > 0) {
+				if (Results.Count == 1)
+					// Specify mod that was updated with no errors
+					resultText.AppendFormat(ModUpdateDateStrings.UPDATE_SINGLE, Results[0].
+						Title);
+				else
+					// N other mod(s) were updated with no errors
+					resultText.AppendFormat(nominal == 1 ? ModUpdateDateStrings.UPDATE_REST_1 :
+						ModUpdateDateStrings.UPDATE_REST, nominal);
 			}
 			if (updated > 0)
 				// Success text
