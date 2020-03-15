@@ -18,79 +18,64 @@
 
 using KMod;
 using PeterHan.PLib;
-using PeterHan.PLib.UI;
 using Steamworks;
 using System;
-using System.Reflection;
-using UnityEngine;
 
 namespace PeterHan.ModUpdateDate {
 	/// <summary>
-	/// Stores the instance data for one mod update.
+	/// Contains details about a mod that will be updated by ModUpdateExecutor.
 	/// </summary>
-	internal sealed class ModUpdateExecutor {
+	public sealed class ModToUpdate {
 		/// <summary>
-		/// Caches a reference to the mActiveModifiers field of KInputController.
+		/// The path to download this mod.
 		/// </summary>
-		private static FieldInfo activeModifiers = typeof(KInputController).GetFieldSafe(
-			"mActiveModifiers", false);
+		public string DownloadPath { get; }
 
 		/// <summary>
-		/// The last update on the Steam Workshop.
+		/// The last update on the Steam Workshop in UTC.
 		/// </summary>
-		internal System.DateTime LastSteamUpdate { get; }
+		public System.DateTime LastSteamUpdate { get; }
 
 		/// <summary>
 		/// The Steam mod ID of this mod.
 		/// </summary>
-		internal PublishedFileId_t SteamID { get; }
+		public PublishedFileId_t SteamID { get; }
 
 		/// <summary>
 		/// The mod to update.
 		/// </summary>
-		private readonly Mod mod;
+		public Mod Mod { get; }
 
-		internal ModUpdateExecutor(Mod mod) {
-			this.mod = mod ?? throw new ArgumentNullException("mod");
+		/// <summary>
+		/// The title of the updated mod.
+		/// </summary>
+		public string Title {
+			get {
+				return Mod.label.title;
+			}
+		}
+
+		public ModToUpdate(Mod mod) {
+			Mod = mod ?? throw new ArgumentNullException("mod");
 			if (mod.label.distribution_platform != Label.DistributionPlatform.Steam)
 				throw new ArgumentException("Only Steam mods can be updated by this class");
 			SteamID = mod.GetSteamModID();
 			if (!SteamID.GetGlobalLastModified(out System.DateTime steamLastUpdate))
 				steamLastUpdate = System.DateTime.MinValue;
 			LastSteamUpdate = steamLastUpdate;
+			DownloadPath = SteamID.m_PublishedFileId.GetDownloadPath();
 		}
 
-		/// <summary>
-		/// Shows a confirmation dialog to force update the specified mod.
-		/// </summary>
-		internal void TryUpdateMod(GameObject _) {
-			var controller = Global.Instance.GetInputManager()?.GetDefaultController();
-			// Check for SHIFT - bypass dialog
-			if (activeModifiers != null && (activeModifiers.GetValue(controller) is Modifier
-					modifier) && modifier == Modifier.Shift)
-				UpdateMod();
-			else
-				PUIElements.ShowConfirmDialog(null, string.Format(ModUpdateDateStrings.
-					CONFIG_WARNING, mod.label.title), UpdateMod, null,
-					ModUpdateDateStrings.UPDATE_CONTINUE, ModUpdateDateStrings.
-					UPDATE_CANCEL);
+		public override bool Equals(object obj) {
+			return obj is ModToUpdate other && other.Mod.label.Match(Mod.label);
 		}
 
-		/// <summary>
-		/// Force updates the specified mod.
-		/// </summary>
-		internal void UpdateMod() {
-			var label = mod.label;
-			if (ModUpdateDetails.Details.TryGetValue(SteamID.m_PublishedFileId,
-					out SteamUGCDetails_t details))
-				ModUpdateHandler.Instance.StartModUpdate(mod, details, LastSteamUpdate);
-			else
-				// Uninstalled?
-				PUtil.LogWarning("Unable to find details for mod: " + label.title);
+		public override int GetHashCode() {
+			return Mod.label.id.GetHashCode();
 		}
 
 		public override string ToString() {
-			return mod.label.title;
+			return "ModToUpdate[id={0},title={1}]".F(Mod.label.id, Mod.label.title);
 		}
 	}
 }

@@ -119,8 +119,7 @@ namespace PeterHan.PLib.UI.Layouts {
 			float aMin = min.FromAnchor, aMax = max.FromAnchor, result;
 			if (aMax > aMin)
 				// "Elbow room" method
-				result = (effective + min.Offset - max.Offset) /
-					(aMax - aMin);
+				result = (effective + min.Offset - max.Offset) / (aMax - aMin);
 			else {
 				// Anchors are together
 				float oMin = min.Offset, oMax = max.Offset;
@@ -219,8 +218,7 @@ namespace PeterHan.PLib.UI.Layouts {
 		internal static float GetMinSizeX(this IEnumerable<RelativeLayoutResults> children) {
 			float maxWidth = 0.0f;
 			foreach (var child in children) {
-				float width = ElbowRoom(child.LeftEdge, child.RightEdge, child.
-					EffectiveWidth);
+				float width = ElbowRoom(child.LeftEdge, child.RightEdge, child.EffectiveWidth);
 				if (width > maxWidth) maxWidth = width;
 			}
 			return maxWidth;

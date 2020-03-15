@@ -336,7 +336,7 @@ namespace PeterHan.PLib.UI {
 				System.Action onConfirm, System.Action onCancel = null,
 				string confirmText = null, string cancelText = null) {
 			if (parent == null)
-				parent = FrontEndManager.Instance.gameObject;
+				parent = PDialog.GetParentObject();
 			var obj = Util.KInstantiateUI(ScreenPrefabs.Instance.ConfirmDialogScreen.
 				gameObject, parent, false);
 			var confirmDialog = obj.GetComponent<ConfirmDialogScreen>();

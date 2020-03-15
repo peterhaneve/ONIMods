@@ -64,6 +64,34 @@ namespace PeterHan.ModUpdateDate {
 		}
 
 		/// <summary>
+		/// Scrubs the config of mods that Steam got around to actually updating.
+		/// </summary>
+		private static void DoScrubConfig() {
+			var settings = ModUpdateInfo.Settings;
+			var existing = settings?.ModUpdates;
+			var manager = Global.Instance.modManager;
+			if (existing != null && manager != null) {
+				// Anything that is up to date gets purged
+				var remove = HashSetPool<ModUpdateData, ModUpdateHandler>.Allocate();
+				foreach (var info in existing) {
+					ulong id = info.ID;
+					if (CheckMod(manager, id))
+						remove.Add(info);
+					if (info.Status == ModUpdateStatus.PendingUpdate) {
+						// Purge the temporary zip
+						ExtensionMethods.RemoveOldDownload(id.GetDownloadPath());
+						info.Status = ModUpdateStatus.UpdatedByThisMod;
+					}
+				}
+				// Remove the obsolete entries
+				foreach (var info in remove)
+					existing.Remove(info);
+				remove.Recycle();
+				POptions.WriteSettingsForAssembly(settings);
+			}
+		}
+
+		/// <summary>
 		/// Called when the Steam service updates the installed mods.
 		/// </summary>
 		/// <param name="updated">The mods that Steam just updated details.</param>
@@ -86,28 +114,7 @@ namespace PeterHan.ModUpdateDate {
 		internal static void ScrubConfig() {
 			lock (Details) {
 				if (scrubRequired) {
-					var settings = ModUpdateInfo.Settings;
-					var existing = settings?.ModUpdates;
-					var manager = Global.Instance.modManager;
-					if (existing != null && manager != null) {
-						// Anything that is up to date gets purged
-						var remove = HashSetPool<ModUpdateData, ModUpdateHandler>.Allocate();
-						foreach (var info in existing) {
-							ulong id = info.ID;
-							if (CheckMod(manager, id))
-								remove.Add(info);
-							if (info.Status == ModUpdateStatus.PendingUpdate) {
-								// Purge the zip
-								ExtensionMethods.RemoveOldDownload(id);
-								info.Status = ModUpdateStatus.UpdatedByThisMod;
-							}
-						}
-						// Remove the obsolete entries
-						foreach (var info in remove)
-							existing.Remove(info);
-						remove.Recycle();
-						POptions.WriteSettingsForAssembly(settings);
-					}
+					DoScrubConfig();
 				}
 				scrubRequired = false;
 			}

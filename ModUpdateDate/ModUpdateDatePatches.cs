@@ -21,8 +21,10 @@ using KMod;
 using PeterHan.PLib;
 using PeterHan.PLib.Datafiles;
 using PeterHan.PLib.Options;
+using PeterHan.PLib.UI;
 using Steamworks;
 using System.Collections.Generic;
+using System.IO;
 
 namespace PeterHan.ModUpdateDate {
 	/// <summary>
@@ -48,6 +50,19 @@ namespace PeterHan.ModUpdateDate {
 			PUtil.InitLibrary();
 			POptions.RegisterOptions(typeof(ModUpdateInfo));
 			PLocalization.Register();
+			// Try to read the backup config first
+			string backupPath = ExtensionMethods.BackupConfigPath;
+			if (File.Exists(backupPath))
+				try {
+					// Copy and overwrite our config if possible
+					File.Copy(backupPath, ExtensionMethods.ConfigPath, true);
+					File.Delete(backupPath);
+					PUtil.LogDebug("Restored configuration settings after self-update");
+				} catch (IOException) {
+					PUtil.LogWarning("Unable to restore configuration for Mod Updater");
+				} catch (System.UnauthorizedAccessException) {
+					PUtil.LogWarning("Unable to restore configuration for Mod Updater");
+				}
 			ModUpdateInfo.LoadSettings();
 			// Find our mod
 			foreach (var mod in Global.Instance.modManager?.mods)
@@ -83,11 +98,17 @@ namespace PeterHan.ModUpdateDate {
 			/// <summary>
 			/// Applied after BuildDisplay runs.
 			/// </summary>
-			internal static void Postfix(object ___displayedMods) {
-				if (___displayedMods != null)
-					// Must cast the type because ModsScreen.DisplayedMod is private
-					foreach (var displayedMod in (System.Collections.IEnumerable)___displayedMods)
-						ModUpdateHandler.AddModUpdateButton(Traverse.Create(displayedMod));
+			internal static void Postfix(KButton ___closeButton, object ___displayedMods) {
+				// Must cast the type because ModsScreen.DisplayedMod is private
+				if (___displayedMods is System.Collections.IEnumerable mods) {
+					var outdated = new List<ModToUpdate>(16);
+					foreach (var displayedMod in mods)
+						ModUpdateHandler.AddModUpdateButton(outdated, Traverse.Create(
+							displayedMod));
+					if (outdated.Count > 0 && ___closeButton != null)
+						ModUpdateHandler.AddUpdateAll(___closeButton.gameObject.GetParent(),
+							outdated);
+				}
 			}
 		}
 

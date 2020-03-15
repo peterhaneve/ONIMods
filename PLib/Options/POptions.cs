@@ -110,6 +110,28 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
+		/// Retrieves the configuration file path used by PLib Options for a specified type.
+		/// </summary>
+		/// <param name="optionsType">The options type stored in the config file.</param>
+		/// <returns>The path to the configuration file that will be used by PLib for that
+		/// mod's config.</returns>
+		public static string GetConfigFilePath(Type optionsType) {
+			return GetConfigPath(GetConfigFileAttribute(optionsType), optionsType.Assembly);
+		}
+
+		/// <summary>
+		/// Retrieves the configuration file path used by PLib Options for a specified type.
+		/// </summary>
+		/// <param name="attr">The config file attribute for that type.</param>
+		/// <param name="modAssembly">The assembly to use for determining the path.</param>
+		/// <returns>The path to the configuration file that will be used by PLib for that
+		/// mod's config.</returns>
+		private static string GetConfigPath(ConfigFileAttribute attr, Assembly modAssembly) {
+			return Path.Combine(GetModDir(modAssembly), attr?.ConfigFileName ??
+				CONFIG_FILE_NAME);
+		}
+
+		/// <summary>
 		/// Retrieves the information attribute a mod config.
 		/// </summary>
 		/// <param name="optionsType">The type potentially containing the mod info attribute.</param>
@@ -241,8 +263,7 @@ namespace PeterHan.PLib.Options {
 		/// <returns>The settings read, or null if they could not be read (e.g. newly installed).</returns>
 		internal static T ReadSettings<T>(Assembly assembly) where T : class {
 			var type = typeof(T);
-			string file = GetConfigFileAttribute(type)?.ConfigFileName;
-			return ReadSettings(Path.Combine(GetModDir(assembly), file ?? CONFIG_FILE_NAME),
+			return ReadSettings(GetConfigPath(GetConfigFileAttribute(type), assembly),
 				type) as T;
 		}
 
@@ -293,7 +314,9 @@ namespace PeterHan.PLib.Options {
 		/// Shows a mod options dialog now, as if Options was used inside the Mods menu.
 		/// </summary>
 		/// <param name="optionsType">The type of the options to show. The mod to configure,
-		/// configuration directory, and so forth will be retrieved from the provided type.</param>
+		/// configuration directory, and so forth will be retrieved from the provided type.
+		/// This type can be a different type than the one registered by the mod for
+		/// RegisterOptions, but it must follow the same rules as those options types.</param>
 		/// <param name="title">The title to show in the dialog. If null, a default title
 		/// will be used.</param>
 		/// <param name="onClose">The method to call when the dialog is closed.</param>
@@ -357,9 +380,8 @@ namespace PeterHan.PLib.Options {
 		/// <param name="settings">The settings to write.</param>
 		internal static void WriteSettings<T>(T settings, Assembly assembly) where T : class {
 			var attr = GetConfigFileAttribute(typeof(T));
-			string file = attr?.ConfigFileName;
-			WriteSettings(settings, Path.Combine(GetModDir(assembly), file ??
-				CONFIG_FILE_NAME), attr?.IndentOutput ?? false);
+			WriteSettings(settings, GetConfigPath(attr, assembly), attr?.IndentOutput ??
+				false);
 		}
 
 		/// <summary>

@@ -170,11 +170,16 @@ namespace PeterHan.PLib.UI {
 		/// <returns>The computed size of this component when locked.</returns>
 		public Vector2 LockLayout() {
 			var rt = gameObject.rectTransform();
-			locked = false;
-			LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
-			rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, minWidth);
-			rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, minHeight);
-			locked = true;
+			if (rt != null) {
+				locked = false;
+				CalculateLayoutInputHorizontal();
+				rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, minWidth);
+				SetLayoutHorizontal();
+				CalculateLayoutInputVertical();
+				rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, minHeight);
+				SetLayoutVertical();
+				locked = true;
+			}
 			return new Vector2(minWidth, minHeight);
 		}
 
@@ -236,10 +241,8 @@ namespace PeterHan.PLib.UI {
 		/// Sets this layout as dirty.
 		/// </summary>
 		private void SetDirty() {
-			if (gameObject != null && IsActive() && !locked) {
+			if (gameObject != null && IsActive() && !locked)
 				LayoutRebuilder.MarkLayoutForRebuild(gameObject.rectTransform());
-				results.Clear();
-			}
 		}
 
 		/// <summary>

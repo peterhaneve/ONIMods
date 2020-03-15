@@ -18,10 +18,10 @@
 
 using KMod;
 using PeterHan.PLib;
+using PeterHan.PLib.Options;
 using Steamworks;
 using System;
 using System.IO;
-using System.Reflection;
 
 namespace PeterHan.ModUpdateDate {
 	/// <summary>
@@ -33,6 +33,24 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		private static readonly System.DateTime UNIX_EPOCH = new System.DateTime(1970, 1, 1,
 			0, 0, 0, DateTimeKind.Utc);
+
+		/// <summary>
+		/// Gets the path to the backup copy of this mod's config.
+		/// </summary>
+		internal static string BackupConfigPath {
+			get {
+				return Path.Combine(Manager.GetDirectory(), POptions.CONFIG_FILE_NAME);
+			}
+		}
+
+		/// <summary>
+		/// Gets the path to this mod's config.
+		/// </summary>
+		internal static string ConfigPath {
+			get {
+				return POptions.GetConfigFilePath(typeof(ModUpdateInfo));
+			}
+		}
 
 		/// <summary>
 		/// Finds a Steam mod by its ID (published file ID).
@@ -61,12 +79,12 @@ namespace PeterHan.ModUpdateDate {
 		/// <param name="id">The Steam mod ID.</param>
 		/// <param name="temp">true for the temporary location, or false for the real one.</param>
 		/// <returns>The path where its temporary download will be stored.</returns>
-		internal static string GetDownloadPath(ulong id, bool temp = false) {
+		internal static string GetDownloadPath(this ulong id, bool temp = false) {
 			return Path.Combine(Manager.GetDirectory(), id + (temp ? ".tmp" : ".zip"));
 		}
 
 		/// <summary>
-		/// Gets the last modified date of a mod's local files.
+		/// Gets the last modified date of a mod's local files. The time is returned in UTC.
 		/// </summary>
 		/// <param name="mod">The mod to check.</param>
 		/// <returns>The date and time of its last modification.</returns>
@@ -79,7 +97,7 @@ namespace PeterHan.ModUpdateDate {
 				// 260 = MAX_PATH
 				if (SteamUGC.GetItemInstallInfo(mod.GetSteamModID(), out _,
 						out string _, 260U, out uint timestamp) && timestamp > 0U)
-					result = ((ulong)timestamp).UnixEpochToDateTime();
+					result = UnixEpochToDateTime(timestamp);
 				else
 					PUtil.LogWarning("Unable to get Steam install information for " +
 						label.title);
@@ -108,7 +126,7 @@ namespace PeterHan.ModUpdateDate {
 			if (steamMod != null) {
 				ulong ticks = steamMod.lastUpdateTime;
 				result = true;
-				when = (ticks == 0U) ? System.DateTime.MinValue : ticks.UnixEpochToDateTime();
+				when = (ticks == 0U) ? System.DateTime.MinValue : UnixEpochToDateTime(ticks);
 			} else
 				// Mod was not found
 				when = System.DateTime.UtcNow;
@@ -131,14 +149,14 @@ namespace PeterHan.ModUpdateDate {
 		/// <summary>
 		/// Removes old downloaded copies of a mod.
 		/// </summary>
-		/// <param name="id">The Steam mod ID.</param>
-		internal static void RemoveOldDownload(ulong id) {
+		/// <param name="path">The path to the file to remove.</param>
+		internal static void RemoveOldDownload(string path) {
 			try {
-				File.Delete(GetDownloadPath(id));
+				File.Delete(path);
 			} catch (IOException) {
-				PUtil.LogWarning("Unable to clean temporary download for mod ID {0:D}".F(id));
+				PUtil.LogWarning("Unable to clean temporary download {0}".F(path));
 			} catch (UnauthorizedAccessException) {
-				PUtil.LogWarning("Unable to access temporary download for mod ID {0:D}".F(id));
+				PUtil.LogWarning("Unable to access temporary download {0}".F(path));
 			}
 		}
 
@@ -147,7 +165,7 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		/// <param name="timeSeconds">The timestamp since the epoch.</param>
 		/// <returns>The UTC date and time that it represents.</returns>
-		internal static System.DateTime UnixEpochToDateTime(this ulong timeSeconds) {
+		private static System.DateTime UnixEpochToDateTime(ulong timeSeconds) {
 			return UNIX_EPOCH.AddSeconds(timeSeconds);
 		}
 	}

@@ -47,6 +47,27 @@ namespace PeterHan.PLib.UI {
 		public const string DIALOG_KEY_CLOSE = "close";
 
 		/// <summary>
+		/// Returns a suitable parent object for a dialog.
+		/// </summary>
+		/// <returns>A game object that can be used as a dialog parent depending on the game
+		/// stage, or null if none is available.</returns>
+		public static GameObject GetParentObject() {
+			GameObject parent = null;
+			var fi = FrontEndManager.Instance;
+			if (fi != null)
+				parent = fi.gameObject;
+			else {
+				// Grr unity
+				var gi = GameScreenManager.Instance;
+				if (gi != null)
+					parent = gi.ssOverlayCanvas;
+				else
+					PUIUtils.LogUIWarning("No dialog parent found!");
+			}
+			return parent;
+		}
+
+		/// <summary>
 		/// Rounds the size up to the nearest even integer.
 		/// </summary>
 		/// <param name="size">The current size.</param>
@@ -133,17 +154,7 @@ namespace PeterHan.PLib.UI {
 			MaxSize = Vector2.zero;
 			Name = name ?? "Dialog";
 			// First try the front end manager (menu), then the in-game (game)
-			GameObject parent = null;
-			var fi = FrontEndManager.Instance;
-			if (fi != null)
-				parent = fi.gameObject;
-			else {
-				// Grr unity
-				var gi = GameScreenManager.Instance;
-				if (gi != null)
-					parent = gi.ssOverlayCanvas;
-			}
-			Parent = parent;
+			Parent = GetParentObject();
 			RoundToNearestEven = false;
 			Size = Vector2.zero;
 			SortKey = 0.0f;
