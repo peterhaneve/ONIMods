@@ -104,6 +104,11 @@ namespace PeterHan.PLib.UI {
 				Open();
 		}
 
+		protected override void OnPrefabInit() {
+			base.OnPrefabInit();
+			handler = gameObject.AddOrGet<MouseEventHandler>();
+		}
+
 		/// <summary>
 		/// Opens the pulldown.
 		/// </summary>
@@ -151,7 +156,6 @@ namespace PeterHan.PLib.UI {
 				for (int i = 0; i < n; i++)
 					Destroy(content.GetChild(i));
 				currentItems.Clear();
-				handler = pdn.AddOrGet<MouseEventHandler>();
 				foreach (var item in items) {
 					string tooltip = "";
 					var rowInstance = Util.KInstantiate(prefab, content.gameObject);

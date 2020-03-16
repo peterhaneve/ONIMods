@@ -24,11 +24,15 @@ namespace PeterHan.DebugNotIncluded {
 	/// <summary>
 	/// The options class used for Debug Not Included.
 	/// </summary>
-	[ModInfo("Debug Not Included", "https://github.com/peterhaneve/ONIMods", "preview.png")]
+	[ModInfo("Debug Not Included", "https://github.com/peterhaneve/ONIMods", "preview.png", true)]
 	[JsonObject(MemberSerialization.OptIn)]
 	[RestartRequired]
 	public sealed class DebugNotIncludedOptions : POptions.SingletonOptions<
 			DebugNotIncludedOptions> {
+		[Option("Debug Not Included is a debug mod intended for mod developers.\n" +
+			"Most users should <b>only use this mod if directed</b> by a mod owner to generate better logs.\n")]
+		public LocText Description => null;
+
 		[Option("Extended Features", "Enables extra features of this mod.", "Quality of Life")]
 		[JsonProperty]
 		public bool PowerUserMode { get; set; }

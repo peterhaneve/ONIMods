@@ -82,7 +82,8 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
-		/// The dialog body panel.
+		/// The dialog body panel. To add custom components to the dialog, use AddChild on
+		/// this panel. Its direction, margin, and spacing can also be customized.
 		/// </summary>
 		public PPanel Body { get; }
 

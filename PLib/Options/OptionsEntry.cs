@@ -32,7 +32,7 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// The margins around the control used in each entry.
 		/// </summary>
-		private static readonly RectOffset CONTROL_MARGIN = new RectOffset(0, 0, 2, 2);
+		protected static readonly RectOffset CONTROL_MARGIN = new RectOffset(0, 0, 2, 2);
 
 		/// <summary>
 		/// The margins around the label for each entry.
@@ -88,6 +88,11 @@ namespace PeterHan.PLib.Options {
 				entry = new FloatOptionsEntry(oa, info);
 			else if (type == typeof(string))
 				entry = new StringOptionsEntry(oa, info);
+			else if (type == typeof(System.Action))
+				// Should not actually be serialized to the JSON
+				entry = new ButtonOptionsEntry(oa, info);
+			else if (type == typeof(LocText))
+				entry = new TextBlockOptionsEntry(oa, info);
 			return entry;
 		}
 
@@ -175,7 +180,7 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <param name="parent">The location to add this entry.</param>
 		/// <param name="row">The layout row index to use.</param>
-		internal void CreateUIEntry(PGridPanel parent, int row) {
+		internal virtual void CreateUIEntry(PGridPanel parent, int row) {
 			parent.AddChild(new PLabel("Label") {
 				Text = LookInStrings(Title), ToolTip = LookInStrings(ToolTip),
 				TextStyle = PUITuning.Fonts.TextLightStyle
@@ -202,7 +207,7 @@ namespace PeterHan.PLib.Options {
 		internal void ReadFrom(object settings) {
 			try {
 				var prop = settings.GetType().GetProperty(Field);
-				if (prop != null)
+				if (prop != null && prop.CanRead)
 					Value = prop.GetValue(settings, null);
 			} catch (TargetInvocationException e) {
 				// Other mod's error
@@ -211,7 +216,7 @@ namespace PeterHan.PLib.Options {
 				// Other mod's error
 				PUtil.LogException(e);
 			} catch (InvalidCastException e) {
-				// Our errror!
+				// Our error!
 				PUtil.LogException(e);
 			}
 		}
@@ -227,7 +232,7 @@ namespace PeterHan.PLib.Options {
 		internal void WriteTo(object settings) {
 			try {
 				var prop = settings.GetType().GetProperty(Field);
-				if (prop != null)
+				if (prop != null && prop.CanWrite)
 					prop.SetValue(settings, Value, null);
 			} catch (TargetInvocationException e) {
 				// Other mod's error
@@ -236,7 +241,7 @@ namespace PeterHan.PLib.Options {
 				// Other mod's error
 				PUtil.LogException(e);
 			} catch (InvalidCastException e) {
-				// Our errror!
+				// Our error!
 				PUtil.LogException(e);
 			}
 		}

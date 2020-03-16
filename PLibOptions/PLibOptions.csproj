@@ -20,6 +20,7 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
     <DocumentationFile>bin\Release\PLibOptions.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\PLib\Options\ButtonOptionsEntry.cs" Link="ButtonOptionsEntry.cs" />
     <Compile Include="..\PLib\Options\CheckboxOptionsEntry.cs" Link="CheckboxOptionsEntry.cs" />
     <Compile Include="..\PLib\Options\ConfigFileAttribute.cs" Link="ConfigFileAttribute.cs" />
     <Compile Include="..\PLib\Options\FloatOptionsEntry.cs" Link="FloatOptionsEntry.cs" />
@@ -36,6 +37,7 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
     <Compile Include="..\PLib\Options\RuntimeOptionsHandler.cs" Link="RuntimeOptionsHandler.cs" />
     <Compile Include="..\PLib\Options\SelectOneOptionsEntry.cs" Link="SelectOneOptionsEntry.cs" />
     <Compile Include="..\PLib\Options\StringOptionsEntry.cs" Link="StringOptionsEntry.cs" />
+    <Compile Include="..\PLib\Options\TextBlockOptionsEntry.cs" Link="TextBlockOptionsEntry.cs" />
     <Compile Include="..\PLib\UI\IDynamicSizable.cs" Link="UI\IDynamicSizable.cs" />
     <Compile Include="..\PLib\UI\ImageTransform.cs" Link="UI\ImageTransform.cs" />
     <Compile Include="..\PLib\UI\ISettableFlexSize.cs" Link="UI\ISettableFlexSize.cs" />

@@ -49,17 +49,6 @@ namespace PeterHan.ModUpdateDate {
 		private const long MAX_SIZE_PER_FILE = 100 * 1024;
 
 		/// <summary>
-		/// Closes the stream.
-		/// </summary>
-		/// <param name="stream">The stream to close.</param>
-		private static void CloseStream(string _, Stream stream) {
-			try {
-				stream.Close();
-				// Ignore exceptions when closing
-			} catch (IOException) { }
-		}
-
-		/// <summary>
 		/// The mod folder to backup.
 		/// </summary>
 		private readonly string modFolder;
@@ -111,8 +100,7 @@ namespace PeterHan.ModUpdateDate {
 #if DEBUG
 				PUtil.LogDebug("ConfigBackupUtility add existing file " + entry.FileName);
 #endif
-				dst.AddEntry(entry.FileName, (name) => src[name].OpenReader(),
-					CloseStream);
+				dst.AddEntry(entry.FileName, (name, stream) => src[name].Extract(stream));
 			}
 			foreach (var pair in toAdd) {
 				// Avoid capturing the wrong pair value
@@ -161,7 +149,7 @@ namespace PeterHan.ModUpdateDate {
 						CopyFiles(src, dst, toCopy, toAdd);
 						dst.Save();
 						copied = toAdd.Count;
-						PUtil.LogDebug("Config backup for {0} copied {1:D} files!".F(modFolder,
+						PUtil.LogDebug("Config backup for {0} copied {1:D} files".F(modFolder,
 							copied));
 					}
 				}
