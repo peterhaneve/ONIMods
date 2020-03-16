@@ -262,25 +262,10 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
-		/// Applied to DebugUtil to log exceptions more cleanly.
-		/// </summary>
-		[HarmonyPatch(typeof(DebugUtil), "LogException")]
-		public static class DebugUtil_LogException_Patch {
-			/// <summary>
-			/// Applied before LogException runs.
-			/// </summary>
-			internal static bool Prefix(Exception e, string errorMessage) {
-				DebugLogger.LogError(errorMessage);
-				DebugLogger.LogException(e);
-				return false;
-			}
-		}
-
-		/// <summary>
 		/// Applied to Debug to log which methods are actually sending log messages.
 		/// </summary>
 		[HarmonyPatch(typeof(Debug), "TimeStamp")]
-		public static class DebugUtil_TimeStamp_Patch {
+		public static class Debug_TimeStamp_Patch {
 			internal static bool Prepare() {
 				return DebugNotIncludedOptions.Instance?.ShowLogSenders ?? false;
 			}
@@ -297,6 +282,21 @@ namespace PeterHan.DebugNotIncluded {
 				 */
 				__result = DebugLogger.AddCallingLocation(__result, new System.Diagnostics.
 					StackTrace(4));
+			}
+		}
+
+		/// <summary>
+		/// Applied to DebugUtil to log exceptions more cleanly.
+		/// </summary>
+		[HarmonyPatch(typeof(DebugUtil), "LogException")]
+		public static class DebugUtil_LogException_Patch {
+			/// <summary>
+			/// Applied before LogException runs.
+			/// </summary>
+			internal static bool Prefix(Exception e, string errorMessage) {
+				DebugLogger.LogError(errorMessage);
+				DebugLogger.LogException(e);
+				return false;
 			}
 		}
 

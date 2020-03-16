@@ -54,14 +54,22 @@ namespace PeterHan.DebugNotIncluded {
 					// Valid method?
 					if (method != null) {
 						var type = method.DeclaringType;
-						string typeName = type.Name, mName = method.Name;
+						string typeName = type.Name, methodName = method.Name;
 						// Do not add info to messages from this mod
 						if (type == typeof(DebugLogger)) break;
 						if ((typeName != nameof(PLib.PUtil) && type != typeof(DebugUtil)) ||
-								!mName.StartsWith("Log")) {
+								!methodName.StartsWith("Log")) {
+							var declaring = type.DeclaringType;
+							// Remove compiler generated delegate classes
+							if (typeName.StartsWith("<>") && declaring != null)
+								typeName = declaring.Name;
+							// Strip the patch suffix
+							int index = methodName.IndexOf("_Patch");
+							if (index > 0)
+								methodName = methodName.Substring(0, index);
 							// Found the caller
 							message = string.Format("[{0}] [{2}.{3}|{1:D}] ", GetTimeStamp(),
-								Thread.CurrentThread.ManagedThreadId, typeName, mName);
+								Thread.CurrentThread.ManagedThreadId, typeName, methodName);
 							break;
 						}
 					}
@@ -185,7 +193,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		/// <returns>The UTC time formatted as a time stamp.</returns>
 		internal static string GetTimeStamp() {
-			return System.DateTime.Now.ToString("HH:mm:ss.fff");
+			return System.DateTime.UtcNow.ToString("HH:mm:ss.fff");
 		}
 
 		/// <summary>

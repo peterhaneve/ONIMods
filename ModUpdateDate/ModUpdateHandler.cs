@@ -105,7 +105,8 @@ namespace PeterHan.ModUpdateDate {
 					if (updated == ModStatus.Outdated)
 						outdated.Add(modUpdate);
 				} else
-					tooltip.AppendFormat(ModUpdateDateStrings.LOCAL_UPDATE, localDate);
+					tooltip.AppendFormat(ModUpdateDateStrings.LOCAL_UPDATE, localDate.
+						ToLocalTime());
 				// Icon, color, and tooltip
 				updButton.Sprite = (updated == ModStatus.UpToDate || updated == ModStatus.
 					Disabled) ? PUITuning.Images.Checked : PUITuning.Images.GetSpriteByName(
