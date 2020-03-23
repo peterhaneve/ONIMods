@@ -69,6 +69,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AirlockDoor", "AirlockDoor\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModUpdateDate", "ModUpdateDate\ModUpdateDate.csproj", "{650A16F4-9A85-446B-B46A-2811715D4C6D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToastControl", "ToastControl\ToastControl.csproj", "{9F1CA3AB-F409-4F09-BC3B-D026A6E9FBDB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -207,6 +209,10 @@ Global
 		{650A16F4-9A85-446B-B46A-2811715D4C6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{650A16F4-9A85-446B-B46A-2811715D4C6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{650A16F4-9A85-446B-B46A-2811715D4C6D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F1CA3AB-F409-4F09-BC3B-D026A6E9FBDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F1CA3AB-F409-4F09-BC3B-D026A6E9FBDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F1CA3AB-F409-4F09-BC3B-D026A6E9FBDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F1CA3AB-F409-4F09-BC3B-D026A6E9FBDB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -123,8 +123,10 @@ namespace PeterHan.PLib.UI.Layouts {
 			else {
 				// Anchors are together
 				float oMin = min.Offset, oMax = max.Offset;
-				if (oMin == oMax)
-					oMin = oMax = effective * 0.5f;
+				if (oMin == oMax) {
+					oMin = -effective * 0.5f;
+					oMax = effective * 0.5f;
+				}
 				if (oMin < 0.0f)
 					oMin /= -Math.Max(MIN_SIZE_RATIO, aMax);
 				else

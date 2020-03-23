@@ -53,7 +53,7 @@ namespace PeterHan.PLib.Options {
 		internal ButtonOptionsEntry(OptionAttribute oa, PropertyInfo prop) : base(prop?.Name,
 				oa) { }
 
-		internal override void CreateUIEntry(PGridPanel parent, int row) {
+		internal override void CreateUIEntry(PGridPanel parent, ref int row) {
 			parent.AddChild(new PButton(Field) {
 				Text = LookInStrings(Title), ToolTip = LookInStrings(ToolTip),
 				OnClick = OnButtonClicked

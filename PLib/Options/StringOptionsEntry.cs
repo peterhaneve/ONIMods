@@ -66,8 +66,9 @@ namespace PeterHan.PLib.Options {
 
 		protected override IUIComponent GetUIComponent() {
 			var cb = new PTextField() {
-				OnTextChanged = OnTextChanged, ToolTip = ToolTip, Text = value.ToString(),
-				MinWidth = 128, Type = PTextField.FieldType.Text, MaxLength = maxLength
+				OnTextChanged = OnTextChanged, ToolTip = LookInStrings(ToolTip),
+				Text = value.ToString(), MinWidth = 128, Type = PTextField.FieldType.Text,
+				MaxLength = maxLength
 			};
 			cb.OnRealize += OnRealizeTextField;
 			return cb;

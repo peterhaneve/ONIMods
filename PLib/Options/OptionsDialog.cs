@@ -48,6 +48,7 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		private static readonly int OUTER_MARGIN = 10;
 
+		/// <summary>
 		/// The default size of the Mod Settings dialog.
 		/// </summary>
 		private static readonly Vector2 SETTINGS_DIALOG_SIZE = new Vector2(320.0f, 200.0f);
@@ -324,7 +325,8 @@ namespace PeterHan.PLib.Options {
 					AddCategoryHeader(container, catEntries.Key, contents);
 					foreach (var entry in catEntries.Value) {
 						contents.AddRow(new GridRowSpec());
-						entry.CreateUIEntry(contents, i++);
+						entry.CreateUIEntry(contents, ref i);
+						i++;
 					}
 					scrollBody.AddChild(container);
 				}

@@ -32,13 +32,17 @@ namespace PeterHan.PLib.UI {
 	/// can function properly when frozen even on dynamically sized items. However, it is also
 	/// the most difficult to set up and cannot handle all layouts.
 	/// </summary>
-	public class PRelativePanel : PContainer {
+	public class PRelativePanel : PContainer, IDynamicSizable {
 		/// <summary>
 		/// Constraints for each object are stored here.
 		/// </summary>
 		private readonly IDictionary<IUIComponent, RelativeConfig> constraints;
 
-		public PRelativePanel() : this(null) { }
+		public bool DynamicSize { get; set; }
+
+		public PRelativePanel() : this(null) {
+			DynamicSize = true;
+		}
 
 		public PRelativePanel(string name) : base(name ?? "RelativePanel") {
 			constraints = new Dictionary<IUIComponent, RelativeConfig>(16);
@@ -121,6 +125,8 @@ namespace PeterHan.PLib.UI {
 				newParams.Insets = rawParams.Insets;
 				layout.SetRaw(realized, newParams);
 			}
+			if (!DynamicSize)
+				layout.LockLayout();
 			mapping.Recycle();
 			// Set flex size
 			layout.flexibleWidth = FlexSize.x;

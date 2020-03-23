@@ -23,9 +23,9 @@ using UnityEngine;
 
 namespace PeterHan.PLib.Options {
 	/// <summary>
-	/// An options entry which represents float and displays a text field.
+	/// An options entry which represents float and displays a text field and slider.
 	/// </summary>
-	internal sealed class FloatOptionsEntry : OptionsEntry {
+	internal sealed class FloatOptionsEntry : SlidingBaseOptionsEntry {
 		protected override object Value {
 			get {
 				return value;
@@ -39,11 +39,6 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
-		/// The limits allowed for the entry.
-		/// </summary>
-		private readonly LimitAttribute limits;
-
-		/// <summary>
 		/// The realized text field.
 		/// </summary>
 		private GameObject textField;
@@ -53,17 +48,24 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		private float value;
 
-		internal FloatOptionsEntry(OptionAttribute oa, PropertyInfo prop) : base(prop?.Name,
-				oa) {
+		internal FloatOptionsEntry(OptionAttribute oa, PropertyInfo prop) : base(oa, prop) {
 			textField = null;
 			value = 0.0f;
-			limits = FindLimitAttribute(prop);
+		}
+
+		protected override PSliderSingle GetSlider() {
+			return new PSliderSingle() {
+				OnValueChanged = OnSliderChanged, ToolTip = LookInStrings(ToolTip),
+				MinValue = (float)limits.Minimum, MaxValue = (float)limits.Maximum,
+				InitialValue = value
+			};
 		}
 
 		protected override IUIComponent GetUIComponent() {
 			var cb = new PTextField() {
-				OnTextChanged = OnTextChanged, ToolTip = ToolTip, Text = value.ToString(),
-				MinWidth = 64, MaxLength = 16, Type = PTextField.FieldType.Float
+				OnTextChanged = OnTextChanged, ToolTip = LookInStrings(ToolTip),
+				Text = value.ToString(), MinWidth = 64, MaxLength = 16,
+				Type = PTextField.FieldType.Float
 			};
 			cb.OnRealize += OnRealizeTextField;
 			return cb;
@@ -75,6 +77,19 @@ namespace PeterHan.PLib.Options {
 		/// <param name="realized">The actual text field.</param>
 		private void OnRealizeTextField(GameObject realized) {
 			textField = realized;
+			Update();
+		}
+
+		/// <summary>
+		/// Called when the slider's value is changed.
+		/// </summary>
+		/// <param name="newValue">The new slider value.</param>
+		private void OnSliderChanged(GameObject _, float newValue) {
+			// Record the value
+			if (limits != null)
+				value = limits.ClampToRange(newValue);
+			else
+				value = newValue;
 			Update();
 		}
 
@@ -95,10 +110,12 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// Updates the displayed value.
 		/// </summary>
-		private void Update() {
+		protected override void Update() {
 			var field = textField?.GetComponentInChildren<TMP_InputField>();
 			if (field != null)
 				field.text = value.ToString();
+			if (slider != null)
+				PSliderSingle.SetCurrentValue(slider, value);
 		}
 	}
 }

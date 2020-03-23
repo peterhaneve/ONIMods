@@ -18,6 +18,8 @@
 
 using Harmony;
 using PeterHan.PLib.Options;
+using System.Collections;
+using UnityEngine;
 
 namespace PLibOptions {
 	/// <summary>
@@ -32,8 +34,9 @@ namespace PLibOptions {
 			/// <summary>
 			/// Applied after BuildDisplay runs.
 			/// </summary>
-			internal static void Postfix(object ___displayedMods) {
-				POptions.BuildDisplay(___displayedMods);
+			internal static void Postfix(IEnumerable ___displayedMods, GameObject
+					___entryPrefab) {
+				POptions.BuildDisplay(___displayedMods, ___entryPrefab);
 			}
 		}
 	}

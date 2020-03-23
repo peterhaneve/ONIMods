@@ -57,7 +57,7 @@ namespace PeterHan.PLib.Options {
 					// Swap the check: checked and partial -> unchecked
 					check = state == PCheckBox.STATE_UNCHECKED;
 					Update();
-				}, ToolTip = ToolTip
+				}, ToolTip = LookInStrings(ToolTip)
 			}.SetKleiBlueStyle();
 			cb.OnRealize += OnRealizeCheckBox;
 			return cb;

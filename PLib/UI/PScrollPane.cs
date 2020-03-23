@@ -172,7 +172,7 @@ namespace PeterHan.PLib.UI {
 			hImg.type = Image.Type.Sliced;
 			sb.targetGraphic = hImg;
 			track.SetActive(true);
-			PUIElements.SetAnchorOffsets(track, 2.0f, 2.0f, -TrackSize - 1.0f, 1.0f);
+			PUIElements.SetAnchorOffsets(track, 2.0f, 2.0f, -TrackSize, 0.0f);
 			return sb;
 		}
 
@@ -204,7 +204,7 @@ namespace PeterHan.PLib.UI {
 			hImg.type = Image.Type.Sliced;
 			sb.targetGraphic = hImg;
 			track.SetActive(true);
-			PUIElements.SetAnchorOffsets(track, -TrackSize - 1.0f, 1.0f, 2.0f, 2.0f);
+			PUIElements.SetAnchorOffsets(track, -TrackSize, 0.0f, 2.0f, 2.0f);
 			return sb;
 		}
 

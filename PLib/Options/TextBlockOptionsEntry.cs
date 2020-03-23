@@ -61,7 +61,7 @@ namespace PeterHan.PLib.Options {
 		internal TextBlockOptionsEntry(OptionAttribute oa, PropertyInfo prop) : base(prop?.Name,
 				oa) { }
 
-		internal override void CreateUIEntry(PGridPanel parent, int row) {
+		internal override void CreateUIEntry(PGridPanel parent, ref int row) {
 			parent.AddChild(new PLabel(Field) {
 				Text = LookInStrings(Title), ToolTip = LookInStrings(ToolTip),
 				TextStyle = WRAP_TEXT_STYLE

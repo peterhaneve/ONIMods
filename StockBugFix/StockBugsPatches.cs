@@ -148,6 +148,7 @@ namespace PeterHan.StockBugFix {
 		/// Applied to FuelTank's property setter to properly update the chore when its
 		/// capacity is changed.
 		/// </summary>
+		[HarmonyPatch]
 		public static class FuelTank_Set_UserMaxCapacity_Patch {
 			/// <summary>
 			/// Determines the target method to patch.
@@ -170,6 +171,7 @@ namespace PeterHan.StockBugFix {
 		/// Applied to OxidizerTank's property setter to properly update the chore when its
 		/// capacity is changed.
 		/// </summary>
+		[HarmonyPatch]
 		public static class OxidizerTank_Set_UserMaxCapacity_Patch {
 			/// <summary>
 			/// Determines the target method to patch.
@@ -309,6 +311,41 @@ namespace PeterHan.StockBugFix {
 			}
 		}
 
+		/// <summary>
+		/// Applied to WorldInspector to fix the integer overflow error on huge masses.
+		/// </summary>
+		[HarmonyPatch(typeof(WorldInspector), "MassStringsReadOnly")]
+		public static class WorldInspector_MassStringsReadOnly_Patch {
+			/// <summary>
+			/// Applied after MassStringsReadOnly runs.
+			/// </summary>
+			internal static void Postfix(string[] __result, Element ___cachedElement,
+					float ___cachedMass) {
+				var id = ___cachedElement.id;
+				float mass = ___cachedMass;
+				if (id != SimHashes.Vacuum && id != SimHashes.Unobtanium) {
+					if (mass < 5.0f)
+						// kg => g
+						mass *= 1000.0f;
+					if (mass < 5.0f)
+						// g => mg
+						mass *= 1000.0f;
+					if (mass < 5.0f)
+						mass = Mathf.Floor(1000.0f * mass);
+					// Base game hardcodes dots so we will too
+					string formatted = mass.ToString("F1", System.Globalization.CultureInfo.
+						InvariantCulture);
+					int index = formatted.IndexOf('.');
+					if (index > 0) {
+						__result[0] = formatted.Substring(0, index);
+						__result[1] = formatted.Substring(index);
+					} else {
+						__result[0] = formatted;
+						__result[1] = "";
+					}
+				}
+			}
+		}
 #if false
 		/// <summary>
 		/// Applied to LaunchableRocket to not dupe materials when launched through a door.

@@ -97,6 +97,11 @@ namespace PeterHan.PLib.UI {
 			public static Sprite ScrollHandleVertical { get; }
 
 			/// <summary>
+			/// The handle of a horizontal slider.
+			/// </summary>
+			public static Sprite SliderHandle { get; }
+
+			/// <summary>
 			/// The sprite dictionary.
 			/// </summary>
 			private static readonly IDictionary<string, Sprite> SPRITES;
@@ -123,6 +128,7 @@ namespace PeterHan.PLib.UI {
 				ScrollHandleHorizontal = GetSpriteByName("build_menu_scrollbar_inner_horizontal");
 				ScrollBorderVertical = GetSpriteByName("build_menu_scrollbar_frame");
 				ScrollHandleVertical = GetSpriteByName("build_menu_scrollbar_inner");
+				SliderHandle = GetSpriteByName("game_speed_selected_med");
 			}
 
 			/// <summary>

@@ -252,6 +252,26 @@ namespace PeterHan.PLib.UI {
 			return rowPrefab;
 		}
 
+		/// <summary>
+		/// Sets the default Klei pink button style as this combo box's foreground color and text style.
+		/// </summary>
+		/// <returns>This button for call chaining.</returns>
+		public PComboBox<T> SetKleiPinkStyle() {
+			TextStyle = PUITuning.Fonts.UILightStyle;
+			BackColor = PUITuning.Colors.ButtonPinkStyle;
+			return this;
+		}
+
+		/// <summary>
+		/// Sets the default Klei blue button style as this combo box's foreground color and text style.
+		/// </summary>
+		/// <returns>This button for call chaining.</returns>
+		public PComboBox<T> SetKleiBlueStyle() {
+			TextStyle = PUITuning.Fonts.UILightStyle;
+			BackColor = PUITuning.Colors.ButtonBlueStyle;
+			return this;
+		}
+
 		public override string ToString() {
 			return "PComboBox[Name={0}]".F(Name);
 		}

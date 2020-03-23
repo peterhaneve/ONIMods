@@ -67,6 +67,8 @@ The image, if specified, will attempt to load a preview image (best size is 192x
 
 Fields must be a property, not a member, and should be annotated with `PLib.Option(string displaytext, [string tooltip=""])` to be visible in the mod config menu.
 Currently supported types are: `int`, `float`, `string`, `bool`, and `Enum`.
+If a property is a read-only `System.Action`, a button will be created that will execute the returned action if clicked.
+If a property is of type `LocText`, no matter what it returns, the text in `displaytext` will be displayed as a full-width label with no input field.
 If a valid localization string key name is used for `displaytext` (such as `STRINGS.YOURMOD.OPTIONS.YOUROPTION`), the localized value of that string from the strings database is used as the display text.
 
 #### Categories
@@ -142,7 +144,7 @@ Register lighting types by using `PLightShape.Register(string, CastLight)` in `O
 The identifier should be unique to the light pattern that will be registered.
 If multiple mods register the same lighting type identifier, all will receive a valid `PLightShape` object but only the first mod loaded will be used to render it.
 The returned `PLightShape` object has a `GetKLightShape` method which can be used to retrieve a `LightShape` that works in standard `Light2D` functions.
-The `CastLight` specifies a callback in your mod that can handle drawing the light. It needs the signature
+The `CastLight` specifies a callback in the mod that can handle drawing the light. It needs the signature
 ```c
 void CastLight(GameObject source, LightingArgs args);
 ```
@@ -165,12 +167,14 @@ The codex files will be loaded using the same structure as the base game: a `cod
 
 ### Side Screens
 
-Add your side screen class in a postfix patch on `DetailsScreen.OnPrefabInit` using `PUIUtils.AddSideScreenContent<T>()`.
+Add a side screen class in a postfix patch on `DetailsScreen.OnPrefabInit` using `PUIUtils.AddSideScreenContent<T>()`.
 The type parameter should be a custom class which extends `SideScreenContent`.
 The optional argument can be used to set an existing UI `GameObject` as the UI to be displayed, either created using PLib UI or custom creation.
 
-If the argument is `null`, create the UI in the **constructor** of the side screen content class, and use `AddTo(gameObject, 0)` on the root PPanel to add it to the side screen content.
+If the argument is `null`, create the UI in the `OnPrefabInit` of the side screen content class, and use `AddTo(gameObject, 0)` on the root PPanel to add it to the side screen content.
 A reference to the UI `GameObject` created by `AddTo` should also be stored in the `ContentContainer` property of the side screen content class.
+Note that `SetTarget` is called on the very first object selected *before* `OnPrefabInit` runs for the first time.
+Make sure that this case is handled in code, and that `OnPrefabInit` refreshes the UI after it is built to match the current target object.
 
 ### Other
 

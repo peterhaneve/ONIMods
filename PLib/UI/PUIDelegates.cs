@@ -59,6 +59,20 @@ namespace PeterHan.PLib.UI {
 		public delegate void OnRealize(GameObject realized);
 
 		/// <summary>
+		/// The delegate type invoked once after a slider is changed and released.
+		/// </summary>
+		/// <param name="source">The source slider.</param>
+		/// <param name="newValue">The new slider value.</param>
+		public delegate void OnSliderChanged(GameObject source, float newValue);
+
+		/// <summary>
+		/// The delegate type invoked while a slider is being changed.
+		/// </summary>
+		/// <param name="source">The source slider.</param>
+		/// <param name="newValue">The new slider value.</param>
+		public delegate void OnSliderDrag(GameObject source, float newValue);
+
+		/// <summary>
 		/// The delegate type invoked when text in a text field is changed.
 		/// </summary>
 		/// <param name="source">The source text field.</param>

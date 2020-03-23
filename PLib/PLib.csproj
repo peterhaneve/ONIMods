@@ -4,8 +4,8 @@
     <TargetFramework>net40</TargetFramework>
     <Title>PeterHan.PLib</Title>
       <AssemblyTitle>PeterHanLib</AssemblyTitle>
-      <Version>3.4.0.0</Version>
-      <!--<PackageVersion>3.3.6-beta</PackageVersion>-->
+      <Version>3.5.0.0</Version>
+      <!--<PackageVersion>3.5.0-beta</PackageVersion>-->
       <UsesPLib>false</UsesPLib>
       <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
       <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
@@ -17,15 +17,15 @@
       <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
     
 Contains functions aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
-      <PackageReleaseNotes>Added PComboBox class and made it default for Enum options. Options dialogs now display the extra information from the ModInfo attribute.
+      <PackageReleaseNotes>Added PSlider class and added it as a secondary input for int and float options that have limits set to realistic values.
 
 Fix an issue where custom side screens were laid out incorrectly causing them to stomp the border or other side screens. Consider checking any custom side screens to ensure that their layout is still as expected as they may have unintentionally relied on this bug.
 
-Add the new RelativeLayout class for creating extremely fast prefab layouts. Fix several bugs in GridPanel/PGridLayoutGroup regarding margins and multi-row/multi-column components.
+Allow PLib Options dialogs to be shown on demand, in-game or in other menus outside of the Mods menu.
 
-Fix bug where PVersion.IsLatestVersion would always return false. Fix a compatibility issue with versions of PLib below 2.16 on Linux only.</PackageReleaseNotes>
+Fix several bugs in the RelativeLayout class regarding minimum size, particularly when components are updated. Most other components now regain the DynamicSize flag to allow them to update if their size changes need to propagate upwards.</PackageReleaseNotes>
       <RootNamespace>PeterHan.PLib</RootNamespace>
-      <AssemblyVersion>3.4.0.0</AssemblyVersion>
+      <AssemblyVersion>3.5.0.0</AssemblyVersion>
       <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
       <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>

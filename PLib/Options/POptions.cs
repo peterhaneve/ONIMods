@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using Newtonsoft.Json;
 using PeterHan.PLib.UI;
 using System;
@@ -47,6 +46,16 @@ namespace PeterHan.PLib.Options {
 		public const string CONFIG_FILE_NAME = "config.json";
 
 		/// <summary>
+		/// The mod_index field of the private DisplayedMod struct in ModsScreen.
+		/// </summary>
+		private static readonly FieldInfo FIELD_MOD_INDEX;
+
+		/// <summary>
+		/// The rect_transform field of the private DisplayedMod struct in ModsScreen.
+		/// </summary>
+		private static readonly FieldInfo FIELD_RECT_TRANSFORM;
+
+		/// <summary>
 		/// The maximum nested class depth which will be serialized in mod options to avoid
 		/// infinite loops.
 		/// </summary>
@@ -55,21 +64,48 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// The mod options table.
 		/// </summary>
-		private static OptionsTable modOptions = null;
+		private static OptionsTable modOptions;
+
+		/// <summary>
+		/// Initializes the reflected FieldInfo structures. This is more efficient than making
+		/// Traverse instances on each entry.
+		/// </summary>
+		static POptions() {
+			var subStruct = typeof(ModsScreen).GetNestedType("DisplayedMod", BindingFlags.
+				NonPublic | BindingFlags.Public);
+			if (subStruct != null) {
+				// Must avoid GetFieldSafe as that is not available in options-only
+				FIELD_MOD_INDEX = subStruct.GetField("mod_index", BindingFlags.NonPublic |
+					BindingFlags.Public | BindingFlags.Instance);
+				FIELD_RECT_TRANSFORM = subStruct.GetField("rect_transform", BindingFlags.
+					NonPublic | BindingFlags.Public | BindingFlags.Instance);
+			}
+			modOptions = null;
+		}
 
 		/// <summary>
 		/// Adds the Options button to the Mods screen.
 		/// </summary>
 		/// <param name="modEntry">The mod entry where the button should be added.</param>
-		private static void AddModOptions(Traverse modEntry) {
-			int index = modEntry.GetField<int>("mod_index");
+		/// <param name="fallbackIndex">The index to use if it cannot be determined from the entry.</param>
+		/// <param name="parent">The parent where the entries were added, used only if the
+		/// fallback index is required.</param>
+		private static void AddModOptions(object modEntry, int fallbackIndex, GameObject parent) {
 			var mods = Global.Instance.modManager?.mods;
-			if (mods != null && index >= 0 && index < mods.Count) {
+			var transform = (FIELD_RECT_TRANSFORM?.GetValue(modEntry)) as Transform;
+			int index;
+			// Try retrieving from the entry first
+			if (FIELD_MOD_INDEX != null && FIELD_MOD_INDEX.GetValue(modEntry) is int realIndex)
+				index = realIndex;
+			else
+				index = fallbackIndex;
+			if (transform == null)
+				transform = parent.transform.GetChild(index);
+			if (mods != null && index >= 0 && index < mods.Count && transform != null) {
 				var modSpec = mods[index];
-				var transform = modEntry.GetField<RectTransform>("rect_transform");
 				string modID = modSpec.label.id;
 				if (modSpec.enabled && !string.IsNullOrEmpty(modID) && modOptions.TryGetValue(
-						modID, out Type oType) && transform != null) {
+						modID, out Type oType)) {
 					// Create delegate to spawn actions dialog
 					var action = new OptionsDialog(oType, new ModOptionsHandler(modSpec));
 					new PButton("ModSettingsButton") {
@@ -86,11 +122,14 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// Applied to ModsScreen if mod options are registered, after BuildDisplay runs.
 		/// </summary>
-		internal static void BuildDisplay(object displayedMods) {
-			if (modOptions != null)
-				// Must cast the type because ModsScreen.DisplayedMod is private
-				foreach (var displayedMod in (System.Collections.IEnumerable)displayedMods)
-					AddModOptions(Traverse.Create(displayedMod));
+		internal static void BuildDisplay(System.Collections.IEnumerable displayedMods,
+				GameObject entryPrefab) {
+			if (modOptions != null) {
+				int index = 0;
+				// Harmony does not check the type at all on accessing private fields with ___
+				foreach (var displayedMod in displayedMods)
+					AddModOptions(displayedMod, index++, entryPrefab);
+			}
 		}
 
 		/// <summary>
@@ -315,8 +354,7 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <param name="optionsType">The type of the options to show. The mod to configure,
 		/// configuration directory, and so forth will be retrieved from the provided type.
-		/// This type can be a different type than the one registered by the mod for
-		/// RegisterOptions, but it must follow the same rules as those options types.</param>
+		/// This type must be the same type configured in RegisterOptions for the mod.</param>
 		/// <param name="title">The title to show in the dialog. If null, a default title
 		/// will be used.</param>
 		/// <param name="onClose">The method to call when the dialog is closed.</param>

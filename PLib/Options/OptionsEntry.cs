@@ -179,8 +179,9 @@ namespace PeterHan.PLib.Options {
 		/// Adds the line item entry for this options entry.
 		/// </summary>
 		/// <param name="parent">The location to add this entry.</param>
-		/// <param name="row">The layout row index to use.</param>
-		internal virtual void CreateUIEntry(PGridPanel parent, int row) {
+		/// <param name="row">The layout row index to use. If updated, the row index will
+		/// continue to count up from the new value.</param>
+		internal virtual void CreateUIEntry(PGridPanel parent, ref int row) {
 			parent.AddChild(new PLabel("Label") {
 				Text = LookInStrings(Title), ToolTip = LookInStrings(ToolTip),
 				TextStyle = PUITuning.Fonts.TextLightStyle

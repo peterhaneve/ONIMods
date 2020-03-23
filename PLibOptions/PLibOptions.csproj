@@ -36,6 +36,7 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
     <Compile Include="..\PLib\Options\RestartRequiredAttribute.cs" Link="RestartRequiredAttribute.cs" />
     <Compile Include="..\PLib\Options\RuntimeOptionsHandler.cs" Link="RuntimeOptionsHandler.cs" />
     <Compile Include="..\PLib\Options\SelectOneOptionsEntry.cs" Link="SelectOneOptionsEntry.cs" />
+    <Compile Include="..\PLib\Options\SlidingBaseOptionsEntry.cs" Link="SlidingBaseOptionsEntry.cs" />
     <Compile Include="..\PLib\Options\StringOptionsEntry.cs" Link="StringOptionsEntry.cs" />
     <Compile Include="..\PLib\Options\TextBlockOptionsEntry.cs" Link="TextBlockOptionsEntry.cs" />
     <Compile Include="..\PLib\UI\IDynamicSizable.cs" Link="UI\IDynamicSizable.cs" />
@@ -71,6 +72,7 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
     <Compile Include="..\PLib\UI\PPanel.cs" Link="UI\PPanel.cs" />
     <Compile Include="..\PLib\UI\PRelativePanel.cs" Link="UI\PRelativePanel.cs" />
     <Compile Include="..\PLib\UI\PScrollPane.cs" Link="UI\PScrollPane.cs" />
+    <Compile Include="..\PLib\UI\PSlider.cs" Link="UI\PSlider.cs" />
     <Compile Include="..\PLib\UI\PSpacer.cs" Link="UI\PSpacer.cs" />
     <Compile Include="..\PLib\UI\PTextArea.cs" Link="UI\PTextArea.cs" />
     <Compile Include="..\PLib\UI\PTextComponent.cs" Link="UI\PTextComponent.cs" />

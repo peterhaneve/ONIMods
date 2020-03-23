@@ -113,7 +113,7 @@ namespace PeterHan.PLib.Options {
 			var dd = new PComboBox<Option>("Select") {
 				BackColor = PUITuning.Colors.ButtonPinkStyle, InitialItem = longestOption,
 				Content = options, EntryColor = PUITuning.Colors.ButtonBlueStyle,
-				TextStyle = PUITuning.Fonts.TextLightStyle, OnOptionSelected = UpdateValue,
+				TextStyle = PUITuning.Fonts.TextLightStyle, OnOptionSelected = UpdateValue
 			};
 			dd.OnRealize += OnRealize;
 			return dd;

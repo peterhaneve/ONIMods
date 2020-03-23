@@ -26,7 +26,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-
+using UnityEngine;
+using IEnumerable = System.Collections.IEnumerable;
 using IntHandle = HandleVector<int>.Handle;
 using LightGridEmitter = LightGridManager.LightGridEmitter;
 
@@ -75,8 +76,9 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Applied to ModsScreen if mod options are registered, after BuildDisplay runs.
 		/// </summary>
-		private static void BuildDisplay_Postfix(object ___displayedMods) {
-			POptions.BuildDisplay(___displayedMods);
+		private static void BuildDisplay_Postfix(IEnumerable ___displayedMods,
+				GameObject ___entryPrefab) {
+			POptions.BuildDisplay(___displayedMods, ___entryPrefab);
 		}
 
 		/// <summary>
