@@ -25,7 +25,7 @@ namespace PeterHan.ToastControl {
 	public static class ToastControlStrings {
 		public static string ACTION_KEY = "TOASTCONTROL.ACTION.SETTINGS";
 		public static LocString ACTION_TITLE = string.Format("{0} Settings", UI.FRONTEND.
-			TOASTCONTROL.NAME);
+			TOASTCONTROL.NAME.text);
 		
 		public static class UI {
 			public static class FRONTEND {
