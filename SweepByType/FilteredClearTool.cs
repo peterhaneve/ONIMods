@@ -97,7 +97,18 @@ namespace PeterHan.SweepByType {
 			// Update only on tool activation to improve performance
 			if (TypeSelect != null) {
 				var root = TypeSelect.RootPanel;
+				bool firstTime = TypeSelect.CategoryCount < 1;
 				TypeSelect.Update();
+				if (firstTime) {
+					// First time, load the user's old settings if available
+					var savedTypes = SaveGame.Instance?.GetComponent<SavedTypeSelections>();
+					if (savedTypes != null) {
+						var st = savedTypes.GetSavedTypes();
+						// If nothing was selected, this is probably the first ever load
+						if (st.Count > 0)
+							TypeSelect.SetSelections(st);
+					}
+				}
 				root.SetParent(menu.gameObject);
 				root.SetActive(true);
 				root.transform.SetAsFirstSibling();

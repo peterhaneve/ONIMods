@@ -72,6 +72,19 @@ namespace PeterHan.SweepByType {
 		}
 
 		/// <summary>
+		/// Applied to SaveGame to add a list of saved types for sweeping.
+		/// </summary>
+		[HarmonyPatch(typeof(SaveGame), "OnPrefabInit")]
+		public static class SaveGame_OnPrefabInit_Patch {
+			/// <summary>
+			/// Applied after OnPrefabInit runs.
+			/// </summary>
+			internal static void Postfix(Game __instance) {
+				__instance.gameObject.AddOrGet<SavedTypeSelections>();
+			}
+		}
+
+		/// <summary>
 		/// Applied to PlayerController to load the filtered sweep tool into the available
 		/// tool list.
 		/// </summary>

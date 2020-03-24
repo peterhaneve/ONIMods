@@ -108,6 +108,16 @@ namespace PeterHan.SweepByType {
 		}
 
 		/// <summary>
+		/// Returns the number of categories in the control. Defaults to zero when constructed
+		/// until the first call to Update().
+		/// </summary>
+		public int CategoryCount {
+			get {
+				return children.Count;
+			}
+		}
+
+		/// <summary>
 		/// Whether material icons should be disabled.
 		/// </summary>
 		public bool DisableIcons { get; }
@@ -216,6 +226,27 @@ namespace PeterHan.SweepByType {
 		}
 
 		/// <summary>
+		/// Sets the type selections from the specified tag list. All types not in the list
+		/// are deselected.
+		/// 
+		/// Tags in unknown categories will not be selected.
+		/// </summary>
+		/// <param name="selected">The tag types to select.</param>
+		public void SetSelections(IEnumerable<Tag> selected) {
+			if (selected != null) {
+				var tagSet = HashSetPool<Tag, TypeSelectControl>.Allocate();
+				// Make a quick list to look up
+				foreach (var tag in selected)
+					tagSet.Add(tag);
+				// Cycle through all discovered categories
+				foreach (var pair in children)
+					foreach (var tagPair in pair.Value.children)
+						tagPair.Value.SetSelected(tagSet.Contains(tagPair.Key));
+				tagSet.Recycle();
+			}
+		}
+
+		/// <summary>
 		/// Updates the list of available elements.
 		/// </summary>
 		public void Update() {
@@ -268,7 +299,15 @@ namespace PeterHan.SweepByType {
 		/// Updates the parent check box state from the children.
 		/// </summary>
 		internal void UpdateFromChildren() {
+			var savedTypes = SaveGame.Instance?.GetComponent<SavedTypeSelections>();
 			UpdateAllItems(allItems, children.Values);
+			if (savedTypes != null) {
+				// Save type list to the save game
+				var tags = ListPool<Tag, TypeSelectControl>.Allocate();
+				AddTypesToSweep(tags);
+				savedTypes.SetSavedTypes(tags);
+				tags.Recycle();
+			}
 		}
 
 		/// <summary>
@@ -303,7 +342,7 @@ namespace PeterHan.SweepByType {
 			/// <summary>
 			/// The child elements.
 			/// </summary>
-			private readonly SortedList<Tag, TypeSelectElement> children;
+			internal readonly SortedList<Tag, TypeSelectElement> children;
 
 			internal TypeSelectCategory(TypeSelectControl parent, Tag categoryTag,
 					string overrideName = null) {
@@ -445,7 +484,15 @@ namespace PeterHan.SweepByType {
 			}
 
 			private void OnCheck(GameObject source, int state) {
-				if (state == PCheckBox.STATE_UNCHECKED)
+				SetSelected(state == PCheckBox.STATE_UNCHECKED);
+			}
+
+			/// <summary>
+			/// Sets the selected state of this type.
+			/// </summary>
+			/// <param name="selected">true to select this type, or false otherwise.</param>
+			public void SetSelected(bool selected) {
+				if (selected)
 					// Clicked when unchecked, check and possibly check all
 					PCheckBox.SetCheckState(CheckBox, PCheckBox.STATE_CHECKED);
 				else
