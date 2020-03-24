@@ -223,6 +223,7 @@ namespace PeterHan.PLib.UI {
 		public event PUIDelegates.OnRealize OnRealize;
 
 		protected PTextComponent(string name) {
+			DynamicSize = false;
 			FlexSize = Vector2.zero;
 			IconSpacing = 0;
 			MaintainSpriteAspect = true;
@@ -307,6 +308,8 @@ namespace PeterHan.PLib.UI {
 					layout.AnchorYAxis(text).AnchorYAxis(sprite);
 					break;
 				}
+				if (!DynamicSize)
+					layout.LockLayout();
 			} else if (text != null)
 				result = text;
 			else if (sprite != null)

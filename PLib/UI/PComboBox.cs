@@ -203,7 +203,11 @@ namespace PeterHan.PLib.UI {
 				im.right, margin.top, margin.bottom)).SetMargin(image, new RectOffset(0,
 				margin.right, margin.top, margin.bottom)).OverrideSize(image, ArrowSize).
 				AnchorYAxis(pullDown, 0.0f).OverrideSize(pullDown, Vector2.up);
-			if (!DynamicSize) layout.LockLayout();
+			layout.LockLayout();
+			if (DynamicSize)
+				layout.UnlockLayout();
+			// Disable sizing on the pulldown
+			pullDown.AddOrGet<LayoutElement>().ignoreLayout = true;
 			// Scroll pane is hidden right away
 			pullDown.SetActive(false);
 			layout.flexibleWidth = FlexSize.x;

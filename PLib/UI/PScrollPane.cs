@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.UI.Layouts;
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -233,40 +234,7 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// Handles layout for scroll panes. Not freezable.
 		/// </summary>
-		private sealed class PScrollPaneLayout : UIBehaviour, ILayoutElement,
-				ISettableFlexSize {
-			/// <summary>
-			/// The flexible height of the scroll pane.
-			/// </summary>
-			public float flexibleHeight { get; set; }
-
-			/// <summary>
-			/// The flexible width of the scroll pane.
-			/// </summary>
-			public float flexibleWidth { get; set; }
-
-			/// <summary>
-			/// The minimum height of the scroll pane.
-			/// </summary>
-			public float minHeight { get; private set; }
-
-			/// <summary>
-			/// The minimum width of the scroll pane.
-			/// </summary>
-			public float minWidth { get; private set; }
-
-			/// <summary>
-			/// The preferred height of the scroll pane.
-			/// </summary>
-			public float preferredHeight { get; private set; }
-
-			/// <summary>
-			/// The preferred width of the scroll pane.
-			/// </summary>
-			public float preferredWidth { get; private set; }
-
-			public int layoutPriority => 1;
-
+		private sealed class PScrollPaneLayout : AbstractLayoutGroup {
 			/// <summary>
 			/// Caches elements when calculating layout to improve performance.
 			/// </summary>
@@ -302,7 +270,7 @@ namespace PeterHan.PLib.UI {
 				child = viewport = null;
 			}
 
-			public void CalculateLayoutInputHorizontal() {
+			public override void CalculateLayoutInputHorizontal() {
 				if (child != null) {
 					calcElements = child.GetComponents<Component>();
 					// Lay out children
@@ -314,7 +282,7 @@ namespace PeterHan.PLib.UI {
 				}
 			}
 
-			public void CalculateLayoutInputVertical() {
+			public override void CalculateLayoutInputVertical() {
 				if (child != null && calcElements != null) {
 					// Lay out children
 					childVertical = PUIUtils.CalcSizes(child, PanelDirection.Vertical,
@@ -324,36 +292,12 @@ namespace PeterHan.PLib.UI {
 				}
 			}
 
-			protected override void OnDidApplyAnimationProperties() {
-				base.OnDidApplyAnimationProperties();
-				SetDirty();
-			}
-
-			protected override void OnDisable() {
-				base.OnDisable();
-				SetDirty();
-			}
-
 			protected override void OnEnable() {
 				base.OnEnable();
 				UpdateComponents();
-				SetDirty();
 			}
 
-			protected override void OnRectTransformDimensionsChange() {
-				base.OnRectTransformDimensionsChange();
-				SetDirty();
-			}
-
-			/// <summary>
-			/// Sets this layout as dirty.
-			/// </summary>
-			private void SetDirty() {
-				if (gameObject != null && IsActive())
-					LayoutRebuilder.MarkLayoutForRebuild(gameObject.rectTransform());
-			}
-
-			public void SetLayoutHorizontal() {
+			public override void SetLayoutHorizontal() {
 				if (viewport != null && child != null) {
 					// Observe the flex width
 					float prefWidth = childHorizontal.preferred;
@@ -370,7 +314,7 @@ namespace PeterHan.PLib.UI {
 				}
 			}
 
-			public void SetLayoutVertical() {
+			public override void SetLayoutVertical() {
 				if (viewport != null && child != null && setElements != null) {
 					// Observe the flex height
 					float prefHeight = childVertical.preferred;

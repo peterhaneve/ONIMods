@@ -201,26 +201,6 @@ namespace PeterHan.PLib.UI {
 			}
 		}
 
-		protected override void OnDidApplyAnimationProperties() {
-			base.OnDidApplyAnimationProperties();
-			SetDirty();
-		}
-
-		protected override void OnDisable() {
-			base.OnDisable();
-			SetDirty();
-		}
-
-		protected override void OnEnable() {
-			base.OnEnable();
-			SetDirty();
-		}
-
-		protected override void OnRectTransformDimensionsChange() {
-			base.OnRectTransformDimensionsChange();
-			SetDirty();
-		}
-
 		public RelativeLayoutGroup OverrideSize(GameObject item, Vector2 size) {
 			if (item != null)
 				AddOrGet(item).OverrideSize = size;
@@ -237,12 +217,9 @@ namespace PeterHan.PLib.UI {
 			return this;
 		}
 
-		/// <summary>
-		/// Sets this layout as dirty.
-		/// </summary>
-		private void SetDirty() {
-			if (gameObject != null && IsActive() && !locked)
-				LayoutRebuilder.MarkLayoutForRebuild(gameObject.rectTransform());
+		protected override void SetDirty() {
+			if (!locked)
+				base.SetDirty();
 		}
 
 		/// <summary>
@@ -295,8 +272,6 @@ namespace PeterHan.PLib.UI {
 				// Lay out children
 				results.ExecuteY(components, mt, mb);
 				components.Recycle();
-				// All done!
-				results.Clear();
 			}
 		}
 

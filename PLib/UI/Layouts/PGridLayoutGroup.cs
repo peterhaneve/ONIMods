@@ -31,17 +31,17 @@ namespace PeterHan.PLib.UI {
 		/// Calculates all column widths.
 		/// </summary>
 		/// <param name="results">The results from layout.</param>
-		/// <param name="obj">The object to lay out.</param>
+		/// <param name="width">The current container width.</param>
 		/// <param name="margin">The margins within the borders.</param>
 		/// <returns>The column widths.</returns>
-		private static float[] GetColumnWidths(GridLayoutResults results, GameObject obj,
+		private static float[] GetColumnWidths(GridLayoutResults results, float width,
 				RectOffset margin) {
 			int columns = results.Columns;
 			// Find out how much flexible size can be given out
 			float position = margin?.left ?? 0, right = margin?.right ?? 0;
-			float actualWidth = obj.rectTransform().rect.width - position - right,
-				totalFlex = results.TotalFlexWidth, excess = (totalFlex > 0.0f) ?
-				(actualWidth - results.MinWidth) / totalFlex : 0.0f;
+			float actualWidth = width - position - right, totalFlex = results.TotalFlexWidth,
+				excess = (totalFlex > 0.0f) ? (actualWidth - results.MinWidth) / totalFlex :
+				0.0f;
 			float[] colX = new float[columns + 1];
 			// Determine start of columns
 			for (int i = 0; i < columns; i++) {
@@ -57,17 +57,17 @@ namespace PeterHan.PLib.UI {
 		/// Calculates all row heights.
 		/// </summary>
 		/// <param name="results">The results from layout.</param>
-		/// <param name="obj">The object to lay out.</param>
+		/// <param name="height">The current container height.</param>
 		/// <param name="margin">The margins within the borders.</param>
 		/// <returns>The row heights.</returns>
-		private static float[] GetRowHeights(GridLayoutResults results, GameObject obj,
+		private static float[] GetRowHeights(GridLayoutResults results, float height,
 				RectOffset margin) {
 			int rows = results.Rows;
 			// Find out how much flexible size can be given out
 			float position = margin?.bottom ?? 0, top = margin?.top ?? 0;
-			float actualWidth = obj.rectTransform().rect.height - position - top,
-				totalFlex = results.TotalFlexHeight, excess = (totalFlex > 0.0f) ?
-				(actualWidth - results.MinHeight) / totalFlex : 0.0f;
+			float actualWidth = height - position - top, totalFlex = results.TotalFlexHeight,
+				excess = (totalFlex > 0.0f) ? (actualWidth - results.MinHeight) / totalFlex :
+				0.0f;
 			float[] rowY = new float[rows + 1];
 			// Determine start of rows
 			for (int i = 0; i < rows; i++) {
@@ -301,35 +301,14 @@ namespace PeterHan.PLib.UI {
 			}
 		}
 
-		protected override void OnDidApplyAnimationProperties() {
-			base.OnDidApplyAnimationProperties();
-			SetDirty();
-			results = null;
-		}
-
 		protected override void OnDisable() {
 			base.OnDisable();
-			SetDirty();
 			results = null;
 		}
 
 		protected override void OnEnable() {
 			base.OnEnable();
-			SetDirty();
 			results = null;
-		}
-
-		protected override void OnRectTransformDimensionsChange() {
-			base.OnRectTransformDimensionsChange();
-			SetDirty();
-		}
-
-		/// <summary>
-		/// Sets this layout as dirty.
-		/// </summary>
-		private void SetDirty() {
-			if (gameObject != null && IsActive())
-				LayoutRebuilder.MarkLayoutForRebuild(gameObject.rectTransform());
 		}
 
 		public override void SetLayoutHorizontal() {
@@ -339,7 +318,7 @@ namespace PeterHan.PLib.UI {
 				throw new InvalidOperationException("SetLayoutHorizontal before CalculateLayoutInputHorizontal");
 #endif
 			if (results != null && obj != null && results.Columns > 0) {
-				float[] colX = GetColumnWidths(results, obj, Margin);
+				float[] colX = GetColumnWidths(results, rectTransform.rect.width, Margin);
 				// All components lay out
 				var controllers = ListPool<ILayoutController, PGridLayoutGroup>.Allocate();
 				foreach (var component in results.Components)
@@ -362,7 +341,7 @@ namespace PeterHan.PLib.UI {
 				throw new InvalidOperationException("SetLayoutVertical before CalculateLayoutInputVertical");
 #endif
 			if (results != null && obj != null && (rows = results.Rows) > 0) {
-				float[] rowY = GetRowHeights(results, obj, Margin);
+				float[] rowY = GetRowHeights(results, rectTransform.rect.height, Margin);
 				// All components lay out
 				var controllers = ListPool<ILayoutController, PGridLayoutGroup>.Allocate();
 				foreach (var component in results.Components)

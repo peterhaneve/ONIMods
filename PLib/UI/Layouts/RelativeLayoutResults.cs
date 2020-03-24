@@ -122,5 +122,10 @@ namespace PeterHan.PLib.UI.Layouts {
 			PreferredWidth = PreferredHeight = 0.0f;
 			UseSizeDeltaX = UseSizeDeltaY = false;
 		}
+
+		public override string ToString() {
+			return "component={0} {1:F2}x{2:F2}".F(Transform.gameObject?.name ?? "null",
+				prefSize.x, prefSize.y);
+		}
 	}
 }

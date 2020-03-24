@@ -199,36 +199,16 @@ namespace PeterHan.PLib.UI {
 			preferredHeight = vTotal.preferred + gap;
 		}
 
-		protected override void OnDidApplyAnimationProperties() {
-			base.OnDidApplyAnimationProperties();
-			SetDirty();
-		}
-
 		protected override void OnDisable() {
 			base.OnDisable();
-			SetDirty();
 			horizontal = null;
 			vertical = null;
 		}
 
 		protected override void OnEnable() {
 			base.OnEnable();
-			SetDirty();
 			horizontal = null;
 			vertical = null;
-		}
-
-		protected override void OnRectTransformDimensionsChange() {
-			base.OnRectTransformDimensionsChange();
-			SetDirty();
-		}
-
-		/// <summary>
-		/// Sets this layout as dirty.
-		/// </summary>
-		private void SetDirty() {
-			if (gameObject != null && IsActive())
-				LayoutRebuilder.MarkLayoutForRebuild(gameObject.rectTransform());
 		}
 
 		/// <summary>
@@ -262,10 +242,8 @@ namespace PeterHan.PLib.UI {
 			if (horizontal == null)
 				throw new InvalidOperationException("SetLayoutHorizontal before CalculateLayoutInputHorizontal");
 #endif
-			if (horizontal != null) {
-				var rt = gameObject.rectTransform();
-				DoLayout(Margin ?? new RectOffset(), horizontal, rt.rect.width);
-			}
+			if (horizontal != null)
+				DoLayout(Margin ?? new RectOffset(), horizontal, rectTransform.rect.width);
 		}
 
 		public override void SetLayoutVertical() {
@@ -273,10 +251,8 @@ namespace PeterHan.PLib.UI {
 			if (vertical == null)
 				throw new InvalidOperationException("SetLayoutVertical before CalculateLayoutInputVertical");
 #endif
-			if (vertical != null) {
-				var rt = gameObject.rectTransform();
-				DoLayout(Margin ?? new RectOffset(), vertical, rt.rect.height);
-			}
+			if (vertical != null)
+				DoLayout(Margin ?? new RectOffset(), vertical, rectTransform.rect.height);
 		}
 	}
 }

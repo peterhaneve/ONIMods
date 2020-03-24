@@ -30,12 +30,6 @@ namespace PeterHan.PLib.UI.Layouts {
 	/// </summary>
 	internal static class RelativeLayoutUtil {
 		/// <summary>
-		/// Avoids a crash when attempting to lay out very wide panels by limiting anchor
-		/// ratios to this value.
-		/// </summary>
-		private const float MIN_SIZE_RATIO = 0.01f;
-
-		/// <summary>
 		/// Initializes and computes horizontal sizes for the components in this relative
 		/// layout.
 		/// </summary>
@@ -116,27 +110,14 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// <param name="effective">The component size in that dimension plus margins.</param>
 		/// <returns>The minimum parent component size to fit the child.</returns>
 		internal static float ElbowRoom(EdgeStatus min, EdgeStatus max, float effective) {
-			float aMin = min.FromAnchor, aMax = max.FromAnchor, result;
+			float aMin = min.FromAnchor, aMax = max.FromAnchor, result, offMin = min.Offset,
+				offMax = max.Offset;
 			if (aMax > aMin)
 				// "Elbow room" method
-				result = (effective + min.Offset - max.Offset) / (aMax - aMin);
-			else {
+				result = (effective + offMin - offMax) / (aMax - aMin);
+			else
 				// Anchors are together
-				float oMin = min.Offset, oMax = max.Offset;
-				if (oMin == oMax) {
-					oMin = -effective * 0.5f;
-					oMax = effective * 0.5f;
-				}
-				if (oMin < 0.0f)
-					oMin /= -Math.Max(MIN_SIZE_RATIO, aMax);
-				else
-					oMin /= Math.Max(MIN_SIZE_RATIO, 1.0f - aMax);
-				if (oMax < 0.0f)
-					oMax /= -Math.Max(MIN_SIZE_RATIO, aMax);
-				else
-					oMax /= Math.Max(MIN_SIZE_RATIO, 1.0f - aMax);
-				result = Math.Max(oMin, oMax);
-			}
+				result = Math.Max(effective, Math.Max(Math.Abs(offMin), Math.Abs(offMax)));
 			return result;
 		}
 

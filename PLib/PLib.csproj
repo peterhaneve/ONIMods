@@ -4,7 +4,7 @@
     <TargetFramework>net40</TargetFramework>
     <Title>PeterHan.PLib</Title>
       <AssemblyTitle>PeterHanLib</AssemblyTitle>
-      <Version>3.5.0.0</Version>
+      <Version>3.5.1.0</Version>
       <!--<PackageVersion>3.5.0-beta</PackageVersion>-->
       <UsesPLib>false</UsesPLib>
       <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
@@ -23,7 +23,7 @@ Allow PLib Options dialogs to be shown on demand, in-game or in other menus outs
 
 Fix several bugs in the RelativeLayout class regarding minimum size, particularly when components are updated. Most other components now regain the DynamicSize flag to allow them to update if their size changes need to propagate upwards.</PackageReleaseNotes>
       <RootNamespace>PeterHan.PLib</RootNamespace>
-      <AssemblyVersion>3.5.0.0</AssemblyVersion>
+      <AssemblyVersion>3.5.1.0</AssemblyVersion>
       <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
       <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>

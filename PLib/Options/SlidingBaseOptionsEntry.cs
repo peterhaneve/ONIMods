@@ -52,19 +52,20 @@ namespace PeterHan.PLib.Options {
 		}
 
 		internal override void CreateUIEntry(PGridPanel parent, ref int row) {
+			double minLimit, maxLimit;
 			base.CreateUIEntry(parent, ref row);
-			double minLimit = limits.Minimum, maxLimit = limits.Maximum;
-			// NaN will be false on either comparison
-			if (limits != null && maxLimit < float.MaxValue && minLimit > float.MinValue) {
+			if (limits != null && (minLimit = limits.Minimum) > float.MinValue && (maxLimit =
+					limits.Maximum) < float.MaxValue) {
+				// NaN will be false on either comparison
 				var slider = GetSlider();
 				// Min and max labels
 				var minLabel = new PLabel("MinValue") {
-					TextStyle = PUITuning.Fonts.TextLightStyle, Text = minLimit.ToString("G"),
-					TextAlignment = TextAnchor.MiddleRight
+					TextStyle = PUITuning.Fonts.TextLightStyle, Text = minLimit.
+					ToString("G4"), TextAlignment = TextAnchor.MiddleRight
 				};
 				var maxLabel = new PLabel("MaxValue") {
-					TextStyle = PUITuning.Fonts.TextLightStyle, Text = maxLimit.ToString("G"),
-					TextAlignment = TextAnchor.MiddleLeft
+					TextStyle = PUITuning.Fonts.TextLightStyle, Text = maxLimit.
+					ToString("G4"), TextAlignment = TextAnchor.MiddleLeft
 				};
 				// Lay out left to right
 				var panel = new PRelativePanel("Slider Grid") {

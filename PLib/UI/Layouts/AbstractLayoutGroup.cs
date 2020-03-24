@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -26,6 +27,17 @@ namespace PeterHan.PLib.UI.Layouts {
 	/// </summary>
 	public abstract class AbstractLayoutGroup : UIBehaviour, ISettableFlexSize, ILayoutElement
 	{
+		/// <summary>
+		/// Sets an object's layout dirty on the next frame.
+		/// </summary>
+		/// <param name="transform">The transform to set dirty.</param>
+		/// <returns>A coroutine to set it dirty.</returns>
+		internal static IEnumerator DelayedSetDirty(RectTransform transform) {
+			yield return null;
+			LayoutRebuilder.MarkLayoutForRebuild(transform);
+			yield break;
+		}
+
 		public float minWidth {
 			get {
 				return mMinWidth;
@@ -98,6 +110,14 @@ namespace PeterHan.PLib.UI.Layouts {
 			}
 		}
 
+		protected RectTransform rectTransform {
+			get {
+				if (cachedTransform == null)
+					cachedTransform = gameObject.rectTransform();
+				return cachedTransform;
+			}
+		}
+
 		// The backing fields must be annotated with the attribute to have prefabbed versions
 		// successfully copy the values
 		[SerializeField]
@@ -107,9 +127,51 @@ namespace PeterHan.PLib.UI.Layouts {
 		[SerializeField]
 		private int mLayoutPriority;
 
+		/// <summary>
+		/// The cached rect transform to speed up layout.
+		/// </summary>
+		private RectTransform cachedTransform;
+
+		protected AbstractLayoutGroup() {
+			cachedTransform = null;
+			mLayoutPriority = 1;
+		}
+
 		public abstract void CalculateLayoutInputHorizontal();
 
 		public abstract void CalculateLayoutInputVertical();
+
+		protected override void OnDidApplyAnimationProperties() {
+			base.OnDidApplyAnimationProperties();
+			SetDirty();
+		}
+
+		protected override void OnDisable() {
+			base.OnDisable();
+			SetDirty();
+		}
+
+		protected override void OnEnable() {
+			base.OnEnable();
+			SetDirty();
+		}
+
+		protected override void OnRectTransformDimensionsChange() {
+			base.OnRectTransformDimensionsChange();
+			SetDirty();
+		}
+
+		/// <summary>
+		/// Sets this layout as dirty.
+		/// </summary>
+		protected virtual void SetDirty() {
+			if (gameObject != null && IsActive()) {
+				if (CanvasUpdateRegistry.IsRebuildingLayout())
+					LayoutRebuilder.MarkLayoutForRebuild(rectTransform);
+				else
+					StartCoroutine(DelayedSetDirty(rectTransform));
+			}
+		}
 
 		public abstract void SetLayoutHorizontal();
 
