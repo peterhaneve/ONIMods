@@ -29,7 +29,17 @@ namespace PeterHan.ThermalTooltips {
 	/// </summary>
 	public static class ThermalTooltipsPatches {
 		/// <summary>
-		/// The current mod options.
+		/// Handles compatibility with Better Info Cards.
+		/// </summary>
+		private static BetterInfoCardsCompat bicCompat;
+
+		/// <summary>
+		/// The current building handler.
+		/// </summary>
+		private static BuildThermalTooltip buildingInstance;
+
+		/// <summary>
+		/// The current tooltip handler.
 		/// </summary>
 		internal static ExtendedThermalTooltip TooltipInstance { get; private set; }
 
@@ -51,10 +61,25 @@ namespace PeterHan.ThermalTooltips {
 		}
 
 		public static void OnLoad() {
+			bicCompat = null;
+			buildingInstance = new BuildThermalTooltip();
 			PUtil.InitLibrary();
 			POptions.RegisterOptions(typeof(ThermalTooltipsOptions));
 			PLocalization.Register();
 			TooltipInstance = null;
+		}
+
+		/// <summary>
+		/// Applied to Db to initialize Better Info Cards compatibility at a safe time.
+		/// </summary>
+		[HarmonyPatch(typeof(Db), "Initialize")]
+		public static class Db_Initialize_Patch {
+			/// <summary>
+			/// Applied after Initialize runs.
+			/// </summary>
+			internal static void Postfix() {
+				bicCompat = new BetterInfoCardsCompat();
+			}
 		}
 
 		/// <summary>
@@ -67,6 +92,7 @@ namespace PeterHan.ThermalTooltips {
 			/// </summary>
 			internal static void Postfix() {
 				PUtil.LogDebug("Destroying ExtendedThermalTooltip");
+				buildingInstance?.ClearDef();
 				TooltipInstance = null;
 			}
 		}
@@ -83,15 +109,59 @@ namespace PeterHan.ThermalTooltips {
 				var options = POptions.ReadSettings<ThermalTooltipsOptions>();
 				// Check for DisplayAllTemps
 				try {
-					if (Type.GetType("DisplayAllTemps.State, DisplayAllTemps", false) != null) {
+					if (Type.GetType("DisplayAllTemps.State, DisplayAllTemps", false) != null)
+					{
 						// Let Display All Temps take over display (ironically setting AllUnits
 						// to FALSE) since it patches GetFormattedTemperature
 						PUtil.LogDebug("DisplayAllTemps compatibility activated");
 						options.AllUnits = false;
 					}
 				} catch { }
-				TooltipInstance = new ExtendedThermalTooltip(options);
+				TooltipInstance = new ExtendedThermalTooltip(options, bicCompat);
 				PUtil.LogDebug("Created ExtendedThermalTooltip");
+			}
+		}
+
+		/// <summary>
+		/// Applied to MaterialSelector to display thermal information on buildings that are
+		/// being planned.
+		/// </summary>
+		[HarmonyPatch(typeof(MaterialSelector), "SetEffects")]
+		public static class MaterialSelector_SetEffects_Patch {
+			/// <summary>
+			/// Applied after SetEffects runs.
+			/// </summary>
+			internal static void Postfix(MaterialSelector __instance, Tag element) {
+				if (__instance.selectorIndex == 0)
+					// Primary element only
+					buildingInstance?.AddThermalInfo(__instance.MaterialEffectsPane, element);
+			}
+		}
+
+		/// <summary>
+		/// Applied to ProductInfoScreen to clear the selected building when it is closed.
+		/// </summary>
+		[HarmonyPatch(typeof(ProductInfoScreen), "Close")]
+		public static class ProductInfoScreen_Close_Patch {
+			/// <summary>
+			/// Applied after Close runs.
+			/// </summary>
+			internal static void Postfix() {
+				buildingInstance?.ClearDef();
+			}
+		}
+
+		/// <summary>
+		/// Applied to ProductInfoScreen to store the building that will be constructed.
+		/// </summary>
+		[HarmonyPatch(typeof(ProductInfoScreen), "SetMaterials")]
+		public static class ProductInfoScreen_SetMaterials_Patch {
+			/// <summary>
+			/// Applied before SetMaterials runs.
+			/// </summary>
+			internal static void Prefix(BuildingDef def) {
+				if (buildingInstance != null)
+					buildingInstance.Def = def;
 			}
 		}
 
@@ -103,6 +173,7 @@ namespace PeterHan.ThermalTooltips {
 			/// <summary>
 			/// Transpiles UpdateHoverElements to display more thermal information.
 			/// </summary>
+			[HarmonyPriority(Priority.LowerThanNormal)]
 			internal static IEnumerable<CodeInstruction> Transpiler(
 					IEnumerable<CodeInstruction> method) {
 				return new ThermalTranspilerPatch().DoTranspile(method);

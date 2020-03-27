@@ -27,6 +27,13 @@ namespace PeterHan.ThermalTooltips {
 		// <element> [<percentage>] and <secondary element> [<percentage>]
 		public static LocString AND_JOIN = "[{0}] and ";
 
+		// Building information shown in the build screen
+		public static LocString BUILDING_THERMAL_MASS = "The completed {0} will have a thermal mass of {1:##0.#} {2}/{3}\n\nAdding or removing {1:##0.#} {2} will change the building's " +
+			STRINGS.UI.FormatAsLink("Temperature", "HEAT") + " by 1 {3}";
+
+		public static LocString BUILDING_CONDUCTIVITY = "The completed {0} will have a thermal conductivity of {1}\n\nFor every 1 {3} of difference between the building's " +
+			STRINGS.UI.FormatAsLink("Temperature", "HEAT") + " and its surroundings, {2:##0.#} {4} will be transferred";
+
 		// State change message (fallback if icon not found)
 		public static LocString CHANGES = "Changes";
 
@@ -35,6 +42,9 @@ namespace PeterHan.ThermalTooltips {
 
 		// Format to use for temperature values (including suffix)
 		internal const string TEMP_FORMAT = "{0:##0.#}{1}";
+
+		// The sum suffix for Better Info Cards compatibility
+		public static LocString SUM = " (\u03A3)";
 
 		// Thermal mass is the amount of kDTU required to shift by 1 degree C/K/F
 		public static LocString THERMAL_MASS = "Thermal Mass: {0:##0.#} {1}/{2}";

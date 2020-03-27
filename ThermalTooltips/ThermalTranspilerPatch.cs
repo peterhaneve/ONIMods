@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -37,11 +38,7 @@ namespace PeterHan.ThermalTooltips {
 			var instance = ThermalTooltipsPatches.TooltipInstance;
 			var primaryElement = instance?.PrimaryElement;
 			if (primaryElement != null) {
-				float mass = primaryElement.Mass;
-				var building = primaryElement.gameObject.GetComponentSafe<BuildingComplete>();
-				// Buildings have 1/5th the expected mass with respect to heat calculations
-				if (building != null && !building.Def.IsFoundation)
-					mass *= 0.2f;
+				float mass = primaryElement.Mass * GetSHCAdjustment(primaryElement.gameObject);
 				instance.Drawer = drawer;
 				instance.Style = style;
 				instance.DisplayThermalInfo(primaryElement.Element, primaryElement.Temperature,
@@ -70,11 +67,24 @@ namespace PeterHan.ThermalTooltips {
 		}
 
 		/// <summary>
-		/// Called as a replacement for Grid.PosToCell; stores the cell to be used for the
-		/// element based thermal tooltips.
+		/// Returns the specific heat multiplier for a completed building.
 		/// </summary>
-		private static int SetCell(Vector3 location) {
-			int cell = Grid.PosToCell(location);
+		/// <param name="building">The completed building.</param>
+		/// <returns>The multiplier for that building's SHC.</returns>
+		public static float GetSHCAdjustment(GameObject building) {
+			var sco = building.GetComponentSafe<SimCellOccupier>();
+			// Buildings have that insidious /5 multiplier... if they do not use tile
+			// temperature instead (with doors only being /5 if open)
+			//  isSolidTile almost works but it is false on FarmTile
+			//  IsFoundation almost works but it is true on Mesh and Airflow tiles
+			return (sco == null || !sco.IsVisuallySolid) ? 0.2f : 1.0f;
+		}
+
+		/// <summary>
+		/// Called after Grid.PosToCell; stores the cell to be used for the element based
+		/// thermal tooltips.
+		/// </summary>
+		private static int SetCell(int cell) {
 			var instance = ThermalTooltipsPatches.TooltipInstance;
 			if (instance != null)
 				instance.Cell = cell;
@@ -82,12 +92,11 @@ namespace PeterHan.ThermalTooltips {
 		}
 
 		/// <summary>
-		/// Called as a replacement for GetComponent&lt;PrimaryElement&gt;; stores the element
-		/// to be used for the item based thermal tooltips.
+		/// Called after GetComponent&lt;PrimaryElement&gt;; stores the element to be used for
+		/// the item based thermal tooltips.
 		/// </summary>
-		private static PrimaryElement SetElement(Component component) {
+		private static PrimaryElement SetElement(PrimaryElement element) {
 			var instance = ThermalTooltipsPatches.TooltipInstance;
-			var element = component?.GetComponent<PrimaryElement>();
 			if (instance != null && element != null)
 				instance.PrimaryElement = element;
 			return element;
@@ -146,19 +155,24 @@ namespace PeterHan.ThermalTooltips {
 #if DEBUG
 					PUtil.LogDebug("PATCH: PosToCell found at {0:D}".F(i));
 #endif
-					instruction.opcode = OpCodes.Call;
-					instruction.operand = typeof(ThermalTranspilerPatch).GetMethodSafe(nameof(
-						SetCell), true, PPatchTools.AnyArguments);
+					newMethod.Insert(++i, new CodeInstruction(OpCodes.Call, typeof(
+						ThermalTranspilerPatch).GetMethodSafe(nameof(SetCell), true,
+						PPatchTools.AnyArguments)));
 					patchOne = true;
+					n++;
+					i++;
 				}
 				if (IsCallTo(instruction, getComponent) && !patchTwo) {
 #if DEBUG
 					PUtil.LogDebug("PATCH: GetComponent found at {0:D}".F(i));
 #endif
-					instruction.opcode = OpCodes.Call;
-					instruction.operand = typeof(ThermalTranspilerPatch).GetMethodSafe(nameof(
-						SetElement), true, PPatchTools.AnyArguments);
+					// For BIC compatibility call our stuff after it
+					newMethod.Insert(++i, new CodeInstruction(OpCodes.Call, typeof(
+						ThermalTranspilerPatch).GetMethodSafe(nameof(SetElement), true,
+						PPatchTools.AnyArguments)));
 					patchTwo = true;
+					n++;
+					i++;
 				}
 			}
 			// Find first instance of GetFormattedTemperature

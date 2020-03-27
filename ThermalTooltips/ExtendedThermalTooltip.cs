@@ -53,6 +53,11 @@ namespace PeterHan.ThermalTooltips {
 		public TextStyleSetting Style { get; set; }
 
 		/// <summary>
+		/// Handles compatibility with Better Info Cards.
+		/// </summary>
+		private readonly BetterInfoCardsCompat bicCompat;
+
+		/// <summary>
 		/// The options to use.
 		/// </summary>
 		private readonly ThermalTooltipsOptions options;
@@ -72,8 +77,10 @@ namespace PeterHan.ThermalTooltips {
 		/// </summary>
 		private readonly Sprite spriteHot;
 
-		internal ExtendedThermalTooltip(ThermalTooltipsOptions options) {
+		internal ExtendedThermalTooltip(ThermalTooltipsOptions options,
+				BetterInfoCardsCompat compat = null) {
 			this.options = options;
+			bicCompat = compat;
 			Cell = 0;
 			PrimaryElement = null;
 			Drawer = null;
@@ -153,6 +160,7 @@ namespace PeterHan.ThermalTooltips {
 		/// <param name="mass">The element's mass.</param>
 		private void DisplayThermalStats(Element element, float temp, float mass) {
 			float tc = element.thermalConductivity, shc = element.specificHeatCapacity;
+			float tMass = GameUtil.GetDisplaySHC(mass * shc), tEnergy = mass * shc * temp;
 			string kDTU = STRINGS.UI.UNITSUFFIXES.HEAT.KDTU.text.Trim();
 			// Temperature
 			Drawer.DrawText(GetTemperatureString(temp), Style);
@@ -164,14 +172,15 @@ namespace PeterHan.ThermalTooltips {
 			Drawer.NewLine();
 			Drawer.DrawIcon(spriteDash);
 			// Thermal mass (mass is in kg so result is in kDTU/C)
-			Drawer.DrawText(string.Format(ThermalTooltipsStrings.THERMAL_MASS, GameUtil.
-				GetDisplaySHC(mass * shc), kDTU, GameUtil.GetTemperatureUnitSuffix()?.Trim()),
-				Style);
+			bicCompat?.Export(BetterInfoCardsCompat.EXPORT_THERMAL_MASS, tMass);
+			Drawer.DrawText(string.Format(ThermalTooltipsStrings.THERMAL_MASS, tMass, kDTU,
+				GameUtil.GetTemperatureUnitSuffix()?.Trim()), Style);
 			Drawer.NewLine();
 			Drawer.DrawIcon(spriteDash);
 			// Heat energy in kDTU
-			Drawer.DrawText(string.Format(ThermalTooltipsStrings.HEAT_ENERGY, mass * shc *
-				temp, kDTU), Style);
+			bicCompat?.Export(BetterInfoCardsCompat.EXPORT_HEAT_ENERGY, tEnergy);
+			Drawer.DrawText(string.Format(ThermalTooltipsStrings.HEAT_ENERGY, tEnergy, kDTU),
+				Style);
 		}
 
 		/// <summary>
