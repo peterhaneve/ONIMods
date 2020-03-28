@@ -301,7 +301,7 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
-		/// Applied to ModLoader to patch in our handling to LoadDLLs.
+		/// Applied to DLLLoader to patch in our handling to LoadDLLs.
 		/// </summary>
 		[HarmonyPatch]
 		public static class DLLLoader_LoadDLLs_Patch {
@@ -470,6 +470,19 @@ namespace PeterHan.DebugNotIncluded {
 			/// </summary>
 			internal static void Prefix(Mod __instance) {
 				ModLoadHandler.CurrentMod = ModDebugRegistry.Instance.GetDebugInfo(__instance);
+			}
+		}
+
+		/// <summary>
+		/// Applied to ModUtil to log animations loaded.
+		/// </summary>
+		[HarmonyPatch(typeof(ModUtil), "AddKAnimMod")]
+		public static class ModUtil_AddKAnimMod_Patch {
+			/// <summary>
+			/// Applied after AddKAnimMod runs.
+			/// </summary>
+			internal static void Postfix(string name) {
+				DebugLogger.LogDebug("Adding anim \"{0}\"", name);
 			}
 		}
 

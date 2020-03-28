@@ -38,7 +38,7 @@ namespace PeterHan.ThermalTooltips {
 			var instance = ThermalTooltipsPatches.TooltipInstance;
 			var primaryElement = instance?.PrimaryElement;
 			if (primaryElement != null) {
-				float mass = primaryElement.Mass * GetSHCAdjustment(primaryElement.gameObject);
+				float mass = GetAdjustedMass(primaryElement.gameObject, primaryElement.Mass);
 				instance.Drawer = drawer;
 				instance.Style = style;
 				instance.DisplayThermalInfo(primaryElement.Element, primaryElement.Temperature,
@@ -67,17 +67,20 @@ namespace PeterHan.ThermalTooltips {
 		}
 
 		/// <summary>
-		/// Returns the specific heat multiplier for a completed building.
+		/// Returns the adjusted mass for an entity.
 		/// </summary>
-		/// <param name="building">The completed building.</param>
-		/// <returns>The multiplier for that building's SHC.</returns>
-		public static float GetSHCAdjustment(GameObject building) {
-			var sco = building.GetComponentSafe<SimCellOccupier>();
+		/// <param name="entity">The entity.</param>
+		/// <param name="originalMass">The original entity mass.</param>
+		/// <returns>The mass used for that entity in temperature calculations.</returns>
+		public static float GetAdjustedMass(GameObject entity, float originalMass) {
+			var sco = entity.GetComponentSafe<SimCellOccupier>();
+			var def = entity.GetComponentSafe<Building>()?.Def;
 			// Buildings have that insidious /5 multiplier... if they do not use tile
 			// temperature instead (with doors only being /5 if open)
 			//  isSolidTile almost works but it is false on FarmTile
 			//  IsFoundation almost works but it is true on Mesh and Airflow tiles
-			return (sco == null || !sco.IsVisuallySolid) ? 0.2f : 1.0f;
+			return (def == null || (sco != null && sco.IsVisuallySolid)) ? originalMass : def.
+				MassForTemperatureModification;
 		}
 
 		/// <summary>

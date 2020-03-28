@@ -38,33 +38,33 @@ namespace PeterHan.ThermalTooltips {
 		/// <param name="elementTag">The element that is selected.</param>
 		public void AddThermalInfo(DescriptorPanel effectsPane, Tag elementTag) {
 			var element = ElementLoader.GetElement(elementTag);
+			var desc = default(Descriptor);
 			if (element != null && Def != null) {
 				var descriptors = GameUtil.GetMaterialDescriptors(element);
-				var item = default(Descriptor);
 				// Get building mass from its def (primary element is in slot 0)
 				var masses = Def.Mass;
 				float tc = element.thermalConductivity, shc = element.specificHeatCapacity;
-				float mass = (masses != null && masses.Length > 0) ? masses[0] : 0.0f;
+				float mass = ThermalTranspilerPatch.GetAdjustedMass(Def?.BuildingComplete,
+					(masses != null && masses.Length > 0) ? masses[0] : 0.0f),
+					tMass = GameUtil.GetDisplaySHC(mass * shc);
 				string deg = GameUtil.GetTemperatureUnitSuffix()?.Trim(), kDTU = STRINGS.UI.
 					UNITSUFFIXES.HEAT.KDTU.text.Trim();
-				float tMass = GameUtil.GetDisplaySHC(mass * shc) * ThermalTranspilerPatch.
-					GetSHCAdjustment(Def?.BuildingComplete);
 				// GetMaterialDescriptors returns a fresh list
-				item.SetupDescriptor(STRINGS.ELEMENTS.MATERIAL_MODIFIERS.EFFECTS_HEADER,
+				desc.SetupDescriptor(STRINGS.ELEMENTS.MATERIAL_MODIFIERS.EFFECTS_HEADER,
 					STRINGS.ELEMENTS.MATERIAL_MODIFIERS.TOOLTIP.EFFECTS_HEADER);
-				descriptors.Insert(0, item);
+				descriptors.Insert(0, desc);
 				// Thermal Conductivity
-				item.SetupDescriptor(string.Format(STRINGS.UI.ELEMENTAL.THERMALCONDUCTIVITY.
+				desc.SetupDescriptor(string.Format(STRINGS.UI.ELEMENTAL.THERMALCONDUCTIVITY.
 					NAME, tc), string.Format(ThermalTooltipsStrings.BUILDING_CONDUCTIVITY,
 					Def.Name, GameUtil.GetFormattedThermalConductivity(tc), tc, deg,
 					STRINGS.UI.UNITSUFFIXES.HEAT.DTU_S.text.Trim()));
-				item.IncreaseIndent();
-				descriptors.Add(item);
+				desc.IncreaseIndent();
+				descriptors.Add(desc);
 				// Thermal Mass
-				item.SetupDescriptor(string.Format(ThermalTooltipsStrings.THERMAL_MASS, tMass,
+				desc.SetupDescriptor(string.Format(ThermalTooltipsStrings.THERMAL_MASS, tMass,
 					kDTU, deg), string.Format(ThermalTooltipsStrings.BUILDING_THERMAL_MASS,
 					Def.Name, tMass, kDTU, deg));
-				descriptors.Add(item);
+				descriptors.Add(desc);
 				effectsPane.SetDescriptors(descriptors);
 				effectsPane.gameObject.SetActive(true);
 			}
