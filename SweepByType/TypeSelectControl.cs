@@ -223,6 +223,22 @@ namespace PeterHan.SweepByType {
 			else
 				// Clicked when checked or partial, clear all
 				ClearAll();
+			SaveTypes();
+		}
+
+		/// <summary>
+		/// Saves the selected types to the save game so that Sweep By Type will remember
+		/// the selected types across reload.
+		/// </summary>
+		private void SaveTypes() {
+			var savedTypes = SaveGame.Instance?.GetComponent<SavedTypeSelections>();
+			if (savedTypes != null) {
+				// Save type list to the save game
+				var tags = ListPool<Tag, TypeSelectControl>.Allocate();
+				AddTypesToSweep(tags);
+				savedTypes.SetSavedTypes(tags);
+				tags.Recycle();
+			}
 		}
 
 		/// <summary>
@@ -299,15 +315,8 @@ namespace PeterHan.SweepByType {
 		/// Updates the parent check box state from the children.
 		/// </summary>
 		internal void UpdateFromChildren() {
-			var savedTypes = SaveGame.Instance?.GetComponent<SavedTypeSelections>();
 			UpdateAllItems(allItems, children.Values);
-			if (savedTypes != null) {
-				// Save type list to the save game
-				var tags = ListPool<Tag, TypeSelectControl>.Allocate();
-				AddTypesToSweep(tags);
-				savedTypes.SetSavedTypes(tags);
-				tags.Recycle();
-			}
+			SaveTypes();
 		}
 
 		/// <summary>

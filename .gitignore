@@ -251,10 +251,7 @@ paket-files/
 .idea/
 *.sln.iml
 
-# Library folder
-/lib/*
-/lib-testing
-/Out/
+# Other folders
 /Assets/
 /textures/
 *.cmd

@@ -706,7 +706,9 @@ namespace PeterHan.PLib.UI {
 		/// dimension.
 		/// 
 		/// If addLayout is true, a layout element is also added so that future auto layout
-		/// calls will try to maintain that size.
+		/// calls will try to maintain that size. Do not set addLayout to true if either of
+		/// the size dimensions are negative, as laying out components with a negative
+		/// preferred size may cause unexpected behavior.
 		/// </summary>
 		/// <param name="uiElement">The UI element to modify.</param>
 		/// <param name="size">The new element size.</param>
