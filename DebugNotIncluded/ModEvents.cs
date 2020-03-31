@@ -114,11 +114,11 @@ namespace PeterHan.DebugNotIncluded {
 				title = STRINGS.UI.FormatAsAutomationState(title, STRINGS.UI.
 					AutomationState.Standby);
 			else if (type == EventType.ExpectedActive)
-				title = DebugNotIncludedStrings.MOD_DEACTIVATED;
+				title = DebugNotIncludedStrings.UI.MODEVENTS.DEACTIVATED;
 			else if (type == EventType.LoadError)
-				title = DebugNotIncludedStrings.MOD_NOTLOADED;
+				title = DebugNotIncludedStrings.UI.MODEVENTS.NOTLOADED;
 			else if (type == EventType.ExpectedInactive)
-				title = DebugNotIncludedStrings.MOD_ACTIVATED;
+				title = DebugNotIncludedStrings.UI.MODEVENTS.ACTIVATED;
 			else
 				// Bold the title
 				title = "<b><color=#DEDEFF>" + title + "</color></b>";

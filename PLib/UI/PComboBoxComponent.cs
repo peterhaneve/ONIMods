@@ -127,7 +127,8 @@ namespace PeterHan.PLib.UI {
 					rowHeight = LayoutUtility.GetPreferredHeight(rt);
 				}
 				// Update size and enable/disable scrolling if not needed
-				pdn.SetUISize(new Vector2(-1.0f, rows * rowHeight));
+				pdn.rectTransform().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,
+					rows * rowHeight);
 				if (sp != null)
 					sp.vertical = itemCount >= MaxRowsShown;
 				// Move above normal UI elements but below the tooltips

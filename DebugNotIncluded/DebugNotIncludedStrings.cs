@@ -16,8 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using STRINGS;
-
 using AutomationState = STRINGS.UI.AutomationState;
 
 namespace PeterHan.DebugNotIncluded {
@@ -25,39 +23,71 @@ namespace PeterHan.DebugNotIncluded {
 	/// Strings used in Debug Not Included.
 	/// </summary>
 	public static class DebugNotIncludedStrings {
-		// Mod status changes
-		public static LocString MOD_ACTIVATED = UI.FormatAsAutomationState("Activated", AutomationState.Active);
-		public static LocString MOD_DEACTIVATED = UI.FormatAsAutomationState("Deactivated", AutomationState.Standby);
-		public static LocString MOD_NOTLOADED = UI.FormatAsAutomationState("Not loaded", AutomationState.Standby);
+		public static class UI {
+			// New restart message
+			public static class LOADERRORDIALOG {
+				public static LocString TEXT = "An error occurred during start-up.\n\n{0}";
+				public static LocString BLAME = "The crashing code is likely from <b>{0}</b>!";
+				public static LocString UNKNOWN = "It is not clear which mod caused the error.";
+				public static LocString DISABLEMOD = "DISABLE AND RESTART";
+				public static LocString OPENLOG = "OPEN OUTPUT LOG";
+			}
 
-		// Mod management
-		public static LocString TOOLTIP_TOP = "Move to top";
-		public static LocString TOOLTIP_UPONE = "Move up 10 slots";
-		public static LocString TOOLTIP_DOWNONE = "Move down 10 slots";
-		public static LocString TOOLTIP_BOTTOM = "Move to bottom";
-		public static LocString TOOLTIP_ALL = "Enable or disable all";
-		public static LocString TOOLTIP_PLIB = "The currently active version of PLib\nFrom Mod: {0}";
-		public static LocString BUTTON_ALL = "ALL";
-		public static LocString LABEL_PLIB = "PLib Version: {0}";
-		public static LocString LABEL_DESCRIPTION = "Mod ID: {0}\r\nDescription: {1}\r\n";
-		public static LocString LABEL_VERSIONS_FILE = "File Version {0}, ";
-		public static LocString LABEL_VERSIONS_ASSEMBLY = "{0}: {1}Assembly Version {2}\r\n";
+			// Mod status changes
+			public static class MODEVENTS {
+				public static LocString ACTIVATED = STRINGS.UI.FormatAsAutomationState("Activated",
+					AutomationState.Active);
+				public static LocString DEACTIVATED = STRINGS.UI.FormatAsAutomationState("Deactivated",
+					AutomationState.Standby);
+				public static LocString NOTLOADED = STRINGS.UI.FormatAsAutomationState("Not loaded",
+					AutomationState.Standby);
+			}
 
-		// Not first on the list
-		public static LocString DIALOG_NOTFIRST = "Debug Not Included is not the first active mod in the load order.\r\nDebug Not Included can only debug mods loaded after it.\r\n\r\nMove Debug Not Included to the first position?";
-		public static LocString NOTFIRST_TITLE = "LOAD ORDER";
-		public static LocString NOTFIRST_CONFIRM = "MOVE TO TOP";
-		public static LocString NOTFIRST_CANCEL = "CONTINUE";
-		public static LocString NOTFIRST_IGNORE = "DISABLE THIS WARNING";
+			// Mod management
+			public static class MODSSCREEN {
+				public static LocString BUTTON_ALL = "ALL";
+				public static LocString BUTTON_LOCAL = "Local Folder";
+				public static LocString BUTTON_SUBSCRIPTION = "Subscription";
+				public static LocString BUTTON_UNSUB = "Unsubscribe";
+				public static LocString LABEL_PLIB = "PLib Version: {0}";
+				public static LocString LABEL_DESCRIPTION = "Mod ID: {0}\n";
+				public static LocString LABEL_THISMOD = "Thank you for using Debug Not Included!";
+				public static LocString LABEL_VERSIONS_FILE = "File Version {0}, ";
+				public static LocString LABEL_VERSIONS_ASSEMBLY = "{0}: {1}Assembly Version {2}\n";
+				public static LocString LABEL_PLIB_MERGED = " <b>merged</b>";
+				public static LocString LABEL_PLIB_PACKED = " <b>packed</b>";
+			}
 
-		// New restart message
-		public static LocString DIALOG_LOADERROR = "An error occurred during start-up.\r\n\r\n{0}";
-		public static LocString LOADERR_BLAME = "The crashing code is likely from \"{0}\"!";
-		public static LocString LOADERR_UNKNOWN = "It is not clear which mod caused the error.";
-		public static LocString LOADERR_DISABLEMOD = "DISABLE AND RESTART";
-		public static LocString LOADERR_OPENLOG = "OPEN OUTPUT LOG";
+			// Not first on the list
+			public static class NOTFIRSTDIALOG {
+				public static LocString TEXT = "Debug Not Included is not the first active mod in the load order.\nDebug Not Included can only debug mods loaded after it.\n\nMove Debug Not Included to the first position?";
+				public static LocString TITLE = "LOAD ORDER";
+				public static LocString CONFIRM = "MOVE TO TOP";
+				public static LocString CANCEL = "CONTINUE";
+				public static LocString IGNORE = "DISABLE THIS WARNING";
+			}
 
-		// Key binding to snapshot item under cursor
-		public static LocString KEY_SNAPSHOT = "Log UI element under cursor";
+			public static class TOOLTIPS {
+				public static LocString DNI_TOP = "Move to top";
+				public static LocString DNI_UP = "Move up 10 slots";
+				public static LocString DNI_DOWN = "Move down 10 slots";
+				public static LocString DNI_BOTTOM = "Move to bottom";
+				public static LocString DNI_ALL = "Enable or disable all";
+				public static LocString DNI_UNSUB = "Unsubscribe from this mod";
+				public static LocString DNI_PLIB = "The currently active version of PLib\nFrom Mod: <b>{0}</b>";
+			}
+
+			// Unable to unsubscribe from mod
+			public static class UNSUBFAILEDDIALOG {
+				public static LocString TEXT = "Unable to unsubscribe from mod <b>{0}</b>.";
+			}
+		}
+
+		public static class INPUT_BINDINGS {
+			public static class DEBUG {
+				// Key binding to snapshot item under cursor
+				public static LocString SNAPSHOT = "Log UI element under cursor";
+			}
+		}
 	}
 }

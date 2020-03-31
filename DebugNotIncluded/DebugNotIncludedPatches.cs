@@ -20,6 +20,7 @@ using Harmony;
 using Harmony.ILCopying;
 using KMod;
 using PeterHan.PLib;
+using PeterHan.PLib.Datafiles;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.UI;
 using System;
@@ -71,8 +72,16 @@ namespace PeterHan.DebugNotIncluded {
 		private static void BuildDisplay(ModsScreen __instance, object ___displayedMods) {
 			// Must cast the type because ModsScreen.DisplayedMod is private
 			foreach (var displayedMod in (System.Collections.IEnumerable)___displayedMods)
-				ModDialogs.ConfigureRowInstance(Traverse.Create(displayedMod));
+				ModDialogs.ConfigureRowInstance(Traverse.Create(displayedMod), __instance);
 			__instance.GetComponent<AllModsHandler>()?.UpdateCheckedState();
+		}
+
+		/// <summary>
+		/// Applied to ModsScreen to hide any popups from this mod before the rows get
+		/// destroyed.
+		/// </summary>
+		private static void HidePopups(ModsScreen __instance) {
+			__instance.gameObject.AddOrGet<MoreModActions>().HidePopup();
 		}
 
 		/// <summary>
@@ -118,6 +127,10 @@ namespace PeterHan.DebugNotIncluded {
 			if (DebugNotIncludedOptions.Instance?.DetailedBacktrace ?? true)
 				DebugLogger.InstallExceptionLogger();
 			POptions.RegisterOptions(typeof(DebugNotIncludedOptions));
+			// Set up strings
+			LocString.CreateLocStringKeys(typeof(DebugNotIncludedStrings.UI));
+			LocString.CreateLocStringKeys(typeof(DebugNotIncludedStrings.INPUT_BINDINGS));
+			PLocalization.Register();
 			if (DebugNotIncludedOptions.Instance?.LogAsserts ?? true)
 				LogAllFailedAsserts();
 			// Patch the exception logger for state machines
@@ -138,8 +151,8 @@ namespace PeterHan.DebugNotIncluded {
 					ThisMod));
 			// Default UI debug key is ALT+U
 			UIDebugAction = PAction.Register("DebugNotIncluded.UIDebugAction",
-				DebugNotIncludedStrings.KEY_SNAPSHOT, new PKeyBinding(KKeyCode.U,
-				Modifier.Alt));
+				DebugNotIncludedStrings.INPUT_BINDINGS.DEBUG.SNAPSHOT, new PKeyBinding(
+				KKeyCode.U, Modifier.Alt));
 			// Must postload the mods dialog to come out after aki's mods, ony's mods, PLib
 			// options, and so forth
 			PUtil.RegisterPostload(PostloadHandler);
@@ -151,7 +164,8 @@ namespace PeterHan.DebugNotIncluded {
 		/// <param name="instance">The Harmony instance to execute patches.</param>
 		private static void PostloadHandler(HarmonyInstance instance) {
 			if (DebugNotIncludedOptions.Instance?.PowerUserMode ?? false)
-				instance.Patch(typeof(ModsScreen), "BuildDisplay", postfix:
+				instance.Patch(typeof(ModsScreen), "BuildDisplay",
+					new HarmonyMethod(typeof(DebugNotIncludedPatches), nameof(HidePopups)),
 					new HarmonyMethod(typeof(DebugNotIncludedPatches), nameof(BuildDisplay)));
 			KInputHandler.Add(Global.Instance.GetInputManager().GetDefaultController(),
 				new UISnapshotHandler(), 1024);
@@ -495,7 +509,6 @@ namespace PeterHan.DebugNotIncluded {
 			/// <summary>
 			/// Applied before OnActivate runs.
 			/// </summary>
-			/// <param name="___entryPrefab"></param>
 			internal static void Prefix(GameObject ___entryPrefab) {
 				if (___entryPrefab != null)
 					ModDialogs.ConfigureRowPrefab(___entryPrefab);
@@ -515,7 +528,7 @@ namespace PeterHan.DebugNotIncluded {
 					obj.SetActive(false);
 					// Drop a checkbox "All" there instead
 					var parent = obj.GetParent();
-					if (parent != null && obj != null)
+					if (parent != null)
 						ModDialogs.AddExtraButtons(__instance.gameObject, parent);
 				}
 			}

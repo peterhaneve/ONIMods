@@ -719,12 +719,14 @@ namespace PeterHan.PLib.UI {
 				bool addLayout = false) {
 			if (uiElement == null)
 				throw new ArgumentNullException("uiElement");
-			var transform = uiElement.AddOrGet<RectTransform>();
+			var transform = uiElement.rectTransform();
 			float width = size.x, height = size.y;
-			if (width >= 0.0f)
-				transform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
-			if (height >= 0.0f)
-				transform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
+			if (transform != null) {
+				if (width >= 0.0f)
+					transform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
+				if (height >= 0.0f)
+					transform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
+			}
 			if (addLayout) {
 				var le = uiElement.AddOrGet<LayoutElement>();
 				// Set minimum and preferred size

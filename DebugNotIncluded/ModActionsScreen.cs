@@ -16,37 +16,51 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
+using KMod;
+using UnityEngine;
+using UnityEngine.EventSystems;
 
-namespace PeterHan.PLib {
+namespace PeterHan.DebugNotIncluded {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// Stores information about the "More Mod Actions" screen.
 	/// </summary>
-	public static class PVersion {
+	internal sealed class ModActionsScreen : MonoBehaviour, IPointerEnterHandler,
+			IPointerExitHandler {
 		/// <summary>
-		/// The PLib version.
+		/// Whether the mouse is over this component.
 		/// </summary>
-		public const string VERSION = "3.5.1.0";
+		public bool IsOver { get; private set; }
 
 		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in OnLoad, and will always return false in those cases.
+		/// The index of the active mod in the list.
 		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				bool latest = false;
-				try {
-					latest = VERSION == PSharedData.GetData<string>(PRegistry.KEY_VERSION);
-				} catch (OverflowException) {
-				} catch (FormatException) {
-				} catch (ArgumentOutOfRangeException) {
-				}
-				return latest;
-			}
+		public int Index { get; set; }
+
+		/// <summary>
+		/// The mod that is active.
+		/// </summary>
+		public Mod Mod { get; set; }
+
+		internal ModActionsScreen() {
+			Index = -1;
+			IsOver = false;
+			Mod = null;
+		}
+
+		public void OnPointerEnter(PointerEventData data) {
+			IsOver = true;
+		}
+
+		public void OnPointerExit(PointerEventData data) {
+			IsOver = false;
+		}
+
+		/// <summary>
+		/// Shows or hides the parent game object.
+		/// </summary>
+		/// <param name="active">true to make it visible, or false otherwise.</param>
+		public void SetActive(bool active) {
+			gameObject.SetActive(active);
 		}
 	}
 }
