@@ -142,7 +142,7 @@ namespace PeterHan.ToastControl {
 		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.DELIVERED_DUPLICANT",
 			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.DELIVERED_DUPLICANT",
 			"STRINGS.UI.FRONTEND.TOASTCONTROL.MATERIALS")]
-		public bool DeliveredDuplicant { get; set; }
+		public bool Delivered { get; set; }
 
 		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.DELIVERED_MACHINE",
 			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.DELIVERED_MACHINE",
@@ -177,7 +177,7 @@ namespace PeterHan.ToastControl {
 		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.PICKEDUP_DUPLICANT",
 			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.PICKEDUP_DUPLICANT",
 			"STRINGS.UI.FRONTEND.TOASTCONTROL.MATERIALS")]
-		public bool PickedUpDuplicant { get; set; }
+		public bool PickedUp { get; set; }
 
 		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.PICKEDUP_MACHINE",
 			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.PICKEDUP_MACHINE",
@@ -251,7 +251,7 @@ namespace PeterHan.ToastControl {
 			DamagePipe = true;
 			DamagePressure = true;
 			DamageRocket = true;
-			DeliveredDuplicant = true;
+			Delivered = false;
 			DeliveredMachine = false;
 			DiseaseCure = true;
 			DiseaseInfect = true;
@@ -273,7 +273,7 @@ namespace PeterHan.ToastControl {
 			Overjoyed = true;
 			MopNotFloor = true;
 			MopTooMuch = true;
-			PickedUpDuplicant = true;
+			PickedUp = false;
 			PickedUpMachine = false;
 			ResearchGained = true;
 			SkillPointEarned = true;

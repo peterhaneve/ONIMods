@@ -81,18 +81,18 @@ namespace PeterHan.SandboxTools {
 				}, null, Def.GetUISprite(Assets.GetPrefab("GeyserGeneric_slush_water"))));
 			// Update the special filter to add other comet types
 			foreach (var filter in filters)
-				if (filter.Name == STRINGS.UI.SANDBOXTOOLS.FILTERS.ENTITIES.SPECIAL)
+				if (filter.Name == STRINGS.UI.SANDBOXTOOLS.FILTERS.ENTITIES.SPECIAL) {
+					var oldCondition = filter.condition;
 					filter.condition = (entity) => {
 						var prefab = entity as KPrefabID;
 						bool ok = prefab != null;
 						if (ok) {
 							string name = prefab.PrefabTag.Name;
-							ok = name == MinionConfig.ID || name == DustCometConfig.ID ||
-								name == RockCometConfig.ID || name == IronCometConfig.ID ||
-								name == GoldCometConfig.ID || name == CopperCometConfig.ID;
+							ok = name == GoldCometConfig.ID || name == CopperCometConfig.ID;
 						}
-						return ok;
+						return ok || oldCondition.Invoke(entity);
 					};
+				}
 			// Add matching assets
 			var options = ListPool<object, SandboxToolParameterMenu>.Allocate();
 			foreach (var prefab in Assets.Prefabs)

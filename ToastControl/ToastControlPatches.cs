@@ -27,6 +27,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
 
+using Delivery = FetchAreaChore.StatesInstance.Delivery;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<Harmony.CodeInstruction>;
 
 namespace PeterHan.ToastControl {
@@ -150,6 +151,39 @@ namespace PeterHan.ToastControl {
 		}
 
 		/// <summary>
+		/// Transpiler code shared between the pickup and delivery transpilers.
+		/// </summary>
+		/// <param name="method">The method code to transpile.</param>
+		/// <param name="newInstructions">The new code instructions to insert - 
+		/// should return a bool to determine if Store shows popups.</param>
+		/// <returns>The transpiled method code.</returns>
+		private static TranspiledMethod ExecuteChoreTranspiler(TranspiledMethod method,
+				IList<CodeInstruction> newInstructions) {
+			var instructions = new List<CodeInstruction>(method);
+			int n = instructions.Count, toAdd = newInstructions.Count, previousCall = 0;
+			bool patched = false;
+			// Streaming this transpiler will be difficult since instructions before the call
+			// to Store need to be changed
+			var find = typeof(Storage).GetMethodSafe(nameof(Storage.Store), false,
+				PPatchTools.AnyArguments);
+			for (int i = 0; i < n; i++) {
+				var instr = instructions[i];
+				if (instr.opcode == OpCodes.Callvirt) {
+					// ReplaceMethodCall will not work here since we need information not
+					// available in the call to Store
+					if (find != null && (instr.operand as MethodInfo) == find) {
+						patched = SwapArgument(instructions, previousCall, i, newInstructions);
+						break;
+					}
+					previousCall = i;
+				}
+			}
+			if (!patched)
+				PUtil.LogWarning("No calls to Storage.Store found!");
+			return instructions;
+		}
+
+		/// <summary>
 		/// Transpiler code shared between the long and short form PopFXManager.SpawnFX
 		/// handler methods.
 		/// </summary>
@@ -184,26 +218,6 @@ namespace PeterHan.ToastControl {
 			if (!replaced)
 				PUtil.LogWarning("No calls to SpawnFX found: {0}.{1}".F(original.DeclaringType.
 					FullName, original.Name));
-		}
-
-		/// <summary>
-		/// Transpiler code shared between the pickup and delivery transpilers
-		/// </summary>
-		/// <param name="method">The method code to transpile.</param>
-		/// <param name="newInstructions">The new code instructions to insert - 
-		/// should return a bool to determine if Store shows popups.</param>
-		/// <returns>The transpiled method code.</returns>
-		private static TranspiledMethod ExecuteChoreTranspiler(TranspiledMethod method, List<CodeInstruction> newInstructions) {
-			var ins = method.ToList();
-			var targetMethod = AccessTools.Method(typeof(Storage), nameof(Storage.Store));
-
-			int storeIndex = ins.FindIndex(x => x.operand == (object)targetMethod);
-			int prevCallIndex = ins.FindLastIndex(storeIndex - 1, x => x.opcode == OpCodes.Callvirt);
-			int targetIndex = ins.FindIndex(prevCallIndex, x => x.opcode == OpCodes.Ldc_I4_0);
-
-			ins.InsertRange(targetIndex + 1, newInstructions);
-			ins.RemoveAt(targetIndex);
-			return ins;
 		}
 
 		public static void OnLoad() {
@@ -242,6 +256,37 @@ namespace PeterHan.ToastControl {
 			if (ToastControlPopups.ShowPopup(source, text))
 				popup = instance.SpawnFX(icon, text, targetTransform, lifetime, track_target);
 			return popup;
+		}
+
+		/// <summary>
+		/// Swaps the first "false" (0) constant load in the specified range with the
+		/// specified instructions.
+		/// </summary>
+		/// <param name="instructions">The instructions to modify.</param>
+		/// <param name="start">The starting index to search (exclusive).</param>
+		/// <param name="end">The ending index to search (exclusive).</param>
+		/// <param name="newInstructions">The instructions to use as replacements.</param>
+		/// <returns>true if instructions were replaced, or false otherwise.</returns>
+		private static bool SwapArgument(List<CodeInstruction> instructions, int start,
+				int end, ICollection<CodeInstruction> newInstructions) {
+			bool patched = false;
+			for (int j = start + 1; j < end && !patched; j++) {
+				var instr = instructions[j];
+				// "false"
+				if (instr.opcode == OpCodes.Ldc_I4_0) {
+#if DEBUG
+					PUtil.LogDebug("Replacing " + instr + " with:\n" + newInstructions.
+						Join("\n"));
+#endif
+					instructions.RemoveAt(j);
+					instructions.InsertRange(j, newInstructions);
+					// Copy the labels and blocks to the new instructions
+					instructions[j].labels = instr.labels;
+					instructions[j].blocks = instr.blocks;
+					patched = true;
+				}
+			}
+			return patched;
 		}
 
 		/// <summary>
@@ -308,54 +353,75 @@ namespace PeterHan.ToastControl {
 		}
 
 		/// <summary>
-		/// Applied to FetchAreaChore.StatesInstance.Deliver.Complete, replaces bool that controls popups.
+		/// Applied to FetchAreaChore.StatesInstance.Delivery.Complete to determine whether
+		/// store popups are shown.
 		/// </summary>
-		[HarmonyPatch(typeof(FetchAreaChore.StatesInstance.Delivery), nameof(FetchAreaChore.StatesInstance.Delivery.Complete))]
-		public class Deliver_Patch {
+		[HarmonyPatch(typeof(Delivery), "Complete")]
+		public static class Delivery_Complete_Patch {
 			/// <summary>
-			/// Applied before Store runs.
+			/// Transpiles Complete to alter the "display popup" flag on Storage.Store
+			/// depending on the options settings.
 			/// </summary>
-			internal static TranspiledMethod Transpiler(TranspiledMethod method) => ExecuteChoreTranspiler(method, new List<CodeInstruction>() {
-					new CodeInstruction(OpCodes.Ldarg_0),
-                    // Would have to call `Ldobj` on the struct to pass it directly to the method, so might as well just grab the chore here.
-                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FetchAreaChore.StatesInstance.Delivery), "get_chore")),
-					new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Deliver_Patch), nameof(Deliver_Patch.ShouldHidePopups)))
-				});
+			internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+				var getChore = typeof(Delivery).GetPropertySafe<FetchChore>(nameof(Delivery.
+					chore), false)?.GetGetMethod(true);
+				var target = typeof(Delivery_Complete_Patch).GetMethodSafe(
+					nameof(ShouldHidePopups), true, typeof(FetchChore));
+				var result = method;
+				if (getChore == null)
+					// Unable to retrieve the chore, avoid crashing and just do not transpile
+					PUtil.LogWarning("Unable to retrieve Delivery.chore property");
+				else
+					result = ExecuteChoreTranspiler(method, new List<CodeInstruction>(3) {
+						new CodeInstruction(OpCodes.Ldarg_0),
+						// Would have to call `Ldobj` on the struct to pass it directly to the
+						// method, so might as well just grab the chore here
+						new CodeInstruction(OpCodes.Call, getChore),
+						new CodeInstruction(OpCodes.Call, target)
+					});
+				return result;
+			}
 
 			/// <summary>
-			/// Determines if popups should be hidden.
+			/// Determines if popups should be hidden from deliveries.
 			/// </summary>
+			/// <param name="chore">The chore that delivered the item.</param>
 			private static bool ShouldHidePopups(FetchChore chore)
 			{
 				var opts = ToastControlPopups.Options;
-				if (opts.DeliveredDuplicant ^ opts.DeliveredMachine)
-					return !chore.fetcher.GetComponent<MinionBrain>();
-				return !opts.DeliveredDuplicant;
+				bool deliverDupe = opts.Delivered;
+				return (deliverDupe != opts.DeliveredMachine) ? (deliverDupe != (chore.fetcher.
+					GetComponent<MinionBrain>() != null)) : !deliverDupe;
 			}
 		}
 
 		/// <summary>
-		/// Applied to Pickupable.OnCompleteWork, replaces bool that controls popups.
+		/// Applied to Pickupable.OnCompleteWork to determine whether pick up popups are shown.
 		/// </summary>
 		[HarmonyPatch(typeof(Pickupable), "OnCompleteWork")]
-		public class Pickup_Patch {
+		public static class Pickupable_OnCompleteWork_Patch {
 			/// <summary>
-			/// Applied before Store runs.
+			/// Transpiles OnCompleteWork to alter the "display popup" flag on Storage.Store
+			/// depending on the options settings.
 			/// </summary>
-			internal static TranspiledMethod Transpiler(TranspiledMethod method) => ExecuteChoreTranspiler(method, new List<CodeInstruction>() {
+			internal static TranspiledMethod Transpiler(TranspiledMethod method) =>
+				ExecuteChoreTranspiler(method, new List<CodeInstruction>(2) {
+					// Loads the first real Worker argument (arg 0 is this)
 					new CodeInstruction(OpCodes.Ldarg_1),
-					new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Pickup_Patch), nameof(Pickup_Patch.ShouldHidePopups)))
+					new CodeInstruction(OpCodes.Call, typeof(Pickupable_OnCompleteWork_Patch).
+						GetMethodSafe(nameof(ShouldHidePopups), true, typeof(Worker)))
 				});
 
 			/// <summary>
-			/// Determines if popups should be hidden.
+			/// Determines if popups should be hidden from pick ups.
 			/// </summary>
+			/// <param name="worker">The worker who completed the chore.</param>
 			private static bool ShouldHidePopups(Worker worker)
 			{
 				var opts = ToastControlPopups.Options;
-				if (opts.PickedUpDuplicant ^ opts.PickedUpMachine)
-					return !worker.GetComponent<MinionBrain>();
-				return !opts.DeliveredDuplicant;
+				bool pickupDupe = opts.PickedUp;
+				return (pickupDupe != opts.PickedUpMachine) ? (pickupDupe != (worker.
+					GetComponent<MinionBrain>() != null)) : !pickupDupe;
 			}
 		}
 
