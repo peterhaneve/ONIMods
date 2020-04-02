@@ -35,6 +35,8 @@ namespace PeterHan.ToastControl {
 					public static LocString DUPLICANTS = "Duplicants and Critters";
 					private const string DISEASE = "disease";
 					private const string ITEM = "Item";
+					private const string DUPLICANT = "(Duplicant)";
+					private const string MACHINE = "(Machine)";
 					public static LocString MATERIALS = "Materials";
 					internal const string OTHER = "other sources";
 					public static LocString TOOLS = "Tools";
@@ -44,8 +46,10 @@ namespace PeterHan.ToastControl {
 
 					public static LocString BUILD_COMPLETE = "Construction completed";
 					public static LocString CRITTER_DROPS = "Critter drops";
-					public static LocString DELIVERED = string.Format(STRINGS.UI.DELIVERED,
-						ITEM, "");
+					public static LocString DELIVERED_DUPLICANT = string.Format(STRINGS.UI.DELIVERED,
+						ITEM, DUPLICANT);
+					public static LocString DELIVERED_MACHINE = string.Format(STRINGS.UI.DELIVERED,
+						ITEM, MACHINE);
 					public static LocString DISEASE_CURED = string.Format(STRINGS.
 						DUPLICANTS.DISEASES.CURED_POPUP, DISEASE);
 					public static LocString DISEASE_INFECTED = string.Format(STRINGS.
@@ -60,8 +64,10 @@ namespace PeterHan.ToastControl {
 					public static LocString INVALID_CONNECTION = "Invalid utility connection";
 					public static LocString ITEM_GAINED = "Item obtained";
 					public static LocString OVERJOYED = "Overjoyed reactions";
-					public static LocString PICKEDUP = string.Format(STRINGS.UI.PICKEDUP,
-						ITEM, "");
+					public static LocString PICKEDUP_DUPLICANT = string.Format(STRINGS.UI.PICKEDUP,
+						ITEM, DUPLICANT);
+					public static LocString PICKEDUP_MACHINE = string.Format(STRINGS.UI.PICKEDUP,
+						ITEM, MACHINE);
 					public static LocString RESEARCH_GAINED = "Research point gained";
 
 					private const string DAMAGE_BASE = "Damage: {0}";
@@ -107,7 +113,8 @@ namespace PeterHan.ToastControl {
 						NOTIFICATION_TOOLTIP, FRONTEND.TOASTCONTROL.BUILDING, DAMAGESOURCES.
 						ROCKET);
 					public static LocString DEBUG_LOCATION_INVALID = "Location selected for spawn is not valid";
-					public static LocString DELIVERED = "Item was delivered to storage or building";
+					public static LocString DELIVERED_DUPLICANT = "Item was delivered to storage or building by a duplicant";
+					public static LocString DELIVERED_MACHINE = "Item was delivered to storage or building by a machine";
 					public static LocString DISEASE_CURED = "Successfully cured of a disease";
 					public static LocString DISEASE_INFECTED = "Became infected by a disease";
 					public static LocString EFFECT_ADDED = "An effect was applied to a Duplicant or critter";
@@ -130,7 +137,8 @@ namespace PeterHan.ToastControl {
 					public static LocString MOP_TOO_MUCH = "Too much " + STRINGS.UI.
 						FormatAsLink("Liquid", "LIQUID") + " to mop";
 					public static LocString OVERJOYED = "Duplicants' Overjoyed reactions:\n - Super Productive";
-					public static LocString PICKEDUP = "Item was removed from storage or building";
+					public static LocString PICKEDUP_DUPLICANT = "Item was removed from storage or building by a duplicant";
+					public static LocString PICKEDUP_MACHINE = "Item was removed from storage or building by a machine";
 					public static LocString RESEARCH_GAINED = "Progress made towards a research objective";
 					public static LocString SETTINGS_APPLIED = "Settings were copied to another building";
 				}

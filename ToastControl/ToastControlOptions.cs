@@ -139,10 +139,15 @@ namespace PeterHan.ToastControl {
 			"STRINGS.UI.FRONTEND.TOASTCONTROL.DUPLICANTS")]
 		public bool SkillPointEarned { get; set; }
 
-		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.DELIVERED",
-			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.DELIVERED",
+		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.DELIVERED_DUPLICANT",
+			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.DELIVERED_DUPLICANT",
 			"STRINGS.UI.FRONTEND.TOASTCONTROL.MATERIALS")]
-		public bool Delivered { get; set; }
+		public bool DeliveredDuplicant { get; set; }
+
+		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.DELIVERED_MACHINE",
+			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.DELIVERED_MACHINE",
+			"STRINGS.UI.FRONTEND.TOASTCONTROL.MATERIALS")]
+		public bool DeliveredMachine { get; set; }
 
 		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.ELEMENT_GAINED",
 			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.ELEMENT_GAINED",
@@ -169,10 +174,15 @@ namespace PeterHan.ToastControl {
 			"STRINGS.UI.FRONTEND.TOASTCONTROL.MATERIALS")]
 		public bool ItemGained { get; set; }
 
-		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.PICKEDUP",
-			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.PICKEDUP",
+		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.PICKEDUP_DUPLICANT",
+			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.PICKEDUP_DUPLICANT",
 			"STRINGS.UI.FRONTEND.TOASTCONTROL.MATERIALS")]
-		public bool PickedUp { get; set; }
+		public bool PickedUpDuplicant { get; set; }
+
+		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.PICKEDUP_MACHINE",
+			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.PICKEDUP_MACHINE",
+			"STRINGS.UI.FRONTEND.TOASTCONTROL.MATERIALS")]
+		public bool PickedUpMachine { get; set; }
 
 		[Option("STRINGS.UI.TOOLTIPS.NOMATERIAL",
 			"STRINGS.UI.TOOLTIPS.SELECTAMATERIAL",
@@ -241,7 +251,8 @@ namespace PeterHan.ToastControl {
 			DamagePipe = true;
 			DamagePressure = true;
 			DamageRocket = true;
-			Delivered = false;
+			DeliveredDuplicant = true;
+			DeliveredMachine = false;
 			DiseaseCure = true;
 			DiseaseInfect = true;
 			EffectAdded = true;
@@ -262,7 +273,8 @@ namespace PeterHan.ToastControl {
 			Overjoyed = true;
 			MopNotFloor = true;
 			MopTooMuch = true;
-			PickedUp = false;
+			PickedUpDuplicant = true;
+			PickedUpMachine = false;
 			ResearchGained = true;
 			SkillPointEarned = true;
 		}

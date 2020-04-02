@@ -143,7 +143,7 @@ namespace PeterHan.ToastControl {
 		private static bool ShowItemStored(object sender, string text) {
 			var storage = sender as Storage;
 			return (storage == null || storage.fxPrefix == Storage.FXPrefix.Delivered) ?
-				Options.Delivered : Options.PickedUp;
+				Options.DeliveredDuplicant : Options.PickedUpDuplicant;
 		}
 
 		private static bool ShowMopError(object _, string text) {
