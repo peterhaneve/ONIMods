@@ -290,6 +290,48 @@ namespace PeterHan.ToastControl {
 		}
 
 		/// <summary>
+		/// Applied to FetchAreaChore.StatesInstance.Delivery.Complete to determine whether
+		/// store popups are shown.
+		/// </summary>
+		[HarmonyPatch(typeof(Delivery), "Complete")]
+		public static class Delivery_Complete_Patch {
+			/// <summary>
+			/// Transpiles Complete to alter the "display popup" flag on Storage.Store
+			/// depending on the options settings.
+			/// </summary>
+			internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+				var getChore = typeof(Delivery).GetPropertySafe<FetchChore>(nameof(Delivery.
+					chore), false)?.GetGetMethod(true);
+				var target = typeof(Delivery_Complete_Patch).GetMethodSafe(
+					nameof(ShouldHidePopups), true, typeof(FetchChore));
+				var result = method;
+				if (getChore == null)
+					// Unable to retrieve the chore, avoid crashing and just do not transpile
+					PUtil.LogWarning("Unable to retrieve Delivery.chore property");
+				else
+					result = ExecuteChoreTranspiler(method, new List<CodeInstruction>(3) {
+						new CodeInstruction(OpCodes.Ldarg_0),
+						// Would have to call `Ldobj` on the struct to pass it directly to the
+						// method, so might as well just grab the chore here
+						new CodeInstruction(OpCodes.Call, getChore),
+						new CodeInstruction(OpCodes.Call, target)
+					});
+				return result;
+			}
+
+			/// <summary>
+			/// Determines if popups should be hidden from deliveries.
+			/// </summary>
+			/// <param name="chore">The chore that delivered the item.</param>
+			private static bool ShouldHidePopups(FetchChore chore) {
+				var opts = ToastControlPopups.Options;
+				bool deliverDupe = opts.Delivered;
+				return (deliverDupe != opts.DeliveredMachine) ? (deliverDupe != (chore.fetcher.
+					GetComponent<MinionBrain>() != null)) : !deliverDupe;
+			}
+		}
+
+		/// <summary>
 		/// Applied to Game to load settings when the user starts a game.
 		/// </summary>
 		[HarmonyPatch(typeof(Game), "OnSpawn")]
@@ -299,6 +341,35 @@ namespace PeterHan.ToastControl {
 			/// </summary>
 			internal static void Postfix() {
 				ToastControlPopups.ReloadOptions();
+			}
+		}
+
+		/// <summary>
+		/// Applied to Pickupable.OnCompleteWork to determine whether pick up popups are shown.
+		/// </summary>
+		[HarmonyPatch(typeof(Pickupable), "OnCompleteWork")]
+		public static class Pickupable_OnCompleteWork_Patch {
+			/// <summary>
+			/// Transpiles OnCompleteWork to alter the "display popup" flag on Storage.Store
+			/// depending on the options settings.
+			/// </summary>
+			internal static TranspiledMethod Transpiler(TranspiledMethod method) =>
+				ExecuteChoreTranspiler(method, new List<CodeInstruction>(2) {
+					// Loads the first real Worker argument (arg 0 is this)
+					new CodeInstruction(OpCodes.Ldarg_1),
+					new CodeInstruction(OpCodes.Call, typeof(Pickupable_OnCompleteWork_Patch).
+						GetMethodSafe(nameof(ShouldHidePopups), true, typeof(Worker)))
+				});
+
+			/// <summary>
+			/// Determines if popups should be hidden from pick ups.
+			/// </summary>
+			/// <param name="worker">The worker who completed the chore.</param>
+			private static bool ShouldHidePopups(Worker worker) {
+				var opts = ToastControlPopups.Options;
+				bool pickupDupe = opts.PickedUp;
+				return (pickupDupe != opts.PickedUpMachine) ? (pickupDupe != (worker.
+					GetComponent<MinionBrain>() != null)) : !pickupDupe;
 			}
 		}
 
@@ -349,79 +420,6 @@ namespace PeterHan.ToastControl {
 				return ExecuteTranspiler(method, SPAWN_FX_SHORT, typeof(ToastControlPatches).
 					GetMethodSafe(nameof(SpawnFXShort), true, PPatchTools.AnyArguments),
 					original);
-			}
-		}
-
-		/// <summary>
-		/// Applied to FetchAreaChore.StatesInstance.Delivery.Complete to determine whether
-		/// store popups are shown.
-		/// </summary>
-		[HarmonyPatch(typeof(Delivery), "Complete")]
-		public static class Delivery_Complete_Patch {
-			/// <summary>
-			/// Transpiles Complete to alter the "display popup" flag on Storage.Store
-			/// depending on the options settings.
-			/// </summary>
-			internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-				var getChore = typeof(Delivery).GetPropertySafe<FetchChore>(nameof(Delivery.
-					chore), false)?.GetGetMethod(true);
-				var target = typeof(Delivery_Complete_Patch).GetMethodSafe(
-					nameof(ShouldHidePopups), true, typeof(FetchChore));
-				var result = method;
-				if (getChore == null)
-					// Unable to retrieve the chore, avoid crashing and just do not transpile
-					PUtil.LogWarning("Unable to retrieve Delivery.chore property");
-				else
-					result = ExecuteChoreTranspiler(method, new List<CodeInstruction>(3) {
-						new CodeInstruction(OpCodes.Ldarg_0),
-						// Would have to call `Ldobj` on the struct to pass it directly to the
-						// method, so might as well just grab the chore here
-						new CodeInstruction(OpCodes.Call, getChore),
-						new CodeInstruction(OpCodes.Call, target)
-					});
-				return result;
-			}
-
-			/// <summary>
-			/// Determines if popups should be hidden from deliveries.
-			/// </summary>
-			/// <param name="chore">The chore that delivered the item.</param>
-			private static bool ShouldHidePopups(FetchChore chore)
-			{
-				var opts = ToastControlPopups.Options;
-				bool deliverDupe = opts.Delivered;
-				return (deliverDupe != opts.DeliveredMachine) ? (deliverDupe != (chore.fetcher.
-					GetComponent<MinionBrain>() != null)) : !deliverDupe;
-			}
-		}
-
-		/// <summary>
-		/// Applied to Pickupable.OnCompleteWork to determine whether pick up popups are shown.
-		/// </summary>
-		[HarmonyPatch(typeof(Pickupable), "OnCompleteWork")]
-		public static class Pickupable_OnCompleteWork_Patch {
-			/// <summary>
-			/// Transpiles OnCompleteWork to alter the "display popup" flag on Storage.Store
-			/// depending on the options settings.
-			/// </summary>
-			internal static TranspiledMethod Transpiler(TranspiledMethod method) =>
-				ExecuteChoreTranspiler(method, new List<CodeInstruction>(2) {
-					// Loads the first real Worker argument (arg 0 is this)
-					new CodeInstruction(OpCodes.Ldarg_1),
-					new CodeInstruction(OpCodes.Call, typeof(Pickupable_OnCompleteWork_Patch).
-						GetMethodSafe(nameof(ShouldHidePopups), true, typeof(Worker)))
-				});
-
-			/// <summary>
-			/// Determines if popups should be hidden from pick ups.
-			/// </summary>
-			/// <param name="worker">The worker who completed the chore.</param>
-			private static bool ShouldHidePopups(Worker worker)
-			{
-				var opts = ToastControlPopups.Options;
-				bool pickupDupe = opts.PickedUp;
-				return (pickupDupe != opts.PickedUpMachine) ? (pickupDupe != (worker.
-					GetComponent<MinionBrain>() != null)) : !pickupDupe;
 			}
 		}
 

@@ -162,7 +162,7 @@ namespace PeterHan.ToastControl {
 		/// <param name="message">The original popup message.</param>
 		/// <returns>true to show the popup, or false to hide it.</returns>
 		public static bool ShowPopup(object parent, string message) {
-			bool show = !Options.GlobalDisable;
+			bool show = Options.GlobalEnable;
 			var parentType = parent as Type;
 			if (parentType == null)
 				parentType = parent.GetType();
@@ -175,13 +175,16 @@ namespace PeterHan.ToastControl {
 				if (lastDot > 0) index = lastDot;
 				type = type.Substring(0, index);
 			}
-			if (show && SHOW_FUNCS.TryGetValue(type, out ShowFunc method))
-				show = method.Invoke(parent, message);
-			else {
+			if (show) {
+				if (SHOW_FUNCS.TryGetValue(type, out ShowFunc method))
+					show = method.Invoke(parent, message);
+				else {
+					// Debug: Flag popup with no handler
 #if DEBUG
-				PUtil.LogWarning("Notification from {0} => \"{1}\" has no handler defined".F(
-					parent == null ? "null" : parent.GetType().FullName, message));
+					PUtil.LogWarning("Popup from {0} => \"{1}\" has no handler defined".F(
+						parent == null ? "null" : parent.GetType().FullName, message));
 #endif
+				}
 			}
 			return show;
 		}

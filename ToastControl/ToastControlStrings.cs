@@ -30,6 +30,8 @@ namespace PeterHan.ToastControl {
 		public static class UI {
 			public static class FRONTEND {
 				public static class TOASTCONTROL {
+					public static LocString OPTIONS_CAPTION = "<b>Selected</b> check boxes will show the popup.\n<b>Deselected</b> check boxes will hide the popup.\n ";
+
 					internal const string BUILDING = "building";
 					public static LocString BUILDINGS = "Buildings";
 					public static LocString DUPLICANTS = "Duplicants and Critters";
@@ -41,8 +43,8 @@ namespace PeterHan.ToastControl {
 					internal const string OTHER = "other sources";
 					public static LocString TOOLS = "Tools";
 
-					public static LocString DISABLE_ALL = "Disable All";
-					public static LocString DISABLE_ALL_TOOLTIP = "Hides all popup notifications, regardless of the other settings";
+					public static LocString CONTROL_ALL = "<b>All</b> Popups";
+					public static LocString CONTROL_ALL_TOOLTIP = "If <b>deselected</b>, hides all popup notifications\nregardless of the other settings";
 
 					public static LocString BUILD_COMPLETE = "Construction completed";
 					public static LocString CRITTER_DROPS = "Critter drops";

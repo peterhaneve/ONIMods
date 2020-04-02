@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Newtonsoft.Json;
 using PeterHan.PLib;
 
 namespace PeterHan.ToastControl {
@@ -24,10 +25,17 @@ namespace PeterHan.ToastControl {
 	/// </summary>
 	[ModInfo("STRINGS.UI.FRONTEND.TOASTCONTROL.NAME", "https://github.com/peterhaneve/ONIMods",
 		collapse: true)]
+	[JsonObject(MemberSerialization = MemberSerialization.OptOut)]
 	public sealed class ToastControlOptions {
-		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.DISABLE_ALL",
-			"STRINGS.UI.FRONTEND.TOASTCONTROL.DISABLE_ALL_TOOLTIP")]
-		public bool GlobalDisable { get; set; }
+		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.OPTIONS_CAPTION")]
+		[JsonIgnore]
+		// Usually OptIn is the right choice, but here there are dozens to serialize and one to
+		// not
+		public LocText Caption => null;
+
+		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.CONTROL_ALL",
+			"STRINGS.UI.FRONTEND.TOASTCONTROL.CONTROL_ALL_TOOLTIP")]
+		public bool GlobalEnable { get; set; }
 
 		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.BUILD_COMPLETE",
 			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.BUILD_COMPLETE",
@@ -235,7 +243,7 @@ namespace PeterHan.ToastControl {
 		public bool MopTooMuch { get; set; }
 
 		public ToastControlOptions() {
-			GlobalDisable = false;
+			GlobalEnable = true;
 			AttributeIncrease = true;
 			BuildingComplete = true;
 			CannotCapture = true;
