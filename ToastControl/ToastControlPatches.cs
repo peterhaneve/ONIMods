@@ -22,6 +22,7 @@ using PeterHan.PLib.Datafiles;
 using PeterHan.PLib.Options;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
@@ -104,7 +105,7 @@ namespace PeterHan.ToastControl {
 			"SeedProducer:ProduceSeed",
 			"SetLocker:DropContents",
 			"SolidConsumerMonitor+Instance:OnEatSolidComplete",
-			"Storage:Store",
+			//"Storage:Store",
 			"ThreatMonitor+Grudge:Calm",
 			"WorldDamage:OnDigComplete"
 		};
@@ -183,6 +184,26 @@ namespace PeterHan.ToastControl {
 			if (!replaced)
 				PUtil.LogWarning("No calls to SpawnFX found: {0}.{1}".F(original.DeclaringType.
 					FullName, original.Name));
+		}
+
+		/// <summary>
+		/// Transpiler code shared between the pickup and delivery transpilers
+		/// </summary>
+		/// <param name="method">The method code to transpile.</param>
+		/// <param name="newInstructions">The new code instructions to insert - 
+		/// should return a bool to determine if Store shows popups.</param>
+		/// <returns>The transpiled method code.</returns>
+		private static TranspiledMethod ExecuteChoreTranspiler(TranspiledMethod method, List<CodeInstruction> newInstructions) {
+			var ins = method.ToList();
+			var targetMethod = AccessTools.Method(typeof(Storage), nameof(Storage.Store));
+
+			int storeIndex = ins.FindIndex(x => x.operand == (object)targetMethod);
+			int prevCallIndex = ins.FindLastIndex(storeIndex - 1, x => x.opcode == OpCodes.Callvirt);
+			int targetIndex = ins.FindIndex(prevCallIndex, x => x.opcode == OpCodes.Ldc_I4_0);
+
+			ins.InsertRange(targetIndex + 1, newInstructions);
+			ins.RemoveAt(targetIndex);
+			return ins;
 		}
 
 		public static void OnLoad() {
@@ -283,6 +304,58 @@ namespace PeterHan.ToastControl {
 				return ExecuteTranspiler(method, SPAWN_FX_SHORT, typeof(ToastControlPatches).
 					GetMethodSafe(nameof(SpawnFXShort), true, PPatchTools.AnyArguments),
 					original);
+			}
+		}
+
+		/// <summary>
+		/// Applied to FetchAreaChore.StatesInstance.Deliver.Complete, replaces bool that controls popups.
+		/// </summary>
+		[HarmonyPatch(typeof(FetchAreaChore.StatesInstance.Delivery), nameof(FetchAreaChore.StatesInstance.Delivery.Complete))]
+		public class Deliver_Patch {
+			/// <summary>
+			/// Applied before Store runs.
+			/// </summary>
+			internal static TranspiledMethod Transpiler(TranspiledMethod method) => ExecuteChoreTranspiler(method, new List<CodeInstruction>() {
+					new CodeInstruction(OpCodes.Ldarg_0),
+                    // Would have to call `Ldobj` on the struct to pass it directly to the method, so might as well just grab the chore here.
+                    new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(FetchAreaChore.StatesInstance.Delivery), "get_chore")),
+					new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Deliver_Patch), nameof(Deliver_Patch.ShouldHidePopups)))
+				});
+
+			/// <summary>
+			/// Determines if popups should be hidden.
+			/// </summary>
+			private static bool ShouldHidePopups(FetchChore chore)
+			{
+				var opts = ToastControlPopups.Options;
+				if (opts.DeliveredDuplicant ^ opts.DeliveredMachine)
+					return !chore.fetcher.GetComponent<MinionBrain>();
+				return !opts.DeliveredDuplicant;
+			}
+		}
+
+		/// <summary>
+		/// Applied to Pickupable.OnCompleteWork, replaces bool that controls popups.
+		/// </summary>
+		[HarmonyPatch(typeof(Pickupable), "OnCompleteWork")]
+		public class Pickup_Patch {
+			/// <summary>
+			/// Applied before Store runs.
+			/// </summary>
+			internal static TranspiledMethod Transpiler(TranspiledMethod method) => ExecuteChoreTranspiler(method, new List<CodeInstruction>() {
+					new CodeInstruction(OpCodes.Ldarg_1),
+					new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Pickup_Patch), nameof(Pickup_Patch.ShouldHidePopups)))
+				});
+
+			/// <summary>
+			/// Determines if popups should be hidden.
+			/// </summary>
+			private static bool ShouldHidePopups(Worker worker)
+			{
+				var opts = ToastControlPopups.Options;
+				if (opts.PickedUpDuplicant ^ opts.PickedUpMachine)
+					return !worker.GetComponent<MinionBrain>();
+				return !opts.DeliveredDuplicant;
 			}
 		}
 
