@@ -50,10 +50,11 @@ namespace PeterHan.DebugNotIncluded {
 				public static LocString BUTTON_SUBSCRIPTION = "Subscription";
 				public static LocString BUTTON_UNSUB = "Unsubscribe";
 				public static LocString LABEL_PLIB = "PLib Version: {0}";
-				public static LocString LABEL_DESCRIPTION = "Mod ID: {0}\n";
+				public static LocString LABEL_DESCRIPTION = "<b>Mod ID</b>: {0}\n";
 				public static LocString LABEL_THISMOD = "Thank you for using Debug Not Included!";
 				public static LocString LABEL_VERSIONS_FILE = "File Version {0}, ";
-				public static LocString LABEL_VERSIONS_ASSEMBLY = "{0}: {1}Assembly Version {2}\n";
+				public static LocString LABEL_VERSIONS_ASSEMBLY = "<b>{0}</b>: {1}Assembly Version {2}\n";
+				public static LocString LABEL_VERSIONS_BOTH = "<b>{0}</b>: Version {1}\n";
 				public static LocString LABEL_PLIB_MERGED = " <b>merged</b>";
 				public static LocString LABEL_PLIB_PACKED = " <b>packed</b>";
 			}

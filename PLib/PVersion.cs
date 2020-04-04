@@ -38,14 +38,7 @@ namespace PeterHan.PLib {
 		/// </summary>
 		public static bool IsLatestVersion {
 			get {
-				bool latest = false;
-				try {
-					latest = VERSION == PSharedData.GetData<string>(PRegistry.KEY_VERSION);
-				} catch (OverflowException) {
-				} catch (FormatException) {
-				} catch (ArgumentOutOfRangeException) {
-				}
-				return latest;
+				return VERSION == PSharedData.GetData<string>(PRegistry.KEY_VERSION);
 			}
 		}
 	}

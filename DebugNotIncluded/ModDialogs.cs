@@ -26,6 +26,7 @@ using System.Reflection;
 using System.Text;
 using UnityEngine;
 
+using AutomationState = STRINGS.UI.AutomationState;
 using UI = PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI;
 
 namespace PeterHan.DebugNotIncluded {
@@ -33,6 +34,11 @@ namespace PeterHan.DebugNotIncluded {
 	/// Manages dialogs shown by Debug Not Included.
 	/// </summary>
 	internal static class ModDialogs {
+		/// <summary>
+		/// The current version of PLib in this mod.
+		/// </summary>
+		private static readonly Version OUR_VERSION = new Version(PVersion.VERSION);
+
 		/// <summary>
 		/// The name used for the new button to perform actions on a mod.
 		/// </summary>
@@ -180,23 +186,39 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
-		/// Gets the PLib version of the assembly, if merged or a packed copy of PLib.
+		/// Gets the formatted PLib version of the assembly, if merged or a packed copy of
+		/// PLib.
 		/// </summary>
 		/// <param name="assembly">The assembly to check.</param>
-		/// <returns>The PLib version merged or packed into that assembly, or null if PLib is not contained in it.</returns>
+		/// <returns>The PLib version merged or packed into that assembly formatted for display,
+		/// or null if PLib is not contained in it.</returns>
 		private static string GetPVersion(Assembly assembly) {
-			string version = null;
+			string version = null, versionText = null;
 			const string PVERSION_TYPE = nameof(PeterHan) + "." + nameof(PLib) + "." +
 				nameof(PVersion);
 			// Does this assembly have PLib?
 			try {
 				var pvType = assembly.GetType(PVERSION_TYPE, false);
-				if (pvType != null)
+				if (pvType != null) {
 					version = pvType.GetFieldSafe(nameof(PVersion.VERSION), true)?.
 						GetValue(null)?.ToString();
+					if (version != null)
+						// Red for PLib versions that are old and bad
+						version = STRINGS.UI.FormatAsAutomationState(version, (new Version(
+							version).Major >= OUR_VERSION.Major) ? AutomationState.Active :
+							AutomationState.Standby);
+				}
 			} catch (TargetInvocationException) {
-			} catch (TypeLoadException) { }
-			return version;
+			} catch (TypeLoadException) {
+			} catch (OverflowException) {
+			} catch (FormatException) {
+			} catch (ArgumentOutOfRangeException) { }
+			// If version was found, format it for display
+			if (version != null)
+				versionText = string.Format(UI.MODSSCREEN.LABEL_PLIB, version) + (assembly.
+					GetName().Name == nameof(PLib) ? UI.MODSSCREEN.LABEL_PLIB_PACKED :
+					UI.MODSSCREEN.LABEL_PLIB_MERGED);
+			return versionText;
 		}
 
 		/// <summary>
@@ -206,24 +228,25 @@ namespace PeterHan.DebugNotIncluded {
 		/// <param name="tooltip">The location where the assembly tooltip will be stored.</param>
 		private static void ListAssemblies(StringBuilder tooltip, Mod modInfo) {
 			var debugInfo = ModDebugRegistry.Instance.GetDebugInfo(modInfo);
-			string plibVersion = null;
+			string plibVersionText = null;
 			// For all other mods, list the assemblies for that mod
 			foreach (var assembly in debugInfo.ModAssemblies) {
-				var fileVer = assembly.GetFileVersion();
-				var name = assembly.GetName();
-				string pv = GetPVersion(assembly);
-				tooltip.AppendFormat(UI.MODSSCREEN.LABEL_VERSIONS_ASSEMBLY,
-					name.Name, (fileVer == null) ? "" : string.Format(
-					UI.MODSSCREEN.LABEL_VERSIONS_FILE, fileVer), name.Version);
-				if (pv != null)
-					// PLib found
-					plibVersion = string.Format(UI.MODSSCREEN.LABEL_PLIB, pv) + (name.Name ==
-						nameof(PLib) ? UI.MODSSCREEN.LABEL_PLIB_PACKED : UI.MODSSCREEN.
-						LABEL_PLIB_MERGED);
+				var asmName = assembly.GetName();
+				string plibVer = GetPVersion(assembly), asmVer = asmName.Version.ToString(),
+					name = asmName.Name, fileVer = assembly.GetFileVersion();
+				// If the versions match, only display one version
+				if (asmVer.Equals(fileVer, StringComparison.OrdinalIgnoreCase))
+					tooltip.AppendFormat(UI.MODSSCREEN.LABEL_VERSIONS_BOTH, name, asmVer);
+				else
+					tooltip.AppendFormat(UI.MODSSCREEN.LABEL_VERSIONS_ASSEMBLY, name,
+						(fileVer == null) ? "" : string.Format(UI.MODSSCREEN.
+						LABEL_VERSIONS_FILE, fileVer), asmVer);
+				if (plibVer != null)
+					plibVersionText = plibVer;
 			}
 			// PLib version, if applicable
-			if (plibVersion != null)
-				tooltip.Append(plibVersion);
+			if (plibVersionText != null)
+				tooltip.Append(plibVersionText);
 		}
 
 		/// <summary>

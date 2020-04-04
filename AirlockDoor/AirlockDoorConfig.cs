@@ -105,7 +105,7 @@ namespace PeterHan.AirlockDoor {
 			Prioritizable.AddRef(go);
 			go.AddOrGet<CopyBuildingSettings>().copyGroupTag = GameTags.Door;
 			go.AddOrGet<Workable>().workTime = 3f;
-			UnityEngine.Object.DestroyImmediate(go.GetComponent<BuildingEnabledButton>());
+			Object.DestroyImmediate(go.GetComponent<BuildingEnabledButton>());
 			go.GetComponent<KBatchedAnimController>().initialAnim = "closed";
 		}
 	}
