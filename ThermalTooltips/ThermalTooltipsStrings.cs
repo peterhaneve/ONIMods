@@ -28,14 +28,26 @@ namespace PeterHan.ThermalTooltips {
 		public static LocString AND_JOIN = "[{0}] and ";
 
 		// Building information shown in the build screen
-		public static LocString BUILDING_THERMAL_MASS = "The completed {0} will have a thermal mass of {1:##0.#} {2}/{3}\n\nAdding or removing {1:##0.#} {2} will change the building's " +
-			STRINGS.UI.FormatAsLink("Temperature", "HEAT") + " by 1 {3}";
-
-		public static LocString BUILDING_CONDUCTIVITY = "The completed {0} will have a thermal conductivity of {1}\n\nFor every 1 {3} of difference between the building's " +
+		public static LocString BUILDING_CONDUCTIVITY = "The completed {0} will have a thermal conductivity of <b>{1}</b>\n\nFor every 1 {3} of difference between the building's " +
 			STRINGS.UI.FormatAsLink("Temperature", "HEAT") + " and its surroundings, {2:##0.#} {4} will be transferred";
+
+		public static LocString BUILDING_MELT_TEMPERATURE = "The completed {0} will melt at <b>{1}</b> into {2}";
+
+		public static LocString BUILDING_THERMAL_MASS = "The completed {0} will have a thermal mass of <b>{1:##0.#} {2}/{3}</b>\n\nAdding or removing {1:##0.#} {2} will change the building's " +
+			STRINGS.UI.FormatAsLink("Temperature", "HEAT") + " by 1 {3}";
 
 		// State change message (fallback if icon not found)
 		public static LocString CHANGES = "Changes";
+
+		// Effect headers for the build screen
+		public static LocString EFFECT_CONDUCTIVITY = STRINGS.UI.FormatAsLink(
+			"Thermal Conductivity", "HEAT") + ": {0}";
+
+		public static LocString EFFECT_MELT_TEMPERATURE = STRINGS.UI.FormatAsLink(
+			"Melting Point", "HEAT") + ": {0}";
+
+		public static LocString EFFECT_THERMAL_MASS = STRINGS.UI.FormatAsLink("Thermal Mass",
+			"HEAT") + ": {0:##0.#} {1}/{2}";
 
 		// Total heat energy in kDTU
 		public static LocString HEAT_ENERGY = "Heat Energy: {0:##0.#} {1}";

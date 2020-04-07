@@ -30,7 +30,7 @@ namespace PeterHan.ThermalTooltips {
 		/// <summary>
 		/// The hysteresis in each direction when changing states.
 		/// </summary>
-		private const float TRANSITION_HYSTERESIS = 3.0f;
+		internal const float TRANSITION_HYSTERESIS = 3.0f;
 
 		/// <summary>
 		/// The cell to use for element-based thermal tooltips.
@@ -98,21 +98,11 @@ namespace PeterHan.ThermalTooltips {
 		/// the provided element, the state of matter will be displayed.</param>
 		private void DisplayElement(Element element, string oldElementName = null) {
 			var prefab = Assets.GetPrefab(element.tag);
-			string name = STRINGS.UI.StripLinkFormatting(element.name);
 			Tuple<Sprite, Color> pair;
 			// Extract the UI preview image
 			if (prefab != null && (pair = Def.GetUISprite(prefab)) != null)
 				Drawer.DrawIcon(pair.first, pair.second, 22);
-			if (name == oldElementName) {
-				// Do not switch case on State, it is a bit field
-				if (element.IsLiquid)
-					name = STRINGS.ELEMENTS.STATE.LIQUID + " " + name;
-				else if (element.IsSolid)
-					name = STRINGS.ELEMENTS.STATE.SOLID + " " + name;
-				else if (element.IsGas)
-					name = STRINGS.ELEMENTS.STATE.GAS + " " + name;
-			}
-			Drawer.DrawText(name, Style);
+			Drawer.DrawText(element.FormatName(oldElementName), Style);
 		}
 
 		/// <summary>

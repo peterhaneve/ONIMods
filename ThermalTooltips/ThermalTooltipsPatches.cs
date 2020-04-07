@@ -44,6 +44,28 @@ namespace PeterHan.ThermalTooltips {
 		internal static ExtendedThermalTooltip TooltipInstance { get; private set; }
 
 		/// <summary>
+		/// Formats a transition element name, adding a prefix if it has the same name as the
+		/// original element.
+		/// </summary>
+		/// <param name="element">The result of the state transition.</param>
+		/// <param name="originalName">The original element name with link formatting removed.</param>
+		/// <returns>The proper name for the result that is unambiguous from the original
+		/// element.</returns>
+		public static string FormatName(this Element element, string originalName) {
+			string name = STRINGS.UI.StripLinkFormatting(element.name);
+			if (name == originalName) {
+				// Do not switch case on State, it is a bit field
+				if (element.IsLiquid)
+					name = STRINGS.ELEMENTS.STATE.LIQUID + " " + name;
+				else if (element.IsSolid)
+					name = STRINGS.ELEMENTS.STATE.SOLID + " " + name;
+				else if (element.IsGas)
+					name = STRINGS.ELEMENTS.STATE.GAS + " " + name;
+			}
+			return name;
+		}
+
+		/// <summary>
 		/// Reports whether the element is a valid state transition.
 		/// </summary>
 		/// <param name="element">The element to check.</param>
