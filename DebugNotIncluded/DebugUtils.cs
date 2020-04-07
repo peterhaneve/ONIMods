@@ -285,13 +285,13 @@ namespace PeterHan.DebugNotIncluded {
 					for (int i = 0; i < nParams; i++)
 						paramTypes[i] = parameters[i].GetTypeByUnityName();
 					// Genericize it
-					var baseType = AccessTools.TypeByName(match.Groups[1].Value);
+					var baseType = PPatchTools.GetTypeSafe(match.Groups[1].Value);
 					if (baseType != null && baseType.IsGenericTypeDefinition)
 						type = baseType.MakeGenericType(paramTypes);
 					else
 						type = baseType;
 				} else
-					type = AccessTools.TypeByName(typeName);
+					type = PPatchTools.GetTypeSafe(typeName);
 			}
 			return type;
 		}

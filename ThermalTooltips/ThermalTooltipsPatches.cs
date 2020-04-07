@@ -108,15 +108,13 @@ namespace PeterHan.ThermalTooltips {
 			internal static void Postfix() {
 				var options = POptions.ReadSettings<ThermalTooltipsOptions>();
 				// Check for DisplayAllTemps
-				try {
-					if (Type.GetType("DisplayAllTemps.State, DisplayAllTemps", false) != null)
-					{
-						// Let Display All Temps take over display (ironically setting AllUnits
-						// to FALSE) since it patches GetFormattedTemperature
-						PUtil.LogDebug("DisplayAllTemps compatibility activated");
-						options.AllUnits = false;
-					}
-				} catch { }
+				if (PPatchTools.GetTypeSafe("DisplayAllTemps.State", "DisplayAllTemps") !=
+						null) {
+					// Let Display All Temps take over display (ironically setting AllUnits
+					// to FALSE) since it patches GetFormattedTemperature
+					PUtil.LogDebug("DisplayAllTemps compatibility activated");
+					options.AllUnits = false;
+				}
 				TooltipInstance = new ExtendedThermalTooltip(options, bicCompat);
 				PUtil.LogDebug("Created ExtendedThermalTooltip");
 			}

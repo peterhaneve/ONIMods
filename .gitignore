@@ -252,8 +252,8 @@ paket-files/
 *.sln.iml
 
 # Other folders
-/Assets/
 /textures/
-*.cmd
 /*.pptx
+/*.zip
+*.cmd
 *.po

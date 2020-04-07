@@ -20,7 +20,6 @@ using Harmony;
 using Harmony.ILCopying;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
@@ -200,8 +199,52 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Retrieves a type using its full name (including namespace). However, the assembly
+		/// name is optional, as this method searches all assemblies in the current
+		/// AppDomain if it is null or empty.
+		/// </summary>
+		/// <param name="name">The type name to retrieve.</param>
+		/// <param name="assemblyName">If specified, the name of the assembly that contains
+		/// the type. No other assembly name will be searched if this parameter is not null
+		/// or empty. The assembly name might not match the DLL name, use a decompiler to
+		/// make sure.</param>
+		/// <returns>The type, or null if the type is not found or cannot be loaded.</returns>
+		public static Type GetTypeSafe(string name, string assemblyName = null) {
+			Type type = null;
+			if (string.IsNullOrEmpty(assemblyName))
+				foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) {
+					try {
+						type = assembly.GetType(name, false);
+					} catch (System.IO.IOException) {
+						// The common parent of exceptions when the type requires another type
+						// that cannot be loaded
+					} catch (BadImageFormatException) { }
+					if (type != null) break;
+				}
+			else {
+				try {
+					type = Type.GetType(name + ", " + assemblyName, false);
+				} catch (TargetInvocationException e) {
+					PUtil.LogWarning("Unable to load type {0} from assembly {1}:".F(name,
+						assemblyName));
+					PUtil.LogExcWarn(e);
+				} catch (ArgumentException e) {
+					// A generic type is loaded with bad arguments
+					PUtil.LogWarning("Unable to load type {0} from assembly {1}:".F(name,
+						assemblyName));
+					PUtil.LogExcWarn(e);
+				} catch (System.IO.IOException) {
+					// The common parent of exceptions when the type requires another type that
+					// cannot be loaded
+				} catch (BadImageFormatException) { }
+			}
+			return type;
+		}
+
+		/// <summary>
 		/// Adds a logger to all unhandled exceptions.
 		/// </summary>
+		[Obsolete("Do not use this method in production code. Make sure to remove it in release builds, or disable it with #if DEBUG.")]
 		public static void LogAllExceptions() {
 			// This is not for production use
 			PUtil.LogWarning("PLib in mod " + Assembly.GetCallingAssembly().GetName()?.Name +
@@ -213,6 +256,7 @@ namespace PeterHan.PLib {
 		/// Adds a logger to all failed assertions. The assertions will still fail, but a stack
 		/// trace will be printed for each failed assertion.
 		/// </summary>
+		[Obsolete("Do not use this method in production code. Make sure to remove it in release builds, or disable it with #if DEBUG.")]
 		public static void LogAllFailedAsserts() {
 			var inst = HarmonyInstance.Create("PeterHan.PLib.LogFailedAsserts");
 			MethodBase assert;

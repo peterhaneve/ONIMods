@@ -128,7 +128,7 @@ namespace PeterHan.ToastControl {
 					int n = types.Length;
 					MethodBase result = null;
 					// Resolve the type, descending by '+' if needed
-					var type = AccessTools.TypeByName(types[0]);
+					var type = PPatchTools.GetTypeSafe(types[0]);
 					for (int i = 1; i < n && type != null; i++)
 						type = type.GetNestedType(types[i], BindingFlags.NonPublic |
 							BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);

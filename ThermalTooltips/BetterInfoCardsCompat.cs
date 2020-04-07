@@ -27,10 +27,14 @@ namespace PeterHan.ThermalTooltips {
 	/// </summary>
 	internal sealed class BetterInfoCardsCompat {
 		/// <summary>
-		/// The assembly qualified name for types in BetterInfoCards, including the root
-		/// namespace.
+		/// The assembly name for types in BetterInfoCards.
 		/// </summary>
-		private static string BIC_ASSEMBLY = "BetterInfoCards.{0}, BetterInfoCards";
+		private const string BIC_ASSEMBLY = "BetterInfoCards";
+
+		/// <summary>
+		/// The root namespace for types in BetterInfoCards.
+		/// </summary>
+		private const string BIC_NAMESPACE = "BetterInfoCards.";
 
 		/// <summary>
 		/// The export title for heat energy.
@@ -94,11 +98,12 @@ namespace PeterHan.ThermalTooltips {
 		internal BetterInfoCardsCompat() {
 			MethodInfo addConv = null, exportData = null;
 			try {
-				addConv = Type.GetType(BIC_ASSEMBLY.F("ConverterManager"))?.GetMethodSafe(
-					"AddConverter", true, PPatchTools.AnyArguments);
-				exportData = Type.GetType(BIC_ASSEMBLY.F("CollectHoverInfo"))?.
-					GetNestedType("GetSelectInfo_Patch", BindingFlags.Static | BindingFlags.
-					Instance | BindingFlags.NonPublic | BindingFlags.Public)?.
+				addConv = PPatchTools.GetTypeSafe(BIC_NAMESPACE + "ConverterManager",
+					BIC_ASSEMBLY)?.GetMethodSafe("AddConverter", true, PPatchTools.
+					AnyArguments);
+				exportData = PPatchTools.GetTypeSafe(BIC_NAMESPACE + "CollectHoverInfo",
+					BIC_ASSEMBLY)?.GetNestedType("GetSelectInfo_Patch", BindingFlags.Static |
+					BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)?.
 					GetMethodSafe("Export", true, typeof(string), typeof(object));
 			} catch (TargetInvocationException e) {
 				PUtil.LogWarning("Exception when loading Better Info Cards compatibility:");

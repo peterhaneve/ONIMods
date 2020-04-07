@@ -73,7 +73,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToastControl", "ToastContro
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighFlowConduits", "HighFlowConduits\HighFlowConduits.csproj", "{418AE069-5F79-4C8D-A4DA-F2E303615F5E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CleanDrop", "CleanDrop\CleanDrop.csproj", "{86E9BA14-F3B4-45B6-9DE6-537F6EF6EB30}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CleanDrop", "CleanDrop\CleanDrop.csproj", "{86E9BA14-F3B4-45B6-9DE6-537F6EF6EB30}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClothingTweaks", "ClothingTweaks\ClothingTweaks.csproj", "{39A349AE-5CD5-46C0-8709-3C6877EA2AAB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -225,6 +227,10 @@ Global
 		{86E9BA14-F3B4-45B6-9DE6-537F6EF6EB30}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{86E9BA14-F3B4-45B6-9DE6-537F6EF6EB30}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{86E9BA14-F3B4-45B6-9DE6-537F6EF6EB30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{39A349AE-5CD5-46C0-8709-3C6877EA2AAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39A349AE-5CD5-46C0-8709-3C6877EA2AAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39A349AE-5CD5-46C0-8709-3C6877EA2AAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39A349AE-5CD5-46C0-8709-3C6877EA2AAB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
