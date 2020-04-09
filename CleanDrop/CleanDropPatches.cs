@@ -128,6 +128,7 @@ namespace PeterHan.CleanDrop {
 					}
 				// Do not reset the direction to None since multiple items could drop from
 				// one workable
+				tryFirst.Recycle();
 			}
 		}
 
@@ -165,7 +166,7 @@ namespace PeterHan.CleanDrop {
 
 		/// <summary>
 		/// Applied to DropAllWorkable to mark the direction where the worker was standing
-		/// when the drop occurs occurs.
+		/// when the drop occurs.
 		/// </summary>
 		[HarmonyPatch(typeof(DropAllWorkable), "OnCompleteWork")]
 		public static class DropAllWorkable_OnCompleteWork_Patch {

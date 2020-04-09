@@ -163,27 +163,36 @@ namespace PeterHan.ToastControl {
 		/// <returns>true to show the popup, or false to hide it.</returns>
 		public static bool ShowPopup(object parent, string message) {
 			bool show = Options.GlobalEnable;
-			var parentType = parent as Type;
-			if (parentType == null)
-				parentType = parent.GetType();
-			string type = parentType.FullName;
-			// Skip internal delegate classes
-			int index = type.IndexOf('<');
-			if (index > 0) {
-				// Back up to the previous dot before then, if present
-				int lastDot = type.LastIndexOf('.', index);
-				if (lastDot > 0) index = lastDot;
-				type = type.Substring(0, index);
-			}
-			if (show) {
-				if (SHOW_FUNCS.TryGetValue(type, out ShowFunc method))
-					show = method.Invoke(parent, message);
-				else {
-					// Debug: Flag popup with no handler
+			Type parentType;
+#pragma warning disable IDE0031 // Use null propagation
+			if (parent is UnityEngine.Object unityParent)
+				// GetType() NREs on disposed objects?
+				parentType = (unityParent == null) ? null : unityParent.GetType();
+			else if (parent is Type type)
+				parentType = type;
+			else
+				parentType = parent?.GetType();
+#pragma warning restore IDE0031
+			if (parentType != null) {
+				string type = parentType.FullName;
+				// Skip internal delegate classes
+				int index = type.IndexOf('<');
+				if (index > 0) {
+					// Back up to the previous dot before then, if present
+					int lastDot = type.LastIndexOf('.', index);
+					if (lastDot > 0) index = lastDot;
+					type = type.Substring(0, index);
+				}
+				if (show) {
+					if (SHOW_FUNCS.TryGetValue(type, out ShowFunc method))
+						show = method.Invoke(parent, message);
+					else {
+						// Debug: Flag popup with no handler
 #if DEBUG
-					PUtil.LogWarning("Popup from {0} => \"{1}\" has no handler defined".F(
-						parent == null ? "null" : parent.GetType().FullName, message));
+						PUtil.LogWarning("Popup from {0} => \"{1}\" has no handler defined".F(
+							parent == null ? "null" : parent.GetType().FullName, message));
 #endif
+					}
 				}
 			}
 			return show;

@@ -106,7 +106,6 @@ namespace PeterHan.ToastControl {
 			"SeedProducer:ProduceSeed",
 			"SetLocker:DropContents",
 			"SolidConsumerMonitor+Instance:OnEatSolidComplete",
-			//"Storage:Store",
 			"ThreatMonitor+Grudge:Calm",
 			"WorldDamage:OnDigComplete"
 		};
@@ -133,17 +132,11 @@ namespace PeterHan.ToastControl {
 						type = type.GetNestedType(types[i], BindingFlags.NonPublic |
 							BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
 					// Access constructor or method
-					if (type != null) {
-						string method = mSpec.Substring(index + 1);
-						if (method == ".ctor")
-							// No way to specify which one
-							result = AccessTools.GetDeclaredConstructors(type)[0];
-						else
-							result = AccessTools.Method(type, method);
-					}
-					if (result == null)
-						PUtil.LogWarning("Unable to find method: " + mSpec);
+					if (type == null)
+						PUtil.LogWarning("Unable to find type: " + type);
 					else
+						result = LookupMethod(type, mSpec.Substring(index + 1));
+					if (result != null)
 						methods.Add(result);
 				}
 			}
@@ -220,6 +213,36 @@ namespace PeterHan.ToastControl {
 					FullName, original.Name));
 		}
 
+		/// <summary>
+		/// Looks up the specified method.
+		/// </summary>
+		/// <param name="type">The type to check.</param>
+		/// <param name="method">The method name to look up.</param>
+		/// <returns>The method, or null if it was not found or ambiguous.</returns>
+		private static MethodBase LookupMethod(Type type, string method) {
+			MethodBase result = null;
+			try {
+				if (method == ".ctor") {
+					// No way to specify which one
+					var cons = type.GetConstructors(BindingFlags.NonPublic | BindingFlags.
+						Public | BindingFlags.Instance);
+					if (cons == null || cons.Length != 1)
+						PUtil.LogWarning("No single constructor found for " + type);
+					else
+						result = cons[0];
+				} else {
+					result = type.GetMethod(method, BindingFlags.Public | BindingFlags.NonPublic |
+						BindingFlags.Instance | BindingFlags.Static);
+					if (result == null)
+						PUtil.LogWarning("No match found for {0}.{1}".F(type, method));
+				}
+			} catch (AmbiguousMatchException e) {
+				PUtil.LogWarning("Ambiguous match for {0}.{1}:".F(type, method));
+				PUtil.LogExcWarn(e);
+			}
+			return result;
+		}
+
 		public static void OnLoad() {
 			PUtil.InitLibrary();
 			LocString.CreateLocStringKeys(typeof(ToastControlStrings.UI));
@@ -238,8 +261,16 @@ namespace PeterHan.ToastControl {
 				Transform targetTransform, Vector3 offset, float lifetime, bool track_target,
 				bool force_spawn, object source) {
 			PopFX popup = null;
-			// Parameter count cannot be reduced - in order to conform with Klei method
-			if (ToastControlPopups.ShowPopup(source, text))
+			bool show = true;
+			try {
+				// Parameter count cannot be reduced - in order to conform with Klei method
+				show = ToastControlPopups.ShowPopup(source, text);
+			} catch (Exception e) {
+				// Sometimes this gets executed on a background thread and unhandled exceptions
+				// cause a CTD
+				PUtil.LogException(e);
+			}
+			if (show)
 				popup = instance.SpawnFX(icon, text, targetTransform, offset, lifetime,
 					track_target, force_spawn);
 			return popup;
@@ -252,8 +283,16 @@ namespace PeterHan.ToastControl {
 			Transform targetTransform, float lifetime, bool track_target, object source)
 		{
 			PopFX popup = null;
-			// Parameter count cannot be reduced - in order to conform with Klei method
-			if (ToastControlPopups.ShowPopup(source, text))
+			bool show = true;
+			try {
+				// Parameter count cannot be reduced - in order to conform with Klei method
+				show = ToastControlPopups.ShowPopup(source, text);
+			} catch (Exception e) {
+				// Sometimes this gets executed on a background thread and unhandled exceptions
+				// cause a CTD
+				PUtil.LogException(e);
+			}
+			if (show)
 				popup = instance.SpawnFX(icon, text, targetTransform, lifetime, track_target);
 			return popup;
 		}
@@ -368,8 +407,11 @@ namespace PeterHan.ToastControl {
 			private static bool ShouldHidePopups(Worker worker) {
 				var opts = ToastControlPopups.Options;
 				bool pickupDupe = opts.PickedUp;
-				return (pickupDupe != opts.PickedUpMachine) ? (pickupDupe != (worker.
-					GetComponent<MinionBrain>() != null)) : !pickupDupe;
+#pragma warning disable IDE0031 // Use null propagation
+				var brain = (worker == null) ? null : worker.GetComponent<MinionBrain>();
+#pragma warning restore IDE0031
+				return (pickupDupe != opts.PickedUpMachine) ? (pickupDupe != (brain != null)) :
+					!pickupDupe;
 			}
 		}
 

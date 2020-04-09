@@ -18,8 +18,10 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.UI;
 using System;
 using System.Reflection;
+using UnityEngine;
 
 namespace PeterHan.DebugNotIncluded {
 	/// <summary>
