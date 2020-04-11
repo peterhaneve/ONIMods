@@ -58,6 +58,21 @@ namespace PeterHan.Resculpt {
 		}
 
 		/// <summary>
+		/// Applied to Artable to refresh the resculpt button when sculpting completes.
+		/// </summary>
+		[HarmonyPatch(typeof(Artable), "OnCompleteWork")]
+		public static class Artable_OnCompleteWork_Patch {
+			/// <summary>
+			/// Applied after OnCompleteWork runs.
+			/// </summary>
+			internal static void Postfix(Artable __instance) {
+				var obj = __instance.gameObject;
+				if (obj != null)
+					Game.Instance.userMenu?.Refresh(obj);
+			}
+		}
+
+		/// <summary>
 		/// Applied to Artable to allow repainting.
 		/// </summary>
 		[HarmonyPatch(typeof(Artable), "OnSpawn")]
