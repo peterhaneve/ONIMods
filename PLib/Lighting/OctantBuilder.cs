@@ -17,7 +17,7 @@
  */
 
 using System;
-using System.Reflection;
+using System.Collections.Generic;
 
 using BrightnessDict = System.Collections.Generic.IDictionary<int, float>;
 using Octant = DiscreteShadowCaster.Octant;
@@ -30,15 +30,23 @@ namespace PeterHan.PLib.Lighting {
 		/// <summary>
 		/// The method to call to scan octants.
 		/// </summary>
-		private static readonly MethodBase OCTANT_SCAN;
+		private static readonly ScanOctantFunc OCTANT_SCAN;
 
 		static OctantBuilder() {
 			// Cache the method for faster execution
-			OCTANT_SCAN = typeof(DiscreteShadowCaster).GetMethodSafe("ScanOctant", true,
-				PPatchTools.AnyArguments);
-			if (OCTANT_SCAN == null)
+			var scanOctant = typeof(DiscreteShadowCaster).GetMethodSafe("ScanOctant", true,
+				typeof(Vector2I), typeof(int), typeof(int), typeof(Octant), typeof(double),
+				typeof(double), typeof(List<int>));
+			if (scanOctant == null) {
 				PUtil.LogError("OctantBuilder cannot find default octant scanner!");
+				OCTANT_SCAN = null;
+			} else
+				OCTANT_SCAN = (ScanOctantFunc)Delegate.CreateDelegate(typeof(ScanOctantFunc),
+					scanOctant);
 		}
+
+		private delegate void ScanOctantFunc(Vector2I cellPos, int range, int depth,
+			Octant octant, double startSlope, double endSlope, List<int> visiblePoints);
 
 		/// <summary>
 		/// The fallout to use when building the light.
@@ -84,9 +92,7 @@ namespace PeterHan.PLib.Lighting {
 		/// <returns>This object, for call chaining.</returns>
 		public OctantBuilder AddOctant(int range, Octant octant) {
 			var points = ListPool<int, OctantBuilder>.Allocate();
-			OCTANT_SCAN?.Invoke(null, new object[] {
-				Grid.CellToXY(SourceCell), range, 1, octant, 1.0, 0.0, points
-			});
+			OCTANT_SCAN?.Invoke(Grid.CellToXY(SourceCell), range, 1, octant, 1.0, 0.0, points);
 			// Transfer to our array using:
 			foreach (int cell in points) {
 				float intensity;

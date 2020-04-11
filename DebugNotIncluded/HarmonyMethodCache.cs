@@ -41,6 +41,9 @@ namespace PeterHan.DebugNotIncluded {
 		/// <summary>
 		/// The method to call to get the "internal method name" of a stack frame. Used if the
 		/// method is a dynamic or other native method.
+		/// 
+		/// Note that making this a delegate gains nothing, because the delegate has to be
+		/// remade on each different stack frame object.
 		/// </summary>
 		private static readonly MethodInfo GET_INTERNAL_METHOD_NAME = typeof(StackFrame).
 			GetMethodSafe("GetInternalMethodName", false);

@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Klei.AI;
 using PeterHan.PLib;
 using UnityEngine;
 
@@ -75,9 +76,14 @@ namespace PeterHan.Resculpt {
 							eligible.Add(stage);
 						}
 					int n = eligible.Count;
-					if (n > 1)
+					if (n > 1) {
+						var attrs = this.GetAttributes().Get(Db.Get().BuildingAttributes.Decor);
+						// Remove the decor bonus (SetStage adds it back)
+						attrs.Modifiers.RemoveAll((modifier) => modifier.Description ==
+							"Art Quality");
 						// Next entry
 						artable.SetStage(eligible[(currentIndex + 1) % n].id, true);
+					}
 				} finally {
 					eligible.Recycle();
 				}

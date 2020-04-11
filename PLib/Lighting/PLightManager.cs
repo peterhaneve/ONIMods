@@ -24,6 +24,7 @@ using UnityEngine;
 using BrightnessDict = System.Collections.Generic.IDictionary<int, float>;
 using LightGridEmitter = LightGridManager.LightGridEmitter;
 using IntHandle = HandleVector<int>.Handle;
+using System.Reflection;
 
 namespace PeterHan.PLib.Lighting {
 	/// <summary>
@@ -104,21 +105,38 @@ namespace PeterHan.PLib.Lighting {
 		private static PLightShape LightToInstance(object otherShape) {
 			var shape = otherShape as PLightShape;
 			if (shape == null) {
-				var trLight = Traverse.Create(otherShape);
-				// Retrieve the ID, handler, and identifier
-				int id = trLight.GetProperty<int>(nameof(PLightShape.ShapeID));
-				if (id > 0) {
-					string identifer = trLight.GetProperty<string>(nameof(PLightShape.
-						Identifier)) ?? ("LightShape" + id);
-					shape = new PLightShape(id, identifer, new CrossModLightWrapper(trLight).
-						CastLight);
-				} else
-					// Some invalid object got in there somehow
-					PUtil.LogWarning("Found light shape {0} with bad ID {1:D}!".F(otherShape,
-						id));
+				var otherType = otherShape.GetType();
+				// Retrieve properties via reflection
+				var propID = otherType.GetPropertySafe<int>(nameof(PLightShape.ShapeID),
+					false);
+				var propName = otherType.GetPropertySafe<string>(nameof(PLightShape.
+					Identifier), false);
+				var fillLight = otherType.GetMethodSafe(nameof(PLightShape.FillLight),
+					false, typeof(GameObject), typeof(int), typeof(int),
+					typeof(BrightnessDict));
+				try {
+					// Retrieve the ID, handler, and identifier
+					if (fillLight == null)
+						PUtil.LogWarning("PLightSource handler has invalid method signature!");
+					else if (propID.GetValue(otherShape, null) is int id && id > 0) {
+						shape = new PLightShape(id, (propName.GetValue(otherShape, null) as
+							string) ?? ("LightShape" + id), new CrossModLightWrapper(
+							otherShape, fillLight).CastLight);
+					} else
+						// Some invalid object got in there somehow
+						PUtil.LogWarning("Found light shape {0} with bad ID!".F(otherShape));
+				} catch (TargetInvocationException e) {
+					PUtil.LogWarning("Exception when retrieving light shape of type " +
+						otherType.AssemblyQualifiedName);
+					PUtil.LogExcWarn(e);
+				}
 			}
 			return shape;
 		}
+
+		// The delegate type covering calls to FillLight from other mods.
+		private delegate void FillLightFunc(GameObject source, int cell, int range,
+			BrightnessDict brightness);
 
 		/// <summary>
 		/// The game object which last requested lighting calculations.
@@ -192,7 +210,6 @@ namespace PeterHan.PLib.Lighting {
 					PUtil.LogDebug("GetBrightness for invalid emitter at {0:D}".F(location));
 #endif
 					result = 0;
-					valid = false;
 				}
 			} else if (ForceSmoothLight) {
 				// Use smooth light even for vanilla Cone and Circle
@@ -245,15 +262,14 @@ namespace PeterHan.PLib.Lighting {
 		private void Init(IList<object> lightShapes) {
 			int i = 0;
 			foreach (var light in lightShapes)
-				// Should only have instances of PLightShape from other mods
+				// Should only have instances of PLightShape from this mod or other mods
 				if (light != null && light.GetType().Name == typeof(PLightShape).Name) {
 					var ls = LightToInstance(light);
 					if (ls != null) {
 						// Verify that the light goes into the right slot
 						int sid = ls.ShapeID;
 						if (sid != ++i)
-							PUtil.LogWarning("Light shape {0} has the wrong ID {1:D}!".F(ls,
-								sid));
+							PUtil.LogWarning("Light shape {0} has bad ID {1:D}!".F(ls, sid));
 						shapes.Add(ls);
 					}
 				} else
@@ -373,14 +389,15 @@ namespace PeterHan.PLib.Lighting {
 			/// <summary>
 			/// The method to call when lighting system handling is requested.
 			/// </summary>
-			private readonly Traverse method;
+			private readonly FillLightFunc other;
 
-			internal CrossModLightWrapper(Traverse other) {
-				method = other?.Method("FillLight", new Type[] {
-					typeof(GameObject), typeof(int), typeof(int), typeof(BrightnessDict)
-				});
-				if (method == null || !method.MethodExists())
-					PUtil.LogError("PLightSource handler has invalid method signature!");
+			internal CrossModLightWrapper(object otherShape, MethodInfo fillLight) {
+				if (otherShape == null)
+					throw new ArgumentNullException("otherShape");
+				if (fillLight == null)
+					throw new ArgumentNullException("fillLight");
+				other = (FillLightFunc)Delegate.CreateDelegate(typeof(FillLightFunc),
+					otherShape, fillLight);
 			}
 
 			/// <summary>
@@ -389,7 +406,7 @@ namespace PeterHan.PLib.Lighting {
 			/// <param name="source">The source game object.</param>
 			/// <param name="args">The lighting arguments.</param>
 			internal void CastLight(GameObject source, LightingArgs args) {
-				method?.GetValue(source, args.SourceCell, args.Range, args.Brightness);
+				other?.Invoke(source, args.SourceCell, args.Range, args.Brightness);
 			}
 		}
 	}
