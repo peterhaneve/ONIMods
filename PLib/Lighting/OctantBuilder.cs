@@ -34,15 +34,11 @@ namespace PeterHan.PLib.Lighting {
 
 		static OctantBuilder() {
 			// Cache the method for faster execution
-			var scanOctant = typeof(DiscreteShadowCaster).GetMethodSafe("ScanOctant", true,
-				typeof(Vector2I), typeof(int), typeof(int), typeof(Octant), typeof(double),
-				typeof(double), typeof(List<int>));
-			if (scanOctant == null) {
+			OCTANT_SCAN = typeof(DiscreteShadowCaster).CreateStaticDelegate<ScanOctantFunc>(
+				"ScanOctant", typeof(Vector2I), typeof(int), typeof(int), typeof(Octant),
+				typeof(double), typeof(double), typeof(List<int>));
+			if (OCTANT_SCAN == null)
 				PUtil.LogError("OctantBuilder cannot find default octant scanner!");
-				OCTANT_SCAN = null;
-			} else
-				OCTANT_SCAN = (ScanOctantFunc)Delegate.CreateDelegate(typeof(ScanOctantFunc),
-					scanOctant);
 		}
 
 		private delegate void ScanOctantFunc(Vector2I cellPos, int range, int depth,

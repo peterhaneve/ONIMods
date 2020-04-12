@@ -86,6 +86,109 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Creates a delegate for a private instance method. This delegate is over ten times
+		/// faster than reflection, so useful if called frequently on the same object.
+		/// </summary>
+		/// <typeparam name="T">A delegate type which matches the method signature.</typeparam>
+		/// <param name="type">The declaring type of the target method.</param>
+		/// <param name="method">The target method name.</param>
+		/// <param name="caller">The object on which to call the method.</param>
+		/// <param name="arguments">The types of the target method arguments, or PPatchTools.
+		/// AnyArguments (not recommended, type safety is good) to match any static method with
+		/// that name.</param>
+		/// <returns>A delegate which calls this method, or null if the method could not be
+		/// found or did not match the types.</returns>
+		public static T CreateDelegate<T>(this Type type, string method, object caller,
+				params Type[] arguments) where T : Delegate {
+			var del = default(T);
+			if (type == null)
+				throw new ArgumentNullException("type");
+			if (string.IsNullOrEmpty(method))
+				throw new ArgumentNullException("method");
+			var reflectMethod = GetMethodSafe(type, method, false, arguments);
+			if (reflectMethod != null)
+				del = (T)Delegate.CreateDelegate(typeof(T), caller, reflectMethod);
+			return del;
+		}
+
+		/// <summary>
+		/// Creates a delegate for a private instance property getter. This delegate is over
+		/// ten times faster than reflection, so useful if called frequently on the same object.
+		/// 
+		/// This method does not work on indexed properties.
+		/// </summary>
+		/// <typeparam name="T">The property's type.</typeparam>
+		/// <param name="type">The declaring type of the target property.</param>
+		/// <param name="property">The target property name.</param>
+		/// <param name="caller">The object on which to call the property getter.</param>
+		/// <returns>A delegate which calls this property's getter, or null if the property
+		/// could not be found or did not match the type.</returns>
+		public static Func<T> CreateGetDelegate<T>(this Type type, string property,
+				object caller) {
+			Func<T> del = null;
+			if (type == null)
+				throw new ArgumentNullException("type");
+			if (string.IsNullOrEmpty(property))
+				throw new ArgumentNullException("property");
+			var reflectMethod = GetPropertySafe<T>(type, property, false)?.GetGetMethod();
+			if (reflectMethod != null)
+				del = (Func<T>)Delegate.CreateDelegate(typeof(Func<T>), caller,
+					reflectMethod);
+			return del;
+		}
+
+		/// <summary>
+		/// Creates a delegate for a private instance property setter. This delegate is over
+		/// ten times faster than reflection, so useful if called frequently on the same object.
+		/// 
+		/// This method does not work on indexed properties.
+		/// </summary>
+		/// <typeparam name="T">The property's type.</typeparam>
+		/// <param name="type">The declaring type of the target property.</param>
+		/// <param name="property">The target property name.</param>
+		/// <param name="caller">The object on which to call the property setter.</param>
+		/// <returns>A delegate which calls this property's setter, or null if the property
+		/// could not be found or did not match the type.</returns>
+		public static Action<T> CreateSetDelegate<T>(this Type type, string property,
+				object caller) {
+			Action<T> del = null;
+			if (type == null)
+				throw new ArgumentNullException("type");
+			if (string.IsNullOrEmpty(property))
+				throw new ArgumentNullException("property");
+			var reflectMethod = GetPropertySafe<T>(type, property, false)?.GetSetMethod();
+			if (reflectMethod != null)
+				del = (Action<T>)Delegate.CreateDelegate(typeof(Action<T>), caller,
+					reflectMethod);
+			return del;
+		}
+
+		/// <summary>
+		/// Creates a delegate for a private static method. This delegate is over ten times
+		/// faster than reflection, so useful if called frequently.
+		/// </summary>
+		/// <typeparam name="T">A delegate type which matches the method signature.</typeparam>
+		/// <param name="type">The declaring type of the target method.</param>
+		/// <param name="method">The target method name.</param>
+		/// <param name="arguments">The types of the target method arguments, or PPatchTools.
+		/// AnyArguments (not recommended, type safety is good) to match any static method with
+		/// that name.</param>
+		/// <returns>A delegate which calls this method, or null if the method could not be
+		/// found or did not match the types.</returns>
+		public static T CreateStaticDelegate<T>(this Type type, string method,
+				params Type[] arguments) where T : Delegate {
+			var del = default(T);
+			if (type == null)
+				throw new ArgumentNullException("type");
+			if (string.IsNullOrEmpty(method))
+				throw new ArgumentNullException("method");
+			var reflectMethod = GetMethodSafe(type, method, true, arguments);
+			if (reflectMethod != null)
+				del = (T)Delegate.CreateDelegate(typeof(T), reflectMethod);
+			return del;
+		}
+
+		/// <summary>
 		/// Retrieves a field using reflection, or returns null if it does not exist.
 		/// </summary>
 		/// <param name="type">The base type.</param>

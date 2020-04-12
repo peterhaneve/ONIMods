@@ -19,6 +19,7 @@
 using Harmony;
 using PeterHan.PLib;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace PeterHan.BulkSettingsChange {
@@ -27,6 +28,62 @@ namespace PeterHan.BulkSettingsChange {
 	/// disinfect, enable/disable auto repair, and enable/disable building.
 	/// </summary>
 	sealed class BulkChangeTool : DragTool {
+		#region Reflection
+		/// <summary>
+		/// Reports the status of auto-disinfection.
+		/// </summary>
+		private static readonly FieldInfo DISINFECT_AUTO = typeof(AutoDisinfectable).
+			GetFieldSafe("enableAutoDisinfect", false);
+
+		/// <summary>
+		/// Disables automatic disinfect.
+		/// </summary>
+		private static readonly MethodInfo DISINFECT_DISABLE = typeof(AutoDisinfectable).
+			GetMethodSafe("DisableAutoDisinfect", false);
+
+		/// <summary>
+		/// Enables automatic disinfect.
+		/// </summary>
+		private static readonly MethodInfo DISINFECT_ENABLE = typeof(AutoDisinfectable).
+			GetMethodSafe("EnableAutoDisinfect", false);
+
+		/// <summary>
+		/// The empty storage chore if one is active.
+		/// </summary>
+		private static readonly FieldInfo EMPTY_CHORE = typeof(DropAllWorkable).GetFieldSafe(
+			"chore", false);
+
+		/// <summary>
+		/// Enables or disables a building.
+		/// </summary>
+		private static readonly MethodInfo ENABLE_DISABLE = typeof(BuildingEnabledButton).
+			GetMethodSafe("OnMenuToggle", false);
+
+		/// <summary>
+		/// Reports the current enable/disable status of a building.
+		/// </summary>
+		private static readonly FieldInfo ENABLE_TOGGLEIDX = typeof(BuildingEnabledButton).
+			GetFieldSafe("ToggleIdx", false);
+
+		/// <summary>
+		/// Disables auto-repair.
+		/// </summary>
+		private static readonly MethodInfo REPAIR_DISABLE = typeof(Repairable).GetMethodSafe(
+			"CancelRepair", false);
+
+		/// <summary>
+		/// Enables auto-repair.
+		/// </summary>
+		private static readonly MethodInfo REPAIR_ENABLE = typeof(Repairable).GetMethodSafe(
+			"AllowRepair", false);
+
+		/// <summary>
+		/// The state machine instance for repairable objects.
+		/// </summary>
+		private static readonly FieldInfo REPAIR_SMI = typeof(Repairable).GetFieldSafe("smi",
+			false);
+		#endregion
+
 		/// <summary>
 		/// The color to use for this tool's placer icon.
 		/// </summary>
@@ -63,6 +120,11 @@ namespace PeterHan.BulkSettingsChange {
 		}
 
 		/// <summary>
+		/// The last selected tool option.
+		/// </summary>
+		private string lastSelected;
+
+		/// <summary>
 		/// The options available for this tool.
 		/// </summary>
 		private IDictionary<string, ToolParameterMenu.ToggleState> options;
@@ -92,9 +154,12 @@ namespace PeterHan.BulkSettingsChange {
 			var modes = ListPool<PToolMode, BulkChangeTool>.Allocate();
 			base.OnActivateTool();
 			// Create mode list
-			foreach (var mode in BulkToolMode.AllTools())
-				modes.Add(mode.ToToolMode(modes.Count == 0 ? ToolParameterMenu.ToggleState.On :
+			foreach (var mode in BulkToolMode.AllTools()) {
+				bool select = mode.Key == lastSelected || (lastSelected == null && modes.
+					Count == 0);
+				modes.Add(mode.ToToolMode(select ? ToolParameterMenu.ToggleState.On :
 					ToolParameterMenu.ToggleState.Off));
+			}
 			options = PToolMode.PopulateMenu(menu, modes);
 			modes.Recycle();
 			// When the parameters are changed, update the view settings
@@ -105,6 +170,7 @@ namespace PeterHan.BulkSettingsChange {
 
 		protected override void OnCleanUp() {
 			base.OnCleanUp();
+			lastSelected = null;
 			PUtil.LogDebug("Destroying BulkChangeTool");
 		}
 
@@ -172,6 +238,7 @@ namespace PeterHan.BulkSettingsChange {
 		protected override void OnPrefabInit() {
 			var us = Traverse.Create(this);
 			Sprite sprite;
+			lastSelected = null;
 			base.OnPrefabInit();
 			gameObject.AddComponent<BulkChangeHover>();
 			// Allow priority setting for the enable/disable building chores
@@ -226,10 +293,8 @@ namespace PeterHan.BulkSettingsChange {
 		private bool ToggleBuilding(int cell, GameObject building, bool enable) {
 			var ed = building.GetComponentSafe<BuildingEnabledButton>();
 			bool changed = false;
-			if (ed != null) {
-				var trEnableDisable = Traverse.Create(ed);
+			if (ed != null && ENABLE_TOGGLEIDX?.GetValue(ed) is int toggleIndex) {
 				// Check to see if a work errand is pending
-				int toggleIndex = trEnableDisable.GetField<int>("ToggleIdx");
 				bool curEnabled = ed.IsEnabled, toggleQueued = building.GetComponent<
 					Toggleable>()?.IsToggleQueued(toggleIndex) ?? false;
 #if false
@@ -240,7 +305,7 @@ namespace PeterHan.BulkSettingsChange {
 				// Only continue if we are cancelling the toggle errand or (the building state
 				// is different than desired and no toggle errand is queued)
 				if (toggleQueued != (curEnabled != enable)) {
-					trEnableDisable.CallMethod("OnMenuToggle");
+					ENABLE_DISABLE?.Invoke(ed, null);
 					// Set priority according to the chosen level
 					var priority = building.GetComponent<Prioritizable>();
 					if (priority != null)
@@ -299,19 +364,19 @@ namespace PeterHan.BulkSettingsChange {
 		private bool ToggleDisinfect(int cell, GameObject item, bool enable) {
 			var ad = item.GetComponentSafe<AutoDisinfectable>();
 			bool changed = false;
-			if (ad != null) {
-				var trAutoDisinfect = Traverse.Create(ad);
-				// Private methods grrr
-				if (trAutoDisinfect.GetField<bool>("enableAutoDisinfect") != enable) {
-					trAutoDisinfect.CallMethod(enable ? "EnableAutoDisinfect" :
-						"DisableAutoDisinfect");
+			// Private methods grrr
+			if (ad != null && DISINFECT_AUTO?.GetValue(ad) is bool status && status != enable)
+			{
+				if (enable)
+					DISINFECT_ENABLE?.Invoke(ad, null);
+				else
+					DISINFECT_DISABLE?.Invoke(ad, null);
 #if DEBUG
-					var xy = Grid.CellToXY(cell);
-					PUtil.LogDebug("Auto disinfect {3} @({0:D},{1:D}) = {2}".F(xy.X, xy.Y,
-						enable, item.GetProperName()));
+				var xy = Grid.CellToXY(cell);
+				PUtil.LogDebug("Auto disinfect {3} @({0:D},{1:D}) = {2}".F(xy.X, xy.Y,
+					enable, item.GetProperName()));
 #endif
-					changed = true;
-				}
+				changed = true;
 			}
 			return changed;
 		}
@@ -326,16 +391,15 @@ namespace PeterHan.BulkSettingsChange {
 		private bool ToggleEmptyStorage(int cell, GameObject item, bool enable) {
 			var daw = item.GetComponentSafe<DropAllWorkable>();
 			bool changed = false;
-			if (daw != null) {
-				if ((Traverse.Create(daw).GetField<Chore>("chore") != null) != enable) {
-					daw.DropAll();
+			if (daw != null && EMPTY_CHORE != null && (EMPTY_CHORE.GetValue(daw) != null) !=
+					enable) {
+				daw.DropAll();
 #if DEBUG
-					var xy = Grid.CellToXY(cell);
-					PUtil.LogDebug("Empty storage {3} @({0:D},{1:D}) = {2}".F(xy.X, xy.Y,
-						enable, item.GetProperName()));
+				var xy = Grid.CellToXY(cell);
+				PUtil.LogDebug("Empty storage {3} @({0:D},{1:D}) = {2}".F(xy.X, xy.Y,
+					enable, item.GetProperName()));
 #endif
-					changed = true;
-				}
+				changed = true;
 			}
 			return changed;
 		}
@@ -350,19 +414,17 @@ namespace PeterHan.BulkSettingsChange {
 		private bool ToggleRepair(int cell, GameObject item, bool enable) {
 			var ar = item.GetComponentSafe<Repairable>();
 			bool changed = false;
-			if (ar != null) {
-				var trRepairable = Traverse.Create(ar);
+			if (ar != null && REPAIR_SMI.GetValue(ar) is Repairable.SMInstance smi) {
 				// Need to check the state machine directly
-				var smi = trRepairable.GetField<Repairable.SMInstance>("smi");
 				var currentState = smi.GetCurrentState();
 				// Prevent buildings in the allow state from being repaired again
 				if (enable) {
 					if (currentState == smi.sm.forbidden) {
-						trRepairable.CallMethod("AllowRepair");
+						REPAIR_ENABLE?.Invoke(ar, null);
 						changed = true;
 					}
 				} else if (currentState != smi.sm.forbidden) {
-					trRepairable.CallMethod("CancelRepair");
+					REPAIR_DISABLE?.Invoke(ar, null);
 					changed = true;
 				}
 #if DEBUG
@@ -378,6 +440,11 @@ namespace PeterHan.BulkSettingsChange {
 		/// Based on the current tool mode, updates the overlay mode.
 		/// </summary>
 		private void UpdateViewMode() {
+			foreach (var option in options)
+				if (option.Value == ToolParameterMenu.ToggleState.On) {
+					lastSelected = option.Key;
+					break;
+				}
 			if (BulkChangeTools.EnableDisinfect.IsOn(options) || BulkChangeTools.
 					DisableDisinfect.IsOn(options)) {
 				// Enable/Disable Disinfect

@@ -19,12 +19,13 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// A custom UI panel factory which can arrange its children horizontally or vertically.
 	/// </summary>
-	public class PPanel : PContainer {
+	public class PPanel : PContainer, IDynamicSizable {
 		/// <summary>
 		/// The alignment position to use for child elements if they are smaller than the
 		/// required size.
@@ -36,7 +37,6 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		public PanelDirection Direction { get; set; }
 
-		[Obsolete("PPanel always is dynamically sized now, unless built using BuildWithFixedSize.")]
 		public bool DynamicSize { get; set; }
 
 		/// <summary>
@@ -55,6 +55,7 @@ namespace PeterHan.PLib.UI {
 			Alignment = TextAnchor.MiddleCenter;
 			children = new List<IUIComponent>();
 			Direction = PanelDirection.Vertical;
+			DynamicSize = true;
 			Spacing = 0;
 		}
 
@@ -71,7 +72,7 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public override GameObject Build() {
-			return Build(default, true);
+			return Build(default, DynamicSize);
 		}
 
 		/// <summary>
@@ -89,19 +90,17 @@ namespace PeterHan.PLib.UI {
 				obj.SetParent(panel);
 				PUIElements.SetAnchors(obj, PUIAnchoring.Stretch, PUIAnchoring.Stretch);
 			}
-			// Add layout component
-			var args = new BoxLayoutParams() {
+			var lg = panel.AddComponent<BoxLayoutGroup>();
+			lg.Params = new BoxLayoutParams() {
 				Direction = Direction, Alignment = Alignment, Spacing = Spacing,
 				Margin = Margin
 			};
-			// Gotta love freezable layouts
-			if (dynamic) {
-				var lg = panel.AddComponent<BoxLayoutGroup>();
-				lg.Params = args;
-				lg.flexibleWidth = FlexSize.x;
-				lg.flexibleHeight = FlexSize.y;
-			} else
-				BoxLayoutGroup.LayoutNow(panel, args, size).SetFlexUISize(FlexSize);
+			if (!dynamic) {
+				lg.LockLayout();
+				panel.SetMinUISize(size);
+			}
+			lg.flexibleWidth = FlexSize.x;
+			lg.flexibleHeight = FlexSize.y;
 			InvokeRealize(panel);
 			return panel;
 		}

@@ -44,8 +44,8 @@ namespace PeterHan.PLib.Options {
 					// Search for OptionsAttribute
 					foreach (var attrib in enumField.GetCustomAttributes(false))
 						if ((oa = OptionAttribute.CreateFrom(attrib)) != null) {
-							title = oa.Title;
-							tooltip = oa.Tooltip;
+							title = LookInStrings(oa.Title);
+							tooltip = LookInStrings(oa.Tooltip);
 							break;
 						}
 					break;

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Smart Pumps</AssemblyTitle>
-    <FileVersion>2.1.0.0</FileVersion>
+    <FileVersion>2.2.0.0</FileVersion>
     <RootNamespace>PeterHan.SmartPumps</RootNamespace>
     <Description>Adds advanced liquid and gas pumps with configurable options.</Description>
     <AssemblyVersion>2.1.0.0</AssemblyVersion>

@@ -68,6 +68,15 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Logs an error message to the debug log.
+		/// </summary>
+		/// <param name="message">The message to log.</param>
+		public static void LogError(object message) {
+			Debug.LogErrorFormat("[PLib/{0}] {1}", Assembly.GetCallingAssembly()?.GetName()?.
+				Name ?? "?", message);
+		}
+
+		/// <summary>
 		/// Logs an exception message to the debug log.
 		/// </summary>
 		/// <param name="thrown">The exception to log.</param>

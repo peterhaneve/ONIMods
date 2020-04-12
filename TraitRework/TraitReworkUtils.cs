@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using Klei.AI;
 using PeterHan.PLib;
 using System;
@@ -31,8 +30,15 @@ namespace PeterHan.TraitRework {
 		/// <summary>
 		/// Cached Traverse for the static AcousticDisturbance method.
 		/// </summary>
-		private static readonly Traverse ACOUSTIC_TRAVERSE = Traverse.Create(typeof(
-			AcousticDisturbance));
+		private static readonly DetermineCellsFunc ACOUSTIC_SCAN;
+
+		static TraitReworkUtils() {
+			ACOUSTIC_SCAN = typeof(AcousticDisturbance).CreateStaticDelegate<DetermineCellsFunc>(
+				"DetermineCellsInRadius", typeof(int), typeof(int), typeof(int),
+				typeof(HashSet<int>));
+			if (ACOUSTIC_SCAN == null)
+				PUtil.LogWarning("Unable to find stock AcousticDisturbance radius calculator");
+		}
 
 		/// <summary>
 		/// Bans foods if necessary from a Duplicant.
@@ -108,11 +114,7 @@ namespace PeterHan.TraitRework {
 			float radSq = radius * radius;
 			var cells = HashSetPool<int, TraitTemplate>.Allocate();
 			// Determine who gets disturbed (ouch private method)
-			// Disable cast warning, cast is to ensure correct method selection
-#pragma warning disable IDE0004
-			ACOUSTIC_TRAVERSE.CallMethod("DetermineCellsInRadius", Grid.PosToCell(source), 0,
-				Mathf.CeilToInt(radius), (HashSet<int>)cells);
-#pragma warning restore IDE0004
+			ACOUSTIC_SCAN?.Invoke(Grid.PosToCell(source), 0, Mathf.CeilToInt(radius), cells);
 			foreach (var dupe in Components.LiveMinionIdentities.Items) {
 				var newObj = dupe.gameObject;
 				if (newObj != null && newObj != source) {
@@ -232,5 +234,11 @@ namespace PeterHan.TraitRework {
 				}
 			}
 		}
+
+		/// <summary>
+		/// The delegate type which defers to the stock sound radius calculator.
+		/// </summary>
+		private delegate void DetermineCellsFunc(int cell, int depth, int max_depth,
+			HashSet<int> cells_in_range);
 	}
 }

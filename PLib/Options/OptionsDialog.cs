@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace PeterHan.PLib.Options {
 	/// <summary>
@@ -172,16 +173,20 @@ namespace PeterHan.PLib.Options {
 				container.AddColumn(new GridColumnSpec()).AddColumn(new GridColumnSpec(
 					flex: 1.0f)).AddRow(new GridRowSpec()).AddRow(new GridRowSpec(flex: 1.0f));
 				// Toggle is upper left, header is upper right
-				container.AddChild(new PLabel("CategoryHeader") {
+				var header = new PLabel("CategoryHeader") {
 					Text = OptionsEntry.LookInStrings(category), TextStyle =
 					CATEGORY_TITLE_STYLE, TextAlignment = TextAnchor.LowerCenter
-				}, new GridComponentSpec(0, 1) {
-					Margin = new RectOffset(OUTER_MARGIN, OUTER_MARGIN, 0, 0)
-				}).AddChild(new PToggle("CategoryToggle") {
+				};
+				var toggle = new PToggle("CategoryToggle") {
 					Color = PUITuning.Colors.ComponentDarkStyle, InitialState = state,
 					ToolTip = PUIStrings.TOOLTIP_TOGGLE, Size = TOGGLE_SIZE,
 					OnStateChanged = handler.OnExpandContract
-				}, new GridComponentSpec(0, 0));
+				};
+				header.OnRealize += handler.OnRealizeHeader;
+				toggle.OnRealize += handler.OnRealizeToggle;
+				container.AddChild(header, new GridComponentSpec(0, 1) {
+					Margin = new RectOffset(OUTER_MARGIN, OUTER_MARGIN, 0, 0)
+				}).AddChild(toggle, new GridComponentSpec(0, 0));
 				if (contents != null)
 					contents.OnRealize += handler.OnRealizePanel;
 				container.AddChild(contents, new GridComponentSpec(1, 0) { ColumnSpan = 2 });
@@ -300,7 +305,7 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <param name="dialog">The dialog to populate.</param>
 		private void FillModOptions(PDialog dialog) {
-			PPanel body = dialog.Body;
+			var body = dialog.Body;
 			var margin = body.Margin;
 			// For each option, add its UI component to panel
 			body.Margin = new RectOffset();
@@ -364,12 +369,12 @@ namespace PeterHan.PLib.Options {
 					PUITuning.Colors.ButtonPinkStyle).AddButton(PDialog.DIALOG_KEY_CLOSE,
 					STRINGS.UI.CONFIRMDIALOG.CANCEL, PUIStrings.TOOLTIP_CANCEL,
 					PUITuning.Colors.ButtonBlueStyle);
-				if (infoAttr != null)
-					AddModInfoScreen(pDialog);
-				FillModOptions(pDialog);
 				options = POptions.ReadSettings(path, optionsType);
 				if (options == null)
 					CreateOptions();
+				if (infoAttr != null)
+					AddModInfoScreen(pDialog);
+				FillModOptions(pDialog);
 				// Manually build the dialog so the options can be updated after realization
 				var obj = pDialog.Build();
 				UpdateOptions();
@@ -463,6 +468,11 @@ namespace PeterHan.PLib.Options {
 			/// </summary>
 			private readonly bool initialState;
 
+			/// <summary>
+			/// The realized toggle button.
+			/// </summary>
+			private GameObject toggle;
+
 			public CategoryExpandHandler(bool initialState = true) {
 				this.initialState = initialState;
 			}
@@ -478,12 +488,41 @@ namespace PeterHan.PLib.Options {
 			}
 
 			/// <summary>
+			/// Fired when the header is clicked.
+			/// </summary>
+			private void OnHeaderClicked() {
+				if (toggle != null) {
+					bool state = PToggle.GetToggleState(toggle);
+					PToggle.SetToggleState(toggle, !state);
+					//OnExpandContract(null, true);
+				}
+			}
+
+			/// <summary>
+			/// Fired when the category label is realized.
+			/// </summary>
+			/// <param name="header">The realized header label of the category.</param>
+			public void OnRealizeHeader(GameObject header) {
+				var button = header.AddComponent<UnityEngine.UI.Button>();
+				button.onClick.AddListener(new UnityAction(OnHeaderClicked));
+				button.interactable = true;
+			}
+
+			/// <summary>
 			/// Fired when the body is realized.
 			/// </summary>
 			/// <param name="panel">The realized body of the category.</param>
 			public void OnRealizePanel(GameObject panel) {
 				contents = panel;
 				OnExpandContract(null, initialState);
+			}
+
+			/// <summary>
+			/// Fired when the toggle button is realized.
+			/// </summary>
+			/// <param name="toggle">The realized expand/contract button.</param>
+			public void OnRealizeToggle(GameObject toggle) {
+				this.toggle = toggle;
 			}
 		}
 	}

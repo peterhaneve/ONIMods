@@ -29,6 +29,26 @@ namespace PeterHan.PLib.UI {
 		internal static readonly RectOffset TOGGLE_MARGIN = new RectOffset(1, 1, 1, 1);
 
 		/// <summary>
+		/// Gets a realized toggle button's state.
+		/// </summary>
+		/// <param name="realized">The realized toggle button.</param>
+		/// <returns>The toggle button state.</returns>
+		public static bool GetToggleState(GameObject realized) {
+			return realized.GetComponentSafe<KToggle>()?.isOn ?? false;
+		}
+
+		/// <summary>
+		/// Sets a realized toggle button's state.
+		/// </summary>
+		/// <param name="realized">The realized toggle button.</param>
+		/// <param name="on">Whether the button should be on or off.</param>
+		public static void SetToggleState(GameObject realized, bool on) {
+			var toggle = realized.GetComponentSafe<KToggle>();
+			if (toggle != null)
+				toggle.isOn = on;
+		}
+
+		/// <summary>
 		/// The sprite to display when active.
 		/// </summary>
 		public Sprite ActiveSprite { get; set; }

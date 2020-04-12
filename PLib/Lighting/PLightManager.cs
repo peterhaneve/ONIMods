@@ -16,21 +16,32 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using System;
 using System.Collections.Generic;
-using UnityEngine;
-
-using BrightnessDict = System.Collections.Generic.IDictionary<int, float>;
-using LightGridEmitter = LightGridManager.LightGridEmitter;
-using IntHandle = HandleVector<int>.Handle;
 using System.Reflection;
+using UnityEngine;
+using BrightnessDict = System.Collections.Generic.IDictionary<int, float>;
+using IntHandle = HandleVector<int>.Handle;
+using LightGridEmitter = LightGridManager.LightGridEmitter;
 
 namespace PeterHan.PLib.Lighting {
 	/// <summary>
 	/// Manages lighting. Instantiated only by the latest PLib version.
 	/// </summary>
 	internal sealed class PLightManager {
+		/// <summary>
+		/// Adds a light's scene change partitioner to the specified scene layer.
+		/// </summary>
+		private static readonly MethodInfo ADD_TO_LAYER = typeof(Light2D).GetMethodSafe(
+			"AddToLayer", false, typeof(Vector2I), typeof(int), typeof(int),
+			typeof(ScenePartitionerLayer));
+
+		/// <summary>
+		/// Retrieves the origin of a light.
+		/// </summary>
+		private static readonly PropertyInfo ORIGIN = typeof(Light2D).GetPropertySafe<int>(
+			"origin", false);
+
 		/// <summary>
 		/// If true, enables the smooth light falloff mode even on vanilla lights.
 		/// </summary>
@@ -53,24 +64,37 @@ namespace PeterHan.PLib.Lighting {
 				ref IntHandle liquidPart) {
 			bool handled = false;
 			var shape = instance.shape;
+			int rad = (int)instance.Range;
 			// Avoid interfering with vanilla lights
-			if (shape != LightShape.Cone && shape != LightShape.Circle) {
-				var trInstance = Traverse.Create(instance);
-				int rad = (int)instance.Range, cell = trInstance.GetProperty<int>("origin");
-				// Only if there would be a valid area
-				if (rad > 0 && Grid.IsValidCell(cell)) {
-					var origin = Grid.CellToXY(cell);
-					var minCoords = new Vector2I(origin.x - rad, origin.y - rad);
-					// Better safe than sorry, check whole possible radius
-					int width = 2 * rad, height = 2 * rad;
-					solidPart = trInstance.CallMethod<IntHandle>("AddToLayer", minCoords,
-						width, height, GameScenePartitioner.Instance.solidChangedLayer);
-					liquidPart = trInstance.CallMethod<IntHandle>("AddToLayer", minCoords,
-						width, height, GameScenePartitioner.Instance.liquidChangedLayer);
-					handled = true;
-				}
+			if (shape != LightShape.Cone && shape != LightShape.Circle && ORIGIN?.GetValue(
+					instance, null) is int cell && rad > 0 && Grid.IsValidCell(cell)) {
+				var origin = Grid.CellToXY(cell);
+				var minCoords = new Vector2I(origin.x - rad, origin.y - rad);
+				// Better safe than sorry, check whole possible radius
+				var gsp = GameScenePartitioner.Instance;
+				solidPart = AddToLayer(instance, minCoords, rad, gsp.solidChangedLayer);
+				liquidPart = AddToLayer(instance, minCoords, rad, gsp.liquidChangedLayer);
+				handled = true;
 			}
 			return handled;
+		}
+
+		/// <summary>
+		/// Adds a light's scene change partitioner to a layer.
+		/// </summary>
+		/// <param name="instance">The light to add.</param>
+		/// <param name="minCoords">The coordinates of the upper left corner.</param>
+		/// <param name="rad">The light "radius" (square).</param>
+		/// <param name="layer">The layer to add it on.</param>
+		/// <returns>A handle to the change partitioner, or InvalidHandle if it could not be
+		/// added.</returns>
+		private static IntHandle AddToLayer(Light2D instance, Vector2I minCoords, int rad,
+				ScenePartitionerLayer layer) {
+			var handle = IntHandle.InvalidHandle;
+			if (ADD_TO_LAYER?.Invoke(instance, new object[] { minCoords, 2 * rad, 2 * rad,
+					layer }) is IntHandle newHandle)
+				handle = newHandle;
+			return handle;
 		}
 
 		/// <summary>
@@ -111,8 +135,8 @@ namespace PeterHan.PLib.Lighting {
 					false);
 				var propName = otherType.GetPropertySafe<string>(nameof(PLightShape.
 					Identifier), false);
-				var fillLight = otherType.GetMethodSafe(nameof(PLightShape.FillLight),
-					false, typeof(GameObject), typeof(int), typeof(int),
+				var fillLight = otherType.CreateDelegate<FillLightFunc>(nameof(PLightShape.
+					FillLight), otherShape, typeof(GameObject), typeof(int), typeof(int),
 					typeof(BrightnessDict));
 				try {
 					// Retrieve the ID, handler, and identifier
@@ -121,7 +145,7 @@ namespace PeterHan.PLib.Lighting {
 					else if (propID.GetValue(otherShape, null) is int id && id > 0) {
 						shape = new PLightShape(id, (propName.GetValue(otherShape, null) as
 							string) ?? ("LightShape" + id), new CrossModLightWrapper(
-							otherShape, fillLight).CastLight);
+							fillLight).CastLight);
 					} else
 						// Some invalid object got in there somehow
 						PUtil.LogWarning("Found light shape {0} with bad ID!".F(otherShape));
@@ -391,13 +415,10 @@ namespace PeterHan.PLib.Lighting {
 			/// </summary>
 			private readonly FillLightFunc other;
 
-			internal CrossModLightWrapper(object otherShape, MethodInfo fillLight) {
-				if (otherShape == null)
-					throw new ArgumentNullException("otherShape");
-				if (fillLight == null)
-					throw new ArgumentNullException("fillLight");
-				other = (FillLightFunc)Delegate.CreateDelegate(typeof(FillLightFunc),
-					otherShape, fillLight);
+			internal CrossModLightWrapper(FillLightFunc other) {
+				if (other == null)
+					throw new ArgumentNullException("other");
+				this.other = other;
 			}
 
 			/// <summary>

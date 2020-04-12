@@ -24,11 +24,13 @@ namespace PeterHan.PLib.UI {
 	/// <summary>
 	/// A panel which lays out its components using grid-type constraints.
 	/// </summary>
-	public class PGridPanel : PContainer {
+	public class PGridPanel : PContainer, IDynamicSizable {
 		/// <summary>
 		/// The number of columns currently defined.
 		/// </summary>
 		public int Columns => columns.Count;
+
+		public bool DynamicSize { get; set; }
 
 		/// <summary>
 		/// The number of rows currently defined.
@@ -56,6 +58,7 @@ namespace PeterHan.PLib.UI {
 			children = new List<GridComponent<IUIComponent>>(16);
 			columns = new List<GridColumnSpec>(16);
 			rows = new List<GridRowSpec>(16);
+			DynamicSize = true;
 			Margin = null;
 		}
 
@@ -115,6 +118,8 @@ namespace PeterHan.PLib.UI {
 			// Add children
 			foreach (var child in children)
 				layout.AddComponent(child.Item.Build(), child);
+			if (!DynamicSize)
+				layout.LockLayout();
 			layout.flexibleWidth = FlexSize.x;
 			layout.flexibleHeight = FlexSize.y;
 			InvokeRealize(panel);

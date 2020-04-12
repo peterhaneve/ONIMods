@@ -37,7 +37,22 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// The margins around the label for each entry.
 		/// </summary>
-		private static readonly RectOffset LABEL_MARGIN = new RectOffset(0, 5, 2, 2);
+		protected static readonly RectOffset LABEL_MARGIN = new RectOffset(0, 5, 2, 2);
+
+		/// <summary>
+		/// Adds an options entry to the category list, creating a new category if necessary.
+		/// </summary>
+		/// <param name="entries">The existing categories.</param>
+		/// <param name="entry">The option entry to add.</param>
+		private static void AddToCategory(IDictionary<string, OptionsList> entries,
+				OptionsEntry entry) {
+			string category = entry.Category ?? "";
+			if (!entries.TryGetValue(category, out OptionsList inCat)) {
+				inCat = new List<OptionsEntry>(16);
+				entries.Add(category, inCat);
+			}
+			inCat.Add(entry);
+		}
 
 		/// <summary>
 		/// Builds the options entries from the type.
@@ -47,21 +62,18 @@ namespace PeterHan.PLib.Options {
 		internal static IDictionary<string, OptionsList> BuildOptions(Type forType) {
 			var entries = new SortedList<string, OptionsList>(8);
 			OptionAttribute oa;
+			DynamicOptionAttribute doa;
 			foreach (var prop in forType.GetProperties())
 				// Must have the annotation
 				foreach (var attr in prop.GetCustomAttributes(false))
 					if ((oa = OptionAttribute.CreateFrom(attr)) != null) {
 						// Attempt to find a class that will represent it
 						var entry = CreateOptions(prop, oa);
-						if (entry != null) {
-							string category = entry.Category ?? "";
-							// Add this category if it does not exist
-							if (!entries.TryGetValue(category, out OptionsList inCat)) {
-								inCat = new List<OptionsEntry>(16);
-								entries.Add(category, inCat);
-							}
-							inCat.Add(entry);
-						}
+						if (entry != null)
+							AddToCategory(entries, entry);
+						break;
+					} else if ((doa = DynamicOptionAttribute.CreateFrom(attr)) != null) {
+						AddToCategory(entries, new DynamicOptionsEntry(prop.Name, doa));
 						break;
 					}
 			return entries;
@@ -139,19 +151,18 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// The option title on screen.
 		/// </summary>
-		public string Title { get; }
+		public string Title { get; protected set; }
 
 		/// <summary>
 		/// The tool tip to display.
 		/// </summary>
-		public string ToolTip { get; }
+		public string ToolTip { get; protected set; }
 
 		/// <summary>
 		/// The current value selected by the user.
 		/// </summary>
 		protected abstract object Value { get; set; }
 
-		[Obsolete("Do not use this constructor, it exists only for binary compatibility")]
 		protected OptionsEntry(string field, string title, string tooltip) {
 			Category = "";
 			Field = field;

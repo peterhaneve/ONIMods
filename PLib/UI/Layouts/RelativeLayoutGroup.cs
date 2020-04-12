@@ -60,12 +60,6 @@ namespace PeterHan.PLib.UI {
 		private IList<KeyValuePair<GameObject, RelativeLayoutParams>> serialConstraints;
 
 		/// <summary>
-		/// Whether the layout is currently locked.
-		/// </summary>
-		[SerializeField]
-		private bool locked;
-
-		/// <summary>
 		/// The margin around the components as a whole.
 		/// </summary>
 		[SerializeField]
@@ -79,7 +73,6 @@ namespace PeterHan.PLib.UI {
 		internal RelativeLayoutGroup() {
 			layoutPriority = 1;
 			locConstraints = new Dictionary<GameObject, RelativeLayoutParams>(32);
-			locked = false;
 			results = new List<RelativeLayoutResults>(32);
 			serialConstraints = null;
 		}
@@ -157,30 +150,6 @@ namespace PeterHan.PLib.UI {
 			locConstraints.Clear();
 			foreach (var pair in values)
 				locConstraints[pair.Key] = pair.Value;
-		}
-
-		/// <summary>
-		/// Triggers a layout with the current parent, and then locks the layout size. Further
-		/// attempts to automatically lay out the component, unless UnlockLayout is called,
-		/// will not trigger any action.
-		/// 
-		/// The resulting layout has the same performance as the old RelativeLayout but the
-		/// same limitations on adapting to size.
-		/// </summary>
-		/// <returns>The computed size of this component when locked.</returns>
-		public Vector2 LockLayout() {
-			var rt = gameObject.rectTransform();
-			if (rt != null) {
-				locked = false;
-				CalculateLayoutInputHorizontal();
-				rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, minWidth);
-				SetLayoutHorizontal();
-				CalculateLayoutInputVertical();
-				rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, minHeight);
-				SetLayoutVertical();
-				locked = true;
-			}
-			return new Vector2(minWidth, minHeight);
 		}
 
 		public void OnBeforeSerialize() {
@@ -319,15 +288,6 @@ namespace PeterHan.PLib.UI {
 				SetEdge(AddOrGet(item).TopEdge, fraction, below);
 			}
 			return this;
-		}
-
-		/// <summary>
-		/// Unlocks the layout, allowing it to again dynamically resize when component sizes
-		/// are changed.
-		/// </summary>
-		public void UnlockLayout() {
-			locked = false;
-			LayoutRebuilder.MarkLayoutForRebuild(gameObject.rectTransform());
 		}
 	}
 }

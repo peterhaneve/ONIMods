@@ -50,7 +50,11 @@ namespace PeterHan.ThermalTooltips {
 			"HEAT") + ": {0:##0.#} {1}/{2}";
 
 		// Total heat energy in kDTU
-		public static LocString HEAT_ENERGY = "Heat Energy: {0:##0.#} {1}";
+		public static LocString HEAT_ENERGY = "Heat Energy: {0} {1}";
+
+		// Number formats
+		internal const string NUM_FORMAT_BIG = "{0}x10<sup>{1:D}</sup>";
+		internal const string NUM_FORMAT_SMALL = "##0.#";
 
 		// Format to use for temperature values (including suffix)
 		internal const string TEMP_FORMAT = "{0:##0.#}{1}";
@@ -59,7 +63,7 @@ namespace PeterHan.ThermalTooltips {
 		public static LocString SUM = " (\u03A3)";
 
 		// Thermal mass is the amount of kDTU required to shift by 1 degree C/K/F
-		public static LocString THERMAL_MASS = "Thermal Mass: {0:##0.#} {1}/{2}";
+		public static LocString THERMAL_MASS = "Thermal Mass: {0} {1}/{2}";
 
 		// <heat icon> to <element> (temperature)
 		public static LocString TO_JOIN = " to ";

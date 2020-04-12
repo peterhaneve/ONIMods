@@ -16,65 +16,35 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.UI;
 using UnityEngine;
 
 namespace PeterHan.PLib.Options {
 	/// <summary>
-	/// An options entry which represents bool and displays a check box.
+	/// User dynamic option handlers must implement this type. No type check is done due to
+	/// cross-assembly references, but if the methods do not exist the option may fail to
+	/// load properly.
 	/// </summary>
-	internal sealed class CheckboxOptionsEntry : OptionsEntry {
-		protected override object Value {
-			get {
-				return check;
-			}
-			set {
-				if (value is bool newCheck) {
-					check = newCheck;
-					Update();
-				}
-			}
-		}
+	public interface IDynamicOption {
+		/// <summary>
+		/// The options title. It will be queried after the initial option value is loaded.
+		/// </summary>
+		string Title { get; }
 
 		/// <summary>
-		/// true if it is checked, or false otherwise
+		/// The options tooltip. Will be regularly queried and updated when tooltips are shown.
 		/// </summary>
-		private bool check;
+		string Tooltip { get; }
 
 		/// <summary>
-		/// The realized item checkbox.
+		/// Will be invoked to set the value with the value read from options, and read from
+		/// when options are saved.
 		/// </summary>
-		private GameObject checkbox;
-
-		internal CheckboxOptionsEntry(string field, OptionAttribute oa) : base(field, oa) {
-			check = false;
-			checkbox = null;
-		}
-
-		protected override IUIComponent GetUIComponent() {
-			var cb = new PCheckBox() {
-				OnChecked = (source, state) => {
-					// Swap the check: checked and partial -> unchecked
-					check = state == PCheckBox.STATE_UNCHECKED;
-					Update();
-				}, ToolTip = LookInStrings(ToolTip)
-			}.SetKleiBlueStyle();
-			cb.OnRealize += OnRealizeCheckBox;
-			return cb;
-		}
+		object Value { get; set; }
 
 		/// <summary>
-		/// Called when the checkbox is realized.
+		/// Creates the UI entry handler.
 		/// </summary>
-		/// <param name="realized">The actual check box.</param>
-		private void OnRealizeCheckBox(GameObject realized) {
-			checkbox = realized;
-			Update();
-		}
-
-		private void Update() {
-			PCheckBox.SetCheckState(checkbox, check ? PCheckBox.STATE_CHECKED : PCheckBox.
-				STATE_UNCHECKED);
-		}
+		/// <returns>The UI entry handler for this option.</returns>
+		GameObject CreateUIEntry();
 	}
 }

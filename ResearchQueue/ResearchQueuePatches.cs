@@ -32,6 +32,12 @@ namespace PeterHan.ResearchQueue {
 		/// </summary>
 		private static FieldInfo activeModifiers = null;
 
+		/// <summary>
+		/// Adds a tech to the research queue.
+		/// </summary>
+		private static readonly MethodInfo ADD_TECH = typeof(Research).GetMethodSafe(
+			"AddTechToQueue", false, typeof(Tech));
+
 		public static void OnLoad() {
 			PUtil.InitLibrary();
 			// Cache a ref to the active modifiers field
@@ -136,8 +142,7 @@ namespace PeterHan.ResearchQueue {
 				} else if (screen != null) {
 					if (shiftDown)
 						// If not in the queue already and shift clicked, queue it on the end
-						// Reflection would be required no matter which way
-						Traverse.Create(research).CallMethod("AddTechToQueue", targetTech);
+						ADD_TECH?.Invoke(research, new object[] { targetTech });
 					research.SetActiveResearch(targetTech, !shiftDown);
 					cont = false;
 				}

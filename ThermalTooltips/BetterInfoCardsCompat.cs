@@ -55,8 +55,9 @@ namespace PeterHan.ThermalTooltips {
 			float sum = 0;
 			foreach (var value in values)
 				sum += value;
-			return string.Format(ThermalTooltipsStrings.HEAT_ENERGY, sum, STRINGS.UI.
-				UNITSUFFIXES.HEAT.KDTU.text.Trim()) + ThermalTooltipsStrings.SUM;
+			return string.Format(ThermalTooltipsStrings.HEAT_ENERGY, ExtendedThermalTooltip.
+				DoScientific(sum), STRINGS.UI.UNITSUFFIXES.HEAT.KDTU.text.Trim()) +
+				ThermalTooltipsStrings.SUM;
 		}
 
 		/// <summary>
@@ -68,9 +69,9 @@ namespace PeterHan.ThermalTooltips {
 			float sum = 0;
 			foreach (var value in values)
 				sum += value;
-			return string.Format(ThermalTooltipsStrings.THERMAL_MASS, sum, STRINGS.UI.
-				UNITSUFFIXES.HEAT.KDTU.text.Trim(), GameUtil.GetTemperatureUnitSuffix()?.
-				Trim()) + ThermalTooltipsStrings.SUM;
+			return string.Format(ThermalTooltipsStrings.THERMAL_MASS, ExtendedThermalTooltip.
+				DoScientific(sum), STRINGS.UI.UNITSUFFIXES.HEAT.KDTU.text.Trim(), GameUtil.
+				GetTemperatureUnitSuffix()?.Trim()) + ThermalTooltipsStrings.SUM;
 		}
 
 		/// <summary>
@@ -99,15 +100,18 @@ namespace PeterHan.ThermalTooltips {
 		private readonly MethodInfo registerMethod;
 
 		internal BetterInfoCardsCompat() {
-			MethodInfo addConv = null, exportData = null;
+			MethodInfo addConv = null;
+			exportMethod = null;
 			try {
 				addConv = PPatchTools.GetTypeSafe(BIC_NAMESPACE + "ConverterManager",
 					BIC_ASSEMBLY)?.GetMethodSafe("AddConverter", true, PPatchTools.
 					AnyArguments);
-				exportData = PPatchTools.GetTypeSafe(BIC_NAMESPACE + "CollectHoverInfo",
+				var patchType = PPatchTools.GetTypeSafe(BIC_NAMESPACE + "CollectHoverInfo",
 					BIC_ASSEMBLY)?.GetNestedType("GetSelectInfo_Patch", BindingFlags.Static |
-					BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)?.
-					GetMethodSafe("Export", true, typeof(string), typeof(object));
+					BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+				if (patchType != null)
+					exportMethod = patchType.CreateStaticDelegate<ExportMethodFunc>("Export",
+						typeof(string), typeof(object));
 			} catch (TargetInvocationException e) {
 				PUtil.LogWarning("Exception when loading Better Info Cards compatibility:");
 				PUtil.LogExcWarn(e?.GetBaseException() ?? e);
@@ -115,11 +119,9 @@ namespace PeterHan.ThermalTooltips {
 				PUtil.LogWarning("Exception when loading Better Info Cards compatibility:");
 				PUtil.LogExcWarn(e);
 			}
-			if (addConv != null && exportData != null) {
+			if (addConv != null && exportMethod != null) {
 				// Delegates are much faster at runtime
 				registerMethod = addConv;
-				exportMethod = (ExportMethodFunc)Delegate.CreateDelegate(typeof(
-					ExportMethodFunc), exportData);
 				try {
 					Register(EXPORT_THERMAL_MASS, ObjectToFloat, SumThermalMass);
 					Register(EXPORT_HEAT_ENERGY, ObjectToFloat, SumHeatEnergy);
@@ -128,10 +130,8 @@ namespace PeterHan.ThermalTooltips {
 					PUtil.LogWarning("Exception when registering Better Info Cards compatibility:");
 					PUtil.LogExcWarn(e?.GetBaseException() ?? e);
 				}
-			} else {
+			} else
 				registerMethod = null;
-				exportMethod = null;
-			}
 		}
 
 		/// <summary>

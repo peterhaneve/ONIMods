@@ -691,12 +691,14 @@ namespace PeterHan.PLib.UI {
 		public static GameObject SetMinUISize(this GameObject uiElement, Vector2 minSize) {
 			if (uiElement == null)
 				throw new ArgumentNullException("uiElement");
-			var le = uiElement.AddOrGet<LayoutElement>();
 			float minX = minSize.x, minY = minSize.y;
-			if (minX > 0.0f)
-				le.minWidth = minX;
-			if (minY > 0.0f)
-				le.minHeight = minY;
+			if (minX > 0.0f && minY > 0.0f) {
+				var le = uiElement.AddOrGet<LayoutElement>();
+				if (minX > 0.0f)
+					le.minWidth = minX;
+				if (minY > 0.0f)
+					le.minHeight = minY;
+			}
 			return uiElement;
 		}
 

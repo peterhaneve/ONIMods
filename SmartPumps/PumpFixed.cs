@@ -124,6 +124,21 @@ namespace PeterHan.SmartPumps {
 		protected bool pumpable;
 
 		/// <summary>
+		/// A delegate which invokes SimRegister() to register the sim element consumer.
+		/// </summary>
+		private System.Action simRegister;
+
+		/// <summary>
+		/// A delegate which invokes SimUnregister() to remove the sim element consumer.
+		/// </summary>
+		private System.Action simUnregister;
+
+		internal PumpFixed() {
+			simRegister = null;
+			simUnregister = null;
+		}
+
+		/// <summary>
 		/// Checks for pumpable media of the right type in the pump's radius.
 		/// 
 		/// This version has the detect radius synchronized with the absorb radius.
@@ -150,6 +165,11 @@ namespace PeterHan.SmartPumps {
 			var statusItems = Db.Get().BuildingStatusItems;
 			base.OnPrefabInit();
 			consumer.EnableConsumption(false);
+			// Create delegates
+			simRegister = typeof(SimComponent).CreateDelegate<System.Action>("SimRegister",
+				consumer);
+			simUnregister = typeof(SimComponent).CreateDelegate<System.Action>("SimUnregister",
+				consumer);
 			// These can be replaced by subclasses
 			noGasAvailable = statusItems.NoGasElementToPump;
 			noLiquidAvailable = statusItems.NoLiquidElementToPump;
@@ -167,10 +187,13 @@ namespace PeterHan.SmartPumps {
 		/// Re-creates the SimHandle when the element changes.
 		/// </summary>
 		protected void RecreateSimHandle() {
-			var trConsumer = Traverse.Create(consumer);
 			// These already check for validity
-			trConsumer.CallMethod("SimUnregister");
-			trConsumer.CallMethod("SimRegister");
+			if (simRegister == null || simUnregister == null)
+				PUtil.LogWarning("Unable to register sim component of ElementConsumer");
+			else {
+				simUnregister.Invoke();
+				simRegister.Invoke();
+			}
 		}
 
 		public void Sim1000ms(float dt) {

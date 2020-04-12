@@ -18,6 +18,7 @@
 
 using PeterHan.PLib;
 using System;
+using System.Globalization;
 using UnityEngine;
 
 using TEMP_SUFFIXES = STRINGS.UI.UNITSUFFIXES.TEMPERATURE;
@@ -28,9 +29,38 @@ namespace PeterHan.ThermalTooltips {
 	/// </summary>
 	public sealed class ExtendedThermalTooltip {
 		/// <summary>
+		/// Numbers over this value become scientific notation for Heat Energy and Thermal
+		/// Mass.
+		/// </summary>
+		private const float SCI_NOTATION = 1E+6f;
+
+		/// <summary>
 		/// The hysteresis in each direction when changing states.
 		/// </summary>
 		internal const float TRANSITION_HYSTERESIS = 3.0f;
+
+		/// <summary>
+		/// Automatically reformats the number in TMP-compliant scientific notation if
+		/// necessary.
+		/// </summary>
+		/// <param name="value">The value to format.</param>
+		/// <returns>The formatted representation of that value.</returns>
+		internal static string DoScientific(float value) {
+			string formatted;
+			if (value >= SCI_NOTATION || value <= -SCI_NOTATION) {
+				string defSci = value.ToString("E3", CultureInfo.InvariantCulture).
+					ToLowerInvariant();
+				// Reformat by splitting over the "e"
+				int index = defSci.IndexOf('e');
+				if (index > 0 && int.TryParse(defSci.Substring(index + 1), out int exp))
+					formatted = string.Format(ThermalTooltipsStrings.NUM_FORMAT_BIG, defSci.
+						Substring(0, index), exp);
+				else
+					formatted = defSci;
+			} else
+				formatted = value.ToString(ThermalTooltipsStrings.NUM_FORMAT_SMALL);
+			return formatted;
+		}
 
 		/// <summary>
 		/// The cell to use for element-based thermal tooltips.
@@ -163,14 +193,14 @@ namespace PeterHan.ThermalTooltips {
 			Drawer.DrawIcon(spriteDash);
 			// Thermal mass (mass is in kg so result is in kDTU/C)
 			bicCompat?.Export(BetterInfoCardsCompat.EXPORT_THERMAL_MASS, tMass);
-			Drawer.DrawText(string.Format(ThermalTooltipsStrings.THERMAL_MASS, tMass, kDTU,
-				GameUtil.GetTemperatureUnitSuffix()?.Trim()), Style);
+			Drawer.DrawText(string.Format(ThermalTooltipsStrings.THERMAL_MASS, DoScientific(
+				tMass), kDTU, GameUtil.GetTemperatureUnitSuffix()?.Trim()), Style);
 			Drawer.NewLine();
 			Drawer.DrawIcon(spriteDash);
 			// Heat energy in kDTU
 			bicCompat?.Export(BetterInfoCardsCompat.EXPORT_HEAT_ENERGY, tEnergy);
-			Drawer.DrawText(string.Format(ThermalTooltipsStrings.HEAT_ENERGY, tEnergy, kDTU),
-				Style);
+			Drawer.DrawText(string.Format(ThermalTooltipsStrings.HEAT_ENERGY, DoScientific(
+				tEnergy), kDTU), Style);
 		}
 
 		/// <summary>

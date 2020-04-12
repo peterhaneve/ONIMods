@@ -21,8 +21,8 @@ using System;
 
 namespace PeterHan.PLib {
 	/// <summary>
-	/// An attribute placed on an option property or enum value for a class used as mod options in
-	/// order to denote the display title and other options.
+	/// An attribute placed on an option property or enum value for a class used as mod options
+	/// in order to denote the display title and other options.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false,
 		Inherited = true)]

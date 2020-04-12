@@ -179,35 +179,15 @@ namespace PeterHan.PLib.UI {
 		/// <param name="parameters">The layout parameters to use.</param>
 		/// <param name="size">The minimum component size.</param>
 		/// <returns>obj for call chaining.</returns>
+		[Obsolete("This method is obsolete. Add a BoxLayoutGroup to the component and use LockLayout.")]
 		public static GameObject LayoutNow(GameObject obj, BoxLayoutParams parameters = null,
 				Vector2 size = default) {
 			if (obj == null)
 				throw new ArgumentNullException("obj");
-			var args = parameters ?? new BoxLayoutParams();
-			var margin = args.Margin ?? new RectOffset();
-			var layoutElement = obj.AddOrGet<LayoutElement>();
-			var rt = obj.rectTransform();
-			// Calculate H
-			var horizontal = Calc(obj, args, PanelDirection.Horizontal);
-			// Update or create fixed layout element
-			float hmin = horizontal.total.preferred + margin.left + margin.right,
-				hsize = Math.Max(size.x, hmin);
-			layoutElement.minWidth = hsize;
-			layoutElement.preferredWidth = hsize;
-			layoutElement.flexibleWidth = 0.0f;
-			// Size the object now
-			rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, hsize);
-			DoLayout(args, horizontal, hsize);
-			// Calculate V
-			var vertical = Calc(obj, args, PanelDirection.Vertical);
-			float vmin = vertical.total.preferred + margin.top + margin.bottom,
-				vsize = Math.Max(size.y, vmin);
-			layoutElement.minHeight = vsize;
-			layoutElement.preferredHeight = vsize;
-			layoutElement.flexibleHeight = 0.0f;
-			// Size the object now
-			rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, vsize);
-			DoLayout(args, vertical, vsize);
+			var layout = obj.AddOrGet<BoxLayoutGroup>();
+			layout.Params = parameters;
+			layout.LockLayout();
+			obj.SetMinUISize(size);
 			return obj;
 		}
 
@@ -247,29 +227,33 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public override void CalculateLayoutInputHorizontal() {
-			var margin = parameters.Margin;
-			float gap = (margin == null) ? 0.0f : margin.left + margin.right;
-			horizontal = Calc(gameObject, parameters, PanelDirection.Horizontal);
-			var hTotal = horizontal.total;
-			minWidth = hTotal.min + gap;
-			preferredWidth = hTotal.preferred + gap;
+			if (!locked) {
+				var margin = parameters.Margin;
+				float gap = (margin == null) ? 0.0f : margin.left + margin.right;
+				horizontal = Calc(gameObject, parameters, PanelDirection.Horizontal);
+				var hTotal = horizontal.total;
+				minWidth = hTotal.min + gap;
+				preferredWidth = hTotal.preferred + gap;
 #if DEBUG_LAYOUT
-			PUIUtils.LogUIDebug("CalculateLayoutInputHorizontal for {0} preferred {1:F2}".F(
-				gameObject.name, preferredWidth));
+				PUIUtils.LogUIDebug("CalculateLayoutInputHorizontal for {0} preferred {1:F2}".
+					F(gameObject.name, preferredWidth));
 #endif
+			}
 		}
 
 		public override void CalculateLayoutInputVertical() {
-			var margin = parameters.Margin;
-			float gap = (margin == null) ? 0.0f : margin.top + margin.bottom;
-			vertical = Calc(gameObject, parameters, PanelDirection.Vertical);
-			var vTotal = vertical.total;
-			minHeight = vTotal.min + gap;
-			preferredHeight = vTotal.preferred + gap;
+			if (!locked) {
+				var margin = parameters.Margin;
+				float gap = (margin == null) ? 0.0f : margin.top + margin.bottom;
+				vertical = Calc(gameObject, parameters, PanelDirection.Vertical);
+				var vTotal = vertical.total;
+				minHeight = vTotal.min + gap;
+				preferredHeight = vTotal.preferred + gap;
 #if DEBUG_LAYOUT
-			PUIUtils.LogUIDebug("CalculateLayoutInputVertical for {0} preferred {1:F2}".F(
-				gameObject.name, preferredHeight));
+				PUIUtils.LogUIDebug("CalculateLayoutInputVertical for {0} preferred {1:F2}".F(
+					gameObject.name, preferredHeight));
 #endif
+			}
 		}
 
 		protected override void OnDisable() {
@@ -285,11 +269,7 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public override void SetLayoutHorizontal() {
-#if DEBUG
-			if (horizontal == null)
-				throw new InvalidOperationException("SetLayoutHorizontal before CalculateLayoutInputHorizontal");
-#endif
-			if (horizontal != null) {
+			if (horizontal != null && !locked) {
 #if DEBUG_LAYOUT
 				PUIUtils.LogUIDebug("SetLayoutHorizontal for {0} resolved width to {1:F2}".F(
 					gameObject.name, rectTransform.rect.width));
@@ -299,11 +279,7 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public override void SetLayoutVertical() {
-#if DEBUG
-			if (vertical == null)
-				throw new InvalidOperationException("SetLayoutVertical before CalculateLayoutInputVertical");
-#endif
-			if (vertical != null) {
+			if (vertical != null && !locked) {
 #if DEBUG_LAYOUT
 				PUIUtils.LogUIDebug("SetLayoutVertical for {0} resolved height to {1:F2}".F(
 					gameObject.name, rectTransform.rect.height));

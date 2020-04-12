@@ -74,11 +74,8 @@ namespace PeterHan.PLib.Options {
 			var subStruct = typeof(ModsScreen).GetNestedType("DisplayedMod", BindingFlags.
 				NonPublic | BindingFlags.Public);
 			if (subStruct != null) {
-				// Must avoid GetFieldSafe as that is not available in options-only
-				FIELD_MOD_INDEX = subStruct.GetField("mod_index", BindingFlags.NonPublic |
-					BindingFlags.Public | BindingFlags.Instance);
-				FIELD_RECT_TRANSFORM = subStruct.GetField("rect_transform", BindingFlags.
-					NonPublic | BindingFlags.Public | BindingFlags.Instance);
+				FIELD_MOD_INDEX = subStruct.GetFieldSafe("mod_index", false);
+				FIELD_RECT_TRANSFORM = subStruct.GetFieldSafe("rect_transform", false);
 			}
 			modOptions = null;
 		}
@@ -321,8 +318,10 @@ namespace PeterHan.PLib.Options {
 					options = serializer.Deserialize(jr, optionsType);
 				}
 			} catch (FileNotFoundException) {
+#if DEBUG
 				PUtil.LogDebug("{0} was not found; using default settings".F(Path.GetFileName(
 					path)));
+#endif
 			} catch (UnauthorizedAccessException e) {
 				// Options will be set to defaults
 				PUtil.LogExcWarn(e);

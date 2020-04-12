@@ -241,39 +241,37 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public override void CalculateLayoutInputHorizontal() {
-			results = new GridLayoutResults(rows, columns, children);
-			var elements = ListPool<Component, PGridLayoutGroup>.Allocate();
-			foreach (var component in results.Components) {
-				// Cache size of children
-				var obj = component.HorizontalSize.source;
-				var margin = component.Margin;
-				elements.Clear();
-				obj.GetComponents(elements);
-				var sz = PUIUtils.CalcSizes(obj, PanelDirection.Horizontal, elements);
-				if (!sz.ignore) {
-					// Add borders
-					int border = (margin == null) ? 0 : margin.left + margin.right;
-					sz.min += border;
-					sz.preferred += border;
+			if (!locked) {
+				results = new GridLayoutResults(rows, columns, children);
+				var elements = ListPool<Component, PGridLayoutGroup>.Allocate();
+				foreach (var component in results.Components) {
+					// Cache size of children
+					var obj = component.HorizontalSize.source;
+					var margin = component.Margin;
+					elements.Clear();
+					obj.GetComponents(elements);
+					var sz = PUIUtils.CalcSizes(obj, PanelDirection.Horizontal, elements);
+					if (!sz.ignore) {
+						// Add borders
+						int border = (margin == null) ? 0 : margin.left + margin.right;
+						sz.min += border;
+						sz.preferred += border;
+					}
+					component.HorizontalSize = sz;
 				}
-				component.HorizontalSize = sz;
+				elements.Recycle();
+				// Calculate columns sizes and our size
+				results.CalcBaseWidths();
+				float width = results.MinWidth;
+				if (Margin != null)
+					width += Margin.left + Margin.right;
+				minWidth = preferredWidth = width;
+				flexibleWidth = (results.TotalFlexWidth > 0.0f) ? 1.0f : 0.0f;
 			}
-			elements.Recycle();
-			// Calculate columns sizes and our size
-			results.CalcBaseWidths();
-			float width = results.MinWidth;
-			if (Margin != null)
-				width += Margin.left + Margin.right;
-			minWidth = preferredWidth = width;
-			flexibleWidth = (results.TotalFlexWidth > 0.0f) ? 1.0f : 0.0f;
 		}
 
 		public override void CalculateLayoutInputVertical() {
-#if DEBUG
-			if (results == null)
-				throw new InvalidOperationException("CalculateLayoutInputVertical before CalculateLayoutInputHorizontal");
-#endif
-			if (results != null) {
+			if (results != null && !locked) {
 				var elements = ListPool<Component, PGridLayoutGroup>.Allocate();
 				foreach (var component in results.Components) {
 					// Cache size of children
@@ -313,11 +311,7 @@ namespace PeterHan.PLib.UI {
 
 		public override void SetLayoutHorizontal() {
 			var obj = gameObject;
-#if DEBUG
-			if (results == null)
-				throw new InvalidOperationException("SetLayoutHorizontal before CalculateLayoutInputHorizontal");
-#endif
-			if (results != null && obj != null && results.Columns > 0) {
+			if (results != null && obj != null && results.Columns > 0 && !locked) {
 				float[] colX = GetColumnWidths(results, rectTransform.rect.width, Margin);
 				// All components lay out
 				var controllers = ListPool<ILayoutController, PGridLayoutGroup>.Allocate();
@@ -336,11 +330,7 @@ namespace PeterHan.PLib.UI {
 		public override void SetLayoutVertical() {
 			var obj = gameObject;
 			int rows;
-#if DEBUG
-			if (results == null)
-				throw new InvalidOperationException("SetLayoutVertical before CalculateLayoutInputVertical");
-#endif
-			if (results != null && obj != null && (rows = results.Rows) > 0) {
+			if (results != null && obj != null && (rows = results.Rows) > 0 && !locked) {
 				float[] rowY = GetRowHeights(results, rectTransform.rect.height, Margin);
 				// All components lay out
 				var controllers = ListPool<ILayoutController, PGridLayoutGroup>.Allocate();

@@ -118,6 +118,12 @@ namespace PeterHan.PLib.UI.Layouts {
 			}
 		}
 
+		/// <summary>
+		/// Whether the layout is currently locked.
+		/// </summary>
+		[SerializeField]
+		protected bool locked;
+
 		// The backing fields must be annotated with the attribute to have prefabbed versions
 		// successfully copy the values
 		[SerializeField]
@@ -134,12 +140,38 @@ namespace PeterHan.PLib.UI.Layouts {
 
 		protected AbstractLayoutGroup() {
 			cachedTransform = null;
+			locked = false;
 			mLayoutPriority = 1;
 		}
 
 		public abstract void CalculateLayoutInputHorizontal();
 
 		public abstract void CalculateLayoutInputVertical();
+
+		/// <summary>
+		/// Triggers a layout with the current parent, and then locks the layout size. Further
+		/// attempts to automatically lay out the component, unless UnlockLayout is called,
+		/// will not trigger any action.
+		/// 
+		/// The resulting layout has very good performance, but cannot adapt to changes in the
+		/// size of its children or its own size.
+		/// </summary>
+		/// <returns>The computed size of this component when locked.</returns>
+		public virtual Vector2 LockLayout() {
+			var rt = gameObject.rectTransform();
+			if (rt != null) {
+				locked = false;
+				CalculateLayoutInputHorizontal();
+				rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, minWidth);
+				SetLayoutHorizontal();
+				CalculateLayoutInputVertical();
+				rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, minHeight);
+				SetLayoutVertical();
+				locked = true;
+			}
+			return new Vector2(minWidth, minHeight);
+		}
+
 
 		protected override void OnDidApplyAnimationProperties() {
 			base.OnDidApplyAnimationProperties();
@@ -176,5 +208,14 @@ namespace PeterHan.PLib.UI.Layouts {
 		public abstract void SetLayoutHorizontal();
 
 		public abstract void SetLayoutVertical();
+
+		/// <summary>
+		/// Unlocks the layout, allowing it to again dynamically resize when component sizes
+		/// are changed.
+		/// </summary>
+		public virtual void UnlockLayout() {
+			locked = false;
+			LayoutRebuilder.MarkLayoutForRebuild(gameObject.rectTransform());
+		}
 	}
 }
