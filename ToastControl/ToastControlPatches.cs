@@ -106,7 +106,6 @@ namespace PeterHan.ToastControl {
 			"SeedProducer:ProduceSeed",
 			"SetLocker:DropContents",
 			"SolidConsumerMonitor+Instance:OnEatSolidComplete",
-			"ThreatMonitor+Grudge:Calm",
 			"WorldDamage:OnDigComplete"
 		};
 
@@ -298,6 +297,17 @@ namespace PeterHan.ToastControl {
 		}
 
 		/// <summary>
+		/// A special case for ThreatMonitor+Grudge.Calm due to the source being a struct.
+		/// </summary>
+		private static PopFX SpawnFXThreat(PopFXManager instance, Sprite icon, string text,
+				Transform targetTransform, float lifetime, bool track_target) {
+			PopFX popup = null;
+			if (ToastControlPopups.Options.Forgiveness)
+				popup = instance.SpawnFX(icon, text, targetTransform, lifetime, track_target);
+			return popup;
+		}
+
+		/// <summary>
 		/// Swaps the first "false" (0) constant load in the specified range with the
 		/// specified instructions.
 		/// </summary>
@@ -430,7 +440,7 @@ namespace PeterHan.ToastControl {
 			}
 
 			/// <summary>
-			/// Applied before SpawnFX runs.
+			/// Transpiles SpawnFX to replace calls to SpawnFX with our handler.
 			/// </summary>
 			internal static TranspiledMethod Transpiler(TranspiledMethod method,
 					MethodBase original) {
@@ -455,13 +465,40 @@ namespace PeterHan.ToastControl {
 			}
 
 			/// <summary>
-			/// Applied before SpawnFX runs.
+			/// Transpiles SpawnFX to replace calls to SpawnFX with our handler.
 			/// </summary>
 			internal static TranspiledMethod Transpiler(TranspiledMethod method,
 					MethodBase original) {
 				return ExecuteTranspiler(method, SPAWN_FX_SHORT, typeof(ToastControlPatches).
 					GetMethodSafe(nameof(SpawnFXShort), true, PPatchTools.AnyArguments),
 					original);
+			}
+		}
+
+		/// <summary>
+		/// Applied to ThreatMonitor.Grudge as it uses a struct and therefore fails when used
+		/// with the normal multi-patcher.
+		/// </summary>
+		[HarmonyPatch(typeof(ThreatMonitor.Grudge), "Calm")]
+		public static class ThreatMonitor_Grudge_Calm_Patch {
+			/// <summary>
+			/// Transpiles Calm to replace calls to SpawnFX with our handler.
+			/// </summary>
+			internal static TranspiledMethod Transpiler(TranspiledMethod method,
+					MethodBase original) {
+				bool replaced = false;
+				foreach (var instr in method) {
+					if (instr.opcode == OpCodes.Callvirt && SPAWN_FX_SHORT != null && (instr.
+							operand as MethodInfo) == SPAWN_FX_SHORT) {
+						// Call our method instead
+						instr.operand = typeof(ToastControlPatches).GetMethodSafe(nameof(
+							SpawnFXThreat), true, PPatchTools.AnyArguments);
+						replaced = true;
+					}
+					yield return instr;
+				}
+				if (!replaced)
+					PUtil.LogWarning("No calls to SpawnFX found: ThreatMonitor+Grudge.Calm");
 			}
 		}
 

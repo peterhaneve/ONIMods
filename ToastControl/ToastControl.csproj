@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Popup Control</AssemblyTitle>
-    <FileVersion>1.4.0.0</FileVersion>
+    <FileVersion>1.5.0.0</FileVersion>
     <RootNamespace>PeterHan.ToastControl</RootNamespace>
     <Description>Control which text popups are shown.</Description>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>

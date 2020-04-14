@@ -107,7 +107,7 @@ namespace PeterHan.PLib {
 				throw new ArgumentNullException("method");
 			var reflectMethod = GetMethodSafe(type, method, false, arguments);
 			if (reflectMethod != null)
-				del = (T)Delegate.CreateDelegate(typeof(T), caller, reflectMethod);
+				del = Delegate.CreateDelegate(typeof(T), caller, reflectMethod, false) as T;
 			return del;
 		}
 
@@ -132,8 +132,8 @@ namespace PeterHan.PLib {
 				throw new ArgumentNullException("property");
 			var reflectMethod = GetPropertySafe<T>(type, property, false)?.GetGetMethod();
 			if (reflectMethod != null)
-				del = (Func<T>)Delegate.CreateDelegate(typeof(Func<T>), caller,
-					reflectMethod);
+				del = Delegate.CreateDelegate(typeof(Func<T>), caller, reflectMethod, false)
+					as Func<T>;
 			return del;
 		}
 
@@ -158,8 +158,8 @@ namespace PeterHan.PLib {
 				throw new ArgumentNullException("property");
 			var reflectMethod = GetPropertySafe<T>(type, property, false)?.GetSetMethod();
 			if (reflectMethod != null)
-				del = (Action<T>)Delegate.CreateDelegate(typeof(Action<T>), caller,
-					reflectMethod);
+				del = Delegate.CreateDelegate(typeof(Action<T>), caller, reflectMethod, false)
+					as Action<T>;
 			return del;
 		}
 
@@ -184,7 +184,7 @@ namespace PeterHan.PLib {
 				throw new ArgumentNullException("method");
 			var reflectMethod = GetMethodSafe(type, method, true, arguments);
 			if (reflectMethod != null)
-				del = (T)Delegate.CreateDelegate(typeof(T), reflectMethod);
+				del = Delegate.CreateDelegate(typeof(T), reflectMethod, false) as T;
 			return del;
 		}
 

@@ -83,11 +83,11 @@ namespace PeterHan.PLib.Options {
 			}
 			if (handler != null) {
 				createUIEntry = targetType.CreateDelegate<Func<GameObject>>(nameof(
-					IDynamicOption.CreateUIEntry), handler);
+					IDynamicOption.GetUIComponent), handler);
 				getTitle = targetType.CreateGetDelegate<string>(nameof(IDynamicOption.Title),
 					handler);
 				getTooltip = targetType.CreateGetDelegate<string>(nameof(IDynamicOption.
-					Tooltip), handler);
+					ToolTip), handler);
 				getValue = targetType.CreateGetDelegate<object>(nameof(IDynamicOption.Value),
 					handler);
 				setValue = targetType.CreateSetDelegate<object>(nameof(IDynamicOption.Value),

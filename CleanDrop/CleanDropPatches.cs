@@ -181,14 +181,14 @@ namespace PeterHan.CleanDrop {
 		/// <summary>
 		/// Applied to EmptyConduitWorkable to mark the direction where the worker was standing
 		/// during the job. Note that since the errand can continuously emit bottles/canisters,
-		/// the location is saved when work begins.
+		/// the location is saved while work is in progress.
 		/// </summary>
-		[HarmonyPatch(typeof(EmptyConduitWorkable), "OnStartWork")]
-		public static class EmptyConduitWorkable_OnStartWork_Patch {
+		[HarmonyPatch(typeof(EmptyConduitWorkable), "OnWorkTick")]
+		public static class EmptyConduitWorkable_OnWorkTick_Patch {
 			/// <summary>
-			/// Applied after OnStartWork runs.
+			/// Applied before OnWorkTick runs.
 			/// </summary>
-			internal static void Postfix(EmptyConduitWorkable __instance, Worker worker) {
+			internal static void Prefix(EmptyConduitWorkable __instance, Worker worker) {
 				MarkDirection(__instance, worker);
 			}
 		}

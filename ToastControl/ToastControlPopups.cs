@@ -78,7 +78,6 @@ namespace PeterHan.ToastControl {
 			{ nameof(Storage), ShowItemStored },
 			{ nameof(SuperProductive), ShowOverjoyed },
 			{ nameof(Toilet), ShowGermsAdded },
-			{ "ThreatMonitor+Grudge", (c, t) => Options.Forgiveness },
 			{ nameof(UtilityBuildTool), (c, t) => Options.InvalidConnection },
 			{ nameof(WorldDamage), (c, t) => Options.ElementDug }
 		};

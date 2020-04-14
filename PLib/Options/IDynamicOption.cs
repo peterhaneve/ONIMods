@@ -26,25 +26,29 @@ namespace PeterHan.PLib.Options {
 	/// </summary>
 	public interface IDynamicOption {
 		/// <summary>
-		/// The options title. It will be queried after the initial option value is loaded.
+		/// The options title. It will be queried after the initial option value is loaded,
+		/// but only once.
 		/// </summary>
 		string Title { get; }
 
 		/// <summary>
 		/// The options tooltip. Will be regularly queried and updated when tooltips are shown.
+		/// However, there is a bug in the stock game that will not resize the black background
+		/// if the text changes.
 		/// </summary>
-		string Tooltip { get; }
+		string ToolTip { get; }
 
 		/// <summary>
-		/// Will be invoked to set the value with the value read from options, and read from
-		/// when options are saved.
+		/// Will be written to set the value with the value read from options, and read when
+		/// options are saved.
 		/// </summary>
 		object Value { get; set; }
 
 		/// <summary>
-		/// Creates the UI entry handler.
+		/// Gets the UI component that will handle this option. Note that this method must
+		/// return a realized GameObject.
 		/// </summary>
 		/// <returns>The UI entry handler for this option.</returns>
-		GameObject CreateUIEntry();
+		GameObject GetUIComponent();
 	}
 }
