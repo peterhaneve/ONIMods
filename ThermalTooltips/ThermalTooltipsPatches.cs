@@ -128,7 +128,8 @@ namespace PeterHan.ThermalTooltips {
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
 			internal static void Postfix() {
-				var options = POptions.ReadSettings<ThermalTooltipsOptions>();
+				var options = POptions.ReadSettings<ThermalTooltipsOptions>() ??
+					new ThermalTooltipsOptions();
 				// Check for DisplayAllTemps
 				if (PPatchTools.GetTypeSafe("DisplayAllTemps.State", "DisplayAllTemps") !=
 						null) {

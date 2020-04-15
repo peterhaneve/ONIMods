@@ -109,7 +109,7 @@ namespace PeterHan.ThermalTooltips {
 
 		internal ExtendedThermalTooltip(ThermalTooltipsOptions options,
 				BetterInfoCardsCompat compat = null) {
-			this.options = options;
+			this.options = options ?? throw new ArgumentNullException("options");
 			bicCompat = compat;
 			Cell = 0;
 			PrimaryElement = null;
@@ -146,7 +146,7 @@ namespace PeterHan.ThermalTooltips {
 			if (Drawer != null && Style != null) {
 				// Ignore SHC <= 0: vacuum, void, neutronium
 				if (element != null && (SimDebugView.Instance.GetMode() == OverlayModes.
-						Temperature.ID || options?.OnlyOnThermalOverlay == false) &&
+						Temperature.ID || options.OnlyOnThermalOverlay == false) &&
 						element.specificHeatCapacity > 0.0f) {
 					string name = STRINGS.UI.StripLinkFormatting(element.name);
 					DisplayThermalStats(element, temperature, mass);
@@ -253,7 +253,7 @@ namespace PeterHan.ThermalTooltips {
 		/// <returns>The display value of that temperature.</returns>
 		private string GetTemperatureString(float temp) {
 			string result;
-			if (options?.AllUnits == true) {
+			if (options.AllUnits == true) {
 				string c = ThermalTooltipsStrings.TEMP_FORMAT.F(GameUtil.
 					GetTemperatureConvertedFromKelvin(temp, GameUtil.TemperatureUnit.
 					Celsius), TEMP_SUFFIXES.CELSIUS);
