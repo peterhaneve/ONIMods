@@ -20,7 +20,6 @@ using PeterHan.PLib.UI;
 using UnityEngine;
 
 namespace PeterHan.DebugNotIncluded {
-
 	/// <summary>
 	/// Added to the toggle all checkbox to manage its state.
 	/// </summary>

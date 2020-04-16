@@ -311,20 +311,21 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		internal static void OpenOutputLog() {
 			// Ugly but true!
-			var platform = Environment.OSVersion.Platform;
+			var platform = Application.platform;
 			string path = "";
 			switch (platform) {
-			case PlatformID.MacOSX:
+			case RuntimePlatform.OSXPlayer:
+			case RuntimePlatform.OSXEditor:
 				// https://answers.unity.com/questions/1484445/how-do-i-find-the-player-log-file-from-code.html
 				path = "~/Library/Logs/Unity/Player.log";
 				break;
-			case PlatformID.Unix:
+			case RuntimePlatform.LinuxEditor:
+			case RuntimePlatform.LinuxPlayer:
 				path = Path.Combine("~/.config/unity3d", Application.companyName, Application.
 					productName, "Player.log");
 				break;
-			case PlatformID.Win32NT:
-			case PlatformID.Win32S:
-			case PlatformID.Win32Windows:
+			case RuntimePlatform.WindowsEditor:
+			case RuntimePlatform.WindowsPlayer:
 				path = Path.Combine(Environment.GetEnvironmentVariable("AppData"),
 					"..", "LocalLow", Application.companyName, Application.productName,
 					"output_log.txt");
