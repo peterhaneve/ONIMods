@@ -73,19 +73,22 @@ namespace PeterHan.ModUpdateDate {
 		}
 
 		/// <summary>
-		/// Applied to Mod to avoid disabling this mod on crash.
-		/// 
-		/// If this mod gets disabled on crash, Steam might then downgrade a bunch of other
-		/// mods and cause out of control follow on crashes.
+		/// Handles a mod crash and bypasses disabling the mod if it is this mod.
 		/// </summary>
-		[HarmonyPatch(typeof(Mod), "Crash")]
-		public static class Mod_Crash_Patch {
-			/// <summary>
-			/// Applied before Crash runs.
-			/// </summary>
-			internal static bool Prefix(Mod __instance) {
-				return ThisMod == null || !__instance.label.Match(ThisMod.label);
-			}
+		private static bool OnModCrash(Mod __instance) {
+			return ThisMod == null || !__instance.label.Match(ThisMod.label);
+		}
+
+		/// <summary>
+		/// Invoked by the game before our patches, so we get a chance to patch Mod.Crash.
+		/// </summary>
+		public static void PrePatch(HarmonyInstance instance) {
+			var method = typeof(Mod).GetMethodSafe("Crash", false);
+			if (method == null)
+				method = typeof(Mod).GetMethodSafe("SetCrashed", false);
+			if (method != null)
+				instance.Patch(method, prefix: new HarmonyMethod(typeof(
+					ModUpdateDatePatches), nameof(OnModCrash)));
 		}
 
 		/// <summary>

@@ -34,6 +34,16 @@ namespace PeterHan.DebugNotIncluded {
 	/// </summary>
 	internal static class DebugUtils {
 		/// <summary>
+		/// Anchors the subelement to its middle left.
+		/// </summary>
+		internal static readonly Vector2 ANCHOR_MID_LEFT = new Vector2(0.0f, 0.5f);
+
+		/// <summary>
+		/// The margin inside each button.
+		/// </summary>
+		internal static readonly RectOffset BUTTON_MARGIN = new RectOffset(10, 10, 7, 7);
+
+		/// <summary>
 		/// Finds only declared members of a class of any visibility and static/instance.
 		/// </summary>
 		private const BindingFlags DEC_FLAGS = PUBLIC_PRIVATE | INSTANCE_STATIC | BindingFlags.

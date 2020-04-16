@@ -31,16 +31,6 @@ namespace PeterHan.DebugNotIncluded {
 	/// </summary>
 	internal sealed class MoreModActions : KMonoBehaviour {
 		/// <summary>
-		/// Anchors the subelement to its middle left.
-		/// </summary>
-		private static readonly Vector2 ANCHOR_MID_LEFT = new Vector2(0.0f, 0.5f);
-
-		/// <summary>
-		/// The margin inside each button.
-		/// </summary>
-		private static readonly RectOffset BUTTON_MARGIN = new RectOffset(10, 10, 7, 7);
-
-		/// <summary>
 		/// The screen to show when More Mod Actions is clicked.
 		/// </summary>
 		private ModActionsScreen actionsScreen;
@@ -96,7 +86,7 @@ namespace PeterHan.DebugNotIncluded {
 				OnButtonPressed action, PUIDelegates.OnRealize onRealize) {
 			var button = new PButton(name) {
 				SpriteSize = ModDialogs.SPRITE_SIZE, Sprite = sprite, DynamicSize = false,
-				OnClick = action, ToolTip = tooltip, Margin = BUTTON_MARGIN
+				OnClick = action, ToolTip = tooltip, Margin = DebugUtils.BUTTON_MARGIN
 			}.SetKleiPinkStyle();
 			button.OnRealize += onRealize;
 			return button;
@@ -182,13 +172,14 @@ namespace PeterHan.DebugNotIncluded {
 			// Manage mod (subscription / local folder), strings will be replaced
 			var manage = new PButton("ManageMod") {
 				Text = UI.MODSSCREEN.BUTTON_SUBSCRIPTION, DynamicSize = false,
-				OnClick = OnManage, ToolTip = "Manage Mod", Margin = BUTTON_MARGIN
+				OnClick = OnManage, ToolTip = "Manage Mod", Margin = DebugUtils.BUTTON_MARGIN
 			}.SetKleiBlueStyle();
 			manage.OnRealize += (obj) => buttonManage = obj;
 			// Unsubscribe from mod
 			var unsub = new PButton("UnsubMod") {
 				Text = UI.MODSSCREEN.BUTTON_UNSUB, DynamicSize = false,
-				OnClick = OnUnsub, ToolTip = UI.TOOLTIPS.DNI_UNSUB, Margin = BUTTON_MARGIN
+				OnClick = OnUnsub, ToolTip = UI.TOOLTIPS.DNI_UNSUB, Margin = DebugUtils.
+				BUTTON_MARGIN
 			}.SetKleiBlueStyle();
 			unsub.OnRealize += (obj) => buttonUnsub = obj.GetComponent<KButton>();
 			var actionsObj = panel.AddChild(manage).AddChild(unsub).AddTo(gameObject);
@@ -278,8 +269,8 @@ namespace PeterHan.DebugNotIncluded {
 				rt.SetAsLastSibling();
 				// Move it to the correct place
 				rt.anchoredPosition = Vector2.zero;
-				rt.anchorMin = ANCHOR_MID_LEFT;
-				rt.anchorMax = ANCHOR_MID_LEFT;
+				rt.anchorMin = DebugUtils.ANCHOR_MID_LEFT;
+				rt.anchorMax = DebugUtils.ANCHOR_MID_LEFT;
 				rt.offsetMin = new Vector2(end - w, -h);
 				rt.offsetMax = new Vector2(end, h);
 				callingButton = button;

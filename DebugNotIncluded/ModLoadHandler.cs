@@ -18,10 +18,9 @@
 
 using Harmony;
 using PeterHan.PLib;
-using PeterHan.PLib.UI;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
-using UnityEngine;
 
 namespace PeterHan.DebugNotIncluded {
 	/// <summary>
@@ -60,29 +59,6 @@ namespace PeterHan.DebugNotIncluded {
 		private static ModDebugInfo lastCrashedMod;
 
 		/// <summary>
-		/// When creating a Harmony instance, ignores the silly constant OxygenNotIncluded_v0.1
-		/// and instead fills in a name sensible to the current mod.
-		/// </summary>
-		internal static HarmonyInstance CreateHarmonyInstance(string name) {
-			HarmonyInstance instance;
-			if (CurrentMod != null) {
-				// This mod's changes to names were integrated into the game!
-				if (PUtil.GameVersion >= 397125u)
-					CurrentMod.HarmonyIdentifier = name;
-				else
-					name = CurrentMod.HarmonyIdentifier;
-			}
-			instance = HarmonyInstance.Create(name);
-			if (CurrentMod != null)
-				CurrentMod.HarmonyInstance = instance;
-#if DEBUG
-			DebugLogger.LogDebug("Created Harmony instance with ID {0} for mod {1}",
-				name, CurrentModTitle);
-#endif
-			return instance;
-		}
-
-		/// <summary>
 		/// Handles an exception thrown when loading a mod.
 		/// </summary>
 		/// <param name="ex">The exception thrown.</param>
@@ -111,6 +87,22 @@ namespace PeterHan.DebugNotIncluded {
 				ModDebugRegistry.Instance.RegisterModAssembly(assembly, CurrentMod);
 			}
 			return assembly;
+		}
+
+		/// <summary>
+		/// Adds the assemblies in the loaded mod data to the active mod.
+		/// </summary>
+		/// <param name="data">The assemblies loaded.</param>
+		internal static void LoadAssemblies(object data) {
+			var dllList = data.GetType().GetFieldSafe("dlls", false);
+			if (dllList != null && dllList.GetValue(data) is ICollection<Assembly> dlls)
+				foreach (var assembly in dlls) {
+#if DEBUG
+					DebugLogger.LogDebug("Attributed assembly {0} to mod {1}", assembly.
+						FullName, CurrentModTitle);
+#endif
+					ModDebugRegistry.Instance.RegisterModAssembly(assembly, CurrentMod);
+				}
 		}
 	}
 }

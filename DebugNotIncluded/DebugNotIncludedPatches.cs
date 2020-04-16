@@ -35,6 +35,11 @@ namespace PeterHan.DebugNotIncluded {
 	/// Patches which will be applied via annotations for Debug Not Included.
 	/// </summary>
 	public static class DebugNotIncludedPatches {
+		/// <summary>
+		/// Yay debugging was made better in this version!
+		/// </summary>
+		public const uint BETTER_DEBUG_VER = 404823u;
+
 		/*
 		 * Spawned prefabs at launch initialization:
 		 * KObjectManager
@@ -74,6 +79,26 @@ namespace PeterHan.DebugNotIncluded {
 			foreach (var displayedMod in (System.Collections.IEnumerable)___displayedMods)
 				ModDialogs.ConfigureRowInstance(Traverse.Create(displayedMod), __instance);
 			__instance.GetComponent<AllModsHandler>()?.UpdateCheckedState();
+		}
+
+		/// <summary>
+		/// Returns the DLLLoader.LoadDLLs method, which is private in versions of ONI before
+		/// the debug improvement version.
+		/// </summary>
+		/// <returns>A reference to DLLLoader.LoadDLLs. The signature varies depending on
+		/// game version!</returns>
+		private static MethodBase GetLoadDLLsMethod() {
+			MethodBase target = null;
+			try {
+				target = typeof(Mod).Assembly.GetType("KMod.DLLLoader", false)?.
+					GetMethodSafe("LoadDLLs", true, PPatchTools.AnyArguments);
+				if (target == null)
+					DebugLogger.LogError("Unable to transpile LoadDLLs: Method not found");
+			} catch (IOException e) {
+				// This should theoretically be impossible since the type is loaded
+				DebugLogger.BaseLogException(e, null);
+			}
+			return target;
 		}
 
 		/// <summary>
@@ -159,6 +184,13 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
+		/// Handles a mod crash and bypasses disabling the mod if it is this mod.
+		/// </summary>
+		private static bool OnModCrash(Mod __instance) {
+			return ThisMod == null || !__instance.label.Match(ThisMod.label);
+		}
+
+		/// <summary>
 		/// Runs the required postload patches after all other mods load.
 		/// </summary>
 		/// <param name="instance">The Harmony instance to execute patches.</param>
@@ -174,6 +206,19 @@ namespace PeterHan.DebugNotIncluded {
 			var latest = ModDebugRegistry.Instance.OwnerOfAssembly(RunningPLibAssembly);
 			if (latest != null)
 				DebugLogger.LogDebug("Executing version of PLib is from: " + latest.ModName);
+			HarmonyPatchInspector.Check();
+		}
+
+		/// <summary>
+		/// Invoked by the game before our patches, so we get a chance to patch Mod.Crash.
+		/// </summary>
+		public static void PrePatch(HarmonyInstance instance) {
+			var method = typeof(Mod).GetMethodSafe("Crash", false);
+			if (method == null)
+				method = typeof(Mod).GetMethodSafe("SetCrashed", false);
+			if (method != null)
+				instance.Patch(method, prefix: new HarmonyMethod(typeof(
+					DebugNotIncludedPatches), nameof(OnModCrash)));
 		}
 
 		/// <summary>
@@ -318,43 +363,76 @@ namespace PeterHan.DebugNotIncluded {
 		/// Applied to DLLLoader to patch in our handling to LoadDLLs.
 		/// </summary>
 		[HarmonyPatch]
-		public static class DLLLoader_LoadDLLs_Patch {
-			/// <summary>
-			/// Applied before OnPrefabInit runs.
-			/// </summary>
+		public static class DLLLoader_LoadDLLs_Postfix_Patch {
+			internal static bool Prepare() {
+				return PUtil.GameVersion >= BETTER_DEBUG_VER;
+			}
+
 			internal static MethodBase TargetMethod() {
-				MethodBase target = null;
+#if DEBUG
+				DebugLogger.LogDebug("Postfixing LoadDLLs()");
+#endif
+				return GetLoadDLLsMethod();
+			}
+
+			/// <summary>
+			/// Applied after LoadDLLs runs.
+			/// </summary>
+			internal static void Postfix(object __result) {
+				// LoadedModData is not declared in old versions
+				if (__result != null)
+					ModLoadHandler.LoadAssemblies(__result);
+			}
+		}
+
+		/// <summary>
+		/// Applied to DLLLoader to patch in our handling to LoadDLLs.
+		/// </summary>
+		[HarmonyPatch]
+		public static class DLLLoader_LoadDLLs_Transpiler_Patch {
+			internal static bool Prepare() {
+				return PUtil.GameVersion < BETTER_DEBUG_VER;
+			}
+
+			internal static MethodBase TargetMethod() {
 #if DEBUG
 				DebugLogger.LogDebug("Transpiling LoadDLLs()");
 #endif
-				try {
-					target = typeof(Mod).Assembly.GetType("KMod.DLLLoader", false)?.
-						GetMethodSafe("LoadDLLs", true, PPatchTools.AnyArguments);
-					if (target == null)
-						DebugLogger.LogError("Unable to transpile LoadDLLs: Method not found");
-				} catch (IOException e) {
-					// This should theoretically be impossible since the type is loaded
-					DebugLogger.BaseLogException(e, null);
-				}
-				return target;
+				return GetLoadDLLsMethod();
 			}
 
 			/// <summary>
 			/// Transpiles LoadDLLs to grab the exception information when a mod fails to load.
 			/// </summary>
-			private static IEnumerable<CodeInstruction> Transpiler(
+			internal static IEnumerable<CodeInstruction> Transpiler(
 					IEnumerable<CodeInstruction> method) {
-				return PPatchTools.ReplaceMethodCall(method, new Dictionary<MethodInfo,
-						MethodInfo>() {
-					{ typeof(HarmonyInstance).GetMethodSafe(nameof(HarmonyInstance.Create),
-						true, typeof(string)), typeof(ModLoadHandler).GetMethodSafe(nameof(
-						ModLoadHandler.CreateHarmonyInstance), true, typeof(string)) },
-					{ typeof(Assembly).GetMethodSafe(nameof(Assembly.LoadFrom), true,
-						typeof(string)), typeof(ModLoadHandler).GetMethodSafe(nameof(
-						ModLoadHandler.LoadAssembly), true, typeof(string)) }
-				});
+				return PPatchTools.ReplaceMethodCall(method, typeof(Assembly).
+					GetMethodSafe(nameof(Assembly.LoadFrom), true, typeof(string)),
+					typeof(ModLoadHandler).GetMethodSafe(nameof(ModLoadHandler.LoadAssembly),
+					true, typeof(string)));
 			}
 		}
+
+#if DEBUG
+		/// <summary>
+		/// Applied to PatchProcessor to warn about suspicious patches that end up targeting
+		/// a method in another class.
+		/// 
+		/// DEBUG ONLY.
+		/// </summary>
+		[HarmonyPatch(typeof(PatchProcessor), "GetOriginalMethod")]
+		public static class PatchProcessor_GetOriginalMethod_Patch {
+			/// <summary>
+			/// Applied after GetOriginalMethod runs.
+			/// </summary>
+			internal static void Postfix(HarmonyMethod ___containerAttributes,
+					Type ___container, MethodBase __result) {
+				if (__result != null && ___containerAttributes != null)
+					HarmonyPatchInspector.CheckHarmonyMethod(___containerAttributes,
+						___container);
+			}
+		}
+#endif
 
 		/// <summary>
 		/// Applied to KMonoBehaviour to modify InitializeComponent for better logging.
@@ -362,7 +440,8 @@ namespace PeterHan.DebugNotIncluded {
 		[HarmonyPatch(typeof(KMonoBehaviour), "InitializeComponent")]
 		public static class KMonoBehaviour_InitializeComponent_Patch {
 			internal static bool Prepare() {
-				return DebugNotIncludedOptions.Instance?.DetailedBacktrace ?? false;
+				return (DebugNotIncludedOptions.Instance?.DetailedBacktrace ?? false) &&
+					PUtil.GameVersion < BETTER_DEBUG_VER;
 			}
 
 			/// <summary>
@@ -383,7 +462,8 @@ namespace PeterHan.DebugNotIncluded {
 		[HarmonyPatch(typeof(KMonoBehaviour), "Spawn")]
 		public static class KMonoBehaviour_Spawn_Patch {
 			internal static bool Prepare() {
-				return DebugNotIncludedOptions.Instance?.DetailedBacktrace ?? false;
+				return (DebugNotIncludedOptions.Instance?.DetailedBacktrace ?? false) &&
+					PUtil.GameVersion < BETTER_DEBUG_VER;
 			}
 
 			/// <summary>
@@ -458,19 +538,6 @@ namespace PeterHan.DebugNotIncluded {
 				string result = ModEvents.Describe(events);
 				if (!string.IsNullOrEmpty(result))
 					__result = result;
-			}
-		}
-
-		/// <summary>
-		/// Applied to Mod to avoid disabling this mod on crash.
-		/// </summary>
-		[HarmonyPatch(typeof(Mod), "Crash")]
-		public static class Mod_Crash_Patch {
-			/// <summary>
-			/// Applied before Crash runs.
-			/// </summary>
-			internal static bool Prefix(Mod __instance) {
-				return ThisMod == null || !__instance.label.Match(ThisMod.label);
 			}
 		}
 

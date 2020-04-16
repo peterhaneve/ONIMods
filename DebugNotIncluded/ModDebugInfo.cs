@@ -43,12 +43,6 @@ namespace PeterHan.DebugNotIncluded {
 		public string HarmonyIdentifier { get; internal set; }
 
 		/// <summary>
-		/// The Harmony instance used for this mod's annotation patches. Can be null if no
-		/// DLLs are ever loaded for the mod.
-		/// </summary>
-		public HarmonyInstance HarmonyInstance { get; internal set; }
-
-		/// <summary>
 		/// The Klei mod information.
 		/// </summary>
 		public Mod Mod { get; }
@@ -74,7 +68,6 @@ namespace PeterHan.DebugNotIncluded {
 			ModAssemblies = new HashSet<Assembly>();
 			ModName = mod.title ?? "unknown";
 			HarmonyIdentifier = GetIdentifier(mod);
-			HarmonyInstance = null;
 		}
 
 		public override bool Equals(object obj) {
