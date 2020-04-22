@@ -18,7 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
-using PeterHan.PLib.UI;
+using System.Reflection;
 using UnityEngine;
 
 namespace PeterHan.SweepByType {
@@ -32,6 +32,12 @@ namespace PeterHan.SweepByType {
 		public static FilteredClearTool Instance { get; private set; }
 
 		/// <summary>
+		/// Temporary workaround for beta branch, recompile and remove when it goes live
+		/// </summary>
+		private static readonly MethodInfo MARK_FOR_CLEAR_NEW = typeof(Clearable).
+			GetMethodSafe("MarkForClear", false, typeof(bool), typeof(bool));
+
+		/// <summary>
 		/// Destroys the singleton instance.
 		/// </summary>
 		internal static void DestroyInstance() {
@@ -40,6 +46,15 @@ namespace PeterHan.SweepByType {
 				Destroy(inst);
 				Instance = null;
 			}
+		}
+
+		/// <summary>
+		/// Directly marks a Clearable for sweeping.
+		/// </summary>
+		/// <param name="cc">The item to sweep.</param>
+		private static void MarkForClearDirect(Clearable cc) {
+			// Parameter is whether to force, not remove sweep errand!
+			cc.MarkForClear(false);
 		}
 
 		/// <summary>
@@ -81,10 +96,13 @@ namespace PeterHan.SweepByType {
 		/// <param name="priority">The priority to set the sweep errand.</param>
 		private void MarkForClear(GameObject content, PrioritySetting priority) {
 			var cc = content.GetComponent<Clearable>();
-			if (cc != null && cc.isClearable && (cachedAll || cachedTypes.
-					Contains(content.PrefabID()))) {
-				// Parameter is whether to force, not remove sweep errand!
-				cc.MarkForClear(false);
+			if (cc != null && cc.isClearable && (cachedAll || cachedTypes.Contains(content.
+					PrefabID()))) {
+				// In beta branch a new optional parameter was added
+				if (MARK_FOR_CLEAR_NEW != null)
+					MARK_FOR_CLEAR_NEW.Invoke(cc, new object[] { false, false });
+				else
+					MarkForClearDirect(cc);
 				var pr = content.GetComponent<Prioritizable>();
 				if (pr != null)
 					pr.SetMasterPriority(priority);
@@ -100,14 +118,12 @@ namespace PeterHan.SweepByType {
 				bool firstTime = TypeSelect.CategoryCount < 1;
 				TypeSelect.Update();
 				if (firstTime) {
+					var savedTypes = SaveGame.Instance?.GetComponent<SavedTypeSelections>()?.
+						GetSavedTypes();
 					// First time, load the user's old settings if available
-					var savedTypes = SaveGame.Instance?.GetComponent<SavedTypeSelections>();
-					if (savedTypes != null) {
-						var st = savedTypes.GetSavedTypes();
-						// If nothing was selected, this is probably the first ever load
-						if (st.Count > 0)
-							TypeSelect.SetSelections(st);
-					}
+					// If nothing at all is selected, then this is probably the first ever load
+					if (savedTypes != null && savedTypes.Count > 0)
+						TypeSelect.SetSelections(savedTypes);
 				}
 				root.SetParent(menu.gameObject);
 				root.SetActive(true);

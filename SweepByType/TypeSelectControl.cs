@@ -21,6 +21,7 @@ using PeterHan.PLib.UI;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace PeterHan.SweepByType {
 	/// <summary>
@@ -31,6 +32,11 @@ namespace PeterHan.SweepByType {
 		/// The margin around the scrollable area to avoid stomping on the scrollbar.
 		/// </summary>
 		private static readonly RectOffset ELEMENT_MARGIN = new RectOffset(2, 2, 2, 2);
+
+		/// <summary>
+		/// The margin around the text in the title bar.
+		/// </summary>
+		private static readonly RectOffset TITLE_MARGIN = new RectOffset(5, 5, 3, 3);
 
 		/// <summary>
 		/// The indent of the categories, and the items in each category.
@@ -158,32 +164,37 @@ namespace PeterHan.SweepByType {
 			allCheckBox.OnRealize += (obj) => { allItems = obj; };
 			var cp = new PPanel("Categories") {
 				Direction = PanelDirection.Vertical, Alignment = TextAnchor.UpperLeft,
-				Spacing = ROW_SPACING
+				Spacing = ROW_SPACING, Margin = ELEMENT_MARGIN, FlexSize = Vector2.right,
 			};
+			cp.AddChild(allCheckBox);
 			cp.OnRealize += (obj) => { childPanel = obj; };
-			RootPanel = new PPanel("Border") {
-				// 1px dark border for contrast
-				Margin = new RectOffset(1, 1, 1, 1), Direction = PanelDirection.Vertical,
-				Alignment = TextAnchor.MiddleCenter, Spacing = 1
-			}.AddChild(new PLabel("Title") {
-				// Title bar
+			// Scroll to select elements
+			var sp = new PScrollPane("Scroll") {
+				Child = cp, ScrollHorizontal = false, ScrollVertical = true,
+				AlwaysShowVertical = true, TrackSize = 8.0f, FlexSize = Vector2.one
+			};
+			// Title bar
+			var title = new PLabel("Title") {
 				TextAlignment = TextAnchor.MiddleCenter, Text = SweepByTypeStrings.
-				DIALOG_TITLE, FlexSize = new Vector2(1.0f, 0.0f), Margin =
-				new RectOffset(1, 1, 1, 1)
-			}.SetKleiPinkColor()).AddChild(new PPanel("TypeSelectControl") {
-				// White background for scroll bar
-				Direction = PanelDirection.Vertical, Margin = OUTER_MARGIN,
-				Alignment = TextAnchor.MiddleCenter, Spacing = 0,
-				BackColor = PUITuning.Colors.BackgroundLight, FlexSize = Vector2.one
-			}.AddChild(new PScrollPane("Scroll") {
-				// Scroll to select elements
-				Child = new PPanel("SelectType") {
-					Direction = PanelDirection.Vertical, Margin = ELEMENT_MARGIN,
-					FlexSize = new Vector2(1.0f, 0.0f), Alignment = TextAnchor.UpperLeft
-				}.AddChild(allCheckBox).AddChild(cp), ScrollHorizontal = false,
-				ScrollVertical = true, AlwaysShowVertical = true, TrackSize = 8.0f,
-				FlexSize = Vector2.one, BackColor = PUITuning.Colors.BackgroundLight,
-			})).SetKleiBlueColor().BuildWithFixedSize(PANEL_SIZE);
+				DIALOG_TITLE, FlexSize = Vector2.right, Margin = TITLE_MARGIN
+			}.SetKleiPinkColor();
+			// Bottom border on the title for contrast
+			title.OnRealize += (obj) => {
+				var img = obj.AddOrGet<Image>();
+				img.sprite = PUITuning.Images.BoxBorder;
+				img.type = Image.Type.Sliced;
+			};
+			// 1px black border on the rest of the dialog for contrast
+			var panel = new PRelativePanel("Border") {
+				BackImage = PUITuning.Images.BoxBorder, ImageMode = Image.Type.Sliced,
+				DynamicSize = false, BackColor = PUITuning.Colors.BackgroundLight
+			}.AddChild(sp).AddChild(title);
+			RootPanel = panel.SetMargin(sp, OUTER_MARGIN).
+				SetLeftEdge(title, fraction: 0.0f).SetRightEdge(title, fraction: 1.0f).
+				SetLeftEdge(sp, fraction: 0.0f).SetRightEdge(sp, fraction: 1.0f).
+				SetTopEdge(title, fraction: 1.0f).SetBottomEdge(sp, fraction: 0.0f).
+				SetTopEdge(sp, below: title).Build();
+			RootPanel.SetMinUISize(PANEL_SIZE);
 			children = new SortedList<Tag, TypeSelectCategory>(16, TagAlphabetComparer.
 				INSTANCE);
 			Screen = RootPanel.AddComponent<TypeSelectScreen>();
@@ -296,7 +307,7 @@ namespace PeterHan.SweepByType {
 				if (!children.TryGetValue(category, out TypeSelectCategory current)) {
 					current = new TypeSelectCategory(this, category, overrideName);
 					children.Add(category, current);
-					int index = children.IndexOfKey(category) << 1;
+					int index = 1 + (children.IndexOfKey(category) << 1);
 					GameObject header = current.Header, panel = current.ChildPanel;
 					// Header goes in even indexes, panel goes in odds
 					header.SetParent(childPanel);
