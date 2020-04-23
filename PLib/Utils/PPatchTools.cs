@@ -486,6 +486,9 @@ namespace PeterHan.PLib {
 
 		/// <summary>
 		/// Transpiles a method to replace instances of one constant value with another.
+		/// 
+		/// Note that values of type byte, char, and bool are also represented with "i4"
+		/// constants which can be targeted by this method.
 		/// </summary>
 		/// <param name="method">The method to patch.</param>
 		/// <param name="oldValue">The old constant to remove.</param>
@@ -501,7 +504,7 @@ namespace PeterHan.PLib {
 			int replaced = 0;
 			bool quickCode = oldValue >= -1 && oldValue <= 8;
 			// Quick test for the opcode on the shorthand forms
-			OpCode qc = OpCodes.Nop;
+			var qc = OpCodes.Nop;
 			if (quickCode)
 				qc = LOAD_INT[oldValue + 1];
 			foreach (var inst in method) {
@@ -593,7 +596,8 @@ namespace PeterHan.PLib {
 		/// Transpiles a method to replace calls to the specified victim methods with
 		/// replacement methods, altering the call type if necessary.
 		/// 
-		/// Each key to value pair must meet the criteria defined in ReplaceMethodCall.
+		/// Each key to value pair must meet the criteria defined in
+		/// ReplaceMethodCall(TranspiledMethod, MethodInfo, MethodInfo).
 		/// </summary>
 		/// <param name="method">The method to patch.</param>
 		/// <param name="victim">The old method calls to remove.</param>
@@ -649,8 +653,18 @@ namespace PeterHan.PLib {
 					yield return instruction;
 			}
 #if DEBUG
-			if (replaced == 0)
-				PUtil.LogWarning("No method calls replaced (multiple replacements)");
+			if (replaced == 0) {
+				if (translation.Count == 1) {
+					// Diagnose the method that could not be replaced
+					var items = new KeyValuePair<MethodInfo, MethodInfo>[1];
+					translation.CopyTo(items, 0);
+					MethodInfo from = items[0].Key, to = items[0].Value;
+					PUtil.LogWarning("No method calls replaced: {0}.{1} to {2}.{3}".F(
+						from.DeclaringType.FullName, from.Name, to.DeclaringType.FullName,
+						to.Name));
+				} else
+					PUtil.LogWarning("No method calls replaced (multiple replacements)");
+			}
 #endif
 		}
 

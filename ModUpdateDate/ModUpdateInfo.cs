@@ -67,8 +67,13 @@ namespace PeterHan.ModUpdateDate {
 		[JsonProperty]
 		public List<ModUpdateData> ModUpdates { get; set; }
 
+		[JsonProperty]
+		[Option("STRINGS.UI.MODUPDATER.OPTION_MAINMENU", "STRINGS.UI.TOOLTIPS.MODUPDATER.OPTION_MAINMENU")]
+		public bool ShowMainMenuWarning { get; set; }
+
 		public ModUpdateInfo() {
 			ModUpdates = new List<ModUpdateData>(8);
+			ShowMainMenuWarning = true;
 		}
 	}
 

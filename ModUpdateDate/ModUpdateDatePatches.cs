@@ -49,6 +49,7 @@ namespace PeterHan.ModUpdateDate {
 		public static void OnLoad(string path) {
 			PUtil.InitLibrary();
 			POptions.RegisterOptions(typeof(ModUpdateInfo));
+			LocString.CreateLocStringKeys(typeof(ModUpdateDateStrings.UI));
 			PLocalization.Register();
 			// Try to read the backup config first
 			string backupPath = ExtensionMethods.BackupConfigPath;
@@ -92,25 +93,48 @@ namespace PeterHan.ModUpdateDate {
 		}
 
 		/// <summary>
+		/// Updates the number of outdated mods on the main menu.
+		/// </summary>
+		private static void UpdateMainMenu() {
+			MainMenuWarning.Instance?.UpdateText();
+		}
+
+		/// <summary>
+		/// Applied to MainMenu to initialize the main menu update warning.
+		/// </summary>
+		[HarmonyPatch(typeof(MainMenu), "OnPrefabInit")]
+		public static class MainMenu_OnPrefabInit_Patch {
+			/// <summary>
+			/// Applied after OnPrefabInit runs.
+			/// </summary>
+			internal static void Postfix(MainMenu __instance) {
+				if (ModUpdateInfo.Settings?.ShowMainMenuWarning == true)
+					__instance.gameObject.AddOrGet<MainMenuWarning>();
+			}
+		}
+
+		/// <summary>
 		/// Applied to ModsScreen to adjust tool tips for the subscription button to have
 		/// the dates.
 		/// </summary>
 		[HarmonyPatch(typeof(ModsScreen), "BuildDisplay")]
-		[HarmonyPriority(Priority.First)]
+		[HarmonyPriority(Priority.High)]
 		public static class ModsScreen_BuildDisplay_Patch {
 			/// <summary>
 			/// Applied after BuildDisplay runs.
 			/// </summary>
-			internal static void Postfix(KButton ___closeButton, object ___displayedMods) {
+			internal static void Postfix(KButton ___closeButton, System.Collections.
+					IEnumerable ___displayedMods) {
 				// Must cast the type because ModsScreen.DisplayedMod is private
-				if (___displayedMods is System.Collections.IEnumerable mods) {
+				if (___displayedMods != null) {
 					var outdated = new List<ModToUpdate>(16);
-					foreach (var displayedMod in mods)
+					foreach (var displayedMod in ___displayedMods)
 						ModUpdateHandler.AddModUpdateButton(outdated, Traverse.Create(
 							displayedMod));
 					if (outdated.Count > 0 && ___closeButton != null)
 						ModUpdateHandler.AddUpdateAll(___closeButton.gameObject.GetParent(),
 							outdated);
+					UpdateMainMenu();
 				}
 			}
 		}
@@ -124,7 +148,8 @@ namespace PeterHan.ModUpdateDate {
 			/// Applied after Update runs.
 			/// </summary>
 			internal static void Postfix() {
-				ModUpdateDetails.ScrubConfig();
+				if (ModUpdateDetails.ScrubConfig())
+					UpdateMainMenu();
 			}
 
 			/// <summary>

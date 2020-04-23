@@ -74,16 +74,6 @@ namespace PeterHan.ModUpdateDate {
 		}
 
 		/// <summary>
-		/// Gets the temporary download path for a mod.
-		/// </summary>
-		/// <param name="id">The Steam mod ID.</param>
-		/// <param name="temp">true for the temporary location, or false for the real one.</param>
-		/// <returns>The path where its temporary download will be stored.</returns>
-		internal static string GetDownloadPath(this ulong id, bool temp = false) {
-			return Path.Combine(Manager.GetDirectory(), id + (temp ? ".tmp" : ".zip"));
-		}
-
-		/// <summary>
 		/// Gets the last modified date of a mod's local files. The time is returned in UTC.
 		/// </summary>
 		/// <param name="mod">The mod to check.</param>

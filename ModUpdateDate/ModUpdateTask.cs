@@ -25,6 +25,8 @@ using System.Reflection;
 using System.Text;
 using UnityEngine;
 
+using UISTRINGS = PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER;
+
 namespace PeterHan.ModUpdateDate {
 	/// <summary>
 	/// Stores the instance data for a mod update or batch mod update.
@@ -80,41 +82,40 @@ namespace PeterHan.ModUpdateDate {
 			switch (result.Status) {
 			case ModDownloadStatus.ConfigError:
 				// Success but configuration could not be saved
-				resultText.AppendFormat(ModUpdateDateStrings.UPDATE_OK_NOCONFIG, title);
+				resultText.AppendFormat(UISTRINGS.UPDATE_OK_NOCONFIG, title);
 				break;
 			case ModDownloadStatus.OK:
 				// Success!
 				int configs = result.ConfigsRestored;
 				if (configs > 0)
-					resultText.AppendFormat(configs == 1 ? ModUpdateDateStrings.
-						UPDATE_OK_CONFIG : ModUpdateDateStrings.UPDATE_OK_CONFIG_1, title,
-						configs);
+					resultText.AppendFormat(configs == 1 ? UISTRINGS.UPDATE_OK_CONFIG :
+						UISTRINGS.UPDATE_OK_CONFIG_1, title, configs);
 				break;
 			case ModDownloadStatus.NoSteamFile:
 				// Steam data not found
-				resultText.AppendFormat(ModUpdateDateStrings.UPDATE_ERROR, title,
-					ModUpdateDateStrings.UPDATE_NOFILE);
+				resultText.AppendFormat(UISTRINGS.UPDATE_ERROR, title, UISTRINGS.
+					UPDATE_NOFILE);
 				break;
 			case ModDownloadStatus.ModUninstalled:
 				// Mod data not found
-				resultText.AppendFormat(ModUpdateDateStrings.UPDATE_ERROR, title,
-					ModUpdateDateStrings.UPDATE_NODETAILS);
+				resultText.AppendFormat(UISTRINGS.UPDATE_ERROR, title, UISTRINGS.
+					UPDATE_NODETAILS);
 				break;
 			case ModDownloadStatus.SteamError:
 			default:
 				string message;
 				switch (result.Result) {
 				case EResult.k_EResultServiceUnavailable:
-					message = ModUpdateDateStrings.UPDATE_CANTSTART;
+					message = UISTRINGS.UPDATE_CANTSTART;
 					break;
 				case EResult.k_EResultNotLoggedOn:
-					message = ModUpdateDateStrings.UPDATE_OFFLINE;
+					message = UISTRINGS.UPDATE_OFFLINE;
 					break;
 				default:
 					message = result.Result.ToString();
 					break;
 				}
-				resultText.AppendFormat(ModUpdateDateStrings.UPDATE_ERROR, title, message);
+				resultText.AppendFormat(UISTRINGS.UPDATE_ERROR, title, message);
 				break;
 			}
 		}
@@ -133,18 +134,17 @@ namespace PeterHan.ModUpdateDate {
 				// Add up to the limit to avoid making a dialog larger than the screen
 				int n = 0;
 				foreach (var mod in Mods) {
-					modList.AppendFormat(ModUpdateDateStrings.CONFIRM_LINE, mod.Title);
+					modList.AppendFormat(UISTRINGS.CONFIRM_LINE, mod.Title);
 					n++;
 					// (and N more...)
 					if (n >= ModUpdateDateStrings.MAX_LINES) {
-						modList.AppendFormat(ModUpdateDateStrings.CONFIRM_MORE, Mods.Count -
-							n);
+						modList.AppendFormat(UISTRINGS.CONFIRM_MORE, Mods.Count - n);
 						break;
 					}
 				}
-				PUIElements.ShowConfirmDialog(null, string.Format(ModUpdateDateStrings.
-					CONFIRM_UPDATE, modList.ToString()), UpdateMods, null,
-					ModUpdateDateStrings.CONFIRM_OK, ModUpdateDateStrings.CONFIRM_CANCEL);
+				PUIElements.ShowConfirmDialog(null, string.Format(UISTRINGS.CONFIRM_UPDATE,
+					modList.ToString()), UpdateMods, null, UISTRINGS.CONFIRM_OK, UISTRINGS.
+					CONFIRM_CANCEL);
 			}
 		}
 
@@ -154,7 +154,7 @@ namespace PeterHan.ModUpdateDate {
 		private void UpdateMods() {
 			var instance = ModUpdateHandler.Instance;
 			if (instance.IsUpdating)
-				PUIElements.ShowMessageDialog(null, ModUpdateDateStrings.UPDATE_INPROGRESS);
+				PUIElements.ShowMessageDialog(null, UISTRINGS.UPDATE_INPROGRESS);
 			else
 				instance.StartModUpdate(this);
 		}
@@ -166,7 +166,7 @@ namespace PeterHan.ModUpdateDate {
 			bool errors = false, configFail = false;
 			int updated = 0, nominal = 0, n = 0;
 			var resultText = new StringBuilder(512);
-			resultText.Append(ModUpdateDateStrings.UPDATE_HEADER);
+			resultText.Append(UISTRINGS.UPDATE_HEADER);
 			Results.Sort();
 			foreach (var result in Results) {
 				// Update cumulative status
@@ -189,28 +189,27 @@ namespace PeterHan.ModUpdateDate {
 			}
 			if (n > ModUpdateDateStrings.MAX_LINES)
 				// (and N more...)
-				resultText.AppendFormat(ModUpdateDateStrings.CONFIRM_MORE, n -
-					ModUpdateDateStrings.MAX_LINES);
+				resultText.AppendFormat(UISTRINGS.CONFIRM_MORE, n - ModUpdateDateStrings.
+					MAX_LINES);
 			if (nominal > 0) {
 				if (Results.Count == 1)
 					// Specify mod that was updated with no errors
-					resultText.AppendFormat(ModUpdateDateStrings.UPDATE_SINGLE, Results[0].
-						Title);
+					resultText.AppendFormat(UISTRINGS.UPDATE_SINGLE, Results[0].Title);
 				else
 					// N other mod(s) were updated with no errors
-					resultText.AppendFormat(nominal == 1 ? ModUpdateDateStrings.UPDATE_REST_1 :
-						ModUpdateDateStrings.UPDATE_REST, nominal);
+					resultText.AppendFormat(nominal == 1 ? UISTRINGS.UPDATE_REST_1 :
+						UISTRINGS.UPDATE_REST, nominal);
 			}
 			if (updated > 0)
 				// Success text
-				resultText.AppendFormat(ModUpdateDateStrings.UPDATE_FOOTER_OK, updated > 1 ?
-					ModUpdateDateStrings.UPDATE_MULTIPLE : ModUpdateDateStrings.UPDATE_ONE);
+				resultText.AppendFormat(UISTRINGS.UPDATE_FOOTER_OK, updated > 1 ? UISTRINGS.
+					UPDATE_MULTIPLE : UISTRINGS.UPDATE_ONE);
 			if (errors)
 				// Error text
-				resultText.Append(ModUpdateDateStrings.UPDATE_FOOTER_ERROR);
+				resultText.Append(UISTRINGS.UPDATE_FOOTER_ERROR);
 			if (configFail)
 				// Config warning text
-				resultText.Append(ModUpdateDateStrings.UPDATE_FOOTER_CONFIG);
+				resultText.Append(UISTRINGS.UPDATE_FOOTER_CONFIG);
 			PUIElements.ShowConfirmDialog(null, resultText.ToString(), SaveAndRestart,
 				null, STRINGS.UI.FRONTEND.MOD_DIALOGS.RESTART.OK, STRINGS.UI.FRONTEND.
 				MOD_DIALOGS.RESTART.CANCEL);

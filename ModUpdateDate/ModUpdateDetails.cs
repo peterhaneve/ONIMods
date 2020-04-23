@@ -20,6 +20,7 @@ using KMod;
 using PeterHan.PLib;
 using PeterHan.PLib.Options;
 using Steamworks;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace PeterHan.ModUpdateDate {
@@ -30,8 +31,8 @@ namespace PeterHan.ModUpdateDate {
 		/// <summary>
 		/// The details of each mod by ID as fetched by the game.
 		/// </summary>
-		internal static IDictionary<ulong, SteamUGCDetails_t> Details { get; } =
-			new Dictionary<ulong, SteamUGCDetails_t>(64);
+		private static readonly ConcurrentDictionary<ulong, SteamUGCDetails_t> DETAILS =
+			new ConcurrentDictionary<ulong, SteamUGCDetails_t>(2, 64);
 
 		/// <summary>
 		/// True if a config scrub is required after mod details update.
@@ -47,7 +48,7 @@ namespace PeterHan.ModUpdateDate {
 		private static bool CheckMod(Manager manager, ulong id) {
 			bool remove = false;
 			Mod mod;
-			if (Details.ContainsKey(id) && (mod = manager.FindSteamMod(id)) != null) {
+			if (DETAILS.ContainsKey(id) && (mod = manager.FindSteamMod(id)) != null) {
 				var target = mod.GetLocalLastModified();
 				// Compare date just like the button does
 				if (mod.GetSteamModID().GetGlobalLastModified(out System.DateTime steamTime) &&
@@ -79,7 +80,7 @@ namespace PeterHan.ModUpdateDate {
 						remove.Add(info);
 					if (info.Status == ModUpdateStatus.PendingUpdate) {
 						// Purge the temporary zip
-						ExtensionMethods.RemoveOldDownload(id.GetDownloadPath());
+						ExtensionMethods.RemoveOldDownload(ModUpdateHandler.GetDownloadPath(id));
 						info.Status = ModUpdateStatus.UpdatedByThisMod;
 					}
 				}
@@ -96,28 +97,42 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		/// <param name="updated">The mods that Steam just updated details.</param>
 		internal static void OnInstalledUpdate(ICollection<SteamUGCDetails_t> updated) {
-			lock (Details) {
-				foreach (var modDetails in updated) {
-					var id = modDetails.m_nPublishedFileId;
-					// Update details of each mod
-					if (!id.Equals(PublishedFileId_t.Invalid) && modDetails.
-							m_eResult == EResult.k_EResultOK)
-						Details[id.m_PublishedFileId] = modDetails;
-				}
-				scrubRequired = true;
+			foreach (var modDetails in updated) {
+				var id = modDetails.m_nPublishedFileId;
+				// Update details of each mod
+				if (!id.Equals(PublishedFileId_t.Invalid) && modDetails.m_eResult == EResult.
+						k_EResultOK)
+					DETAILS.AddOrUpdate(id.m_PublishedFileId, modDetails, (key, old) =>
+						modDetails);
 			}
+			scrubRequired = true;
 		}
 
 		/// <summary>
 		/// Scrubs the config of mods that Steam got around to actually updating.
 		/// </summary>
-		internal static void ScrubConfig() {
-			lock (Details) {
+		/// <returns>true if scrubbing was performed (mods may or may not have changed), or
+		/// false otherwise.</returns>
+		internal static bool ScrubConfig() {
+			bool scrubbed = false;
+			lock (DETAILS) {
 				if (scrubRequired) {
 					DoScrubConfig();
+					scrubbed = true;
 				}
 				scrubRequired = false;
 			}
+			return scrubbed;
+		}
+
+		/// <summary>
+		/// Attempts to obtain the Steam details of a mod.
+		/// </summary>
+		/// <param name="id">The mod ID to look up.</param>
+		/// <param name="details">The location where the details will be stored.</param>
+		/// <returns>true if the details were found, or false otherwise.</returns>
+		internal static bool TryGetDetails(ulong id, out SteamUGCDetails_t details) {
+			return DETAILS.TryGetValue(id, out details);
 		}
 
 		/// <summary>
@@ -126,7 +141,7 @@ namespace PeterHan.ModUpdateDate {
 		/// <param name="id">The Steam mod ID to update.</param>
 		/// <param name="lastUpdated">The new last updated date.</param>
 		internal static void UpdateConfigFor(ulong id, System.DateTime lastUpdated) {
-			lock (Details) {
+			lock (DETAILS) {
 				var settings = ModUpdateInfo.Settings;
 				if (settings.ModUpdates == null)
 					settings = new ModUpdateInfo();

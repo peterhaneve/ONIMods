@@ -27,6 +27,8 @@ using System.IO;
 using System.Text;
 using UnityEngine;
 
+using UISTRINGS = PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER;
+
 namespace PeterHan.ModUpdateDate {
 	/// <summary>
 	/// Adds an update button to the mod menu.
@@ -105,8 +107,7 @@ namespace PeterHan.ModUpdateDate {
 					if (updated == ModStatus.Outdated)
 						outdated.Add(modUpdate);
 				} else
-					tooltip.AppendFormat(ModUpdateDateStrings.LOCAL_UPDATE, localDate.
-						ToLocalTime());
+					tooltip.AppendFormat(UISTRINGS.LOCAL_UPDATE, localDate.ToLocalTime());
 				// Icon, color, and tooltip
 				updButton.Sprite = (updated == ModStatus.UpToDate || updated == ModStatus.
 					Disabled) ? PUITuning.Images.Checked : PUITuning.Images.GetSpriteByName(
@@ -131,41 +132,30 @@ namespace PeterHan.ModUpdateDate {
 		private static ModStatus AddSteamUpdate(StringBuilder tooltip, ModToUpdate modUpdate,
 				System.DateTime localDate, PButton updButton) {
 			var steamDate = modUpdate.LastSteamUpdate;
-			var updated = ModStatus.Disabled;
-			if (steamDate > System.DateTime.MinValue) {
-				// Generate tooltip for mod's current date and last Steam update
-				var ours = ModUpdateInfo.FindModInConfig(modUpdate.SteamID.m_PublishedFileId);
-				var ourDate = System.DateTime.MinValue;
-				var globalDate = modUpdate.LastSteamUpdate;
-				// Do we have a better estimate?
-				if (ours != null)
-					ourDate = new System.DateTime(ours.LastUpdated, DateTimeKind.Utc);
-				// Allow some time for download delays etc
-				if (localDate.AddMinutes(UPDATE_JITTER) >= globalDate) {
-					tooltip.Append(ModUpdateDateStrings.MOD_UPDATED);
-					updated = ModStatus.UpToDate;
-				} else if (ourDate.AddMinutes(UPDATE_JITTER) >= globalDate) {
-					tooltip.Append(ModUpdateDateStrings.MOD_UPDATED_BYUS);
-					localDate = ourDate;
-					updated = ModStatus.UpToDateLocal;
-				} else {
-					tooltip.Append(ModUpdateDateStrings.MOD_OUTDATED);
-					updated = ModStatus.Outdated;
-				}
-				// AppendLine appends platform specific separator
-				tooltip.Append("\n");
-				tooltip.AppendFormat(ModUpdateDateStrings.LOCAL_UPDATE, localDate.
-					ToLocalTime());
-				tooltip.Append("\n");
-				tooltip.AppendFormat(ModUpdateDateStrings.STEAM_UPDATE, globalDate.
-					ToLocalTime());
+			var updated = GetModStatus(modUpdate, ref localDate);
+			// Generate tooltip for mod's current date and last Steam update
+			switch (updated) {
+			case ModStatus.UpToDate:
+				tooltip.Append(UISTRINGS.MOD_UPDATED);
+				break;
+			case ModStatus.UpToDateLocal:
+				tooltip.Append(UISTRINGS.MOD_UPDATED_BYUS);
+				break;
+			case ModStatus.Outdated:
+				tooltip.Append(UISTRINGS.MOD_OUTDATED);
+				break;
+			default:
+				break;
+			}
+			// AppendLine appends platform specific separator
+			tooltip.Append("\n");
+			tooltip.AppendFormat(UISTRINGS.LOCAL_UPDATE, localDate.ToLocalTime());
+			tooltip.Append("\n");
+			if (updated == ModStatus.Disabled)
+				tooltip.AppendFormat(UISTRINGS.STEAM_UPDATE_UNKNOWN);
+			else {
+				tooltip.AppendFormat(UISTRINGS.STEAM_UPDATE, steamDate.ToLocalTime());
 				updButton.OnClick = new ModUpdateTask(modUpdate).TryUpdateMods;
-			} else {
-				// Steam update could not be determined
-				tooltip.AppendFormat(ModUpdateDateStrings.LOCAL_UPDATE, localDate.
-					ToLocalTime());
-				tooltip.Append("\n");
-				tooltip.AppendFormat(ModUpdateDateStrings.STEAM_UPDATE_UNKNOWN);
 			}
 			return updated;
 		}
@@ -178,15 +168,76 @@ namespace PeterHan.ModUpdateDate {
 		internal static void AddUpdateAll(GameObject parent, ICollection<ModToUpdate> outdated)
 		{
 			int n = outdated.Count;
-			if (parent != null)
-				new PButton("UpdateAll") {
+			const string UPDATE_ALL = "UpdateAll";
+			// Only if button is not already there
+			if (parent != null && parent.transform.Find(UPDATE_ALL) == null)
+				new PButton(UPDATE_ALL) {
 					Margin = BUTTON_MARGIN, SpriteSize = ICON_SIZE, Text = n.ToString(),
 					MaintainSpriteAspect = true, Color = COLOR_OUTDATED, IconSpacing = 4,
-					ToolTip = string.Format(n == 1 ? ModUpdateDateStrings.MOD_UPDATE_1 :
-					ModUpdateDateStrings.MOD_UPDATE_ALL, n),
+					ToolTip = string.Format(n == 1 ? UISTRINGS.MOD_UPDATE_1 :
+					UISTRINGS.MOD_UPDATE_ALL, n),
 					OnClick = new ModUpdateTask(outdated).TryUpdateMods,
 					Sprite = PUITuning.Images.GetSpriteByName("iconWarning"),
 				}.AddTo(parent, 0);
+		}
+
+		/// <summary>
+		/// Determines how many mods may be out of date.
+		/// </summary>
+		/// <returns>The number of outdated mods.</returns>
+		internal static int CountOutdatedMods() {
+			var mods = Global.Instance?.modManager?.mods;
+			int outdated = 0;
+			if (mods != null && mods.Count > 0)
+				foreach (var mod in mods)
+					// Steam mods only, count outdated
+					if (mod.label.distribution_platform == Label.DistributionPlatform.Steam) {
+						System.DateTime localDate = mod.GetLocalLastModified();
+						if (GetModStatus(new ModToUpdate(mod), ref localDate) == ModStatus.
+								Outdated)
+							outdated++;
+					}
+			return outdated;
+		}
+
+		/// <summary>
+		/// Gets the temporary download path for a mod.
+		/// </summary>
+		/// <param name="id">The Steam mod ID.</param>
+		/// <param name="temp">true for the temporary location, or false for the real one.</param>
+		/// <returns>The path where its temporary download will be stored.</returns>
+		internal static string GetDownloadPath(ulong id, bool temp = false) {
+			return Path.Combine(Manager.GetDirectory(), id + (temp ? ".tmp" : ".zip"));
+		}
+
+		/// <summary>
+		/// Finds the update status of a mod.
+		/// </summary>
+		/// <param name="modUpdate">The mod to query.</param>
+		/// <param name="localDate">The date it was last updated locally, from Mod.
+		/// GetLocalLastModified()</param>
+		/// <returns>The status of that mod.</returns>
+		private static ModStatus GetModStatus(ModToUpdate modUpdate, ref System.DateTime
+				localDate) {
+			ModStatus updated;
+			if (modUpdate.LastSteamUpdate > System.DateTime.MinValue) {
+				var ours = ModUpdateInfo.FindModInConfig(modUpdate.SteamID);
+				var ourDate = System.DateTime.MinValue;
+				var steamDate = modUpdate.LastSteamUpdate;
+				// Do we have a better estimate?
+				if (ours != null)
+					ourDate = new System.DateTime(ours.LastUpdated, DateTimeKind.Utc);
+				// Allow some time for download delays etc
+				if (localDate.AddMinutes(UPDATE_JITTER) >= steamDate)
+					updated = ModStatus.UpToDate;
+				else if (ourDate.AddMinutes(UPDATE_JITTER) >= steamDate) {
+					localDate = ourDate;
+					updated = ModStatus.UpToDateLocal;
+				} else
+					updated = ModStatus.Outdated;
+			} else
+				updated = ModStatus.Disabled;
+			return updated;
 		}
 
 		/// <summary>
@@ -232,8 +283,8 @@ namespace PeterHan.ModUpdateDate {
 		/// <returns>true if backup was OK, or false if it failed.</returns>
 		private bool BackupConfigs(out int copied) {
 			// Attempt config backup
-			var backup = new ConfigBackupUtility(active.Mod, active.DownloadPath, active.
-				SteamID.m_PublishedFileId.GetDownloadPath(true));
+			var backup = new ConfigBackupUtility(active.Mod, active.DownloadPath,
+				GetDownloadPath(active.SteamID, true));
 			bool success;
 			copied = 0;
 			try {
@@ -275,7 +326,7 @@ namespace PeterHan.ModUpdateDate {
 		private void OnDownloadComplete(RemoteStorageDownloadUGCResult_t result, bool failed) {
 			var steamStatus = result.m_eResult;
 			if (active != null) {
-				ulong id = active.SteamID.m_PublishedFileId;
+				ulong id = active.SteamID;
 				ModUpdateResult status;
 				var mod = active.Mod;
 				if (failed || (steamStatus != EResult.k_EResultAdministratorOK &&
@@ -335,9 +386,8 @@ namespace PeterHan.ModUpdateDate {
 			var mod = task.Mod;
 			var globalDate = task.LastSteamUpdate;
 			ModUpdateResult status = null;
-			ulong id = task.SteamID.m_PublishedFileId;
 			UGCHandle_t content;
-			if (!ModUpdateDetails.Details.TryGetValue(id, out SteamUGCDetails_t details))
+			if (!ModUpdateDetails.TryGetDetails(task.SteamID, out SteamUGCDetails_t details))
 				status = new ModUpdateResult(ModDownloadStatus.ModUninstalled, mod,
 					EResult.k_EResultFileNotFound);
 			else if ((content = details.m_hFile).Equals(UGCHandle_t.Invalid))

@@ -39,7 +39,7 @@ namespace PeterHan.ModUpdateDate {
 		/// <summary>
 		/// The Steam mod ID of this mod.
 		/// </summary>
-		public PublishedFileId_t SteamID { get; }
+		public ulong SteamID { get; }
 
 		/// <summary>
 		/// The mod to update.
@@ -55,15 +55,18 @@ namespace PeterHan.ModUpdateDate {
 			}
 		}
 
+		private PublishedFileId_t steamFileID;
+
 		public ModToUpdate(Mod mod) {
 			Mod = mod ?? throw new ArgumentNullException("mod");
 			if (mod.label.distribution_platform != Label.DistributionPlatform.Steam)
 				throw new ArgumentException("Only Steam mods can be updated by this class");
-			SteamID = mod.GetSteamModID();
-			if (!SteamID.GetGlobalLastModified(out System.DateTime steamLastUpdate))
+			steamFileID = mod.GetSteamModID();
+			SteamID = steamFileID.m_PublishedFileId;
+			if (!steamFileID.GetGlobalLastModified(out System.DateTime steamLastUpdate))
 				steamLastUpdate = System.DateTime.MinValue;
 			LastSteamUpdate = steamLastUpdate;
-			DownloadPath = SteamID.m_PublishedFileId.GetDownloadPath();
+			DownloadPath = ModUpdateHandler.GetDownloadPath(SteamID);
 		}
 
 		public override bool Equals(object obj) {
