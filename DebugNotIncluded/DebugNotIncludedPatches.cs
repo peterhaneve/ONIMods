@@ -25,7 +25,6 @@ using PeterHan.PLib.Options;
 using PeterHan.PLib.UI;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
@@ -35,11 +34,6 @@ namespace PeterHan.DebugNotIncluded {
 	/// Patches which will be applied via annotations for Debug Not Included.
 	/// </summary>
 	public static class DebugNotIncludedPatches {
-		/// <summary>
-		/// Yay debugging was made better in this version!
-		/// </summary>
-		public const uint BETTER_DEBUG_VER = 404823u;
-
 		/*
 		 * Spawned prefabs at launch initialization:
 		 * KObjectManager
@@ -60,7 +54,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// The assembly which is running the current version of PLib.
 		/// </summary>
 		internal static Assembly RunningPLibAssembly { get; private set; }
-		
+
 		/// <summary>
 		/// The KMod which describes this mod.
 		/// </summary>
@@ -78,27 +72,9 @@ namespace PeterHan.DebugNotIncluded {
 			// Must cast the type because ModsScreen.DisplayedMod is private
 			foreach (var displayedMod in (System.Collections.IEnumerable)___displayedMods)
 				ModDialogs.ConfigureRowInstance(Traverse.Create(displayedMod), __instance);
+#if ALL_MODS_CHECKBOX
 			__instance.GetComponent<AllModsHandler>()?.UpdateCheckedState();
-		}
-
-		/// <summary>
-		/// Returns the DLLLoader.LoadDLLs method, which is private in versions of ONI before
-		/// the debug improvement version.
-		/// </summary>
-		/// <returns>A reference to DLLLoader.LoadDLLs. The signature varies depending on
-		/// game version!</returns>
-		private static MethodBase GetLoadDLLsMethod() {
-			MethodBase target = null;
-			try {
-				target = typeof(Mod).Assembly.GetType("KMod.DLLLoader", false)?.
-					GetMethodSafe("LoadDLLs", true, PPatchTools.AnyArguments);
-				if (target == null)
-					DebugLogger.LogError("Unable to transpile LoadDLLs: Method not found");
-			} catch (IOException e) {
-				// This should theoretically be impossible since the type is loaded
-				DebugLogger.BaseLogException(e, null);
-			}
-			return target;
+#endif
 		}
 
 		/// <summary>
@@ -107,6 +83,16 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		private static void HidePopups(ModsScreen __instance) {
 			__instance.gameObject.AddOrGet<MoreModActions>().HidePopup();
+		}
+
+		/// <summary>
+		/// Applied to DLLLoader to patch in our handling to LoadDLLs.
+		/// </summary>
+		[PLibPatch(RunAt.Immediately, "LoadDLLs", RequireType = "KMod.DLLLoader")]
+		internal static void LoadDLLs_Postfix(object __result) {
+			// LoadedModData is not declared in old versions
+			if (__result != null)
+				ModLoadHandler.LoadAssemblies(__result);
 		}
 
 		/// <summary>
@@ -158,12 +144,6 @@ namespace PeterHan.DebugNotIncluded {
 			PLocalization.Register();
 			if (DebugNotIncludedOptions.Instance?.LogAsserts ?? true)
 				LogAllFailedAsserts();
-			// Patch the exception logger for state machines
-			var logException = typeof(DebugUtil).GetMethodSafe("LogException", true,
-				PPatchTools.AnyArguments);
-			if (logException != null)
-				inst.DebugInstance.Patch(logException, prefix: new HarmonyMethod(typeof(
-					DebugLogger), nameof(DebugLogger.LogException)));
 			foreach (var mod in Global.Instance.modManager?.mods)
 				if (mod.label.install_path == path) {
 					ThisMod = mod;
@@ -180,7 +160,7 @@ namespace PeterHan.DebugNotIncluded {
 				KKeyCode.U, Modifier.Alt));
 			// Must postload the mods dialog to come out after aki's mods, ony's mods, PLib
 			// options, and so forth
-			PUtil.RegisterPostload(PostloadHandler);
+			PUtil.RegisterPatchClass(typeof(DebugNotIncludedPatches));
 		}
 
 		/// <summary>
@@ -194,6 +174,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// Runs the required postload patches after all other mods load.
 		/// </summary>
 		/// <param name="instance">The Harmony instance to execute patches.</param>
+		[PLibMethod(RunAt.AfterModsLoad)]
 		private static void PostloadHandler(HarmonyInstance instance) {
 			if (DebugNotIncludedOptions.Instance?.PowerUserMode ?? false)
 				instance.Patch(typeof(ModsScreen), "BuildDisplay",
@@ -279,11 +260,11 @@ namespace PeterHan.DebugNotIncluded {
 				var logger = typeof(DebugLogger).GetMethodSafe(nameof(DebugLogger.
 					LogBuildingException), true, typeof(Exception), typeof(IBuildingConfig));
 				var ee = method.GetEnumerator();
-				CodeInstruction last = null;
-				bool hasNext, isFirst = true;
-				var endMethod = generator.DefineLabel();
 				// Emit all but the last instruction
-				if (ee.MoveNext())
+				if (ee.MoveNext()) {
+					CodeInstruction last;
+					bool hasNext, isFirst = true;
+					var endMethod = generator.DefineLabel();
 					do {
 						last = ee.Current;
 						if (isFirst)
@@ -294,7 +275,6 @@ namespace PeterHan.DebugNotIncluded {
 						if (hasNext)
 							yield return last;
 					} while (hasNext);
-				if (last != null) {
 					// Preserves the labels "ret" might have had
 					last.opcode = OpCodes.Nop;
 					last.operand = null;
@@ -316,7 +296,7 @@ namespace PeterHan.DebugNotIncluded {
 					var ret = new CodeInstruction(OpCodes.Ret);
 					ret.labels.Add(endMethod);
 					yield return ret;
-				} // Otherwise, there were no instructions to wrap
+				}
 			}
 		}
 
@@ -356,125 +336,6 @@ namespace PeterHan.DebugNotIncluded {
 				DebugLogger.LogError(errorMessage);
 				DebugLogger.LogException(e);
 				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to DLLLoader to patch in our handling to LoadDLLs.
-		/// </summary>
-		[HarmonyPatch]
-		public static class DLLLoader_LoadDLLs_Postfix_Patch {
-			internal static bool Prepare() {
-				return PUtil.GameVersion >= BETTER_DEBUG_VER;
-			}
-
-			internal static MethodBase TargetMethod() {
-#if DEBUG
-				DebugLogger.LogDebug("Postfixing LoadDLLs()");
-#endif
-				return GetLoadDLLsMethod();
-			}
-
-			/// <summary>
-			/// Applied after LoadDLLs runs.
-			/// </summary>
-			internal static void Postfix(object __result) {
-				// LoadedModData is not declared in old versions
-				if (__result != null)
-					ModLoadHandler.LoadAssemblies(__result);
-			}
-		}
-
-		/// <summary>
-		/// Applied to DLLLoader to patch in our handling to LoadDLLs.
-		/// </summary>
-		[HarmonyPatch]
-		public static class DLLLoader_LoadDLLs_Transpiler_Patch {
-			internal static bool Prepare() {
-				return PUtil.GameVersion < BETTER_DEBUG_VER;
-			}
-
-			internal static MethodBase TargetMethod() {
-#if DEBUG
-				DebugLogger.LogDebug("Transpiling LoadDLLs()");
-#endif
-				return GetLoadDLLsMethod();
-			}
-
-			/// <summary>
-			/// Transpiles LoadDLLs to grab the exception information when a mod fails to load.
-			/// </summary>
-			internal static IEnumerable<CodeInstruction> Transpiler(
-					IEnumerable<CodeInstruction> method) {
-				return PPatchTools.ReplaceMethodCall(method, typeof(Assembly).
-					GetMethodSafe(nameof(Assembly.LoadFrom), true, typeof(string)),
-					typeof(ModLoadHandler).GetMethodSafe(nameof(ModLoadHandler.LoadAssembly),
-					true, typeof(string)));
-			}
-		}
-
-#if DEBUG
-		/// <summary>
-		/// Applied to PatchProcessor to warn about suspicious patches that end up targeting
-		/// a method in another class.
-		/// 
-		/// DEBUG ONLY.
-		/// </summary>
-		[HarmonyPatch(typeof(PatchProcessor), "GetOriginalMethod")]
-		public static class PatchProcessor_GetOriginalMethod_Patch {
-			/// <summary>
-			/// Applied after GetOriginalMethod runs.
-			/// </summary>
-			internal static void Postfix(HarmonyMethod ___containerAttributes,
-					Type ___container, MethodBase __result) {
-				if (__result != null && ___containerAttributes != null)
-					HarmonyPatchInspector.CheckHarmonyMethod(___containerAttributes,
-						___container);
-			}
-		}
-#endif
-
-		/// <summary>
-		/// Applied to KMonoBehaviour to modify InitializeComponent for better logging.
-		/// </summary>
-		[HarmonyPatch(typeof(KMonoBehaviour), "InitializeComponent")]
-		public static class KMonoBehaviour_InitializeComponent_Patch {
-			internal static bool Prepare() {
-				return (DebugNotIncludedOptions.Instance?.DetailedBacktrace ?? false) &&
-					PUtil.GameVersion < BETTER_DEBUG_VER;
-			}
-
-			/// <summary>
-			/// Transpiles InitializeComponent to add more error logging.
-			/// </summary>
-			internal static IEnumerable<CodeInstruction> Transpiler(
-					IEnumerable<CodeInstruction> method) {
-#if DEBUG
-				DebugLogger.LogDebug("Transpiling InitializeComponent()");
-#endif
-				return TranspileSpawn(method);
-			}
-		}
-
-		/// <summary>
-		/// Applied to KMonoBehaviour to modify Spawn for better logging.
-		/// </summary>
-		[HarmonyPatch(typeof(KMonoBehaviour), "Spawn")]
-		public static class KMonoBehaviour_Spawn_Patch {
-			internal static bool Prepare() {
-				return (DebugNotIncludedOptions.Instance?.DetailedBacktrace ?? false) &&
-					PUtil.GameVersion < BETTER_DEBUG_VER;
-			}
-
-			/// <summary>
-			/// Transpiles Spawn to add more error logging.
-			/// </summary>
-			internal static IEnumerable<CodeInstruction> Transpiler(
-					IEnumerable<CodeInstruction> method) {
-#if DEBUG
-				DebugLogger.LogDebug("Transpiling Spawn()");
-#endif
-				return TranspileSpawn(method);
 			}
 		}
 
@@ -601,6 +462,7 @@ namespace PeterHan.DebugNotIncluded {
 			}
 		}
 
+#if ALL_MODS_CHECKBOX
 		/// <summary>
 		/// Applied to ModsScreen to update the All checkbox when mods are toggled.
 		/// </summary>
@@ -617,6 +479,28 @@ namespace PeterHan.DebugNotIncluded {
 				__instance?.GetComponent<AllModsHandler>()?.UpdateCheckedState();
 			}
 		}
+#endif
+
+#if DEBUG
+		/// <summary>
+		/// Applied to PatchProcessor to warn about suspicious patches that end up targeting
+		/// a method in another class.
+		/// 
+		/// DEBUG ONLY.
+		/// </summary>
+		[HarmonyPatch(typeof(PatchProcessor), "GetOriginalMethod")]
+		public static class PatchProcessor_GetOriginalMethod_Patch {
+			/// <summary>
+			/// Applied after GetOriginalMethod runs.
+			/// </summary>
+			internal static void Postfix(HarmonyMethod ___containerAttributes,
+					Type ___container, MethodBase __result) {
+				if (__result != null && ___containerAttributes != null)
+					HarmonyPatchInspector.CheckHarmonyMethod(___containerAttributes,
+						___container);
+			}
+		}
+#endif
 
 		/// <summary>
 		/// Applied to Steam to avoid dialog spam on startup if many mods are updated or

@@ -16,31 +16,12 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
-
-namespace PeterHan.PLib {
+namespace PeterHan.Challenge100K {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// Contains strings used in the 100K challenge.
 	/// </summary>
-	public static class PVersion {
-		/// <summary>
-		/// The PLib version.
-		/// </summary>
-		public const string VERSION = "3.7.0.0";
-
-		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in OnLoad or RegisterPostload, and will always return false in those
-		/// cases.
-		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				return VERSION == PSharedData.GetData<string>(PRegistry.KEY_VERSION);
-			}
-		}
+	public static class Challenge100KStrings {
+		public static LocString NAME = "100K Challenge";
+		public static LocString DESCRIPTION = "One of the coldest worlds ever surveyed, this harsh and unforgiving asteroid features an average temperature of only 100 K (-173 C).\r\n\r\n<smallcaps>Survival in this world will be nearly impossible, but a glimmer of hope remains. Can you use all that you have learned to survive for 100 cycles?</smallcaps>\r\n";
 	}
 }

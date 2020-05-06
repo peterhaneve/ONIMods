@@ -74,7 +74,7 @@ namespace PeterHan.ToastControl {
 			{ nameof(SetLocker), ShowItemGained },
 			{ "Klei.AI.SlimeSickness+SlimeLungComponent+StatesInstance", ShowCritterPoop },
 			{ "Klei.AI.SicknessInstance+StatesInstance", ShowCureOrInfect },
-			{ "SolidConsumerMonitor.Instance", (c, t) => Options.ElementRemoved },
+			{ "SolidConsumerMonitor+Instance", (c, t) => Options.ElementRemoved },
 			{ nameof(Storage), ShowItemStored },
 			{ nameof(SuperProductive), ShowOverjoyed },
 			{ nameof(Toilet), ShowGermsAdded },
@@ -85,6 +85,7 @@ namespace PeterHan.ToastControl {
 		/// <summary>
 		/// Reloads the mod options.
 		/// </summary>
+		[PLibMethod(RunAt.OnStartGame)]
 		public static void ReloadOptions() {
 			var newOptions = POptions.ReadSettingsForAssembly<ToastControlOptions>();
 			if (newOptions != null) {

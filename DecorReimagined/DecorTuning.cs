@@ -44,7 +44,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// Replaces the stock decor morale bonuses.
 		/// </summary>
-		private static readonly DecorLevel[] DECOR_LEVELS = {
+		internal static readonly DecorLevel[] DECOR_LEVELS = {
 			new DecorLevel("DecorMinus3", -30.0f, -5, DecorReimaginedStrings.DECORMINUS3_NAME,
 				DecorReimaginedStrings.DECORMINUS3_TOOLTIP),
 			new DecorLevel("DecorMinus2", -20.0f, -3, DecorReimaginedStrings.DECORMINUS2_NAME,
@@ -173,16 +173,6 @@ namespace ReimaginationTeam.DecorRework {
 		}
 
 		/// <summary>
-		/// Patches the DecorMonitor constructor.
-		/// </summary>
-		internal static void TuneBuildings(HarmonyInstance patcher) {
-			// Patch constructor of DecorMonitor.Instance
-			patcher.PatchConstructor(typeof(DecorMonitor.Instance), new Type[] {
-				typeof(IStateMachineTarget) }, null, new HarmonyMethod(typeof(DecorTuning),
-				"UpdateDecorLevels"));
-		}
-
-		/// <summary>
 		/// Adjusts Atmo and Jet suit decor.
 		/// </summary>
 		/// <param name="options">The options for the decor of those suits.</param>
@@ -194,25 +184,9 @@ namespace ReimaginationTeam.DecorRework {
 		}
 
 		/// <summary>
-		/// Updates the decor levels of the specified decor monitor.
-		/// </summary>
-		/// <param name="instance">The decor level monitor to modify.</param>
-		internal static void UpdateDecorLevels(DecorMonitor.Instance __instance) {
-			// Retrieve the decor lookup from the DecorMonitor class
-			var decorLookup = Traverse.Create(__instance).GetField<List<KeyValuePair<
-				float, string>>>("effectLookup");
-			if (decorLookup != null) {
-				decorLookup.Clear();
-				foreach (var decorLevel in DECOR_LEVELS)
-					decorLookup.Add(new KeyValuePair<float, string>(decorLevel.MinDecor,
-						decorLevel.ID));
-			}
-		}
-
-		/// <summary>
 		/// Represents the decor levels available.
 		/// </summary>
-		private sealed class DecorLevel {
+		internal sealed class DecorLevel {
 			/// <summary>
 			/// The decor level required.
 			/// </summary>

@@ -32,12 +32,6 @@ namespace PeterHan.SweepByType {
 		public static FilteredClearTool Instance { get; private set; }
 
 		/// <summary>
-		/// Temporary workaround for beta branch, recompile and remove when it goes live
-		/// </summary>
-		private static readonly MethodInfo MARK_FOR_CLEAR_NEW = typeof(Clearable).
-			GetMethodSafe("MarkForClear", false, typeof(bool), typeof(bool));
-
-		/// <summary>
 		/// Destroys the singleton instance.
 		/// </summary>
 		internal static void DestroyInstance() {
@@ -46,15 +40,6 @@ namespace PeterHan.SweepByType {
 				Destroy(inst);
 				Instance = null;
 			}
-		}
-
-		/// <summary>
-		/// Directly marks a Clearable for sweeping.
-		/// </summary>
-		/// <param name="cc">The item to sweep.</param>
-		private static void MarkForClearDirect(Clearable cc) {
-			// Parameter is whether to force, not remove sweep errand!
-			cc.MarkForClear(false);
 		}
 
 		/// <summary>
@@ -99,10 +84,7 @@ namespace PeterHan.SweepByType {
 			if (cc != null && cc.isClearable && (cachedAll || cachedTypes.Contains(content.
 					PrefabID()))) {
 				// In beta branch a new optional parameter was added
-				if (MARK_FOR_CLEAR_NEW != null)
-					MARK_FOR_CLEAR_NEW.Invoke(cc, new object[] { false, false });
-				else
-					MarkForClearDirect(cc);
+				cc.MarkForClear(false);
 				var pr = content.GetComponent<Prioritizable>();
 				if (pr != null)
 					pr.SetMasterPriority(priority);

@@ -44,6 +44,16 @@ namespace PeterHan.ThermalTooltips {
 		internal static ExtendedThermalTooltip TooltipInstance { get; private set; }
 
 		/// <summary>
+		/// Cleans up the tooltips on close.
+		/// </summary>
+		[PLibMethod(RunAt.OnEndGame)]
+		internal static void CleanupTooltips() {
+			PUtil.LogDebug("Destroying ExtendedThermalTooltip");
+			buildingInstance?.ClearDef();
+			TooltipInstance = null;
+		}
+
+		/// <summary>
 		/// Formats a transition element name, adding a prefix if it has the same name as the
 		/// original element.
 		/// </summary>
@@ -89,58 +99,34 @@ namespace PeterHan.ThermalTooltips {
 			POptions.RegisterOptions(typeof(ThermalTooltipsOptions));
 			PLocalization.Register();
 			TooltipInstance = null;
+			PUtil.RegisterPatchClass(typeof(ThermalTooltipsPatches));
 		}
 
 		/// <summary>
-		/// Applied to Db to initialize Better Info Cards compatibility at a safe time.
+		/// Initializes Better Info Cards compatibility at a safe time.
 		/// </summary>
-		[HarmonyPatch(typeof(Db), "Initialize")]
-		public static class Db_Initialize_Patch {
-			/// <summary>
-			/// Applied after Initialize runs.
-			/// </summary>
-			internal static void Postfix() {
-				bicCompat = new BetterInfoCardsCompat();
-			}
-		}
-
-		/// <summary>
-		/// Applied to Game to clean up the tooltips on close.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "DestroyInstances")]
-		public static class Game_DestroyInstances_Patch {
-			/// <summary>
-			/// Applied after DestroyInstances runs.
-			/// </summary>
-			internal static void Postfix() {
-				PUtil.LogDebug("Destroying ExtendedThermalTooltip");
-				buildingInstance?.ClearDef();
-				TooltipInstance = null;
-			}
+		[PLibMethod(RunAt.AfterDbInit)]
+		internal static void SetupCompat() {
+			bicCompat = new BetterInfoCardsCompat();
 		}
 
 		/// <summary>
 		/// Applied to Game to load mod options when the game starts.
 		/// </summary>
-		[HarmonyPatch(typeof(Game), "OnPrefabInit")]
-		public static class Game_OnPrefabInit_Patch {
-			/// <summary>
-			/// Applied after OnPrefabInit runs.
-			/// </summary>
-			internal static void Postfix() {
-				var options = POptions.ReadSettings<ThermalTooltipsOptions>() ??
-					new ThermalTooltipsOptions();
-				// Check for DisplayAllTemps
-				if (PPatchTools.GetTypeSafe("DisplayAllTemps.State", "DisplayAllTemps") !=
-						null) {
-					// Let Display All Temps take over display (ironically setting AllUnits
-					// to FALSE) since it patches GetFormattedTemperature
-					PUtil.LogDebug("DisplayAllTemps compatibility activated");
-					options.AllUnits = false;
-				}
-				TooltipInstance = new ExtendedThermalTooltip(options, bicCompat);
-				PUtil.LogDebug("Created ExtendedThermalTooltip");
+		[PLibMethod(RunAt.OnStartGame)]
+		internal static void SetupTooltips() {
+			var options = POptions.ReadSettings<ThermalTooltipsOptions>() ??
+				new ThermalTooltipsOptions();
+			// Check for DisplayAllTemps
+			if (PPatchTools.GetTypeSafe("DisplayAllTemps.State", "DisplayAllTemps") !=
+					null) {
+				// Let Display All Temps take over display (ironically setting AllUnits
+				// to FALSE) since it patches GetFormattedTemperature
+				PUtil.LogDebug("DisplayAllTemps compatibility activated");
+				options.AllUnits = false;
 			}
+			TooltipInstance = new ExtendedThermalTooltip(options, bicCompat);
+			PUtil.LogDebug("Created ExtendedThermalTooltip");
 		}
 
 		/// <summary>

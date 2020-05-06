@@ -23,8 +23,8 @@ namespace PeterHan.PLib.Options {
 	/// <summary>
 	/// An options entry which represents bool and displays a check box.
 	/// </summary>
-	internal sealed class CheckboxOptionsEntry : OptionsEntry {
-		protected override object Value {
+	public class CheckboxOptionsEntry : OptionsEntry {
+		public override object Value {
 			get {
 				return check;
 			}
@@ -46,30 +46,27 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		private GameObject checkbox;
 
+		protected CheckboxOptionsEntry(string title, string tooltip, string category = "") :
+				base(title, tooltip, category) {
+			check = false;
+			checkbox = null;
+		}
+
 		internal CheckboxOptionsEntry(string field, OptionAttribute oa) : base(field, oa) {
 			check = false;
 			checkbox = null;
 		}
 
-		protected override IUIComponent GetUIComponent() {
-			var cb = new PCheckBox() {
+		public override GameObject GetUIComponent() {
+			checkbox = new PCheckBox() {
 				OnChecked = (source, state) => {
 					// Swap the check: checked and partial -> unchecked
 					check = state == PCheckBox.STATE_UNCHECKED;
 					Update();
 				}, ToolTip = LookInStrings(ToolTip)
-			}.SetKleiBlueStyle();
-			cb.OnRealize += OnRealizeCheckBox;
-			return cb;
-		}
-
-		/// <summary>
-		/// Called when the checkbox is realized.
-		/// </summary>
-		/// <param name="realized">The actual check box.</param>
-		private void OnRealizeCheckBox(GameObject realized) {
-			checkbox = realized;
+			}.SetKleiBlueStyle().Build();
 			Update();
+			return checkbox;
 		}
 
 		private void Update() {

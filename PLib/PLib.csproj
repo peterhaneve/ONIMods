@@ -4,8 +4,8 @@
     <TargetFramework>net40</TargetFramework>
     <Title>PeterHan.PLib</Title>
       <AssemblyTitle>PeterHanLib</AssemblyTitle>
-      <Version>3.6.0.0</Version>
-      <!--<PackageVersion>3.6.0-beta</PackageVersion>-->
+      <Version>3.7.0.0</Version>
+      <!--<PackageVersion>3.7.0-beta</PackageVersion>-->
       <UsesPLib>false</UsesPLib>
       <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
       <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
@@ -16,14 +16,12 @@
       <Copyright>Copyright 2020 Peter Han</Copyright>
       <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
     
-Contains functions aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
-      <PackageReleaseNotes>Added PSlider class and added it as a secondary input for int and float options that have limits set to realistic values.
+Contains methods aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
+      <PackageReleaseNotes>Greatly improved postload handlers, allowing patches to be executed directly from a class and adding conditions for required types to exist.
 
-Allow PLib Options dialogs to be shown on demand, in-game or in other menus outside of the Mods menu.
-
-Fix several bugs in the RelativeLayout class regarding minimum size, particularly when components are updated. Most other components now regain the DynamicSize flag to allow them to update if their size changes need to propagate upwards.</PackageReleaseNotes>
+Added OptionalMethodInfo to provide compatibility bridges between methods that have optional parameters added to them.</PackageReleaseNotes>
       <RootNamespace>PeterHan.PLib</RootNamespace>
-      <AssemblyVersion>3.6.0.0</AssemblyVersion>
+      <AssemblyVersion>3.7.0.0</AssemblyVersion>
       <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
       <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>

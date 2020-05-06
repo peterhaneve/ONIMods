@@ -104,8 +104,7 @@ namespace PeterHan.PLib {
 		}
 
 		public override bool Equals(object obj) {
-			var other = obj as PToolMode;
-			return other != null && other.Key == Key;
+			return obj is PToolMode other && other.Key == Key;
 		}
 
 		public override int GetHashCode() {

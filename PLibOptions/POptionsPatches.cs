@@ -17,11 +17,10 @@
  */
 
 using Harmony;
-using PeterHan.PLib.Options;
 using System.Collections;
 using UnityEngine;
 
-namespace PLibOptions {
+namespace PeterHan.PLib.Options {
 	/// <summary>
 	/// Annotation patches this mod's copy of PLib Options in (no forwarding).
 	/// </summary>

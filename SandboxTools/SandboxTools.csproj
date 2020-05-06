@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Sandbox Tools</AssemblyTitle>
-    <FileVersion>2.4.0.0</FileVersion>
+    <FileVersion>2.5.0.0</FileVersion>
     <RootNamespace>PeterHan.SandboxTools</RootNamespace>
     <Description>Improves the Sandbox Mode tools with numerous small tweaks.</Description>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>

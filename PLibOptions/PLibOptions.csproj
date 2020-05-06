@@ -4,14 +4,15 @@
     <TargetFramework>net40</TargetFramework>
     <Title>PeterHan.PLib.Options</Title>
     <AssemblyTitle>PeterHanLib Options</AssemblyTitle>
-    <Version>3.4.0.0</Version>
+    <Version>3.5.0.0</Version>
     <UsesPLib>false</UsesPLib>
     <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
     <Copyright>Copyright 2020 Peter Han</Copyright>
     <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
     
 Contains functions aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
-    <AssemblyVersion>3.4.0.0</AssemblyVersion>
+    <AssemblyVersion>3.5.0.0</AssemblyVersion>
+    <RootNamespace>PeterHan.PLib.Options</RootNamespace>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
     <DefineConstants>OPTIONS_ONLY</DefineConstants>
@@ -21,13 +22,15 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\PLib\Options\ButtonOptionsEntry.cs" Link="ButtonOptionsEntry.cs" />
+    <Compile Include="..\PLib\Options\CategoryExpandHandler.cs" Link="CategoryExpandHandler.cs" />
     <Compile Include="..\PLib\Options\CheckboxOptionsEntry.cs" Link="CheckboxOptionsEntry.cs" />
     <Compile Include="..\PLib\Options\ConfigFileAttribute.cs" Link="ConfigFileAttribute.cs" />
     <Compile Include="..\PLib\Options\DynamicOptionAttribute.cs" Link="DynamicOptionAttribute.cs" />
     <Compile Include="..\PLib\Options\DynamicOptionsEntry.cs" Link="DynamicOptionsEntry.cs" />
     <Compile Include="..\PLib\Options\FloatOptionsEntry.cs" Link="FloatOptionsEntry.cs" />
     <Compile Include="..\PLib\Options\IDynamicOption.cs" Link="IDynamicOption.cs" />
-    <Compile Include="..\PLib\Options\IntegerOptionsEntry.cs" Link="IntegerOptionsEntry.cs" />
+    <Compile Include="..\PLib\Options\IntOptionsEntry.cs" Link="IntOptionsEntry.cs" />
+    <Compile Include="..\PLib\Options\IOptions.cs" Link="IOptions.cs" />
     <Compile Include="..\PLib\Options\IOptionsHandler.cs" Link="IOptionsHandler.cs" />
     <Compile Include="..\PLib\Options\LimitAttribute.cs" Link="LimitAttribute.cs" />
     <Compile Include="..\PLib\Options\ModInfoAttribute.cs" Link="ModInfoAttribute.cs" />

@@ -49,7 +49,8 @@ namespace PeterHan.MoreAchievements {
 		/// <summary>
 		/// Adds all colony achievements for this mod.
 		/// </summary>
-		private static void AddAllAchievements() {
+		[PLibMethod(RunAt.AfterDbInit)]
+		internal static void AddAllAchievements() {
 			int added = 0;
 			ScaldedTag = TagManager.Create("Scalded", AchievementStrings.SCALDED);
 			Achievements.InitAchievements();
@@ -106,6 +107,14 @@ namespace PeterHan.MoreAchievements {
 		}
 
 		/// <summary>
+		/// Applied to Game to clean up the achievement tracker on close.
+		/// </summary>
+		[PLibMethod(RunAt.OnEndGame)]
+		internal static void Cleanup() {
+			AchievementStateComponent.DestroyInstance();
+		}
+
+		/// <summary>
 		/// Loads a sprite and adds it to the master sprite list.
 		/// </summary>
 		/// <param name="sprite">The sprite to load.</param>
@@ -123,6 +132,7 @@ namespace PeterHan.MoreAchievements {
 			PLocalization.Register();
 			POptions.RegisterOptions(typeof(MoreAchievementsOptions));
 			Options = new MoreAchievementsOptions();
+			PUtil.RegisterPatchClass(typeof(MoreAchievementsPatches));
 		}
 
 		/// <summary>
@@ -303,19 +313,6 @@ namespace PeterHan.MoreAchievements {
 		}
 
 		/// <summary>
-		/// Applied to Db to add colony achievements.
-		/// </summary>
-		[HarmonyPatch(typeof(Db), "Initialize")]
-		public static class Db_Initialize_Patch {
-			/// <summary>
-			/// Applied after Initialize runs.
-			/// </summary>
-			internal static void Postfix() {
-				AddAllAchievements();
-			}
-		}
-
-		/// <summary>
 		/// Applied to DeathMonitor.Instance to track Duplicant deaths.
 		/// </summary>
 		[HarmonyPatch(typeof(DeathMonitor.Instance), "Kill")]
@@ -351,19 +348,6 @@ namespace PeterHan.MoreAchievements {
 		}
 
 		/// <summary>
-		/// Applied to Game to clean up the filtered sweep tool on close.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "DestroyInstances")]
-		public static class Game_DestroyInstances_Patch {
-			/// <summary>
-			/// Applied after DestroyInstances runs.
-			/// </summary>
-			internal static void Postfix() {
-				AchievementStateComponent.DestroyInstance();
-			}
-		}
-
-		/// <summary>
 		/// Applied to Game to add our achievement state tracker to it on game start.
 		/// </summary>
 		[HarmonyPatch(typeof(Game), "OnSpawn")]
@@ -372,7 +356,6 @@ namespace PeterHan.MoreAchievements {
 			/// Applied after OnSpawn runs.
 			/// </summary>
 			internal static void Postfix(Game __instance) {
-				var obj = __instance.gameObject;
 				// Reload options
 				var newOptions = POptions.ReadSettings<MoreAchievementsOptions>();
 				if (newOptions != null)

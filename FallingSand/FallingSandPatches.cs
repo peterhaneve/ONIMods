@@ -43,8 +43,17 @@ namespace PeterHan.FallingSand {
 			}
 		}
 
+		/// <summary>
+		/// Stops tracking all digging errands.
+		/// </summary>
+		[PLibMethod(RunAt.OnEndGame)]
+		internal static void Cleanup() {
+			FallingSandManager.Instance.ClearAll();
+		}
+
 		public static void OnLoad() {
 			PUtil.InitLibrary();
+			PUtil.RegisterPatchClass(typeof(FallingSandPatches));
 		}
 
 		/// <summary>
@@ -65,16 +74,6 @@ namespace PeterHan.FallingSand {
 		public static class Diggable_OnCleanUp_Patch {
 			internal static void Postfix(Diggable __instance) {
 				FallingSandManager.Instance.UntrackDiggable(__instance);
-			}
-		}
-
-		/// <summary>
-		/// Applied to Game to stop tracking all digging errands.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "OnDestroy")]
-		public static class Game_OnDestroy_Patch {
-			internal static void Postfix() {
-				FallingSandManager.Instance.ClearAll();
 			}
 		}
 

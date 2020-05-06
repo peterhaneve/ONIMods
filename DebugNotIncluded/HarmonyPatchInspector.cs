@@ -69,7 +69,7 @@ namespace PeterHan.DebugNotIncluded {
 			if (targetType != null && !string.IsNullOrEmpty(name))
 				try {
 					PropertyInfo info;
-					string tstr = targetType.FullName + "." + name;
+					string targetName = targetType.FullName + "." + name;
 					switch (target.methodType) {
 					case MethodType.Normal:
 						var argTypes = target.argumentTypes;
@@ -78,19 +78,19 @@ namespace PeterHan.DebugNotIncluded {
 								targetType.GetMethod(name, ONLY_DEC, null, argTypes, null)) ==
 								null)
 							DebugLogger.LogWarning("Patch {0} targets inherited method {1}",
-								patcher.FullName, tstr);
+								patcher.FullName, targetName);
 						break;
 					case MethodType.Setter:
-						info = targetType.GetProperty(name, ALL | BindingFlags.DeclaredOnly);
+						info = targetType.GetProperty(name, ONLY_DEC);
 						if (info?.GetSetMethod(true) == null)
 							DebugLogger.LogWarning("Patch {0} targets inherited property {1}",
-								patcher.FullName, tstr);
+								patcher.FullName, targetName);
 						break;
 					case MethodType.Getter:
-						info = targetType.GetProperty(name, ALL | BindingFlags.DeclaredOnly);
+						info = targetType.GetProperty(name, ONLY_DEC);
 						if (info?.GetGetMethod(true) == null)
 							DebugLogger.LogWarning("Patch {0} targets inherited property {1}",
-								patcher.FullName, tstr);
+								patcher.FullName, targetName);
 						break;
 					default:
 						break;
@@ -166,8 +166,8 @@ namespace PeterHan.DebugNotIncluded {
 					var thrown = exception.LoaderExceptions[i];
 					if (type != null)
 						types.Add(type);
-					else if (exception != null)
-						DebugLogger.LogException(exception);
+					else if (thrown != null)
+						DebugLogger.LogException(thrown);
 				}
 			}
 		}

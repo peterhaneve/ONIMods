@@ -24,7 +24,7 @@ namespace PeterHan.PLib.Options {
 	/// <summary>
 	/// An options entry which displays a slider below it.
 	/// </summary>
-	internal abstract class SlidingBaseOptionsEntry : OptionsEntry {
+	public abstract class SlidingBaseOptionsEntry : OptionsEntry {
 		/// <summary>
 		/// The margin between the slider extra row and the rest of the dialog.
 		/// </summary>
@@ -45,13 +45,19 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		protected GameObject slider;
 
-		protected SlidingBaseOptionsEntry(OptionAttribute oa, PropertyInfo prop) : base(prop?.
-				Name, oa) {
-			limits = FindLimitAttribute(prop);
+		protected SlidingBaseOptionsEntry(string title, string tooltip, string category,
+				LimitAttribute limits) : base(title, tooltip, category) {
+			this.limits = limits;
 			slider = null;
 		}
 
-		internal override void CreateUIEntry(PGridPanel parent, ref int row) {
+		protected SlidingBaseOptionsEntry(OptionAttribute oa, PropertyInfo prop) : base(prop?.
+				Name, oa) {
+			limits = LimitAttribute.FindFrom(prop);
+			slider = null;
+		}
+
+		public override void CreateUIEntry(PGridPanel parent, ref int row) {
 			double minLimit, maxLimit;
 			base.CreateUIEntry(parent, ref row);
 			if (limits != null && (minLimit = limits.Minimum) > float.MinValue && (maxLimit =

@@ -18,6 +18,7 @@
 
 using Database;
 using Harmony;
+using Klei.AI;
 using PeterHan.PLib;
 using PeterHan.PLib.Options;
 using ReimaginationTeam.Reimagination;
@@ -40,13 +41,20 @@ namespace ReimaginationTeam.DecorRework {
 		/// </summary>
 		internal static DecorReimaginedOptions Options { get; private set; }
 
-		public static void OnLoad() {
-			ImaginationLoader.Init(typeof(DecorReimaginedPatches));
-			Options = new DecorReimaginedOptions();
-			POptions.RegisterOptions(typeof(DecorReimaginedOptions));
-			PUtil.RegisterPostload(DecorTuning.TuneBuildings);
-			PatchParks();
-			PatchRecBuildings();
+		/// <summary>
+		/// Applies the new decor levels.
+		/// </summary>
+		[PLibMethod(RunAt.AfterDbInit)]
+		internal static void ApplyDecorEffects() {
+			DecorTuning.InitEffects();
+			PUtil.AddColonyAchievement(new ColonyAchievement(ACHIEVE_NAME, "",
+				DecorReimaginedStrings.FEELSLIKEHOME_NAME, DecorReimaginedStrings.
+				FEELSLIKEHOME_DESC.text.F(DecorTuning.NUM_DECOR_FOR_ACHIEVEMENT), false,
+				new List<ColonyAchievementRequirement>() {
+					// Specified number of +decor items on one cell
+					new NumDecorPositives(DecorTuning.NUM_DECOR_FOR_ACHIEVEMENT)
+				}, "", "", "", "", null, "", "art_underground"));
+			PUtil.LogDebug("Initialized decor effects");
 		}
 
 		/// <summary>
@@ -68,6 +76,24 @@ namespace ReimaginationTeam.DecorRework {
 							wildPlants++;
 					}
 			return wildPlants;
+		}
+
+		/// <summary>
+		/// Cleans up the decor manager on close.
+		/// </summary>
+		[PLibMethod(RunAt.OnEndGame)]
+		internal static void DestroyDecor() {
+			PUtil.LogDebug("Destroying DecorCellManager");
+			DecorCellManager.DestroyInstance();
+		}
+
+		public static void OnLoad() {
+			ImaginationLoader.Init(typeof(DecorReimaginedPatches));
+			Options = new DecorReimaginedOptions();
+			POptions.RegisterOptions(typeof(DecorReimaginedOptions));
+			PUtil.RegisterPatchClass(typeof(DecorReimaginedPatches));
+			PatchParks();
+			PatchRecBuildings();
 		}
 
 		/// <summary>
@@ -100,6 +126,53 @@ namespace ReimaginationTeam.DecorRework {
 					enabled.IsEnabled);
 			}, null, 1, STRINGS.ROOMS.CRITERIA.REC_BUILDING.NAME, STRINGS.ROOMS.CRITERIA.
 				REC_BUILDING.DESCRIPTION);
+		}
+
+		/// <summary>
+		/// Sets up the decor manager on start.
+		/// </summary>
+		[PLibMethod(RunAt.OnStartGame)]
+		internal static void SetupDecor() {
+			DecorCellManager.CreateInstance();
+			ImaginationLoader.IsFinalDestination();
+			PUtil.LogDebug("Created DecorCellManager");
+		}
+
+		/// <summary>
+		/// Updates the decor levels of the specified decor monitor.
+		/// </summary>
+		/// <param name="instance">The decor level monitor to modify.</param>
+		[PLibPatch(RunAt.AfterModsLoad, typeof(DecorMonitor.Instance), "", typeof(
+			IStateMachineTarget))]
+		internal static void UpdateDecorLevels_Postfix(List<KeyValuePair<float,
+				string>> ___effectLookup) {
+			if (___effectLookup != null) {
+				___effectLookup.Clear();
+				foreach (var decorLevel in DecorTuning.DECOR_LEVELS)
+					___effectLookup.Add(new KeyValuePair<float, string>(decorLevel.MinDecor,
+						decorLevel.ID));
+#if DEBUG
+				PUtil.LogDebug("Updated decor levels");
+#endif
+			}
+		}
+
+		/// <summary>
+		/// Applied to Artable to strip off the "Incomplete" modifier when the artable is
+		/// completed.
+		/// </summary>
+		[HarmonyPatch(typeof(Artable), "OnCompleteWork")]
+		public static class Artable_OnCompleteWork_Patch {
+			/// <summary>
+			/// Applied before OnCompleteWork runs.
+			/// </summary>
+			internal static void Prefix(Artable __instance) {
+				// Remove the decor bonus (SetStage adds it back)
+				var attr = __instance.GetAttributes().Get(Db.Get().BuildingAttributes.Decor);
+				if (attr != null)
+					attr.Modifiers.RemoveAll((modifier) => modifier.Description ==
+						"Art Quality");
+			}
 		}
 
 		/// <summary>
@@ -142,27 +215,6 @@ namespace ReimaginationTeam.DecorRework {
 		}
 
 		/// <summary>
-		/// Applied to Db to apply the new decor levels.
-		/// </summary>
-		[HarmonyPatch(typeof(Db), "Initialize")]
-		public static class Db_Initialize_Patch {
-			/// <summary>
-			/// Applied after Initialize runs.
-			/// </summary>
-			internal static void Postfix() {
-				DecorTuning.InitEffects();
-				PUtil.AddColonyAchievement(new ColonyAchievement(ACHIEVE_NAME, "",
-					DecorReimaginedStrings.FEELSLIKEHOME_NAME, DecorReimaginedStrings.
-					FEELSLIKEHOME_DESC.text.F(DecorTuning.NUM_DECOR_FOR_ACHIEVEMENT), false,
-					new List<ColonyAchievementRequirement>() {
-						// Specified number of +decor items on one cell
-						new NumDecorPositives(DecorTuning.NUM_DECOR_FOR_ACHIEVEMENT)
-					}, "", "", "", "", null, "", "art_underground"));
-				PUtil.LogDebug("Initialized decor effects");
-			}
-		}
-
-		/// <summary>
 		/// Applied to DecorMonitor.Instance to hide decor while sleeping.
 		/// </summary>
 		[HarmonyPatch(typeof(DecorMonitor.Instance), "Update")]
@@ -184,7 +236,7 @@ namespace ReimaginationTeam.DecorRework {
 				if ((driver = __instance.GetComponent<ChoreDriver>()) != null) {
 					var chore = driver.GetCurrentChore();
 					cont = false;
-					// Slew to zero decor if sleeping
+					// Slew to half decor if sleeping
 					float decorAtCell = GameUtil.GetDecorAtCell(Grid.PosToCell(__instance));
 					if (chore != null && chore.choreType == Db.Get().ChoreTypes.Sleep)
 						decorAtCell *= DecorTuning.DECOR_FRACTION_SLEEP;
@@ -260,35 +312,6 @@ namespace ReimaginationTeam.DecorRework {
 					splat.RefreshDecor();
 				}
 				return cont;
-			}
-		}
-
-		/// <summary>
-		/// Applied to Game to clean up the decor manager on close.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "DestroyInstances")]
-		public static class Game_DestroyInstances_Patch {
-			/// <summary>
-			/// Applied after DestroyInstances runs.
-			/// </summary>
-			internal static void Postfix() {
-				PUtil.LogDebug("Destroying DecorCellManager");
-				DecorCellManager.DestroyInstance();
-			}
-		}
-
-		/// <summary>
-		/// Applied to Game to set up the decor manager on start.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "OnPrefabInit")]
-		public static class Game_OnPrefabInit_Patch {
-			/// <summary>
-			/// Applied after OnPrefabInit runs.
-			/// </summary>
-			internal static void Postfix() {
-				PUtil.LogDebug("Creating DecorCellManager");
-				DecorCellManager.CreateInstance();
-				ImaginationLoader.IsFinalDestination();
 			}
 		}
 

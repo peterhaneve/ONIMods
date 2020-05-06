@@ -692,7 +692,7 @@ namespace PeterHan.PLib.UI {
 			if (uiElement == null)
 				throw new ArgumentNullException("uiElement");
 			float minX = minSize.x, minY = minSize.y;
-			if (minX > 0.0f && minY > 0.0f) {
+			if (minX > 0.0f || minY > 0.0f) {
 				var le = uiElement.AddOrGet<LayoutElement>();
 				if (minX > 0.0f)
 					le.minWidth = minX;

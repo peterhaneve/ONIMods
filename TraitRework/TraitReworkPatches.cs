@@ -31,16 +31,6 @@ namespace PeterHan.TraitRework {
 	/// </summary>
 	public static class TraitReworkPatches {
 		/// <summary>
-		/// The modifier applied when eating in a lit area.
-		/// </summary>
-		internal static AttributeModifier EAT_LIT_MODIFIER;
-
-		/// <summary>
-		/// The minimum version where "lit workspace" eating was fixed in the stock game.
-		/// </summary>
-		private const uint VERSION_DISABLE_LITEATING = 379337U;
-
-		/// <summary>
 		/// Adds a short trait description for the embark screen.
 		/// </summary>
 		/// <param name="traitID">The trait ID to add.</param>
@@ -90,12 +80,8 @@ namespace PeterHan.TraitRework {
 
 		public static void OnLoad() {
 			// Defined in Edible
-			const float BASE_EAT_RATE = 50000.0f;
 			ImaginationLoader.Init(typeof(TraitReworkPatches));
 			InitStrings();
-			// Create modifier for "Eating in lit area"
-			EAT_LIT_MODIFIER = new AttributeModifier("CaloriesDelta", BASE_EAT_RATE * (1.0f /
-				(1.0f - TraitTuning.EAT_SPEED_BUFF) - 1.0f), TraitStrings.EATING_LIT);
 		}
 
 		/// <summary>
@@ -138,48 +124,6 @@ namespace PeterHan.TraitRework {
 			/// </summary>
 			internal static void Postfix(ConsumerManager __instance) {
 				__instance.OnDiscover += TraitReworkUtils.ApplyAllBannedFoods;
-			}
-		}
-
-		/// <summary>
-		/// Applied to Edible to remove the lit eating modifier on eating end.
-		/// </summary>
-		[HarmonyPatch(typeof(Edible), "OnStopWork")]
-		public static class Edible_OnStopWork_Patch {
-			/// <summary>
-			/// Controls whether this patch is implemented.
-			/// </summary>
-			internal static bool Prepare() {
-				return PUtil.GameVersion < VERSION_DISABLE_LITEATING;
-			}
-
-			/// <summary>
-			/// Applied after OnStopWork runs.
-			/// </summary>
-			internal static void Postfix(Worker worker) {
-				if (EAT_LIT_MODIFIER != null)
-					worker.GetAttributes()?.Remove(EAT_LIT_MODIFIER);
-			}
-		}
-
-		/// <summary>
-		/// Applied to Edible to fix the loss of calories when eating in the light.
-		/// </summary>
-		[HarmonyPatch(typeof(Edible), "OnWorkTick")]
-		public static class Edible_OnWorkTick_Patch {
-			/// <summary>
-			/// Controls whether this patch is implemented.
-			/// </summary>
-			internal static bool Prepare() {
-				return PUtil.GameVersion < VERSION_DISABLE_LITEATING;
-			}
-
-			/// <summary>
-			/// Applied after OnWorkTick runs.
-			/// </summary>
-			internal static void Postfix(Worker worker) {
-				if (worker != null)
-					TraitReworkUtils.UpdateLitEatingModifier(worker);
 			}
 		}
 

@@ -177,37 +177,6 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
-		/// Executes all post-load handlers.
-		/// </summary>
-		internal static void ExecutePostload() {
-			IList<PostLoadHandler> postload = null;
-			lock (PSharedData.GetLock(PRegistry.KEY_POSTLOAD_LOCK)) {
-				// Get list holding postload information
-				var list = PSharedData.GetData<IList<PostLoadHandler>>(PRegistry.
-					KEY_POSTLOAD_TABLE);
-				if (list != null)
-					postload = new List<PostLoadHandler>(list);
-			}
-			// If there were any, run them
-			if (postload != null) {
-				var hInst = Harmony.HarmonyInstance.Create("PLib.PostLoad");
-				PRegistry.LogPatchDebug("Executing {0:D} post-load handler(s)".F(postload.
-					Count));
-				foreach (var handler in postload)
-					try {
-						handler?.Invoke(hInst);
-					} catch (Exception e) {
-						var method = handler.Method;
-						// Say which mod's postload crashed
-						if (method != null)
-							PRegistry.LogPatchWarning("Postload handler for {0} failed:".F(
-								method.DeclaringType.Assembly?.GetName()?.Name ?? "?"));
-						LogException(e);
-					}
-			}
-		}
-
-		/// <summary>
 		/// Retrieves the current game version from the Klei code.
 		/// </summary>
 		/// <returns>The change list version of the game, or 0 if it cannot be determined.</returns>
@@ -402,6 +371,39 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Registers a class containing methods for [PLibPatch] and [PLibMethod] handlers.
+		/// All methods, public and private, of the type will be searched for annotations.
+		/// However, nested and derived types will not be searched, nor will inherited methods.
+		/// 
+		/// This method cannot be used to register a class from another mod, as the annotations
+		/// on those methods would have a different assembly qualified name and would thus
+		/// not be recognized.
+		/// </summary>
+		/// <param name="type">The type to register.</param>
+		public static void RegisterPatchClass(Type type) {
+			if (type == null)
+				throw new ArgumentNullException("type");
+			// Some others used this call before the library was initialized
+			if (!PLibInit) {
+				InitLibrary(false);
+				LogWarning("PUtil.InitLibrary was not called before using RegisterPatchClass!");
+			}
+			int count = 0;
+			foreach (var method in type.GetMethods(PPatchManager.FLAGS | BindingFlags.Static))
+				foreach (var attrib in method.GetCustomAttributes(true))
+					if (attrib is IPLibAnnotation pm) {
+						PPatchManager.AddHandler(pm.Runtime, pm.CreateInstance(method));
+						count++;
+					}
+			string name = Assembly.GetCallingAssembly()?.GetName()?.Name;
+			if (count > 0)
+				PRegistry.LogPatchDebug("Registered {0:D} handler(s) for {1}".F(count, name ??
+					"?"));
+			else
+				PRegistry.LogPatchWarning("RegisterPatchClass could not find any handlers!");
+		}
+
+		/// <summary>
 		/// Registers a method which will be run after PLib and all mods load. It will be
 		/// passed a HarmonyInstance which can be used to make late patches.
 		/// 
@@ -411,6 +413,7 @@ namespace PeterHan.PLib {
 		/// if necessary.
 		/// </summary>
 		/// <param name="callback">The method to invoke.</param>
+		[Obsolete("Use the [PLibMethod(RunAt.PostLoad)] annotation on the target method instead and call RegisterPatchClass.")]
 		public static void RegisterPostload(PostLoadHandler callback) {
 			if (callback == null)
 				throw new ArgumentNullException("callback");
@@ -419,18 +422,11 @@ namespace PeterHan.PLib {
 				InitLibrary(false);
 				LogWarning("PUtil.InitLibrary was not called before using RegisterPostload!");
 			}
-			lock (PSharedData.GetLock(PRegistry.KEY_POSTLOAD_LOCK)) {
-				// Get list holding postload information
-				var list = PSharedData.GetData<IList<PostLoadHandler>>(PRegistry.
-					KEY_POSTLOAD_TABLE);
-				if (list == null)
-					PSharedData.PutData(PRegistry.KEY_POSTLOAD_TABLE, list =
-						new List<PostLoadHandler>(16));
-				list.Add(callback);
-				string name = Assembly.GetCallingAssembly()?.GetName()?.Name;
-				if (name != null)
-					PRegistry.LogPatchDebug("Registered post-load handler for " + name);
-			}
+			PPatchManager.AddHandler(RunAt.AfterModsLoad, new LegacyPostloadMethod(
+				callback));
+			string name = Assembly.GetCallingAssembly()?.GetName()?.Name;
+			if (name != null)
+				PRegistry.LogPatchDebug("Registered post-load handler for " + name);
 		}
 
 		/// <summary>
@@ -443,6 +439,7 @@ namespace PeterHan.PLib {
 		/// <returns>The parsed enumeration value, or ifNotFound if the value string is invalid.
 		/// Note that out of range integer strings will be successfully parsed and converted to
 		/// the enumeration type.</returns>
+		[Obsolete("Use Enum.TryParse instead")]
 		public static T TryParseEnum<T>(string enumValue, T ifNotFound = default,
 				bool ignoreCase = false) where T : Enum {
 			T value = ifNotFound;

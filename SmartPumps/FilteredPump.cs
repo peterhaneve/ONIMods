@@ -37,6 +37,7 @@ namespace PeterHan.SmartPumps {
 		/// <summary>
 		/// Creates the status items for filtered pumps.
 		/// </summary>
+		[PLibMethod(RunAt.AfterDbInit)]
 		internal static void CreateStatusItems() {
 			const string Category = "BUILDING", NoGasMatch = "NoGasMatchToPump",
 				NoLiquidMatch = "NoLiquidMatchToPump";

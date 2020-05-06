@@ -20,6 +20,7 @@ using Harmony;
 using PeterHan.PLib;
 using PeterHan.PLib.Datafiles;
 using PeterHan.PLib.Options;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -38,23 +39,7 @@ namespace PeterHan.SweepByType {
 			POptions.RegisterOptions(typeof(SweepByTypeOptions));
 			PLocalization.Register();
 			Options = null;
-		}
-
-		/// <summary>
-		/// Handles localization by registering for translation.
-		/// </summary>
-		[HarmonyPatch(typeof(Db), "Initialize")]
-		public static class Db_Initialize_Patch {
-			/// <summary>
-			/// Applied before Initialize runs.
-			/// </summary>
-			internal static void Prefix() {
-#if DEBUG
-				ModUtil.RegisterForTranslation(typeof(SweepByTypeStrings));
-#else
-				Localization.RegisterForTranslation(typeof(SweepByTypeStrings));
-#endif
-			}
+			PUtil.RegisterPatchClass(typeof(SweepByTypePatches));
 		}
 
 		/// <summary>
@@ -111,9 +96,11 @@ namespace PeterHan.SweepByType {
 			/// Applied after CreateBasicTools runs.
 			/// </summary>
 			internal static void Postfix(ToolMenu __instance) {
+				if (!Enum.TryParse("Clear", out Action clearAction))
+					clearAction = Action.Clear;
 				var filteredSweep = ToolMenu.CreateToolCollection(STRINGS.UI.TOOLS.
-					MARKFORSTORAGE.NAME, SweepByTypeStrings.TOOL_ICON_NAME, PUtil.TryParseEnum(
-					"Clear", Action.Clear), nameof(FilteredClearTool), STRINGS.UI.TOOLTIPS.
+					MARKFORSTORAGE.NAME, SweepByTypeStrings.TOOL_ICON_NAME, clearAction,
+					nameof(FilteredClearTool), STRINGS.UI.TOOLTIPS.
 					CLEARBUTTON, false);
 				var tools = __instance.basicTools;
 				int n = tools.Count;

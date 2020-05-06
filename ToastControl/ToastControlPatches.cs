@@ -247,6 +247,7 @@ namespace PeterHan.ToastControl {
 			LocString.CreateLocStringKeys(typeof(ToastControlStrings.UI));
 			PLocalization.Register();
 			POptions.RegisterOptions(typeof(ToastControlOptions));
+			PUtil.RegisterPatchClass(typeof(ToastControlPopups));
 			ToastControlPopups.ReloadOptions();
 			// No default key bind
 			inGameSettings = PAction.Register(ToastControlStrings.ACTION_KEY,
@@ -377,19 +378,6 @@ namespace PeterHan.ToastControl {
 				bool deliverDupe = opts.Delivered;
 				return (deliverDupe != opts.DeliveredMachine) ? (deliverDupe != (chore.fetcher.
 					GetComponent<MinionBrain>() != null)) : !deliverDupe;
-			}
-		}
-
-		/// <summary>
-		/// Applied to Game to load settings when the user starts a game.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "OnSpawn")]
-		public static class Game_OnSpawn_Patch {
-			/// <summary>
-			/// Applied after OnSpawn runs.
-			/// </summary>
-			internal static void Postfix() {
-				ToastControlPopups.ReloadOptions();
 			}
 		}
 

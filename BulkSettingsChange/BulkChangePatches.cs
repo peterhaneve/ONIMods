@@ -44,6 +44,7 @@ namespace PeterHan.BulkSettingsChange {
 				BulkChangeStrings.ACTION_TITLE, new PKeyBinding(KKeyCode.Q));
 		}
 
+#if DEBUG
 		/// <summary>
 		/// Handles localization by registering for translation.
 		/// </summary>
@@ -53,11 +54,10 @@ namespace PeterHan.BulkSettingsChange {
 			/// Applied before Initialize runs.
 			/// </summary>
 			internal static void Prefix() {
-#if DEBUG
 				ModUtil.RegisterForTranslation(typeof(BulkChangeStrings));
-#endif
 			}
 		}
+#endif
 
 		/// <summary>
 		/// Applied to PlayerController to load the change settings tool into the available

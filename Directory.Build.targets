@@ -6,7 +6,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="ILRepack" AfterTargets="Build" Condition=" '$(AssemblyName)' != 'PLib' ">
+  <Target Name="ILRepack" AfterTargets="Build" Condition=" '$(AssemblyName)' != 'PLib' And '$(AssemblyName)' != 'PLibOptions' ">
     <ItemGroup>
       <InputAssemblies Include="$(TargetDir)\*.dll"
         Exclude="**\0Harmony.dll" />
@@ -15,9 +15,9 @@
     <ILRepack 
         TargetPlatformVersion="v4"
         OutputType="SameAsPrimaryAssembly"
-        MainAssembly="$(TargetPath)" 
-        OutputAssembly="$(TargetPath)" 
-        InputAssemblies="@(InputAssemblies)" 
+        MainAssembly="$(TargetPath)"
+        OutputAssembly="$(TargetPath)"
+        InputAssemblies="@(InputAssemblies)"
         WilcardInputAssemblies="true"
         WorkingDirectory="$(GameFolder)" />
   </Target>

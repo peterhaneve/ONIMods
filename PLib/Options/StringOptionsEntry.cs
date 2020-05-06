@@ -26,8 +26,8 @@ namespace PeterHan.PLib.Options {
 	/// <summary>
 	/// An options entry which represents a string and displays a text field.
 	/// </summary>
-	internal sealed class StringOptionsEntry : OptionsEntry {
-		protected override object Value {
+	public class StringOptionsEntry : OptionsEntry {
+		public override object Value {
 			get {
 				return value;
 			}
@@ -52,9 +52,16 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		private string value;
 
+		protected StringOptionsEntry(string title, string tooltip, string category = "",
+				int maxLen = 0) : base(title, tooltip, category) {
+			maxLength = Math.Max(2, maxLen);
+			textField = null;
+			value = "";
+		}
+
 		internal StringOptionsEntry(OptionAttribute oa, PropertyInfo prop) : base(prop?.Name,
 				oa) {
-			var limits = FindLimitAttribute(prop);
+			var limits = LimitAttribute.FindFrom(prop);
 			// Use the maximum limit value for the max length, if present
 			if (limits != null)
 				maxLength = Math.Max(2, (int)Math.Round(limits.Maximum));
@@ -64,23 +71,14 @@ namespace PeterHan.PLib.Options {
 			value = "";
 		}
 
-		protected override IUIComponent GetUIComponent() {
-			var cb = new PTextField() {
+		public override GameObject GetUIComponent() {
+			textField = new PTextField() {
 				OnTextChanged = OnTextChanged, ToolTip = LookInStrings(ToolTip),
 				Text = value.ToString(), MinWidth = 128, Type = PTextField.FieldType.Text,
 				MaxLength = maxLength
-			};
-			cb.OnRealize += OnRealizeTextField;
-			return cb;
-		}
-
-		/// <summary>
-		/// Called when the text field is realized.
-		/// </summary>
-		/// <param name="realized">The actual text field.</param>
-		private void OnRealizeTextField(GameObject realized) {
-			textField = realized;
+			}.Build();
 			Update();
+			return textField;
 		}
 
 		/// <summary>

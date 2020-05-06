@@ -93,19 +93,19 @@ namespace PeterHan.PLib {
 		/// <param name="type">The declaring type of the target method.</param>
 		/// <param name="method">The target method name.</param>
 		/// <param name="caller">The object on which to call the method.</param>
-		/// <param name="arguments">The types of the target method arguments, or PPatchTools.
+		/// <param name="argumentTypes">The types of the target method arguments, or PPatchTools.
 		/// AnyArguments (not recommended, type safety is good) to match any static method with
 		/// that name.</param>
 		/// <returns>A delegate which calls this method, or null if the method could not be
 		/// found or did not match the types.</returns>
 		public static T CreateDelegate<T>(this Type type, string method, object caller,
-				params Type[] arguments) where T : Delegate {
+				params Type[] argumentTypes) where T : Delegate {
 			var del = default(T);
 			if (type == null)
 				throw new ArgumentNullException("type");
 			if (string.IsNullOrEmpty(method))
 				throw new ArgumentNullException("method");
-			var reflectMethod = GetMethodSafe(type, method, false, arguments);
+			var reflectMethod = GetMethodSafe(type, method, false, argumentTypes);
 			if (reflectMethod != null)
 				del = Delegate.CreateDelegate(typeof(T), caller, reflectMethod, false) as T;
 			return del;
@@ -170,19 +170,19 @@ namespace PeterHan.PLib {
 		/// <typeparam name="T">A delegate type which matches the method signature.</typeparam>
 		/// <param name="type">The declaring type of the target method.</param>
 		/// <param name="method">The target method name.</param>
-		/// <param name="arguments">The types of the target method arguments, or PPatchTools.
+		/// <param name="argumentTypes">The types of the target method arguments, or PPatchTools.
 		/// AnyArguments (not recommended, type safety is good) to match any static method with
 		/// that name.</param>
 		/// <returns>A delegate which calls this method, or null if the method could not be
 		/// found or did not match the types.</returns>
 		public static T CreateStaticDelegate<T>(this Type type, string method,
-				params Type[] arguments) where T : Delegate {
+				params Type[] argumentTypes) where T : Delegate {
 			var del = default(T);
 			if (type == null)
 				throw new ArgumentNullException("type");
 			if (string.IsNullOrEmpty(method))
 				throw new ArgumentNullException("method");
-			var reflectMethod = GetMethodSafe(type, method, true, arguments);
+			var reflectMethod = GetMethodSafe(type, method, true, argumentTypes);
 			if (reflectMethod != null)
 				del = Delegate.CreateDelegate(typeof(T), reflectMethod, false) as T;
 			return del;
@@ -681,11 +681,11 @@ namespace PeterHan.PLib {
 			var logger = typeof(PUtil).GetMethodSafe(nameof(PUtil.LogException), true,
 				typeof(Exception));
 			var ee = method.GetEnumerator();
-			CodeInstruction last = null;
-			bool hasNext, isFirst = true;
-			var endMethod = generator.DefineLabel();
 			// Emit all but the last instruction
-			if (ee.MoveNext())
+			if (ee.MoveNext()) {
+				CodeInstruction last;
+				bool hasNext, isFirst = true;
+				var endMethod = generator.DefineLabel();
 				do {
 					last = ee.Current;
 					if (isFirst)
@@ -696,7 +696,6 @@ namespace PeterHan.PLib {
 					if (hasNext)
 						yield return last;
 				} while (hasNext);
-			if (last != null) {
 				CodeInstruction startHandler;
 				// Preserves the labels "ret" might have had
 				last.opcode = OpCodes.Nop;

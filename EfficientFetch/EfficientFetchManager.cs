@@ -18,6 +18,7 @@
 
 using PeterHan.PLib;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -62,7 +63,7 @@ namespace PeterHan.EfficientFetch {
 		/// Outstanding requests for fetch information that were not efficiently satisfied
 		/// go here.
 		/// </summary>
-		private readonly IDictionary<Tag, FetchData> outstanding;
+		private readonly ConcurrentDictionary<Tag, FetchData> outstanding;
 
 		/// <summary>
 		/// The pickups field of the fetch manager.
@@ -78,7 +79,7 @@ namespace PeterHan.EfficientFetch {
 			if (thresholdFraction.IsNaNOrInfinity())
 				throw new ArgumentException("thresholdFraction");
 			choreTypes = Db.Get().ChoreTypes;
-			outstanding = new Dictionary<Tag, FetchData>(512);
+			outstanding = new ConcurrentDictionary<Tag, FetchData>(4, 512);
 			// Reflect that field!
 			IList<Pickup> fp = null;
 			var fm = Game.Instance.fetchManager;
@@ -87,8 +88,7 @@ namespace PeterHan.EfficientFetch {
 				if (pickupsField != null && fm != null)
 					fp = pickupsField.GetValue(fm) as IList<Pickup>;
 			} catch (FieldAccessException) {
-			} catch (TargetException) {
-			}
+			} catch (TargetException) { }
 			if (fp == null)
 				PUtil.LogWarning("Unable to find pickups field on FetchManager!");
 			fmPickups = fp;
@@ -113,7 +113,7 @@ namespace PeterHan.EfficientFetch {
 					newTagBits = new TagBits(ref FetchManager.disallowedTagMask);
 					pickup.pickupable.KPrefabID.AndTagBits(ref newTagBits);
 					if (pickup.tagBitsHash == hash && newTagBits.AreEqual(ref tagBits))
-						// Identical to the previous element
+						// Identical to the previous item
 						del = true;
 				}
 				if (del)
@@ -133,9 +133,7 @@ namespace PeterHan.EfficientFetch {
 		}
 
 		public void Dispose() {
-			lock (outstanding) {
-				outstanding.Clear();
-			}
+			outstanding.Clear();
 		}
 
 		/// <summary>
@@ -195,33 +193,22 @@ namespace PeterHan.EfficientFetch {
 			// Do not start a fetch entry if nothing is available
 			if (bestMatch != null) {
 				Tag itemType = bestMatch.PrefabID();
-				lock (outstanding) {
-					bool has = outstanding.TryGetValue(itemType, out FetchData current);
-					if (canGet < target) {
-						if (!has) {
-							// Start searching for a better option
-							outstanding.Add(itemType, new FetchData(target));
+				if (outstanding.TryGetValue(itemType, out FetchData current) && !current.
+						NeedsScan) {
+					// Retire it, with the best item we could do
+					outstanding.TryRemove(itemType, out _);
 #if DEBUG
-							PUtil.LogDebug("Find {0} ({3}): have {1:F2}, want {2:F2}".F(
-								destination.name, canGet, target, itemType));
+					PUtil.LogDebug("{3} {0} ({2}) with {1:F2}".F(destination.name,
+						canGet, itemType, (canGet >= target) ? "Complete" : "Retire"));
 #endif
-							bestMatch = null;
-						} else if (!current.NeedsScan) {
-							// Retired it, but could not find the item at threshold
+				} else if (canGet < target && outstanding.TryAdd(itemType, new FetchData(
+						target))) {
+					// Start searching for a better option
 #if DEBUG
-							PUtil.LogDebug("Retire {0} ({2}) with best effort {1:F2}".F(
-								destination.name, canGet, itemType));
+					PUtil.LogDebug("Find {0} ({3}): have {1:F2}, want {2:F2}".F(
+						destination.name, canGet, target, itemType));
 #endif
-							outstanding.Remove(itemType);
-						}
-					} else if (has && !current.NeedsScan) {
-						// Retire it, we have chosen the item
-#if DEBUG
-						PUtil.LogDebug("Complete {0} ({2}) with {1:F2}".F(destination.name,
-							canGet, itemType));
-#endif
-						outstanding.Remove(itemType);
-					}
+					bestMatch = null;
 				}
 			}
 			return bestMatch;
@@ -270,12 +257,10 @@ namespace PeterHan.EfficientFetch {
 		/// <param name="cellCosts">A location to store the cell costs.</param>
 		internal void UpdatePickups(FetchablesByPrefabId fetch, Navigator navigator,
 				GameObject fetcher, IDictionary<int, int> cellCosts) {
-			FetchData data;
 			var pickups = fetch.finalPickups;
 			if (pickups != null) {
-				lock (outstanding) {
-					outstanding.TryGetValue(fetch.prefabId, out data);
-				}
+				if (!outstanding.TryGetValue(fetch.prefabId, out FetchData data))
+					data = null;
 				pickups.Clear();
 				GetFetchList(fetch, navigator, fetcher, cellCosts);
 				if (pickups.Count > 1) {
@@ -287,9 +272,7 @@ namespace PeterHan.EfficientFetch {
 					CondensePickups(pickups);
 				}
 				if (data != null)
-					lock (outstanding) {
-						data.NeedsScan = false;
-					}
+					data.NeedsScan = false;
 			}
 		}
 
@@ -326,9 +309,9 @@ namespace PeterHan.EfficientFetch {
 					return comp;
 				// Add comparison for threshold
 				float aq = a.pickupable.UnreservedAmount, bq = b.pickupable.UnreservedAmount;
-				if (aq > Threshold && bq < Threshold)
+				if (aq >= Threshold && bq < Threshold)
 					return -1;
-				else if (aq < Threshold && bq > Threshold)
+				else if (aq < Threshold && bq >= Threshold)
 					return 1;
 				comp = a.PathCost.CompareTo(b.PathCost);
 				if (comp != 0)

@@ -206,36 +206,6 @@ namespace PeterHan.TraitRework {
 		}
 
 		/// <summary>
-		/// Updates the "Eating in Lit Area" modifier when a Duplicant eats.
-		/// </summary>
-		/// <param name="worker">The Duplicant that is eating.</param>
-		internal static void UpdateLitEatingModifier(Worker worker) {
-			var modifier = TraitReworkPatches.EAT_LIT_MODIFIER;
-			var litWorkspace = Db.Get().DuplicantStatusItems.LightWorkEfficiencyBonus;
-			var attrs = worker.GetAttributes();
-			var selectable = worker.GetComponent<KSelectable>();
-			if (modifier != null && attrs != null && selectable != null) {
-				var calAttribute = attrs.Get(modifier.AttributeId);
-				if (calAttribute != null) {
-					// If lit workspace, add the eating in lit area modifier to boost
-					// calorie gain rate by 15%
-					bool hasModifier = false;
-					var modifiers = calAttribute.Modifiers;
-					for (int i = 0; i < modifiers.Count && !hasModifier; i++)
-						// Only one instance, == is fine
-						if (modifiers[i] == modifier)
-							hasModifier = true;
-					// Set as needed
-					if (selectable.HasStatusItem(litWorkspace)) {
-						if (!hasModifier)
-							attrs.Add(modifier);
-					} else if (hasModifier)
-						attrs.Remove(modifier);
-				}
-			}
-		}
-
-		/// <summary>
 		/// The delegate type which defers to the stock sound radius calculator.
 		/// </summary>
 		private delegate void DetermineCellsFunc(int cell, int depth, int max_depth,

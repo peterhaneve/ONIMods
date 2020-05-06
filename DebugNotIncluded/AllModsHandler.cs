@@ -20,6 +20,7 @@ using PeterHan.PLib.UI;
 using UnityEngine;
 
 namespace PeterHan.DebugNotIncluded {
+#if ALL_MODS_CHECKBOX
 	/// <summary>
 	/// Added to the toggle all checkbox to manage its state.
 	/// </summary>
@@ -80,4 +81,5 @@ namespace PeterHan.DebugNotIncluded {
 					PCheckBox.STATE_PARTIAL : PCheckBox.STATE_UNCHECKED));
 		}
 	}
+#endif
 }

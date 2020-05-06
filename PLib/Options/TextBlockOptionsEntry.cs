@@ -32,7 +32,7 @@ namespace PeterHan.PLib.Options {
 	/// Unity font formatting can be used in the text. The name of a strings table entry can
 	/// also be used to allow localization.
 	/// </summary>
-	internal sealed class TextBlockOptionsEntry : OptionsEntry {
+	public class TextBlockOptionsEntry : OptionsEntry {
 		/// <summary>
 		/// A font style that looks like TextLightStyle but allows word wrapping.
 		/// </summary>
@@ -43,13 +43,13 @@ namespace PeterHan.PLib.Options {
 			WRAP_TEXT_STYLE.enableWordWrapping = true;
 		}
 
-		protected override object Value {
+		public override object Value {
 			get {
 				return ignore;
 			}
 			set {
 				if (value is LocText newValue)
-					this.ignore = newValue;
+					ignore = newValue;
 			}
 		}
 
@@ -58,10 +58,13 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		private LocText ignore;
 
-		internal TextBlockOptionsEntry(OptionAttribute oa, PropertyInfo prop) : base(prop?.Name,
-				oa) { }
+		protected TextBlockOptionsEntry(string title, string tooltip, string category = "") :
+			base(title, tooltip, category) { }
 
-		internal override void CreateUIEntry(PGridPanel parent, ref int row) {
+		internal TextBlockOptionsEntry(OptionAttribute oa, PropertyInfo prop) : base(prop?.
+			Name, oa) { }
+
+		public override void CreateUIEntry(PGridPanel parent, ref int row) {
 			parent.AddChild(new PLabel(Field) {
 				Text = LookInStrings(Title), ToolTip = LookInStrings(ToolTip),
 				TextStyle = WRAP_TEXT_STYLE
@@ -70,9 +73,9 @@ namespace PeterHan.PLib.Options {
 			});
 		}
 
-		protected override IUIComponent GetUIComponent() {
+		public override GameObject GetUIComponent() {
 			// Will not be invoked
-			return new PSpacer();
+			return new GameObject("Empty");
 		}
 	}
 }

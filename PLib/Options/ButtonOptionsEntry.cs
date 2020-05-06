@@ -34,8 +34,8 @@ namespace PeterHan.PLib.Options {
 	///     // ...
 	/// }
 	/// </summary>
-	internal sealed class ButtonOptionsEntry : OptionsEntry {
-		protected override object Value {
+	public class ButtonOptionsEntry : OptionsEntry {
+		public override object Value {
 			get {
 				return value;
 			}
@@ -50,10 +50,13 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		private System.Action value;
 
-		internal ButtonOptionsEntry(OptionAttribute oa, PropertyInfo prop) : base(prop?.Name,
-				oa) { }
+		protected ButtonOptionsEntry(string title, string tooltip, string category = "") :
+			base(title, tooltip, category) { }
 
-		internal override void CreateUIEntry(PGridPanel parent, ref int row) {
+		internal ButtonOptionsEntry(OptionAttribute oa, PropertyInfo prop) : base(prop?.Name,
+			oa) { }
+
+		public override void CreateUIEntry(PGridPanel parent, ref int row) {
 			parent.AddChild(new PButton(Field) {
 				Text = LookInStrings(Title), ToolTip = LookInStrings(ToolTip),
 				OnClick = OnButtonClicked
@@ -66,9 +69,9 @@ namespace PeterHan.PLib.Options {
 			value?.Invoke();
 		}
 
-		protected override IUIComponent GetUIComponent() {
+		public override GameObject GetUIComponent() {
 			// Will not be invoked
-			return new PSpacer();
+			return new GameObject("Empty");
 		}
 	}
 }

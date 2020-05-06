@@ -26,6 +26,11 @@ namespace PeterHan.PLib.Options {
 	/// </summary>
 	public interface IDynamicOption {
 		/// <summary>
+		/// The options category. It will be queried once before any options are loaded.
+		/// </summary>
+		string Category { get; }
+
+		/// <summary>
 		/// The options title. It will be queried after the initial option value is loaded,
 		/// but only once.
 		/// </summary>

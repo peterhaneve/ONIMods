@@ -121,6 +121,11 @@ namespace PeterHan.PLib {
 		public const string KEY_POSTLOAD_TABLE = "PLib.PostLoad.Table";
 
 		/// <summary>
+		/// Stores the enhanced post load handlers and patches currently registered.
+		/// </summary>
+		public const string KEY_POSTLOAD_ENHANCED = "PLib.PostLoad.EnhancedTable";
+
+		/// <summary>
 		/// Used to denote the latest version of PLib installed across any mod, which is the
 		/// version that is being used for any shared item forwarding.
 		/// </summary>

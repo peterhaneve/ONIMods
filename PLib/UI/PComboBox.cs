@@ -96,6 +96,11 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		public int MaxRowsShown { get; set; }
 
+		/// <summary>
+		/// The minimum width in units (not characters!) of this text field.
+		/// </summary>
+		public int MinWidth { get; set; }
+
 		public string Name { get; }
 
 		/// <summary>
@@ -134,6 +139,7 @@ namespace PeterHan.PLib.UI {
 			ItemMargin = DEFAULT_ITEM_MARGIN;
 			Margin = PButton.BUTTON_MARGIN;
 			MaxRowsShown = 6;
+			MinWidth = 0;
 			Name = name;
 			TextAlignment = TextAnchor.MiddleLeft;
 			TextStyle = null;
@@ -151,6 +157,8 @@ namespace PeterHan.PLib.UI {
 			PButton.SetupButtonBackground(bgImage);
 			// Need a LocText (selected item)
 			var selection = PUIElements.CreateUI(combo, "SelectedItem");
+			if (MinWidth > 0)
+				selection.SetMinUISize(new Vector2(MinWidth, 0.0f));
 			var selectedLabel = PUIElements.AddLocText(selection, style);
 			// Vertical flow panel with the choices
 			var contentContainer = PUIElements.CreateUI(null, "Content");
@@ -273,6 +281,20 @@ namespace PeterHan.PLib.UI {
 		public PComboBox<T> SetKleiBlueStyle() {
 			TextStyle = PUITuning.Fonts.UILightStyle;
 			BackColor = PUITuning.Colors.ButtonBlueStyle;
+			return this;
+		}
+
+		/// <summary>
+		/// Sets the minimum (and preferred) width of this combo box in characters.
+		/// 
+		/// The width is computed using the currently selected text style.
+		/// </summary>
+		/// <param name="chars">The number of characters to be displayed.</param>
+		/// <returns>This combo box for call chaining.</returns>
+		public PComboBox<T> SetMinWidthInCharacters(int chars) {
+			int width = Mathf.RoundToInt(chars * PUIUtils.GetEmWidth(TextStyle));
+			if (width > 0)
+				MinWidth = width;
 			return this;
 		}
 

@@ -35,32 +35,26 @@ namespace PeterHan.Challenge100K {
 		/// </summary>
 		private static Temperature to11 = null;
 
+		/// <summary>
+		/// Registers the strings used in this mod.
+		/// </summary>
+		[PLibMethod(RunAt.AfterDbInit)]
+		internal static void InitStrings() {
+			Strings.Add("STRINGS.WORLDS.ONEHUNDREDK.NAME", Challenge100KStrings.NAME);
+			Strings.Add("STRINGS.WORLDS.ONEHUNDREDK.DESCRIPTION", Challenge100KStrings.
+				DESCRIPTION);
+			var sprite = PUtil.LoadSprite("PeterHan.Challenge100K." + SPRITE + ".png");
+			if (sprite != null)
+				Assets.Sprites.Add(SPRITE, sprite);
+		}
+
 		public static void OnLoad() {
 			PUtil.InitLibrary();
 			to11 = new Temperature();
 			var tr11 = Traverse.Create(to11);
 			tr11.SetProperty("min", 80.0f);
 			tr11.SetProperty("max", 110.0f);
-		}
-
-		/// <summary>
-		/// Applied to Db to load the strings for this world.
-		/// </summary>
-		[HarmonyPatch(typeof(Db), "Initialize")]
-		public static class Db_Initialize_Patch {
-			public static LocString NAME = "100K Challenge";
-			public static LocString DESCRIPTION = "One of the coldest worlds ever surveyed, this harsh and unforgiving asteroid features an average temperature of only 100 K (-173 C).\r\n\r\n<smallcaps>Survival in this world will be nearly impossible, but a glimmer of hope remains. Can you use all that you have learned to survive for 100 cycles?</smallcaps>\r\n";
-
-			/// <summary>
-			/// Applied after Initialize runs.
-			/// </summary>
-			internal static void Postfix() {
-				Strings.Add("STRINGS.WORLDS.ONEHUNDREDK.NAME", NAME);
-				Strings.Add("STRINGS.WORLDS.ONEHUNDREDK.DESCRIPTION", DESCRIPTION);
-				var sprite = PUtil.LoadSprite("PeterHan.Challenge100K." + SPRITE + ".png");
-				if (sprite != null)
-					Assets.Sprites.Add(SPRITE, sprite);
-			}
+			PUtil.RegisterPatchClass(typeof(Challenge100K));
 		}
 
 		/// <summary>

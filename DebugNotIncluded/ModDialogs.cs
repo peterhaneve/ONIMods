@@ -55,6 +55,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// <param name="instance">The object hosting the mods screen.</param>
 		/// <param name="bottom">The panel where the buttons should be added.</param>
 		internal static void AddExtraButtons(GameObject instance, GameObject bottom) {
+#if ALL_MODS_CHECKBOX
 			var handler = instance.AddOrGet<AllModsHandler>();
 			var cb = new PCheckBox("AllMods") {
 				CheckSize = new Vector2(24.0f, 24.0f), Text = UI.MODSSCREEN.BUTTON_ALL,
@@ -65,6 +66,7 @@ namespace PeterHan.DebugNotIncluded {
 				cb.OnChecked = handler.OnClick;
 			handler.checkbox = cb.AddTo(bottom, 0);
 			handler.UpdateCheckedState();
+#endif
 			// Current PLib version
 			string version = PSharedData.GetData<string>("PLib.Version");
 			string name = ModDebugRegistry.Instance.OwnerOfAssembly(DebugNotIncludedPatches.

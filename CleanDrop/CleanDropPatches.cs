@@ -26,6 +26,24 @@ namespace PeterHan.CleanDrop {
 	/// </summary>
 	public static class CleanDropPatches {
 		/// <summary>
+		/// Creates the drop manager based on the current world size.
+		/// </summary>
+		[PLibMethod(RunAt.OnStartGame)]
+		internal static void CreateCleanDrop() {
+			CleanDropManager.CreateInstance();
+			PUtil.LogDebug("Created CleanDropManager");
+		}
+
+		/// <summary>
+		/// Destroy the drop manager when the game is closed.
+		/// </summary>
+		[PLibMethod(RunAt.OnEndGame)]
+		internal static void DestroyCleanDrop() {
+			PUtil.LogDebug("Destroying CleanDropManager");
+			CleanDropManager.DestroyInstance();
+		}
+
+		/// <summary>
 		/// Marks the direction where a worker was standing.
 		/// </summary>
 		/// <param name="instance">The target workable.</param>
@@ -134,6 +152,7 @@ namespace PeterHan.CleanDrop {
 
 		public static void OnLoad() {
 			PUtil.InitLibrary();
+			PUtil.RegisterPatchClass(typeof(CleanDropPatches));
 		}
 
 		/// <summary>
@@ -190,34 +209,6 @@ namespace PeterHan.CleanDrop {
 			/// </summary>
 			internal static void Prefix(EmptyConduitWorkable __instance, Worker worker) {
 				MarkDirection(__instance, worker);
-			}
-		}
-
-		/// <summary>
-		/// Applied to Game to destroy the drop manager.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "DestroyInstances")]
-		public static class Game_DestroyInstances_Patch {
-			/// <summary>
-			/// Applied after DestroyInstances runs.
-			/// </summary>
-			internal static void Postfix() {
-				PUtil.LogDebug("Destroying CleanDropManager");
-				CleanDropManager.DestroyInstance();
-			}
-		}
-
-		/// <summary>
-		/// Applied to Game to create the drop manager based on the current world size.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "OnPrefabInit")]
-		public static class Game_OnPrefabInit_Patch {
-			/// <summary>
-			/// Applied after OnPrefabInit runs.
-			/// </summary>
-			internal static void Postfix() {
-				PUtil.LogDebug("Creating CleanDropManager");
-				CleanDropManager.CreateInstance();
 			}
 		}
 

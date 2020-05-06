@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Clean Drop</AssemblyTitle>
-    <FileVersion>1.2.0.0</FileVersion>
+    <FileVersion>1.3.0.0</FileVersion>
     <RootNamespace>PeterHan.CleanDrop</RootNamespace>
     <Description>Drops materials from build, deconstruct, or repair errands in a place where the working Duplicant can usually access them.</Description>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>

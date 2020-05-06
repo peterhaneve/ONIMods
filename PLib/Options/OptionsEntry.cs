@@ -26,9 +26,10 @@ using OptionsList = System.Collections.Generic.ICollection<PeterHan.PLib.Options
 
 namespace PeterHan.PLib.Options {
 	/// <summary>
-	/// An entry in the Options screen for one particular setting.
+	/// An abstract parent class containing methods shared by all built-in options handlers.
 	/// </summary>
-	internal abstract class OptionsEntry : IComparable<OptionsEntry> {
+	public abstract class OptionsEntry : IDynamicOption, IComparable<OptionsEntry>,
+			IUIComponent {
 		/// <summary>
 		/// The margins around the control used in each entry.
 		/// </summary>
@@ -38,6 +39,32 @@ namespace PeterHan.PLib.Options {
 		/// The margins around the label for each entry.
 		/// </summary>
 		protected static readonly RectOffset LABEL_MARGIN = new RectOffset(0, 5, 2, 2);
+
+		internal static IDictionary<string, OptionsList> AddCustomOptions(object options,
+				IDictionary<string, OptionsList> existing) {
+			System.Collections.IEnumerable customOptions = null;
+			// Call the user handler
+			var createOptions = PPatchTools.GetMethodSafe(options.GetType(), nameof(IOptions.
+				CreateOptions), false);
+			var entries = existing;
+			if (createOptions != null)
+				try {
+					customOptions = createOptions.Invoke(options, null) as System.
+						Collections.IEnumerable;
+				} catch (TargetInvocationException e) {
+					PUtil.LogException(e.GetBaseException() ?? e);
+				}
+			if (customOptions != null) {
+				// Middle-depth copy of the existing categories as it can change on each dialog
+				entries = new SortedList<string, OptionsList>(entries.Count);
+				foreach (var pair in existing)
+					entries.Add(pair.Key, new List<OptionsEntry>(pair.Value));
+				foreach (var value in customOptions)
+					if (value != null)
+						AddToCategory(entries, DynamicOptionsEntry.Create(value));
+			}
+			return entries;
+		}
 
 		/// <summary>
 		/// Adds an options entry to the category list, creating a new category if necessary.
@@ -73,7 +100,7 @@ namespace PeterHan.PLib.Options {
 							AddToCategory(entries, entry);
 						break;
 					} else if ((doa = DynamicOptionAttribute.CreateFrom(attr)) != null) {
-						AddToCategory(entries, new DynamicOptionsEntry(prop.Name, doa));
+						AddToCategory(entries, DynamicOptionsEntry.Create(prop.Name, doa));
 						break;
 					}
 			return entries;
@@ -109,19 +136,6 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
-		/// Searches for LimitAttribute attributes on the property wrapped by an OptionsEntry.
-		/// </summary>
-		/// <param name="prop">The property with annotations.</param>
-		/// <returns>The Limit attribute if present, or null if none is.</returns>
-		protected static LimitAttribute FindLimitAttribute(PropertyInfo prop) {
-			LimitAttribute fieldLimits = null;
-			foreach (var attr in prop.GetCustomAttributes(false))
-				if ((fieldLimits = LimitAttribute.CreateFrom(attr)) != null)
-					break;
-			return fieldLimits;
-		}
-
-		/// <summary>
 		/// First looks to see if the string exists in the string database; if it does, returns
 		/// the localized value, otherwise returns the string unmodified.
 		/// 
@@ -148,6 +162,10 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		public string Field { get; }
 
+		public virtual string Name => nameof(OptionsEntry);
+
+		public event PUIDelegates.OnRealize OnRealize;
+
 		/// <summary>
 		/// The option title on screen.
 		/// </summary>
@@ -161,11 +179,11 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// The current value selected by the user.
 		/// </summary>
-		protected abstract object Value { get; set; }
+		public abstract object Value { get; set; }
 
-		protected OptionsEntry(string field, string title, string tooltip) {
-			Category = "";
-			Field = field;
+		protected OptionsEntry(string title, string tooltip, string category) {
+			Category = category ?? "";
+			Field = null;
 			Title = title;
 			ToolTip = tooltip;
 		}
@@ -177,6 +195,12 @@ namespace PeterHan.PLib.Options {
 			Title = attr.Title;
 			ToolTip = attr.Tooltip;
 			Category = attr.Category ?? "";
+		}
+
+		public GameObject Build() {
+			var comp = GetUIComponent();
+			OnRealize?.Invoke(comp);
+			return comp;
 		}
 
 		public int CompareTo(OptionsEntry other) {
@@ -192,14 +216,14 @@ namespace PeterHan.PLib.Options {
 		/// <param name="parent">The location to add this entry.</param>
 		/// <param name="row">The layout row index to use. If updated, the row index will
 		/// continue to count up from the new value.</param>
-		internal virtual void CreateUIEntry(PGridPanel parent, ref int row) {
+		public virtual void CreateUIEntry(PGridPanel parent, ref int row) {
 			parent.AddChild(new PLabel("Label") {
 				Text = LookInStrings(Title), ToolTip = LookInStrings(ToolTip),
 				TextStyle = PUITuning.Fonts.TextLightStyle
 			}, new GridComponentSpec(row, 0) {
 				Margin = LABEL_MARGIN, Alignment = TextAnchor.MiddleLeft
 			});
-			parent.AddChild(GetUIComponent(), new GridComponentSpec(row, 1) {
+			parent.AddChild(this, new GridComponentSpec(row, 1) {
 				Alignment = TextAnchor.MiddleRight, Margin = CONTROL_MARGIN
 			});
 		}
@@ -210,27 +234,28 @@ namespace PeterHan.PLib.Options {
 		/// the component is realized.
 		/// </summary>
 		/// <returns>The UI component to display.</returns>
-		protected abstract IUIComponent GetUIComponent();
+		public abstract GameObject GetUIComponent();
 
 		/// <summary>
 		/// Reads the option value from the settings.
 		/// </summary>
 		/// <param name="settings">The settings object.</param>
 		internal void ReadFrom(object settings) {
-			try {
-				var prop = settings.GetType().GetProperty(Field);
-				if (prop != null && prop.CanRead)
-					Value = prop.GetValue(settings, null);
-			} catch (TargetInvocationException e) {
-				// Other mod's error
-				PUtil.LogException(e);
-			} catch (AmbiguousMatchException e) {
-				// Other mod's error
-				PUtil.LogException(e);
-			} catch (InvalidCastException e) {
-				// Our error!
-				PUtil.LogException(e);
-			}
+			if (Field != null)
+				try {
+					var prop = settings.GetType().GetProperty(Field);
+					if (prop != null && prop.CanRead)
+						Value = prop.GetValue(settings, null);
+				} catch (TargetInvocationException e) {
+					// Other mod's error
+					PUtil.LogException(e);
+				} catch (AmbiguousMatchException e) {
+					// Other mod's error
+					PUtil.LogException(e);
+				} catch (InvalidCastException e) {
+					// Our error!
+					PUtil.LogException(e);
+				}
 		}
 
 		public override string ToString() {
@@ -242,20 +267,21 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <param name="settings">The settings object.</param>
 		internal void WriteTo(object settings) {
-			try {
-				var prop = settings.GetType().GetProperty(Field);
-				if (prop != null && prop.CanWrite)
-					prop.SetValue(settings, Value, null);
-			} catch (TargetInvocationException e) {
-				// Other mod's error
-				PUtil.LogException(e);
-			} catch (AmbiguousMatchException e) {
-				// Other mod's error
-				PUtil.LogException(e);
-			} catch (InvalidCastException e) {
-				// Our error!
-				PUtil.LogException(e);
-			}
+			if (Field != null)
+				try {
+					var prop = settings.GetType().GetProperty(Field);
+					if (prop != null && prop.CanWrite)
+						prop.SetValue(settings, Value, null);
+				} catch (TargetInvocationException e) {
+					// Other mod's error
+					PUtil.LogException(e);
+				} catch (AmbiguousMatchException e) {
+					// Other mod's error
+					PUtil.LogException(e);
+				} catch (InvalidCastException e) {
+					// Our error!
+					PUtil.LogException(e);
+				}
 		}
 	}
 }

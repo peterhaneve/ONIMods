@@ -26,7 +26,7 @@ namespace PeterHan.PLib.Options {
 	/// <summary>
 	/// An options entry which represents Enum and displays a spinner with text options.
 	/// </summary>
-	internal sealed class SelectOneOptionsEntry : OptionsEntry {
+	public class SelectOneOptionsEntry : OptionsEntry {
 		/// <summary>
 		/// Obtains the title and tool tip for an enumeration value.
 		/// </summary>
@@ -53,7 +53,7 @@ namespace PeterHan.PLib.Options {
 			return new Option(title, tooltip, enumValue);
 		}
 
-		protected override object Value {
+		public override object Value {
 			get {
 				return chosen?.Value;
 			}
@@ -82,7 +82,14 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// The available options to cycle through.
 		/// </summary>
-		private readonly IList<Option> options;
+		protected readonly IList<Option> options;
+
+		protected SelectOneOptionsEntry(string title, string tooltip, string category = "") :
+				base(title, tooltip, category) {
+			chosen = null;
+			comboBox = null;
+			options = new List<Option>(8);
+		}
 
 		internal SelectOneOptionsEntry(string field, OptionAttribute oa, Type fieldType) :
 				base(field, oa) {
@@ -99,33 +106,25 @@ namespace PeterHan.PLib.Options {
 				options.Add(GetAttribute(eval.GetValue(i), fieldType));
 		}
 
-		protected override IUIComponent GetUIComponent() {
-			// Find largest option to size the label appropriately
-			Option longestOption = null;
-			string longestText = " ";
+		public override GameObject GetUIComponent() {
+			// Find largest option to size the label appropriately, using em width this time!
+			Option firstOption = null;
+			int maxLen = 0;
 			foreach (var option in options) {
-				string optionText = option.Title;
-				if (optionText.Length > longestText.Length) {
-					longestText = optionText;
-					longestOption = option;
-				}
+				int len = option.Title?.Trim()?.Length ?? 0;
+				// Kerning each string is slow, so estimate based on em width instead
+				if (firstOption == null && len > 0)
+					firstOption = option;
+				if (len > maxLen)
+					maxLen = len;
 			}
-			var dd = new PComboBox<Option>("Select") {
-				BackColor = PUITuning.Colors.ButtonPinkStyle, InitialItem = longestOption,
+			comboBox = new PComboBox<Option>("Select") {
+				BackColor = PUITuning.Colors.ButtonPinkStyle, InitialItem = firstOption,
 				Content = options, EntryColor = PUITuning.Colors.ButtonBlueStyle,
-				TextStyle = PUITuning.Fonts.TextLightStyle, OnOptionSelected = UpdateValue
-			};
-			dd.OnRealize += OnRealize;
-			return dd;
-		}
-
-		/// <summary>
-		/// Called when the item combo box is realized.
-		/// </summary>
-		/// <param name="obj">The actual combo box.</param>
-		private void OnRealize(GameObject obj) {
-			comboBox = obj;
+				TextStyle = PUITuning.Fonts.TextLightStyle, OnOptionSelected = UpdateValue,
+			}.SetMinWidthInCharacters(maxLen).Build();
 			Update();
+			return comboBox;
 		}
 
 		/// <summary>
@@ -148,7 +147,7 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// Represents a selectable option.
 		/// </summary>
-		private sealed class Option : ITooltipListableOption {
+		protected sealed class Option : ITooltipListableOption {
 			/// <summary>
 			/// The option title.
 			/// </summary>

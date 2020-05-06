@@ -171,6 +171,20 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Applied to Game to run postload handlers.
+		/// </summary>
+		private static void Game_DestroyInstances_Postfix() {
+			PPatchManager.RunAll(RunAt.OnEndGame);
+		}
+
+		/// <summary>
+		/// Applied to Game to run postload handlers.
+		/// </summary>
+		private static void Game_OnPrefabInit_Postfix() {
+			PPatchManager.RunAll(RunAt.OnStartGame);
+		}
+
+		/// <summary>
 		/// Applied to GetKeycodeLocalized to quash warning spam on key codes that are valid
 		/// but not handled by default.
 		/// </summary>
@@ -196,10 +210,18 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
-		/// Applied to Db to register PLib buildings.
+		/// Applied to Db to register PLib buildings and run postload handlers.
 		/// </summary>
 		private static void Initialize_Prefix() {
 			PBuilding.AddAllTechs();
+			PPatchManager.RunAll(RunAt.BeforeDbInit);
+		}
+
+		/// <summary>
+		/// Applied to Db to run postload handlers.
+		/// </summary>
+		private static void Initialize_Postfix() {
+			PPatchManager.RunAll(RunAt.AfterDbInit);
 		}
 
 		/// <summary>
@@ -224,6 +246,13 @@ namespace PeterHan.PLib {
 		/// </summary>
 		private static void LoadGeneratedBuildings_Prefix() {
 			PBuilding.AddAllStrings();
+		}
+
+		/// <summary>
+		/// Applied to MainMenu to run postload handlers.
+		/// </summary>
+		private static void MainMenu_OnSpawn_Postfix() {
+			PPatchManager.RunAll(RunAt.InMainMenu);
 		}
 
 		/// <summary>
@@ -332,6 +361,16 @@ namespace PeterHan.PLib {
 			instance.Patch(typeof(ColonyAchievementStatus), "Serialize",
 				PatchMethod(nameof(Serialize_Prefix)), null);
 
+			// Db
+			instance.Patch(typeof(Db), "Initialize", PatchMethod(nameof(Initialize_Prefix)),
+				PatchMethod(nameof(Initialize_Postfix)));
+
+			// Game
+			instance.Patch(typeof(Game), "DestroyInstances", null, PatchMethod(nameof(
+				Game_DestroyInstances_Postfix)));
+			instance.Patch(typeof(Game), "OnPrefabInit", null, PatchMethod(nameof(
+				Game_OnPrefabInit_Postfix)));
+
 			// GameInputMapping
 			instance.Patch(typeof(GameInputMapping), "SetDefaultKeyBindings", null,
 				PatchMethod(nameof(SetDefaultKeyBindings_Postfix)));
@@ -383,17 +422,18 @@ namespace PeterHan.PLib {
 					PatchMethod(nameof(OrientVisualizer_Postfix)));
 			}
 
+			// MainMenu
+			instance.Patch(typeof(MainMenu), "OnSpawn", null, PatchMethod(
+				nameof(MainMenu_OnSpawn_Postfix)));
+
 			// PBuilding
 			instance.Patch(typeof(BuildingTemplates), "CreateBuildingDef", null,
 				PatchMethod(nameof(CreateBuildingDef_Postfix)));
 			instance.Patch(typeof(EquipmentTemplates), "CreateEquipmentDef", null,
 				PatchMethod(nameof(CreateEquipmentDef_Postfix)));
-			if (PBuilding.CheckBuildings()) {
-				instance.Patch(typeof(Db), "Initialize",
-					PatchMethod(nameof(Initialize_Prefix)), null);
+			if (PBuilding.CheckBuildings())
 				instance.Patch(typeof(GeneratedBuildings), "LoadGeneratedBuildings",
 					PatchMethod(nameof(LoadGeneratedBuildings_Prefix)), null);
-			}
 
 			// PCodex
 			instance.Patch(typeof(CodexCache), "CollectEntries", null,
@@ -412,12 +452,14 @@ namespace PeterHan.PLib {
 				PatchMethod(nameof(BuildDisplay_Postfix)));
 
 			// SteamUGCService
-			try {
-				instance.PatchTranspile(typeof(SteamUGCService), "LoadPreviewImage",
-					PatchMethod(nameof(LoadPreviewImage_Transpile)));
-			} catch (TypeLoadException) {
-				// Not a Steam install, ignoring
-			}
+			var ugc = PPatchTools.GetTypeSafe("SteamUGCService", "Assembly-CSharp");
+			if (ugc != null)
+				try {
+					instance.PatchTranspile(ugc, "LoadPreviewImage", PatchMethod(nameof(
+						LoadPreviewImage_Transpile)));
+				} catch (Exception e) {
+					PUtil.LogExcWarn(e);
+				}
 
 			// TMPro.TMP_InputField
 			try {
@@ -428,8 +470,9 @@ namespace PeterHan.PLib {
 					"improperly inside scroll areas");
 			}
 
-			// Postload
-			PUtil.ExecutePostload();
+			// Postload, legacy and normal
+			PPatchManager.ExecuteLegacyPostload();
+			PPatchManager.RunAll(RunAt.AfterModsLoad);
 		}
 
 #endregion

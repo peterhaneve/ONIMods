@@ -127,16 +127,24 @@ namespace PeterHan.DebugNotIncluded {
 		private static string GetExceptionLog(Exception e, HarmonyMethodCache cache) {
 			// Better breakdown of the stack trace
 			var message = new StringBuilder(8192);
-			var stackTrace = new StackTrace(e);
-			message.AppendFormat("{0}: {1}", e.GetType().Name, e.Message ?? "<no message>");
-			message.AppendLine();
-			ModLoadHandler.CrashingMod = DebugUtils.GetFirstModOnCallStack(stackTrace);
-			GetStackTraceLog(stackTrace, cache, message);
-			// Log the root cause
-			var cause = e.GetBaseException();
-			if (cause != null && cause != e) {
-				message.AppendLine("Root cause exception:");
-				message.Append(GetExceptionLog(cause, cache));
+			if (e is ReflectionTypeLoadException loadException) {
+				message.AppendLine("Exception(s) when loading types:");
+				foreach (var cause in loadException.LoaderExceptions)
+					if (cause != null)
+						message.Append(GetExceptionLog(cause, cache));
+			} else {
+				var stackTrace = new StackTrace(e);
+				message.AppendFormat("{0}: {1}", e.GetType().Name, e.Message ??
+					"<no message>");
+				message.AppendLine();
+				ModLoadHandler.CrashingMod = DebugUtils.GetFirstModOnCallStack(stackTrace);
+				GetStackTraceLog(stackTrace, cache, message);
+				// Log the root cause
+				var cause = e.GetBaseException();
+				if (cause != null && cause != e) {
+					message.AppendLine("Root cause exception:");
+					message.Append(GetExceptionLog(cause, cache));
+				}
 			}
 			return message.ToString();
 		}

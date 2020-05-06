@@ -18,16 +18,61 @@
 
 using PeterHan.PLib.UI;
 using System;
+using System.Reflection;
 using UnityEngine;
 
 namespace PeterHan.PLib.Options {
 	/// <summary>
 	/// An options entry controlled by the mod.
 	/// </summary>
-	internal sealed class DynamicOptionsEntry : OptionsEntry, IUIComponent {
-		public string Name => nameof(DynamicOptionsEntry);
+	internal sealed class DynamicOptionsEntry : OptionsEntry {
+		/// <summary>
+		/// Creates a new dynamic options entry from a [DynamicOption] attribute.
+		/// </summary>
+		/// <param name="name">The property name.</param>
+		/// <param name="attr">The attribute giving the type of the handler.</param>
+		/// <returns>A dynamic options entry for that type.</returns>
+		internal static DynamicOptionsEntry Create(string name, DynamicOptionAttribute attr) {
+			var targetType = attr.Handler;
+			object handler;
+			if (targetType == null)
+				throw new ArgumentNullException("targetType");
+			try {
+				handler = Activator.CreateInstance(targetType);
+			} catch (Exception e) {
+				// Log error
+				PUtil.LogError("Cannot create options handler for " + name + ":");
+				PUtil.LogException(e.GetBaseException() ?? e);
+				handler = null;
+			}
+			return new DynamicOptionsEntry(name, attr.Category, handler);
+		}
 
-		protected override object Value {
+		/// <summary>
+		/// Create a new dynamic options entry with no backing property. All handling of this
+		/// entry must be done by the user options class.
+		/// </summary>
+		/// <param name="handler">The handler for that option.</param>
+		/// <returns>A dynamic options entry for that type.</returns>
+		internal static DynamicOptionsEntry Create(object handler) {
+			string category = null;
+			if (handler != null) {
+				// Retrieve the category from the user handler
+				var getter = handler.GetType().GetPropertySafe<string>(nameof(IDynamicOption.
+					Category), false)?.GetGetMethod();
+				if (getter != null)
+					try {
+						category = getter.Invoke(handler, null)?.ToString();
+					} catch (TargetInvocationException e) {
+						PUtil.LogExcWarn(e);
+					}
+			}
+			return new DynamicOptionsEntry("Dynamic", category, handler);
+		}
+
+		public override string Name => nameof(DynamicOptionsEntry);
+
+		public override object Value {
 			get {
 				return getValue?.Invoke();
 			}
@@ -61,27 +106,16 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		private readonly object handler;
 
-		public event PUIDelegates.OnRealize OnRealize;
-
 		/// <summary>
 		/// Sets the value of the option.
 		/// </summary>
 		private readonly Action<object> setValue;
 
-		internal DynamicOptionsEntry(string field, DynamicOptionAttribute attr) : base(field,
-				null, null) {
-			var targetType = attr.Handler;
-			if (targetType == null)
-				throw new ArgumentNullException("targetType");
-			try {
-				handler = Activator.CreateInstance(targetType);
-			} catch (Exception e) {
-				// Log error
-				PUtil.LogError("Cannot create options handler for " + field + ":");
-				PUtil.LogException(e.GetBaseException() ?? e);
-				handler = null;
-			}
+		private DynamicOptionsEntry(string name, string category, object handler) : base(name,
+				new OptionAttribute(name, null, category)) {
+			this.handler = handler;
 			if (handler != null) {
+				var targetType = handler.GetType();
 				createUIEntry = targetType.CreateDelegate<Func<GameObject>>(nameof(
 					IDynamicOption.GetUIComponent), handler);
 				getTitle = targetType.CreateGetDelegate<string>(nameof(IDynamicOption.Title),
@@ -102,13 +136,7 @@ namespace PeterHan.PLib.Options {
 			}
 		}
 
-		public GameObject Build() {
-			var obj = createUIEntry?.Invoke() ?? new GameObject("No handler specified");
-			OnRealize?.Invoke(obj);
-			return obj;
-		}
-
-		internal override void CreateUIEntry(PGridPanel parent, ref int row) {
+		public override void CreateUIEntry(PGridPanel parent, ref int row) {
 			if (getTitle != null)
 				Title = getTitle.Invoke();
 			else
@@ -121,13 +149,13 @@ namespace PeterHan.PLib.Options {
 			parent.AddChild(label, new GridComponentSpec(row, 0) {
 				Margin = LABEL_MARGIN, Alignment = TextAnchor.MiddleLeft
 			});
-			parent.AddChild(GetUIComponent(), new GridComponentSpec(row, 1) {
+			parent.AddChild(this, new GridComponentSpec(row, 1) {
 				Alignment = TextAnchor.MiddleRight, Margin = CONTROL_MARGIN
 			});
 		}
 
-		protected override IUIComponent GetUIComponent() {
-			return this;
+		public override GameObject GetUIComponent() {
+			return createUIEntry?.Invoke() ?? new GameObject("No handler specified");
 		}
 
 		private void OnRealizeLabel(GameObject realized) {

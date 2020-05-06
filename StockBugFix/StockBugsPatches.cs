@@ -346,6 +346,7 @@ namespace PeterHan.StockBugFix {
 				}
 			}
 		}
+
 #if false
 		/// <summary>
 		/// Applied to LaunchableRocket to not dupe materials when launched through a door.

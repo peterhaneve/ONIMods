@@ -19,7 +19,6 @@
 using Harmony;
 using PeterHan.PLib;
 using PeterHan.PLib.Options;
-using System.Collections;
 
 namespace PeterHan.DeselectNewMaterials {
 	/// <summary>
@@ -31,27 +30,23 @@ namespace PeterHan.DeselectNewMaterials {
 		/// </summary>
 		internal static DeselectMaterialsOptions Options { get; private set; }
 
+		/// <summary>
+		/// Loads settings when the mod starts up.
+		/// </summary>
+		[PLibMethod(RunAt.OnStartGame)]
+		internal static void LoadSettings() {
+			var newOptions = POptions.ReadSettings<DeselectMaterialsOptions>();
+			if (newOptions != null)
+				Options = newOptions;
+			PUtil.LogDebug("DeselectNewMaterials settings: Ignore Food = {0}".F(Options.
+				IgnoreFoodBoxes));
+		}
+
 		public static void OnLoad() {
 			PUtil.InitLibrary();
 			Options = new DeselectMaterialsOptions();
 			POptions.RegisterOptions(typeof(DeselectMaterialsOptions));
-		}
-
-		/// <summary>
-		/// Applied to Game to load settings when the mod starts up.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "OnPrefabInit")]
-		public static class Game_OnPrefabInit_Patch {
-			/// <summary>
-			/// Applied before OnPrefabInit runs.
-			/// </summary>
-			internal static void Prefix() {
-				var newOptions = POptions.ReadSettings<DeselectMaterialsOptions>();
-				if (newOptions != null)
-					Options = newOptions;
-				PUtil.LogDebug("DeselectNewMaterials settings: Ignore Food = {0}".F(Options.
-					IgnoreFoodBoxes));
-			}
+			PUtil.RegisterPatchClass(typeof(DeselectMaterialsPatches));
 		}
 
 		/// <summary>

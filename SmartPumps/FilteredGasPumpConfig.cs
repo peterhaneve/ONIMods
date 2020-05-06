@@ -80,6 +80,7 @@ namespace PeterHan.SmartPumps {
 
 		public override BuildingDef CreateBuildingDef() {
 			PUtil.CopySoundsToAnim(GasPumpFiltered.Animation, "pumpgas_kanim");
+			GeneratedBuildings.RegisterWithOverlay(OverlayScreen.GasVentIDs, ID);
 			return GasPumpFiltered?.CreateDef();
 		}
 

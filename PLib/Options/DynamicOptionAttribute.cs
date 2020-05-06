@@ -34,15 +34,17 @@ namespace PeterHan.PLib {
 		/// possible to retrieve; or null if none could be obtained.</returns>
 		internal static DynamicOptionAttribute CreateFrom(object attr) {
 			Type handler = null;
+			string category = null;
 			if (attr.GetType().Name == typeof(DynamicOptionAttribute).Name) {
 				var trAttr = Traverse.Create(attr);
 				try {
 					handler = trAttr.GetProperty<Type>(nameof(Handler));
+					category = trAttr.GetProperty<string>(nameof(Category));
 				} catch (Exception e) {
 					PUtil.LogExcWarn(e);
 				}
 			}
-			return (handler == null) ? null : new DynamicOptionAttribute(handler);
+			return (handler == null) ? null : new DynamicOptionAttribute(handler, category);
 		}
 
 		/// <summary>

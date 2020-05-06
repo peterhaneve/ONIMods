@@ -17,6 +17,7 @@
  */
 
 using Harmony;
+using Ionic.Zlib;
 using PeterHan.PLib;
 using PeterHan.PLib.UI;
 using System;
@@ -175,22 +176,14 @@ namespace PeterHan.FastSave {
 		/// </summary>
 		/// <param name="data">The uncompressed save data.</param>
 		private void DoSave(BackgroundSaveData data) {
-			byte[] buffer;
 			try {
 				var stream = data.Stream;
-				long len = stream.Length;
-				// Uh oh
-				if (len >= int.MaxValue)
-					PUtil.LogError("Save file is too big, game will not save correctly!");
-				else
-					PUtil.LogDebug("Background save to: " + data.FileName);
-				if (data.Compress)
-					buffer = SaveLoader.CompressContents(stream.GetBuffer(), (int)len);
-				else
-					buffer = stream.ToArray();
+				PUtil.LogDebug("Background save to: " + data.FileName);
+				stream.Seek(0L, SeekOrigin.Begin);
 				CleanAutosaves(data.FileName);
 				// Write the file header
-				using (var writer = new BinaryWriter(File.Open(data.FileName, FileMode.Create))) {
+				using (var writer = new BinaryWriter(File.Open(data.FileName, FileMode.
+						Create))) {
 					var saveHeader = SaveGame.Instance.GetSaveHeader(true, data.Compress,
 						out SaveGame.Header header);
 					writer.Write(header.buildVersion);
@@ -199,10 +192,17 @@ namespace PeterHan.FastSave {
 					writer.Write(header.compression);
 					writer.Write(saveHeader);
 					KSerialization.Manager.SerializeDirectory(writer);
-					writer.Write(buffer);
 					writer.Flush();
+					if (data.Compress)
+						// SaveLoader.CompressContents is now private
+						using (var compressor = new ZlibStream(writer.BaseStream,
+								CompressionMode.Compress, CompressionLevel.BestSpeed)) {
+							stream.CopyTo(compressor);
+							compressor.Flush();
+						}
+					else
+						stream.CopyTo(writer.BaseStream);
 				}
-				buffer = null;
 				status = SaveStatus.Done;
 				PUtil.LogDebug("Background save complete");
 			} catch (IOException e) {

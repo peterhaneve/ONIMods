@@ -29,6 +29,16 @@ namespace PeterHan.EfficientFetch {
 	/// </summary>
 	public static class EfficientFetchPatches {
 		/// <summary>
+		/// The number of errors encountered so far in the pickup loop.
+		/// </summary>
+		private static int errorCount = 0;
+
+		/// <summary>
+		/// The maximum number of error messages which will be logged before being shushed.
+		/// </summary>
+		private const int ERROR_THRESHOLD = 10;
+
+		/// <summary>
 		/// The options for this mod.
 		/// </summary>
 		private static EfficientFetchOptions options;
@@ -59,7 +69,8 @@ namespace PeterHan.EfficientFetch {
 		}
 
 		/// <summary>
-		/// Applied to FetchablesByPrefabId to rip out the .
+		/// Applied to FetchablesByPrefabId to replace the existing pickup calculation code
+		/// with one that takes the required amount into effect.
 		/// </summary>
 		[HarmonyPatch(typeof(FetchManager.FetchablesByPrefabId), "UpdatePickups")]
 		public static class FetchablesByPrefabId_UpdatePickups_Patch {
@@ -78,7 +89,8 @@ namespace PeterHan.EfficientFetch {
 						cont = false;
 					} catch (Exception e) {
 						// Crashing will bring down simdll with no stack trace
-						PUtil.LogException(e);
+						if (++errorCount < ERROR_THRESHOLD)
+							PUtil.LogException(e);
 					}
 				return cont;
 			}

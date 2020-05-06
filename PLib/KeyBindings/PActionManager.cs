@@ -19,6 +19,7 @@
 using Harmony;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace PeterHan.PLib {
 	/// <summary>
@@ -185,8 +186,9 @@ namespace PeterHan.PLib {
 		private void ProcessKeyBinds() {
 			int n = queueBindKeys.Count;
 			if (n > 0 && GameInputMapping.DefaultBindings != null) {
+				string name = Assembly.GetExecutingAssembly()?.GetName()?.Name ?? "?";
 				// Safe to add them without risk of concurrent modification
-				LogKeyBind("Registering {0:D} key binds".F(n));
+				LogKeyBind("Registering {0:D} key binds for mod {1}".F(n, name));
 				foreach (var pair in queueBindKeys)
 					pair.Key.AddKeyBinding(pair.Value);
 				queueBindKeys.Clear();

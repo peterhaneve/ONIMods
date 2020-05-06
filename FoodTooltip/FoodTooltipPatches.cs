@@ -26,8 +26,27 @@ namespace PeterHan.FoodTooltip {
 	/// Patches which will be applied via annotations for Food Supply Tooltips.
 	/// </summary>
 	public static class FoodTooltipPatches {
+		/// <summary>
+		/// Cleans up the recipe cache on close.
+		/// </summary>
+		[PLibMethod(RunAt.OnEndGame)]
+		internal static void CleanupCache() {
+			PUtil.LogDebug("Destroying FoodRecipeCache");
+			FoodRecipeCache.DestroyInstance();
+		}
+
+		/// <summary>
+		/// Sets up the recipe cache on start.
+		/// </summary>
+		[PLibMethod(RunAt.OnStartGame)]
+		internal static void InitCache() {
+			FoodRecipeCache.CreateInstance();
+			PUtil.LogDebug("Created FoodRecipeCache");
+		}
+
 		public static void OnLoad() {
 			PUtil.InitLibrary();
+			PUtil.RegisterPatchClass(typeof(FoodTooltipPatches));
 		}
 
 		/// <summary>
@@ -56,34 +75,6 @@ namespace PeterHan.FoodTooltip {
 			internal static void Postfix(Crop __instance, List<Descriptor> __result) {
 				if (__result != null)
 					FoodTooltipUtils.AddCropDescriptors(__instance, __result);
-			}
-		}
-
-		/// <summary>
-		/// Applied to Game to clean up the recipe cache on close.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "DestroyInstances")]
-		public static class Game_DestroyInstances_Patch {
-			/// <summary>
-			/// Applied after DestroyInstances runs.
-			/// </summary>
-			internal static void Postfix() {
-				PUtil.LogDebug("Destroying FoodRecipeCache");
-				FoodRecipeCache.DestroyInstance();
-			}
-		}
-
-		/// <summary>
-		/// Applied to Game to set up the recipe cache on start.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "OnPrefabInit")]
-		public static class Game_OnPrefabInit_Patch {
-			/// <summary>
-			/// Applied after OnPrefabInit runs.
-			/// </summary>
-			internal static void Postfix() {
-				PUtil.LogDebug("Creating FoodRecipeCache");
-				FoodRecipeCache.CreateInstance();
 			}
 		}
 

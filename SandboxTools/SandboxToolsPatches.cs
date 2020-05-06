@@ -216,44 +216,6 @@ namespace PeterHan.SandboxTools {
 		}
 
 		/// <summary>
-		/// Applied to SandboxToolParameterMenu to fix the sliders and make them more useful.
-		/// </summary>
-		[HarmonyPatch(typeof(SandboxToolParameterMenu), "OnSpawn")]
-		public static class SandboxToolParameterMenu_OnSpawn_Patch {
-			internal static bool Prepare() {
-				// Both of these patches became vanilla as of 397241
-				return PUtil.GameVersion < 397241u;
-			}
-
-			/// <summary>
-			/// Applied after OnSpawn runs.
-			/// </summary>
-			internal static void Postfix(SandboxToolParameterMenu __instance) {
-				var settings = __instance.settings;
-				settings.OnChangeDisease += delegate {
-					// Use same instance as the default handler
-					CallSetValue(SandboxToolParameterMenu.instance?.diseaseCountSlider, 0.0f);
-				};
-				CallSetValue(__instance.diseaseCountSlider, 0.0f);
-				// Mass slider no longer rounds to nearest 1 kg if typed in, only to 0.01 kg
-				var massSlider = __instance.massSlider;
-				var massField = massSlider.inputField;
-				massSlider.minValue = 0.0f;
-				massField.decimalPlaces = 2;
-				Traverse.Create(massField).SetField("onEndEdit", (System.Action)
-					delegate {
-						var inputField = massSlider.inputField;
-						// Round to nearest 0.01 instead
-						float value = (Mathf.Round(100.0f * inputField.currentValue) * 0.01f).
-							InRange(inputField.minValue, inputField.maxValue);
-						inputField.SetDisplayValue(value.ToString("F2"));
-						massSlider.slider.value = value;
-						massSlider.onValueChanged?.Invoke(value);
-					});
-			}
-		}
-
-		/// <summary>
 		/// Applied to SandboxToolParameterMenu to add more items to the spawnable menu.
 		/// </summary>
 		[HarmonyPatch(typeof(SandboxToolParameterMenu), "ConfigureEntitySelector")]
@@ -275,10 +237,12 @@ namespace PeterHan.SandboxTools {
 			/// Applied after CreateSandBoxTools runs.
 			/// </summary>
 			internal static void Postfix(ToolMenu __instance) {
+				if (!Enum.TryParse("SandboxDestroy", out Action destroyAction))
+					destroyAction = Action.SandboxDestroy;
 				var filteredDestroy = ToolMenu.CreateToolCollection(SandboxToolsStrings.
-					TOOL_DESTROY_NAME, SandboxToolsStrings.TOOL_DESTROY_ICON, PUtil.
-					TryParseEnum("SandboxDestroy", Action.SandboxDestroy), nameof(
-					FilteredDestroyTool), SandboxToolsStrings.TOOL_DESTROY_TOOLTIP, false);
+					TOOL_DESTROY_NAME, SandboxToolsStrings.TOOL_DESTROY_ICON, destroyAction,
+					nameof(FilteredDestroyTool), SandboxToolsStrings.TOOL_DESTROY_TOOLTIP,
+					false);
 				var tools = __instance.sandboxTools;
 				int n = tools.Count;
 				bool replaced = false;

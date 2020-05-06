@@ -18,6 +18,7 @@
 
 using Harmony;
 using System;
+using System.Reflection;
 
 namespace PeterHan.PLib {
 	/// <summary>
@@ -32,7 +33,7 @@ namespace PeterHan.PLib {
 		/// <param name="attr">The attribute from the other mod.</param>
 		/// <returns>A LimitAttribute object with the values from that object, where
 		/// possible to retrieve; or null if none could be obtained.</returns>
-		internal static LimitAttribute CreateFrom(object attr) {
+		private static LimitAttribute CreateFrom(object attr) {
 			LimitAttribute la = null;
 			if (attr.GetType().Name == typeof(LimitAttribute).Name) {
 				// Has limit type
@@ -48,6 +49,19 @@ namespace PeterHan.PLib {
 					la = new LimitAttribute(min, max);
 			}
 			return la;
+		}
+
+		/// <summary>
+		/// Searches for LimitAttribute attributes on a property.
+		/// </summary>
+		/// <param name="prop">The property with annotations.</param>
+		/// <returns>The Limit attribute if present, or null if none is.</returns>
+		internal static LimitAttribute FindFrom(PropertyInfo prop) {
+			LimitAttribute fieldLimits = null;
+			foreach (var attr in prop.GetCustomAttributes(false))
+				if ((fieldLimits = CreateFrom(attr)) != null)
+					break;
+			return fieldLimits;
 		}
 
 		/// <summary>

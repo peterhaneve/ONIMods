@@ -197,7 +197,7 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// Sets the default Klei pink style as this text field's color and text style.
 		/// </summary>
-		/// <returns>This button for call chaining.</returns>
+		/// <returns>This text field for call chaining.</returns>
 		public PTextField SetKleiPinkStyle() {
 			TextStyle = PUITuning.Fonts.UILightStyle;
 			BackColor = PUITuning.Colors.ButtonPinkStyle.inactiveColor;
@@ -207,7 +207,7 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// Sets the default Klei blue style as this text field's color and text style.
 		/// </summary>
-		/// <returns>This button for call chaining.</returns>
+		/// <returns>This text field for call chaining.</returns>
 		public PTextField SetKleiBlueStyle() {
 			TextStyle = PUITuning.Fonts.UILightStyle;
 			BackColor = PUITuning.Colors.ButtonBlueStyle.inactiveColor;
@@ -220,7 +220,7 @@ namespace PeterHan.PLib.UI {
 		/// The width is computed using the currently selected text style.
 		/// </summary>
 		/// <param name="chars">The number of characters to be displayed.</param>
-		/// <returns>This button for call chaining.</returns>
+		/// <returns>This text field for call chaining.</returns>
 		public PTextField SetMinWidthInCharacters(int chars) {
 			int width = Mathf.RoundToInt(chars * PUIUtils.GetEmWidth(TextStyle));
 			if (width > 0)

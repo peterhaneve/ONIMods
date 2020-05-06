@@ -16,31 +16,23 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
+using System.Reflection;
 
 namespace PeterHan.PLib {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// The commmon parent of [PLibPatch] and [PLibMethod].
 	/// </summary>
-	public static class PVersion {
+	internal interface IPLibAnnotation {
 		/// <summary>
-		/// The PLib version.
+		/// When this method is run.
 		/// </summary>
-		public const string VERSION = "3.7.0.0";
+		uint Runtime { get; }
 
 		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in OnLoad or RegisterPostload, and will always return false in those
-		/// cases.
+		/// Creates a new patch method instance.
 		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				return VERSION == PSharedData.GetData<string>(PRegistry.KEY_VERSION);
-			}
-		}
+		/// <param name="method">The method that was attributed.</param>
+		/// <returns>An instance that can execute this patch.</returns>
+		IPatchMethodInstance CreateInstance(MethodInfo method);
 	}
 }

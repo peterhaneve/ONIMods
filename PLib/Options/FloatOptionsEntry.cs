@@ -25,8 +25,8 @@ namespace PeterHan.PLib.Options {
 	/// <summary>
 	/// An options entry which represents float and displays a text field and slider.
 	/// </summary>
-	internal sealed class FloatOptionsEntry : SlidingBaseOptionsEntry {
-		protected override object Value {
+	public class FloatOptionsEntry : SlidingBaseOptionsEntry {
+		public override object Value {
 			get {
 				return value;
 			}
@@ -48,6 +48,12 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		private float value;
 
+		protected FloatOptionsEntry(string title, string tooltip, string category = "",
+				LimitAttribute limits = null) : base(title, tooltip, category, limits) {
+			textField = null;
+			value = 0.0f;
+		}
+
 		internal FloatOptionsEntry(OptionAttribute oa, PropertyInfo prop) : base(oa, prop) {
 			textField = null;
 			value = 0.0f;
@@ -61,23 +67,14 @@ namespace PeterHan.PLib.Options {
 			};
 		}
 
-		protected override IUIComponent GetUIComponent() {
-			var cb = new PTextField() {
+		public override GameObject GetUIComponent() {
+			textField = new PTextField() {
 				OnTextChanged = OnTextChanged, ToolTip = LookInStrings(ToolTip),
 				Text = value.ToString(), MinWidth = 64, MaxLength = 16,
 				Type = PTextField.FieldType.Float
-			};
-			cb.OnRealize += OnRealizeTextField;
-			return cb;
-		}
-
-		/// <summary>
-		/// Called when the text field is realized.
-		/// </summary>
-		/// <param name="realized">The actual text field.</param>
-		private void OnRealizeTextField(GameObject realized) {
-			textField = realized;
+			}.Build();
 			Update();
+			return textField;
 		}
 
 		/// <summary>

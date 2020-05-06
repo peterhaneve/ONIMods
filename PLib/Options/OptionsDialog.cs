@@ -22,7 +22,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
-using UnityEngine.Events;
+
+using OptionsList = System.Collections.Generic.ICollection<PeterHan.PLib.Options.OptionsEntry>;
 
 namespace PeterHan.PLib.Options {
 	/// <summary>
@@ -117,7 +118,7 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// The option entries in the dialog.
 		/// </summary>
-		private readonly IDictionary<string, ICollection<OptionsEntry>> optionCategories;
+		private readonly IDictionary<string, OptionsList> optionCategories;
 
 		/// <summary>
 		/// The options read from the config. It might contain hidden options so preserve its
@@ -141,6 +142,7 @@ namespace PeterHan.PLib.Options {
 		private readonly ConfigFileAttribute typeAttr;
 
 		internal OptionsDialog(Type optionsType, IOptionsHandler handler) {
+			string root = handler.ConfigPath;
 			dialog = null;
 			modImage = null;
 			this.handler = handler ?? throw new ArgumentNullException("handler");
@@ -150,12 +152,8 @@ namespace PeterHan.PLib.Options {
 			// Determine config location
 			infoAttr = POptions.GetModInfoAttribute(optionsType);
 			typeAttr = POptions.GetConfigFileAttribute(optionsType);
-			string root = handler.ConfigPath;
-			if (root == null)
-				path = null;
-			else
-				path = Path.Combine(root, typeAttr?.ConfigFileName ?? POptions.
-					CONFIG_FILE_NAME);
+			path = (root == null) ? null : Path.Combine(root, typeAttr?.ConfigFileName ??
+				POptions.CONFIG_FILE_NAME);
 		}
 
 		/// <summary>
@@ -313,8 +311,10 @@ namespace PeterHan.PLib.Options {
 				Spacing = OUTER_MARGIN, Direction = PanelDirection.Vertical, Alignment =
 				TextAnchor.UpperCenter, FlexSize = Vector2.right
 			};
+			var allOptions = (options == null) ? optionCategories : OptionsEntry.
+				AddCustomOptions(options, optionCategories);
 			// Display all categories
-			foreach (var catEntries in optionCategories) {
+			foreach (var catEntries in allOptions) {
 				string category = catEntries.Key;
 				if (catEntries.Value.Count > 0) {
 					string name = string.IsNullOrEmpty(category) ? "Default" : category;
@@ -343,7 +343,7 @@ namespace PeterHan.PLib.Options {
 				PDialog.BUTTON_MARGIN
 			}.SetKleiBlueStyle());
 			body.AddChild(new PScrollPane() {
-				ScrollHorizontal = false, ScrollVertical = optionCategories.Count > 0,
+				ScrollHorizontal = false, ScrollVertical = allOptions.Count > 0,
 				Child = scrollBody, FlexSize = Vector2.right, TrackSize = 8,
 				AlwaysShowHorizontal = false, AlwaysShowVertical = false
 			});
@@ -410,12 +410,30 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <param name="action">The action key taken.</param>
 		private void OnOptionsSelected(string action) {
+			// Only invoked once so a delegate probably will not gain anything
 			if (action == "ok") {
 				// Save changes to mod options
 				WriteOptions();
 				CheckForRestart();
 			} else if (action == PDialog.DIALOG_KEY_CLOSE)
 				handler.OnCancel(options);
+		}
+
+		/// <summary>
+		/// Calls the user OnOptionsChanged handler if present.
+		/// </summary>
+		/// <param name="options">The updated options object.</param>
+		private void TriggerUpdateOptions(object options) {
+			// Call the user handler
+			var onSave = PPatchTools.GetMethodSafe(options.GetType(), nameof(IOptions.
+				OnOptionsChanged), false);
+			if (onSave != null)
+				try {
+					onSave.Invoke(options, null);
+				} catch (TargetInvocationException e) {
+					PUtil.LogException(e.GetBaseException() ?? e);
+				}
+			handler.OnSaveOptions(options);
 		}
 
 		/// <summary>
@@ -450,79 +468,7 @@ namespace PeterHan.PLib.Options {
 					foreach (var option in catEntries.Value)
 						option.WriteTo(options);
 				POptions.WriteSettings(options, path, typeAttr?.IndentOutput ?? false);
-				handler.OnSaveOptions(options);
-			}
-		}
-
-		/// <summary>
-		/// Handles events for expanding and contracting buttons.
-		/// </summary>
-		private sealed class CategoryExpandHandler {
-			/// <summary>
-			/// The realized panel containing the options.
-			/// </summary>
-			private GameObject contents;
-
-			/// <summary>
-			/// The initial state of the button.
-			/// </summary>
-			private readonly bool initialState;
-
-			/// <summary>
-			/// The realized toggle button.
-			/// </summary>
-			private GameObject toggle;
-
-			public CategoryExpandHandler(bool initialState = true) {
-				this.initialState = initialState;
-			}
-
-			/// <summary>
-			/// Fired when the button is expanded or contracted.
-			/// </summary>
-			/// <param name="on">true if the button is on, or false if it is off.</param>
-			public void OnExpandContract(GameObject _, bool on) {
-				var scale = on ? Vector3.one : Vector3.zero;
-				if (contents != null)
-					contents.transform.localScale = scale;
-			}
-
-			/// <summary>
-			/// Fired when the header is clicked.
-			/// </summary>
-			private void OnHeaderClicked() {
-				if (toggle != null) {
-					bool state = PToggle.GetToggleState(toggle);
-					PToggle.SetToggleState(toggle, !state);
-					//OnExpandContract(null, true);
-				}
-			}
-
-			/// <summary>
-			/// Fired when the category label is realized.
-			/// </summary>
-			/// <param name="header">The realized header label of the category.</param>
-			public void OnRealizeHeader(GameObject header) {
-				var button = header.AddComponent<UnityEngine.UI.Button>();
-				button.onClick.AddListener(new UnityAction(OnHeaderClicked));
-				button.interactable = true;
-			}
-
-			/// <summary>
-			/// Fired when the body is realized.
-			/// </summary>
-			/// <param name="panel">The realized body of the category.</param>
-			public void OnRealizePanel(GameObject panel) {
-				contents = panel;
-				OnExpandContract(null, initialState);
-			}
-
-			/// <summary>
-			/// Fired when the toggle button is realized.
-			/// </summary>
-			/// <param name="toggle">The realized expand/contract button.</param>
-			public void OnRealizeToggle(GameObject toggle) {
-				this.toggle = toggle;
+				TriggerUpdateOptions(options);
 			}
 		}
 	}

@@ -17,41 +17,38 @@
  */
 
 using Harmony;
-using PeterHan.PLib;
-using UnityEngine;
+using System;
 
-namespace PeterHan.SmartPumps {
+using PostLoadHandler = System.Action<Harmony.HarmonyInstance>;
+
+namespace PeterHan.PLib {
 	/// <summary>
-	/// Patches which will be applied via annotations for Smart Pumps.
+	/// Refers to a single instance of the annotation, with its annotated method.
 	/// </summary>
-	public static class SmartPumpsPatches {
-		public static void OnLoad() {
-			PUtil.InitLibrary();
-			FilteredGasPumpConfig.RegisterBuilding();
-			FilteredLiquidPumpConfig.RegisterBuilding();
-			VacuumPumpConfig.RegisterBuilding();
-			PUtil.RegisterPatchClass(typeof(FilteredPump));
+	public interface IPatchMethodInstance {
+		/// <summary>
+		/// Runs the patch or method if the conditions are met. This method should check its
+		/// preconditions before executing the target.
+		/// </summary>
+		/// <param name="instance">The Harmony instance to use.</param>
+		void Run(HarmonyInstance instance);
+	}
+
+	/// <summary>
+	/// A legacy handler for old post-load actions.
+	/// </summary>
+	internal sealed class LegacyPostloadMethod : IPatchMethodInstance {
+		/// <summary>
+		/// The handler from the mod to execute.
+		/// </summary>
+		public PostLoadHandler Handler { get; }
+
+		internal LegacyPostloadMethod(PostLoadHandler handler) {
+			Handler = handler ?? throw new ArgumentNullException("handler");
 		}
 
-		/// <summary>
-		/// Applied to FilterSideScreen to show the screen for filtered gas and liquid pumps.
-		/// </summary>
-		[HarmonyPatch(typeof(FilterSideScreen), "IsValidForTarget")]
-		public static class FilterSideScreen_IsValidForTarget_Patch {
-			/// <summary>
-			/// Applied after IsValidForTarget runs.
-			/// </summary>
-			internal static void Postfix(FilterSideScreen __instance, GameObject target,
-					ref bool __result) {
-				var prefabID = target.GetComponentSafe<KPrefabID>();
-				if (target.GetComponent<Filterable>() != null && __instance.isLogicFilter &&
-						prefabID != null) {
-					// Some targets do not have an ID?
-					var id = prefabID.PrefabTag;
-					if (id == FilteredGasPumpConfig.ID || id == FilteredLiquidPumpConfig.ID)
-						__result = true;
-				}
-			}
+		public void Run(HarmonyInstance instance) {
+			Handler.Invoke(instance);
 		}
 	}
 }
