@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Efficient Supply</AssemblyTitle>
-    <FileVersion>2.5.0.0</FileVersion>
+    <FileVersion>2.6.0.0</FileVersion>
     <RootNamespace>PeterHan.EfficientFetch</RootNamespace>
     <Description>Prevents Duplicants from fetching tiny amounts of materials to fulfill chores.</Description>
     <AssemblyVersion>2.1.0.0</AssemblyVersion>

@@ -110,15 +110,16 @@ namespace PeterHan.PLib.Buildings {
 		/// </summary>
 		/// <returns>true if buildings must be patched in, or false otherwise</returns>
 		internal static bool CheckBuildings() {
-			bool any = false;
-			lock (PSharedData.GetLock(PRegistry.KEY_BUILDING_LOCK)) {
-				var table = PSharedData.GetData<ICollection<object>>(PRegistry.
-					KEY_BUILDING_TABLE);
-				if (table != null && table.Count > 0) {
-					buildingTable = table;
-					any = true;
+			bool any = buildingTable != null;
+			if (!any)
+				lock (PSharedData.GetLock(PRegistry.KEY_BUILDING_LOCK)) {
+					var table = PSharedData.GetData<ICollection<object>>(PRegistry.
+						KEY_BUILDING_TABLE);
+					if (table != null && table.Count > 0) {
+						buildingTable = table;
+						any = true;
+					}
 				}
-			}
 			return any;
 		}
 

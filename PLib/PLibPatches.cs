@@ -213,7 +213,8 @@ namespace PeterHan.PLib {
 		/// Applied to Db to register PLib buildings and run postload handlers.
 		/// </summary>
 		private static void Initialize_Prefix() {
-			PBuilding.AddAllTechs();
+			if (PBuilding.CheckBuildings())
+				PBuilding.AddAllTechs();
 			PPatchManager.RunAll(RunAt.BeforeDbInit);
 		}
 

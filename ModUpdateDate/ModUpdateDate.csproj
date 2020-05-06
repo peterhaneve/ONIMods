@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Mod Updater</AssemblyTitle>
-    <FileVersion>1.5.0.0</FileVersion>
+    <FileVersion>1.6.0.0</FileVersion>
     <RootNamespace>PeterHan.ModUpdateDate</RootNamespace>
     <Description>Identifies mods that are not updating and allows them to be manually updated.</Description>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>

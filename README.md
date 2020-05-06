@@ -1,6 +1,6 @@
 # Peter Han&#39;s Mods for Oxygen Not Included
 
-Last tested on game version: **AP-399948**
+Last tested on game version: **AP-408920**
 
 Steam Workshop: https://steamcommunity.com/profiles/76561198025154321/myworkshopfiles/?appid=457140
 
@@ -55,9 +55,6 @@ Mods should remain in their own subfolder.
 | [Smart Pumps](https://forums.kleientertainment.com/forums/topic/91094-the-mystery-about-pump-range/) | Adds new, smarter liquid and gas pumps for specific situations |
 | [Thermal Interface Plate](https://steamcommunity.com/sharedfiles/filedetails/?id=1938747693) | Transfers heat between buildings in its tile, even in a complete Vacuum |
 | [Thermo Sensor Tile](https://steamcommunity.com/sharedfiles/filedetails/?id=1974008313) | A Thermo Sensor in tile form for effective heat measurement of adjacent tiles |
-
-## World Generation
-
 
 ## Reimagination Team Mods
 
