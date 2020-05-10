@@ -51,8 +51,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StockBugFix", "StockBugFix\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TileTempSensor", "TileTempSensor\TileTempSensor.csproj", "{5C449554-E0F9-4F6F-B1EC-BAD76F1A6469}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlaidAsteroid", "PlaidAsteroid\PlaidAsteroid.csproj", "{5E7070F4-C6A1-4C75-BBC2-AA9590F029C3}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThermalTooltips", "ThermalTooltips\ThermalTooltips.csproj", "{01184A60-E812-461A-97BF-8523723B68C4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLibOptions", "PLibOptions\PLibOptions.csproj", "{0BED6413-DABC-4349-B047-547F4E125C3F}"
@@ -63,19 +61,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DebugNotIncluded", "DebugNo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaughtyMod", "NaughtyMod\NaughtyMod.csproj", "{7DD1C5EB-0394-4741-B54C-10209CCE2498}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NeonSigns", "NeonSigns\NeonSigns.csproj", "{D3E8C20B-FADC-4DF5-BEBF-DFD136EB306E}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AirlockDoor", "AirlockDoor\AirlockDoor.csproj", "{9F9A55F7-EB51-4CC3-8B99-9735F020217B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModUpdateDate", "ModUpdateDate\ModUpdateDate.csproj", "{650A16F4-9A85-446B-B46A-2811715D4C6D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToastControl", "ToastControl\ToastControl.csproj", "{9F1CA3AB-F409-4F09-BC3B-D026A6E9FBDB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ToastControl", "ToastControl\ToastControl.csproj", "{9F1CA3AB-F409-4F09-BC3B-D026A6E9FBDB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HighFlowConduits", "HighFlowConduits\HighFlowConduits.csproj", "{418AE069-5F79-4C8D-A4DA-F2E303615F5E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CleanDrop", "CleanDrop\CleanDrop.csproj", "{86E9BA14-F3B4-45B6-9DE6-537F6EF6EB30}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClothingTweaks", "ClothingTweaks\ClothingTweaks.csproj", "{39A349AE-5CD5-46C0-8709-3C6877EA2AAB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClothingTweaks", "ClothingTweaks\ClothingTweaks.csproj", "{39A349AE-5CD5-46C0-8709-3C6877EA2AAB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -179,10 +175,6 @@ Global
 		{5C449554-E0F9-4F6F-B1EC-BAD76F1A6469}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5C449554-E0F9-4F6F-B1EC-BAD76F1A6469}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5C449554-E0F9-4F6F-B1EC-BAD76F1A6469}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5E7070F4-C6A1-4C75-BBC2-AA9590F029C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5E7070F4-C6A1-4C75-BBC2-AA9590F029C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5E7070F4-C6A1-4C75-BBC2-AA9590F029C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5E7070F4-C6A1-4C75-BBC2-AA9590F029C3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{01184A60-E812-461A-97BF-8523723B68C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{01184A60-E812-461A-97BF-8523723B68C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{01184A60-E812-461A-97BF-8523723B68C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -203,10 +195,6 @@ Global
 		{7DD1C5EB-0394-4741-B54C-10209CCE2498}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7DD1C5EB-0394-4741-B54C-10209CCE2498}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7DD1C5EB-0394-4741-B54C-10209CCE2498}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D3E8C20B-FADC-4DF5-BEBF-DFD136EB306E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D3E8C20B-FADC-4DF5-BEBF-DFD136EB306E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D3E8C20B-FADC-4DF5-BEBF-DFD136EB306E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D3E8C20B-FADC-4DF5-BEBF-DFD136EB306E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9F9A55F7-EB51-4CC3-8B99-9735F020217B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9F9A55F7-EB51-4CC3-8B99-9735F020217B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F9A55F7-EB51-4CC3-8B99-9735F020217B}.Release|Any CPU.ActiveCfg = Release|Any CPU

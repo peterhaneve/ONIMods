@@ -27,33 +27,51 @@ namespace PeterHan.AirlockDoor {
 		/// <summary>
 		/// The doors to be opened.
 		/// </summary>
-		private readonly ICollection<AirlockDoor> doors;
+		private readonly IDictionary<AirlockDoor, DoorRequestType> doors;
 
 		public AirlockDoorTransitionLayer(Navigator navigator) : base(navigator) {
-			doors = new List<AirlockDoor>(4);
+			doors = new Dictionary<AirlockDoor, DoorRequestType>(4);
 		}
 
 		/// <summary>
 		/// Adds a door if it is present in this cell.
 		/// </summary>
-		/// <param name="cell">The cell to check for the door.</param>
-		private void AddDoor(int cell) {
-			var door = GetDoor(cell);
-			if (door != null && !doors.Contains(door))
-				doors.Add(door);
+		/// <param name="doorCell">The cell to check for the door.</param>
+		/// <param name="navCell">The cell of the Duplicant navigating the door.</param>
+		private void AddDoor(int doorCell, int navCell) {
+			if (Grid.HasDoor[doorCell]) {
+				var door = Grid.Objects[doorCell, (int)ObjectLayer.Building].
+					GetComponentSafe<AirlockDoor>();
+				if (door != null && door.isSpawned && !doors.ContainsKey(door))
+					RequestOpenDoor(door, doorCell, navCell);
+			}
 		}
 
 		/// <summary>
-		/// Checks to see if all airlock doors in the way are open.
+		/// For each door, checks to see if all are in a state where the Duplicant may pass.
 		/// </summary>
-		/// <returns>true if the Duplicant can now pass, or false otherwise.</returns>
+		/// <returns>true if doors are open, or false otherwise.</returns>
 		private bool AreAllDoorsOpen() {
 			bool open = true;
-			foreach (var door in doors)
-				if (door != null && !door.IsOpen) {
-					open = false;
+			foreach (var pair in doors) {
+				var door = pair.Key;
+				switch (pair.Value) {
+				case DoorRequestType.EnterLeft:
+				case DoorRequestType.ExitLeft:
+					if (!door.IsLeftOpen) {
+						open = false;
+						break;
+					}
+					break;
+				case DoorRequestType.EnterRight:
+				case DoorRequestType.ExitRight:
+					if (!door.IsRightOpen) {
+						open = false;
+						break;
+					}
 					break;
 				}
+			}
 			return open;
 		}
 
@@ -62,13 +80,13 @@ namespace PeterHan.AirlockDoor {
 			base.BeginTransition(navigator, transition);
 			int cell = Grid.PosToCell(navigator);
 			int targetCell = Grid.OffsetCell(cell, transition.x, transition.y);
-			AddDoor(targetCell);
+			AddDoor(targetCell, cell);
 			// If duplicant is inside a tube they are only 1 cell tall
 			if (navigator.CurrentNavType != NavType.Tube)
-				AddDoor(Grid.CellAbove(targetCell));
+				AddDoor(Grid.CellAbove(targetCell), cell);
 			// Include any other offsets
 			foreach (var offset in transition.navGridTransition.voidOffsets)
-				AddDoor(Grid.OffsetCell(cell, offset));
+				AddDoor(Grid.OffsetCell(cell, offset), cell);
 			// If not open, start a transition with the dupe waiting for the door
 			if (doors.Count > 0 && !AreAllDoorsOpen()) {
 				transition.anim = navigator.NavGrid.GetIdleAnim(navigator.CurrentNavType);
@@ -80,37 +98,69 @@ namespace PeterHan.AirlockDoor {
 				transition.y = 0;
 				transition.isCompleteCB = AreAllDoorsOpen;
 			}
-			foreach (var door in doors)
-				door.Open();
 		}
-
-		/*public override void UpdateTransition(Navigator navigator, Navigator.ActiveTransition transition) {
-			base.UpdateTransition(navigator, transition);
-		}*/
 
 		public override void EndTransition(Navigator navigator, Navigator.
 				ActiveTransition transition) {
 			base.EndTransition(navigator, transition);
-			foreach (var door in doors)
-				if (door != null)
-					door.Close();
+			foreach (var pair in doors) {
+				var door = pair.Key;
+				switch (pair.Value) {
+				case DoorRequestType.EnterLeft:
+					door.EnterLeft?.Finish();
+					break;
+				case DoorRequestType.EnterRight:
+					door.EnterRight?.Finish();
+					break;
+				case DoorRequestType.ExitLeft:
+					door.ExitLeft?.Finish();
+					break;
+				case DoorRequestType.ExitRight:
+					door.ExitRight?.Finish();
+					break;
+				}
+			}
 			doors.Clear();
 		}
 
 		/// <summary>
-		/// Gets the airlock door at the specified cell.
+		/// Requests a door to open if necessary.
 		/// </summary>
-		/// <param name="cell">The cell to check.</param>
-		/// <returns>The airlock door there, or null if no door is there.</returns>
-		private AirlockDoor GetDoor(int cell) {
-			AirlockDoor door = null;
-			if (Grid.HasDoor[cell]) {
-				var ad = Grid.Objects[cell, (int)ObjectLayer.Building].
-					GetComponentSafe<AirlockDoor>();
-				if (ad != null && ad.isSpawned)
-					door = ad;
-			}
-			return door;
+		/// <param name="door">The door that is being traversed.</param>
+		/// <param name="doorCell">The cell where the navigator is moving.</param>
+		/// <param name="navCell">The cell where the navigator is standing now.</param>
+		private void RequestOpenDoor(AirlockDoor door, int doorCell, int navCell) {
+			int baseCell = door.GetBaseCell(), dx;
+			// Based on coordinates, determine what is required of the door
+			CellOffset targetOffset = Grid.GetOffset(baseCell, doorCell), navOffset =
+				Grid.GetOffset(doorCell, navCell);
+			dx = targetOffset.x;
+			if (dx > 0) {
+				// Right side door
+				if (navOffset.x > 0) {
+					doors.Add(door, DoorRequestType.EnterRight);
+					door.EnterRight?.Queue();
+				} else {
+					doors.Add(door, DoorRequestType.ExitRight);
+					door.ExitRight?.Queue();
+				}
+			} else if (dx < 0) {
+				// Left side door
+				if (navOffset.x > 0) {
+					doors.Add(door, DoorRequestType.ExitLeft);
+					door.ExitLeft?.Queue();
+				} else {
+					doors.Add(door, DoorRequestType.EnterLeft);
+					door.EnterLeft?.Queue();
+				}
+			} // Else, entering center cell which is "always" passable
+		}
+
+		/// <summary>
+		/// The types of requests that can be made of an airlock door.
+		/// </summary>
+		private enum DoorRequestType {
+			EnterLeft, EnterRight, ExitLeft, ExitRight
 		}
 	}
 }

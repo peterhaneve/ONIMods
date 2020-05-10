@@ -25,7 +25,7 @@ namespace PeterHan.AirlockDoor {
 	/// A version of Door that never permits gas and liquids to pass unless set to open.
 	/// </summary>
 	[SerializationConfig(MemberSerialization.OptIn)]
-	public sealed class AirlockDoor : StateMachineComponent<AirlockDoor.Instance>, ISaveLoadable, ISim200ms {
+	public sealed partial class AirlockDoor : StateMachineComponent<AirlockDoor.Instance>, ISaveLoadable, ISim200ms {
 		/// <summary>
 		/// The status item showing the door's current state.
 		/// </summary>
@@ -106,12 +106,46 @@ namespace PeterHan.AirlockDoor {
 		public float EnergyPerUse;
 
 		/// <summary>
-		/// Returns true if the airlock door is currently open (set open, or open in auto mode).
+		/// Counts Duplicants entering the airlock travelling left to right.
 		/// </summary>
-		/// <returns>Whether the door is open.</returns>
-		public bool IsOpen {
+		internal SideReferenceCounter EnterLeft { get; private set; }
+
+		/// <summary>
+		/// Counts Duplicants entering the airlock travelling right to left.
+		/// </summary>
+		internal SideReferenceCounter EnterRight { get; private set; }
+
+		/// <summary>
+		/// Counts Duplicants leaving the airlock travelling right to left.
+		/// </summary>
+		internal SideReferenceCounter ExitLeft { get; private set; }
+
+		/// <summary>
+		/// Counts Duplicants leaving the airlock travelling left to right.
+		/// </summary>
+		internal SideReferenceCounter ExitRight { get; private set; }
+
+		/// <summary>
+		/// Returns true if the airlock door is currently open for entry or exit from the left.
+		/// </summary>
+		/// <returns>Whether the door is open on the left.</returns>
+		public bool IsLeftOpen {
 			get {
-				return smi.IsInsideState(smi.sm.closeDelay) || smi.IsInsideState(smi.sm.open);
+				return smi.IsInsideState(smi.sm.left.waitEnter) || smi.IsInsideState(smi.sm.
+					left.waitEnterClose) || smi.IsInsideState(smi.sm.left.waitExit) ||
+					smi.IsInsideState(smi.sm.left.waitExitClose);
+			}
+		}
+
+		/// <summary>
+		/// Returns true if the airlock door is currently open for entry or exit from the right.
+		/// </summary>
+		/// <returns>Whether the door is open on the right.</returns>
+		public bool IsRightOpen {
+			get {
+				return smi.IsInsideState(smi.sm.right.waitEnter) || smi.IsInsideState(smi.sm.
+					right.waitEnterClose) || smi.IsInsideState(smi.sm.right.waitExit) ||
+					smi.IsInsideState(smi.sm.right.waitExitClose);
 			}
 		}
 
@@ -141,9 +175,9 @@ namespace PeterHan.AirlockDoor {
 		private bool locked;
 
 		/// <summary>
-		/// A reference counter of how many times Open()/Close() have been called.
+		/// The energy meter.
 		/// </summary>
-		private int openCount;
+		private MeterController meter;
 
 		/// <summary>
 		/// The door state requested by automation.
@@ -181,18 +215,15 @@ namespace PeterHan.AirlockDoor {
 		}
 
 		/// <summary>
-		/// Closes the door.
+		/// Gets the base cell (center bottom) of this door.
 		/// </summary>
-		public void Close() {
-			if (locked)
-				smi.sm.isOpen.Set(false, smi);
-			else {
-				openCount = Math.Max(0, openCount - 1);
-				if (openCount == 0) {
-					smi.sm.isOpen.Set(false, smi);
-					Game.Instance.userMenu.Refresh(gameObject);
-				}
-			}
+		/// <returns>The door's foundation cell.</returns>
+		public int GetBaseCell() {
+			return building.GetCell();
+		}
+
+		public override int GetHashCode() {
+			return building.GetCell();
 		}
 
 		/// <summary>
@@ -211,6 +242,17 @@ namespace PeterHan.AirlockDoor {
 			return operational.IsOperational && HasEnergy();
 		}
 
+		/// <summary>
+		/// Whether a Duplicant can traverse the door. Also true if the door is currently
+		/// operating.
+		/// </summary>
+		/// <returns>true if the door is passable, or false otherwise.</returns>
+		private bool IsUsableOrActive() {
+			return IsUsable() || smi.IsInsideState(smi.sm.left) || smi.IsInsideState(smi.sm.
+				vacuum) || smi.IsInsideState(smi.sm.right) || smi.IsInsideState(smi.sm.
+				vacuum_check);
+		}
+
 		protected override void OnPrefabInit() {
 			base.OnPrefabInit();
 			lock (INIT_LOCK) {
@@ -227,8 +269,12 @@ namespace PeterHan.AirlockDoor {
 			var structureTemperatures = GameComps.StructureTemperatures;
 			var handle = structureTemperatures.GetHandle(gameObject);
 			structureTemperatures.Bypass(handle);
-			openCount = 0;
 			Subscribe((int)GameHashes.LogicEvent, OnLogicValueChanged);
+			// Handle transitions
+			EnterLeft = new SideReferenceCounter(this, smi.sm.waitEnterLeft);
+			EnterRight = new SideReferenceCounter(this, smi.sm.waitEnterRight);
+			ExitLeft = new SideReferenceCounter(this, smi.sm.waitExitLeft);
+			ExitRight = new SideReferenceCounter(this, smi.sm.waitExitRight);
 			requestedState = locked;
 			smi.StartSM();
 			RefreshControlState();
@@ -240,11 +286,19 @@ namespace PeterHan.AirlockDoor {
 				Grid.HasAccessDoor[cell] = access;
 				Pathfinding.Instance.AddDirtyNavGridCell(cell);
 			}
+			var kac = GetComponent<KAnimControllerBase>();
+			if (kac != null)
+				// Stock mechanized airlocks are 5.0f powered
+				kac.PlaySpeedMultiplier = 4.0f;
+			meter = new MeterController(kac, "meter_target", "meter", Meter.Offset.Infront,
+				Grid.SceneLayer.NoLayer);
 			// Door is always powered when used
 			if (doorClosingSound != null)
-				loopingSounds.UpdateFirstParameter(doorClosingSound, SOUND_POWERED_PARAMETER, 1f);
+				loopingSounds.UpdateFirstParameter(doorClosingSound, SOUND_POWERED_PARAMETER,
+					1.0f);
 			if (doorOpeningSound != null)
-				loopingSounds.UpdateFirstParameter(doorOpeningSound, SOUND_POWERED_PARAMETER, 1f);
+				loopingSounds.UpdateFirstParameter(doorOpeningSound, SOUND_POWERED_PARAMETER,
+					1.0f);
 			selectable.SetStatusItem(Db.Get().StatusItemCategories.OperatingEnergy,
 				storedCharge, this);
 		}
@@ -276,16 +330,6 @@ namespace PeterHan.AirlockDoor {
 		}
 
 		/// <summary>
-		/// Opens the pod bay doors!
-		/// </summary>
-		public void Open() {
-			if (!locked) {
-				smi.sm.isOpen.Set(true, smi);
-				openCount++;
-			}
-		}
-
-		/// <summary>
 		/// Updates the locked/open/auto state in the UI and the state machine.
 		/// </summary>
 		private void RefreshControlState() {
@@ -297,18 +341,6 @@ namespace PeterHan.AirlockDoor {
 				this);
 		}
 
-		/// <summary>
-		/// Updates the state of the door's cells in the game.
-		/// </summary>
-		private void UpdateWorldState() {
-			bool open = IsOpen, usable = IsUsable();
-			foreach (var cell in building.PlacementCells) {
-				Game.Instance.SetDupePassableSolid(cell, !locked && usable, !open || !usable);
-				Pathfinding.Instance.AddDirtyNavGridCell(cell);
-			}
-		}
-
-		// Token: 0x06000E55 RID: 3669 RVA: 0x0004AB1C File Offset: 0x00048D1C
 		public void Sim200ms(float dt) {
 			if (requestedState != locked) {
 				// Automation locked or unlocked the door
@@ -328,6 +360,7 @@ namespace PeterHan.AirlockDoor {
 						UpdateWorldState();
 						Trigger((int)GameHashes.OperationalFlagChanged, this);
 					}
+					UpdateMeter();
 				} else
 					// Not charging
 					operational.SetActive(false);
@@ -335,145 +368,92 @@ namespace PeterHan.AirlockDoor {
 				operational.SetActive(false);
 		}
 
-		public sealed class States : GameStateMachine<States, Instance, AirlockDoor> {
-			public override void InitializeStates(out BaseState default_state) {
-				serializable = true;
-				default_state = notOperational;
-				notOperational.PlayAnim("locked").
-					Enter("UpdateWorldState", (smi) => smi.master.UpdateWorldState()).
-					EventTransition(GameHashes.OperationalFlagChanged, closed, (smi) => smi.master.IsUsable());
-				// If it cannot close because of Duplicants in the door, wait for them to clear
-				open.PlayAnim("open").
-					Enter("EnterCheckBlocked", (smi) => smi.CheckDuplicantStatus()).
-					Update("CheckIsBlocked", (smi, _) => smi.CheckDuplicantStatus(), UpdateRate.SIM_200ms).
-					ParamTransition(isTraversing, closeDelay, IsFalse);
-				closeDelay.PlayAnim("open").
-					Update("CheckIsBlocked", (smi, _) => smi.CheckDuplicantStatus(), UpdateRate.SIM_200ms).
-					ScheduleGoTo(0.5f, closing).
-					ParamTransition(isTraversing, open, IsTrue);
-				// Door is being closed
-				closing.ParamTransition(isTraversing, open, IsTrue).
-					Update("CheckIsBlocked", (smi, _) => smi.CheckDuplicantStatus(), UpdateRate.SIM_200ms).
-					ToggleTag(GameTags.Transition).
-					ToggleLoopingSound("Airlock Closes", (smi) => smi.master.doorClosingSound, (smi) => !string.IsNullOrEmpty(smi.master.doorClosingSound)).
-					Update((smi, dt) => {
-						if (smi.master.doorClosingSound != null)
-							smi.master.loopingSounds.UpdateSecondParameter(smi.master.doorClosingSound, SOUND_PROGRESS_PARAMETER, smi.Get<KBatchedAnimController>().GetPositionPercent());
-					}, UpdateRate.SIM_33ms, false).
-					PlayAnim("closing").OnAnimQueueComplete(closed);
-				// Start opening if requested, lock if requested
-				closed.PlayAnim("closed").
-					EventTransition(GameHashes.OperationalFlagChanged, notOperational, (smi) => !smi.master.IsUsable()).
-					ParamTransition(isOpen, opening, IsTrue).
-					ParamTransition(isLocked, locking, IsTrue).
-					Enter("UpdateWorldState", (smi) => smi.master.UpdateWorldState());
-				// The locked state displays the "no" icon on the door
-				locking.PlayAnim("locked_pre").OnAnimQueueComplete(locked).
-					Enter("UpdateWorldState", (smi) => smi.master.UpdateWorldState());
-				locked.PlayAnim("locked").
-					ParamTransition(isLocked, unlocking, IsFalse).
-					EventTransition(GameHashes.OperationalFlagChanged, notOperational, (smi) => !smi.master.IsUsable());
-				unlocking.PlayAnim("locked_pst").OnAnimQueueComplete(closed);
-				// Door is being opened
-				opening.ToggleTag(GameTags.Transition).
-					ToggleLoopingSound("Airlock Opens", (smi) => smi.master.doorOpeningSound, (smi) => !string.IsNullOrEmpty(smi.master.doorOpeningSound)).
-					Enter("RemoveEnergy", (smi) => smi.WithdrawEnergy()).
-					Update((smi, dt) => {
-						if (smi.master.doorOpeningSound != null)
-							smi.master.loopingSounds.UpdateSecondParameter(smi.master.doorOpeningSound, SOUND_PROGRESS_PARAMETER, smi.Get<KBatchedAnimController>().GetPositionPercent());
-					}, UpdateRate.SIM_33ms, false).
-					PlayAnim("opening").OnAnimQueueComplete(open);
-			}
-
-			/// <summary>
-			/// Not operational / broken down / no charge. Door is considered closed.
-			/// </summary>
-			public State notOperational;
-
-			/// <summary>
-			/// Open animation playing.
-			/// </summary>
-			public State opening;
-
-			/// <summary>
-			/// Closed in automatic mode.
-			/// </summary>
-			public State closed;
-
-			/// <summary>
-			/// Close animation playing.
-			/// </summary>
-			public State closing;
-
-			/// <summary>
-			/// Waiting to close, 0.5s with no Duplicants passing then closes.
-			/// </summary>
-			public State closeDelay;
-
-			/// <summary>
-			/// Waiting to close, Duplicant is still traversing the door.
-			/// </summary>
-			public State open;
-
-			/// <summary>
-			/// Closed and lock process started.
-			/// </summary>
-			public State locking;
-
-			/// <summary>
-			/// Closed and locked to access.
-			/// </summary>
-			public State locked;
-
-			/// <summary>
-			/// Closed and unlock process started.
-			/// </summary>
-			public State unlocking;
-
-			/// <summary>
-			/// True if the door is open.
-			/// </summary>
-			public BoolParameter isOpen;
-
-			/// <summary>
-			/// True if the door is currently locked by automation or toggle.
-			/// No Duplicants can pass if locked.
-			/// </summary>
-			public BoolParameter isLocked;
-
-			/// <summary>
-			/// True if a Duplicant is passing through.
-			/// </summary>
-			public BoolParameter isTraversing;
+		/// <summary>
+		/// Updates the energy meter.
+		/// </summary>
+		private void UpdateMeter() {
+			meter?.SetPositionPercent(energyAvailable / EnergyCapacity);
 		}
 
 		/// <summary>
-		/// The instance parameters of this state machine.
+		/// Updates the state of the door's cells in the game.
 		/// </summary>
-		public sealed class Instance : States.GameInstance {
-			public Instance(AirlockDoor door) : base(door) { }
+		private void UpdateWorldState() {
+			bool usable = IsUsableOrActive(), openLeft = IsLeftOpen, openRight = IsRightOpen;
+			int baseCell = building.GetCell(), centerUpCell = Grid.CellAbove(baseCell);
+			if (Grid.IsValidBuildingCell(baseCell))
+				Game.Instance.SetDupePassableSolid(baseCell, !locked && usable, false);
+			if (Grid.IsValidBuildingCell(centerUpCell))
+				Game.Instance.SetDupePassableSolid(centerUpCell, !locked && usable, false);
+			// Left side cells controlled by left open
+			UpdateWorldState(Grid.CellLeft(baseCell), usable, openLeft);
+			UpdateWorldState(Grid.CellUpLeft(baseCell), usable, openLeft);
+			// Right side cells controlled by left open
+			UpdateWorldState(Grid.CellRight(baseCell), usable, openRight);
+			UpdateWorldState(Grid.CellUpRight(baseCell), usable, openRight);
+			foreach (var cell in building.PlacementCells)
+				Pathfinding.Instance.AddDirtyNavGridCell(cell);
+		}
+
+		/// <summary>
+		/// Updates the world state of one cell in the airlock.
+		/// </summary>
+		/// <param name="cell">The cell to update.</param>
+		/// <param name="usable">Whether the door is currently usable.</param>
+		/// <param name="open">Whether that cell is currently open.</param>
+		private void UpdateWorldState(int cell, bool usable, bool open) {
+			if (Grid.IsValidBuildingCell(cell))
+				Game.Instance.SetDupePassableSolid(cell, !locked && usable, !open || !usable);
+		}
+
+		/// <summary>
+		/// Counts the number of Duplicants waiting at transition points.
+		/// </summary>
+		internal sealed class SideReferenceCounter {
+			/// <summary>
+			/// How many Duplicants are currently waiting.
+			/// </summary>
+			public int WaitingCount { get; private set; }
 
 			/// <summary>
-			/// Updates the traversing parameter if a Duplicant is currently passing
-			/// through the door.
+			/// The master door.
 			/// </summary>
-			public void CheckDuplicantStatus() {
-				bool value = false;
-				foreach (int cell in master.building.PlacementCells)
-					if (Grid.Objects[cell, (int)ObjectLayer.Minion] != null) {
-						value = true;
-						break;
-					}
-				sm.isTraversing.Set(value, smi);
+			private readonly AirlockDoor door;
+
+			/// <summary>
+			/// The parameter to set if a request is pending.
+			/// </summary>
+			private States.BoolParameter parameter;
+
+			internal SideReferenceCounter(AirlockDoor door, States.BoolParameter parameter) {
+				this.door = door ?? throw new ArgumentNullException("door");
+				this.parameter = parameter ?? throw new ArgumentNullException("parameter");
 			}
 
 			/// <summary>
-			/// Withdraws energy when the door opens to admit a Duplicant.
+			/// Completes transition through the point.
 			/// </summary>
-			public void WithdrawEnergy() {
-				// Door was closed and has started to open, withdraw energy
-				master.energyAvailable = Math.Max(0.0f, master.energyAvailable - master.
-					EnergyPerUse);
+			public void Finish() {
+				if (door != null) {
+					if (door.locked)
+						parameter.Set(false, door.smi);
+					else {
+						int count = Math.Max(0, WaitingCount - 1);
+						WaitingCount = count;
+						if (count == 0)
+							parameter.Set(false, door.smi);
+					}
+				}
+			}
+
+			/// <summary>
+			/// Queues a request to traverse the transition point.
+			/// </summary>
+			public void Queue() {
+				if (door != null && !door.locked && door.IsUsableOrActive()) {
+					WaitingCount++;
+					parameter.Set(true, door.smi);
+				}
 			}
 		}
 	}

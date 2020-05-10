@@ -40,7 +40,7 @@ namespace PeterHan.AirlockDoor {
 			PBuilding.Register(AirlockDoorTemplate = new PBuilding(ID,
 					AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.NAME) {
 				AddAfter = PressureDoorConfig.ID,
-				Animation = "door_external_kanim",
+				Animation = "airlock_door_kanim",
 				Category = "Base",
 				ConstructionTime = 60.0f,
 				Decor = TUNING.BUILDINGS.DECOR.PENALTY.TIER1,
@@ -63,9 +63,10 @@ namespace PeterHan.AirlockDoor {
 				// structure temperatures so sim will never send the overheat notification
 				Placement = BuildLocationRule.Tile,
 				PowerInput = new PowerRequirement(120.0f, new CellOffset(0, 1)),
-				SceneLayer = Grid.SceneLayer.TileMain,
+				RotateMode = PermittedRotations.Unrotatable,
+				SceneLayer = Grid.SceneLayer.Building,
 				Tech = "ValveMiniaturization",
-				Width = 2
+				Width = 3
 			});
 		}
 
@@ -94,7 +95,7 @@ namespace PeterHan.AirlockDoor {
 			AirlockDoorTemplate?.CreateLogicPorts(go);
 			var ad = go.AddOrGet<AirlockDoor>();
 			ad.EnergyCapacity = 10000.0f;
-			ad.EnergyPerUse = 1000.0f;
+			ad.EnergyPerUse = 2000.0f;
 			var occupier = go.AddOrGet<SimCellOccupier>();
 			occupier.doReplaceElement = true;
 			occupier.notifyOnMelt = true;
