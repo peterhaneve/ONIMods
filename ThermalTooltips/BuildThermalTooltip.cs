@@ -43,10 +43,10 @@ namespace PeterHan.ThermalTooltips {
 				var descriptors = GameUtil.GetMaterialDescriptors(element);
 				// Get building mass from its def (primary element is in slot 0)
 				var masses = Def.Mass;
-				float tc = element.thermalConductivity, shc = element.specificHeatCapacity;
-				float mass = ThermalTranspilerPatch.GetAdjustedMass(Def?.BuildingComplete,
-					(masses != null && masses.Length > 0) ? masses[0] : 0.0f),
-					tMass = GameUtil.GetDisplaySHC(mass * shc);
+				float tc = element.thermalConductivity * Def.ThermalConductivity, shc =
+					element.specificHeatCapacity, mass = ThermalTranspilerPatch.
+					GetAdjustedMass(Def.BuildingComplete, (masses != null && masses.Length >
+					0) ? masses[0] : 0.0f), tMass = GameUtil.GetDisplaySHC(mass * shc);
 				string deg = GameUtil.GetTemperatureUnitSuffix()?.Trim(), kDTU = STRINGS.UI.
 					UNITSUFFIXES.HEAT.KDTU.text.Trim();
 				// GetMaterialDescriptors returns a fresh list

@@ -62,9 +62,9 @@ namespace PeterHan.AirlockDoor {
 				// Overheating is not possible on solid tile buildings because they bypass
 				// structure temperatures so sim will never send the overheat notification
 				Placement = BuildLocationRule.Tile,
-				PowerInput = new PowerRequirement(120.0f, new CellOffset(0, 1)),
+				PowerInput = new PowerRequirement(120.0f, new CellOffset(0, 0)),
 				RotateMode = PermittedRotations.Unrotatable,
-				SceneLayer = Grid.SceneLayer.Building,
+				SceneLayer = Grid.SceneLayer.InteriorWall,
 				Tech = "ValveMiniaturization",
 				Width = 3
 			});
@@ -77,7 +77,10 @@ namespace PeterHan.AirlockDoor {
 
 		public override BuildingDef CreateBuildingDef() {
 			var def = AirlockDoorTemplate?.CreateDef();
-			def.ForegroundLayer = Grid.SceneLayer.InteriorWall;
+			def.ForegroundLayer = Grid.SceneLayer.TileMain;
+			def.PreventIdleTraversalPastBuilding = true;
+			// /5 multiplier to thermal conductivity
+			def.ThermalConductivity = 0.2f;
 			def.TileLayer = ObjectLayer.FoundationTile;
 			return def;
 		}

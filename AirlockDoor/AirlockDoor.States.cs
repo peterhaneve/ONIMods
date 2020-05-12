@@ -63,7 +63,8 @@ namespace PeterHan.AirlockDoor {
 				default_state = notOperational;
 				notOperational.PlayAnim("off").
 					Enter("UpdateWorldState", (smi) => smi.master.UpdateWorldState()).
-					EventTransition(GameHashes.OperationalFlagChanged, closed, (smi) => smi.master.IsUsable());
+					ParamTransition(isLocked, locking, IsTrue).
+					Transition(closed, (smi) => smi.master.IsUsable(), UpdateRate.SIM_200ms);
 				// Start opening if waiting, lock if requested
 				closed.PlayAnim("idle").
 					EventTransition(GameHashes.OperationalFlagChanged, notOperational, (smi) => !smi.master.IsUsable()).
@@ -78,13 +79,12 @@ namespace PeterHan.AirlockDoor {
 				locking.PlayAnim("locked_pre").OnAnimQueueComplete(locked).
 					Enter("UpdateWorldState", (smi) => smi.master.UpdateWorldState());
 				locked.PlayAnim("locked").
-					ParamTransition(isLocked, unlocking, IsFalse).
-					EventTransition(GameHashes.OperationalFlagChanged, notOperational, (smi) => !smi.master.IsUsable());
-				unlocking.PlayAnim("locked_pst").OnAnimQueueComplete(closed);
+					ParamTransition(isLocked, unlocking, IsFalse);
+				unlocking.PlayAnim("locked_pst").OnAnimQueueComplete(notOperational);
 				left.ConfigureStates("_left", isTraversingLeft, vacuum);
 				right.ConfigureStates("_right", isTraversingRight, vacuum);
 				// Clear contaminants, wait for anim, and check
-				vacuum.PlayAnim("vacuum_suck", KAnim.PlayMode.Loop).
+				vacuum.PlayAnim("vacuum", KAnim.PlayMode.Loop).
 					ScheduleGoTo(3.0f, vacuum_check).
 					Enter("ClearContaminants", (smi) => {
 						smi.master.UpdateWorldState();
@@ -93,8 +93,7 @@ namespace PeterHan.AirlockDoor {
 						smi.ClearContaminants();
 						Game.Instance.userMenu.Refresh(smi.master.gameObject);
 					});
-				vacuum_check.PlayAnim("vacuum").
-					ParamTransition(waitExitLeft, left.exit, IsTrue).
+				vacuum_check.ParamTransition(waitExitLeft, left.exit, IsTrue).
 					ParamTransition(waitExitRight, right.exit, IsTrue).
 					Transition(closed, (smi) => !waitExitLeft.Get(smi) && !waitExitRight.Get(smi), UpdateRate.SIM_200ms);
 			}
@@ -344,8 +343,9 @@ namespace PeterHan.AirlockDoor {
 					while (node != null) {
 						var item = node.gameObject;
 						node = node.nextItem;
-						// Ignore Duplicants
-						if (item != null && item.GetComponent<MinionIdentity>() == null) {
+						// Ignore living entities
+						if (item != null && item.GetSMI<DeathMonitor.Instance>()?.IsDead() !=
+								false) {
 							var position = Grid.CellToPosCCC(newCell, Grid.SceneLayer.Move);
 							var collider = item.GetComponent<KCollider2D>();
 							// Adjust for material's bounding box

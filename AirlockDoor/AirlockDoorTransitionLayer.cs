@@ -78,31 +78,14 @@ namespace PeterHan.AirlockDoor {
 		public override void BeginTransition(Navigator navigator, Navigator.
 				ActiveTransition transition) {
 			base.BeginTransition(navigator, transition);
-			int cell = Grid.PosToCell(navigator);
-			int targetCell = Grid.OffsetCell(cell, transition.x, transition.y);
-			AddDoor(targetCell, cell);
-			// If duplicant is inside a tube they are only 1 cell tall
-			if (navigator.CurrentNavType != NavType.Tube)
-				AddDoor(Grid.CellAbove(targetCell), cell);
-			// Include any other offsets
-			foreach (var offset in transition.navGridTransition.voidOffsets)
-				AddDoor(Grid.OffsetCell(cell, offset), cell);
-			// If not open, start a transition with the dupe waiting for the door
-			if (doors.Count > 0 && !AreAllDoorsOpen()) {
-				transition.anim = navigator.NavGrid.GetIdleAnim(navigator.CurrentNavType);
-				transition.isLooping = false;
-				transition.end = transition.start;
-				transition.speed = 1.0f;
-				transition.animSpeed = 1.0f;
-				transition.x = 0;
-				transition.y = 0;
-				transition.isCompleteCB = AreAllDoorsOpen;
-			}
+			ClearTransitions();
+			MakeTransitions(navigator, transition);
 		}
 
-		public override void EndTransition(Navigator navigator, Navigator.
-				ActiveTransition transition) {
-			base.EndTransition(navigator, transition);
+		/// <summary>
+		/// Clears all pending transitions.
+		/// </summary>
+		private void ClearTransitions() {
 			foreach (var pair in doors) {
 				var door = pair.Key;
 				switch (pair.Value) {
@@ -121,6 +104,17 @@ namespace PeterHan.AirlockDoor {
 				}
 			}
 			doors.Clear();
+		}
+
+		public override void Destroy() {
+			base.Destroy();
+			ClearTransitions();
+		}
+
+		public override void EndTransition(Navigator navigator, Navigator.
+				ActiveTransition transition) {
+			base.EndTransition(navigator, transition);
+			ClearTransitions();
 		}
 
 		/// <summary>
@@ -154,6 +148,35 @@ namespace PeterHan.AirlockDoor {
 					door.EnterLeft?.Queue();
 				}
 			} // Else, entering center cell which is "always" passable
+		}
+
+		/// <summary>
+		/// Requests all doors to open when necessary.
+		/// </summary>
+		/// <param name="navigator">The Duplicant navigating potential doors.</param>
+		/// <param name="transition">The movement this Duplicant is making.</param>
+		private void MakeTransitions(Navigator navigator, Navigator.
+				ActiveTransition transition) {
+			int cell = Grid.PosToCell(navigator);
+			int targetCell = Grid.OffsetCell(cell, transition.x, transition.y);
+			AddDoor(targetCell, cell);
+			// If duplicant is inside a tube they are only 1 cell tall
+			if (navigator.CurrentNavType != NavType.Tube)
+				AddDoor(Grid.CellAbove(targetCell), cell);
+			// Include any other offsets
+			foreach (var offset in transition.navGridTransition.voidOffsets)
+				AddDoor(Grid.OffsetCell(cell, offset), cell);
+			// If not open, start a transition with the dupe waiting for the door
+			if (doors.Count > 0 && !AreAllDoorsOpen()) {
+				transition.anim = navigator.NavGrid.GetIdleAnim(navigator.CurrentNavType);
+				transition.isLooping = false;
+				transition.end = transition.start;
+				transition.speed = 1.0f;
+				transition.animSpeed = 1.0f;
+				transition.x = 0;
+				transition.y = 0;
+				transition.isCompleteCB = AreAllDoorsOpen;
+			}
 		}
 
 		/// <summary>

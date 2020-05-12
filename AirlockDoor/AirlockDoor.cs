@@ -235,6 +235,16 @@ namespace PeterHan.AirlockDoor {
 		}
 
 		/// <summary>
+		/// Whether the door is currently passing Duplicants.
+		/// </summary>
+		/// <returns>true if the door is active, or false if it is idle / disabled / out of power.</returns>
+		public bool IsDoorActive() {
+			return smi.IsInsideState(smi.sm.left) || smi.IsInsideState(smi.sm.
+				vacuum) || smi.IsInsideState(smi.sm.right) || smi.IsInsideState(smi.sm.
+				vacuum_check);
+		}
+
+		/// <summary>
 		/// Whether a Duplicant can traverse the door.
 		/// </summary>
 		/// <returns>true if the door is passable, or false otherwise.</returns>
@@ -248,9 +258,7 @@ namespace PeterHan.AirlockDoor {
 		/// </summary>
 		/// <returns>true if the door is passable, or false otherwise.</returns>
 		private bool IsUsableOrActive() {
-			return IsUsable() || smi.IsInsideState(smi.sm.left) || smi.IsInsideState(smi.sm.
-				vacuum) || smi.IsInsideState(smi.sm.right) || smi.IsInsideState(smi.sm.
-				vacuum_check);
+			return IsUsable() || IsDoorActive();
 		}
 
 		protected override void OnPrefabInit() {
@@ -290,8 +298,9 @@ namespace PeterHan.AirlockDoor {
 			if (kac != null)
 				// Stock mechanized airlocks are 5.0f powered
 				kac.PlaySpeedMultiplier = 4.0f;
-			meter = new MeterController(kac, "meter_target", "meter", Meter.Offset.Infront,
-				Grid.SceneLayer.NoLayer);
+			// Layer is ignored if you use infront
+			meter = new MeterController(kac, "meter_target", "meter", Meter.Offset.
+				Infront, Grid.SceneLayer.NoLayer);
 			// Door is always powered when used
 			if (doorClosingSound != null)
 				loopingSounds.UpdateFirstParameter(doorClosingSound, SOUND_POWERED_PARAMETER,
@@ -342,7 +351,7 @@ namespace PeterHan.AirlockDoor {
 		}
 
 		public void Sim200ms(float dt) {
-			if (requestedState != locked) {
+			if (requestedState != locked && !IsDoorActive()) {
 				// Automation locked or unlocked the door
 				locked = requestedState;
 				RefreshControlState();

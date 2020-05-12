@@ -44,10 +44,10 @@ namespace PeterHan.AirlockDoor {
 		public static class BUILDINGS {
 			public static class PREFABS {
 				public static class PAIRLOCKDOOR {
-					public static LocString NAME = STRINGS.UI.FormatAsLink("True Airlock", AirlockDoorConfig.ID);
+					public static LocString NAME = STRINGS.UI.FormatAsLink("Airlock Door", AirlockDoorConfig.ID);
 					public static LocString DESC = string.Concat("Sucking Duplicants that have nowhere to go into space through ",
 						STRINGS.UI.FormatAsLink("Mechanized Airlocks", PressureDoorConfig.ID),
-						" is poor taste. Now they can suffocate quietly on the other side of an airlock.");
+						" is poor taste. Airlock Doors now allow Duplicants safe passage with the loss of any of their mysterious fluids.");
 					public static LocString EFFECT = string.Concat("Blocks ",
 						STRINGS.UI.FormatAsLink("Liquid", "ELEMENTS_LIQUID"),
 						" and ",
@@ -56,9 +56,9 @@ namespace PeterHan.AirlockDoor {
 						STRINGS.UI.FormatAsLink("Power", "POWER"),
 						" is available.\n\n",
 						STRINGS.UI.FormatAsLink("Critters", "CRITTERS"),
-						" cannot pass through this door.");
+						" never can pass through this door.");
 
-					public static LocString LOGIC_OPEN = "Open/Close";
+					public static LocString LOGIC_OPEN = "Unlock/Lock";
 					public static LocString LOGIC_OPEN_ACTIVE = STRINGS.UI.FormatAsAutomationState(
 						"Green Signal", STRINGS.UI.AutomationState.Active) + ": Unlock door";
 					public static LocString LOGIC_OPEN_INACTIVE = STRINGS.UI.FormatAsAutomationState(
