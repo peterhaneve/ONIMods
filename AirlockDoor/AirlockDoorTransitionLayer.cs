@@ -53,56 +53,77 @@ namespace PeterHan.AirlockDoor {
 		/// <returns>true if doors are open, or false otherwise.</returns>
 		private bool AreAllDoorsOpen() {
 			bool open = true;
-			foreach (var pair in doors) {
-				var door = pair.Key;
-				switch (pair.Value) {
-				case DoorRequestType.EnterLeft:
-				case DoorRequestType.ExitLeft:
-					if (!door.IsLeftOpen) {
-						open = false;
+			AirlockDoor door;
+			foreach (var pair in doors)
+				if ((door = pair.Key) != null) {
+					switch (pair.Value) {
+					case DoorRequestType.EnterLeft:
+					case DoorRequestType.ExitLeft:
+						if (!door.IsLeftOpen) {
+							open = false;
+							break;
+						}
+						break;
+					case DoorRequestType.EnterRight:
+					case DoorRequestType.ExitRight:
+						if (!door.IsRightOpen) {
+							open = false;
+							break;
+						}
 						break;
 					}
-					break;
-				case DoorRequestType.EnterRight:
-				case DoorRequestType.ExitRight:
-					if (!door.IsRightOpen) {
-						open = false;
-						break;
-					}
-					break;
 				}
-			}
 			return open;
 		}
 
 		public override void BeginTransition(Navigator navigator, Navigator.
 				ActiveTransition transition) {
 			base.BeginTransition(navigator, transition);
+			int cell = Grid.PosToCell(navigator);
+			int targetCell = Grid.OffsetCell(cell, transition.x, transition.y);
 			ClearTransitions();
-			MakeTransitions(navigator, transition);
+			AddDoor(targetCell, cell);
+			// If duplicant is inside a tube they are only 1 cell tall
+			if (navigator.CurrentNavType != NavType.Tube)
+				AddDoor(Grid.CellAbove(targetCell), cell);
+			// Include any other offsets
+			foreach (var offset in transition.navGridTransition.voidOffsets)
+				AddDoor(Grid.OffsetCell(cell, offset), cell);
+			// If not open, start a transition with the dupe waiting for the door
+			if (doors.Count > 0 && !AreAllDoorsOpen()) {
+				transition.anim = navigator.NavGrid.GetIdleAnim(navigator.CurrentNavType);
+				transition.isLooping = false;
+				transition.end = transition.start;
+				transition.speed = 1.0f;
+				transition.animSpeed = 1.0f;
+				transition.x = 0;
+				transition.y = 0;
+				transition.isCompleteCB = AreAllDoorsOpen;
+			}
 		}
 
 		/// <summary>
 		/// Clears all pending transitions.
 		/// </summary>
 		private void ClearTransitions() {
-			foreach (var pair in doors) {
-				var door = pair.Key;
-				switch (pair.Value) {
-				case DoorRequestType.EnterLeft:
-					door.EnterLeft?.Finish();
-					break;
-				case DoorRequestType.EnterRight:
-					door.EnterRight?.Finish();
-					break;
-				case DoorRequestType.ExitLeft:
-					door.ExitLeft?.Finish();
-					break;
-				case DoorRequestType.ExitRight:
-					door.ExitRight?.Finish();
-					break;
+			AirlockDoor door;
+			foreach (var pair in doors)
+				if ((door = pair.Key) != null) {
+					switch (pair.Value) {
+					case DoorRequestType.EnterLeft:
+						door.EnterLeft?.Finish();
+						break;
+					case DoorRequestType.EnterRight:
+						door.EnterRight?.Finish();
+						break;
+					case DoorRequestType.ExitLeft:
+						door.ExitLeft?.Finish();
+						break;
+					case DoorRequestType.ExitRight:
+						door.ExitRight?.Finish();
+						break;
+					}
 				}
-			}
 			doors.Clear();
 		}
 
@@ -148,35 +169,6 @@ namespace PeterHan.AirlockDoor {
 					door.EnterLeft?.Queue();
 				}
 			} // Else, entering center cell which is "always" passable
-		}
-
-		/// <summary>
-		/// Requests all doors to open when necessary.
-		/// </summary>
-		/// <param name="navigator">The Duplicant navigating potential doors.</param>
-		/// <param name="transition">The movement this Duplicant is making.</param>
-		private void MakeTransitions(Navigator navigator, Navigator.
-				ActiveTransition transition) {
-			int cell = Grid.PosToCell(navigator);
-			int targetCell = Grid.OffsetCell(cell, transition.x, transition.y);
-			AddDoor(targetCell, cell);
-			// If duplicant is inside a tube they are only 1 cell tall
-			if (navigator.CurrentNavType != NavType.Tube)
-				AddDoor(Grid.CellAbove(targetCell), cell);
-			// Include any other offsets
-			foreach (var offset in transition.navGridTransition.voidOffsets)
-				AddDoor(Grid.OffsetCell(cell, offset), cell);
-			// If not open, start a transition with the dupe waiting for the door
-			if (doors.Count > 0 && !AreAllDoorsOpen()) {
-				transition.anim = navigator.NavGrid.GetIdleAnim(navigator.CurrentNavType);
-				transition.isLooping = false;
-				transition.end = transition.start;
-				transition.speed = 1.0f;
-				transition.animSpeed = 1.0f;
-				transition.x = 0;
-				transition.y = 0;
-				transition.isCompleteCB = AreAllDoorsOpen;
-			}
 		}
 
 		/// <summary>

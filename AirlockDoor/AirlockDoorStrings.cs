@@ -56,7 +56,7 @@ namespace PeterHan.AirlockDoor {
 						STRINGS.UI.FormatAsLink("Power", "POWER"),
 						" is available.\n\n",
 						STRINGS.UI.FormatAsLink("Critters", "CRITTERS"),
-						" never can pass through this door.");
+						" can never pass through this door.");
 
 					public static LocString LOGIC_OPEN = "Unlock/Lock";
 					public static LocString LOGIC_OPEN_ACTIVE = STRINGS.UI.FormatAsAutomationState(

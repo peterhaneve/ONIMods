@@ -57,7 +57,6 @@ namespace PeterHan.AirlockDoor {
 				},
 				Ingredients = {
 					new BuildIngredient(TUNING.MATERIALS.REFINED_METAL, tier: 4),
-					new BuildIngredient(TUNING.MATERIALS.PLASTIC, tier: 0)
 				},
 				// Overheating is not possible on solid tile buildings because they bypass
 				// structure temperatures so sim will never send the overheat notification
@@ -65,7 +64,7 @@ namespace PeterHan.AirlockDoor {
 				PowerInput = new PowerRequirement(120.0f, new CellOffset(0, 0)),
 				RotateMode = PermittedRotations.Unrotatable,
 				SceneLayer = Grid.SceneLayer.InteriorWall,
-				Tech = "ValveMiniaturization",
+				Tech = "ImprovedGasPiping",
 				Width = 3
 			});
 		}
