@@ -77,6 +77,7 @@ namespace PeterHan.AirlockDoor {
 		public override BuildingDef CreateBuildingDef() {
 			var def = AirlockDoorTemplate?.CreateDef();
 			def.ForegroundLayer = Grid.SceneLayer.TileMain;
+			def.IsFoundation = true;
 			def.PreventIdleTraversalPastBuilding = true;
 			// /5 multiplier to thermal conductivity
 			def.ThermalConductivity = 0.2f;
