@@ -67,7 +67,7 @@ namespace PeterHan.AirlockDoor {
 					Transition(closed, (smi) => smi.master.IsUsable(), UpdateRate.SIM_200ms);
 				// Start opening if waiting, lock if requested
 				closed.PlayAnim("idle").
-					EventTransition(GameHashes.OperationalFlagChanged, notOperational, (smi) => !smi.master.IsUsable()).
+					EventTransition(GameHashes.OperationalChanged, notOperational, (smi) => !smi.master.IsUsable()).
 					ParamTransition(waitEnterLeft, left.enter, IsTrue).
 					ParamTransition(waitEnterRight, right.enter, IsTrue).
 					// If someone teleports a dupe into the airlock...

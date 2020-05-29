@@ -34,26 +34,21 @@ namespace PeterHan.SweepByType {
 		/// </summary>
 		internal static SweepByTypeOptions Options { get; private set; }
 
+		/// <summary>
+		/// Cleans up the filtered sweep tool on close.
+		/// </summary>
+		[PLibMethod(RunAt.OnEndGame)]
+		internal static void DestroyTool() {
+			PUtil.LogDebug("Destroying FilteredClearTool");
+			FilteredClearTool.DestroyInstance();
+		}
+
 		public static void OnLoad() {
 			PUtil.InitLibrary();
 			POptions.RegisterOptions(typeof(SweepByTypeOptions));
 			PLocalization.Register();
 			Options = null;
 			PUtil.RegisterPatchClass(typeof(SweepByTypePatches));
-		}
-
-		/// <summary>
-		/// Applied to Game to clean up the filtered sweep tool on close.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "DestroyInstances")]
-		public static class Game_DestroyInstances_Patch {
-			/// <summary>
-			/// Applied after DestroyInstances runs.
-			/// </summary>
-			internal static void Postfix() {
-				PUtil.LogDebug("Destroying FilteredClearTool");
-				FilteredClearTool.DestroyInstance();
-			}
 		}
 
 		/// <summary>

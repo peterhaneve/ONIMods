@@ -17,6 +17,7 @@
  */
 
 using KSerialization;
+using PeterHan.PLib;
 using System;
 using UnityEngine;
 
@@ -397,11 +398,12 @@ namespace PeterHan.AirlockDoor {
 			// Left side cells controlled by left open
 			UpdateWorldState(Grid.CellLeft(baseCell), usable, openLeft);
 			UpdateWorldState(Grid.CellUpLeft(baseCell), usable, openLeft);
-			// Right side cells controlled by left open
+			// Right side cells controlled by right open
 			UpdateWorldState(Grid.CellRight(baseCell), usable, openRight);
 			UpdateWorldState(Grid.CellUpRight(baseCell), usable, openRight);
+			var inst = Pathfinding.Instance;
 			foreach (var cell in building.PlacementCells)
-				Pathfinding.Instance.AddDirtyNavGridCell(cell);
+				inst.AddDirtyNavGridCell(cell);
 		}
 
 		/// <summary>

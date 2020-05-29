@@ -255,6 +255,20 @@ namespace PeterHan.ToastControl {
 		}
 
 		/// <summary>
+		/// Determines if popups should be hidden from pick ups.
+		/// </summary>
+		/// <param name="worker">The worker who completed the chore.</param>
+		private static bool ShouldHidePickupPopups(Worker worker) {
+			var opts = ToastControlPopups.Options;
+			bool pickupDupe = opts.PickedUp;
+#pragma warning disable IDE0031 // Use null propagation
+			var brain = (worker == null) ? null : worker.GetComponent<MinionBrain>();
+#pragma warning restore IDE0031
+			return (pickupDupe != opts.PickedUpMachine) ? (pickupDupe != (brain != null)) :
+				!pickupDupe;
+		}
+
+		/// <summary>
 		/// Common transpiled target method for each use of PopFXManager.SpawnFX.
 		/// </summary>
 		private static PopFX SpawnFXLong(PopFXManager instance, Sprite icon, string text,
@@ -382,6 +396,24 @@ namespace PeterHan.ToastControl {
 		}
 
 		/// <summary>
+		/// Applied to LiquidPumpingStation to determine whether pickup popups are shown.
+		/// </summary>
+		[HarmonyPatch(typeof(LiquidPumpingStation), "OnCompleteWork")]
+		public static class LiquidPumpingStation_OnCompleteWork_Patch {
+			/// <summary>
+			/// Transpiles OnCompleteWork to alter the "display popup" flag on Storage.Store
+			/// depending on the options settings.
+			/// </summary>
+			internal static TranspiledMethod Transpiler(TranspiledMethod method) =>
+				ExecuteChoreTranspiler(method, new List<CodeInstruction>(2) {
+					// Loads the first real Worker argument (arg 0 is this)
+					new CodeInstruction(OpCodes.Ldarg_1),
+					new CodeInstruction(OpCodes.Call, typeof(ToastControlPatches).
+						GetMethodSafe(nameof(ShouldHidePickupPopups), true, typeof(Worker)))
+				});
+		}
+
+		/// <summary>
 		/// Applied to Pickupable.OnCompleteWork to determine whether pick up popups are shown.
 		/// </summary>
 		[HarmonyPatch(typeof(Pickupable), "OnCompleteWork")]
@@ -394,23 +426,9 @@ namespace PeterHan.ToastControl {
 				ExecuteChoreTranspiler(method, new List<CodeInstruction>(2) {
 					// Loads the first real Worker argument (arg 0 is this)
 					new CodeInstruction(OpCodes.Ldarg_1),
-					new CodeInstruction(OpCodes.Call, typeof(Pickupable_OnCompleteWork_Patch).
-						GetMethodSafe(nameof(ShouldHidePopups), true, typeof(Worker)))
+					new CodeInstruction(OpCodes.Call, typeof(ToastControlPatches).
+						GetMethodSafe(nameof(ShouldHidePickupPopups), true, typeof(Worker)))
 				});
-
-			/// <summary>
-			/// Determines if popups should be hidden from pick ups.
-			/// </summary>
-			/// <param name="worker">The worker who completed the chore.</param>
-			private static bool ShouldHidePopups(Worker worker) {
-				var opts = ToastControlPopups.Options;
-				bool pickupDupe = opts.PickedUp;
-#pragma warning disable IDE0031 // Use null propagation
-				var brain = (worker == null) ? null : worker.GetComponent<MinionBrain>();
-#pragma warning restore IDE0031
-				return (pickupDupe != opts.PickedUpMachine) ? (pickupDupe != (brain != null)) :
-					!pickupDupe;
-			}
 		}
 
 		/// <summary>
