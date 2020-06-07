@@ -250,7 +250,7 @@ namespace PeterHan.AirlockDoor {
 		/// </summary>
 		/// <returns>true if the door is passable, or false otherwise.</returns>
 		public bool IsUsable() {
-			return operational.IsOperational && HasEnergy();
+			return operational.IsFunctional && HasEnergy();
 		}
 
 		/// <summary>
@@ -434,7 +434,7 @@ namespace PeterHan.AirlockDoor {
 			/// <summary>
 			/// The parameter to set if a request is pending.
 			/// </summary>
-			private States.BoolParameter parameter;
+			private readonly States.BoolParameter parameter;
 
 			internal SideReferenceCounter(AirlockDoor door, States.BoolParameter parameter) {
 				this.door = door ?? throw new ArgumentNullException("door");

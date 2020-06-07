@@ -60,14 +60,14 @@ namespace PeterHan.AirlockDoor {
 
 			public override void InitializeStates(out BaseState default_state) {
 				serializable = true;
-				default_state = notOperational;
-				notOperational.PlayAnim("off").
+				default_state = notFunctional;
+				notFunctional.PlayAnim("off").
 					Enter("UpdateWorldState", (smi) => smi.master.UpdateWorldState()).
 					ParamTransition(isLocked, locking, IsTrue).
 					Transition(closed, (smi) => smi.master.IsUsable(), UpdateRate.SIM_200ms);
 				// Start opening if waiting, lock if requested
 				closed.PlayAnim("idle").
-					EventTransition(GameHashes.OperationalChanged, notOperational, (smi) => !smi.master.IsUsable()).
+					EventTransition(GameHashes.FunctionalChanged, notFunctional, (smi) => !smi.master.IsUsable()).
 					ParamTransition(waitEnterLeft, left.enter, IsTrue).
 					ParamTransition(waitEnterRight, right.enter, IsTrue).
 					// If someone teleports a dupe into the airlock...
@@ -80,7 +80,7 @@ namespace PeterHan.AirlockDoor {
 					Enter("UpdateWorldState", (smi) => smi.master.UpdateWorldState());
 				locked.PlayAnim("locked").
 					ParamTransition(isLocked, unlocking, IsFalse);
-				unlocking.PlayAnim("locked_pst").OnAnimQueueComplete(notOperational);
+				unlocking.PlayAnim("locked_pst").OnAnimQueueComplete(notFunctional);
 				left.ConfigureStates("_left", isTraversingLeft, vacuum);
 				right.ConfigureStates("_right", isTraversingRight, vacuum);
 				// Clear contaminants, wait for anim, and check
@@ -101,7 +101,7 @@ namespace PeterHan.AirlockDoor {
 			/// <summary>
 			/// Not operational / broken down / no charge. Door is considered closed.
 			/// </summary>
-			public State notOperational;
+			public State notFunctional;
 
 			/// <summary>
 			/// Both sides closed in automatic mode.
