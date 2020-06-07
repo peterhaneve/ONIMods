@@ -149,11 +149,16 @@ namespace PeterHan.PLib {
 		private static readonly object applyLock = new object();
 
 		/// <summary>
+		/// A fence to ensure that attempts to use GlobalResources.Instance too early will not
+		/// prematurely initialize PLib.
+		/// </summary>
+		private static bool dllsLoaded = true;
+
+		/// <summary>
 		/// The instantiated instance of PLibRegistry, if it has been added as a component.
 		/// </summary>
 		private static PRegistry instance = null;
 
-#pragma warning disable IDE0051 // Remove unused private members
 		/// <summary>
 		/// Finds the latest patch and applies it only if it was not applied before.
 		/// </summary>
@@ -166,7 +171,7 @@ namespace PeterHan.PLib {
 					if (!wasApplied)
 						applied = true;
 				}
-				if (!wasApplied)
+				if (!wasApplied && dllsLoaded)
 					DoApplyLatest();
 			} else {
 #if DEBUG
@@ -174,7 +179,6 @@ namespace PeterHan.PLib {
 #endif
 			}
 		}
-#pragma warning restore IDE0051 // Remove unused private members
 
 		/// <summary>
 		/// Applies the latest patch version.
@@ -218,6 +222,13 @@ namespace PeterHan.PLib {
 			}
 			// Reduce memory usage by cleaning up the patch list
 			instance.Patches.Clear();
+		}
+
+		/// <summary>
+		/// Drops the initialization fence once mod content is loaded for all mods.
+		/// </summary>
+		private static void DropFence() {
+			dllsLoaded = true;
 		}
 
 		/// <summary>
@@ -291,7 +302,7 @@ namespace PeterHan.PLib {
 		/// </summary>
 		public HarmonyInstance PLibInstance { get; }
 
-		public PRegistry() {
+		internal PRegistry() {
 			if (instance == null)
 				instance = this;
 			else {
@@ -346,13 +357,26 @@ namespace PeterHan.PLib {
 				// Gets called in Global.Awake() after mods load, and a few other places, but
 				// we have a flag to avoid initializing more than once
 				PLibInstance.Patch(typeof(GlobalResources), "Instance", null,
-					new HarmonyMethod(typeof(PRegistry), "ApplyLatest"));
+					new HarmonyMethod(typeof(PRegistry), nameof(ApplyLatest)));
 			} catch (AmbiguousMatchException e) {
 				PUtil.LogException(e);
 			} catch (ArgumentException e) {
 				PUtil.LogException(e);
 			} catch (TypeLoadException e) {
 				PUtil.LogException(e);
+			}
+			try {
+				// This method is on the call stack, but the next invocation is fine to patch
+				PLibInstance.Patch(typeof(KMod.Manager), "Load", null, new HarmonyMethod(
+					typeof(PRegistry), nameof(DropFence)));
+				dllsLoaded = false;
+			} catch (Exception e) {
+				// If this patch fails for any reason, disable the fence so that PLib loads
+				// at the right time
+#if DEBUG
+				PUtil.LogException(e);
+#endif
+				DropFence();
 			}
 		}
 

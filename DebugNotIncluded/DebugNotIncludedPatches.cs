@@ -182,8 +182,14 @@ namespace PeterHan.DebugNotIncluded {
 					new HarmonyMethod(typeof(DebugNotIncludedPatches), nameof(BuildDisplay)));
 			KInputHandler.Add(Global.Instance.GetInputManager().GetDefaultController(),
 				new UISnapshotHandler(), 1024);
+			// New postload architecture requires going back a little ways
+			var st = new System.Diagnostics.StackTrace(6);
+			Assembly assembly = null;
+			if (st.FrameCount > 0)
+				assembly = st.GetFrame(0).GetMethod()?.DeclaringType?.Assembly;
+			PUtil.LogDebug(assembly?.FullName ?? "none");
+			RunningPLibAssembly = assembly ?? Assembly.GetCallingAssembly();
 			// Log which mod is running PLib
-			RunningPLibAssembly = Assembly.GetCallingAssembly();
 			var latest = ModDebugRegistry.Instance.OwnerOfAssembly(RunningPLibAssembly);
 			if (latest != null)
 				DebugLogger.LogDebug("Executing version of PLib is from: " + latest.ModName);

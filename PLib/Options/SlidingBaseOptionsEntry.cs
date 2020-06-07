@@ -61,7 +61,7 @@ namespace PeterHan.PLib.Options {
 			double minLimit, maxLimit;
 			base.CreateUIEntry(parent, ref row);
 			if (limits != null && (minLimit = limits.Minimum) > float.MinValue && (maxLimit =
-					limits.Maximum) < float.MaxValue) {
+					limits.Maximum) < float.MaxValue && maxLimit > minLimit) {
 				// NaN will be false on either comparison
 				var slider = GetSlider();
 				// Min and max labels

@@ -18,29 +18,11 @@
 
 using System;
 
-namespace PeterHan.PLib {
+namespace PeterHan.AIImprovements {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// Strings used in AI Improvements.
 	/// </summary>
-	public static class PVersion {
-		/// <summary>
-		/// The PLib version.
-		/// </summary>
-		public const string VERSION = "3.8.2.0";
+	public static class AIImprovementsStrings {
 
-		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in OnLoad or RegisterPostload, and will always return false in those
-		/// cases.
-		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				return VERSION == PSharedData.GetData<string>(PRegistry.KEY_VERSION);
-			}
-		}
 	}
 }

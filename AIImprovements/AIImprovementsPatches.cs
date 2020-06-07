@@ -1,0 +1,213 @@
+﻿/*
+ * Copyright 2020 Peter Han
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+ * and associated documentation files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+using Harmony;
+using PeterHan.PLib;
+using UnityEngine;
+
+namespace PeterHan.AIImprovements {
+	/// <summary>
+	/// Patches which will be applied via annotations for AI Improvements.
+	/// </summary>
+	public static class AIImprovementsPatches {
+		/// <summary>
+		/// Determines whether a Duplicant could plausibly navigate to the target cell.
+		/// </summary>
+		/// <param name="navigator">The Duplicant to check.</param>
+		/// <param name="cell">The destination cell.</param>
+		/// <returns>true if the Duplicant could move there, or false otherwise.</returns>
+		internal static bool IsValidNavCell(Navigator navigator, int cell) {
+			return navigator.NavGrid.NavTable.IsValid(cell, navigator.CurrentNavType);
+		}
+
+		[PLibMethod(RunAt.OnEndGame)]
+		internal static void OnEndGame() {
+#if DEBUG
+			PUtil.LogDebug("Destroying AllMinionsLocationHistory");
+#endif
+			AllMinionsLocationHistory.DestroyInstance();
+		}
+
+		public static void OnLoad() {
+			PUtil.InitLibrary();
+			PUtil.RegisterPatchClass(typeof(AIImprovementsPatches));
+		}
+
+		[PLibMethod(RunAt.OnStartGame)]
+		internal static void OnStartGame() {
+#if DEBUG
+			PUtil.LogDebug("Creating AllMinionsLocationHistory");
+#endif
+			AllMinionsLocationHistory.InitInstance();
+		}
+
+		/// <summary>
+		/// Moves the Duplicant from the cell to a destination cell, using a smooth transition
+		/// if possible.
+		/// </summary>
+		/// <param name="instance">The fall monitor to update if successful.</param>
+		/// <param name="destination">The destination cell.</param>
+		/// <param name="navigator">The navigator to move.</param>
+		private static void ForceMoveTo(FallMonitor.Instance instance, int destination,
+				Navigator navigator, ref bool flipEmote) {
+			var navType = navigator.CurrentNavType;
+			var navGrid = navigator.NavGrid;
+			int cell = Grid.PosToCell(navigator);
+			bool moved = false;
+			foreach (var transition in navGrid.transitions)
+				if (transition.isEscape && navType == transition.start) {
+					int possibleDest = transition.IsValid(cell, navGrid.NavTable);
+					if (destination == possibleDest) {
+						Grid.CellToXY(cell, out int startX, out _);
+						Grid.CellToXY(destination, out int endX, out _);
+						flipEmote = endX < startX;
+						navigator.BeginTransition(transition);
+						moved = true;
+						break;
+					}
+				}
+			if (!moved) {
+				var transform = instance.transform;
+				// Move to the new location
+				transform.SetPosition(Grid.CellToPosCBC(destination, Grid.SceneLayer.Move));
+				navigator.Stop(false, true);
+				if (instance.gameObject.HasTag(GameTags.Incapacitated))
+					navigator.SetCurrentNavType(NavType.Floor);
+				instance.UpdateFalling();
+				instance.GoTo(instance.sm.standing);
+			}
+		}
+
+		/// <summary>
+		/// Tries to move a Duplicant to a more sensible location when entombed.
+		/// </summary>
+		/// <param name="instance">The fall monitor to update if successful.</param>
+		/// <param name="navigator">The Duplicant to check.</param>
+		/// <param name="layer">The location history of the Duplicant.</param>
+		/// <returns>true if the Duplicant was successfully moved away from entombment, or
+		/// false otherwise.</returns>
+		private static bool TryClearEntombment(LocationHistoryTransitionLayer layer,
+				Navigator navigator, FallMonitor.Instance instance, ref bool flipEmote) {
+			bool moved = false;
+			for (int i = 0; i < LocationHistoryTransitionLayer.TRACK_CELLS; i++) {
+				int last = layer.VisitedCells[i], above = Grid.CellAbove(last);
+#if DEBUG
+				PUtil.LogDebug("{0} is entombed, trying to move to {1:D}".F(navigator.
+					gameObject?.name, last));
+#endif
+				if (Grid.IsValidCell(last) && (IsValidNavCell(navigator, last) || (Grid.
+						IsValidCell(above) && !Grid.Solid[last] && !Grid.Solid[above]))) {
+					ForceMoveTo(instance, last, navigator, ref flipEmote);
+					break;
+				}
+			}
+			return moved;
+		}
+
+		/// <summary>
+		/// Tries to move a Duplicant to a more sensible location when they are about to fall.
+		/// </summary>
+		/// <param name="instance">The fall monitor to update if successful.</param>
+		/// <param name="navigator">The Duplicant to check.</param>
+		/// <param name="layer">The location history of the Duplicant.</param>
+		/// <returns>true if the Duplicant was successfully moved away from entombment, or
+		/// false otherwise.</returns>
+		private static bool TryEscapeFalling(LocationHistoryTransitionLayer layer,
+				Navigator navigator, FallMonitor.Instance instance, ref bool flipEmote) {
+			bool moved = false;
+			for (int i = 0; i < LocationHistoryTransitionLayer.TRACK_CELLS; i++) {
+				int last = layer.VisitedCells[i], above = Grid.CellAbove(last);
+#if DEBUG
+				PUtil.LogDebug("{0} is falling, trying to move to {1:D}".F(navigator.
+					gameObject?.name, last));
+#endif
+				if (Grid.IsValidCell(last) && IsValidNavCell(navigator, last)) {
+					ForceMoveTo(instance, last, navigator, ref flipEmote);
+					break;
+				}
+			}
+			return moved;
+		}
+
+		/// <summary>
+		/// Applied to FallMonitor.Instance to try and back out to a previously visited tile
+		/// if the floor is removed from under a Duplicant.
+		/// </summary>
+		[HarmonyPatch(typeof(FallMonitor.Instance), "Recover")]
+		public static class FallMonitor_Instance_Recover_Patch {
+			/// <summary>
+			/// Applied before Recover runs.
+			/// </summary>
+			internal static bool Prefix(FallMonitor.Instance __instance,
+					Navigator ___navigator, ref bool ___flipRecoverEmote) {
+				// This is not run too often so searching is fine
+				bool moved = false;
+				var layers = ___navigator?.transitionDriver?.overrideLayers;
+				if (layers != null)
+					foreach (var layer in layers)
+						if (layer is LocationHistoryTransitionLayer lhs) {
+							moved = TryEscapeFalling(lhs, ___navigator, __instance,
+								ref ___flipRecoverEmote);
+							if (moved) break;
+						}
+				return !moved;
+			}
+		}
+
+		/// <summary>
+		/// Applied to FallMonitor.Instance to try and back out to a previously visited tile
+		/// instead of teleporting upwards.
+		/// </summary>
+		[HarmonyPatch(typeof(FallMonitor.Instance), "TryEntombedEscape")]
+		public static class FallMonitor_Instance_TryEntombedEscape_Patch {
+			/// <summary>
+			/// Applied before TryEntombedEscape runs.
+			/// </summary>
+			internal static bool Prefix(FallMonitor.Instance __instance,
+					Navigator ___navigator, ref bool ___flipRecoverEmote) {
+				// This is not run too often so searching is fine
+				bool moved = false;
+				var layers = ___navigator?.transitionDriver?.overrideLayers;
+				if (layers != null)
+					foreach (var layer in layers)
+						if (layer is LocationHistoryTransitionLayer lhs) {
+							moved = TryClearEntombment(lhs, ___navigator, __instance,
+								ref ___flipRecoverEmote);
+							if (moved) break;
+						}
+				return !moved;
+			}
+		}
+
+		/// <summary>
+		/// Applied to MinionConfig to add the navigator transition for keeping track of
+		/// their location history. Big Brother is watching...
+		/// </summary>
+		[HarmonyPatch(typeof(MinionConfig), "OnSpawn")]
+		public static class MinionConfig_OnSpawn_Patch {
+			/// <summary>
+			/// Applied after OnSpawn runs.
+			/// </summary>
+			internal static void Postfix(GameObject go) {
+				var nav = go.GetComponent<Navigator>();
+				nav.transitionDriver.overrideLayers.Add(new LocationHistoryTransitionLayer(
+					nav));
+			}
+		}
+	}
+}
