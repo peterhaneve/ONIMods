@@ -164,15 +164,17 @@ namespace PeterHan.PLib {
 		/// </summary>
 		private static void ApplyLatest() {
 			if (instance != null) {
-				bool wasApplied;
-				// Synchronize access to the apply flag
-				lock (applyLock) {
-					wasApplied = applied;
+				if (dllsLoaded) {
+					bool wasApplied;
+					// Synchronize access to the apply flag
+					lock (applyLock) {
+						wasApplied = applied;
+						if (!wasApplied)
+							applied = true;
+					}
 					if (!wasApplied)
-						applied = true;
+						DoApplyLatest();
 				}
-				if (!wasApplied && dllsLoaded)
-					DoApplyLatest();
 			} else {
 #if DEBUG
 				LogPatchWarning("ApplyLatest invoked with no Instance!");

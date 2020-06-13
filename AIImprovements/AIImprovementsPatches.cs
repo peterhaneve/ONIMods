@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Options;
 using UnityEngine;
 
 namespace PeterHan.AIImprovements {
@@ -26,6 +27,69 @@ namespace PeterHan.AIImprovements {
 	/// </summary>
 	public static class AIImprovementsPatches {
 		/// <summary>
+		/// The chore type used for Build chores.
+		/// </summary>
+		internal static ChoreType BuildChore { get; private set; }
+
+		/// <summary>
+		/// The chore type used for Deconstruct chores.
+		/// </summary>
+		internal static ChoreType DeconstructChore { get; private set; }
+
+		/// <summary>
+		/// The options to use.
+		/// </summary>
+		internal static AIImprovementsOptionsInstance Options { get; private set; }
+
+		/// <summary>
+		/// Adjusts build priorities based on the options.
+		/// </summary>
+		/// <param name="priorityMod">The priority to modify.</param>
+		/// <param name="chore">The parent chore.</param>
+		private static void AdjustBuildPriority(ref int priorityMod, Chore chore) {
+			BuildingDef def;
+			if (chore.target is Constructable target && target != null && (def = target.
+					GetComponent<Building>()?.Def) != null) {
+				string id = def.PrefabID;
+				if (Options.PrioritizeBuildings.Contains(id))
+					priorityMod += AIImprovementsOptions.BUILD_PRIORIY_MOD;
+				else if (Options.DeprioritizeBuildings.Contains(id))
+					priorityMod -= AIImprovementsOptions.BUILD_PRIORIY_MOD;
+				if (def.IsFoundation || def.isSolidTile) {
+					// Avoid building a tile which would block a location recently used by
+					// a dupe
+					int cell = Grid.PosToCell(target);
+					if (AllMinionsLocationHistory.Instance.WasRecentlyOccupied(cell))
+						priorityMod -= AIImprovementsOptions.BLOCK_PRIORITY_MOD;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Adjusts deconstruct priorities based on the options.
+		/// </summary>
+		/// <param name="priorityMod">The priority to modify.</param>
+		/// <param name="chore">The parent chore.</param>
+		private static void AdjustDeconstructPriority(ref int priorityMod,
+				Chore chore) {
+			BuildingDef def;
+			if (chore.target is Deconstructable target && target != null && (def = target.
+					GetComponent<Building>()?.Def) != null) {
+				string id = target.GetComponent<Building>()?.Def?.PrefabID;
+				if (Options.PrioritizeBuildings.Contains(id))
+					priorityMod -= AIImprovementsOptions.BUILD_PRIORIY_MOD;
+				else if (Options.DeprioritizeBuildings.Contains(id))
+					priorityMod += AIImprovementsOptions.BUILD_PRIORIY_MOD;
+				if (def.IsFoundation) {
+					// Avoid destroying a tile recently stood on by a dupe
+					int cell = Grid.CellAbove(Grid.PosToCell(target));
+					if (AllMinionsLocationHistory.Instance.WasRecentlyOccupied(cell))
+						priorityMod -= AIImprovementsOptions.BLOCK_PRIORITY_MOD;
+				}
+			}
+		}
+
+		/// <summary>
 		/// Determines whether a Duplicant could plausibly navigate to the target cell.
 		/// </summary>
 		/// <param name="navigator">The Duplicant to check.</param>
@@ -33,6 +97,13 @@ namespace PeterHan.AIImprovements {
 		/// <returns>true if the Duplicant could move there, or false otherwise.</returns>
 		internal static bool IsValidNavCell(Navigator navigator, int cell) {
 			return navigator.NavGrid.NavTable.IsValid(cell, navigator.CurrentNavType);
+		}
+
+		[PLibMethod(RunAt.AfterDbInit)]
+		internal static void OnDbInit() {
+			var db = Db.Get();
+			BuildChore = db.ChoreTypes.Build;
+			DeconstructChore = db.ChoreTypes.Deconstruct;
 		}
 
 		[PLibMethod(RunAt.OnEndGame)]
@@ -44,12 +115,15 @@ namespace PeterHan.AIImprovements {
 		}
 
 		public static void OnLoad() {
+			Options = new AIImprovementsOptionsInstance();
 			PUtil.InitLibrary();
 			PUtil.RegisterPatchClass(typeof(AIImprovementsPatches));
 		}
 
 		[PLibMethod(RunAt.OnStartGame)]
 		internal static void OnStartGame() {
+			Options = AIImprovementsOptionsInstance.Create(POptions.ReadSettingsForAssembly<
+				AIImprovementsOptions>() ?? new AIImprovementsOptions());
 #if DEBUG
 			PUtil.LogDebug("Creating AllMinionsLocationHistory");
 #endif
@@ -73,6 +147,7 @@ namespace PeterHan.AIImprovements {
 				if (transition.isEscape && navType == transition.start) {
 					int possibleDest = transition.IsValid(cell, navGrid.NavTable);
 					if (destination == possibleDest) {
+						// The "nice" method, use their animation
 						Grid.CellToXY(cell, out int startX, out _);
 						Grid.CellToXY(destination, out int endX, out _);
 						flipEmote = endX < startX;
@@ -83,7 +158,7 @@ namespace PeterHan.AIImprovements {
 				}
 			if (!moved) {
 				var transform = instance.transform;
-				// Move to the new location
+				// Teleport to the new location
 				transform.SetPosition(Grid.CellToPosCBC(destination, Grid.SceneLayer.Move));
 				navigator.Stop(false, true);
 				if (instance.gameObject.HasTag(GameTags.Incapacitated))
@@ -142,6 +217,23 @@ namespace PeterHan.AIImprovements {
 				}
 			}
 			return moved;
+		}
+
+		/// <summary>
+		/// Applied to Chore.Precondition.Context to adjust the priority modifier on chores
+		/// slightly for specific chore classes.
+		/// </summary>
+		[HarmonyPatch(typeof(Chore.Precondition.Context), "SetPriority")]
+		public static class Chore_Context_SetPriority_Patch {
+			/// <summary>
+			/// Applied after SetPriority runs.
+			/// </summary>
+			internal static void Postfix(ref int ___priorityMod, Chore chore) {
+				if (BuildChore != null && chore.choreType == BuildChore)
+					AdjustBuildPriority(ref ___priorityMod, chore);
+				else if (DeconstructChore != null && chore.choreType == DeconstructChore)
+					AdjustDeconstructPriority(ref ___priorityMod, chore);
+			}
 		}
 
 		/// <summary>

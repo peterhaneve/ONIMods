@@ -24,7 +24,7 @@ namespace PeterHan.AIImprovements {
 		/// <summary>
 		/// How many cells are tracked by this transition layer.
 		/// </summary>
-		public const int TRACK_CELLS = 3;
+		public const int TRACK_CELLS = 5;
 
 		/// <summary>
 		/// The cells last visited.
