@@ -19,6 +19,7 @@
 using Harmony;
 using PeterHan.PLib;
 using PeterHan.PLib.Options;
+using System.Diagnostics;
 using UnityEngine;
 
 namespace PeterHan.AIImprovements {
@@ -301,5 +302,55 @@ namespace PeterHan.AIImprovements {
 					nav));
 			}
 		}
+
+#if DEBUG
+		private static long timeInPath;
+		private static System.DateTime lastDebugPrint;
+
+		[PLibMethod(RunAt.OnStartGame)]
+		internal static void InitTimers() {
+			timeInPath = 0L;
+			lastDebugPrint = System.DateTime.UtcNow;
+			PUtil.LogDebug("Stopwatch resolution is {0:D}".F(Stopwatch.Frequency));
+		}
+
+		[HarmonyPatch(typeof(Game), "Update")]
+		public static class Game_Update_Patch {
+			/// <summary>
+			/// Applied after Update runs.
+			/// </summary>
+			internal static void Postfix() {
+				var now = System.DateTime.UtcNow;
+				if (now > lastDebugPrint.AddSeconds(1.0)) {
+					lastDebugPrint = now;
+					PUtil.LogDebug("Spent {0:D} us in pathfinding the last second".F(
+						timeInPath / 1000L));
+					timeInPath = 0L;
+				}
+			}
+		}
+
+		/*[HarmonyPatch(typeof(PathFinder), "FindPaths")]
+		public static class PathFinder_FindPaths_Patch {
+			internal static void Prefix(ref Stopwatch __state) {
+				__state = Stopwatch.StartNew();
+			}
+
+			internal static void Postfix(Stopwatch __state) {
+				timeInPath += __state.ElapsedTicks * 1000000000L / Stopwatch.Frequency;
+			}
+		}*/
+
+		[HarmonyPatch(typeof(Game), "SimEveryTick")]
+		public static class Game_SimEveryTick_Patch {
+			internal static void Prefix(ref Stopwatch __state) {
+				__state = Stopwatch.StartNew();
+			}
+
+			internal static void Postfix(Stopwatch __state) {
+				timeInPath += __state.ElapsedTicks * 1000000000L / Stopwatch.Frequency;
+			}
+		}
 	}
+#endif
 }

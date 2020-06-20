@@ -7,5 +7,6 @@
     <RootNamespace>PeterHan.AIImprovements</RootNamespace>
     <Description>Makes Duplicants just a little smarter during common tasks to reduce cases of entrapment and entombment.</Description>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
+	<CopyPreview>true</CopyPreview>
   </PropertyGroup>
 </Project>

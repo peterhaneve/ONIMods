@@ -52,6 +52,7 @@ Mods should remain in their own subfolder.
 | :--------: | :---------------: |
 | [AI Improvements](https://steamcommunity.com/sharedfiles/filedetails/?id=2128885110) | Improves Duplicant AI to reduce cases of stuck Duplicants |
 | [Airlock Door](https://steamcommunity.com/sharedfiles/filedetails/?id=2094698134) | Allows Duplicants to pass between areas while maintaing full atmospheric isolation |
+| [Build Straight Up](https://steamcommunity.com/sharedfiles/filedetails/?id=2135682628) | Allows Rockets and Monuments to be planned out all at once |
 | [One Giant Leap](https://steamcommunity.com/sharedfiles/filedetails/?id=1999001228) | Adds over 30 new, challenging Colony Initiatives |
 | [Queue for Sinks](https://steamcommunity.com/sharedfiles/filedetails/?id=1881925531) | Causes Duplicants to automatically line up to use sinks, wash basins, hand sanitizers, and ore scrubbers |
 | [Smart Pumps](https://forums.kleientertainment.com/forums/topic/91094-the-mystery-about-pump-range/) | Adds new, smarter liquid and gas pumps for specific situations |

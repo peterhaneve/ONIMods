@@ -73,7 +73,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CleanDrop", "CleanDrop\Clea
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClothingTweaks", "ClothingTweaks\ClothingTweaks.csproj", "{39A349AE-5CD5-46C0-8709-3C6877EA2AAB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AIImprovements", "AIImprovements\AIImprovements.csproj", "{E367FD41-DCD7-4921-82A9-27783206D7BD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIImprovements", "AIImprovements\AIImprovements.csproj", "{E367FD41-DCD7-4921-82A9-27783206D7BD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildStraightUp", "BuildStraightUp\BuildStraightUp.csproj", "{76F4CFB2-B40A-4C14-8842-4AE1C3F73A5D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -225,6 +227,10 @@ Global
 		{E367FD41-DCD7-4921-82A9-27783206D7BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E367FD41-DCD7-4921-82A9-27783206D7BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E367FD41-DCD7-4921-82A9-27783206D7BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76F4CFB2-B40A-4C14-8842-4AE1C3F73A5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76F4CFB2-B40A-4C14-8842-4AE1C3F73A5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76F4CFB2-B40A-4C14-8842-4AE1C3F73A5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76F4CFB2-B40A-4C14-8842-4AE1C3F73A5D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
