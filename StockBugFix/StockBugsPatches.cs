@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Database;
 using Harmony;
 using PeterHan.PLib;
 using System;
@@ -28,6 +29,12 @@ namespace PeterHan.StockBugFix {
 	/// Patches which will be applied via annotations for Stock Bug Fix.
 	/// </summary>
 	public sealed class StockBugsPatches {
+		/// <summary>
+		/// Base divisor is 10000, so 6000/10000 = 0.6 priority.
+		/// </summary>
+		public const int JOY_PRIORITY_MOD = 6000;
+
+#if false
 		/// <summary>
 		/// Applies rocket damage. Since the amount is known to be instant, the method can be
 		/// simplified greatly.
@@ -65,6 +72,7 @@ namespace PeterHan.StockBugFix {
 			}
 			return amount;
 		}
+#endif
 
 		/// <summary>
 		/// Retrieves the specified property setter.
@@ -188,6 +196,38 @@ namespace PeterHan.StockBugFix {
 			internal static void Postfix(OxidizerTank __instance) {
 				var obj = __instance.gameObject;
 				obj.GetComponentSafe<Storage>()?.Trigger((int)GameHashes.OnStorageChange, obj);
+			}
+		}
+
+		/// <summary>
+		/// Applied to ChoreTypes to bump the priority of overjoyed reactions.
+		/// </summary>
+		[HarmonyPatch]
+		public static class ChoreTypes_Add_Patch {
+			/// <summary>
+			/// Calculates the correct Add overload to patch.
+			/// </summary>
+			internal static MethodInfo TargetMethod() {
+				var methods = typeof(ChoreTypes).GetMethods(BindingFlags.DeclaredOnly |
+					BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+				foreach (var method in methods)
+					if (method.Name == nameof(ChoreTypes.Add))
+						return method;
+				PUtil.LogWarning("Unable to find ChoreTypes.Add method!");
+				return typeof(ChoreTypes).GetMethodSafe(nameof(ChoreTypes.Add), false,
+					PPatchTools.AnyArguments);
+			}
+
+			/// <summary>
+			/// Applied before Add runs.
+			/// </summary>
+			internal static void Prefix(string id, ref int explicit_priority) {
+				if (id == "JoyReaction") {
+					explicit_priority = JOY_PRIORITY_MOD;
+#if DEBUG
+					PUtil.LogDebug("Changed priority of {1} to {0:D}".F(JOY_PRIORITY_MOD, id));
+#endif
+				}
 			}
 		}
 
