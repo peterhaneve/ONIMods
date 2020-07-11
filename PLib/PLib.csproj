@@ -4,8 +4,8 @@
     <TargetFramework>net40</TargetFramework>
     <Title>PeterHan.PLib</Title>
       <AssemblyTitle>PeterHanLib</AssemblyTitle>
-      <Version>3.8.2.0</Version>
-      <!--<PackageVersion>3.8.2-beta</PackageVersion>-->
+      <Version>3.9.0.0</Version>
+      <!--<PackageVersion>3.9.0-beta</PackageVersion>-->
       <UsesPLib>false</UsesPLib>
       <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
       <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
@@ -17,11 +17,11 @@
       <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
     
 Contains methods aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
-      <PackageReleaseNotes>Greatly improved postload handlers, allowing patches to be executed directly from a class and adding conditions for required types to exist.
+      <PackageReleaseNotes>Add a few additional transpiler tools.
 
-Added OptionalMethodInfo to provide compatibility bridges between methods that have optional parameters added to them.</PackageReleaseNotes>
+Fix a crash caused by game updates to dialogs.</PackageReleaseNotes>
       <RootNamespace>PeterHan.PLib</RootNamespace>
-      <AssemblyVersion>3.8.2.0</AssemblyVersion>
+      <AssemblyVersion>3.9.0.0</AssemblyVersion>
       <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
       <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>

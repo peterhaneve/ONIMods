@@ -37,6 +37,11 @@ namespace PeterHan.PLib {
 		private const BindingFlags BASE_FLAGS = BindingFlags.Public | BindingFlags.NonPublic;
 
 		/// <summary>
+		/// The opcodes that branch control conditionally.
+		/// </summary>
+		private static readonly ISet<OpCode> BRANCH_CODES;
+
+		/// <summary>
 		/// Opcodes to load an integer onto the stack.
 		/// </summary>
 		private static readonly OpCode[] LOAD_INT = {
@@ -44,6 +49,36 @@ namespace PeterHan.PLib {
 			OpCodes.Ldc_I4_3, OpCodes.Ldc_I4_4, OpCodes.Ldc_I4_5, OpCodes.Ldc_I4_6,
 			OpCodes.Ldc_I4_7, OpCodes.Ldc_I4_8
 		};
+
+		static PPatchTools() {
+			// OpCode has a GetHashCode method!
+			BRANCH_CODES = new HashSet<OpCode> {
+				OpCodes.Beq,
+				OpCodes.Beq_S,
+				OpCodes.Bge,
+				OpCodes.Bge_S,
+				OpCodes.Bge_Un,
+				OpCodes.Bge_Un_S,
+				OpCodes.Bgt,
+				OpCodes.Bgt_S,
+				OpCodes.Bgt_Un,
+				OpCodes.Bgt_Un_S,
+				OpCodes.Ble,
+				OpCodes.Ble_S,
+				OpCodes.Ble_Un,
+				OpCodes.Ble_Un_S,
+				OpCodes.Blt,
+				OpCodes.Blt_S,
+				OpCodes.Blt_Un,
+				OpCodes.Blt_Un_S,
+				OpCodes.Bne_Un,
+				OpCodes.Bne_Un_S,
+				OpCodes.Brfalse,
+				OpCodes.Brfalse_S,
+				OpCodes.Brtrue,
+				OpCodes.Brtrue_S,
+			};
+		}
 
 		/// <summary>
 		/// Passed to GetMethodSafe to match any method arguments.
@@ -210,6 +245,29 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Creates a store instruction to the same local as the specified load instruction.
+		/// </summary>
+		/// <param name="load">The initial load instruction.</param>
+		/// <returns>The counterbalancing store instruction.</returns>
+		public static CodeInstruction GetMatchingStoreInstruction(CodeInstruction load) {
+			CodeInstruction instr;
+			var opcode = load.opcode;
+			if (opcode == OpCodes.Ldloc)
+				instr = new CodeInstruction(OpCodes.Stloc, load.operand);
+			else if (opcode == OpCodes.Ldloc_0)
+				instr = new CodeInstruction(OpCodes.Stloc_0);
+			else if (opcode == OpCodes.Ldloc_1)
+				instr = new CodeInstruction(OpCodes.Stloc_1);
+			else if (opcode == OpCodes.Ldloc_2)
+				instr = new CodeInstruction(OpCodes.Stloc_2);
+			else if (opcode == OpCodes.Ldloc_3)
+				instr = new CodeInstruction(OpCodes.Stloc_3);
+			else
+				instr = new CodeInstruction(OpCodes.Pop);
+			return instr;
+		}
+
+		/// <summary>
 		/// Retrieves a method using reflection, or returns null if it does not exist.
 		/// </summary>
 		/// <param name="type">The base type.</param>
@@ -342,6 +400,15 @@ namespace PeterHan.PLib {
 				} catch (BadImageFormatException) { }
 			}
 			return type;
+		}
+
+		/// <summary>
+		/// Checks to see if an instruction opcode is a branch instruction.
+		/// </summary>
+		/// <param name="opcode">The opcode to check.</param>
+		/// <returns>true if it is a branch, or false otherwise.</returns>
+		public static bool IsConditionalBranchInstruction(this OpCode opcode) {
+			return BRANCH_CODES.Contains(opcode);
 		}
 
 		/// <summary>
@@ -600,8 +667,8 @@ namespace PeterHan.PLib {
 		/// ReplaceMethodCall(TranspiledMethod, MethodInfo, MethodInfo).
 		/// </summary>
 		/// <param name="method">The method to patch.</param>
-		/// <param name="victim">The old method calls to remove.</param>
-		/// <param name="newMethod">The new method to replace, or null to delete the calls.</param>
+		/// <param name="translation">A mapping from the old method calls to replace, to the
+		/// new method calls to use instead.</param>
 		/// <returns>A transpiled version of that method that replaces or removes all calls
 		/// to the specified methods.</returns>
 		/// <exception cref="ArgumentException">If any of the new methods' argument types do

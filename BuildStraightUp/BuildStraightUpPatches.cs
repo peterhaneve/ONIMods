@@ -18,7 +18,6 @@
 
 using Harmony;
 using PeterHan.PLib;
-using ProcGen.Map;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -30,44 +29,9 @@ namespace PeterHan.BuildStraightUp {
 	/// </summary>
 	public static class BuildStraightUpPatches {
 		/// <summary>
-		/// The opcodes that branch control conditionally.
-		/// </summary>
-		private static readonly ISet<OpCode> branchCodes;
-		
-		/// <summary>
 		/// The last building checked.
 		/// </summary>
 		private static LastBuilding lastChecked = new LastBuilding();
-
-		static BuildStraightUpPatches() {
-			// OpCode has a GetHashCode method!
-			branchCodes = new HashSet<OpCode> {
-				OpCodes.Beq,
-				OpCodes.Beq_S,
-				OpCodes.Bge,
-				OpCodes.Bge_S,
-				OpCodes.Bge_Un,
-				OpCodes.Bge_Un_S,
-				OpCodes.Bgt,
-				OpCodes.Bgt_S,
-				OpCodes.Bgt_Un,
-				OpCodes.Bgt_Un_S,
-				OpCodes.Ble,
-				OpCodes.Ble_S,
-				OpCodes.Ble_Un,
-				OpCodes.Ble_Un_S,
-				OpCodes.Blt,
-				OpCodes.Blt_S,
-				OpCodes.Blt_Un,
-				OpCodes.Blt_Un_S,
-				OpCodes.Bne_Un,
-				OpCodes.Bne_Un_S,
-				OpCodes.Brfalse,
-				OpCodes.Brfalse_S,
-				OpCodes.Brtrue,
-				OpCodes.Brtrue_S,
-			};
-		}
 
 		public static void OnLoad() {
 			PUtil.InitLibrary();
@@ -154,29 +118,6 @@ namespace PeterHan.BuildStraightUp {
 		}
 
 		/// <summary>
-		/// Creates a store instruction to the same local as the specified load instruction.
-		/// </summary>
-		/// <param name="load">The initial load instruction.</param>
-		/// <returns>The counterbalancing store instruction.</returns>
-		private static CodeInstruction GetMatchingStoreInstruction(CodeInstruction load) {
-			CodeInstruction instr;
-			var opcode = load.opcode;
-			if (opcode == OpCodes.Ldloc)
-				instr = new CodeInstruction(OpCodes.Stloc, load.operand);
-			else if (opcode == OpCodes.Ldloc_0)
-				instr = new CodeInstruction(OpCodes.Stloc_0);
-			else if (opcode == OpCodes.Ldloc_1)
-				instr = new CodeInstruction(OpCodes.Stloc_1);
-			else if (opcode == OpCodes.Ldloc_2)
-				instr = new CodeInstruction(OpCodes.Stloc_2);
-			else if (opcode == OpCodes.Ldloc_3)
-				instr = new CodeInstruction(OpCodes.Stloc_3);
-			else
-				instr = new CodeInstruction(OpCodes.Pop);
-			return instr;
-		}
-
-		/// <summary>
 		/// Checks to see if a building attachment point would be valid, after completion of
 		/// all buildings planned or under construction.
 		/// </summary>
@@ -209,15 +150,6 @@ namespace PeterHan.BuildStraightUp {
 		}
 
 		/// <summary>
-		/// Checks to see if an instruction opcode is a branch instruction.
-		/// </summary>
-		/// <param name="opcode">The opcode to check.</param>
-		/// <returns>true if it is a branch, or false otherwise.</returns>
-		private static bool IsBranchInstruction(OpCode opcode) {
-			return branchCodes != null && branchCodes.Contains(opcode);
-		}
-
-		/// <summary>
 		/// Transpiles the IsAreaClear method to modify the check for attachment points.
 		/// </summary>
 		/// <param name="name">The method patched.</param>
@@ -246,11 +178,12 @@ namespace PeterHan.BuildStraightUp {
 #if DEBUG
 						PUtil.LogDebug("Power method offset: {0:D}".F(i));
 #endif
-					} else if (hasAnchor && IsBranchInstruction(code)) {
+					} else if (hasAnchor && code.IsConditionalBranchInstruction()) {
 #if DEBUG
 						PUtil.LogDebug("Branch offset: {0:D}".F(i));
 #endif
-						var store = GetMatchingStoreInstruction(instructions[i - 1]);
+						var store = PPatchTools.GetMatchingStoreInstruction(
+							instructions[i - 1]);
 						// Stack has "flag" on it, pass it to our method
 						instructions.InsertRange(i, new List<CodeInstruction>(3) {
 							// this
