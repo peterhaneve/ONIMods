@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net40</TargetFramework>
+    <AssemblyTitle>Custom Pipe Colors</AssemblyTitle>
+    <FileVersion>1.0.0.0</FileVersion>
+    <RootNamespace>PeterHan.OldPipeColor</RootNamespace>
+    <Description>Restores the former colo(u)r of Insulated Pipes and allows configuration of custom colors.</Description>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+  </PropertyGroup>
+</Project>

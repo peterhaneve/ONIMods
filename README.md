@@ -31,6 +31,7 @@ Mods should remain in their own subfolder.
 | [Claustrophobia](https://steamcommunity.com/sharedfiles/filedetails/?id=1836997281) | Triggers a warning if Duplicants are stuck or unable to access your colony |
 | [Clean Drop](https://steamcommunity.com/sharedfiles/filedetails/?id=2047364442) | Attempts to push items spawned inside tiles into a location accessible to Duplicants |
 | [Critter Inventory](https://steamcommunity.com/sharedfiles/filedetails/?id=1831438994) | Adds tame and wild critters to the inventory list |
+| [Custom Pipe Colors](https://steamcommunity.com/sharedfiles/filedetails/?id=2167499088) | Restores the old Insulated Pipe overlay color and allows configuring custom colors |
 | [Deselect New Materials](https://steamcommunity.com/sharedfiles/filedetails/?id=1863598374) | Optionally deselects newly discovered materials from storage buildings |
 | [Efficient Supply](https://steamcommunity.com/sharedfiles/filedetails/?id=1874600082) | Optimizes Supply errands by preventing the use of tiny item stacks |
 | [Falling Sand](https://steamcommunity.com/sharedfiles/filedetails/?id=1855163252) | Automatically places Dig errands on fallen unstable tiles caused by mining |

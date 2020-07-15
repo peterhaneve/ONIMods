@@ -77,6 +77,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIImprovements", "AIImprove
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuildStraightUp", "BuildStraightUp\BuildStraightUp.csproj", "{76F4CFB2-B40A-4C14-8842-4AE1C3F73A5D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OldPipeColor", "OldPipeColor\OldPipeColor.csproj", "{6D6A89D2-BC44-48CE-A057-BB29FC1A4D05}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -231,6 +233,10 @@ Global
 		{76F4CFB2-B40A-4C14-8842-4AE1C3F73A5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{76F4CFB2-B40A-4C14-8842-4AE1C3F73A5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{76F4CFB2-B40A-4C14-8842-4AE1C3F73A5D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D6A89D2-BC44-48CE-A057-BB29FC1A4D05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D6A89D2-BC44-48CE-A057-BB29FC1A4D05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D6A89D2-BC44-48CE-A057-BB29FC1A4D05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D6A89D2-BC44-48CE-A057-BB29FC1A4D05}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
