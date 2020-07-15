@@ -20,27 +20,9 @@ using System;
 
 namespace PeterHan.PLib {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// An exception thrown when constructing a detour.
 	/// </summary>
-	public static class PVersion {
-		/// <summary>
-		/// The PLib version.
-		/// </summary>
-		public const string VERSION = "3.9.5.0";
-
-		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in OnLoad or RegisterPostload, and will always return false in those
-		/// cases.
-		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				return VERSION == PSharedData.GetData<string>(PRegistry.KEY_VERSION);
-			}
-		}
+	public class DetourException : ArgumentException {
+		public DetourException(string message) : base(message) { }
 	}
 }

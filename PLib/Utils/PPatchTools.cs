@@ -22,7 +22,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Threading;
 
 using TranspiledMethod = System.Collections.Generic.IEnumerable<Harmony.CodeInstruction>;
 
@@ -34,51 +33,7 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// The base binding flags for all reflection methods.
 		/// </summary>
-		private const BindingFlags BASE_FLAGS = BindingFlags.Public | BindingFlags.NonPublic;
-
-		/// <summary>
-		/// The opcodes that branch control conditionally.
-		/// </summary>
-		private static readonly ISet<OpCode> BRANCH_CODES;
-
-		/// <summary>
-		/// Opcodes to load an integer onto the stack.
-		/// </summary>
-		private static readonly OpCode[] LOAD_INT = {
-			OpCodes.Ldc_I4_M1, OpCodes.Ldc_I4_0, OpCodes.Ldc_I4_1, OpCodes.Ldc_I4_2,
-			OpCodes.Ldc_I4_3, OpCodes.Ldc_I4_4, OpCodes.Ldc_I4_5, OpCodes.Ldc_I4_6,
-			OpCodes.Ldc_I4_7, OpCodes.Ldc_I4_8
-		};
-
-		static PPatchTools() {
-			// OpCode has a GetHashCode method!
-			BRANCH_CODES = new HashSet<OpCode> {
-				OpCodes.Beq,
-				OpCodes.Beq_S,
-				OpCodes.Bge,
-				OpCodes.Bge_S,
-				OpCodes.Bge_Un,
-				OpCodes.Bge_Un_S,
-				OpCodes.Bgt,
-				OpCodes.Bgt_S,
-				OpCodes.Bgt_Un,
-				OpCodes.Bgt_Un_S,
-				OpCodes.Ble,
-				OpCodes.Ble_S,
-				OpCodes.Ble_Un,
-				OpCodes.Ble_Un_S,
-				OpCodes.Blt,
-				OpCodes.Blt_S,
-				OpCodes.Blt_Un,
-				OpCodes.Blt_Un_S,
-				OpCodes.Bne_Un,
-				OpCodes.Bne_Un_S,
-				OpCodes.Brfalse,
-				OpCodes.Brfalse_S,
-				OpCodes.Brtrue,
-				OpCodes.Brtrue_S,
-			};
-		}
+		internal const BindingFlags BASE_FLAGS = BindingFlags.Public | BindingFlags.NonPublic;
 
 		/// <summary>
 		/// Passed to GetMethodSafe to match any method arguments.
@@ -87,37 +42,6 @@ namespace PeterHan.PLib {
 			get {
 				return new Type[] { null };
 			}
-		}
-
-		/// <summary>
-		/// Compares the method parameters and throws ArgumentException if they do not match.
-		/// </summary>
-		/// <param name="victim">The victim method.</param>
-		/// <param name="paramTypes">The method's parameter types.</param>
-		/// <param name="newMethod">The replacement method.</param>
-		private static void CompareMethodParams(MethodInfo victim, Type[] paramTypes,
-				MethodInfo newMethod) {
-			Type[] newTypes = newMethod.GetParameterTypes();
-			if (!newMethod.IsStatic)
-				newTypes = PushDeclaringType(newTypes, newMethod.DeclaringType);
-			if (!victim.IsStatic)
-				paramTypes = PushDeclaringType(paramTypes, victim.DeclaringType);
-			int n = paramTypes.Length;
-			// Argument count check
-			if (newTypes.Length != n)
-				throw new ArgumentException(("New method {0} ({1:D} arguments) does not " +
-					"match method {2} ({3:D} arguments)").F(newMethod.Name, newTypes.Length,
-					victim.Name, n));
-			// Argument type check
-			for (int i = 0; i < n; i++)
-				if (!newTypes[i].IsAssignableFrom(paramTypes[i]))
-					throw new ArgumentException(("Argument {0:D}: New method type {1} does " +
-						"not match old method type {2}").F(i, paramTypes[i].FullName,
-						newTypes[i].FullName));
-			if (!victim.ReturnType.IsAssignableFrom(newMethod.ReturnType))
-				throw new ArgumentException(("New method {0} (returns {1}) does not match " +
-					"method {2} (returns {3})").F(newMethod.Name, newMethod.
-					ReturnType, victim.Name, victim.ReturnType));
 		}
 
 		/// <summary>
@@ -296,22 +220,6 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
-		/// Gets the method's parameter types.
-		/// </summary>
-		/// <param name="method">The method to query.</param>
-		/// <returns>The type of each parameter of the method.</returns>
-		internal static Type[] GetParameterTypes(this MethodInfo method) {
-			if (method == null)
-				throw new ArgumentNullException("method");
-			var pm = method.GetParameters();
-			int n = pm.Length;
-			var types = new Type[n];
-			for (int i = 0; i < n; i++)
-				types[i] = pm[i].ParameterType;
-			return types;
-		}
-
-		/// <summary>
 		/// Retrieves a property using reflection, or returns null if it does not exist.
 		/// </summary>
 		/// <param name="type">The base type.</param>
@@ -408,7 +316,7 @@ namespace PeterHan.PLib {
 		/// <param name="opcode">The opcode to check.</param>
 		/// <returns>true if it is a branch, or false otherwise.</returns>
 		public static bool IsConditionalBranchInstruction(this OpCode opcode) {
-			return BRANCH_CODES.Contains(opcode);
+			return PTranspilerTools.IsConditionalBranchInstruction(opcode);
 		}
 
 		/// <summary>
@@ -416,10 +324,9 @@ namespace PeterHan.PLib {
 		/// </summary>
 		[Obsolete("Do not use this method in production code. Make sure to remove it in release builds, or disable it with #if DEBUG.")]
 		public static void LogAllExceptions() {
-			// This is not for production use
 			PUtil.LogWarning("PLib in mod " + Assembly.GetCallingAssembly().GetName()?.Name +
 				" is logging ALL unhandled exceptions!");
-			AppDomain.CurrentDomain.UnhandledException += OnThrown;
+			PTranspilerTools.LogAllExceptions();
 		}
 
 		/// <summary>
@@ -428,69 +335,9 @@ namespace PeterHan.PLib {
 		/// </summary>
 		[Obsolete("Do not use this method in production code. Make sure to remove it in release builds, or disable it with #if DEBUG.")]
 		public static void LogAllFailedAsserts() {
-			var inst = HarmonyInstance.Create("PeterHan.PLib.LogFailedAsserts");
-			MethodBase assert;
-			var handler = new HarmonyMethod(typeof(PPatchTools), nameof(OnAssertFailed));
-			// This is not for production use
 			PUtil.LogWarning("PLib in mod " + Assembly.GetCallingAssembly().GetName()?.Name +
 				" is logging ALL failed assertions!");
-			try {
-				// Assert(bool)
-				assert = GetMethodSafe(typeof(Debug), "Assert", true, typeof(bool));
-				if (assert != null)
-					inst.Patch(assert, handler);
-				// Assert(bool, object)
-				assert = GetMethodSafe(typeof(Debug), "Assert", true, typeof(bool), typeof(
-					object));
-				if (assert != null)
-					inst.Patch(assert, handler);
-				// Assert(bool, object, UnityEngine.Object)
-				assert = GetMethodSafe(typeof(Debug), "Assert", true, typeof(bool), typeof(
-					object), typeof(UnityEngine.Object));
-				if (assert != null)
-					inst.Patch(assert, handler);
-			} catch (Exception e) {
-				PUtil.LogException(e);
-			}
-		}
-
-		/// <summary>
-		/// Logs a failed assertion that is about to occur.
-		/// </summary>
-		private static void OnAssertFailed(bool condition) {
-			if (!condition) {
-				Debug.LogError("Assert is about to fail:");
-				Debug.LogError(new System.Diagnostics.StackTrace().ToString());
-			}
-		}
-
-		/// <summary>
-		/// An optional handler for all unhandled exceptions.
-		/// </summary>
-		private static void OnThrown(object sender, UnhandledExceptionEventArgs e) {
-			if (!e.IsTerminating) {
-				Debug.LogError("Unhandled exception on Thread " + Thread.CurrentThread.Name);
-				if (e.ExceptionObject is Exception ex)
-					Debug.LogException(ex);
-				else
-					Debug.LogError(e.ExceptionObject);
-			}
-		}
-
-		/// <summary>
-		/// Inserts the declaring instance type to the front of the specified array.
-		/// </summary>
-		/// <param name="types">The parameter types.</param>
-		/// <param name="declaringType">The type which declared this method.</param>
-		/// <returns>The types with declaringType inserted at the beginning.</returns>
-		private static Type[] PushDeclaringType(Type[] types, Type declaringType) {
-			int n = types.Length;
-			// Allow special case of passing "this" as first static arg
-			var newParamTypes = new Type[n + 1];
-			newParamTypes[0] = declaringType;
-			for (int i = 0; i < n; i++)
-				newParamTypes[i + 1] = types[i];
-			return newParamTypes;
+			PTranspilerTools.LogAllFailedAsserts();
 		}
 
 		/// <summary>
@@ -554,7 +401,7 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Transpiles a method to replace instances of one constant value with another.
 		/// 
-		/// Note that values of type byte, char, and bool are also represented with "i4"
+		/// Note that values of type byte, short, char, and bool are also represented with "i4"
 		/// constants which can be targeted by this method.
 		/// </summary>
 		/// <param name="method">The method to patch.</param>
@@ -566,14 +413,14 @@ namespace PeterHan.PLib {
 		/// constant with that of the second.</returns>
 		public static TranspiledMethod ReplaceConstant(TranspiledMethod method, int oldValue,
 				int newValue, bool all = false) {
-			if (method == null)
-				throw new ArgumentNullException("method");
 			int replaced = 0;
 			bool quickCode = oldValue >= -1 && oldValue <= 8;
-			// Quick test for the opcode on the shorthand forms
 			var qc = OpCodes.Nop;
+			if (method == null)
+				throw new ArgumentNullException("method");
+			// Quick test for the opcode on the shorthand forms
 			if (quickCode)
-				qc = LOAD_INT[oldValue + 1];
+				qc = PTranspilerTools.LOAD_INT[oldValue + 1];
 			foreach (var inst in method) {
 				var instruction = inst;
 				var opcode = instruction.opcode;
@@ -582,21 +429,8 @@ namespace PeterHan.PLib {
 						(opcode == OpCodes.Ldc_I4_S && (operand is byte bval) && bval ==
 						oldValue) || (quickCode && qc == opcode)) {
 					// Replace instruction if first instance, or all to be replaced
-					if (all || replaced == 0) {
-						if (newValue >= -1 && newValue <= 8) {
-							// Short form: constant
-							instruction.opcode = LOAD_INT[newValue + 1];
-							instruction.operand = null;
-						} else if (newValue >= byte.MinValue && newValue <= byte.MaxValue) {
-							// Short form: 0-255
-							instruction.opcode = OpCodes.Ldc_I4_S;
-							instruction.operand = (byte)newValue;
-						} else {
-							// Long form
-							instruction.opcode = OpCodes.Ldc_I4;
-							instruction.operand = newValue;
-						}
-					}
+					if (all || replaced == 0)
+						PTranspilerTools.ModifyLoadI4(instruction, newValue);
 					replaced++;
 				}
 				yield return instruction;
@@ -687,7 +521,8 @@ namespace PeterHan.PLib {
 				if (victim == null)
 					throw new ArgumentNullException("victim");
 				if (newMethod != null)
-					CompareMethodParams(victim, victim.GetParameterTypes(), newMethod);
+					PTranspilerTools.CompareMethodParams(victim, victim.GetParameterTypes(),
+						newMethod);
 				else if (victim.ReturnType != typeof(void))
 					throw new ArgumentException("Cannot remove method {0} with a return value".
 						F(victim.Name));

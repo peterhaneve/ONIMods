@@ -41,6 +41,11 @@ namespace PeterHan.PLib.Options {
 		private static readonly TextStyleSetting CATEGORY_TITLE_STYLE;
 
 		/// <summary>
+		/// The margins inside the colored boxes in each config section.
+		/// </summary>
+		private static readonly int CATEGORY_MARGIN = 8;
+
+		/// <summary>
 		/// The size of the mod preview image displayed.
 		/// </summary>
 		private static readonly Vector2 MOD_IMAGE_SIZE = new Vector2(192.0f, 192.0f);
@@ -304,7 +309,8 @@ namespace PeterHan.PLib.Options {
 		/// <param name="dialog">The dialog to populate.</param>
 		private void FillModOptions(PDialog dialog) {
 			var body = dialog.Body;
-			var margin = body.Margin;
+			var margin = new RectOffset(CATEGORY_MARGIN, CATEGORY_MARGIN, CATEGORY_MARGIN,
+				CATEGORY_MARGIN);
 			// For each option, add its UI component to panel
 			body.Margin = new RectOffset();
 			var scrollBody = new PPanel("ScrollContent") {

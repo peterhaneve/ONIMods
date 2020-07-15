@@ -24,6 +24,8 @@ namespace PeterHan.PLib {
 	/// A method information object that automatically handles optional parameters. Klei likes
 	/// to add these, but they are not binary compatible, so this method allows handling both
 	/// cases.
+	/// 
+	/// Consider using PDetours in cases where performance is critical.
 	/// </summary>
 	public sealed class OptionalMethodInfo<T> {
 		/// <summary>
@@ -122,6 +124,8 @@ namespace PeterHan.PLib {
 
 		/// <summary>
 		/// Calls the target method, automatically filling in optional parameters.
+		/// 
+		/// This method can be slow, as it uses reflection.
 		/// </summary>
 		/// <param name="context">The object to use as the instance parameter, or null when
 		/// used on a static method.</param>

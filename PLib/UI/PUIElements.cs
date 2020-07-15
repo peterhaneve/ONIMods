@@ -28,6 +28,17 @@ namespace PeterHan.PLib.UI {
 	/// </summary>
 	public sealed class PUIElements {
 		/// <summary>
+		/// Detour for ConfirmDialogScreen.PopupConfirmDialog.
+		/// </summary>
+		private delegate void PCD(ConfirmDialogScreen dialog, string text,
+			System.Action on_confirm, System.Action on_cancel, string configurable_text,
+			System.Action on_configurable_clicked, string title_text, string confirm_text,
+			string cancel_text);
+
+		private static readonly PCD POPUP_CONFIRM = typeof(ConfirmDialogScreen).
+			Detour<PCD>(nameof(ConfirmDialogScreen.PopupConfirmDialog));
+
+		/// <summary>
 		/// Safely adds a LocText to a game object without throwing an NRE on construction.
 		/// </summary>
 		/// <param name="parent">The game object to add the LocText.</param>
@@ -340,7 +351,7 @@ namespace PeterHan.PLib.UI {
 			var obj = Util.KInstantiateUI(ScreenPrefabs.Instance.ConfirmDialogScreen.
 				gameObject, parent, false);
 			var confirmDialog = obj.GetComponent<ConfirmDialogScreen>();
-			confirmDialog.PopupConfirmDialog(message, onConfirm, onCancel ?? DoNothing, null,
+			POPUP_CONFIRM(confirmDialog, message, onConfirm, onCancel ?? DoNothing, null,
 				null, null, confirmText, cancelText);
 			obj.SetActive(true);
 			return confirmDialog;
