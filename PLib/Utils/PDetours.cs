@@ -118,9 +118,11 @@ namespace PeterHan.PLib {
 			for (int i = 4; i < n; i++)
 				generator.Emit(OpCodes.Ldarg_S, i);
 			// Load the rest as defaults
-			for (int i = n; i < need; i++)
-				PTranspilerTools.GenerateDefaultLoad(generator, actualParams[i - offset].
-					ParameterType);
+			for (int i = n; i < need; i++) {
+				var param = actualParams[i - offset];
+				PTranspilerTools.GenerateDefaultLoad(generator, param.ParameterType, param.
+					DefaultValue);
+			}
 			if (parentType.IsValueType || target.IsStatic)
 				generator.Emit(OpCodes.Call, target);
 			else
@@ -137,7 +139,125 @@ namespace PeterHan.PLib {
 			PUtil.LogDebug("Created delegate {0} for method {1}.{2} with parameter types {3}".
 				F(caller.Name, parentType.FullName, target.Name, actualParams.Join(",")));
 #endif
-			return (D)caller.CreateDelegate(typeof(D));
+			return caller.CreateDelegate(typeof(D)) as D;
+		}
+
+		/// <summary>
+		/// Creates dynamic detour methods to wrap a base game field or property with the
+		/// specified name. The detour will still work even if the field is converted to a
+		/// source compatible property and vice versa.
+		/// </summary>
+		/// <typeparam name="P">The type of the parent class.</typeparam>
+		/// <typeparam name="T">The type of the field or property element.</typeparam>
+		/// <param name="name">The name of the field or property to be accessed.</param>
+		/// <returns>A detour element that wraps the field or property with common getter and
+		/// setter delegates which will work on both types.</returns>
+		public static DetouredField<P, T> DetourField<P, T>(string name) {
+			if (string.IsNullOrEmpty(name))
+				throw new ArgumentNullException("name");
+			var field = typeof(P).GetField(name, PPatchTools.BASE_FLAGS | BindingFlags.
+				Static | BindingFlags.Instance);
+			DetouredField<P, T> d;
+			if (field == null) {
+				try {
+					var property = typeof(P).GetProperty(name, PPatchTools.BASE_FLAGS |
+						BindingFlags.Static | BindingFlags.Instance);
+					if (property == null)
+						throw new DetourException("Unable to find {0} on type {1}".
+							F(name, typeof(P).FullName));
+					d = DetourProperty<P, T>(property);
+				} catch (AmbiguousMatchException) {
+					throw new DetourException("Unable to find {0} on type {1}".
+						F(name, typeof(P).FullName));
+				}
+			} else
+				d = DetourField<P, T>(field);
+			return d;
+		}
+
+		/// <summary>
+		/// Creates dynamic detour methods to wrap a base game field with the specified name.
+		/// </summary>
+		/// <typeparam name="P">The type of the parent class.</typeparam>
+		/// <typeparam name="T">The type of the field element.</typeparam>
+		/// <param name="target">The field which will be accessed.</param>
+		/// <returns>A detour element that wraps the field with a common interface matching
+		/// that of a detoured property.</returns>
+		private static DetouredField<P, T> DetourField<P, T>(this FieldInfo target) {
+			if (target == null)
+				throw new ArgumentNullException("target");
+			var parentType = target.DeclaringType;
+			string name = target.Name;
+			if (parentType != typeof(P))
+				throw new ArgumentException("Parent type does not match delegate to be created");
+			var getter = new DynamicMethod(name + "_Detour_Get", typeof(T), new Type[] {
+				typeof(P)
+			});
+			var setter = new DynamicMethod(name + "_Detour_Set", null, new Type[] {
+				typeof(P), typeof(T)
+			});
+			var generator = getter.GetILGenerator();
+			// Getter will load the first argument and use ldfld/ldsfld
+			if (target.IsStatic)
+				generator.Emit(OpCodes.Ldsfld, target);
+			else {
+				generator.Emit(OpCodes.Ldarg_0);
+				generator.Emit(OpCodes.Ldfld, target);
+			}
+			generator.Emit(OpCodes.Ret);
+			generator = setter.GetILGenerator();
+			// Setter will load both arguments and use stfld/stsfld
+			if (target.IsStatic) {
+				generator.Emit(OpCodes.Ldarg_1);
+				generator.Emit(OpCodes.Stsfld, target);
+			} else {
+				generator.Emit(OpCodes.Ldarg_0);
+				generator.Emit(OpCodes.Ldarg_1);
+				generator.Emit(OpCodes.Stfld, target);
+			}
+			generator.Emit(OpCodes.Ret);
+			return new DetouredField<P, T>(name, getter.CreateDelegate(typeof(Func<P, T>)) as
+				Func<P, T>, setter.CreateDelegate(typeof(Action<P, T>)) as Action<P, T>);
+		}
+
+		/// <summary>
+		/// Creates dynamic detour methods to wrap a base game property with the specified name.
+		/// </summary>
+		/// <typeparam name="P">The type of the parent class.</typeparam>
+		/// <typeparam name="T">The type of the property element.</typeparam>
+		/// <param name="target">The property which will be accessed.</param>
+		/// <returns>A detour element that wraps the property with a common interface matching
+		/// that of a detoured field.</returns>
+		/// <exception cref="DetourException">If the property has indexers.</exception>
+		private static DetouredField<P, T> DetourProperty<P, T>(this PropertyInfo target) {
+			if (target == null)
+				throw new ArgumentNullException("target");
+			var parentType = target.DeclaringType;
+			string name = target.Name;
+			if (parentType != typeof(P))
+				throw new ArgumentException("Parent type does not match delegate to be created");
+			var indexes = target.GetIndexParameters();
+			if (indexes != null && indexes.Length > 0)
+				throw new DetourException("Cannot detour on properties with index arguments");
+			var getter = new DynamicMethod(name + "_Detour_Get", typeof(T), new Type[] {
+				typeof(P)
+			});
+			var setter = new DynamicMethod(name + "_Detour_Set", null, new Type[] {
+				typeof(P), typeof(T)
+			});
+			var generator = getter.GetILGenerator();
+			// Getter will load the first argument and call the property getter
+			generator.Emit(OpCodes.Ldarg_0);
+			generator.Emit(OpCodes.Call, target.GetGetMethod());
+			generator.Emit(OpCodes.Ret);
+			generator = setter.GetILGenerator();
+			// Setter will load both arguments and use stfld/stsfld
+			generator.Emit(OpCodes.Ldarg_0);
+			generator.Emit(OpCodes.Ldarg_1);
+			generator.Emit(OpCodes.Call, target.GetSetMethod());
+			generator.Emit(OpCodes.Ret);
+			return new DetouredField<P, T>(name, getter.CreateDelegate(typeof(Func<P, T>)) as
+				Func<P, T>, setter.CreateDelegate(typeof(Action<P, T>)) as Action<P, T>);
 		}
 
 		/// <summary>

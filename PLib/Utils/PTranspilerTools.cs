@@ -103,37 +103,88 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
-		/// Pushes the default value for a type. This method does not work on compound value
-		/// types or by-ref types, as those need a local.
+		/// Pushes the specified value onto the evaluation stack. This method does not work on
+		/// compound value types or by-ref types, as those need a local variable. If the value
+		/// is DBNull.Value, then default(value) will be used instead.
 		/// </summary>
 		/// <param name="generator">The IL generator where the opcodes will be emitted.</param>
 		/// <param name="type">The type of the value to generate.</param>
+		/// <param name="value">The value to load.</param>
 		/// <returns>true if instructions were pushed (all basic types and reference types),
 		/// or false otherwise (by ref type or compound value type).</returns>
-		private static bool GenerateBasicLoad(ILGenerator generator, Type type) {
-			bool ok = true;
-			if (type == null)
-				throw new ArgumentNullException("type");
-			if (type.IsByRef)
-				ok = false;
-			else if (type == typeof(int) || type == typeof(char) || type == typeof(short) ||
-					type == typeof(uint) || type == typeof(ushort) || type == typeof(byte) ||
-					type == typeof(sbyte) || type == typeof(bool))
-				// Numbers all default to 0, booleans to false
-				generator.Emit(OpCodes.Ldc_I4_0);
-			else if (type == typeof(long) || type == typeof(ulong))
-				generator.Emit(OpCodes.Ldc_I8, 0L);
-			else if (type == typeof(float))
-				generator.Emit(OpCodes.Ldc_R4, 0.0f);
-			else if (type == typeof(double))
-				generator.Emit(OpCodes.Ldc_R8, 0.0);
-			else if (type == typeof(string))
-				generator.Emit(OpCodes.Ldstr, "");
-			else if (!type.IsValueType)
-				// All reference types (including Nullable)
-				generator.Emit(OpCodes.Ldnull);
-			else
-				ok = false;
+		private static bool GenerateBasicLoad(ILGenerator generator, Type type, object value) {
+			bool ok = !type.IsByRef;
+			if (ok) {
+				if (type == typeof(int)) {
+					// int
+					if (value is int iVal)
+						generator.Emit(OpCodes.Ldc_I4, iVal);
+					else
+						generator.Emit(OpCodes.Ldc_I4_0);
+				} else if (type == typeof(char)) {
+					// char
+					if (value is char cVal)
+						generator.Emit(OpCodes.Ldc_I4, cVal);
+					else
+						generator.Emit(OpCodes.Ldc_I4_0);
+				} else if (type == typeof(short)) {
+					// short
+					if (value is short sVal)
+						generator.Emit(OpCodes.Ldc_I4, sVal);
+					else
+						generator.Emit(OpCodes.Ldc_I4_0);
+				} else if (type == typeof(uint)) {
+					// uint
+					if (value is uint uiVal)
+						generator.Emit(OpCodes.Ldc_I4, (int)uiVal);
+					else
+						generator.Emit(OpCodes.Ldc_I4_0);
+				} else if (type == typeof(ushort)) {
+					// ushort
+					if (value is ushort usVal)
+						generator.Emit(OpCodes.Ldc_I4, usVal);
+					else
+						generator.Emit(OpCodes.Ldc_I4_0);
+				} else if (type == typeof(byte)) {
+					// byte (unsigned)
+					if (value is byte bVal)
+						generator.Emit(OpCodes.Ldc_I4_S, bVal);
+					else
+						generator.Emit(OpCodes.Ldc_I4_0);
+				} else if (type == typeof(sbyte)) {
+					// byte (signed)
+					if (value is sbyte sbVal)
+						generator.Emit(OpCodes.Ldc_I4, sbVal);
+					else
+						generator.Emit(OpCodes.Ldc_I4_0);
+				} else if (type == typeof(bool))
+					// bool
+					generator.Emit((value is bool kVal && kVal) ? OpCodes.Ldc_I4_1 : OpCodes.
+						Ldc_I4_0);
+				else if (type == typeof(long))
+					// long
+					generator.Emit(OpCodes.Ldc_I8, (value is long lVal) ? lVal : 0L);
+				else if (type == typeof(ulong))
+					// ulong
+					generator.Emit(OpCodes.Ldc_I8, (value is ulong ulVal) ? (long)ulVal : 0L);
+				else if (type == typeof(float))
+					// float
+					generator.Emit(OpCodes.Ldc_R4, (value is float fVal) ? fVal : 0.0f);
+				else if (type == typeof(double))
+					// double
+					generator.Emit(OpCodes.Ldc_R8, (value is double dVal) ? dVal : 0.0);
+				else if (type == typeof(string))
+					// string
+					generator.Emit(OpCodes.Ldstr, (value is string sVal) ? sVal : "");
+				else if (type.IsPointer)
+					// All pointers
+					generator.Emit(OpCodes.Ldc_I4_0);
+				else if (!type.IsValueType)
+					// All reference types (including Nullable)
+					generator.Emit(OpCodes.Ldnull);
+				else
+					ok = false;
+			}
 			return ok;
 		}
 
@@ -144,18 +195,22 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <param name="generator">The IL generator where the opcodes will be emitted.</param>
 		/// <param name="type">The type to load and initialize.</param>
-		internal static void GenerateDefaultLoad(ILGenerator generator, Type type) {
-			if (!GenerateBasicLoad(generator, type)) {
+		/// <param name="defaultValue">The default value to load.</param>
+		internal static void GenerateDefaultLoad(ILGenerator generator, Type type,
+				object defaultValue) {
+			if (type == null)
+				throw new ArgumentNullException("type");
+			if (!GenerateBasicLoad(generator, type, defaultValue)) {
 				// This method will fail if there are more than 255 local variables, oh no!
 				if (type.IsByRef) {
 					var baseType = type.GetElementType();
 					var localVariable = generator.DeclareLocal(baseType);
 					int index = localVariable.LocalIndex;
-					if (GenerateBasicLoad(generator, baseType))
+					if (GenerateBasicLoad(generator, baseType, defaultValue))
 						// Reference type or basic type
 						generator.Emit(OpCodes.Stloc_S, index);
 					else {
-						// Value types not handled by it
+						// Value types not handled by it, ref vars cannot have a default value
 						generator.Emit(OpCodes.Ldloca_S, index);
 						generator.Emit(OpCodes.Initobj, type);
 					}
@@ -163,7 +218,8 @@ namespace PeterHan.PLib {
 				} else {
 					var localVariable = generator.DeclareLocal(type);
 					int index = localVariable.LocalIndex;
-					// Is a value type
+					// Is a value type, those cannot have default values other than default()
+					// as it must be constant
 					generator.Emit(OpCodes.Ldloca_S, index);
 					generator.Emit(OpCodes.Initobj, type);
 					generator.Emit(OpCodes.Ldloc_S, index);

@@ -68,7 +68,7 @@ namespace PeterHan.DeselectNewMaterials {
 		}
 
 		/// <summary>
-		/// Applied to Storage to ensure that new TreeFilterable objects get a
+		/// Applied to TreeFilterable to ensure that objects with filterable storage get a
 		/// NewMaterialsSettings.
 		/// </summary>
 		[HarmonyPatch(typeof(TreeFilterable), "OnPrefabInit")]

@@ -345,6 +345,36 @@ namespace PeterHan.DebugNotIncluded {
 			}
 		}
 
+#if DEBUG
+		/// <summary>
+		/// Applied to EntityTemplates to allow things to be instantly tamed in sandbox mode.
+		/// </summary>
+		[HarmonyPatch(typeof(EntityTemplates), "ExtendEntityToWildCreature")]
+		public static class EntityTemplates_ExtendEntityToWildCreature_Patch {
+			/// <summary>
+			/// Applied after ExtendEntityToWildCreature runs.
+			/// </summary>
+			internal static void Postfix(GameObject __result) {
+				__result.AddOrGet<InstantGrowable>();
+			}
+		}
+#endif
+
+#if DEBUG
+		/// <summary>
+		/// Applied to Growing to allow things to be instantly grown in sandbox mode.
+		/// </summary>
+		[HarmonyPatch(typeof(Growing), "OnPrefabInit")]
+		public static class Growing_OnPrefabInit_Patch {
+			/// <summary>
+			/// Applied after OnPrefabInit runs.
+			/// </summary>
+			internal static void Postfix(Growing __instance) {
+				__instance.gameObject.AddOrGet<InstantGrowable>();
+			}
+		}
+#endif
+
 		/// <summary>
 		/// Applied to MainMenu to check and move this mod to the top.
 		/// </summary>

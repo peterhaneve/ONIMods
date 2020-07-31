@@ -76,11 +76,17 @@ namespace PeterHan.DebugNotIncluded {
 				public static LocString DNI_ALL = "Enable or disable all";
 				public static LocString DNI_UNSUB = "Unsubscribe from this mod";
 				public static LocString DNI_PLIB = "The currently active version of PLib\nFrom Mod: <b>{0}</b>";
+				public static LocString DNI_INSTANT_GROW = "Set plant growth to 100%";
+				public static LocString DNI_INSTANT_TAME = "Set wildness to 0%";
 			}
 
 			// Unable to unsubscribe from mod
 			public static class UNSUBFAILEDDIALOG {
 				public static LocString TEXT = "Unable to unsubscribe from mod <b>{0}</b>.";
+			}
+
+			public static class USERMENUOPTIONS {
+				public static LocString INSTANTGROW = "Instantly Grow";
 			}
 		}
 

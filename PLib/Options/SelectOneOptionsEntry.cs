@@ -163,8 +163,8 @@ namespace PeterHan.PLib.Options {
 			/// </summary>
 			public object Value { get; }
 
-			internal Option(string title, string toolTip, object value) {
-				Title = title;
+			public Option(string title, string toolTip, object value) {
+				Title = title ?? throw new ArgumentNullException("title");
 				ToolTip = toolTip;
 				Value = value;
 			}
