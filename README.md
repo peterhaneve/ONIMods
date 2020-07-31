@@ -39,6 +39,7 @@ Mods should remain in their own subfolder.
 | [Food Supply Tooltips](https://steamcommunity.com/sharedfiles/filedetails/?id=1914501780) | Adds tooltips to food sources indicating how much food they can produce per cycle |
 | [Mod Updater](https://steamcommunity.com/sharedfiles/filedetails/?id=2018291283) | Adds an option to force update mods that Steam leaves at old versions |
 | [Popup Control](https://steamcommunity.com/sharedfiles/filedetails/?id=2032187035) | Allows in-game text info popups to be hidden or shown by type |
+| [Reloading In Motion](https://steamcommunity.com/sharedfiles/filedetails/?id=2182976959) | Saves the timings of Doors and Plants across reloads |
 | [Research Queue](https://steamcommunity.com/sharedfiles/filedetails/?id=1893887916) | Allows queueing of multiple technologies to research |
 | [Sandbox Tools](https://steamcommunity.com/sharedfiles/filedetails/?id=1928837153) | Improves the Sandbox mode with new spawnable items and other small tweaks | 
 | [Settings Change Tool](https://steamcommunity.com/sharedfiles/filedetails/?id=1843647561) | Allows Repair, Disinfect, and Enable settings to be changed on many buildings at once |
