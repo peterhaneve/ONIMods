@@ -107,8 +107,10 @@ namespace PeterHan.FallingSand {
 					// Should never be null since object was just spawned
 					var component = obj.AddComponent<FallFromDigging>();
 					var xy = Grid.CellToXY(cell);
+#if DEBUG
 					PUtil.LogDebug("Digging induced: {0} @ ({1:D},{2:D})".F(obj.name,
 						xy.X, xy.Y));
+#endif
 					// Unity equals operator strikes again
 					var digPri = cause.gameObject.GetComponentSafe<Prioritizable>();
 					if (digPri != null)

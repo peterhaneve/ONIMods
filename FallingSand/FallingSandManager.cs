@@ -60,7 +60,9 @@ namespace PeterHan.FallingSand {
 				// Assign priority to the dig
 				if (Grid.IsSolidCell(cell)) {
 					var obj = DigTool.PlaceDig(cell);
+#if DEBUG
 					PUtil.LogDebug("Placed dig in cell ({0:D},{1:D})".F(xy.X, xy.Y));
+#endif
 					if ((component = obj.GetComponentSafe<Prioritizable>()) != null)
 						component.SetMasterPriority(priority);
 				} else

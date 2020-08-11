@@ -18,7 +18,10 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Datafiles;
+using PeterHan.PLib.Options;
 using ProcGen;
+using System.Collections.Generic;
 
 namespace PeterHan.Challenge100K {
 	/// <summary>
@@ -31,6 +34,11 @@ namespace PeterHan.Challenge100K {
 		private const string SPRITE = "Asteroid_onehundredk";
 
 		/// <summary>
+		/// The world name string key.
+		/// </summary>
+		private const string WORLD_NAME = "STRINGS.WORLDS.ONEHUNDREDK.NAME";
+
+		/// <summary>
 		/// The "to 11" cold temperature for frigid biomes.
 		/// </summary>
 		private static Temperature to11 = null;
@@ -40,7 +48,7 @@ namespace PeterHan.Challenge100K {
 		/// </summary>
 		[PLibMethod(RunAt.AfterDbInit)]
 		internal static void InitStrings() {
-			Strings.Add("STRINGS.WORLDS.ONEHUNDREDK.NAME", Challenge100KStrings.NAME);
+			Strings.Add(WORLD_NAME, Challenge100KStrings.NAME);
 			Strings.Add("STRINGS.WORLDS.ONEHUNDREDK.DESCRIPTION", Challenge100KStrings.
 				DESCRIPTION);
 			var sprite = PUtil.LoadSprite("PeterHan.Challenge100K." + SPRITE + ".png");
@@ -54,6 +62,8 @@ namespace PeterHan.Challenge100K {
 			var tr11 = Traverse.Create(to11);
 			tr11.SetProperty("min", 80.0f);
 			tr11.SetProperty("max", 110.0f);
+			PLocalization.Register();
+			POptions.RegisterOptions(typeof(Challenge100KOptions));
 			PUtil.RegisterPatchClass(typeof(Challenge100K));
 		}
 
@@ -62,11 +72,42 @@ namespace PeterHan.Challenge100K {
 		/// </summary>
 		[HarmonyPatch(typeof(SettingsCache), "LoadFiles")]
 		public static class SettingsCache_LoadFiles_Patch {
+			/// <summary>
+			/// Applied after LoadFiles runs.
+			/// </summary>
 			internal static void Postfix() {
 				var frigid = (Temperature.Range)11;
 				var temps = SettingsCache.temperatures;
 				if (!temps.ContainsKey(frigid))
 					SettingsCache.temperatures.Add(frigid, to11);
+			}
+		}
+
+		/// <summary>
+		/// Applied to MutatedWorldData() to remove all geysers on hard mode on 100 K.
+		/// </summary>
+		[HarmonyPatch(typeof(MutatedWorldData), MethodType.Constructor, typeof(ProcGen.World),
+			typeof(List<WorldTrait>))]
+		public static class MutatedWorldData_Constructor_Patch {
+			/// <summary>
+			/// Applied after the constructor runs.
+			/// </summary>
+			internal static void Postfix(MutatedWorldData __instance) {
+				var world = __instance.world;
+				var subworlds = __instance.subworlds;
+				if (world.name == WORLD_NAME) {
+					var options = POptions.ReadSettingsForAssembly<Challenge100KOptions>();
+					if (options != null && options.RemoveGeysers) {
+#if DEBUG
+						PUtil.LogDebug("Hard mode: removing geysers");
+#endif
+						world.globalFeatureTemplates?.Clear();
+						// Remove the POI geysers too
+						if (subworlds != null)
+							foreach (var subworld in subworlds)
+								subworld.Value.pointsOfInterest?.Clear();
+					}
+				}
 			}
 		}
 	}

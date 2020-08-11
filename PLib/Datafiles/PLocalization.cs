@@ -39,6 +39,20 @@ namespace PeterHan.PLib.Datafiles {
 		public const string TRANSLATIONS_EXT = ".po";
 
 		/// <summary>
+		/// Debug dumps the translation templates for ALL registered PLib localized mods.
+		/// </summary>
+		internal static void DumpAll() {
+			lock (PSharedData.GetLock(PRegistry.KEY_LOCALE_LOCK)) {
+				// Get list holding locale information
+				var list = PSharedData.GetData<IList<Assembly>>(PRegistry.KEY_LOCALE_TABLE);
+				if (list != null)
+					foreach (var mod in list)
+						if (mod != null)
+							ModUtil.RegisterForTranslation(mod.GetTypes()[0]);
+			}
+		}
+
+		/// <summary>
 		/// Localizes the specified mod.
 		/// </summary>
 		/// <param name="mod">The mod to localize.</param>
