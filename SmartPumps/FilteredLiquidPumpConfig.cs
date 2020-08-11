@@ -81,7 +81,7 @@ namespace PeterHan.SmartPumps {
 		public override BuildingDef CreateBuildingDef() {
 			// Believe it or not, stock game pumps make no noise pollution
 			PUtil.CopySoundsToAnim(LiquidPumpFiltered.Animation, "pumpliquid_kanim");
-			GeneratedBuildings.RegisterWithOverlay(OverlayScreen.GasVentIDs, ID);
+			GeneratedBuildings.RegisterWithOverlay(OverlayScreen.LiquidVentIDs, ID);
 			return LiquidPumpFiltered?.CreateDef();
 		}
 
