@@ -47,7 +47,7 @@ namespace PeterHan.AirlockDoor {
 					public static LocString NAME = STRINGS.UI.FormatAsLink("Airlock Door", AirlockDoorConfig.ID);
 					public static LocString DESC = string.Concat("Sucking Duplicants that have nowhere to go into space through ",
 						STRINGS.UI.FormatAsLink("Mechanized Airlocks", PressureDoorConfig.ID),
-						" is poor taste. Airlock Doors now allow Duplicants safe passage with the loss of any of their mysterious fluids.");
+						" is poor taste. Airlock Doors now allow Duplicants safe passage without the loss of any of their mysterious fluids.");
 					public static LocString EFFECT = string.Concat("Blocks ",
 						STRINGS.UI.FormatAsLink("Liquid", "ELEMENTS_LIQUID"),
 						" and ",
