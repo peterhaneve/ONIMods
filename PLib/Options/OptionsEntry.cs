@@ -162,6 +162,11 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		public string Field { get; }
 
+		/// <summary>
+		/// The format string to use when rendering this option, or null if none was supplied.
+		/// </summary>
+		protected string Format { get; }
+
 		public virtual string Name => nameof(OptionsEntry);
 
 		public event PUIDelegates.OnRealize OnRealize;
@@ -184,6 +189,7 @@ namespace PeterHan.PLib.Options {
 		protected OptionsEntry(string title, string tooltip, string category) {
 			Category = category ?? "";
 			Field = null;
+			Format = null;
 			Title = title;
 			ToolTip = tooltip;
 		}
@@ -192,6 +198,7 @@ namespace PeterHan.PLib.Options {
 			if (attr == null)
 				throw new ArgumentNullException("attr");
 			Field = field;
+			Format = attr.Format;
 			Title = attr.Title;
 			ToolTip = attr.Tooltip;
 			Category = attr.Category ?? "";

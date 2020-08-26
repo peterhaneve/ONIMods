@@ -346,7 +346,7 @@ namespace PeterHan.ModUpdateDate {
 					// Mod has been updated
 					mod.status = Mod.Status.ReinstallPending;
 					mod.reinstall_path = active.DownloadPath;
-					Global.Instance.modManager?.Save();
+					PUtil.SaveMods();
 					// Backup our config if needed
 					if (mod.label.Match(ModUpdateDatePatches.ThisMod.label))
 						selfUpdated = true;

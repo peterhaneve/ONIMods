@@ -82,7 +82,7 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
-		/// Creates a UI entry for the option.
+		/// Creates the entire row used to display this option.
 		/// </summary>
 		private readonly Func<GameObject> createUIEntry;
 
@@ -95,6 +95,11 @@ namespace PeterHan.PLib.Options {
 		/// Gets the tooltip of the option.
 		/// </summary>
 		private readonly Func<string> getTooltip;
+
+		/// <summary>
+		/// Gets the component used to display this option. createUIEntry will take precedence.
+		/// </summary>
+		private readonly Func<GameObject> getUIComponent;
 
 		/// <summary>
 		/// Gets the value of the option.
@@ -117,6 +122,8 @@ namespace PeterHan.PLib.Options {
 			if (handler != null) {
 				var targetType = handler.GetType();
 				createUIEntry = targetType.CreateDelegate<Func<GameObject>>(nameof(
+					CreateUIEntry), handler);
+				getUIComponent = targetType.CreateDelegate<Func<GameObject>>(nameof(
 					IDynamicOption.GetUIComponent), handler);
 				getTitle = targetType.CreateGetDelegate<string>(nameof(IDynamicOption.Title),
 					handler);
@@ -128,7 +135,7 @@ namespace PeterHan.PLib.Options {
 					handler);
 				Title = getTitle.Invoke();
 			} else {
-				createUIEntry = null;
+				getUIComponent = null;
 				getTitle = null;
 				getTooltip = null;
 				getValue = null;
@@ -137,25 +144,40 @@ namespace PeterHan.PLib.Options {
 		}
 
 		public override void CreateUIEntry(PGridPanel parent, ref int row) {
-			if (getTitle != null)
-				Title = getTitle.Invoke();
-			else
-				// Only displayed in error cases, should not be localized
-				Title = "<No Title>";
-			var label = new PLabel("Label") {
-				Text = LookInStrings(Title), TextStyle = PUITuning.Fonts.TextLightStyle
-			};
-			label.OnRealize += OnRealizeLabel;
-			parent.AddChild(label, new GridComponentSpec(row, 0) {
-				Margin = LABEL_MARGIN, Alignment = TextAnchor.MiddleLeft
-			});
-			parent.AddChild(this, new GridComponentSpec(row, 1) {
-				Alignment = TextAnchor.MiddleRight, Margin = CONTROL_MARGIN
-			});
+			if (createUIEntry != null)
+				parent.AddChild(this, new GridComponentSpec(row, 0) {
+					Alignment = TextAnchor.MiddleLeft, Margin = CONTROL_MARGIN
+				});
+			else {
+				if (getTitle != null)
+					Title = getTitle.Invoke();
+				else
+					// Only displayed in error cases, should not be localized
+					Title = "<No Title>";
+				var label = new PLabel("Label") {
+					Text = LookInStrings(Title), TextStyle = PUITuning.Fonts.TextLightStyle
+				};
+				label.OnRealize += OnRealizeLabel;
+				parent.AddChild(label, new GridComponentSpec(row, 0) {
+					Margin = LABEL_MARGIN, Alignment = TextAnchor.MiddleLeft
+				});
+				parent.AddChild(this, new GridComponentSpec(row, 1) {
+					Alignment = TextAnchor.MiddleRight, Margin = CONTROL_MARGIN
+				});
+
+			}
 		}
 
 		public override GameObject GetUIComponent() {
-			return createUIEntry?.Invoke() ?? new GameObject("No handler specified");
+			GameObject ui;
+			if (createUIEntry != null)
+				// This is inserted at toplevel if it is not null
+				ui = createUIEntry.Invoke();
+			else if (getUIComponent != null)
+				ui = getUIComponent.Invoke();
+			else
+				ui = new GameObject("No handler specified");
+			return ui;
 		}
 
 		private void OnRealizeLabel(GameObject realized) {

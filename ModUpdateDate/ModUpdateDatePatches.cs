@@ -88,8 +88,8 @@ namespace PeterHan.ModUpdateDate {
 			if (method == null)
 				method = typeof(Mod).GetMethodSafe("SetCrashed", false);
 			if (method != null)
-				instance.Patch(method, prefix: new HarmonyMethod(typeof(
-					ModUpdateDatePatches), nameof(OnModCrash)));
+				instance.Patch(method, prefix: new HarmonyMethod(typeof(ModUpdateDatePatches),
+					nameof(OnModCrash)));
 		}
 
 		/// <summary>

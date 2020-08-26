@@ -244,8 +244,8 @@ namespace PeterHan.ToastControl {
 
 		public static void OnLoad() {
 			PUtil.InitLibrary();
-			LocString.CreateLocStringKeys(typeof(ToastControlStrings.UI));
 			PLocalization.Register();
+			LocString.CreateLocStringKeys(typeof(ToastControlStrings.UI));
 			POptions.RegisterOptions(typeof(ToastControlOptions));
 			PUtil.RegisterPatchClass(typeof(ToastControlPopups));
 			ToastControlPopups.ReloadOptions();

@@ -134,11 +134,6 @@ namespace PeterHan.SweepByType {
 		public GameObject RootPanel { get; }
 
 		/// <summary>
-		/// The screen object.
-		/// </summary>
-		public KScreen Screen { get; }
-
-		/// <summary>
 		/// The "all items" checkbox.
 		/// </summary>
 		private GameObject allItems;
@@ -165,6 +160,8 @@ namespace PeterHan.SweepByType {
 			var cp = new PPanel("Categories") {
 				Direction = PanelDirection.Vertical, Alignment = TextAnchor.UpperLeft,
 				Spacing = ROW_SPACING, Margin = ELEMENT_MARGIN, FlexSize = Vector2.right,
+				// Background ensures that scrolling works properly!
+				BackColor = PUITuning.Colors.BackgroundLight
 			};
 			cp.AddChild(allCheckBox);
 			cp.OnRealize += (obj) => { childPanel = obj; };
@@ -197,7 +194,7 @@ namespace PeterHan.SweepByType {
 			RootPanel.SetMinUISize(PANEL_SIZE);
 			children = new SortedList<Tag, TypeSelectCategory>(16, TagAlphabetComparer.
 				INSTANCE);
-			Screen = RootPanel.AddComponent<TypeSelectScreen>();
+			RootPanel.AddComponent<TypeSelectScreen>();
 		}
 
 		/// <summary>

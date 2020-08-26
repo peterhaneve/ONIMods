@@ -17,6 +17,7 @@
  */
 
 using Klei;
+using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -39,11 +40,6 @@ namespace PeterHan.PLib {
 		public static uint GameVersion { get; }
 
 		/// <summary>
-		/// The first released version of the new Automation Update.
-		/// </summary>
-		public const uint VERSION_AP_PREVIEW = 395113u;
-
-		/// <summary>
 		/// Whether PLib has been initialized.
 		/// </summary>
 		internal static bool PLibInit { get; private set; }
@@ -52,6 +48,15 @@ namespace PeterHan.PLib {
 		/// The characters which are not allowed in file names.
 		/// </summary>
 		private static readonly HashSet<char> INVALID_FILE_CHARS;
+
+		// Saves the current mod list and settings to the JSON
+		private static readonly DetouredMethod<Func<KMod.Manager, bool>> MODS_SAVE =
+			typeof(KMod.Manager).DetourLazy<Func<KMod.Manager, bool>>(nameof(KMod.Manager.Save));
+
+		/// <summary>
+		/// The first released version of the new Automation Update.
+		/// </summary>
+		public const uint VERSION_AP_PREVIEW = 395113u;
 
 		static PUtil() {
 			INVALID_FILE_CHARS = new HashSet<char>(Path.GetInvalidFileNameChars());
@@ -226,7 +231,7 @@ namespace PeterHan.PLib {
 					PRegistry.Init();
 					if (logVersion)
 						Debug.LogFormat("[PLib] Mod {0} initialized, version {1}",
-							assembly.GetName()?.Name, assembly.GetFileVersion() ?? "Unknown");
+							assembly.GetNameSafe(), assembly.GetFileVersion() ?? "Unknown");
 				}
 			} else
 				// Probably impossible
@@ -307,7 +312,7 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <param name="message">The message to log.</param>
 		public static void LogDebug(object message) {
-			Debug.LogFormat("[PLib/{0}] {1}", Assembly.GetCallingAssembly()?.GetName()?.Name,
+			Debug.LogFormat("[PLib/{0}] {1}", Assembly.GetCallingAssembly().GetNameSafe(),
 				message);
 		}
 
@@ -319,8 +324,8 @@ namespace PeterHan.PLib {
 			// Cannot make a utility property or method for Assembly.GetCalling... because
 			// its caller would then be the assembly PLib is in, not the assembly which
 			// invoked LogXXX
-			Debug.LogErrorFormat("[PLib/{0}] {1}", Assembly.GetCallingAssembly()?.GetName()?.
-				Name ?? "?", message);
+			Debug.LogErrorFormat("[PLib/{0}] {1}", Assembly.GetCallingAssembly().
+				GetNameSafe() ?? "?", message);
 		}
 
 		/// <summary>
@@ -328,8 +333,8 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <param name="thrown">The exception to log.</param>
 		public static void LogException(Exception thrown) {
-			Debug.LogErrorFormat("[PLib/{0}] {1} {2} {3}", Assembly.GetCallingAssembly()?.
-				GetName()?.Name ?? "?", thrown.GetType(), thrown.Message, thrown.StackTrace);
+			Debug.LogErrorFormat("[PLib/{0}] {1} {2} {3}", Assembly.GetCallingAssembly().
+				GetNameSafe() ?? "?", thrown.GetType(), thrown.Message, thrown.StackTrace);
 		}
 
 		/// <summary>
@@ -337,8 +342,8 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <param name="thrown">The exception to log.</param>
 		public static void LogExcWarn(Exception thrown) {
-			Debug.LogWarningFormat("[PLib/{0}] {1} {2} {3}", Assembly.GetCallingAssembly()?.
-				GetName()?.Name ?? "?", thrown.GetType(), thrown.Message, thrown.StackTrace);
+			Debug.LogWarningFormat("[PLib/{0}] {1} {2} {3}", Assembly.GetCallingAssembly().
+				GetNameSafe() ?? "?", thrown.GetType(), thrown.Message, thrown.StackTrace);
 		}
 
 		/// <summary>
@@ -357,8 +362,8 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <param name="message">The message to log.</param>
 		public static void LogWarning(object message) {
-			Debug.LogWarningFormat("[PLib/{0}] {1}", Assembly.GetCallingAssembly()?.GetName()?.
-				Name ?? "?", message);
+			Debug.LogWarningFormat("[PLib/{0}] {1}", Assembly.GetCallingAssembly().
+				GetNameSafe() ?? "?", message);
 		}
 
 		/// <summary>
@@ -395,10 +400,9 @@ namespace PeterHan.PLib {
 						PPatchManager.AddHandler(pm.Runtime, pm.CreateInstance(method));
 						count++;
 					}
-			string name = Assembly.GetCallingAssembly()?.GetName()?.Name;
 			if (count > 0)
-				PRegistry.LogPatchDebug("Registered {0:D} handler(s) for {1}".F(count, name ??
-					"?"));
+				PRegistry.LogPatchDebug("Registered {0:D} handler(s) for {1}".F(count,
+					Assembly.GetCallingAssembly().GetNameSafe() ?? "?"));
 			else
 				PRegistry.LogPatchWarning("RegisterPatchClass could not find any handlers!");
 		}
@@ -424,9 +428,18 @@ namespace PeterHan.PLib {
 			}
 			PPatchManager.AddHandler(RunAt.AfterModsLoad, new LegacyPostloadMethod(
 				callback));
-			string name = Assembly.GetCallingAssembly()?.GetName()?.Name;
+			string name = Assembly.GetCallingAssembly().GetNameSafe();
 			if (name != null)
 				PRegistry.LogPatchDebug("Registered post-load handler for " + name);
+		}
+
+		/// <summary>
+		/// Saves the current list of mods.
+		/// </summary>
+		public static void SaveMods() {
+			var manager = Global.Instance.modManager;
+			if (manager != null)
+				MODS_SAVE.Invoke(manager);
 		}
 
 		/// <summary>

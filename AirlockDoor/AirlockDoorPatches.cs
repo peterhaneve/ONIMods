@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Datafiles;
 using UnityEngine;
 
 namespace PeterHan.AirlockDoor {
@@ -28,6 +29,7 @@ namespace PeterHan.AirlockDoor {
 		public static void OnLoad() {
 			PUtil.InitLibrary();
 			AirlockDoorConfig.RegisterBuilding();
+			PLocalization.Register();
 			LocString.CreateLocStringKeys(typeof(AirlockDoorStrings.BUILDING));
 			LocString.CreateLocStringKeys(typeof(AirlockDoorStrings.BUILDINGS));
 		}

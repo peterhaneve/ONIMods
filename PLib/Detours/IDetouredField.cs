@@ -18,29 +18,27 @@
 
 using System;
 
-namespace PeterHan.PLib {
+namespace PeterHan.PLib.Detours {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// An interface that describes a detoured field, which stores delegates used to read and
+	/// write fields or properties.
 	/// </summary>
-	public static class PVersion {
+	/// <typeparam name="P">The containing type of the field or property.</typeparam>
+	/// <typeparam name="T">The element type of the field or property.</typeparam>
+	public interface IDetouredField<P, T> {
 		/// <summary>
-		/// The PLib version.
+		/// Invoke to get the field/property value.
 		/// </summary>
-		public const string VERSION = "3.10.0.0";
+		Func<P, T> Get { get; }
 
 		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in OnLoad or RegisterPostload, and will always return false in those
-		/// cases.
+		/// The field name.
 		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				return VERSION == PSharedData.GetData<string>(PRegistry.KEY_VERSION);
-			}
-		}
+		string Name { get; }
+
+		/// <summary>
+		/// Invoke to set the field/property value.
+		/// </summary>
+		Action<P, T> Set { get; }
 	}
 }

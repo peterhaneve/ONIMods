@@ -54,7 +54,7 @@ namespace PeterHan.ModUpdateDate {
 				public static LocString STEAM_UPDATE = "<b>Steam Updated:</b> {0:f}";
 
 				// Steam update date not known
-				public static LocString STEAM_UPDATE_UNKNOWN = "Steam Updated: Unknown";
+				public static LocString STEAM_UPDATE_UNKNOWN = "<b>Steam Updated</b>: Unknown";
 
 				// Update results
 				public static LocString UPDATE_ERROR = "<b>{0}</b>: <color=#FF0000>{1}</color>\n";

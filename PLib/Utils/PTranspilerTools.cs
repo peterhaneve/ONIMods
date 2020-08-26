@@ -347,6 +347,8 @@ namespace PeterHan.PLib {
 			int n = types.Length;
 			// Allow special case of passing "this" as first static arg
 			var newParamTypes = new Type[n + 1];
+			if (declaringType.IsValueType)
+				declaringType = declaringType.MakeByRefType();
 			newParamTypes[0] = declaringType;
 			for (int i = 0; i < n; i++)
 				newParamTypes[i + 1] = types[i];

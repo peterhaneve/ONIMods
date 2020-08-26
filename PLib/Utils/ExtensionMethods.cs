@@ -72,6 +72,15 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Gets the assembly name of an assembly.
+		/// </summary>
+		/// <param name="assembly">The assembly to query.</param>
+		/// <returns>The assembly name, or null if assembly is null.</returns>
+		internal static string GetNameSafe(this Assembly assembly) {
+			return assembly?.GetName()?.Name;
+		}
+
+		/// <summary>
 		/// Uses Traverse to retrieve a private field of an object.
 		/// </summary>
 		/// <param name="root">The object on which to get the field.</param>

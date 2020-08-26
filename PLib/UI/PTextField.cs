@@ -157,8 +157,7 @@ namespace PeterHan.PLib.UI {
 			events.OnTextChanged = OnTextChanged;
 			events.OnValidate = OnValidate;
 			// Add tooltip
-			if (!string.IsNullOrEmpty(ToolTip))
-				textField.AddComponent<ToolTip>().toolTip = ToolTip;
+			PUIElements.SetToolTip(textField, ToolTip);
 			mask.enabled = true;
 			// Lay out, even better than before
 			var tbTransform = textBox.rectTransform();

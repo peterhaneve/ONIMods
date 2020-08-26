@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.Detours;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
@@ -51,6 +52,7 @@ namespace PeterHan.PLib.UI {
 		/// <param name="imageColor">The color style for the checked icon.</param>
 		/// <returns>The states for this checkbox.</returns>
 		private static ToggleState[] GenerateStates(ColorStyleSetting imageColor) {
+			// Structs sadly do not work well with detours
 			var sps = new StatePresentationSetting() {
 				color = imageColor.activeColor, use_color_on_hover = true,
 				color_on_hover = imageColor.hoverColor, image_target = null,
@@ -94,7 +96,7 @@ namespace PeterHan.PLib.UI {
 				throw new ArgumentNullException("realized");
 			var checkButton = realized.GetComponentInChildren<MultiToggle>();
 			if (checkButton != null)
-				state = checkButton.CurrentState;
+				state = UIDetours.CURRENT_STATE.Get(checkButton);
 			return state;
 		}
 
@@ -107,8 +109,8 @@ namespace PeterHan.PLib.UI {
 			if (realized == null)
 				throw new ArgumentNullException("realized");
 			var checkButton = realized.GetComponentInChildren<MultiToggle>();
-			if (checkButton != null && checkButton.CurrentState != state)
-				checkButton.ChangeState(state);
+			if (checkButton != null && UIDetours.CURRENT_STATE.Get(checkButton) != state)
+				UIDetours.CHANGE_STATE.Invoke(checkButton, state);
 		}
 
 		/// <summary>
@@ -178,20 +180,17 @@ namespace PeterHan.PLib.UI {
 			if (!string.IsNullOrEmpty(Text))
 				text = TextChildHelper(checkbox, TextStyle ?? PUITuning.Fonts.UILightStyle,
 					Text).gameObject;
-			// Add tooltip
-			if (!string.IsNullOrEmpty(ToolTip))
-				checkbox.AddComponent<ToolTip>().toolTip = ToolTip;
 			// Toggle
 			var mToggle = checkbox.AddComponent<MultiToggle>();
 			var evt = OnChecked;
 			if (evt != null)
 				mToggle.onClick += () => evt?.Invoke(checkbox, mToggle.CurrentState);
-			mToggle.play_sound_on_click = true;
-			mToggle.play_sound_on_release = false;
+			UIDetours.PLAY_SOUND_CLICK.Set(mToggle, true);
+			UIDetours.PLAY_SOUND_RELEASE.Set(mToggle, false);
 			mToggle.states = GenerateStates(trueColor);
 			mToggle.toggle_image = checkImage;
-			mToggle.ChangeState(InitialState);
-			checkbox.SetActive(true);
+			UIDetours.CHANGE_STATE.Invoke(mToggle, InitialState);
+			PUIElements.SetToolTip(checkbox, ToolTip).SetActive(true);
 			// Faster than ever!
 			var subLabel = WrapTextAndSprite(text, sprite);
 			var layout = checkbox.AddComponent<RelativeLayoutGroup>();

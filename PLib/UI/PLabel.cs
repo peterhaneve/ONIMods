@@ -49,9 +49,7 @@ namespace PeterHan.PLib.UI {
 				text = TextChildHelper(label, TextStyle ?? PUITuning.Fonts.UILightStyle,
 					Text).gameObject;
 			// Add tooltip
-			if (!string.IsNullOrEmpty(ToolTip))
-				label.AddComponent<ToolTip>().toolTip = ToolTip;
-			label.SetActive(true);
+			PUIElements.SetToolTip(label, ToolTip).SetActive(true);
 			// Arrange the icon and text
 			var layout = label.AddComponent<RelativeLayoutGroup>();
 			layout.Margin = Margin;

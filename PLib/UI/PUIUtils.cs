@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -118,14 +117,12 @@ namespace PeterHan.PLib.UI {
 				LogUIWarning("DetailsScreen is not yet initialized, try a postfix on " +
 					"DetailsScreen.OnPrefabInit");
 			else {
-				var trInst = Traverse.Create(inst);
-				// These are private fields
-				var screens = trInst.GetField<List<SideScreenRef>>("sideScreens");
-				var body = trInst.GetField<GameObject>("sideScreenContentBody");
+				var screens = UIDetours.SIDE_SCREENS.Get(inst);
+				var body = UIDetours.SS_CONTENT_BODY.Get(inst);
 				string name = typeof(T).Name;
 				if (body != null && screens != null) {
 					// The ref normally contains a prefab which is instantiated
-					var newScreen = new SideScreenRef();
+					var newScreen = new DetailsScreen.SideScreenRef();
 					// Mimic the basic screens
 					var rootObject = PUIElements.CreateUI(body, name);
 					// Preserve the border by fitting the child
@@ -136,14 +133,14 @@ namespace PeterHan.PLib.UI {
 					var controller = rootObject.AddComponent<T>();
 					if (uiPrefab != null) {
 						// Add prefab if supplied
-						controller.ContentContainer = uiPrefab;
+						UIDetours.SS_CONTENT_CONTAINER.Set(controller, uiPrefab);
 						uiPrefab.transform.parent = rootObject.transform;
 					}
 					newScreen.name = name;
 					// Offset is never used
-					newScreen.offset = Vector2.zero;
-					newScreen.screenPrefab = controller;
-					newScreen.screenInstance = controller;
+					UIDetours.SS_OFFSET.Set(newScreen, Vector2.zero);
+					UIDetours.SS_PREFAB.Set(newScreen, controller);
+					UIDetours.SS_INSTANCE.Set(newScreen, controller);
 					InsertSideScreenContent(screens, newScreen, targetClassName, insertBefore);
 				}
 			}
@@ -454,10 +451,11 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// Inserts the side screen at the target location.
 		/// </summary>
-		/// <param name="screens"></param>
-		/// <param name="newScreen"></param>
-		/// <param name="targetClassName"></param>
-		/// <param name="insertBefore"></param>
+		/// <param name="screens">The current list of side screens.</param>
+		/// <param name="newScreen">The screen to insert.</param>
+		/// <param name="targetClassName">The target class name for locating the screen. If this
+		/// class is not found, it will be added at the end regardless of insertBefore.</param>
+		/// <param name="insertBefore">true to insert before that class, or false to insert after.</param>
 		private static void InsertSideScreenContent(IList<SideScreenRef> screens,
 				SideScreenRef newScreen, string targetClassName, bool insertBefore) {
 			if (screens == null)
@@ -472,7 +470,7 @@ namespace PeterHan.PLib.UI {
 				bool found = false;
 				for (int i = 0; i < n; i++) {
 					var screen = screens[i];
-					var contents = screen.screenPrefab?.GetComponentsInChildren<
+					var contents = UIDetours.SS_PREFAB.Get(screen)?.GetComponentsInChildren<
 						SideScreenContent>();
 					if (contents == null || contents.Length < 1)
 						// Some naughty mod added a prefab with no side screen content!

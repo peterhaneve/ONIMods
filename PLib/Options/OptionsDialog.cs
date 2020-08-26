@@ -96,7 +96,7 @@ namespace PeterHan.PLib.Options {
 		/// Saves the mod enabled settings and restarts the game.
 		/// </summary>
 		private static void SaveAndRestart() {
-			Global.Instance?.modManager?.Save();
+			PUtil.SaveMods();
 			App.instance.Restart();
 		}
 

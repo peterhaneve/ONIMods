@@ -110,7 +110,7 @@ namespace PeterHan.PLib.Options {
 		protected override void Update() {
 			var field = textField?.GetComponentInChildren<TMP_InputField>();
 			if (field != null)
-				field.text = value.ToString();
+				field.text = value.ToString(Format ?? "D");
 			if (slider != null)
 				PSliderSingle.SetCurrentValue(slider, value);
 		}

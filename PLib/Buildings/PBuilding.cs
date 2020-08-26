@@ -381,7 +381,7 @@ namespace PeterHan.PLib.Buildings {
 			if (string.IsNullOrEmpty(id))
 				throw new ArgumentNullException("id");
 			if (string.IsNullOrEmpty(name))
-				throw new ArgumentNullException("anim");
+				throw new ArgumentNullException("name");
 			AddAfter = null;
 			AlwaysOperational = false;
 			Animation = "";
@@ -430,7 +430,6 @@ namespace PeterHan.PLib.Buildings {
 		public void AddPlan() {
 			if (!addedPlan && Category.IsValid) {
 				bool add = false;
-				//ModUtil.AddBuildingToPlanScreen(Category, ID);
 				foreach (var menu in TUNING.BUILDINGS.PLANORDER)
 					if (menu.category == Category) {
 						// Found category
@@ -502,6 +501,7 @@ namespace PeterHan.PLib.Buildings {
 		/// </summary>
 		/// <returns>The Klei building def.</returns>
 		public BuildingDef CreateDef() {
+			// The number of fields in BuildingDef makes it somewhat impractical to detour
 			if (Width < 1)
 				throw new InvalidOperationException("Building width: " + Width);
 			if (Height < 1)

@@ -17,6 +17,7 @@
  */
 
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace PeterHan.PLib.UI {
 	/// <summary>
@@ -34,7 +35,8 @@ namespace PeterHan.PLib.UI {
 		/// <param name="realized">The realized toggle button.</param>
 		/// <returns>The toggle button state.</returns>
 		public static bool GetToggleState(GameObject realized) {
-			return realized.GetComponentSafe<KToggle>()?.isOn ?? false;
+			var toggle = realized.GetComponentSafe<KToggle>();
+			return toggle != null && UIDetours.IS_ON.Get(toggle);
 		}
 
 		/// <summary>
@@ -45,7 +47,7 @@ namespace PeterHan.PLib.UI {
 		public static void SetToggleState(GameObject realized, bool on) {
 			var toggle = realized.GetComponentSafe<KToggle>();
 			if (toggle != null)
-				toggle.isOn = on;
+				UIDetours.IS_ON.Set(toggle, on);
 		}
 
 		/// <summary>
@@ -121,10 +123,10 @@ namespace PeterHan.PLib.UI {
 				kToggle.onValueChanged += (on) => {
 					evt?.Invoke(toggle, on);
 				};
-			kToggle.artExtension = new KToggleArtExtensions();
-			kToggle.soundPlayer = PUITuning.ToggleSounds;
+			UIDetours.ART_EXTENSION.Set(kToggle, new KToggleArtExtensions());
+			UIDetours.SOUND_PLAYER_TOGGLE.Set(kToggle, PUITuning.ToggleSounds);
 			// Background image
-			var fgImage = toggle.AddComponent<KImage>();
+			var fgImage = toggle.AddComponent<Image>();
 			fgImage.color = Color.activeColor;
 			fgImage.sprite = InactiveSprite;
 			toggle.SetActive(false);
@@ -143,7 +145,7 @@ namespace PeterHan.PLib.UI {
 			toggleImage.DisabledColour = Color.disabledColor;
 			toggleImage.HoverColour = Color.hoverColor;
 			toggleImage.DisabledHoverColor = Color.disabledhoverColor;
-			kToggle.isOn = InitialState;
+			UIDetours.IS_ON.Set(kToggle, InitialState);
 			toggle.SetActive(true);
 			// Set size
 			if (Size.x > 0.0f && Size.y > 0.0f)
@@ -151,9 +153,7 @@ namespace PeterHan.PLib.UI {
 			else
 				PUIElements.AddSizeFitter(toggle, DynamicSize);
 			// Add tooltip
-			if (!string.IsNullOrEmpty(ToolTip))
-				toggle.AddComponent<ToolTip>().toolTip = ToolTip;
-			toggle.SetFlexUISize(FlexSize).SetActive(true);
+			PUIElements.SetToolTip(toggle, ToolTip).SetFlexUISize(FlexSize).SetActive(true);
 			OnRealize?.Invoke(toggle);
 			return toggle;
 		}

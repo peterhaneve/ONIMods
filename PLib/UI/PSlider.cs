@@ -148,7 +148,7 @@ namespace PeterHan.PLib.UI {
 			var trueColor = HandleColor ?? PUITuning.Colors.ButtonBlueStyle;
 			slider.SetActive(false);
 			// Track (visual)
-			var trackImg = slider.AddComponent<KImage>();
+			var trackImg = slider.AddComponent<Image>();
 			trackImg.sprite = isVertical ? PUITuning.Images.ScrollBorderVertical : PUITuning.
 				Images.ScrollBorderHorizontal;
 			trackImg.type = Image.Type.Sliced;
@@ -199,7 +199,7 @@ namespace PeterHan.PLib.UI {
 			// Handle
 			var handle = PUIElements.CreateUI(slider, "Handle", true, PUIAnchoring.Center,
 				PUIAnchoring.Center);
-			var handleImg = handle.AddComponent<KImage>();
+			var handleImg = handle.AddComponent<Image>();
 			handleImg.sprite = PUITuning.Images.SliderHandle;
 			handleImg.preserveAspect = true;
 			handle.SetUISize(new Vector2(HandleSize, HandleSize));

@@ -17,6 +17,7 @@
  */
 
 using PeterHan.PLib;
+using PeterHan.PLib.Detours;
 using UnityEngine;
 
 using UISTRINGS = PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER;
@@ -31,6 +32,10 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		internal static MainMenuWarning Instance { get; private set; }
 
+		// Detour the "Resume Game" button
+		private static readonly IDetouredField<MainMenu, KButton> RESUME_GAME = PDetours.
+			DetourFieldLazy<MainMenu, KButton>(nameof(MainMenu.Button_ResumeGame));
+
 		/// <summary>
 		/// The button used to open the Mods screen.
 		/// </summary>
@@ -40,6 +45,26 @@ namespace PeterHan.ModUpdateDate {
 			modsButton = null;
 		}
 
+		/// <summary>
+		/// Finds the "Mods" button and stores it in the modsButton field.
+		/// </summary>
+		/// <param name="buttonParent">The parent of all the main menu buttons.</param>
+		private void FindModsButton(Transform buttonParent) {
+			int n = buttonParent.childCount;
+			for (int i = 0; i < n; i++) {
+				var button = buttonParent.GetChild(i).gameObject;
+				// Match by text... sucks but unlikely to have changed this early
+				if (button != null && button.GetComponentInChildren<LocText>()?.text ==
+						STRINGS.UI.FRONTEND.MODS.TITLE) {
+					modsButton = button;
+					break;
+				}
+			}
+			if (modsButton == null)
+				PUtil.LogWarning("Unable to find Mods menu button, main menu update " +
+					"warning will not be functional");
+		}
+
 		protected override void OnCleanUp() {
 			Instance = null;
 			base.OnCleanUp();
@@ -47,28 +72,18 @@ namespace PeterHan.ModUpdateDate {
 
 		protected override void OnPrefabInit() {
 			Transform buttonParent;
+			KButton resumeButton;
 			base.OnPrefabInit();
+			var mm = GetComponent<MainMenu>();
 			if (Instance != null)
 				PUtil.LogWarning("Multiple instances of MainMenuWarning have been created!");
 			Instance = this;
-			var resumeButton = GetComponent<MainMenu>()?.Button_ResumeGame;
-			// "resume game" is in the same panel
-			if (resumeButton != null && (buttonParent = resumeButton.gameObject.transform?.
-					parent) != null) {
-				int n = buttonParent.childCount;
-				for (int i = 0; i < n; i++) {
-					var button = buttonParent.GetChild(i).gameObject;
-					// Match by text... sucks but unlikely to have changed this early
-					if (button != null && button.GetComponentInChildren<LocText>()?.text ==
-							STRINGS.UI.FRONTEND.MODS.TITLE) {
-						modsButton = button;
-						break;
-					}
-				}
-				if (modsButton == null)
-					PUtil.LogWarning("Unable to find Mods menu button, main menu update " +
-						"warning will not be functional");
-			}
+			try {
+				// "Resume game" is in the same panel as "Mods"
+				if (mm != null && (resumeButton = RESUME_GAME.Get(mm)) != null &&
+						(buttonParent = resumeButton.gameObject.transform?.parent) != null)
+					FindModsButton(buttonParent);
+			} catch (DetourException) { }
 			UpdateText();
 		}
 

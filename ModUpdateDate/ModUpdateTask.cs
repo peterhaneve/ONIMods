@@ -17,11 +17,11 @@
  */
 
 using PeterHan.PLib;
+using PeterHan.PLib.Detours;
 using PeterHan.PLib.UI;
 using Steamworks;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 using UnityEngine;
 
@@ -35,14 +35,14 @@ namespace PeterHan.ModUpdateDate {
 		/// <summary>
 		/// Caches a reference to the mActiveModifiers field of KInputController.
 		/// </summary>
-		private static readonly FieldInfo activeModifiers = typeof(KInputController).
-			GetFieldSafe("mActiveModifiers", false);
+		private static readonly IDetouredField<KInputController, Modifier> ACTIVE_MODIFIERS =
+			PDetours.DetourFieldLazy<KInputController, Modifier>("mActiveModifiers");
 
 		/// <summary>
 		/// Saves the mod enabled settings and restarts the game.
 		/// </summary>
 		private static void SaveAndRestart() {
-			Global.Instance?.modManager?.Save();
+			PUtil.SaveMods();
 			App.instance.Restart();
 		}
 
@@ -125,9 +125,12 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		internal void TryUpdateMods(GameObject _) {
 			var controller = Global.Instance.GetInputManager()?.GetDefaultController();
+			var modifier = Modifier.None;
+			try {
+				modifier = ACTIVE_MODIFIERS.Get(controller);
+			} catch (DetourException) { }
 			// Check for SHIFT - bypass dialog
-			if (activeModifiers != null && (activeModifiers.GetValue(controller) is Modifier
-					modifier) && modifier == Modifier.Shift)
+			if (modifier == Modifier.Shift)
 				UpdateMods();
 			else {
 				var modList = new StringBuilder(256);

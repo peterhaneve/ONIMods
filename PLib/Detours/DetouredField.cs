@@ -18,29 +18,36 @@
 
 using System;
 
-namespace PeterHan.PLib {
+namespace PeterHan.PLib.Detours {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// Stores delegates used to read and write fields or properties.
 	/// </summary>
-	public static class PVersion {
+	/// <typeparam name="P">The containing type of the field or property.</typeparam>
+	/// <typeparam name="T">The element type of the field or property.</typeparam>
+	internal sealed class DetouredField<P, T> : IDetouredField<P, T> {
 		/// <summary>
-		/// The PLib version.
+		/// Invoke to get the field/property value.
 		/// </summary>
-		public const string VERSION = "3.10.0.0";
+		public Func<P, T> Get { get; }
 
 		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in OnLoad or RegisterPostload, and will always return false in those
-		/// cases.
+		/// The field name.
 		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				return VERSION == PSharedData.GetData<string>(PRegistry.KEY_VERSION);
-			}
+		public string Name { get; }
+
+		/// <summary>
+		/// Invoke to set the field/property value. Null if the field is const or readonly.
+		/// </summary>
+		public Action<P, T> Set { get; }
+
+		internal DetouredField(string name, Func<P, T> get, Action<P, T> set) {
+			Name = name ?? throw new ArgumentNullException("name");
+			Get = get;
+			Set = set;
+		}
+
+		public override string ToString() {
+			return "DetouredField[name={0}]".F(Name);
 		}
 	}
 }

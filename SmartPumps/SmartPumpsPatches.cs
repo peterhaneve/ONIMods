@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Datafiles;
 using UnityEngine;
 
 namespace PeterHan.SmartPumps {
@@ -27,6 +28,7 @@ namespace PeterHan.SmartPumps {
 	public static class SmartPumpsPatches {
 		public static void OnLoad() {
 			PUtil.InitLibrary();
+			PLocalization.Register();
 			FilteredGasPumpConfig.RegisterBuilding();
 			FilteredLiquidPumpConfig.RegisterBuilding();
 			VacuumPumpConfig.RegisterBuilding();

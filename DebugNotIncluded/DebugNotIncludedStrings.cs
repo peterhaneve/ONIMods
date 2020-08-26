@@ -78,6 +78,8 @@ namespace PeterHan.DebugNotIncluded {
 				public static LocString DNI_PLIB = "The currently active version of PLib\nFrom Mod: <b>{0}</b>";
 				public static LocString DNI_INSTANT_GROW = "Set plant growth to 100%";
 				public static LocString DNI_INSTANT_TAME = "Set wildness to 0%";
+				public static LocString DNI_OVERJOY = "Start this Duplicant's Overjoyed reaction immediately";
+				public static LocString DNI_STRESSOUT = "Start this Duplicant's Stress reaction immediately";
 			}
 
 			// Unable to unsubscribe from mod
@@ -87,6 +89,8 @@ namespace PeterHan.DebugNotIncluded {
 
 			public static class USERMENUOPTIONS {
 				public static LocString INSTANTGROW = "Instantly Grow";
+				public static LocString OVERJOY = "Start Overjoyed Reaction";
+				public static LocString STRESSOUT = "Start Stress Reaction";
 			}
 		}
 

@@ -119,8 +119,8 @@ namespace PeterHan.PLib {
 					var cb = currentBindings[i];
 					if (cb.mAction == action) {
 						// Already exists, but it really should not
-						PActionManager.LogKeyBindWarning("Action {0} already exists; " +
-							"assigned to KeyCode {1}".F(action, cb.mKeyCode));
+						PActionManager.LogKeyBindWarning(("Action {0} already exists; " +
+							"assigned to KeyCode {1}").F(action, cb.mKeyCode));
 						inBindings = true;
 						break;
 					}

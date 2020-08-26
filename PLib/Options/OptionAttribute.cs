@@ -34,24 +34,33 @@ namespace PeterHan.PLib {
 		/// <returns>An OptionAttribute object with the values from that object, where
 		/// possible to retrieve; or null if none could be obtained.</returns>
 		internal static OptionAttribute CreateFrom(object attr) {
-			string title = "", tt = "", cat = "";
+			string title = "", tt = "", cat = "", format = null;
 			if (attr.GetType().Name == typeof(OptionAttribute).Name) {
 				var trAttr = Traverse.Create(attr);
 				try {
 					title = trAttr.GetProperty<string>(nameof(Title));
 					tt = trAttr.GetProperty<string>(nameof(Tooltip)) ?? "";
 					cat = trAttr.GetProperty<string>(nameof(Category)) ?? "";
+					format = trAttr.GetProperty<string>(nameof(Format));
 				} catch (Exception e) {
 					PUtil.LogExcWarn(e);
 				}
 			}
-			return string.IsNullOrEmpty(title) ? null : new OptionAttribute(title, tt, cat);
+			return string.IsNullOrEmpty(title) ? null : new OptionAttribute(title, tt, cat) {
+				Format = format
+			};
 		}
 
 		/// <summary>
 		/// The option category.
 		/// </summary>
 		public string Category { get; }
+
+		/// <summary>
+		/// The format string to use when displaying this option value. Only applicable for
+		/// some types of options.
+		/// </summary>
+		public string Format { get; set; }
 
 		/// <summary>
 		/// The option title.
@@ -82,6 +91,7 @@ namespace PeterHan.PLib {
 			if (string.IsNullOrEmpty(title))
 				throw new ArgumentNullException("title");
 			Category = category;
+			Format = null;
 			Title = title;
 			Tooltip = tooltip;
 		}

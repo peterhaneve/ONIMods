@@ -35,9 +35,9 @@ namespace PeterHan.PLib.UI {
 		/// <param name="button">The button to set up.</param>
 		/// <param name="bgImage">The background image.</param>
 		internal static void SetupButton(KButton button, KImage bgImage) {
-			button.additionalKImages = new KImage[0];
-			button.soundPlayer = PUITuning.ButtonSounds;
-			button.bgImage = bgImage;
+			UIDetours.ADDITIONAL_K_IMAGES.Set(button, new KImage[0]);
+			UIDetours.SOUND_PLAYER_BUTTON.Set(button, PUITuning.ButtonSounds);
+			UIDetours.BG_IMAGE.Set(button, bgImage);
 		}
 
 		/// <summary>
@@ -45,7 +45,7 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <param name="bgImage">The image that forms the button background.</param>
 		internal static void SetupButtonBackground(KImage bgImage) {
-			bgImage.ApplyColorStyleSetting();
+			UIDetours.APPLY_COLOR_STYLE.Invoke(bgImage);
 			bgImage.sprite = PUITuning.Images.ButtonBorder;
 			bgImage.type = Image.Type.Sliced;
 		}
@@ -58,7 +58,7 @@ namespace PeterHan.PLib.UI {
 		public static void SetButtonEnabled(GameObject obj, bool enabled) {
 			var button = obj.GetComponentSafe<KButton>();
 			if (button != null)
-				button.isInteractable = enabled;
+				UIDetours.IS_INTERACTABLE.Set(button, enabled);
 		}
 
 		/// <summary>
@@ -85,18 +85,20 @@ namespace PeterHan.PLib.UI {
 			GameObject sprite = null, text = null;
 			// Background
 			var bgImage = button.AddComponent<KImage>();
-			bgImage.colorStyleSetting = Color ?? PUITuning.Colors.ButtonPinkStyle;
+			var bgColorStyle = Color ?? PUITuning.Colors.ButtonPinkStyle;
+			UIDetours.COLOR_STYLE_SETTING.Set(bgImage, bgColorStyle);
 			SetupButtonBackground(bgImage);
 			// Set on click event
 			var kButton = button.AddComponent<KButton>();
 			var evt = OnClick;
 			if (evt != null)
+				// Detouring an Event is not worth the effort
 				kButton.onClick += () => evt?.Invoke(button);
 			SetupButton(kButton, bgImage);
 			// Add foreground image since the background already has one
 			if (Sprite != null) {
 				var fgImage = ImageChildHelper(button, this);
-				kButton.fgImage = fgImage;
+				UIDetours.FG_IMAGE.Set(kButton, fgImage);
 				sprite = fgImage.gameObject;
 			}
 			// Add text
@@ -104,9 +106,7 @@ namespace PeterHan.PLib.UI {
 				text = TextChildHelper(button, TextStyle ?? PUITuning.Fonts.UILightStyle,
 					Text).gameObject;
 			// Add tooltip
-			if (!string.IsNullOrEmpty(ToolTip))
-				button.AddComponent<ToolTip>().toolTip = ToolTip;
-			button.SetActive(true);
+			PUIElements.SetToolTip(button, ToolTip).SetActive(true);
 			// Arrange the icon and text
 			var layout = button.AddComponent<RelativeLayoutGroup>();
 			layout.Margin = Margin;

@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Datafiles;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -46,6 +47,7 @@ namespace PeterHan.FoodTooltip {
 
 		public static void OnLoad() {
 			PUtil.InitLibrary();
+			PLocalization.Register();
 			PUtil.RegisterPatchClass(typeof(FoodTooltipPatches));
 		}
 

@@ -359,12 +359,12 @@ namespace PeterHan.PLib {
 				throw new ArgumentNullException("instance");
 
 			// ColonyAchievementStatus
-			instance.Patch(typeof(ColonyAchievementStatus), "Serialize",
-				PatchMethod(nameof(Serialize_Prefix)), null);
+			instance.Patch(typeof(ColonyAchievementStatus), nameof(ColonyAchievementStatus.
+				Serialize), PatchMethod(nameof(Serialize_Prefix)), null);
 
 			// Db
-			instance.Patch(typeof(Db), "Initialize", PatchMethod(nameof(Initialize_Prefix)),
-				PatchMethod(nameof(Initialize_Postfix)));
+			instance.Patch(typeof(Db), nameof(Db.Initialize), PatchMethod(nameof(
+				Initialize_Prefix)), PatchMethod(nameof(Initialize_Postfix)));
 
 			// Game
 			instance.Patch(typeof(Game), "DestroyInstances", null, PatchMethod(nameof(
@@ -373,46 +373,47 @@ namespace PeterHan.PLib {
 				Game_OnPrefabInit_Postfix)));
 
 			// GameInputMapping
-			instance.Patch(typeof(GameInputMapping), "SetDefaultKeyBindings", null,
-				PatchMethod(nameof(SetDefaultKeyBindings_Postfix)));
+			instance.Patch(typeof(GameInputMapping), nameof(GameInputMapping.
+				SetDefaultKeyBindings), null, PatchMethod(nameof(
+				SetDefaultKeyBindings_Postfix)));
 
 			// GameUtil
-			instance.Patch(typeof(GameUtil), "GetKeycodeLocalized",
+			instance.Patch(typeof(GameUtil), nameof(GameUtil.GetKeycodeLocalized),
 				PatchMethod(nameof(GetKeycodeLocalized_Prefix)), null);
 
 			// KInputController
 			instance.PatchConstructor(typeof(KInputController.KeyDef), new Type[] {
 				typeof(KKeyCode), typeof(Modifier)
 			}, null, PatchMethod(nameof(CKeyDef_Postfix)));
-			instance.Patch(typeof(KInputController), "IsActive",
+			instance.Patch(typeof(KInputController), nameof(KInputController.IsActive),
 				PatchMethod(nameof(IsActive_Prefix)), null);
-			instance.Patch(typeof(KInputController), "QueueButtonEvent",
+			instance.Patch(typeof(KInputController), nameof(KInputController.QueueButtonEvent),
 				PatchMethod(nameof(QueueButtonEvent_Prefix)), null);
 
 			if (PLightManager.InitInstance()) {
 				// DiscreteShadowCaster
-				instance.Patch(typeof(DiscreteShadowCaster), "GetVisibleCells",
-					PatchMethod(nameof(GetVisibleCells_Prefix)), null);
+				instance.Patch(typeof(DiscreteShadowCaster), nameof(DiscreteShadowCaster.
+					GetVisibleCells), PatchMethod(nameof(GetVisibleCells_Prefix)), null);
 
 				// Light2D
 				instance.Patch(typeof(Light2D), "AddToScenePartitioner",
 					PatchMethod(nameof(AddToScenePartitioner_Prefix)), null);
-				instance.Patch(typeof(Light2D), "RefreshShapeAndPosition", null,
+				instance.Patch(typeof(Light2D), nameof(Light2D.RefreshShapeAndPosition), null,
 					PatchMethod(nameof(RefreshShapeAndPosition_Postfix)));
 
 				// LightGridEmitter
-				instance.Patch(typeof(LightGridEmitter), "AddToGrid", null,
-					PatchMethod(nameof(AddToGrid_Postfix)));
+				instance.Patch(typeof(LightGridEmitter), nameof(LightGridEmitter.AddToGrid),
+					null, PatchMethod(nameof(AddToGrid_Postfix)));
 				instance.Patch(typeof(LightGridEmitter), "ComputeLux",
 					PatchMethod(nameof(ComputeLux_Prefix)), null);
-				instance.Patch(typeof(LightGridEmitter), "RemoveFromGrid",
-					null, PatchMethod(nameof(RemoveFromGrid_Postfix)));
-				instance.Patch(typeof(LightGridEmitter), "UpdateLitCells",
-					PatchMethod(nameof(UpdateLitCells_Prefix)), null);
+				instance.Patch(typeof(LightGridEmitter), nameof(LightGridEmitter.
+					RemoveFromGrid), null, PatchMethod(nameof(RemoveFromGrid_Postfix)));
+				instance.Patch(typeof(LightGridEmitter), nameof(LightGridEmitter.
+					UpdateLitCells), PatchMethod(nameof(UpdateLitCells_Prefix)), null);
 
 				// LightGridManager
-				instance.Patch(typeof(LightGridManager), "CreatePreview",
-					PatchMethod(nameof(CreatePreview_Prefix)), null);
+				instance.Patch(typeof(LightGridManager), nameof(LightGridManager.
+					CreatePreview), PatchMethod(nameof(CreatePreview_Prefix)), null);
 
 				// LightShapePreview
 				instance.Patch(typeof(LightShapePreview), "Update",
@@ -428,18 +429,19 @@ namespace PeterHan.PLib {
 				nameof(MainMenu_OnSpawn_Postfix)));
 
 			// PBuilding
-			instance.Patch(typeof(BuildingTemplates), "CreateBuildingDef", null,
-				PatchMethod(nameof(CreateBuildingDef_Postfix)));
-			instance.Patch(typeof(EquipmentTemplates), "CreateEquipmentDef", null,
-				PatchMethod(nameof(CreateEquipmentDef_Postfix)));
+			instance.Patch(typeof(BuildingTemplates), nameof(BuildingTemplates.
+				CreateBuildingDef), null, PatchMethod(nameof(CreateBuildingDef_Postfix)));
+			instance.Patch(typeof(EquipmentTemplates), nameof(EquipmentTemplates.
+				CreateEquipmentDef), null, PatchMethod(nameof(CreateEquipmentDef_Postfix)));
 			if (PBuilding.CheckBuildings())
-				instance.Patch(typeof(GeneratedBuildings), "LoadGeneratedBuildings",
-					PatchMethod(nameof(LoadGeneratedBuildings_Prefix)), null);
+				instance.Patch(typeof(GeneratedBuildings), nameof(GeneratedBuildings.
+					LoadGeneratedBuildings), PatchMethod(nameof(LoadGeneratedBuildings_Prefix)),
+					null);
 
 			// PCodex
-			instance.Patch(typeof(CodexCache), "CollectEntries", null,
+			instance.Patch(typeof(CodexCache), nameof(CodexCache.CollectEntries), null,
 				PatchMethod(nameof(CollectEntries_Postfix)));
-			instance.Patch(typeof(CodexCache), "CollectSubEntries", null,
+			instance.Patch(typeof(CodexCache), nameof(CodexCache.CollectSubEntries), null,
 				PatchMethod(nameof(CollectSubEntries_Postfix)));
 
 			// PLocalization
@@ -449,8 +451,8 @@ namespace PeterHan.PLib {
 
 			// ModsScreen
 			POptions.Init();
-			instance.Patch(typeof(ModsScreen), "BuildDisplay", null,
-				PatchMethod(nameof(BuildDisplay_Postfix)));
+			instance.Patch(typeof(ModsScreen), "BuildDisplay", null, PatchMethod(nameof(
+				BuildDisplay_Postfix)));
 
 			// SteamUGCService
 			var ugc = PPatchTools.GetTypeSafe("SteamUGCService", "Assembly-CSharp");

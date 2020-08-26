@@ -315,7 +315,9 @@ namespace PeterHan.PLib.UI {
 		/// Builds and shows this dialog.
 		/// </summary>
 		public void Show() {
-			Build().GetComponent<KScreen>()?.Activate();
+			var screen = Build().GetComponent<KScreen>();
+			if (screen != null)
+				UIDetours.ACTIVATE_KSCREEN.Invoke(screen);
 		}
 
 		public override string ToString() {
@@ -397,7 +399,7 @@ namespace PeterHan.PLib.UI {
 			/// <param name="source">The button source.</param>
 			internal void DoButton(GameObject source) {
 				key = source.name;
-				Deactivate();
+				UIDetours.DEACTIVATE_KSCREEN.Invoke(this);
 			}
 
 			public override float GetSortKey() {
@@ -414,7 +416,7 @@ namespace PeterHan.PLib.UI {
 
 			public override void OnKeyDown(KButtonEvent e) {
 				if (e.TryConsume(Action.Escape))
-					Deactivate();
+					UIDetours.DEACTIVATE_KSCREEN.Invoke(this);
 				else
 					base.OnKeyDown(e);
 			}

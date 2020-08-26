@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Datafiles;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -55,6 +56,7 @@ namespace PeterHan.Resculpt {
 
 		public static void OnLoad() {
 			PUtil.InitLibrary();
+			PLocalization.Register();
 		}
 
 		/// <summary>

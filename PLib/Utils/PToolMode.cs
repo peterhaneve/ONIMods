@@ -38,7 +38,8 @@ namespace PeterHan.PLib {
 			// Add to Klei format, yes it loses the order but it means less of a mess
 			foreach (var option in options) {
 				string key = option.Key;
-				Strings.Add("STRINGS.UI.TOOLS.FILTERLAYERS." + key, option.Title);
+				if (!string.IsNullOrEmpty(option.Title))
+					Strings.Add("STRINGS.UI.TOOLS.FILTERLAYERS." + key, option.Title);
 				kOpt.Add(key, option.State);
 			}
 			menu.PopulateMenu(kOpt);
@@ -96,8 +97,6 @@ namespace PeterHan.PLib {
 				ToolParameterMenu.ToggleState.Off) {
 			if (string.IsNullOrEmpty(key))
 				throw new ArgumentNullException("key");
-			if (string.IsNullOrEmpty(title))
-				throw new ArgumentNullException("title");
 			Key = key;
 			State = state;
 			Title = title;

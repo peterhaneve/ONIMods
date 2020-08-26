@@ -20,7 +20,7 @@ using System;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace PeterHan.PLib {
+namespace PeterHan.PLib.Detours {
 	/// <summary>
 	/// Efficiently detours around many changes in the game by creating detour methods and
 	/// accessors which are resilient against many types of source compatible but binary
@@ -85,6 +85,28 @@ namespace PeterHan.PLib {
 		/// Creates a dynamic detour method of the specified delegate type to wrap a base game
 		/// method with the specified name. The dynamic method will automatically adapt if
 		/// optional parameters are added, filling in their default values.
+		/// 
+		/// This overload creates a lazy detour that only performs the expensive reflection
+		/// when it is first used.
+		/// </summary>
+		/// <typeparam name="D">The delegate type to be used to call the detour.</typeparam>
+		/// <param name="type">The target type.</param>
+		/// <param name="name">The method name.</param>
+		/// <returns>The detour that will call that method.</returns>
+		/// <exception cref="DetourException">If the delegate does not match any valid target method.</exception>
+		public static DetouredMethod<D> DetourLazy<D>(this Type type, string name)
+				where D : Delegate {
+			if (type == null)
+				throw new ArgumentNullException("type");
+			if (string.IsNullOrEmpty(name))
+				throw new ArgumentNullException("name");
+			return new DetouredMethod<D>(type, name);
+		}
+
+		/// <summary>
+		/// Creates a dynamic detour method of the specified delegate type to wrap a base game
+		/// method with the specified name. The dynamic method will automatically adapt if
+		/// optional parameters are added, filling in their default values.
 		/// </summary>
 		/// <typeparam name="D">The delegate type to be used to call the detour.</typeparam>
 		/// <param name="target">The target method to be called.</param>
@@ -103,7 +125,7 @@ namespace PeterHan.PLib {
 			// Method will be "declared" in the type of the target, as we are detouring around
 			// a method of that type
 			var caller = new DynamicMethod(target.Name + "_Detour", expected.ReturnType,
-				expectedParamTypes, parentType);
+				expectedParamTypes, parentType, true);
 			var generator = caller.GetILGenerator();
 			// Load the known method arguments onto the stack
 			int n = expectedParamTypes.Length, need = actualParams.Length + offset;
@@ -136,7 +158,7 @@ namespace PeterHan.PLib {
 				caller.DefineParameter(i + 1, oldParam.Attributes, oldParam.Name);
 			}
 #if DEBUG
-			PUtil.LogDebug("Created delegate {0} for method {1}.{2} with parameter types {3}".
+			PUtil.LogDebug("Created delegate {0} for method {1}.{2} with parameters [{3}]".
 				F(caller.Name, parentType.FullName, target.Name, actualParams.Join(",")));
 #endif
 			return caller.CreateDelegate(typeof(D)) as D;
@@ -152,15 +174,16 @@ namespace PeterHan.PLib {
 		/// <param name="name">The name of the field or property to be accessed.</param>
 		/// <returns>A detour element that wraps the field or property with common getter and
 		/// setter delegates which will work on both types.</returns>
-		public static DetouredField<P, T> DetourField<P, T>(string name) {
+		public static IDetouredField<P, T> DetourField<P, T>(string name) {
 			if (string.IsNullOrEmpty(name))
 				throw new ArgumentNullException("name");
-			var field = typeof(P).GetField(name, PPatchTools.BASE_FLAGS | BindingFlags.
+			var pt = typeof(P);
+			var field = pt.GetField(name, PPatchTools.BASE_FLAGS | BindingFlags.
 				Static | BindingFlags.Instance);
-			DetouredField<P, T> d;
+			IDetouredField<P, T> d;
 			if (field == null) {
 				try {
-					var property = typeof(P).GetProperty(name, PPatchTools.BASE_FLAGS |
+					var property = pt.GetProperty(name, PPatchTools.BASE_FLAGS |
 						BindingFlags.Static | BindingFlags.Instance);
 					if (property == null)
 						throw new DetourException("Unable to find {0} on type {1}".
@@ -170,9 +193,31 @@ namespace PeterHan.PLib {
 					throw new DetourException("Unable to find {0} on type {1}".
 						F(name, typeof(P).FullName));
 				}
-			} else
+			} else {
+				if (pt.IsValueType || (pt.IsByRef && pt.GetElementType().IsValueType))
+					throw new ArgumentException("For accessing struct fields, use DetourStructField");
 				d = DetourField<P, T>(field);
+			}
 			return d;
+		}
+
+		/// <summary>
+		/// Creates dynamic detour methods to wrap a base game field or property with the
+		/// specified name. The detour will still work even if the field is converted to a
+		/// source compatible property and vice versa.
+		/// 
+		/// This overload creates a lazy detour that only performs the expensive reflection
+		/// when it is first used.
+		/// </summary>
+		/// <typeparam name="P">The type of the parent class.</typeparam>
+		/// <typeparam name="T">The type of the field or property element.</typeparam>
+		/// <param name="name">The name of the field or property to be accessed.</param>
+		/// <returns>A detour element that wraps the field or property with common getter and
+		/// setter delegates which will work on both types.</returns>
+		public static IDetouredField<P, T> DetourFieldLazy<P, T>(string name) {
+			if (string.IsNullOrEmpty(name))
+				throw new ArgumentNullException("name");
+			return new LazyDetouredField<P, T>(typeof(P), name);
 		}
 
 		/// <summary>
@@ -183,7 +228,7 @@ namespace PeterHan.PLib {
 		/// <param name="target">The field which will be accessed.</param>
 		/// <returns>A detour element that wraps the field with a common interface matching
 		/// that of a detoured property.</returns>
-		private static DetouredField<P, T> DetourField<P, T>(this FieldInfo target) {
+		private static IDetouredField<P, T> DetourField<P, T>(FieldInfo target) {
 			if (target == null)
 				throw new ArgumentNullException("target");
 			var parentType = target.DeclaringType;
@@ -192,10 +237,7 @@ namespace PeterHan.PLib {
 				throw new ArgumentException("Parent type does not match delegate to be created");
 			var getter = new DynamicMethod(name + "_Detour_Get", typeof(T), new Type[] {
 				typeof(P)
-			});
-			var setter = new DynamicMethod(name + "_Detour_Set", null, new Type[] {
-				typeof(P), typeof(T)
-			});
+			}, true);
 			var generator = getter.GetILGenerator();
 			// Getter will load the first argument and use ldfld/ldsfld
 			if (target.IsStatic)
@@ -205,19 +247,33 @@ namespace PeterHan.PLib {
 				generator.Emit(OpCodes.Ldfld, target);
 			}
 			generator.Emit(OpCodes.Ret);
-			generator = setter.GetILGenerator();
-			// Setter will load both arguments and use stfld/stsfld
-			if (target.IsStatic) {
-				generator.Emit(OpCodes.Ldarg_1);
-				generator.Emit(OpCodes.Stsfld, target);
-			} else {
-				generator.Emit(OpCodes.Ldarg_0);
-				generator.Emit(OpCodes.Ldarg_1);
-				generator.Emit(OpCodes.Stfld, target);
+			DynamicMethod setter;
+			if (target.IsInitOnly)
+				// Handle readonly fields
+				setter = null;
+			else {
+				setter = new DynamicMethod(name + "_Detour_Set", null, new Type[] {
+					typeof(P), typeof(T)
+				}, true);
+				generator = setter.GetILGenerator();
+				// Setter will load both arguments and use stfld/stsfld (argument 1 is ignored
+				// for static fields)
+				if (target.IsStatic) {
+					generator.Emit(OpCodes.Ldarg_1);
+					generator.Emit(OpCodes.Stsfld, target);
+				} else {
+					generator.Emit(OpCodes.Ldarg_0);
+					generator.Emit(OpCodes.Ldarg_1);
+					generator.Emit(OpCodes.Stfld, target);
+				}
+				generator.Emit(OpCodes.Ret);
 			}
-			generator.Emit(OpCodes.Ret);
+#if DEBUG
+			PUtil.LogDebug("Created delegate for field {0}.{1} with type {2}".
+				F(parentType.FullName, target.Name, typeof(T).FullName));
+#endif
 			return new DetouredField<P, T>(name, getter.CreateDelegate(typeof(Func<P, T>)) as
-				Func<P, T>, setter.CreateDelegate(typeof(Action<P, T>)) as Action<P, T>);
+				Func<P, T>, setter?.CreateDelegate(typeof(Action<P, T>)) as Action<P, T>);
 		}
 
 		/// <summary>
@@ -229,7 +285,7 @@ namespace PeterHan.PLib {
 		/// <returns>A detour element that wraps the property with a common interface matching
 		/// that of a detoured field.</returns>
 		/// <exception cref="DetourException">If the property has indexers.</exception>
-		private static DetouredField<P, T> DetourProperty<P, T>(this PropertyInfo target) {
+		private static IDetouredField<P, T> DetourProperty<P, T>(PropertyInfo target) {
 			if (target == null)
 				throw new ArgumentNullException("target");
 			var parentType = target.DeclaringType;
@@ -239,25 +295,94 @@ namespace PeterHan.PLib {
 			var indexes = target.GetIndexParameters();
 			if (indexes != null && indexes.Length > 0)
 				throw new DetourException("Cannot detour on properties with index arguments");
+			DynamicMethod getter, setter;
+			if (target.CanRead) {
+				getter = new DynamicMethod(name + "_Detour_Get", typeof(T), new Type[] {
+					typeof(P)
+				}, true);
+				var generator = getter.GetILGenerator();
+				var getMethod = target.GetGetMethod();
+				// Getter will load the first argument and call the property getter
+				if (!getMethod.IsStatic)
+					generator.Emit(OpCodes.Ldarg_0);
+				generator.Emit(OpCodes.Call, getMethod);
+				generator.Emit(OpCodes.Ret);
+			} else
+				getter = null;
+			if (target.CanWrite) {
+				setter = new DynamicMethod(name + "_Detour_Set", null, new Type[] {
+					typeof(P), typeof(T)
+				}, true);
+				var generator = setter.GetILGenerator();
+				var setMethod = target.GetSetMethod();
+				// Setter will load both arguments and call property setter (argument 1 is
+				// ignored for static properties)
+				if (!setMethod.IsStatic)
+					generator.Emit(OpCodes.Ldarg_0);
+				generator.Emit(OpCodes.Ldarg_1);
+				generator.Emit(OpCodes.Call, setMethod);
+				generator.Emit(OpCodes.Ret);
+			} else
+				setter = null;
+#if DEBUG
+			PUtil.LogDebug("Created delegate for property {0}.{1} with type {2}".
+				F(parentType.FullName, target.Name, typeof(T).FullName));
+#endif
+			return new DetouredField<P, T>(name, getter?.CreateDelegate(typeof(Func<P, T>)) as
+				Func<P, T>, setter?.CreateDelegate(typeof(Action<P, T>)) as Action<P, T>);
+		}
+
+		/// <summary>
+		/// Creates dynamic detour methods to wrap a base game struct field with the specified
+		/// name. For static fields, use the regular DetourField.
+		/// </summary>
+		/// <typeparam name="T">The type of the field element.</typeparam>
+		/// <param name="target">The field which will be accessed.</param>
+		/// <returns>A detour element that wraps the field with a common interface matching
+		/// that of a detoured property.</returns>
+		public static IDetouredField<object, T> DetourStructField<T>(this Type parentType,
+				string name) {
+			if (parentType == null)
+				throw new ArgumentNullException("parentType");
+			if (string.IsNullOrEmpty(name))
+				throw new ArgumentNullException("name");
+			var target = parentType.GetField(name, PPatchTools.BASE_FLAGS | BindingFlags.
+				Instance);
+			if (target == null)
+				throw new DetourException("Unable to find {0} on type {1}".F(name, parentType.
+					FullName));
 			var getter = new DynamicMethod(name + "_Detour_Get", typeof(T), new Type[] {
-				typeof(P)
-			});
-			var setter = new DynamicMethod(name + "_Detour_Set", null, new Type[] {
-				typeof(P), typeof(T)
-			});
+				typeof(object)
+			}, true);
 			var generator = getter.GetILGenerator();
-			// Getter will load the first argument and call the property getter
+			// Getter will load the first argument, unbox. and use ldfld
 			generator.Emit(OpCodes.Ldarg_0);
-			generator.Emit(OpCodes.Call, target.GetGetMethod());
+			generator.Emit(OpCodes.Unbox, parentType);
+			generator.Emit(OpCodes.Ldfld, target);
 			generator.Emit(OpCodes.Ret);
-			generator = setter.GetILGenerator();
-			// Setter will load both arguments and use stfld/stsfld
-			generator.Emit(OpCodes.Ldarg_0);
-			generator.Emit(OpCodes.Ldarg_1);
-			generator.Emit(OpCodes.Call, target.GetSetMethod());
-			generator.Emit(OpCodes.Ret);
-			return new DetouredField<P, T>(name, getter.CreateDelegate(typeof(Func<P, T>)) as
-				Func<P, T>, setter.CreateDelegate(typeof(Action<P, T>)) as Action<P, T>);
+			DynamicMethod setter;
+			if (target.IsInitOnly)
+				// Handle readonly fields
+				setter = null;
+			else {
+				setter = new DynamicMethod(name + "_Detour_Set", null, new Type[] {
+					typeof(object), typeof(T)
+				}, true);
+				generator = setter.GetILGenerator();
+				// Setter will load both arguments, unbox and use stfld
+				generator.Emit(OpCodes.Ldarg_0);
+				generator.Emit(OpCodes.Unbox, parentType);
+				generator.Emit(OpCodes.Ldarg_1);
+				generator.Emit(OpCodes.Stfld, target);
+				generator.Emit(OpCodes.Ret);
+			}
+#if DEBUG
+			PUtil.LogDebug("Created delegate for struct field {0}.{1} with type {2}".
+				F(parentType.FullName, target.Name, typeof(T).FullName));
+#endif
+			return new DetouredField<object, T>(name, getter.CreateDelegate(typeof(
+				Func<object, T>)) as Func<object, T>, setter?.CreateDelegate(typeof(
+				Action<object, T>)) as Action<object, T>);
 		}
 
 		/// <summary>

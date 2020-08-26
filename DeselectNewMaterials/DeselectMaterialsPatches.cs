@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Datafiles;
 using PeterHan.PLib.Options;
 
 namespace PeterHan.DeselectNewMaterials {
@@ -44,6 +45,7 @@ namespace PeterHan.DeselectNewMaterials {
 
 		public static void OnLoad() {
 			PUtil.InitLibrary();
+			PLocalization.Register();
 			Options = new DeselectMaterialsOptions();
 			POptions.RegisterOptions(typeof(DeselectMaterialsOptions));
 			PUtil.RegisterPatchClass(typeof(DeselectMaterialsPatches));

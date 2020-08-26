@@ -153,7 +153,8 @@ namespace PeterHan.PLib.UI {
 			RectOffset margin = Margin, im = ItemMargin;
 			// Background color
 			var bgImage = combo.AddComponent<KImage>();
-			bgImage.colorStyleSetting = BackColor ?? PUITuning.Colors.ButtonBlueStyle;
+			var backColorStyle = BackColor ?? PUITuning.Colors.ButtonBlueStyle;
+			UIDetours.COLOR_STYLE_SETTING.Set(bgImage, backColorStyle);
 			PButton.SetupButtonBackground(bgImage);
 			// Need a LocText (selected item)
 			var selection = PUIElements.CreateUI(combo, "SelectedItem");
@@ -196,11 +197,10 @@ namespace PeterHan.PLib.UI {
 			// Button component
 			var dropButton = combo.AddComponent<KButton>();
 			PButton.SetupButton(dropButton, bgImage);
-			dropButton.fgImage = icon;
+			UIDetours.FG_IMAGE.Set(dropButton, icon);
 			dropButton.onClick += comboBox.OnClick;
 			// Add tooltip
-			if (!string.IsNullOrEmpty(ToolTip))
-				selection.AddComponent<ToolTip>().toolTip = ToolTip;
+			PUIElements.SetToolTip(selection, ToolTip);
 			combo.SetActive(true);
 			// Button gets laid out on the right, rest of space goes to the label
 			// Scroll pane is laid out on the bottom
@@ -236,8 +236,8 @@ namespace PeterHan.PLib.UI {
 			var rowPrefab = PUIElements.CreateUI(null, "RowEntry");
 			// Background of the entry
 			var bgImage = rowPrefab.AddComponent<KImage>();
-			bgImage.colorStyleSetting = entryColor;
-			bgImage.ApplyColorStyleSetting();
+			UIDetours.COLOR_STYLE_SETTING.Set(bgImage, entryColor);
+			UIDetours.APPLY_COLOR_STYLE.Invoke(bgImage);
 			// Checkmark for the front of the entry
 			var isSelected = PUIElements.CreateUI(rowPrefab, "Selected");
 			var fgImage = isSelected.AddComponent<Image>();
@@ -247,7 +247,7 @@ namespace PeterHan.PLib.UI {
 			// Button for the entry to select it
 			var entryButton = rowPrefab.AddComponent<KButton>();
 			PButton.SetupButton(entryButton, bgImage);
-			entryButton.fgImage = fgImage;
+			UIDetours.FG_IMAGE.Set(entryButton, fgImage);
 			// Tooltip for the entry
 			rowPrefab.AddComponent<ToolTip>();
 			// Text for the entry

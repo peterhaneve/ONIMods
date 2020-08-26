@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.Detours;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
@@ -27,17 +28,6 @@ namespace PeterHan.PLib.UI {
 	/// Used for creating and managing UI elements.
 	/// </summary>
 	public sealed class PUIElements {
-		/// <summary>
-		/// Detour for ConfirmDialogScreen.PopupConfirmDialog.
-		/// </summary>
-		private delegate void PCD(ConfirmDialogScreen dialog, string text,
-			System.Action on_confirm, System.Action on_cancel, string configurable_text,
-			System.Action on_configurable_clicked, string title_text, string confirm_text,
-			string cancel_text);
-
-		private static readonly PCD POPUP_CONFIRM = typeof(ConfirmDialogScreen).
-			Detour<PCD>(nameof(ConfirmDialogScreen.PopupConfirmDialog));
-
 		/// <summary>
 		/// Safely adds a LocText to a game object without throwing an NRE on construction.
 		/// </summary>
@@ -52,8 +42,8 @@ namespace PeterHan.PLib.UI {
 			parent.SetActive(false);
 			var text = parent.AddComponent<LocText>();
 			// This is enough to let it activate
-			text.key = string.Empty;
-			text.textStyleSetting = setting ?? PUITuning.Fonts.UIDarkStyle;
+			UIDetours.LOCTEXT_KEY.Set(text, string.Empty);
+			UIDetours.LOCTEXT_STYLE.Set(text, setting ?? PUITuning.Fonts.UIDarkStyle);
 			parent.SetActive(active);
 			return text;
 		}
@@ -314,10 +304,8 @@ namespace PeterHan.PLib.UI {
 		public static GameObject SetToolTip(GameObject uiElement, string tooltip) {
 			if (uiElement == null)
 				throw new ArgumentNullException("uiElement");
-			if (!string.IsNullOrEmpty(tooltip)) {
-				var tooltipComponent = uiElement.AddOrGet<ToolTip>();
-				tooltipComponent.toolTip = tooltip;
-			}
+			if (!string.IsNullOrEmpty(tooltip))
+				uiElement.AddOrGet<ToolTip>().toolTip = tooltip;
 			return uiElement;
 		}
 
@@ -351,8 +339,8 @@ namespace PeterHan.PLib.UI {
 			var obj = Util.KInstantiateUI(ScreenPrefabs.Instance.ConfirmDialogScreen.
 				gameObject, parent, false);
 			var confirmDialog = obj.GetComponent<ConfirmDialogScreen>();
-			POPUP_CONFIRM(confirmDialog, message, onConfirm, onCancel ?? DoNothing, null,
-				null, null, confirmText, cancelText);
+			UIDetours.POPUP_CONFIRM.Invoke(confirmDialog, message, onConfirm, onCancel ??
+				DoNothing, null, null, null, confirmText, cancelText);
 			obj.SetActive(true);
 			return confirmDialog;
 		}
@@ -368,7 +356,8 @@ namespace PeterHan.PLib.UI {
 			return ShowConfirmDialog(parent, message, DoNothing);
 		}
 
-
+		// This class should probably be static, but that might be binary compatibility
+		// breaking
 		private PUIElements() { }
 	}
 

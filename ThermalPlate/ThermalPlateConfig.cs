@@ -18,6 +18,7 @@
 
 using PeterHan.PLib;
 using PeterHan.PLib.Buildings;
+using PeterHan.PLib.Datafiles;
 using System;
 using UnityEngine;
 
@@ -38,6 +39,7 @@ namespace PeterHan.ThermalPlate {
 
 		public static void OnLoad() {
 			PUtil.InitLibrary();
+			PLocalization.Register();
 			RegisterBuilding();
 		}
 

@@ -16,31 +16,29 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
+using Newtonsoft.Json;
+using PeterHan.PLib;
 
-namespace PeterHan.PLib {
+namespace PeterHan.Challenge100K {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// The options class used for the 100 K Challenge.
 	/// </summary>
-	public static class PVersion {
+	[JsonObject(MemberSerialization.OptIn)]
+	[ModInfo("100K Challenge", "https://github.com/peterhaneve/ONIMods")]
+	public sealed class Challenge100KOptions {
 		/// <summary>
-		/// The PLib version.
+		/// Whether hard mode (no geysers) is enabled.
 		/// </summary>
-		public const string VERSION = "3.10.0.0";
+		[Option("Hard Mode", "Removes geysers from the 100 K map. Only applies to newly generated worlds.\r\nThis setting has no effect on other worlds.")]
+		[JsonProperty]
+		public bool RemoveGeysers { get; set; }
 
-		/// <summary>
-		/// Reports whether the PLib version included or referenced by this mod is the latest
-		/// version loaded on the client.
-		/// 
-		/// This accessor will only work after PLib is fully loaded. Therefore, it will be
-		/// unavailable in OnLoad or RegisterPostload, and will always return false in those
-		/// cases.
-		/// </summary>
-		public static bool IsLatestVersion {
-			get {
-				return VERSION == PSharedData.GetData<string>(PRegistry.KEY_VERSION);
-			}
+		public Challenge100KOptions() {
+			RemoveGeysers = false;
+		}
+
+		public override string ToString() {
+			return "Challenge100KOptions[hard={0}]".F(RemoveGeysers);
 		}
 	}
 }

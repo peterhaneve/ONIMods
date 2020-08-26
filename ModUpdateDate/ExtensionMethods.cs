@@ -18,6 +18,7 @@
 
 using KMod;
 using PeterHan.PLib;
+using PeterHan.PLib.Detours;
 using PeterHan.PLib.Options;
 using Steamworks;
 using System;
@@ -33,6 +34,12 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		private static readonly System.DateTime UNIX_EPOCH = new System.DateTime(1970, 1, 1,
 			0, 0, 0, DateTimeKind.Utc);
+
+		// SteamUGCService.FindMod
+		private delegate SteamUGCService.Mod FindMod(SteamUGCService svc, PublishedFileId_t id);
+
+		private static readonly FindMod FIND_MOD = typeof(SteamUGCService).Detour<FindMod>(
+			nameof(SteamUGCService.FindMod));
 
 		/// <summary>
 		/// Gets the path to the backup copy of this mod's config.
@@ -112,7 +119,8 @@ namespace PeterHan.ModUpdateDate {
 		internal static bool GetGlobalLastModified(this PublishedFileId_t id,
 				out System.DateTime when) {
 			bool result = false;
-			var steamMod = SteamUGCService.Instance?.FindMod(id);
+			var inst = SteamUGCService.Instance;
+			var steamMod = (inst == null) ? null : FIND_MOD.Invoke(inst, id);
 			if (steamMod != null) {
 				ulong ticks = steamMod.lastUpdateTime;
 				result = true;

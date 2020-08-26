@@ -67,11 +67,11 @@ namespace PeterHan.PLib.Options {
 				// Min and max labels
 				var minLabel = new PLabel("MinValue") {
 					TextStyle = PUITuning.Fonts.TextLightStyle, Text = minLimit.
-					ToString("G4"), TextAlignment = TextAnchor.MiddleRight
+					ToString(Format ?? "G3"), TextAlignment = TextAnchor.MiddleRight
 				};
 				var maxLabel = new PLabel("MaxValue") {
 					TextStyle = PUITuning.Fonts.TextLightStyle, Text = maxLimit.
-					ToString("G4"), TextAlignment = TextAnchor.MiddleLeft
+					ToString(Format ?? "G3"), TextAlignment = TextAnchor.MiddleLeft
 				};
 				// Lay out left to right
 				var panel = new PRelativePanel("Slider Grid") {

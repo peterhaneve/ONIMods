@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Datafiles;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -72,12 +73,8 @@ namespace PeterHan.SandboxTools {
 			filters.Add(new SearchFilter(SandboxToolsStrings.FILTER_GEYSERS,
 				(entity) => {
 					var prefab = entity as KPrefabID;
-					bool ok = prefab != null;
-					if (ok) {
-						string name = prefab.PrefabTag.Name;
-						ok = name.StartsWith("GeyserGeneric_") || name == "OilWell";
-					}
-					return ok;
+					return prefab != null && (prefab.GetComponent<Geyser>() != null || prefab.
+						PrefabTag.Name == "OilWell");
 				}, null, Def.GetUISprite(Assets.GetPrefab("GeyserGeneric_slush_water"))));
 			// Update the special filter to add other comet types
 			foreach (var filter in filters)
@@ -85,12 +82,8 @@ namespace PeterHan.SandboxTools {
 					var oldCondition = filter.condition;
 					filter.condition = (entity) => {
 						var prefab = entity as KPrefabID;
-						bool ok = prefab != null;
-						if (ok) {
-							string name = prefab.PrefabTag.Name;
-							ok = name == GoldCometConfig.ID || name == CopperCometConfig.ID;
-						}
-						return ok || oldCondition.Invoke(entity);
+						return (prefab != null && prefab.GetComponent<Comet>() != null) ||
+							oldCondition.Invoke(entity);
 					};
 				}
 			// Add matching assets
@@ -161,6 +154,7 @@ namespace PeterHan.SandboxTools {
 
 		public static void OnLoad() {
 			PUtil.InitLibrary();
+			PLocalization.Register();
 			sliderSetValue = typeof(SandboxToolParameterMenu.SliderValue).GetMethodSafe(
 				"SetValue", false, PPatchTools.AnyArguments);
 		}

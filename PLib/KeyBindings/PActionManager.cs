@@ -42,6 +42,19 @@ namespace PeterHan.PLib {
 		public const string CATEGORY_TITLE = "PLib Mods";
 
 		/// <summary>
+		/// Adds a patch on GameInputMapping.LoadBindings to register key bindings for this
+		/// mod. The typical table approach in PSharedData does not work, because LoadBindings
+		/// executes after mods load but before PLib patches are applied...
+		/// </summary>
+		private static void AddActionManager() {
+			var hi = HarmonyInstance.Create("PKeyBinding_" + (Assembly.GetExecutingAssembly().
+				GetNameSafe() ?? "Unknown"));
+			hi.Patch(typeof(GameInputMapping).GetMethodSafe(nameof(GameInputMapping.
+				LoadBindings), true), new HarmonyMethod(typeof(PActionManager),
+				nameof(RunActionManagers)), null);
+		}
+
+		/// <summary>
 		/// Configures the action entry in the strings database to display its title properly.
 		/// </summary>
 		/// <param name="action">The action to configure.</param>
@@ -55,7 +68,7 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <param name="oldActionFlags">The old flags array.</param>
 		/// <param name="newMax">The minimum length.</param>
-		/// <returns>The n</returns>
+		/// <returns>The new action flags array.</returns>
 		internal static bool[] ExtendFlags(bool[] oldActionFlags, int newMax) {
 			int n = oldActionFlags.Length;
 			bool[] newActionFlags;
@@ -147,6 +160,18 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Executes all registered action managers from any mod.
+		/// </summary>
+		internal static void RunActionManagers() {
+			Instance?.ProcessKeyBinds();
+		}
+
+		/// <summary>
+		/// Whether the action manager has been patched in.
+		/// </summary>
+		private bool Added { get; set; }
+
+		/// <summary>
 		/// The maximum PAction ID.
 		/// </summary>
 		private int maxPAction;
@@ -157,6 +182,7 @@ namespace PeterHan.PLib {
 		private readonly IDictionary<PAction, PKeyBinding> queueBindKeys;
 
 		internal PActionManager() {
+			Added = false;
 			maxPAction = 0;
 			queueBindKeys = new Dictionary<PAction, PKeyBinding>(8);
 		}
@@ -186,9 +212,9 @@ namespace PeterHan.PLib {
 		private void ProcessKeyBinds() {
 			int n = queueBindKeys.Count;
 			if (n > 0 && GameInputMapping.DefaultBindings != null) {
-				string name = Assembly.GetExecutingAssembly()?.GetName()?.Name ?? "?";
+				string name = Assembly.GetExecutingAssembly().GetNameSafe() ?? "?";
 				// Safe to add them without risk of concurrent modification
-				LogKeyBind("Registering {0:D} key binds for mod {1}".F(n, name));
+				LogKeyBind("Registering {0:D} key bind(s) for mod {1}".F(n, name));
 				foreach (var pair in queueBindKeys)
 					pair.Key.AddKeyBinding(pair.Value);
 				queueBindKeys.Clear();
@@ -201,6 +227,10 @@ namespace PeterHan.PLib {
 		/// <param name="action">The action to bind.</param>
 		/// <param name="binding">The key to bind it to.</param>
 		internal void QueueKeyBind(PAction action, PKeyBinding binding) {
+			if (!Added) {
+				AddActionManager();
+				Added = true;
+			}
 			queueBindKeys[action] = binding;
 		}
 
@@ -214,22 +244,6 @@ namespace PeterHan.PLib {
 					maxPAction = Math.Max(0, PSharedData.GetData<int>(PRegistry.
 						KEY_ACTION_ID));
 				}
-		}
-
-		/// <summary>
-		/// Applied to GameInputMapping to apply default key bindings for actions.
-		/// 
-		/// This patch is supposed to be applied for <b>every</b> mod using PLib. Do not move
-		/// it to PLibPatches.
-		/// </summary>
-		[HarmonyPatch(typeof(GameInputMapping), "LoadBindings")]
-		public static class GameInputMapping_LoadBindings_Patch {
-			/// <summary>
-			/// Applied before LoadBindings runs.
-			/// </summary>
-			private static void Prefix() {
-				Instance.ProcessKeyBinds();
-			}
 		}
 	}
 }

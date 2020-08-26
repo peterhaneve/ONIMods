@@ -18,7 +18,7 @@
 
 using System;
 
-namespace PeterHan.PLib {
+namespace PeterHan.PLib.Detours {
 	/// <summary>
 	/// An exception thrown when constructing a detour.
 	/// </summary>

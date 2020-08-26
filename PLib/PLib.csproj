@@ -4,8 +4,8 @@
     <TargetFramework>net40</TargetFramework>
     <Title>PeterHan.PLib</Title>
       <AssemblyTitle>PeterHanLib</AssemblyTitle>
-      <Version>3.9.6.0</Version>
-      <!--<PackageVersion>3.9.6-beta</PackageVersion>-->
+      <Version>3.10.0.0</Version>
+      <!--<PackageVersion>3.10.0-beta</PackageVersion>-->
       <UsesPLib>false</UsesPLib>
       <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
       <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
@@ -21,7 +21,7 @@ Contains methods aimed at improving cross-mod compatibility, in-game user interf
 
 Fix a crash caused by game updates to dialogs.</PackageReleaseNotes>
       <RootNamespace>PeterHan.PLib</RootNamespace>
-      <AssemblyVersion>3.9.6.0</AssemblyVersion>
+      <AssemblyVersion>3.10.0.0</AssemblyVersion>
       <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
       <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>

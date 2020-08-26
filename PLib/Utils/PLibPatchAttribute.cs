@@ -19,7 +19,6 @@
 using Harmony;
 using System;
 using System.Reflection;
-using System.Security.Cryptography;
 
 namespace PeterHan.PLib {
 	/// <summary>
