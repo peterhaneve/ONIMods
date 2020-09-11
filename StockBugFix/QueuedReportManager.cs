@@ -18,7 +18,7 @@
 
 using UnityEngine;
 
-namespace PeterHan.DebugNotIncluded {
+namespace PeterHan.StockBugFix {
 	/// <summary>
 	/// Manages queued reports of mod updates.
 	/// </summary>

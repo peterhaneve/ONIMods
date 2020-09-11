@@ -74,6 +74,21 @@ namespace PeterHan.StockBugFix {
 		}
 #endif
 
+		public static void PostPatch(HarmonyInstance instance) {
+			var steamMod = PPatchTools.GetTypeSafe("KMod.Steam");
+			if (steamMod != null) {
+#if DEBUG
+				PUtil.LogDebug("Transpiling Steam.UpdateMods()");
+#endif
+				// Transpile UpdateMods only for Steam versions (not EGS)
+				instance.Patch(steamMod.GetMethodSafe("UpdateMods", false, PPatchTools.
+					AnyArguments), transpiler: new HarmonyMethod(typeof(StockBugsPatches),
+					nameof(TranspileUpdateMods)));
+				instance.Patch(typeof(MainMenu).GetMethodSafe("Update", false), postfix:
+					new HarmonyMethod(typeof(StockBugsPatches), nameof(PostfixMenuUpdate)));
+			}
+		}
+
 		/// <summary>
 		/// Retrieves the specified property setter.
 		/// </summary>
@@ -345,10 +360,38 @@ namespace PeterHan.StockBugFix {
 			/// <summary>
 			/// Applied after Recharge runs.
 			/// </summary>
-			internal static void Postfix(GeneShuffler.GeneShufflerSM.Instance ___geneShufflerSMI) {
+			internal static void Postfix(GeneShuffler.GeneShufflerSM.Instance
+					___geneShufflerSMI) {
 				if (___geneShufflerSMI != null)
 					___geneShufflerSMI.GoTo(___geneShufflerSMI.sm.recharging);
 			}
+		}
+
+		/// <summary>
+		/// Applied to MainMenu to display a queued Steam mod status report if pending.
+		/// </summary>
+		internal static void PostfixMenuUpdate(MainMenu __instance) {
+			if (__instance != null)
+				QueuedReportManager.Instance.CheckQueuedReport(__instance.gameObject);
+		}
+
+		/// <summary>
+		/// Applied to Steam to avoid dialog spam on startup if many mods are updated or
+		/// installed.
+		/// </summary>
+		internal static IEnumerable<CodeInstruction> TranspileUpdateMods(
+				IEnumerable<CodeInstruction> method) {
+			return PPatchTools.ReplaceMethodCall(method, new Dictionary<MethodInfo,
+					MethodInfo>() {
+				{ typeof(KMod.Manager).GetMethodSafe(nameof(KMod.Manager.Report), false,
+					typeof(GameObject)), typeof(QueuedReportManager).GetMethodSafe(nameof(
+					QueuedReportManager.QueueDelayedReport), true, typeof(KMod.Manager),
+					typeof(GameObject)) },
+				{ typeof(KMod.Manager).GetMethodSafe(nameof(KMod.Manager.Sanitize), false,
+					typeof(GameObject)), typeof(QueuedReportManager).GetMethodSafe(nameof(
+					QueuedReportManager.QueueDelayedSanitize), true, typeof(KMod.Manager),
+					typeof(GameObject)) }
+			});
 		}
 
 		/// <summary>

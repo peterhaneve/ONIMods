@@ -25,6 +25,7 @@ using PeterHan.PLib.Options;
 using PeterHan.PLib.UI;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
@@ -130,7 +131,7 @@ namespace PeterHan.DebugNotIncluded {
 				DebugLogger.BaseLogException(e, null);
 			}
 		}
-		
+
 		public static void OnLoad(string path) {
 			var inst = ModDebugRegistry.Instance;
 			RunningPLibAssembly = typeof(PUtil).Assembly;
@@ -325,8 +326,7 @@ namespace PeterHan.DebugNotIncluded {
 				 * WriteTimeStamped
 				 * Log/LogFormat/...
 				 */
-				__result = DebugLogger.AddCallingLocation(__result, new System.Diagnostics.
-					StackTrace(4));
+				__result = DebugLogger.AddCallingLocation(__result, new StackTrace(4));
 			}
 		}
 
@@ -362,6 +362,32 @@ namespace PeterHan.DebugNotIncluded {
 
 #if DEBUG
 		/// <summary>
+		/// Applied to EventSystem to debug the cause of the pesky "Not subscribed to event"
+		/// log spam.
+		/// </summary>
+		[HarmonyPatch(typeof(EventSystem), "Unsubscribe", typeof(int), typeof(int),
+			typeof(bool))]
+		public static class EventSystem_Unsubscribe_Patch {
+			/// <summary>
+			/// Applied before Unsubscribe runs.
+			/// </summary>
+			internal static void Prefix(ArrayRef<IntraObjectRoute> ___intraObjectRoutes,
+					int eventName, int subscribeHandle, bool suppressWarnings) {
+				if (!suppressWarnings && ___intraObjectRoutes.FindIndex((route) => route.
+						eventHash == eventName && route.handlerIndex == subscribeHandle) < 0)
+					DebugLogger.DumpStack();
+			}
+
+			// Mirror struct to the private struct EventSystem.IntraObjectRoute
+			internal struct IntraObjectRoute {
+				public int eventHash;
+				public int handlerIndex;
+			}
+		}
+#endif
+
+#if DEBUG
+		/// <summary>
 		/// Applied to Growing to allow things to be instantly grown in sandbox mode.
 		/// </summary>
 		[HarmonyPatch(typeof(Growing), "OnPrefabInit")]
@@ -386,20 +412,6 @@ namespace PeterHan.DebugNotIncluded {
 			internal static void Postfix(MainMenu __instance) {
 				if (DebugNotIncludedOptions.Instance?.SkipFirstModCheck != true)
 					ModDialogs.CheckFirstMod(__instance.gameObject);
-			}
-		}
-
-		/// <summary>
-		/// Applied to MainMenu to display a queued Steam mod status report if pending.
-		/// </summary>
-		[HarmonyPatch(typeof(MainMenu), "Update")]
-		public static class MainMenu_Update_Patch {
-			/// <summary>
-			/// Applied after Update runs.
-			/// </summary>
-			internal static void Postfix(MainMenu __instance) {
-				if (__instance != null)
-					QueuedReportManager.Instance.CheckQueuedReport(__instance.gameObject);
 			}
 		}
 
@@ -435,6 +447,19 @@ namespace PeterHan.DebugNotIncluded {
 				string result = ModEvents.Describe(events);
 				if (!string.IsNullOrEmpty(result))
 					__result = result;
+			}
+		}
+
+		/// <summary>
+		/// Applied to MinionConfig to add buttons for triggering stress and joy reactions.
+		/// </summary>
+		[HarmonyPatch(typeof(MinionConfig), "CreatePrefab")]
+		public static class MinionConfig_CreatePrefab_Patch {
+			/// <summary>
+			/// Applied after CreatePrefab runs.
+			/// </summary>
+			internal static void Postfix(GameObject __result) {
+				__result.AddOrGet<InstantEmotable>();
 			}
 		}
 
@@ -538,32 +563,58 @@ namespace PeterHan.DebugNotIncluded {
 		}
 #endif
 
-		/// <summary>
-		/// Applied to Steam to avoid dialog spam on startup if many mods are updated or
-		/// installed.
-		/// </summary>
-		[HarmonyPatch(typeof(Steam), "UpdateMods")]
-		public static class Steam_UpdateMods_Patch {
+#if false
+		private static long timeInPath;
+		private static System.DateTime lastDebugPrint;
+
+		[PLibMethod(RunAt.OnStartGame)]
+		internal static void InitTimers() {
+			timeInPath = 0L;
+			lastDebugPrint = System.DateTime.UtcNow;
+			PUtil.LogDebug("Stopwatch resolution is {0:D}".F(Stopwatch.Frequency));
+		}
+
+		[HarmonyPatch(typeof(Game), "Update")]
+		public static class Game_Update_Patch {
 			/// <summary>
-			/// Transpiles UpdateMods to postpone the report.
+			/// Applied after Update runs.
 			/// </summary>
-			internal static IEnumerable<CodeInstruction> Transpiler(
-					IEnumerable<CodeInstruction> method) {
-#if DEBUG
-				DebugLogger.LogDebug("Transpiling Steam.UpdateMods()");
-#endif
-				return PPatchTools.ReplaceMethodCall(method, new Dictionary<MethodInfo,
-						MethodInfo>() {
-					{ typeof(Manager).GetMethodSafe(nameof(Manager.Report), false,
-						typeof(GameObject)), typeof(QueuedReportManager).GetMethodSafe(nameof(
-						QueuedReportManager.QueueDelayedReport), true, typeof(Manager),
-						typeof(GameObject)) },
-					{ typeof(Manager).GetMethodSafe(nameof(Manager.Sanitize), false,
-						typeof(GameObject)), typeof(QueuedReportManager).GetMethodSafe(nameof(
-						QueuedReportManager.QueueDelayedSanitize), true, typeof(Manager),
-						typeof(GameObject)) }
-				});
+			internal static void Postfix() {
+				var now = System.DateTime.UtcNow;
+				if (now > lastDebugPrint.AddSeconds(1.0)) {
+					lastDebugPrint = now;
+					PUtil.LogDebug("Spent {0:D} us in pathfinding the last second".F(
+						timeInPath / 1000L));
+					timeInPath = 0L;
+				}
 			}
 		}
+
+		[HarmonyPatch(typeof(PathProber), "UpdateProbe")]
+		public static class TimePatch {
+			internal static void Prefix(ref Stopwatch __state) {
+				__state = Stopwatch.StartNew();
+			}
+
+			internal static void Postfix(Stopwatch __state) {
+				timeInPath += __state.ElapsedTicks * 1000000000L / Stopwatch.Frequency;
+			}
+		}
+
+		// CHORE PRECON: ~30ms/1000ms
+		// PATHFINDER.FINDPATH: ~20ms/1000ms
+		// SIM: ~160ms/1000ms
+		// PATHPROBE.UPDATEPROBE: 900ms/1000ms!!!
+		/*[HarmonyPatch(typeof(Game), "SimEveryTick")]
+		public static class Game_SimEveryTick_Patch {
+			internal static void Prefix(ref Stopwatch __state) {
+				__state = Stopwatch.StartNew();
+			}
+
+			internal static void Postfix(Stopwatch __state) {
+				timeInPath += __state.ElapsedTicks * 1000000000L / Stopwatch.Frequency;
+			}
+		}*/
+#endif
 	}
 }
