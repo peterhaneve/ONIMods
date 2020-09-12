@@ -55,7 +55,8 @@ namespace PeterHan.FoodTooltip {
 		/// Applied to CreatureCalorieMonitor.Def to include kcal per cycle information in the
 		/// critter descriptors.
 		/// </summary>
-		[HarmonyPatch(typeof(CreatureCalorieMonitor.Def), "GetDescriptors")]
+		[HarmonyPatch(typeof(CreatureCalorieMonitor.Def), nameof(CreatureCalorieMonitor.Def.
+			GetDescriptors))]
 		public static class CreatureCalorieMonitor_Def_GetDescriptors_Patch {
 			/// <summary>
 			/// Applied after GetDescriptors runs.
@@ -69,7 +70,7 @@ namespace PeterHan.FoodTooltip {
 		/// <summary>
 		/// Applied to Crop to include kcal per cycle information in the plant descriptors.
 		/// </summary>
-		[HarmonyPatch(typeof(Crop), "InformationDescriptors")]
+		[HarmonyPatch(typeof(Crop), nameof(Crop.InformationDescriptors))]
 		public static class Crop_InformationDescriptors_Patch {
 			/// <summary>
 			/// Applied after InformationDescriptors runs.
@@ -110,7 +111,7 @@ namespace PeterHan.FoodTooltip {
 		/// Applied to SimpleInfoScreen to refresh the panel on plant wilt/recover or critter
 		/// status changes.
 		/// </summary>
-		[HarmonyPatch(typeof(SimpleInfoScreen), "OnSelectTarget")]
+		[HarmonyPatch(typeof(SimpleInfoScreen), nameof(SimpleInfoScreen.OnSelectTarget))]
 		public static class SimpleInfoScreen_OnSelectTarget_Patch {
 			/// <summary>
 			/// Applied after OnSelectTarget runs.
@@ -124,7 +125,7 @@ namespace PeterHan.FoodTooltip {
 		/// <summary>
 		/// Applied to SimpleInfoScreen to clean up after status changes.
 		/// </summary>
-		[HarmonyPatch(typeof(SimpleInfoScreen), "OnDeselectTarget")]
+		[HarmonyPatch(typeof(SimpleInfoScreen), nameof(SimpleInfoScreen.OnDeselectTarget))]
 		public static class SimpleInfoScreen_OnDeselectTarget_Patch {
 			/// <summary>
 			/// Applied after OnDeselectTarget runs.

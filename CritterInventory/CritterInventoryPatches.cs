@@ -134,7 +134,8 @@ namespace PeterHan.CritterInventory {
 		/// As compared to the old approach of updating separately, this method preserves the
 		/// semantics of the original UpdateContents, improving compatibility.
 		/// </summary>
-		[HarmonyPatch(typeof(ResourceCategoryHeader), "UpdateContents")]
+		[HarmonyPatch(typeof(ResourceCategoryHeader), nameof(ResourceCategoryHeader.
+			UpdateContents))]
 		public static class ResourceCategoryHeader_UpdateContents_Patch {
 			/// <summary>
 			/// Applied before UpdateContents runs.

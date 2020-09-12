@@ -109,7 +109,7 @@ namespace PeterHan.ResourcesInMotion {
 		/// Applied to Accumulators to implement the 3 second (one accumulator window) grace
 		/// period on game load.
 		/// </summary>
-		[HarmonyPatch(typeof(Accumulators), "Sim200ms")]
+		[HarmonyPatch(typeof(Accumulators), nameof(Accumulators.Sim200ms))]
 		public static class Accumulators_Sim200ms_Patch {
 			/// <summary>
 			/// Applied before Sim200ms runs.
@@ -123,7 +123,7 @@ namespace PeterHan.ResourcesInMotion {
 		/// <summary>
 		/// Applied to Door.Controller to track door opening and closing status.
 		/// </summary>
-		[HarmonyPatch(typeof(Door.Controller), "InitializeStates")]
+		[HarmonyPatch(typeof(Door.Controller), nameof(Door.Controller.InitializeStates))]
 		public static class Door_Controller_InitializeStates_Patch {
 			/// <summary>
 			/// Applied after InitializeStates runs.
@@ -153,7 +153,7 @@ namespace PeterHan.ResourcesInMotion {
 		/// Applied to Growing.States to track plants automatically harvesting after a few
 		/// cycles.
 		/// </summary>
-		[HarmonyPatch(typeof(Growing.States), "InitializeStates")]
+		[HarmonyPatch(typeof(Growing.States), nameof(Growing.States.InitializeStates))]
 		public static class Growing_States_InitializeStates_Patch {
 			/// <summary>
 			/// Applied after InitializeStates runs.
@@ -183,7 +183,7 @@ namespace PeterHan.ResourcesInMotion {
 		/// for atmosphere reasons to grow for one accumulator cycle (3s). Can't win them
 		/// all...
 		/// </summary>
-		[HarmonyPatch(typeof(PressureVulnerable), "SlicedSim1000ms")]
+		[HarmonyPatch(typeof(PressureVulnerable), nameof(PressureVulnerable.SlicedSim1000ms))]
 		public static class PressureVulnerable_SlicedSim1000ms_Patch {
 			/// <summary>
 			/// Transpiles SlicedSim1000ms to wrap accumulator calls with our own.

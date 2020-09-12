@@ -17,6 +17,8 @@
  */
 
 using Harmony;
+using PeterHan.PLib.Detours;
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -25,6 +27,10 @@ namespace PeterHan.PLib.Options {
 	/// Annotation patches this mod's copy of PLib Options in (no forwarding).
 	/// </summary>
 	internal static class POptionsPatches {
+		// Saves the current mod list and settings to the JSON
+		private static readonly DetouredMethod<Func<KMod.Manager, bool>> MODS_SAVE = typeof(
+			KMod.Manager).DetourLazy<Func<KMod.Manager, bool>>(nameof(KMod.Manager.Save));
+
 		/// <summary>
 		/// Applied to ModsScreen to display settings for this mod.
 		/// </summary>
@@ -37,6 +43,15 @@ namespace PeterHan.PLib.Options {
 					___entryPrefab) {
 				POptions.BuildDisplay(___displayedMods, ___entryPrefab);
 			}
+		}
+
+		/// <summary>
+		/// Saves the current list of mods.
+		/// </summary>
+		internal static void SaveMods() {
+			var manager = Global.Instance.modManager;
+			if (manager != null)
+				MODS_SAVE.Invoke(manager);
 		}
 	}
 }

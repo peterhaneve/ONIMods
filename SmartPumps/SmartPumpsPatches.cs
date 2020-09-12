@@ -38,7 +38,7 @@ namespace PeterHan.SmartPumps {
 		/// <summary>
 		/// Applied to FilterSideScreen to show the screen for filtered gas and liquid pumps.
 		/// </summary>
-		[HarmonyPatch(typeof(FilterSideScreen), "IsValidForTarget")]
+		[HarmonyPatch(typeof(FilterSideScreen), nameof(FilterSideScreen.IsValidForTarget))]
 		public static class FilterSideScreen_IsValidForTarget_Patch {
 			/// <summary>
 			/// Applied after IsValidForTarget runs.

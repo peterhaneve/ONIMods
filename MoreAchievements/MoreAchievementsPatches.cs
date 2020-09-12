@@ -217,7 +217,7 @@ namespace PeterHan.MoreAchievements {
 		/// <summary>
 		/// Applied to Butcherable to count dying critters if they die at a young age.
 		/// </summary>
-		[HarmonyPatch(typeof(Butcherable), "OnButcherComplete")]
+		[HarmonyPatch(typeof(Butcherable), nameof(Butcherable.OnButcherComplete))]
 		public static class Butcherable_OnButcherComplete_Patch {
 			/// <summary>
 			/// Applied after OnButcherComplete runs.
@@ -280,7 +280,8 @@ namespace PeterHan.MoreAchievements {
 		/// Applied to ColonyAchievementTracker to properly remove achievements used by this
 		/// mod if the "do not serialize" is selected.
 		/// </summary>
-		[HarmonyPatch(typeof(ColonyAchievementTracker), "Serialize")]
+		[HarmonyPatch(typeof(ColonyAchievementTracker), nameof(ColonyAchievementTracker.
+			Serialize))]
 		public static class ColonyAchievementTracker_Serialize_Patch {
 			/// <summary>
 			/// Applied before Serialize runs.
@@ -315,7 +316,7 @@ namespace PeterHan.MoreAchievements {
 		/// <summary>
 		/// Applied to DeathMonitor.Instance to track Duplicant deaths.
 		/// </summary>
-		[HarmonyPatch(typeof(DeathMonitor.Instance), "Kill")]
+		[HarmonyPatch(typeof(DeathMonitor.Instance), nameof(DeathMonitor.Instance.Kill))]
 		public static class DeathMonitor_Instance_Kill_Patch {
 			/// <summary>
 			/// Applied after Kill runs.
@@ -383,7 +384,7 @@ namespace PeterHan.MoreAchievements {
 		/// <summary>
 		/// Applied to Health to properly track deaths due to scalding.
 		/// </summary>
-		[HarmonyPatch(typeof(Health), "Incapacitate")]
+		[HarmonyPatch(typeof(Health), nameof(Health.Incapacitate))]
 		public static class Health_Incapacitate_Patch {
 			/// <summary>
 			/// Applied after Incapacitate runs.
@@ -399,7 +400,7 @@ namespace PeterHan.MoreAchievements {
 		/// <summary>
 		/// Applied to Health to remove scalding tags when a Duplicant recovers.
 		/// </summary>
-		[HarmonyPatch(typeof(Health), "OnHealthChanged")]
+		[HarmonyPatch(typeof(Health), nameof(Health.OnHealthChanged))]
 		public static class Health_OnHealthChanged_Patch {
 			/// <summary>
 			/// Applied before OnHealthChanged runs.
@@ -427,7 +428,8 @@ namespace PeterHan.MoreAchievements {
 		/// <summary>
 		/// Applied to IncapacitationMonitor to properly attribute scalding deaths.
 		/// </summary>
-		[HarmonyPatch(typeof(IncapacitationMonitor.Instance), "GetCauseOfIncapacitation")]
+		[HarmonyPatch(typeof(IncapacitationMonitor.Instance), nameof(IncapacitationMonitor.
+			Instance.GetCauseOfIncapacitation))]
 		public static class IncapacitationMonitor_Instance_GetCauseOfIncapacitation_Patch {
 			/// <summary>
 			/// Applied after GetCauseOfIncapacitation runs.
@@ -443,7 +445,8 @@ namespace PeterHan.MoreAchievements {
 		/// <summary>
 		/// Applied to OxygenBreather to register for events on each Duplicant for oxygen.
 		/// </summary>
-		[HarmonyPatch(typeof(RecoverBreathChore.States), "InitializeStates")]
+		[HarmonyPatch(typeof(RecoverBreathChore.States), nameof(RecoverBreathChore.States.
+			InitializeStates))]
 		public static class RecoverBreathChore_States_InitializeStates_Patch {
 			/// <summary>
 			/// Applied after InitializeStates runs.
@@ -485,7 +488,8 @@ namespace PeterHan.MoreAchievements {
 		/// <summary>
 		/// Applied to SimTemperatureTransfer to check for POIs melting down.
 		/// </summary>
-		[HarmonyPatch(typeof(SimTemperatureTransfer), "DoStateTransition")]
+		[HarmonyPatch(typeof(SimTemperatureTransfer), nameof(SimTemperatureTransfer.
+			DoStateTransition))]
 		public static class SimTemperatureTransfer_DoStateTransition_Patch {
 			/// <summary>
 			/// Applied before DoStateTransition runs.
@@ -502,7 +506,7 @@ namespace PeterHan.MoreAchievements {
 		/// <summary>
 		/// Applied to Spacecraft to track space destination visits when a spacecraft launches.
 		/// </summary>
-		[HarmonyPatch(typeof(Spacecraft), "BeginMission")]
+		[HarmonyPatch(typeof(Spacecraft), nameof(Spacecraft.BeginMission))]
 		public static class Spacecraft_BeginMission_Patch {
 			/// <summary>
 			/// Applied after BeginMission runs.
@@ -516,7 +520,7 @@ namespace PeterHan.MoreAchievements {
 		/// <summary>
 		/// Applied to Spacecraft to track space destination visits when a spacecraft lands.
 		/// </summary>
-		[HarmonyPatch(typeof(Spacecraft), "CompleteMission")]
+		[HarmonyPatch(typeof(Spacecraft), nameof(Spacecraft.CompleteMission))]
 		public static class Spacecraft_CompleteMission_Patch {
 			/// <summary>
 			/// Applied after CompleteMission runs.
@@ -532,7 +536,7 @@ namespace PeterHan.MoreAchievements {
 		/// <summary>
 		/// Applied to WorldInventory to grant an achievement upon discovering items.
 		/// </summary>
-		[HarmonyPatch(typeof(WorldInventory), "Discover")]
+		[HarmonyPatch(typeof(WorldInventory), nameof(WorldInventory.Discover))]
 		public static class WorldInventory_Discover_Patch {
 			/// <summary>
 			/// Applied after Discover runs.

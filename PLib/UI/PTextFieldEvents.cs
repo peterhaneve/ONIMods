@@ -79,9 +79,11 @@ namespace PeterHan.PLib.UI {
 		/// <param name="text">The text entered.</param>
 		private void OnEndEdit(string text) {
 			var obj = gameObject;
-			if (obj != null)
+			if (obj != null) {
 				OnTextChanged?.Invoke(obj, text);
-			StartCoroutine(DelayEndEdit());
+				if (obj.activeInHierarchy)
+					StartCoroutine(DelayEndEdit());
+			}
 		}
 
 		/// <summary>
@@ -120,7 +122,8 @@ namespace PeterHan.PLib.UI {
 		/// Completes the edit process.
 		/// </summary>
 		private void StopEditing() {
-			textEntry.DeactivateInputField();
+			if (textEntry != null && textEntry.gameObject.activeInHierarchy)
+				textEntry.DeactivateInputField();
 			editing = false;
 		}
 	}

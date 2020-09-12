@@ -178,7 +178,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// Applied to AtmoSuitConfig to patch the atmo suit to look ugly.
 		/// </summary>
-		[HarmonyPatch(typeof(AtmoSuitConfig), "CreateEquipmentDef")]
+		[HarmonyPatch(typeof(AtmoSuitConfig), nameof(AtmoSuitConfig.CreateEquipmentDef))]
 		public static class AtmoSuitConfig_CreateEquipmentDef_Patch {
 			/// <summary>
 			/// Applied after CreateEquipmentDef runs.
@@ -195,7 +195,8 @@ namespace ReimaginationTeam.DecorRework {
 		/// Applied to ColonyAchievementTracker to fix achievement status from old versions of
 		/// this mod.
 		/// </summary>
-		[HarmonyPatch(typeof(ColonyAchievementTracker), "Deserialize")]
+		[HarmonyPatch(typeof(ColonyAchievementTracker), nameof(ColonyAchievementTracker.
+			Deserialize))]
 		public static class ColonyAchievementTracker_Deserialize_Patch {
 			/// <summary>
 			/// Applied after Deserialize runs.
@@ -217,7 +218,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// Applied to DecorMonitor.Instance to hide decor while sleeping.
 		/// </summary>
-		[HarmonyPatch(typeof(DecorMonitor.Instance), "Update")]
+		[HarmonyPatch(typeof(DecorMonitor.Instance), nameof(DecorMonitor.Instance.Update))]
 		public static class DecorMonitor_Instance_Update_Patch {
 			/// <summary>
 			/// The slew speed of displayed decor.
@@ -259,7 +260,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// Applied to DecorProvider to properly attribute decor sources.
 		/// </summary>
-		[HarmonyPatch(typeof(DecorProvider), "GetDecorForCell")]
+		[HarmonyPatch(typeof(DecorProvider), nameof(DecorProvider.GetDecorForCell))]
 		public static class DecorProvider_GetDecorForCell_Patch {
 			/// <summary>
 			/// Applied before GetDecorForCell runs.
@@ -297,7 +298,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// Applied to DecorProvider to properly handle broken/disabled building decor.
 		/// </summary>
-		[HarmonyPatch(typeof(DecorProvider), "Refresh")]
+		[HarmonyPatch(typeof(DecorProvider), nameof(DecorProvider.Refresh))]
 		public static class DecorProvider_Refresh_Patch {
 			/// <summary>
 			/// Applied before Refresh runs.
@@ -318,7 +319,8 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// Applied to adjust sculpture art decor levels.
 		/// </summary>
-		[HarmonyPatch(typeof(IceSculptureConfig), "DoPostConfigureComplete")]
+		[HarmonyPatch(typeof(IceSculptureConfig), nameof(IceSculptureConfig.
+			DoPostConfigureComplete))]
 		public static class IceSculptureConfig_DoPostConfigureComplete_Patch {
 			/// <summary>
 			/// Applied after DoPostConfigureComplete runs.
@@ -331,7 +333,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// Applied to JetSuitConfig to patch the jet suit to look ugly.
 		/// </summary>
-		[HarmonyPatch(typeof(JetSuitConfig), "CreateEquipmentDef")]
+		[HarmonyPatch(typeof(JetSuitConfig), nameof(JetSuitConfig.CreateEquipmentDef))]
 		public static class JetSuitConfig_CreateEquipmentDef_Patch {
 			/// <summary>
 			/// Applied after CreateEquipmentDef runs.
@@ -366,7 +368,8 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// Applied to adjust sculpture art decor levels.
 		/// </summary>
-		[HarmonyPatch(typeof(MarbleSculptureConfig), "DoPostConfigureComplete")]
+		[HarmonyPatch(typeof(MarbleSculptureConfig), nameof(MarbleSculptureConfig.
+			DoPostConfigureComplete))]
 		public static class MarbleSculptureConfig_DoPostConfigureComplete_Patch {
 			/// <summary>
 			/// Applied after DoPostConfigureComplete runs.
@@ -379,7 +382,8 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// Applied to adjust sculpture art decor levels.
 		/// </summary>
-		[HarmonyPatch(typeof(MetalSculptureConfig), "DoPostConfigureComplete")]
+		[HarmonyPatch(typeof(MetalSculptureConfig), nameof(MetalSculptureConfig.
+			DoPostConfigureComplete))]
 		public static class MetalSculptureConfig_DoPostConfigureComplete_Patch {
 			/// <summary>
 			/// Applied after DoPostConfigureComplete runs.
@@ -392,7 +396,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// Applied to Operational to update room stat.
 		/// </summary>
-		[HarmonyPatch(typeof(Operational), "SetFlag")]
+		[HarmonyPatch(typeof(Operational), nameof(Operational.SetFlag))]
 		public static class Operational_SetFlag_Patch {
 			/// <summary>
 			/// Applied after SetFlag runs.
@@ -410,7 +414,8 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// Applied to adjust sculpture art decor levels.
 		/// </summary>
-		[HarmonyPatch(typeof(SculptureConfig), "DoPostConfigureComplete")]
+		[HarmonyPatch(typeof(SculptureConfig), nameof(SculptureConfig.
+			DoPostConfigureComplete))]
 		public static class SculptureConfig_DoPostConfigureComplete_Patch {
 			/// <summary>
 			/// Applied after DoPostConfigureComplete runs.
@@ -423,7 +428,8 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// Applied to adjust sculpture art decor levels.
 		/// </summary>
-		[HarmonyPatch(typeof(SmallSculptureConfig), "DoPostConfigureComplete")]
+		[HarmonyPatch(typeof(SmallSculptureConfig), nameof(SmallSculptureConfig.
+			DoPostConfigureComplete))]
 		public static class SmallSculptureConfig_DoPostConfigureComplete_Patch {
 			/// <summary>
 			/// Applied after DoPostConfigureComplete runs.
@@ -436,7 +442,8 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// Applied to UglyCryChore.States to make ugly criers more ugly!
 		/// </summary>
-		[HarmonyPatch(typeof(UglyCryChore.States), "InitializeStates")]
+		[HarmonyPatch(typeof(UglyCryChore.States), nameof(UglyCryChore.States.
+			InitializeStates))]
 		public static class UglyCryChore_InitializeStates_Patch {
 			/// <summary>
 			/// Applied after InitializeStates runs.

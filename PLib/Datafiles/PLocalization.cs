@@ -61,14 +61,16 @@ namespace PeterHan.PLib.Datafiles {
 		private static void Localize(Assembly mod, string path, Localization.Locale locale) {
 			var poFile = Path.Combine(Path.Combine(path, TRANSLATIONS_DIR), locale.Code +
 				TRANSLATIONS_EXT);
-			if (File.Exists(poFile))
-				try {
-					Localization.OverloadStrings(Localization.LoadStringsFile(poFile, false));
-				} catch (IOException e) {
-					PUtil.LogWarning("Failed to load {0} localization for mod {1}:".F(locale.
-						Code, mod.GetName()?.Name));
-					PUtil.LogExcWarn(e);
-				}
+			try {
+				Localization.OverloadStrings(Localization.LoadStringsFile(poFile, false));
+			} catch (FileNotFoundException) {
+				// No localization available for this locale
+			} catch (DirectoryNotFoundException) {
+			} catch (IOException e) {
+				PUtil.LogWarning("Failed to load {0} localization for mod {1}:".F(locale.
+					Code, mod.GetName()?.Name));
+				PUtil.LogExcWarn(e);
+			}
 		}
 
 		/// <summary>
@@ -114,11 +116,16 @@ namespace PeterHan.PLib.Datafiles {
 			}
 			var types = assembly.GetTypes();
 			if (types == null || types.Length == 0)
-				PUtil.LogWarning("Registered assembly " + assembly.GetName()?.Name +
+				PUtil.LogWarning("Registered assembly " + assembly.GetNameSafe() +
 					" that had no types for localization!");
-			else
+			else {
 				// This call searches all types in the assembly implicitly
 				Localization.RegisterForTranslation(types[0]);
+#if DEBUG
+				PUtil.LogDebug("Localizing assembly {0} using base namespace {1}".F(assembly.
+					GetNameSafe(), types[0].Namespace));
+#endif
+			}
 		}
 	}
 }

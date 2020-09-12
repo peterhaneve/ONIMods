@@ -230,7 +230,7 @@ namespace PeterHan.CleanDrop {
 		/// Applied to Pickupable to pick a preferred offset direction if there is context
 		/// available about a direction that might be better.
 		/// </summary>
-		[HarmonyPatch(typeof(Pickupable), "TryToOffsetIfBuried")]
+		[HarmonyPatch(typeof(Pickupable), nameof(Pickupable.TryToOffsetIfBuried))]
 		public static class Pickupable_TryToOffsetIfBuried_Patch {
 			/// <summary>
 			/// Applied before TryToOffsetIfBuried runs.

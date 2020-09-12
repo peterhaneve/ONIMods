@@ -92,7 +92,7 @@ namespace PeterHan.FastSave {
 		/// <summary>
 		/// Applied to Timelapser to save the PNG on a background thread.
 		/// </summary>
-		[HarmonyPatch(typeof(Timelapser), "WriteToPng")]
+		[HarmonyPatch(typeof(Timelapser), nameof(Timelapser.WriteToPng))]
 		public static class Timelapser_WriteToPng_Patch {
 			internal static bool Prepare() {
 				// Only enable if background save is on

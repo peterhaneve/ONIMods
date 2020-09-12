@@ -50,8 +50,8 @@ namespace PeterHan.PLib {
 		private static readonly HashSet<char> INVALID_FILE_CHARS;
 
 		// Saves the current mod list and settings to the JSON
-		private static readonly DetouredMethod<Func<KMod.Manager, bool>> MODS_SAVE =
-			typeof(KMod.Manager).DetourLazy<Func<KMod.Manager, bool>>(nameof(KMod.Manager.Save));
+		private static readonly DetouredMethod<Func<KMod.Manager, bool>> MODS_SAVE = typeof(
+			KMod.Manager).DetourLazy<Func<KMod.Manager, bool>>(nameof(KMod.Manager.Save));
 
 		/// <summary>
 		/// The first released version of the new Automation Update.

@@ -289,7 +289,7 @@ namespace PeterHan.PLib.Buildings {
 		/// <summary>
 		/// The building name.
 		/// </summary>
-		public string Name { get; }
+		public string Name { get; private set; }
 
 		/// <summary>
 		/// The noise of this building (not used by Klei).
@@ -467,7 +467,11 @@ namespace PeterHan.PLib.Buildings {
 		public void AddStrings() {
 			if (!addedStrings) {
 				string prefix = "STRINGS.BUILDINGS.PREFABS." + ID.ToUpperInvariant() + ".";
-				Strings.Add(prefix + "NAME", Name);
+				string nameStr = prefix + "NAME";
+				if (Strings.TryGet(nameStr, out StringEntry localized))
+					Name = localized.String;
+				else
+					Strings.Add(nameStr, Name);
 				// Allow null values to be defined in LocString class adds / etc
 				if (Description != null)
 					Strings.Add(prefix + "DESC", Description);

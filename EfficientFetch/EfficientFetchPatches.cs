@@ -46,6 +46,7 @@ namespace PeterHan.EfficientFetch {
 		public static void OnLoad() {
 			PUtil.InitLibrary();
 			options = new EfficientFetchOptions();
+			PUtil.RegisterPatchClass(typeof(EfficientFetchPatches));
 			POptions.RegisterOptions(typeof(EfficientFetchOptions));
 		}
 
@@ -53,7 +54,7 @@ namespace PeterHan.EfficientFetch {
 		/// Applied to FetchChore to evaluate the list of pickups more carefully for one that
 		/// actually makes progress.
 		/// </summary>
-		[HarmonyPatch(typeof(FetchChore), "FindFetchTarget")]
+		[HarmonyPatch(typeof(FetchChore), nameof(FetchChore.FindFetchTarget))]
 		public static class FetchChore_FindFetchTarget_Patch {
 			/// <summary>
 			/// Applied before FindFetchTarget runs.
@@ -72,7 +73,8 @@ namespace PeterHan.EfficientFetch {
 		/// Applied to FetchablesByPrefabId to replace the existing pickup calculation code
 		/// with one that takes the required amount into effect.
 		/// </summary>
-		[HarmonyPatch(typeof(FetchManager.FetchablesByPrefabId), "UpdatePickups")]
+		[HarmonyPatch(typeof(FetchManager.FetchablesByPrefabId), nameof(FetchManager.
+			FetchablesByPrefabId.UpdatePickups))]
 		public static class FetchablesByPrefabId_UpdatePickups_Patch {
 			/// <summary>
 			/// Applied before UpdatePickups runs.
@@ -96,35 +98,19 @@ namespace PeterHan.EfficientFetch {
 			}
 		}
 
-		/// <summary>
-		/// Applied to Game to clean up the fetch manager on close.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "DestroyInstances")]
-		public static class Game_DestroyInstances_Patch {
-			/// <summary>
-			/// Applied after DestroyInstances runs.
-			/// </summary>
-			internal static void Postfix() {
-				PUtil.LogDebug("Destroying EfficientFetch");
-				EfficientFetchManager.DestroyInstance();
-			}
+		[PLibMethod(RunAt.OnEndGame)]
+		internal static void OnEndGame() {
+			PUtil.LogDebug("Destroying EfficientFetch");
+			EfficientFetchManager.DestroyInstance();
 		}
 
-		/// <summary>
-		/// Applied to Game to load settings when the mod starts up.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "OnPrefabInit")]
-		public static class Game_OnPrefabInit_Patch {
-			/// <summary>
-			/// Applied after OnPrefabInit runs.
-			/// </summary>
-			internal static void Postfix() {
-				options = POptions.ReadSettings<EfficientFetchOptions>() ??
-					new EfficientFetchOptions();
-				PUtil.LogDebug("EfficientFetch starting: Min Ratio={0:D}%".F(options.
-					MinimumAmountPercent));
-				EfficientFetchManager.CreateInstance(options.GetMinimumRatio());
-			}
+		[PLibMethod(RunAt.OnStartGame)]
+		internal static void OnStartGame() {
+			options = POptions.ReadSettings<EfficientFetchOptions>() ??
+				new EfficientFetchOptions();
+			PUtil.LogDebug("EfficientFetch starting: Min Ratio={0:D}%".F(options.
+				MinimumAmountPercent));
+			EfficientFetchManager.CreateInstance(options.GetMinimumRatio());
 		}
 	}
 }

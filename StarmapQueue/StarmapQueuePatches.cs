@@ -77,7 +77,8 @@ namespace PeterHan.StarmapQueue {
 		/// <summary>
 		/// Applied to SpacecraftManager to queue up a new destination when one is discovered.
 		/// </summary>
-		[HarmonyPatch(typeof(SpacecraftManager), "EarnDestinationAnalysisPoints")]
+		[HarmonyPatch(typeof(SpacecraftManager), nameof(SpacecraftManager.
+			EarnDestinationAnalysisPoints))]
 		public static class SpacecraftManager_EarnDestinationAnalysisPoints_Patch {
 			/// <summary>
 			/// Transpiles EarnDestinationAnalysisPoints to replace the cancel destination call

@@ -208,7 +208,7 @@ namespace PeterHan.ResearchQueue {
 		/// <summary>
 		/// Applied to Research to update queue order on techs when research is cancelled.
 		/// </summary>
-		[HarmonyPatch(typeof(Research), "CancelResearch")]
+		[HarmonyPatch(typeof(Research), nameof(Research.CancelResearch))]
 		public static class Research_CancelResearch_Patch {
 			/// <summary>
 			/// Applied after CancelResearch runs.
@@ -221,7 +221,7 @@ namespace PeterHan.ResearchQueue {
 		/// <summary>
 		/// Applied to Research to update queue order on techs when research is changed.
 		/// </summary>
-		[HarmonyPatch(typeof(Research), "SetActiveResearch")]
+		[HarmonyPatch(typeof(Research), nameof(Research.SetActiveResearch))]
 		public static class Research_SetActiveResearch_Patch {
 			/// <summary>
 			/// Applied after SetActiveResearch runs. Transpiling this hit problems with
@@ -272,7 +272,7 @@ namespace PeterHan.ResearchQueue {
 		/// <summary>
 		/// Applied to ResearchEntry to display the help text to add to queue.
 		/// </summary>
-		[HarmonyPatch(typeof(ResearchEntry), "SetTech")]
+		[HarmonyPatch(typeof(ResearchEntry), nameof(ResearchEntry.SetTech))]
 		public static class ResearchEntry_SetTech_Patch {
 			/// <summary>
 			/// Applied after SetTech runs.

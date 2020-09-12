@@ -132,7 +132,8 @@ namespace PeterHan.StockBugFix {
 		/// <summary>
 		/// Applied to GourmetCookingStationConfig to make the CO2 output in the right place.
 		/// </summary>
-		[HarmonyPatch(typeof(GourmetCookingStationConfig), "ConfigureBuildingTemplate")]
+		[HarmonyPatch(typeof(GourmetCookingStationConfig), nameof(GourmetCookingStationConfig.
+			ConfigureBuildingTemplate))]
 		public static class GourmetCookingStationConfig_ConfigureBuildingTemplate_Patch {
 			/// <summary>
 			/// Applied after ConfigureBuildingTemplate runs.
@@ -157,7 +158,8 @@ namespace PeterHan.StockBugFix {
 		/// <summary>
 		/// Applied to PolymerizerConfig to fix a symmetry error when emitting the plastic.
 		/// </summary>
-		[HarmonyPatch(typeof(PolymerizerConfig), "ConfigureBuildingTemplate")]
+		[HarmonyPatch(typeof(PolymerizerConfig), nameof(PolymerizerConfig.
+			ConfigureBuildingTemplate))]
 		public static class PolymerizerConfig_ConfigureBuildingTemplate_Patch {
 			/// <summary>
 			/// Applied after ConfigureBuildingTemplate runs.
@@ -266,7 +268,8 @@ namespace PeterHan.StockBugFix {
 		/// <summary>
 		/// Applied to CircuitManager to fix rounding errors in max wattage calculation.
 		/// </summary>
-		[HarmonyPatch(typeof(CircuitManager), "GetMaxSafeWattageForCircuit")]
+		[HarmonyPatch(typeof(CircuitManager), nameof(CircuitManager.
+			GetMaxSafeWattageForCircuit))]
 		public static class CircuitManager_GetMaxSafeWattageForCircuit_Patch {
 			/// <summary>
 			/// Applied after GetMaxSafeWattageForCircuit runs.
@@ -280,7 +283,8 @@ namespace PeterHan.StockBugFix {
 		/// Applied to ElectricalUtilityNetwork to fix rounding issues that would cause
 		/// spurious overloads.
 		/// </summary>
-		[HarmonyPatch(typeof(ElectricalUtilityNetwork), "UpdateOverloadTime")]
+		[HarmonyPatch(typeof(ElectricalUtilityNetwork), nameof(ElectricalUtilityNetwork.
+			UpdateOverloadTime))]
 		public static class ElectricalUtilityNetwork_UpdateOverloadTime_Patch {
 			/// <summary>
 			/// Transpiles UpdateOverloadTime to fix round off issues.
@@ -397,7 +401,7 @@ namespace PeterHan.StockBugFix {
 		/// <summary>
 		/// Applied to WorldInspector to fix the integer overflow error on huge masses.
 		/// </summary>
-		[HarmonyPatch(typeof(WorldInspector), "MassStringsReadOnly")]
+		[HarmonyPatch(typeof(WorldInspector), nameof(WorldInspector.MassStringsReadOnly))]
 		public static class WorldInspector_MassStringsReadOnly_Patch {
 			/// <summary>
 			/// Applied after MassStringsReadOnly runs.

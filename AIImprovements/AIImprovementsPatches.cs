@@ -223,7 +223,8 @@ namespace PeterHan.AIImprovements {
 		/// Applied to Chore.Precondition.Context to adjust the priority modifier on chores
 		/// slightly for specific chore classes.
 		/// </summary>
-		[HarmonyPatch(typeof(Chore.Precondition.Context), "SetPriority")]
+		[HarmonyPatch(typeof(Chore.Precondition.Context), nameof(Chore.Precondition.Context.
+			SetPriority))]
 		public static class Chore_Context_SetPriority_Patch {
 			/// <summary>
 			/// Applied after SetPriority runs.
@@ -240,7 +241,7 @@ namespace PeterHan.AIImprovements {
 		/// Applied to FallMonitor.Instance to try and back out to a previously visited tile
 		/// if the floor is removed from under a Duplicant.
 		/// </summary>
-		[HarmonyPatch(typeof(FallMonitor.Instance), "Recover")]
+		[HarmonyPatch(typeof(FallMonitor.Instance), nameof(FallMonitor.Instance.Recover))]
 		public static class FallMonitor_Instance_Recover_Patch {
 			/// <summary>
 			/// Applied before Recover runs.
@@ -265,7 +266,8 @@ namespace PeterHan.AIImprovements {
 		/// Applied to FallMonitor.Instance to try and back out to a previously visited tile
 		/// instead of teleporting upwards.
 		/// </summary>
-		[HarmonyPatch(typeof(FallMonitor.Instance), "TryEntombedEscape")]
+		[HarmonyPatch(typeof(FallMonitor.Instance), nameof(FallMonitor.Instance.
+			TryEntombedEscape))]
 		public static class FallMonitor_Instance_TryEntombedEscape_Patch {
 			/// <summary>
 			/// Applied before TryEntombedEscape runs.

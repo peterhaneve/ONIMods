@@ -74,7 +74,8 @@ namespace PeterHan.ShowRange {
 		/// Telescope, along with automatic visualizers for all buildings that use elements
 		/// from their environment like Liquid Pump, Deodorizer, and so forth.
 		/// </summary>
-		[HarmonyPatch(typeof(GeneratedBuildings), "LoadGeneratedBuildings")]
+		[HarmonyPatch(typeof(GeneratedBuildings), nameof(GeneratedBuildings.
+			LoadGeneratedBuildings))]
 		public static class GeneratedBuildings_LoadGeneratedBuildings_Patch {
 			/// <summary>
 			/// Applied after LoadGeneratedBuildings runs.

@@ -55,11 +55,11 @@ namespace PeterHan.NotEnoughTags {
 			GameTags.Farmable, GameTags.Filter, GameTags.Garbage, GameTags.Gas,
 			GameTags.GrowingPlant, GameTags.HasChores, GameTags.HoldingBreath, GameTags.Idle,
 			GameTags.IncubatableEgg, GameTags.IndustrialIngredient, GameTags.IndustrialProduct,
-			GameTags.Liquid, GameTags.Liquifiable, GameTags.MedicalSupplies, GameTags.Medicine,
-			GameTags.Metal, GameTags.Minion, GameTags.Operational, GameTags.Ore,
-			GameTags.Organics, GameTags.Other, GameTags.Overjoyed,
-			GameTags.PedestalDisplayable, GameTags.PerformingWorkRequest, GameTags.Preserved, 
-			GameTags.Pickupable, GameTags.Reachable, GameTags.RefinedMetal,
+			GameTags.Liquid, GameTags.Liquifiable, GameTags.ManufacturedMaterial,
+			GameTags.MedicalSupplies, GameTags.Medicine, GameTags.Metal, GameTags.Minion,
+			GameTags.Operational, GameTags.Ore, GameTags.Organics, GameTags.Other,
+			GameTags.Overjoyed, GameTags.PedestalDisplayable, GameTags.PerformingWorkRequest,
+			GameTags.Preserved, GameTags.Pickupable, GameTags.Reachable, GameTags.RefinedMetal,
 			GameTags.RareMaterials, GameTags.Sealed, GameTags.Seed, GameTags.Solid,
 			GameTags.Stored, GameTags.Trapped, GameTags.Unbreathable,
 		};
@@ -67,7 +67,7 @@ namespace PeterHan.NotEnoughTags {
 		/// <summary>
 		/// Tries to stop a method from being inlined.
 		/// 
-		/// This code was taken from https://github.com/pardeike/Harmony which is available
+		/// This code was adapted from https://github.com/pardeike/Harmony which is available
 		/// under the MIT License.
 		/// </summary>
 		/// <param name="method">The method to modify.</param>

@@ -94,8 +94,9 @@ namespace PeterHan.FallingSand {
 		/// Applied to UnstableGroundManager to flag spawned falling objects with the
 		/// appropriate component.
 		/// </summary>
-		[HarmonyPatch(typeof(UnstableGroundManager), "Spawn", typeof(int), typeof(Element),
-			typeof(float), typeof(float), typeof(byte), typeof(int))]
+		[HarmonyPatch(typeof(UnstableGroundManager), nameof(UnstableGroundManager.Spawn),
+			typeof(int), typeof(Element), typeof(float), typeof(float), typeof(byte),
+			typeof(int))]
 		public static class UnstableGroundManager_Spawn_Patch {
 			internal static void Postfix(List<GameObject> ___fallingObjects, int cell) {
 				int n = ___fallingObjects.Count;

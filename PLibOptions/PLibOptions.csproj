@@ -4,14 +4,14 @@
     <TargetFramework>net40</TargetFramework>
     <Title>PeterHan.PLib.Options</Title>
     <AssemblyTitle>PeterHanLib Options</AssemblyTitle>
-    <Version>3.6.0.0</Version>
+    <Version>3.7.0.0</Version>
     <UsesPLib>false</UsesPLib>
     <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
     <Copyright>Copyright 2020 Peter Han</Copyright>
     <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
     
 Contains functions aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
-    <AssemblyVersion>3.6.0.0</AssemblyVersion>
+    <AssemblyVersion>3.7.0.0</AssemblyVersion>
     <RootNamespace>PeterHan.PLib.Options</RootNamespace>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
@@ -21,6 +21,12 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
     <DocumentationFile>bin\Release\PLibOptions.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\PLib\Detours\DetouredField.cs" Link="DetouredField.cs" />
+    <Compile Include="..\PLib\Detours\DetouredMethod.cs" Link="DetouredMethod.cs" />
+    <Compile Include="..\PLib\Detours\DetourException.cs" Link="DetourException.cs" />
+    <Compile Include="..\PLib\Detours\IDetouredField.cs" Link="IDetouredField.cs" />
+    <Compile Include="..\PLib\Detours\LazyDetouredField.cs" Link="LazyDetouredField.cs" />
+    <Compile Include="..\PLib\Detours\PDetours.cs" Link="PDetours.cs" />
     <Compile Include="..\PLib\Options\ButtonOptionsEntry.cs" Link="ButtonOptionsEntry.cs" />
     <Compile Include="..\PLib\Options\CategoryExpandHandler.cs" Link="CategoryExpandHandler.cs" />
     <Compile Include="..\PLib\Options\CheckboxOptionsEntry.cs" Link="CheckboxOptionsEntry.cs" />
@@ -91,6 +97,8 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
     <Compile Include="..\PLib\UI\PUITuning.cs" Link="UI\PUITuning.cs" />
     <Compile Include="..\PLib\UI\PUIUtils.cs" Link="UI\PUIUtils.cs" />
     <Compile Include="..\PLib\UI\TextAnchorUtils.cs" Link="UI\TextAnchorUtils.cs" />
+    <Compile Include="..\PLib\UI\UIDetours.cs" Link="UIDetours.cs" />
     <Compile Include="..\PLib\Utils\PPatchTools.cs" Link="PPatchTools.cs" />
+    <Compile Include="..\PLib\Utils\PTranspilerTools.cs" Link="PTranspilerTools.cs" />
   </ItemGroup>
 </Project>

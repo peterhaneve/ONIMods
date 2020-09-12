@@ -44,7 +44,10 @@ namespace PeterHan.MoreAchievements {
 		/// <param name="key">The string name to retrieve.</param>
 		/// <returns>The value of that string.</returns>
 		internal static string GetStringValue(Type type, string key) {
-			return type?.GetFieldSafe(key, true)?.GetValue(null)?.ToString() ?? "";
+			string value = "";
+			if (type?.GetFieldSafe(key, true)?.GetValue(null) is LocString field)
+				value = field.text;
+			return value;
 		}
 
 		/// <summary>

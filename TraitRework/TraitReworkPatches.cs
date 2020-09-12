@@ -102,7 +102,7 @@ namespace PeterHan.TraitRework {
 		/// Applied to ConsumableConsumer to ban meat and fish from Pacifist Duplicants,
 		/// and the Gas Range foods from Gastrophobic Duplicants.
 		/// </summary>
-		[HarmonyPatch(typeof(ConsumableConsumer), "SetPermitted")]
+		[HarmonyPatch(typeof(ConsumableConsumer), nameof(ConsumableConsumer.SetPermitted))]
 		public static class ConsumableConsumer_SetPermitted_Patch {
 			/// <summary>
 			/// Applied after SetPermitted runs.
@@ -130,7 +130,7 @@ namespace PeterHan.TraitRework {
 		/// <summary>
 		/// Applied to EntityModifierSet to alter/add traits on load.
 		/// </summary>
-		[HarmonyPatch(typeof(EntityModifierSet), "Initialize")]
+		[HarmonyPatch(typeof(EntityModifierSet), nameof(EntityModifierSet.Initialize))]
 		public static class EntityModifierSet_Initialize_Patch {
 			/// <summary>
 			/// Applied after Initialize runs.
@@ -201,7 +201,7 @@ namespace PeterHan.TraitRework {
 		/// Applied to Narcolepsy.States to add new states for preventing sleeping while
 		/// carrying an item.
 		/// </summary>
-		[HarmonyPatch(typeof(Narcolepsy.States), "InitializeStates")]
+		[HarmonyPatch(typeof(Narcolepsy.States), nameof(Narcolepsy.States.InitializeStates))]
 		public static class Narcolepsy_States_InitializeStates_Patch {
 			/// <summary>
 			/// Retrieves the interval for the next sleep, using the same method as the base
@@ -272,7 +272,8 @@ namespace PeterHan.TraitRework {
 		/// Applied to SleepChoreMonitor to prevent Narcoleptic duplicants from getting
 		/// Sore Back.
 		/// </summary>
-		[HarmonyPatch(typeof(SleepChoreMonitor.Instance), "CreateFloorLocator")]
+		[HarmonyPatch(typeof(SleepChoreMonitor.Instance), nameof(SleepChoreMonitor.Instance.
+			CreateFloorLocator))]
 		public static class SleepChoreMonitor_Instance_CreateFloorLocator_Patch {
 			/// <summary>
 			/// Applied after CreateFloorLocator runs.
@@ -287,7 +288,8 @@ namespace PeterHan.TraitRework {
 		/// Applied to SleepChoreMonitor to prevent Narcoleptic duplicants from getting
 		/// Sore Back.
 		/// </summary>
-		[HarmonyPatch(typeof(SleepChoreMonitor.Instance), "CreatePassedOutLocator")]
+		[HarmonyPatch(typeof(SleepChoreMonitor.Instance), nameof(SleepChoreMonitor.Instance.
+			CreatePassedOutLocator))]
 		public static class SleepChoreMonitor_Instance_CreatePassedOutLocator_Patch {
 			/// <summary>
 			/// Applied after CreatePassedOutLocator runs.
@@ -301,7 +303,8 @@ namespace PeterHan.TraitRework {
 		/// <summary>
 		/// Applied to Snorer.StatesInstance to stress woken Duplicants who hear a snorer.
 		/// </summary>
-		[HarmonyPatch(typeof(Snorer.StatesInstance), "StartSnoreBGEffect")]
+		[HarmonyPatch(typeof(Snorer.StatesInstance), nameof(Snorer.StatesInstance.
+			StartSnoreBGEffect))]
 		public static class Snorer_StatesInstance_StartSnoreBGEffect_Patch {
 			/// <summary>
 			/// Applied after StartSnoreBGEffect runs.

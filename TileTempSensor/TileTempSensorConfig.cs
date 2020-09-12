@@ -40,6 +40,7 @@ namespace PeterHan.TileTempSensor {
 			PUtil.InitLibrary();
 			PLocalization.Register();
 			RegisterBuilding();
+			LocString.CreateLocStringKeys(typeof(TileTempSensorStrings.BUILDINGS));
 		}
 
 		/// <summary>
@@ -48,7 +49,7 @@ namespace PeterHan.TileTempSensor {
 		internal static void RegisterBuilding() {
 			// Inititialize it here to allow localization to change the strings
 			PBuilding.Register(TileTempSensor = new PBuilding(ID,
-					TileTempSensorStrings.TILETEMP_NAME) {
+					TileTempSensorStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.NAME) {
 				AddAfter = LogicTemperatureSensorConfig.ID,
 				Animation = "thermo_tile_kanim",
 				AudioCategory = "Metal",
@@ -56,8 +57,8 @@ namespace PeterHan.TileTempSensor {
 				Category = "Automation",
 				ConstructionTime = 30.0f,
 				Decor = TUNING.BUILDINGS.DECOR.BONUS.TIER0,
-				Description = TileTempSensorStrings.TILETEMP_DESCRIPTION,
-				EffectText = TileTempSensorStrings.TILETEMP_EFFECT,
+				Description = null,
+				EffectText = null,
 				Entombs = false,
 				Floods = false,
 				Height = 1,

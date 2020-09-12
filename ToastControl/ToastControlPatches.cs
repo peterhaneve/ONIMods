@@ -22,7 +22,6 @@ using PeterHan.PLib.Datafiles;
 using PeterHan.PLib.Options;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
@@ -294,8 +293,7 @@ namespace PeterHan.ToastControl {
 		/// Common transpiled target method for each use of PopFXManager.SpawnFX.
 		/// </summary>
 		private static PopFX SpawnFXShort(PopFXManager instance, Sprite icon, string text,
-			Transform targetTransform, float lifetime, bool track_target, object source)
-		{
+				Transform targetTransform, float lifetime, bool track_target, object source) {
 			PopFX popup = null;
 			bool show = true;
 			try {
@@ -357,7 +355,7 @@ namespace PeterHan.ToastControl {
 		/// Applied to FetchAreaChore.StatesInstance.Delivery.Complete to determine whether
 		/// store popups are shown.
 		/// </summary>
-		[HarmonyPatch(typeof(Delivery), "Complete")]
+		[HarmonyPatch(typeof(Delivery), nameof(Delivery.Complete))]
 		public static class Delivery_Complete_Patch {
 			/// <summary>
 			/// Transpiles Complete to alter the "display popup" flag on Storage.Store
@@ -485,7 +483,7 @@ namespace PeterHan.ToastControl {
 		/// Applied to ThreatMonitor.Grudge as it uses a struct and therefore fails when used
 		/// with the normal multi-patcher.
 		/// </summary>
-		[HarmonyPatch(typeof(ThreatMonitor.Grudge), "Calm")]
+		[HarmonyPatch(typeof(ThreatMonitor.Grudge), nameof(ThreatMonitor.Grudge.Calm))]
 		public static class ThreatMonitor_Grudge_Calm_Patch {
 			/// <summary>
 			/// Transpiles Calm to replace calls to SpawnFX with our handler.
@@ -511,7 +509,7 @@ namespace PeterHan.ToastControl {
 		/// <summary>
 		/// Applied to ToolMenu to capture key binds to open the settings.
 		/// </summary>
-		[HarmonyPatch(typeof(ToolMenu), "OnKeyDown")]
+		[HarmonyPatch(typeof(ToolMenu), nameof(ToolMenu.OnKeyDown))]
 		public static class ToolMenu_OnKeyDown_Patch {
 			/// <summary>
 			/// Applied after OnKeyDown runs.
