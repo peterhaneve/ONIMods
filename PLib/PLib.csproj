@@ -17,9 +17,9 @@
       <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
     
 Contains methods aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
-      <PackageReleaseNotes>Add a few additional transpiler tools.
+      <PackageReleaseNotes>Add PLib Detours, a feature which allows lightning fast type-checked access to public or private fields, properties, and methods. Automatically adapts to many source-compatible method signature changes.
 
-Fix a crash caused by game updates to dialogs.</PackageReleaseNotes>
+Fix a bug with text fields crashing after being destroyed. Fix bugs with building localizations.</PackageReleaseNotes>
       <RootNamespace>PeterHan.PLib</RootNamespace>
       <AssemblyVersion>3.10.0.0</AssemblyVersion>
       <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  

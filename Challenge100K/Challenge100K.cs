@@ -40,6 +40,8 @@ namespace PeterHan.Challenge100K {
 
 		/// <summary>
 		/// The "to 11" cold temperature for frigid biomes.
+		/// 
+		/// Changed to 12 to avoid a clash with I Love Slicksters.
 		/// </summary>
 		private static Temperature to11 = null;
 
@@ -70,13 +72,13 @@ namespace PeterHan.Challenge100K {
 		/// <summary>
 		/// Applied to SettingsCache to create a custom 100K temperature range.
 		/// </summary>
-		[HarmonyPatch(typeof(SettingsCache), "LoadFiles")]
+		[HarmonyPatch(typeof(SettingsCache), nameof(SettingsCache.LoadFiles))]
 		public static class SettingsCache_LoadFiles_Patch {
 			/// <summary>
 			/// Applied after LoadFiles runs.
 			/// </summary>
 			internal static void Postfix() {
-				var frigid = (Temperature.Range)11;
+				var frigid = (Temperature.Range)12;
 				var temps = SettingsCache.temperatures;
 				if (!temps.ContainsKey(frigid))
 					SettingsCache.temperatures.Add(frigid, to11);

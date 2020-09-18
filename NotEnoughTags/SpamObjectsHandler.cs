@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#if DEBUG
 using PeterHan.PLib;
 using UnityEngine;
 
@@ -56,13 +57,13 @@ namespace PeterHan.NotEnoughTags {
 					PUtil.LogDebug("Spawning item {0}".F(id));
 					GameUtil.KInstantiate(prefab.gameObject, pos, Grid.SceneLayer.Ore).
 						SetActive(true);
-					yield return new WaitForEndOfFrame();
+					yield return null;
 				} else if ((prefab.HasTag(GameTags.Creature) && id != ShockwormConfig.ID) ||
 						prefab.HasTag(GameTags.Egg)) {
 					PUtil.LogDebug("Spawning critter {0}".F(id));
 					GameUtil.KInstantiate(prefab.gameObject, pos, Grid.SceneLayer.Creatures).
 						SetActive(true);
-					yield return new WaitForEndOfFrame();
+					yield return null;
 				}
 			}
 			// Chunks of all elements
@@ -71,6 +72,7 @@ namespace PeterHan.NotEnoughTags {
 					PUtil.LogDebug("Spawning element {0}".F(element.name));
 					element.substance.SpawnResource(pos, 1000.0f, element.IsSolid ? 1.0f :
 						Constants.CELSIUS2KELVIN + 20.0f, Sim.InvalidDiseaseIdx, 0);
+					yield return null;
 				}
 		}
 
@@ -103,3 +105,4 @@ namespace PeterHan.NotEnoughTags {
 		}
 	}
 }
+#endif

@@ -1,5 +1,5 @@
 biomeNoise: noise/subworldJungle
-temperatureRange: 11
+temperatureRange: 12
 density:
   min: 10
   max: 15

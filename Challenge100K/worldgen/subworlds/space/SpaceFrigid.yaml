@@ -1,5 +1,5 @@
 biomeNoise: noise/Generic
-temperatureRange: 11
+temperatureRange: 12
 minChildCount: 4
 density:
   min: 35

@@ -87,6 +87,10 @@ namespace PeterHan.NotEnoughTags {
 #if DEBUG
 			PUtil.InitLibrary();
 			SpamObjectsHandler.PrepareSpamHandler();
+#else
+			var assembly = Assembly.GetExecutingAssembly();
+			PUtil.LogDebug("Mod {0} initialized, version {1}".F(assembly.GetName()?.Name,
+				assembly.GetFileVersion() ?? "Unknown"));
 #endif
 			var inst = ExtendedTagBits.Instance;
 			// Force these tags into the efficient lower bits
