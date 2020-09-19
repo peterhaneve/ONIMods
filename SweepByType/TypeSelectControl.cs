@@ -194,7 +194,9 @@ namespace PeterHan.SweepByType {
 			RootPanel.SetMinUISize(PANEL_SIZE);
 			children = new SortedList<Tag, TypeSelectCategory>(16, TagAlphabetComparer.
 				INSTANCE);
+			RootPanel.AddComponent<Canvas>();
 			RootPanel.AddComponent<TypeSelectScreen>();
+			RootPanel.SetActive(false);
 		}
 
 		/// <summary>
@@ -332,6 +334,11 @@ namespace PeterHan.SweepByType {
 		/// </summary>
 		private sealed class TypeSelectCategory : IHasCheckBox {
 			/// <summary>
+			/// The margins around a checkbox for a category.
+			/// </summary>
+			private static readonly RectOffset HEADER_MARGIN = new RectOffset(5, 0, 0, 0);
+
+			/// <summary>
 			/// The tag for this category.
 			/// </summary>
 			public Tag CategoryTag { get; }
@@ -368,18 +375,19 @@ namespace PeterHan.SweepByType {
 				string title = string.IsNullOrEmpty(overrideName) ? CategoryTag.ProperName() :
 					overrideName;
 				var selectBox = new PCheckBox("SelectCategory") {
-					Text = title, DynamicSize = true, OnChecked = OnCheck,
-					CheckSize = ROW_SIZE, InitialState = PCheckBox.STATE_CHECKED,
-					TextStyle = PUITuning.Fonts.TextDarkStyle
+					Text = title, OnChecked = OnCheck, CheckSize = ROW_SIZE, InitialState =
+					PCheckBox.STATE_CHECKED, TextStyle = PUITuning.Fonts.TextDarkStyle
 				};
 				selectBox.OnRealize += (obj) => { CheckBox = obj; };
-				Header = new PPanel("TypeSelectCategory") {
-					Direction = PanelDirection.Horizontal, Alignment = TextAnchor.MiddleLeft,
-					Spacing = 5
-				}.AddChild(new PToggle("ShowHide") {
+				var showHide = new PToggle("ShowHide") {
 					OnStateChanged = OnToggle, Size = new Vector2(ROW_SIZE.x * 0.5f,
 					ROW_SIZE.y * 0.5f), Color = PUITuning.Colors.ComponentLightStyle
-				}).AddChild(selectBox).Build();
+				};
+				Header = new PRelativePanel("TypeSelectCategory") { DynamicSize = false }.
+					AddChild(showHide).AddChild(selectBox).SetLeftEdge(showHide,
+					fraction: 0.0f).SetRightEdge(selectBox, fraction: 1.0f).SetLeftEdge(
+					selectBox, toRight: showHide).SetMargin(selectBox, HEADER_MARGIN).
+					AnchorYAxis(showHide, anchor: 0.5f).Build();
 				children = new SortedList<Tag, TypeSelectElement>(16, TagAlphabetComparer.
 					INSTANCE);
 				ChildPanel = new PPanel("Children") {

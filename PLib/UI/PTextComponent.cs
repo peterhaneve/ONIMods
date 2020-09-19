@@ -244,6 +244,16 @@ namespace PeterHan.PLib.UI {
 		public abstract GameObject Build();
 
 		/// <summary>
+		/// If the flex size is zero and dynamic size is false, the layout group can be
+		/// completely destroyed on a text component after the layout is locked.
+		/// </summary>
+		/// <param name="component">The realized text component.</param>
+		protected void DestroyLayoutIfPossible(GameObject component) {
+			if (FlexSize.x == 0.0f && FlexSize.y == 0.0f && !DynamicSize)
+				AbstractLayoutGroup.DestroyAndReplaceLayout(component);
+		}
+
+		/// <summary>
 		/// Invokes the OnRealize event.
 		/// </summary>
 		/// <param name="obj">The realized text component.</param>

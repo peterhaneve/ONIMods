@@ -115,6 +115,7 @@ namespace PeterHan.PLib.UI {
 			if (!DynamicSize) layout.LockLayout();
 			layout.flexibleWidth = FlexSize.x;
 			layout.flexibleHeight = FlexSize.y;
+			DestroyLayoutIfPossible(button);
 			InvokeRealize(button);
 			return button;
 		}

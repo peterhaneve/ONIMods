@@ -24,6 +24,7 @@ using PeterHan.PLib.Datafiles;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.UI;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -515,7 +516,6 @@ namespace PeterHan.DebugNotIncluded {
 					// Hide the "STEAM WORKSHOP" button
 					var obj = ___workshopButton.gameObject;
 					obj.SetActive(false);
-					// Drop a checkbox "All" there instead
 					var parent = obj.GetParent();
 					if (parent != null)
 						ModDialogs.AddExtraButtons(__instance.gameObject, parent);
@@ -564,11 +564,15 @@ namespace PeterHan.DebugNotIncluded {
 #endif
 
 #if false
-		private static long timeInPath;
+		private static ConcurrentDictionary<string, int> hitCount;
 		private static System.DateTime lastDebugPrint;
+		private static ConcurrentDictionary<int, int> threadCount;
+		private static long timeInPath;
 
 		[PLibMethod(RunAt.OnStartGame)]
 		internal static void InitTimers() {
+			hitCount = new ConcurrentDictionary<string, int>(64, 4);
+			threadCount = new ConcurrentDictionary<int, int>(32, 4);
 			timeInPath = 0L;
 			lastDebugPrint = System.DateTime.UtcNow;
 			PUtil.LogDebug("Stopwatch resolution is {0:D}".F(Stopwatch.Frequency));
@@ -576,17 +580,34 @@ namespace PeterHan.DebugNotIncluded {
 
 		[HarmonyPatch(typeof(Game), "Update")]
 		public static class Game_Update_Patch {
-			/// <summary>
-			/// Applied after Update runs.
-			/// </summary>
 			internal static void Postfix() {
 				var now = System.DateTime.UtcNow;
 				if (now > lastDebugPrint.AddSeconds(1.0)) {
 					lastDebugPrint = now;
 					PUtil.LogDebug("Spent {0:D} us in pathfinding the last second".F(
 						timeInPath / 1000L));
+					foreach (var pair in hitCount)
+						PUtil.LogDebug("{0:D} hits from {1}".F(pair.Value, pair.Key));
+					foreach (var pair in threadCount)
+						PUtil.LogDebug("{0:D} hits from T#{1:D}".F(pair.Value, pair.Key));
 					timeInPath = 0L;
+					hitCount.Clear();
+					threadCount.Clear();
 				}
+			}
+		}
+
+		[HarmonyPatch(typeof(Navigator.PathProbeTask), "Run")]
+		public static class NavigatorPathingTask {
+			internal static void Postfix() {
+				var stackTrace = new StackTrace(2);
+				if (stackTrace.FrameCount > 0) {
+					var method = stackTrace.GetFrame(0).GetMethod();
+					hitCount.AddOrUpdate(method.DeclaringType.FullName + "." + method.Name,
+						1, (key, value) => value + 1);
+				}
+				int id = System.Threading.Thread.CurrentThread.ManagedThreadId;
+				threadCount.AddOrUpdate(id, 1, (key, value) => value + 1);
 			}
 		}
 
@@ -597,24 +618,12 @@ namespace PeterHan.DebugNotIncluded {
 			}
 
 			internal static void Postfix(Stopwatch __state) {
-				timeInPath += __state.ElapsedTicks * 1000000000L / Stopwatch.Frequency;
+				long ticks = __state.ElapsedTicks * 1000000000L / Stopwatch.Frequency;
+				lock (threadCount) {
+					timeInPath += ticks;
+				}
 			}
 		}
-
-		// CHORE PRECON: ~30ms/1000ms
-		// PATHFINDER.FINDPATH: ~20ms/1000ms
-		// SIM: ~160ms/1000ms
-		// PATHPROBE.UPDATEPROBE: 900ms/1000ms!!!
-		/*[HarmonyPatch(typeof(Game), "SimEveryTick")]
-		public static class Game_SimEveryTick_Patch {
-			internal static void Prefix(ref Stopwatch __state) {
-				__state = Stopwatch.StartNew();
-			}
-
-			internal static void Postfix(Stopwatch __state) {
-				timeInPath += __state.ElapsedTicks * 1000000000L / Stopwatch.Frequency;
-			}
-		}*/
 #endif
 	}
 }

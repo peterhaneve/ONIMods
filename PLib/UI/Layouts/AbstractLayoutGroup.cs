@@ -38,6 +38,26 @@ namespace PeterHan.PLib.UI.Layouts {
 			yield break;
 		}
 
+		/// <summary>
+		/// Removes and destroys any PLib layouts on the component. They will be replaced with
+		/// a static LayoutElement containing the old size of the component.
+		/// </summary>
+		/// <param name="component">The component to cleanse.</param>
+		internal static void DestroyAndReplaceLayout(GameObject component) {
+			var layoutGroup = component.GetComponentSafe<AbstractLayoutGroup>();
+			if (layoutGroup != null) {
+				var replacement = component.AddOrGet<LayoutElement>();
+				replacement.flexibleHeight = layoutGroup.flexibleHeight;
+				replacement.flexibleWidth = layoutGroup.flexibleWidth;
+				replacement.layoutPriority = layoutGroup.layoutPriority;
+				replacement.minHeight = layoutGroup.minHeight;
+				replacement.minWidth = layoutGroup.minWidth;
+				replacement.preferredHeight = layoutGroup.preferredHeight;
+				replacement.preferredWidth = layoutGroup.preferredWidth;
+				DestroyImmediate(layoutGroup);
+			}
+		}
+
 		public float minWidth {
 			get {
 				return mMinWidth;

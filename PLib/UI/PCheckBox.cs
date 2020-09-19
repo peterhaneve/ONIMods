@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.Detours;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
@@ -199,6 +198,7 @@ namespace PeterHan.PLib.UI {
 			if (!DynamicSize) layout.LockLayout();
 			layout.flexibleWidth = FlexSize.x;
 			layout.flexibleHeight = FlexSize.y;
+			DestroyLayoutIfPossible(checkbox);
 			InvokeRealize(checkbox);
 			return checkbox;
 		}

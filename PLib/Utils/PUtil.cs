@@ -443,6 +443,23 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Measures how long the specified code takes to run. The result is logged to the
+		/// debug log in microseconds.
+		/// </summary>
+		/// <param name="code">The code to execute.</param>
+		/// <param name="header">The name used in the log to describe this code.</param>
+		public static void Time(System.Action code, string header = "Code") {
+			if (code == null)
+				throw new ArgumentNullException("code");
+			var watch = new System.Diagnostics.Stopwatch();
+			watch.Start();
+			code.Invoke();
+			watch.Stop();
+			LogDebug("{1} took {0:D} us".F(watch.ElapsedTicks * 1000000L / System.Diagnostics.
+				Stopwatch.Frequency, header));
+		}
+
+		/// <summary>
 		/// Attempts to parse an enumeration's value.
 		/// </summary>
 		/// <typeparam name="T">The enumeration type to parse.</typeparam>

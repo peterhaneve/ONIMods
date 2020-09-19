@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using FMOD.Studio;
 using Harmony;
 using PeterHan.PLib;
 using System.Reflection;
@@ -108,8 +109,8 @@ namespace PeterHan.SweepByType {
 						TypeSelect.SetSelections(savedTypes);
 				}
 				root.SetParent(menu.gameObject);
-				root.SetActive(true);
 				root.transform.SetAsFirstSibling();
+				root.SetActive(true);
 			}
 			menu.PriorityScreen.Show(true);
 		}
@@ -127,11 +128,8 @@ namespace PeterHan.SweepByType {
 		protected override void OnDeactivateTool(InterfaceTool newTool) {
 			var menu = ToolMenu.Instance;
 			// Unparent but do not dispose
-			if (TypeSelect != null) {
-				var root = TypeSelect.RootPanel;
-				root.SetActive(false);
-				root.SetParent(null);
-			}
+			if (TypeSelect != null)
+				TypeSelect.RootPanel.SetActive(false);
 			menu.PriorityScreen.Show(false);
 			base.OnDeactivateTool(newTool);
 		}
@@ -195,7 +193,6 @@ namespace PeterHan.SweepByType {
 			// Allow icons to be disabled
 			TypeSelect = new TypeSelectControl(SweepByTypePatches.Options?.DisableIcons ??
 				false);
-			TypeSelect.RootPanel.SetActive(false);
 		}
 	}
 }
