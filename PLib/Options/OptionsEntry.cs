@@ -52,7 +52,7 @@ namespace PeterHan.PLib.Options {
 					customOptions = createOptions.Invoke(options, null) as System.
 						Collections.IEnumerable;
 				} catch (TargetInvocationException e) {
-					PUtil.LogException(e.GetBaseException() ?? e);
+					PUtil.LogException(e.GetBaseException());
 				}
 			if (customOptions != null) {
 				// Middle-depth copy of the existing categories as it can change on each dialog

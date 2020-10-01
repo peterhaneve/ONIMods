@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Threading;
 using UnityEngine;
 
 namespace PeterHan.DebugNotIncluded {
@@ -563,52 +564,50 @@ namespace PeterHan.DebugNotIncluded {
 		}
 #endif
 
-#if false
+#if true
 		private static ConcurrentDictionary<string, int> hitCount;
-		private static System.DateTime lastDebugPrint;
 		private static ConcurrentDictionary<int, int> threadCount;
 		private static long timeInPath;
 
-		[PLibMethod(RunAt.OnStartGame)]
-		internal static void InitTimers() {
-			hitCount = new ConcurrentDictionary<string, int>(64, 4);
-			threadCount = new ConcurrentDictionary<int, int>(32, 4);
-			timeInPath = 0L;
-			lastDebugPrint = System.DateTime.UtcNow;
-			PUtil.LogDebug("Stopwatch resolution is {0:D}".F(Stopwatch.Frequency));
-		}
-
-		[HarmonyPatch(typeof(Game), "Update")]
-		public static class Game_Update_Patch {
-			internal static void Postfix() {
-				var now = System.DateTime.UtcNow;
-				if (now > lastDebugPrint.AddSeconds(1.0)) {
-					lastDebugPrint = now;
-					PUtil.LogDebug("Spent {0:D} us in pathfinding the last second".F(
-						timeInPath / 1000L));
-					foreach (var pair in hitCount)
-						PUtil.LogDebug("{0:D} hits from {1}".F(pair.Value, pair.Key));
-					foreach (var pair in threadCount)
-						PUtil.LogDebug("{0:D} hits from T#{1:D}".F(pair.Value, pair.Key));
-					timeInPath = 0L;
-					hitCount.Clear();
-					threadCount.Clear();
-				}
-			}
-		}
-
+		/// <summary>
+		/// Dumps profiling information every second.
+		/// </summary>
 		[HarmonyPatch(typeof(Navigator.PathProbeTask), "Run")]
-		public static class NavigatorPathingTask {
+		internal sealed class ProfilingComponent : KMonoBehaviour, IRender1000ms {
+			protected override void OnPrefabInit() {
+				base.OnPrefabInit();
+				hitCount = new ConcurrentDictionary<string, int>(64, 4);
+				threadCount = new ConcurrentDictionary<int, int>(32, 4);
+				timeInPath = 0L;
+			}
+
 			internal static void Postfix() {
 				var stackTrace = new StackTrace(2);
+				int id = Thread.CurrentThread.ManagedThreadId;
 				if (stackTrace.FrameCount > 0) {
 					var method = stackTrace.GetFrame(0).GetMethod();
 					hitCount.AddOrUpdate(method.DeclaringType.FullName + "." + method.Name,
 						1, (key, value) => value + 1);
 				}
-				int id = System.Threading.Thread.CurrentThread.ManagedThreadId;
 				threadCount.AddOrUpdate(id, 1, (key, value) => value + 1);
 			}
+
+			public void Render1000ms(float dt) {
+				PUtil.LogDebug("Spent {0:D} us in pathfinding the last second".F(
+					timeInPath / 1000L));
+				foreach (var pair in hitCount)
+					PUtil.LogDebug("{0:D} hits from {1}".F(pair.Value, pair.Key));
+				foreach (var pair in threadCount)
+					PUtil.LogDebug("{0:D} hits from T#{1:D}".F(pair.Value, pair.Key));
+				timeInPath = 0L;
+				hitCount.Clear();
+				threadCount.Clear();
+			}
+		}
+
+		[PLibMethod(RunAt.OnStartGame)]
+		internal static void InitTimers() {
+			Game.Instance.gameObject.AddOrGet<ProfilingComponent>();
 		}
 
 		[HarmonyPatch(typeof(PathProber), "UpdateProbe")]
@@ -618,10 +617,14 @@ namespace PeterHan.DebugNotIncluded {
 			}
 
 			internal static void Postfix(Stopwatch __state) {
-				long ticks = __state.ElapsedTicks * 1000000000L / Stopwatch.Frequency;
-				lock (threadCount) {
-					timeInPath += ticks;
-				}
+				long ticks = __state.ElapsedTicks * 1000000000L / Stopwatch.Frequency,
+					oldValue, newValue;
+				// Thread safe, lockless increment
+				do {
+					oldValue = Interlocked.Read(ref timeInPath);
+					newValue = oldValue + ticks;
+				} while (Interlocked.CompareExchange(ref timeInPath, newValue, oldValue) !=
+					oldValue);
 			}
 		}
 #endif

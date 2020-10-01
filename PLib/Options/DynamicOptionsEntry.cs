@@ -42,7 +42,7 @@ namespace PeterHan.PLib.Options {
 			} catch (Exception e) {
 				// Log error
 				PUtil.LogError("Cannot create options handler for " + name + ":");
-				PUtil.LogException(e.GetBaseException() ?? e);
+				PUtil.LogException(e.GetBaseException());
 				handler = null;
 			}
 			return new DynamicOptionsEntry(name, attr.Category, handler);

@@ -22,7 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
-
+using System.Text;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<Harmony.CodeInstruction>;
 
 namespace PeterHan.PLib {
@@ -145,6 +145,84 @@ namespace PeterHan.PLib {
 			if (reflectMethod != null)
 				del = Delegate.CreateDelegate(typeof(T), reflectMethod, false) as T;
 			return del;
+		}
+
+		/// <summary>
+		/// Dumps the IL body of the method to the debug log.
+		/// 
+		/// Only to be used for debugging purposes.
+		/// </summary>
+		/// <param name="opcodes">The IL instructions to log.</param>
+		public static void DumpMethodBody(TranspiledMethod opcodes) {
+			var result = new StringBuilder(1024);
+			result.Append("METHOD BODY:");
+			foreach (var instr in opcodes) {
+				foreach (var block in instr.blocks) {
+					var type = block.blockType;
+					if (type == ExceptionBlockType.EndExceptionBlock)
+						result.AppendLine("}");
+					else {
+						if (type != ExceptionBlockType.BeginExceptionBlock)
+							result.Append("} ");
+						result.Append(block.blockType);
+						result.AppendLine(" {");
+					}
+				}
+				foreach (var label in instr.labels) {
+					// Label hashcodes are just easy integers
+					result.Append(label.GetHashCode());
+					result.Append(": ");
+				}
+				result.Append('\t');
+				result.Append(instr.opcode);
+				var operand = instr.operand;
+				if (operand != null) {
+					result.Append('\t');
+					if (operand is Label)
+						result.Append(operand.GetHashCode());
+					else if (operand is MethodBase method)
+						FormatMethodCall(result, method);
+					else
+						result.Append(Emitter.FormatArgument(operand));
+				}
+				result.AppendLine();
+			}
+			PUtil.LogDebug(result.ToString());
+		}
+
+		/// <summary>
+		/// Formats a method call for logging.
+		/// </summary>
+		/// <param name="result">The location where the log is stored.</param>
+		/// <param name="method">The method that is called.</param>
+		private static void FormatMethodCall(StringBuilder result, MethodBase method) {
+			bool first = true;
+			// The default representation leaves off the class name!
+			if (method is MethodInfo hasRet) {
+				result.Append(hasRet.ReturnType.Name);
+				result.Append(' ');
+			}
+			result.Append(method.DeclaringType.Name);
+			result.Append('.');
+			result.Append(method.Name);
+			result.Append('(');
+			// Put the default value in there too
+			foreach (var pr in method.GetParameters()) {
+				string paramName = pr.Name;
+				if (!first)
+					result.Append(", ");
+				result.Append(pr.ParameterType.Name);
+				if (!string.IsNullOrEmpty(paramName)) {
+					result.Append(' ');
+					result.Append(paramName);
+				}
+				if (pr.IsOptional) {
+					result.Append(" = ");
+					result.Append(pr.DefaultValue);
+				}
+				first = false;
+			}
+			result.Append(')');
 		}
 
 		/// <summary>

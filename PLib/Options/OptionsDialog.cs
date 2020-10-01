@@ -441,7 +441,7 @@ namespace PeterHan.PLib.Options {
 				try {
 					onSave.Invoke(options, null);
 				} catch (TargetInvocationException e) {
-					PUtil.LogException(e.GetBaseException() ?? e);
+					PUtil.LogException(e.GetBaseException());
 				}
 			handler.OnSaveOptions(options);
 		}

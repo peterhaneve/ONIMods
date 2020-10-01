@@ -203,6 +203,9 @@ namespace PeterHan.PLib {
 				foreach (var method in toRun)
 					try {
 						method.Run(instance);
+					} catch (TargetInvocationException e) {
+						// Use the inner exception
+						PUtil.LogException(e.GetBaseException());
 					} catch (Exception e) {
 						// Say which mod's postload crashed
 						PUtil.LogException(e);
