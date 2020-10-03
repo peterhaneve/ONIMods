@@ -564,7 +564,7 @@ namespace PeterHan.DebugNotIncluded {
 		}
 #endif
 
-#if true
+#if false
 		private static ConcurrentDictionary<string, int> hitCount;
 		private static ConcurrentDictionary<int, int> threadCount;
 		private static long timeInPath;

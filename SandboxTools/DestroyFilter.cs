@@ -17,33 +17,42 @@
  */
 
 using PeterHan.PLib;
-using PeterHan.PLib.Options;
+using System;
 
-namespace PeterHan.OldPipeColor {
+namespace PeterHan.SandboxTools {
 	/// <summary>
-	/// Patches which will be applied via annotations for Custom Pipe Colors.
+	/// A filter option for the sandbox destroy tool.
 	/// </summary>
-	public static class OldPipeColorPatches {
-		public static void OnLoad() {
-			PUtil.InitLibrary();
-			PUtil.RegisterPatchClass(typeof(OldPipeColorPatches));
-			POptions.RegisterOptions(typeof(OldPipeColorOptions));
-		}
+	internal sealed class DestroyFilter {
+		/// <summary>
+		/// The ID to use internally.
+		/// </summary>
+		public string ID { get; }
 
 		/// <summary>
-		/// Run at game start to alter the pipe colors to the configured colors. The active
-		/// ColorSet is a reference to the options array so changes copy through.
+		/// The action to perform when this filter is selected for each destroyed cell.
 		/// </summary>
-		[PLibMethod(RunAt.OnStartGame)]
-		internal static void OnStartGame() {
-			var colorOptions = POptions.ReadSettingsForAssembly<OldPipeColorOptions>() ??
-				new OldPipeColorOptions();
-			// 0 is the default
-			var options = GlobalAssets.Instance.colorSetOptions[0];
-			options.conduitInsulated = colorOptions.InsulatedColor;
-			options.conduitNormal = colorOptions.NormalColor;
-			options.conduitRadiant = colorOptions.RadiantColor;
-			options.RefreshLookup();
+		public Action<int> OnPaintCell { get; }
+
+		/// <summary>
+		/// The title of the filter.
+		/// </summary>
+		public string Title { get; }
+
+		public DestroyFilter(string id, string title) : this(id, title, null) { }
+
+		public DestroyFilter(string id, string title, Action<int> onPaintCell) {
+			if (string.IsNullOrEmpty(id))
+				throw new ArgumentNullException("id");
+			if (string.IsNullOrEmpty(title))
+				throw new ArgumentNullException("title");
+			ID = id;
+			Title = title;
+			OnPaintCell = onPaintCell;
+		}
+
+		public override string ToString() {
+			return "SandboxDestroyFilter[ID={0},Title={1}]".F(ID, Title);
 		}
 	}
 }

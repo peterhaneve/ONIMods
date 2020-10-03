@@ -46,11 +46,6 @@ namespace PeterHan.SandboxTools {
 		private readonly IList<DestroyFilter> modes;
 
 		/// <summary>
-		/// The options available for this tool.
-		/// </summary>
-		private IDictionary<string, ToolParameterMenu.ToggleState> options;
-
-		/// <summary>
 		/// The cells recently destroyed by the tool.
 		/// </summary>
 		private readonly HashSet<int> pendingCells;
@@ -60,15 +55,9 @@ namespace PeterHan.SandboxTools {
 		/// </summary>
 		private readonly Color pendingHighlightColor;
 
-		/// <summary>
-		/// The last used tool mode.
-		/// </summary>
-		private string selectedTool;
-
 		internal FilteredDestroyTool() {
 			Color color;
 			modes = new List<DestroyFilter>(12) {
-				new DestroyFilter("All", SandboxToolsStrings.DESTROY_ALL, DestroyAll),
 				new DestroyFilter("Elements", SandboxToolsStrings.DESTROY_ELEMENTS,
 					DestroyElement),
 				new DestroyFilter("Items", SandboxToolsStrings.DESTROY_ITEMS, DestroyItems),
@@ -84,8 +73,11 @@ namespace PeterHan.SandboxTools {
 				new DestroyFilter("Logic", SandboxToolsStrings.DESTROY_AUTO),
 				new DestroyFilter("SolidConduits", SandboxToolsStrings.DESTROY_SHIPPING)
 			};
+			// "All" checkbox to destroy everything
+			if (!SandboxToolsPatches.AdvancedFilterEnabled)
+				modes.Insert(0, new DestroyFilter("All", SandboxToolsStrings.DESTROY_ALL,
+					DestroyAll));
 			pendingCells = new HashSet<int>();
-			selectedTool = modes[0].ID;
 			try {
 				// Take from stock tool if possible
 				color = Traverse.Create(SandboxDestroyerTool.instance).GetField<Color>(
@@ -237,24 +229,13 @@ namespace PeterHan.SandboxTools {
 		}
 
 		protected override void OnActivateTool() {
-			var menu = ToolMenu.Instance.toolParameterMenu;
-			var toolModes = ListPool<PToolMode, PToolMode>.Allocate();
+			var menu = DestroyParameterMenu.Instance;
 			base.OnActivateTool();
-			// Create list of layers which can be destroyed
-			bool found = false;
-			foreach (var mode in modes) {
-				var enable = ToolParameterMenu.ToggleState.Off;
-				if (mode.ID == selectedTool && !found) {
-					enable = ToolParameterMenu.ToggleState.On;
-					found = true;
-				}
-				toolModes.Add(mode.GetMode(enable));
-			}
 			if (menu != null) {
-				options = PToolMode.PopulateMenu(menu, toolModes);
-				menu.onParametersChanged += SaveToolMode;
+				if (!menu.HasOptions)
+					menu.PopulateMenu(modes);
+				menu.ShowMenu();
 			}
-			toolModes.Recycle();
 			// Show the radius slider
 			var sandboxMenu = SandboxToolParameterMenu.instance;
 			sandboxMenu.gameObject.SetActive(true);
@@ -263,82 +244,29 @@ namespace PeterHan.SandboxTools {
 		}
 
 		protected override void OnDeactivateTool(InterfaceTool newTool) {
-			var menu = ToolMenu.Instance.toolParameterMenu;
 			base.OnDeactivateTool(newTool);
-			if (menu != null) {
-				menu.onParametersChanged -= SaveToolMode;
-				menu.ClearMenu();
-			}
+			DestroyParameterMenu.Instance?.HideMenu();
 			SandboxToolParameterMenu.instance.gameObject.SetActive(false);
 		}
 
 		protected override void OnPaintCell(int cell, int distFromOrigin) {
+			var menu = DestroyParameterMenu.Instance;
 			base.OnPaintCell(cell, distFromOrigin);
-			foreach (var mode in modes)
-				// Look for the enabled layer
-				if (options[mode.ID] == ToolParameterMenu.ToggleState.On) {
-					var handler = mode.OnPaintCell;
-					if (handler != null)
-						handler(cell);
-					else
-						DestroyBuildings(cell, mode.ID);
-				}
-		}
-
-		/// <summary>
-		/// Saves the current tool mode.
-		/// </summary>
-		private void SaveToolMode() {
-			foreach (var mode in modes)
-				// Look for the enabled layer
-				if (options[mode.ID] == ToolParameterMenu.ToggleState.On) {
-					selectedTool = mode.ID;
-					break;
-				}
-		}
-
-		/// <summary>
-		/// A filter option for the sandbox destroy tool.
-		/// </summary>
-		private sealed class DestroyFilter {
-			/// <summary>
-			/// The ID to use internally.
-			/// </summary>
-			public string ID { get; }
-
-			/// <summary>
-			/// The action to perform when this filter is selected for each destroyed cell.
-			/// </summary>
-			public Action<int> OnPaintCell { get; }
-
-			/// <summary>
-			/// The title of the filter.
-			/// </summary>
-			public string Title { get; }
-
-			public DestroyFilter(string id, string title) : this(id, title, null) { }
-
-			public DestroyFilter(string id, string title, Action<int> onPaintCell) {
-				if (string.IsNullOrEmpty(id))
-					throw new ArgumentNullException("id");
-				if (string.IsNullOrEmpty(title))
-					throw new ArgumentNullException("title");
-				ID = id;
-				Title = title;
-				OnPaintCell = onPaintCell;
-			}
-
-			/// <summary>
-			/// Gets the matching tool mode.
-			/// </summary>
-			/// <param name="state">Whether this option should be initially selected.</param>
-			/// <returns>The mode to be added to the options menu.</returns>
-			public PToolMode GetMode(ToolParameterMenu.ToggleState state) {
-				return new PToolMode(ID, Title, state);
-			}
-
-			public override string ToString() {
-				return "SandboxDestroyFilter[ID={0},Title={1}]".F(ID, Title);
+			if (menu != null) {
+				if (menu.AllSelected)
+					// Ensure that everything in the cell that the filters might have missed
+					// is destroyed
+					DestroyAll(cell);
+				else
+					foreach (var mode in modes)
+						// Look for the enabled layers
+						if (menu.GetState(mode.ID) == ToolParameterMenu.ToggleState.On) {
+							var handler = mode.OnPaintCell;
+							if (handler != null)
+								handler(cell);
+							else
+								DestroyBuildings(cell, mode.ID);
+						}
 			}
 		}
 	}

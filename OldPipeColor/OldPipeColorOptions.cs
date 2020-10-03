@@ -23,9 +23,9 @@ using UnityEngine;
 
 namespace PeterHan.OldPipeColor {
 	/// <summary>
-	/// The options class used for Old Pipe Color.
+	/// The options class used for Custom Pipe Colors.
 	/// </summary>
-	[ModInfo("Old Pipe Color", "https://github.com/peterhaneve/ONIMods")]
+	[ModInfo("Custom Pipe Colors", "https://github.com/peterhaneve/ONIMods")]
 	[JsonObject(MemberSerialization.OptIn)]
 	public sealed class OldPipeColorOptions {
 		[Option("Red", "The RED component of the insulated pipe color from 0 to 255 inclusive", "Insulated")]

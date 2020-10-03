@@ -2,10 +2,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
-    <AssemblyTitle>FastTrack</AssemblyTitle>
+    <AssemblyTitle>Fast Track</AssemblyTitle>
     <FileVersion>1.0.0.0</FileVersion>
     <RootNamespace>PeterHan.FastTrack</RootNamespace>
-    <Description>Mod Description Here.</Description>
+    <Description>Optimizes Duplicant path finding.</Description>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
   </PropertyGroup>
 </Project>

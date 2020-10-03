@@ -32,9 +32,9 @@ namespace PeterHan.SandboxTools {
 	/// </summary>
 	public static class SandboxToolsPatches {
 		/// <summary>
-		/// The method to invoke to set a slider's value.
+		/// Whether multi select is available for filtering on Destroy.
 		/// </summary>
-		private static MethodInfo sliderSetValue;
+		public static bool AdvancedFilterEnabled { get; private set; }
 
 		/// <summary>
 		/// Adds more items to the spawner list, including geysers, artifacts, and POI items.
@@ -134,29 +134,22 @@ namespace PeterHan.SandboxTools {
 			return def.Build(cell, orient, storage, elements, temperature, sound, timeBuilt);
 		}
 
-		/// <summary>
-		/// Sets the value of a slider in the sandbox tools menu.
-		/// </summary>
-		/// <param name="slider">The slider value to adjust.</param>
-		/// <param name="value">The new value.</param>
-		private static void CallSetValue(SandboxToolParameterMenu.SliderValue slider,
-				float value) {
-			if (slider != null && sliderSetValue != null) {
-				int n = sliderSetValue.GetParameters().Length;
-				object[] parameters = new object[n];
-				// Could be float, or float,bool
-				parameters[0] = value;
-				if (n > 1)
-					parameters[1] = true;
-				sliderSetValue.Invoke(slider, parameters);
-			}
+		[PLibMethod(RunAt.OnEndGame)]
+		internal static void OnEndGame() {
+			PUtil.LogDebug("Destroying FilteredDestroyTool");
+			DestroyParameterMenu.DestroyInstance();
 		}
 
 		public static void OnLoad() {
 			PUtil.InitLibrary();
 			PLocalization.Register();
-			sliderSetValue = typeof(SandboxToolParameterMenu.SliderValue).GetMethodSafe(
-				"SetValue", false, PPatchTools.AnyArguments);
+			PUtil.RegisterPatchClass(typeof(SandboxToolsPatches));
+		}
+
+		[PLibMethod(RunAt.AfterModsLoad)]
+		internal static void TestAdvancedFilter() {
+			AdvancedFilterEnabled = PPatchTools.GetTypeSafe(
+				"AdvancedFilterMenu.AdvancedFiltrationAssets", "AdvancedFilterMenu") != null;
 		}
 
 		/// <summary>
@@ -264,6 +257,7 @@ namespace PeterHan.SandboxTools {
 			/// </summary>
 			/// <param name="___icons">The icon list where the icon can be added.</param>
 			internal static void Postfix(List<Sprite> ___icons) {
+				DestroyParameterMenu.CreateInstance();
 				___icons.Add(SpriteRegistry.GetToolIcon());
 			}
 		}
