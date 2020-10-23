@@ -25,6 +25,8 @@ using PeterHan.PLib.UI;
 using Steamworks;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
+using System.Reflection.Emit;
 
 namespace PeterHan.ModUpdateDate {
 	/// <summary>
@@ -110,6 +112,49 @@ namespace PeterHan.ModUpdateDate {
 			internal static void Postfix(MainMenu __instance) {
 				if (ModUpdateInfo.Settings?.ShowMainMenuWarning == true)
 					__instance.gameObject.AddOrGet<MainMenuWarning>();
+			}
+		}
+
+		/// <summary>
+		/// Applied to KMod.Manager to fix mods being overwritten by Klei if the content in
+		/// the outdated mod does not match the content in the updated mod.
+		/// </summary>
+		[HarmonyPatch(typeof(Manager), "Subscribe")]
+		public static class Manager_Subscribe_Patch {
+			/// <summary>
+			/// Transpiles Subscribe to insert a call to SuppressContentChanged after the
+			/// comparison.
+			/// </summary>
+			internal static IEnumerable<CodeInstruction> Transpiler(
+					IEnumerable<CodeInstruction> method) {
+				bool gac = false, notCheck = false;
+				// get_available_content
+				var targetMethod = typeof(Mod).GetPropertySafe<Content>(nameof(Mod.
+					available_content), false)?.GetGetMethod();
+				var insertMethod = typeof(ModUpdateDetails).GetMethodSafe(nameof(
+					ModUpdateDetails.SuppressContentChanged), true, typeof(bool), typeof(Mod));
+				foreach (var instr in method) {
+					var opcode = instr.opcode;
+					yield return instr;
+					if (opcode == OpCodes.Callvirt && targetMethod != null && (instr.operand as
+							MethodBase) == targetMethod) {
+						// Only the one after calling get_available_content
+						gac = true;
+						notCheck = false;
+					} else if ((opcode == OpCodes.Ldc_I4_0 || opcode == OpCodes.Ldc_I4) && gac)
+						// ldc 0 and ceq is the NOT instruction
+						notCheck = true;
+					else if (opcode == OpCodes.Ceq && notCheck && insertMethod != null) {
+#if DEBUG
+						PUtil.LogDebug("Patching Manager.Subscribe");
+#endif
+						yield return new CodeInstruction(OpCodes.Ldarg_1);
+						yield return new CodeInstruction(OpCodes.Call, insertMethod);
+						gac = false;
+						notCheck = false;
+					} else
+						notCheck = false;
+				}
 			}
 		}
 

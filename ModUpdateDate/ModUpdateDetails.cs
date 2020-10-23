@@ -80,7 +80,8 @@ namespace PeterHan.ModUpdateDate {
 						remove.Add(info);
 					if (info.Status == ModUpdateStatus.PendingUpdate) {
 						// Purge the temporary zip
-						ExtensionMethods.RemoveOldDownload(ModUpdateHandler.GetDownloadPath(id));
+						ExtensionMethods.RemoveOldDownload(ModUpdateHandler.GetDownloadPath(
+							id));
 						info.Status = ModUpdateStatus.UpdatedByThisMod;
 					}
 				}
@@ -123,6 +124,30 @@ namespace PeterHan.ModUpdateDate {
 				scrubRequired = false;
 			}
 			return scrubbed;
+		}
+
+		/// <summary>
+		/// If an updated mod has changed content from the broken Steam version, Klei puts up a
+		/// required restart flag on it and paves it on restart with the Steam version. Fix
+		/// that for mods that we have updated.
+		/// </summary>
+		/// <param name="changed">Whether the content was supposedly changed.</param>
+		/// <param name="target">The target mod.</param>
+		/// <returns>Whether the content was really changed.</returns>
+		internal static bool SuppressContentChanged(bool changed, Mod target) {
+			var settings = ModUpdateInfo.Settings;
+			var existing = settings?.ModUpdates;
+			var label = target.label;
+			foreach (var info in existing) {
+				string idString = info.ID.ToString();
+				if (label.id == idString && label.distribution_platform == Label.
+						DistributionPlatform.Steam && (info.Status == ModUpdateStatus.
+						PendingUpdate || info.Status == ModUpdateStatus.UpdatedByThisMod)) {
+					changed = false;
+					break;
+				}
+			}
+			return changed;
 		}
 
 		/// <summary>

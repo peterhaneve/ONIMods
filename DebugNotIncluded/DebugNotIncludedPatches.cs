@@ -186,11 +186,10 @@ namespace PeterHan.DebugNotIncluded {
 			KInputHandler.Add(Global.Instance.GetInputManager().GetDefaultController(),
 				new UISnapshotHandler(), 1024);
 			// New postload architecture requires going back a little ways
-			var st = new System.Diagnostics.StackTrace(6);
+			var st = new StackTrace(6);
 			Assembly assembly = null;
 			if (st.FrameCount > 0)
 				assembly = st.GetFrame(0).GetMethod()?.DeclaringType?.Assembly;
-			PUtil.LogDebug(assembly?.FullName ?? "none");
 			RunningPLibAssembly = assembly ?? Assembly.GetCallingAssembly();
 			// Log which mod is running PLib
 			var latest = ModDebugRegistry.Instance.OwnerOfAssembly(RunningPLibAssembly);
