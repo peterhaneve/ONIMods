@@ -20,7 +20,7 @@ using UnityEngine;
 
 namespace PeterHan.QueueForSinks {
 	/// <summary>
-	/// A class for a checkpoint on sinks.
+	/// Forces duplicants to stop if necessary when passing sinks.
 	/// </summary>
 	public sealed class SinkCheckpoint : WorkCheckpoint<HandSanitizer.Work> {
 		// Sinks are 2x3
@@ -34,20 +34,23 @@ namespace PeterHan.QueueForSinks {
 		/// <returns>false if another working sink is available for the Duplicant
 		/// to use, or true if no other sink is available</returns>
 		private bool CheckForOtherSink(bool dir) {
-			var sink = gameObject;
+			GameObject sink = gameObject, nSink;
 			bool stop = true;
 			int cell;
 			if (sink != null && Grid.IsValidCell(cell = Grid.PosToCell(sink))) {
-				// Sinks are 2x2
 				cell = Grid.OffsetCell(cell, new CellOffset(dir ? OFFSET : -OFFSET, 0));
 				// Is cell valid?
-				if (Grid.IsValidBuildingCell(cell)) {
-					var nSink = Grid.Objects[cell, (int)ObjectLayer.Building];
+				if (Grid.IsValidBuildingCell(cell) && (nSink = Grid.Objects[cell, (int)
+						ObjectLayer.Building]) != null) {
+					var nextSink = nSink.GetComponent<SinkCheckpoint>();
 					// Must be immediately next to this one, same type, and working
-					stop = nSink == null || sink.PrefabID() != nSink.PrefabID() ||
-						nSink.GetComponent<Operational>()?.IsOperational != true ||
-						direction.allowedDirection != nSink.GetComponent<DirectionControl>()?.
-						allowedDirection;
+					stop = sink.PrefabID() != nSink.PrefabID() || nSink.
+						GetComponent<Operational>()?.IsOperational != true || nSink.
+						GetComponent<DirectionControl>()?.allowedDirection !=
+						direction.allowedDirection;
+					if (!stop && nextSink != null && nextSink.inUse && nSink != sink)
+						// Check that sink for a suitable destination
+						stop = nextSink.CheckForOtherSink(dir);
 				}
 			}
 			return stop;

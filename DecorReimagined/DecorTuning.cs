@@ -20,6 +20,7 @@ using Harmony;
 using Klei.AI;
 using Newtonsoft.Json;
 using PeterHan.PLib;
+using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -133,13 +134,15 @@ namespace ReimaginationTeam.DecorRework {
 				editDecor.Recycle();
 			}
 			// Patch in the debris decor
-			var baseOreTemplate = Traverse.Create(typeof(EntityTemplates)).GetField<
-				GameObject>("baseOreTemplate");
+			var baseOreTemplate = typeof(EntityTemplates).GetFieldSafe("baseOreTemplate",
+				true)?.GetValue(null) as GameObject;
 			DecorProvider component;
 			if (baseOreTemplate != null && (component = baseOreTemplate.
 					GetComponent<DecorProvider>()) != null) {
+				int radius = Math.Max(1, options.DebrisRadius);
 				component.baseDecor = options.DebrisDecor;
-				component.baseRadius = Math.Max(1, options.DebrisRadius);
+				component.baseRadius = radius;
+				PUtil.LogDebug("Debris: {0:F1} radius {1:D}".F(options.DebrisDecor, radius));
 			}
 			// Patch the suits
 			PUtil.LogDebug("Snazzy Suit: {0:D} Warm/Cool Vest: {1:D}".F(options.

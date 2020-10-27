@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Decor Reimagined</AssemblyTitle>
-    <FileVersion>2.4.0.0</FileVersion>
+    <FileVersion>2.5.0.0</FileVersion>
     <RootNamespace>ReimaginationTeam.DecorRework</RootNamespace>
     <Description>Reworks decor, making an attractive colony a better colony.</Description>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>

@@ -24,15 +24,21 @@ namespace PeterHan.DebugNotIncluded {
 	/// or stressed out.
 	/// </summary>
 	[SkipSaveFileSerialization]
-	public sealed class InstantEmotable : KMonoBehaviour {
+	public sealed class InstantEmotable : KMonoBehaviour, IRefreshUserMenu {
+		/// <summary>
+		/// Handles user menu refresh events system-wide.
+		/// </summary>
+		private static readonly EventSystem.IntraObjectHandler<InstantEmotable>
+			ON_REFRESH_MENU = PUtil.CreateUserMenuHandler<InstantEmotable>();
+
 		protected override void OnCleanUp() {
-			Unsubscribe((int)GameHashes.RefreshUserMenu);
+			Unsubscribe((int)GameHashes.RefreshUserMenu, ON_REFRESH_MENU);
 			base.OnCleanUp();
 		}
 
 		protected override void OnPrefabInit() {
 			base.OnPrefabInit();
-			Subscribe((int)GameHashes.RefreshUserMenu, OnRefreshUserMenu);
+			Subscribe((int)GameHashes.RefreshUserMenu, ON_REFRESH_MENU);
 		}
 
 		/// <summary>
@@ -53,7 +59,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// <summary>
 		/// Called when the info screen for the plant or creature is refreshed.
 		/// </summary>
-		private void OnRefreshUserMenu(object _) {
+		public void OnRefreshUserMenu() {
 			if (Game.Instance.SandboxModeActive) {
 				Game.Instance?.userMenu?.AddButton(gameObject, new KIconButtonMenu.
 					ButtonInfo("action_repair", DebugNotIncludedStrings.

@@ -16,10 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using KSerialization;
 using PeterHan.PLib;
-using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
@@ -29,13 +27,6 @@ namespace PeterHan.ResearchQueue {
 	/// </summary>
 	[SerializationConfig(MemberSerialization.OptIn)]
 	public sealed class SavedResearchQueue : KMonoBehaviour, ISaveLoadable {
-		/// <summary>
-		/// The argument types for the AddTechToQueue method.
-		/// </summary>
-		private static readonly Type[] TECH_ARGS = new Type[] {
-			typeof(Tech)
-		};
-
 #pragma warning disable IDE0044 // Add readonly modifier
 		/// <summary>
 		/// The saved research queue.
@@ -64,25 +55,21 @@ namespace PeterHan.ResearchQueue {
 			var inst = Research.Instance;
 			var dbTechs = Db.Get().Techs;
 			if (inst != null && techQueue != null) {
-				var trInst = Traverse.Create(inst).Method("AddTechToQueue", TECH_ARGS);
-				if (trInst.MethodExists()) {
-					Tech lastTech = null;
-					inst.SetActiveResearch(null, true);
-					// Add each tech in order
-					foreach (var id in techQueue) {
-						var tech = dbTechs.Get(id);
-						if (tech != null) {
-							trInst.GetValue(tech);
-							lastTech = tech;
+				Tech lastTech = null;
+				inst.SetActiveResearch(null, true);
+				// Add each tech in order
+				foreach (var id in techQueue) {
+					var tech = dbTechs.Get(id);
+					if (tech != null) {
+						ResearchQueuePatches.ADD_TECH(inst, tech);
+						lastTech = tech;
 #if DEBUG
-							PUtil.LogDebug("Added tech to queue: {0}".F(tech.Name));
+						PUtil.LogDebug("Added tech to queue: {0}".F(tech.Name));
 #endif
-						}
 					}
-					// Restart the queue
-					inst.SetActiveResearch(lastTech, false);
-				} else
-					PUtil.LogWarning("Could not find AddTechToQueue method!");
+				}
+				// Restart the queue
+				inst.SetActiveResearch(lastTech, false);
 			}
 		}
 	}

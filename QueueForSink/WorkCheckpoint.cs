@@ -35,6 +35,11 @@ namespace PeterHan.QueueForSinks {
 #pragma warning restore IDE0044
 
 		/// <summary>
+		/// Whether the workable this checkpoint guards is currently in use.
+		/// </summary>
+		protected bool inUse;
+
+		/// <summary>
 		/// The current reaction.
 		/// </summary>
 		private WorkCheckpointReactable reactable;
@@ -62,6 +67,22 @@ namespace PeterHan.QueueForSinks {
 		}
 
 		/// <summary>
+		/// Handles work events to keep the status of this workable.
+		/// </summary>
+		/// <param name="evt">The type of work event which occurred.</param>
+		private void HandleWorkableAction(Workable.WorkableEvent evt) {
+			switch (evt) {
+			case Workable.WorkableEvent.WorkStarted:
+				inUse = true;
+				break;
+			case Workable.WorkableEvent.WorkCompleted:
+			case Workable.WorkableEvent.WorkStopped:
+				inUse = false;
+				break;
+			}
+		}
+
+		/// <summary>
 		/// Called to see if a Duplicant shall not pass!
 		/// </summary>
 		/// <param name="reactor">The Duplicant to check.</param>
@@ -72,12 +93,16 @@ namespace PeterHan.QueueForSinks {
 		protected override void OnCleanUp() {
 			base.OnCleanUp();
 			ClearReactable();
+			if (workable != null)
+				workable.OnWorkableEventCB -= HandleWorkableAction;
 		}
 
 		protected override void OnSpawn() {
 			base.OnSpawn();
 			// Using MyCmpReq on generics was crashing
 			workable = gameObject.GetComponent<T>();
+			if (workable != null)
+				workable.OnWorkableEventCB += HandleWorkableAction;
 			CreateNewReactable();
 		}
 

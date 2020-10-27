@@ -28,7 +28,7 @@ namespace PeterHan.TraitRework {
 	/// </summary>
 	internal static class TraitReworkUtils {
 		/// <summary>
-		/// Cached Traverse for the static AcousticDisturbance method.
+		/// Cached delegate for the static AcousticDisturbance method.
 		/// </summary>
 		private static readonly DetermineCellsFunc ACOUSTIC_SCAN;
 

@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -35,8 +36,11 @@ namespace PeterHan.ResearchQueue {
 		/// <summary>
 		/// Adds a tech to the research queue.
 		/// </summary>
-		private static readonly MethodInfo ADD_TECH = typeof(Research).GetMethodSafe(
-			"AddTechToQueue", false, typeof(Tech));
+		internal static readonly Action<Research, Tech> ADD_TECH = typeof(Research).Detour<
+			Action<Research, Tech>>("AddTechToQueue");
+
+		private static readonly IDetouredField<ResearchEntry, LocText> RESEARCH_NAME =
+			PDetours.DetourField<ResearchEntry, LocText>("researchName");
 
 		public static void OnLoad() {
 			PUtil.InitLibrary();
@@ -142,7 +146,7 @@ namespace PeterHan.ResearchQueue {
 				} else if (screen != null) {
 					if (shiftDown)
 						// If not in the queue already and shift clicked, queue it on the end
-						ADD_TECH?.Invoke(research, new object[] { targetTech });
+						ADD_TECH(research, targetTech);
 					research.SetActiveResearch(targetTech, !shiftDown);
 					cont = false;
 				}
@@ -159,21 +163,21 @@ namespace PeterHan.ResearchQueue {
 			if (queuedTech == null)
 				throw new ArgumentNullException("queuedTech");
 			int n = queuedTech.Count;
-			if (screen != null) {
+			if (screen != null && RESEARCH_NAME != null) {
 				// O(N^2) sucks
 				var techIndex = DictionaryPool<string, int, ResearchScreen>.Allocate();
 				for (int i = 0; i < n; i++)
 					techIndex.Add(queuedTech[i].tech.Id, i + 1);
+				LocText lt;
 				foreach (var tech in Db.Get().Techs.resources) {
 					var entry = screen.GetEntry(tech);
 					// Update all techs with the order count
-					if (entry != null) {
-						var lt = Traverse.Create(entry).GetField<LocText>("researchName");
+					if (entry != null && (lt = RESEARCH_NAME.Get(entry)) != null) {
 						if (techIndex.TryGetValue(tech.Id, out int order))
-							lt?.SetText(string.Format(ResearchQueueStrings.QueueFormat, tech.
+							lt.SetText(string.Format(ResearchQueueStrings.QueueFormat, tech.
 								Name, order));
 						else
-							lt?.SetText(tech.Name);
+							lt.SetText(tech.Name);
 					}
 				}
 				techIndex.Recycle();

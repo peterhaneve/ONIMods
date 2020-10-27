@@ -22,6 +22,9 @@ using System.IO;
 using System.Reflection;
 using Klei;
 using Harmony;
+using PeterHan.PLib.Detours;
+
+using WidgetMappingList = System.Collections.Generic.List<Tuple<string, System.Type>>;
 
 namespace PeterHan.PLib.Datafiles {
 	/// <summary>
@@ -56,6 +59,12 @@ namespace PeterHan.PLib.Datafiles {
 		/// The codex category under which plant entries should go.
 		/// </summary>
 		public const string PLANTS_CATEGORY = "PLANTS";
+
+		/// <summary>
+		/// Allow access to the private widget tag mappings field.
+		/// </summary>
+		private static readonly FieldInfo WIDGET_TAG_MAPPINGS = typeof(CodexCache).
+			GetFieldSafe("widgetTagMappings", true);
 
 		private static void RegisterEntry(Assembly modAssembly, string lockKey, string tableKey,
 				string entryPath, string debugLine) {
@@ -119,31 +128,7 @@ namespace PeterHan.PLib.Datafiles {
 #if DEBUG
 						PUtil.LogDebug("Loaded codex entries from directory: {0}".F(dir));
 #endif
-						string[] codexFiles = new string[0];
-						try {
-							// List codex data files in the codex directory
-							codexFiles = Directory.GetFiles(dir, CODEX_FILES);
-						} catch (UnauthorizedAccessException ex) {
-							PUtil.LogExcWarn(ex);
-						} catch (IOException ex) {
-							PUtil.LogExcWarn(ex);
-						}
-						var widgetTagMappings = Traverse.Create(typeof(CodexCache)).
-							GetField<List<Tuple<string, Type>>>("widgetTagMappings");
-						foreach (string str in codexFiles)
-							try {
-								string filename = str;
-								var codexEntry = YamlIO.LoadFile<CodexEntry>(filename, PUtil.
-									YamlParseErrorCB, widgetTagMappings);
-								if (codexEntry != null) {
-									codexEntry.category = category;
-									entries.Add(codexEntry);
-								}
-							} catch (IOException ex) {
-								PUtil.LogException(ex);
-							} catch (InvalidDataException ex) {
-								PUtil.LogException(ex);
-							}
+						LoadFromDirectory(entries, dir, category);
 					}
 			}
 			return entries;
@@ -163,6 +148,42 @@ namespace PeterHan.PLib.Datafiles {
 		/// </summary>
 		/// <param name="entries">The location where the data will be placed.</param>
 		/// <param name="dir">The directory to load.</param>
+		/// <param name="category">The category to assign to each entry thus loaded.</param>
+		private static void LoadFromDirectory(ICollection<CodexEntry> entries, string dir,
+				string category) {
+			string[] codexFiles = new string[0];
+			try {
+				// List codex data files in the codex directory
+				codexFiles = Directory.GetFiles(dir, CODEX_FILES);
+			} catch (UnauthorizedAccessException ex) {
+				PUtil.LogExcWarn(ex);
+			} catch (IOException ex) {
+				PUtil.LogExcWarn(ex);
+			}
+			var widgetTagMappings = WIDGET_TAG_MAPPINGS?.GetValue(null) as WidgetMappingList;
+			if (widgetTagMappings == null)
+				PUtil.LogWarning("Unable to load codex files: no tag mappings found");
+			foreach (string str in codexFiles)
+				try {
+					string filename = str;
+					var codexEntry = YamlIO.LoadFile<CodexEntry>(filename, PUtil.
+						YamlParseErrorCB, widgetTagMappings);
+					if (codexEntry != null) {
+						codexEntry.category = category;
+						entries.Add(codexEntry);
+					}
+				} catch (IOException ex) {
+					PUtil.LogException(ex);
+				} catch (InvalidDataException ex) {
+					PUtil.LogException(ex);
+				}
+		}
+
+		/// <summary>
+		/// Loads codex entries from the specified directory.
+		/// </summary>
+		/// <param name="entries">The location where the data will be placed.</param>
+		/// <param name="dir">The directory to load.</param>
 		private static void LoadFromDirectory(ICollection<SubEntry> entries, string dir) {
 			string[] codexFiles = new string[0];
 			try {
@@ -174,12 +195,13 @@ namespace PeterHan.PLib.Datafiles {
 			} catch (IOException ex) {
 				PUtil.LogExcWarn(ex);
 			}
-			var widgetTagMappings = Traverse.Create(typeof(CodexCache)).
-				GetField<List<Tuple<string, Type>>>("widgetTagMappings");
+			var widgetTagMappings = WIDGET_TAG_MAPPINGS?.GetValue(null) as WidgetMappingList;
+			if (widgetTagMappings == null)
+				PUtil.LogWarning("Unable to load codex files: no tag mappings found");
 			foreach (string filename in codexFiles)
 				try {
-					var subEntry = YamlIO.LoadFile<SubEntry>(filename, PUtil.
-						YamlParseErrorCB, widgetTagMappings);
+					var subEntry = YamlIO.LoadFile<SubEntry>(filename, PUtil.YamlParseErrorCB,
+						widgetTagMappings);
 					if (entries != null)
 						entries.Add(subEntry);
 				} catch (IOException ex) {

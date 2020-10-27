@@ -136,6 +136,21 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Creates a default user menu handler for a class implementing IRefreshUserMenu.
+		/// </summary>
+		/// <typeparam name="T">The class to handle events.</typeparam>
+		/// <returns>A handler which can be used to Subscribe for RefreshUserMenu events.</returns>
+		public static EventSystem.IntraObjectHandler<T> CreateUserMenuHandler<T>()
+				where T : class, IRefreshUserMenu {
+			return new Action<T, object>((T target, object ignore) => {
+#if DEBUG
+				LogDebug("OnRefreshUserMenu<{0}> on {1}".F(typeof(T).Name, target));
+#endif
+				target.OnRefreshUserMenu();
+			});
+		}
+
+		/// <summary>
 		/// Creates a popup message at the specified cell location on the Move layer.
 		/// </summary>
 		/// <param name="image">The image to display, likely from PopFXManager.Instance.</param>

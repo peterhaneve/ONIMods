@@ -20,7 +20,7 @@ using UnityEngine;
 
 namespace PeterHan.QueueForSinks {
 	/// <summary>
-	/// A class for a checkpoint on ore scrubbers.
+	/// Forces duplicants to stop if necessary when passing ore scrubbers.
 	/// </summary>
 	public sealed class ScrubberCheckpoint : WorkCheckpoint<OreScrubber.Work> {
 		// Scrubbers are 3x3
@@ -34,19 +34,24 @@ namespace PeterHan.QueueForSinks {
 		/// <returns>false if another working scrubber is available for the Duplicant
 		/// to use, or true if no other scrubber is available</returns>
 		private bool CheckForOtherScrubber(bool dir) {
-			var scrubber = gameObject;
+			GameObject scrubber = gameObject, nScrub;
 			bool stop = true;
 			int cell;
 			if (scrubber != null && Grid.IsValidCell(cell = Grid.PosToCell(scrubber))) {
 				cell = Grid.OffsetCell(cell, new CellOffset(dir ? OFFSET : -OFFSET, 0));
 				// Is cell valid?
-				if (Grid.IsValidBuildingCell(cell)) {
-					var nScrub = Grid.Objects[cell, (int)ObjectLayer.Building];
+				if (Grid.IsValidBuildingCell(cell) && (nScrub = Grid.Objects[cell, (int)
+						ObjectLayer.Building]) != null) {
+					var nextScrubber = nScrub.GetComponent<ScrubberCheckpoint>();
 					// Must be immediately next to this one, same type, and working
-					stop = nScrub == null || scrubber.PrefabID() != nScrub.PrefabID() ||
-						nScrub.GetComponent<Operational>()?.IsOperational != true ||
-						direction.allowedDirection != nScrub.GetComponent<DirectionControl>()?.
-						allowedDirection;
+					stop = scrubber.PrefabID() != nScrub.PrefabID() || nScrub.
+						GetComponent<Operational>()?.IsOperational != true || nScrub.
+						GetComponent<DirectionControl>()?.allowedDirection !=
+						direction.allowedDirection;
+					if (!stop && nextScrubber != null && nextScrubber.inUse && nScrub !=
+							scrubber)
+						// Check that scrubber for a suitable destination
+						stop = nextScrubber.CheckForOtherScrubber(dir);
 				}
 			}
 			return stop;

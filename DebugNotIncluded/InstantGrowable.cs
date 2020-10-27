@@ -25,7 +25,13 @@ namespace PeterHan.DebugNotIncluded {
 	/// full growth.
 	/// </summary>
 	[SkipSaveFileSerialization]
-	public sealed class InstantGrowable : KMonoBehaviour {
+	public sealed class InstantGrowable : KMonoBehaviour, IRefreshUserMenu {
+		/// <summary>
+		/// Handles user menu refresh events system-wide.
+		/// </summary>
+		private static readonly EventSystem.IntraObjectHandler<InstantGrowable>
+			ON_REFRESH_MENU = PUtil.CreateUserMenuHandler<InstantGrowable>();
+
 #pragma warning disable CS0649
 #pragma warning disable IDE0044
 		// This field is automatically populated by KMonoBehaviour
@@ -37,13 +43,13 @@ namespace PeterHan.DebugNotIncluded {
 		private WildnessMonitor.Def wildMonitor;
 
 		protected override void OnCleanUp() {
-			Unsubscribe((int)GameHashes.RefreshUserMenu);
+			Unsubscribe((int)GameHashes.RefreshUserMenu, ON_REFRESH_MENU);
 			base.OnCleanUp();
 		}
 
 		protected override void OnPrefabInit() {
 			base.OnPrefabInit();
-			Subscribe((int)GameHashes.RefreshUserMenu, OnRefreshUserMenu);
+			Subscribe((int)GameHashes.RefreshUserMenu, ON_REFRESH_MENU);
 			wildMonitor = gameObject.GetDef<WildnessMonitor.Def>();
 		}
 
@@ -70,7 +76,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// <summary>
 		/// Called when the info screen for the plant or creature is refreshed.
 		/// </summary>
-		private void OnRefreshUserMenu(object _) {
+		public void OnRefreshUserMenu() {
 			if (Game.Instance.SandboxModeActive) {
 				string tt = null;
 				if (wildMonitor != null)

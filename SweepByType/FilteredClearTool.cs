@@ -16,10 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using FMOD.Studio;
-using Harmony;
 using PeterHan.PLib;
-using System.Reflection;
+using PeterHan.PLib.Detours;
 using UnityEngine;
 
 namespace PeterHan.SweepByType {
@@ -31,6 +29,18 @@ namespace PeterHan.SweepByType {
 		/// The singleton instance of this tool.
 		/// </summary>
 		public static FilteredClearTool Instance { get; private set; }
+
+		// Detours for private fields in InterfaceTool
+		private static readonly IDetouredField<DragTool, GameObject> AREA_VISUALIZER =
+			PDetours.DetourField<DragTool, GameObject>("areaVisualizer");
+		private static readonly IDetouredField<DragTool, GameObject> AREA_VISUALIZER_TEXT_PREFAB =
+			PDetours.DetourField<DragTool, GameObject>("areaVisualizerTextPrefab");
+		private static readonly IDetouredField<DragTool, Texture2D> BOX_CURSOR =
+			PDetours.DetourField<DragTool, Texture2D>("boxCursor");
+		private static readonly IDetouredField<InterfaceTool, Texture2D> CURSOR =
+			PDetours.DetourField<InterfaceTool, Texture2D>(nameof(cursor));
+		private static readonly IDetouredField<InterfaceTool, GameObject> VISUALIZER =
+			PDetours.DetourField<InterfaceTool, GameObject>(nameof(visualizer));
 
 		/// <summary>
 		/// Destroys the singleton instance.
@@ -161,7 +171,6 @@ namespace PeterHan.SweepByType {
 		}
 
 		protected override void OnPrefabInit() {
-			var us = Traverse.Create(this);
 			base.OnPrefabInit();
 			var inst = ClearTool.Instance;
 			Instance = this;
@@ -169,12 +178,11 @@ namespace PeterHan.SweepByType {
 			populateHitsList = true;
 			// Get the cursor from the existing sweep tool
 			if (inst != null) {
-				var trSweep = Traverse.Create(inst);
 				gameObject.AddComponent<FilteredClearHover>();
-				cursor = trSweep.GetField<Texture2D>("cursor");
-				us.SetField("boxCursor", cursor);
+				cursor = CURSOR.Get(inst);
+				BOX_CURSOR.Set(this, cursor);
 				// Get the area visualizer from the sweep tool
-				var avTemplate = trSweep.GetField<GameObject>("areaVisualizer");
+				var avTemplate = AREA_VISUALIZER.Get(inst);
 				if (avTemplate != null) {
 					var areaVisualizer = Util.KInstantiate(avTemplate, gameObject,
 						"FilteredClearToolAreaVisualizer");
@@ -182,12 +190,12 @@ namespace PeterHan.SweepByType {
 					areaVisualizerSpriteRenderer = areaVisualizer.GetComponent<
 						SpriteRenderer>();
 					// The visualizer is private so we need to set it with reflection
-					us.SetField("areaVisualizer", areaVisualizer);
-					us.SetField("areaVisualizerTextPrefab", trSweep.GetField<GameObject>(
-						"areaVisualizerTextPrefab"));
+					AREA_VISUALIZER.Set(this, areaVisualizer);
+					AREA_VISUALIZER_TEXT_PREFAB.Set(this, AREA_VISUALIZER_TEXT_PREFAB.Get(
+						inst));
 				}
-				visualizer = Util.KInstantiate(trSweep.GetField<GameObject>("visualizer"),
-					gameObject, "FilteredClearToolSprite");
+				visualizer = Util.KInstantiate(VISUALIZER.Get(inst), gameObject,
+					"FilteredClearToolSprite");
 				visualizer.SetActive(false);
 			}
 			// Allow icons to be disabled

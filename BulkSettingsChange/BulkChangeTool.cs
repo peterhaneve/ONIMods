@@ -16,8 +16,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Detours;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -29,59 +30,71 @@ namespace PeterHan.BulkSettingsChange {
 	/// </summary>
 	sealed class BulkChangeTool : DragTool {
 		#region Reflection
+		// Detours for private fields in InterfaceTool
+		private static readonly IDetouredField<DragTool, GameObject> AREA_VISUALIZER =
+			PDetours.DetourField<DragTool, GameObject>("areaVisualizer");
+		private static readonly IDetouredField<DragTool, GameObject> AREA_VISUALIZER_TEXT_PREFAB =
+			PDetours.DetourField<DragTool, GameObject>("areaVisualizerTextPrefab");
+		private static readonly IDetouredField<DragTool, Texture2D> BOX_CURSOR =
+			PDetours.DetourField<DragTool, Texture2D>("boxCursor");
+		private static readonly IDetouredField<InterfaceTool, Texture2D> CURSOR =
+			PDetours.DetourField<InterfaceTool, Texture2D>(nameof(cursor));
+		private static readonly IDetouredField<InterfaceTool, GameObject> VISUALIZER =
+			PDetours.DetourField<InterfaceTool, GameObject>(nameof(visualizer));
+
 		/// <summary>
 		/// Reports the status of auto-disinfection.
 		/// </summary>
-		private static readonly FieldInfo DISINFECT_AUTO = typeof(AutoDisinfectable).
-			GetFieldSafe("enableAutoDisinfect", false);
+		private static readonly IDetouredField<AutoDisinfectable, bool> DISINFECT_AUTO =
+			PDetours.DetourField<AutoDisinfectable, bool>("enableAutoDisinfect");
 
 		/// <summary>
 		/// Disables automatic disinfect.
 		/// </summary>
-		private static readonly MethodInfo DISINFECT_DISABLE = typeof(AutoDisinfectable).
-			GetMethodSafe("DisableAutoDisinfect", false);
+		private static readonly Action<AutoDisinfectable> DISINFECT_DISABLE =
+			typeof(AutoDisinfectable).Detour<Action<AutoDisinfectable>>("DisableAutoDisinfect");
 
 		/// <summary>
 		/// Enables automatic disinfect.
 		/// </summary>
-		private static readonly MethodInfo DISINFECT_ENABLE = typeof(AutoDisinfectable).
-			GetMethodSafe("EnableAutoDisinfect", false);
+		private static readonly Action<AutoDisinfectable> DISINFECT_ENABLE =
+			typeof(AutoDisinfectable).Detour<Action<AutoDisinfectable>>("EnableAutoDisinfect");
 
 		/// <summary>
 		/// The empty storage chore if one is active.
 		/// </summary>
-		private static readonly FieldInfo EMPTY_CHORE = typeof(DropAllWorkable).GetFieldSafe(
-			"chore", false);
+		private static readonly IDetouredField<DropAllWorkable, Chore> EMPTY_CHORE =
+			PDetours.DetourField<DropAllWorkable, Chore>("chore");
 
 		/// <summary>
 		/// Enables or disables a building.
 		/// </summary>
-		private static readonly MethodInfo ENABLE_DISABLE = typeof(BuildingEnabledButton).
-			GetMethodSafe("OnMenuToggle", false);
+		private static readonly Action<BuildingEnabledButton> ENABLE_DISABLE =
+			typeof(BuildingEnabledButton).Detour<Action<BuildingEnabledButton>>("OnMenuToggle");
 
 		/// <summary>
 		/// Reports the current enable/disable status of a building.
 		/// </summary>
-		private static readonly FieldInfo ENABLE_TOGGLEIDX = typeof(BuildingEnabledButton).
-			GetFieldSafe("ToggleIdx", false);
+		private static readonly IDetouredField<BuildingEnabledButton, int> ENABLE_TOGGLEIDX =
+			PDetours.DetourField<BuildingEnabledButton, int>("ToggleIdx");
 
 		/// <summary>
 		/// Disables auto-repair.
 		/// </summary>
-		private static readonly MethodInfo REPAIR_DISABLE = typeof(Repairable).GetMethodSafe(
-			"CancelRepair", false);
+		private static readonly Action<Repairable> REPAIR_DISABLE =
+			typeof(Repairable).Detour<Action<Repairable>>("CancelRepair");
 
 		/// <summary>
 		/// Enables auto-repair.
 		/// </summary>
-		private static readonly MethodInfo REPAIR_ENABLE = typeof(Repairable).GetMethodSafe(
-			"AllowRepair", false);
+		private static readonly Action<Repairable> REPAIR_ENABLE =
+			typeof(Repairable).Detour<Action<Repairable>>("AllowRepair");
 
 		/// <summary>
 		/// The state machine instance for repairable objects.
 		/// </summary>
-		private static readonly FieldInfo REPAIR_SMI = typeof(Repairable).GetFieldSafe("smi",
-			false);
+		private static readonly IDetouredField<Repairable, Repairable.SMInstance> REPAIR_SMI =
+			PDetours.DetourField<Repairable, Repairable.SMInstance>("smi");
 		#endregion
 
 		/// <summary>
@@ -236,7 +249,6 @@ namespace PeterHan.BulkSettingsChange {
 		}
 
 		protected override void OnPrefabInit() {
-			var us = Traverse.Create(this);
 			Sprite sprite;
 			lastSelected = null;
 			base.OnPrefabInit();
@@ -244,20 +256,19 @@ namespace PeterHan.BulkSettingsChange {
 			// Allow priority setting for the enable/disable building chores
 			interceptNumberKeysForPriority = true;
 			// HACK: Get the cursor from the disinfect tool
-			var trDisinfect = Traverse.Create(DisinfectTool.Instance);
-			cursor = trDisinfect.GetField<Texture2D>("cursor");
-			us.SetField("boxCursor", cursor);
+			var inst = DisinfectTool.Instance;
+			cursor = CURSOR.Get(inst);
+			BOX_CURSOR.Set(this, cursor);
 			// HACK: Get the area visualizer from the disinfect tool
-			var avTemplate = trDisinfect.GetField<GameObject>("areaVisualizer");
+			var avTemplate = AREA_VISUALIZER.Get(inst);
 			if (avTemplate != null) {
 				var areaVisualizer = Util.KInstantiate(avTemplate, gameObject,
 					"BulkChangeToolAreaVisualizer");
 				areaVisualizer.SetActive(false);
 				areaVisualizerSpriteRenderer = areaVisualizer.GetComponent<SpriteRenderer>();
 				// The visualizer is private so we need to set it with reflection
-				us.SetField("areaVisualizer", areaVisualizer);
-				us.SetField("areaVisualizerTextPrefab", trDisinfect.GetField<GameObject>(
-					"areaVisualizerTextPrefab"));
+				AREA_VISUALIZER.Set(this, areaVisualizer);
+				AREA_VISUALIZER_TEXT_PREFAB.Set(this, AREA_VISUALIZER_TEXT_PREFAB.Get(inst));
 			}
 			visualizer = new GameObject("BulkChangeToolVisualizer");
 			// Actually fix the position to not be off by a grid cell
@@ -293,7 +304,8 @@ namespace PeterHan.BulkSettingsChange {
 		private bool ToggleBuilding(int cell, GameObject building, bool enable) {
 			var ed = building.GetComponentSafe<BuildingEnabledButton>();
 			bool changed = false;
-			if (ed != null && ENABLE_TOGGLEIDX?.GetValue(ed) is int toggleIndex) {
+			if (ed != null && ENABLE_TOGGLEIDX != null) {
+				int toggleIndex = ENABLE_TOGGLEIDX.Get(ed);
 				// Check to see if a work errand is pending
 				bool curEnabled = ed.IsEnabled, toggleQueued = building.GetComponent<
 					Toggleable>()?.IsToggleQueued(toggleIndex) ?? false;
@@ -305,7 +317,7 @@ namespace PeterHan.BulkSettingsChange {
 				// Only continue if we are cancelling the toggle errand or (the building state
 				// is different than desired and no toggle errand is queued)
 				if (toggleQueued != (curEnabled != enable)) {
-					ENABLE_DISABLE?.Invoke(ed, null);
+					ENABLE_DISABLE(ed);
 					// Set priority according to the chosen level
 					var priority = building.GetComponent<Prioritizable>();
 					if (priority != null)
@@ -363,14 +375,14 @@ namespace PeterHan.BulkSettingsChange {
 		/// <returns>true if changes were made, or false otherwise.</returns>
 		private bool ToggleDisinfect(int cell, GameObject item, bool enable) {
 			var ad = item.GetComponentSafe<AutoDisinfectable>();
-			bool changed = false;
+			bool changed = false, status;
 			// Private methods grrr
-			if (ad != null && DISINFECT_AUTO?.GetValue(ad) is bool status && status != enable)
-			{
+			if (ad != null && DISINFECT_AUTO != null && (status = DISINFECT_AUTO.Get(ad)) !=
+					enable) {
 				if (enable)
-					DISINFECT_ENABLE?.Invoke(ad, null);
+					DISINFECT_ENABLE(ad);
 				else
-					DISINFECT_DISABLE?.Invoke(ad, null);
+					DISINFECT_DISABLE(ad);
 #if DEBUG
 				var xy = Grid.CellToXY(cell);
 				PUtil.LogDebug("Auto disinfect {3} @({0:D},{1:D}) = {2}".F(xy.X, xy.Y,
@@ -391,7 +403,7 @@ namespace PeterHan.BulkSettingsChange {
 		private bool ToggleEmptyStorage(int cell, GameObject item, bool enable) {
 			var daw = item.GetComponentSafe<DropAllWorkable>();
 			bool changed = false;
-			if (daw != null && EMPTY_CHORE != null && (EMPTY_CHORE.GetValue(daw) != null) !=
+			if (daw != null && EMPTY_CHORE != null && (EMPTY_CHORE.Get(daw) != null) !=
 					enable) {
 				daw.DropAll();
 #if DEBUG
@@ -414,17 +426,18 @@ namespace PeterHan.BulkSettingsChange {
 		private bool ToggleRepair(int cell, GameObject item, bool enable) {
 			var ar = item.GetComponentSafe<Repairable>();
 			bool changed = false;
-			if (ar != null && REPAIR_SMI.GetValue(ar) is Repairable.SMInstance smi) {
+			if (ar != null && REPAIR_SMI != null) {
+				var smi = REPAIR_SMI.Get(ar);
 				// Need to check the state machine directly
 				var currentState = smi.GetCurrentState();
 				// Prevent buildings in the allow state from being repaired again
 				if (enable) {
 					if (currentState == smi.sm.forbidden) {
-						REPAIR_ENABLE?.Invoke(ar, null);
+						REPAIR_ENABLE(ar);
 						changed = true;
 					}
 				} else if (currentState != smi.sm.forbidden) {
-					REPAIR_DISABLE?.Invoke(ar, null);
+					REPAIR_DISABLE(ar);
 					changed = true;
 				}
 #if DEBUG
