@@ -563,6 +563,28 @@ namespace PeterHan.DebugNotIncluded {
 		}
 #endif
 
+#if DEBUG
+		/// <summary>
+		/// Applied to Memory to warn about suspicious patches that target empty methods.
+		/// 
+		/// DEBUG ONLY.
+		/// </summary>
+		[HarmonyPatch(typeof(Memory), "DetourMethod")]
+		public static class Memory_DetourMethod_Patch {
+			private const int MIN_METHOD_SIZE = 8;
+
+			/// <summary>
+			/// Applied before DetourMethod runs.
+			/// </summary>
+			internal static void Prefix(MethodBase original, MethodBase replacement) {
+				var body = original.GetMethodBody();
+				if (body.GetILAsByteArray().Length < MIN_METHOD_SIZE)
+					PUtil.LogWarning("Patch {0} targets empty method {1}.{2}".F(replacement.
+						Name, original.DeclaringType, original.Name));
+			}
+		}
+#endif
+
 #if false
 		private static ConcurrentDictionary<string, int> hitCount;
 		private static ConcurrentDictionary<int, int> threadCount;
