@@ -31,16 +31,16 @@ namespace PeterHan.PLib.Options {
 		private readonly string modTitle;
 
 		internal ModOptionsHandler(Mod mod) {
-			ConfigPath = mod.file_source?.GetRoot();
 			// Find mod home page
 			var label = mod.label;
+			ConfigPath = mod.GetModBasePath();
 			if (string.IsNullOrEmpty(DefaultURL) && label.distribution_platform == Label.
 					DistributionPlatform.Steam)
 				// Steam mods use their workshop ID as the label
 				DefaultURL = "https://steamcommunity.com/sharedfiles/filedetails/?id=" + label.id;
 			else
 				DefaultURL = null;
-			modTitle = mod.label.title;
+			modTitle = label.title;
 		}
 
 		public string GetTitle(string baseTitle) {

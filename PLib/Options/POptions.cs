@@ -130,6 +130,40 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
+		/// Retrieves the base mod directory for the specified assembly. Identical to
+		/// GetModDir() for most mods, but resolves to the original mod directory if an
+		/// archived version is running.
+		/// </summary>
+		/// <param name="modDLL">The assembly used for a mod.</param>
+		/// <returns>The base directory of that mod.</returns>
+		public static string GetModBaseDir(Assembly modDLL) {
+			if (modDLL == null)
+				throw new ArgumentNullException("modDLL");
+			string dir = null;
+			try {
+				dir = Directory.GetParent(modDLL.Location)?.FullName;
+				if (dir != null) {
+					var parent = Directory.GetParent(dir);
+					// Unfortunately this string is hard coded in the base game
+					if (parent != null && parent.Name.StartsWith("archived_version"))
+						dir = Directory.GetParent(parent.FullName)?.FullName;
+				}
+			} catch (NotSupportedException e) {
+				// Guess from the Klei strings
+				PUtil.LogExcWarn(e);
+			} catch (System.Security.SecurityException e) {
+				// Guess from the Klei strings
+				PUtil.LogExcWarn(e);
+			} catch (IOException e) {
+				// Guess from the Klei strings
+				PUtil.LogExcWarn(e);
+			}
+			if (dir == null)
+				dir = Path.Combine(KMod.Manager.GetDirectory(), modDLL.GetName()?.Name ?? "");
+			return dir;
+		}
+
+		/// <summary>
 		/// Retrieves the configuration file attribute for a mod config.
 		/// </summary>
 		/// <param name="optionsType">The type potentially containing the config file attribute.</param>
@@ -251,7 +285,10 @@ namespace PeterHan.PLib.Options {
 					"RegisterOptions!");
 			}
 			var assembly = optionsType.Assembly;
-			var id = Path.GetFileName(GetModDir(assembly));
+			// Moving a mod to an archived version will technically trash the settings for
+			// any users still on that version. Since Klei throws out the settings files
+			// anyways upon any update this is not a huge issue however.
+			var id = Path.GetFileName(GetModBaseDir(assembly));
 			// Prevent concurrent modification (should be impossible anyways)
 			lock (PSharedData.GetLock(PRegistry.KEY_OPTIONS_LOCK)) {
 				// Get options table
@@ -343,8 +380,9 @@ namespace PeterHan.PLib.Options {
 		/// <param name="onClose">The method to call when the dialog is closed.</param>
 		private static void ShowDialog(Type optionsType, string title, Action<object> onClose)
 		{
-			var handler = new RuntimeOptionsHandler(Path.GetDirectoryName(optionsType.Assembly.
-				Location), title) { OnClose = onClose };
+			var handler = new RuntimeOptionsHandler(GetModDir(optionsType.Assembly), title) {
+				OnClose = onClose
+			};
 			new OptionsDialog(optionsType, handler).OnModOptions(null);
 		}
 
@@ -372,9 +410,8 @@ namespace PeterHan.PLib.Options {
 			if (forwardType == null)
 				forwardType = typeof(POptions);
 			try {
-				var method = forwardType.GetMethod(nameof(ShowDialog), BindingFlags.Static |
-					BindingFlags.NonPublic, null, new Type[] { typeof(Type), typeof(string),
-					typeof(Action<object>) }, null);
+				var method = forwardType.GetMethodSafe(nameof(ShowDialog), true, typeof(Type),
+					typeof(string), typeof(Action<object>));
 				// Forward call to that version
 				if (method != null)
 					method.Invoke(null, new object[] { optionsType, title, onClose });

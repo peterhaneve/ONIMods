@@ -148,7 +148,7 @@ namespace PeterHan.DebugNotIncluded {
 			if (DebugNotIncludedOptions.Instance?.LogAsserts ?? true)
 				LogAllFailedAsserts();
 			foreach (var mod in Global.Instance.modManager?.mods)
-				if (mod.label.install_path == path) {
+				if (mod.GetModBasePath() == path) {
 					ThisMod = mod;
 					break;
 				}

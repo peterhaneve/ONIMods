@@ -4,8 +4,8 @@
     <TargetFramework>net40</TargetFramework>
     <Title>PeterHan.PLib</Title>
     <AssemblyTitle>PeterHanLib</AssemblyTitle>
-    <Version>3.10.0.0</Version>
-    <!--<PackageVersion>3.10.0-beta</PackageVersion>-->
+    <Version>3.11.1.0</Version>
+    <!--<PackageVersion>3.11.1-beta</PackageVersion>-->
     <UsesPLib>false</UsesPLib>
     <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
     <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
@@ -21,7 +21,7 @@ Contains methods aimed at improving cross-mod compatibility, in-game user interf
 
 Fix a bug with text fields crashing after being destroyed. Fix bugs with building localizations.</PackageReleaseNotes>
     <RootNamespace>PeterHan.PLib</RootNamespace>
-    <AssemblyVersion>3.10.0.0</AssemblyVersion>
+    <AssemblyVersion>3.11.1.0</AssemblyVersion>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>

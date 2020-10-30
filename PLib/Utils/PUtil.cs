@@ -215,6 +215,16 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Retrieves the normalized path of the mod's active content directory, adjusting if
+		/// the mod is running an archived version.
+		/// </summary>
+		/// <param name="mod">The mod to query.</param>
+		/// <returns>The mod's active root directory (where its assembly is located).</returns>
+		public static string GetModBasePath(this KMod.Mod mod) {
+			return FileSystem.Normalize(Path.Combine(mod.label.install_path, mod.relative_root));
+		}
+
+		/// <summary>
 		/// Highlights an entity. Use Color.black to unhighlight it.
 		/// </summary>
 		/// <param name="entity">The entity to highlight.</param>

@@ -17,14 +17,13 @@
  */
 
 using Harmony;
-using Ionic.Zlib;
 using PeterHan.PLib;
+using PeterHan.PLib.Detours;
 using PeterHan.PLib.UI;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using UnityEngine;
 
 using ButtonInfo = KButtonMenu.ButtonInfo;
 using PAUSE_SCREEN = STRINGS.UI.FRONTEND.PAUSE_SCREEN;
@@ -39,27 +38,25 @@ namespace PeterHan.FastSave {
 		/// </summary>
 		private const int BUFFER_SIZE = 1024 * 1024 * 4;
 
+		private delegate void CompressContents(BinaryWriter writer, byte[] data, int length);
+
+		private static readonly IDetouredField<KButtonMenu, IList<ButtonInfo>> BUTTONS =
+			PDetours.DetourField<KButtonMenu, IList<ButtonInfo>>("buttons");
+
+		private static readonly CompressContents COMPRESS_CONTENTS = typeof(SaveLoader).
+			Detour<CompressContents>();
+
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
 		public static BackgroundAutosave Instance { get; } = new BackgroundAutosave();
 
 		/// <summary>
-		/// Writes the image to a PNG in the background.
-		/// </summary>
-		/// <param name="instance">The time lapser that is recording the image.</param>
-		/// <param name="texture">The texture to write.</param>
-		internal static void BackgroundWritePng(Timelapser instance, RenderTexture texture) {
-			instance.WriteToPng(texture);
-		}
-
-		/// <summary>
 		/// Enables save/load and removes the warning about quitting.
 		/// </summary>
 		internal static void EnableSaving() {
 			var instance = PauseScreen.Instance;
-			var buttons = (instance == null) ? null : Traverse.Create(instance).
-				GetField<IList<ButtonInfo>>("buttons");
+			var buttons = (instance == null) ? null : BUTTONS.Get(instance);
 			if (buttons != null && buttons.Count > 0) {
 				foreach (var button in buttons) {
 					// Enable "save", "save as", "load", "quit to menu"
@@ -75,8 +72,7 @@ namespace PeterHan.FastSave {
 		/// </summary>
 		internal static void DisableSaving() {
 			var instance = PauseScreen.Instance;
-			var buttons = (instance == null) ? null : Traverse.Create(instance).
-				GetField<IList<ButtonInfo>>("buttons");
+			var buttons = (instance == null) ? null : BUTTONS.Get(instance);
 			if (buttons != null && buttons.Count > 0) {
 				foreach (var button in buttons) {
 					string text = button.text;
@@ -124,14 +120,14 @@ namespace PeterHan.FastSave {
 				done = true;
 				PUIElements.ShowMessageDialog(GameScreenManager.Instance.ssOverlayCanvas.
 					gameObject, string.Format(STRINGS.UI.CRASHSCREEN.SAVEFAILED,
-					"Autosave failed!"));
+					FastSaveStrings.AUTOSAVE_FAILED));
 				break;
 			case SaveStatus.IOError:
 				// I/O error, raise a dialog
 				done = true;
 				PUIElements.ShowMessageDialog(GameScreenManager.Instance.ssOverlayCanvas.
 					gameObject, string.Format(STRINGS.UI.CRASHSCREEN.SAVEFAILED,
-					"IOException. You may not have enough free space!"));
+					FastSaveStrings.IO_ERROR));
 				break;
 			case SaveStatus.InProgress:
 				break;
@@ -157,14 +153,14 @@ namespace PeterHan.FastSave {
 						PUtil.LogDebug("Deleting old autosave: " + autoName);
 						File.Delete(autoName);
 					} catch (Exception e) {
-						PUtil.LogWarning("Problem deleting old autosave: " + autoName);
+						PUtil.LogWarning("Error deleting old autosave: " + autoName);
 						PUtil.LogExcWarn(e);
 					}
 					try {
 						if (File.Exists(autoImage))
 							File.Delete(autoImage);
 					} catch (Exception e) {
-						PUtil.LogWarning("Problem deleting old screenshot: " + autoImage);
+						PUtil.LogWarning("Error deleting old screenshot: " + autoImage);
 						PUtil.LogExcWarn(e);
 					}
 				}
@@ -194,12 +190,8 @@ namespace PeterHan.FastSave {
 					KSerialization.Manager.SerializeDirectory(writer);
 					writer.Flush();
 					if (data.Compress)
-						// SaveLoader.CompressContents is now private
-						using (var compressor = new ZlibStream(writer.BaseStream,
-								CompressionMode.Compress, CompressionLevel.BestSpeed)) {
-							stream.CopyTo(compressor);
-							compressor.Flush();
-						}
+						COMPRESS_CONTENTS.Invoke(writer, stream.GetBuffer(), (int)stream.
+							Length);
 					else
 						stream.CopyTo(writer.BaseStream);
 				}
@@ -217,9 +209,7 @@ namespace PeterHan.FastSave {
 				try {
 					// Cannot throw during a finally, or it will discard the original exception
 					data.Dispose();
-				} catch (Exception e) {
-					PUtil.LogException(e);
-				}
+				} catch { }
 			}
 		}
 

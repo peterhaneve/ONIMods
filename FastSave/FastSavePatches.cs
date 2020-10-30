@@ -22,6 +22,7 @@ using PeterHan.PLib.Datafiles;
 using PeterHan.PLib.Options;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace PeterHan.FastSave {
 	/// <summary>
@@ -35,6 +36,53 @@ namespace PeterHan.FastSave {
 			// Sorry, Fast Save now requires a restart to take effect because of background!
 			PUtil.LogDebug("FastSave in mode: {0}".F(FastSaveOptions.Instance.Mode));
 			PLocalization.Register();
+		}
+
+		/// <summary>
+		/// Waits in a coroutine for the GPU to complete uploading the timelapse image, and
+		/// then starts a background task to save it.
+		/// </summary>
+		/// <param name="rt">The texture where the timelapse image was rendered.</param>
+		/// <param name="savePath">The path to save the image.</param>
+		/// <param name="preview">true if the image is a colony preview.</param>
+		private static System.Collections.IEnumerator TimelapseCoroutine(RenderTexture rt,
+				string savePath, bool preview) {
+			int width = rt.width, height = rt.height;
+			if (width > 0 && height > 0) {
+				var request = AsyncGPUReadback.Request(rt, 0);
+				// Wait for texture to be read back from the GPU
+				while (!request.done)
+					yield return new WaitForEndOfFrame();
+				byte[] rawARGB = request.GetData<byte>().ToArray();
+				if (rawARGB != null)
+					BackgroundTimelapser.Instance.Start(savePath, TextureToPNG(rawARGB,
+						width, height), preview);
+			}
+		}
+
+		/// <summary>
+		/// Converts raw image data in ARGB32 format (the format used by the game for the
+		/// camera render texture) to PNG image data.
+		/// </summary>
+		/// <param name="rawData">The raw texture data.</param>
+		/// <param name="width">The image width.</param>
+		/// <param name="height">The image height.</param>
+		/// <returns>The image encoded as PNG.</returns>
+		private static byte[] TextureToPNG(byte[] rawData, int width, int height) {
+			// NOTE: The game uses ARGB32 as the RenderTexture format, but for some reason
+			// the returned data is RGBA32...
+			var pngTexture = new Texture2D(width, height, TextureFormat.RGBA32, false);
+#if DEBUG
+			PUtil.LogDebug("Copying texture {0:D}x{1:D} to render".F(width, height));
+#endif
+			byte[] data;
+			try {
+				pngTexture.LoadRawTextureData(rawData);
+				data = pngTexture.EncodeToPNG();
+			} finally {
+				Object.Destroy(pngTexture);
+			}
+			return data;
 		}
 
 		/// <summary>
@@ -54,11 +102,12 @@ namespace PeterHan.FastSave {
 					System.Collections.IEnumerator result, string filename, bool isAutoSave,
 					Game.SavingPostCB ___activatePostCB, bool updateSavePointer,
 					Game.SavingActiveCB ___activateActiveCB) {
+				var inst = PlayerController.Instance;
 				if (isAutoSave) {
 					// Wait for player to stop dragging
-					while (PlayerController.Instance.IsDragging())
+					while (inst.IsDragging())
 						yield return null;
-					PlayerController.Instance.AllowDragging(false);
+					inst.AllowDragging(false);
 					BackgroundAutosave.DisableSaving();
 					try {
 						yield return null;
@@ -67,7 +116,7 @@ namespace PeterHan.FastSave {
 							yield return null;
 						}
 						// Save in the background
-						Game.Instance.timelapser.SaveColonyPreview(filename);
+						Game.Instance.timelapser?.SaveColonyPreview(filename);
 						BackgroundAutosave.Instance.StartSave(filename);
 						// Wait asynchronously for it
 						while (!BackgroundAutosave.Instance.CheckSaveStatus())
@@ -79,7 +128,7 @@ namespace PeterHan.FastSave {
 							yield return null;
 					} finally {
 						BackgroundAutosave.EnableSaving();
-						PlayerController.Instance.AllowDragging(true);
+						inst.AllowDragging(true);
 					}
 					yield break;
 				} else
@@ -92,7 +141,7 @@ namespace PeterHan.FastSave {
 		/// <summary>
 		/// Applied to Timelapser to save the PNG on a background thread.
 		/// </summary>
-		[HarmonyPatch(typeof(Timelapser), nameof(Timelapser.WriteToPng))]
+		[HarmonyPatch(typeof(Timelapser), "RenderAndPrint")]
 		public static class Timelapser_WriteToPng_Patch {
 			internal static bool Prepare() {
 				// Only enable if background save is on
@@ -100,19 +149,30 @@ namespace PeterHan.FastSave {
 			}
 
 			/// <summary>
-			/// Applied before WriteToPng runs.
+			/// Applied before RenderAndPrint runs.
 			/// </summary>
-			internal static bool Prefix(RenderTexture renderTex, string ___previewSaveGamePath,
-					bool ___previewScreenshot) {
-				if (renderTex != null) {
-					int width = renderTex.width, height = renderTex.height;
-					// Read pixels from the screen
-					var screenData = new Texture2D(width, height, TextureFormat.ARGB32, false);
-					screenData.ReadPixels(new Rect(0.0f, 0.0f, width, height), 0, 0);
-					screenData.Apply();
-					BackgroundTimelapser.Instance.Start(___previewSaveGamePath, screenData,
-						___previewScreenshot);
-					Object.Destroy(screenData);
+			internal static bool Prefix(RenderTexture ___bufferRenderTexture, float ___camSize,
+					string ___previewSaveGamePath, bool ___previewScreenshot,
+					Vector3 ___camPosition) {
+				var telepad = GameUtil.GetTelepad();
+				var rt = ___bufferRenderTexture;
+				var inst = CameraController.Instance;
+				if (telepad == null)
+					Debug.Log("No telepad present, aborting screenshot.");
+				else if (rt != null && inst != null) {
+					var centerPos = telepad.transform.position;
+					var oldRT = RenderTexture.active;
+					// Center camera on the printing pod
+					RenderTexture.active = rt;
+					inst.SetPosition(new Vector3(centerPos.x, centerPos.y, inst.transform.
+						position.z));
+					inst.RenderForTimelapser(ref rt);
+					inst.StartCoroutine(TimelapseCoroutine(rt, ___previewSaveGamePath,
+						___previewScreenshot));
+					inst.SetOrthographicsSize(___camSize);
+					inst.SetPosition(___camPosition);
+					inst.SetTargetPos(___camPosition, ___camSize, false);
+					RenderTexture.active = oldRT;
 				}
 				return false;
 			}

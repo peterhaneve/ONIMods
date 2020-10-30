@@ -3,15 +3,10 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Fast Save</AssemblyTitle>
-    <FileVersion>2.6.0.0</FileVersion>
+    <FileVersion>2.7.0.0</FileVersion>
     <RootNamespace>PeterHan.FastSave</RootNamespace>
     <Description>Trims data from save files to make saving and loading faster.</Description>
-    <AssemblyVersion>2.1.0.0</AssemblyVersion>
+    <AssemblyVersion>2.2.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="Ionic.Zip">
-      <HintPath>D:\Programs\Steam\steamapps\common\OxygenNotIncluded\OxygenNotIncluded_Data\Managed\Ionic.Zip.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 </Project>

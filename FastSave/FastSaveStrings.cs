@@ -16,17 +16,21 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
-
 namespace PeterHan.FastSave {
 	/// <summary>
 	/// Strings used in Fast Save.
 	/// </summary>
 	static class FastSaveStrings {
-		// Warns the user that quitting may cause data loss
-		public static LocString DESKTOP_QUIT_WARNING = "Exit to Desktop may corrupt the current autosave!";
+		// Auto-save failed: non-I/O exception
+		public static LocString AUTOSAVE_FAILED = "Autosave failed!";
 
 		// Why is the save button disabled?
 		public static LocString AUTOSAVE_PROGRESS = "Auto-Save in progress";
+
+		// Warns the user that quitting may cause data loss
+		public static LocString DESKTOP_QUIT_WARNING = "Exit to Desktop may corrupt the current autosave!";
+
+		// Auto-save failed: I/O exception
+		public static LocString IO_ERROR = "IOException. You may not have enough free space!";
 	}
 }
