@@ -107,6 +107,7 @@ namespace PeterHan.FastSave {
 					// Wait for player to stop dragging
 					while (inst.IsDragging())
 						yield return null;
+					inst.CancelDragging();
 					inst.AllowDragging(false);
 					BackgroundAutosave.DisableSaving();
 					try {
@@ -118,6 +119,8 @@ namespace PeterHan.FastSave {
 						// Save in the background
 						Game.Instance.timelapser?.SaveColonyPreview(filename);
 						BackgroundAutosave.Instance.StartSave(filename);
+						yield return null;
+						RetireColonyUtility.SaveColonySummaryData();
 						// Wait asynchronously for it
 						while (!BackgroundAutosave.Instance.CheckSaveStatus())
 							yield return null;

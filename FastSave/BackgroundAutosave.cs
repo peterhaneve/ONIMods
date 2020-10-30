@@ -46,6 +46,12 @@ namespace PeterHan.FastSave {
 		private static readonly CompressContents COMPRESS_CONTENTS = typeof(SaveLoader).
 			Detour<CompressContents>();
 
+		private static readonly IDetouredField<SaveLoader, bool> COMPRESS_SAVE_DATA =
+			PDetours.DetourField<SaveLoader, bool>("compressSaveData");
+
+		private static readonly Action<SaveLoader, BinaryWriter> SAVE =
+			typeof(SaveLoader).Detour<Action<SaveLoader, BinaryWriter>>("Save");
+
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
@@ -141,10 +147,10 @@ namespace PeterHan.FastSave {
 		/// <summary>
 		/// Cleans up old autosaves.
 		/// </summary>
-		/// <param name="filename">The file name that is being saved.</param>
-		private void CleanAutosaves(string filename) {
+		private void CleanAutosaves() {
 			if (!Klei.GenericGameSettings.instance.keepAllAutosaves) {
-				var saveFiles = SaveLoader.GetSaveFiles(Path.GetDirectoryName(filename));
+				string autoSavePath = SaveLoader.GetActiveAutoSavePath();
+				var saveFiles = SaveLoader.GetSaveFiles(autoSavePath, SearchOption.AllDirectories);
 				// Clean up old autosaves and their preview images
 				for (int i = saveFiles.Count - 1; i >= SaveLoader.MAX_AUTOSAVE_FILES - 1; i--) {
 					string autoName = saveFiles[i], autoImage = Path.ChangeExtension(
@@ -176,7 +182,7 @@ namespace PeterHan.FastSave {
 				var stream = data.Stream;
 				PUtil.LogDebug("Background save to: " + data.FileName);
 				stream.Seek(0L, SeekOrigin.Begin);
-				CleanAutosaves(data.FileName);
+				CleanAutosaves();
 				// Write the file header
 				using (var writer = new BinaryWriter(File.Open(data.FileName, FileMode.
 						Create))) {
@@ -222,19 +228,19 @@ namespace PeterHan.FastSave {
 			var inst = SaveLoader.Instance;
 			bool save = true;
 			if (inst != null) {
-				var trLoader = Traverse.Create(inst);
 				KSerialization.Manager.Clear();
 #if DEBUG
 				PUtil.LogDebug("Starting serialization of save");
 #endif
 				bool compress = true;
 				// This field is currently always true
-				try {
-					compress = trLoader.GetField<bool>("compressSaveData");
-				} catch { }
+				if (COMPRESS_SAVE_DATA != null)
+					try {
+						compress = COMPRESS_SAVE_DATA.Get(inst);
+					} catch { }
 				// Keep this part on the foreground
 				try {
-					trLoader.CallMethod("Save", new BinaryWriter(buffer));
+					SAVE.Invoke(inst, new BinaryWriter(buffer));
 				} catch (Exception e) {
 					buffer.Dispose();
 					PUtil.LogError("Error when saving game:");
@@ -242,7 +248,6 @@ namespace PeterHan.FastSave {
 					save = false;
 				}
 				// In Unity 4 GetComponent no longer works on background threads
-				RetireColonyUtility.SaveColonySummaryData();
 				if (save)
 					StartSave(new BackgroundSaveData(buffer, compress, filename));
 			}
@@ -263,7 +268,7 @@ namespace PeterHan.FastSave {
 						var task = new Thread(() => DoSave(data));
 						status = SaveStatus.InProgress;
 						Util.ApplyInvariantCultureToThread(task);
-						task.Priority = System.Threading.ThreadPriority.BelowNormal;
+						task.Priority = ThreadPriority.BelowNormal;
 						task.Name = "Background Autosave";
 						Thread.MemoryBarrier();
 						task.Start();

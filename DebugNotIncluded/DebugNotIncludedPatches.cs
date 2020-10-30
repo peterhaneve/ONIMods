@@ -381,8 +381,10 @@ namespace PeterHan.DebugNotIncluded {
 
 			// Mirror struct to the private struct EventSystem.IntraObjectRoute
 			internal struct IntraObjectRoute {
+#pragma warning disable CS0649
 				public int eventHash;
 				public int handlerIndex;
+#pragma warning restore CS0649
 			}
 		}
 #endif

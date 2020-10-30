@@ -1,6 +1,6 @@
 # Peter Han&#39;s Mods for Oxygen Not Included
 
-Last tested on game version: **AP-420700**
+Last tested on game version: **AP-420700**; preliminary testing for version **AP-437482**
 
 Steam Workshop: https://steamcommunity.com/profiles/76561198025154321/myworkshopfiles/?appid=457140
 
@@ -52,6 +52,7 @@ Mods should remain in their own subfolder.
 ## New Features
 |  **Name**  |  **Description**  |
 | :--------: | :---------------: |
+| [100K Challenge](https://steamcommunity.com/sharedfiles/filedetails/?id=2228381429) | A frigid map with an average temperature of 100 K (-173 C) |
 | [AI Improvements](https://steamcommunity.com/sharedfiles/filedetails/?id=2128885110) | Improves Duplicant AI to reduce cases of stuck Duplicants |
 | [Airlock Door](https://steamcommunity.com/sharedfiles/filedetails/?id=2094698134) | Allows Duplicants to pass between areas while maintaing full atmospheric isolation |
 | [Build Straight Up](https://steamcommunity.com/sharedfiles/filedetails/?id=2135682628) | Allows Rockets and Monuments to be planned out all at once |

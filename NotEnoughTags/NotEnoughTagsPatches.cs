@@ -125,9 +125,14 @@ namespace PeterHan.NotEnoughTags {
 				// LAST and
 				if (instr.opcode == OpCodes.And) {
 					int and = ++i;
-					// Find the next RET after it
-					for (; i < n && !transpiled; i++)
-						if (method[i].opcode == OpCodes.Ret) {
+					// Find the next RET or branch after it
+					for (; i < n && !transpiled; i++) {
+						var ni = method[i];
+						var opcode = ni.opcode;
+						// Ignore branches that branch to the immediately following statement
+						if (opcode == OpCodes.Ret || ((opcode == OpCodes.Br || opcode ==
+								OpCodes.Br_S) && (!(ni.operand is Label lbl) || i >= n ||
+								!method[i + 1].labels.Contains(lbl)))) {
 							// Replace the AND with static tag compare
 							instr.opcode = OpCodes.Call;
 							instr.operand = replacement;
@@ -136,6 +141,7 @@ namespace PeterHan.NotEnoughTags {
 								method.RemoveRange(and, i - and);
 							transpiled = true;
 						}
+					}
 					break;
 				}
 			}
