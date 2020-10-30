@@ -1,0 +1,490 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.4.1\n"
+"Last-Translator: \n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Language: fr\n"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ABALANCEDDIET.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ABALANCEDDIET.DESC"
+msgid ""
+"Eat 1,000 kcal of each Food type available on Terra or through care packages."
+msgstr ""
+"Mangez 1 000 kcal de chaque type de nourriture disponible sur Terra ou dans "
+"les colis du portail."
+
+#. PeterHan.MoreAchievements.AchievementStrings.ABALANCEDDIET.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ABALANCEDDIET.NAME"
+msgid "A Balanced Diet"
+msgstr "Un régime alimentaire équilibré"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ABALANCEDDIET.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ABALANCEDDIET.PROGRESS"
+msgid "Calories from {0}: {1} / {2}"
+msgstr "Calories de {0} : {1} / {2}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ADALOVELACE.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ADALOVELACE.DESC"
+msgid "Raise a Duplicant's Science attribute to 20."
+msgstr "Atteignez l'attribut \"Science\" d'un duplicant à 20."
+
+#. PeterHan.MoreAchievements.AchievementStrings.ADALOVELACE.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ADALOVELACE.NAME"
+msgid "Ada Lovelace"
+msgstr "Ada Lovelace"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ALLTHEDUPLICANTS.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ALLTHEDUPLICANTS.DESC"
+msgid "Have at least 100 living Duplicants living in the colony at one time."
+msgstr "Avoir au moins 100 duplicants vivants dans la colonie en même temps."
+
+#. PeterHan.MoreAchievements.AchievementStrings.ALLTHEDUPLICANTS.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ALLTHEDUPLICANTS.NAME"
+msgid "ALL the Duplicants!"
+msgstr "TOUS les duplicants !"
+
+#. PeterHan.MoreAchievements.AchievementStrings.BELONGSINAMUSEUM.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.BELONGSINAMUSEUM.DESC"
+msgid "Obtain at least one of each space artifact."
+msgstr "Obtenez au moins une fois tous les artefacts spatiaux."
+
+#. PeterHan.MoreAchievements.AchievementStrings.BELONGSINAMUSEUM.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.BELONGSINAMUSEUM.NAME"
+msgid "That Belongs in a Museum"
+msgstr "That Belongs in a Museum"
+
+#. PeterHan.MoreAchievements.AchievementStrings.BELONGSINAMUSEUM.PROGRESS
+msgctxt ""
+"PeterHan.MoreAchievements.AchievementStrings.BELONGSINAMUSEUM.PROGRESS"
+msgid "Artifacts obtained: {0:D} / {1:D}"
+msgstr "Artefacts obtenus : {0:D} / {1:D}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.CHUTESANDLADDERS.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.CHUTESANDLADDERS.DESC"
+msgid "Have Duplicants travel 10,000 m by Fire Pole."
+msgstr "Faites voyager les duplicants sur 10 000 m par la barre de pompier."
+
+#. PeterHan.MoreAchievements.AchievementStrings.CHUTESANDLADDERS.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.CHUTESANDLADDERS.NAME"
+msgid "Chutes and Ladders"
+msgstr "Chutes et échelles"
+
+#. PeterHan.MoreAchievements.AchievementStrings.COWBOY.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.COWBOY.DESC"
+msgid "Raise a Duplicant's Ranching attribute to 20."
+msgstr "Atteignez l'attribut \"Élevage\" d'un duplicants à 20."
+
+#. PeterHan.MoreAchievements.AchievementStrings.COWBOY.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.COWBOY.NAME"
+msgid "Cowboy"
+msgstr "Cowboy"
+
+#. PeterHan.MoreAchievements.AchievementStrings.CRITTERSINGER.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.CRITTERSINGER.DESC"
+msgid ""
+"Tame at least one of every critter morph of each critter species in the "
+"world."
+msgstr ""
+"Apprivoisez au moins une de chaque morphologie de chaque espèce de créature "
+"dans le monde."
+
+#. PeterHan.MoreAchievements.AchievementStrings.CRITTERSINGER.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.CRITTERSINGER.NAME"
+msgid "Critter Ventriloquist"
+msgstr "Ventriloque des créatures"
+
+#. PeterHan.MoreAchievements.AchievementStrings.DEFAULT_PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.DEFAULT_PROGRESS"
+msgid "Complete requirement"
+msgstr "Exigence complète"
+
+#. PeterHan.MoreAchievements.AchievementStrings.DESTROYEROFWORLDS.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.DESTROYEROFWORLDS.DESC"
+msgid "Raise a Duplicant's Excavation attribute to 20."
+msgstr "Atteignez l'attribut \"Excavation\" d'un duplicant à 20."
+
+#. PeterHan.MoreAchievements.AchievementStrings.DESTROYEROFWORLDS.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.DESTROYEROFWORLDS.NAME"
+msgid "Destroyer of Worlds"
+msgstr "Destructeur de mondes"
+
+#. PeterHan.MoreAchievements.AchievementStrings.DESTROYEROFWORLDS.PROGRESS
+msgctxt ""
+"PeterHan.MoreAchievements.AchievementStrings.DESTROYEROFWORLDS.PROGRESS"
+msgid "Highest attribute value: {0:F0} / {1:F0}"
+msgstr "Valeur d'attribut la plus élevée : {0:F0} / {1:F0}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.EMPIREBUILDER.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.EMPIREBUILDER.DESC"
+msgid "Build 2,500 buildings."
+msgstr "Construire 2 500 bâtiments."
+
+#. PeterHan.MoreAchievements.AchievementStrings.EMPIREBUILDER.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.EMPIREBUILDER.NAME"
+msgid "Empire Builder"
+msgstr "Bâtisseur d'empire"
+
+#. PeterHan.MoreAchievements.AchievementStrings.EMPIREBUILDER.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.EMPIREBUILDER.PROGRESS"
+msgid "Buildings constructed: {0:D} / {1:D}"
+msgstr "Construction de bâtiments : {0:D} / {1:D}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.FINALBREATH.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.FINALBREATH.DESC"
+msgid ""
+"Have a Duplicant reach oxygen with less than 5 seconds left until "
+"suffocation."
+msgstr ""
+"Faites en sorte qu'un duplicant atteigne l'oxygène en moins de 5 secondes "
+"avant la suffocation."
+
+#. PeterHan.MoreAchievements.AchievementStrings.FINALBREATH.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.FINALBREATH.NAME"
+msgid "Final Breath"
+msgstr "Dernier souffle"
+
+#. PeterHan.MoreAchievements.AchievementStrings.FINALBREATH.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.FINALBREATH.PROGRESS"
+msgid "Reached breathable area with less than 5 seconds until death"
+msgstr "A atteint la zone respirable en moins de 5 secondes avant la mort"
+
+#. PeterHan.MoreAchievements.AchievementStrings.FIRSTDONOHARM.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.FIRSTDONOHARM.DESC"
+msgid "Raise a Duplicant's Doctoring attribute to 20."
+msgstr "Atteignez l'attribut \"Médecine\" d'un duplicant à 20."
+
+#. PeterHan.MoreAchievements.AchievementStrings.FIRSTDONOHARM.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.FIRSTDONOHARM.NAME"
+msgid "First Do No Harm"
+msgstr "Primum non nocere"
+
+#. PeterHan.MoreAchievements.AchievementStrings.HAVEIWONYET.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.HAVEIWONYET.DESC"
+msgid "Reach cycle 4,000 with at least one living Duplicant."
+msgstr "Atteindre le cycle 4 000 avec au moins un duplicant vivant."
+
+#. PeterHan.MoreAchievements.AchievementStrings.HAVEIWONYET.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.HAVEIWONYET.NAME"
+msgid "Have I Won Yet?"
+msgstr "Ai-je déjà gagné ?"
+
+#. PeterHan.MoreAchievements.AchievementStrings.IMGONNABE.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.IMGONNABE.DESC"
+msgid "Have Duplicants travel 1,609,000 m by walking."
+msgstr "Faites parcourir aux duplicants 1 609 000 m à pied."
+
+#. PeterHan.MoreAchievements.AchievementStrings.IMGONNABE.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.IMGONNABE.NAME"
+msgid "I'm Gonna Be"
+msgstr "I'm Gonna Be"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ISEEWHATYOUDIDTHERE.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ISEEWHATYOUDIDTHERE.DESC"
+msgid "Obtain a chunk of Neutronium."
+msgstr "Obtenez un morceau de Neutronium."
+
+#. PeterHan.MoreAchievements.AchievementStrings.ISEEWHATYOUDIDTHERE.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ISEEWHATYOUDIDTHERE.NAME"
+msgid "I See What You Did There"
+msgstr "I See What You Did There"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ISEEWHATYOUDIDTHERE.PROGRESS
+msgctxt ""
+"PeterHan.MoreAchievements.AchievementStrings.ISEEWHATYOUDIDTHERE.PROGRESS"
+msgid "Obtain the unobtainium"
+msgstr "Obtenir l'unobtanium"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ISITHOTINHERE.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ISITHOTINHERE.DESC"
+msgid "Increase the temperature of a building to 2226.9 ºC."
+msgstr "Augmenter la température d'un bâtiment jusqu'à 2226,9 ºC."
+
+#. PeterHan.MoreAchievements.AchievementStrings.ISITHOTINHERE.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ISITHOTINHERE.NAME"
+msgid "Is It Hot in Here?"
+msgstr "Il fait chaud ici ?"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ISITHOTINHERE.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ISITHOTINHERE.PROGRESS"
+msgid "Hottest building: {0} / {1}"
+msgstr "Bâtiment le plus chaud : {0} / {1}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.JACKOFALLTRADES.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.JACKOFALLTRADES.DESC"
+msgid "Raise all of a single Duplicant's attributes to 10."
+msgstr "Atteignez à 10 tous les attributs d'un même duplicant."
+
+#. PeterHan.MoreAchievements.AchievementStrings.JACKOFALLTRADES.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.JACKOFALLTRADES.NAME"
+msgid "Jack of All Trades"
+msgstr "Homme à tout faire"
+
+#. PeterHan.MoreAchievements.AchievementStrings.JACKOFALLTRADES.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.JACKOFALLTRADES.PROGRESS"
+msgid "Raise attributes to {0:F0}"
+msgstr "Augmenter les attributs à {0:F0}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.JOHNHENRY.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.JOHNHENRY.DESC"
+msgid "Dig 10,000 tiles."
+msgstr "Creusez 10 000 carreaux."
+
+#. PeterHan.MoreAchievements.AchievementStrings.JOHNHENRY.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.JOHNHENRY.NAME"
+msgid "John Henry"
+msgstr "John Henry"
+
+#. PeterHan.MoreAchievements.AchievementStrings.JOHNHENRY.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.JOHNHENRY.PROGRESS"
+msgid "Tiles dug by Duplicants: {0:D} / {1:D}"
+msgstr "Carreaux creusés par les duplicants : {0:D} / {1:D}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MASTERBUILDER.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MASTERBUILDER.DESC"
+msgid "Raise a Duplicant's Construction attribute to 20."
+msgstr "Atteignez l'attribut \"Construction\" d'un duplicant à 20."
+
+#. PeterHan.MoreAchievements.AchievementStrings.MASTERBUILDER.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MASTERBUILDER.NAME"
+msgid "Master Builder"
+msgstr "Maître d'œuvre"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MASTERCHEF.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MASTERCHEF.DESC"
+msgid "Raise a Duplicant's Cooking attribute to 20."
+msgstr "Atteignez l'attribut \"Cuisine\" d'un duplicant à 20."
+
+#. PeterHan.MoreAchievements.AchievementStrings.MASTERCHEF.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MASTERCHEF.NAME"
+msgid "MasterChef"
+msgstr "MasterChef"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MASTEROFDISASTER.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MASTEROFDISASTER.DESC"
+msgid "Lose a Duplicant to each (stock game) cause of death."
+msgstr "Perdre un duplicant pour chaque cause de décès."
+
+#. PeterHan.MoreAchievements.AchievementStrings.MASTEROFDISASTER.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MASTEROFDISASTER.NAME"
+msgid "Master of Disaster"
+msgstr "Maître du désastre"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MASTEROFDISASTER.PROGRESS
+msgctxt ""
+"PeterHan.MoreAchievements.AchievementStrings.MASTEROFDISASTER.PROGRESS"
+msgid "Duplicant died due to {0}"
+msgstr "Le duplicant est mort à cause de {0}."
+
+#. PeterHan.MoreAchievements.AchievementStrings.MICHELANGELO.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MICHELANGELO.DESC"
+msgid "Raise a Duplicant's Creativity attribute to 20."
+msgstr "Atteignez l'attribut \"Créativité\" d'un duplicant à 20."
+
+#. PeterHan.MoreAchievements.AchievementStrings.MICHELANGELO.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MICHELANGELO.NAME"
+msgid "Michelangelo"
+msgstr "Michelangelo"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MOTHEREARTH.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MOTHEREARTH.DESC"
+msgid "Raise a Duplicant's Agriculture attribute to 20."
+msgstr "Atteignez l'attribut \"Agriculture\" d'un duplicant à 20."
+
+#. PeterHan.MoreAchievements.AchievementStrings.MOTHEREARTH.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MOTHEREARTH.NAME"
+msgid "Mother Earth"
+msgstr "Mother Earth"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MOUNTAINMOVER.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MOUNTAINMOVER.DESC"
+msgid "Raise a Duplicant's Strength attribute to 20."
+msgstr "Atteignez l'attribut \"Force\" d'un duplicant à 20."
+
+#. PeterHan.MoreAchievements.AchievementStrings.MOUNTAINMOVER.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MOUNTAINMOVER.NAME"
+msgid "Mountain Mover"
+msgstr "Mountain Mover"
+
+#. PeterHan.MoreAchievements.AchievementStrings.OLYMPIAN.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.OLYMPIAN.DESC"
+msgid "Raise a Duplicant's Athletics attribute to 20."
+msgstr "Atteignez l'attribut \"Athlétisme\" d'un duplicant à 20."
+
+#. PeterHan.MoreAchievements.AchievementStrings.OLYMPIAN.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.OLYMPIAN.NAME"
+msgid "Olympian"
+msgstr "Olympien"
+
+#. PeterHan.MoreAchievements.AchievementStrings.POWEROVERWHELMING.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.POWEROVERWHELMING.DESC"
+msgid "Overload a Heavi-Watt Conductive Wire."
+msgstr "Surcharger un câble conducteur de forte puissance."
+
+#. PeterHan.MoreAchievements.AchievementStrings.POWEROVERWHELMING.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.POWEROVERWHELMING.NAME"
+msgid "Power Overwhelming"
+msgstr "Power Overwhelming"
+
+#. PeterHan.MoreAchievements.AchievementStrings.POWEROVERWHELMING.PROGRESS
+msgctxt ""
+"PeterHan.MoreAchievements.AchievementStrings.POWEROVERWHELMING.PROGRESS"
+msgid "Overload wire with {0}"
+msgstr "Surchargez le câble avec {0}."
+
+#. PeterHan.MoreAchievements.AchievementStrings.SAFESPACE.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SAFESPACE.DESC"
+msgid "Avoid any Duplicant deaths for 100 consecutive cycles."
+msgstr "Éviter tout décès en double pendant 100 cycles consécutifs."
+
+#. PeterHan.MoreAchievements.AchievementStrings.SAFESPACE.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SAFESPACE.NAME"
+msgid "Safe Space"
+msgstr "Espace sûr"
+
+#. PeterHan.MoreAchievements.AchievementStrings.SAFESPACE.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SAFESPACE.PROGRESS"
+msgid "Last Duplicant death: Cycle {0:D}"
+msgstr "Dernier décès d'un duplicant : Cycle {0:D}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.SAVINGMEEP.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SAVINGMEEP.DESC"
+msgid ""
+"Have a Duplicant reach a Triage Cot under their own power with no more than "
+"10 Hit Points remaining."
+msgstr ""
+"Faites en sorte qu'un duplicant atteigne un lit de triage par ses propres "
+"moyens sans qu'il ne reste plus que 10 points de vie."
+
+#. PeterHan.MoreAchievements.AchievementStrings.SAVINGMEEP.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SAVINGMEEP.NAME"
+msgid "Saving Private Meep"
+msgstr "Saving Private Meep"
+
+#. PeterHan.MoreAchievements.AchievementStrings.SAVINGMEEP.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SAVINGMEEP.PROGRESS"
+msgid ""
+"Reached Triage Cot with less than or equal to 10 health without being "
+"Incapacitated"
+msgstr ""
+"A atteint le lit de triage avec un état de santé inférieur ou égal à 10 sans "
+"être inapte"
+
+#. PeterHan.MoreAchievements.AchievementStrings.SCALDED
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SCALDED"
+msgid "Badly Burned"
+msgstr "Sévèrement brûlé"
+
+#. PeterHan.MoreAchievements.AchievementStrings.SMALLWORLD.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SMALLWORLD.DESC"
+msgid "Have at least 35 living Duplicants living in the colony at one time."
+msgstr "Avoir au moins 35 duplicants vivant dans la colonie à un moment donné."
+
+#. PeterHan.MoreAchievements.AchievementStrings.SMALLWORLD.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SMALLWORLD.NAME"
+msgid "Small World After All"
+msgstr "Le monde est petit après tout"
+
+#. PeterHan.MoreAchievements.AchievementStrings.SMOOTHOPERATOR.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SMOOTHOPERATOR.DESC"
+msgid "Raise a Duplicant's Machinery attribute to 20."
+msgstr "Atteignez l'attribut \"Bricolage\" d'un duplicant à 20."
+
+#. PeterHan.MoreAchievements.AchievementStrings.SMOOTHOPERATOR.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SMOOTHOPERATOR.NAME"
+msgid "Smooth Operator"
+msgstr "Smooth Operator"
+
+#. PeterHan.MoreAchievements.AchievementStrings.TESTOFTIME.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.TESTOFTIME.DESC"
+msgid "Reach cycle 1,000 with at least one living Duplicant."
+msgstr "Atteindre le cycle 1 000 avec au moins un duplicant vivant."
+
+#. PeterHan.MoreAchievements.AchievementStrings.TESTOFTIME.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.TESTOFTIME.NAME"
+msgid "To Stand the Test of Time"
+msgstr "Résister à l'épreuve du temps"
+
+#. PeterHan.MoreAchievements.AchievementStrings.THINKINGAHEAD.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.THINKINGAHEAD.DESC"
+msgid "Use the Neural Vacillator 10 times."
+msgstr "Utilisez le Vacillateur neuronal 10 fois."
+
+#. PeterHan.MoreAchievements.AchievementStrings.THINKINGAHEAD.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.THINKINGAHEAD.NAME"
+msgid "Thinking Ahead"
+msgstr "Thinking Ahead"
+
+#. PeterHan.MoreAchievements.AchievementStrings.THINKINGAHEAD.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.THINKINGAHEAD.PROGRESS"
+msgid "Neural Vacillator used: {0:D} / {1:D}"
+msgstr "Vacillateur neuronal utilisé : {0:D} / {1:D}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.TOTALLYECSTATIC.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.TOTALLYECSTATIC.DESC"
+msgid "Raise a single Duplicant's Morale to 60."
+msgstr "Augmenter le moral d'un seul duplicateur à 60."
+
+#. PeterHan.MoreAchievements.AchievementStrings.TOTALLYECSTATIC.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.TOTALLYECSTATIC.NAME"
+msgid "Totally Ecstatic"
+msgstr "Extase totalle"
+
+#. PeterHan.MoreAchievements.AchievementStrings.TOTALLYECSTATIC.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.TOTALLYECSTATIC.PROGRESS"
+msgid "Highest Morale: {0:F0} / {1:F0}"
+msgstr "Moral le plus élevé : {0:F0} / {1:F0}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.WATCHTHEWORLDBURN.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.WATCHTHEWORLDBURN.DESC"
+msgid "Melt a unique building generated in a point of interest."
+msgstr "Faites fondre un bâtiment unique généré dans un point d'intérêt."
+
+#. PeterHan.MoreAchievements.AchievementStrings.WATCHTHEWORLDBURN.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.WATCHTHEWORLDBURN.NAME"
+msgid "Watch the World Burn"
+msgstr "Watch the World Burn"
+
+#. PeterHan.MoreAchievements.AchievementStrings.WATCHTHEWORLDBURN.PROGRESS
+msgctxt ""
+"PeterHan.MoreAchievements.AchievementStrings.WATCHTHEWORLDBURN.PROGRESS"
+msgid "Melt a normally non-constructable POI building"
+msgstr "Faire fondre un bâtiment de POI normalement non constructible"
+
+#. PeterHan.MoreAchievements.AchievementStrings.WHOLENEWWORLDS.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.WHOLENEWWORLDS.DESC"
+msgid "Send a Space Mission to each destination on the Starmap."
+msgstr ""
+"Envoyez une mission spatiale à chaque destination sur la carte stellaire."
+
+#. PeterHan.MoreAchievements.AchievementStrings.WHOLENEWWORLDS.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.WHOLENEWWORLDS.NAME"
+msgid "Whole New Worlds"
+msgstr "De nouveaux mondes entiers"
+
+#. PeterHan.MoreAchievements.AchievementStrings.WHOLENEWWORLDS.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.WHOLENEWWORLDS.PROGRESS"
+msgid "Destinations visited: {0:D} / {1:D}"
+msgstr "Destinations visitées : {0:D} / {1:D}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.YOUMONSTER.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.YOUMONSTER.DESC"
+msgid "Kill 100 critters before they die of old age."
+msgstr "Tuez 100 créatures avant qu'elles ne meurent de vieillesse."
+
+#. PeterHan.MoreAchievements.AchievementStrings.YOUMONSTER.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.YOUMONSTER.NAME"
+msgid "You Monster"
+msgstr "Vous êtes un monstre"
+
+#. PeterHan.MoreAchievements.AchievementStrings.YOUMONSTER.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.YOUMONSTER.PROGRESS"
+msgid "Critters killed by non-natural causes: {0:D} / {1:D}"
+msgstr "Des créatures tuées par des causes non naturelles : {0:D} / {1:D}"

@@ -1,0 +1,24 @@
+"Language: es"
+"Application: Oxygen Not Included"
+"POT Version: 2.0"
+
+#. PeterHan.Claustrophobia.ClaustrophobiaStrings.CONFINED_DESC
+msgctxt "PeterHan.Claustrophobia.ClaustrophobiaStrings.CONFINED_DESC"
+msgid "These Duplicants are stuck in a small space:"
+msgstr "Estas personas estan atascadas en un lugar pequeño:"
+
+#. PeterHan.Claustrophobia.ClaustrophobiaStrings.CONFINED_TITLE
+msgctxt "PeterHan.Claustrophobia.ClaustrophobiaStrings.CONFINED_TITLE"
+msgid "Confined"
+msgstr "Confinados"
+
+#. PeterHan.Claustrophobia.ClaustrophobiaStrings.TRAPPED_DESC
+msgctxt "PeterHan.Claustrophobia.ClaustrophobiaStrings.TRAPPED_DESC"
+msgid "These Duplicants cannot access vital parts of the colony:"
+msgstr "Estas personas no pueden llegar lugares más importantes en la colonia:"
+
+#. PeterHan.Claustrophobia.ClaustrophobiaStrings.TRAPPED_TITLE
+msgctxt "PeterHan.Claustrophobia.ClaustrophobiaStrings.TRAPPED_TITLE"
+msgid "Trapped"
+msgstr "Atrapados"
+
