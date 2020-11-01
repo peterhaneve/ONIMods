@@ -158,6 +158,16 @@ namespace PeterHan.PLib.UI {
 			ToolTip = "";
 		}
 
+		/// <summary>
+		/// Adds a handler when this check box is realized.
+		/// </summary>
+		/// <param name="onRealize">The handler to invoke on realization.</param>
+		/// <returns>This check box for call chaining.</returns>
+		public PCheckBox AddOnRealize(PUIDelegates.OnRealize onRealize) {
+			OnRealize += onRealize;
+			return this;
+		}
+
 		public override GameObject Build() {
 			var checkbox = PUIElements.CreateUI(null, Name);
 			var actualSize = CheckSize;
@@ -236,9 +246,9 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
-		/// Sets the default Klei pink button style as this button's color and text style.
+		/// Sets the default Klei pink button style as this check box's color and text style.
 		/// </summary>
-		/// <returns>This button for call chaining.</returns>
+		/// <returns>This check box for call chaining.</returns>
 		public PCheckBox SetKleiPinkStyle() {
 			TextStyle = PUITuning.Fonts.UILightStyle;
 			BackColor = PUITuning.Colors.ButtonPinkStyle.inactiveColor;
@@ -247,9 +257,9 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
-		/// Sets the default Klei blue button style as this button's color and text style.
+		/// Sets the default Klei blue button style as this check box's color and text style.
 		/// </summary>
-		/// <returns>This button for call chaining.</returns>
+		/// <returns>This check box for call chaining.</returns>
 		public PCheckBox SetKleiBlueStyle() {
 			TextStyle = PUITuning.Fonts.UILightStyle;
 			BackColor = PUITuning.Colors.ButtonBlueStyle.inactiveColor;

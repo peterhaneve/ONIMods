@@ -180,20 +180,16 @@ namespace PeterHan.PLib.Options {
 				container.AddColumn(new GridColumnSpec()).AddColumn(new GridColumnSpec(
 					flex: 1.0f)).AddRow(new GridRowSpec()).AddRow(new GridRowSpec(flex: 1.0f));
 				// Toggle is upper left, header is upper right
-				var header = new PLabel("CategoryHeader") {
+				container.AddChild(new PLabel("CategoryHeader") {
 					Text = OptionsEntry.LookInStrings(category), TextStyle =
 					CATEGORY_TITLE_STYLE, TextAlignment = TextAnchor.LowerCenter
-				};
-				var toggle = new PToggle("CategoryToggle") {
+				}.AddOnRealize(handler.OnRealizeHeader), new GridComponentSpec(0, 1) {
+					Margin = new RectOffset(OUTER_MARGIN, OUTER_MARGIN, 0, 0)
+				}).AddChild(new PToggle("CategoryToggle") {
 					Color = PUITuning.Colors.ComponentDarkStyle, InitialState = state,
 					ToolTip = PUIStrings.TOOLTIP_TOGGLE, Size = TOGGLE_SIZE,
 					OnStateChanged = handler.OnExpandContract
-				};
-				header.OnRealize += handler.OnRealizeHeader;
-				toggle.OnRealize += handler.OnRealizeToggle;
-				container.AddChild(header, new GridComponentSpec(0, 1) {
-					Margin = new RectOffset(OUTER_MARGIN, OUTER_MARGIN, 0, 0)
-				}).AddChild(toggle, new GridComponentSpec(0, 0));
+				}.AddOnRealize(handler.OnRealizeToggle), new GridComponentSpec(0, 0));
 				if (contents != null)
 					contents.OnRealize += handler.OnRealizePanel;
 				container.AddChild(contents, new GridComponentSpec(1, 0) { ColumnSpan = 2 });

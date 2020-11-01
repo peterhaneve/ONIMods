@@ -66,6 +66,17 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Adds a hot pink rectangle over the target matching its size, to help identify it
+		/// better.
+		/// </summary>
+		/// <param name="parent">The target UI component.</param>
+		public static void AddPinkOverlay(GameObject parent) {
+			var child = PUIElements.CreateUI(parent, "Overlay");
+			var img = child.AddComponent<Image>();
+			img.color = new Color(1.0f, 0.0f, 1.0f, 0.2f);
+		}
+
+		/// <summary>
 		/// Adds the specified side screen content to the side screen list. The side screen
 		/// behavior should be defined in a class inherited from SideScreenContent.
 		/// 
@@ -343,7 +354,8 @@ namespace PeterHan.PLib.UI {
 			foreach (var component in root.GetComponents<Component>()) {
 				if (component is RectTransform rt) {
 					// UI rectangle
-					Vector2 size = rt.rect.size, aMin = rt.anchorMin, aMax = rt.anchorMax;
+					Vector2 size = rt.rect.size, aMin = rt.anchorMin, aMax = rt.anchorMax,
+						oMin = rt.offsetMin, oMax = rt.offsetMax, pivot = rt.pivot;
 					result.Append(sol).AppendFormat(" Rect[Size=({0:F2},{1:F2}) Min=" +
 						"({2:F2},{3:F2}) ", size.x, size.y, LayoutUtility.GetMinWidth(rt),
 						LayoutUtility.GetMinHeight(rt));
@@ -351,8 +363,11 @@ namespace PeterHan.PLib.UI {
 						"{3:F2}) ", LayoutUtility.GetPreferredWidth(rt), LayoutUtility.
 						GetPreferredHeight(rt), LayoutUtility.GetFlexibleWidth(rt),
 						LayoutUtility.GetFlexibleHeight(rt));
-					result.AppendFormat("AnchorMin=({0:F2},{1:F2}) AnchorMax=({2:F2}," +
-						"{3:F2})]", aMin.x, aMin.y, aMax.x, aMax.y).AppendLine();
+					result.AppendFormat("Pivot=({4:F2},{5:F2}) AnchorMin=({0:F2},{1:F2}) " +
+						"AnchorMax=({2:F2},{3:F2}) ", aMin.x, aMin.y, aMax.x, aMax.y, pivot.x,
+						pivot.y);
+					result.AppendFormat("OffsetMin=({0:F2},{1:F2}) OffsetMax=({2:F2}," +
+						"{3:F2})]", oMin.x, oMin.y, oMax.x, oMax.y).AppendLine();
 				} else if (component != null && !(component is Transform)) {
 					// Exclude destroyed components and Transform objects
 					result.Append(sol).Append(" Component[").Append(component.GetType().
@@ -445,6 +460,31 @@ namespace PeterHan.PLib.UI {
 				if (newParent != null)
 					parent = newParent;
 			}
+			return parent;
+		}
+
+		/// <summary>
+		/// Insets a child component from its parent, and assigns a fixed size to the parent
+		/// equal to the provided size plus the insets.
+		/// </summary>
+		/// <param name="parent">The parent component.</param>
+		/// <param name="child">The child to inset.</param>
+		/// <param name="vertical">The vertical inset on each side.</param>
+		/// <param name="horizontal">The horizontal inset on each side.</param>
+		/// <param name="prefSize">The minimum component size.</param>
+		/// <returns>The parent component.</returns>
+		internal static GameObject InsetChild(GameObject parent, GameObject child,
+				Vector2 insets, Vector2 prefSize = default(Vector2)) {
+			var rt = child.rectTransform();
+			float horizontal = insets.x, vertical = insets.y, width = prefSize.x, height =
+				prefSize.y;
+			rt.offsetMax = new Vector2(-horizontal, -vertical);
+			rt.offsetMin = insets;
+			var layout = parent.AddOrGet<LayoutElement>();
+			layout.minWidth = layout.preferredWidth = (width <= 0.0f ? LayoutUtility.
+				GetPreferredWidth(rt) : width) + horizontal * 2.0f;
+			layout.minHeight = layout.preferredHeight = (height <= 0.0f ? LayoutUtility.
+				GetPreferredHeight(rt) : height) + vertical * 2.0f;
 			return parent;
 		}
 

@@ -102,34 +102,40 @@ namespace PeterHan.PLib.UI {
 			ToolTip = "";
 		}
 
+		/// <summary>
+		/// Adds a handler when this text area is realized.
+		/// </summary>
+		/// <param name="onRealize">The handler to invoke on realization.</param>
+		/// <returns>This text area for call chaining.</returns>
+		public PTextArea AddOnRealize(PUIDelegates.OnRealize onRealize) {
+			OnRealize += onRealize;
+			return this;
+		}
+
 		public GameObject Build() {
 			var textField = PUIElements.CreateUI(null, Name);
-			// Background
 			var style = TextStyle ?? PUITuning.Fonts.TextLightStyle;
-			textField.AddComponent<Image>().color = style.textColor;
+			// Background
+			var border = textField.AddComponent<Image>();
+			border.sprite = PUITuning.Images.BoxBorderWhite;
+			border.type = Image.Type.Sliced;
+			border.color = style.textColor;
 			// Text box with rectangular clipping area; put pivot in upper left
 			var textArea = PUIElements.CreateUI(textField, "Text Area", false);
-			textArea.rectTransform().pivot = Vector2.up;
 			textArea.AddComponent<Image>().color = BackColor;
 			var mask = textArea.AddComponent<RectMask2D>();
 			// Scrollable text
-			var textBox = PUIElements.CreateUI(textArea, "Text", true, PUIAnchoring.Beginning,
-				PUIAnchoring.End);
+			var textBox = PUIElements.CreateUI(textArea, "Text");
 			// Text to display
-			var textDisplay = textBox.AddComponent<TextMeshProUGUI>();
-			textDisplay.alignment = TextAlignment;
-			textDisplay.autoSizeTextContainer = false;
-			textDisplay.enabled = true;
-			textDisplay.color = style.textColor;
-			textDisplay.font = style.sdfFont;
-			textDisplay.fontSize = style.fontSize;
-			textDisplay.fontStyle = style.style;
+			var textDisplay = PTextField.ConfigureField(textBox.AddComponent<TextMeshProUGUI>(),
+				style, TextAlignment);
+			textDisplay.enableWordWrapping = true;
+			textDisplay.raycastTarget = true;
 			// Text field itself
 			textField.SetActive(false);
 			var textEntry = textField.AddComponent<TMP_InputField>();
 			textEntry.textComponent = textDisplay;
 			textEntry.textViewport = textArea.rectTransform();
-			textField.SetActive(true);
 			textEntry.text = Text ?? "";
 			textDisplay.text = Text ?? "";
 			// Events!
@@ -137,15 +143,16 @@ namespace PeterHan.PLib.UI {
 			var events = textField.AddComponent<PTextFieldEvents>();
 			events.OnTextChanged = OnTextChanged;
 			events.OnValidate = OnValidate;
+			events.TextObject = textBox;
 			// Add tooltip
 			PUIElements.SetToolTip(textField, ToolTip);
 			mask.enabled = true;
-			// Lay out, even better than before
-			var layout = textField.AddComponent<RelativeLayoutGroup>();
-			layout.SetTopEdge(textArea, fraction: 1.0f).SetBottomEdge(textArea, fraction: 0.0f).
-				SetMargin(textArea, new RectOffset(1, 1, 1, 1)).OverrideSize(textArea,
-				new Vector2(MinWidth, Math.Max(LineCount, 1) * PUIUtils.GetLineHeight(style))).
-				LockLayout();
+			PUIElements.SetAnchorOffsets(textBox, new RectOffset());
+			textField.SetActive(true);
+			// Lay out
+			var layout = PUIUtils.InsetChild(textField, textArea, Vector2.one, new Vector2(
+				MinWidth, Math.Max(LineCount, 1) * PUIUtils.GetLineHeight(style))).
+				AddOrGet<LayoutElement>();
 			layout.flexibleWidth = FlexSize.x;
 			layout.flexibleHeight = FlexSize.y;
 			OnRealize?.Invoke(textField);

@@ -114,6 +114,16 @@ namespace PeterHan.PLib.UI {
 			ToolTip = "";
 		}
 
+		/// <summary>
+		/// Adds a handler when this toggle button is realized.
+		/// </summary>
+		/// <param name="onRealize">The handler to invoke on realization.</param>
+		/// <returns>This toggle button for call chaining.</returns>
+		public PToggle AddOnRealize(PUIDelegates.OnRealize onRealize) {
+			OnRealize += onRealize;
+			return this;
+		}
+
 		public GameObject Build() {
 			var toggle = PUIElements.CreateUI(null, Name);
 			// Set on click event

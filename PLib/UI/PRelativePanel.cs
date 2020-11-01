@@ -64,6 +64,16 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Adds a handler when this panel is realized.
+		/// </summary>
+		/// <param name="onRealize">The handler to invoke on realization.</param>
+		/// <returns>This panel for call chaining.</returns>
+		public PRelativePanel AddOnRealize(PUIDelegates.OnRealize onRealize) {
+			OnRealize += onRealize;
+			return this;
+		}
+
+		/// <summary>
 		/// Anchors the component's pivot in the X axis to the specified anchor position.
 		/// The component will be laid out at its preferred (or overridden) width with its
 		/// pivot locked to the specified relative fraction of the parent component's width.

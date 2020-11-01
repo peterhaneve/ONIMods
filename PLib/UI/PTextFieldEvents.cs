@@ -18,6 +18,7 @@
 
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace PeterHan.PLib.UI {
 	/// <summary>
@@ -36,6 +37,12 @@ namespace PeterHan.PLib.UI {
 		[SerializeField]
 		internal TMP_InputField.OnValidateInput OnValidate { get; set; }
 
+		/// <summary>
+		/// The object to resize on text change.
+		/// </summary>
+		[SerializeField]
+		internal GameObject TextObject { get; set; }
+
 		[MyCmpReq]
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable CS0649
@@ -51,6 +58,7 @@ namespace PeterHan.PLib.UI {
 		internal PTextFieldEvents() {
 			activateOnSpawn = true;
 			editing = false;
+			TextObject = null;
 		}
 
 		/// <summary>
@@ -65,9 +73,17 @@ namespace PeterHan.PLib.UI {
 			return editing ? 99.0f : base.GetSortKey();
 		}
 
+		protected override void OnCleanUp() {
+			textEntry.onFocus -= OnFocus;
+			textEntry.onValueChanged.RemoveListener(OnValueChanged);
+			textEntry.onEndEdit.RemoveListener(OnEndEdit);
+			base.OnCleanUp();
+		}
+
 		protected override void OnSpawn() {
 			base.OnSpawn();
 			textEntry.onFocus += OnFocus;
+			textEntry.onValueChanged.AddListener(OnValueChanged);
 			textEntry.onEndEdit.AddListener(OnEndEdit);
 			if (OnValidate != null)
 				textEntry.onValidateInput = OnValidate;
@@ -116,6 +132,19 @@ namespace PeterHan.PLib.UI {
 				e.Consumed = true;
 			else
 				base.OnKeyUp(e);
+		}
+
+		/// <summary>
+		/// Triggered when the text box value changes.
+		/// </summary>
+		/// <param name="text">The text entered.</param>
+		private void OnValueChanged(string text) {
+			var obj = gameObject;
+			if (obj != null && TextObject != null) {
+				var rt = TextObject.rectTransform();
+				rt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, LayoutUtility.
+					GetPreferredHeight(rt));
+			}
 		}
 
 		/// <summary>

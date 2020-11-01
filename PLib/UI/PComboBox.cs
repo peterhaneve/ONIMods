@@ -146,6 +146,16 @@ namespace PeterHan.PLib.UI {
 			ToolTip = null;
 		}
 
+		/// <summary>
+		/// Adds a handler when this combo box is realized.
+		/// </summary>
+		/// <param name="onRealize">The handler to invoke on realization.</param>
+		/// <returns>This combo box for call chaining.</returns>
+		public PComboBox<T> AddOnRealize(PUIDelegates.OnRealize onRealize) {
+			OnRealize += onRealize;
+			return this;
+		}
+
 		public GameObject Build() {
 			var combo = PUIElements.CreateUI(null, Name);
 			var style = TextStyle ?? PUITuning.Fonts.UILightStyle;
@@ -267,7 +277,7 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// Sets the default Klei pink button style as this combo box's foreground color and text style.
 		/// </summary>
-		/// <returns>This button for call chaining.</returns>
+		/// <returns>This combo box for call chaining.</returns>
 		public PComboBox<T> SetKleiPinkStyle() {
 			TextStyle = PUITuning.Fonts.UILightStyle;
 			BackColor = PUITuning.Colors.ButtonPinkStyle;
@@ -277,7 +287,7 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// Sets the default Klei blue button style as this combo box's foreground color and text style.
 		/// </summary>
-		/// <returns>This button for call chaining.</returns>
+		/// <returns>This combo box for call chaining.</returns>
 		public PComboBox<T> SetKleiBlueStyle() {
 			TextStyle = PUITuning.Fonts.UILightStyle;
 			BackColor = PUITuning.Colors.ButtonBlueStyle;

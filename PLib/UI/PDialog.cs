@@ -192,6 +192,16 @@ namespace PeterHan.PLib.UI {
 			return this;
 		}
 
+		/// <summary>
+		/// Adds a handler when this dialog is realized.
+		/// </summary>
+		/// <param name="onRealize">The handler to invoke on realization.</param>
+		/// <returns>This dialog for call chaining.</returns>
+		public PDialog AddOnRealize(PUIDelegates.OnRealize onRealize) {
+			OnRealize += onRealize;
+			return this;
+		}
+
 		public GameObject Build() {
 			if (Parent == null)
 				throw new InvalidOperationException("Parent for dialog may not be null");
@@ -407,10 +417,10 @@ namespace PeterHan.PLib.UI {
 			}
 
 			protected override void OnDeactivate() {
-				base.OnDeactivate();
 				if (dialog != null)
 					// Klei destroys the dialog GameObject for us
 					dialog.DialogClosed?.Invoke(key);
+				base.OnDeactivate();
 				dialog = null;
 			}
 

@@ -70,6 +70,16 @@ namespace PeterHan.PLib.UI {
 			return this;
 		}
 
+		/// <summary>
+		/// Adds a handler when this panel is realized.
+		/// </summary>
+		/// <param name="onRealize">The handler to invoke on realization.</param>
+		/// <returns>This panel for call chaining.</returns>
+		public PPanel AddOnRealize(PUIDelegates.OnRealize onRealize) {
+			OnRealize += onRealize;
+			return this;
+		}
+
 		public override GameObject Build() {
 			return Build(default, DynamicSize);
 		}

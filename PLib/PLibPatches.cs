@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using TMPro;
 using UnityEngine;
 using IEnumerable = System.Collections.IEnumerable;
 using IntHandle = HandleVector<int>.Handle;
@@ -71,6 +72,33 @@ namespace PeterHan.PLib {
 			var lm = PLightManager.Instance;
 			if (lm != null)
 				lm.CallingObject = null;
+		}
+
+		/// <summary>
+		/// Applied to TMP_InputField to fix a bug that prevented auto layout from ever
+		/// working.
+		/// </summary>
+		private static bool AssignPositioningIfNeeded_Prefix(TMP_InputField __instance,
+				RectTransform ___caretRectTrans, TMP_Text ___m_TextComponent) {
+			bool cont = true;
+			var crt = ___caretRectTrans;
+			if (___m_TextComponent != null && crt != null && __instance != null &&
+				___m_TextComponent.isActiveAndEnabled)
+			{
+				var rt = ___m_TextComponent.rectTransform;
+				if (crt.localPosition != rt.localPosition ||
+						crt.localRotation != rt.localRotation ||
+						crt.localScale != rt.localScale ||
+						crt.anchorMin != rt.anchorMin ||
+						crt.anchorMax != rt.anchorMax ||
+						crt.anchoredPosition != rt.anchoredPosition ||
+						crt.sizeDelta != rt.sizeDelta ||
+						crt.pivot != rt.pivot) {
+					__instance.StartCoroutine(ResizeCaret(crt, rt));
+					cont = false;
+				}
+			}
+			return cont;
 		}
 
 		/// <summary>
@@ -262,7 +290,7 @@ namespace PeterHan.PLib {
 		/// https://forum.unity.com/threads/textmeshpro-text-still-visible-when-using-nested-rectmask2d.537967/
 		/// </summary>
 		private static void OnEnable_Postfix(UnityEngine.UI.Scrollbar ___m_VerticalScrollbar,
-				TMPro.TMP_Text ___m_TextComponent) {
+				TMP_Text ___m_TextComponent) {
 			var component = ___m_TextComponent;
 			if (component != null)
 				component.ignoreRectMaskCulling = ___m_VerticalScrollbar != null;
@@ -465,13 +493,17 @@ namespace PeterHan.PLib {
 				}
 
 			// TMPro.TMP_InputField
-			try {
-				instance.Patch(typeof(TMPro.TMP_InputField), "OnEnable", null,
-					PatchMethod(nameof(OnEnable_Postfix)));
-			} catch (Exception) {
-				PUtil.LogWarning("Unable to patch TextMeshPro bug, text fields may display " +
-					"improperly inside scroll areas");
-			}
+			var tmpType = PPatchTools.GetTypeSafe("TMPro.TMP_InputField");
+			if (tmpType != null)
+				try {
+					instance.Patch(tmpType, "AssignPositioningIfNeeded",
+						PatchMethod(nameof(AssignPositioningIfNeeded_Prefix)), null);
+					instance.Patch(tmpType, "OnEnable", null, PatchMethod(
+						nameof(OnEnable_Postfix)));
+				} catch (Exception) {
+					PUtil.LogWarning("Unable to patch TextMeshPro bug, text fields may " +
+						"display improperly inside scroll areas");
+				}
 
 			// Postload, legacy and normal
 			PPatchManager.ExecuteLegacyPostload();
@@ -489,6 +521,24 @@ namespace PeterHan.PLib {
 		/// <returns>The matching method.</returns>
 		private static HarmonyMethod PatchMethod(string name) {
 			return new HarmonyMethod(typeof(PLibPatches), name);
+		}
+
+		/// <summary>
+		/// Resizes the caret object to match the text. Used as an enumerator.
+		/// </summary>
+		/// <param name="caretTransform">The rectTransform of the caret.</param>
+		/// <param name="textTransform">The rectTransform of the text.</param>
+		private static System.Collections.IEnumerator ResizeCaret(
+				RectTransform caretTransform, RectTransform textTransform) {
+			yield return new WaitForEndOfFrame();
+			caretTransform.localPosition = textTransform.localPosition;
+			caretTransform.localRotation = textTransform.localRotation;
+			caretTransform.localScale = textTransform.localScale;
+			caretTransform.anchorMin = textTransform.anchorMin;
+			caretTransform.anchorMax = textTransform.anchorMax;
+			caretTransform.anchoredPosition = textTransform.anchoredPosition;
+			caretTransform.sizeDelta = textTransform.sizeDelta;
+			caretTransform.pivot = textTransform.pivot;
 		}
 
 		/// <summary>

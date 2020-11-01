@@ -86,12 +86,10 @@ namespace PeterHan.DebugNotIncluded {
 		/// <returns>A button with that icon.</returns>
 		private PButton MakeButton(string name, string tooltip, Sprite sprite, PUIDelegates.
 				OnButtonPressed action, PUIDelegates.OnRealize onRealize) {
-			var button = new PButton(name) {
+			return new PButton(name) {
 				SpriteSize = ModDialogs.SPRITE_SIZE, Sprite = sprite, DynamicSize = false,
 				OnClick = action, ToolTip = tooltip, Margin = DebugUtils.BUTTON_MARGIN
-			}.SetKleiPinkStyle();
-			button.OnRealize += onRealize;
-			return button;
+			}.SetKleiPinkStyle().AddOnRealize(onRealize);
 		}
 
 		protected override void OnCleanUp() {
@@ -188,32 +186,28 @@ namespace PeterHan.DebugNotIncluded {
 				buttonDown = obj.GetComponent<KButton>()))
 			.AddChild(MakeButton("MoveToLast", UI.TOOLTIPS.DNI_BOTTOM,
 				SpriteRegistry.GetBottomIcon(), OnMoveLast, (obj) =>
-				buttonLast = obj.GetComponent<KButton>()));
-			// Manage mod (subscription / local folder), strings will be replaced
-			var manage = new PButton("ManageMod") {
+				buttonLast = obj.GetComponent<KButton>()))
+			.AddChild(new PButton("ManageMod") {
 				Text = UI.MODSSCREEN.BUTTON_SUBSCRIPTION, DynamicSize = false,
 				OnClick = OnManage, ToolTip = "Manage Mod", Margin = DebugUtils.BUTTON_MARGIN
-			}.SetKleiBlueStyle();
-			manage.OnRealize += (obj) => buttonManage = obj;
-			// Unsubscribe from mod
-			var unsub = new PButton("UnsubMod") {
+			}.SetKleiBlueStyle().AddOnRealize((obj) => buttonManage = obj))
+			.AddChild(new PButton("UnsubMod") {
 				Text = UI.MODSSCREEN.BUTTON_UNSUB, DynamicSize = false,
 				OnClick = OnUnsub, ToolTip = UI.TOOLTIPS.DNI_UNSUB, Margin = DebugUtils.
 				BUTTON_MARGIN
-			}.SetKleiBlueStyle();
-			unsub.OnRealize += (obj) => buttonUnsub = obj.GetComponent<KButton>();
+			}.SetKleiBlueStyle().AddOnRealize((obj) => buttonUnsub = obj.
+				GetComponent<KButton>()));
 #if DEBUG
-			var modify = new PButton("ModifyMod") {
+			panel.AddChild(new PButton("ModifyMod") {
 				Text = UI.MODSSCREEN.BUTTON_MODIFY, DynamicSize = false,
 				OnClick = OnModify, ToolTip = UI.TOOLTIPS.DNI_MODIFY, Margin = DebugUtils.
 				BUTTON_MARGIN
-			}.SetKleiPinkStyle();
-			modify.OnRealize += (obj) => buttonModify = obj.GetComponent<KButton>();
-			var actionsObj = panel.AddChild(manage).AddChild(unsub).AddChild(modify).
-				AddTo(gameObject);
+			}.SetKleiPinkStyle().AddOnRealize((obj) => buttonModify = obj.
+				GetComponent<KButton>()));
+#endif
+			var actionsObj = panel.AddTo(gameObject);
+#if DEBUG
 			PButton.SetButtonEnabled(buttonModify.gameObject, false);
-#else
-			var actionsObj = panel.AddChild(manage).AddChild(unsub).AddTo(gameObject);
 #endif
 			actionsObj.SetActive(false);
 			// Blacklist from auto layout

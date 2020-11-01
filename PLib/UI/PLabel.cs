@@ -35,6 +35,16 @@ namespace PeterHan.PLib.UI {
 			BackColor = PUITuning.Colors.Transparent;
 		}
 
+		/// <summary>
+		/// Adds a handler when this label is realized.
+		/// </summary>
+		/// <param name="onRealize">The handler to invoke on realization.</param>
+		/// <returns>This label for call chaining.</returns>
+		public PLabel AddOnRealize(PUIDelegates.OnRealize onRealize) {
+			OnRealize += onRealize;
+			return this;
+		}
+
 		public override GameObject Build() {
 			var label = PUIElements.CreateUI(null, Name);
 			GameObject sprite = null, text = null;

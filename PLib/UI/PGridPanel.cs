@@ -90,6 +90,16 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Adds a handler when this panel is realized.
+		/// </summary>
+		/// <param name="onRealize">The handler to invoke on realization.</param>
+		/// <returns>This panel for call chaining.</returns>
+		public PGridPanel AddOnRealize(PUIDelegates.OnRealize onRealize) {
+			OnRealize += onRealize;
+			return this;
+		}
+
+		/// <summary>
 		/// Adds a row to this panel.
 		/// </summary>
 		/// <param name="row">The specification for that row.</param>

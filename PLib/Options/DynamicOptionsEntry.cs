@@ -154,17 +154,14 @@ namespace PeterHan.PLib.Options {
 				else
 					// Only displayed in error cases, should not be localized
 					Title = "<No Title>";
-				var label = new PLabel("Label") {
+				parent.AddChild(new PLabel("Label") {
 					Text = LookInStrings(Title), TextStyle = PUITuning.Fonts.TextLightStyle
-				};
-				label.OnRealize += OnRealizeLabel;
-				parent.AddChild(label, new GridComponentSpec(row, 0) {
+				}.AddOnRealize(OnRealizeLabel), new GridComponentSpec(row, 0) {
 					Margin = LABEL_MARGIN, Alignment = TextAnchor.MiddleLeft
 				});
 				parent.AddChild(this, new GridComponentSpec(row, 1) {
 					Alignment = TextAnchor.MiddleRight, Margin = CONTROL_MARGIN
 				});
-
 			}
 		}
 

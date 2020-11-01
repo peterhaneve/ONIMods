@@ -89,6 +89,16 @@ namespace PeterHan.PLib.UI {
 			TrackSize = DEFAULT_TRACK_SIZE;
 		}
 
+		/// <summary>
+		/// Adds a handler when this scroll pane is realized.
+		/// </summary>
+		/// <param name="onRealize">The handler to invoke on realization.</param>
+		/// <returns>This scroll pane for call chaining.</returns>
+		public PScrollPane AddOnRealize(PUIDelegates.OnRealize onRealize) {
+			OnRealize += onRealize;
+			return this;
+		}
+
 		public GameObject Build() {
 			if (Child == null)
 				throw new InvalidOperationException("No child component");

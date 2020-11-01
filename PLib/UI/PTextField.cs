@@ -27,6 +27,37 @@ namespace PeterHan.PLib.UI {
 	/// </summary>
 	public sealed class PTextField : IUIComponent {
 		/// <summary>
+		/// Configures a Text Mesh Pro field.
+		/// </summary>
+		/// <param name="component">The text component to configure.</param>
+		/// <param name="style">The desired text color, font, and style.</param>
+		/// <param name="alignment">The text alignment.</param>
+		/// <returns>The component, for call chaining.</returns>
+		internal static TextMeshProUGUI ConfigureField(TextMeshProUGUI component,
+				TextStyleSetting style, TextAlignmentOptions alignment) {
+			component.alignment = alignment;
+			component.autoSizeTextContainer = false;
+			component.enabled = true;
+			component.color = style.textColor;
+			component.font = style.sdfFont;
+			component.fontSize = style.fontSize;
+			component.fontStyle = style.style;
+			component.overflowMode = TextOverflowModes.Overflow;
+			return component;
+		}
+
+		/// <summary>
+		/// Gets a text field's text.
+		/// </summary>
+		/// <param name="textField">The UI element to retrieve.</param>
+		/// <returns>The current text in the field.</returns>
+		public static string GetText(GameObject textField) {
+			if (textField == null)
+				throw new ArgumentNullException("textField");
+			return textField.GetComponent<TMP_InputField>()?.text;
+		}
+
+		/// <summary>
 		/// The text field's background color.
 		/// </summary>
 		public Color BackColor { get; set; }
@@ -67,6 +98,17 @@ namespace PeterHan.PLib.UI {
 		/// The minimum width in units (not characters!) of this text field.
 		/// </summary>
 		public int MinWidth { get; set; }
+
+		/// <summary>
+		/// The placeholder text style (including color, font, and word wrap settings) if the
+		/// field is empty.
+		/// </summary>
+		public TextStyleSetting PlaceholderStyle { get; set; }
+
+		/// <summary>
+		/// The placeholder text if the field is empty.
+		/// </summary>
+		public string PlaceholderText { get; set; }
 
 		public string Name { get; }
 
@@ -115,18 +157,33 @@ namespace PeterHan.PLib.UI {
 			MaxLength = 256;
 			MinWidth = 32;
 			Name = name ?? "TextField";
+			PlaceholderText = null;
 			Text = null;
 			TextAlignment = TextAlignmentOptions.Center;
 			TextStyle = PUITuning.Fonts.TextDarkStyle;
+			PlaceholderStyle = TextStyle;
 			ToolTip = "";
 			Type = FieldType.Text;
 		}
 
+		/// <summary>
+		/// Adds a handler when this text field is realized.
+		/// </summary>
+		/// <param name="onRealize">The handler to invoke on realization.</param>
+		/// <returns>This text field for call chaining.</returns>
+		public PTextField AddOnRealize(PUIDelegates.OnRealize onRealize) {
+			OnRealize += onRealize;
+			return this;
+		}
+
 		public GameObject Build() {
 			var textField = PUIElements.CreateUI(null, Name);
-			// Background
 			var style = TextStyle ?? PUITuning.Fonts.TextLightStyle;
-			textField.AddComponent<Image>().color = style.textColor;
+			// Background
+			var border = textField.AddComponent<Image>();
+			border.sprite = PUITuning.Images.BoxBorderWhite;
+			border.type = Image.Type.Sliced;
+			border.color = style.textColor;
 			// Text box with rectangular clipping area
 			var textArea = PUIElements.CreateUI(textField, "Text Area", false);
 			textArea.AddComponent<Image>().color = BackColor;
@@ -134,39 +191,43 @@ namespace PeterHan.PLib.UI {
 			// Scrollable text
 			var textBox = PUIElements.CreateUI(textArea, "Text");
 			// Text to display
-			var textDisplay = textBox.AddComponent<TextMeshProUGUI>();
-			textDisplay.alignment = TextAlignment;
-			textDisplay.autoSizeTextContainer = false;
-			textDisplay.enabled = true;
-			textDisplay.color = style.textColor;
-			textDisplay.font = style.sdfFont;
-			textDisplay.fontSize = style.fontSize;
-			textDisplay.fontStyle = style.style;
+			var textDisplay = ConfigureField(textBox.AddComponent<TextMeshProUGUI>(), style,
+				TextAlignment);
+			textDisplay.enableWordWrapping = false;
 			textDisplay.maxVisibleLines = 1;
+			textDisplay.raycastTarget = true;
 			// Text field itself
 			textField.SetActive(false);
 			var textEntry = textField.AddComponent<TMP_InputField>();
 			textEntry.textComponent = textDisplay;
 			textEntry.textViewport = textArea.rectTransform();
-			textField.SetActive(true);
 			textEntry.text = Text ?? "";
 			textDisplay.text = Text ?? "";
+			// Placeholder
+			if (PlaceholderText != null) {
+				var placeholder = PUIElements.CreateUI(textArea, "Placeholder Text");
+				var textPlace = ConfigureField(placeholder.AddComponent<TextMeshProUGUI>(),
+					PlaceholderStyle ?? style, TextAlignment);
+				textPlace.maxVisibleLines = 1;
+				textPlace.text = PlaceholderText;
+				textEntry.placeholder = textPlace;
+			}
 			// Events!
 			ConfigureTextEntry(textEntry);
 			var events = textField.AddComponent<PTextFieldEvents>();
 			events.OnTextChanged = OnTextChanged;
 			events.OnValidate = OnValidate;
+			events.TextObject = textBox;
 			// Add tooltip
 			PUIElements.SetToolTip(textField, ToolTip);
 			mask.enabled = true;
-			// Lay out, even better than before
-			var tbTransform = textBox.rectTransform();
-			LayoutRebuilder.ForceRebuildLayoutImmediate(tbTransform);
-			var layout = textField.AddComponent<RelativeLayoutGroup>();
-			layout.SetTopEdge(textArea, fraction: 1.0f).SetBottomEdge(textArea, fraction: 0.0f).
-				SetMargin(textArea, new RectOffset(1, 1, 1, 1)).OverrideSize(textArea,
-				new Vector2(MinWidth, LayoutUtility.GetPreferredHeight(tbTransform))).
-				LockLayout();
+			PUIElements.SetAnchorOffsets(textBox, new RectOffset());
+			textField.SetActive(true);
+			// Lay out
+			var rt = textBox.rectTransform();
+			LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
+			var layout = PUIUtils.InsetChild(textField, textArea, Vector2.one, new Vector2(
+				MinWidth, LayoutUtility.GetPreferredHeight(rt))).AddOrGet<LayoutElement>();
 			layout.flexibleWidth = FlexSize.x;
 			layout.flexibleHeight = FlexSize.y;
 			OnRealize?.Invoke(textField);

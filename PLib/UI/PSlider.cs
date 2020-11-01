@@ -127,6 +127,16 @@ namespace PeterHan.PLib.UI {
 			TrackSize = 12.0f;
 		}
 
+		/// <summary>
+		/// Adds a handler when this slider is realized.
+		/// </summary>
+		/// <param name="onRealize">The handler to invoke on realization.</param>
+		/// <returns>This slider for call chaining.</returns>
+		public PSliderSingle AddOnRealize(PUIDelegates.OnRealize onRealize) {
+			OnRealize += onRealize;
+			return this;
+		}
+
 		public GameObject Build() {
 			float iv;
 			// Bounds must be valid

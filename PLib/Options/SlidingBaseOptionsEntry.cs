@@ -63,7 +63,7 @@ namespace PeterHan.PLib.Options {
 			if (limits != null && (minLimit = limits.Minimum) > float.MinValue && (maxLimit =
 					limits.Maximum) < float.MaxValue && maxLimit > minLimit) {
 				// NaN will be false on either comparison
-				var slider = GetSlider();
+				var slider = GetSlider().AddOnRealize(OnRealizeSlider);
 				// Min and max labels
 				var minLabel = new PLabel("MinValue") {
 					TextStyle = PUITuning.Fonts.TextLightStyle, Text = minLimit.
@@ -81,7 +81,6 @@ namespace PeterHan.PLib.Options {
 					minLabel, fraction: 0.0f).SetRightEdge(maxLabel, fraction: 1.0f).
 					SetLeftEdge(slider, toRight: minLabel).SetRightEdge(slider, toLeft:
 					maxLabel).SetMargin(slider, SLIDER_MARGIN);
-				slider.OnRealize += OnRealizeSlider;
 				// Add another row for the slider
 				parent.AddRow(new GridRowSpec());
 				parent.AddChild(panel, new GridComponentSpec(++row, 0) {

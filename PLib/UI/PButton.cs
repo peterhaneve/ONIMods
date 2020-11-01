@@ -80,6 +80,16 @@ namespace PeterHan.PLib.UI {
 			ToolTip = "";
 		}
 
+		/// <summary>
+		/// Adds a handler when this button is realized.
+		/// </summary>
+		/// <param name="onRealize">The handler to invoke on realization.</param>
+		/// <returns>This button for call chaining.</returns>
+		public PButton AddOnRealize(PUIDelegates.OnRealize onRealize) {
+			OnRealize += onRealize;
+			return this;
+		}
+
 		public override GameObject Build() {
 			var button = PUIElements.CreateUI(null, Name);
 			GameObject sprite = null, text = null;

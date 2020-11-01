@@ -151,20 +151,16 @@ namespace PeterHan.SweepByType {
 		public TypeSelectControl(bool disableIcons = false) {
 			DisableIcons = disableIcons;
 			// Select/deselect all types
-			var allCheckBox = new PCheckBox("SelectAll") {
-				Text = STRINGS.UI.UISIDESCREENS.TREEFILTERABLESIDESCREEN.ALLBUTTON,
-				CheckSize = ROW_SIZE, InitialState = PCheckBox.STATE_CHECKED,
-				OnChecked = OnCheck, TextStyle = PUITuning.Fonts.TextDarkStyle
-			};
-			allCheckBox.OnRealize += (obj) => { allItems = obj; };
 			var cp = new PPanel("Categories") {
 				Direction = PanelDirection.Vertical, Alignment = TextAnchor.UpperLeft,
 				Spacing = ROW_SPACING, Margin = ELEMENT_MARGIN, FlexSize = Vector2.right,
 				// Background ensures that scrolling works properly!
 				BackColor = PUITuning.Colors.BackgroundLight
-			};
-			cp.AddChild(allCheckBox);
-			cp.OnRealize += (obj) => { childPanel = obj; };
+			}.AddChild(new PCheckBox("SelectAll") {
+				Text = STRINGS.UI.UISIDESCREENS.TREEFILTERABLESIDESCREEN.ALLBUTTON,
+				CheckSize = ROW_SIZE, InitialState = PCheckBox.STATE_CHECKED,
+				OnChecked = OnCheck, TextStyle = PUITuning.Fonts.TextDarkStyle
+			}.AddOnRealize((obj) => allItems = obj)).AddOnRealize((obj) => childPanel = obj);
 			// Scroll to select elements
 			var sp = new PScrollPane("Scroll") {
 				Child = cp, ScrollHorizontal = false, ScrollVertical = true,
@@ -173,20 +169,14 @@ namespace PeterHan.SweepByType {
 			// Title bar
 			var title = new PLabel("Title") {
 				TextAlignment = TextAnchor.MiddleCenter, Text = SweepByTypeStrings.
-				DIALOG_TITLE, FlexSize = Vector2.right, Margin = TITLE_MARGIN
+				DIALOG_TITLE, FlexSize = Vector2.right, Margin = TITLE_MARGIN,
+				Sprite = PUITuning.Images.BoxBorder, SpriteMode = Image.Type.Sliced
 			}.SetKleiPinkColor();
-			// Bottom border on the title for contrast
-			title.OnRealize += (obj) => {
-				var img = obj.AddOrGet<Image>();
-				img.sprite = PUITuning.Images.BoxBorder;
-				img.type = Image.Type.Sliced;
-			};
 			// 1px black border on the rest of the dialog for contrast
-			var panel = new PRelativePanel("Border") {
+			RootPanel = new PRelativePanel("Border") {
 				BackImage = PUITuning.Images.BoxBorder, ImageMode = Image.Type.Sliced,
 				DynamicSize = false, BackColor = PUITuning.Colors.BackgroundLight
-			}.AddChild(sp).AddChild(title);
-			RootPanel = panel.SetMargin(sp, OUTER_MARGIN).
+			}.AddChild(sp).AddChild(title).SetMargin(sp, OUTER_MARGIN).
 				SetLeftEdge(title, fraction: 0.0f).SetRightEdge(title, fraction: 1.0f).
 				SetLeftEdge(sp, fraction: 0.0f).SetRightEdge(sp, fraction: 1.0f).
 				SetTopEdge(title, fraction: 1.0f).SetBottomEdge(sp, fraction: 0.0f).
