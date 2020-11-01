@@ -405,6 +405,24 @@ namespace PeterHan.DebugNotIncluded {
 #endif
 
 		/// <summary>
+		/// Applied to KCrashReporter to crash to desktop instead of showing the crash dialog.
+		/// </summary>
+		[HarmonyPatch(typeof(KCrashReporter), "ShowDialog")]
+		public static class KCrashReporter_ShowDialog_Patch {
+			/// <summary>
+			/// Applied before ShowDialog runs.
+			/// </summary>
+			internal static bool Prefix(ref bool __result) {
+				bool ctd = DebugNotIncludedOptions.Instance.DisableCrashDialog;
+				if (ctd) {
+					__result = false;
+					Application.Quit();
+				}
+				return !ctd;
+			}
+		}
+
+		/// <summary>
 		/// Applied to MainMenu to check and move this mod to the top.
 		/// </summary>
 		[HarmonyPatch(typeof(MainMenu), "OnSpawn")]

@@ -37,6 +37,10 @@ namespace PeterHan.DebugNotIncluded {
 		[JsonProperty]
 		public bool PowerUserMode { get; set; }
 
+		[Option("Disable Crash Dialog", "Crash to desktop instead of trying to show the Klei crash dialog.", "Debugging")]
+		[JsonProperty]
+		public bool DisableCrashDialog { get; set; }
+
 		[Option("Log Assert Failures", "Logs a stack trace of every failing assert to the log.", "Debugging")]
 		[JsonProperty]
 		public bool LogAsserts { get; set; }
@@ -59,6 +63,7 @@ namespace PeterHan.DebugNotIncluded {
 
 		public DebugNotIncludedOptions() {
 			DetailedBacktrace = true;
+			DisableCrashDialog = false;
 			LogAsserts = true;
 			LogSounds = false;
 			PowerUserMode = false;

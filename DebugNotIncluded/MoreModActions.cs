@@ -38,25 +38,27 @@ namespace PeterHan.DebugNotIncluded {
 		/// <summary>
 		/// Stores the realized buttons.
 		/// </summary>
-		private KButton buttonFirst, buttonUp, buttonLast, buttonDown, buttonUnsub;
+		private KButton buttonFirst, buttonUp, buttonLast, buttonDown, buttonUnsub,
+			buttonModify;
 		private GameObject buttonManage;
-
-		/// <summary>
-		/// The CallResult for handling the Steam API call to unsubscribe from a mod.
-		/// </summary>
-		private CallResult<RemoteStorageUnsubscribePublishedFileResult_t> callHandler;
 
 		/// <summary>
 		/// The button which last invoked the window.
 		/// </summary>
 		private KButton callingButton;
 
+		/// <summary>
+		/// The CallResult for handling the Steam API call to unsubscribe from a mod.
+		/// </summary>
+		private CallResult<RemoteStorageUnsubscribePublishedFileResult_t> unsubCaller;
+
 		internal MoreModActions() {
 			actionsScreen = null;
-			buttonFirst = buttonUp = buttonLast = buttonDown = buttonUnsub = null;
+			buttonFirst = buttonUp = buttonLast = buttonDown = buttonUnsub = buttonModify =
+				null;
 			buttonManage = null;
 			callingButton = null;
-			callHandler = null;
+			unsubCaller = null;
 		}
 
 		/// <summary>
@@ -94,7 +96,7 @@ namespace PeterHan.DebugNotIncluded {
 
 		protected override void OnCleanUp() {
 			HidePopup();
-			callHandler?.Dispose();
+			unsubCaller?.Dispose();
 			if (actionsScreen != null)
 				Destroy(actionsScreen.gameObject);
 			actionsScreen = null;
@@ -108,6 +110,24 @@ namespace PeterHan.DebugNotIncluded {
 			if (actionsScreen != null)
 				actionsScreen.Mod?.on_managed();
 		}
+
+#if DEBUG
+		/// <summary>
+		/// Edits the mod on Steam if the current user is the owner.
+		/// </summary>
+		private void OnModify(GameObject _) {
+			var mod = actionsScreen?.Mod;
+			if (mod != null && mod.label.distribution_platform == Label.DistributionPlatform.
+					Steam) {
+				var editor = new ModEditDialog(gameObject, mod);
+				if (editor.CanBegin())
+					editor.CreateDialog();
+				else
+					editor.Dispose();
+				HidePopup();
+			}
+		}
+#endif
 
 		/// <summary>
 		/// Moves the active mod down 10 spaces.
@@ -182,12 +202,24 @@ namespace PeterHan.DebugNotIncluded {
 				BUTTON_MARGIN
 			}.SetKleiBlueStyle();
 			unsub.OnRealize += (obj) => buttonUnsub = obj.GetComponent<KButton>();
+#if DEBUG
+			var modify = new PButton("ModifyMod") {
+				Text = UI.MODSSCREEN.BUTTON_MODIFY, DynamicSize = false,
+				OnClick = OnModify, ToolTip = UI.TOOLTIPS.DNI_MODIFY, Margin = DebugUtils.
+				BUTTON_MARGIN
+			}.SetKleiPinkStyle();
+			modify.OnRealize += (obj) => buttonModify = obj.GetComponent<KButton>();
+			var actionsObj = panel.AddChild(manage).AddChild(unsub).AddChild(modify).
+				AddTo(gameObject);
+			PButton.SetButtonEnabled(buttonModify.gameObject, false);
+#else
 			var actionsObj = panel.AddChild(manage).AddChild(unsub).AddTo(gameObject);
+#endif
 			actionsObj.SetActive(false);
 			// Blacklist from auto layout
 			actionsObj.AddOrGet<LayoutElement>().ignoreLayout = true;
 			PUIElements.SetAnchors(actionsObj, PUIAnchoring.End, PUIAnchoring.Center);
-			callHandler = new CallResult<RemoteStorageUnsubscribePublishedFileResult_t>(
+			unsubCaller = new CallResult<RemoteStorageUnsubscribePublishedFileResult_t>(
 				OnUnsubComplete);
 			actionsScreen = actionsObj.AddComponent<ModActionsScreen>();
 			callingButton = null;
@@ -199,14 +231,14 @@ namespace PeterHan.DebugNotIncluded {
 		private void OnUnsub(GameObject _) {
 			var mod = actionsScreen?.Mod;
 			if (mod != null && mod.label.distribution_platform == Label.DistributionPlatform.
-					Steam && ulong.TryParse(mod.label.id, out ulong idLong) && !callHandler.
+					Steam && ulong.TryParse(mod.label.id, out ulong idLong) && !unsubCaller.
 					IsActive()) {
 				// Execute the unsubscribe
 				var call = SteamUGC.UnsubscribeItem(new PublishedFileId_t(idLong));
 				if (call.Equals(SteamAPICall_t.Invalid))
 					OnUnsubFailed();
 				else
-					callHandler.Set(call);
+					unsubCaller.Set(call);
 				HidePopup();
 			}
 		}
@@ -260,6 +292,8 @@ namespace PeterHan.DebugNotIncluded {
 						BUTTON_SUBSCRIPTION : UI.MODSSCREEN.BUTTON_LOCAL);
 					PUIElements.SetToolTip(buttonManage, mod.manage_tooltip);
 				}
+				if (buttonModify != null)
+					buttonModify.isInteractable = isSteam;
 				actionsScreen.SetActive(true);
 				// Resize to the proper size
 				LayoutRebuilder.ForceRebuildLayoutImmediate(rt);

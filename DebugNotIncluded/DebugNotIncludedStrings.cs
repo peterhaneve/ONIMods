@@ -43,10 +43,29 @@ namespace PeterHan.DebugNotIncluded {
 					AutomationState.Standby);
 			}
 
+			// Edit Mod
+			public static class MODIFYDIALOG {
+				public static LocString CAPTION = "Title";
+				public static LocString DATA_PATH = "Mod Data";
+				public static LocString DESC = "Description";
+				public static LocString CANCEL = "CANCEL";
+				public static LocString IMAGE_PATH = "Preview Image";
+				public static LocString OK = "OK";
+				public static LocString PATCHNOTES = "Patch Notes";
+				public static LocString SUCCESS = "Succesfully updated mod <b>{0}</b>!";
+				public static LocString TITLE = "UPDATE MOD <i>{0}</i>";
+			}
+
+			// Unable to modify mod
+			public static class MODIFYFAILEDDIALOG {
+				public static LocString TEXT = "Unable to modify mod <b>{0}</b>.\nMods can only be edited if you are the owner.";
+			}
+
 			// Mod management
 			public static class MODSSCREEN {
 				public static LocString BUTTON_ALL = "ALL";
 				public static LocString BUTTON_LOCAL = "Local Folder";
+				public static LocString BUTTON_MODIFY = "Edit";
 				public static LocString BUTTON_SUBSCRIPTION = "Subscription";
 				public static LocString BUTTON_UNSUB = "Unsubscribe";
 				public static LocString LABEL_PLIB = "PLib Version: {0}";
@@ -75,6 +94,7 @@ namespace PeterHan.DebugNotIncluded {
 				public static LocString DNI_BOTTOM = "Move to bottom";
 				public static LocString DNI_ALL = "Enable or disable all";
 				public static LocString DNI_UNSUB = "Unsubscribe from this mod";
+				public static LocString DNI_MODIFY = "Modify this mod";
 				public static LocString DNI_PLIB = "The currently active version of PLib\nFrom Mod: <b>{0}</b>";
 				public static LocString DNI_INSTANT_GROW = "Set plant growth to 100%";
 				public static LocString DNI_INSTANT_TAME = "Set wildness to 0%";
