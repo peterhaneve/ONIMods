@@ -83,6 +83,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotEnoughTags", "NotEnoughT
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastTrack", "FastTrack\FastTrack.csproj", "{5031ADAF-C406-4EA0-8003-6C88A2A64802}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoSensorLimits", "NoSensorLimits\NoSensorLimits.csproj", "{136F8525-F65C-4A92-BC9E-2F89ECAFD4E1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -249,6 +251,10 @@ Global
 		{5031ADAF-C406-4EA0-8003-6C88A2A64802}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5031ADAF-C406-4EA0-8003-6C88A2A64802}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5031ADAF-C406-4EA0-8003-6C88A2A64802}.Release|Any CPU.Build.0 = Release|Any CPU
+		{136F8525-F65C-4A92-BC9E-2F89ECAFD4E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{136F8525-F65C-4A92-BC9E-2F89ECAFD4E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{136F8525-F65C-4A92-BC9E-2F89ECAFD4E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{136F8525-F65C-4A92-BC9E-2F89ECAFD4E1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
