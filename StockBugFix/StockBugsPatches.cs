@@ -74,21 +74,6 @@ namespace PeterHan.StockBugFix {
 		}
 #endif
 
-		public static void PostPatch(HarmonyInstance instance) {
-			var steamMod = PPatchTools.GetTypeSafe("KMod.Steam");
-			if (steamMod != null) {
-#if DEBUG
-				PUtil.LogDebug("Transpiling Steam.UpdateMods()");
-#endif
-				// Transpile UpdateMods only for Steam versions (not EGS)
-				instance.Patch(steamMod.GetMethodSafe("UpdateMods", false, PPatchTools.
-					AnyArguments), transpiler: new HarmonyMethod(typeof(StockBugsPatches),
-					nameof(TranspileUpdateMods)));
-				instance.Patch(typeof(MainMenu).GetMethodSafe("Update", false), postfix:
-					new HarmonyMethod(typeof(StockBugsPatches), nameof(PostfixMenuUpdate)));
-			}
-		}
-
 		/// <summary>
 		/// Retrieves the specified property setter.
 		/// </summary>
@@ -114,6 +99,14 @@ namespace PeterHan.StockBugFix {
 		}
 
 		/// <summary>
+		/// Applied to MainMenu to display a queued Steam mod status report if pending.
+		/// </summary>
+		private static void PostfixMenuUpdate(MainMenu __instance) {
+			if (__instance != null)
+				QueuedReportManager.Instance.CheckQueuedReport(__instance.gameObject);
+		}
+
+		/// <summary>
 		/// Correctly moves the room check point of CreatureDeliveryPoint to match the place
 		/// where the critter spawns.
 		/// </summary>
@@ -127,6 +120,40 @@ namespace PeterHan.StockBugFix {
 					cell = fixedCell;
 			}
 			return cell;
+		}
+
+		public static void PostPatch(HarmonyInstance instance) {
+			var steamMod = PPatchTools.GetTypeSafe("KMod.Steam");
+			if (steamMod != null) {
+#if DEBUG
+				PUtil.LogDebug("Transpiling Steam.UpdateMods()");
+#endif
+				// Transpile UpdateMods only for Steam versions (not EGS)
+				instance.Patch(steamMod.GetMethodSafe("UpdateMods", false, PPatchTools.
+					AnyArguments), transpiler: new HarmonyMethod(typeof(StockBugsPatches),
+					nameof(TranspileUpdateMods)));
+				instance.Patch(typeof(MainMenu).GetMethodSafe("Update", false), postfix:
+					new HarmonyMethod(typeof(StockBugsPatches), nameof(PostfixMenuUpdate)));
+			}
+		}
+
+		/// <summary>
+		/// Applied to Steam to avoid dialog spam on startup if many mods are updated or
+		/// installed.
+		/// </summary>
+		private static IEnumerable<CodeInstruction> TranspileUpdateMods(
+				IEnumerable<CodeInstruction> method) {
+			return PPatchTools.ReplaceMethodCall(method, new Dictionary<MethodInfo,
+					MethodInfo>() {
+				{ typeof(KMod.Manager).GetMethodSafe(nameof(KMod.Manager.Report), false,
+					typeof(GameObject)), typeof(QueuedReportManager).GetMethodSafe(nameof(
+					QueuedReportManager.QueueDelayedReport), true, typeof(KMod.Manager),
+					typeof(GameObject)) },
+				{ typeof(KMod.Manager).GetMethodSafe(nameof(KMod.Manager.Sanitize), false,
+					typeof(GameObject)), typeof(QueuedReportManager).GetMethodSafe(nameof(
+					QueuedReportManager.QueueDelayedSanitize), true, typeof(KMod.Manager),
+					typeof(GameObject)) }
+			});
 		}
 
 		/// <summary>
@@ -317,6 +344,21 @@ namespace PeterHan.StockBugFix {
 		}
 
 		/// <summary>
+		/// Applied to GeneShuffler to fix a bug where it would not update after recharging.
+		/// </summary>
+		[HarmonyPatch(typeof(GeneShuffler), "Recharge")]
+		public static class GeneShuffler_Recharge_Patch {
+			/// <summary>
+			/// Applied after Recharge runs.
+			/// </summary>
+			internal static void Postfix(GeneShuffler.GeneShufflerSM.Instance
+					___geneShufflerSMI) {
+				if (___geneShufflerSMI != null)
+					___geneShufflerSMI.GoTo(___geneShufflerSMI.sm.recharging);
+			}
+		}
+
+		/// <summary>
 		/// Applied to OxidizerTank to empty the tank on launch to avoid duplicating mass.
 		/// </summary>
 		[HarmonyPatch(typeof(OxidizerTank), "OnSpawn")]
@@ -357,45 +399,19 @@ namespace PeterHan.StockBugFix {
 #endif
 
 		/// <summary>
-		/// Applied to GeneShuffler to fix a bug where it would not update after recharging.
+		/// Applied to SolidTransferArm to prevent offgassing of materials inside its
+		/// storage during transfer.
 		/// </summary>
-		[HarmonyPatch(typeof(GeneShuffler), "Recharge")]
-		public static class GeneShuffler_Recharge_Patch {
+		[HarmonyPatch(typeof(SolidTransferArm), "OnSpawn")]
+		public static class SolidTransferArm_OnSpawn_Patch {
 			/// <summary>
-			/// Applied after Recharge runs.
+			/// Applied after OnSpawn runs.
 			/// </summary>
-			internal static void Postfix(GeneShuffler.GeneShufflerSM.Instance
-					___geneShufflerSMI) {
-				if (___geneShufflerSMI != null)
-					___geneShufflerSMI.GoTo(___geneShufflerSMI.sm.recharging);
+			internal static void Postfix(SolidTransferArm __instance) {
+				Storage storage;
+				if (__instance != null && (storage = __instance.GetComponent<Storage>()) != null)
+					storage.SetDefaultStoredItemModifiers(Storage.StandardSealedStorage);
 			}
-		}
-
-		/// <summary>
-		/// Applied to MainMenu to display a queued Steam mod status report if pending.
-		/// </summary>
-		internal static void PostfixMenuUpdate(MainMenu __instance) {
-			if (__instance != null)
-				QueuedReportManager.Instance.CheckQueuedReport(__instance.gameObject);
-		}
-
-		/// <summary>
-		/// Applied to Steam to avoid dialog spam on startup if many mods are updated or
-		/// installed.
-		/// </summary>
-		internal static IEnumerable<CodeInstruction> TranspileUpdateMods(
-				IEnumerable<CodeInstruction> method) {
-			return PPatchTools.ReplaceMethodCall(method, new Dictionary<MethodInfo,
-					MethodInfo>() {
-				{ typeof(KMod.Manager).GetMethodSafe(nameof(KMod.Manager.Report), false,
-					typeof(GameObject)), typeof(QueuedReportManager).GetMethodSafe(nameof(
-					QueuedReportManager.QueueDelayedReport), true, typeof(KMod.Manager),
-					typeof(GameObject)) },
-				{ typeof(KMod.Manager).GetMethodSafe(nameof(KMod.Manager.Sanitize), false,
-					typeof(GameObject)), typeof(QueuedReportManager).GetMethodSafe(nameof(
-					QueuedReportManager.QueueDelayedSanitize), true, typeof(KMod.Manager),
-					typeof(GameObject)) }
-			});
 		}
 
 		/// <summary>
