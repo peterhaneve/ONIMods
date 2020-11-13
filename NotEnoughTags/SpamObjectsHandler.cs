@@ -101,7 +101,7 @@ namespace PeterHan.NotEnoughTags {
 			var game = Game.Instance;
 			if (e.TryConsume(snapshotAction) && game != null && game.SandboxModeActive)
 				game.StartCoroutine(SpamObjectsRoutine(Grid.PosToCell(Camera.current.
-					ScreenToWorldPoint(Input.mousePosition))));
+					ScreenToWorldPoint(KInputManager.GetMousePos()))));
 		}
 	}
 }

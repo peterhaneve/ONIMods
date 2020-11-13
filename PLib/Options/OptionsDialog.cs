@@ -63,7 +63,7 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// The maximum size of the Mod Settings dialog before it gets scroll bars.
 		/// </summary>
-		private static readonly Vector2 SETTINGS_DIALOG_MAX_SIZE = new Vector2(640.0f, 480.0f);
+		private static readonly Vector2 SETTINGS_DIALOG_MAX_SIZE = new Vector2(800.0f, 600.0f);
 
 		/// <summary>
 		/// The size of the toggle button on each (non-default) config section.

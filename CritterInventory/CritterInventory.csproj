@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Critter Inventory Display</AssemblyTitle>
-    <FileVersion>2.3.0.0</FileVersion>
+    <FileVersion>2.4.0.0</FileVersion>
     <RootNamespace>PeterHan.CritterInventory</RootNamespace>
     <Description>Displays available critters in the Inventory screen.</Description>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <AssemblyVersion>2.1.0.0</AssemblyVersion>
   </PropertyGroup>
 </Project>

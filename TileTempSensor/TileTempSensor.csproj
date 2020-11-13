@@ -6,6 +6,6 @@
     <FileVersion>2.5.0.0</FileVersion>
     <RootNamespace>PeterHan.TileTempSensor</RootNamespace>
     <Description>A Thermo Sensor in tile form, allowing heat transfer to it even in Vacuum.</Description>
-    <AssemblyVersion>2.2.0.0</AssemblyVersion>
+    <AssemblyVersion>2.3.0.0</AssemblyVersion>
   </PropertyGroup>
 </Project>

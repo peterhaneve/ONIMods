@@ -27,6 +27,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
@@ -196,6 +197,17 @@ namespace PeterHan.DebugNotIncluded {
 			if (latest != null)
 				DebugLogger.LogDebug("Executing version of PLib is from: " + latest.ModName);
 			HarmonyPatchInspector.Check();
+#if DEBUG
+			// SaveManager.Load:: 13831 ms
+			instance.ProfileMethod(typeof(SaveLoader).GetMethodSafe("Load", false, typeof(
+				IReader)));
+			instance.ProfileMethod(typeof(SaveLoader).GetMethodSafe("Save", false, typeof(
+				BinaryWriter)));
+			instance.ProfileMethod(typeof(SaveManager).GetMethodSafe("Load", false,
+				PPatchTools.AnyArguments));
+			instance.ProfileMethod(typeof(SaveManager).GetMethodSafe("Save", false,
+				PPatchTools.AnyArguments));
+#endif
 		}
 
 		/// <summary>
@@ -208,6 +220,39 @@ namespace PeterHan.DebugNotIncluded {
 			if (method != null)
 				instance.Patch(method, prefix: new HarmonyMethod(typeof(
 					DebugNotIncludedPatches), nameof(OnModCrash)));
+		}
+
+		/// <summary>
+		/// Profiles a method, outputting how many milliseconds it took to run on each use.
+		/// </summary>
+		/// <param name="instance">The Harmony instance to use for the patch.</param>
+		/// <param name="target">The method to profile.</param>
+		internal static void ProfileMethod(this HarmonyInstance instance, MethodBase target) {
+			if (target == null)
+				PUtil.LogWarning("No method specified to profile!");
+			else {
+				instance.Patch(target, new HarmonyMethod(typeof(DebugNotIncludedPatches),
+					nameof(ProfilerPrefix)), new HarmonyMethod(typeof(DebugNotIncludedPatches),
+					nameof(ProfilerPostfix)));
+				DebugLogger.LogDebug("Profiling method {0}.{1}".F(target.DeclaringType, target.
+					Name));
+			}
+		}
+
+		/// <summary>
+		/// A postfix method for instrumenting methods in the code base. Logs the total time
+		/// taken in milliseconds.
+		/// </summary>
+		private static void ProfilerPostfix(MethodBase __originalMethod, Stopwatch __state) {
+			DebugLogger.LogDebug("{1}.{2}:: {0:D} ms".F(__state.ElapsedMilliseconds,
+				__originalMethod.DeclaringType, __originalMethod.Name));
+		}
+
+		/// <summary>
+		/// A prefix method for instrumenting methods in the code base.
+		/// </summary>
+		private static void ProfilerPrefix(ref Stopwatch __state) {
+			__state = Stopwatch.StartNew();
 		}
 
 		/// <summary>
@@ -471,6 +516,28 @@ namespace PeterHan.DebugNotIncluded {
 			}
 		}
 
+#if DEBUG
+		/// <summary>
+		/// Applied to Memory to warn about suspicious patches that target empty methods.
+		/// 
+		/// DEBUG ONLY.
+		/// </summary>
+		[HarmonyPatch(typeof(Memory), "DetourMethod")]
+		public static class Memory_DetourMethod_Patch {
+			private const int MIN_METHOD_SIZE = 8;
+
+			/// <summary>
+			/// Applied before DetourMethod runs.
+			/// </summary>
+			internal static void Prefix(MethodBase original, MethodBase replacement) {
+				var body = original.GetMethodBody();
+				if (body.GetILAsByteArray().Length < MIN_METHOD_SIZE)
+					PUtil.LogWarning("Patch {0} targets empty method {1}.{2}".F(replacement.
+						Name, original.DeclaringType, original.Name));
+			}
+		}
+#endif
+
 		/// <summary>
 		/// Applied to MinionConfig to add buttons for triggering stress and joy reactions.
 		/// </summary>
@@ -583,27 +650,19 @@ namespace PeterHan.DebugNotIncluded {
 		}
 #endif
 
-#if DEBUG
 		/// <summary>
-		/// Applied to Memory to warn about suspicious patches that target empty methods.
-		/// 
-		/// DEBUG ONLY.
+		/// Applied to SaveLoader to try and get rid of a duplicate Sim initialization.
 		/// </summary>
-		[HarmonyPatch(typeof(Memory), "DetourMethod")]
-		public static class Memory_DetourMethod_Patch {
-			private const int MIN_METHOD_SIZE = 8;
-
-			/// <summary>
-			/// Applied before DetourMethod runs.
-			/// </summary>
-			internal static void Prefix(MethodBase original, MethodBase replacement) {
-				var body = original.GetMethodBody();
-				if (body.GetILAsByteArray().Length < MIN_METHOD_SIZE)
-					PUtil.LogWarning("Patch {0} targets empty method {1}.{2}".F(replacement.
-						Name, original.DeclaringType, original.Name));
+		[HarmonyPatch(typeof(SaveLoader), "OnSpawn")]
+		public static class SaveLoader_OnSpawn_Patch {
+			internal static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> method) {
+				return PPatchTools.ReplaceMethodCall(method, new Dictionary<MethodInfo, MethodInfo>() {
+					{ typeof(Sim).GetMethodSafe(nameof(Sim.SIM_Initialize), true, PPatchTools.AnyArguments), null },
+					{ typeof(SimMessages).GetMethodSafe(nameof(SimMessages.CreateSimElementsTable), true, PPatchTools.AnyArguments), null },
+					{ typeof(SimMessages).GetMethodSafe(nameof(SimMessages.CreateDiseaseTable), true, PPatchTools.AnyArguments), null }
+				});
 			}
 		}
-#endif
 
 #if false
 		private static ConcurrentDictionary<string, int> hitCount;

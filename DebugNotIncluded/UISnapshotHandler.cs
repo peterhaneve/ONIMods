@@ -51,8 +51,8 @@ namespace PeterHan.DebugNotIncluded {
 			var es = UnityEngine.EventSystems.EventSystem.current;
 			if (e.TryConsume(snapshotAction) && es != null) {
 				var results = ListPool<RaycastResult, DebugHandler>.Allocate();
-				es.RaycastAll(new PointerEventData(es) { position = Input.mousePosition },
-					results);
+				es.RaycastAll(new PointerEventData(es) { position = KInputManager.
+					GetMousePos() }, results);
 				GameObject obj;
 				foreach (var hit in results)
 					if (hit.isValid && (obj = hit.gameObject) != null) {

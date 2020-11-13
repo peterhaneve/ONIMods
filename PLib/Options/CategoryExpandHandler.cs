@@ -22,7 +22,7 @@ using UnityEngine.Events;
 
 namespace PeterHan.PLib.Options {
 	/// <summary>
-	/// Handles events for expanding and contracting buttons.
+	/// Handles events for expanding and contracting options categories.
 	/// </summary>
 	internal sealed class CategoryExpandHandler {
 		/// <summary>
@@ -45,13 +45,17 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
-		/// Fired when the button is expanded or contracted.
+		/// Fired when the options category is expanded or contracted.
 		/// </summary>
 		/// <param name="on">true if the button is on, or false if it is off.</param>
 		public void OnExpandContract(GameObject _, bool on) {
 			var scale = on ? Vector3.one : Vector3.zero;
-			if (contents != null)
-				contents.transform.localScale = scale;
+			if (contents != null) {
+				var rt = contents.rectTransform();
+				rt.localScale = scale;
+				if (rt != null)
+					UnityEngine.UI.LayoutRebuilder.MarkLayoutForRebuild(rt);
+			}
 		}
 
 		/// <summary>

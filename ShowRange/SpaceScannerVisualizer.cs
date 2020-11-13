@@ -95,19 +95,23 @@ namespace PeterHan.ShowRange {
 				var machinery = ListPool<ScenePartitionerEntry, SpaceScannerVisualizer>.
 					Allocate();
 				try {
+					Vector2 delta2 = default;
 					// Use the partitioner instead of iterating each cell, more efficient
 					GameScenePartitioner.Instance.GatherEntries(extents, GameScenePartitioner.
 						Instance.industrialBuildings, machinery);
 					foreach (var entry in machinery) {
 						var machineObj = (GameObject)entry.obj;
-						if (machineObj != null) {
+						if (machineObj != null && machineObj != gameObject) {
 							// Machinery factor is actually based on true distance
-							var machinePos = machineObj.transform.GetPosition();
-							if (machineObj != gameObject && (machinePos - basePos).magnitude <
-									interferenceRadius)
-								// Highlight the offending heavy machinery
+							var delta3 = machineObj.transform.GetPosition() - basePos;
+							delta2.x = delta3.x;
+							delta2.y = delta3.y;
+							if (delta2.magnitude < interferenceRadius)
+								// Highlight the offending heavy machinery - when placing, the
+								// interference preview is white since overlay mode dims the
+								// screen and makes red hard to see
 								newCells.Add(new VisCellData(Grid.PosToCell(machineObj),
-									INTERFERE_TINT));
+									preview == null ? INTERFERE_TINT : Color.white));
 						}
 					}
 				} finally {

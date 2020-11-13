@@ -312,6 +312,16 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Reads the value of an input axis.
+		/// </summary>
+		/// <param name="inputAxis">The axis to check. This parameter will be passed to
+		/// Input.GetAxis.</param>
+		/// <returns>The value of the axis, with 0.0f being no deflection.</returns>
+		public static float GetInputAxis(string inputAxis) {
+			return UIDetours.GET_AXIS?.Invoke(inputAxis) ?? 0.0f;
+		}
+
+		/// <summary>
 		/// Retrieves the estimated height of one line of text in the given text style.
 		/// </summary>
 		/// <param name="style">The text style to use.</param>
@@ -326,6 +336,16 @@ namespace PeterHan.PLib.UI {
 				height = info.LineHeight * style.fontSize / (info.Scale * info.PointSize);
 			}
 			return height;
+		}
+
+		/// <summary>
+		/// Checks to see if a mouse button is down.
+		/// </summary>
+		/// <param name="button">The button to check. This parameter will be passed to
+		/// Input.GetMouseButtonDown.</param>
+		/// <returns>true if the button is down, or false otherwise.</returns>
+		public static bool GetMouseButton(int button) {
+			return UIDetours.GET_MOUSE_BUTTON_DOWN?.Invoke(button) ?? false;
 		}
 
 		/// <summary>

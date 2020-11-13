@@ -6,6 +6,6 @@
     <FileVersion>2.6.0.0</FileVersion>
     <RootNamespace>PeterHan.ResearchQueue</RootNamespace>
     <Description>Allows multiple tech tree research items to be queued.</Description>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <AssemblyVersion>2.1.0.0</AssemblyVersion>
   </PropertyGroup>
 </Project>

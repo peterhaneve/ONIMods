@@ -24,7 +24,7 @@ namespace PeterHan.DebugNotIncluded {
 	/// <summary>
 	/// The options class used for Debug Not Included.
 	/// </summary>
-	[ModInfo("Debug Not Included", "https://github.com/peterhaneve/ONIMods", "preview.png", true)]
+	[ModInfo("Debug Not Included", "https://github.com/peterhaneve/ONIMods", collapse: true)]
 	[JsonObject(MemberSerialization.OptIn)]
 	[RestartRequired]
 	public sealed class DebugNotIncludedOptions : POptions.SingletonOptions<

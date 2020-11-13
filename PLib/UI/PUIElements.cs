@@ -95,7 +95,7 @@ namespace PeterHan.PLib.UI {
 			var transform = element.AddOrGet<RectTransform>();
 			transform.localScale = Vector3.one;
 			SetAnchors(element, horizAnchor, vertAnchor);
-			// All UI components need a canvas renderer for some reason
+			// Almost all UI components need a canvas renderer for some reason
 			if (canvas)
 				element.AddComponent<CanvasRenderer>();
 			element.layer = LayerMask.NameToLayer("UI");

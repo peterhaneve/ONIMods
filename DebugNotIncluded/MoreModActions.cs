@@ -324,7 +324,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// the dropdown while open, and closes it if so.
 		/// </summary>
 		internal void Update() {
-			if (actionsScreen != null && (Input.GetMouseButtonDown(0) || Input.GetAxis(
+			if (actionsScreen != null && (PUIUtils.GetMouseButton(0) || PUIUtils.GetInputAxis(
 					"Mouse ScrollWheel") != 0.0f) && !actionsScreen.IsOver &&
 					(callingButton == null || !callingButton.GetMouseOver))
 				HidePopup();

@@ -43,7 +43,8 @@ namespace PeterHan.DebugNotIncluded {
 		/// method is a dynamic or other native method.
 		/// 
 		/// Note that making this a delegate gains nothing, because the delegate has to be
-		/// remade on each different stack frame object.
+		/// remade on each different stack frame object. Detouring is not worth it as the
+		/// performance overhead only occurs when the game is crashing anyways.
 		/// </summary>
 		private static readonly MethodInfo GET_INTERNAL_METHOD_NAME = typeof(StackFrame).
 			GetMethodSafe("GetInternalMethodName", false);
@@ -60,7 +61,7 @@ namespace PeterHan.DebugNotIncluded {
 			foreach (var method in patched) {
 				string key = method.DeclaringType.FullName + "." + method.Name;
 				if (!cache.TryGetValue(key, out ICollection<MethodBase> methods))
-					cache[key] = methods = new List<MethodBase>(4);
+					cache[key] = methods = new List<MethodBase>(16);
 				methods.Add(method);
 			}
 		}

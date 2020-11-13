@@ -281,6 +281,8 @@ namespace PeterHan.PLib.UI {
 			}
 
 			public override void CalculateLayoutInputHorizontal() {
+				if (child == null)
+					UpdateComponents();
 				if (child != null) {
 					calcElements = child.GetComponents<Component>();
 					// Lay out children
@@ -293,6 +295,8 @@ namespace PeterHan.PLib.UI {
 			}
 
 			public override void CalculateLayoutInputVertical() {
+				if (child == null)
+					UpdateComponents();
 				if (child != null && calcElements != null) {
 					// Lay out children
 					childVertical = PUIUtils.CalcSizes(child, PanelDirection.Vertical,

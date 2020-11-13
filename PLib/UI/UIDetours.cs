@@ -93,5 +93,18 @@ namespace PeterHan.PLib.UI {
 		public static readonly IDetouredField<SideScreenRef, SideScreenContent> SS_PREFAB = PDetours.DetourFieldLazy<SideScreenRef, SideScreenContent>(nameof(SideScreenRef.screenPrefab));
 		public static readonly IDetouredField<SideScreenRef, SideScreenContent> SS_INSTANCE = PDetours.DetourFieldLazy<SideScreenRef, SideScreenContent>(nameof(SideScreenRef.screenInstance));
 		#endregion
+
+		#region UnityEngine.Input
+		// Allow either UnityEngine.LegacyInputModule or UnityEngine.CoreModule assemblies
+		private static readonly Type INPUT_TYPE = PPatchTools.GetTypeSafe("UnityEngine.Input");
+
+		public delegate float GetAxis(string axisName);
+		public delegate bool GetMouseButtonDown(int button);
+
+		public static readonly DetouredMethod<GetAxis> GET_AXIS =
+			INPUT_TYPE?.DetourLazy<GetAxis>(nameof(GetAxis));
+		public static readonly DetouredMethod<GetMouseButtonDown> GET_MOUSE_BUTTON_DOWN =
+			INPUT_TYPE?.DetourLazy<GetMouseButtonDown>(nameof(GetMouseButtonDown));
+		#endregion
 	}
 }

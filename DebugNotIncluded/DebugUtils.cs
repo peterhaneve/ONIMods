@@ -143,8 +143,8 @@ namespace PeterHan.DebugNotIncluded {
 		/// <returns>The best match found, or null if all matches sucked.</returns>
 		internal static MethodBase BestEffortMatch(IEnumerable<MethodBase> candidates,
 				Type[] paramTypes) {
-			MethodBase method = null;
-			int bestMatch = -1, originalLength = paramTypes.Length;
+			MethodBase method = null, firstMatch = null;
+			int bestMatch = -1, n = 0, originalLength = paramTypes.Length;
 			foreach (var candidate in candidates) {
 				// Argument count must match, with <object> as first parameter for instance
 				var parameters = candidate.GetParameters();
@@ -161,7 +161,11 @@ namespace PeterHan.DebugNotIncluded {
 						method = candidate;
 					}
 				}
+				firstMatch = candidate;
+				n++;
 			}
+			if (method == null && n < 2)
+				method = firstMatch;
 			return method;
 		}
 
@@ -295,13 +299,14 @@ namespace PeterHan.DebugNotIncluded {
 					for (int i = 0; i < nParams; i++)
 						paramTypes[i] = parameters[i].GetTypeByUnityName();
 					// Genericize it
-					var baseType = PPatchTools.GetTypeSafe(match.Groups[1].Value);
+					var baseType = PPatchTools.GetTypeSafe(RemoveBacktick(match.Groups[1].
+						Value));
 					if (baseType != null && baseType.IsGenericTypeDefinition)
 						type = baseType.MakeGenericType(paramTypes);
 					else
 						type = baseType;
 				} else
-					type = PPatchTools.GetTypeSafe(typeName);
+					type = PPatchTools.GetTypeSafe(RemoveBacktick(typeName));
 			}
 			return type;
 		}
@@ -312,6 +317,12 @@ namespace PeterHan.DebugNotIncluded {
 		internal static void OpenOutputLog() {
 			// Ugly but true!
 			var platform = Application.platform;
+			string verString = Application.unityVersion;
+			// Get the major Unity version
+			if (verString != null && verString.Length > 4)
+				verString = verString.Substring(0, 4);
+			if (!uint.TryParse(verString, out uint unityYear))
+				unityYear = 2000u;
 			string path = "";
 			switch (platform) {
 			case RuntimePlatform.OSXPlayer:
@@ -328,7 +339,7 @@ namespace PeterHan.DebugNotIncluded {
 			case RuntimePlatform.WindowsPlayer:
 				path = Path.Combine(Environment.GetEnvironmentVariable("AppData"),
 					"..", "LocalLow", Application.companyName, Application.productName,
-					"output_log.txt");
+					unityYear < 2019 ? "output_log.txt" : "Player.log");
 				break;
 			default:
 				DebugLogger.LogWarning("Unable to open the output log on: {0}", platform);
@@ -336,6 +347,16 @@ namespace PeterHan.DebugNotIncluded {
 			}
 			if (!string.IsNullOrEmpty(path))
 				Application.OpenURL(Path.GetFullPath(path));
+		}
+
+		/// <summary>
+		/// Removes the backtick and subsequent numbers from type names.
+		/// </summary>
+		/// <param name="typeName">The type name.</param>
+		/// <returns>The name without the backtick suffix.</returns>
+		private static string RemoveBacktick(string typeName) {
+			int index = typeName.IndexOf('`');
+			return index > 0 ? typeName.Substring(0, index) : typeName;
 		}
 
 		/// <summary>

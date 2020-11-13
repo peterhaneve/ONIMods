@@ -113,6 +113,17 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Retrieves the normalized path of the mod's active content directory, adjusting if
+		/// the mod is running an archived version.
+		/// </summary>
+		/// <param name="mod">The mod to query.</param>
+		/// <returns>The mod's active root directory (where its assembly is located).</returns>
+		public static string GetModBasePath(this KMod.Mod mod) {
+			return Klei.FileSystem.Normalize(System.IO.Path.Combine(mod.label.install_path,
+				mod.relative_root));
+		}
+
+		/// <summary>
 		/// Coerces a floating point number into the specified range.
 		/// </summary>
 		/// <param name="value">The original number.</param>

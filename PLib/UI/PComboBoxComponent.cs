@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 using TMPro;
@@ -213,8 +214,8 @@ namespace PeterHan.PLib.UI {
 		/// the dropdown while open, and closes it if so.
 		/// </summary>
 		internal void Update() {
-			if (open && (Input.GetMouseButtonDown(0) || Input.GetAxis("Mouse ScrollWheel") !=
-					0.0f) && handler != null && !handler.IsOver)
+			if (open && handler != null && !handler.IsOver && (PUIUtils.GetMouseButton(0) ||
+					PUIUtils.GetInputAxis("Mouse ScrollWheel") != 0.0f))
 				Close();
 		}
 

@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>ResourcesInMotion</AssemblyTitle>
-    <FileVersion>1.0.0.0</FileVersion>
+    <FileVersion>1.1.0.0</FileVersion>
     <RootNamespace>PeterHan.ResourcesInMotion</RootNamespace>
-    <Description>Mod Description Here.</Description>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <Description>Saves and restores the state of doors across reloads.</Description>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
   </PropertyGroup>
 </Project>

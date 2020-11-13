@@ -49,8 +49,10 @@ namespace PeterHan.ResourcesInMotion {
 		/// Clears the saved progress of a door animation.
 		/// </summary>
 		/// <param name="smi">The state machine instance to update.</param>
-		private static void ClearDoorAnimProgress(StateMachine.Instance smi) {
-			smi.Get<AnimationTrackerComponent>()?.ExitState(smi.GetCurrentState().name);
+		/// <param name="oldState">The state name of the instance, prior to the Exit.</param>
+		private static void ClearDoorAnimProgress(StateMachine.Instance smi, string oldState) {
+			// smi.GetCurrentState().name reports the state AFTER the exit
+			smi.Get<AnimationTrackerComponent>()?.ExitState(oldState);
 		}
 
 		/// <summary>
@@ -129,10 +131,12 @@ namespace PeterHan.ResourcesInMotion {
 			/// Applied after InitializeStates runs.
 			/// </summary>
 			internal static void Postfix(Door.Controller __instance) {
-				__instance.opening.Enter("ReloadProgress", RestoreDoorAnimProgress).
-					Exit("StopStateTracking", ClearDoorAnimProgress);
-				__instance.closing.Enter("ReloadProgress", RestoreDoorAnimProgress).
-					Exit("StopStateTracking", ClearDoorAnimProgress);
+				var opening = __instance.opening;
+				var closing = __instance.closing;
+				opening.Enter("ReloadProgress", RestoreDoorAnimProgress).Exit(
+					"StopStateTracking", (smi) => ClearDoorAnimProgress(smi, opening.name));
+				closing.Enter("ReloadProgress", RestoreDoorAnimProgress).Exit(
+					"StopStateTracking", (smi) => ClearDoorAnimProgress(smi, closing.name));
 			}
 		}
 

@@ -30,6 +30,11 @@ namespace PeterHan.StockBugFix {
 	/// </summary>
 	public sealed class StockBugsPatches {
 		/// <summary>
+		/// The game version in which the electric overload network bug was fixed.
+		/// </summary>
+		public const uint ELECTRIC_OVERLOAD_FIX = 439714U;
+
+		/// <summary>
 		/// Base divisor is 10000, so 6000/10000 = 0.6 priority.
 		/// </summary>
 		public const int JOY_PRIORITY_MOD = 6000;
@@ -294,10 +299,16 @@ namespace PeterHan.StockBugFix {
 
 		/// <summary>
 		/// Applied to CircuitManager to fix rounding errors in max wattage calculation.
+		/// 
+		/// Only used for game versions earlier than 439714.
 		/// </summary>
 		[HarmonyPatch(typeof(CircuitManager), nameof(CircuitManager.
 			GetMaxSafeWattageForCircuit))]
 		public static class CircuitManager_GetMaxSafeWattageForCircuit_Patch {
+			internal static bool Prepare() {
+				return PUtil.GameVersion < ELECTRIC_OVERLOAD_FIX;
+			}
+
 			/// <summary>
 			/// Applied after GetMaxSafeWattageForCircuit runs.
 			/// </summary>
@@ -309,10 +320,16 @@ namespace PeterHan.StockBugFix {
 		/// <summary>
 		/// Applied to ElectricalUtilityNetwork to fix rounding issues that would cause
 		/// spurious overloads.
+		/// 
+		/// Only used for game versions earlier than 439714.
 		/// </summary>
 		[HarmonyPatch(typeof(ElectricalUtilityNetwork), nameof(ElectricalUtilityNetwork.
 			UpdateOverloadTime))]
 		public static class ElectricalUtilityNetwork_UpdateOverloadTime_Patch {
+			internal static bool Prepare() {
+				return PUtil.GameVersion < ELECTRIC_OVERLOAD_FIX;
+			}
+
 			/// <summary>
 			/// Transpiles UpdateOverloadTime to fix round off issues.
 			/// </summary>
@@ -409,7 +426,8 @@ namespace PeterHan.StockBugFix {
 			/// </summary>
 			internal static void Postfix(SolidTransferArm __instance) {
 				Storage storage;
-				if (__instance != null && (storage = __instance.GetComponent<Storage>()) != null)
+				if (__instance != null && (storage = __instance.GetComponent<Storage>()) !=
+						null)
 					storage.SetDefaultStoredItemModifiers(Storage.StandardSealedStorage);
 			}
 		}
