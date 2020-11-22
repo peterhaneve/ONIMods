@@ -184,7 +184,7 @@ namespace PeterHan.CritterInventory {
 			/// Applied after Update runs.
 			/// </summary>
 			internal static void Postfix() {
-				if (WorldInventory.Instance != null) {
+				if (DiscoveredResources.Instance != null) {
 					if (critterTame != null) {
 						// Tame critter update
 						critterTame.Activate();

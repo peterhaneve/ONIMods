@@ -35,7 +35,6 @@ namespace PeterHan.PLib.UI.Layouts {
 		internal static IEnumerator DelayedSetDirty(RectTransform transform) {
 			yield return null;
 			LayoutRebuilder.MarkLayoutForRebuild(transform);
-			yield break;
 		}
 
 		/// <summary>
@@ -191,7 +190,6 @@ namespace PeterHan.PLib.UI.Layouts {
 			}
 			return new Vector2(minWidth, minHeight);
 		}
-
 
 		protected override void OnDidApplyAnimationProperties() {
 			base.OnDidApplyAnimationProperties();

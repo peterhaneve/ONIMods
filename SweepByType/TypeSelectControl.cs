@@ -266,7 +266,7 @@ namespace PeterHan.SweepByType {
 		/// Updates the list of available elements.
 		/// </summary>
 		public void Update() {
-			var inventory = WorldInventory.Instance;
+			var inventory = DiscoveredResources.Instance;
 			if (inventory != null) {
 				// Find categories with discovered materials
 				// This is the same logic as used in ResourceCategoryScreen
@@ -288,7 +288,7 @@ namespace PeterHan.SweepByType {
 		/// <param name="inv">The inventory of discovered elements.</param>
 		/// <param name="category">The category to search.</param>
 		/// <param name="overrideName">The name to override the category title</param>
-		private void UpdateCategory(WorldInventory inv, Tag category,
+		private void UpdateCategory(DiscoveredResources inv, Tag category,
 				string overrideName = null) {
 			if (inv.TryGetDiscoveredResourcesFromTag(category, out HashSet<Tag> found) &&
 					found.Count > 0) {

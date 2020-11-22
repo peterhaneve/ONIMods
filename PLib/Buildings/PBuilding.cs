@@ -486,15 +486,10 @@ namespace PeterHan.PLib.Buildings {
 		/// </summary>
 		public void AddTech() {
 			if (!addedTech && Tech != null) {
-				var groups = Database.Techs.TECH_GROUPING;
-				if (groups.TryGetValue(Tech, out string[] values)) {
-					int n = values.Length;
-					// Expand by 1 and add building ID
-					string[] newValues = new string[n + 1];
-					Array.Copy(values, newValues, n);
-					newValues[n] = ID;
-					groups[Tech] = newValues;
-				} else
+				var dbTech = Db.Get().Techs.TryGet(Tech);
+				if (dbTech != null)
+					dbTech.unlockedItemIDs.Add(ID);
+				else
 					PUtil.LogWarning("Unknown technology " + Tech);
 				addedTech = true;
 			}

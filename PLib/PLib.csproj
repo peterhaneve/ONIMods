@@ -4,8 +4,8 @@
     <TargetFramework>net40</TargetFramework>
     <Title>PeterHan.PLib</Title>
     <AssemblyTitle>PeterHanLib</AssemblyTitle>
-    <Version>3.12.1.0</Version>
-    <!--<PackageVersion>3.12.0-beta</PackageVersion>-->
+    <Version>4.0.0.0</Version>
+    <!--<PackageVersion>4.0.0-beta</PackageVersion>-->
     <UsesPLib>false</UsesPLib>
     <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
     <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
@@ -21,7 +21,7 @@ Contains methods aimed at improving cross-mod compatibility, in-game user interf
 
 Fix a bug when using PLib Options with Archived Versions.</PackageReleaseNotes>
     <RootNamespace>PeterHan.PLib</RootNamespace>
-    <AssemblyVersion>3.12.0.0</AssemblyVersion>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>
