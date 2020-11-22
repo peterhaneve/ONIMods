@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using PeterHan.PLib;
 using PeterHan.PLib.Detours;
 using PeterHan.PLib.UI;
@@ -40,6 +39,8 @@ namespace PeterHan.FastSave {
 
 		private delegate void CompressContents(BinaryWriter writer, byte[] data, int length);
 
+		private delegate List<string> GetSaveFiles(string save_dir);
+
 		private static readonly IDetouredField<KButtonMenu, IList<ButtonInfo>> BUTTONS =
 			PDetours.DetourField<KButtonMenu, IList<ButtonInfo>>("buttons");
 
@@ -48,6 +49,9 @@ namespace PeterHan.FastSave {
 
 		private static readonly IDetouredField<SaveLoader, bool> COMPRESS_SAVE_DATA =
 			PDetours.DetourField<SaveLoader, bool>("compressSaveData");
+
+		private static readonly GetSaveFiles GET_SAVE_FILES = typeof(SaveLoader).
+			Detour<GetSaveFiles>();
 
 		private static readonly Action<SaveLoader, BinaryWriter> SAVE =
 			typeof(SaveLoader).Detour<Action<SaveLoader, BinaryWriter>>("Save");
@@ -147,10 +151,13 @@ namespace PeterHan.FastSave {
 		/// <summary>
 		/// Cleans up old autosaves.
 		/// </summary>
-		private void CleanAutosaves() {
+		/// <param name="filename">The path to the current save.</param>
+		private void CleanAutosaves(string filename) {
 			if (!Klei.GenericGameSettings.instance.keepAllAutosaves) {
-				string autoSavePath = SaveLoader.GetActiveAutoSavePath();
-				var saveFiles = SaveLoader.GetSaveFiles(autoSavePath, SearchOption.AllDirectories);
+				string autoSavePath = PUtil.GameVersion > 420700 ? GetActiveAutoSavePath() :
+					Path.GetDirectoryName(filename);
+				// SearchOption.AllDirectories is the default value for Cloud Save Preview
+				var saveFiles = GET_SAVE_FILES.Invoke(autoSavePath);
 				// Clean up old autosaves and their preview images
 				for (int i = saveFiles.Count - 1; i >= SaveLoader.MAX_AUTOSAVE_FILES - 1; i--) {
 					string autoName = saveFiles[i], autoImage = Path.ChangeExtension(
@@ -182,7 +189,7 @@ namespace PeterHan.FastSave {
 				var stream = data.Stream;
 				PUtil.LogDebug("Background save to: " + data.FileName);
 				stream.Seek(0L, SeekOrigin.Begin);
-				CleanAutosaves();
+				CleanAutosaves(data.FileName);
 				// Write the file header
 				using (var writer = new BinaryWriter(File.Open(data.FileName, FileMode.
 						Create))) {
@@ -217,6 +224,23 @@ namespace PeterHan.FastSave {
 					data.Dispose();
 				} catch { }
 			}
+		}
+
+		/// <summary>
+		/// Gets the path to the current autosave folder.
+		/// </summary>
+		/// <returns>The location where autosaves are saved.</returns>
+		private static string GetActiveAutoSavePath() {
+			string filename = SaveLoader.GetActiveSaveFilePath();
+			bool flag = filename == null;
+			string result;
+			if (flag) {
+				result = SaveLoader.GetAutoSavePrefix();
+			} else {
+				string root = Path.GetDirectoryName(filename);
+				result = Path.Combine(root, "auto_save");
+			}
+			return result;
 		}
 
 		/// <summary>

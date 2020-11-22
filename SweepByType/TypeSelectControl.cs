@@ -429,9 +429,12 @@ namespace PeterHan.SweepByType {
 
 			private void OnToggle(GameObject source, bool open) {
 				var obj = ChildPanel;
-				if (obj != null)
+				if (obj != null) {
 					// Scale to 0x0 if not visible
-					obj.rectTransform().localScale = open ? Vector3.one : Vector3.zero;
+					var rt = obj.rectTransform();
+					rt.localScale = open ? Vector3.one : Vector3.zero;
+					LayoutRebuilder.MarkLayoutForRebuild(rt);
+				}
 			}
 
 			/// <summary>

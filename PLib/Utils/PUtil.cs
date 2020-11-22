@@ -141,7 +141,7 @@ namespace PeterHan.PLib {
 		/// <typeparam name="T">The class to handle events.</typeparam>
 		/// <returns>A handler which can be used to Subscribe for RefreshUserMenu events.</returns>
 		public static EventSystem.IntraObjectHandler<T> CreateUserMenuHandler<T>()
-				where T : class, IRefreshUserMenu {
+				where T : Component, IRefreshUserMenu {
 			return new Action<T, object>((T target, object ignore) => {
 #if DEBUG
 				LogDebug("OnRefreshUserMenu<{0}> on {1}".F(typeof(T).Name, target));

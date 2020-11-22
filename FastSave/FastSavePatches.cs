@@ -52,11 +52,19 @@ namespace PeterHan.FastSave {
 				var request = AsyncGPUReadback.Request(rt, 0);
 				// Wait for texture to be read back from the GPU
 				while (!request.done)
-					yield return new WaitForEndOfFrame();
-				byte[] rawARGB = request.GetData<byte>().ToArray();
-				if (rawARGB != null)
-					BackgroundTimelapser.Instance.Start(savePath, TextureToPNG(rawARGB,
-						width, height), preview);
+					yield return null;
+				if (request.hasError) {
+					PUtil.LogWarning("Error saving background timelapse image!");
+					var oldRT = RenderTexture.active;
+					RenderTexture.active = rt;
+					Game.Instance.timelapser.WriteToPng(rt);
+					RenderTexture.active = oldRT;
+				} else {
+					byte[] rawARGB = request.GetData<byte>().ToArray();
+					if (rawARGB != null)
+						BackgroundTimelapser.Instance.Start(savePath, TextureToPNG(rawARGB,
+							width, height), preview);
+				}
 			}
 		}
 

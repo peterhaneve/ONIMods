@@ -167,7 +167,11 @@ namespace PeterHan.PLib {
 		/// <param name="obj">The object to check.</param>
 		/// <returns>true if it is falling, or false otherwise.</returns>
 		public static bool IsFalling(this GameObject obj) {
-			return obj.GetSMI<FallMonitor.Instance>()?.IsFalling() ?? false;
+			var navigator = obj.GetComponent<Navigator>();
+			int cell = Grid.PosToCell(obj);
+			return navigator != null && !navigator.IsMoving() && Grid.
+				IsValidCell(cell) && Grid.IsValidCell(Grid.CellBelow(cell)) &&
+				!navigator.NavGrid.NavTable.IsValid(cell, navigator.CurrentNavType);
 		}
 
 		/// <summary>
