@@ -4,7 +4,7 @@
     <TargetFramework>net40</TargetFramework>
     <Title>PeterHan.PLib.Options</Title>
     <AssemblyTitle>PeterHanLib Options</AssemblyTitle>
-    <Version>3.8.0.0</Version>
+    <Version>3.8.1.0</Version>
     <UsesPLib>false</UsesPLib>
     <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
     <Copyright>Copyright 2020 Peter Han</Copyright>
@@ -21,6 +21,7 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
     <DocumentationFile>bin\Release\PLibOptions.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\PLib\Datafiles\PLocalizationItself.cs" Link="PLocalizationItself.cs" />
     <Compile Include="..\PLib\Detours\DetouredField.cs" Link="DetouredField.cs" />
     <Compile Include="..\PLib\Detours\DetouredMethod.cs" Link="DetouredMethod.cs" />
     <Compile Include="..\PLib\Detours\DetourException.cs" Link="DetourException.cs" />

@@ -474,8 +474,10 @@ namespace PeterHan.PLib {
 
 			// PLocalization
 			var locale = Localization.GetLocale();
-			if (locale != null)
+			if (locale != null) { 
 				PLocalization.LocalizeAll(locale);
+				PLocalizationItself.LocalizeItself(locale);
+			}
 
 			// ModsScreen
 			POptions.Init();
