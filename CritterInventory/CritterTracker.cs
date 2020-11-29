@@ -18,15 +18,27 @@
 
 namespace PeterHan.CritterInventory {
 	/// <summary>
-	/// Cleans up the wild/tame critter types to allow future expansion. Just like that,
-	/// artificial critters!
-	/// 
-	/// If this is changed, also modify:
-	/// CritterInventoryUtils.GetCritterType
-	/// CritterInventoryUtils.GetProperName
-	/// CritterInventory.ctor
+	/// A resource tracker which tracks critter counts.
 	/// </summary>
-	public enum CritterType {
-		Wild, Tame, Artificial
+	public sealed class CritterTracker : BaseCritterTracker {
+		/// <summary>
+		/// The creature type being tracked.
+		/// </summary>
+		public Tag Tag { get; }
+
+		public CritterTracker(int worldID, Tag creatureTag, CritterType type) : base(worldID,
+				type) {
+			Tag = creatureTag;
+		}
+
+		public override void UpdateData() {
+			var world = ClusterManager.Instance.GetWorld(WorldID);
+			if (world != null) {
+				var ci = world.GetComponent<CritterInventory>();
+				if (ci != null)
+					// Tracker excludes reserved
+					AddPoint(ci.GetBySpecies(Type, Tag).Available);
+			}
+		}
 	}
 }

@@ -16,17 +16,22 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using UnityEngine;
-
 namespace PeterHan.CritterInventory {
 	/// <summary>
-	/// A marker class used to annotate additional information regarding the critter
-	/// information to be displayed by a ResourceEntry or ResourceCategoryHeader object.
+	/// A resource tracker which tracks critter counts for critters of a specific type.
 	/// </summary>
-	public sealed class CritterResourceInfo : MonoBehaviour {
+	public abstract class BaseCritterTracker : WorldTracker {
 		/// <summary>
-		/// The critter type this ResourceEntry or ResourceCategoryHeader will show.
+		/// The type of critter (wild or tame) being tracked.
 		/// </summary>
-		public CritterType CritterType { get; set; }
+		public CritterType Type { get; }
+
+		protected BaseCritterTracker(int worldID, CritterType type) : base(worldID) {
+			Type = type;
+		}
+
+		public override string FormatValueString(float value) {
+			return GameUtil.GetFormattedSimple(value, GameUtil.TimeSlice.None);
+		}
 	}
 }

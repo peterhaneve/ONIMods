@@ -16,17 +16,24 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
+using System.Collections.Generic;
+
 namespace PeterHan.CritterInventory {
 	/// <summary>
-	/// Cleans up the wild/tame critter types to allow future expansion. Just like that,
-	/// artificial critters!
-	/// 
-	/// If this is changed, also modify:
-	/// CritterInventoryUtils.GetCritterType
-	/// CritterInventoryUtils.GetProperName
-	/// CritterInventory.ctor
+	/// Compares tags by their display name (localized), without link formatting.
 	/// </summary>
-	public enum CritterType {
-		Wild, Tame, Artificial
+	public sealed class TagComparer : IComparer<Tag> {
+		/// <summary>
+		/// The singleton instance of this class.
+		/// </summary>
+		public static readonly IComparer<Tag> INSTANCE = new TagComparer();
+
+		private TagComparer() { }
+
+		public int Compare(Tag x, Tag y) {
+			return string.Compare(x.ProperNameStripLink(), y.ProperNameStripLink(),
+				StringComparison.CurrentCulture);
+		}
 	}
 }
