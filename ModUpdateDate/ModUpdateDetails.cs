@@ -135,18 +135,19 @@ namespace PeterHan.ModUpdateDate {
 		/// <param name="target">The target mod.</param>
 		/// <returns>Whether the content was really changed.</returns>
 		internal static bool SuppressContentChanged(bool changed, Mod target) {
-			var settings = ModUpdateInfo.Settings;
-			var existing = settings?.ModUpdates;
+			var existing = ModUpdateInfo.Settings?.ModUpdates;
 			var label = target.label;
-			foreach (var info in existing) {
-				string idString = info.ID.ToString();
-				if (label.id == idString && label.distribution_platform == Label.
-						DistributionPlatform.Steam && (info.Status == ModUpdateStatus.
-						PendingUpdate || info.Status == ModUpdateStatus.UpdatedByThisMod)) {
-					changed = false;
-					break;
+			if (existing != null)
+				foreach (var info in existing) {
+					string idString = info.ID.ToString();
+					if (label.id == idString && label.distribution_platform == Label.
+							DistributionPlatform.Steam && (info.Status == ModUpdateStatus.
+							PendingUpdate || info.Status == ModUpdateStatus.UpdatedByThisMod))
+					{
+						changed = false;
+						break;
+					}
 				}
-			}
 			return changed;
 		}
 
