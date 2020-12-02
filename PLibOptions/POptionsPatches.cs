@@ -32,6 +32,20 @@ namespace PeterHan.PLib.Options {
 		private static readonly DetouredMethod<Func<KMod.Manager, bool>> MODS_SAVE = typeof(
 			KMod.Manager).DetourLazy<Func<KMod.Manager, bool>>(nameof(KMod.Manager.Save));
 
+		private static bool applied = false;
+
+		/// <summary>
+		/// Localizes PLib Options if it has not already been localized.
+		/// </summary>
+		private static void Localize() {
+			if (!applied) {
+				var locale = Localization.GetLocale();
+				if (locale != null)
+					PLocalizationItself.LocalizeItself(locale);
+			}
+			applied = true;
+		}
+
 		/// <summary>
 		/// Applied to ModsScreen to display settings for this mod.
 		/// </summary>
@@ -42,6 +56,7 @@ namespace PeterHan.PLib.Options {
 			/// </summary>
 			internal static void Postfix(IEnumerable ___displayedMods, GameObject
 					___entryPrefab) {
+				Localize();
 				POptions.BuildDisplay(___displayedMods, ___entryPrefab);
 			}
 		}
@@ -53,26 +68,6 @@ namespace PeterHan.PLib.Options {
 			var manager = Global.Instance.modManager;
 			if (manager != null)
 				MODS_SAVE.Invoke(manager);
-		}
-
-		/// <summary>
-		/// Applied to GlobalResources to localize POptions UI for this mod.
-		/// </summary>
-		[HarmonyPatch(typeof(GlobalResources), "Instance")]
-		internal static class GlobalResources_Instance_Patch {
-			private static bool applied = false;
-			/// <summary>
-			/// Applied after Instance runs.
-			/// </summary>
-			internal static void Postfix() {
-				if (!applied) {
-					var locale = Localization.GetLocale();
-					if (locale != null) {
-						PLocalizationItself.LocalizeItself(locale);
-					}
-					applied = true;
-				}
-			}
 		}
 	}
 }
