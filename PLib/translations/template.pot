@@ -1,0 +1,75 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not Included"
+"POT Version: 2.0"
+
+#. PeterHan.PLib.UI.PUIStrings.BUTTON_MANUAL
+msgctxt "PeterHan.PLib.UI.PUIStrings.BUTTON_MANUAL"
+msgid "MANUAL CONFIG"
+msgstr ""
+
+#. PeterHan.PLib.UI.PUIStrings.DIALOG_TITLE
+msgctxt "PeterHan.PLib.UI.PUIStrings.DIALOG_TITLE"
+msgid "Options for {0}"
+msgstr ""
+
+#. PeterHan.PLib.UI.PUIStrings.MOD_ASSEMBLY_VERSION
+msgctxt "PeterHan.PLib.UI.PUIStrings.MOD_ASSEMBLY_VERSION"
+msgid "Assembly Version: {0}"
+msgstr ""
+
+#. PeterHan.PLib.UI.PUIStrings.MOD_HOMEPAGE
+msgctxt "PeterHan.PLib.UI.PUIStrings.MOD_HOMEPAGE"
+msgid "Mod Homepage"
+msgstr ""
+
+#. PeterHan.PLib.UI.PUIStrings.MOD_VERSION
+msgctxt "PeterHan.PLib.UI.PUIStrings.MOD_VERSION"
+msgid "Mod Version: {0}"
+msgstr ""
+
+#. PeterHan.PLib.UI.PUIStrings.RESTART_REQUIRED
+msgctxt "PeterHan.PLib.UI.PUIStrings.RESTART_REQUIRED"
+msgid "Oxygen Not Included must be restarted for these options to take effect."
+msgstr ""
+
+#. PeterHan.PLib.UI.PUIStrings.TOOLTIP_CANCEL
+msgctxt "PeterHan.PLib.UI.PUIStrings.TOOLTIP_CANCEL"
+msgid "Discard changes."
+msgstr ""
+
+#. PeterHan.PLib.UI.PUIStrings.TOOLTIP_HOMEPAGE
+msgctxt "PeterHan.PLib.UI.PUIStrings.TOOLTIP_HOMEPAGE"
+msgid "Visit the mod's website."
+msgstr ""
+
+#. PeterHan.PLib.UI.PUIStrings.TOOLTIP_MANUAL
+msgctxt "PeterHan.PLib.UI.PUIStrings.TOOLTIP_MANUAL"
+msgid "Opens the folder containing the full mod configuration."
+msgstr ""
+
+#. PeterHan.PLib.UI.PUIStrings.TOOLTIP_NEXT
+msgctxt "PeterHan.PLib.UI.PUIStrings.TOOLTIP_NEXT"
+msgid "Next"
+msgstr ""
+
+#. PeterHan.PLib.UI.PUIStrings.TOOLTIP_OK
+msgctxt "PeterHan.PLib.UI.PUIStrings.TOOLTIP_OK"
+msgid "Save these options. Some mods may require a restart for the options to take effect."
+msgstr ""
+
+#. PeterHan.PLib.UI.PUIStrings.TOOLTIP_PREVIOUS
+msgctxt "PeterHan.PLib.UI.PUIStrings.TOOLTIP_PREVIOUS"
+msgid "Previous"
+msgstr ""
+
+#. PeterHan.PLib.UI.PUIStrings.TOOLTIP_TOGGLE
+msgctxt "PeterHan.PLib.UI.PUIStrings.TOOLTIP_TOGGLE"
+msgid "Show or hide this options category"
+msgstr ""
+
+#. PeterHan.PLib.UI.PUIStrings.TOOLTIP_VERSION
+msgctxt "PeterHan.PLib.UI.PUIStrings.TOOLTIP_VERSION"
+msgid "The currently installed version of this mod.\n\nCompare this version with the mod's Release Notes to see if it is outdated."
+msgstr ""
+

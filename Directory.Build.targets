@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
+  <Target Name="PLibTranslationEmbeddedResources" BeforeTargets="ResolveReferences" Condition=" '$(AssemblyName)' == 'PLib' Or '$(AssemblyName)' == 'PLibOptions' ">
+    <ItemGroup>
+      <PLibTranslationFiles Include="../PLib/translations/*.po" />
+    </ItemGroup>
+    <ItemGroup>
+      <EmbeddedResource Include="%(PLibTranslationFiles.Identity)"
+        LogicalName="PeterHan.PLib.UI.PUIStrings.%(PLibTranslationFiles.Filename)%(PLibTranslationFiles.Extension)" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="ClearGameFolderCopyLocal" AfterTargets="ResolveAssemblyReferences">
     <ItemGroup>
       <ReferenceCopyLocalPaths Remove="$(GameFolder)\*" />
