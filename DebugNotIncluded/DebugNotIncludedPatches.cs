@@ -229,7 +229,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// <param name="target">The method to profile.</param>
 		internal static void ProfileMethod(this HarmonyInstance instance, MethodBase target) {
 			if (target == null)
-				PUtil.LogWarning("No method specified to profile!");
+				DebugLogger.LogWarning("No method specified to profile!");
 			else {
 				instance.Patch(target, new HarmonyMethod(typeof(DebugNotIncludedPatches),
 					nameof(ProfilerPrefix)), new HarmonyMethod(typeof(DebugNotIncludedPatches),
@@ -532,8 +532,8 @@ namespace PeterHan.DebugNotIncluded {
 			internal static void Prefix(MethodBase original, MethodBase replacement) {
 				var body = original.GetMethodBody();
 				if (body.GetILAsByteArray().Length < MIN_METHOD_SIZE)
-					PUtil.LogWarning("Patch {0} targets empty method {1}.{2}".F(replacement.
-						Name, original.DeclaringType, original.Name));
+					DebugLogger.LogWarning("Patch {0} targets empty method {1}.{2}".F(
+						replacement.Name, original.DeclaringType, original.Name));
 			}
 		}
 #endif

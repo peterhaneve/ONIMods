@@ -30,11 +30,6 @@ namespace PeterHan.StockBugFix {
 	/// </summary>
 	public sealed class StockBugsPatches {
 		/// <summary>
-		/// The game version in which the electric overload network bug was fixed.
-		/// </summary>
-		public const uint ELECTRIC_OVERLOAD_FIX = 439714U;
-
-		/// <summary>
 		/// Base divisor is 10000, so 6000/10000 = 0.6 priority.
 		/// </summary>
 		public const int JOY_PRIORITY_MOD = 6000;
@@ -159,6 +154,20 @@ namespace PeterHan.StockBugFix {
 					QueuedReportManager.QueueDelayedSanitize), true, typeof(KMod.Manager),
 					typeof(GameObject)) }
 			});
+		}
+
+		/// <summary>
+		/// Applied to Clustercraft to fix a floating point round off error with rocket range.
+		/// </summary>
+		[HarmonyPatch(typeof(Clustercraft), nameof(Clustercraft.HasResourcesToMove))]
+		public static class Clustercraft_HasResourcesToMove_Patch {
+			/// <summary>
+			/// Applied after HasResourcesToMove runs.
+			/// </summary>
+			internal static void Postfix(Clustercraft __instance, int hexes, ref bool __result) {
+				__result = __instance.ModuleInterface.BurnableMassRemaining / __instance.
+					FuelPerDistance >= Constants.SECONDS_PER_CYCLE * hexes - 1.0f;
+			}
 		}
 
 		/// <summary>
@@ -298,69 +307,6 @@ namespace PeterHan.StockBugFix {
 		}
 
 		/// <summary>
-		/// Applied to CircuitManager to fix rounding errors in max wattage calculation.
-		/// 
-		/// Only used for game versions earlier than 439714.
-		/// </summary>
-		[HarmonyPatch(typeof(CircuitManager), nameof(CircuitManager.
-			GetMaxSafeWattageForCircuit))]
-		public static class CircuitManager_GetMaxSafeWattageForCircuit_Patch {
-			internal static bool Prepare() {
-				return PUtil.GameVersion < ELECTRIC_OVERLOAD_FIX;
-			}
-
-			/// <summary>
-			/// Applied after GetMaxSafeWattageForCircuit runs.
-			/// </summary>
-			internal static void Postfix(ref float __result) {
-				__result += 0.001953125f;
-			}
-		}
-
-		/// <summary>
-		/// Applied to ElectricalUtilityNetwork to fix rounding issues that would cause
-		/// spurious overloads.
-		/// 
-		/// Only used for game versions earlier than 439714.
-		/// </summary>
-		[HarmonyPatch(typeof(ElectricalUtilityNetwork), nameof(ElectricalUtilityNetwork.
-			UpdateOverloadTime))]
-		public static class ElectricalUtilityNetwork_UpdateOverloadTime_Patch {
-			internal static bool Prepare() {
-				return PUtil.GameVersion < ELECTRIC_OVERLOAD_FIX;
-			}
-
-			/// <summary>
-			/// Transpiles UpdateOverloadTime to fix round off issues.
-			/// </summary>
-			internal static IEnumerable<CodeInstruction> Transpiler(
-					IEnumerable<CodeInstruction> method) {
-				return PPatchTools.ReplaceMethodCall(method, typeof(Wire).GetMethodSafe(
-					nameof(Wire.GetMaxWattageAsFloat), true, typeof(Wire.WattageRating)),
-					typeof(StockBugsPatches).GetMethodSafe(nameof(GetRoundedMaxWattage), true,
-					typeof(Wire.WattageRating)));
-			}
-		}
-
-		/// <summary>
-		/// Applied to FuelTank to empty the tank on launch to avoid duplicating mass.
-		/// </summary>
-		[HarmonyPatch(typeof(FuelTank), "OnSpawn")]
-		public static class FuelTank_OnSpawn_Patch {
-			/// <summary>
-			/// Applied after OnSpawn runs.
-			/// </summary>
-			internal static void Postfix(FuelTank __instance) {
-				__instance.gameObject.Subscribe((int)GameHashes.LaunchRocket, (_) => {
-					// Clear the contents
-					foreach (var item in __instance.items)
-						Util.KDestroyGameObject(item);
-					__instance.items.Clear();
-				});
-			}
-		}
-
-		/// <summary>
 		/// Applied to GeneShuffler to fix a bug where it would not update after recharging.
 		/// </summary>
 		[HarmonyPatch(typeof(GeneShuffler), "Recharge")]
@@ -376,21 +322,40 @@ namespace PeterHan.StockBugFix {
 		}
 
 		/// <summary>
-		/// Applied to OxidizerTank to empty the tank on launch to avoid duplicating mass.
+		/// Applied to HoverTextHelper to fix the integer overflow error on huge masses.
 		/// </summary>
-		[HarmonyPatch(typeof(OxidizerTank), "OnSpawn")]
-		public static class OxidizerTank_OnSpawn_Patch {
+		[HarmonyPatch(typeof(HoverTextHelper), nameof(HoverTextHelper.MassStringsReadOnly))]
+		public static class HoverTextHelper_MassStringsReadOnly_Patch {
 			/// <summary>
-			/// Applied after OnSpawn runs.
+			/// Applied after MassStringsReadOnly runs.
 			/// </summary>
-			internal static void Postfix(OxidizerTank __instance) {
-				var storage = __instance.storage;
-				__instance.gameObject.Subscribe((int)GameHashes.LaunchRocket, (_) => {
-					// Clear the contents
-					foreach (var item in storage.items)
-						Util.KDestroyGameObject(item);
-					storage.items.Clear();
-				});
+			internal static void Postfix(int cell, ref string[] __result, float ___cachedMass,
+					Element ___cachedElement) {
+				var element = ___cachedElement;
+				SimHashes id;
+				float mass = ___cachedMass;
+				if (Grid.IsValidCell(cell) && element != null && (id = element.id) !=
+						SimHashes.Vacuum && id != SimHashes.Unobtanium) {
+					if (mass < 5.0f)
+						// kg => g
+						mass *= 1000.0f;
+					if (mass < 5.0f)
+						// g => mg
+						mass *= 1000.0f;
+					if (mass < 5.0f)
+						mass = Mathf.Floor(1000.0f * mass);
+					// Base game hardcodes dots so we will too
+					string formatted = mass.ToString("F1", System.Globalization.CultureInfo.
+						InvariantCulture);
+					int index = formatted.IndexOf('.');
+					if (index > 0) {
+						__result[0] = formatted.Substring(0, index);
+						__result[1] = formatted.Substring(index);
+					} else {
+						__result[0] = formatted;
+						__result[1] = "";
+					}
+				}
 			}
 		}
 
@@ -429,42 +394,6 @@ namespace PeterHan.StockBugFix {
 				if (__instance != null && (storage = __instance.GetComponent<Storage>()) !=
 						null)
 					storage.SetDefaultStoredItemModifiers(Storage.StandardSealedStorage);
-			}
-		}
-
-		/// <summary>
-		/// Applied to WorldInspector to fix the integer overflow error on huge masses.
-		/// </summary>
-		[HarmonyPatch(typeof(WorldInspector), nameof(WorldInspector.MassStringsReadOnly))]
-		public static class WorldInspector_MassStringsReadOnly_Patch {
-			/// <summary>
-			/// Applied after MassStringsReadOnly runs.
-			/// </summary>
-			internal static void Postfix(string[] __result, Element ___cachedElement,
-					float ___cachedMass) {
-				var id = ___cachedElement.id;
-				float mass = ___cachedMass;
-				if (id != SimHashes.Vacuum && id != SimHashes.Unobtanium) {
-					if (mass < 5.0f)
-						// kg => g
-						mass *= 1000.0f;
-					if (mass < 5.0f)
-						// g => mg
-						mass *= 1000.0f;
-					if (mass < 5.0f)
-						mass = Mathf.Floor(1000.0f * mass);
-					// Base game hardcodes dots so we will too
-					string formatted = mass.ToString("F1", System.Globalization.CultureInfo.
-						InvariantCulture);
-					int index = formatted.IndexOf('.');
-					if (index > 0) {
-						__result[0] = formatted.Substring(0, index);
-						__result[1] = formatted.Substring(index);
-					} else {
-						__result[0] = formatted;
-						__result[1] = "";
-					}
-				}
 			}
 		}
 

@@ -200,9 +200,6 @@ namespace PeterHan.AirlockDoor {
 		[MyCmpReq]
 		private Operational operational;
 
-		[MyCmpReq]
-		private PrimaryElement pe;
-
 		[MyCmpGet]
 		private KSelectable selectable;
 #pragma warning restore CS0649
@@ -287,12 +284,11 @@ namespace PeterHan.AirlockDoor {
 			requestedState = locked;
 			smi.StartSM();
 			RefreshControlState();
-			var access = GetComponent<AccessControl>() != null;
-			float massPerCell = pe.Mass / building.PlacementCells.Length;
+			SetFakeFloor(true);
+			// Lock out the critters
 			foreach (int cell in building.PlacementCells) {
 				Grid.CritterImpassable[cell] = true;
 				Grid.HasDoor[cell] = true;
-				Grid.HasAccessDoor[cell] = access;
 				Pathfinding.Instance.AddDirtyNavGridCell(cell);
 			}
 			var kac = GetComponent<KAnimControllerBase>();
@@ -314,10 +310,10 @@ namespace PeterHan.AirlockDoor {
 		}
 
 		protected override void OnCleanUp() {
+			SetFakeFloor(false);
 			foreach (int cell in building.PlacementCells) {
 				// Clear the airlock flags, render critter and duplicant passable
 				Grid.HasDoor[cell] = false;
-				Grid.HasAccessDoor[cell] = false;
 				Game.Instance.SetDupePassableSolid(cell, false, Grid.Solid[cell]);
 				Grid.CritterImpassable[cell] = false;
 				Pathfinding.Instance.AddDirtyNavGridCell(cell);
@@ -349,6 +345,23 @@ namespace PeterHan.AirlockDoor {
 			UpdateWorldState();
 			selectable.SetStatusItem(Db.Get().StatusItemCategories.Main, doorControlState,
 				this);
+		}
+
+		/// <summary>
+		/// Enables or disables the fake floor along the top of the door.
+		/// </summary>
+		/// <param name="enable">true to add a fake floor, or false to remove it.</param>
+		private void SetFakeFloor(bool enable) {
+			// Place fake floor along the top
+			int width = building.Def.WidthInCells, start = Grid.PosToCell(this), height =
+				building.Def.HeightInCells;
+			for (int i = 0; i < width; i++) {
+				int target = Grid.OffsetCell(start, i, height);
+				if (Grid.IsValidCell(target)) {
+					Grid.FakeFloor[target] = enable;
+					Pathfinding.Instance.AddDirtyNavGridCell(target);
+				}
+			}
 		}
 
 		public void Sim200ms(float dt) {

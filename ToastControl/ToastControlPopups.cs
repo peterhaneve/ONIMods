@@ -47,6 +47,7 @@ namespace PeterHan.ToastControl {
 				Dictionary<string, ShowFunc>() {
 			{ "Klei.AI.AttributeLevel", (c, t) => Options.AttributeIncrease },
 			{ nameof(BaseUtilityBuildTool), ShowInsufficient },
+			{ "Beefinery+States", ShowElementRemoved },
 			{ nameof(BuildingHP), ShowBuildingDamage },
 			{ nameof(BuildTool), ShowInsufficient },
 			{ nameof(CaptureTool), (c, t) => Options.CannotCapture },
@@ -55,7 +56,6 @@ namespace PeterHan.ToastControl {
 			{ "CreatureCalorieMonitor+Stomach", ShowCritterPoop },
 			{ nameof(DebugHandler), ShowInvalidLocation },
 			{ "Klei.AI.EffectInstance", (c, t) => Options.EffectAdded },
-			{ nameof(ElementDropper), ShowElementDropped },
 			{ "ElementDropperMonitor+Instance", ShowCritterPoop },
 			{ nameof(ElementEmitter), ShowElementDropped }, // no uses?
 			{ nameof(FleeStates), (c, t) => Options.Fleeing },
@@ -64,6 +64,8 @@ namespace PeterHan.ToastControl {
 			{ nameof(MinionResume), (c, t) => Options.SkillPointEarned },
 			{ nameof(Moppable), (c, t) => Options.ElementMopped },
 			{ nameof(MopTool), ShowMopError },
+			{ nameof(NuclearResearchCenterWorkable), ShowResearchGained },
+			{ nameof(ReorderableBuilding), ShowInvalidLocation },
 			{ nameof(ResearchCenter), ShowResearchGained },
 			{ nameof(ResearchPointObject), ShowResearchGained },
 			{ nameof(RotPile), ShowFoodRotted },
@@ -74,7 +76,7 @@ namespace PeterHan.ToastControl {
 			{ nameof(SetLocker), ShowItemGained },
 			{ "Klei.AI.SlimeSickness+SlimeLungComponent+StatesInstance", ShowCritterPoop },
 			{ "Klei.AI.SicknessInstance+StatesInstance", ShowCureOrInfect },
-			{ "SolidConsumerMonitor+Instance", (c, t) => Options.ElementRemoved },
+			{ "SolidConsumerMonitor+Instance", ShowElementRemoved },
 			{ nameof(Storage), ShowItemStored },
 			{ nameof(SuperProductive), ShowOverjoyed },
 			{ nameof(Toilet), ShowGermsAdded },
@@ -127,6 +129,8 @@ namespace PeterHan.ToastControl {
 		}
 
 		private static bool ShowElementDropped(object _, string text) => Options.ElementDropped;
+
+		private static bool ShowElementRemoved(object _, string text) => Options.ElementRemoved;
 
 		private static bool ShowFoodRotted(object _, string text) => Options.FoodDecayed;
 

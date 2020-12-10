@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Airlock Door</AssemblyTitle>
-    <FileVersion>1.6.0.0</FileVersion>
+    <FileVersion>1.7.0.0</FileVersion>
     <RootNamespace>PeterHan.AirlockDoor</RootNamespace>
     <Description>A powered airlock door that allows passage without ever exchanging liquid or gas.</Description>
     <AssemblyVersion>1.1.0.0</AssemblyVersion>

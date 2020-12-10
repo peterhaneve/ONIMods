@@ -31,6 +31,7 @@ namespace PeterHan.CritterInventory {
 	public static class CritterInventoryPatches {
 		public static void OnLoad() {
 			PUtil.InitLibrary();
+			LocString.CreateLocStringKeys(typeof(CritterInventoryStrings.CREATURES));
 			PLib.Datafiles.PLocalization.Register();
 		}
 

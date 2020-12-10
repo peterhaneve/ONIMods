@@ -20,7 +20,6 @@ using Harmony;
 using PeterHan.PLib;
 using PeterHan.PLib.Datafiles;
 using PeterHan.PLib.Options;
-using System;
 using System.Collections.Generic;
 
 namespace PeterHan.ThermalTooltips {
