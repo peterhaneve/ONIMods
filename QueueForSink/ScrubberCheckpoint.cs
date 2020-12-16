@@ -43,11 +43,12 @@ namespace PeterHan.QueueForSinks {
 				if (Grid.IsValidBuildingCell(cell) && (nScrub = Grid.Objects[cell, (int)
 						ObjectLayer.Building]) != null) {
 					var nextScrubber = nScrub.GetComponent<ScrubberCheckpoint>();
+					var op = nScrub.GetComponent<Operational>();
+					var dc = nScrub.GetComponent<DirectionControl>();
 					// Must be immediately next to this one, same type, and working
-					stop = scrubber.PrefabID() != nScrub.PrefabID() || nScrub.
-						GetComponent<Operational>()?.IsOperational != true || nScrub.
-						GetComponent<DirectionControl>()?.allowedDirection !=
-						direction.allowedDirection;
+					stop = scrubber.PrefabID() != nScrub.PrefabID() || op == null || !op.
+						IsOperational || dc == null || dc.allowedDirection != direction.
+						allowedDirection;
 					if (!stop && nextScrubber != null && nextScrubber.inUse && nScrub !=
 							scrubber)
 						// Check that scrubber for a suitable destination

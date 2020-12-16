@@ -43,11 +43,12 @@ namespace PeterHan.QueueForSinks {
 				if (Grid.IsValidBuildingCell(cell) && (nSink = Grid.Objects[cell, (int)
 						ObjectLayer.Building]) != null) {
 					var nextSink = nSink.GetComponent<SinkCheckpoint>();
+					var op = nSink.GetComponent<Operational>();
+					var dc = nSink.GetComponent<DirectionControl>();
 					// Must be immediately next to this one, same type, and working
-					stop = sink.PrefabID() != nSink.PrefabID() || nSink.
-						GetComponent<Operational>()?.IsOperational != true || nSink.
-						GetComponent<DirectionControl>()?.allowedDirection !=
-						direction.allowedDirection;
+					stop = sink.PrefabID() != nSink.PrefabID() || op == null || !op.
+						IsOperational || dc == null || dc.allowedDirection != direction.
+						allowedDirection;
 					if (!stop && nextSink != null && nextSink.inUse && nSink != sink)
 						// Check that sink for a suitable destination
 						stop = nextSink.CheckForOtherSink(dir);
