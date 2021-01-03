@@ -301,7 +301,7 @@ namespace PeterHan.PLib.Detours {
 					typeof(P)
 				}, true);
 				var generator = getter.GetILGenerator();
-				var getMethod = target.GetGetMethod();
+				var getMethod = target.GetGetMethod(true);
 				// Getter will load the first argument and call the property getter
 				if (!getMethod.IsStatic)
 					generator.Emit(OpCodes.Ldarg_0);
@@ -314,7 +314,7 @@ namespace PeterHan.PLib.Detours {
 					typeof(P), typeof(T)
 				}, true);
 				var generator = setter.GetILGenerator();
-				var setMethod = target.GetSetMethod();
+				var setMethod = target.GetSetMethod(true);
 				// Setter will load both arguments and call property setter (argument 1 is
 				// ignored for static properties)
 				if (!setMethod.IsStatic)
