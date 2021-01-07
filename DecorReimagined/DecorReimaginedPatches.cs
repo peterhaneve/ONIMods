@@ -473,9 +473,14 @@ namespace ReimaginationTeam.DecorRework {
 			/// </summary>
 			internal static void Postfix(WiltCondition __instance) {
 				var obj = __instance.gameObject;
-				if (obj != null)
-					// Update rooms if plants grow/recover
-					Game.Instance.roomProber.SolidChangedEvent(Grid.PosToCell(obj), true);
+				var prober = Game.Instance.roomProber;
+				if (obj != null && prober != null) {
+					var room = prober.GetRoomOfGameObject(obj)?.roomType;
+					// Only need to re-evaluate, if the room is a miscellaneous room
+					if (room == Db.Get().RoomTypes.Neutral)
+						// Update that room
+						Game.Instance.roomProber.SolidChangedEvent(Grid.PosToCell(obj), true);
+				}
 			}
 		}
 
@@ -490,9 +495,15 @@ namespace ReimaginationTeam.DecorRework {
 			/// </summary>
 			internal static void Postfix(WiltCondition __instance) {
 				var obj = __instance.gameObject;
-				if (obj != null)
-					// Update rooms if plants grow/recover
-					Game.Instance.roomProber.SolidChangedEvent(Grid.PosToCell(obj), true);
+				var prober = Game.Instance.roomProber;
+				if (obj != null && prober != null) {
+					var room = prober.GetRoomOfGameObject(obj)?.roomType;
+					// Only need to re-evaluate, if the room is a park or a nature reserve
+					var types = Db.Get().RoomTypes;
+					if (room == types.Park || room == types.NatureReserve)
+						// Update that room
+						prober.SolidChangedEvent(Grid.PosToCell(obj), true);
+				}
 			}
 		}
 	}
