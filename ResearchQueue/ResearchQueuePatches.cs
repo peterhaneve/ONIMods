@@ -42,6 +42,9 @@ namespace PeterHan.ResearchQueue {
 		private static readonly IDetouredField<ResearchEntry, LocText> RESEARCH_NAME =
 			PDetours.DetourField<ResearchEntry, LocText>("researchName");
 
+		private static readonly IDetouredField<ManagementMenu, ResearchScreen> RESEARCH_SCREEN =
+			PDetours.DetourField<ManagementMenu, ResearchScreen>("researchScreen");
+
 		public static void OnLoad() {
 			PUtil.InitLibrary();
 			// Cache a ref to the active modifiers field
@@ -89,7 +92,8 @@ namespace PeterHan.ResearchQueue {
 		/// removed the technology.</returns>
 		private static bool OnResearchCanceled(Tech targetTech) {
 			var controller = Global.Instance.GetInputManager()?.GetDefaultController();
-			var screen = ManagementMenu.Instance?.researchScreen as ResearchScreen;
+			var inst = ManagementMenu.Instance;
+			var screen = (inst == null) ? null : RESEARCH_SCREEN.Get(inst);
 			var research = Research.Instance;
 			// If SHIFT is down (have to use reflection!)
 			bool shiftDown = activeModifiers != null && (activeModifiers.GetValue(controller)
@@ -119,7 +123,8 @@ namespace PeterHan.ResearchQueue {
 		/// added the technology.</returns>
 		private static bool OnResearchClicked(Tech targetTech) {
 			var controller = Global.Instance.GetInputManager()?.GetDefaultController();
-			var screen = ManagementMenu.Instance?.researchScreen as ResearchScreen;
+			var inst = ManagementMenu.Instance;
+			var screen = (inst == null) ? null : RESEARCH_SCREEN.Get(inst);
 			var research = Research.Instance;
 			string id = targetTech.Id;
 			// If SHIFT is down (have to use reflection!)
@@ -159,7 +164,8 @@ namespace PeterHan.ResearchQueue {
 		/// </summary>
 		/// <param name="queuedTech">The current research queue.</param>
 		private static void UpdateResearchOrder(IList<TechInstance> queuedTech) {
-			var screen = ManagementMenu.Instance?.researchScreen as ResearchScreen;
+			var inst = ManagementMenu.Instance;
+			var screen = (inst == null) ? null : RESEARCH_SCREEN.Get(inst);
 			if (queuedTech == null)
 				throw new ArgumentNullException("queuedTech");
 			int n = queuedTech.Count;

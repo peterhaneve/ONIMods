@@ -18,64 +18,56 @@
 
 using PeterHan.PLib;
 using PeterHan.PLib.Buildings;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace PeterHan.ShowRange {
     /// <summary>
-	/// Shows the range which must be clear for the Telescope.
+	/// Shows the range which must be clear for the Cluster (DLC) Telescope.
 	/// </summary>
-	internal sealed class TelescopeVisualizer : ColoredRangeVisualizer {
+	internal sealed class ClusterTelescopeVisualizer : ColoredRangeVisualizer {
 		/// <summary>
-		/// The color used on tiles when the telescope is blocked.
+		/// The color used on tiles when the cluster telescope is blocked.
 		/// </summary>
 		private static readonly Color BLOCKED_TINT = new Color(1.0f, 0.5f, 0.5f);
 
 		/// <summary>
-		/// Creates a new telescope visualizer.
+		/// Creates a new cluster telescope visualizer.
 		/// </summary>
 		/// <param name="template">The parent game object.</param>
 		public static void Create(GameObject template) {
 			var prefabID = template.GetComponentSafe<KPrefabID>();
 			if (prefabID != null)
-				prefabID.instantiateFn += (obj) => obj.AddComponent<TelescopeVisualizer>();
+				prefabID.instantiateFn += (obj) => obj.AddComponent<ClusterTelescopeVisualizer>();
 		}
-
-		// These components are automatically populated by KMonoBehaviour
-#pragma warning disable IDE0044 // Add readonly modifier
-#pragma warning disable CS0649
-		[MyCmpGet]
-		private Telescope telescope;
-#pragma warning restore CS0649
-#pragma warning restore IDE0044 // Add readonly modifier
 
 		/// <summary>
 		/// The radius within which objects can block the telescope.
 		/// </summary>
 		private int scanRadius;
 
-		internal TelescopeVisualizer() {
-			// Is hard coded in TelescopeConfig, will be updated using the Telescope object if
-			// available
+		internal ClusterTelescopeVisualizer() {
+			// Is hard coded in ClusterTelescopeConfig, will be updated using the
+			// ClusterTelescope object if available
 			scanRadius = 5;
 		}
 
 		protected override void OnSpawn() {
 			base.OnSpawn();
 			// Only available on completed buildings
-			if (telescope != null)
-				scanRadius = telescope.clearScanCellRadius;
+			var def = gameObject.GetDef<ClusterTelescope.Def>();
+			if (def != null)
+				scanRadius = def.clearScanCellRadius;
 		}
 
 		protected override void VisualizeCells(ICollection<VisCellData> newCells) {
 			int baseCell = Grid.PosToCell(gameObject), width = Grid.WidthInCells;
 			if (Grid.IsValidCell(baseCell)) {
 				Grid.CellToXY(baseCell, out int startX, out int startY);
-				// Currently telescopes cannot be rotated in game
+				// Base game adds 3 (height) and subtracts 3
 				for (int x = -scanRadius; x <= scanRadius; x++)
 					// Up to height limit
-					for (int y = startY + 4; y < Grid.HeightInCells; y++) {
+					for (int y = startY; y < Grid.HeightInCells; y++) {
 						int newX = startX + x - 1, cell = Grid.XYToCell(newX, y);
 						if (Grid.IsValidCell(cell) && newX >= 0 && newX <= width)
 							newCells.Add(new VisCellData(cell, SpaceScannerVisualizer.

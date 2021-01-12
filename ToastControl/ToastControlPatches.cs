@@ -83,10 +83,10 @@ namespace PeterHan.ToastControl {
 		/// Methods to patch for the long form of PopFXManager.SpawnFX.
 		/// </summary>
 		private static ICollection<string> TargetsShort => new List<string>() {
+			"Beefinery+States:EatOreFromStorage",
 			"BuildingHP:DoDamagePopFX",
 			"Constructable:OnCompleteWork",
 			"CreatureCalorieMonitor+Stomach:Poop",
-			"ElementDropper:OnStorageChanged",
 			"ElementDropperMonitor+Instance:DropElement",
 			"ElementEmitter:ForceEmit",
 			"FleeStates+<>c:<InitializeStates>b__8_2",
@@ -97,6 +97,8 @@ namespace PeterHan.ToastControl {
 			"Klei.AI.SicknessInstance+StatesInstance:Cure",
 			"Klei.AI.SlimeSickness+SlimeLungComponent+StatesInstance:ProduceSlime",
 			"Moppable:Sim1000ms",
+			"NuclearResearchCenterWorkable:OnWorkTick",
+			"ReorderableBuilding:ConvertModule",
 			"ResearchCenter:ConvertMassToResearchPoints",
 			"ResearchPointObject:OnSpawn",
 			"RotPile:ConvertToElement",

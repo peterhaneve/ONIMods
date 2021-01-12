@@ -329,8 +329,7 @@ namespace PeterHan.PLib.UI {
 
 		public override void SetLayoutVertical() {
 			var obj = gameObject;
-			int rows;
-			if (results != null && obj != null && (rows = results.Rows) > 0 && !locked) {
+			if (results != null && obj != null && results.Rows > 0 && !locked) {
 				float[] rowY = GetRowHeights(results, rectTransform.rect.height, Margin);
 				// All components lay out
 				var controllers = ListPool<ILayoutController, PGridLayoutGroup>.Allocate();

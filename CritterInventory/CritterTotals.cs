@@ -24,7 +24,7 @@ namespace PeterHan.CritterInventory {
 	/// 
 	/// While this could be a struct, it would get copied a lot.
 	/// </summary>
-	sealed class CritterTotals {
+	internal sealed class CritterTotals {
 		/// <summary>
 		/// The number of critters available to be used (total minus reserved).
 		/// </summary>

@@ -19,14 +19,16 @@
 using Database;
 using PeterHan.PLib;
 using System;
-using System.IO;
 
 namespace ReimaginationTeam.DecorRework {
 	/// <summary>
 	/// An achievement requirement with progress that requires a specified quantity of
 	/// positive decor items affecting a cell at any given time.
+	/// 
+	/// The deprecated interface must be implemented to allow previous saves with this
+	/// achievement to load.
 	/// </summary>
-	public sealed class NumDecorPositives : ColonyAchievementRequirement {
+	public sealed class NumDecorPositives : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
 		/// The number of decor items required.
 		/// </summary>
@@ -38,17 +40,13 @@ namespace ReimaginationTeam.DecorRework {
 			this.required = required;
 		}
 
-		public override void Deserialize(IReader reader) {
+		public void Deserialize(IReader reader) {
 			required = reader.ReadInt32();
 		}
 
 		public override string GetProgress(bool complete) {
 			return DecorReimaginedStrings.FEELSLIKEHOME_PROGRESS.text.F(complete ? required :
 				(DecorCellManager.Instance?.NumPositiveDecor ?? 0));
-		}
-
-		public override void Serialize(BinaryWriter writer) {
-			writer.Write(required);
 		}
 
 		public override bool Success() {

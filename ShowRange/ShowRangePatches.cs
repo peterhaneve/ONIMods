@@ -31,19 +31,16 @@ namespace PeterHan.ShowRange {
 		private static readonly string IGNORE_WALLPUMPS = "WallPumps.RotatableElementConsumer";
 
 		/// <summary>
-		/// The color for the secondary (water) consumer of the Algae Terrarium.
-		/// </summary>
-		private static readonly Color TERRARIUM_SECONDARY = new Color(0.5f, 0.5f, 1.0f);
-
-		/// <summary>
 		/// Adds ElementConsumer range previews to the specified building def.
 		/// </summary>
 		/// <param name="def">The preview to add.</param>
 		private static void AddConsumerPreview(BuildingDef def) {
 			GameObject complete = def.BuildingComplete, preview = def.BuildingPreview,
 				inBuild = def.BuildingUnderConstruction;
-			// Check the complete building for a consumer
-			foreach (var consumer in complete.GetComponents<ElementConsumer>())
+			var consumers = complete.GetComponents<ElementConsumer>();
+			int n = consumers.Length;
+			var existing = DictionaryPool<CellOffset, int, ElementConsumer>.Allocate();
+			foreach (var consumer in consumers)
 				// Avoid stomping the range preview of Wall Vents and Pumps
 				if (consumer.GetType().FullName != IGNORE_WALLPUMPS) {
 					int radius = consumer.consumptionRadius & 0xFF;
@@ -51,18 +48,29 @@ namespace PeterHan.ShowRange {
 					var color = Color.white;
 					var offset = new CellOffset(Mathf.RoundToInt(sco.x), Mathf.RoundToInt(
 						sco.y));
-					// Special case: make the algae terrarium's secondary consumer blue
-					if (radius == 1 && def.PrefabID == AlgaeHabitatConfig.ID)
-						color = TERRARIUM_SECONDARY;
-					PUtil.LogDebug("Visualizer added to {0}, range {1:D}".F(def.PrefabID,
-						radius));
-					ElementConsumerVisualizer.Create(complete, offset, radius, color);
-					// Consumer found, update the preview and under construction versions
-					if (preview != null)
-						ElementConsumerVisualizer.Create(preview, offset, radius, color);
-					if (inBuild != null)
-						ElementConsumerVisualizer.Create(inBuild, offset, radius, color);
+					// Make secondary consumers a color related to their element
+					if (n > 0 && consumer.configuration == ElementConsumer.Configuration.
+							Element) {
+						var target = ElementLoader.FindElementByHash(consumer.
+							elementToConsume);
+						if (target != null)
+							color = target.substance.conduitColour;
+					}
+					if (!existing.TryGetValue(offset, out int oldRad) || radius != oldRad) {
+						PUtil.LogDebug("Visualizer added to {0}, range {1:D}".F(def.PrefabID,
+							radius));
+						ElementConsumerVisualizer.Create(complete, offset, radius, color);
+						// Consumer found, update the preview and under construction versions
+						if (preview != null)
+							// Previews should always be white as other colors are hard to see
+							// on overlays
+							ElementConsumerVisualizer.Create(preview, offset, radius);
+						if (inBuild != null)
+							ElementConsumerVisualizer.Create(inBuild, offset, radius, color);
+						existing[offset] = radius;
+					}
 				}
+			existing.Recycle();
 		}
 
 		public static void OnLoad() {
@@ -90,6 +98,12 @@ namespace PeterHan.ShowRange {
 							TelescopeVisualizer.Create(def.BuildingComplete);
 							TelescopeVisualizer.Create(def.BuildingPreview);
 							TelescopeVisualizer.Create(def.BuildingUnderConstruction);
+						}
+						if (def.PrefabID == ClusterTelescopeConfig.ID) {
+							PUtil.LogDebug("Cluster Telescope visualizer added");
+							ClusterTelescopeVisualizer.Create(def.BuildingComplete);
+							ClusterTelescopeVisualizer.Create(def.BuildingPreview);
+							ClusterTelescopeVisualizer.Create(def.BuildingUnderConstruction);
 						}
 						if (def.PrefabID == CometDetectorConfig.ID) {
 							PUtil.LogDebug("Space scanner visualizer added");

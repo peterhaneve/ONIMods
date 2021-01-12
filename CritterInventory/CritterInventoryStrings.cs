@@ -18,15 +18,16 @@
 
 namespace PeterHan.CritterInventory {
 	/// <summary>
-	/// Cleans up the wild/tame critter types to allow future expansion. Just like that,
-	/// artificial critters!
-	/// 
-	/// If this is changed, also modify:
-	/// CritterInventoryUtils.GetCritterType
-	/// CritterInventoryUtils.GetProperName
-	/// CritterInventory.ctor
+	/// Contains strings used in Critter Inventory.
 	/// </summary>
-	public enum CritterType {
-		Wild, Tame, Artificial
+	public static class CritterInventoryStrings {
+		public static class CREATURES {
+			public static class MODIFIERS {
+				public static class ARTIFICIAL {
+					public static LocString NAME = "Artificial";
+					public static LocString TOOLTIP = "This critter was created by Duplicants. It may be considering a hostile takeover.";
+				}
+			}
+		}
 	}
 }
