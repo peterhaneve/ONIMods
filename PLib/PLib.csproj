@@ -4,8 +4,8 @@
     <TargetFramework>net40</TargetFramework>
     <Title>PeterHan.PLib</Title>
     <AssemblyTitle>PeterHanLib</AssemblyTitle>
-    <Version>3.12.1.0</Version>
-    <!--<PackageVersion>3.12.0-beta</PackageVersion>-->
+    <Version>3.13.0.0</Version>
+    <!--<PackageVersion>3.13.0-beta</PackageVersion>-->
     <UsesPLib>false</UsesPLib>
     <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
     <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
@@ -17,11 +17,11 @@
     <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
     
 Contains methods aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
-    <PackageReleaseNotes>Significant improvements to label and button UI performance. Alignment issues improved in text areas and text boxes.
+    <PackageReleaseNotes>Compatibility with the Spaced Out! DLC. Version 3.13 will load on both DLC and Vanilla if properly merged.
 
-Fix a bug when using PLib Options with Archived Versions.</PackageReleaseNotes>
+PLib can now be localized. Ships with translations for Chinese (Simplified), French, and Russian.</PackageReleaseNotes>
     <RootNamespace>PeterHan.PLib</RootNamespace>
-    <AssemblyVersion>3.12.0.0</AssemblyVersion>
+    <AssemblyVersion>3.13.0.0</AssemblyVersion>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>

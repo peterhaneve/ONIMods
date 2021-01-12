@@ -20,6 +20,7 @@ using PeterHan.PLib;
 using PeterHan.PLib.UI;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -28,6 +29,9 @@ namespace PeterHan.SweepByType {
 	/// A control which allows selection of types.
 	/// </summary>
 	public sealed class TypeSelectControl {
+		// The method to call to check for discovered resources. Varies between DLC and vanilla.
+		private delegate bool ResourceCheckDelegate(Tag category, out HashSet<Tag> found);
+
 		/// <summary>
 		/// The margin around the scrollable area to avoid stomping on the scrollbar.
 		/// </summary>
@@ -148,7 +152,13 @@ namespace PeterHan.SweepByType {
 		/// </summary>
 		private readonly SortedList<Tag, TypeSelectCategory> children;
 
+		/// <summary>
+		/// The discovered resources so far.
+		/// </summary>
+		private ResourceCheckDelegate discovered;
+
 		public TypeSelectControl(bool disableIcons = false) {
+			discovered = null;
 			DisableIcons = disableIcons;
 			// Select/deselect all types
 			var cp = new PPanel("Categories") {
@@ -216,6 +226,25 @@ namespace PeterHan.SweepByType {
 				child.Value.ClearAll();
 		}
 
+		/// <summary>
+		/// Initializes the list of discovered resources, accounting for both DLC and Vanilla.
+		/// </summary>
+		private void InitDiscovered() {
+			Type baseType;
+			// DLC
+			if ((baseType = PPatchTools.GetTypeSafe("DiscoveredResources")) == null)
+				// Vanilla
+				baseType = PPatchTools.GetTypeSafe("WorldInventory");
+			var instance = baseType?.GetProperty("Instance", BindingFlags.Static |
+				BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(null, null);
+			if (instance != null) {
+				discovered = baseType.CreateDelegate<ResourceCheckDelegate>(
+					"TryGetDiscoveredResourcesFromTag", instance, typeof(Tag), typeof(
+					HashSet<Tag>).MakeByRefType());
+			} else
+				PUtil.LogWarning("Unable to find discovered resource list, no resources will be available to sweep");
+		}
+
 		private void OnCheck(GameObject source, int state) {
 			if (state == PCheckBox.STATE_UNCHECKED)
 				// Clicked when unchecked, check all
@@ -266,18 +295,19 @@ namespace PeterHan.SweepByType {
 		/// Updates the list of available elements.
 		/// </summary>
 		public void Update() {
-			var inventory = WorldInventory.Instance;
-			if (inventory != null) {
+			if (discovered == null)
+				InitDiscovered();
+			if (discovered != null) {
 				// Find categories with discovered materials
 				// This is the same logic as used in ResourceCategoryScreen
 				foreach (var category in GameTags.MaterialCategories)
-					UpdateCategory(inventory, category);
+					UpdateCategory(category);
 				foreach (var category in GameTags.CalorieCategories)
-					UpdateCategory(inventory, category);
+					UpdateCategory(category);
 				foreach (var category in GameTags.UnitCategories)
-					UpdateCategory(inventory, category);
-				UpdateCategory(inventory, GameTags.Miscellaneous);
-				UpdateCategory(inventory, GameTags.MiscPickupable, SweepByTypeStrings.
+					UpdateCategory(category);
+				UpdateCategory(GameTags.Miscellaneous);
+				UpdateCategory(GameTags.MiscPickupable, SweepByTypeStrings.
 					CATEGORY_MISCPICKUPABLE);
 			}
 		}
@@ -285,13 +315,10 @@ namespace PeterHan.SweepByType {
 		/// <summary>
 		/// Updates all elements in the specified category.
 		/// </summary>
-		/// <param name="inv">The inventory of discovered elements.</param>
 		/// <param name="category">The category to search.</param>
 		/// <param name="overrideName">The name to override the category title</param>
-		private void UpdateCategory(WorldInventory inv, Tag category,
-				string overrideName = null) {
-			if (inv.TryGetDiscoveredResourcesFromTag(category, out HashSet<Tag> found) &&
-					found.Count > 0) {
+		private void UpdateCategory(Tag category, string overrideName = null) {
+			if (discovered.Invoke(category, out HashSet<Tag> found) && found.Count > 0) {
 				// Attempt to add to type select control
 				if (!children.TryGetValue(category, out TypeSelectCategory current)) {
 					current = new TypeSelectCategory(this, category, overrideName);

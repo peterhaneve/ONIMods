@@ -257,3 +257,4 @@ paket-files/
 /*.zip
 *.cmd
 Assets/
+*.lnk

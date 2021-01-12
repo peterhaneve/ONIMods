@@ -24,13 +24,11 @@ using PeterHan.PLib.Datafiles;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.UI;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Threading;
 using UnityEngine;
 
 namespace PeterHan.DebugNotIncluded {
@@ -277,6 +275,65 @@ namespace PeterHan.DebugNotIncluded {
 			return instructions;
 		}
 
+#if false
+		/// <summary>
+		/// Applied to Assets to fix a bug with anim loading.
+		/// </summary>
+		[HarmonyPatch(typeof(Assets), "LoadAnims")]
+		public static class Assets_LoadAnims_Patch {
+			internal static bool Prepare() {
+				return !string.IsNullOrEmpty(DlcManager.GetActiveDlcId());
+			}
+
+			/// <summary>
+			/// Applied after LoadAnims runs.
+			/// </summary>
+			internal static void Postfix() {
+				var animTable = Traverse.Create(typeof(Assets)).
+					GetField<IDictionary<HashedString, KAnimFile>>("AnimTable");
+				foreach (var modAnim in Assets.ModLoadedKAnims)
+					if (modAnim != null)
+						animTable[modAnim.name] = modAnim;
+			}
+
+			/// <summary>
+			/// Transpiles LoadAnims to swap some key instructions.
+			/// </summary>
+			internal static IEnumerable<CodeInstruction> Transpiler(ILGenerator generator,
+					IEnumerable<CodeInstruction> method) {
+				var remove = typeof(Manager).GetMethodSafe(nameof(Manager.Load), false,
+					typeof(Content));
+				var globalInstance = typeof(Global).GetPropertySafe<Global>(nameof(Global.
+					Instance), true);
+				var managerField = typeof(Global).GetFieldSafe(nameof(Global.modManager),
+					false);
+				var insertAt = typeof(KAnimGroupFile).GetMethodSafe(nameof(KAnimGroupFile.
+					LoadAll), true, PPatchTools.AnyArguments);
+				foreach (var instr in method) {
+					var opcode = instr.opcode;
+					var operand = instr.operand;
+					if (opcode == OpCodes.Callvirt && (operand as MethodBase) == remove &&
+							globalInstance != null && managerField != null) {
+						// Comment out the first call and pop the argument and the instance
+						instr.operand = null;
+						instr.opcode = OpCodes.Pop;
+						yield return new CodeInstruction(OpCodes.Pop);
+					}
+					yield return instr;
+					if (opcode == OpCodes.Call && (operand as MethodBase) == insertAt &&
+							globalInstance != null && managerField != null) {
+						// Re-add the call after the groups are set
+						yield return new CodeInstruction(OpCodes.Call, globalInstance.
+							GetGetMethod());
+						yield return new CodeInstruction(OpCodes.Ldfld, managerField);
+						yield return new CodeInstruction(OpCodes.Ldc_I4, (int)Content.Animation);
+						yield return new CodeInstruction(OpCodes.Callvirt, remove);
+					}
+				}
+			}
+		}
+#endif
+
 		/// <summary>
 		/// Applied to AudioSheets to log audio event information.
 		/// </summary>
@@ -293,63 +350,6 @@ namespace PeterHan.DebugNotIncluded {
 				// Add sound "GasPump_intake" to anim pumpgas_kanim.working_loop
 				DebugLogger.LogDebug("Add sound \"{0}\" to anim {1}.{2}".F(sound_name,
 					file_name, anim_name));
-			}
-		}
-
-		/// <summary>
-		/// Applied to BuildingConfigManager to catch and report errors when initializing
-		/// buildings.
-		/// </summary>
-		[HarmonyPatch(typeof(BuildingConfigManager), "RegisterBuilding")]
-		public static class BuildingConfigManager_RegisterBuilding_Patch {
-			/// <summary>
-			/// Transpiles RegisterBuilding to catch exceptions and log them.
-			/// </summary>
-			internal static IEnumerable<CodeInstruction> Transpiler(ILGenerator generator,
-					IEnumerable<CodeInstruction> method) {
-#if DEBUG
-				DebugLogger.LogDebug("Transpiling BuildingConfigManager.RegisterBuilding()");
-#endif
-				var logger = typeof(DebugLogger).GetMethodSafe(nameof(DebugLogger.
-					LogBuildingException), true, typeof(Exception), typeof(IBuildingConfig));
-				var ee = method.GetEnumerator();
-				// Emit all but the last instruction
-				if (ee.MoveNext()) {
-					CodeInstruction last;
-					bool hasNext, isFirst = true;
-					var endMethod = generator.DefineLabel();
-					do {
-						last = ee.Current;
-						if (isFirst)
-							last.blocks.Add(new ExceptionBlock(ExceptionBlockType.
-								BeginExceptionBlock, null));
-						hasNext = ee.MoveNext();
-						isFirst = false;
-						if (hasNext)
-							yield return last;
-					} while (hasNext);
-					// Preserves the labels "ret" might have had
-					last.opcode = OpCodes.Nop;
-					last.operand = null;
-					yield return last;
-					// Add a "leave"
-					yield return new CodeInstruction(OpCodes.Leave, endMethod);
-					// The exception is already on the stack
-					var startHandler = new CodeInstruction(OpCodes.Ldarg_1);
-					startHandler.blocks.Add(new ExceptionBlock(ExceptionBlockType.
-						BeginCatchBlock, typeof(Exception)));
-					yield return startHandler;
-					yield return new CodeInstruction(OpCodes.Call, logger);
-					// End catch block, quash the exception
-					var endCatch = new CodeInstruction(OpCodes.Leave, endMethod);
-					endCatch.blocks.Add(new ExceptionBlock(ExceptionBlockType.
-						EndExceptionBlock, null));
-					yield return endCatch;
-					// Actual new ret
-					var ret = new CodeInstruction(OpCodes.Ret);
-					ret.labels.Add(endMethod);
-					yield return ret;
-				}
 			}
 		}
 

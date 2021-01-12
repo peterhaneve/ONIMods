@@ -67,6 +67,8 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Adds a colony achievement to the colony summary screen. Must be invoked after the
 		/// database is initialized (Db.Initialize() postfix recommended).
+		/// 
+		/// Note that achievement structures significantly changed from Vanilla to the DLC.
 		/// </summary>
 		/// <param name="achievement">The achievement to add.</param>
 		public static void AddColonyAchievement(Database.ColonyAchievement achievement) {

@@ -20,6 +20,7 @@ using Harmony;
 using KSerialization;
 using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Datafiles;
+using PeterHan.PLib.Detours;
 using PeterHan.PLib.Lighting;
 using PeterHan.PLib.Options;
 using System;
@@ -37,7 +38,10 @@ namespace PeterHan.PLib {
 	/// All patches for PLib are stored here and only applied once for all PLib mods loaded.
 	/// </summary>
 	sealed class PLibPatches {
-#region Patches
+		#region Patches
+		// Method only exists in vanilla
+		private static readonly MethodBase ACHIEVEMENT_SERIALIZE =
+			typeof(Database.ColonyAchievementRequirement).GetMethodSafe("Serialize", false);
 
 		/// <summary>
 		/// Applied to modify SteamUGCService to silence "Preview image load failed".
@@ -240,16 +244,20 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Applied to Db to register PLib buildings and run postload handlers.
 		/// </summary>
-		private static void Initialize_Prefix() {
-			if (PBuilding.CheckBuildings())
+		private static void Initialize_Prefix(ref bool __state) {
+			bool needBuilds = PBuilding.CheckBuildings();
+			if (needBuilds && !PBuilding.RequiresDBInit)
 				PBuilding.AddAllTechs();
+			__state = needBuilds;
 			PPatchManager.RunAll(RunAt.BeforeDbInit);
 		}
 
 		/// <summary>
 		/// Applied to Db to run postload handlers.
 		/// </summary>
-		private static void Initialize_Postfix() {
+		private static void Initialize_Postfix(bool __state) {
+			if (__state && PBuilding.RequiresDBInit)
+				PBuilding.AddAllTechs();
 			PPatchManager.RunAll(RunAt.AfterDbInit);
 		}
 
@@ -335,7 +343,8 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
-		/// Applied to Serialize to fix deserializing non-Klei achievements.
+		/// Applied to Serialize to fix deserializing non-Klei achievements. Only applied in
+		/// the vanilla version of the game as DLC changed the achievement format.
 		/// </summary>
 		private static bool Serialize_Prefix(ColonyAchievementStatus __instance,
 				BinaryWriter writer) {
@@ -355,7 +364,9 @@ namespace PeterHan.PLib {
 						writer.WriteKleiString(type.ToString());
 					else
 						writer.WriteKleiString(type.AssemblyQualifiedName);
-					requirement.Serialize(writer);
+					// Slower than a detour, but there are not many requirements and the
+					// existence is used as a check to enable this patch
+					ACHIEVEMENT_SERIALIZE.Invoke(requirement, new object[] { writer });
 				}
 			}
 			return false;
@@ -386,9 +397,10 @@ namespace PeterHan.PLib {
 			if (instance == null)
 				throw new ArgumentNullException("instance");
 
-			// ColonyAchievementStatus
-			instance.Patch(typeof(ColonyAchievementStatus), nameof(ColonyAchievementStatus.
-				Serialize), PatchMethod(nameof(Serialize_Prefix)), null);
+			// ColonyAchievementStatus (VANILLA ONLY)
+			if (ACHIEVEMENT_SERIALIZE != null)
+				instance.Patch(typeof(ColonyAchievementStatus), nameof(ColonyAchievementStatus.
+					Serialize), PatchMethod(nameof(Serialize_Prefix)), null);
 
 			// Db
 			instance.Patch(typeof(Db), nameof(Db.Initialize), PatchMethod(nameof(

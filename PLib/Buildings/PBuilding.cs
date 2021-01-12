@@ -17,19 +17,42 @@
  */
 
 using Harmony;
+using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+using BuildingTechGroup = System.Collections.Generic.IDictionary<string, string[]>;
+using Techs = Database.Techs;
+
 namespace PeterHan.PLib.Buildings {
 	/// <summary>
-	/// Utility methods for creating new buildings. No I am not unconstructive any more!
+	/// Utility methods for creating new buildings.
 	/// </summary>
 	public sealed class PBuilding {
+		private delegate Tech TryGetTech(Techs techs, string name);
+
 		/// <summary>
 		/// The default building category.
 		/// </summary>
 		private static readonly HashedString DEFAULT_CATEGORY = new HashedString("Base");
+
+		// The tech tree in the DLC.
+		private static readonly DetouredMethod<TryGetTech> DLC_TECHS = typeof(Techs).
+			DetourLazy<TryGetTech>("TryGet");
+
+		// The tech tree in vanilla.
+		private static readonly System.Reflection.FieldInfo VANILLA_TECHS = typeof(Techs).
+			GetFieldSafe("TECH_GROUPING", true);
+
+		/// <summary>
+		/// If true, the DB must be initialized before building techs are added.
+		/// </summary>
+		internal static bool RequiresDBInit {
+			get {
+				return VANILLA_TECHS == null;
+			}
+		}
 
 		/// <summary>
 		/// The building table.
@@ -46,20 +69,26 @@ namespace PeterHan.PLib.Buildings {
 				PRegistry.LogPatchDebug("Register strings for {0:D} buildings".F(
 					buildingTable.Count));
 				foreach (var building in buildingTable)
-					if (building != null) {
-						var trBuilding = Traverse.Create(building);
-						// Building is of type object because it is in another assembly
-						var addStr = trBuilding.Method(nameof(AddStrings));
-						if (addStr.MethodExists())
-							addStr.GetValue();
-						else
-							PRegistry.LogPatchWarning("Invalid building strings!");
-						var addMenu = trBuilding.Method(nameof(AddPlan));
-						if (addMenu.MethodExists())
-							addMenu.GetValue();
-						else
-							PRegistry.LogPatchWarning("Invalid building plan!");
-					}
+					if (building != null)
+						try {
+							var trBuilding = Traverse.Create(building);
+							// Building is of type object because it is in another assembly
+							var addStr = trBuilding.Method(nameof(AddStrings));
+							if (addStr.MethodExists())
+								addStr.GetValue();
+							else
+								PRegistry.LogPatchWarning("Invalid building strings!");
+							var addMenu = trBuilding.Method(nameof(AddPlan));
+							if (addMenu.MethodExists())
+								addMenu.GetValue();
+							else
+								PRegistry.LogPatchWarning("Invalid building plan!");
+						} catch (System.Reflection.TargetInvocationException e) {
+							// Log errors when registering building from another mod
+							PUtil.LogError("Unable to add building strings for " +
+								building.GetType().Assembly?.GetNameSafe() + ":");
+							PUtil.LogException(e.GetBaseException());
+						}
 			}
 		}
 
@@ -73,15 +102,21 @@ namespace PeterHan.PLib.Buildings {
 				PRegistry.LogPatchDebug("Register techs for {0:D} buildings".F(
 					buildingTable.Count));
 				foreach (var building in buildingTable)
-					if (building != null) {
-						var trBuilding = Traverse.Create(building);
-						// Building is of type object because it is in another assembly
-						var addTech = Traverse.Create(building).Method(nameof(AddTech));
-						if (addTech.MethodExists())
-							addTech.GetValue();
-						else
-							PRegistry.LogPatchWarning("Invalid building technology!");
-					}
+					if (building != null)
+						try {
+							var trBuilding = Traverse.Create(building);
+							// Building is of type object because it is in another assembly
+							var addTech = Traverse.Create(building).Method(nameof(AddTech));
+							if (addTech.MethodExists())
+								addTech.GetValue();
+							else
+								PRegistry.LogPatchWarning("Invalid building technology!");
+						} catch (System.Reflection.TargetInvocationException e) {
+							// Log errors when registering building from another mod
+							PUtil.LogError("Unable to add building tech for " +
+								building.GetType().Assembly?.GetNameSafe() + ":");
+							PUtil.LogException(e.GetBaseException());
+						}
 			}
 		}
 
@@ -486,18 +521,39 @@ namespace PeterHan.PLib.Buildings {
 		/// </summary>
 		public void AddTech() {
 			if (!addedTech && Tech != null) {
-				var groups = Database.Techs.TECH_GROUPING;
-				if (groups.TryGetValue(Tech, out string[] values)) {
-					int n = values.Length;
-					// Expand by 1 and add building ID
-					string[] newValues = new string[n + 1];
-					Array.Copy(values, newValues, n);
-					newValues[n] = ID;
-					groups[Tech] = newValues;
-				} else
-					PUtil.LogWarning("Unknown technology " + Tech);
+				if (VANILLA_TECHS?.GetValue(null) is BuildingTechGroup groups)
+					AddTechVanilla(groups);
+				else
+					AddTechDLC();
 				addedTech = true;
 			}
+		}
+
+		/// <summary>
+		/// Adds the building tech to the tech tree - DLC implementation.
+		/// </summary>
+		private void AddTechDLC() {
+			var dbTech = Db.Get().Techs.TryGet(Tech);
+			if (dbTech != null)
+				dbTech.unlockedItemIDs.Add(ID);
+			else
+				PUtil.LogWarning("Unknown technology " + Tech);
+		}
+
+		/// <summary>
+		/// Adds the building tech to the tech tree - Vanilla implementation.
+		/// </summary>
+		/// <param name="groups">The tech grouping to modify.</param>
+		private void AddTechVanilla(BuildingTechGroup groups) {
+			if (groups.TryGetValue(Tech, out string[] values)) {
+				int n = values.Length;
+				// Expand by 1 and add building ID
+				string[] newValues = new string[n + 1];
+				Array.Copy(values, newValues, n);
+				newValues[n] = ID;
+				groups[Tech] = newValues;
+			} else
+				PUtil.LogWarning("Unknown technology " + Tech);
 		}
 
 		/// <summary>
