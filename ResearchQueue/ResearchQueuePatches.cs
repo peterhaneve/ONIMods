@@ -124,6 +124,7 @@ namespace PeterHan.ResearchQueue {
 		private static bool OnResearchClicked(Tech targetTech) {
 			var controller = Global.Instance.GetInputManager()?.GetDefaultController();
 			var inst = ManagementMenu.Instance;
+			// TODO Vanilla/DLC code
 			var screen = (inst == null) ? null : RESEARCH_SCREEN.Get(inst);
 			var research = Research.Instance;
 			string id = targetTech.Id;

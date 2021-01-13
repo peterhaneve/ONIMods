@@ -59,8 +59,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoreAchievements", "MoreAch
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DebugNotIncluded", "DebugNotIncluded\DebugNotIncluded.csproj", "{121FD801-8404-419F-BB58-47BED5737F04}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaughtyMod", "NaughtyMod\NaughtyMod.csproj", "{7DD1C5EB-0394-4741-B54C-10209CCE2498}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AirlockDoor", "AirlockDoor\AirlockDoor.csproj", "{9F9A55F7-EB51-4CC3-8B99-9735F020217B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModUpdateDate", "ModUpdateDate\ModUpdateDate.csproj", "{650A16F4-9A85-446B-B46A-2811715D4C6D}"
@@ -207,10 +205,6 @@ Global
 		{121FD801-8404-419F-BB58-47BED5737F04}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{121FD801-8404-419F-BB58-47BED5737F04}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{121FD801-8404-419F-BB58-47BED5737F04}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7DD1C5EB-0394-4741-B54C-10209CCE2498}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7DD1C5EB-0394-4741-B54C-10209CCE2498}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7DD1C5EB-0394-4741-B54C-10209CCE2498}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7DD1C5EB-0394-4741-B54C-10209CCE2498}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9F9A55F7-EB51-4CC3-8B99-9735F020217B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9F9A55F7-EB51-4CC3-8B99-9735F020217B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9F9A55F7-EB51-4CC3-8B99-9735F020217B}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -157,20 +157,6 @@ namespace PeterHan.StockBugFix {
 		}
 
 		/// <summary>
-		/// Applied to Clustercraft to fix a floating point round off error with rocket range.
-		/// </summary>
-		[HarmonyPatch(typeof(Clustercraft), nameof(Clustercraft.HasResourcesToMove))]
-		public static class Clustercraft_HasResourcesToMove_Patch {
-			/// <summary>
-			/// Applied after HasResourcesToMove runs.
-			/// </summary>
-			internal static void Postfix(Clustercraft __instance, int hexes, ref bool __result) {
-				__result = __instance.ModuleInterface.BurnableMassRemaining / __instance.
-					FuelPerDistance >= Constants.SECONDS_PER_CYCLE * hexes - 1.0f;
-			}
-		}
-
-		/// <summary>
 		/// Applied to GourmetCookingStationConfig to make the CO2 output in the right place.
 		/// </summary>
 		[HarmonyPatch(typeof(GourmetCookingStationConfig), nameof(GourmetCookingStationConfig.
@@ -324,8 +310,19 @@ namespace PeterHan.StockBugFix {
 		/// <summary>
 		/// Applied to HoverTextHelper to fix the integer overflow error on huge masses.
 		/// </summary>
-		[HarmonyPatch(typeof(HoverTextHelper), nameof(HoverTextHelper.MassStringsReadOnly))]
-		public static class HoverTextHelper_MassStringsReadOnly_Patch {
+		[HarmonyPatch]
+		public static class MassStringsReadOnly_Patch {
+			private const string METHOD = "MassStringsReadOnly";
+
+			internal static MethodBase TargetMethod() {
+				// Target HoverTextHelper in DLC, and WorldInspector in vanilla
+				// TODO Vanilla/DLC code
+				var type = PPatchTools.GetTypeSafe("HoverTextHelper");
+				if (type == null)
+					type = PPatchTools.GetTypeSafe("WorldInspector");
+				return type?.GetMethodSafe(METHOD, true, typeof(int));
+			}
+
 			/// <summary>
 			/// Applied after MassStringsReadOnly runs.
 			/// </summary>

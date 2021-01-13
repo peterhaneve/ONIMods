@@ -397,8 +397,9 @@ namespace PeterHan.PLib {
 			if (instance == null)
 				throw new ArgumentNullException("instance");
 
-			// ColonyAchievementStatus (VANILLA ONLY)
+			// ColonyAchievementStatus
 			if (ACHIEVEMENT_SERIALIZE != null)
+				// TODO Vanilla/DLC code
 				instance.Patch(typeof(ColonyAchievementStatus), nameof(ColonyAchievementStatus.
 					Serialize), PatchMethod(nameof(Serialize_Prefix)), null);
 
@@ -475,8 +476,8 @@ namespace PeterHan.PLib {
 				CreateEquipmentDef), null, PatchMethod(nameof(CreateEquipmentDef_Postfix)));
 			if (PBuilding.CheckBuildings())
 				instance.Patch(typeof(GeneratedBuildings), nameof(GeneratedBuildings.
-					LoadGeneratedBuildings), PatchMethod(nameof(LoadGeneratedBuildings_Prefix)),
-					null);
+					LoadGeneratedBuildings), PatchMethod(nameof(
+					LoadGeneratedBuildings_Prefix)), null);
 
 			// PCodex
 			instance.Patch(typeof(CodexCache), nameof(CodexCache.CollectEntries), null,
@@ -524,9 +525,9 @@ namespace PeterHan.PLib {
 			PPatchManager.RunAll(RunAt.AfterModsLoad);
 		}
 
-#endregion
+		#endregion
 
-#region Infrastructure
+		#region Infrastructure
 
 		/// <summary>
 		/// Returns a patch method from this class. It must be static.
@@ -593,6 +594,6 @@ namespace PeterHan.PLib {
 			return "PLibPatches version " + MyVersion;
 		}
 
-#endregion
+		#endregion
 	}
 }

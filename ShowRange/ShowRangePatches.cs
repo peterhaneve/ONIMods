@@ -99,7 +99,8 @@ namespace PeterHan.ShowRange {
 							TelescopeVisualizer.Create(def.BuildingPreview);
 							TelescopeVisualizer.Create(def.BuildingUnderConstruction);
 						}
-						if (def.PrefabID == ClusterTelescopeConfig.ID) {
+						if (def.PrefabID == "ClusterTelescope") {
+							// Not reachable in Vanilla
 							PUtil.LogDebug("Cluster Telescope visualizer added");
 							ClusterTelescopeVisualizer.Create(def.BuildingComplete);
 							ClusterTelescopeVisualizer.Create(def.BuildingPreview);

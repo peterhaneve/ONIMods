@@ -30,6 +30,7 @@ namespace PeterHan.PLib.Buildings {
 	/// Utility methods for creating new buildings.
 	/// </summary>
 	public sealed class PBuilding {
+		// TODO Vanilla/DLC code
 		private delegate Tech TryGetTech(Techs techs, string name);
 
 		/// <summary>
@@ -40,6 +41,9 @@ namespace PeterHan.PLib.Buildings {
 		// The tech tree in the DLC.
 		private static readonly DetouredMethod<TryGetTech> DLC_TECHS = typeof(Techs).
 			DetourLazy<TryGetTech>("TryGet");
+
+		private static readonly IDetouredField<Tech, List<string>> UNLOCKED_ITEMS =
+			PDetours.DetourFieldLazy<Tech, List<string>>("unlockedItemIDs");
 
 		// The tech tree in vanilla.
 		private static readonly System.Reflection.FieldInfo VANILLA_TECHS = typeof(Techs).
@@ -520,6 +524,7 @@ namespace PeterHan.PLib.Buildings {
 		/// Adds the building tech to the tech tree.
 		/// </summary>
 		public void AddTech() {
+			// TODO Vanilla/DLC code
 			if (!addedTech && Tech != null) {
 				if (VANILLA_TECHS?.GetValue(null) is BuildingTechGroup groups)
 					AddTechVanilla(groups);
@@ -533,9 +538,9 @@ namespace PeterHan.PLib.Buildings {
 		/// Adds the building tech to the tech tree - DLC implementation.
 		/// </summary>
 		private void AddTechDLC() {
-			var dbTech = Db.Get().Techs.TryGet(Tech);
+			var dbTech = DLC_TECHS.Invoke(Db.Get().Techs, Tech);
 			if (dbTech != null)
-				dbTech.unlockedItemIDs.Add(ID);
+				UNLOCKED_ITEMS.Get(dbTech)?.Add(ID);
 			else
 				PUtil.LogWarning("Unknown technology " + Tech);
 		}

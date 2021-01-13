@@ -3,10 +3,10 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Mod Updater</AssemblyTitle>
-    <FileVersion>1.10.0.0</FileVersion>
+    <FileVersion>1.11.0.0</FileVersion>
     <RootNamespace>PeterHan.ModUpdateDate</RootNamespace>
     <Description>Identifies mods that are not updating and allows them to be manually updated.</Description>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Ionic.Zip" HintPath="$(GameFolder)/Ionic.Zip.dll" />

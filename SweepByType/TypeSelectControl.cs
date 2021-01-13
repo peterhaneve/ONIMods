@@ -231,12 +231,20 @@ namespace PeterHan.SweepByType {
 		/// </summary>
 		private void InitDiscovered() {
 			Type baseType;
-			// DLC
-			if ((baseType = PPatchTools.GetTypeSafe("DiscoveredResources")) == null)
+			object instance;
+			// TODO Vanilla/DLC code
+			if ((baseType = PPatchTools.GetTypeSafe("DiscoveredResources")) == null) {
 				// Vanilla
-				baseType = PPatchTools.GetTypeSafe("WorldInventory");
-			var instance = baseType?.GetProperty("Instance", BindingFlags.Static |
-				BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(null, null);
+				baseType = PPatchTools.GetTypeSafe(nameof(WorldInventory));
+				instance = baseType?.GetProperty("Instance", BindingFlags.Static |
+					BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(null, null);
+			} else {
+				// DLC
+				instance = baseType.GetFieldSafe("Instance", true)?.GetValue(null);
+			}
+#if DEBUG
+			PUtil.LogDebug("Using inventory type: " + (baseType?.Name ?? "None"));
+#endif
 			if (instance != null) {
 				discovered = baseType.CreateDelegate<ResourceCheckDelegate>(
 					"TryGetDiscoveredResourcesFromTag", instance, typeof(Tag), typeof(

@@ -16,8 +16,12 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib;
+using PeterHan.PLib.Detours;
 using System;
 using UnityEngine;
+
+using NavTransition = NavGrid.Transition;
 
 namespace PeterHan.QueueForSinks {
 	/// <summary>
@@ -26,13 +30,45 @@ namespace PeterHan.QueueForSinks {
 	/// </summary>
 	public abstract class WorkCheckpoint<T> : KMonoBehaviour, ISaveLoadable where T : Workable
 	{
+		// The delegate type used by WorkCheckpoint to determine which way the Duplicant is
+		// moving upon reaction.
+		private delegate int GetTransitionXDelegate(NavTransition transition);
+
+		/// <summary>
+		/// Creates a delegate that returns the X value of a navigator's transition as an int,
+		/// even if the field is an sbyte.
+		/// 
+		/// TODO Vanilla/DLC code
+		/// </summary>
+		/// <returns>A delegate to properly retrieve NavGrid.Transition.x</returns>
+		private static GetTransitionXDelegate GetTransitionX() {
+			const string x = nameof(NavTransition.x);
+			var xField = typeof(NavTransition).GetFieldSafe(x, false);
+			GetTransitionXDelegate ret;
+			if (xField.FieldType == typeof(int)) {
+				var getter = PDetours.DetourStructField<int>(typeof(NavTransition), x);
+				ret = (transition) => {
+					return getter.Get(transition);
+				};
+			} else if (xField.FieldType == typeof(sbyte)) {
+				var getter = PDetours.DetourStructField<sbyte>(typeof(NavTransition), x);
+				ret = (transition) => {
+					return (int)getter.Get(transition);
+				};
+			} else
+				throw new InvalidOperationException("Field type of NavGrid.Transition: " +
+					xField.FieldType);
+			return ret;
+		}
+
 		// These fields are filled in automatically by KMonoBehaviour
-#pragma warning disable IDE0044
 #pragma warning disable CS0649
 		[MyCmpReq]
 		protected DirectionControl direction;
 #pragma warning restore CS0649
-#pragma warning restore IDE0044
+
+		// Workaround to use the proper accessor for the transition X value.
+		private readonly GetTransitionXDelegate getX;
 
 		/// <summary>
 		/// Whether the workable this checkpoint guards is currently in use.
@@ -48,6 +84,10 @@ namespace PeterHan.QueueForSinks {
 		/// The workable which controls tasks.
 		/// </summary>
 		private T workable;
+
+		public WorkCheckpoint() {
+			getX = GetTransitionX();
+		}
 
 		/// <summary>
 		/// Destroys the current reaction.
@@ -127,8 +167,8 @@ namespace PeterHan.QueueForSinks {
 			private Navigator reactorNavigator;
 
 			internal WorkCheckpointReactable(WorkCheckpoint<T> checkpoint) : base(checkpoint.
-					gameObject, "WorkCheckpointReactable", Db.Get().ChoreTypes.
-					Checkpoint, 1, 1) {
+					gameObject, "WorkCheckpointReactable", Db.Get().ChoreTypes.Checkpoint,
+					1, 1) {
 				this.checkpoint = checkpoint ?? throw new ArgumentNullException("checkpoint");
 				distractedAnim = Assets.GetAnim("anim_idle_distracted_kanim");
 				preventChoreInterruption = false;
@@ -185,9 +225,10 @@ namespace PeterHan.QueueForSinks {
 				if (checkpoint?.workable == null || reactorNavigator == null)
 					Cleanup();
 				else {
+					var transition = reactorNavigator.GetNextTransition();
 					reactorNavigator.AdvancePath(false);
-					if (!reactorNavigator.path.IsValid() || !MustStop(reactor,
-							reactorNavigator.GetNextTransition().x))
+					if (!reactorNavigator.path.IsValid() || !MustStop(reactor, checkpoint.getX.
+							Invoke(transition)))
 						Cleanup();
 				}
 			}

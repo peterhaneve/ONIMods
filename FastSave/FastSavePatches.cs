@@ -29,6 +29,28 @@ namespace PeterHan.FastSave {
 	/// Patches which will be applied via annotations for Fast Save.
 	/// </summary>
 	public sealed class FastSavePatches {
+		/// <summary>
+		/// Retrieves the printing pod if it exists.
+		/// </summary>
+		/// <returns>The printing pod (on the first asteroid if in a cluster), or null if it
+		/// was destroyed/deconstructed.</returns>
+		public static Telepad GetTelepad() {
+			var method = typeof(GameUtil).GetMethodSafe(nameof(GameUtil.GetTelepad), true,
+				PPatchTools.AnyArguments);
+			var arguments = method.GetParameters();
+			Telepad dest = null;
+			// TODO Vanilla/DLC code
+			if (arguments.Length == 0)
+				// Vanilla
+				dest = method.Invoke(null, null) as Telepad;
+			else if (arguments.Length == 1 && arguments[0].ParameterType == typeof(int))
+				// DLC
+				dest = method.Invoke(null, new object[] { 0 }) as Telepad;
+			else
+				PUtil.LogWarning("Unknown GetTelepad signature: " + arguments.Join(", "));
+			return dest;
+		}
+
 		public static void OnLoad() {
 			PUtil.InitLibrary();
 			POptions.RegisterOptions(typeof(FastSaveOptions));
@@ -150,46 +172,6 @@ namespace PeterHan.FastSave {
 		}
 
 		/// <summary>
-		/// Applied to Timelapser to save the PNG on a background thread.
-		/// </summary>
-		[HarmonyPatch(typeof(Timelapser), "RenderAndPrint")]
-		public static class Timelapser_WriteToPng_Patch {
-			internal static bool Prepare() {
-				// Only enable if background save is on
-				return FastSaveOptions.Instance.BackgroundSave;
-			}
-
-			/// <summary>
-			/// Applied before RenderAndPrint runs.
-			/// </summary>
-			internal static bool Prefix(RenderTexture ___bufferRenderTexture, float ___camSize,
-					string ___previewSaveGamePath, bool ___previewScreenshot,
-					Vector3 ___camPosition) {
-				var telepad = GameUtil.GetTelepad();
-				var rt = ___bufferRenderTexture;
-				var inst = CameraController.Instance;
-				if (telepad == null)
-					Debug.Log("No telepad present, aborting screenshot.");
-				else if (rt != null && inst != null) {
-					var centerPos = telepad.transform.position;
-					var oldRT = RenderTexture.active;
-					// Center camera on the printing pod
-					RenderTexture.active = rt;
-					inst.SetPosition(new Vector3(centerPos.x, centerPos.y, inst.transform.
-						position.z));
-					inst.RenderForTimelapser(ref rt);
-					inst.StartCoroutine(TimelapseCoroutine(rt, ___previewSaveGamePath,
-						___previewScreenshot));
-					inst.SetOrthographicsSize(___camSize);
-					inst.SetPosition(___camPosition);
-					inst.SetTargetPos(___camPosition, ___camSize, false);
-					RenderTexture.active = oldRT;
-				}
-				return false;
-			}
-		}
-
-		/// <summary>
 		/// Applied to ReportManager to remove old daily reports.
 		/// </summary>
 		[HarmonyPatch(typeof(ReportManager), "OnNightTime")]
@@ -279,6 +261,46 @@ namespace PeterHan.FastSave {
 						graphedLine.line_renderer.color = lineFormatting[lastIndex].color;
 					}
 				}
+			}
+		}
+
+		/// <summary>
+		/// Applied to Timelapser to save the PNG on a background thread.
+		/// </summary>
+		[HarmonyPatch(typeof(Timelapser), "RenderAndPrint")]
+		public static class Timelapser_RenderAndPrint_Patch {
+			internal static bool Prepare() {
+				// Only enable if background save is on
+				return FastSaveOptions.Instance.BackgroundSave;
+			}
+
+			/// <summary>
+			/// Applied before RenderAndPrint runs.
+			/// </summary>
+			internal static bool Prefix(RenderTexture ___bufferRenderTexture, float ___camSize,
+					string ___previewSaveGamePath, bool ___previewScreenshot,
+					Vector3 ___camPosition) {
+				var telepad = GetTelepad();
+				var rt = ___bufferRenderTexture;
+				var inst = CameraController.Instance;
+				if (telepad == null)
+					Debug.Log("No telepad present, aborting screenshot.");
+				else if (rt != null && inst != null) {
+					var centerPos = telepad.transform.position;
+					var oldRT = RenderTexture.active;
+					// Center camera on the printing pod
+					RenderTexture.active = rt;
+					inst.SetPosition(new Vector3(centerPos.x, centerPos.y, inst.transform.
+						position.z));
+					inst.RenderForTimelapser(ref rt);
+					inst.StartCoroutine(TimelapseCoroutine(rt, ___previewSaveGamePath,
+						___previewScreenshot));
+					inst.SetOrthographicsSize(___camSize);
+					inst.SetPosition(___camPosition);
+					inst.SetTargetPos(___camPosition, ___camSize, false);
+					RenderTexture.active = oldRT;
+				}
+				return false;
 			}
 		}
 	}

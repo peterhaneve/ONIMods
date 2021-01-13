@@ -101,8 +101,11 @@ namespace PeterHan.PLib.Options {
 			if (mods != null && index >= 0 && index < mods.Count && transform != null) {
 				var modSpec = mods[index];
 				string modID = modSpec.label.id;
-				if (modSpec.enabled && !string.IsNullOrEmpty(modID) && modOptions.TryGetValue(
-						modID, out Type oType)) {
+				if (modSpec.IsEnabledForActiveDlc() && !string.IsNullOrEmpty(modID) &&
+						modOptions.TryGetValue(modID, out Type oType)) {
+#if DEBUG
+					PUtil.LogDebug("Adding options for mod: {0}".F(modID));
+#endif
 					// Create delegate to spawn actions dialog
 					var action = new OptionsDialog(oType, new ModOptionsHandler(modSpec));
 					new PButton("ModSettingsButton") {

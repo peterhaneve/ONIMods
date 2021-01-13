@@ -75,6 +75,18 @@ namespace PeterHan.SandboxTools {
 					return prefab != null && (prefab.GetComponent<Geyser>() != null || prefab.
 						PrefabTag.Name == "OilWell");
 				}, null, Def.GetUISprite(Assets.GetPrefab("GeyserGeneric_slush_water"))));
+			// TODO Vanilla/DLC code
+			if (PPatchTools.GetTypeSafe("FullereneCometConfig") != null)
+				// Update the special filter to add other comet types
+				foreach (var filter in filters)
+					if (filter.Name == STRINGS.UI.SANDBOXTOOLS.FILTERS.ENTITIES.SPECIAL) {
+						var oldCondition = filter.condition;
+						filter.condition = (entity) => {
+							var prefab = entity as KPrefabID;
+							return (prefab != null && prefab.GetComponent<Comet>() != null) ||
+								oldCondition.Invoke(entity);
+						};
+					}
 			// Add matching assets
 			var options = ListPool<object, SandboxToolParameterMenu>.Allocate();
 			foreach (var prefab in Assets.Prefabs)

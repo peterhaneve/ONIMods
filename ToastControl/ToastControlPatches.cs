@@ -133,7 +133,7 @@ namespace PeterHan.ToastControl {
 							BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
 					// Access constructor or method
 					if (type == null)
-						PUtil.LogWarning("Unable to find type: " + type);
+						PUtil.LogWarning("Unable to find type: " + mSpec);
 					else
 						result = LookupMethod(type, mSpec.Substring(index + 1));
 					if (result != null)
