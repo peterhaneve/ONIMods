@@ -20,7 +20,6 @@ using Harmony;
 using KSerialization;
 using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Datafiles;
-using PeterHan.PLib.Detours;
 using PeterHan.PLib.Lighting;
 using PeterHan.PLib.Options;
 using System;
@@ -44,12 +43,12 @@ namespace PeterHan.PLib {
 			typeof(Database.ColonyAchievementRequirement).GetMethodSafe("Serialize", false);
 
 		/// <summary>
-		/// Applied to modify SteamUGCService to silence "Preview image load failed".
+		/// Applied to LightGridEmitter to unattribute lighting sources.
 		/// </summary>
-		private static IEnumerable<CodeInstruction> LoadPreviewImage_Transpile(
-				IEnumerable<CodeInstruction> body) {
-			return PPatchTools.ReplaceMethodCall(body, typeof(Debug).GetMethodSafe(nameof(
-				Debug.LogFormat), true, typeof(string), typeof(object[])));
+		private static void AddToGrid_Postfix() {
+			var lm = PLightManager.Instance;
+			if (lm != null)
+				lm.CallingObject = null;
 		}
 
 		/// <summary>
@@ -67,15 +66,6 @@ namespace PeterHan.PLib {
 					ref ___solidPartitionerEntry, ref ___liquidPartitionerEntry);
 			}
 			return cont;
-		}
-
-		/// <summary>
-		/// Applied to LightGridEmitter to unattribute lighting sources.
-		/// </summary>
-		private static void AddToGrid_Postfix() {
-			var lm = PLightManager.Instance;
-			if (lm != null)
-				lm.CallingObject = null;
 		}
 
 		/// <summary>
@@ -178,6 +168,15 @@ namespace PeterHan.PLib {
 				LightShape shape, int lux) {
 			var lm = PLightManager.Instance;
 			return lm == null || !lm.PreviewLight(origin_cell, radius, shape, lux);
+		}
+
+		/// <summary>
+		/// Applied to modify SteamUGCService to silence "Preview image load failed".
+		/// </summary>
+		private static IEnumerable<CodeInstruction> LoadPreviewImage_Transpile(
+				IEnumerable<CodeInstruction> body) {
+			return PPatchTools.ReplaceMethodCall(body, typeof(Debug).GetMethodSafe(nameof(
+				Debug.LogFormat), true, typeof(string), typeof(object[])));
 		}
 
 		/// <summary>
