@@ -29,22 +29,6 @@ namespace PeterHan.FastSave {
 	[RestartRequired]
 	public sealed class FastSaveOptions : POptions.SingletonOptions<FastSaveOptions> {
 		/// <summary>
-		/// Time entries ending this many in-game seconds before the current time will be
-		/// removed in Safe mode.
-		/// </summary>
-		internal const float USAGE_SAFE = 6200.0f;
-		/// <summary>
-		/// Time entries ending this many in-game seconds before the current time will be
-		/// removed in Moderate mode.
-		/// </summary>
-		internal const float USAGE_MODERATE = 620.0f;
-		/// <summary>
-		/// Time entries ending this many in-game seconds before the current time will be
-		/// removed in Aggressive mode.
-		/// </summary>
-		internal const float USAGE_AGGRESSIVE = 62.0f;
-
-		/// <summary>
 		/// Cycles to retain of colony summary when in Moderate mode.
 		/// </summary>
 		internal const int SUMMARY_MODERATE = 20;
@@ -63,7 +47,7 @@ namespace PeterHan.FastSave {
 
 		public FastSaveOptions() {
 			Mode = FastSaveMode.Safe;
-			BackgroundSave = false;
+			BackgroundSave = true;
 		}
 
 		public override string ToString() {
@@ -78,11 +62,11 @@ namespace PeterHan.FastSave {
 		/// and 60s of uptime.
 		/// </summary>
 		public enum FastSaveMode {
-			[Option("Safe", "Daily Reports: All, Operational History: 10 Cycles")]
+			[Option("Safe", "Daily Reports: All")]
 			Safe,
-			[Option("Moderate", "Daily Reports: 20 Cycles, Operational History: 1 Cycle")]
+			[Option("Moderate", "Daily Reports: 20 Cycles")]
 			Moderate,
-			[Option("Aggressive", "Daily Reports: 2 Cycles, Operational History: 60 Seconds")]
+			[Option("Aggressive", "Daily Reports: 2 Cycles")]
 			Aggressive
 		}
 	}

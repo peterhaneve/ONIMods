@@ -49,7 +49,7 @@ namespace PeterHan.ShowRange {
 					var offset = new CellOffset(Mathf.RoundToInt(sco.x), Mathf.RoundToInt(
 						sco.y));
 					// Make secondary consumers a color related to their element
-					if (n > 0 && consumer.configuration == ElementConsumer.Configuration.
+					if (n > 1 && consumer.configuration == ElementConsumer.Configuration.
 							Element) {
 						var target = ElementLoader.FindElementByHash(consumer.
 							elementToConsume);

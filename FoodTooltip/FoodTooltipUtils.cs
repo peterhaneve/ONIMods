@@ -17,6 +17,7 @@
  */
 
 using PeterHan.PLib;
+using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -32,6 +33,13 @@ namespace PeterHan.FoodTooltip {
 		/// How many cycles are in the third line of the food consumption tooltips.
 		/// </summary>
 		private const int CYCLES_FOR_SUMMARY = 5;
+
+		// TODO DLC/Vanilla code
+		private delegate void AddMultiStringTooltip(ToolTip instance, string newString,
+			TextStyleSetting styleSetting);
+
+		private static readonly AddMultiStringTooltip ADD_TOOLTIP = typeof(ToolTip).
+			Detour<AddMultiStringTooltip>(nameof(ToolTip.AddMultiStringTooltip));
 
 		/// <summary>
 		/// Adds the correct descriptors to a plant info screen.
@@ -184,11 +192,11 @@ namespace PeterHan.FoodTooltip {
 			var reports = ReportManager.Instance;
 			if (tooltip != null && reports != null) {
 				GetCalorieDeltas(reports.TodaysReport, out float produced, out float consumed);
-				tooltip.AddMultiStringTooltip(FormatDeltaTooltip(FoodTooltipStrings.
+				ADD_TOOLTIP.Invoke(tooltip, FormatDeltaTooltip(FoodTooltipStrings.
 					FOOD_RATE_CURRENT, produced, consumed), style);
 				// Returns null if not present
 				GetCalorieDeltas(reports.YesterdaysReport, out produced, out consumed);
-				tooltip.AddMultiStringTooltip(FormatDeltaTooltip(FoodTooltipStrings.
+				ADD_TOOLTIP.Invoke(tooltip, FormatDeltaTooltip(FoodTooltipStrings.
 					FOOD_RATE_LAST1, produced, consumed), style);
 				int days = 0, cycle = GameUtil.GetCurrentCycle();
 				float totalProduced = 0.0f, totalConsumed = 0.0f;
@@ -203,7 +211,7 @@ namespace PeterHan.FoodTooltip {
 				// Do not divide by zero
 				if (days == 0)
 					days = 1;
-				tooltip.AddMultiStringTooltip(FormatDeltaTooltip(FoodTooltipStrings.
+				ADD_TOOLTIP.Invoke(tooltip, FormatDeltaTooltip(FoodTooltipStrings.
 					FOOD_RATE_LAST5, totalProduced / days, totalConsumed / days), style);
 			}
 		}

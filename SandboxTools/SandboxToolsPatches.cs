@@ -76,7 +76,7 @@ namespace PeterHan.SandboxTools {
 						PrefabTag.Name == "OilWell");
 				}, null, Def.GetUISprite(Assets.GetPrefab("GeyserGeneric_slush_water"))));
 			// TODO Vanilla/DLC code
-			if (PPatchTools.GetTypeSafe("FullereneCometConfig") != null)
+			if (PPatchTools.GetTypeSafe("FullereneCometConfig") == null)
 				// Update the special filter to add other comet types
 				foreach (var filter in filters)
 					if (filter.Name == STRINGS.UI.SANDBOXTOOLS.FILTERS.ENTITIES.SPECIAL) {

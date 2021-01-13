@@ -34,18 +34,18 @@ namespace PeterHan.FastSave {
 		/// </summary>
 		/// <returns>The printing pod (on the first asteroid if in a cluster), or null if it
 		/// was destroyed/deconstructed.</returns>
-		public static Telepad GetTelepad() {
+		public static GameObject GetTelepad() {
 			var method = typeof(GameUtil).GetMethodSafe(nameof(GameUtil.GetTelepad), true,
 				PPatchTools.AnyArguments);
 			var arguments = method.GetParameters();
-			Telepad dest = null;
+			GameObject dest = null;
 			// TODO Vanilla/DLC code
 			if (arguments.Length == 0)
 				// Vanilla
-				dest = method.Invoke(null, null) as Telepad;
+				dest = method.Invoke(null, null) as GameObject;
 			else if (arguments.Length == 1 && arguments[0].ParameterType == typeof(int))
 				// DLC
-				dest = method.Invoke(null, new object[] { 0 }) as Telepad;
+				dest = method.Invoke(null, new object[] { 0 }) as GameObject;
 			else
 				PUtil.LogWarning("Unknown GetTelepad signature: " + arguments.Join(", "));
 			return dest;
