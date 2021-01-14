@@ -3,15 +3,12 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>NotEnoughTags</AssemblyTitle>
-    <FileVersion>1.2.0.0</FileVersion>
+    <FileVersion>2.0.0.0</FileVersion>
     <RootNamespace>PeterHan.NotEnoughTags</RootNamespace>
-    <Description>Mod Description Here.</Description>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <Description>Fixes a stock game bug where Tags can be exhausted in large bases.</Description>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+  <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 </Project>

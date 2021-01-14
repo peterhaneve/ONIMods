@@ -69,6 +69,11 @@ namespace PeterHan.NotEnoughTags {
 			// Chunks of all elements
 			foreach (var element in ElementLoader.elements)
 				if (!element.IsVacuum && element.id != SimHashes.Void) {
+					// FIXME Avoid spawning crashy crashy elements
+					var id = element.id;
+					if (id == SimHashes.MoltenCobalt || id == SimHashes.Fallout || id ==
+							SimHashes.MoltenUranium || id == SimHashes.CobaltGas)
+						continue;
 					PUtil.LogDebug("Spawning element {0}".F(element.name));
 					element.substance.SpawnResource(pos, 1000.0f, element.IsSolid ? 1.0f :
 						Constants.CELSIUS2KELVIN + 20.0f, Sim.InvalidDiseaseIdx, 0);
