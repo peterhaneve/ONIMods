@@ -296,12 +296,12 @@ namespace PeterHan.PLib.Detours {
 			if (indexes != null && indexes.Length > 0)
 				throw new DetourException("Cannot detour on properties with index arguments");
 			DynamicMethod getter, setter;
-			if (target.CanRead) {
+			var getMethod = target.GetGetMethod(true);
+			if (target.CanRead && getMethod != null) {
 				getter = new DynamicMethod(name + "_Detour_Get", typeof(T), new Type[] {
 					typeof(P)
 				}, true);
 				var generator = getter.GetILGenerator();
-				var getMethod = target.GetGetMethod(true);
 				// Getter will load the first argument and call the property getter
 				if (!getMethod.IsStatic)
 					generator.Emit(OpCodes.Ldarg_0);
@@ -309,12 +309,12 @@ namespace PeterHan.PLib.Detours {
 				generator.Emit(OpCodes.Ret);
 			} else
 				getter = null;
-			if (target.CanWrite) {
+			var setMethod = target.GetSetMethod(true);
+			if (target.CanWrite && setMethod != null) {
 				setter = new DynamicMethod(name + "_Detour_Set", null, new Type[] {
 					typeof(P), typeof(T)
 				}, true);
 				var generator = setter.GetILGenerator();
-				var setMethod = target.GetSetMethod(true);
 				// Setter will load both arguments and call property setter (argument 1 is
 				// ignored for static properties)
 				if (!setMethod.IsStatic)
@@ -334,10 +334,11 @@ namespace PeterHan.PLib.Detours {
 
 		/// <summary>
 		/// Creates dynamic detour methods to wrap a base game struct field with the specified
-		/// name. For static fields, use the regular DetourField.
+		/// name. For static struct fields, use the regular DetourField.
 		/// </summary>
 		/// <typeparam name="T">The type of the field element.</typeparam>
-		/// <param name="target">The field which will be accessed.</param>
+		/// <param name="parentType">The struct type which will be accessed.</param>
+		/// <param name="name">The name of the struct field to be accessed.</param>
 		/// <returns>A detour element that wraps the field with a common interface matching
 		/// that of a detoured property.</returns>
 		public static IDetouredField<object, T> DetourStructField<T>(this Type parentType,
@@ -390,8 +391,7 @@ namespace PeterHan.PLib.Detours {
 		/// the method provided by src, with the possible addition of optional parameters set
 		/// to their default values.
 		/// </summary>
-		/// <param name="returnType">The method return type expected.</param>
-		/// <param name="parameterTypes">The method parameter types expected.</param>
+		/// <param name="expected">The method return type and parameter types expected.</param>
 		/// <param name="actual">The method to be called.</param>
 		/// <returns>The parameters used in the call to the actual method.</returns>
 		/// <exception cref="DetourException">If the delegate does not match the target.</exception>

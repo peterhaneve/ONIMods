@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using BuildingTechGroup = System.Collections.Generic.IDictionary<string, string[]>;
+using PlanInfo = PlanScreen.PlanInfo;
 using Techs = Database.Techs;
 
 namespace PeterHan.PLib.Buildings {
@@ -41,6 +42,9 @@ namespace PeterHan.PLib.Buildings {
 		// The tech tree in the DLC.
 		private static readonly DetouredMethod<TryGetTech> DLC_TECHS = typeof(Techs).
 			DetourLazy<TryGetTech>("TryGet");
+
+		private static readonly IDetouredField<object, object> PLAN_ORDER_FIELD = PDetours.
+			DetourStructField<object>(typeof(PlanInfo), nameof(PlanInfo.data));
 
 		private static readonly IDetouredField<Tech, List<string>> UNLOCKED_ITEMS =
 			PDetours.DetourFieldLazy<Tech, List<string>>("unlockedItemIDs");
@@ -471,33 +475,38 @@ namespace PeterHan.PLib.Buildings {
 				bool add = false;
 				foreach (var menu in TUNING.BUILDINGS.PLANORDER)
 					if (menu.category == Category) {
-						// Found category
-						var data = menu.data as IList<string>;
-						if (data == null)
-							PUtil.LogWarning("Build menu " + Category +
-								" has invalid entries!");
-						else {
-							string addID = AddAfter;
-							if (addID != null) {
-								// Optionally choose the position
-								int n = data.Count;
-								for (int i = 0; i < n - 1 && !add; i++)
-									if (data[i] == addID) {
-										data.Insert(i + 1, ID);
-										add = true;
-									}
-							}
-							if (!add) {
-								data.Add(ID);
-								add = true;
-							}
-						}
+						AddPlanToCategory(menu);
+						add = true;
 						break;
 					}
 				if (!add)
 					PUtil.LogWarning("Unable to find build menu: " + Category);
 				addedPlan = true;
 			}
+		}
+
+		/// <summary>
+		/// Adds a building to a specific plan menu.
+		/// </summary>
+		/// <param name="menu">The menu to which to add the building.</param>
+		private void AddPlanToCategory(PlanScreen.PlanInfo menu) {
+			// Found category
+			if (PLAN_ORDER_FIELD.Get(menu) is IList<string> data) {
+				string addID = AddAfter;
+				bool add = false;
+				if (addID != null) {
+					// Optionally choose the position
+					int n = data.Count;
+					for (int i = 0; i < n - 1 && !add; i++)
+						if (data[i] == addID) {
+							data.Insert(i + 1, ID);
+							add = true;
+						}
+				}
+				if (!add)
+					data.Add(ID);
+			} else
+				PUtil.LogWarning("Build menu " + Category + " has invalid entries!");
 		}
 
 		/// <summary>
