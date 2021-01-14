@@ -98,7 +98,7 @@ namespace PeterHan.AirlockDoor {
 			AirlockDoorTemplate?.CreateLogicPorts(go);
 			var ad = go.AddOrGet<AirlockDoor>();
 			ad.EnergyCapacity = 10000.0f;
-			ad.EnergyPerUse = 2000.0f;
+			ad.EnergyPerUse = 1500.0f;
 			var occupier = go.AddOrGet<SimCellOccupier>();
 			occupier.doReplaceElement = true;
 			occupier.notifyOnMelt = true;

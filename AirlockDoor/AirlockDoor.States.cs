@@ -100,7 +100,7 @@ namespace PeterHan.AirlockDoor {
 			}
 
 			public override void InitializeStates(out BaseState default_state) {
-				serializable = true;
+				serializable = SerializeType.ParamsOnly;
 				default_state = notFunctional;
 				notFunctional.PlayAnim("off").
 					Enter("UpdateWorldState", UpdateWorldState).
