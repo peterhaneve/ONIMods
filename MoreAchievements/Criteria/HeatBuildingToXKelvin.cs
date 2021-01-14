@@ -26,7 +26,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
 	/// Requires a building to be heated to a specified temperature.
 	/// </summary>
-	public sealed class HeatBuildingToXKelvin : ColonyAchievementRequirement {
+	public sealed class HeatBuildingToXKelvin : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
 		/// The maximum temperature seen.
 		/// </summary>
@@ -44,7 +44,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 			maxValue = 0.0f;
 		}
 
-		public override void Deserialize(IReader reader) {
+		public void Deserialize(IReader reader) {
 			maxValue = 0.0f;
 			required = Math.Max(0.0f, reader.ReadSingle());
 		}

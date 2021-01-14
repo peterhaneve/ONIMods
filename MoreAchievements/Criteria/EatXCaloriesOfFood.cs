@@ -25,7 +25,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
 	/// Requires the consumption of a specific quantity of calories of a given food type.
 	/// </summary>
-	public class EatXCaloriesOfFood : ColonyAchievementRequirement {
+	public class EatXCaloriesOfFood : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
 		/// The food tag which must be consumed.
 		/// </summary>
@@ -44,7 +44,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 			this.foodTag = foodTag;
 		}
 
-		public override void Deserialize(IReader reader) {
+		public void Deserialize(IReader reader) {
 			numCalories = Math.Max(1.0f, reader.ReadSingle());
 			foodTag = reader.ReadKleiString();
 		}

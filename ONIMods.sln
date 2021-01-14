@@ -87,6 +87,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DLCModEnabler", "DLCModEnab
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinishTasks", "FinishTasks\FinishTasks.csproj", "{6E8902F8-2969-4A11-B2D2-C8644A00949D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoSplashScreen", "NoSplashScreen\NoSplashScreen.csproj", "{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -261,6 +263,10 @@ Global
 		{6E8902F8-2969-4A11-B2D2-C8644A00949D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E8902F8-2969-4A11-B2D2-C8644A00949D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E8902F8-2969-4A11-B2D2-C8644A00949D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

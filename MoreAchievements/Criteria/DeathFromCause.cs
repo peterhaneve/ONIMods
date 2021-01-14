@@ -25,7 +25,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
 	/// Requires a Duplicant death from the specified cause.
 	/// </summary>
-	public class DeathFromCause : ColonyAchievementRequirement, IDeathRequirement {
+	public class DeathFromCause : ColonyAchievementRequirement, IDeathRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
 		/// The cause of death which must occur.
 		/// </summary>
@@ -43,7 +43,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 			triggered = false;
 		}
 
-		public override void Deserialize(IReader reader) {
+		public void Deserialize(IReader reader) {
 			cause = reader.ReadKleiString();
 			triggered = reader.ReadInt32() != 0;
 		}

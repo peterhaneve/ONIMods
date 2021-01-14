@@ -24,7 +24,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
 	/// Requires the construction of a specified total number of buildings.
 	/// </summary>
-	public class BuildNBuildings : ColonyAchievementRequirement {
+	public class BuildNBuildings : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
 		/// The number of buildings built.
 		/// </summary>
@@ -47,7 +47,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 			built++;
 		}
 
-		public override void Deserialize(IReader reader) {
+		public void Deserialize(IReader reader) {
 			required = Math.Max(reader.ReadInt32(), 1);
 			built = Math.Max(reader.ReadInt32(), 0);
 		}

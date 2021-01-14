@@ -26,7 +26,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
 	/// Requires no Duplicants to die for the specified number of consecutive cycles.
 	/// </summary>
-	public sealed class NoDeathsForNCycles : ColonyAchievementRequirement, IDeathRequirement {
+	public sealed class NoDeathsForNCycles : ColonyAchievementRequirement, IDeathRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
 		/// How many cycles is required for no deaths.
 		/// </summary>
@@ -42,7 +42,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 			lastDeath = -1;
 		}
 
-		public override void Deserialize(IReader reader) {
+		public void Deserialize(IReader reader) {
 			cycles = Math.Max(1, reader.ReadInt32());
 			lastDeath = Math.Max(-1, reader.ReadInt32());
 		}

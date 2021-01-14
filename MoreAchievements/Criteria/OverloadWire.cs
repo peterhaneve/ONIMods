@@ -23,7 +23,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
 	/// Requires a wire of a specific type to take overload damage.
 	/// </summary>
-	public sealed class OverloadWire : ColonyAchievementRequirement {
+	public sealed class OverloadWire : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
 		/// Whether the wire has been overloaded.
 		/// </summary>
@@ -49,7 +49,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 				overloaded = true;
 		}
 
-		public override void Deserialize(IReader reader) {
+		public void Deserialize(IReader reader) {
 			type = (Wire.WattageRating)reader.ReadInt32();
 			overloaded = false;
 		}

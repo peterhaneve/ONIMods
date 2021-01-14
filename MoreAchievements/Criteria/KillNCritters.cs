@@ -26,7 +26,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// Requires the killing of a specified number of critters, through causes other than old
 	/// age.
 	/// </summary>
-	public class KillNCritters : ColonyAchievementRequirement {
+	public class KillNCritters : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
 		/// The number of critters killed.
 		/// </summary>
@@ -49,7 +49,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 			killed++;
 		}
 
-		public override void Deserialize(IReader reader) {
+		public void Deserialize(IReader reader) {
 			required = Math.Max(reader.ReadInt32(), 1);
 			killed = Math.Max(reader.ReadInt32(), 0);
 		}

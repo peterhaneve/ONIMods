@@ -25,7 +25,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
 	/// Requires the digging of a specified total number of tiles.
 	/// </summary>
-	public class DigNTiles : ColonyAchievementRequirement {
+	public class DigNTiles : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
 		/// The event ID for completing a dig. Obtained via Hash.SDBMLower("DigComplete").
 		/// </summary>
@@ -53,7 +53,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 			dug++;
 		}
 
-		public override void Deserialize(IReader reader) {
+		public void Deserialize(IReader reader) {
 			required = Math.Max(reader.ReadInt32(), 1);
 			dug = Math.Max(reader.ReadInt32(), 0);
 		}

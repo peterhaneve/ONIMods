@@ -25,7 +25,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
 	/// Requires an event to be triggered through the achievement state component.
 	/// </summary>
-	public sealed class TriggerEvent : ColonyAchievementRequirement {
+	public sealed class TriggerEvent : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
 		/// The ID of the event to trigger. Should be the achievement ID for simple
 		/// achievements.
@@ -50,7 +50,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 			UpdateDescription();
 		}
 
-		public override void Deserialize(IReader reader) {
+		public void Deserialize(IReader reader) {
 			ID = reader.ReadKleiString();
 			triggered = reader.ReadInt32() != 0;
 			UpdateDescription();
