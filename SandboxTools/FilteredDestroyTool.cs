@@ -167,10 +167,11 @@ namespace PeterHan.SandboxTools {
 		/// <param name="cell">The cell to destroy.</param>
 		private void DestroyItems(int cell) {
 			var destroy = HashSetPool<GameObject, FilteredDestroyTool>.Allocate();
-			var gameObject = Grid.Objects[cell, (int)ObjectLayer.Pickupables];
-			if (gameObject != null) {
+			var pickupable = Grid.Objects[cell, (int)ObjectLayer.Pickupables].
+				GetComponentSafe<Pickupable>();
+			if (pickupable != null) {
 				// Linked list of debris in layer 3
-				var objectListNode = gameObject.GetComponent<Pickupable>().objectLayerListItem;
+				var objectListNode = pickupable.objectLayerListItem;
 				while (objectListNode != null) {
 					var content = objectListNode.gameObject;
 					objectListNode = objectListNode.nextItem;
