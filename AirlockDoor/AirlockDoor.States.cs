@@ -17,6 +17,7 @@
  */
 
 using PeterHan.PLib;
+using PeterHan.PLib.Buildings;
 using System;
 using UnityEngine;
 
@@ -331,14 +332,14 @@ namespace PeterHan.AirlockDoor {
 		/// </summary>
 		public sealed class Instance : States.GameInstance {
 			/// <summary>
-			/// Checks the cell for a Duplicant.
+			/// The layer to check for Duplicants.
 			/// </summary>
-			/// <param name="cell">The cell to check.</param>
-			/// <returns>Whether a Duplicant occupies this cell.</returns>
-			private static bool HasMinion(int cell) {
-				return Grid.IsValidBuildingCell(cell) && Grid.Objects[cell, (int)ObjectLayer.
-					Minion] != null;
-			}
+			private readonly int minionLayer;
+
+			/// <summary>
+			/// The layer to check for dropped items.
+			/// </summary>
+			private readonly int pickupableLayer;
 
 			/// <summary>
 			/// The number of samples taken of the tiles just outside the airlock.
@@ -361,6 +362,10 @@ namespace PeterHan.AirlockDoor {
 			}
 
 			public Instance(AirlockDoor door) : base(door) {
+				minionLayer = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.Minion),
+					ObjectLayer.Minion);
+				pickupableLayer = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.
+					Pickupables), ObjectLayer.Pickupables);
 				pressureSamples = 0;
 				totalPressure = 0.0f;
 			}
@@ -420,7 +425,7 @@ namespace PeterHan.AirlockDoor {
 			/// <param name="newCell">The location to move the items.</param>
 			private void EjectAll(int cell, int newCell) {
 				if (Grid.IsValidCell(cell)) {
-					var node = Grid.Objects[cell, (int)ObjectLayer.Pickupables].
+					var node = Grid.Objects[cell, pickupableLayer].
 						GetComponentSafe<Pickupable>()?.objectLayerListItem;
 					while (node != null) {
 						var item = node.gameObject;
@@ -443,6 +448,16 @@ namespace PeterHan.AirlockDoor {
 						}
 					}
 				}
+			}
+
+			/// <summary>
+			/// Checks the cell for a Duplicant.
+			/// </summary>
+			/// <param name="cell">The cell to check.</param>
+			/// <returns>Whether a Duplicant occupies this cell.</returns>
+			private bool HasMinion(int cell) {
+				return Grid.IsValidBuildingCell(cell) && Grid.Objects[cell, minionLayer] !=
+					null;
 			}
 
 			/// <summary>

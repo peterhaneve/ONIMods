@@ -81,7 +81,8 @@ namespace PeterHan.AirlockDoor {
 			def.PreventIdleTraversalPastBuilding = true;
 			// /5 multiplier to thermal conductivity
 			def.ThermalConductivity = 0.2f;
-			def.TileLayer = ObjectLayer.FoundationTile;
+			def.TileLayer = PBuilding.GetObjectLayer(nameof(ObjectLayer.FoundationTile),
+				ObjectLayer.FoundationTile);
 			return def;
 		}
 

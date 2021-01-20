@@ -67,8 +67,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ToastControl", "ToastContro
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CleanDrop", "CleanDrop\CleanDrop.csproj", "{86E9BA14-F3B4-45B6-9DE6-537F6EF6EB30}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClothingTweaks", "ClothingTweaks\ClothingTweaks.csproj", "{39A349AE-5CD5-46C0-8709-3C6877EA2AAB}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIImprovements", "AIImprovements\AIImprovements.csproj", "{E367FD41-DCD7-4921-82A9-27783206D7BD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuildStraightUp", "BuildStraightUp\BuildStraightUp.csproj", "{76F4CFB2-B40A-4C14-8842-4AE1C3F73A5D}"
@@ -223,10 +221,6 @@ Global
 		{86E9BA14-F3B4-45B6-9DE6-537F6EF6EB30}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{86E9BA14-F3B4-45B6-9DE6-537F6EF6EB30}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{86E9BA14-F3B4-45B6-9DE6-537F6EF6EB30}.Release|Any CPU.Build.0 = Release|Any CPU
-		{39A349AE-5CD5-46C0-8709-3C6877EA2AAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{39A349AE-5CD5-46C0-8709-3C6877EA2AAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{39A349AE-5CD5-46C0-8709-3C6877EA2AAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{39A349AE-5CD5-46C0-8709-3C6877EA2AAB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E367FD41-DCD7-4921-82A9-27783206D7BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E367FD41-DCD7-4921-82A9-27783206D7BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E367FD41-DCD7-4921-82A9-27783206D7BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
