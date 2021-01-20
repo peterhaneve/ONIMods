@@ -65,7 +65,8 @@ namespace PeterHan.ThermalPlate {
 				Ingredients = {
 					new BuildIngredient(TUNING.MATERIALS.REFINED_METALS, tier: 3)
 				},
-				ObjectLayer = ObjectLayer.Backwall,
+				ObjectLayer = PBuilding.GetObjectLayer(nameof(ObjectLayer.Backwall),
+					ObjectLayer.Backwall),
 				Placement = BuildLocationRule.NotInTiles,
 				SceneLayer = Grid.SceneLayer.Backwall,
 				Tech = "Suits",
@@ -89,7 +90,8 @@ namespace PeterHan.ThermalPlate {
 
 		public override void ConfigureBuildingTemplate(GameObject go, Tag prefabTag) {
 			ThermalInterfacePlate?.ConfigureBuildingTemplate(go);
-			go.AddOrGet<AnimTileable>().objectLayer = ObjectLayer.Backwall;
+			go.AddOrGet<AnimTileable>().objectLayer = PBuilding.GetObjectLayer(
+				nameof(ObjectLayer.Backwall), ObjectLayer.Backwall);
 			go.AddComponent<ZoneTile>();
 			BuildingConfigManager.Instance.IgnoreDefaultKComponent(typeof(RequiresFoundation),
 				prefabTag);

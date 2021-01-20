@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.Buildings;
 using UnityEngine;
 
 namespace PeterHan.QueueForSinks {
@@ -25,6 +26,16 @@ namespace PeterHan.QueueForSinks {
 	public sealed class SinkCheckpoint : WorkCheckpoint<HandSanitizer.Work> {
 		// Sinks are 2x3
 		private const int OFFSET = 2;
+
+		/// <summary>
+		/// The layer for buildings.
+		/// </summary>
+		private readonly int buildingLayer;
+
+		public SinkCheckpoint() : base() {
+			buildingLayer = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.Building),
+				ObjectLayer.Building);
+		}
 
 		/// <summary>
 		/// Checks for another usable sink in the specified direction. It is assumed that the
@@ -40,8 +51,8 @@ namespace PeterHan.QueueForSinks {
 			if (sink != null && Grid.IsValidCell(cell = Grid.PosToCell(sink))) {
 				cell = Grid.OffsetCell(cell, new CellOffset(dir ? OFFSET : -OFFSET, 0));
 				// Is cell valid?
-				if (Grid.IsValidBuildingCell(cell) && (nSink = Grid.Objects[cell, (int)
-						ObjectLayer.Building]) != null) {
+				if (Grid.IsValidBuildingCell(cell) && (nSink = Grid.Objects[cell,
+						buildingLayer]) != null) {
 					var nextSink = nSink.GetComponent<SinkCheckpoint>();
 					var op = nSink.GetComponent<Operational>();
 					var dc = nSink.GetComponent<DirectionControl>();

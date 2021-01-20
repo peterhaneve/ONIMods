@@ -17,6 +17,7 @@
  */
 
 using PeterHan.PLib;
+using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
@@ -39,8 +40,6 @@ namespace PeterHan.BulkSettingsChange {
 			PDetours.DetourField<DragTool, Texture2D>("boxCursor");
 		private static readonly IDetouredField<InterfaceTool, Texture2D> CURSOR =
 			PDetours.DetourField<InterfaceTool, Texture2D>(nameof(cursor));
-		private static readonly IDetouredField<InterfaceTool, GameObject> VISUALIZER =
-			PDetours.DetourField<InterfaceTool, GameObject>(nameof(visualizer));
 
 		/// <summary>
 		/// Reports the status of auto-disinfection.
@@ -138,9 +137,26 @@ namespace PeterHan.BulkSettingsChange {
 		private string lastSelected;
 
 		/// <summary>
+		/// The number of object layers, determined at RUNTIME.
+		/// </summary>
+		private readonly int numObjectLayers;
+
+		/// <summary>
+		/// The layer to check for dropped items.
+		/// </summary>
+		private readonly int pickupableLayer;
+
+		/// <summary>
 		/// The options available for this tool.
 		/// </summary>
 		private IDictionary<string, ToolParameterMenu.ToggleState> options;
+
+		public BulkChangeTool() {
+			numObjectLayers = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.NumLayers),
+				ObjectLayer.NumLayers);
+			pickupableLayer = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.Pickupables),
+				ObjectLayer.Pickupables);
+		}
 
 		protected override string GetConfirmSound() {
 			string sound = base.GetConfirmSound();
@@ -212,36 +228,35 @@ namespace PeterHan.BulkSettingsChange {
 #endif
 				if (enable || BulkChangeTools.DisableBuildings.IsOn(options)) {
 					// Enable/disable buildings
-					for (int i = 0; i < (int)ObjectLayer.NumLayers; i++)
+					for (int i = 0; i < numObjectLayers; i++)
 						changed |= ToggleBuilding(cell, Grid.Objects[cell, i], enable);
 					if (changed)
 						ShowPopup(enable, BulkChangeTools.EnableBuildings, BulkChangeTools.
 							DisableBuildings, cell);
 				} else if (disinfect || BulkChangeTools.DisableDisinfect.IsOn(options)) {
 					// Enable/disable disinfect
-					for (int i = 0; i < (int)ObjectLayer.NumLayers; i++)
+					for (int i = 0; i < numObjectLayers; i++)
 						changed |= ToggleDisinfect(cell, Grid.Objects[cell, i], disinfect);
 					if (changed)
 						ShowPopup(disinfect, BulkChangeTools.EnableDisinfect, BulkChangeTools.
 							DisableDisinfect, cell);
 				} else if (repair || BulkChangeTools.DisableRepair.IsOn(options)) {
 					// Enable/disable repair
-					for (int i = 0; i < (int)ObjectLayer.NumLayers; i++)
+					for (int i = 0; i < numObjectLayers; i++)
 						changed |= ToggleRepair(cell, Grid.Objects[cell, i], repair);
 					if (changed)
 						ShowPopup(repair, BulkChangeTools.EnableRepair, BulkChangeTools.
 							DisableRepair, cell);
 				} else if (empty || BulkChangeTools.DisableEmpty.IsOn(options)) {
 					// Enable/disable empty storage
-					for (int i = 0; i < (int)ObjectLayer.NumLayers; i++)
+					for (int i = 0; i < numObjectLayers; i++)
 						changed |= ToggleEmptyStorage(cell, Grid.Objects[cell, i], empty);
 					if (changed)
 						ShowPopup(empty, BulkChangeTools.EnableEmpty, BulkChangeTools.
 							DisableEmpty, cell);
 				} else if (compost || BulkChangeTools.DisableCompost.IsOn(options)) {
 					// Enable/disable compost
-					if (ToggleCompost(cell, Grid.Objects[cell, (int)ObjectLayer.Pickupables],
-							compost))
+					if (ToggleCompost(cell, Grid.Objects[cell, pickupableLayer], compost))
 						ShowPopup(compost, BulkChangeTools.EnableCompost, BulkChangeTools.
 							DisableCompost, cell);
 				}

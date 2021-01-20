@@ -20,6 +20,7 @@ using Harmony;
 using Klei.AI;
 using Newtonsoft.Json;
 using PeterHan.PLib;
+using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
@@ -107,6 +108,8 @@ namespace ReimaginationTeam.DecorRework {
 			}
 			if (entries != null) {
 				var editDecor = DictionaryPool<string, DecorDbEntry, DecorDbEntry>.Allocate();
+				var tileLayer = PBuilding.GetObjectLayer(nameof(ObjectLayer.FoundationTile),
+					ObjectLayer.FoundationTile);
 				string id;
 				// Add to dictionary, way faster
 				foreach (var entry in entries)
@@ -115,8 +118,7 @@ namespace ReimaginationTeam.DecorRework {
 				foreach (var def in Assets.BuildingDefs)
 					// If PreserveTileDecor is set to true, ignore foundation tile decor mods
 					if (editDecor.TryGetValue(id = def.PrefabID, out DecorDbEntry entry) &&
-							(def.TileLayer != ObjectLayer.FoundationTile || !options.
-							PreserveTileDecor)) {
+							(def.TileLayer != tileLayer || !options.PreserveTileDecor)) {
 						float decor = entry.decor;
 						int radius = entry.radius;
 						var provider = def.BuildingComplete.GetComponent<DecorProvider>();

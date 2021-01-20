@@ -34,8 +34,7 @@ namespace PeterHan.PLib {
 		public static Action MaxAction { get; }
 
 		static PAction() {
-			// Enum.TryParse was introduced in .NET Framework 4.0
-			if (!Enum.TryParse("NumActions", out Action limit))
+			if (!Enum.TryParse(nameof(Action.NumActions), out Action limit))
 				limit = Action.NumActions;
 			MaxAction = limit;
 		}

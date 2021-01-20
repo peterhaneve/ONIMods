@@ -17,6 +17,7 @@
  */
 
 using PeterHan.PLib;
+using PeterHan.PLib.Buildings;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -26,6 +27,11 @@ namespace PeterHan.ThermalPlate {
 	/// A component which transfers heat among buildings and entities in its cell.
 	/// </summary>
 	public sealed class ThermalInterfacePlate : KMonoBehaviour, ISim200ms, ISim1000ms {
+		/// <summary>
+		/// The layer for tempshift plates.
+		/// </summary>
+		private readonly int backwallLayer;
+
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable CS0649
 		/// <summary>
@@ -37,11 +43,20 @@ namespace PeterHan.ThermalPlate {
 #pragma warning restore IDE0044 // Add readonly modifier
 
 		/// <summary>
+		/// The number of object layers, determined at RUNTIME.
+		/// </summary>
+		private readonly int numObjectLayers;
+
+		/// <summary>
 		/// The buildings to which heat will be transferred.
 		/// </summary>
 		private readonly ICollection<GameObject> transferCache;
 
 		public ThermalInterfacePlate() {
+			backwallLayer = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.Backwall),
+				ObjectLayer.Backwall);
+			numObjectLayers = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.NumLayers),
+				ObjectLayer.NumLayers);
 			transferCache = new List<GameObject>();
 		}
 
@@ -67,7 +82,7 @@ namespace PeterHan.ThermalPlate {
 				transferCache.Clear();
 				// Update the buildings to which heat should be transferred
 				int cell = Grid.PosToCell(this);
-				for (int i = 0; i < (int)ObjectLayer.NumLayers; i++) {
+				for (int i = 0; i < numObjectLayers; i++) {
 					var gameObject = Grid.Objects[cell, i];
 					var newBuilding = gameObject.GetComponentSafe<BuildingComplete>();
 					if (newBuilding != null && newBuilding != building)
@@ -78,7 +93,7 @@ namespace PeterHan.ThermalPlate {
 					for (int dy = -1; dy <= 1; dy++) {
 						int newCell = Grid.OffsetCell(cell, new CellOffset(dx, dy));
 						if (newCell != cell && Grid.IsValidBuildingCell(newCell)) {
-							var gameObject = Grid.Objects[newCell, (int)ObjectLayer.Backwall];
+							var gameObject = Grid.Objects[newCell, backwallLayer];
 							var plate = gameObject.GetComponentSafe<BuildingComplete>();
 							// Is it a tempshift plate?
 							if (plate?.Def?.PrefabID == ThermalBlockConfig.ID)

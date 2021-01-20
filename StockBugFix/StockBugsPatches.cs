@@ -34,46 +34,6 @@ namespace PeterHan.StockBugFix {
 		/// </summary>
 		public const int JOY_PRIORITY_MOD = 6000;
 
-#if false
-		/// <summary>
-		/// Applies rocket damage. Since the amount is known to be instant, the method can be
-		/// simplified greatly.
-		/// </summary>
-		private static float ApplyRocketDamage(WorldDamage instance, int cell, float amount,
-				int _, int destroyCallback, string sourceName, string popText) {
-			if (Grid.Solid[cell]) {
-				bool hadBuilding = false;
-				// Destroy the cell immediately
-				var obj = Grid.Objects[cell, (int)ObjectLayer.FoundationTile];
-				if (obj != null) {
-					// Break down the building on that cell
-					var hp = obj.GetComponent<BuildingHP>();
-					if (hp != null) {
-						// Damage for all it has left
-						obj.Trigger((int)GameHashes.DoBuildingDamage, new BuildingHP.
-								DamageSourceInfo {
-							damage = hp.HitPoints,
-							source = sourceName,
-							popString = popText
-						});
-						if (!hp.destroyOnDamaged)
-							hadBuilding = true;
-					}
-				}
-				Grid.Damage[cell] = 1.0f;
-				if (hadBuilding)
-					// Destroy tile completely
-					SimMessages.ReplaceElement(cell, SimHashes.Vacuum, CellEventLogger.
-						Instance.SimCellOccupierDestroySelf, 0.0f, 0.0f, 255, 0,
-						destroyCallback);
-				else
-					// Regular tile, break it normally
-					instance.DestroyCell(cell, destroyCallback);
-			}
-			return amount;
-		}
-#endif
-
 		/// <summary>
 		/// Retrieves the specified property setter.
 		/// </summary>

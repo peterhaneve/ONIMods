@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Buildings;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -33,7 +34,14 @@ namespace PeterHan.BuildStraightUp {
 		/// </summary>
 		private static LastBuilding lastChecked = new LastBuilding();
 
+		/// <summary>
+		/// The number of object layers to check.
+		/// </summary>
+		private static int numObjectLayers;
+
 		public static void OnLoad() {
+			numObjectLayers = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.NumLayers),
+				ObjectLayer.NumLayers);
 			PUtil.InitLibrary();
 			lastChecked.Reset();
 			PUtil.RegisterPatchClass(typeof(BuildStraightUpPatches));
@@ -90,7 +98,7 @@ namespace PeterHan.BuildStraightUp {
 			// Search all buildings in the cell
 			BuildingUnderConstruction underCons;
 			bool found = false;
-			for (int layer = 0; layer < (int)ObjectLayer.NumLayers && !found; layer++) {
+			for (int layer = 0; layer < numObjectLayers && !found; layer++) {
 				var building = Grid.Objects[target, layer];
 				if (building != null && (underCons = building.GetComponent<
 						BuildingUnderConstruction>()) != null) {

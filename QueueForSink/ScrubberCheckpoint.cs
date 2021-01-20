@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.Buildings;
 using UnityEngine;
 
 namespace PeterHan.QueueForSinks {
@@ -25,6 +26,16 @@ namespace PeterHan.QueueForSinks {
 	public sealed class ScrubberCheckpoint : WorkCheckpoint<OreScrubber.Work> {
 		// Scrubbers are 3x3
 		private const int OFFSET = 3;
+
+		/// <summary>
+		/// The layer for buildings.
+		/// </summary>
+		private readonly int buildingLayer;
+
+		public ScrubberCheckpoint() : base() {
+			buildingLayer = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.Building),
+				ObjectLayer.Building);
+		}
 
 		/// <summary>
 		/// Checks for another usable ore scrubber in the specified direction. It is assumed
@@ -40,8 +51,8 @@ namespace PeterHan.QueueForSinks {
 			if (scrubber != null && Grid.IsValidCell(cell = Grid.PosToCell(scrubber))) {
 				cell = Grid.OffsetCell(cell, new CellOffset(dir ? OFFSET : -OFFSET, 0));
 				// Is cell valid?
-				if (Grid.IsValidBuildingCell(cell) && (nScrub = Grid.Objects[cell, (int)
-						ObjectLayer.Building]) != null) {
+				if (Grid.IsValidBuildingCell(cell) && (nScrub = Grid.Objects[cell,
+						buildingLayer]) != null) {
 					var nextScrubber = nScrub.GetComponent<ScrubberCheckpoint>();
 					var op = nScrub.GetComponent<Operational>();
 					var dc = nScrub.GetComponent<DirectionControl>();

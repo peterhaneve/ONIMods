@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Buildings;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -46,6 +47,11 @@ namespace PeterHan.SandboxTools {
 		private readonly IList<DestroyFilter> modes;
 
 		/// <summary>
+		/// The number of object layers, determined at RUNTIME.
+		/// </summary>
+		private readonly int numObjectLayers;
+
+		/// <summary>
 		/// The cells recently destroyed by the tool.
 		/// </summary>
 		private readonly HashSet<int> pendingCells;
@@ -54,6 +60,11 @@ namespace PeterHan.SandboxTools {
 		/// The color to highlight the recently affected cells.
 		/// </summary>
 		private readonly Color pendingHighlightColor;
+
+		/// <summary>
+		/// The layer for dropped items, determined at RUNTIME.
+		/// </summary>
+		private readonly int pickupLayer;
 
 		internal FilteredDestroyTool() {
 			Color color;
@@ -82,10 +93,15 @@ namespace PeterHan.SandboxTools {
 				// Take from stock tool if possible
 				color = Traverse.Create(SandboxDestroyerTool.instance).GetField<Color>(
 					"recentlyAffectedCellColor");
-			} catch (Exception) {
+			} catch {
 				// Use default
 				color = new Color(1f, 1f, 1f, 0.1f);
 			}
+			// Read value at runtime if possible
+			numObjectLayers = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.NumLayers),
+				ObjectLayer.NumLayers);
+			pickupLayer = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.Pickupables),
+				ObjectLayer.Pickupables);
 			pendingHighlightColor = color;
 		}
 
@@ -100,7 +116,7 @@ namespace PeterHan.SandboxTools {
 			DestroyPlants(cell);
 			DestroyCreatures(cell);
 			// All buildings, no exceptions
-			for (int i = 0; i < (int)ObjectLayer.NumLayers; i++) {
+			for (int i = 0; i < numObjectLayers; i++) {
 				var obj = Grid.Objects[cell, i];
 				if (obj != null)
 					destroy.Add(obj);
@@ -117,7 +133,7 @@ namespace PeterHan.SandboxTools {
 		private void DestroyBuildings(int cell, string filter) {
 			var destroy = HashSetPool<GameObject, FilteredDestroyTool>.Allocate();
 			var inst = DeconstructTool.Instance;
-			for (int i = 0; i < (int)ObjectLayer.NumLayers; i++) {
+			for (int i = 0; i < numObjectLayers; i++) {
 				var obj = Grid.Objects[cell, i];
 				if (obj != null && inst.GetFilterLayerFromGameObject(obj) == filter)
 					// Buldings, either finished or under construction
@@ -153,7 +169,7 @@ namespace PeterHan.SandboxTools {
 				SandBoxTool, 0.0f, 0.0f, Klei.SimUtil.DiseaseInfo.Invalid.idx, 0, index);
 			// Destroy any solid tiles / doors on the area as well to avoid bad states
 			var destroy = HashSetPool<GameObject, FilteredDestroyTool>.Allocate();
-			for (int i = 0; i < (int)ObjectLayer.NumLayers; i++) {
+			for (int i = 0; i < numObjectLayers; i++) {
 				var obj = Grid.Objects[cell, i];
 				if (obj != null && obj.GetComponentSafe<SimCellOccupier>() != null)
 					destroy.Add(obj);
@@ -167,8 +183,7 @@ namespace PeterHan.SandboxTools {
 		/// <param name="cell">The cell to destroy.</param>
 		private void DestroyItems(int cell) {
 			var destroy = HashSetPool<GameObject, FilteredDestroyTool>.Allocate();
-			var pickupable = Grid.Objects[cell, (int)ObjectLayer.Pickupables].
-				GetComponentSafe<Pickupable>();
+			var pickupable = Grid.Objects[cell, pickupLayer].GetComponentSafe<Pickupable>();
 			if (pickupable != null) {
 				// Linked list of debris in layer 3
 				var objectListNode = pickupable.objectLayerListItem;
