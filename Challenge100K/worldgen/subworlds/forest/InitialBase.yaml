@@ -1,0 +1,28 @@
+biomeNoise: noise/subworldForest
+temperatureRange: VeryCold
+pdWeight: 2
+density:
+  min: 10
+  max: 20
+avoidRadius: 20.0
+minChildCount: 5
+doAvoidPoints: false
+dontRelaxChildren: true
+sampleBehaviour: PoissonDisk
+borderOverride: rocky
+biomes:
+  - name: biomes/Forest/FrigidStart
+    weight: 2
+    tags:
+      - BasicForagePlant
+      - ForestForagePlantPlanted
+tags:
+  - StartWorld
+  - IgnoreCaveOverride
+  - NoGlobalFeatureSpawning
+centralFeature:
+  type: features/onehundredk/StartLocation
+features:
+  - type: features/forest/OxyfernCave
+  - type: features/forest/PhosphoriteLump
+zoneType: Forest

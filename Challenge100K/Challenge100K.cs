@@ -45,9 +45,11 @@ namespace PeterHan.Challenge100K {
 		private const string SPRITE = "Asteroid_onehundredk";
 
 		/// <summary>
-		/// The world name string key.
+		/// The world names used for all 100K moonlets.
 		/// </summary>
-		private const string WORLD_NAME = "STRINGS.WORLDS.ONEHUNDREDK.NAME";
+		private static readonly ISet<string> WORLD_NAMES = new HashSet<string>() {
+			"STRINGS.WORLDS.ONEHUNDREDK.NAME"
+		};
 
 		/// <summary>
 		/// The "to 11" cold temperature for frigid biomes.
@@ -65,20 +67,14 @@ namespace PeterHan.Challenge100K {
 		/// <returns>The minimum temperature to be used for world gen.</returns>
 		private static float GetMinTemperature(Element element, WorldGen worldGen) {
 			var world = worldGen?.Settings?.world;
-			return (world != null && world.name == WORLD_NAME) ? 1.0f : element.lowTemp;
+			return (world != null && WORLD_NAMES.Contains(world.name)) ? 1.0f : element.lowTemp;
 		}
 
 		/// <summary>
-		/// Registers the strings used in this mod.
+		/// Registers the sprites used in this mod.
 		/// </summary>
 		[PLibMethod(RunAt.AfterDbInit)]
-		internal static void InitStrings() {
-			Strings.Add(WORLD_NAME, Challenge100KStrings.NAME);
-			Strings.Add("STRINGS.WORLDS.ONEHUNDREDK.DESCRIPTION", Challenge100KStrings.
-				DESCRIPTION);
-			Strings.Add("STRINGS.CLUSTER_NAMES.ONEHUNDREDK.NAME", Challenge100KStrings.NAME);
-			Strings.Add("STRINGS.CLUSTER_NAMES.ONEHUNDREDK.DESCRIPTION", Challenge100KStrings.
-				DESCRIPTION);
+		internal static void InitSprites() {
 			var sprite = PUIUtils.LoadSprite("PeterHan.Challenge100K." + SPRITE + ".png");
 			if (sprite != null)
 				Assets.Sprites.Add(SPRITE, sprite);
@@ -92,10 +88,12 @@ namespace PeterHan.Challenge100K {
 				SetValue(to11, 80.0f);
 			typeof(Temperature).GetPropertySafe<float>(nameof(Temperature.max), false)?.
 				SetValue(to11, 110.0f);
+			LocString.CreateLocStringKeys(typeof(Challenge100KStrings.CLUSTER_NAMES));
+			LocString.CreateLocStringKeys(typeof(Challenge100KStrings.WORLDS));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 			new PLocalization().Register();
 			new POptions().RegisterOptions(this, typeof(Challenge100KOptions));
 			new PPatchManager(harmony).RegisterPatchClass(typeof(Challenge100K));
-			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>
@@ -114,6 +112,7 @@ namespace PeterHan.Challenge100K {
 			}
 		}
 
+#if false
 		/// <summary>
 		/// Applied to MutatedWorldData() to remove all geysers on hard mode on 100 K.
 		/// </summary>
@@ -141,27 +140,34 @@ namespace PeterHan.Challenge100K {
 				}
 			}
 		}
+#endif
 
 		/// <summary>
-		/// Applied to TerrainCell to allow elements to be spawned in at lower than their
-		/// normal transition temperature (and thus instantly freeze).
+		/// Applied to TerrainCell to prevent element temperature clamping to the minimum
+		/// temperature of the current phase (which leads to unwanted things like hot magma
+		/// channels).
 		/// </summary>
 		[HarmonyPatch(typeof(TerrainCell), "ApplyBackground")]
 		public static class TerrainCell_ApplyBackground_Patch {
+			/// <summary>
+			/// Transpiles ApplyBackground to swap out Element.lowTemp with our method.
+			/// </summary>
 			internal static IEnumerable<CodeInstruction> Transpiler(
 					IEnumerable<CodeInstruction> method) {
 				var target = typeof(Element).GetFieldSafe(nameof(Element.lowTemp), false);
 				var replacement = typeof(Challenge100K).GetMethodSafe(nameof(
 					GetMinTemperature), true, typeof(Element), typeof(WorldGen));
-				foreach (var instruction in method)
+				foreach (var instruction in method) {
 					if (instruction.opcode == OpCodes.Ldfld && target != null && target ==
 							(FieldInfo)instruction.operand) {
 						// With the Element on the stack, push the WorldGen (first arg)
 						yield return new CodeInstruction(OpCodes.Ldarg_1);
 						// Replacement for "Element.lowTemp"
-						yield return new CodeInstruction(OpCodes.Call, replacement);
-					} else
-						yield return instruction;
+						instruction.opcode = OpCodes.Call;
+						instruction.operand = replacement;
+					}
+					yield return instruction;
+				}
 			}
 		}
 
@@ -177,8 +183,8 @@ namespace PeterHan.Challenge100K {
 			internal static void Postfix(WorldGen worldGen, ref Temperature.Range __result) {
 				var world = worldGen.Settings?.world;
 				var temp = __result;
-				if (world != null && world.name == WORLD_NAME && temp > Temperature.Range.
-						VeryCold && temp <= Temperature.Range.ExtremelyHot) {
+				if (world != null && WORLD_NAMES.Contains(world.name) && temp > Temperature.
+						Range.VeryCold && temp <= Temperature.Range.ExtremelyHot) {
 					// Override temp
 #if DEBUG
 					PUtil.LogDebug("Found subworld with temp {0}, overriding to 100K".F(temp));

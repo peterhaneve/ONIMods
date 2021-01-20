@@ -1,0 +1,88 @@
+name: STRINGS.WORLDS.ONEHUNDREDK.NAME
+description: STRINGS.CLUSTER_NAMES.ONEHUNDREDK_CLUSTER.DESCRIPTION
+asteroidIcon: asteroid_onehundredk_kanim
+nameTables: [ TUNDRA ]
+disableWorldTraits: true
+# This asteroid is the DLC-specific 100K Cluster starting planetoid
+
+worldsize:
+  X: 96
+  Y: 128
+layoutMethod: PowerTree
+
+defaultsOverrides:
+  data:
+    OverworldDensityMin: 8
+    OverworldDensityMax: 8
+
+startSubworldName: subworlds/forest/InitialBase
+startingBaseTemplate: bases/ohkBase
+startingBasePositionHorizontal:
+  min: 0.5
+  max: 0.5
+startingBasePositionVertical:
+  min: 0.3
+  max: 0.3
+
+# List all the zone files to load
+subworldFiles:
+  - name: subworlds/forest/InitialBase
+  - name: subworlds/forest/ForestFrigidStart
+  - name: subworlds/space/SpaceFrigid
+  - name: subworlds/space/SurfaceFrigid
+  - name: subworlds/rust/RustFrigidStart
+  - name: subworlds/barren/BadlandsFrigidStart
+
+unknownCellsAllowedSubworlds: 
+  - tagcommand: Default
+    command: Replace
+    subworldNames:
+      - subworlds/forest/ForestFrigidStart
+  - tagcommand: DistanceFromTag
+    tag: AtStart
+    minDistance: 2
+    maxDistance: 99
+    command: Replace
+    subworldNames:
+      - subworlds/rust/RustFrigidStart
+      - subworlds/barren/BadlandsFrigidStart
+  - tagcommand: AtTag
+    tag: AtSurface
+    command: Replace
+    subworldNames:
+      - subworlds/space/SpaceFrigid
+  - tagcommand: DistanceFromTag
+    tag: AtSurface
+    minDistance: 1
+    maxDistance: 1
+    command: Replace
+    subworldNames:
+      - subworlds/space/SurfaceFrigid
+
+worldTemplateRules:
+  - names:
+    - poi/poi_warp_sender_100kc
+    - poi/poi_warp_receiver_100kc
+    - poi/poi_warp_teleporter_100kc
+    listRule: GuaranteeAll
+    priority: 500
+    allowedCellsFilter:
+      - command: Replace
+        tagcommand: DistanceFromTag
+        tag: AtStart
+        minDistance: 1
+        maxDistance: 5
+      - command: IntersectWith
+        zoneTypes: [ Barren, Rust ]
+  - names:
+    - expansion1::poi/poi_geyser_magma
+    listRule: TryAll
+    priority: 50
+    allowedCellsFilter:
+      - command: Replace
+        tagcommand: DistanceFromTag
+        tag: AtDepths
+        minDistance: 0
+        maxDistance: 0
+      - command: IntersectWith
+        zoneTypes: [ Barren, Rust ]

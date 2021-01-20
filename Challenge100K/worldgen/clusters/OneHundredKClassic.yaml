@@ -1,0 +1,163 @@
+name: STRINGS.CLUSTER_NAMES.VANILLA_ONEHUNDREDK_CLUSTER.NAME
+description: STRINGS.CLUSTER_NAMES.VANILLA_ONEHUNDREDK_CLUSTER.DESCRIPTION
+requiredDlcId: EXPANSION1_ID
+coordinatePrefix: V-100K-C
+menuOrder: 12
+clusterCategory: 1
+
+difficulty: 6
+numRings: 12
+startWorldIndex: 0
+worldPlacements:
+- world: worlds/OneHundredKClassic
+  buffer: 2
+  locationType: StartWorld
+  allowedRings:
+    min: 0
+    max: 0
+- world: expansion1::worlds/MediumSwampy
+  buffer: 2
+  locationType: InnerCluster
+  allowedRings:
+    min: 3
+    max: 3
+- world: expansion1::worlds/TundraMoonlet
+  buffer: 4
+  allowedRings:
+    min: 5
+    max: 5
+- world: expansion1::worlds/MarshyMoonlet
+  buffer: 4
+  allowedRings:
+    min: 5
+    max: 6
+- world: expansion1::worlds/NiobiumMoonlet
+  buffer: 3
+  allowedRings:
+    min: 5
+    max: 6
+- world: expansion1::worlds/MooMoonlet
+  buffer: 3
+  allowedRings:
+    min: 6
+    max: 7
+- world: expansion1::worlds/WaterMoonlet
+  buffer: 4
+  allowedRings:
+    min: 5
+    max: 7
+- world: expansion1::worlds/MiniRegolithMoonlet
+  buffer: 4
+  allowedRings:
+    min: 5
+    max: 8
+
+poiPlacements:
+  - pois:
+      - TemporalTear
+    numToSpawn: 1
+    avoidClumping: false
+    allowedRings:
+      min: 8
+      max: 11
+      
+  - pois:
+      - HarvestableSpacePOI_ForestyOreField
+    numToSpawn: 1
+    allowedRings:
+      min: 2
+      max: 3
+      
+  - pois:
+      - HarvestableSpacePOI_OrganicMassField
+    numToSpawn: 1
+    allowedRings:
+      min: 5
+      max: 7
+      
+  - pois:
+      - HarvestableSpacePOI_GildedAsteroidField
+      - HarvestableSpacePOI_GlimmeringAsteroidField
+      - HarvestableSpacePOI_HeliumCloud
+      - HarvestableSpacePOI_OilyAsteroidField
+      - HarvestableSpacePOI_FrozenOreField
+    numToSpawn: 5
+    allowedRings:
+      min: 8
+      max: 11
+  
+  - pois:
+      - HarvestableSpacePOI_RadioactiveGasCloud
+      - HarvestableSpacePOI_RadioactiveAsteroidField
+    numToSpawn: 2
+    avoidClumping: true
+    allowedRings:
+      min: 10
+      max: 11
+  
+  - pois:
+      - HarvestableSpacePOI_RockyAsteroidField
+      - HarvestableSpacePOI_InterstellarIceField
+      - HarvestableSpacePOI_InterstellarOcean
+      - HarvestableSpacePOI_ForestyOreField
+      - HarvestableSpacePOI_SwampyOreField
+      - HarvestableSpacePOI_OrganicMassField
+    numToSpawn: 5
+    canSpawnDuplicates: true
+    allowedRings:
+      min: 5
+      max: 7
+      
+  - pois:
+      - HarvestableSpacePOI_CarbonAsteroidField
+      - HarvestableSpacePOI_MetallicAsteroidField
+      - HarvestableSpacePOI_SatelliteField
+      - HarvestableSpacePOI_IceAsteroidField
+      - HarvestableSpacePOI_GasGiantCloud
+      - HarvestableSpacePOI_ChlorineCloud
+      - HarvestableSpacePOI_OxidizedAsteroidField
+      - HarvestableSpacePOI_SaltyAsteroidField
+      - HarvestableSpacePOI_OxygenRichAsteroidField
+      - HarvestableSpacePOI_GildedAsteroidField
+      - HarvestableSpacePOI_GlimmeringAsteroidField
+      - HarvestableSpacePOI_HeliumCloud
+      - HarvestableSpacePOI_OilyAsteroidField
+      - HarvestableSpacePOI_FrozenOreField
+      - HarvestableSpacePOI_RadioactiveGasCloud
+      - HarvestableSpacePOI_RadioactiveAsteroidField
+    numToSpawn: 10
+    canSpawnDuplicates: true
+    allowedRings:
+      min: 7
+      max: 11
+      
+  # artifact POIs
+  - pois:
+      - ArtifactSpacePOI_GravitasSpaceStation1
+      - ArtifactSpacePOI_GravitasSpaceStation4
+      - ArtifactSpacePOI_GravitasSpaceStation6
+    numToSpawn: 1
+    avoidClumping: true
+    allowedRings:
+      min: 2
+      max: 3
+      
+  - pois:
+      - ArtifactSpacePOI_RussellsTeapot
+    numToSpawn: 1
+    avoidClumping: true
+    allowedRings:
+      min: 9
+      max: 11
+      
+  - pois:
+      - ArtifactSpacePOI_GravitasSpaceStation2
+      - ArtifactSpacePOI_GravitasSpaceStation3
+      - ArtifactSpacePOI_GravitasSpaceStation5
+      - ArtifactSpacePOI_GravitasSpaceStation7
+      - ArtifactSpacePOI_GravitasSpaceStation8
+    numToSpawn: 4
+    avoidClumping: true
+    allowedRings:
+      min: 4
+      max: 11

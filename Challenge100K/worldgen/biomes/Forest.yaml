@@ -30,3 +30,28 @@ TerrainBiomeLookupTable:
       bandSize: 0.30
       overrides:
         massOverride: 1000.0
+    FrigidStart:
+    - content: Mercury
+      bandSize: 0.04
+    - content: IgneousRock
+      bandSize: 0.03
+    - content: Dirt
+      bandSize: 0.025
+    - content: IgneousRock
+      bandSize: 0.03
+    - content: Dirt
+      bandSize: 0.10
+    - content: IgneousRock
+      bandSize: 0.05
+    - content: Dirt
+      bandSize: 0.10
+    - content: IgneousRock
+      bandSize: 0.03
+    - content: OxyRock
+      bandSize: 0.01
+    - content: Oxygen
+      bandSize: 0.5
+    - content: SolidCarbonDioxide
+      bandSize: 0.30
+      overrides:
+        massOverride: 100.0

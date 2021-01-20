@@ -1,0 +1,21 @@
+biomeNoise: noise/Default
+temperatureRange: 12
+minChildCount: 2
+pdWeight: 2
+density:
+  min: 35
+  max: 45
+avoidRadius: 50.0
+sampleBehaviour: PoissonDisk
+biomes:
+  - name: expansion1::biomes/Barren/RockyChasm
+    weight: 2
+    tags:
+  - name: expansion1::biomes/Barren/GraniteOre
+    weight: 1
+    tags:
+features: []
+pointsOfInterest:
+tags:
+  - IgnoreCaveOverride
+zoneType: Barren

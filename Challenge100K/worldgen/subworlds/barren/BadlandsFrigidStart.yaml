@@ -1,16 +1,17 @@
-biomeNoise: noise/Generic
+biomeNoise: noise/Default
 temperatureRange: 12
 minChildCount: 1
+pdWeight: 2
 density:
   min: 35
   max: 45
 avoidRadius: 50.0
 sampleBehaviour: PoissonDisk
 biomes:
-  - name: biomes/Misc/Space
+  - name: biomes/Barren/GraniteMercury
     weight: 1
+    tags:
+      - BasicForagePlant
 tags:
   - IgnoreCaveOverride
-  - NoGlobalFeatureSpawning
-  - RemoveWorldBorderOverVacuum
-zoneType: Space
+zoneType: Barren

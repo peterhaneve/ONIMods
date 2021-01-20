@@ -1,0 +1,17 @@
+biomeNoise: noise/subworldRust
+temperatureRange: 12
+density:
+  min: 10
+  max: 15
+avoidRadius: 20.0
+minChildCount: 1
+sampleBehaviour: PoissonDisk
+biomes:
+  - name: biomes/Rust/FrigidStart
+    weight: 2
+    tags:
+      - ColdBreatherSparse
+      - BasicForagePlant
+tags:
+  - IgnoreCaveOverride
+zoneType: Rust

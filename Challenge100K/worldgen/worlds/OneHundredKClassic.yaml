@@ -1,0 +1,239 @@
+name: STRINGS.WORLDS.ONEHUNDREDK.NAME
+description: STRINGS.CLUSTER_NAMES.VANILLA_ONEHUNDREDK_CLUSTER.DESCRIPTION
+asteroidIcon: asteroid_onehundredk_kanim
+nameTables: [ TUNDRA ]
+# This asteroid is the DLC-specific Classic 100K starting planetoid
+
+worldTraitScale: 1
+worldsize:
+  X: 256
+  Y: 384
+layoutMethod: PowerTree
+
+# List all the zone files to load
+subworldFiles:
+  - name: subworlds/sandstone/SandstoneStartFrigid
+  - name: subworlds/sandstone/SandstoneFrigid
+  - name: subworlds/sandstone/SandstoneMiniMetalFrigid
+  - name: subworlds/sandstone/SandstoneMiniWaterFrigid
+  - name: subworlds/sandstone/SandstoneMiniAlgaeFrigid
+  - name: subworlds/marsh/MarshFrigid
+    minCount: 2
+  - name: subworlds/jungle/JungleFrigid
+    minCount: 2
+  - name: subworlds/frozen/FrozenFrigid
+    minCount: 3
+  - name: subworlds/oil/OilPocketsFrigid
+    minCount: 4
+  - name: subworlds/space/SpaceFrigid
+  - name: subworlds/space/SurfaceFrigid
+  - name: subworlds/ocean/OceanFrigid
+    minCount: 2
+  - name: subworlds/rust/RustFrigid
+  - name: subworlds/forest/ForestFrigid
+
+startSubworldName: subworlds/sandstone/SandstoneStartFrigid
+startingBaseTemplate: bases/sandstoneBase
+startingBasePositionHorizontal:
+  min: 0.4
+  max: 0.5
+startingBasePositionVertical:
+  min: 0.45
+  max: 0.55
+
+fixedTraits:
+  - sunlightVeryLow
+  - cosmicRadiationVeryLow
+
+seasons:
+  - RegolithMoonMeteorShowers
+
+worldTemplateRules:
+  # Jungle
+  - names:
+      - poi/jungle/geyser_steam
+    listRule: TryOne
+    priority: 100
+    allowedCellsFilter:
+      - command: Replace
+        zoneTypes: [ToxicJungle]
+  - names:
+      - poi/jungle/geyser_methane
+      - poi/jungle/geyser_chlorine
+    listRule: TryOne
+    priority: 100
+    allowedCellsFilter:
+      - command: Replace
+        zoneTypes: [ToxicJungle]
+  # Marsh
+  - names:
+      - poi/hotmarsh/geyser_steam
+    listRule: TryOne
+    priority: 100
+    allowedCellsFilter:
+      - command: Replace
+        zoneTypes: [BoggyMarsh]
+  - names:
+      - poi/hotmarsh/geyser_methane
+    listRule: TryOne
+    priority: 100
+    allowedCellsFilter:
+      - command: Replace
+        zoneTypes: [BoggyMarsh]
+  # Ocean
+  - names:
+      - poi/poi_ocean_geyser_saltwater
+    listRule: TryOne
+    priority: 100 
+    allowedCellsFilter:
+      - command: Replace
+        zoneTypes: [Ocean]
+  # Oil
+  - names:
+    - poi/oil/small_oilpockets_geyser_a
+    - poi/oil/small_oilpockets_geyser_b
+    - poi/oil/small_oilpockets_geyser_c
+    - poi/oil/small_oilpockets_geyser_d
+    - poi/oil/small_oilpockets_geyser_e
+    - poi/oil/small_oilpockets_geyser_f
+    - poi/oil/small_oilpockets_geyser_g
+    - poi/oil/small_oilpockets_geyser_h
+    listRule: TryOne
+    times: 3
+    allowDuplicates: true # be more flexible due to high temperature borders
+    priority: 100
+    allowedCellsFilter:
+      - command: Replace
+        zoneTypes: [OilField]
+  # Gravitas
+  - names:
+    - templates/poi/poi_warp_sender_100k
+    - templates/poi/poi_warp_receiver_100k
+    - templates/poi/poi_warp_teleporter_100k
+    listRule: GuaranteeAll
+    priority: 90
+    allowedCellsFilter:
+      - command: Replace
+        tagcommand: DistanceFromTag
+        tag: AtStart
+        minDistance: 3
+        maxDistance: 4
+      - command: ExceptWith
+        tagcommand: DistanceFromTag
+        tag: AtSurface
+        minDistance: 0
+        maxDistance: 2
+      - command: ExceptWith
+        zoneTypes: [ Space, MagmaCore, OilField ]
+      - command: ExceptWith
+        tagcommand: AtTag
+        tag: NoGravitasFeatures
+  - names:
+      - expansion1::poi/genericGravitas/poi_office
+    listRule: GuaranteeAll
+    priority: 90
+    allowedCellsFilter:
+      - command: Replace
+        tagcommand: DistanceFromTag
+        tag: AtStart
+        minDistance: 2
+        maxDistance: 99
+      - command: ExceptWith
+        tagcommand: AtTag
+        tag: NoGravitasFeatures
+      - command: ExceptWith
+        tagcommand: DistanceFromTag
+        tag: AtDepths
+        minDistance: 0
+        maxDistance: 2
+      - command: ExceptWith
+        tagcommand: DistanceFromTag
+        tag: AtSurface
+        minDistance: 0
+        maxDistance: 2
+  # Generic Geysers
+  - names:
+    - geysers/generic
+    listRule: TryOne
+    times: 12
+    ruleId: GenericGeysers
+    allowDuplicates: true
+    allowedCellsFilter:
+      - command: Replace
+        tagcommand: NotAtTag
+        tag: NoGlobalFeatureSpawning
+  # Uranium Geode
+  - names:
+    - expansion1::poi/radioactive/uranium_geode1
+    listRule: GuaranteeOne
+    useRelaxedFiltering: true
+    allowExtremeTemperatureOverlap: true # has Abyssalite border
+    priority: 200
+    allowedCellsFilter:
+      - command: Replace
+        tagcommand: DistanceFromTag
+        tag: AtStart
+        minDistance: 1
+        maxDistance: 1
+
+unknownCellsAllowedSubworlds:
+  - tagcommand: Default
+    command: Replace
+    subworldNames:
+      - subworlds/sandstone/SandstoneStartFrigid
+  - tagcommand: DistanceFromTag
+    tag: AtStart
+    minDistance: 1
+    maxDistance: 1
+    command: Replace
+    subworldNames:
+      - subworlds/sandstone/SandstoneMiniMetalFrigid
+      - subworlds/sandstone/SandstoneMiniWaterFrigid
+      - subworlds/sandstone/SandstoneMiniAlgaeFrigid
+  - tagcommand: DistanceFromTag
+    tag: AtStart
+    minDistance: 2
+    maxDistance: 2
+    command: Replace
+    subworldNames:
+      - subworlds/marsh/MarshFrigid
+      - subworlds/jungle/JungleFrigid
+      - subworlds/ocean/OceanFrigid
+      - subworlds/rust/RustFrigid
+  - tagcommand: DistanceFromTag
+    tag: AtStart
+    minDistance: 3
+    maxDistance: 999
+    command: Replace
+    subworldNames:
+      - subworlds/forest/ForestFrigid
+      - subworlds/marsh/MarshFrigid
+      - subworlds/jungle/JungleFrigid
+      - subworlds/ocean/OceanFrigid
+      - subworlds/sandstone/SandstoneFrigid
+      - subworlds/rust/RustFrigid
+      - subworlds/frozen/FrozenFrigid
+  - tagcommand: AtTag
+    tag: AtDepths
+    command: Replace
+    subworldNames:
+      - subworlds/oil/OilPocketsFrigid
+  - tagcommand: DistanceFromTag
+    tag: AtDepths
+    minDistance: 1
+    maxDistance: 1
+    command: Replace
+    subworldNames:
+      - subworlds/oil/OilPocketsFrigid
+  - tagcommand: AtTag
+    tag: AtSurface
+    command: Replace
+    subworldNames:
+      - subworlds/space/SpaceFrigid
+  - tagcommand: DistanceFromTag
+    tag: AtSurface
+    minDistance: 1
+    maxDistance: 1
+    command: Replace
+    subworldNames:
+      - subworlds/space/SurfaceFrigid

@@ -1,0 +1,30 @@
+TerrainBiomeLookupTable:
+  # keys to remove from in-memory structure when this file is loaded
+  remove: [] 
+  # elements to add from in-memory structure when this file is loaded
+  add:
+    GraniteMercury:
+    - content: Vacuum
+      bandSize: 0.1
+    - content: Granite
+      bandSize: 0.2
+    - content: Obsidian
+      bandSize: 0.2
+    - content: Granite
+      bandSize: 0.2
+    - content: IgneousRock
+      bandSize: 0.2
+    - content: Carbon
+      bandSize: 0.04
+    - content: Granite
+      bandSize: 0.2
+    - content: IgneousRock
+      bandSize: 0.1
+    - content: Granite
+      bandSize: 0.2
+    - content: Mercury
+      bandSize: 0.08
+    - content: Granite
+      bandSize: 0.2
+    - content: IgneousRock
+      bandSize: 0.1

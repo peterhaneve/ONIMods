@@ -9,10 +9,19 @@ TerrainBiomeLookupTable:
     - content: MaficRock
       bandSize: 0.1
     - content: Rust
-      bandSize: 0.35  
+      bandSize: 0.35
     - content: Snow
       bandSize: 0.05
     - content: SolidCarbonDioxide
       bandSize: 0.75
       overrides:
-        massOverride: 1000.0
+        massOverride: 100.0
+    FrigidStart:
+    - content: MaficRock
+      bandSize: 0.1
+    - content: Rust
+      bandSize: 0.35
+    - content: SolidCarbonDioxide
+      bandSize: 0.75
+      overrides:
+        massOverride: 100.0

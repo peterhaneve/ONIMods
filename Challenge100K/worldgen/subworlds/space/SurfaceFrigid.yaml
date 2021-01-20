@@ -9,11 +9,9 @@ sampleBehaviour: PoissonDisk
 biomes:
   - name: biomes/Misc/Surface
     weight: 1
-    tags:
-      - Mole
 tags:
   - IgnoreCaveOverride
-  - ErodePointToWorldTop
+  - ErodePointToBorderInv
   - NoGlobalFeatureSpawning
   - RemoveWorldBorderOverVacuum
 zoneType: Space

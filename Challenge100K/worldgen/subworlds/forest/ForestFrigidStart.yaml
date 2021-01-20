@@ -1,0 +1,17 @@
+biomeNoise: noise/subworldForest
+temperatureRange: 12
+density:
+  min: 10
+  max: 15
+avoidRadius: 20.0
+minChildCount: 4
+sampleBehaviour: PoissonDisk
+biomes:
+  - name: biomes/Forest/FrigidStart
+    weight: 2
+    tags:
+      - BasicForagePlant
+      - ForestForagePlantPlanted
+tags:
+  - IgnoreCaveOverride
+zoneType: Forest

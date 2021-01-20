@@ -1,0 +1,37 @@
+name: STRINGS.CLUSTER_NAMES.ONEHUNDREDK_CLUSTER.NAME
+description: STRINGS.CLUSTER_NAMES.ONEHUNDREDK_CLUSTER.DESCRIPTION
+requiredDlcId: EXPANSION1_ID
+coordinatePrefix: S-100K-C
+menuOrder: 9
+clusterCategory: 2
+
+difficulty: 6
+numRings: 8
+startWorldIndex: 0
+worldPlacements:
+- world: worlds/OHKStart
+  buffer: 2
+  locationType: StartWorld
+  allowedRings:
+    min: 0
+    max: 0
+#- world: worlds/OHKRocket # Rocket world
+#  buffer: 2
+#  allowedRings:
+#    min: 3
+#    max: 3
+#- world: worlds/OHKWarp # Warp world
+#  buffer: 3
+#  allowedRings:
+#    min: 5
+#    max: 5
+#- world: worlds/OHKSlime
+#  buffer: 4
+#  allowedRings:
+#    min: 5
+#    max: 6
+#- world: worlds/OHKCritters
+#  buffer: 6
+#  allowedRings:
+#    min: 7
+#    max: 8

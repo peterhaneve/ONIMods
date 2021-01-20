@@ -21,7 +21,23 @@ namespace PeterHan.Challenge100K {
 	/// Contains strings used in the 100K challenge.
 	/// </summary>
 	public static class Challenge100KStrings {
-		public static LocString NAME = "100K Challenge";
-		public static LocString DESCRIPTION = "One of the coldest worlds ever surveyed, this harsh and unforgiving asteroid features an average temperature of only 100 K (-173 C).\r\n\r\n<smallcaps>Survival in this world will be nearly impossible, but a glimmer of hope remains. Can you use all that you have learned to survive for 100 cycles?</smallcaps>\r\n";
+		public static class CLUSTER_NAMES {
+			public static class ONEHUNDREDK_CLUSTER {
+				public static LocString NAME = "100K Challenge Cluster";
+				public static LocString DESCRIPTION = "One of the harshed and most unforgiving asteroid clusters ever surveyed, this cluster features an average moonlet temperature of 100 K (-173 C) or less that will put your survival skills to the ultimate test.\r\n\r\nIts extreme distance from its host star reduces the effectiveness of solar power. Enabling the Teleporter is <b>highly recommended</b> unless your heart is as cold as the stony wastes before you.\r\n";
+			}
+
+			public static class VANILLA_ONEHUNDREDK_CLUSTER {
+				public static LocString NAME = "100K Challenge Classic";
+				public static LocString DESCRIPTION = "One of the coldest asteroid clusters ever surveyed, this cluster features an average moonlet temperature of 100 K (-173 C) or less. Its extreme distance from its host star reduces the effectiveness of solar power.\r\n";
+			}
+		}
+
+		public static class WORLDS {
+			public static class ONEHUNDREDK {
+				public static LocString NAME = "100K Challenge";
+				public static LocString DESCRIPTION = "One of the coldest worlds ever surveyed, this harsh and unforgiving asteroid features an average temperature of only 100 K (-173 C).\r\n\r\n<smallcaps>Survival in this world will be nearly impossible, but a glimmer of hope remains. Can you use all that you have learned to survive for 100 cycles?</smallcaps>\r\n";
+			}
+		}
 	}
 }
