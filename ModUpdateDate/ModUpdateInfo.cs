@@ -126,7 +126,7 @@ namespace PeterHan.ModUpdateDate {
 	}
 
 	/// <summary>
-	/// The mod update status.
+	/// The mod update status stored in the configuration.
 	/// </summary>
 	public enum ModUpdateStatus {
 		Default, PendingUpdate, UpdatedByThisMod
