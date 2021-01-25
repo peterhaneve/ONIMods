@@ -40,7 +40,14 @@ namespace PeterHan.FinishTasks {
 		/// </summary>
 		/// <returns>true if a mingle cell is available, or false otherwise.</returns>
 		private static bool HasMingleCell(ref Precondition.Context context, object data) {
-			return data is FinishMingleChore mc && Grid.IsValidCell(mc.smi.GetMingleCell());
+			bool hasCell = false;
+			if (data is FinishMingleChore mc) {
+				int target = mc.smi.GetMingleCell();
+				var user = context.consumerState?.navigator;
+				hasCell = Grid.IsValidCell(target) && user != null && user.GetNavigationCost(
+					target) >= 0;
+			}
+			return hasCell;
 		}
 
 		// Idle Priority 9 puts it above Idle task but below the task the Dupe is finishing

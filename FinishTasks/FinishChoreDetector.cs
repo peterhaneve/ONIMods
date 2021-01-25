@@ -72,6 +72,18 @@ namespace PeterHan.FinishTasks {
 		private bool acquireChore;
 
 		/// <summary>
+		/// The current chore consumer. Cannot be populated with [MyCmpGet] because that force
+		/// spawns the component if it exists, which crashes on dead Dupes.
+		/// </summary>
+		private ChoreConsumer consumer;
+
+		/// <summary>
+		/// The current chore driver. Cannot be populated with [MyCmpGet] because that force
+		/// spawns the component if it exists, which crashes on dead Dupes.
+		/// </summary>
+		private ChoreDriver driver;
+
+		/// <summary>
 		/// The chore that the Duplicant may perform during this Finish Tasks block.
 		/// </summary>
 		private Chore allowedChore;
@@ -80,17 +92,6 @@ namespace PeterHan.FinishTasks {
 		/// The schedule block ID when the changed handler was last executed.
 		/// </summary>
 		private string lastGroupID;
-
-#pragma warning disable CS0649
-#pragma warning disable IDE0044
-		// These fields are automatically populated by KMonoBehaviour
-		[MyCmpReq]
-		private ChoreConsumer consumer;
-
-		[MyCmpReq]
-		private ChoreDriver driver;
-#pragma warning restore IDE0044
-#pragma warning restore CS0649
 
 		/// <summary>
 		/// If the Duplicant has not yet acquired a task, checks for a task that they can
@@ -143,6 +144,8 @@ namespace PeterHan.FinishTasks {
 
 		protected override void OnSpawn() {
 			base.OnSpawn();
+			consumer = gameObject.GetComponent<ChoreConsumer>();
+			driver = gameObject.GetComponent<ChoreDriver>();
 			Subscribe((int)GameHashes.ScheduleBlocksChanged, OnScheduleChanged);
 			lastGroupID = CurrentScheduleBlock;
 			acquireChore = lastGroupID == FinishTasksPatches.FinishTask.Id;

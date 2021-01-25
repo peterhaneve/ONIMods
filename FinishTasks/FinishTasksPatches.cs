@@ -73,7 +73,6 @@ namespace PeterHan.FinishTasks {
 			var state = context.consumerState;
 			var driver = state.choreDriver;
 			var scheduleBlock = state.scheduleBlock;
-			// TODO Vanilla/DLC code
 			bool start = true, normal = VanillaDLCAdapter.Instance?.IsNormalCondition(driver.
 				gameObject) ?? true;
 			// Bypass on red/yellow alert, only evaluate condition during Finish Tasks blocks,
