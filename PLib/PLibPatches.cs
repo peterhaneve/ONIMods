@@ -39,8 +39,9 @@ namespace PeterHan.PLib {
 	sealed class PLibPatches {
 		#region Patches
 		// Method only exists in vanilla
-		private static readonly MethodBase ACHIEVEMENT_SERIALIZE =
-			typeof(Database.ColonyAchievementRequirement).GetMethodSafe("Serialize", false);
+		private static readonly MethodBase ACHIEVEMENT_SERIALIZE = typeof(Database.
+			ColonyAchievementRequirement).GetMethodSafe("Serialize", false, typeof(
+			BinaryWriter));
 
 		/// <summary>
 		/// Applied to LightGridEmitter to unattribute lighting sources.
@@ -397,10 +398,14 @@ namespace PeterHan.PLib {
 				throw new ArgumentNullException("instance");
 
 			// ColonyAchievementStatus
-			if (ACHIEVEMENT_SERIALIZE != null)
+			if (ACHIEVEMENT_SERIALIZE != null) {
+#if DEBUG
+				PUtil.LogDebug("Applying ColonyAchievementRequirement.Serialize patch");
+#endif
 				// TODO Vanilla/DLC code
 				instance.Patch(typeof(ColonyAchievementStatus), nameof(ColonyAchievementStatus.
 					Serialize), PatchMethod(nameof(Serialize_Prefix)), null);
+			}
 
 			// Db
 			instance.Patch(typeof(Db), nameof(Db.Initialize), PatchMethod(nameof(
@@ -524,9 +529,9 @@ namespace PeterHan.PLib {
 			PPatchManager.RunAll(RunAt.AfterModsLoad);
 		}
 
-		#endregion
+#endregion
 
-		#region Infrastructure
+#region Infrastructure
 
 		/// <summary>
 		/// Returns a patch method from this class. It must be static.
@@ -593,6 +598,6 @@ namespace PeterHan.PLib {
 			return "PLibPatches version " + MyVersion;
 		}
 
-		#endregion
+#endregion
 	}
 }
