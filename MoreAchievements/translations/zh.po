@@ -1,0 +1,479 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.4.2\n"
+"Last-Translator: Ventulus\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"Language: zh_CN\n"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ABALANCEDDIET.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ABALANCEDDIET.DESC"
+msgid ""
+"Eat 1,000 kcal of each Food type available on Terra or through care packages."
+msgstr "吃下由本星球或资源包产出的食物每种1,000千卡。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ABALANCEDDIET.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ABALANCEDDIET.NAME"
+msgid "A Balanced Diet"
+msgstr "均衡膳食"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ABALANCEDDIET.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ABALANCEDDIET.PROGRESS"
+msgid "Calories from {0}: {1} / {2}"
+msgstr "从{0}获取的卡路里：{1} / {2}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ADALOVELACE.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ADALOVELACE.DESC"
+msgid "Raise a Duplicant's Science attribute to 20."
+msgstr "提高一个复制人的科学属性到20点。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ADALOVELACE.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ADALOVELACE.NAME"
+msgid "Ada Lovelace"
+msgstr "第一位程序员"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ALLTHEDUPLICANTS.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ALLTHEDUPLICANTS.DESC"
+msgid "Have at least 100 living Duplicants living in the colony at one time."
+msgstr "在殖民地中至少有100名活着的复制人。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ALLTHEDUPLICANTS.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ALLTHEDUPLICANTS.NAME"
+msgid "ALL the Duplicants!"
+msgstr "全是复制人！"
+
+#. PeterHan.MoreAchievements.AchievementStrings.BELONGSINAMUSEUM.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.BELONGSINAMUSEUM.DESC"
+msgid "Obtain at least one of each space artifact."
+msgstr "获得每种太空工艺品。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.BELONGSINAMUSEUM.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.BELONGSINAMUSEUM.NAME"
+msgid "That Belongs in a Museum"
+msgstr "开个博物馆"
+
+#. PeterHan.MoreAchievements.AchievementStrings.BELONGSINAMUSEUM.PROGRESS
+msgctxt ""
+"PeterHan.MoreAchievements.AchievementStrings.BELONGSINAMUSEUM.PROGRESS"
+msgid "Artifacts obtained: {0:D} / {1:D}"
+msgstr "获得工艺品：{0:D} / {1:D}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.CHUTESANDLADDERS.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.CHUTESANDLADDERS.DESC"
+msgid "Have Duplicants travel 10,000 m by Fire Pole."
+msgstr "让复制人通过消防滑杆前进10,000米。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.CHUTESANDLADDERS.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.CHUTESANDLADDERS.NAME"
+msgid "Chutes and Ladders"
+msgstr "爬上去滑下来"
+
+#. PeterHan.MoreAchievements.AchievementStrings.COWBOY.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.COWBOY.DESC"
+msgid "Raise a Duplicant's Ranching attribute to 20."
+msgstr "提高一个复制人的畜牧属性到20点。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.COWBOY.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.COWBOY.NAME"
+msgid "Cowboy"
+msgstr "牛仔"
+
+#. PeterHan.MoreAchievements.AchievementStrings.CRITTERSINGER.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.CRITTERSINGER.DESC"
+msgid ""
+"Tame at least one of every critter morph of each critter species in the "
+"world."
+msgstr "驯化这世界上每一种生物的每种变种。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.CRITTERSINGER.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.CRITTERSINGER.NAME"
+msgid "Critter Ventriloquist"
+msgstr "动物腹语者"
+
+#. PeterHan.MoreAchievements.AchievementStrings.DEFAULT_PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.DEFAULT_PROGRESS"
+msgid "Complete requirement"
+msgstr "完成需求"
+
+#. PeterHan.MoreAchievements.AchievementStrings.DESTROYEROFWORLDS.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.DESTROYEROFWORLDS.DESC"
+msgid "Raise a Duplicant's Excavation attribute to 20."
+msgstr "提高一个复制人的挖掘属性到20点。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.DESTROYEROFWORLDS.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.DESTROYEROFWORLDS.NAME"
+msgid "Destroyer of Worlds"
+msgstr "人肉挖掘机"
+
+#. PeterHan.MoreAchievements.AchievementStrings.DESTROYEROFWORLDS.PROGRESS
+msgctxt ""
+"PeterHan.MoreAchievements.AchievementStrings.DESTROYEROFWORLDS.PROGRESS"
+msgid "Highest attribute value: {0:F0} / {1:F0}"
+msgstr "最高属性值：{0:F0} / {1:F0}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.EMPIREBUILDER.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.EMPIREBUILDER.DESC"
+msgid "Build 2,500 buildings."
+msgstr "建造2,500个建筑。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.EMPIREBUILDER.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.EMPIREBUILDER.NAME"
+msgid "Empire Builder"
+msgstr "帝国建设者"
+
+#. PeterHan.MoreAchievements.AchievementStrings.EMPIREBUILDER.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.EMPIREBUILDER.PROGRESS"
+msgid "Buildings constructed: {0:D} / {1:D}"
+msgstr "已建造建筑：{0:D} / {1:D}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.FINALBREATH.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.FINALBREATH.DESC"
+msgid ""
+"Have a Duplicant reach oxygen with less than 5 seconds left until "
+"suffocation."
+msgstr "让一个复制人在窒息前5秒内才呼吸到氧气。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.FINALBREATH.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.FINALBREATH.NAME"
+msgid "Final Breath"
+msgstr "最后一口气"
+
+#. PeterHan.MoreAchievements.AchievementStrings.FINALBREATH.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.FINALBREATH.PROGRESS"
+msgid "Reached breathable area with less than 5 seconds until death"
+msgstr "在死亡前5秒内到达可呼吸区域"
+
+#. PeterHan.MoreAchievements.AchievementStrings.FIRSTDONOHARM.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.FIRSTDONOHARM.DESC"
+msgid "Raise a Duplicant's Doctoring attribute to 20."
+msgstr "提高一个复制人的医疗属性到20点。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.FIRSTDONOHARM.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.FIRSTDONOHARM.NAME"
+msgid "First Do No Harm"
+msgstr "急诊护士"
+
+#. PeterHan.MoreAchievements.AchievementStrings.HAVEIWONYET.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.HAVEIWONYET.DESC"
+msgid "Reach cycle 4,000 with at least one living Duplicant."
+msgstr "至少有一名复制人活过4,000周期。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.HAVEIWONYET.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.HAVEIWONYET.NAME"
+msgid "Have I Won Yet?"
+msgstr "还没打通关？"
+
+#. PeterHan.MoreAchievements.AchievementStrings.IMGONNABE.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.IMGONNABE.DESC"
+msgid "Have Duplicants travel 1,609,000 m by walking."
+msgstr "复制人步行一千英里。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.IMGONNABE.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.IMGONNABE.NAME"
+msgid "I'm Gonna Be"
+msgstr "《I'm Gonna Be》"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ISEEWHATYOUDIDTHERE.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ISEEWHATYOUDIDTHERE.DESC"
+msgid "Obtain a chunk of Neutronium."
+msgstr "获得一块中子物质。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ISEEWHATYOUDIDTHERE.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ISEEWHATYOUDIDTHERE.NAME"
+msgid "I See What You Did There"
+msgstr "瞧你干了啥"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ISEEWHATYOUDIDTHERE.PROGRESS
+msgctxt ""
+"PeterHan.MoreAchievements.AchievementStrings.ISEEWHATYOUDIDTHERE.PROGRESS"
+msgid "Obtain the unobtainium"
+msgstr "获得中子物质"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ISITHOTINHERE.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ISITHOTINHERE.DESC"
+msgid "Increase the temperature of a building to 2226.9 ºC."
+msgstr "将一个建筑物的温度提高到2226.9 ºC。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ISITHOTINHERE.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ISITHOTINHERE.NAME"
+msgid "Is It Hot in Here?"
+msgstr "这里有点热？"
+
+#. PeterHan.MoreAchievements.AchievementStrings.ISITHOTINHERE.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.ISITHOTINHERE.PROGRESS"
+msgid "Hottest building: {0} / {1}"
+msgstr "最热建筑：{0} / {1}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.JACKOFALLTRADES.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.JACKOFALLTRADES.DESC"
+msgid "Raise all of a single Duplicant's attributes to 10."
+msgstr "提高一个复制人的所有属性到10点。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.JACKOFALLTRADES.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.JACKOFALLTRADES.NAME"
+msgid "Jack of All Trades"
+msgstr "万事通"
+
+#. PeterHan.MoreAchievements.AchievementStrings.JACKOFALLTRADES.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.JACKOFALLTRADES.PROGRESS"
+msgid "Raise attributes to {0:F0}"
+msgstr "提高属性点至{0:F0}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.JOHNHENRY.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.JOHNHENRY.DESC"
+msgid "Dig 10,000 tiles."
+msgstr "挖掘10,000格砖。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.JOHNHENRY.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.JOHNHENRY.NAME"
+msgid "John Henry"
+msgstr "大老板亨利"
+
+#. PeterHan.MoreAchievements.AchievementStrings.JOHNHENRY.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.JOHNHENRY.PROGRESS"
+msgid "Tiles dug by Duplicants: {0:D} / {1:D}"
+msgstr "由复制人挖掘的格砖：{0:D} / {1:D}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MASTERBUILDER.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MASTERBUILDER.DESC"
+msgid "Raise a Duplicant's Construction attribute to 20."
+msgstr "提高一个复制人的建造属性到20点。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MASTERBUILDER.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MASTERBUILDER.NAME"
+msgid "Master Builder"
+msgstr "包工头"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MASTERCHEF.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MASTERCHEF.DESC"
+msgid "Raise a Duplicant's Cooking attribute to 20."
+msgstr "提高一个复制人的烹饪属性到20点。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MASTERCHEF.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MASTERCHEF.NAME"
+msgid "MasterChef"
+msgstr "主厨"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MASTEROFDISASTER.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MASTEROFDISASTER.DESC"
+msgid "Lose a Duplicant to each (stock game) cause of death."
+msgstr "因为每种死因失去复制人。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MASTEROFDISASTER.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MASTEROFDISASTER.NAME"
+msgid "Master of Disaster"
+msgstr "灾难之主"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MASTEROFDISASTER.PROGRESS
+msgctxt ""
+"PeterHan.MoreAchievements.AchievementStrings.MASTEROFDISASTER.PROGRESS"
+msgid "Duplicant died due to {0}"
+msgstr "复制人死于{0}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MICHELANGELO.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MICHELANGELO.DESC"
+msgid "Raise a Duplicant's Creativity attribute to 20."
+msgstr "提高一个复制人的创作属性到20点。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MICHELANGELO.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MICHELANGELO.NAME"
+msgid "Michelangelo"
+msgstr "米开朗基罗再世"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MOTHEREARTH.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MOTHEREARTH.DESC"
+msgid "Raise a Duplicant's Agriculture attribute to 20."
+msgstr "提高一个复制人的农业属性到20点。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MOTHEREARTH.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MOTHEREARTH.NAME"
+msgid "Mother Earth"
+msgstr "大地之母"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MOUNTAINMOVER.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MOUNTAINMOVER.DESC"
+msgid "Raise a Duplicant's Strength attribute to 20."
+msgstr "提高一个复制人的力量属性到20点。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.MOUNTAINMOVER.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.MOUNTAINMOVER.NAME"
+msgid "Mountain Mover"
+msgstr "挑山工"
+
+#. PeterHan.MoreAchievements.AchievementStrings.OLYMPIAN.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.OLYMPIAN.DESC"
+msgid "Raise a Duplicant's Athletics attribute to 20."
+msgstr "提高一个复制人的运动属性到20点。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.OLYMPIAN.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.OLYMPIAN.NAME"
+msgid "Olympian"
+msgstr "奥运选手"
+
+#. PeterHan.MoreAchievements.AchievementStrings.POWEROVERWHELMING.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.POWEROVERWHELMING.DESC"
+msgid "Overload a Heavi-Watt Conductive Wire."
+msgstr "过载高负荷导线。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.POWEROVERWHELMING.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.POWEROVERWHELMING.NAME"
+msgid "Power Overwhelming"
+msgstr "功率压倒一切"
+
+#. PeterHan.MoreAchievements.AchievementStrings.POWEROVERWHELMING.PROGRESS
+msgctxt ""
+"PeterHan.MoreAchievements.AchievementStrings.POWEROVERWHELMING.PROGRESS"
+msgid "Overload wire with {0}"
+msgstr "过载导线{0}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.SAFESPACE.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SAFESPACE.DESC"
+msgid "Avoid any Duplicant deaths for 100 consecutive cycles."
+msgstr "连续100个周期避免复制人死亡。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.SAFESPACE.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SAFESPACE.NAME"
+msgid "Safe Space"
+msgstr "安全空间"
+
+#. PeterHan.MoreAchievements.AchievementStrings.SAFESPACE.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SAFESPACE.PROGRESS"
+msgid "Last Duplicant death: Cycle {0:D}"
+msgstr "最后一次复制人死亡：第{0:D}周期"
+
+#. PeterHan.MoreAchievements.AchievementStrings.SAVINGMEEP.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SAVINGMEEP.DESC"
+msgid ""
+"Have a Duplicant reach a Triage Cot under their own power with no more than "
+"10 Hit Points remaining."
+msgstr "让一个复制人还有不超过10点生命时自行到达分诊床。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.SAVINGMEEP.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SAVINGMEEP.NAME"
+msgid "Saving Private Meep"
+msgstr "回光返照"
+
+#. PeterHan.MoreAchievements.AchievementStrings.SAVINGMEEP.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SAVINGMEEP.PROGRESS"
+msgid ""
+"Reached Triage Cot with less than or equal to 10 health without being "
+"Incapacitated"
+msgstr "在小于等于10点生命值时到达分诊床，且未丧失行动能力"
+
+#. PeterHan.MoreAchievements.AchievementStrings.SCALDED
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SCALDED"
+msgid "Badly Burned"
+msgstr "严重烧伤"
+
+#. PeterHan.MoreAchievements.AchievementStrings.SMALLWORLD.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SMALLWORLD.DESC"
+msgid "Have at least 35 living Duplicants living in the colony at one time."
+msgstr "在殖民地中至少有35名活着的复制人。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.SMALLWORLD.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SMALLWORLD.NAME"
+msgid "Small World After All"
+msgstr "毕竟是个小世界"
+
+#. PeterHan.MoreAchievements.AchievementStrings.SMOOTHOPERATOR.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SMOOTHOPERATOR.DESC"
+msgid "Raise a Duplicant's Machinery attribute to 20."
+msgstr "提高一个复制人的机械属性到20点。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.SMOOTHOPERATOR.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.SMOOTHOPERATOR.NAME"
+msgid "Smooth Operator"
+msgstr "老师傅"
+
+#. PeterHan.MoreAchievements.AchievementStrings.TESTOFTIME.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.TESTOFTIME.DESC"
+msgid "Reach cycle 1,000 with at least one living Duplicant."
+msgstr "至少有一名复制人活过1,000周期。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.TESTOFTIME.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.TESTOFTIME.NAME"
+msgid "To Stand the Test of Time"
+msgstr "久经时间的考验"
+
+#. PeterHan.MoreAchievements.AchievementStrings.THINKINGAHEAD.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.THINKINGAHEAD.DESC"
+msgid "Use the Neural Vacillator 10 times."
+msgstr "使用神经振荡器10次。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.THINKINGAHEAD.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.THINKINGAHEAD.NAME"
+msgid "Thinking Ahead"
+msgstr "洗个脑"
+
+#. PeterHan.MoreAchievements.AchievementStrings.THINKINGAHEAD.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.THINKINGAHEAD.PROGRESS"
+msgid "Neural Vacillator used: {0:D} / {1:D}"
+msgstr "神经振荡器使用：{0:D} / {1:D}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.TOTALLYECSTATIC.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.TOTALLYECSTATIC.DESC"
+msgid "Raise a single Duplicant's Morale to 60."
+msgstr "提高一个复制人的士气到60点。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.TOTALLYECSTATIC.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.TOTALLYECSTATIC.NAME"
+msgid "Totally Ecstatic"
+msgstr "完全狂喜"
+
+#. PeterHan.MoreAchievements.AchievementStrings.TOTALLYECSTATIC.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.TOTALLYECSTATIC.PROGRESS"
+msgid "Highest Morale: {0:F0} / {1:F0}"
+msgstr "最高士气：{0:F0} / {1:F0}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.WATCHTHEWORLDBURN.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.WATCHTHEWORLDBURN.DESC"
+msgid "Melt a unique building generated in a point of interest."
+msgstr "因为某种恶趣味而烧一座独特建筑。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.WATCHTHEWORLDBURN.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.WATCHTHEWORLDBURN.NAME"
+msgid "Watch the World Burn"
+msgstr "《Watch the World Burn》"
+
+#. PeterHan.MoreAchievements.AchievementStrings.WATCHTHEWORLDBURN.PROGRESS
+msgctxt ""
+"PeterHan.MoreAchievements.AchievementStrings.WATCHTHEWORLDBURN.PROGRESS"
+msgid "Melt a normally non-constructable POI building"
+msgstr "熔化一个通常不可建造的遗迹建筑"
+
+#. PeterHan.MoreAchievements.AchievementStrings.WHOLENEWWORLDS.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.WHOLENEWWORLDS.DESC"
+msgid "Send a Space Mission to each destination on the Starmap."
+msgstr "向星图上的每个目的地发送太空任务。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.WHOLENEWWORLDS.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.WHOLENEWWORLDS.NAME"
+msgid "Whole New Worlds"
+msgstr "全新世界"
+
+#. PeterHan.MoreAchievements.AchievementStrings.WHOLENEWWORLDS.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.WHOLENEWWORLDS.PROGRESS"
+msgid "Destinations visited: {0:D} / {1:D}"
+msgstr "目的地到访：{0:D} / {1:D}"
+
+#. PeterHan.MoreAchievements.AchievementStrings.YOUMONSTER.DESC
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.YOUMONSTER.DESC"
+msgid "Kill 100 critters before they die of old age."
+msgstr "在小动物老死前杀死100个。"
+
+#. PeterHan.MoreAchievements.AchievementStrings.YOUMONSTER.NAME
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.YOUMONSTER.NAME"
+msgid "You Monster"
+msgstr "你这混蛋！"
+
+#. PeterHan.MoreAchievements.AchievementStrings.YOUMONSTER.PROGRESS
+msgctxt "PeterHan.MoreAchievements.AchievementStrings.YOUMONSTER.PROGRESS"
+msgid "Critters killed by non-natural causes: {0:D} / {1:D}"
+msgstr "非自然原因杀死的小动物：{0:D} / {1:D}"

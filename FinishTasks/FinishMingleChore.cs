@@ -23,7 +23,8 @@ namespace PeterHan.FinishTasks {
 	/// A variation of MingleChore that can run during Finish Tasks schedule blocks. Dupes
 	/// with no tasks near the mingle location to do, will mingle there instead.
 	/// </summary>
-	public sealed class FinishMingleChore : Chore<FinishMingleChore.StatesInstance> {
+	public sealed class FinishMingleChore : Chore<FinishMingleChore.StatesInstance>,
+			IWorkerPrioritizable {
 		/// <summary>
 		/// A precondition that checks for a valid mingling cell.
 		/// </summary>
@@ -42,12 +43,11 @@ namespace PeterHan.FinishTasks {
 			return data is FinishMingleChore mc && Grid.IsValidCell(mc.smi.GetMingleCell());
 		}
 
-		// Idle Priority 9 should put it below all work chores but above Idle
+		// Idle Priority 9 puts it above Idle task but below the task the Dupe is finishing
 		public FinishMingleChore(IStateMachineTarget target) : base(Db.Get().ChoreTypes.Relax,
 				target, target.GetComponent<ChoreProvider>(), false, null, null, null,
-				PriorityScreen.PriorityClass.high, 5, false, true, 0, false,
+				PriorityScreen.PriorityClass.idle, 9, false, true, 0, false,
 				ReportManager.ReportType.PersonalTime) {
-			PLib.PUtil.LogDebug("Creating FinishMingleChore");
 			showAvailabilityInHoverText = false;
 			smi = new StatesInstance(this, target.gameObject);
 			AddPrecondition(HAS_MINGLE_CELL, this);
@@ -59,6 +59,12 @@ namespace PeterHan.FinishTasks {
 
 		protected override StatusItem GetStatusItem() {
 			return Db.Get().DuplicantStatusItems.Mingling;
+		}
+
+		public bool GetWorkerPriority(Worker worker, out int priority) {
+			// Same value as MingleChore
+			priority = TUNING.RELAXATION.PRIORITY.TIER1;
+			return true;
 		}
 
 		/// <summary>
@@ -120,9 +126,9 @@ namespace PeterHan.FinishTasks {
 			/// <returns>The destination where the Duplicant will go when the busy day is done.</returns>
 			public int GetMingleCell() {
 				int cell = mingleCellSensor.GetCell();
-				GameObject pod;
-				if (!Grid.IsValidCell(cell) && (pod = GameUtil.GetTelepad()) != null)
-					cell = Grid.PosToCell(pod);
+				if (!Grid.IsValidCell(cell))
+					cell = VanillaDLCAdapter.Instance?.GetDefaultMingleCell(sm.mingler.Get(
+						smi)) ?? Grid.InvalidCell;
 				return cell;
 			}
 

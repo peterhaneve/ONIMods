@@ -35,9 +35,13 @@ namespace PeterHan.FinishTasks {
 					public const string ID = "FinishTask";
 
 					public static LocString NAME = "Finish-Up";
-					public static LocString DESCRIPTION = "During Finish-Up time shifts my Duplicants will finish their current task if they have one.\n\nThey will not start new tasks unless they are close to the " + STRINGS.UI.FormatAsLink("Printing Pod", "HEADQUARTERS") + ".";
-					public static LocString NOTIFICATION_TOOLTIP = "During " + STRINGS.UI.PRE_KEYWORD +
-						"Finish-Up" + STRINGS.UI.PST_KEYWORD + " shifts my Duplicants will finish their current task but will not start new tasks.";
+					public static LocString DESCRIPTION = "During Finish-Up time shifts my Duplicants will finish their current task if they have one.\n\nThey will return to the " +
+						STRINGS.UI.FormatAsLink("Printing Pod", "HEADQUARTERS") + " or " +
+						STRINGS.UI.PRE_KEYWORD + "Recreation" + STRINGS.UI.PST_KEYWORD +
+						" Room once finished.";
+					public static LocString NOTIFICATION_TOOLTIP = "During " +
+						STRINGS.UI.PRE_KEYWORD + "Finish-Up" + STRINGS.UI.PST_KEYWORD +
+						" shifts my Duplicants will finish their current task but will not start new tasks.";
 				}
 			}
 		}

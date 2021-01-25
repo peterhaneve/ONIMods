@@ -275,65 +275,6 @@ namespace PeterHan.DebugNotIncluded {
 			return instructions;
 		}
 
-#if false
-		/// <summary>
-		/// Applied to Assets to fix a bug with anim loading.
-		/// </summary>
-		[HarmonyPatch(typeof(Assets), "LoadAnims")]
-		public static class Assets_LoadAnims_Patch {
-			internal static bool Prepare() {
-				return !string.IsNullOrEmpty(DlcManager.GetActiveDlcId());
-			}
-
-			/// <summary>
-			/// Applied after LoadAnims runs.
-			/// </summary>
-			internal static void Postfix() {
-				var animTable = Traverse.Create(typeof(Assets)).
-					GetField<IDictionary<HashedString, KAnimFile>>("AnimTable");
-				foreach (var modAnim in Assets.ModLoadedKAnims)
-					if (modAnim != null)
-						animTable[modAnim.name] = modAnim;
-			}
-
-			/// <summary>
-			/// Transpiles LoadAnims to swap some key instructions.
-			/// </summary>
-			internal static IEnumerable<CodeInstruction> Transpiler(ILGenerator generator,
-					IEnumerable<CodeInstruction> method) {
-				var remove = typeof(Manager).GetMethodSafe(nameof(Manager.Load), false,
-					typeof(Content));
-				var globalInstance = typeof(Global).GetPropertySafe<Global>(nameof(Global.
-					Instance), true);
-				var managerField = typeof(Global).GetFieldSafe(nameof(Global.modManager),
-					false);
-				var insertAt = typeof(KAnimGroupFile).GetMethodSafe(nameof(KAnimGroupFile.
-					LoadAll), true, PPatchTools.AnyArguments);
-				foreach (var instr in method) {
-					var opcode = instr.opcode;
-					var operand = instr.operand;
-					if (opcode == OpCodes.Callvirt && (operand as MethodBase) == remove &&
-							globalInstance != null && managerField != null) {
-						// Comment out the first call and pop the argument and the instance
-						instr.operand = null;
-						instr.opcode = OpCodes.Pop;
-						yield return new CodeInstruction(OpCodes.Pop);
-					}
-					yield return instr;
-					if (opcode == OpCodes.Call && (operand as MethodBase) == insertAt &&
-							globalInstance != null && managerField != null) {
-						// Re-add the call after the groups are set
-						yield return new CodeInstruction(OpCodes.Call, globalInstance.
-							GetGetMethod());
-						yield return new CodeInstruction(OpCodes.Ldfld, managerField);
-						yield return new CodeInstruction(OpCodes.Ldc_I4, (int)Content.Animation);
-						yield return new CodeInstruction(OpCodes.Callvirt, remove);
-					}
-				}
-			}
-		}
-#endif
-
 		/// <summary>
 		/// Applied to AudioSheets to log audio event information.
 		/// </summary>
