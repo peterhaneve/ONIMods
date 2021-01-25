@@ -96,12 +96,12 @@ namespace PeterHan.FinishTasks {
 		public static void OnLoad() {
 			FinishBlock = null;
 			FinishColor = ScriptableObject.CreateInstance<ColorStyleSetting>();
-			FinishColor.activeColor = new Color(0.6f, 1.0f, 0.6f, 1.0f);
-			FinishColor.inactiveColor = new Color(0.286f, 1.0f, 0.286f, 1.0f);
-			FinishColor.disabledColor = new Color(0.4f, 0.416f, 0.4f, 1.0f);
-			FinishColor.disabledActiveColor = new Color(0.588f, 0.625f, 0.588f, 1.0f);
-			FinishColor.hoverColor = new Color(0.6f, 1.0f, 0.6f, 1.0f);
-			FinishColor.disabledhoverColor = new Color(0.46f, 0.5f, 0.46f, 1.0f);
+			FinishColor.activeColor = new Color(0.8f, 0.6f, 1.0f, 1.0f);
+			FinishColor.inactiveColor = new Color(0.5f, 0.286f, 1.0f, 1.0f);
+			FinishColor.disabledColor = new Color(0.4f, 0.4f, 0.416f, 1.0f);
+			FinishColor.disabledActiveColor = new Color(0.6f, 0.588f, 0.625f, 1.0f);
+			FinishColor.hoverColor = FinishColor.activeColor;
+			FinishColor.disabledhoverColor = new Color(0.48f, 0.46f, 0.5f, 1.0f);
 			FinishTask = null;
 			Work = null;
 			PUtil.InitLibrary();
