@@ -117,7 +117,7 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 		/// <summary>
 		/// Updates the pin checkbox to match the actual pinned state.
 		/// </summary>
-		/// <param name="ci">The currently active critter inventory</param>
+		/// <param name="ci">The currently active critter inventory.</param>
 		private void UpdatePinnedState(CritterInventory ci) {
 			References.GetReference<MultiToggle>("PinToggle").ChangeState(ci.
 				GetPinnedSpecies(CritterType).Contains(Species) ? 1 : 0);

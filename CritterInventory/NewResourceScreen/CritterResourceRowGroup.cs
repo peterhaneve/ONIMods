@@ -116,16 +116,15 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 		/// </summary>
 		internal void SetRowsActive() {
 			bool visible = IsVisible && resources.Count > 0;
-			if (!visible)
-				foreach (var resource in resources) {
-					var cr = resource.Value;
-					bool showRow = cr.IsVisible;
-					// If any row is visible, header must also be
-					var go = cr.gameObject;
-					if (go != null && showRow != go.activeSelf)
-						go.SetActive(showRow);
-					visible |= showRow;
-				}
+			foreach (var resource in resources) {
+				var cr = resource.Value;
+				bool showRow = cr.IsVisible;
+				// If any row is visible, header must also be
+				var go = cr.gameObject;
+				if (go != null && showRow != go.activeSelf)
+					go.SetActive(showRow);
+				visible |= showRow;
+			}
 			// Update visibility if dirty
 			if (gameObject.activeSelf != visible)
 				gameObject.SetActive(visible);
