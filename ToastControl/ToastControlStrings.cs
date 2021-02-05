@@ -45,6 +45,8 @@ namespace PeterHan.ToastControl {
 
 					public static LocString CONTROL_ALL = "<b>All</b> Popups";
 					public static LocString CONTROL_ALL_TOOLTIP = "If <b>deselected</b>, hides all popup notifications\nregardless of the other settings";
+					public static LocString DISABLE_MOVING = "Disable Motion";
+					public static LocString DISABLE_MOVING_TOOLTIP = "If selected, popup text will no longer move upwards after creation";
 
 					public static LocString BUILD_COMPLETE = "Construction completed";
 					public static LocString CRITTER_DROPS = "Critter drops";
