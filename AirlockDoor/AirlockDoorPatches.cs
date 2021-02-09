@@ -18,7 +18,9 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Datafiles;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace PeterHan.AirlockDoor {
@@ -26,12 +28,30 @@ namespace PeterHan.AirlockDoor {
 	/// Patches which will be applied via annotations for Airlock Door.
 	/// </summary>
 	public static class AirlockDoorPatches {
+		/// <summary>
+		/// The layer to check for airlock doors.
+		/// </summary>
+		private static int BUILDING_LAYER;
+
 		public static void OnLoad() {
+			BUILDING_LAYER = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.Building),
+				ObjectLayer.Building);
 			PUtil.InitLibrary();
 			AirlockDoorConfig.RegisterBuilding();
 			PLocalization.Register();
 			LocString.CreateLocStringKeys(typeof(AirlockDoorStrings.BUILDING));
 			LocString.CreateLocStringKeys(typeof(AirlockDoorStrings.BUILDINGS));
+		}
+
+		/// <summary>
+		/// Checks to see if a grid cell is solid and not an Airlock Door.
+		/// </summary>
+		/// <param name="cell">The grid cell to check.</param>
+		/// <returns>true if the cell is solid and not inside an Airlock Door, or false
+		/// otherwise.</returns>
+		private static bool SolidAndNotAirlock(ref Grid.BuildFlagsSolidIndexer _, int cell) {
+			return Grid.Solid[cell] && (!Grid.IsValidCell(cell) || Grid.Objects[cell,
+				BUILDING_LAYER].GetComponentSafe<AirlockDoor>() == null);
 		}
 
 		/// <summary>
@@ -50,6 +70,31 @@ namespace PeterHan.AirlockDoor {
 				if (building != null && building.Def.BuildingComplete.GetComponent<
 						AirlockDoor>() != null)
 					___waitForFetchesBeforeDigging = true;
+			}
+		}
+
+		/// <summary>
+		/// Applied to FallMonitor.Instance to fix the entombment monitor triggering on
+		/// Duplicants inside an airlock door [was changed with the Re-Rocketry update,
+		/// EX-449549].
+		/// </summary>
+		[HarmonyPatch(typeof(FallMonitor.Instance), nameof(FallMonitor.Instance.
+			UpdateFalling))]
+		public static class FallMonitor_Instance_UpdateFalling_Patch {
+			/// <summary>
+			/// Transpiles UpdateFalling to replace Grid.Solid calls with calls that respect
+			/// Airlock Door.
+			/// </summary>
+			internal static IEnumerable<CodeInstruction> Transpiler(
+					IEnumerable<CodeInstruction> method) {
+				// Default indexer (this[]) is hardcode named Item
+				// https://docs.microsoft.com/en-us/dotnet/api/system.type.getproperty?view=net-5.0
+				var indexer = typeof(Grid.BuildFlagsSolidIndexer).GetPropertyIndexedSafe<bool>(
+					"Item", false, typeof(int))?.GetGetMethod();
+				var replacement = typeof(AirlockDoorPatches).GetMethodSafe(nameof(
+					SolidAndNotAirlock), true, typeof(Grid.BuildFlagsSolidIndexer).
+					MakeByRefType(), typeof(int));
+				return PPatchTools.ReplaceMethodCall(method, indexer, replacement);
 			}
 		}
 
