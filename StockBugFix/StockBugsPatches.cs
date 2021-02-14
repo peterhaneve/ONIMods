@@ -22,6 +22,7 @@ using PeterHan.PLib;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Reflection.Emit;
 using UnityEngine;
 
 namespace PeterHan.StockBugFix {
@@ -117,93 +118,6 @@ namespace PeterHan.StockBugFix {
 		}
 
 		/// <summary>
-		/// Applied to GourmetCookingStationConfig to make the CO2 output in the right place.
-		/// </summary>
-		[HarmonyPatch(typeof(GourmetCookingStationConfig), nameof(GourmetCookingStationConfig.
-			ConfigureBuildingTemplate))]
-		public static class GourmetCookingStationConfig_ConfigureBuildingTemplate_Patch {
-			/// <summary>
-			/// Applied after ConfigureBuildingTemplate runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				var elements = go.GetComponentSafe<ElementConverter>()?.outputElements;
-				if (elements != null) {
-					// ElementConverter.OutputElement is a struct!
-					int n = elements.Length;
-					for (int i = 0; i < n; i++) {
-						var outputElement = elements[i];
-						var offset = outputElement.outputElementOffset;
-						if (offset.y > 2.0f) {
-							outputElement.outputElementOffset = new Vector2(offset.x, 2.0f);
-							elements[i] = outputElement;
-						}
-					}
-				}
-			}
-		}
-
-		/// <summary>
-		/// Applied to PolymerizerConfig to fix a symmetry error when emitting the plastic.
-		/// </summary>
-		[HarmonyPatch(typeof(PolymerizerConfig), nameof(PolymerizerConfig.
-			ConfigureBuildingTemplate))]
-		public static class PolymerizerConfig_ConfigureBuildingTemplate_Patch {
-			/// <summary>
-			/// Applied after ConfigureBuildingTemplate runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				go.GetComponentSafe<Polymerizer>().emitOffset = new Vector3(-1.75f, 1.0f, 0.0f);
-			}
-		}
-
-		/// <summary>
-		/// Applied to FuelTank's property setter to properly update the chore when its
-		/// capacity is changed.
-		/// </summary>
-		[HarmonyPatch]
-		public static class FuelTank_Set_UserMaxCapacity_Patch {
-			/// <summary>
-			/// Determines the target method to patch.
-			/// </summary>
-			/// <returns>The method which should be affected by this patch.</returns>
-			internal static MethodBase TargetMethod() {
-				return GetPropertySetter(typeof(FuelTank), nameof(FuelTank.UserMaxCapacity));
-			}
-
-			/// <summary>
-			/// Applied after the setter runs.
-			/// </summary>
-			internal static void Postfix(FuelTank __instance) {
-				var obj = __instance.gameObject;
-				obj.GetComponentSafe<Storage>()?.Trigger((int)GameHashes.OnStorageChange, obj);
-			}
-		}
-
-		/// <summary>
-		/// Applied to OxidizerTank's property setter to properly update the chore when its
-		/// capacity is changed.
-		/// </summary>
-		[HarmonyPatch]
-		public static class OxidizerTank_Set_UserMaxCapacity_Patch {
-			/// <summary>
-			/// Determines the target method to patch.
-			/// </summary>
-			/// <returns>The method which should be affected by this patch.</returns>
-			internal static MethodBase TargetMethod() {
-				return GetPropertySetter(typeof(OxidizerTank), nameof(OxidizerTank.
-					UserMaxCapacity));
-			}
-
-			/// <summary>
-			/// Applied after the setter runs.
-			/// </summary>
-			internal static void Postfix(OxidizerTank __instance) {
-				var obj = __instance.gameObject;
-				obj.GetComponentSafe<Storage>()?.Trigger((int)GameHashes.OnStorageChange, obj);
-			}
-		}
-
-		/// <summary>
 		/// Applied to ChoreTypes to bump the priority of overjoyed reactions.
 		/// </summary>
 		[HarmonyPatch]
@@ -253,6 +167,73 @@ namespace PeterHan.StockBugFix {
 		}
 
 		/// <summary>
+		/// Applied to EntombedItemManager to remove the "tower of terror" that spawns on load.
+		/// </summary>
+		[HarmonyPatch(typeof(EntombedItemManager), "AddMassToWorlIfPossible")]
+		public static class EntombedItemManager_AddMassToWorlIfPossible_Patch {
+			/// <summary>
+			/// Transpiles AddMassToWorlIfPossible to flip the flag that Klei forgot about.
+			/// </summary>
+			internal static IEnumerable<CodeInstruction> Transpiler(
+					IEnumerable<CodeInstruction> method) {
+				const int SEARCH_LIMIT = 16;
+				var messages = typeof(SimMessages).GetMethods(BindingFlags.DeclaredOnly |
+					BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+				var targets = new List<MethodBase>(4);
+				// Match any of the overloads, no matter what their parameters contain, in
+				// case new optional parameters are added
+				foreach (var target in messages)
+					if (target.Name == nameof(SimMessages.AddRemoveSubstance))
+						targets.Add(target);
+				var opcodes = new List<CodeInstruction>(method);
+				for (int i = opcodes.Count - 1; i > 0; i--) {
+					var instr = opcodes[i];
+					// Is it a call to SimMessages.AddRemoveSubstance?
+					if (instr.opcode == OpCodes.Call && instr.operand is MethodBase target &&
+							targets.Contains(target)) {
+						int cutoff = Math.Max(0, i - SEARCH_LIMIT);
+						// Backward search for the first "ldc.i4.1"
+						for (int j = i - 1; j > cutoff; j--) {
+							instr = opcodes[j];
+							// Switch "true" for DoVerticalSolidDisplacement to "false"
+							if (instr.opcode == OpCodes.Ldc_I4_1) {
+								instr.opcode = OpCodes.Ldc_I4_0;
+#if DEBUG
+								PUtil.LogDebug("Patched EntombedItemManager flag");
+#endif
+								break;
+							}
+						}
+					}
+				}
+				return opcodes;
+			}
+		}
+
+		/// <summary>
+		/// Applied to FuelTank's property setter to properly update the chore when its
+		/// capacity is changed.
+		/// </summary>
+		[HarmonyPatch]
+		public static class FuelTank_Set_UserMaxCapacity_Patch {
+			/// <summary>
+			/// Determines the target method to patch.
+			/// </summary>
+			/// <returns>The method which should be affected by this patch.</returns>
+			internal static MethodBase TargetMethod() {
+				return GetPropertySetter(typeof(FuelTank), nameof(FuelTank.UserMaxCapacity));
+			}
+
+			/// <summary>
+			/// Applied after the setter runs.
+			/// </summary>
+			internal static void Postfix(FuelTank __instance) {
+				var obj = __instance.gameObject;
+				obj.GetComponentSafe<Storage>()?.Trigger((int)GameHashes.OnStorageChange, obj);
+			}
+		}
+
+		/// <summary>
 		/// Applied to GeneShuffler to fix a bug where it would not update after recharging.
 		/// </summary>
 		[HarmonyPatch(typeof(GeneShuffler), "Recharge")]
@@ -264,6 +245,32 @@ namespace PeterHan.StockBugFix {
 					___geneShufflerSMI) {
 				if (___geneShufflerSMI != null)
 					___geneShufflerSMI.GoTo(___geneShufflerSMI.sm.recharging);
+			}
+		}
+
+		/// <summary>
+		/// Applied to GourmetCookingStationConfig to make the CO2 output in the right place.
+		/// </summary>
+		[HarmonyPatch(typeof(GourmetCookingStationConfig), nameof(GourmetCookingStationConfig.
+			ConfigureBuildingTemplate))]
+		public static class GourmetCookingStationConfig_ConfigureBuildingTemplate_Patch {
+			/// <summary>
+			/// Applied after ConfigureBuildingTemplate runs.
+			/// </summary>
+			internal static void Postfix(GameObject go) {
+				var elements = go.GetComponentSafe<ElementConverter>()?.outputElements;
+				if (elements != null) {
+					// ElementConverter.OutputElement is a struct!
+					int n = elements.Length;
+					for (int i = 0; i < n; i++) {
+						var outputElement = elements[i];
+						var offset = outputElement.outputElementOffset;
+						if (offset.y > 2.0f) {
+							outputElement.outputElementOffset = new Vector2(offset.x, 2.0f);
+							elements[i] = outputElement;
+						}
+					}
+				}
 			}
 		}
 
@@ -316,26 +323,59 @@ namespace PeterHan.StockBugFix {
 			}
 		}
 
-#if false
 		/// <summary>
-		/// Applied to SpacecraftManager to make the "Ready to land" message expire.
+		/// Applied to OxidizerTank's property setter to properly update the chore when its
+		/// capacity is changed.
 		/// </summary>
-		[HarmonyPatch(typeof(SpacecraftManager), "PushReadyToLandNotification")]
-		public static class SpacecraftManager_PushReadyToLandNotification_Patch {
+		[HarmonyPatch]
+		public static class OxidizerTank_Set_UserMaxCapacity_Patch {
 			/// <summary>
-			/// Applied before PushReadyToLandNotification runs.
+			/// Determines the target method to patch.
 			/// </summary>
-			internal static bool Prefix(SpacecraftManager __instance, Spacecraft spacecraft) {
-				var notification = new Notification(STRINGS.BUILDING.STATUSITEMS.
-					SPACECRAFTREADYTOLAND.NOTIFICATION, NotificationType.Good, HashedString.
-					Invalid, (notificationList, data) => STRINGS.BUILDING.STATUSITEMS.
-					SPACECRAFTREADYTOLAND.NOTIFICATION_TOOLTIP + notificationList.
-					ReduceMessages(false), spacecraft.launchConditions.GetProperName(), true);
-				__instance.gameObject.AddOrGet<Notifier>().Add(notification);
-				return false;
+			/// <returns>The method which should be affected by this patch.</returns>
+			internal static MethodBase TargetMethod() {
+				return GetPropertySetter(typeof(OxidizerTank), nameof(OxidizerTank.
+					UserMaxCapacity));
+			}
+
+			/// <summary>
+			/// Applied after the setter runs.
+			/// </summary>
+			internal static void Postfix(OxidizerTank __instance) {
+				var obj = __instance.gameObject;
+				obj.GetComponentSafe<Storage>()?.Trigger((int)GameHashes.OnStorageChange, obj);
 			}
 		}
-#endif
+
+		/// <summary>
+		/// Applied to PolymerizerConfig to fix a symmetry error when emitting the plastic.
+		/// </summary>
+		[HarmonyPatch(typeof(PolymerizerConfig), nameof(PolymerizerConfig.
+			ConfigureBuildingTemplate))]
+		public static class PolymerizerConfig_ConfigureBuildingTemplate_Patch {
+			/// <summary>
+			/// Applied after ConfigureBuildingTemplate runs.
+			/// </summary>
+			internal static void Postfix(GameObject go) {
+				go.GetComponentSafe<Polymerizer>().emitOffset = new Vector3(-1.75f, 1.0f, 0.0f);
+			}
+		}
+
+		/// <summary>
+		/// Applied to RationMonitor to stop dead code from cancelling Eat chores at new day.
+		/// </summary>
+		[HarmonyPatch(typeof(RationMonitor), nameof(RationMonitor.InitializeStates))]
+		public static class RationMonitor_InitializeStates_Patch {
+			/// <summary>
+			/// Applied after InitializeStates runs.
+			/// </summary>
+			internal static void Postfix(RationMonitor __instance) {
+				var root = __instance.root;
+				if (root != null)
+					// outofrations is dead code
+					root.parameterTransitions?.Clear();
+			}
+		}
 
 		/// <summary>
 		/// Applied to SolidTransferArm to prevent offgassing of materials inside its
@@ -353,53 +393,5 @@ namespace PeterHan.StockBugFix {
 					storage.SetDefaultStoredItemModifiers(Storage.StandardSealedStorage);
 			}
 		}
-
-#if false
-		/// <summary>
-		/// Applied to LaunchableRocket to not dupe materials when launched through a door.
-		/// </summary>
-		[HarmonyPatch(typeof(LaunchableRocket.States), "DoWorldDamage")]
-		public static class LaunchableRocket_States_DoWorldDamage_Patch {
-			/// <summary>
-			/// Transpiles DoWorldDamage to destroy tiles more intelligently.
-			/// </summary>
-			internal static IEnumerable<CodeInstruction> Transpiler(
-					IEnumerable<CodeInstruction> method) {
-				// There are 2 overloads, so types must be specified
-				return PPatchTools.ReplaceMethodCall(method, typeof(WorldDamage).GetMethodSafe(
-					nameof(WorldDamage.ApplyDamage), false, typeof(int), typeof(float),
-					typeof(int), typeof(int), typeof(string), typeof(string)),
-					typeof(StockBugsPatches).GetMethodSafe(nameof(ApplyRocketDamage), true,
-					PPatchTools.AnyArguments));
-			}
-		}
-
-		/// <summary>
-		/// Applied to LaunchableRocket to make rockets correctly disappear if loaded while
-		/// underway.
-		/// </summary>
-		[HarmonyPatch(typeof(LaunchableRocket), "OnSpawn")]
-		public static class LaunchableRocket_OnSpawn_Patch {
-			/// <summary>
-			/// Applied after OnSpawn runs.
-			/// </summary>
-			internal static void Postfix(LaunchableRocket __instance) {
-				var smi = __instance.smi;
-				const string name = nameof(LaunchableRocket.States.not_grounded.space);
-				if (smi != null && (smi.GetCurrentState().name?.EndsWith(name) ?? false)) {
-#if DEBUG
-					PUtil.LogDebug("Scheduling rocket fix task");
-#endif
-					GameScheduler.Instance.Schedule("FixRocketAnims", 0.5f, (_) => {
-						var parts = smi.master.parts;
-						if (smi.GetCurrentState().name?.EndsWith(name) ?? false)
-							// Hide them!
-							foreach (var part in parts)
-								part.GetComponent<KBatchedAnimController>().enabled = false;
-					});
-				}
-			}
-		}
-#endif
 	}
 }
