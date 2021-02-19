@@ -52,6 +52,16 @@ namespace PeterHan.MooReproduction {
 			if (butcherable != null)
 				butcherable.SetDrops(new string[] { MeatConfig.ID });
 			MooReproductionPatches.UpdateMooChores(prefab);
+			// Babies should not be ranchable or auto wrangled, but there is no RemoveDef
+			// function...
+			var smc = prefab.GetComponent<StateMachineController>();
+			if (smc != null && smc.defHandle.IsValid()) {
+				var defs = smc.cmpdef?.defs;
+				if (defs != null) {
+					defs.Remove(smc.GetDef<RanchableMonitor.Def>());
+					defs.Remove(smc.GetDef<FixedCapturableMonitor.Def>());
+				}
+			}
 			return prefab;
 		}
 
