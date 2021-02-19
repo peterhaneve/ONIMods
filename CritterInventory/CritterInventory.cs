@@ -17,6 +17,7 @@
  */
 
 using KSerialization;
+using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 
@@ -29,6 +30,13 @@ namespace PeterHan.CritterInventory {
 	/// </summary>
 	[SerializationConfig(MemberSerialization.OptIn)]
 	public sealed class CritterInventory : KMonoBehaviour {
+		// EX1-452242 made these fields private
+		private static readonly IDetouredField<FactionAlignment, bool> FACTION_TARGETABLE =
+			PDetours.DetourField<FactionAlignment, bool>("targetable");
+
+		private static readonly IDetouredField<FactionAlignment, bool> FACTION_TARGETED =
+			PDetours.DetourField<FactionAlignment, bool>("targeted");
+
 		/// <summary>
 		/// The total quantity of creatures.
 		/// </summary>
@@ -69,16 +77,20 @@ namespace PeterHan.CritterInventory {
 					byType)) {
 				var species = creature.PrefabID();
 				var alignment = creature.GetComponent<FactionAlignment>();
+				bool targeted = false, targetable = false;
 				// Create critter totals if not present
 				if (!byType.TryGetValue(species, out CritterTotals totals)) {
 					byType.Add(species, totals = new CritterTotals());
 					discovered = true;
 				}
 				totals.Total++;
+				if (alignment != null) {
+					targeted = FACTION_TARGETED.Get(alignment);
+					targetable = FACTION_TARGETABLE.Get(alignment);
+				}
 				// Reserve wrangled, marked for attack, and trussed/bagged creatures
 				if ((creature.GetComponent<Capturable>()?.IsMarkedForCapture ?? false) ||
-						((alignment?.targeted ?? false) && alignment.targetable) ||
-						creature.HasTag(GameTags.Creatures.Bagged))
+						(targeted && targetable) || creature.HasTag(GameTags.Creatures.Bagged))
 					totals.Reserved++;
 			}
 		}
