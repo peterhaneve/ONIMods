@@ -35,6 +35,7 @@ namespace PeterHan.MooReproduction {
 		internal static readonly Tag HasNearbyCreature = new Tag("HasNearbyCreature");
 
 #pragma warning disable IDE0044 // Add readonly modifier
+#pragma warning disable CS0649
 		/// <summary>
 		/// The creature can give birth.
 		/// </summary>
@@ -44,13 +45,15 @@ namespace PeterHan.MooReproduction {
 		/// The creature cannot give birth.
 		/// </summary>
 		private State infertile;
+#pragma warning restore CS0649
 #pragma warning restore IDE0044
 
 		public override void InitializeStates(out BaseState default_state) {
 			default_state = fertile;
 			// Needs to be changed for vanilla
 			serializable = SerializeType.ParamsOnly;
-			root.DefaultState(fertile);
+			root.DefaultState(fertile).
+				Update("UpdateNearbyCreatures", (smi, dt) => smi.UpdateNearbyCreatures(), UpdateRate.SIM_1000ms);
 			fertile.ToggleBehaviour(GameTags.Creatures.Fertile, (Instance smi) => smi.IsReadyToGiveBirth(), null).
 				ToggleEffect((Instance smi) => smi.fertileEffect).
 				Transition(infertile, Not(new Transition.ConditionCallback(IsFertile)), UpdateRate.SIM_1000ms);
@@ -98,11 +101,6 @@ namespace PeterHan.MooReproduction {
 			public List<FertilityMonitor.BreedingChance> breedingChances;
 
 			/// <summary>
-			/// Monitors the critters nearby this one for a pair of the same species.
-			/// </summary>
-			private readonly NearbyCreatureMonitor.Instance creatureMonitor;
-
-			/// <summary>
 			/// The current reproduction progress.
 			/// </summary>
 			public readonly AmountInstance fertility;
@@ -127,9 +125,6 @@ namespace PeterHan.MooReproduction {
 					deltaAttribute.Id, base_fertile_rate, STRINGS.CREATURES.MODIFIERS.
 					BASE_FERTILITY.NAME));
 				InitializeBreedingChances();
-				creatureMonitor = new NearbyCreatureMonitor.Instance(master);
-				creatureMonitor.OnUpdateNearbyCreatures += OnUpdateNearbyCreatures;
-				creatureMonitor.StartSM();
 			}
 
 			/// <summary>
@@ -230,25 +225,26 @@ namespace PeterHan.MooReproduction {
 						chance.weight /= sum;
 			}
 
-			protected override void OnCleanUp() {
-				creatureMonitor.OnUpdateNearbyCreatures -= OnUpdateNearbyCreatures;
-				base.OnCleanUp();
-			}
-
 			[OnDeserialized]
 			private void OnDeserialized() {
 				if (breedingChances == null || breedingChances.Count == 0)
 					InitializeBreedingChances();
 			}
 
-			private void OnUpdateNearbyCreatures(float dt, List<KPrefabID> creatures) {
+			/// <summary>
+			/// Updates the nearby creatures every second to see if breeding is possible.
+			/// </summary>
+			internal void UpdateNearbyCreatures() {
 				var pid = gameObject.GetComponentSafe<KPrefabID>();
-				if (pid != null) {
+				var info = Game.Instance.roomProber.GetCavityForCell(Grid.PosToCell(
+					gameObject));
+				if (info != null && pid != null) {
 					bool found = false;
 					var tag = pid.PrefabTag;
 					// Search for a different critter in the same room
-					foreach (var creature in creatures)
-						if (creature.PrefabTag == tag && gameObject != creature.gameObject) {
+					foreach (var creature in info.creatures)
+						if (creature != null && creature.PrefabTag == tag && gameObject !=
+								creature.gameObject) {
 							found = true;
 							break;
 						}
