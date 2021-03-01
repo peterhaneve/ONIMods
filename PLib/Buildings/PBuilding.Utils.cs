@@ -112,7 +112,6 @@ namespace PeterHan.PLib.Buildings {
 				foreach (var building in buildingTable)
 					if (building != null)
 						try {
-							var trBuilding = Traverse.Create(building);
 							// Building is of type object because it is in another assembly
 							var addTech = Traverse.Create(building).Method(nameof(AddTech));
 							if (addTech.MethodExists())

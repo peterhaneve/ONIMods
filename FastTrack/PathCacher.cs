@@ -17,6 +17,7 @@
  */
 
 using PeterHan.PLib;
+using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 
@@ -28,6 +29,9 @@ namespace PeterHan.FastTrack {
 	/// nothing has changed.
 	/// </summary>
 	public sealed class PathCacher {
+		private static readonly IDetouredField<Navigator, PathFinderAbilities> ABILITIES =
+			PDetours.DetourField<Navigator, PathFinderAbilities>("abilities");
+
 		/// <summary>
 		/// Map path cache IDs to path cache values.
 		/// </summary>
@@ -37,65 +41,6 @@ namespace PeterHan.FastTrack {
 		/// PathFinder.InvalidHandle is not even readonly!
 		/// </summary>
 		public const int InvalidHandle = -1;
-
-		/// <summary>
-		/// Checks to see if the navigator can reciprocally go back and forth between a cell
-		/// and another cell, checking only if they are immediately reachable.
-		/// </summary>
-		/// <param name="fromCell">The cell where the navigator is currently located.</param>
-		/// <param name="toCell">The potential destination cell.</param>
-		/// <param name="navGrid">The navigation grid to use for lookups.</param>
-		/// <param name="startNavType">The navigation type to use.</param>
-		/// <param name="abilities">The current navigator abilities.</param>
-		/// <param name="newFlags">The flags available for this path.</param>
-		/// <returns>true if navigation can be performed, both ways, or false otherwise.</returns>
-		private static bool CanNavigateReciprocal(int fromCell, int toCell, NavGrid navGrid,
-				NavType startNavType, PathFinderAbilities abilities, PathFlags flags) {
-			var grid = PathFinder.PathGrid;
-			bool ok = false;
-			// Find a link from this cell to the target cell
-			var link = FindLinkToCell(fromCell, toCell, navGrid, startNavType);
-			if (link.link != InvalidHandle) {
-				var endNavType = link.endNavType;
-				var pp = new PathFinder.PotentialPath(toCell, endNavType, flags);
-				int uwCost = grid.GetCell(toCell, endNavType, out _).underwaterCost;
-				// Can navigate there, and has a link back?
-				if (abilities.TraversePath(ref pp, fromCell, startNavType, link.cost, link.
-						transitionId, uwCost) && (link = FindLinkToCell(toCell, fromCell,
-						navGrid, endNavType)).link != InvalidHandle) {
-					pp.cell = fromCell;
-					pp.navType = startNavType;
-					uwCost = grid.GetCell(fromCell, startNavType, out _).underwaterCost;
-					ok = abilities.TraversePath(ref pp, toCell, endNavType, link.cost,
-						link.transitionId, uwCost);
-				}
-			}
-			return ok;
-		}
-
-		/// <summary>
-		/// Finds a link between two cells on the nav grid.
-		/// </summary>
-		/// <param name="fromCell">The initial cell.</param>
-		/// <param name="toCell">The destination cell.</param>
-		/// <param name="navGrid">The grid to search.</param>
-		/// <param name="navType">The required starting navigation type.</param>
-		/// <returns>The matching link, or a link with an invalid destination if no matches
-		/// are found.</returns>
-		private static NavGrid.Link FindLinkToCell(int fromCell, int toCell, NavGrid navGrid,
-				NavType navType) {
-			NavGrid.Link link;
-			var links = navGrid.Links;
-			int lpc = navGrid.maxLinksPerCell, index = fromCell * lpc, end = index + lpc;
-			do {
-				link = links[index];
-				int dest = link.link;
-				if (dest == InvalidHandle || (dest == toCell && link.startNavType ==
-					navType)) break;
-				index++;
-			} while (index < end);
-			return link;
-		}
 
 		/// <summary>
 		/// When a PathProber is destroyed, remove its cached information.
@@ -151,24 +96,20 @@ namespace PeterHan.FastTrack {
 		/// Checks to see if this cached path is still valid. If not, the cached parameters are
 		/// updated assuming that pathing is recalculated.
 		/// </summary>
-		/// <param name="navGrid">The navigation grid to use.</param>
+		/// <param name="navigator">The navigator to use.</param>
 		/// <param name="newCell">The starting cell.</param>
-		/// <param name="navType">The navigation type currently in use.</param>
-		/// <param name="abilities">The path finder's current abilities.</param>
-		/// <param name="newFlags">The path finder's current flags.</param>
 		/// <returns>true if cached information can be used, or false otherwise.</returns>
-		public bool CheckAndUpdate(NavGrid navGrid, int newCell, NavType navType,
-				PathFinderAbilities abilities, PathFlags newFlags) {
-			if (navGrid == null)
-				throw new ArgumentNullException("navGrid");
-			if (abilities == null)
-				throw new ArgumentNullException("abilities");
+		public bool CheckAndUpdate(Navigator navigator, int newCell) {
+			if (navigator == null)
+				throw new ArgumentNullException("navigator");
 			bool ok = false;
+			var newFlags = navigator.flags;
+			var navGrid = navigator.NavGrid;
 			if (NavFences.AllFences.TryGetValue(navGrid.id, out NavFences fences)) {
 				long serial = fences.CurrentSerial;
 				if (serial == globalSerial && flags == newFlags)
-					ok = (cell == newCell) || CanNavigateReciprocal(cell, newCell, navGrid,
-						navType, abilities, newFlags);
+					ok = (cell == newCell) || !PathFinder.ValidatePath(navGrid, ABILITIES.
+						Get(navigator), ref navigator.path);
 				else {
 					// Guaranteed out of date
 					flags = newFlags;

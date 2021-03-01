@@ -89,6 +89,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoSplashScreen", "NoSplashS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MooReproduction", "MooReproduction\MooReproduction.csproj", "{07BE03BD-84A8-4202-82A3-F64829B3D786}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkshopProfiles", "WorkshopProfiles\WorkshopProfiles.csproj", "{E327F5BD-CBF2-47D0-90C6-AE9C56E99B2F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -267,6 +269,10 @@ Global
 		{07BE03BD-84A8-4202-82A3-F64829B3D786}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{07BE03BD-84A8-4202-82A3-F64829B3D786}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{07BE03BD-84A8-4202-82A3-F64829B3D786}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E327F5BD-CBF2-47D0-90C6-AE9C56E99B2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E327F5BD-CBF2-47D0-90C6-AE9C56E99B2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E327F5BD-CBF2-47D0-90C6-AE9C56E99B2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E327F5BD-CBF2-47D0-90C6-AE9C56E99B2F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Rest for the Weary</AssemblyTitle>
-    <FileVersion>1.3.0.0</FileVersion>
+    <FileVersion>1.4.0.0</FileVersion>
     <RootNamespace>PeterHan.FinishTasks</RootNamespace>
     <Description>Defines a schedule block type to allow Duplicants to finish their current task but not start new ones.</Description>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>

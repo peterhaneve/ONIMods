@@ -66,14 +66,18 @@ namespace PeterHan.FastTrack {
 			long startSerial, newSerial = Interlocked.Read(ref globalSerial);
 			if (cells == null)
 				throw new ArgumentNullException("cells");
+			bool current = true;
 			do {
 				// If the grid is updated mid-execution, loop until it is stable
 				startSerial = newSerial;
 				foreach (int cell in cells)
-					if (oldSerial < localSerial[cell])
-						return false;
-			} while ((newSerial = Interlocked.Read(ref globalSerial)) != startSerial);
-			return true;
+					if (oldSerial < localSerial[cell]) {
+						current = false;
+						break;
+					}
+			} while (current && (newSerial = Interlocked.Read(ref globalSerial)) !=
+				startSerial);
+			return current;
 		}
 
 		/// <summary>
@@ -97,6 +101,23 @@ namespace PeterHan.FastTrack {
 					foreach (int cell in updatedCells)
 						if (cell >= 0)
 							localSerial[cell] = newSerial;
+				// Compare/Exchange will only increment the global serial if the operation
+				// fully completed without any other thread affecting it
+			} while (Interlocked.CompareExchange(ref globalSerial, newSerial, startSerial) !=
+				startSerial);
+		}
+
+		/// <summary>
+		/// Called when a cell is made dirty to update paths that use that cell.
+		/// </summary>
+		/// <param name="updatedCell">The cell that was updated.</param>
+		public void UpdateSerial(int updatedCell) {
+			long startSerial, newSerial;
+			do {
+				startSerial = Interlocked.Read(ref globalSerial);
+				newSerial = startSerial + 1L;
+				if (updatedCell >= 0)
+					localSerial[updatedCell] = newSerial;
 				// Compare/Exchange will only increment the global serial if the operation
 				// fully completed without any other thread affecting it
 			} while (Interlocked.CompareExchange(ref globalSerial, newSerial, startSerial) !=

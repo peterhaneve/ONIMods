@@ -20,7 +20,6 @@ using Harmony;
 using PeterHan.PLib;
 using PeterHan.PLib.Detours;
 using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -60,6 +59,39 @@ namespace PeterHan.FastTrack {
 		public static void OnLoad() {
 			PUtil.InitLibrary();
 			PUtil.RegisterPatchClass(typeof(FastTrackPatches));
+		}
+
+		/// <summary>
+		/// Applied to multiple methods in Grid to pre-emptively update the path grid when
+		/// access control is modified.
+		/// </summary>
+		[HarmonyPatch]
+		public static class Grid_Restrictions_Patch {
+			internal static IEnumerable<MethodBase> TargetMethods() {
+				var targetType = typeof(Grid);
+				return new List<MethodBase>(4) {
+					targetType.GetMethodSafe(nameof(Grid.ClearRestriction), true, typeof(int),
+						typeof(int)),
+					targetType.GetMethodSafe(nameof(Grid.RegisterRestriction), true,
+						typeof(int), typeof(Grid.Restriction.Orientation)),
+					targetType.GetMethodSafe(nameof(Grid.SetRestriction), true, typeof(int),
+						typeof(int), typeof(Grid.Restriction.Directions)),
+					targetType.GetMethodSafe(nameof(Grid.UnregisterRestriction), true,
+						typeof(int))
+				};
+			}
+
+			/// <summary>
+			/// Applied after each of the target methods run.
+			/// </summary>
+			internal static void Postfix(int cell) {
+				var fences = NavFences.AllFences;
+				// Access control only affects dupes and (DLC) rovers
+				if (fences.TryGetValue("MinionNavGrid", out NavFences dupeGrid))
+					dupeGrid.UpdateSerial(cell);
+				if (fences.TryGetValue("RobotNavGrid", out NavFences roverGrid))
+					roverGrid.UpdateSerial(cell);
+			}
 		}
 
 		/// <summary>
@@ -125,17 +157,15 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
-		/// Applied to PathProber to estimate the hitrate.
+		/// Applied to Navigator.PathProbeTask to estimate the hitrate.
 		/// </summary>
-		[HarmonyPatch(typeof(PathProber), nameof(PathProber.UpdateProbe))]
-		public static class PathProber_UpdateProbe_Patch {
-			internal static bool Prefix(PathProber __instance, int cell, NavType nav_type,
-					PathFinder.PotentialPath.Flags flags, NavGrid nav_grid,
-					PathFinderAbilities abilities) {
+		[HarmonyPatch(typeof(Navigator.PathProbeTask), nameof(Navigator.PathProbeTask.Run))]
+		public static class Navigator_PathProbeTask_Run_Patch {
+			internal static bool Prefix(Navigator ___navigator, int ___cell) {
 				// If nothing has changed since last time, it is a hit!
-				var cached = PathCacher.Lookup(__instance);
+				var cached = PathCacher.Lookup(___navigator.PathProber);
 				bool hit;
-				if (hit = cached.CheckAndUpdate(nav_grid, cell, nav_type, abilities, flags))
+				if (hit = cached.CheckAndUpdate(___navigator, ___cell))
 					Interlocked.Increment(ref hits);
 				Interlocked.Increment(ref total);
 				return !hit;
