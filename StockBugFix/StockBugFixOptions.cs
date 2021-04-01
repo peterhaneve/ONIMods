@@ -29,6 +29,14 @@ namespace PeterHan.StockBugFix {
 	[RestartRequired]
 	public sealed class StockBugFixOptions : POptions.SingletonOptions<StockBugFixOptions> {
 		/// <summary>
+		/// If true, neutronium digging errands will be allowed. These will only ever complete
+		/// with the "Super Productive" trait active.
+		/// </summary>
+		[Option("Allow Neutronium Digging", "Allows Dig errands to be scheduled on Neutronium tiles.")]
+		[JsonProperty]
+		public bool AllowNeutroniumDig { get; set; }
+
+		/// <summary>
 		/// If true, overheat temperature patches will be applied.
 		/// </summary>
 		[Option("Fix Overheat Temperatures", "Adds missing overheat temperatures to some buildings, and\r\nremoves it from other buildings where it does not make sense.")]
@@ -36,11 +44,13 @@ namespace PeterHan.StockBugFix {
 		public bool FixOverheat { get; set; }
 
 		public StockBugFixOptions() {
+			AllowNeutroniumDig = false;
 			FixOverheat = true;
 		}
 
 		public override string ToString() {
-			return "StockBugFixOptions[fixOverheat={0}]".F(FixOverheat);
+			return "StockBugFixOptions[allowNeutronium={1},fixOverheat={0}]".F(FixOverheat,
+				AllowNeutroniumDig);
 		}
 	}
 }

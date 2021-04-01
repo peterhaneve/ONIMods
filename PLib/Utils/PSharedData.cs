@@ -77,8 +77,8 @@ namespace PeterHan.PLib {
 				throw new ArgumentNullException("key");
 			InitRegistry();
 			registry?.TryGetValue(key, out sval);
-			if (sval is T)
-				value = (T)sval;
+			if (sval is T newVal)
+				value = newVal;
 			return value;
 		}
 

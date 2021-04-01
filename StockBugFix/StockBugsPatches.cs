@@ -29,11 +29,26 @@ namespace PeterHan.StockBugFix {
 	/// <summary>
 	/// Patches which will be applied via annotations for Stock Bug Fix.
 	/// </summary>
-	public sealed class StockBugsPatches {
+	public static class StockBugsPatches {
 		/// <summary>
 		/// Base divisor is 10000, so 6000/10000 = 0.6 priority.
 		/// </summary>
 		public const int JOY_PRIORITY_MOD = 6000;
+
+		[PLibMethod(RunAt.AfterModsLoad)]
+		internal static void FixDiggable(HarmonyInstance instance) {
+			const string BUG_KEY = "Bugs.DisableNeutroniumDig";
+			if (!StockBugFixOptions.Instance.AllowNeutroniumDig && !PSharedData.GetData<bool>(
+					BUG_KEY)) {
+#if DEBUG
+				PUtil.LogDebug("Disabling Neutronium digging");
+#endif
+				PSharedData.PutData(BUG_KEY, true);
+				instance.Patch(typeof(Diggable).GetMethodSafe("OnSolidChanged", false,
+					PPatchTools.AnyArguments), prefix: new HarmonyMethod(
+					typeof(StockBugsPatches), nameof(PrefixSolidChanged)));
+			}
+		}
 
 		/// <summary>
 		/// Retrieves the specified property setter.
@@ -47,16 +62,6 @@ namespace PeterHan.StockBugFix {
 				PUtil.LogError("Unable to find target method for {0}.{1}!".F(baseType.Name,
 					name));
 			return method;
-		}
-
-		/// <summary>
-		/// Retrieves the wattage rating of an electrical network, with a slight margin to
-		/// avoid overloading on rounding issues.
-		/// </summary>
-		/// <param name="rating">The wattage rating of the wire.</param>
-		/// <returns>The wattage the wire can handle before overloading.</returns>
-		private static float GetRoundedMaxWattage(Wire.WattageRating rating) {
-			return Wire.GetMaxWattageAsFloat(rating) + 0.4f;
 		}
 
 		/// <summary>
@@ -85,17 +90,41 @@ namespace PeterHan.StockBugFix {
 
 		public static void PostPatch(HarmonyInstance instance) {
 			var steamMod = PPatchTools.GetTypeSafe("KMod.Steam");
-			if (steamMod != null) {
+			const string BUG_KEY = "Bugs.ModUpdateRace";
+			PUtil.InitLibrary();
+			PUtil.RegisterPatchClass(typeof(StockBugsPatches));
+			if (steamMod != null && !PSharedData.GetData<bool>(BUG_KEY)) {
 #if DEBUG
 				PUtil.LogDebug("Transpiling Steam.UpdateMods()");
 #endif
 				// Transpile UpdateMods only for Steam versions (not EGS)
+				PSharedData.PutData(BUG_KEY, true);
 				instance.Patch(steamMod.GetMethodSafe("UpdateMods", false, PPatchTools.
 					AnyArguments), transpiler: new HarmonyMethod(typeof(StockBugsPatches),
 					nameof(TranspileUpdateMods)));
 				instance.Patch(typeof(MainMenu).GetMethodSafe("Update", false), postfix:
 					new HarmonyMethod(typeof(StockBugsPatches), nameof(PostfixMenuUpdate)));
 			}
+			PSharedData.PutData("Bugs.FishReleaseCount", true);
+		}
+
+		/// <summary>
+		/// Applied to Diggable to cancel the chore if neutronium digging is not allowed.
+		/// </summary>
+		internal static bool PrefixSolidChanged(Diggable __instance) {
+			GameObject go;
+			bool cont = true;
+			if (__instance != null && (go = __instance.gameObject) != null) {
+				int cell = Grid.PosToCell(go);
+				Element element;
+				// Immediately cancel dig chores placed on 255 hardness items
+				if (Grid.IsValidCell(cell) && (element = Grid.Element[cell]) != null &&
+						element.hardness > 254) {
+					go.Trigger((int)GameHashes.Cancel, null);
+					cont = false;
+				}
+			}
+			return cont;
 		}
 
 		/// <summary>
@@ -125,7 +154,7 @@ namespace PeterHan.StockBugFix {
 			/// <summary>
 			/// Calculates the correct Add overload to patch.
 			/// </summary>
-			internal static MethodInfo TargetMethod() {
+			internal static MethodBase TargetMethod() {
 				var methods = typeof(ChoreTypes).GetMethods(BindingFlags.DeclaredOnly |
 					BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
 				foreach (var method in methods)
@@ -163,6 +192,36 @@ namespace PeterHan.StockBugFix {
 					nameof(Grid.PosToCell), true, typeof(KMonoBehaviour)),
 					typeof(StockBugsPatches).GetMethodSafe(nameof(PosToCorrectedCell), true,
 					typeof(KMonoBehaviour)));
+			}
+		}
+
+		/// <summary>
+		/// Applied to Diggable to prevent maximum experience overflow if Super Productive
+		/// manages to complete on Neutronium.
+		/// </summary>
+		[HarmonyPatch(typeof(Diggable), nameof(Diggable.InstantlyFinish))]
+		public static class Diggable_InstantlyFinish_Patch {
+			/// <summary>
+			/// Applied before InstantlyFinish runs.
+			/// </summary>
+			internal static bool Prefix(Diggable __instance, Worker worker, ref bool __result)
+			{
+				bool cont = true;
+				if (__instance != null) {
+					int cell = Grid.PosToCell(__instance);
+					Element element;
+					// Complete by removing the cell instantaneously
+					if (Grid.IsValidCell(cell) && (element = Grid.Element[cell]) != null &&
+							element.hardness > 254) {
+						if (worker != null)
+							// Give some experience
+							worker.Work(1.0f);
+						SimMessages.Dig(cell);
+						__result = true;
+						cont = false;
+					}
+				}
+				return cont;
 			}
 		}
 
