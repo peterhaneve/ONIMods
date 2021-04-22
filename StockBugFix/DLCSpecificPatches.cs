@@ -29,55 +29,5 @@ namespace PeterHan.StockBugFix {
 	/// TODO Vanilla/DLC code
 	/// </summary>
 	internal static class DLCSpecificPatches {
-		private static readonly Type CLUSTER_MANAGER = PPatchTools.GetTypeSafe(
-			"ClusterManager");
-
-		/// <summary>
-		/// A fixed version of DeleteWorldObjects that waits for a short time to give Sim the
-		/// time to destroy the internal cells.
-		/// </summary>
-		/// <param name="world">The world that is being destroyed.</param>
-		/// <param name="spawnPosition">The location to spawn the objects.</param>
-		private static System.Collections.IEnumerator DeleteWorldObjects(Component inst,
-				Component world, GameObject _, Vector3 spawnPosition) {
-			yield return new WaitForSeconds(1.0f);
-			yield return new WaitForEndOfFrame();
-			if (world != null) {
-				if (world is WorldContainer wc) {
-					wc.TransferResourcesToParentWorld(spawnPosition);
-					Grid.FreeGridSpace(wc.WorldSize, wc.WorldOffset);
-#if DEBUG
-					PUtil.LogDebug("Clearing resources and grid space for " + wc.worldName);
-#endif
-				}
-				var inventory = world.GetComponent<WorldInventory>();
-				if (inventory != null)
-					UnityEngine.Object.Destroy(inventory);
-				UnityEngine.Object.Destroy(world);
-			}
-			yield break;
-		}
-
-		public static void PostPatch(HarmonyInstance instance) {
-			var destroyWorld = CLUSTER_MANAGER?.GetMethodSafe(nameof(ClusterManager.
-				DestoryRocketInteriorWorld), false, PPatchTools.AnyArguments);
-			if (destroyWorld != null) {
-				PUtil.LogDebug("Applying DLC specific patches");
-				instance.Patch(destroyWorld, transpiler: new HarmonyMethod(
-					typeof(DLCSpecificPatches), nameof(TranspileDestroyWorld)));
-			}
-		}
-
-		/// <summary>
-		/// Transpiles ClusterManager.DestoryRocketInteriorWorld to fix a race condition that
-		/// causes rocket wall and window tiles to drop their materials on deconstruct.
-		/// </summary>
-		private static IEnumerable<CodeInstruction> TranspileDestroyWorld(
-				IEnumerable<CodeInstruction> method) {
-			return PPatchTools.ReplaceMethodCall(method, CLUSTER_MANAGER.GetMethodSafe(
-				"DeleteWorldObjects", false, typeof(WorldContainer), typeof(GameObject),
-				typeof(Vector3)), typeof(DLCSpecificPatches).GetMethodSafe(nameof(
-				DLCSpecificPatches.DeleteWorldObjects), true, PPatchTools.AnyArguments));
-		}
 	}
 }
