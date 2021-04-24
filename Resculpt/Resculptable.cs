@@ -90,6 +90,22 @@ namespace PeterHan.Resculpt {
 			}
 		}
 
+
+		/// <summary>
+		/// Triggered when the user requests a rotation of the decor item.
+		/// </summary>
+		private void OnRotateClicked()
+		{
+			Rotatable rotatable = this.gameObject.GetComponent<Rotatable>();
+			if (rotatable != null) rotatable.Rotate();
+
+			// Buildings with even width values jump one tile when rotating and must be moved back
+			BuildingDef def = this.gameObject.GetComponent<Building>()?.Def;
+			if (def != null && def.WidthInCells % 2 == 0)
+				this.transform.position += rotatable.GetOrientation() != Orientation.Neutral ? new UnityEngine.Vector3(1, 0, 0)
+																							: new UnityEngine.Vector3(-1, 0, 0);
+		}
+
 		/// <summary>
 		/// Called when the info screen for the decor item is refreshed.
 		/// </summary>
@@ -104,6 +120,14 @@ namespace PeterHan.Resculpt {
 				var button = new KIconButtonMenu.ButtonInfo(icon, text, OnResculpt,
 					PAction.MaxAction, null, null, null, ResculptStrings.RESCULPT_TOOLTIP);
 				Game.Instance?.userMenu?.AddButton(gameObject, button);
+
+				var rotationButton = new KIconButtonMenu.ButtonInfo("action_direction_both",
+																	"Rotate Art",
+																	new System.Action(this.OnRotateClicked),
+																	Action.BuildMenuKeyO,
+																	tooltipText: "Rotates artwork. {Hotkey}");
+				if (this.gameObject.GetComponent<Rotatable>() != null)
+					Game.Instance?.userMenu?.AddButton(this.gameObject, rotationButton);
 			}
 		}
 	}
