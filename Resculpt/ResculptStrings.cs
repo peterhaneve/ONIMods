@@ -24,11 +24,14 @@ namespace PeterHan.Resculpt {
 		// The button in the user menu to trigger resculpting or repainting
 		public static readonly LocString REPAINT_BUTTON = "Repaint";
 		public static readonly LocString RESCULPT_BUTTON = "Resculpt";
+		public static readonly LocString ROTATE_BUTTON = "Rotate";
 
 		// The sprite names used for the repainting and resculpting icons
 		public const string REPAINT_SPRITE = "action_repaint";
 		public const string RESCULPT_SPRITE = "action_resculpt";
+		public const string ROTATE_SPRITE = "action_direction_both";
 
 		public static readonly LocString RESCULPT_TOOLTIP = "Changes the design of this object";
+		public static readonly LocString ROTATE_TOOLTIP = "Rotates artwork. {Hotkey}";
 	}
 }
