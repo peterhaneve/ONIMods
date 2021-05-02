@@ -1,0 +1,24 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not Included"
+"POT Version: 2.0"
+
+#. PeterHan.SweepByType.SweepByTypeStrings.CATEGORY_MISCPICKUPABLE
+msgctxt "PeterHan.SweepByType.SweepByTypeStrings.CATEGORY_MISCPICKUPABLE"
+msgid "Other"
+msgstr "其他"
+
+#. PeterHan.SweepByType.SweepByTypeStrings.DIALOG_TITLE
+msgctxt "PeterHan.SweepByType.SweepByTypeStrings.DIALOG_TITLE"
+msgid "Select material to sweep"
+msgstr "选择要清扫的物品"
+
+#. PeterHan.SweepByType.SweepByTypeStrings.TOOL_NAME_FILTERED
+msgctxt "PeterHan.SweepByType.SweepByTypeStrings.TOOL_NAME_FILTERED"
+msgid "FILTERED SWEEP TOOL"
+msgstr "过滤式清扫工具"
+
+#. PeterHan.SweepByType.SweepByTypeStrings.TOOLTIP_FILTERED
+msgctxt "PeterHan.SweepByType.SweepByTypeStrings.TOOLTIP_FILTERED"
+msgid "SWEEP ONLY SELECTED ITEMS"
+msgstr "只清扫选中的物品"
