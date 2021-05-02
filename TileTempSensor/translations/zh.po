@@ -1,0 +1,19 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not Included"
+"POT Version: 2.0"
+
+#. PeterHan.TileTempSensor.TileTempSensorStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.DESC
+msgctxt "PeterHan.TileTempSensor.TileTempSensorStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.DESC"
+msgid "Liquid drops have been sent an official eviction notice with the invention of a Thermo Sensor that can transfer heat effectively with its surrounding solid tiles."
+msgstr "随着砖块温度传感器的发明，液滴已被发出正式的驱逐通知，该传感器可与周围的固体砖块有效地进行热传递。"
+
+#. PeterHan.TileTempSensor.TileTempSensorStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.EFFECT
+msgctxt "PeterHan.TileTempSensor.TileTempSensorStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.EFFECT"
+msgid "Sends a <b><style=\"logic_on\">Green Signal</style></b> or a <b><style=\"logic_off\">Red Signal</style></b> when ambient <link=\"HEAT"\">Temperature</link> enters the chosen range."
+msgstr "当环境<link=\"HEAT"\">温度</link>进入所选范围时，发送<b><style=\"logic_on\">绿色信号</style></b>或<b><style=\"logic_off\">红色信号</style></b>。"
+
+#. PeterHan.TileTempSensor.TileTempSensorStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.NAME
+msgctxt "PeterHan.TileTempSensor.TileTempSensorStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.NAME"
+msgid "Thermo Sensor Tile"
+msgstr "砖块温度传感器"
