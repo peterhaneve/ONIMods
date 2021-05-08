@@ -18,12 +18,58 @@
 
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace PeterHan.PLib {
 	/// <summary>
 	/// A tool mode used in custom tool menus. Shown in the options in the bottom right.
 	/// </summary>
 	public sealed class PToolMode {
+		/// <summary>
+		/// Adds tool icons to the registry in ToolMenu.OnPrefabInit, if necessary.
+		/// </summary>
+		/// <param name="target">The icon list where the icons will be added.</param>
+		internal static void AddAllToolIcons(ICollection<Sprite> target) {
+			// TODO Vanilla/DLC code
+			lock (PSharedData.GetLock(PRegistry.KEY_TOOLICONS_LOCK)) {
+				var table = PSharedData.GetData<IList<Sprite>>(PRegistry.KEY_TOOLICONS_LIST);
+				if (table != null)
+					foreach (var sprite in table)
+						if (sprite != null)
+							target?.Add(sprite);
+			}
+		}
+
+		/// <summary>
+		/// Adds tool icons to the Assets registry of sprites, for use in later versions of
+		/// the DLC.
+		/// </summary>
+		internal static void AddAllToolIconsToAssets() {
+			lock (PSharedData.GetLock(PRegistry.KEY_TOOLICONS_LOCK)) {
+				var table = PSharedData.GetData<IList<Sprite>>(PRegistry.KEY_TOOLICONS_LIST);
+				if (table != null)
+					foreach (var sprite in table)
+						if (sprite != null)
+							Assets.Sprites.Add(sprite.name, sprite);
+			}
+		}
+
+		/// <summary>
+		/// Reports true if and only if custom tool icons have been registered for display.
+		/// </summary>
+		/// <returns>true if tool icons need to be loaded (not related to whether they
+		/// need to be patched in!), or false if none are registered</returns>
+		internal static bool HasToolIcons {
+			get {
+				bool icons = false;
+				lock (PSharedData.GetLock(PRegistry.KEY_TOOLICONS_LOCK)) {
+					var tbl = PSharedData.GetData<IList<Sprite>>(PRegistry.KEY_TOOLICONS_LIST);
+					icons = tbl != null && tbl.Count > 0;
+				}
+				return icons;
+			}
+		}
+
 		/// <summary>
 		/// Sets up tool options in the tool parameter menu.
 		/// </summary>
@@ -70,6 +116,36 @@ namespace PeterHan.PLib {
 			interfaceTools.Add(newTool.GetComponent<InterfaceTool>());
 			controller.tools = interfaceTools.ToArray();
 			interfaceTools.Recycle();
+		}
+
+		/// <summary>
+		/// Adds a tool icon to the registry. In early DLC versions and the vanilla game, the
+		/// tool menu had its own sprite list which was searched for tool icons, which was
+		/// eventually removed.
+		/// 
+		/// For both versions of the game, the sprite's name field must match the name used
+		/// in the tool collection's icon name declaration.
+		/// 
+		/// This method must be used in OnLoad after PLib is initialized.
+		/// </summary>
+		/// <param name="icon">The tool icon which will be used.</param>
+		public static void RegisterToolIcon(Sprite icon) {
+			if (!PUtil.PLibInit) {
+				PUtil.InitLibrary(false);
+				PUtil.LogWarning("PUtil.InitLibrary was not called before using AddToolIcon!");
+			}
+			lock (PSharedData.GetLock(PRegistry.KEY_TOOLICONS_LOCK)) {
+				var table = PSharedData.GetData<IList<Sprite>>(PRegistry.KEY_TOOLICONS_LIST);
+				if (table == null)
+					PSharedData.PutData(PRegistry.KEY_TOOLICONS_LIST, table =
+						new List<Sprite>(8));
+				if (icon != null) {
+					table.Add(icon);
+#if DEBUG
+					PUtil.LogDebug("Added icon " + icon.name + " to tool menu");
+#endif
+				}
+			}
 		}
 
 		/// <summary>

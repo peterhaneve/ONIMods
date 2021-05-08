@@ -389,6 +389,69 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Checks to see if a patch with the specified method name (the method used in the
+		/// patch class) and type is defined.
+		/// </summary>
+		/// <param name="instance">The Harmony instance to query for patches.</param>
+		/// <param name="target">The target method to search for patches.</param>
+		/// <param name="type">The patch type to look up.</param>
+		/// <param name="name">The patch method name to look up (name as declared by patch owner).</param>
+		/// <returns>true if such a patch was found, or false otherwise</returns>
+		public static bool HasPatchWithMethodName(HarmonyInstance instance, MethodBase target,
+				HarmonyPatchType type, string name) {
+			bool found = false;
+			if (instance == null)
+				throw new ArgumentNullException(nameof(instance));
+			if (target == null)
+				throw new ArgumentNullException(nameof(target));
+			if (string.IsNullOrEmpty(name))
+				throw new ArgumentNullException(nameof(name));
+			var patches = instance.GetPatchInfo(target);
+			if (patches != null) {
+				ICollection<Patch> patchList;
+				switch (type) {
+				case HarmonyPatchType.Prefix:
+					patchList = patches.Prefixes;
+					break;
+				case HarmonyPatchType.Postfix:
+					patchList = patches.Postfixes;
+					break;
+				case HarmonyPatchType.Transpiler:
+					patchList = patches.Transpilers;
+					break;
+				case HarmonyPatchType.All:
+				default:
+					// All
+					if (patches.Transpilers != null)
+						found = HasPatchWithMethodName(patches.Transpilers, name);
+					if (patches.Prefixes != null)
+						found = found || HasPatchWithMethodName(patches.Prefixes, name);
+					patchList = patches.Postfixes;
+					break;
+				}
+				if (patchList != null)
+					found = found || HasPatchWithMethodName(patchList, name);
+			}
+			return found;
+		}
+
+		/// <summary>
+		/// Checks to see if the patch list has a method with the specified name.
+		/// </summary>
+		/// <param name="patchList">The patch list to search.</param>
+		/// <param name="name">The declaring method name to look up.</param>
+		/// <returns>true if a patch matches that name, or false otherwise</returns>
+		private static bool HasPatchWithMethodName(IEnumerable<Patch> patchList, string name) {
+			bool found = false;
+			foreach (var patch in patchList)
+				if (patch.patch.Name == name) {
+					found = true;
+					break;
+				}
+			return found;
+		}
+
+		/// <summary>
 		/// Checks to see if an instruction opcode is a branch instruction.
 		/// </summary>
 		/// <param name="opcode">The opcode to check.</param>

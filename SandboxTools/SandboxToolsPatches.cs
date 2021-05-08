@@ -145,6 +145,7 @@ namespace PeterHan.SandboxTools {
 			PUtil.InitLibrary();
 			PLocalization.Register();
 			PUtil.RegisterPatchClass(typeof(SandboxToolsPatches));
+			PToolMode.RegisterToolIcon(SpriteRegistry.GetToolIcon());
 		}
 
 		[PLibMethod(RunAt.AfterModsLoad)]
@@ -249,17 +250,16 @@ namespace PeterHan.SandboxTools {
 		}
 
 		/// <summary>
-		/// Applied to ToolMenu to add the filtered destroy icon.
+		/// Applied to ToolMenu to add the filtered destroy parameter menu for Advanced
+		/// Filter Menu compatibility.
 		/// </summary>
 		[HarmonyPatch(typeof(ToolMenu), "OnPrefabInit")]
 		public static class ToolMenu_OnPrefabInit_Patch {
 			/// <summary>
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
-			/// <param name="___icons">The icon list where the icon can be added.</param>
-			internal static void Postfix(List<Sprite> ___icons) {
+			internal static void Postfix() {
 				DestroyParameterMenu.CreateInstance();
-				___icons.Add(SpriteRegistry.GetToolIcon());
 			}
 		}
 	}

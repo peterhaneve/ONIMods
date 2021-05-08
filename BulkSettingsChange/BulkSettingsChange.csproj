@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Settings Change Tool</AssemblyTitle>
-    <FileVersion>2.8.0.0</FileVersion>
+    <FileVersion>2.9.0.0</FileVersion>
     <RootNamespace>PeterHan.BulkSettingsChange</RootNamespace>
     <Description>Adds a tool to enable/disable disinfect, auto repair, compost, empty storage, or building operation in bulk.</Description>
     <AssemblyVersion>2.2.0.0</AssemblyVersion>

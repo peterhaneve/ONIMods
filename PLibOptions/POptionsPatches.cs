@@ -46,6 +46,10 @@ namespace PeterHan.PLib.Options {
 			applied = true;
 		}
 
+		internal static void PostPatch(HarmonyInstance inst) {
+			Utils.TextMeshProPatcher.Patch(inst);
+		}
+
 		/// <summary>
 		/// Applied to ModsScreen to display settings for this mod.
 		/// </summary>

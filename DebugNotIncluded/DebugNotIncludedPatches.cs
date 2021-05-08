@@ -63,11 +63,6 @@ namespace PeterHan.DebugNotIncluded {
 		internal static Mod ThisMod { get; private set; }
 
 		/// <summary>
-		/// The Action used when "UI Debug" is pressed.
-		/// </summary>
-		internal static PAction UIDebugAction { get; private set; }
-
-		/// <summary>
 		/// Applied to ModsScreen to add our buttons and otherwise tweak the dialog.
 		/// </summary>
 		private static void BuildDisplay(ModsScreen __instance, object ___displayedMods) {
@@ -156,13 +151,12 @@ namespace PeterHan.DebugNotIncluded {
 			else
 				inst.RegisterModAssembly(Assembly.GetExecutingAssembly(), inst.GetDebugInfo(
 					ThisMod));
-			// Default UI debug key is ALT+U
-			UIDebugAction = PAction.Register("DebugNotIncluded.UIDebugAction",
-				DebugNotIncludedStrings.INPUT_BINDINGS.DEBUG.SNAPSHOT, new PKeyBinding(
-				KKeyCode.U, Modifier.Alt));
 			// Must postload the mods dialog to come out after aki's mods, ony's mods, PLib
 			// options, and so forth
 			PUtil.RegisterPatchClass(typeof(DebugNotIncludedPatches));
+			// Force class initialization to avoid crashes on the background thread if
+			// an Assert fails later
+			DebugUtils.RegisterUIDebug();
 		}
 
 		/// <summary>

@@ -128,6 +128,56 @@ namespace PeterHan.PLib.Buildings {
 		}
 
 		/// <summary>
+		/// Immediately adds an <i>existing</i> building ID to an existing technology ID in the
+		/// tech tree.
+		/// 
+		/// Do <b>not</b> use this method on buildings registered through PBuilding as they
+		/// are added automatically.
+		/// 
+		/// This method must be used in a Postfix patch on Database.Techs.Load.
+		/// </summary>
+		/// <param name="tech">The technology tree node ID.</param>
+		/// <param name="id">The building ID to add to that node.</param>
+		public static void AddExistingBuildingToTech(string tech, string id) {
+			if (string.IsNullOrEmpty(tech))
+				throw new ArgumentNullException(nameof(tech));
+			if (string.IsNullOrEmpty(id))
+				throw new ArgumentNullException(nameof(id));
+			DoAddTech(tech, id);
+		}
+
+		/// <summary>
+		/// Adds the building tech to the tech tree - DLC implementation.
+		/// </summary>
+		/// <param name="tech">The technology node where the building belongs.</param>
+		/// <param name="id">The building ID to add.</param>
+		private static void AddTechDLC(string tech, string id) {
+			var dbTech = DLC_TECHS.Invoke(Db.Get().Techs, tech);
+			if (dbTech != null)
+				UNLOCKED_ITEMS.Get(dbTech)?.Add(id);
+			else
+				PUtil.LogWarning("Unknown technology " + tech);
+		}
+
+		/// <summary>
+		/// Adds the building tech to the tech tree - Vanilla implementation.
+		/// </summary>
+		/// <param name="tech">The technology node where the building belongs.</param>
+		/// <param name="id">The building ID to add.</param>
+		/// <param name="groups">The tech grouping to modify.</param>
+		private static void AddTechVanilla(string tech, string id, BuildingTechGroup groups) {
+			if (groups.TryGetValue(tech, out string[] values)) {
+				int n = values.Length;
+				// Expand by 1 and add building ID
+				string[] newValues = new string[n + 1];
+				Array.Copy(values, newValues, n);
+				newValues[n] = id;
+				groups[tech] = newValues;
+			} else
+				PUtil.LogWarning("Unknown technology " + tech);
+		}
+
+		/// <summary>
 		/// Makes the building always operational without triggering a warning in both the
 		/// new Automation Update and before.
 		/// </summary>
@@ -177,6 +227,19 @@ namespace PeterHan.PLib.Buildings {
 				STRINGS.UI.LOGIC_PORTS.CONTROL_OPERATIONAL,
 				STRINGS.UI.LOGIC_PORTS.CONTROL_OPERATIONAL_ACTIVE,
 				STRINGS.UI.LOGIC_PORTS.CONTROL_OPERATIONAL_INACTIVE, false, type);
+		}
+
+		/// <summary>
+		/// Adds the building tech to the tech tree.
+		/// </summary>
+		/// <param name="tech">The technology node where the building belongs.</param>
+		/// <param name="id">The building ID to add.</param>
+		private static void DoAddTech(string tech, string id) {
+			// TODO Vanilla/DLC code
+			if (VANILLA_TECHS?.GetValue(null) is BuildingTechGroup groups)
+				AddTechVanilla(tech, id, groups);
+			else
+				AddTechDLC(tech, id);
 		}
 
 		/// <summary>
@@ -288,41 +351,10 @@ namespace PeterHan.PLib.Buildings {
 		/// Adds the building tech to the tech tree.
 		/// </summary>
 		public void AddTech() {
-			// TODO Vanilla/DLC code
 			if (!addedTech && Tech != null) {
-				if (VANILLA_TECHS?.GetValue(null) is BuildingTechGroup groups)
-					AddTechVanilla(groups);
-				else
-					AddTechDLC();
+				DoAddTech(Tech, ID);
 				addedTech = true;
 			}
-		}
-
-		/// <summary>
-		/// Adds the building tech to the tech tree - DLC implementation.
-		/// </summary>
-		private void AddTechDLC() {
-			var dbTech = DLC_TECHS.Invoke(Db.Get().Techs, Tech);
-			if (dbTech != null)
-				UNLOCKED_ITEMS.Get(dbTech)?.Add(ID);
-			else
-				PUtil.LogWarning("Unknown technology " + Tech);
-		}
-
-		/// <summary>
-		/// Adds the building tech to the tech tree - Vanilla implementation.
-		/// </summary>
-		/// <param name="groups">The tech grouping to modify.</param>
-		private void AddTechVanilla(BuildingTechGroup groups) {
-			if (groups.TryGetValue(Tech, out string[] values)) {
-				int n = values.Length;
-				// Expand by 1 and add building ID
-				string[] newValues = new string[n + 1];
-				Array.Copy(values, newValues, n);
-				newValues[n] = ID;
-				groups[Tech] = newValues;
-			} else
-				PUtil.LogWarning("Unknown technology " + Tech);
 		}
 
 		/// <summary>

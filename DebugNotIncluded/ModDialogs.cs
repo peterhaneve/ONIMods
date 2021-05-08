@@ -79,6 +79,70 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
+		/// Adds tooltips for one archived mod version, bolding it if it is active.
+		/// </summary>
+		/// <param name="tooltip">The location where the tooltip will be stored.</param>
+		/// <param name="modInfo">The mod to query.</param>
+		/// <param name="relPath">The relative path of this candidate version.</param>
+		/// <param name="info">The version information about that version.</param>
+		private static void AppendArchivedVersion(StringBuilder tooltip, Mod modInfo,
+				string relPath, Mod.PackagedModInfo info) {
+			var message = (relPath == modInfo.relative_root && modInfo.
+				IsEnabledForActiveDlc()) ? UI.MODSSCREEN.LABEL_ARCHIVED_VERSION_ACTIVE :
+				UI.MODSSCREEN.LABEL_ARCHIVED_VERSION_INACTIVE;
+			string[] supported = (info.supportedContent ?? "").Split(',');
+			int n = supported.Length;
+			for (int i = 0; i < n; i++)
+				supported[i] = UI.MODSSCREEN.GetLocalizedName(supported[i].Trim());
+			tooltip.AppendFormat(message, string.IsNullOrEmpty(relPath) ? UI.MODSSCREEN.
+				LABEL_ARCHIVED_VERSION_DEFAULT.ToString() : relPath, supported.Join(", "),
+				info.lastWorkingBuild);
+		}
+
+		/// <summary>
+		/// Adds tooltips listing the mod's archived versions.
+		/// </summary>
+		/// <param name="tooltip">The location where the tooltip will be stored.</param>
+		/// <param name="modInfo">The mod to query.</param>
+		private static void AppendArchivedVersions(StringBuilder tooltip, Mod modInfo) {
+			var info = DebugUtils.GetModInfoForFolder(modInfo, "");
+			var fs = modInfo.file_source;
+			tooltip.Append(UI.MODSSCREEN.LABEL_ARCHIVED_VERSIONS);
+			if (info == null)
+				// No mod info? Give it vanilla since forever
+				info = new Mod.PackagedModInfo {
+					lastWorkingBuild = 0, supportedContent = "VANILLA_ID"
+				};
+			AppendArchivedVersion(tooltip, modInfo, "", info);
+			if (fs.Exists(DebugUtils.ARCHIVED_VERSIONS_FOLDER)) {
+				var archivedItems = ListPool<FileSystemItem, ModActionDelegates>.
+					Allocate();
+				fs.GetTopLevelItems(archivedItems, DebugUtils.
+					ARCHIVED_VERSIONS_FOLDER);
+				foreach (var oldVersion in archivedItems) {
+					string path = System.IO.Path.Combine(DebugUtils.
+						ARCHIVED_VERSIONS_FOLDER, oldVersion.name);
+					info = DebugUtils.GetModInfoForFolder(modInfo, path);
+					if (info != null)
+						AppendArchivedVersion(tooltip, modInfo, path, info);
+				}
+				archivedItems.Recycle();
+			}
+		}
+
+		/// <summary>
+		/// Adds a tooltip if a mod is enabled on a particular DLC.
+		/// </summary>
+		/// <param name="tooltip">The location where the tooltip will be stored.</param>
+		/// <param name="modInfo">The mod to query.</param>
+		/// <param name="dlcID">The DLC's ID from DlcManager.</param>
+		private static void AppendIsEnabled(StringBuilder tooltip, Mod modInfo, string dlcID) {
+			tooltip.AppendFormat(UI.MODSSCREEN.LABEL_DLC_ENABLE, UI.MODSSCREEN.
+				GetLocalizedName(dlcID), modInfo.IsEnabledForDlc(dlcID) ? UI.MODSSCREEN.
+				LABEL_ENABLE_YES : UI.MODSSCREEN.LABEL_ENABLE_NO);
+		}
+
+		/// <summary>
 		/// Blames the mod which failed using a popup message.
 		/// </summary>
 		/// <param name="parent">The parent of the dialog.</param>
@@ -226,8 +290,8 @@ namespace PeterHan.DebugNotIncluded {
 		/// <summary>
 		/// Lists the assemblies found in a given mod.
 		/// </summary>
-		/// <param name="modInfo">The mod to search.</param>
 		/// <param name="tooltip">The location where the assembly tooltip will be stored.</param>
+		/// <param name="modInfo">The mod to search.</param>
 		private static void ListAssemblies(StringBuilder tooltip, Mod modInfo) {
 			var debugInfo = ModDebugRegistry.Instance.GetDebugInfo(modInfo);
 			string plibVersionText = null;
@@ -249,6 +313,8 @@ namespace PeterHan.DebugNotIncluded {
 			// PLib version, if applicable
 			if (plibVersionText != null)
 				tooltip.Append(plibVersionText);
+			else if (debugInfo.ModAssemblies.Count < 1)
+				tooltip.Append(UI.MODSSCREEN.LABEL_ASSEMBLY_NOCODE);
 		}
 
 		/// <summary>
@@ -314,12 +380,21 @@ namespace PeterHan.DebugNotIncluded {
 			/// <param name="modInfo">The mod which is being shown.</param>
 			/// <returns>A tooltip for that mod in the mods screen.</returns>
 			internal string GetDescription() {
-				var tooltip = new StringBuilder(256);
+				var tooltip = new StringBuilder(512);
 				if (modInfo != null) {
 					var thisMod = DebugNotIncludedPatches.ThisMod;
-					// Retrieve the primary assembly's version
-					tooltip.AppendFormat(UI.MODSSCREEN.LABEL_DESCRIPTION, modInfo.label.
-						id, modInfo.description ?? "None");
+					var lc = modInfo.loaded_content;
+					tooltip.AppendFormat(UI.MODSSCREEN.LABEL_DESCRIPTION, modInfo.label.id);
+					foreach (var dlcId in DlcManager.RELEASE_ORDER)
+						AppendIsEnabled(tooltip, modInfo, dlcId);
+					tooltip.AppendFormat(UI.MODSSCREEN.LABEL_CONTENT, (lc == 0) ? "-" : lc.
+						ToString());
+					// About how heavy is the mod?
+					var methods = modInfo.loaded_mod_data?.patched_methods;
+					tooltip.AppendFormat(UI.MODSSCREEN.LABEL_PATCHES, (methods == null) ? 0 :
+						methods.Count);
+					AppendArchivedVersions(tooltip, modInfo);
+					tooltip.AppendLine();
 					if (thisMod == null || !modInfo.label.Match(thisMod.label))
 						ListAssemblies(tooltip, modInfo);
 					else

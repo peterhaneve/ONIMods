@@ -42,6 +42,7 @@ namespace PeterHan.BulkSettingsChange {
 			PLocalization.Register();
 			BulkChangeAction = PAction.Register(BulkChangeStrings.ACTION_KEY,
 				BulkChangeStrings.ACTION_TITLE, new PKeyBinding(KKeyCode.Q));
+			PToolMode.RegisterToolIcon(SpriteRegistry.GetToolIcon());
 		}
 
 #if DEBUG
@@ -82,20 +83,6 @@ namespace PeterHan.BulkSettingsChange {
 				// Add tool to tool list
 				interfaceTools.Add(bulkChangeTool.GetComponent<InterfaceTool>());
 				__instance.tools = interfaceTools.ToArray();
-			}
-		}
-
-		/// <summary>
-		/// Applied to ToolMenu to add the settings change icon.
-		/// </summary>
-		[HarmonyPatch(typeof(ToolMenu), "OnPrefabInit")]
-		public static class ToolMenu_OnPrefabInit_Patch {
-			/// <summary>
-			/// Applied after OnPrefabInit runs.
-			/// </summary>
-			/// <param name="___icons">The icon list where the icon can be added.</param>
-			internal static void Postfix(List<Sprite> ___icons) {
-				___icons?.Add(SpriteRegistry.GetToolIcon());
 			}
 		}
 

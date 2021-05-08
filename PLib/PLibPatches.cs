@@ -37,7 +37,7 @@ namespace PeterHan.PLib {
 	/// All patches for PLib are stored here and only applied once for all PLib mods loaded.
 	/// </summary>
 	sealed class PLibPatches {
-		#region Patches
+#region Patches
 		// Method only exists in vanilla
 		private static readonly MethodBase ACHIEVEMENT_SERIALIZE = typeof(Database.
 			ColonyAchievementRequirement).GetMethodSafe("Serialize", false, typeof(
@@ -65,33 +65,6 @@ namespace PeterHan.PLib {
 				lm.CallingObject = __instance.gameObject;
 				cont = !PLightManager.AddScenePartitioner(__instance,
 					ref ___solidPartitionerEntry, ref ___liquidPartitionerEntry);
-			}
-			return cont;
-		}
-
-		/// <summary>
-		/// Applied to TMP_InputField to fix a bug that prevented auto layout from ever
-		/// working.
-		/// </summary>
-		private static bool AssignPositioningIfNeeded_Prefix(TMP_InputField __instance,
-				RectTransform ___caretRectTrans, TMP_Text ___m_TextComponent) {
-			bool cont = true;
-			var crt = ___caretRectTrans;
-			if (___m_TextComponent != null && crt != null && __instance != null &&
-				___m_TextComponent.isActiveAndEnabled)
-			{
-				var rt = ___m_TextComponent.rectTransform;
-				if (crt.localPosition != rt.localPosition ||
-						crt.localRotation != rt.localRotation ||
-						crt.localScale != rt.localScale ||
-						crt.anchorMin != rt.anchorMin ||
-						crt.anchorMax != rt.anchorMax ||
-						crt.anchoredPosition != rt.anchoredPosition ||
-						crt.sizeDelta != rt.sizeDelta ||
-						crt.pivot != rt.pivot) {
-					__instance.StartCoroutine(ResizeCaret(crt, rt));
-					cont = false;
-				}
 			}
 			return cont;
 		}
@@ -293,18 +266,6 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
-		/// Applied to TMPro.TMP_InputField to fix a clipping bug inside of Scroll Rects.
-		/// 
-		/// https://forum.unity.com/threads/textmeshpro-text-still-visible-when-using-nested-rectmask2d.537967/
-		/// </summary>
-		private static void OnEnable_Postfix(UnityEngine.UI.Scrollbar ___m_VerticalScrollbar,
-				TMP_Text ___m_TextComponent) {
-			var component = ___m_TextComponent;
-			if (component != null)
-				component.ignoreRectMaskCulling = ___m_VerticalScrollbar != null;
-		}
-
-		/// <summary>
 		/// Applied to Rotatable to rotate light previews if a visualizer is rotated.
 		/// </summary>
 		private static void OrientVisualizer_Postfix(Rotatable __instance) {
@@ -378,6 +339,21 @@ namespace PeterHan.PLib {
 		/// </summary>
 		private static void SetDefaultKeyBindings_Postfix() {
 			PActionManager.Instance.UpdateMaxAction();
+		}
+
+		/// <summary>
+		/// Applied to Assets to load sprites for custom tools.
+		/// </summary>
+		private static void ToolMenu_DLC_Postfix() {
+			PToolMode.AddAllToolIconsToAssets();
+		}
+
+		/// <summary>
+		/// Applied to ToolMenu to load sprites for custom tools.
+		/// </summary>
+		private static void ToolMenu_Vanilla_Postfix(List<Sprite> ___icons) {
+			// TODO Vanilla/DLC code
+			PToolMode.AddAllToolIcons(___icons);
 		}
 
 		/// <summary>
@@ -491,9 +467,19 @@ namespace PeterHan.PLib {
 
 			// PLocalization
 			var locale = Localization.GetLocale();
-			if (locale != null) { 
+			if (locale != null) {
 				PLocalization.LocalizeAll(locale);
 				PLocalizationItself.LocalizeItself(locale);
+			}
+
+			// ToolMenu
+			if (PToolMode.HasToolIcons) {
+				if (typeof(ToolMenu).GetFieldSafe("icons", false) != null)
+					instance.Patch(typeof(ToolMenu), "OnPrefabInit", null,
+						PatchMethod(nameof(ToolMenu_Vanilla_Postfix)));
+				else
+					instance.Patch(typeof(Assets), "OnPrefabInit", null,
+						PatchMethod(nameof(ToolMenu_DLC_Postfix)));
 			}
 
 			// ModsScreen
@@ -512,17 +498,7 @@ namespace PeterHan.PLib {
 				}
 
 			// TMPro.TMP_InputField
-			var tmpType = PPatchTools.GetTypeSafe("TMPro.TMP_InputField");
-			if (tmpType != null)
-				try {
-					instance.Patch(tmpType, "AssignPositioningIfNeeded",
-						PatchMethod(nameof(AssignPositioningIfNeeded_Prefix)), null);
-					instance.Patch(tmpType, "OnEnable", null, PatchMethod(
-						nameof(OnEnable_Postfix)));
-				} catch (Exception) {
-					PUtil.LogWarning("Unable to patch TextMeshPro bug, text fields may " +
-						"display improperly inside scroll areas");
-				}
+			Utils.TextMeshProPatcher.Patch(instance);
 
 			// Postload, legacy and normal
 			PPatchManager.ExecuteLegacyPostload();
@@ -540,24 +516,6 @@ namespace PeterHan.PLib {
 		/// <returns>The matching method.</returns>
 		private static HarmonyMethod PatchMethod(string name) {
 			return new HarmonyMethod(typeof(PLibPatches), name);
-		}
-
-		/// <summary>
-		/// Resizes the caret object to match the text. Used as an enumerator.
-		/// </summary>
-		/// <param name="caretTransform">The rectTransform of the caret.</param>
-		/// <param name="textTransform">The rectTransform of the text.</param>
-		private static System.Collections.IEnumerator ResizeCaret(
-				RectTransform caretTransform, RectTransform textTransform) {
-			yield return new WaitForEndOfFrame();
-			caretTransform.localPosition = textTransform.localPosition;
-			caretTransform.localRotation = textTransform.localRotation;
-			caretTransform.localScale = textTransform.localScale;
-			caretTransform.anchorMin = textTransform.anchorMin;
-			caretTransform.anchorMax = textTransform.anchorMax;
-			caretTransform.anchoredPosition = textTransform.anchoredPosition;
-			caretTransform.sizeDelta = textTransform.sizeDelta;
-			caretTransform.pivot = textTransform.pivot;
 		}
 
 		/// <summary>

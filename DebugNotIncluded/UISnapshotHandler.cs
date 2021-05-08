@@ -36,7 +36,7 @@ namespace PeterHan.DebugNotIncluded {
 		private readonly Action snapshotAction;
 
 		internal UISnapshotHandler() {
-			var action = DebugNotIncludedPatches.UIDebugAction;
+			var action = DebugUtils.UIDebugAction;
 			if (action != null)
 				snapshotAction = action.GetKAction();
 			else
