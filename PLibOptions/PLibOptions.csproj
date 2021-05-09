@@ -31,6 +31,7 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
     <Compile Include="..\PLib\Options\ButtonOptionsEntry.cs" Link="ButtonOptionsEntry.cs" />
     <Compile Include="..\PLib\Options\CategoryExpandHandler.cs" Link="CategoryExpandHandler.cs" />
     <Compile Include="..\PLib\Options\CheckboxOptionsEntry.cs" Link="CheckboxOptionsEntry.cs" />
+    <Compile Include="..\PLib\Options\CompositeOptionsEntry.cs" Link="CompositeOptionsEntry.cs" />
     <Compile Include="..\PLib\Options\ConfigFileAttribute.cs" Link="ConfigFileAttribute.cs" />
     <Compile Include="..\PLib\Options\DynamicOptionAttribute.cs" Link="DynamicOptionAttribute.cs" />
     <Compile Include="..\PLib\Options\DynamicOptionsEntry.cs" Link="DynamicOptionsEntry.cs" />
@@ -42,6 +43,8 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
     <Compile Include="..\PLib\Options\LimitAttribute.cs" Link="LimitAttribute.cs" />
     <Compile Include="..\PLib\Options\ModInfoAttribute.cs" Link="ModInfoAttribute.cs" />
     <Compile Include="..\PLib\Options\ModOptionsHandler.cs" Link="ModOptionsHandler.cs" />
+    <Compile Include="..\PLib\Options\NullableFloatOptionsEntry.cs" Link="NullableFloatOptionsEntry.cs" />
+    <Compile Include="..\PLib\Options\NullableIntOptionsEntry.cs" Link="NullableIntOptionsEntry.cs" />
     <Compile Include="..\PLib\Options\OptionAttribute.cs" Link="OptionAttribute.cs" />
     <Compile Include="..\PLib\Options\OptionsDialog.cs" Link="OptionsDialog.cs" />
     <Compile Include="..\PLib\Options\OptionsEntry.cs" Link="OptionsEntry.cs" />

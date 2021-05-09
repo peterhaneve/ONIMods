@@ -23,6 +23,8 @@ using System.Reflection;
 using UnityEngine;
 
 using OptionsList = System.Collections.Generic.ICollection<PeterHan.PLib.Options.OptionsEntry>;
+using AllOptions = System.Collections.Generic.IDictionary<string, System.Collections.Generic.
+	ICollection<PeterHan.PLib.Options.OptionsEntry>>;
 
 namespace PeterHan.PLib.Options {
 	/// <summary>
@@ -40,39 +42,12 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		protected static readonly RectOffset LABEL_MARGIN = new RectOffset(0, 5, 2, 2);
 
-		internal static IDictionary<string, OptionsList> AddCustomOptions(object options,
-				IDictionary<string, OptionsList> existing) {
-			System.Collections.IEnumerable customOptions = null;
-			// Call the user handler
-			var createOptions = PPatchTools.GetMethodSafe(options.GetType(), nameof(IOptions.
-				CreateOptions), false);
-			var entries = existing;
-			if (createOptions != null)
-				try {
-					customOptions = createOptions.Invoke(options, null) as System.
-						Collections.IEnumerable;
-				} catch (TargetInvocationException e) {
-					PUtil.LogException(e.GetBaseException());
-				}
-			if (customOptions != null) {
-				// Middle-depth copy of the existing categories as it can change on each dialog
-				entries = new SortedList<string, OptionsList>(entries.Count);
-				foreach (var pair in existing)
-					entries.Add(pair.Key, new List<OptionsEntry>(pair.Value));
-				foreach (var value in customOptions)
-					if (value != null)
-						AddToCategory(entries, DynamicOptionsEntry.Create(value));
-			}
-			return entries;
-		}
-
 		/// <summary>
 		/// Adds an options entry to the category list, creating a new category if necessary.
 		/// </summary>
 		/// <param name="entries">The existing categories.</param>
 		/// <param name="entry">The option entry to add.</param>
-		private static void AddToCategory(IDictionary<string, OptionsList> entries,
-				OptionsEntry entry) {
+		internal static void AddToCategory(AllOptions entries, OptionsEntry entry) {
 			string category = entry.Category ?? "";
 			if (!entries.TryGetValue(category, out OptionsList inCat)) {
 				inCat = new List<OptionsEntry>(16);
@@ -86,23 +61,15 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <param name="forType">The type of the options class.</param>
 		/// <returns>A list of all public properties annotated for options dialogs.</returns>
-		internal static IDictionary<string, OptionsList> BuildOptions(Type forType) {
+		internal static AllOptions BuildOptions(Type forType) {
 			var entries = new SortedList<string, OptionsList>(8);
-			OptionAttribute oa;
-			DynamicOptionAttribute doa;
-			foreach (var prop in forType.GetProperties())
+			foreach (var prop in forType.GetProperties(BindingFlags.Public | BindingFlags.
+					Instance)) {
 				// Must have the annotation
-				foreach (var attr in prop.GetCustomAttributes(false))
-					if ((oa = OptionAttribute.CreateFrom(attr)) != null) {
-						// Attempt to find a class that will represent it
-						var entry = CreateOptions(prop, oa);
-						if (entry != null)
-							AddToCategory(entries, entry);
-						break;
-					} else if ((doa = DynamicOptionAttribute.CreateFrom(attr)) != null) {
-						AddToCategory(entries, DynamicOptionsEntry.Create(prop.Name, doa));
-						break;
-					}
+				var entry = TryCreateEntry(prop, 0);
+				if (entry != null)
+					AddToCategory(entries, entry);
+			}
 			return entries;
 		}
 
@@ -112,7 +79,7 @@ namespace PeterHan.PLib.Options {
 		/// <param name="info">The property to wrap.</param>
 		/// <param name="oa">The option title and tool tip.</param>
 		/// <returns>An options wrapper, or null if none can handle this type.</returns>
-		private static OptionsEntry CreateOptions(PropertyInfo info, OptionAttribute oa) {
+		private static OptionsEntry CreateOptions(OptionAttribute oa, PropertyInfo info) {
 			OptionsEntry entry = null;
 			Type type = info.PropertyType;
 			string field = info.Name;
@@ -123,8 +90,12 @@ namespace PeterHan.PLib.Options {
 				entry = new CheckboxOptionsEntry(field, oa);
 			else if (type == typeof(int))
 				entry = new IntOptionsEntry(oa, info);
+			else if (type == typeof(int?))
+				entry = new NullableIntOptionsEntry(oa, info);
 			else if (type == typeof(float))
 				entry = new FloatOptionsEntry(oa, info);
+			else if (type == typeof(float?))
+				entry = new NullableFloatOptionsEntry(oa, info);
 			else if (type == typeof(string))
 				entry = new StringOptionsEntry(oa, info);
 			else if (type == typeof(System.Action))
@@ -149,6 +120,38 @@ namespace PeterHan.PLib.Options {
 			if (!string.IsNullOrEmpty(keyOrValue) && Strings.TryGet(keyOrValue, out StringEntry
 					entry))
 				result = entry.String;
+			return result;
+		}
+
+		/// <summary>
+		/// Shared code to create an options entry if an [Option] attribute is found on a
+		/// property.
+		/// </summary>
+		/// <param name="prop">The property to inspect.</param>
+		/// <param name="depth">The current depth of iteration to avoid infinite loops.</param>
+		/// <returns>The OptionsEntry created, or null if none was.</returns>
+		internal static OptionsEntry TryCreateEntry(PropertyInfo prop, int depth) {
+			OptionsEntry result = null;
+			OptionAttribute oa;
+			DynamicOptionAttribute doa;
+			// Must have the annotation, cannot be indexed
+			var indexes = prop.GetIndexParameters();
+			if (indexes == null || indexes.Length < 1)
+				foreach (var attr in prop.GetCustomAttributes(false))
+					if ((oa = OptionAttribute.CreateFrom(attr)) != null) {
+						// Attempt to find a class that will represent it
+						var type = prop.PropertyType;
+						result = CreateOptions(oa, prop);
+						// See if it has entries that can themselves be added, ignore
+						// value types and avoid infinite recursion
+						if (result == null && !type.IsValueType && depth < 16 && type !=
+								prop.DeclaringType)
+							result = CompositeOptionsEntry.Create(oa, prop, depth);
+						break;
+					} else if ((doa = DynamicOptionAttribute.CreateFrom(attr)) != null) {
+						result = DynamicOptionsEntry.Create(prop.Name, doa);
+						break;
+					}
 			return result;
 		}
 
@@ -194,14 +197,17 @@ namespace PeterHan.PLib.Options {
 			ToolTip = tooltip;
 		}
 
-		protected OptionsEntry(string field, OptionAttribute attr) {
+		protected OptionsEntry(string field, OptionAttribute attr) : this(field, attr, "") {
+		}
+
+		internal OptionsEntry(string field, OptionAttribute attr, string overrideCategory) {
 			if (attr == null)
-				throw new ArgumentNullException("attr");
+				throw new ArgumentNullException(nameof(attr));
 			Field = field;
 			Format = attr.Format;
 			Title = attr.Title;
 			ToolTip = attr.Tooltip;
-			Category = attr.Category ?? "";
+			Category = string.IsNullOrEmpty(attr.Category) ? overrideCategory : attr.Category;
 		}
 
 		public GameObject Build() {
@@ -247,10 +253,11 @@ namespace PeterHan.PLib.Options {
 		/// Reads the option value from the settings.
 		/// </summary>
 		/// <param name="settings">The settings object.</param>
-		internal void ReadFrom(object settings) {
+		internal virtual void ReadFrom(object settings) {
 			if (Field != null)
 				try {
-					var prop = settings.GetType().GetProperty(Field);
+					var prop = settings.GetType().GetProperty(Field, BindingFlags.Public |
+						BindingFlags.Instance);
 					if (prop != null && prop.CanRead)
 						Value = prop.GetValue(settings, null);
 				} catch (TargetInvocationException e) {
@@ -273,10 +280,11 @@ namespace PeterHan.PLib.Options {
 		/// Writes the option value from the settings.
 		/// </summary>
 		/// <param name="settings">The settings object.</param>
-		internal void WriteTo(object settings) {
+		internal virtual void WriteTo(object settings) {
 			if (Field != null)
 				try {
-					var prop = settings.GetType().GetProperty(Field);
+					var prop = settings.GetType().GetProperty(Field, BindingFlags.Public |
+						BindingFlags.Instance);
 					if (prop != null && prop.CanWrite)
 						prop.SetValue(settings, Value, null);
 				} catch (TargetInvocationException e) {

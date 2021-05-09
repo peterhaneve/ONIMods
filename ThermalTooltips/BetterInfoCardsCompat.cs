@@ -17,6 +17,7 @@
  */
 
 using PeterHan.PLib;
+using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -45,6 +46,21 @@ namespace PeterHan.ThermalTooltips {
 		/// The export title for thermal mass.
 		/// </summary>
 		internal const string EXPORT_THERMAL_MASS = "PeterHan.ThermalTooltips.ThermalMass";
+
+		/// <summary>
+		/// Registers a converter. While this method seems useless, converting the arguments
+		/// to the proper Func types for the parameter is required.
+		/// </summary>
+		/// <param name="registerMethod">The registration method to call.</param>
+		/// <param name="title">The title to classify the data exported.</param>
+		/// <param name="getValue">The function which converts the exported object to the data type.</param>
+		/// <param name="getTextOverride">The function that accepts the original text and
+		/// collapsed cards to convert them into the final text.</param>
+		/// <typeparam name="T">The type of data that will be converted.</typeparam>
+		private static void Register<T>(RegisterMethodFunc registerMethod, string title,
+				Func<object, T> getValue, Func<string, List<T>, string> getTextOverride) {
+			registerMethod.Invoke(title, getValue, getTextOverride, null);
+		}
 
 		/// <summary>
 		/// Sums up heat energy and reports the total heat energy.
@@ -87,51 +103,41 @@ namespace PeterHan.ThermalTooltips {
 		}
 
 		private delegate void ExportMethodFunc(string title, object data);
+		private delegate void RegisterMethodFunc(string name, object getValue,
+			object getTextOverride, object splitListDefs);
 
 		/// <summary>
 		/// The method to call for exporting data.
 		/// </summary>
 		private readonly ExportMethodFunc exportMethod;
 
-		/// <summary>
-		/// The method to call for registering a converter. This method cannot be made into a
-		/// delegate, because it is type parameterized.
-		/// </summary>
-		private readonly MethodInfo registerMethod;
-
 		internal BetterInfoCardsCompat() {
-			MethodInfo addConv = null;
+			RegisterMethodFunc addConv = null;
 			exportMethod = null;
 			try {
 				addConv = PPatchTools.GetTypeSafe(BIC_NAMESPACE + "ConverterManager",
-					BIC_ASSEMBLY)?.GetMethodSafe("AddConverter", true, PPatchTools.
-					AnyArguments);
+					BIC_ASSEMBLY)?.Detour<RegisterMethodFunc>("AddConverterReflect");
 				var patchType = PPatchTools.GetTypeSafe(BIC_NAMESPACE + "CollectHoverInfo",
 					BIC_ASSEMBLY)?.GetNestedType("GetSelectInfo_Patch", BindingFlags.Static |
 					BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
 				if (patchType != null)
-					exportMethod = patchType.CreateStaticDelegate<ExportMethodFunc>("Export",
-						typeof(string), typeof(object));
-			} catch (TargetInvocationException e) {
-				PUtil.LogWarning("Exception when loading Better Info Cards compatibility:");
-				PUtil.LogExcWarn(e?.GetBaseException() ?? e);
+					exportMethod = patchType.Detour<ExportMethodFunc>("Export");
 			} catch (AmbiguousMatchException e) {
 				PUtil.LogWarning("Exception when loading Better Info Cards compatibility:");
 				PUtil.LogExcWarn(e);
+			} catch (DetourException e) {
+				PUtil.LogWarning("Exception when loading Better Info Cards compatibility:");
+				PUtil.LogExcWarn(e);
 			}
-			if (addConv != null && exportMethod != null) {
-				// Delegates are much faster at runtime
-				registerMethod = addConv;
+			if (addConv != null && exportMethod != null)
 				try {
-					Register(EXPORT_THERMAL_MASS, ObjectToFloat, SumThermalMass);
-					Register(EXPORT_HEAT_ENERGY, ObjectToFloat, SumHeatEnergy);
+					Register(addConv, EXPORT_THERMAL_MASS, ObjectToFloat, SumThermalMass);
+					Register(addConv, EXPORT_HEAT_ENERGY, ObjectToFloat, SumHeatEnergy);
 					PUtil.LogDebug("Registered Better Info Cards status data handlers");
-				} catch (TargetInvocationException e) {
+				} catch (Exception e) {
 					PUtil.LogWarning("Exception when registering Better Info Cards compatibility:");
-					PUtil.LogExcWarn(e?.GetBaseException() ?? e);
+					PUtil.LogExcWarn(e.GetBaseException());
 				}
-			} else
-				registerMethod = null;
 		}
 
 		/// <summary>
@@ -142,21 +148,6 @@ namespace PeterHan.ThermalTooltips {
 		/// <param name="data">The value to export.</param>
 		public void Export(string title, object data) {
 			exportMethod?.Invoke(title, data);
-		}
-
-		/// <summary>
-		/// Registers a converter.
-		/// </summary>
-		/// <param name="title">The title to classify the data exported.</param>
-		/// <param name="getValue">The function which converts the exported object to the data type.</param>
-		/// <param name="getTextOverride">The function that accepts the original text and
-		/// collapsed cards to convert them into the final text.</param>
-		/// <typeparam name="T">The type of data that will be converted.</typeparam>
-		public void Register<T>(string title, Func<object, T> getValue, Func<string, List<T>,
-				string> getTextOverride) {
-			registerMethod?.MakeGenericMethod(typeof(T))?.Invoke(null, new object[] {
-				title, getValue, getTextOverride, null
-			});
 		}
 	}
 }

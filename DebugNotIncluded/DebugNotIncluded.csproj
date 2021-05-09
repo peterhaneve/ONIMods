@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Debug Not Included</AssemblyTitle>
-    <FileVersion>1.5.0.0</FileVersion>
+    <FileVersion>1.6.0.0</FileVersion>
     <RootNamespace>PeterHan.DebugNotIncluded</RootNamespace>
     <Description>Aids with mod debugging and management. Not intended to be a production mod manager.</Description>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>

@@ -16,13 +16,18 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using System;
+using System.Reflection;
 
 namespace PeterHan.PLib {
 	/// <summary>
 	/// An attribute placed on an option property or enum value for a class used as mod options
 	/// in order to denote the display title and other options.
+	/// 
+	/// Options attributes will be recursively searched if a custom type is used for a property
+	/// with this attribute. If fields in that type have Option attributes, they will be
+	/// displayed under the category of their parent option (ignoring their own category
+	/// declaration).
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false,
 		Inherited = true)]
@@ -34,41 +39,63 @@ namespace PeterHan.PLib {
 		/// <returns>An OptionAttribute object with the values from that object, where
 		/// possible to retrieve; or null if none could be obtained.</returns>
 		internal static OptionAttribute CreateFrom(object attr) {
-			string title = "", tt = "", cat = "", format = null;
-			if (attr.GetType().Name == typeof(OptionAttribute).Name) {
-				var trAttr = Traverse.Create(attr);
+			string title = null, tt = "", cat = "", format = null;
+			var type = attr.GetType();
+			if (type.Name == typeof(OptionAttribute).Name) {
 				try {
-					title = trAttr.GetProperty<string>(nameof(Title));
-					tt = trAttr.GetProperty<string>(nameof(Tooltip)) ?? "";
-					cat = trAttr.GetProperty<string>(nameof(Category)) ?? "";
-					format = trAttr.GetProperty<string>(nameof(Format));
-				} catch (Exception e) {
+					var info = type.GetPropertySafe<string>(nameof(Title), false);
+					if (info != null)
+						title = info.GetValue(attr, null) as string;
+					info = type.GetPropertySafe<string>(nameof(Tooltip), false);
+					if (info != null)
+						tt = (info.GetValue(attr, null) as string) ?? "";
+					info = type.GetPropertySafe<string>(nameof(Category), false);
+					if (info != null)
+						cat = (info.GetValue(attr, null) as string) ?? "";
+					info = type.GetPropertySafe<string>(nameof(Format), false);
+					if (info != null)
+						format = info.GetValue(attr, null) as string;
+				} catch (TargetInvocationException e) {
+					// Other mod's error
+					PUtil.LogExcWarn(e.GetBaseException());
+				} catch (AmbiguousMatchException e) {
+					// Other mod's error
+					PUtil.LogExcWarn(e);
+				} catch (FieldAccessException e) {
+					// Other mod's error
 					PUtil.LogExcWarn(e);
 				}
 			}
-			return string.IsNullOrEmpty(title) ? null : new OptionAttribute(title, tt, cat) {
+			return (title == null) ? null : new OptionAttribute(title, tt, cat) {
 				Format = format
 			};
 		}
 
 		/// <summary>
-		/// The option category.
+		/// The option category. Ignored and replaced with the parent option's category if
+		/// this option is part of a custom grouped type.
 		/// </summary>
 		public string Category { get; }
 
 		/// <summary>
 		/// The format string to use when displaying this option value. Only applicable for
 		/// some types of options.
+		/// 
+		/// <b>Warning</b>: Attribute may have issues on nested classes that are used as custom
+		/// grouped options. To mitigate, try declaring the custom class in a non-nested
+		/// context (i.e. not declared inside another class).
 		/// </summary>
 		public string Format { get; set; }
 
 		/// <summary>
-		/// The option title.
+		/// The option title. Ignored for fields which are displayed as custom grouped types
+		/// types of other options.
 		/// </summary>
 		public string Title { get; }
 
 		/// <summary>
-		/// The option description tooltip.
+		/// The option description tooltip. Ignored for fields which are displayed as custom
+		/// grouped types of other options.
 		/// </summary>
 		public string Tooltip { get; }
 

@@ -46,8 +46,18 @@ namespace PeterHan.PLib.Options {
 			applied = true;
 		}
 
-		internal static void PostPatch(HarmonyInstance inst) {
-			Utils.TextMeshProPatcher.Patch(inst);
+		/// <summary>
+		/// Applied to Db to patch Text Mesh Pro issues. While it would be nice in PostPatch,
+		/// that would break compatibility with the unconditional patches in PLib &lt; 3.14.
+		/// </summary>
+		[HarmonyPatch(typeof(Db), "Initialize")]
+		public static class Db_Initialize_Patch {
+			/// <summary>
+			/// Applied after Initialize runs.
+			/// </summary>
+			internal static void Postfix() {
+				Utils.TextMeshProPatcher.Patch(null);
+			}
 		}
 
 		/// <summary>

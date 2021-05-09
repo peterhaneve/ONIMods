@@ -68,8 +68,11 @@ namespace PeterHan.PLib.Utils {
 		private static bool HasOurPatch(IEnumerable<Patch> patchList) {
 			bool found = false;
 			if (patchList != null) {
-				foreach (var patch in patchList)
-					if (patch.patch.DeclaringType.Name == nameof(TextMeshProPatcher)) {
+				foreach (var patch in patchList) {
+					string ownerName = patch.patch.DeclaringType.Name;
+					// Avoid stomping ourselves, or legacy PLibs < 3.14
+					if (ownerName == nameof(TextMeshProPatcher) || ownerName == "PLibPatches")
+					{
 #if DEBUG
 						PUtil.LogDebug("TextMeshProPatcher found existing patch from: {0}".F(
 							patch.owner));
@@ -77,6 +80,7 @@ namespace PeterHan.PLib.Utils {
 						found = true;
 						break;
 					}
+				}
 			}
 			return found;
 		}

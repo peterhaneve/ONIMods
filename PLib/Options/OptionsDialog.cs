@@ -76,6 +76,29 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
+		/// Creates an options object using the default constructor if possible.
+		/// </summary>
+		/// <param name="type">The type of the object to create.</param>
+		internal static object CreateOptions(Type type) {
+			object result = null;
+			try {
+				var cons = type.GetConstructor(Type.EmptyTypes);
+				if (cons != null)
+					result = cons.Invoke(null);
+			} catch (TargetInvocationException e) {
+				// Other mod's error
+				PUtil.LogExcWarn(e.GetBaseException());
+			} catch (AmbiguousMatchException e) {
+				// Other mod's error
+				PUtil.LogException(e);
+			} catch (MemberAccessException e) {
+				// Other mod's error
+				PUtil.LogException(e);
+			}
+			return result;
+		}
+
+		/// <summary>
 		/// Gets the text shown for a mod's version.
 		/// </summary>
 		/// <param name="optionsType">The type used for the mod settings.</param>
@@ -284,26 +307,6 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
-		/// Creates an options object using the default constructor if possible.
-		/// </summary>
-		private void CreateOptions() {
-			try {
-				var cons = optionsType.GetConstructor(Type.EmptyTypes);
-				if (cons != null)
-					options = cons.Invoke(null);
-			} catch (TargetInvocationException e) {
-				// Other mod's error
-				PUtil.LogExcWarn(e);
-			} catch (AmbiguousMatchException e) {
-				// Other mod's error
-				PUtil.LogException(e);
-			} catch (MemberAccessException e) {
-				// Other mod's error
-				PUtil.LogException(e);
-			}
-		}
-
-		/// <summary>
 		/// Fills in the actual mod option fields.
 		/// </summary>
 		/// <param name="dialog">The dialog to populate.</param>
@@ -317,7 +320,7 @@ namespace PeterHan.PLib.Options {
 				Spacing = OUTER_MARGIN, Direction = PanelDirection.Vertical, Alignment =
 				TextAnchor.UpperCenter, FlexSize = Vector2.right
 			};
-			var allOptions = (options == null) ? optionCategories : OptionsEntry.
+			var allOptions = (options == null) ? optionCategories : DynamicOptionsEntry.
 				AddCustomOptions(options, optionCategories);
 			// Display all categories
 			foreach (var catEntries in allOptions) {
@@ -377,7 +380,7 @@ namespace PeterHan.PLib.Options {
 					PUITuning.Colors.ButtonBlueStyle);
 				options = POptions.ReadSettings(path, optionsType);
 				if (options == null)
-					CreateOptions();
+					options = CreateOptions(optionsType);
 				if (infoAttr != null)
 					AddModInfoScreen(pDialog);
 				FillModOptions(pDialog);

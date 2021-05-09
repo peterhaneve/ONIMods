@@ -20,6 +20,7 @@ using Harmony;
 using KSerialization;
 using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Datafiles;
+using PeterHan.PLib.Detours;
 using PeterHan.PLib.Lighting;
 using PeterHan.PLib.Options;
 using System;
@@ -42,6 +43,9 @@ namespace PeterHan.PLib {
 		private static readonly MethodBase ACHIEVEMENT_SERIALIZE = typeof(Database.
 			ColonyAchievementRequirement).GetMethodSafe("Serialize", false, typeof(
 			BinaryWriter));
+
+		private static readonly IDetouredField<LightShapePreview, int> PREVIOUS_CELL =
+			PDetours.DetourFieldLazy<LightShapePreview, int>("previousCell");
 
 		/// <summary>
 		/// Applied to LightGridEmitter to unattribute lighting sources.
@@ -134,9 +138,6 @@ namespace PeterHan.PLib {
 
 		/// <summary>
 		/// Applied to LightGridManager to properly preview a new light source.
-		/// 
-		/// RadiationGridManager.CreatePreview has no references so no sense in patching that
-		/// yet.
 		/// </summary>
 		private static bool CreatePreview_Prefix(int origin_cell, float radius,
 				LightShape shape, int lux) {
@@ -149,8 +150,9 @@ namespace PeterHan.PLib {
 		/// </summary>
 		private static IEnumerable<CodeInstruction> LoadPreviewImage_Transpile(
 				IEnumerable<CodeInstruction> body) {
-			return PPatchTools.ReplaceMethodCall(body, typeof(Debug).GetMethodSafe(nameof(
-				Debug.LogFormat), true, typeof(string), typeof(object[])));
+			var target = typeof(Debug).GetMethodSafe(nameof(Debug.LogFormat), true,
+				typeof(string), typeof(object[]));
+			return (target == null) ? body : PPatchTools.ReplaceMethodCall(body, target);
 		}
 
 		/// <summary>
@@ -272,7 +274,7 @@ namespace PeterHan.PLib {
 			var preview = __instance.gameObject.GetComponentSafe<LightShapePreview>();
 			// Force regeneration on next Update()
 			if (preview != null)
-				Traverse.Create(preview).SetField("previousCell", -1);
+				PREVIOUS_CELL.Set(preview, -1);
 		}
 
 		/// <summary>
@@ -450,10 +452,17 @@ namespace PeterHan.PLib {
 				nameof(MainMenu_OnSpawn_Postfix)));
 
 			// PBuilding
-			instance.Patch(typeof(BuildingTemplates), nameof(BuildingTemplates.
-				CreateBuildingDef), null, PatchMethod(nameof(CreateBuildingDef_Postfix)));
-			instance.Patch(typeof(EquipmentTemplates), nameof(EquipmentTemplates.
-				CreateEquipmentDef), null, PatchMethod(nameof(CreateEquipmentDef_Postfix)));
+			try {
+				// Non essential, do not crash if fail
+				instance.Patch(typeof(BuildingTemplates), nameof(BuildingTemplates.
+					CreateBuildingDef), null, PatchMethod(nameof(CreateBuildingDef_Postfix)));
+				instance.Patch(typeof(EquipmentTemplates), nameof(EquipmentTemplates.
+					CreateEquipmentDef), null, PatchMethod(nameof(CreateEquipmentDef_Postfix)));
+			} catch (Exception e) {
+#if DEBUG
+				PUtil.LogExcWarn(e);
+#endif
+			}
 			if (PBuilding.CheckBuildings())
 				instance.Patch(typeof(GeneratedBuildings), nameof(GeneratedBuildings.
 					LoadGeneratedBuildings), PatchMethod(nameof(
@@ -494,7 +503,9 @@ namespace PeterHan.PLib {
 					instance.PatchTranspile(ugc, "LoadPreviewImage", PatchMethod(nameof(
 						LoadPreviewImage_Transpile)));
 				} catch (Exception e) {
+#if DEBUG
 					PUtil.LogExcWarn(e);
+#endif
 				}
 
 			// TMPro.TMP_InputField

@@ -23,15 +23,27 @@ using UnityEngine;
 
 namespace PeterHan.PLib.Options {
 	/// <summary>
-	/// An options entry which represents int and displays a text field and slider.
+	/// An options entry which represents int? and displays a text field and slider.
 	/// </summary>
-	public class IntOptionsEntry : SlidingBaseOptionsEntry {
+	public class NullableIntOptionsEntry : SlidingBaseOptionsEntry {
+		/// <summary>
+		/// The text that is rendered for the current value of the entry.
+		/// </summary>
+		protected virtual string FieldText {
+			get {
+				return value?.ToString(Format ?? "D") ?? string.Empty;
+			}
+		}
+
 		public override object Value {
 			get {
 				return value;
 			}
 			set {
-				if (value is int newValue) {
+				if (value == null) {
+					this.value = null;
+					Update();
+				} else if (value is int newValue) {
 					this.value = newValue;
 					Update();
 				}
@@ -46,31 +58,33 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// The value in the text field.
 		/// </summary>
-		private int value;
+		private int? value;
 
-		protected IntOptionsEntry(string title, string tooltip, string category = "",
+		protected NullableIntOptionsEntry(string title, string tooltip, string category = "",
 				LimitAttribute limits = null) : base(title, tooltip, category, limits) {
 			textField = null;
-			value = 0;
+			value = null;
 		}
 
-		internal IntOptionsEntry(OptionAttribute oa, PropertyInfo prop) : base(oa, prop) {
+		internal NullableIntOptionsEntry(OptionAttribute oa, PropertyInfo prop) :
+				base(oa, prop) {
 			textField = null;
-			value = 0;
+			value = null;
 		}
 
 		protected override PSliderSingle GetSlider() {
+			float minLimit = (float)limits.Minimum, maxLimit = (float)limits.Maximum;
 			return new PSliderSingle() {
 				OnValueChanged = OnSliderChanged, ToolTip = LookInStrings(ToolTip),
-				MinValue = (float)limits.Minimum, MaxValue = (float)limits.Maximum,
-				InitialValue = value, IntegersOnly = true
+				MinValue = minLimit, MaxValue = maxLimit, InitialValue = minLimit,
+				IntegersOnly = true
 			};
 		}
 
 		public override GameObject GetUIComponent() {
 			textField = new PTextField() {
 				OnTextChanged = OnTextChanged, ToolTip = LookInStrings(ToolTip),
-				Text = value.ToString(Format ?? "D"), MinWidth = 64, MaxLength = 10,
+				Text = FieldText, MinWidth = 64, MaxLength = 10,
 				Type = PTextField.FieldType.Integer
 			}.Build();
 			Update();
@@ -95,7 +109,11 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <param name="text">The new text.</param>
 		private void OnTextChanged(GameObject _, string text) {
-			if (int.TryParse(text, out int newValue)) {
+			if (string.IsNullOrWhiteSpace(text))
+				// Limits are assumed to allow null, because why not use non-nullable
+				// otherwise?
+				value = null;
+			else if (int.TryParse(text, out int newValue)) {
 				if (limits != null)
 					newValue = limits.ClampToRange(newValue);
 				// Record the valid value
@@ -110,9 +128,9 @@ namespace PeterHan.PLib.Options {
 		protected override void Update() {
 			var field = textField?.GetComponentInChildren<TMP_InputField>();
 			if (field != null)
-				field.text = value.ToString(Format ?? "D");
-			if (slider != null)
-				PSliderSingle.SetCurrentValue(slider, value);
+				field.text = FieldText;
+			if (slider != null && value != null)
+				PSliderSingle.SetCurrentValue(slider, (int)value);
 		}
 	}
 }
