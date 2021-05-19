@@ -452,5 +452,59 @@ namespace PeterHan.StockBugFix {
 					storage.SetDefaultStoredItemModifiers(Storage.StandardSealedStorage);
 			}
 		}
+
+		/// <summary>
+		/// Applied to SpaceHeater to fix Tepidizer target temperature area being too large.
+		/// </summary>
+		[HarmonyPatch(typeof(SpaceHeater), "MonitorHeating")]
+		public static class SpaceHeater_MonitorHeating_Patch {
+			/// <summary>
+			/// Transpiles MonitorHeating to replace the GetNonSolidCells call.
+			/// </summary>
+			internal static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> method) {
+				var instructionList = new List<CodeInstruction>(method);
+				MethodInfo targetMethod = typeof(GameUtil).GetMethodSafe("GetNonSolidCells",
+					true, typeof(int), typeof(int), typeof(List<int>));
+				int targetIndex = -1;
+				for (int i = 0; i < instructionList.Count; i++) {
+					CodeInstruction instruction = instructionList[i];
+					if (instruction.opcode == OpCodes.Call && instruction.operand != null &&
+						instruction.operand.Equals(targetMethod)) {
+						targetIndex = i;
+						break;
+					}
+				}
+				if (targetIndex == -1) {
+					PUtil.LogWarning("Target method GetNonSolidCells not found.");
+					return method;
+				}
+				instructionList[targetIndex].operand = typeof(SpaceHeater_MonitorHeating_Patch)
+					.GetMethodSafe("GetValidBuildingCells", true, PPatchTools.AnyArguments);
+				instructionList.Insert(targetIndex, new CodeInstruction(OpCodes.Ldarg_0));
+#if DEBUG
+				PUtil.LogDebug("Patched SpaceHeater.MonitorHeating");
+#endif
+				return instructionList;
+			}
+
+			/// <summary>
+			/// Correctly fill cells with the building placement cells according to the same
+			/// conditions as GetNonSolidCells.
+			/// </summary>
+			/// <param name="cell">Unused, kept for compatibility.</param>
+			/// <param name="radius">Unused, kept for compatibility.</param>
+			/// <param name="cells">List of building cells matching conditions.</param>
+			/// <param name="component">Caller of the method.</param>
+			public static void GetValidBuildingCells(int cell, int radius, List<int> cells,
+				Component component) {
+				Building building = component.GetComponent<Building>();
+				foreach (int targetCell in building.PlacementCells) {
+					if (Grid.IsValidCell(targetCell) && !Grid.Solid[targetCell] &&
+						!Grid.DupePassable[targetCell]) {
+						cells.Add(targetCell);
+					}
+				}
+			}
+		}
 	}
 }
