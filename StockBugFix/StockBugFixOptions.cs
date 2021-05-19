@@ -37,6 +37,14 @@ namespace PeterHan.StockBugFix {
 		public bool AllowNeutroniumDig { get; set; }
 
 		/// <summary>
+		/// If true, tepidizer pulsing will be allowed to heat material past the intended
+		/// temperature. Some builds rely on this.
+		/// </summary>
+		[Option("Allow Tepidizer Pulsing", "Allow the Liquid Tepidizer to be pulsed rapidly to increase its temperature beyond its usual limits.")]
+		[JsonProperty]
+		public bool AllowTepidizerPulsing { get; set; }
+
+		/// <summary>
 		/// If true, overheat temperature patches will be applied.
 		/// </summary>
 		[Option("Fix Overheat Temperatures", "Adds missing overheat temperatures to some buildings, and\r\nremoves it from other buildings where it does not make sense.")]
@@ -45,12 +53,13 @@ namespace PeterHan.StockBugFix {
 
 		public StockBugFixOptions() {
 			AllowNeutroniumDig = false;
+			AllowTepidizerPulsing = false;
 			FixOverheat = true;
 		}
 
 		public override string ToString() {
-			return "StockBugFixOptions[allowNeutronium={1},fixOverheat={0}]".F(FixOverheat,
-				AllowNeutroniumDig);
+			return "StockBugFixOptions[allowNeutronium={1},allowTepidizer={2},fixOverheat={0}]".F(
+				FixOverheat, AllowNeutroniumDig, AllowTepidizerPulsing);
 		}
 	}
 }

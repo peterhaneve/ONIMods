@@ -25,6 +25,12 @@ using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
 
+#if false
+using MobSettings = ProcGen.MobSettings;
+using SettingsCache = ProcGen.SettingsCache;
+using YamlError = Klei.YamlIO.Error;
+#endif
+
 namespace PeterHan.StockBugFix {
 	/// <summary>
 	/// Patches which will be applied via annotations for Stock Bug Fix.
@@ -34,6 +40,36 @@ namespace PeterHan.StockBugFix {
 		/// Base divisor is 10000, so 6000/10000 = 0.6 priority.
 		/// </summary>
 		public const int JOY_PRIORITY_MOD = 6000;
+
+#if false
+		/// <summary>
+		/// Adds the missing entries to mobs.yaml for buried Forest objects.
+		/// </summary>
+		/// <param name="errors">The location where errors in YAML parsing will be stored.</param>
+		private static void AddForestSpawnables(List<YamlError> errors) {
+			// Read in forestMobs.yaml from the mod dir
+			string path = PLib.Options.POptions.GetModDir(Assembly.GetExecutingAssembly());
+			var mobs = SettingsCache.mobs;
+			if (mobs != null)
+				try {
+					var text = File.ReadAllText(Path.Combine(path, "forestMobs.yaml"));
+					// TODO Vanilla/DLC code
+					// Return value only (which is ignored!) is different
+					var method = typeof(MobSettings).GetMethodSafe(nameof(MobSettings.Merge),
+						false, typeof(MobSettings));
+					if (!string.IsNullOrEmpty(text) && method != null) {
+						var parsed = YamlIO.Parse<MobSettings>(text, default, (error, _) =>
+							errors.Add(error));
+						if (parsed != null)
+							method.Invoke(mobs, new object[] { parsed });
+					} else
+						PUtil.LogWarning("Unable to load forest spawnables!");
+				} catch (IOException e) {
+					PUtil.LogWarning("Unable to load forest spawnables:");
+					PUtil.LogExcWarn(e);
+				}
+		}
+#endif
 
 		[PLibMethod(RunAt.AfterModsLoad)]
 		internal static void FixDiggable(HarmonyInstance instance) {
@@ -93,6 +129,7 @@ namespace PeterHan.StockBugFix {
 			const string BUG_KEY = "Bugs.ModUpdateRace";
 			PUtil.InitLibrary();
 			PUtil.RegisterPatchClass(typeof(StockBugsPatches));
+			PUtil.RegisterPatchClass(typeof(SweepFixPatches));
 			if (steamMod != null && !PSharedData.GetData<bool>(BUG_KEY)) {
 #if DEBUG
 				PUtil.LogDebug("Transpiling Steam.UpdateMods()");
@@ -232,6 +269,7 @@ namespace PeterHan.StockBugFix {
 		public static class EntombedItemManager_AddMassToWorlIfPossible_Patch {
 			/// <summary>
 			/// Transpiles AddMassToWorlIfPossible to flip the flag that Klei forgot about.
+			/// Method name misspelling is intentional as it matches the typo in code.
 			/// </summary>
 			internal static IEnumerable<CodeInstruction> Transpiler(
 					IEnumerable<CodeInstruction> method) {
@@ -459,15 +497,24 @@ namespace PeterHan.StockBugFix {
 		[HarmonyPatch(typeof(SpaceHeater), "MonitorHeating")]
 		public static class SpaceHeater_MonitorHeating_Patch {
 			/// <summary>
-			/// Transpiles MonitorHeating to replace the GetNonSolidCells call.
+			/// Allow this patch to be turned off in the config.
 			/// </summary>
-			internal static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> method) {
+			internal static bool Prepare() {
+				return !StockBugFixOptions.Instance.AllowTepidizerPulsing;
+			}
+
+			/// <summary>
+			/// Transpiles MonitorHeating to replace the GetNonSolidCells call with one that
+			/// only uses the appropriate building cells.
+			/// </summary>
+			internal static IEnumerable<CodeInstruction> Transpiler(
+					IEnumerable<CodeInstruction> method) {
 				var instructionList = new List<CodeInstruction>(method);
-				MethodInfo targetMethod = typeof(GameUtil).GetMethodSafe("GetNonSolidCells",
+				var targetMethod = typeof(GameUtil).GetMethodSafe("GetNonSolidCells",
 					true, typeof(int), typeof(int), typeof(List<int>));
 				int targetIndex = -1;
 				for (int i = 0; i < instructionList.Count; i++) {
-					CodeInstruction instruction = instructionList[i];
+					var instruction = instructionList[i];
 					if (instruction.opcode == OpCodes.Call && instruction.operand != null &&
 						instruction.operand.Equals(targetMethod)) {
 						targetIndex = i;
@@ -478,8 +525,8 @@ namespace PeterHan.StockBugFix {
 					PUtil.LogWarning("Target method GetNonSolidCells not found.");
 					return method;
 				}
-				instructionList[targetIndex].operand = typeof(SpaceHeater_MonitorHeating_Patch)
-					.GetMethodSafe("GetValidBuildingCells", true, PPatchTools.AnyArguments);
+				instructionList[targetIndex].operand = typeof(SpaceHeater_MonitorHeating_Patch).
+					GetMethodSafe("GetValidBuildingCells", true, PPatchTools.AnyArguments);
 				instructionList.Insert(targetIndex, new CodeInstruction(OpCodes.Ldarg_0));
 #if DEBUG
 				PUtil.LogDebug("Patched SpaceHeater.MonitorHeating");
@@ -495,15 +542,46 @@ namespace PeterHan.StockBugFix {
 			/// <param name="radius">Unused, kept for compatibility.</param>
 			/// <param name="cells">List of building cells matching conditions.</param>
 			/// <param name="component">Caller of the method.</param>
-			public static void GetValidBuildingCells(int cell, int radius, List<int> cells,
-				Component component) {
-				Building building = component.GetComponent<Building>();
+			internal static void GetValidBuildingCells(int cell, int radius, List<int> cells,
+					Component component) {
+				var building = component.GetComponent<Building>();
 				foreach (int targetCell in building.PlacementCells) {
 					if (Grid.IsValidCell(targetCell) && !Grid.Solid[targetCell] &&
-						!Grid.DupePassable[targetCell]) {
+							!Grid.DupePassable[targetCell])
 						cells.Add(targetCell);
-					}
 				}
+			}
+		}
+
+		/// <summary>
+		/// Applied to SpaceHeater.States to fix the tepidizer pulsing and reload bug.
+		/// </summary>
+		[HarmonyPatch(typeof(SpaceHeater.States), nameof(SpaceHeater.States.InitializeStates))]
+		public static class SpaceHeater_States_InitializeStates_Patch {
+			/// <summary>
+			/// Allow this patch to be turned off in the config.
+			/// </summary>
+			internal static bool Prepare() {
+				return !StockBugFixOptions.Instance.AllowTepidizerPulsing;
+			}
+
+			/// <summary>
+			/// Applied after InitializeStates runs.
+			/// </summary>
+			internal static void Postfix(SpaceHeater.States __instance) {
+				var sm = __instance;
+				var onUpdate = sm.online.updateActions;
+				if (onUpdate.Count > 0) {
+					foreach (var action in onUpdate) {
+						var updater = action.updater as UpdateBucketWithUpdater<SpaceHeater.
+							StatesInstance>.IUpdater;
+						if (updater != null)
+							// dt is not used by the handler!
+							sm.online.Enter("CheckOverheatOnStart", (smi) => updater.Update(
+								smi, 0.0f));
+					}
+				} else
+					PUtil.LogWarning("No SpaceHeater update handler found");
 			}
 		}
 	}
