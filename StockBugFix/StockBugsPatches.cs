@@ -21,7 +21,6 @@ using Harmony;
 using PeterHan.PLib;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
@@ -463,7 +462,7 @@ namespace PeterHan.StockBugFix {
 			/// Transpiles MonitorHeating to replace the GetNonSolidCells call.
 			/// </summary>
 			internal static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> method) {
-				List<CodeInstruction> instructionList = method.ToList();
+				var instructionList = new List<CodeInstruction>(method);
 				MethodInfo targetMethod = typeof(GameUtil).GetMethodSafe("GetNonSolidCells",
 					true, typeof(int), typeof(int), typeof(List<int>));
 				int targetIndex = -1;
@@ -476,9 +475,7 @@ namespace PeterHan.StockBugFix {
 					}
 				}
 				if (targetIndex == -1) {
-#if DEBUG
-					PUtil.LogError("Target method GetNonSolidCells not found.");
-#endif
+					PUtil.LogWarning("Target method GetNonSolidCells not found.");
 					return method;
 				}
 				instructionList[targetIndex].operand = typeof(SpaceHeater_MonitorHeating_Patch)
@@ -487,7 +484,7 @@ namespace PeterHan.StockBugFix {
 #if DEBUG
 				PUtil.LogDebug("Patched SpaceHeater.MonitorHeating");
 #endif
-				return instructionList.AsEnumerable();
+				return instructionList;
 			}
 
 			/// <summary>
