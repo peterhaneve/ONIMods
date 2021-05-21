@@ -76,6 +76,7 @@ namespace PeterHan.ToastControl {
 			"SandboxSampleTool:OnLeftClickDown",
 			"SuperProductive+<>c:<InitializeStates>b__3_0",
 			"Toilet:Flush",
+			"ToiletWorkableUse:OnCompleteWork",
 			"UtilityBuildTool:ApplyPathToConduitSystem"
 		};
 
@@ -83,7 +84,6 @@ namespace PeterHan.ToastControl {
 		/// Methods to patch for the long form of PopFXManager.SpawnFX.
 		/// </summary>
 		private static ICollection<string> TargetsShort => new List<string>() {
-			"Beefinery+States:EatOreFromStorage",
 			"BuildingHP:DoDamagePopFX",
 			"Constructable:OnCompleteWork",
 			"CreatureCalorieMonitor+Stomach:Poop",

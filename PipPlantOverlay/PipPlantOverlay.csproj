@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net40</TargetFramework>
+    <AssemblyTitle>Pip Plant Overlay</AssemblyTitle>
+    <FileVersion>1.0.0.0</FileVersion>
+    <RootNamespace>PeterHan.PipPlantOverlay</RootNamespace>
+    <Description>Adds a filter to the Farming overlay to show where Pips can plant seeds.</Description>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+  </PropertyGroup>
+</Project>

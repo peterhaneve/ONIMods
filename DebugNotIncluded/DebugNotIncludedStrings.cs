@@ -79,15 +79,13 @@ namespace PeterHan.DebugNotIncluded {
 				public static LocString LABEL_PLIB_PACKED = " <b>packed</b>";
 				public static LocString LABEL_ASSEMBLY_NOCODE = "<style=logic_off><b>No code loaded</b></style>";
 
-				public static LocString LABEL_DLC_ENABLE = "<b>Enabled for DLC \"{0}\"</b>: {1}\n";
+				public static LocString LABEL_DLC_ENABLE = "<b>Enabled for DLCs</b>: {0}\n";
 				public static LocString LABEL_CONTENT = "<b>Enabled content</b>: {0}\n";
 				public static LocString LABEL_PATCHES = "<b>Patches registered by ONI</b>: {0:D}\n";
 				public static LocString LABEL_ARCHIVED_VERSIONS = "<b>Versions</b>:\n";
 				public static LocString LABEL_ARCHIVED_VERSION_ACTIVE = "\u2022 <style=\"logic_on\"><b>{0}</b>: Supports {1} since version {2:D}</style>\n";
 				public static LocString LABEL_ARCHIVED_VERSION_DEFAULT = "Base";
 				public static LocString LABEL_ARCHIVED_VERSION_INACTIVE = "\u2022 <b>{0}</b>: Supports {1} since version {2:D}\n";
-				public static LocString LABEL_ENABLE_NO = "No";
-				public static LocString LABEL_ENABLE_YES = "Yes";
 				public static LocString LABEL_DLC_ALL = "All";
 				public static LocString LABEL_DLC_VANILLA = "Vanilla";
 				public static LocString LABEL_DLC_EXPANSION1 = "Spaced Out";

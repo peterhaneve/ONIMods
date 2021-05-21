@@ -106,6 +106,11 @@ namespace PeterHan.ToastControl {
 			"STRINGS.UI.FRONTEND.TOASTCONTROL.BUILDINGS")]
 		public bool InvalidConnection { get; set; }
 
+		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.RADS_REMOVED",
+			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.RADS_REMOVED",
+			"STRINGS.UI.FRONTEND.TOASTCONTROL.BUILDINGS")]
+		public bool RadiationRemoved { get; set; }
+
 		[Option("STRINGS.MISC.NOTIFICATIONS.LEVELUP.NAME",
 			"STRINGS.MISC.NOTIFICATIONS.LEVELUP.TOOLTIP",
 			"STRINGS.UI.FRONTEND.TOASTCONTROL.DUPLICANTS")]
@@ -288,6 +293,7 @@ namespace PeterHan.ToastControl {
 			MopTooMuch = true;
 			PickedUp = false;
 			PickedUpMachine = false;
+			RadiationRemoved = true;
 			ResearchGained = true;
 			SkillPointEarned = true;
 		}

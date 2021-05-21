@@ -1,6 +1,6 @@
 # Peter Han&#39;s Mods for Oxygen Not Included
 
-Last tested on game version: **EX1-461084**
+Last tested on game version: **EX1-463874**
 
 Steam Workshop: https://steamcommunity.com/profiles/76561198025154321/myworkshopfiles/?appid=457140
 
@@ -39,6 +39,7 @@ Mods should remain in their own subfolder.
 | [Food Supply Tooltips](https://steamcommunity.com/sharedfiles/filedetails/?id=1914501780) | Adds tooltips to food sources indicating how much food they can produce per cycle | Yes | Yes |
 | [Mod Updater](https://steamcommunity.com/sharedfiles/filedetails/?id=2018291283) | Updates mods that Steam leaves at old versions | Yes | Yes |
 | [Not Enough Tags](https://steamcommunity.com/sharedfiles/filedetails/?id=2230218796) | Fixes a stock game bug where Tags can be exhausted in large bases | Yes | No |
+| [Pip Plant Overlay](https://steamcommunity.com/sharedfiles/filedetails/?id=2493100777) | Adds an overlay showing where Pips can plant seeds | Yes | Yes |
 | [Popup Control](https://steamcommunity.com/sharedfiles/filedetails/?id=2032187035) | Allows in-game text info popups to be hidden or shown by type | Yes | Yes |
 | [Reloading In Motion](https://steamcommunity.com/sharedfiles/filedetails/?id=2182976959) | Saves the timings of Doors and Plants across reloads | Yes | No |
 | [Research Queue](https://steamcommunity.com/sharedfiles/filedetails/?id=1893887916) | Allows queueing of multiple technologies to research | Yes | Yes |

@@ -131,18 +131,6 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
-		/// Adds a tooltip if a mod is enabled on a particular DLC.
-		/// </summary>
-		/// <param name="tooltip">The location where the tooltip will be stored.</param>
-		/// <param name="modInfo">The mod to query.</param>
-		/// <param name="dlcID">The DLC's ID from DlcManager.</param>
-		private static void AppendIsEnabled(StringBuilder tooltip, Mod modInfo, string dlcID) {
-			tooltip.AppendFormat(UI.MODSSCREEN.LABEL_DLC_ENABLE, UI.MODSSCREEN.
-				GetLocalizedName(dlcID), modInfo.IsEnabledForDlc(dlcID) ? UI.MODSSCREEN.
-				LABEL_ENABLE_YES : UI.MODSSCREEN.LABEL_ENABLE_NO);
-		}
-
-		/// <summary>
 		/// Blames the mod which failed using a popup message.
 		/// </summary>
 		/// <param name="parent">The parent of the dialog.</param>
@@ -382,11 +370,15 @@ namespace PeterHan.DebugNotIncluded {
 			internal string GetDescription() {
 				var tooltip = new StringBuilder(512);
 				if (modInfo != null) {
+					var isEnabled = ListPool<string, ModActionDelegates>.Allocate();
 					var thisMod = DebugNotIncludedPatches.ThisMod;
 					var lc = modInfo.loaded_content;
 					tooltip.AppendFormat(UI.MODSSCREEN.LABEL_DESCRIPTION, modInfo.label.id);
-					foreach (var dlcId in DlcManager.RELEASE_ORDER)
-						AppendIsEnabled(tooltip, modInfo, dlcId);
+					// Which DLCs use it?
+					foreach (var dlcID in DlcManager.RELEASE_ORDER)
+						if (modInfo.IsEnabledForDlc(dlcID))
+							isEnabled.Add(UI.MODSSCREEN.GetLocalizedName(dlcID));
+					tooltip.AppendFormat(UI.MODSSCREEN.LABEL_DLC_ENABLE, isEnabled.Join(", "));
 					tooltip.AppendFormat(UI.MODSSCREEN.LABEL_CONTENT, (lc == 0) ? "-" : lc.
 						ToString());
 					// About how heavy is the mod?
@@ -399,6 +391,7 @@ namespace PeterHan.DebugNotIncluded {
 						ListAssemblies(tooltip, modInfo);
 					else
 						tooltip.Append(UI.MODSSCREEN.LABEL_THISMOD);
+					isEnabled.Recycle();
 				}
 				return tooltip.ToString();
 			}
