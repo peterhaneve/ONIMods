@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using PPO = PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING;
+using ReceptacleDirection = SingleEntityReceptacle.ReceptacleDirection;
 
 namespace PeterHan.PipPlantOverlay {
 	/// <summary>
@@ -239,7 +240,8 @@ namespace PeterHan.PipPlantOverlay {
 				// It goes from [x - radius, y - radius] to (x + radius, y + radius)
 				if (Grid.IsValidCell(mouseCell) && cells[mouseCell] != PipPlantFailedReasons.
 						NoPlantablePlot) {
-					int radius = PipPlantOverlayTests.PlantRadius;
+					int radius = PipPlantOverlayTests.PlantRadius, below = radius, above =
+						radius;
 					var area = plant.GetComponent<OccupyArea>();
 					Grid.CellToXY(mouseCell, out int mouseX, out int mouseY);
 					Grid.CellToXY(plantCell, out int x, out int y);
@@ -257,9 +259,24 @@ namespace PeterHan.PipPlantOverlay {
 						startX--;
 						startY--;
 					}
+					// Pips check the foundation tile, not the plant tile, so find out if top
+					// or bottom is valid and adjust the highlight radius
+					bool solidBelow = PipPlantOverlayTests.IsAcceptableCell(Grid.
+						CellBelow(mouseCell), ReceptacleDirection.Top);
+					if (PipPlantOverlayTests.IsAcceptableCell(Grid.CellAbove(mouseCell),
+							ReceptacleDirection.Bottom)) {
+						above++;
+						if (solidBelow)
+							below++;
+						else
+							below--;
+					} else if (solidBelow) {
+						above--;
+						below++;
+					}
 					// Symmetrical radius adds another tile on the right and top to match
-					hl = mouseX > startX - radius && mouseX <= x + radius && mouseY > startY -
-						radius && mouseY <= y + radius;
+					hl = mouseX > startX - radius && mouseX <= x + radius && mouseY >
+						startY - above && mouseY <= y + below;
 				}
 			}
 			return hl;

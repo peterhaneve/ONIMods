@@ -98,7 +98,7 @@ namespace PeterHan.PipPlantOverlay {
 					// Check below
 					if (IsTooHard(below))
 						result = PipPlantFailedReasons.Hardness;
-					else if (COUNT_PLANTS.Invoke(cell, PlantRadius) > PlantCount)
+					else if (COUNT_PLANTS.Invoke(below, PlantRadius) > PlantCount)
 						result = PipPlantFailedReasons.PlantCount;
 					else if (IsUnderPressure(cell))
 						result = PipPlantFailedReasons.Pressure;
@@ -111,7 +111,7 @@ namespace PeterHan.PipPlantOverlay {
 					// Check above
 					if (IsTooHard(above))
 						result = PipPlantFailedReasons.Hardness;
-					else if (COUNT_PLANTS.Invoke(cell, PlantRadius) > PlantCount)
+					else if (COUNT_PLANTS.Invoke(above, PlantRadius) > PlantCount)
 						result = PipPlantFailedReasons.PlantCount;
 					else if (IsUnderPressure(cell))
 						result = PipPlantFailedReasons.Pressure;
@@ -122,6 +122,17 @@ namespace PeterHan.PipPlantOverlay {
 				}
 			}
 			return result;
+		}
+
+		/// <summary>
+		/// Checks to see if a cell is a natural tile of sufficient hardness, or a valid
+		/// farm plot.
+		/// </summary>
+		/// <param name="cell">The cell to check.</param>
+		/// <param name="direction">The direction which a farm plot must be facing to be valid.</param>
+		/// <returns>true if it is a valid planting location, or false otherwise.</returns>
+		internal static bool IsAcceptableCell(int cell, ReceptacleDirection direction) {
+			return IsPlantable(cell, direction) && !IsTooHard(cell);
 		}
 
 		/// <summary>
