@@ -71,6 +71,25 @@ namespace PeterHan.StockBugFix {
 		}
 #endif
 
+		/// <summary>
+		/// Sets the default chore type of food storage depending on the user options. Also
+		/// fixes (DLC) the trait exclusions.
+		/// </summary>
+		[PLibMethod(RunAt.AfterDbInit)]
+		internal static void AfterDbInit() {
+			var db = Db.Get();
+			var storeType = db.ChoreGroups?.Storage;
+			var storeFood = db.ChoreTypes?.FoodFetch;
+			if (StockBugFixOptions.Instance.StoreFoodChoreType == StoreFoodCategory.Store &&
+					storeType != null && storeFood != null) {
+				// Default is "supply"
+				db.ChoreGroups.Hauling?.choreTypes?.Remove(storeFood);
+				storeType.choreTypes.Add(storeFood);
+				storeFood.groups[0] = storeType;
+			}
+			TraitsExclusionPatches.FixTraits();
+		}
+
 		[PLibMethod(RunAt.AfterModsLoad)]
 		internal static void FixDiggable(HarmonyInstance instance) {
 			const string BUG_KEY = "Bugs.DisableNeutroniumDig";
@@ -129,7 +148,9 @@ namespace PeterHan.StockBugFix {
 			const string BUG_KEY = "Bugs.ModUpdateRace";
 			PUtil.InitLibrary();
 			PUtil.RegisterPatchClass(typeof(StockBugsPatches));
+#if false
 			PUtil.RegisterPatchClass(typeof(SweepFixPatches));
+#endif
 			if (steamMod != null && !PSharedData.GetData<bool>(BUG_KEY)) {
 #if DEBUG
 				PUtil.LogDebug("Transpiling Steam.UpdateMods()");
