@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Reflection.Emit;
 using TMPro;
 using UnityEngine;
 using IEnumerable = System.Collections.IEnumerable;
@@ -146,16 +147,6 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
-		/// Applied to modify SteamUGCService to silence "Preview image load failed".
-		/// </summary>
-		private static IEnumerable<CodeInstruction> LoadPreviewImage_Transpile(
-				IEnumerable<CodeInstruction> body) {
-			var target = typeof(Debug).GetMethodSafe(nameof(Debug.LogFormat), true,
-				typeof(string), typeof(object[]));
-			return (target == null) ? body : PPatchTools.ReplaceMethodCall(body, target);
-		}
-
-		/// <summary>
 		/// Applied to BuildingTemplates to properly debug missing building anims.
 		/// </summary>
 		private static void CreateBuildingDef_Postfix(BuildingDef __result, string anim,
@@ -245,6 +236,18 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Applied to LightBuffer to allow custom ray shapes to be used.
+		/// </summary>
+		private static IEnumerable<CodeInstruction> LightBuffer_LateUpdate_Transpile(
+				IEnumerable<CodeInstruction> body) {
+			var target = typeof(Light2D).GetPropertySafe<LightShape>(nameof(Light2D.shape),
+				false)?.GetGetMethod();
+			return (target == null) ? body : PPatchTools.ReplaceMethodCall(body, target,
+				typeof(PLightManager).GetMethodSafe(nameof(PLightManager.LightShapeToRayShape),
+				true, typeof(Light2D)));
+		}
+
+		/// <summary>
 		/// Applied to LightShapePreview to properly attribute lighting sources.
 		/// </summary>
 		private static void LightShapePreview_Update_Prefix(LightShapePreview __instance) {
@@ -258,6 +261,16 @@ namespace PeterHan.PLib {
 		/// </summary>
 		private static void LoadGeneratedBuildings_Prefix() {
 			PBuilding.AddAllStrings();
+		}
+
+		/// <summary>
+		/// Applied to SteamUGCService to silence "Preview image load failed".
+		/// </summary>
+		private static IEnumerable<CodeInstruction> LoadPreviewImage_Transpile(
+				IEnumerable<CodeInstruction> body) {
+			var target = typeof(Debug).GetMethodSafe(nameof(Debug.LogFormat), true,
+				typeof(string), typeof(object[]));
+			return (target == null) ? body : PPatchTools.ReplaceMethodCall(body, target);
 		}
 
 		/// <summary>
@@ -423,6 +436,15 @@ namespace PeterHan.PLib {
 					PatchMethod(nameof(AddToScenePartitioner_Prefix)), null);
 				instance.Patch(typeof(Light2D), nameof(Light2D.RefreshShapeAndPosition), null,
 					PatchMethod(nameof(RefreshShapeAndPosition_Postfix)));
+
+				// LightBuffer
+				try {
+					instance.PatchTranspile(typeof(LightBuffer), "LateUpdate", PatchMethod(
+						nameof(LightBuffer_LateUpdate_Transpile)));
+				} catch (Exception e) {
+					// Only visual, log as warning
+					PUtil.LogExcWarn(e);
+				}
 
 				// LightGridEmitter
 				instance.Patch(typeof(LightGridEmitter), nameof(LightGridEmitter.AddToGrid),

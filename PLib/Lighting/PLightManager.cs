@@ -136,6 +136,8 @@ namespace PeterHan.PLib.Lighting {
 					false);
 				var propName = otherType.GetPropertySafe<string>(nameof(PLightShape.
 					Identifier), false);
+				var propRayMode = otherType.GetPropertySafe<LightShape>(nameof(PLightShape.
+					RayMode), false);
 				var fillLight = otherType.CreateDelegate<FillLightFunc>(nameof(PLightShape.
 					FillLight), otherShape, typeof(GameObject), typeof(int), typeof(int),
 					typeof(BrightnessDict));
@@ -144,9 +146,12 @@ namespace PeterHan.PLib.Lighting {
 					if (fillLight == null)
 						PUtil.LogWarning("PLightSource handler has invalid method signature!");
 					else if (propID.GetValue(otherShape, null) is int id && id > 0) {
+						// Attempt to populate the ray mode used
+						if (!(propRayMode?.GetValue(otherShape, null) is LightShape rayMode))
+							rayMode = (LightShape)(-1);
 						shape = new PLightShape(id, (propName.GetValue(otherShape, null) as
 							string) ?? ("LightShape" + id), new CrossModLightWrapper(
-							fillLight).CastLight);
+							fillLight).CastLight, rayMode);
 					} else
 						// Some invalid object got in there somehow
 						PUtil.LogWarning("Found light shape {0} with bad ID!".F(otherShape));
@@ -156,6 +161,18 @@ namespace PeterHan.PLib.Lighting {
 					PUtil.LogExcWarn(e.GetBaseException());
 				}
 			}
+			return shape;
+		}
+
+		/// <summary>
+		/// Gets the raycasting shape to use for the given light.
+		/// </summary>
+		/// <param name="light">The light which is being drawn.</param>
+		/// <returns>The shape to use for its rays.</returns>
+		internal static LightShape LightShapeToRayShape(Light2D light) {
+			var shape = light.shape;
+			if (shape != LightShape.Cone && shape != LightShape.Circle)
+				shape = Instance.GetRayShape(shape);
 			return shape;
 		}
 
@@ -210,10 +227,9 @@ namespace PeterHan.PLib.Lighting {
 		internal bool GetBrightness(LightGridEmitter source, int location,
 				LightGridEmitter.State state, out int result) {
 			bool valid;
-			CacheEntry cacheEntry;
 			var shape = state.shape;
 			if (shape != LightShape.Cone && shape != LightShape.Circle) {
-				valid = brightCache.TryGetValue(source, out cacheEntry);
+				valid = brightCache.TryGetValue(source, out CacheEntry cacheEntry);
 				if (valid) {
 					valid = cacheEntry.Intensity.TryGetValue(location, out float ratio);
 					if (valid)
@@ -241,6 +257,23 @@ namespace PeterHan.PLib.Lighting {
 				valid = false;
 			}
 			return valid;
+		}
+
+		/// <summary>
+		/// Checks to see if a light has specified one of the built-in ray options to cast
+		/// the little yellow rays around it.
+		/// </summary>
+		/// <param name="shape">The light shape to check.</param>
+		/// <returns>The light shape to use for ray casting, or the original shape if it is
+		/// a stock shape or a light shape not known to PLib Lighting.</returns>
+		internal LightShape GetRayShape(LightShape shape) {
+			int index = shape - LightShape.Cone - 1;
+			if (index >= 0 && index < shapes.Count) {
+				var newShape = shapes[index].RayMode;
+				if (newShape >= LightShape.Circle)
+					shape = newShape;
+			}
+			return shape;
 		}
 
 		/// <summary>
