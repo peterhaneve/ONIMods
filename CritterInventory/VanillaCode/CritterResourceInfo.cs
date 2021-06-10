@@ -16,23 +16,19 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#if SPACEDOUT
+using UnityEngine;
+
+#if VANILLA
 namespace PeterHan.CritterInventory {
 	/// <summary>
-	/// A resource tracker which tracks critter counts for all critters of a specific type.
+	/// A marker class used to annotate additional information regarding the critter
+	/// information to be displayed by a ResourceEntry or ResourceCategoryHeader object.
 	/// </summary>
-	public sealed class AllCritterTracker : BaseCritterTracker {
-		public AllCritterTracker(int worldID, CritterType type) : base(worldID, type) { }
-
-		public override void UpdateData() {
-			var world = ClusterManager.Instance.GetWorld(WorldID);
-			if (world != null) {
-				var ci = world.GetComponent<CritterInventory>();
-				if (ci != null)
-					// Tracker excludes reserved
-					AddPoint(ci.PopulateTotals(Type, null).Available);
-			}
-		}
+	public sealed class CritterResourceInfo : MonoBehaviour {
+		/// <summary>
+		/// The critter type this ResourceEntry or ResourceCategoryHeader will show.
+		/// </summary>
+		public CritterType CritterType { get; set; }
 	}
 }
 #endif

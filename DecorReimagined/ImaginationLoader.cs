@@ -74,8 +74,12 @@ namespace ReimaginationTeam.Reimagination {
 			if (loader == null)
 				PUtil.LogWarning("IsFinalDestination() called before save loaded!");
 #endif
-			//return loader?.worldGen?.Settings?.world?.name == FINALDEST_KEY;
+			// TODO Vanilla/DLC code
+#if VANILLA
+			return loader?.worldGen?.Settings?.world?.name == FINALDEST_KEY;
+#else
 			return loader?.ClusterLayout?.Id == FINALDEST_KEY;
+#endif
 		}
 
 		/// <summary>

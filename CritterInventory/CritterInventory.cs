@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#if SPACEDOUT
 using KSerialization;
 using PeterHan.PLib.Detours;
 using System;
@@ -180,3 +181,4 @@ namespace PeterHan.CritterInventory {
 		}
 	}
 }
+#endif

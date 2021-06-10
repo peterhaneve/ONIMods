@@ -46,8 +46,13 @@ namespace PeterHan.NotEnoughTags {
 
 		/// <summary>
 		/// The number of indexes which can be efficiently still used by the base game.
+		/// TODO Vanilla/DLC code
 		/// </summary>
+#if VANILLA
+		public const int VANILLA_LIMIT = 352;
+#else
 		public const int VANILLA_LIMIT = 480;
+#endif
 
 		/// <summary>
 		/// Maps indexes to their tag.

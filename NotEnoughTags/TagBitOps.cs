@@ -33,9 +33,15 @@ namespace PeterHan.NotEnoughTags {
 		/// </summary>
 		private const ulong UPPER_MASK = 0xFFFFFFFF00000000UL;
 
-		// Allows accessing the fifth bit of TagBits without an instance.
+		// Allows accessing the fifth/seventh bit of TagBits without an instance.
+		// TODO Vanilla/DLC code
+#if VANILLA
+		internal static readonly IDetouredField<object, ulong> FIFTH_BIT = typeof(TagBits).
+			DetourStructField<ulong>("bits5");
+#else
 		internal static readonly IDetouredField<object, ulong> FIFTH_BIT = typeof(TagBits).
 			DetourStructField<ulong>("bits7");
+#endif
 
 		/// <summary>
 		/// Ands two sets of tag bits and replaces Tag Bits A with the result A & B.
@@ -53,7 +59,7 @@ namespace PeterHan.NotEnoughTags {
 		}
 
 		/// <summary>
-		/// Gets the least significant 32 bits of tag bits 7.
+		/// Gets the least significant 32 bits of tag bits 5/7.
 		/// </summary>
 		/// <param name="value">The upper 64 tag bits.</param>
 		/// <returns>The tag bits value as an integer.</returns>
@@ -62,7 +68,7 @@ namespace PeterHan.NotEnoughTags {
 		}
 
 		/// <summary>
-		/// Gets the most significant 32 bits of tag bits 7, shifted into the rightmost 32
+		/// Gets the most significant 32 bits of tag bits 5/7, shifted into the rightmost 32
 		/// bits.
 		/// </summary>
 		/// <param name="value">The upper 64 tag bits.</param>
@@ -122,7 +128,7 @@ namespace PeterHan.NotEnoughTags {
 		}
 
 		/// <summary>
-		/// Checks to see if tag bits 7 has extended bits set.
+		/// Checks to see if tag bits 5/7 has extended bits set.
 		/// </summary>
 		/// <param name="value">The value to check.</param>
 		/// <returns>true if it needs resolution in the extended tag bits, or false if it is

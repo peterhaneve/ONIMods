@@ -36,7 +36,7 @@ namespace PeterHan.NotEnoughTags {
 		private static bool IsMono = false;
 
 		/// <summary>
-		/// The tags which should always be in the lower 480 bits for speed.
+		/// The tags which should always be in the lower bits for speed.
 		/// </summary>
 		private static readonly Tag[] FORCE_LOWER_BITS = new Tag[] {
 			GameTags.Alloy, GameTags.Agriculture, GameTags.Breathable, GameTags.BuildableAny,
@@ -109,7 +109,7 @@ namespace PeterHan.NotEnoughTags {
 
 		/// <summary>
 		/// Replaces all instructions between the last AND and the RET immediately after
-		/// it with the specified method call. It should return bool and has the bits7 of A
+		/// it with the specified method call. It should return bool and has the bits5/7 of A
 		/// and B on the stack (in the OR case it also has the values from the previous
 		/// bit compares).
 		/// </summary>
@@ -260,7 +260,21 @@ namespace PeterHan.NotEnoughTags {
 		public static class TagBits_Clear_Patch {
 			/// <summary>
 			/// Applied before Clear runs.
+			/// 
+			/// TODO Vanilla/DLC code
 			/// </summary>
+#if VANILLA
+			internal static bool Prefix(ref ulong ___bits5, Tag tag) {
+				var inst = ExtendedTagBits.Instance;
+				int index = inst.ManifestFlagIndex(tag) - ExtendedTagBits.VANILLA_LIMIT;
+				bool vanilla = index < 0;
+				if (!vanilla && ___bits5 != 0UL) {
+					int id = inst.GetIDWithTagClear(TagBitOps.GetUpperBits(___bits5), index);
+					___bits5 = TagBitOps.GetLowerBits(___bits5) | ((ulong)id << 32);
+				}
+				return vanilla;
+			}
+#else
 			internal static bool Prefix(ref ulong ___bits7, Tag tag) {
 				var inst = ExtendedTagBits.Instance;
 				int index = inst.ManifestFlagIndex(tag) - ExtendedTagBits.VANILLA_LIMIT;
@@ -271,6 +285,7 @@ namespace PeterHan.NotEnoughTags {
 				}
 				return vanilla;
 			}
+#endif
 		}
 
 		/// <summary>
@@ -395,7 +410,21 @@ namespace PeterHan.NotEnoughTags {
 		public static class TagBits_SetTag_Patch {
 			/// <summary>
 			/// Applied before SetTag runs.
+			/// 
+			/// TODO Vanilla/DLC code
 			/// </summary>
+#if VANILLA
+			internal static bool Prefix(ref ulong ___bits5, Tag tag) {
+				var inst = ExtendedTagBits.Instance;
+				int index = inst.ManifestFlagIndex(tag) - ExtendedTagBits.VANILLA_LIMIT;
+				bool vanilla = index < 0;
+				if (!vanilla) {
+					int id = inst.GetIDWithTagSet(TagBitOps.GetUpperBits(___bits5), index);
+					___bits5 = (___bits5 & 0xFFFFFFFFUL) | ((ulong)id << 32);
+				}
+				return vanilla;
+			}
+#else
 			internal static bool Prefix(ref ulong ___bits7, Tag tag) {
 				var inst = ExtendedTagBits.Instance;
 				int index = inst.ManifestFlagIndex(tag) - ExtendedTagBits.VANILLA_LIMIT;
@@ -406,6 +435,7 @@ namespace PeterHan.NotEnoughTags {
 				}
 				return vanilla;
 			}
+#endif
 		}
 
 		/// <summary>

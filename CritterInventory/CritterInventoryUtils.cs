@@ -18,8 +18,11 @@
 
 using PeterHan.PLib.Detours;
 using System;
+using System.Collections.Generic;
 
+#if SPACEDOUT
 using TrackerList = System.Collections.Generic.List<WorldTracker>;
+#endif
 
 namespace PeterHan.CritterInventory {
 	/// <summary>
@@ -27,21 +30,9 @@ namespace PeterHan.CritterInventory {
 	/// </summary>
 	internal static class CritterInventoryUtils {
 		/// <summary>
-		/// The number of cycles to display on resource charts.
-		/// </summary>
-		public const float CYCLES_TO_CHART = 5.0f;
-
-		/// <summary>
-		/// The (appears to be hardcoded) interval for the trend indicator on tooltips.
-		/// </summary>
-		public const float TREND_INTERVAL = 150.0f;
-
-		// Detours for private fields in TrackerTool
-		private static readonly IDetouredField<TrackerTool, TrackerList> WORLD_TRACKERS =
-			PDetours.DetourField<TrackerTool, TrackerList>("worldTrackers");
-
-		/// <summary>
 		/// Creates tool tip text for the critter resource entries and headers.
+		/// 
+		/// TODO Vanilla/DLC code
 		/// </summary>
 		/// <param name="heading">The heading to display on the tool tip.</param>
 		/// <param name="totals">The total quantity available and reserved for errands.</param>
@@ -49,6 +40,11 @@ namespace PeterHan.CritterInventory {
 		/// <returns>The tool tip text formatted for those values.</returns>
 		internal static string FormatTooltip(string heading, CritterTotals totals, float trend)
 		{
+#if VANILLA
+			int total = totals.Total, reserved = totals.Reserved;
+			return heading + "\n" + string.Format(STRINGS.UI.RESOURCESCREEN.AVAILABLE_TOOLTIP,
+				total - reserved, reserved, total);
+#else
 			int total = totals.Total, reserved = totals.Reserved;
 			var ret = new System.Text.StringBuilder(256);
 			ret.Append(heading);
@@ -64,25 +60,7 @@ namespace PeterHan.CritterInventory {
 					STRINGS.UI.RESOURCESCREEN.INCREASING_STR : STRINGS.UI.RESOURCESCREEN.
 					DECREASING_STR, GameUtil.GetFormattedSimple(trend));
 			return ret.ToString();
-		}
-
-		/// <summary>
-		/// Invokes an action for all critters that match the specified species.
-		/// </summary>
-		/// <param name="id">The world ID to search.</param>
-		/// <param name="critters">The action to call for each critter.</param>
-		/// <param name="species">The species to filter, or omitted (default) for all species.</param>
-		internal static void GetCritters(int id, Action<CreatureBrain> critters,
-				Tag species = default) {
-			if (critters == null)
-				throw new ArgumentNullException(nameof(critters));
-			foreach (var brain in Components.Brains) {
-				var creature = brain as CreatureBrain;
-				if (creature != null && creature.isSpawned && !creature.HasTag(GameTags.
-						Dead) && creature.GetMyWorldId() == id && (species == Tag.Invalid ||
-						species == creature.PrefabID()))
-					critters.Invoke(creature);
-			}
+#endif
 		}
 
 		/// <summary>
@@ -127,6 +105,117 @@ namespace PeterHan.CritterInventory {
 		}
 
 		/// <summary>
+		/// Gets the proper, localized heading for a critter resource entry.
+		/// </summary>
+		/// <param name="species">The critter species.</param>
+		/// <param name="type">The critter domestication type.</param>
+		/// <returns>The title for that entry.</returns>
+		internal static string GetTitle(Tag species, CritterType type) {
+			return string.Format("{0} ({1})", species.ProperNameStripLink(), type.
+				GetProperName());
+		}
+
+		/// <summary>
+		/// Checks to see if a title matches the search query. The original method in
+		/// AllResourcesScreen is private and would be performance intensive to access...
+		/// </summary>
+		/// <param name="tag">The tag to query.</param>
+		/// <param name="filterUp">The user filter text, in upper case.</param>
+		/// <returns>true if it matches, or false otherwise.</returns>
+		public static bool PassesSearchFilter(string tag, string filterUp) {
+			return filterUp == "" || tag.ToUpper().Contains(filterUp);
+		}
+
+		// TODO Vanilla/DLC code
+#if VANILLA
+		/// <summary>
+		/// Populates a list of the creatures matching the critter type specified.
+		/// </summary>
+		/// <param name="totals">The location where the quantity of creatures will be stored.</param>
+		/// <param name="type">The critter type to match.</param>
+		public static CritterTotals FindCreatures(IDictionary<Tag, CritterTotals> totals,
+				CritterType type) {
+			if (totals == null)
+				throw new ArgumentNullException("totals");
+			var all = new CritterTotals();
+			IterateCreatures((creature) => {
+				var species = creature.PrefabID();
+				var go = creature.gameObject;
+				if (GetCritterType(creature) == type) {
+					var alignment = go.GetComponent<FactionAlignment>();
+					// Create critter totals if not present
+					if (!totals.TryGetValue(species, out CritterTotals total)) {
+						total = new CritterTotals();
+						totals.Add(species, total);
+					}
+					total.Total++;
+					all.Total++;
+					// Reserve wrangled, marked for attack, and trussed/bagged creatures
+					if ((go.GetComponent<Capturable>()?.IsMarkedForCapture ?? false) ||
+							((alignment?.targeted ?? false) && alignment.targetable) ||
+						creature.HasTag(GameTags.Creatures.Bagged)) {
+						total.Reserved++;
+						all.Reserved++;
+					}
+				}
+			});
+			return all;
+		}
+
+		/// <summary>
+		/// Iterates all active creatures and invokes the delegate for each.
+		/// </summary>
+		/// <param name="action">The method to call for each creature.</param>
+		public static void IterateCreatures(Action<CreatureBrain> action) {
+			var enumerator = Components.Brains.GetEnumerator();
+			try {
+				while (enumerator.MoveNext()) {
+					var creatureBrain = enumerator.Current as CreatureBrain;
+					// Must be spawned, do not check "Unreachable" because most flying critters
+					// are indeed unreachable
+					if ((creatureBrain?.isSpawned ?? false) && !creatureBrain.HasTag(
+							GameTags.Dead))
+						action?.Invoke(creatureBrain);
+				}
+			} finally {
+				(enumerator as IDisposable)?.Dispose();
+			}
+		}
+#else
+		/// <summary>
+		/// The number of cycles to display on resource charts.
+		/// </summary>
+		public const float CYCLES_TO_CHART = 5.0f;
+
+		/// <summary>
+		/// The (appears to be hardcoded) interval for the trend indicator on tooltips.
+		/// </summary>
+		public const float TREND_INTERVAL = 150.0f;
+
+		// Detours for private fields in TrackerTool
+		private static readonly IDetouredField<TrackerTool, TrackerList> WORLD_TRACKERS =
+			PDetours.DetourField<TrackerTool, TrackerList>("worldTrackers");
+
+		/// <summary>
+		/// Invokes an action for all critters that match the specified species.
+		/// </summary>
+		/// <param name="id">The world ID to search.</param>
+		/// <param name="critters">The action to call for each critter.</param>
+		/// <param name="species">The species to filter, or omitted (default) for all species.</param>
+		internal static void GetCritters(int id, Action<CreatureBrain> critters,
+				Tag species = default) {
+			if (critters == null)
+				throw new ArgumentNullException(nameof(critters));
+			foreach (var brain in Components.Brains) {
+				var creature = brain as CreatureBrain;
+				if (creature != null && creature.isSpawned && !creature.HasTag(GameTags.
+						Dead) && creature.GetMyWorldId() == id && (species == Tag.Invalid ||
+						species == creature.PrefabID()))
+					critters.Invoke(creature);
+			}
+		}
+
+		/// <summary>
 		/// Gets the resource tracker which tracks critter counts over time.
 		/// </summary>
 		/// <typeparam name="T">The type of critter tracker to find.</typeparam>
@@ -148,27 +237,6 @@ namespace PeterHan.CritterInventory {
 					}
 			return result;
 		}
-
-		/// <summary>
-		/// Gets the proper, localized heading for a critter resource entry.
-		/// </summary>
-		/// <param name="species">The critter species.</param>
-		/// <param name="type">The critter domestication type.</param>
-		/// <returns>The title for that entry.</returns>
-		internal static string GetTitle(Tag species, CritterType type) {
-			return string.Format("{0} ({1})", species.ProperNameStripLink(), type.
-				GetProperName());
-		}
-
-		/// <summary>
-		/// Checks to see if a title matches the search query. The original method in
-		/// AllResourcesScreen is private and would be performance intensive to access...
-		/// </summary>
-		/// <param name="tag">The tag to query.</param>
-		/// <param name="filterUp">The user filter text, in upper case.</param>
-		/// <returns>true if it matches, or false otherwise.</returns>
-		public static bool PassesSearchFilter(string tag, string filterUp) {
-			return filterUp == "" || tag.ToUpper().Contains(filterUp);
-		}
+#endif
 	}
 }

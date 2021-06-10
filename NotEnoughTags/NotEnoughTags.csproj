@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>NotEnoughTags</AssemblyTitle>
-    <FileVersion>2.0.0.0</FileVersion>
+    <FileVersion>2.1.0.0</FileVersion>
     <RootNamespace>PeterHan.NotEnoughTags</RootNamespace>
     <Description>Fixes a stock game bug where Tags can be exhausted in large bases.</Description>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>

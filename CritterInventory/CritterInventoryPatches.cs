@@ -17,12 +17,15 @@
  */
 
 using Harmony;
-using PeterHan.CritterInventory.NewResourceScreen;
-using PeterHan.CritterInventory.OldResourceScreen;
 using PeterHan.PLib;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+
+#if SPACEDOUT
+using PeterHan.CritterInventory.NewResourceScreen;
+using PeterHan.CritterInventory.OldResourceScreen;
+#endif
 
 namespace PeterHan.CritterInventory {
 	/// <summary>
@@ -35,6 +38,194 @@ namespace PeterHan.CritterInventory {
 			PLib.Datafiles.PLocalization.Register();
 		}
 
+		// TODO Vanilla/DLC code
+#if VANILLA
+		/// <summary>
+		/// The cached category for "Critter (Artificial)".
+		/// </summary>
+		private static ResourceCategoryHeader critterArtificial;
+
+		/// <summary>
+		/// The cached category for "Critter (Tame)". Since ResourceCategoryScreen also has
+		/// only one static instance for now, this non-reentrant reference is safe.
+		/// </summary>
+		private static ResourceCategoryHeader critterTame;
+
+		/// <summary>
+		/// The cached category for "Critter (Wild)". Since ResourceCategoryScreen also has
+		/// only one static instance for now, this non-reentrant reference is safe.
+		/// </summary>
+		private static ResourceCategoryHeader critterWild;
+
+		/// <summary>
+		/// Applied to ResourceEntry to highlight critters on hover.
+		/// </summary>
+		[HarmonyPatch(typeof(ResourceEntry), "Hover")]
+		public static class ResourceEntry_Hover_Patch {
+			/// <summary>
+			/// Applied after Hover runs.
+			/// </summary>
+			/// <param name="__instance">The current resource entry.</param>
+			/// <param name="is_hovering">true if the user is hovering, or false otherwise</param>
+			/// <param name="___HighlightColor">The highlight color from the instance.</param>
+			internal static void Postfix(ResourceEntry __instance, bool is_hovering,
+					Color ___HighlightColor) {
+				var info = __instance.gameObject.GetComponentSafe<CritterResourceInfo>();
+				if (info != null) {
+					var hlc = ___HighlightColor;
+					CritterType type = info.CritterType;
+					Tag species = __instance.Resource;
+					CritterInventoryUtils.IterateCreatures((creature) => {
+						if (creature.PrefabID() == species && creature.GetCritterType() ==
+								type)
+							PUtil.HighlightEntity(creature, is_hovering ? hlc : Color.black);
+					});
+				}
+			}
+		}
+
+		/// <summary>
+		/// Applied to ResourceEntry to cycle through critters on click.
+		/// </summary>
+		[HarmonyPatch(typeof(ResourceEntry), "OnClick")]
+		public static class ResourceEntry_OnClick_Patch {
+			/// <summary>
+			/// Applied after OnClick runs.
+			/// </summary>
+			/// <param name="__instance">The current resource entry.</param>
+			/// <param name="___selectionIdx">The current selection index.</param>
+			internal static void Postfix(ResourceEntry __instance, ref int ___selectionIdx) {
+				var info = __instance.gameObject.GetComponentSafe<CritterResourceInfo>();
+				if (info != null) {
+					var creaturesOfType = ListPool<CreatureBrain, ResourceCategoryHeader>.
+						Allocate();
+					CritterType type = info.CritterType;
+					var species = __instance.Resource;
+					// Get a list of creatures that match this type
+					CritterInventoryUtils.IterateCreatures((creature) => {
+						if (creature.PrefabID() == species && creature.GetCritterType() ==
+								type)
+							creaturesOfType.Add(creature);
+					});
+					int count = creaturesOfType.Count;
+					if (count > 0)
+						// Rotate through valid indexes
+						// Select the object and center it
+						PUtil.CenterAndSelect(creaturesOfType[___selectionIdx++ % count]);
+					creaturesOfType.Recycle();
+				}
+			}
+		}
+
+		/// <summary>
+		/// Applied to ResourceCategoryHeader to highlight critters on hover.
+		/// </summary>
+		[HarmonyPatch(typeof(ResourceCategoryHeader), "Hover")]
+		public static class ResourceCategoryHeader_Hover_Patch {
+			/// <summary>
+			/// Applied after Hover runs.
+			/// </summary>
+			/// <param name="__instance">The current resource category header.</param>
+			/// <param name="is_hovering">true if the user is hovering, or false otherwise.</param>
+			/// <param name="___highlightColour">The highlight color from the instance.</param>
+			internal static void Postfix(ResourceCategoryHeader __instance,
+					bool is_hovering, Color ___highlightColour) {
+				var info = __instance.gameObject.GetComponentSafe<CritterResourceInfo>();
+				if (info != null) {
+					CritterType type = info.CritterType;
+					// It is a creature header, highlight all matching
+					CritterInventoryUtils.IterateCreatures((creature) => {
+						if (creature.GetCritterType() == type)
+							PUtil.HighlightEntity(creature, is_hovering ? ___highlightColour :
+								Color.black);
+					});
+				}
+			}
+		}
+
+		/// <summary>
+		/// Applied to ResourceCategoryHeader to replace UpdateContents calls on critter
+		/// resource headers with logic to update with critters.
+		/// 
+		/// As compared to the old approach of updating separately, this method preserves the
+		/// semantics of the original UpdateContents, improving compatibility.
+		/// </summary>
+		[HarmonyPatch(typeof(ResourceCategoryHeader), nameof(ResourceCategoryHeader.
+			UpdateContents))]
+		public static class ResourceCategoryHeader_UpdateContents_Patch {
+			/// <summary>
+			/// Applied before UpdateContents runs.
+			/// </summary>
+			/// <param name="__instance">The current resource category header.</param>
+			internal static bool Prefix(ResourceCategoryHeader __instance) {
+				var info = __instance.gameObject.GetComponentSafe<CritterResourceInfo>();
+				// UpdateContents adds spurious entries (e.g. babies when only adults ever
+				// discovered) on critters
+				if (info != null)
+					__instance.Update(info.CritterType);
+				return info == null;
+			}
+		}
+
+		/// <summary>
+		/// Applied to ResourceCategoryScreen to add a category for "Critter".
+		/// </summary>
+		[HarmonyPatch(typeof(ResourceCategoryScreen), "OnActivate")]
+		public static class ResourceCategoryScreen_OnActivate_Patch {
+			/// <summary>
+			/// Applied after OnActivate runs.
+			/// </summary>
+			/// <param name="__instance">The current resource category list.</param>
+			/// <param name="___Prefab_CategoryBar">The category bar prefab used to create categories.</param>
+			internal static void Postfix(ResourceCategoryScreen __instance,
+					GameObject ___Prefab_CategoryBar) {
+				critterArtificial = CritterResourceHeader.Create(__instance,
+					___Prefab_CategoryBar, CritterType.Artificial);
+				critterTame = CritterResourceHeader.Create(__instance, ___Prefab_CategoryBar,
+					CritterType.Tame);
+				critterWild = CritterResourceHeader.Create(__instance, ___Prefab_CategoryBar,
+					CritterType.Wild);
+			}
+		}
+
+		/// <summary>
+		/// Applied to ResourceCategoryScreen to update the "Critter" category.
+		/// </summary>
+		[HarmonyPatch(typeof(ResourceCategoryScreen), "Update")]
+		public static class ResourceCategoryScreen_Update_Patch {
+			/// <summary>
+			/// Alternates tame and wild critter updating to reduce CPU load.
+			/// </summary>
+			private static int critterUpdatePacer = 0;
+
+			/// <summary>
+			/// Applied after Update runs.
+			/// </summary>
+			internal static void Postfix() {
+				if (WorldInventory.Instance != null) {
+					if (critterTame != null) {
+						// Tame critter update
+						critterTame.Activate();
+						if (critterUpdatePacer == 0)
+							critterTame.UpdateContents();
+					}
+					if (critterWild != null) {
+						// Wild critter update
+						critterWild.Activate();
+						if (critterUpdatePacer == 1)
+							critterWild.UpdateContents();
+					}
+					if (critterArtificial != null) {
+						// Artificial critter update
+						critterArtificial.Activate();
+						if (critterUpdatePacer == 2)
+							critterArtificial.UpdateContents();
+					}
+					critterUpdatePacer = (critterUpdatePacer + 1) % 3;
+				}
+			}
+		}
+#else
 		/// <summary>
 		/// Applied to AllResourcesScreen to add a container for storing critter categories.
 		/// </summary>
@@ -352,5 +543,6 @@ namespace PeterHan.CritterInventory {
 				__instance.gameObject.AddOrGet<CritterInventory>();
 			}
 		}
+#endif
 	}
 }

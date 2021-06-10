@@ -16,8 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#if SPACEDOUT
 using PeterHan.PLib;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -81,3 +81,4 @@ namespace PeterHan.CritterInventory.OldResourceScreen {
 		}
 	}
 }
+#endif
