@@ -4,8 +4,8 @@
     <TargetFramework>net40</TargetFramework>
     <Title>PeterHan.PLib</Title>
     <AssemblyTitle>PeterHanLib</AssemblyTitle>
-    <Version>3.14.0.0</Version>
-    <!--<PackageVersion>3.14.0-beta</PackageVersion>-->
+    <Version>3.14.1.0</Version>
+    <!--<PackageVersion>3.14.1-beta</PackageVersion>-->
     <UsesPLib>false</UsesPLib>
     <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
     <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
@@ -23,7 +23,7 @@ Add nullable int and float to PLib Options. Options in nested classes that are u
 
 Tool icons can now be registered in a DLC/Vanilla independent manner, as well as building technologies for buildings outside of PBuilding.</PackageReleaseNotes>
     <RootNamespace>PeterHan.PLib</RootNamespace>
-    <AssemblyVersion>3.14.0.0</AssemblyVersion>
+    <AssemblyVersion>3.14.1.0</AssemblyVersion>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
     <DistributeMod>false</DistributeMod>
