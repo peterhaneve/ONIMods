@@ -65,7 +65,7 @@ namespace PeterHan.PLib.Detours {
 			foreach (var method in methods)
 				if (method.Name == name) {
 					try {
-						var result = ValidateDelegate(expected, method);
+						var result = ValidateDelegate(expected, method, method.ReturnType);
 						int n = result.Length;
 						// Choose overload with fewest parameters to substitute
 						if (n < bestParamCount) {
@@ -78,6 +78,42 @@ namespace PeterHan.PLib.Detours {
 				}
 			if (bestMatch == null)
 				throw new DetourException("No match found for {1}.{0}".F(name, type.FullName));
+			return Detour<D>(bestMatch);
+		}
+
+		/// <summary>
+		/// Creates a dynamic detour method of the specified delegate type to wrap a base game
+		/// constructor. The dynamic method will automatically adapt if optional parameters
+		/// are added, filling in their default values.
+		/// </summary>
+		/// <typeparam name="D">The delegate type to be used to call the detour.</typeparam>
+		/// <param name="type">The target type.</param>
+		/// <returns>The detour that will call that type's constructor.</returns>
+		/// <exception cref="DetourException">If the delegate does not match any valid target method.</exception>
+		public static D DetourConstructor<D>(this Type type) where D : Delegate {
+			if (type == null)
+				throw new ArgumentNullException("type");
+			var constructors = type.GetConstructors(PPatchTools.BASE_FLAGS | BindingFlags.
+				Instance);
+			// Determine delegate return type
+			var expected = DelegateInfo.Create(typeof(D));
+			ConstructorInfo bestMatch = null;
+			int bestParamCount = int.MaxValue;
+			foreach (var constructor in constructors)
+				try {
+					var result = ValidateDelegate(expected, constructor, type);
+					int n = result.Length;
+					// Choose overload with fewest parameters to substitute
+					if (n < bestParamCount) {
+						bestParamCount = n;
+						bestMatch = constructor;
+					}
+				} catch (DetourException) {
+					// Keep looking
+				}
+			if (bestMatch == null)
+				throw new DetourException("No match found for {0} constructor".F(type.
+					FullName));
 			return Detour<D>(bestMatch);
 		}
 
@@ -120,46 +156,59 @@ namespace PeterHan.PLib.Detours {
 			var expected = DelegateInfo.Create(typeof(D));
 			var parentType = target.DeclaringType;
 			var expectedParamTypes = expected.ParameterTypes;
-			var actualParams = ValidateDelegate(expected, target);
+			var actualParams = ValidateDelegate(expected, target, target.ReturnType);
 			int offset = target.IsStatic ? 0 : 1;
 			// Method will be "declared" in the type of the target, as we are detouring around
 			// a method of that type
 			var caller = new DynamicMethod(target.Name + "_Detour", expected.ReturnType,
 				expectedParamTypes, parentType, true);
 			var generator = caller.GetILGenerator();
-			// Load the known method arguments onto the stack
-			int n = expectedParamTypes.Length, need = actualParams.Length + offset;
-			if (n > 0)
-				generator.Emit(OpCodes.Ldarg_0);
-			if (n > 1)
-				generator.Emit(OpCodes.Ldarg_1);
-			if (n > 2)
-				generator.Emit(OpCodes.Ldarg_2);
-			if (n > 3)
-				generator.Emit(OpCodes.Ldarg_3);
-			for (int i = 4; i < n; i++)
-				generator.Emit(OpCodes.Ldarg_S, i);
-			// Load the rest as defaults
-			for (int i = n; i < need; i++) {
-				var param = actualParams[i - offset];
-				PTranspilerTools.GenerateDefaultLoad(generator, param.ParameterType, param.
-					DefaultValue);
-			}
+			LoadParameters(generator, actualParams, expectedParamTypes, offset);
 			if (parentType.IsValueType || target.IsStatic)
 				generator.Emit(OpCodes.Call, target);
 			else
 				generator.Emit(OpCodes.Callvirt, target);
 			generator.Emit(OpCodes.Ret);
-			// Define the parameter names, parameter indexes start at 1
-			if (offset > 0)
-				caller.DefineParameter(1, ParameterAttributes.None, "this");
-			for (int i = offset; i < n; i++) {
-				var oldParam = actualParams[i - offset];
-				caller.DefineParameter(i + 1, oldParam.Attributes, oldParam.Name);
-			}
+			FinishDynamicMethod(caller, actualParams, expectedParamTypes, offset);
 #if DEBUG
 			PUtil.LogDebug("Created delegate {0} for method {1}.{2} with parameters [{3}]".
 				F(caller.Name, parentType.FullName, target.Name, actualParams.Join(",")));
+#endif
+			return caller.CreateDelegate(typeof(D)) as D;
+		}
+
+		/// <summary>
+		/// Creates a dynamic detour method of the specified delegate type to wrap a base game
+		/// constructor. The dynamic method will automatically adapt if optional parameters
+		/// are added, filling in their default values.
+		/// </summary>
+		/// <typeparam name="D">The delegate type to be used to call the detour.</typeparam>
+		/// <param name="target">The target constructor to be called.</param>
+		/// <returns>The detour that will call that constructor.</returns>
+		/// <exception cref="DetourException">If the delegate does not match the target.</exception>
+		public static D Detour<D>(this ConstructorInfo target) where D : Delegate {
+			if (target == null)
+				throw new ArgumentNullException("target");
+			if (target.ContainsGenericParameters)
+				throw new ArgumentException("Generic types must have all parameters defined");
+			if (target.IsStatic)
+				throw new ArgumentException("Static constructors cannot be called manually");
+			var expected = DelegateInfo.Create(typeof(D));
+			var parentType = target.DeclaringType;
+			var expectedParamTypes = expected.ParameterTypes;
+			var actualParams = ValidateDelegate(expected, target, parentType);
+			// Method will be "declared" in the type of the target, as we are detouring around
+			// a constructor of that type
+			var caller = new DynamicMethod("Constructor_Detour", expected.ReturnType,
+				expectedParamTypes, parentType, true);
+			var generator = caller.GetILGenerator();
+			LoadParameters(generator, actualParams, expectedParamTypes, 0);
+			generator.Emit(OpCodes.Newobj, target);
+			generator.Emit(OpCodes.Ret);
+			FinishDynamicMethod(caller, actualParams, expectedParamTypes, 0);
+#if DEBUG
+			PUtil.LogDebug("Created delegate {0} for constructor {1} with parameters [{2}]".
+				F(caller.Name, parentType.FullName, actualParams.Join(",")));
 #endif
 			return caller.CreateDelegate(typeof(D)) as D;
 		}
@@ -387,22 +436,71 @@ namespace PeterHan.PLib.Detours {
 		}
 
 		/// <summary>
+		/// Generates the required method parameters for the dynamic detour method.
+		/// </summary>
+		/// <param name="caller">The method where the parameters will be defined.</param>
+		/// <param name="actualParams">The actual parameters required.</param>
+		/// <param name="expectedParams">The parameters provided.</param>
+		/// <param name="offset">The offset to start loading (0 = static, 1 = instance).</param>
+		private static void FinishDynamicMethod(DynamicMethod caller,
+				ParameterInfo[] actualParams, Type[] expectedParams, int offset) {
+			int n = expectedParams.Length;
+			if (offset > 0)
+				caller.DefineParameter(1, ParameterAttributes.None, "this");
+			for (int i = offset; i < n; i++) {
+				var oldParam = actualParams[i - offset];
+				caller.DefineParameter(i + 1, oldParam.Attributes, oldParam.Name);
+			}
+		}
+
+		/// <summary>
+		/// Generates instructions to load arguments or default values onto the stack in a
+		/// detour method.
+		/// </summary>
+		/// <param name="generator">The method where the calls will be added.</param>
+		/// <param name="actualParams">The actual parameters required.</param>
+		/// <param name="expectedParams">The parameters provided.</param>
+		/// <param name="offset">The offset to start loading (0 = static, 1 = instance).</param>
+		private static void LoadParameters(ILGenerator generator, ParameterInfo[] actualParams,
+				Type[] expectedParams, int offset) {
+			// Load the known method arguments onto the stack
+			int n = expectedParams.Length, need = actualParams.Length + offset;
+			if (n > 0)
+				generator.Emit(OpCodes.Ldarg_0);
+			if (n > 1)
+				generator.Emit(OpCodes.Ldarg_1);
+			if (n > 2)
+				generator.Emit(OpCodes.Ldarg_2);
+			if (n > 3)
+				generator.Emit(OpCodes.Ldarg_3);
+			for (int i = 4; i < n; i++)
+				generator.Emit(OpCodes.Ldarg_S, i);
+			// Load the rest as defaults
+			for (int i = n; i < need; i++) {
+				var param = actualParams[i - offset];
+				PTranspilerTools.GenerateDefaultLoad(generator, param.ParameterType, param.
+					DefaultValue);
+			}
+		}
+
+		/// <summary>
 		/// Verifies that the delegate signature provided in dst can be dynamically mapped to
 		/// the method provided by src, with the possible addition of optional parameters set
 		/// to their default values.
 		/// </summary>
 		/// <param name="expected">The method return type and parameter types expected.</param>
 		/// <param name="actual">The method to be called.</param>
+		/// <param name="actualReturn">The type of the method or constructor's return value.</param>
 		/// <returns>The parameters used in the call to the actual method.</returns>
 		/// <exception cref="DetourException">If the delegate does not match the target.</exception>
 		private static ParameterInfo[] ValidateDelegate(DelegateInfo expected,
-				MethodInfo actual) {
+				MethodBase actual, Type actualReturn) {
 			var parameterTypes = expected.ParameterTypes;
 			var returnType = expected.ReturnType;
 			// Validate return types
-			if (!returnType.IsAssignableFrom(actual.ReturnType))
+			if (!returnType.IsAssignableFrom(actualReturn))
 				throw new DetourException("Return type {0} cannot be converted to type {1}".
-					F(actual.ReturnType.FullName, returnType.FullName));
+					F(actualReturn.FullName, returnType.FullName));
 			// Do not allow methods declared in not yet closed generic types
 			var baseType = actual.DeclaringType;
 			if (baseType.ContainsGenericParameters)
@@ -413,9 +511,10 @@ namespace PeterHan.PLib.Detours {
 			var actualParams = actual.GetParameters();
 			int n = actualParams.Length, check = parameterTypes.Length;
 			Type[] actualParamTypes, currentTypes = new Type[n];
+			bool noThisPointer = actual.IsStatic || actual.IsConstructor;
 			for (int i = 0; i < n; i++)
 				currentTypes[i] = actualParams[i].ParameterType;
-			if (actual.IsStatic)
+			if (noThisPointer)
 				actualParamTypes = currentTypes;
 			else {
 				actualParamTypes = PTranspilerTools.PushDeclaringType(currentTypes, baseType);
@@ -433,7 +532,7 @@ namespace PeterHan.PLib.Detours {
 						actualName));
 			}
 			// Any remaining parameters must be optional
-			int offset = actual.IsStatic ? 0 : 1;
+			int offset = noThisPointer ? 0 : 1;
 			for (int i = check; i < n; i++) {
 				var cParam = actualParams[i - offset];
 				if (!cParam.IsOptional)

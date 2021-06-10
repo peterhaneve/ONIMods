@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Claustrophobia</AssemblyTitle>
     <FileVersion>2.8.0.0</FileVersion>
     <RootNamespace>PeterHan.Claustrophobia</RootNamespace>
@@ -10,5 +9,6 @@
     <CopyPreview>true</CopyPreview>
     <SupportedContent>VANILLA_ID</SupportedContent>
     <LastWorkingBuild>447213</LastWorkingBuild>
+    <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
 </Project>

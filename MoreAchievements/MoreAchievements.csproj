@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>One Giant Leap</AssemblyTitle>
     <FileVersion>2.0.0.0</FileVersion>
     <RootNamespace>PeterHan.MoreAchievements</RootNamespace>
@@ -10,6 +9,7 @@
     <CopyPreview>true</CopyPreview>
     <SupportedContent>VANILLA_ID</SupportedContent>
     <LastWorkingBuild>447213</LastWorkingBuild>
+    <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="images\art_20.png" />

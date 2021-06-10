@@ -362,8 +362,10 @@ namespace PeterHan.DebugNotIncluded {
 
 			// Mirror struct to the private struct EventSystem.IntraObjectRoute
 			internal struct IntraObjectRoute {
+#pragma warning disable CS0649
 				public int eventHash;
 				public int handlerIndex;
+#pragma warning restore CS0649
 
 				public override string ToString() {
 					return "IntraObjectRoute[hash={0:D},index={1:D}]".F(eventHash,

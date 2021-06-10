@@ -17,6 +17,7 @@
  */
 
 using KSerialization;
+using PeterHan.PLib.Detours;
 using System;
 using UnityEngine;
 
@@ -27,6 +28,14 @@ namespace PeterHan.AirlockDoor {
 	[SerializationConfig(MemberSerialization.OptIn)]
 	public sealed partial class AirlockDoor : StateMachineComponent<AirlockDoor.Instance>,
 			ISaveLoadable, ISim200ms {
+		private delegate StatusItem Construct(string id, string prefix, string icon,
+			StatusItem.IconType icon_type, NotificationType notification_type,
+			bool allow_multiples, HashedString render_overlay);
+
+		// TODO Vanilla/DLC code
+		private static readonly Construct NEW_STATUS_ITEM = typeof(StatusItem).
+			DetourConstructor<Construct>();
+
 		/// <summary>
 		/// The status item showing the door's current state.
 		/// </summary>
@@ -62,26 +71,25 @@ namespace PeterHan.AirlockDoor {
 		/// crash that the stock Door has if it is loaded too early.
 		/// </summary>
 		private static void StaticInit() {
-			doorControlState = new StatusItem("CurrentDoorControlState", "BUILDING", "",
-				StatusItem.IconType.Info, NotificationType.Neutral, false, OverlayModes.
-				None.ID) {
-				resolveStringCallback = (str, data) => {
-					bool locked = (data as AirlockDoor)?.locked ?? true;
-					return str.Replace("{ControlState}", Strings.Get(
-						"STRINGS.BUILDING.STATUSITEMS.CURRENTDOORCONTROLSTATE." + (locked ?
-						"LOCKED" : "AUTO")));
-				}
+			doorControlState = NEW_STATUS_ITEM.Invoke("CurrentDoorControlState", "BUILDING",
+				"", StatusItem.IconType.Info, NotificationType.Neutral, false, OverlayModes.
+				None.ID);
+			doorControlState.resolveStringCallback = (str, data) => {
+				bool locked = (data as AirlockDoor)?.locked ?? true;
+				return str.Replace("{ControlState}", Strings.Get(
+					"STRINGS.BUILDING.STATUSITEMS.CURRENTDOORCONTROLSTATE." + (locked ?
+					"LOCKED" : "AUTO")));
 			};
-			storedCharge = new StatusItem("AirlockStoredCharge", "BUILDING", "", StatusItem.
-				IconType.Info, NotificationType.Neutral, false, OverlayModes.None.ID) {
-				resolveStringCallback = (str, data) => {
-					if (data is AirlockDoor door)
-						str = string.Format(str, GameUtil.GetFormattedRoundedJoules(door.
-							EnergyAvailable), GameUtil.GetFormattedRoundedJoules(door.
-							EnergyCapacity), GameUtil.GetFormattedRoundedJoules(door.
-							EnergyPerUse));
-					return str;
-				}
+			storedCharge = NEW_STATUS_ITEM.Invoke("AirlockStoredCharge", "BUILDING", "",
+				StatusItem.IconType.Info, NotificationType.Neutral, false, OverlayModes.None.
+				ID);
+			storedCharge.resolveStringCallback = (str, data) => {
+				if (data is AirlockDoor door)
+					str = string.Format(str, GameUtil.GetFormattedRoundedJoules(door.
+						EnergyAvailable), GameUtil.GetFormattedRoundedJoules(door.
+						EnergyCapacity), GameUtil.GetFormattedRoundedJoules(door.
+						EnergyPerUse));
+				return str;
 			};
 		}
 

@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>DLC Mod Enabler</AssemblyTitle>
     <FileVersion>1.0.0.0</FileVersion>
     <RootNamespace>PeterHan.DLCModEnabler</RootNamespace>
     <Description>Enables mods to be used on the DLC Spaced Out Alpha.</Description>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <UsesPLib>false</UsesPLib>
+    <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
 </Project>

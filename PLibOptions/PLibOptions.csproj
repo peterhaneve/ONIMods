@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net40</TargetFramework>
     <Title>PeterHan.PLib.Options</Title>
     <AssemblyTitle>PeterHanLib Options</AssemblyTitle>
     <Version>3.10.0.0</Version>
@@ -17,6 +16,7 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
     <DefineConstants>OPTIONS_ONLY</DefineConstants>
     <DistributeMod>false</DistributeMod>
+    <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DocumentationFile>bin\Release\PLibOptions.xml</DocumentationFile>

@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Settings Change Tool</AssemblyTitle>
     <FileVersion>2.9.0.0</FileVersion>
     <RootNamespace>PeterHan.BulkSettingsChange</RootNamespace>
@@ -9,6 +8,7 @@
     <AssemblyVersion>2.2.0.0</AssemblyVersion>
     <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
     <LastWorkingBuild>463187</LastWorkingBuild>
+    <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Placer.png" />

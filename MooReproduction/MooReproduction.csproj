@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Moo Reproduction</AssemblyTitle>
     <FileVersion>1.2.0.0</FileVersion>
     <RootNamespace>PeterHan.MooReproduction</RootNamespace>
@@ -9,5 +8,6 @@
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <SupportedContent>EXPANSION1_ID</SupportedContent>
     <LastWorkingBuild>452242</LastWorkingBuild>
+    <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
 </Project>

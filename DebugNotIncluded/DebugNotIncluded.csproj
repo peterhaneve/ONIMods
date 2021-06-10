@@ -8,6 +8,7 @@
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
     <LastWorkingBuild>448420</LastWorkingBuild>
+    <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="images\icon_mods_bottom.png" />

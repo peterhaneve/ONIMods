@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Thermal Tooltips</AssemblyTitle>
     <FileVersion>2.12.0.0</FileVersion>
     <RootNamespace>PeterHan.ThermalTooltips</RootNamespace>
@@ -10,5 +9,6 @@
     <CopyPreview>true</CopyPreview>
     <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
     <LastWorkingBuild>460672</LastWorkingBuild>
+    <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
 </Project>
