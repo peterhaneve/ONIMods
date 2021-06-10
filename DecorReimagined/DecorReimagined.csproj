@@ -8,6 +8,8 @@
     <Description>Reworks decor, making an attractive colony a better colony.</Description>
     <AssemblyVersion>3.0.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
+    <SupportedContent>EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>448420</LastWorkingBuild>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="buildings.json" />

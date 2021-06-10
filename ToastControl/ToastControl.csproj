@@ -7,5 +7,7 @@
     <RootNamespace>PeterHan.ToastControl</RootNamespace>
     <Description>Control which text popups are shown.</Description>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>463874</LastWorkingBuild>
   </PropertyGroup>
 </Project>

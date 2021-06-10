@@ -8,5 +8,7 @@
     <Description>Hides the splash screen shown in beta and Early Access versions of the game.</Description>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <UsesPLib>false</UsesPLib>
+    <SupportedContent>EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>447598</LastWorkingBuild>
   </PropertyGroup>
 </Project>

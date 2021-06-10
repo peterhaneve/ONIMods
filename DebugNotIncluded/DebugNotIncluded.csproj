@@ -1,12 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Debug Not Included</AssemblyTitle>
     <FileVersion>1.6.0.0</FileVersion>
     <RootNamespace>PeterHan.DebugNotIncluded</RootNamespace>
     <Description>Aids with mod debugging and management. Not intended to be a production mod manager.</Description>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>448420</LastWorkingBuild>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="images\icon_mods_bottom.png" />

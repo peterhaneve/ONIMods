@@ -7,5 +7,7 @@
     <RootNamespace>PeterHan.FoodTooltip</RootNamespace>
     <Description>Shows tooltips on plants and critters for how much food they can supply per cycle in their current states.</Description>
     <AssemblyVersion>2.2.0.0</AssemblyVersion>
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>447213</LastWorkingBuild>
   </PropertyGroup>
 </Project>

@@ -7,5 +7,7 @@
     <RootNamespace>PeterHan.FinishTasks</RootNamespace>
     <Description>Defines a schedule block type to allow Duplicants to finish their current task but not start new ones.</Description>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>447213</LastWorkingBuild>
   </PropertyGroup>
 </Project>

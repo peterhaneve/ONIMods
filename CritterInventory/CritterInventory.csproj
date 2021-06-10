@@ -7,5 +7,7 @@
     <RootNamespace>PeterHan.CritterInventory</RootNamespace>
     <Description>Displays available critters in the Inventory screen.</Description>
     <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    <SupportedContent>EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>447268</LastWorkingBuild>
   </PropertyGroup>
 </Project>

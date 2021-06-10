@@ -18,7 +18,7 @@
     <Reference Include="Newtonsoft.Json" HintPath="$(GameFolder)/Newtonsoft.Json.dll" />
     <Reference Include="UnityEngine" HintPath="$(GameFolder)/UnityEngine.dll" />
     <Reference Include="UnityEngine.CoreModule" HintPath="$(GameFolder)/UnityEngine.CoreModule.dll" />
-	<Reference Include="UnityEngine.ImageConversionModule" HintPath="$(GameFolder)/UnityEngine.ImageConversionModule.dll" />
+    <Reference Include="UnityEngine.ImageConversionModule" HintPath="$(GameFolder)/UnityEngine.ImageConversionModule.dll" />
     <Reference Include="Unity.TextMeshPro" HintPath="$(GameFolder)/Unity.TextMeshPro.dll" />
     <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(GameFolder)/UnityEngine.TextRenderingModule.dll" />
     <Reference Include="UnityEngine.UI" HintPath="$(GameFolder)/UnityEngine.UI.dll" />
@@ -31,5 +31,10 @@
     <Product>PeterHanONIMods</Product>
     <Authors>Peter Han</Authors>
     <Copyright>Copyright ©Peter Han 2020</Copyright>
+    <TargetFramework>net40</TargetFramework>
+    <SupportedContent>VANILLA_ID,EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>0</LastWorkingBuild>
+    <DistributeMod>true</DistributeMod>
+    <ArchivedVersionPath></ArchivedVersionPath>
   </PropertyGroup>
 </Project>

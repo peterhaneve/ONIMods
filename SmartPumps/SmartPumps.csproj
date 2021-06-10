@@ -7,5 +7,7 @@
     <RootNamespace>PeterHan.SmartPumps</RootNamespace>
     <Description>Adds advanced liquid and gas pumps with configurable options.</Description>
     <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    <SupportedContent>EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>448420</LastWorkingBuild>
   </PropertyGroup>
 </Project>

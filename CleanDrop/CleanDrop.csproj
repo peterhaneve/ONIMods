@@ -7,5 +7,7 @@
     <RootNamespace>PeterHan.CleanDrop</RootNamespace>
     <Description>Drops materials from build, deconstruct, or repair errands in a place where the working Duplicant can usually access them.</Description>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>447213</LastWorkingBuild>
   </PropertyGroup>
 </Project>

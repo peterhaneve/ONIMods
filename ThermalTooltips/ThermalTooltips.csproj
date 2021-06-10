@@ -8,5 +8,7 @@
     <Description>Adds additional information to tooltips on the Thermal overlay.</Description>
     <AssemblyVersion>2.2.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>460672</LastWorkingBuild>
   </PropertyGroup>
 </Project>

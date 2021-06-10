@@ -8,5 +8,7 @@
     <Description>Fixes bugs and annoyances in the stock game.</Description>
     <AssemblyVersion>2.1.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>466411</LastWorkingBuild>
   </PropertyGroup>
 </Project>

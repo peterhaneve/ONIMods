@@ -8,6 +8,8 @@
     <Description>Adds many new Colony Initiatives.</Description>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
+    <SupportedContent>VANILLA_ID</SupportedContent>
+    <LastWorkingBuild>447213</LastWorkingBuild>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="images\art_20.png" />

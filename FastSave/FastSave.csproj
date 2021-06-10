@@ -8,5 +8,7 @@
     <Description>Trims data from save files to make saving and loading faster.</Description>
     <AssemblyVersion>2.4.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>447213</LastWorkingBuild>
   </PropertyGroup>
 </Project>

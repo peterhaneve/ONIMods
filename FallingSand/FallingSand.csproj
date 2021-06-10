@@ -7,5 +7,7 @@
     <RootNamespace>PeterHan.FallingSand</RootNamespace>
     <Description>Places Dig errands on unstable materials which fall during mining.</Description>
     <AssemblyVersion>2.2.0.0</AssemblyVersion>
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>447213</LastWorkingBuild>
   </PropertyGroup>
 </Project>

@@ -7,6 +7,8 @@
     <RootNamespace>PeterHan.ModUpdateDate</RootNamespace>
     <Description>Identifies mods that are not updating and allows them to be manually updated.</Description>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>447213</LastWorkingBuild>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Ionic.Zip" HintPath="$(GameFolder)/Ionic.Zip.dll" />

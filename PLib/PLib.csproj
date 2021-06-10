@@ -26,8 +26,9 @@ Tool icons can now be registered in a DLC/Vanilla independent manner, as well as
     <AssemblyVersion>3.14.0.0</AssemblyVersion>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+    <DistributeMod>false</DistributeMod>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DocumentationFile>bin\Release\PLib.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
