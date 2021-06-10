@@ -17,6 +17,7 @@
  */
 
 using PeterHan.PLib;
+using PeterHan.PLib.Buildings;
 using System.Collections.Generic;
 
 namespace PeterHan.AirlockDoor {
@@ -25,11 +26,18 @@ namespace PeterHan.AirlockDoor {
 	/// </summary>
 	public sealed class AirlockDoorTransitionLayer : TransitionDriver.OverrideLayer {
 		/// <summary>
+		/// The layer to check for airlock doors.
+		/// </summary>
+		private readonly int buildingLayer;
+
+		/// <summary>
 		/// The doors to be opened.
 		/// </summary>
 		private readonly IDictionary<AirlockDoor, DoorRequestType> doors;
 
 		public AirlockDoorTransitionLayer(Navigator navigator) : base(navigator) {
+			buildingLayer = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.Building),
+				ObjectLayer.Building);
 			doors = new Dictionary<AirlockDoor, DoorRequestType>(4);
 		}
 
@@ -40,7 +48,7 @@ namespace PeterHan.AirlockDoor {
 		/// <param name="navCell">The cell of the Duplicant navigating the door.</param>
 		private void AddDoor(int doorCell, int navCell) {
 			if (Grid.HasDoor[doorCell]) {
-				var door = Grid.Objects[doorCell, (int)ObjectLayer.Building].
+				var door = Grid.Objects[doorCell, buildingLayer].
 					GetComponentSafe<AirlockDoor>();
 				if (door != null && door.isSpawned && !doors.ContainsKey(door))
 					RequestOpenDoor(door, doorCell, navCell);

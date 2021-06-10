@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyTitle>Pip Plant Overlay</AssemblyTitle>
+    <FileVersion>1.1.0.0</FileVersion>
+    <RootNamespace>PeterHan.PipPlantOverlay</RootNamespace>
+    <Description>Adds a filter to the Farming overlay to show where Pips can plant seeds.</Description>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>463874</LastWorkingBuild>
+    <Platforms>Vanilla;Spaced Out</Platforms>
+  </PropertyGroup>
+</Project>

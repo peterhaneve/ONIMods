@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
 using PeterHan.PLib.Detours;
 
 namespace PeterHan.NotEnoughTags {
@@ -36,7 +35,7 @@ namespace PeterHan.NotEnoughTags {
 
 		// Allows accessing the fifth bit of TagBits without an instance.
 		internal static readonly IDetouredField<object, ulong> FIFTH_BIT = typeof(TagBits).
-			DetourStructField<ulong>("bits5");
+			DetourStructField<ulong>("bits7");
 
 		/// <summary>
 		/// Ands two sets of tag bits and replaces Tag Bits A with the result A & B.
@@ -54,7 +53,7 @@ namespace PeterHan.NotEnoughTags {
 		}
 
 		/// <summary>
-		/// Gets the least significant 32 bits of tag bits 5.
+		/// Gets the least significant 32 bits of tag bits 7.
 		/// </summary>
 		/// <param name="value">The upper 64 tag bits.</param>
 		/// <returns>The tag bits value as an integer.</returns>
@@ -63,7 +62,7 @@ namespace PeterHan.NotEnoughTags {
 		}
 
 		/// <summary>
-		/// Gets the most significant 32 bits of tag bits 5, shifted into the rightmost 32
+		/// Gets the most significant 32 bits of tag bits 7, shifted into the rightmost 32
 		/// bits.
 		/// </summary>
 		/// <param name="value">The upper 64 tag bits.</param>
@@ -123,7 +122,7 @@ namespace PeterHan.NotEnoughTags {
 		}
 
 		/// <summary>
-		/// Checks to see if tag bits 5 has extended bits set.
+		/// Checks to see if tag bits 7 has extended bits set.
 		/// </summary>
 		/// <param name="value">The value to check.</param>
 		/// <returns>true if it needs resolution in the extended tag bits, or false if it is

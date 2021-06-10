@@ -24,7 +24,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
 	/// Requires the collection of the specified number of artifact types.
 	/// </summary>
-	public sealed class CollectNArtifacts : ColonyAchievementRequirement {
+	public sealed class CollectNArtifacts : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
 		/// The number of artifact types obtained.
 		/// </summary>
@@ -40,7 +40,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 			this.required = Math.Max(1, required);
 		}
 
-		public override void Deserialize(IReader reader) {
+		public void Deserialize(IReader reader) {
 			obtained = 0;
 			required = Math.Max(1, reader.ReadInt32());
 		}

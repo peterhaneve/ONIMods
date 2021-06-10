@@ -47,6 +47,20 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
+		/// Applied to Db to patch Text Mesh Pro issues. While it would be nice in PostPatch,
+		/// that would break compatibility with the unconditional patches in PLib &lt; 3.14.
+		/// </summary>
+		[HarmonyPatch(typeof(Db), "Initialize")]
+		public static class Db_Initialize_Patch {
+			/// <summary>
+			/// Applied after Initialize runs.
+			/// </summary>
+			internal static void Postfix() {
+				Utils.TextMeshProPatcher.Patch(null);
+			}
+		}
+
+		/// <summary>
 		/// Applied to ModsScreen to display settings for this mod.
 		/// </summary>
 		[HarmonyPatch(typeof(ModsScreen), "BuildDisplay")]

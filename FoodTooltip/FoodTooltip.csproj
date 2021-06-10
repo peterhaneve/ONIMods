@@ -1,11 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Food Supply Tooltip</AssemblyTitle>
     <FileVersion>2.6.0.0</FileVersion>
     <RootNamespace>PeterHan.FoodTooltip</RootNamespace>
     <Description>Shows tooltips on plants and critters for how much food they can supply per cycle in their current states.</Description>
     <AssemblyVersion>2.2.0.0</AssemblyVersion>
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>447213</LastWorkingBuild>
+    <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
 </Project>

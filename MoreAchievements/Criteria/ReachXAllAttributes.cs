@@ -25,7 +25,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
 	/// Requires a single Duplicant to reach the specified value in all attributes.
 	/// </summary>
-	public sealed class ReachXAllAttributes : ColonyAchievementRequirement {
+	public sealed class ReachXAllAttributes : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
 		/// Whether this requirement has been achieved.
 		/// </summary>
@@ -48,7 +48,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 			this.required = Math.Max(0.0f, required);
 		}
 
-		public override void Deserialize(IReader reader) {
+		public void Deserialize(IReader reader) {
 			required = Math.Max(0.0f, reader.ReadSingle());
 			achieved = false;
 		}

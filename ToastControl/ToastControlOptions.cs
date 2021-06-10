@@ -33,6 +33,10 @@ namespace PeterHan.ToastControl {
 		// not
 		public LocText Caption => null;
 
+		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.DISABLE_MOVING",
+			"STRINGS.UI.FRONTEND.TOASTCONTROL.DISABLE_MOVING_TOOLTIP")]
+		public bool DisableMoving { get; set; }
+
 		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.CONTROL_ALL",
 			"STRINGS.UI.FRONTEND.TOASTCONTROL.CONTROL_ALL_TOOLTIP")]
 		public bool GlobalEnable { get; set; }
@@ -101,6 +105,11 @@ namespace PeterHan.ToastControl {
 			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.INVALID_CONNECTION",
 			"STRINGS.UI.FRONTEND.TOASTCONTROL.BUILDINGS")]
 		public bool InvalidConnection { get; set; }
+
+		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.RADS_REMOVED",
+			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.RADS_REMOVED",
+			"STRINGS.UI.FRONTEND.TOASTCONTROL.BUILDINGS")]
+		public bool RadiationRemoved { get; set; }
 
 		[Option("STRINGS.MISC.NOTIFICATIONS.LEVELUP.NAME",
 			"STRINGS.MISC.NOTIFICATIONS.LEVELUP.TOOLTIP",
@@ -243,6 +252,7 @@ namespace PeterHan.ToastControl {
 		public bool MopTooMuch { get; set; }
 
 		public ToastControlOptions() {
+			DisableMoving = false;
 			GlobalEnable = true;
 			AttributeIncrease = true;
 			BuildingComplete = true;
@@ -283,6 +293,7 @@ namespace PeterHan.ToastControl {
 			MopTooMuch = true;
 			PickedUp = false;
 			PickedUpMachine = false;
+			RadiationRemoved = true;
 			ResearchGained = true;
 			SkillPointEarned = true;
 		}

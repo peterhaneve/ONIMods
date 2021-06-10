@@ -268,7 +268,7 @@ namespace PeterHan.PLib.Options {
 				throw new ArgumentNullException("optionsType");
 #if OPTIONS_ONLY
 			var assembly = optionsType.Assembly;
-			var id = Path.GetFileName(GetModDir(assembly));
+			var id = Path.GetFileName(GetModBaseDir(assembly));
 			// Local options type
 			if (modOptions == null)
 				modOptions = new Dictionary<string, Type>(4);

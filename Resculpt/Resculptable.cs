@@ -91,10 +91,30 @@ namespace PeterHan.Resculpt {
 		}
 
 		/// <summary>
+		/// Triggered when the user requests a rotate of the decor item.
+		/// </summary>
+		private void OnRotateClicked()
+		{
+			var rotatable = gameObject.GetComponent<Rotatable>();
+			if (rotatable != null)
+			{
+				rotatable.Rotate();
+
+				// Buildings with even width values jump one tile when rotating and must be moved back
+				var building = gameObject.GetComponentSafe<Building>()?.Def;
+				if (building != null && building.WidthInCells % 2 == 0)
+					transform.position += rotatable.GetOrientation() != Orientation.Neutral ?
+						Vector3.right : Vector3.left;
+			}
+		}
+
+		/// <summary>
 		/// Called when the info screen for the decor item is refreshed.
 		/// </summary>
 		private void OnRefreshUserMenu(object _) {
-			if (artable != null && artable.CurrentStatus != Artable.Status.Ready) {
+			var um = Game.Instance?.userMenu;
+			if (artable != null && artable.CurrentStatus != Artable.Status.Ready && um != null)
+			{
 				string text = ButtonText, icon = ButtonIcon;
 				// Set default name if not set
 				if (string.IsNullOrEmpty(text))
@@ -103,7 +123,15 @@ namespace PeterHan.Resculpt {
 					icon = ResculptStrings.RESCULPT_SPRITE;
 				var button = new KIconButtonMenu.ButtonInfo(icon, text, OnResculpt,
 					PAction.MaxAction, null, null, null, ResculptStrings.RESCULPT_TOOLTIP);
-				Game.Instance?.userMenu?.AddButton(gameObject, button);
+				um.AddButton(gameObject, button);
+
+				if (gameObject.GetComponent<Rotatable>() != null)
+				{
+					var rotationButton = new KIconButtonMenu.ButtonInfo(ResculptStrings.
+						ROTATE_SPRITE, ResculptStrings.ROTATE_BUTTON, OnRotateClicked,
+						Action.BuildMenuKeyO, tooltipText: ResculptStrings.ROTATE_TOOLTIP);
+					um.AddButton(gameObject, rotationButton);
+				}
 			}
 		}
 	}

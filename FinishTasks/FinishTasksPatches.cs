@@ -50,7 +50,7 @@ namespace PeterHan.FinishTasks {
 		/// <summary>
 		/// The precondition evaluated to see if a Duplicant can start a new Work type task.
 		/// </summary>
-		private static readonly Chore.Precondition CAN_START_NEW = new Chore.Precondition() {
+		private static Chore.Precondition CAN_START_NEW = new Chore.Precondition() {
 			id = "PeterHan.FinishTasks.CanStartNewTask",
 			description = FinishTasksStrings.DUPLICANTS.CHORES.PRECONDITIONS.
 				CAN_START_NEW_TASK,
@@ -70,23 +70,24 @@ namespace PeterHan.FinishTasks {
 		/// <returns>true if new chores can be started, or false otherwise.</returns>
 		private static bool CheckStartNew(ref Chore.Precondition.Context context,
 				object targetChore) {
-			var alertManager = VignetteManager.Instance.Get();
 			var state = context.consumerState;
 			var driver = state.choreDriver;
 			var scheduleBlock = state.scheduleBlock;
-			bool start = true;
+			bool start = true, normal = VanillaDLCAdapter.Instance?.IsNormalCondition(driver.
+				gameObject) ?? true;
 			// Bypass on red/yellow alert, only evaluate condition during Finish Tasks blocks,
 			// allow the current chore to continue, or new work chores to be evaluated if the
 			// current chore is compulsory like emotes
-			if (!alertManager.IsRedAlert() && !alertManager.IsYellowAlert() && scheduleBlock !=
-					null && scheduleBlock.GroupId == FinishTask.Id) {
+			if (normal && scheduleBlock != null && scheduleBlock.GroupId == FinishTask.Id) {
 				var currentChore = driver.GetCurrentChore();
-				// If the current chore is this chore, remember that
-				if (targetChore != null && currentChore == targetChore) {
-					
-				}
+				var detector = driver.GetComponent<FinishChoreDetector>();
+				// Allow the task that the Duplicant initially was doing to continue even if
+				// temporarily interrupted
+				var savedChore = (detector == null) ? null : (detector.IsAcquiringChore ?
+					currentChore : detector.TaskToFinish);
 				start = currentChore != null && (currentChore == context.chore || currentChore.
-					masterPriority.priority_class == PriorityScreen.PriorityClass.compulsory);
+					masterPriority.priority_class == PriorityScreen.PriorityClass.compulsory ||
+					savedChore == context.chore);
 			}
 			return start;
 		}
@@ -94,18 +95,35 @@ namespace PeterHan.FinishTasks {
 		public static void OnLoad() {
 			FinishBlock = null;
 			FinishColor = ScriptableObject.CreateInstance<ColorStyleSetting>();
-			FinishColor.activeColor = new Color(0.6f, 1.0f, 0.6f, 1.0f);
-			FinishColor.inactiveColor = new Color(0.286f, 1.0f, 0.286f, 1.0f);
-			FinishColor.disabledColor = new Color(0.4f, 0.416f, 0.4f, 1.0f);
-			FinishColor.disabledActiveColor = new Color(0.588f, 0.625f, 0.588f, 1.0f);
-			FinishColor.hoverColor = new Color(0.6f, 1.0f, 0.6f, 1.0f);
-			FinishColor.disabledhoverColor = new Color(0.46f, 0.5f, 0.46f, 1.0f);
+			FinishColor.activeColor = new Color(0.8f, 0.6f, 1.0f, 1.0f);
+			FinishColor.inactiveColor = new Color(0.5f, 0.286f, 1.0f, 1.0f);
+			FinishColor.disabledColor = new Color(0.4f, 0.4f, 0.416f, 1.0f);
+			FinishColor.disabledActiveColor = new Color(0.6f, 0.588f, 0.625f, 1.0f);
+			FinishColor.hoverColor = FinishColor.activeColor;
+			FinishColor.disabledhoverColor = new Color(0.48f, 0.46f, 0.5f, 1.0f);
 			FinishTask = null;
 			Work = null;
 			PUtil.InitLibrary();
 			LocString.CreateLocStringKeys(typeof(FinishTasksStrings.DUPLICANTS));
 			LocString.CreateLocStringKeys(typeof(FinishTasksStrings.UI));
 			PLocalization.Register();
+			PUtil.RegisterPatchClass(typeof(FinishTasksPatches));
+		}
+
+		[PLibMethod(RunAt.OnEndGame)]
+		internal static void OnEndGame() {
+#if DEBUG
+			PUtil.LogDebug("Destroying FinishTasks VanillaDLCAdapter");
+#endif
+			VanillaDLCAdapter.DestroyInstance();
+		}
+
+		[PLibMethod(RunAt.OnStartGame)]
+		internal static void OnStartGame() {
+			VanillaDLCAdapter.InitInstance();
+#if DEBUG
+			PUtil.LogDebug("Created FinishTasks VanillaDLCAdapter");
+#endif
 		}
 
 		/// <summary>
@@ -130,7 +148,7 @@ namespace PeterHan.FinishTasks {
 		/// Applied to MingleMonitor to schedule our Finish Mingle chore during Finish Tasks
 		/// time.
 		/// </summary>
-		[HarmonyPatch(typeof(MingleMonitor), "InitializeStates")]
+		[HarmonyPatch(typeof(MingleMonitor), nameof(MingleMonitor.InitializeStates))]
 		public static class MingleMonitor_InitializeStates_Patch {
 			/// <summary>
 			/// Creates a Finish Tasks Mingle chore.
@@ -144,6 +162,20 @@ namespace PeterHan.FinishTasks {
 			/// </summary>
 			internal static void Postfix(MingleMonitor __instance) {
 				__instance.mingle.ToggleRecurringChore(CreateMingleChore);
+			}
+		}
+
+		/// <summary>
+		/// Applied to MinionConfig to add a task completion sensor to each Duplicant.
+		/// </summary>
+		[HarmonyPatch(typeof(MinionConfig), nameof(MinionConfig.CreatePrefab))]
+		public static class MinionConfig_CreatePrefab_Patch {
+			/// <summary>
+			/// Applied after CreatePrefab runs.
+			/// </summary>
+			internal static void Postfix(GameObject __result) {
+				if (__result != null)
+					__result.AddOrGet<FinishChoreDetector>();
 			}
 		}
 
@@ -164,6 +196,9 @@ namespace PeterHan.FinishTasks {
 				// The type and color are not used by the base game
 				FinishBlock = __instance.Add(new ScheduleBlockType(FINISHTASK.ID, __instance,
 					FINISHTASK.NAME, FINISHTASK.DESCRIPTION, color));
+				// Allow localization to update the string (this is running in Db.Initialize)
+				CAN_START_NEW.description = FinishTasksStrings.DUPLICANTS.CHORES.
+					PRECONDITIONS.CAN_START_NEW_TASK;
 			}
 		}
 

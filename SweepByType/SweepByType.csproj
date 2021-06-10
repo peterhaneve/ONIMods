@@ -1,13 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Sweep By Type</AssemblyTitle>
-    <FileVersion>2.13.0.0</FileVersion>
+    <FileVersion>2.14.0.0</FileVersion>
     <RootNamespace>PeterHan.SweepByType</RootNamespace>
     <Description>Adds an optional material type filter to the Sweep tool.</Description>
     <AssemblyVersion>2.2.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>463187</LastWorkingBuild>
+    <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Sweep.png" />

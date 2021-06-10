@@ -70,7 +70,7 @@ namespace PeterHan.PLib.Options {
 		public override GameObject GetUIComponent() {
 			textField = new PTextField() {
 				OnTextChanged = OnTextChanged, ToolTip = LookInStrings(ToolTip),
-				Text = value.ToString(), MinWidth = 64, MaxLength = 16,
+				Text = value.ToString(Format ?? "G3"), MinWidth = 64, MaxLength = 16,
 				Type = PTextField.FieldType.Float
 			}.Build();
 			Update();

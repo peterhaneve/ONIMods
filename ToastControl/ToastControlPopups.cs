@@ -80,6 +80,7 @@ namespace PeterHan.ToastControl {
 			{ nameof(Storage), ShowItemStored },
 			{ nameof(SuperProductive), ShowOverjoyed },
 			{ nameof(Toilet), ShowGermsAdded },
+			{ nameof(ToiletWorkableUse), (c, t) => Options.RadiationRemoved },
 			{ nameof(UtilityBuildTool), (c, t) => Options.InvalidConnection },
 			{ nameof(WorldDamage), (c, t) => Options.ElementDug }
 		};

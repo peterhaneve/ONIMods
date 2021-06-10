@@ -21,7 +21,6 @@ using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 
 namespace PeterHan.BulkSettingsChange {
@@ -62,8 +61,7 @@ namespace PeterHan.BulkSettingsChange {
 		/// <summary>
 		/// The empty storage chore if one is active.
 		/// </summary>
-		private static readonly IDetouredField<DropAllWorkable, Chore> EMPTY_CHORE =
-			PDetours.DetourField<DropAllWorkable, Chore>("chore");
+		private readonly IDetouredField<DropAllWorkable, Chore> emptyChore;
 
 		/// <summary>
 		/// Enables or disables a building.
@@ -152,6 +150,11 @@ namespace PeterHan.BulkSettingsChange {
 		private IDictionary<string, ToolParameterMenu.ToggleState> options;
 
 		public BulkChangeTool() {
+			// TODO Vanilla/DLC code
+			string fieldName = "chore";
+			if (typeof(DropAllWorkable).GetFieldSafe(fieldName, false) == null)
+				fieldName = "Chore";
+			emptyChore = PDetours.DetourField<DropAllWorkable, Chore>(fieldName);
 			numObjectLayers = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.NumLayers),
 				ObjectLayer.NumLayers);
 			pickupableLayer = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.Pickupables),
@@ -418,8 +421,7 @@ namespace PeterHan.BulkSettingsChange {
 		private bool ToggleEmptyStorage(int cell, GameObject item, bool enable) {
 			var daw = item.GetComponentSafe<DropAllWorkable>();
 			bool changed = false;
-			if (daw != null && EMPTY_CHORE != null && (EMPTY_CHORE.Get(daw) != null) !=
-					enable) {
+			if (daw != null && (emptyChore.Get(daw) != null) != enable) {
 				daw.DropAll();
 #if DEBUG
 				var xy = Grid.CellToXY(cell);

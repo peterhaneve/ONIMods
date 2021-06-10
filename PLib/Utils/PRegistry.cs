@@ -126,6 +126,16 @@ namespace PeterHan.PLib {
 		public const string KEY_POSTLOAD_ENHANCED = "PLib.PostLoad.EnhancedTable";
 
 		/// <summary>
+		/// Used to synchronize access to tool icons.
+		/// </summary>
+		public const string KEY_TOOLICONS_LOCK = "PLib.ToolIcons.Lock";
+
+		/// <summary>
+		/// Stores the tool icons to be registered.
+		/// </summary>
+		public const string KEY_TOOLICONS_LIST = "PLib.ToolIcons.Table";
+
+		/// <summary>
 		/// Used to denote the latest version of PLib installed across any mod, which is the
 		/// version that is being used for any shared item forwarding.
 		/// </summary>
@@ -218,6 +228,8 @@ namespace PeterHan.PLib {
 					else
 						LogPatchWarning("The first PLib mod in the load order did not use " +
 							"PUtil.InitLibrary()!");
+				} catch (TargetInvocationException e) {
+					PUtil.LogException(e.GetBaseException() ?? e);
 				} catch (Exception e) {
 					PUtil.LogException(e);
 				}

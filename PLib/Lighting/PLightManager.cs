@@ -16,10 +16,13 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.Detours;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+
 using BrightnessDict = System.Collections.Generic.IDictionary<int, float>;
 using IntHandle = HandleVector<int>.Handle;
 using LightGridEmitter = LightGridManager.LightGridEmitter;
@@ -29,18 +32,20 @@ namespace PeterHan.PLib.Lighting {
 	/// Manages lighting. Instantiated only by the latest PLib version.
 	/// </summary>
 	internal sealed class PLightManager {
+		private delegate IntHandle AddToLayerDelegate(Light2D instance, Vector2I xy_min,
+			int width, int height, ScenePartitionerLayer layer);
+
 		/// <summary>
 		/// Adds a light's scene change partitioner to the specified scene layer.
 		/// </summary>
-		private static readonly MethodInfo ADD_TO_LAYER = typeof(Light2D).GetMethodSafe(
-			"AddToLayer", false, typeof(Vector2I), typeof(int), typeof(int),
-			typeof(ScenePartitionerLayer));
+		private static readonly DetouredMethod<AddToLayerDelegate> ADD_TO_LAYER =
+			typeof(Light2D).DetourLazy<AddToLayerDelegate>("AddToLayer");
 
 		/// <summary>
 		/// Retrieves the origin of a light.
 		/// </summary>
-		private static readonly PropertyInfo ORIGIN = typeof(Light2D).GetPropertySafe<int>(
-			"origin", false);
+		private static readonly IDetouredField<Light2D, int> ORIGIN = PDetours.
+			DetourFieldLazy<Light2D, int>("origin");
 
 		/// <summary>
 		/// If true, enables the smooth light falloff mode even on vanilla lights.
@@ -64,10 +69,10 @@ namespace PeterHan.PLib.Lighting {
 				ref IntHandle liquidPart) {
 			bool handled = false;
 			var shape = instance.shape;
-			int rad = (int)instance.Range;
+			int rad = Mathf.CeilToInt(instance.Range);
 			// Avoid interfering with vanilla lights
-			if (shape != LightShape.Cone && shape != LightShape.Circle && ORIGIN?.GetValue(
-					instance, null) is int cell && rad > 0 && Grid.IsValidCell(cell)) {
+			if (shape != LightShape.Cone && shape != LightShape.Circle && ORIGIN.Get(instance)
+					is int cell && rad > 0 && Grid.IsValidCell(cell)) {
 				var origin = Grid.CellToXY(cell);
 				var minCoords = new Vector2I(origin.x - rad, origin.y - rad);
 				// Better safe than sorry, check whole possible radius
@@ -90,11 +95,7 @@ namespace PeterHan.PLib.Lighting {
 		/// added.</returns>
 		private static IntHandle AddToLayer(Light2D instance, Vector2I minCoords, int rad,
 				ScenePartitionerLayer layer) {
-			var handle = IntHandle.InvalidHandle;
-			if (ADD_TO_LAYER?.Invoke(instance, new object[] { minCoords, 2 * rad, 2 * rad,
-					layer }) is IntHandle newHandle)
-				handle = newHandle;
-			return handle;
+			return ADD_TO_LAYER.Invoke(instance, minCoords, 2 * rad, 2 * rad, layer);
 		}
 
 		/// <summary>
@@ -135,6 +136,8 @@ namespace PeterHan.PLib.Lighting {
 					false);
 				var propName = otherType.GetPropertySafe<string>(nameof(PLightShape.
 					Identifier), false);
+				var propRayMode = otherType.GetPropertySafe<LightShape>(nameof(PLightShape.
+					RayMode), false);
 				var fillLight = otherType.CreateDelegate<FillLightFunc>(nameof(PLightShape.
 					FillLight), otherShape, typeof(GameObject), typeof(int), typeof(int),
 					typeof(BrightnessDict));
@@ -143,18 +146,33 @@ namespace PeterHan.PLib.Lighting {
 					if (fillLight == null)
 						PUtil.LogWarning("PLightSource handler has invalid method signature!");
 					else if (propID.GetValue(otherShape, null) is int id && id > 0) {
+						// Attempt to populate the ray mode used
+						if (!(propRayMode?.GetValue(otherShape, null) is LightShape rayMode))
+							rayMode = (LightShape)(-1);
 						shape = new PLightShape(id, (propName.GetValue(otherShape, null) as
 							string) ?? ("LightShape" + id), new CrossModLightWrapper(
-							fillLight).CastLight);
+							fillLight).CastLight, rayMode);
 					} else
 						// Some invalid object got in there somehow
 						PUtil.LogWarning("Found light shape {0} with bad ID!".F(otherShape));
 				} catch (TargetInvocationException e) {
 					PUtil.LogWarning("Exception when retrieving light shape of type " +
 						otherType.AssemblyQualifiedName);
-					PUtil.LogExcWarn(e);
+					PUtil.LogExcWarn(e.GetBaseException());
 				}
 			}
+			return shape;
+		}
+
+		/// <summary>
+		/// Gets the raycasting shape to use for the given light.
+		/// </summary>
+		/// <param name="light">The light which is being drawn.</param>
+		/// <returns>The shape to use for its rays.</returns>
+		internal static LightShape LightShapeToRayShape(Light2D light) {
+			var shape = light.shape;
+			if (shape != LightShape.Cone && shape != LightShape.Circle)
+				shape = Instance.GetRayShape(shape);
 			return shape;
 		}
 
@@ -170,7 +188,7 @@ namespace PeterHan.PLib.Lighting {
 		/// <summary>
 		/// The light brightness set by the last lighting brightness request.
 		/// </summary>
-		private readonly IDictionary<LightGridEmitter, CacheEntry> brightCache;
+		private readonly ConcurrentDictionary<LightGridEmitter, CacheEntry> brightCache;
 
 		/// <summary>
 		/// The lighting shapes available, all in this mod's namespace.
@@ -182,9 +200,8 @@ namespace PeterHan.PLib.Lighting {
 				PUtil.LogError("Multiple PLightManager created!");
 			else
 				PUtil.LogDebug("Created PLightManager");
-			// Needs to be thread safe! Unfortunately ConcurrentDictionary is unavailable in
-			// Unity .NET so we have to use locks
-			brightCache = new Dictionary<LightGridEmitter, CacheEntry>(128);
+			// Needs to be thread safe!
+			brightCache = new ConcurrentDictionary<LightGridEmitter, CacheEntry>(128, 2);
 			CallingObject = null;
 			Instance = this;
 			shapes = new List<PLightShape>(16);
@@ -196,9 +213,7 @@ namespace PeterHan.PLib.Lighting {
 		/// <param name="source">The source of the light.</param>
 		internal void DestroyLight(LightGridEmitter source) {
 			if (source != null)
-				lock (brightCache) {
-					brightCache.Remove(source);
-				}
+				brightCache.TryRemove(source, out _);
 		}
 
 		/// <summary>
@@ -212,13 +227,9 @@ namespace PeterHan.PLib.Lighting {
 		internal bool GetBrightness(LightGridEmitter source, int location,
 				LightGridEmitter.State state, out int result) {
 			bool valid;
-			CacheEntry cacheEntry;
 			var shape = state.shape;
 			if (shape != LightShape.Cone && shape != LightShape.Circle) {
-				lock (brightCache) {
-					// Shared access to the cache
-					valid = brightCache.TryGetValue(source, out cacheEntry);
-				}
+				valid = brightCache.TryGetValue(source, out CacheEntry cacheEntry);
 				if (valid) {
 					valid = cacheEntry.Intensity.TryGetValue(location, out float ratio);
 					if (valid)
@@ -246,6 +257,23 @@ namespace PeterHan.PLib.Lighting {
 				valid = false;
 			}
 			return valid;
+		}
+
+		/// <summary>
+		/// Checks to see if a light has specified one of the built-in ray options to cast
+		/// the little yellow rays around it.
+		/// </summary>
+		/// <param name="shape">The light shape to check.</param>
+		/// <returns>The light shape to use for ray casting, or the original shape if it is
+		/// a stock shape or a light shape not known to PLib Lighting.</returns>
+		internal LightShape GetRayShape(LightShape shape) {
+			int index = shape - LightShape.Cone - 1;
+			if (index >= 0 && index < shapes.Count) {
+				var newShape = shapes[index].RayMode;
+				if (newShape >= LightShape.Circle)
+					shape = newShape;
+			}
+			return shape;
 		}
 
 		/// <summary>
@@ -356,14 +384,8 @@ namespace PeterHan.PLib.Lighting {
 			if ((index = state.shape - LightShape.Cone - 1) >= 0 && index < shapes.Count &&
 					litCells != null) {
 				var ps = shapes[index];
-				CacheEntry cacheEntry;
-				lock (brightCache) {
-					// Look up in cache, in a thread safe way
-					if (!brightCache.TryGetValue(source, out cacheEntry)) {
-						cacheEntry = new CacheEntry(CallingObject, state.intensity);
-						brightCache.Add(source, cacheEntry);
-					}
-				}
+				var cacheEntry = brightCache.GetOrAdd(source, (_) => new CacheEntry(
+					CallingObject, state.intensity));
 				var brightness = cacheEntry.Intensity;
 				// Proper owner found
 				brightness.Clear();
@@ -416,9 +438,7 @@ namespace PeterHan.PLib.Lighting {
 			private readonly FillLightFunc other;
 
 			internal CrossModLightWrapper(FillLightFunc other) {
-				if (other == null)
-					throw new ArgumentNullException("other");
-				this.other = other;
+				this.other = other ?? throw new ArgumentNullException(nameof(other));
 			}
 
 			/// <summary>

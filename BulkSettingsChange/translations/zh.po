@@ -1,0 +1,79 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.4.2\n"
+"Last-Translator: Ventulus\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"Language: zh_CN\n"
+
+#. PeterHan.BulkSettingsChange.BulkChangeStrings.ACTION_TITLE
+msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.ACTION_TITLE"
+msgid "Settings Change Tool"
+msgstr "设置更改工具"
+
+#. PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DESCRIPTION
+msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DESCRIPTION"
+msgid "Enable or disable Auto-Disinfect, Auto-Repair, or buildings {Hotkey}"
+msgstr "启用或禁用自动消毒、自动维修、建筑使用{Hotkey}"
+
+#. PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DISABLE_BUILDINGS
+msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DISABLE_BUILDINGS"
+msgid "Building Disabled"
+msgstr "禁用建筑"
+
+#. PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DISABLE_COMPOST
+msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DISABLE_COMPOST"
+msgid "Compost Disabled"
+msgstr "禁用堆肥"
+
+#. PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DISABLE_DISINFECT
+msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DISABLE_DISINFECT"
+msgid "Disinfect Disabled"
+msgstr "禁用消毒"
+
+#. PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DISABLE_EMPTY
+msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DISABLE_EMPTY"
+msgid "Empty Storage Cancelled"
+msgstr "取消清空存储"
+
+#. PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DISABLE_REPAIR
+msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DISABLE_REPAIR"
+msgid "Auto-Repair Disabled"
+msgstr "禁用维修"
+
+#. PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_ENABLE_BUILDINGS
+msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_ENABLE_BUILDINGS"
+msgid "Building Enabled"
+msgstr "启用建筑"
+
+#. PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_ENABLE_COMPOST
+msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_ENABLE_COMPOST"
+msgid "Compost Enabled"
+msgstr "启用堆肥"
+
+#. PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_ENABLE_DISINFECT
+msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_ENABLE_DISINFECT"
+msgid "Disinfect Enabled"
+msgstr "启用消毒"
+
+#. PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_ENABLE_EMPTY
+msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_ENABLE_EMPTY"
+msgid "Storage Emptied"
+msgstr "清空存储"
+
+#. PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_ENABLE_REPAIR
+msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_ENABLE_REPAIR"
+msgid "Auto-Repair Enabled"
+msgstr "启用维修"
+
+#. PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_TITLE
+msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_TITLE"
+msgid "Change Settings"
+msgstr "更改设置"

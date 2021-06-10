@@ -18,6 +18,7 @@
 
 using KMod;
 using PeterHan.PLib;
+using PeterHan.PLib.Detours;
 using PeterHan.PLib.Options;
 using Steamworks;
 using System.Collections.Concurrent;
@@ -33,6 +34,11 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		private static readonly ConcurrentDictionary<ulong, SteamUGCDetails_t> DETAILS =
 			new ConcurrentDictionary<ulong, SteamUGCDetails_t>(2, 64);
+
+		// Detours the private setter of Mod.available_content to allow it to be updated.
+		// It is a property so cannot be accessed with ref ___ in a patch
+		private static readonly IDetouredField<Mod, Content> MOD_AVAILABLE_CONTENT =
+			PDetours.DetourField<Mod, Content>(nameof(Mod.available_content));
 
 		/// <summary>
 		/// True if a config scrub is required after mod details update.
@@ -135,19 +141,14 @@ namespace PeterHan.ModUpdateDate {
 		/// <param name="target">The target mod.</param>
 		/// <returns>Whether the content was really changed.</returns>
 		internal static bool SuppressContentChanged(bool changed, Mod target) {
-			var existing = ModUpdateInfo.Settings?.ModUpdates;
-			var label = target.label;
-			if (existing != null)
-				foreach (var info in existing) {
-					string idString = info.ID.ToString();
-					if (label.id == idString && label.distribution_platform == Label.
-							DistributionPlatform.Steam && (info.Status == ModUpdateStatus.
-							PendingUpdate || info.Status == ModUpdateStatus.UpdatedByThisMod))
-					{
-						changed = false;
-						break;
-					}
-				}
+			if (changed) {
+				changed = !WeOwnUpdatesTo(target);
+#if DEBUG
+				if (!changed)
+					PUtil.LogDebug("Suppressing Content Changed notification for mod " +
+						target.label.title);
+#endif
+			}
 			return changed;
 		}
 
@@ -181,6 +182,49 @@ namespace PeterHan.ModUpdateDate {
 				info.Status = ModUpdateStatus.PendingUpdate;
 				POptions.WriteSettingsForAssembly(settings);
 			}
+		}
+
+		/// <summary>
+		/// If an updated mod has different available content from the broken Steam version,
+		/// Klei flags it as incompatible even though it is loaded (!). Fix that for mods we
+		/// have updated.
+		/// </summary>
+		/// <param name="current">The current mod as loaded.</param>
+		/// <param name="replacement">The replacement mod coming from Steam.</param>
+		internal static void UpdateContentChanged(Mod current, Mod replacement) {
+			current.CopyPersistentDataTo(replacement);
+			if (WeOwnUpdatesTo(current)) {
+				var newContent = MOD_AVAILABLE_CONTENT.Get(current);
+				var currentContent = MOD_AVAILABLE_CONTENT.Get(replacement);
+#if DEBUG
+				PUtil.LogDebug("Force updating content of {0}: {1} to {2}".F(current.label.
+					title, currentContent, newContent));
+#endif
+				MOD_AVAILABLE_CONTENT.Set(replacement, newContent);
+			}
+		}
+
+		/// <summary>
+		/// Checks to see if we are the current updater of this mod.
+		/// </summary>
+		/// <param name="target">The mod to check.</param>
+		/// <returns>true if it was found in the Mod Updater config and is registered as
+		/// updated by this mod, or false otherwise.</returns>
+		private static bool WeOwnUpdatesTo(Mod target) {
+			var existing = ModUpdateInfo.Settings?.ModUpdates;
+			bool found = false;
+			if (existing != null && target.label.distribution_platform == Label.
+					DistributionPlatform.Steam) {
+				string idString = target.label.id;
+				foreach (var info in existing)
+					if (idString == info.ID.ToString() && (info.Status == ModUpdateStatus.
+							PendingUpdate || info.Status == ModUpdateStatus.UpdatedByThisMod))
+					{
+						found = true;
+						break;
+					}
+			}
+			return found;
 		}
 	}
 }

@@ -1,23 +1,24 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net40</TargetFramework>
     <Title>PeterHan.PLib.Options</Title>
     <AssemblyTitle>PeterHanLib Options</AssemblyTitle>
-    <Version>3.9.0.0</Version>
+    <Version>3.10.0.0</Version>
     <UsesPLib>false</UsesPLib>
     <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
     <Copyright>Copyright 2021 Peter Han</Copyright>
     <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
     
 Contains functions aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
-    <AssemblyVersion>3.9.0.0</AssemblyVersion>
+    <AssemblyVersion>3.10.0.0</AssemblyVersion>
     <RootNamespace>PeterHan.PLib.Options</RootNamespace>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
     <DefineConstants>OPTIONS_ONLY</DefineConstants>
+    <DistributeMod>false</DistributeMod>
+    <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DocumentationFile>bin\Release\PLibOptions.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
@@ -31,6 +32,7 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
     <Compile Include="..\PLib\Options\ButtonOptionsEntry.cs" Link="ButtonOptionsEntry.cs" />
     <Compile Include="..\PLib\Options\CategoryExpandHandler.cs" Link="CategoryExpandHandler.cs" />
     <Compile Include="..\PLib\Options\CheckboxOptionsEntry.cs" Link="CheckboxOptionsEntry.cs" />
+    <Compile Include="..\PLib\Options\CompositeOptionsEntry.cs" Link="CompositeOptionsEntry.cs" />
     <Compile Include="..\PLib\Options\ConfigFileAttribute.cs" Link="ConfigFileAttribute.cs" />
     <Compile Include="..\PLib\Options\DynamicOptionAttribute.cs" Link="DynamicOptionAttribute.cs" />
     <Compile Include="..\PLib\Options\DynamicOptionsEntry.cs" Link="DynamicOptionsEntry.cs" />
@@ -42,6 +44,8 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
     <Compile Include="..\PLib\Options\LimitAttribute.cs" Link="LimitAttribute.cs" />
     <Compile Include="..\PLib\Options\ModInfoAttribute.cs" Link="ModInfoAttribute.cs" />
     <Compile Include="..\PLib\Options\ModOptionsHandler.cs" Link="ModOptionsHandler.cs" />
+    <Compile Include="..\PLib\Options\NullableFloatOptionsEntry.cs" Link="NullableFloatOptionsEntry.cs" />
+    <Compile Include="..\PLib\Options\NullableIntOptionsEntry.cs" Link="NullableIntOptionsEntry.cs" />
     <Compile Include="..\PLib\Options\OptionAttribute.cs" Link="OptionAttribute.cs" />
     <Compile Include="..\PLib\Options\OptionsDialog.cs" Link="OptionsDialog.cs" />
     <Compile Include="..\PLib\Options\OptionsEntry.cs" Link="OptionsEntry.cs" />
@@ -101,5 +105,6 @@ Contains functions aimed at improving cross-mod compatibility, in-game user inte
     <Compile Include="..\PLib\UI\UIDetours.cs" Link="UIDetours.cs" />
     <Compile Include="..\PLib\Utils\PPatchTools.cs" Link="PPatchTools.cs" />
     <Compile Include="..\PLib\Utils\PTranspilerTools.cs" Link="PTranspilerTools.cs" />
+    <Compile Include="..\PLib\Utils\TextMeshProPatcher.cs" Link="TextMeshProPatcher.cs" />
   </ItemGroup>
 </Project>

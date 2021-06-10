@@ -25,7 +25,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
 	/// Requires the Neural Vacillator to be used a specified number of times.
 	/// </summary>
-	public sealed class UseGeneShufflerNTimes : ColonyAchievementRequirement {
+	public sealed class UseGeneShufflerNTimes : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
 		/// The number of times that it must be used.
 		/// </summary>
@@ -48,7 +48,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 			used++;
 		}
 
-		public override void Deserialize(IReader reader) {
+		public void Deserialize(IReader reader) {
 			required = Math.Max(reader.ReadInt32(), 1);
 			used = Math.Max(reader.ReadInt32(), 0);
 		}

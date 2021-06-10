@@ -78,7 +78,7 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 				// Runs in prefix before SetRowsActive
 				header.IsVisible = CritterInventoryUtils.PassesSearchFilter(header.Title,
 					searchUp);
-				header.SearchFilter(search);
+				header.SearchFilter(searchUp);
 			}
 		}
 

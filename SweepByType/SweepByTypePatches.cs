@@ -21,8 +21,6 @@ using PeterHan.PLib;
 using PeterHan.PLib.Datafiles;
 using PeterHan.PLib.Options;
 using System;
-using System.Collections.Generic;
-using UnityEngine;
 
 namespace PeterHan.SweepByType {
 	/// <summary>
@@ -49,6 +47,7 @@ namespace PeterHan.SweepByType {
 			PLocalization.Register();
 			Options = null;
 			PUtil.RegisterPatchClass(typeof(SweepByTypePatches));
+			PToolMode.RegisterToolIcon(SpriteRegistry.GetToolIcon());
 		}
 
 		/// <summary>
@@ -110,20 +109,6 @@ namespace PeterHan.SweepByType {
 				// If no tool match found, log a warning
 				if (!replaced)
 					PUtil.LogWarning("Could not install filtered sweep tool!");
-			}
-		}
-
-		/// <summary>
-		/// Applied to ToolMenu to add the filtered destroy icon.
-		/// </summary>
-		[HarmonyPatch(typeof(ToolMenu), "OnPrefabInit")]
-		public static class ToolMenu_OnPrefabInit_Patch {
-			/// <summary>
-			/// Applied after OnPrefabInit runs.
-			/// </summary>
-			/// <param name="___icons">The icon list where the icon can be added.</param>
-			internal static void Postfix(List<Sprite> ___icons) {
-				___icons.Add(SpriteRegistry.GetToolIcon());
 			}
 		}
 	}

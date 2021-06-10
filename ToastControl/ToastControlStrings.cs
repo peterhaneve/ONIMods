@@ -45,6 +45,8 @@ namespace PeterHan.ToastControl {
 
 					public static LocString CONTROL_ALL = "<b>All</b> Popups";
 					public static LocString CONTROL_ALL_TOOLTIP = "If <b>deselected</b>, hides all popup notifications\nregardless of the other settings";
+					public static LocString DISABLE_MOVING = "Disable Motion";
+					public static LocString DISABLE_MOVING_TOOLTIP = "If selected, popup text will no longer move upwards after creation";
 
 					public static LocString BUILD_COMPLETE = "Construction completed";
 					public static LocString CRITTER_DROPS = "Critter drops";
@@ -70,6 +72,7 @@ namespace PeterHan.ToastControl {
 						ITEM, DUPLICANT);
 					public static LocString PICKEDUP_MACHINE = string.Format(STRINGS.UI.PICKEDUP,
 						ITEM, MACHINE);
+					public static LocString RADS_REMOVED = "Radiation removed";
 					public static LocString RESEARCH_GAINED = "Research point gained";
 
 					private const string DAMAGE_BASE = "Damage: {0}";
@@ -141,6 +144,8 @@ namespace PeterHan.ToastControl {
 					public static LocString OVERJOYED = "Duplicants' Overjoyed reactions:\n - Super Productive";
 					public static LocString PICKEDUP_DUPLICANT = "Item was removed from storage or building by a duplicant";
 					public static LocString PICKEDUP_MACHINE = "Item was removed from storage or building by a machine";
+					public static LocString RADS_REMOVED = STRINGS.UI.FormatAsLink("Radiation",
+						"RADIATION") + " was removed by a building or Duplicant action";
 					public static LocString RESEARCH_GAINED = "Progress made towards a research objective";
 					public static LocString SETTINGS_APPLIED = "Settings were copied to another building";
 				}

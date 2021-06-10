@@ -26,7 +26,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
 	/// Requires a Duplicant to reach the specified value in the specified attribute.
 	/// </summary>
-	public class ReachXAttributeValue : ColonyAchievementRequirement {
+	public class ReachXAttributeValue : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
 		/// The attribute ID which is checked.
 		/// </summary>
@@ -50,7 +50,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 			this.required = Math.Max(0.0f, required);
 		}
 
-		public override void Deserialize(IReader reader) {
+		public void Deserialize(IReader reader) {
 			attribute = reader.ReadKleiString();
 			maxValue = 0;
 			required = Math.Max(0.0f, reader.ReadSingle());

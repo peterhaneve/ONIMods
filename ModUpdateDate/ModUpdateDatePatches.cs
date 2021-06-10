@@ -86,9 +86,7 @@ namespace PeterHan.ModUpdateDate {
 		/// Invoked by the game before our patches, so we get a chance to patch Mod.Crash.
 		/// </summary>
 		public static void PrePatch(HarmonyInstance instance) {
-			var method = typeof(Mod).GetMethodSafe("Crash", false);
-			if (method == null)
-				method = typeof(Mod).GetMethodSafe("SetCrashed", false);
+			var method = typeof(Mod).GetMethodSafe(nameof(Mod.SetCrashed), false);
 			if (method != null)
 				instance.Patch(method, prefix: new HarmonyMethod(typeof(ModUpdateDatePatches),
 					nameof(OnModCrash)));
@@ -119,11 +117,11 @@ namespace PeterHan.ModUpdateDate {
 		/// Applied to KMod.Manager to fix mods being overwritten by Klei if the content in
 		/// the outdated mod does not match the content in the updated mod.
 		/// </summary>
-		[HarmonyPatch(typeof(Manager), "Subscribe")]
+		[HarmonyPatch(typeof(Manager), nameof(Manager.Subscribe))]
 		public static class Manager_Subscribe_Patch {
 			/// <summary>
 			/// Transpiles Subscribe to insert a call to SuppressContentChanged after the
-			/// comparison.
+			/// comparison, and a call to UpdateContentChanged instead of CopyPersistentDataTo.
 			/// </summary>
 			internal static IEnumerable<CodeInstruction> Transpiler(
 					IEnumerable<CodeInstruction> method) {
@@ -133,10 +131,18 @@ namespace PeterHan.ModUpdateDate {
 					available_content), false)?.GetGetMethod();
 				var insertMethod = typeof(ModUpdateDetails).GetMethodSafe(nameof(
 					ModUpdateDetails.SuppressContentChanged), true, typeof(bool), typeof(Mod));
+				var copyPersistent = typeof(Mod).GetMethodSafe(nameof(Mod.
+					CopyPersistentDataTo), false, typeof(Mod));
+				var updateCC = typeof(ModUpdateDetails).GetMethodSafe(nameof(ModUpdateDetails.
+					UpdateContentChanged), true, typeof(Mod), typeof(Mod));
 				foreach (var instr in method) {
 					var opcode = instr.opcode;
+					var operand = instr.operand;
+					if (opcode == OpCodes.Callvirt && copyPersistent != null && updateCC !=
+							null && (operand as MethodBase) == copyPersistent)
+						instr.operand = updateCC;
 					yield return instr;
-					if (opcode == OpCodes.Callvirt && targetMethod != null && (instr.operand as
+					if (opcode == OpCodes.Callvirt && targetMethod != null && (operand as
 							MethodBase) == targetMethod) {
 						// Only the one after calling get_available_content
 						gac = true;
@@ -159,8 +165,7 @@ namespace PeterHan.ModUpdateDate {
 		}
 
 		/// <summary>
-		/// Applied to ModsScreen to adjust tool tips for the subscription button to have
-		/// the dates.
+		/// Applied to ModsScreen to add the update mod buttons.
 		/// </summary>
 		[HarmonyPatch(typeof(ModsScreen), "BuildDisplay")]
 		[HarmonyPriority(Priority.High)]
@@ -204,8 +209,9 @@ namespace PeterHan.ModUpdateDate {
 					IEnumerable<CodeInstruction> method) {
 				var argType = typeof(UGCQueryHandle_t);
 				return PPatchTools.ReplaceMethodCall(method, typeof(SteamUGC).GetMethodSafe(
-					"SendQueryUGCRequest", true, argType), typeof(ModUpdateDatePatches).
-					GetMethodSafe(nameof(ConfigureAndSend), true, argType));
+					nameof(SteamUGC.SendQueryUGCRequest), true, argType), typeof(
+					ModUpdateDatePatches).GetMethodSafe(nameof(ConfigureAndSend), true,
+					argType));
 			}
 		}
 

@@ -1,0 +1,270 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.4.2\n"
+"Last-Translator: Ventulus\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"Language: zh_CN\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_CANCEL
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_CANCEL"
+msgid "CANCEL"
+msgstr "取消"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_LINE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_LINE"
+msgid "<b>{0}</b>\n"
+msgstr "<b>{0}</b>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_MORE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_MORE"
+msgid "<i>(and {0:D} more...)</i>\n"
+msgstr "<i>(和{0:D}个更多...)</i>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_OK
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_OK"
+msgid "FORCE UPDATE"
+msgstr "强制更新"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_UPDATE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_UPDATE"
+msgid ""
+"Continuing will reinstall the latest version of:\n"
+"{0}from the Workshop.\n"
+"<color=#FFCC00>A best effort will be made to preserve mod options.</color>\n"
+"\n"
+"Check again after updating and enable the mod if necessary."
+msgstr ""
+"下一步会从创意工坊重新安装最新版本：\n"
+"{0}\n"
+"<color=#FFCC00>我们会尽最大努力保留模组的选项。</color>\n"
+"\n"
+"如有必要，更新后重新检查并启用模组。"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.LOCAL_UPDATE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.LOCAL_UPDATE"
+msgid "<b>Local Updated:</b> {0:f}"
+msgstr "<b>本地更新：</b> {0:f}"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_UPDATE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_UPDATE"
+msgid ""
+"\n"
+"\n"
+"<color=#FFCC00>{0:D} mods may be out of date</color>"
+msgstr ""
+"\n"
+"\n"
+"<color=#FFCC00>{0:D}个模组已经过时</color>"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_UPDATE_1
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_UPDATE_1"
+msgid ""
+"\n"
+"\n"
+"<color=#FFCC00>1 mod may be out of date</color>"
+msgstr ""
+"\n"
+"\n"
+"<color=#FFCC00>一个模组已经过时</color>"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_OUTDATED
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_OUTDATED"
+msgid "This mod appears to be out of date!"
+msgstr "这个模组已经过时！"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATE_1
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATE_1"
+msgid "Update one mod which appears to be out of date"
+msgstr "更新已经过时的一个模组"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATE_ALL
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATE_ALL"
+msgid "Update {0:D} mods which appear to be out of date"
+msgstr "更新已经过时的{0:D}个模组"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATED
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATED"
+msgid "This mod appears to be up to date."
+msgstr "这个模组已是最新。"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATED_BYUS
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATED_BYUS"
+msgid "This mod was locally updated by Mod Updater."
+msgstr "这个模组由模组更新器本地更新。"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.OPTION_MAINMENU
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.OPTION_MAINMENU"
+msgid "Show Updates in Main Menu"
+msgstr "在主菜单显示更新"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.STEAM_UPDATE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.STEAM_UPDATE"
+msgid "<b>Steam Updated:</b> {0:f}"
+msgstr "<b>Steam更新：</b>{0:f}"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.STEAM_UPDATE_UNKNOWN
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER."
+"STEAM_UPDATE_UNKNOWN"
+msgid "Steam Updated: Unknown"
+msgstr "Steam更新：未知"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_CANTSTART
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_CANTSTART"
+msgid "Unable to start download"
+msgstr "无法开启下载"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_ERROR
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_ERROR"
+msgid "<b>{0}</b>: <color=#FF0000>{1}</color>\n"
+msgstr "<b>{0}</b>：<color=#FF0000>{1}</color>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_FOOTER_CONFIG
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER."
+"UPDATE_FOOTER_CONFIG"
+msgid ""
+"\n"
+"<b><color=#FFCC00>Back up any valuable mod configurations now manually!</"
+"color></b>"
+msgstr ""
+"\n"
+"<b><color=#FFCC00>现在手动备份任何有价值的模组配置</color></b>"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_FOOTER_ERROR
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_FOOTER_ERROR"
+msgid ""
+"\n"
+"Check your connection, and that the mods directory has sufficient disk space "
+"and permissions."
+msgstr ""
+"\n"
+"检查你的网络连接，并确保模组目录有足够的硬盘空间和权限。"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_FOOTER_OK
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_FOOTER_OK"
+msgid ""
+"\n"
+"{0} will be updated on the next restart."
+msgstr ""
+"\n"
+"{0}将会在下次重启更新。"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_HEADER
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_HEADER"
+msgid ""
+"<size=16>Update results:</size>\n"
+"\n"
+msgstr ""
+"<size=16>更新结果：</size>\n"
+"\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_INPROGRESS
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_INPROGRESS"
+msgid "An update for another mod is already in progress."
+msgstr "另一个模组的更新正在进行。"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_MULTIPLE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_MULTIPLE"
+msgid "These mods"
+msgstr "这些模组"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_NODETAILS
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_NODETAILS"
+msgid "Uninstalled or not found on workshop"
+msgstr "已卸载或未在创意工坊找到"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_NOFILE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_NOFILE"
+msgid "No file found to download"
+msgstr "未找到可下载文件"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_OFFLINE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_OFFLINE"
+msgid "Cannot download in Offline Mode"
+msgstr "无法以离线模式下载"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_OK_CONFIG
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_OK_CONFIG"
+msgid ""
+"<b>{0}</b>: <color=#00CC00>{1:D} custom mod option files backed up</color>\n"
+msgstr "<b>{0}</b>：<color=#00CC00>备份{1:D}个自定义模组选项文件</color>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_OK_CONFIG_1
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_OK_CONFIG_1"
+msgid ""
+"<b>{0}</b>: <color=#00CC00>One custom mod option file backed up</color>\n"
+msgstr "<b>{0}</b>：<color=#00CC00>备份一个自定义模组选项文件</color>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_OK_NOCONFIG
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_OK_NOCONFIG"
+msgid ""
+"<b>{0}</b>: <color=#FFCC00>Unable to back up configuration files</color>\n"
+msgstr "<b>{0}</b>：<color=#FFCC00>无法备份配置文件</color>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_ONE
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_ONE"
+msgid "This mod"
+msgstr "这个模组"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_REST
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_REST"
+msgid "<b>{0:D}</b> <color=#00CC00>mods were updated with no errors</color>\n"
+msgstr "<b>{0:D}</b><color=#00CC00>个模组顺利更新了</color>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_REST_1
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_REST_1"
+msgid "<b>One</b> <color=#00CC00>mod was updated with no errors</color>\n"
+msgstr "<b>一</b><color=#00CC00>个模组顺利更新了</color>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_SINGLE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_SINGLE"
+msgid "<b>{0}</b>: <color=#00CC00>Updated</color>\n"
+msgstr "<b>{0}</b>：<color=#00CC00>更新</color>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.TOOLTIPS.MODUPDATER.OPTION_MAINMENU
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.TOOLTIPS.MODUPDATER."
+"OPTION_MAINMENU"
+msgid ""
+"If selected, a warning with the number of potentially\n"
+"outdated mods is shown in the main menu."
+msgstr ""
+"如果选中，会在主菜单显示\n"
+"过时模组数量的警告。"

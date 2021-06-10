@@ -76,6 +76,7 @@ namespace PeterHan.ToastControl {
 			"SandboxSampleTool:OnLeftClickDown",
 			"SuperProductive+<>c:<InitializeStates>b__3_0",
 			"Toilet:Flush",
+			"ToiletWorkableUse:OnCompleteWork",
 			"UtilityBuildTool:ApplyPathToConduitSystem"
 		};
 
@@ -83,7 +84,6 @@ namespace PeterHan.ToastControl {
 		/// Methods to patch for the long form of PopFXManager.SpawnFX.
 		/// </summary>
 		private static ICollection<string> TargetsShort => new List<string>() {
-			"Beefinery+States:EatOreFromStorage",
 			"BuildingHP:DoDamagePopFX",
 			"Constructable:OnCompleteWork",
 			"CreatureCalorieMonitor+Stomach:Poop",
@@ -429,6 +429,34 @@ namespace PeterHan.ToastControl {
 					new CodeInstruction(OpCodes.Call, typeof(ToastControlPatches).
 						GetMethodSafe(nameof(ShouldHidePickupPopups), true, typeof(Worker)))
 				});
+		}
+
+		/// <summary>
+		/// Applied to PopFX to disable the popups moving upward if necessary.
+		/// </summary>
+		[HarmonyPatch]
+		public static class PopFX_Spawn_Patch {
+			internal static MethodBase TargetMethod() {
+				var options = typeof(PopFX).GetMethods(BindingFlags.Public | BindingFlags.
+					NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+				MethodBase target = null;
+				// Look for a match that is not KMonoBehaviour.Spawn()
+				foreach (var method in options)
+					if (method.Name == nameof(PopFX.Spawn) && method.GetParameters().
+							Length > 0) {
+						target = method;
+						break;
+					}
+				return target;
+			}
+
+			/// <summary>
+			/// Applied after Spawn runs.
+			/// </summary>
+			internal static void Postfix(ref float ___Speed) {
+				if (ToastControlPopups.Options.DisableMoving)
+					___Speed = 0.0f;
+			}
 		}
 
 		/// <summary>

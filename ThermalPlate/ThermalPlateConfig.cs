@@ -77,13 +77,11 @@ namespace PeterHan.ThermalPlate {
 		public override BuildingDef CreateBuildingDef() {
 			var def = ThermalInterfacePlate.CreateDef();
 			// Is "Drywall Hides Pipes" installed? If so, hide pipes with this too
-			if (PPatchTools.GetTypeSafe("DrywallHidesPipes.DrywallPatch",
-					"DrywallHidesPipes-merged") != null)
+			if (PPatchTools.GetTypeSafe("DrywallHidesPipes.DrywallPatch") != null)
 				def.SceneLayer = Grid.SceneLayer.LogicGatesFront;
 			// Is "Faster Drywall & Plate Construction" installed? If so, reduce
 			// construction time by 5x
-			if (PPatchTools.GetTypeSafe("Patches.ExteriorWallAdjust", "ClassLibrary1") !=
-					null)
+			if (PPatchTools.GetTypeSafe("Patches.ExteriorWallAdjust") != null)
 				def.ConstructionTime = 6.0f;
 			return def;
 		}

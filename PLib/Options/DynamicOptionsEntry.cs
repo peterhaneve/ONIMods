@@ -21,11 +21,54 @@ using System;
 using System.Reflection;
 using UnityEngine;
 
+using OptionsList = System.Collections.Generic.ICollection<PeterHan.PLib.Options.OptionsEntry>;
+using System.Collections.Generic;
+
 namespace PeterHan.PLib.Options {
 	/// <summary>
 	/// An options entry controlled by the mod.
 	/// </summary>
 	internal sealed class DynamicOptionsEntry : OptionsEntry {
+		/// <summary>
+		/// Adds the custom options declared by the target class's CreateOptions method at
+		/// runtime.
+		/// </summary>
+		/// <param name="options">The options object to use as the context</param>
+		/// <param name="existing">The existing list of options determined at dialog creation time.</param>
+		/// <returns>The new list of options.</returns>
+		internal static IDictionary<string, OptionsList> AddCustomOptions(object options,
+				IDictionary<string, OptionsList> existing) {
+			System.Collections.IEnumerable customOptions = null;
+			// Call the user handler
+			var createOptions = PPatchTools.GetMethodSafe(options.GetType(), nameof(IOptions.
+				CreateOptions), false);
+			var entries = existing;
+			if (createOptions != null)
+				try {
+					customOptions = createOptions.Invoke(options, null) as System.
+						Collections.IEnumerable;
+				} catch (TargetInvocationException e) {
+					// Other mod's error
+					PUtil.LogExcWarn(e.GetBaseException());
+				} catch (AmbiguousMatchException e) {
+					// Other mod's error
+					PUtil.LogExcWarn(e);
+				} catch (MemberAccessException e) {
+					// Other mod's error
+					PUtil.LogExcWarn(e);
+				}
+			if (customOptions != null) {
+				// Middle-depth copy of the existing categories as it can change on each dialog
+				entries = new SortedList<string, OptionsList>(entries.Count);
+				foreach (var pair in existing)
+					entries.Add(pair.Key, new List<OptionsEntry>(pair.Value));
+				foreach (var value in customOptions)
+					if (value != null)
+						AddToCategory(entries, DynamicOptionsEntry.Create(value));
+			}
+			return entries;
+		}
+
 		/// <summary>
 		/// Creates a new dynamic options entry from a [DynamicOption] attribute.
 		/// </summary>

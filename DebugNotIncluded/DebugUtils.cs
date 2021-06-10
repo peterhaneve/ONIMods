@@ -39,6 +39,11 @@ namespace PeterHan.DebugNotIncluded {
 		internal static readonly Vector2 ANCHOR_MID_LEFT = new Vector2(0.0f, 0.5f);
 
 		/// <summary>
+		/// The relative folder in each mod where archived versions are stored.
+		/// </summary>
+		internal const string ARCHIVED_VERSIONS_FOLDER = "archived_versions";
+
+		/// <summary>
 		/// The margin inside each button.
 		/// </summary>
 		internal static readonly RectOffset BUTTON_MARGIN = new RectOffset(10, 10, 7, 7);
@@ -54,6 +59,11 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		private const BindingFlags INSTANCE_STATIC = BindingFlags.Instance | BindingFlags.
 			Static;
+
+		/// <summary>
+		/// The mod information file name used for archived versions.
+		/// </summary>
+		private const string MOD_INFO_FILENAME = "mod_info.yaml";
 
 		/// <summary>
 		/// Binding flags used to find members in a class of any visibility.
@@ -86,6 +96,11 @@ namespace PeterHan.DebugNotIncluded {
 				{ "ushort", typeof(ushort) }, { "object", typeof(object) },
 				{ "string", typeof(string) }
 			};
+
+		/// <summary>
+		/// The Action used when "UI Debug" is pressed.
+		/// </summary>
+		internal static PAction UIDebugAction { get; private set; }
 
 		/// <summary>
 		/// This method was adapted from Mono at https://github.com/mono/mono/blob/master/mcs/class/corlib/System.Diagnostics/StackTrace.cs
@@ -187,6 +202,31 @@ namespace PeterHan.DebugNotIncluded {
 				}
 			}
 			return mod;
+		}
+
+		/// <summary>
+		/// A slimmed down and public version of Mod.GetModInfoForFolder to read
+		/// archived version information.
+		/// </summary>
+		/// <param name="modInfo">The mod to query.</param>
+		/// <param name="archivedPath">The relative path to the mod base folder.</param>
+		/// <returns>The version information for that particular archived version.</returns>
+		internal static Mod.PackagedModInfo GetModInfoForFolder(Mod modInfo,
+				string archivedPath) {
+			var items = new List<FileSystemItem>(32);
+			modInfo.file_source.GetTopLevelItems(items, archivedPath);
+			Mod.PackagedModInfo result = null;
+			foreach (var item in items)
+				if (item.type == FileSystemItem.ItemType.File && item.name ==
+						MOD_INFO_FILENAME) {
+					// No option but to read into memory, Klei API has no stream version
+					string contents = modInfo.file_source.Read(Path.Combine(archivedPath,
+						MOD_INFO_FILENAME));
+					if (!string.IsNullOrEmpty(contents))
+						result = Klei.YamlIO.Parse<Mod.PackagedModInfo>(contents, default);
+					break;
+				}
+			return result;
 		}
 
 		/// <summary>
@@ -347,6 +387,15 @@ namespace PeterHan.DebugNotIncluded {
 			}
 			if (!string.IsNullOrEmpty(path))
 				Application.OpenURL(Path.GetFullPath(path));
+		}
+
+		/// <summary>
+		/// Registers the UI debug action (default Alt+U) to dump UI element trees to the log.
+		/// </summary>
+		internal static void RegisterUIDebug() {
+			UIDebugAction = PAction.Register("DebugNotIncluded.UIDebugAction",
+				DebugNotIncludedStrings.INPUT_BINDINGS.DEBUG.SNAPSHOT, new PKeyBinding(
+				KKeyCode.U, Modifier.Alt));
 		}
 
 		/// <summary>

@@ -1,11 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net40</TargetFramework>
     <AssemblyTitle>Thermo Sensor Tile</AssemblyTitle>
     <FileVersion>2.7.0.0</FileVersion>
     <RootNamespace>PeterHan.TileTempSensor</RootNamespace>
     <Description>A Thermo Sensor in tile form, allowing heat transfer to it even in Vacuum.</Description>
     <AssemblyVersion>2.3.0.0</AssemblyVersion>
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>448420</LastWorkingBuild>
+    <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
 </Project>

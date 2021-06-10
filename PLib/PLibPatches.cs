@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Reflection.Emit;
 using TMPro;
 using UnityEngine;
 using IEnumerable = System.Collections.IEnumerable;
@@ -38,19 +39,22 @@ namespace PeterHan.PLib {
 	/// All patches for PLib are stored here and only applied once for all PLib mods loaded.
 	/// </summary>
 	sealed class PLibPatches {
-		#region Patches
+#region Patches
 		// Method only exists in vanilla
 		private static readonly MethodBase ACHIEVEMENT_SERIALIZE = typeof(Database.
 			ColonyAchievementRequirement).GetMethodSafe("Serialize", false, typeof(
 			BinaryWriter));
 
+		private static readonly IDetouredField<LightShapePreview, int> PREVIOUS_CELL =
+			PDetours.DetourFieldLazy<LightShapePreview, int>("previousCell");
+
 		/// <summary>
-		/// Applied to modify SteamUGCService to silence "Preview image load failed".
+		/// Applied to LightGridEmitter to unattribute lighting sources.
 		/// </summary>
-		private static IEnumerable<CodeInstruction> LoadPreviewImage_Transpile(
-				IEnumerable<CodeInstruction> body) {
-			return PPatchTools.ReplaceMethodCall(body, typeof(Debug).GetMethodSafe(nameof(
-				Debug.LogFormat), true, typeof(string), typeof(object[])));
+		private static void AddToGrid_Postfix() {
+			var lm = PLightManager.Instance;
+			if (lm != null)
+				lm.CallingObject = null;
 		}
 
 		/// <summary>
@@ -66,42 +70,6 @@ namespace PeterHan.PLib {
 				lm.CallingObject = __instance.gameObject;
 				cont = !PLightManager.AddScenePartitioner(__instance,
 					ref ___solidPartitionerEntry, ref ___liquidPartitionerEntry);
-			}
-			return cont;
-		}
-
-		/// <summary>
-		/// Applied to LightGridEmitter to unattribute lighting sources.
-		/// </summary>
-		private static void AddToGrid_Postfix() {
-			var lm = PLightManager.Instance;
-			if (lm != null)
-				lm.CallingObject = null;
-		}
-
-		/// <summary>
-		/// Applied to TMP_InputField to fix a bug that prevented auto layout from ever
-		/// working.
-		/// </summary>
-		private static bool AssignPositioningIfNeeded_Prefix(TMP_InputField __instance,
-				RectTransform ___caretRectTrans, TMP_Text ___m_TextComponent) {
-			bool cont = true;
-			var crt = ___caretRectTrans;
-			if (___m_TextComponent != null && crt != null && __instance != null &&
-				___m_TextComponent.isActiveAndEnabled)
-			{
-				var rt = ___m_TextComponent.rectTransform;
-				if (crt.localPosition != rt.localPosition ||
-						crt.localRotation != rt.localRotation ||
-						crt.localScale != rt.localScale ||
-						crt.anchorMin != rt.anchorMin ||
-						crt.anchorMax != rt.anchorMax ||
-						crt.anchoredPosition != rt.anchoredPosition ||
-						crt.sizeDelta != rt.sizeDelta ||
-						crt.pivot != rt.pivot) {
-					__instance.StartCoroutine(ResizeCaret(crt, rt));
-					cont = false;
-				}
 			}
 			return cont;
 		}
@@ -171,9 +139,6 @@ namespace PeterHan.PLib {
 
 		/// <summary>
 		/// Applied to LightGridManager to properly preview a new light source.
-		/// 
-		/// RadiationGridManager.CreatePreview has no references so no sense in patching that
-		/// yet.
 		/// </summary>
 		private static bool CreatePreview_Prefix(int origin_cell, float radius,
 				LightShape shape, int lux) {
@@ -271,6 +236,18 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Applied to LightBuffer to allow custom ray shapes to be used.
+		/// </summary>
+		private static IEnumerable<CodeInstruction> LightBuffer_LateUpdate_Transpile(
+				IEnumerable<CodeInstruction> body) {
+			var target = typeof(Light2D).GetPropertySafe<LightShape>(nameof(Light2D.shape),
+				false)?.GetGetMethod();
+			return (target == null) ? body : PPatchTools.ReplaceMethodCall(body, target,
+				typeof(PLightManager).GetMethodSafe(nameof(PLightManager.LightShapeToRayShape),
+				true, typeof(Light2D)));
+		}
+
+		/// <summary>
 		/// Applied to LightShapePreview to properly attribute lighting sources.
 		/// </summary>
 		private static void LightShapePreview_Update_Prefix(LightShapePreview __instance) {
@@ -287,22 +264,20 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Applied to SteamUGCService to silence "Preview image load failed".
+		/// </summary>
+		private static IEnumerable<CodeInstruction> LoadPreviewImage_Transpile(
+				IEnumerable<CodeInstruction> body) {
+			var target = typeof(Debug).GetMethodSafe(nameof(Debug.LogFormat), true,
+				typeof(string), typeof(object[]));
+			return (target == null) ? body : PPatchTools.ReplaceMethodCall(body, target);
+		}
+
+		/// <summary>
 		/// Applied to MainMenu to run postload handlers.
 		/// </summary>
 		private static void MainMenu_OnSpawn_Postfix() {
 			PPatchManager.RunAll(RunAt.InMainMenu);
-		}
-
-		/// <summary>
-		/// Applied to TMPro.TMP_InputField to fix a clipping bug inside of Scroll Rects.
-		/// 
-		/// https://forum.unity.com/threads/textmeshpro-text-still-visible-when-using-nested-rectmask2d.537967/
-		/// </summary>
-		private static void OnEnable_Postfix(UnityEngine.UI.Scrollbar ___m_VerticalScrollbar,
-				TMP_Text ___m_TextComponent) {
-			var component = ___m_TextComponent;
-			if (component != null)
-				component.ignoreRectMaskCulling = ___m_VerticalScrollbar != null;
 		}
 
 		/// <summary>
@@ -312,7 +287,7 @@ namespace PeterHan.PLib {
 			var preview = __instance.gameObject.GetComponentSafe<LightShapePreview>();
 			// Force regeneration on next Update()
 			if (preview != null)
-				Traverse.Create(preview).SetField("previousCell", -1);
+				PREVIOUS_CELL.Set(preview, -1);
 		}
 
 		/// <summary>
@@ -382,6 +357,21 @@ namespace PeterHan.PLib {
 		}
 
 		/// <summary>
+		/// Applied to Assets to load sprites for custom tools.
+		/// </summary>
+		private static void ToolMenu_DLC_Postfix() {
+			PToolMode.AddAllToolIconsToAssets();
+		}
+
+		/// <summary>
+		/// Applied to ToolMenu to load sprites for custom tools.
+		/// </summary>
+		private static void ToolMenu_Vanilla_Postfix(List<Sprite> ___icons) {
+			// TODO Vanilla/DLC code
+			PToolMode.AddAllToolIcons(___icons);
+		}
+
+		/// <summary>
 		/// Applied to LightGridEmitter to update lit cells upon a lighting request.
 		/// </summary>
 		private static bool UpdateLitCells_Prefix(LightGridEmitter __instance,
@@ -447,6 +437,15 @@ namespace PeterHan.PLib {
 				instance.Patch(typeof(Light2D), nameof(Light2D.RefreshShapeAndPosition), null,
 					PatchMethod(nameof(RefreshShapeAndPosition_Postfix)));
 
+				// LightBuffer
+				try {
+					instance.PatchTranspile(typeof(LightBuffer), "LateUpdate", PatchMethod(
+						nameof(LightBuffer_LateUpdate_Transpile)));
+				} catch (Exception e) {
+					// Only visual, log as warning
+					PUtil.LogExcWarn(e);
+				}
+
 				// LightGridEmitter
 				instance.Patch(typeof(LightGridEmitter), nameof(LightGridEmitter.AddToGrid),
 					null, PatchMethod(nameof(AddToGrid_Postfix)));
@@ -475,10 +474,17 @@ namespace PeterHan.PLib {
 				nameof(MainMenu_OnSpawn_Postfix)));
 
 			// PBuilding
+			try {
+				// Non essential, do not crash if fail
 			instance.Patch(typeof(BuildingTemplates), nameof(BuildingTemplates.
 				CreateBuildingDef), null, PatchMethod(nameof(CreateBuildingDef_Postfix)));
 			instance.Patch(typeof(EquipmentTemplates), nameof(EquipmentTemplates.
 				CreateEquipmentDef), null, PatchMethod(nameof(CreateEquipmentDef_Postfix)));
+			} catch (Exception e) {
+#if DEBUG
+				PUtil.LogExcWarn(e);
+#endif
+			}
 			if (PBuilding.CheckBuildings())
 				instance.Patch(typeof(GeneratedBuildings), nameof(GeneratedBuildings.
 					LoadGeneratedBuildings), PatchMethod(nameof(
@@ -492,9 +498,19 @@ namespace PeterHan.PLib {
 
 			// PLocalization
 			var locale = Localization.GetLocale();
-			if (locale != null) { 
+			if (locale != null) {
 				PLocalization.LocalizeAll(locale);
 				PLocalizationItself.LocalizeItself(locale);
+			}
+
+			// ToolMenu
+			if (PToolMode.HasToolIcons) {
+				if (typeof(ToolMenu).GetFieldSafe("icons", false) != null)
+					instance.Patch(typeof(ToolMenu), "OnPrefabInit", null,
+						PatchMethod(nameof(ToolMenu_Vanilla_Postfix)));
+				else
+					instance.Patch(typeof(Assets), "OnPrefabInit", null,
+						PatchMethod(nameof(ToolMenu_DLC_Postfix)));
 			}
 
 			// ModsScreen
@@ -509,21 +525,13 @@ namespace PeterHan.PLib {
 					instance.PatchTranspile(ugc, "LoadPreviewImage", PatchMethod(nameof(
 						LoadPreviewImage_Transpile)));
 				} catch (Exception e) {
+#if DEBUG
 					PUtil.LogExcWarn(e);
+#endif
 				}
 
 			// TMPro.TMP_InputField
-			var tmpType = PPatchTools.GetTypeSafe("TMPro.TMP_InputField");
-			if (tmpType != null)
-				try {
-					instance.Patch(tmpType, "AssignPositioningIfNeeded",
-						PatchMethod(nameof(AssignPositioningIfNeeded_Prefix)), null);
-					instance.Patch(tmpType, "OnEnable", null, PatchMethod(
-						nameof(OnEnable_Postfix)));
-				} catch (Exception) {
-					PUtil.LogWarning("Unable to patch TextMeshPro bug, text fields may " +
-						"display improperly inside scroll areas");
-				}
+			Utils.TextMeshProPatcher.Patch(instance);
 
 			// Postload, legacy and normal
 			PPatchManager.ExecuteLegacyPostload();
@@ -541,24 +549,6 @@ namespace PeterHan.PLib {
 		/// <returns>The matching method.</returns>
 		private static HarmonyMethod PatchMethod(string name) {
 			return new HarmonyMethod(typeof(PLibPatches), name);
-		}
-
-		/// <summary>
-		/// Resizes the caret object to match the text. Used as an enumerator.
-		/// </summary>
-		/// <param name="caretTransform">The rectTransform of the caret.</param>
-		/// <param name="textTransform">The rectTransform of the text.</param>
-		private static System.Collections.IEnumerator ResizeCaret(
-				RectTransform caretTransform, RectTransform textTransform) {
-			yield return new WaitForEndOfFrame();
-			caretTransform.localPosition = textTransform.localPosition;
-			caretTransform.localRotation = textTransform.localRotation;
-			caretTransform.localScale = textTransform.localScale;
-			caretTransform.anchorMin = textTransform.anchorMin;
-			caretTransform.anchorMax = textTransform.anchorMax;
-			caretTransform.anchoredPosition = textTransform.anchoredPosition;
-			caretTransform.sizeDelta = textTransform.sizeDelta;
-			caretTransform.pivot = textTransform.pivot;
 		}
 
 		/// <summary>

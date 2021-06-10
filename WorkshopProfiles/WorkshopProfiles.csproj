@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyTitle>Workshop Profiles</AssemblyTitle>
+    <FileVersion>1.0.0.0</FileVersion>
+    <RootNamespace>PeterHan.WorkshopProfiles</RootNamespace>
+    <Description>Limits usage of most work buildings to the Duplicants specified on an access list.</Description>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>455425</LastWorkingBuild>
+    <Platforms>Vanilla;Spaced Out</Platforms>
+  </PropertyGroup>
+</Project>

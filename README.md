@@ -1,6 +1,8 @@
 # Peter Han&#39;s Mods for Oxygen Not Included
 
-Last tested on game version: **EX1-452242**
+Last tested on game version: **CS-460672** and **EX1-466654**
+
+**No support** for Public Testing branches.
 
 Steam Workshop: https://steamcommunity.com/profiles/76561198025154321/myworkshopfiles/?appid=457140
 
@@ -28,26 +30,27 @@ Mods should remain in their own subfolder.
 ## Minor Updates - No Mechanics Changes
 |  **Name**  |  **Description**  |  **Vanilla**  |  **Spaced Out! DLC**  |
 | :--------: | :---------------: | :-----------: | :-------------------: |
-| [Claustrophobia](https://steamcommunity.com/sharedfiles/filedetails/?id=1836997281) | Triggers a warning if Duplicants are stuck or unable to access your colony | Yes | No |
-| [Clean Drop](https://steamcommunity.com/sharedfiles/filedetails/?id=2047364442) | Attempts to push items inside tiles into a location accessible to Duplicants | Yes | Yes |
+| [Claustrophobia](https://steamcommunity.com/sharedfiles/filedetails/?id=1836997281) | Warns if Duplicants are stuck or unable to access your colony | Yes | No |
+| [Clean Drop](https://steamcommunity.com/sharedfiles/filedetails/?id=2047364442) | Pushes items spawned inside tiles into a location accessible to Duplicants | Yes | Yes |
 | [Critter Inventory](https://steamcommunity.com/sharedfiles/filedetails/?id=1831438994) | Adds tame and wild critters to the inventory list | Yes | Yes |
 | [Custom Pipe Colors](https://steamcommunity.com/sharedfiles/filedetails/?id=2167499088) | Restores the old Insulated Pipe overlay color and allows configuring custom colors | Yes | Yes |
 | [Deselect New Materials](https://steamcommunity.com/sharedfiles/filedetails/?id=1863598374) | Optionally deselects newly discovered materials from storage buildings | Yes | Yes |
-| [Efficient Supply](https://steamcommunity.com/sharedfiles/filedetails/?id=1874600082) | Optimizes Supply errands by preventing the use of tiny item stacks | Yes | Yes |
+| [Efficient Supply](https://steamcommunity.com/sharedfiles/filedetails/?id=1874600082) | Optimizes Supply errands to prevent inefficient uses of tiny item stacks | Yes | Yes |
 | [Falling Sand](https://steamcommunity.com/sharedfiles/filedetails/?id=1855163252) | Automatically places Dig errands on fallen unstable tiles caused by mining | Yes | Yes |
-| [Fast Save](https://steamcommunity.com/sharedfiles/filedetails/?id=1867707267) | Increases performance when loading, saving, or automatically saving the game | Yes | Yes |
-| [Food Supply Tooltips](https://steamcommunity.com/sharedfiles/filedetails/?id=1914501780) | Adds tooltips to food sources indicating how much food they can produce per cycle | Yes | Yes |
+| [Fast Save](https://steamcommunity.com/sharedfiles/filedetails/?id=1867707267) | Improves performance when loading, saving, or automatically saving the game | Yes | Yes |
+| [Food Supply Tooltips](https://steamcommunity.com/sharedfiles/filedetails/?id=1914501780) | Adds tooltips to food sources indicating their calorie production per cycle | Yes | Yes |
 | [Mod Updater](https://steamcommunity.com/sharedfiles/filedetails/?id=2018291283) | Updates mods that Steam leaves at old versions | Yes | Yes |
-| [Not Enough Tags](https://steamcommunity.com/sharedfiles/filedetails/?id=2230218796) | Fixes a stock game bug where Tags can be exhausted in large bases | Yes | No |
-| [Popup Control](https://steamcommunity.com/sharedfiles/filedetails/?id=2032187035) | Allows in-game text info popups to be hidden or shown by type | Yes | Yes |
+| [Not Enough Tags](https://steamcommunity.com/sharedfiles/filedetails/?id=2230218796) | Fixes Tag exhaustion in large bases | Yes | No |
+| [Pip Plant Overlay](https://steamcommunity.com/sharedfiles/filedetails/?id=2493100777) | Adds an overlay showing where Pips can plant seeds | Yes | Yes |
+| [Popup Control](https://steamcommunity.com/sharedfiles/filedetails/?id=2032187035) | Shows or hides text info popups for each source | Yes | Yes |
 | [Reloading In Motion](https://steamcommunity.com/sharedfiles/filedetails/?id=2182976959) | Saves the timings of Doors and Plants across reloads | Yes | No |
 | [Research Queue](https://steamcommunity.com/sharedfiles/filedetails/?id=1893887916) | Allows queueing of multiple technologies to research | Yes | Yes |
 | [Sandbox Tools](https://steamcommunity.com/sharedfiles/filedetails/?id=1928837153) | Improves the Sandbox mode with new spawnable items and other small tweaks | Yes | Yes |
-| [Settings Change Tool](https://steamcommunity.com/sharedfiles/filedetails/?id=1843647561) | Allows Repair, Disinfect, and Enable settings to be changed on many buildings at once | Yes | Yes |
-| [Show Building Ranges](https://steamcommunity.com/sharedfiles/filedetails/?id=1960996649) | Shows the active range of many buildings while they are selected or being placed | Yes | Yes |
+| [Settings Change Tool](https://steamcommunity.com/sharedfiles/filedetails/?id=1843647561) | Changes Repair, Disinfect, and Enable settings on multiple buildings at once | Yes | Yes |
+| [Show Building Ranges](https://steamcommunity.com/sharedfiles/filedetails/?id=1960996649) | Shows the active range of many buildings while selected or being placed | Yes | Yes |
 | [Starmap Queue](https://steamcommunity.com/sharedfiles/filedetails/?id=1907780517) | Automatically selects new destinations to be analyzed when the Telescope finishes research | Yes | No |
 | [Stock Bug Fix](https://steamcommunity.com/sharedfiles/filedetails/?id=1967921388) | Fixes some annoying bugs in the base game | Yes | Yes |
-| [Sweep By Type](https://steamcommunity.com/sharedfiles/filedetails/?id=1863428350) | Adds a filter to the Sweep tool to sweep only selected item types | Yes | Yes |
+| [Sweep By Type](https://steamcommunity.com/sharedfiles/filedetails/?id=1863428350) | Filters the Sweep tool to sweep only selected item types | Yes | Yes |
 | [Thermal Tooltips](https://steamcommunity.com/sharedfiles/filedetails/?id=1983504552) | Displays expanded thermal information tooltips in the Temperature Overlay | Yes | Yes |
 
 ## New Features
@@ -55,7 +58,7 @@ Mods should remain in their own subfolder.
 | :--------: | :---------------: | :-----------: | :-------------------: |
 | [100K Challenge](https://steamcommunity.com/sharedfiles/filedetails/?id=2228381429) | A frigid map with an average temperature of 100 K (-173 C) | Yes | No |
 | [AI Improvements](https://steamcommunity.com/sharedfiles/filedetails/?id=2128885110) | Improves Duplicant AI to reduce cases of stuck Duplicants | Yes | No |
-| [Airlock Door](https://steamcommunity.com/sharedfiles/filedetails/?id=2094698134) | Allows Duplicants to pass between areas while maintaing full atmospheric isolation | Yes | Yes |
+| [Airlock Door](https://steamcommunity.com/sharedfiles/filedetails/?id=2094698134) | A door allowing Duplicants to pass while maintaining full atmospheric isolation | Yes | Yes |
 | [Build Straight Up](https://steamcommunity.com/sharedfiles/filedetails/?id=2135682628) | Allows Rockets and Monuments to be planned out all at once | Yes | Yes |
 | [Moo Reproduction](https://steamcommunity.com/sharedfiles/filedetails/?id=2400500058) | Allows Gassy Moos to reproduce by live birth with multiple in one ranch | No | Yes |
 | [No Sensor Limits](https://steamcommunity.com/sharedfiles/filedetails/?id=2277619848) | Increases the maximum threshold limits on most Automation sensors | Yes | Yes |

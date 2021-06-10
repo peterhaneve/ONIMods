@@ -16,8 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using System;
+using System.Reflection;
 
 namespace PeterHan.PLib {
 	/// <summary>
@@ -35,12 +35,23 @@ namespace PeterHan.PLib {
 		internal static DynamicOptionAttribute CreateFrom(object attr) {
 			Type handler = null;
 			string category = null;
-			if (attr.GetType().Name == typeof(DynamicOptionAttribute).Name) {
-				var trAttr = Traverse.Create(attr);
+			var type = attr.GetType();
+			if (type.Name == typeof(DynamicOptionAttribute).Name) {
 				try {
-					handler = trAttr.GetProperty<Type>(nameof(Handler));
-					category = trAttr.GetProperty<string>(nameof(Category));
-				} catch (Exception e) {
+					var info = type.GetPropertySafe<Type>(nameof(Handler), false);
+					if (info != null)
+						handler = info.GetValue(attr, null) as Type;
+					info = type.GetPropertySafe<string>(nameof(Category), false);
+					if (info != null)
+						category = (info.GetValue(attr, null) as string) ?? "";
+				} catch (TargetInvocationException e) {
+					// Other mod's error
+					PUtil.LogExcWarn(e.GetBaseException());
+				} catch (AmbiguousMatchException e) {
+					// Other mod's error
+					PUtil.LogExcWarn(e);
+				} catch (FieldAccessException e) {
+					// Other mod's error
 					PUtil.LogExcWarn(e);
 				}
 			}

@@ -61,14 +61,17 @@ namespace PeterHan.PLib.Lighting {
 				newCell.X, newCell.Y));
 		}
 
+
 		/// <summary>
 		/// Registers a light shape handler.
 		/// </summary>
 		/// <param name="identifier">A unique identifier for this shape. If another mod has
 		/// already registered that identifier, the previous mod will take precedence.</param>
 		/// <param name="handler">The handler for that shape.</param>
+		/// <param name="rayMode">The type of visual rays that are displayed from the light.</param>
 		/// <returns>The light shape which can be used.</returns>
-		public static PLightShape Register(string identifier, CastLight handler) {
+		public static PLightShape Register(string identifier, CastLight handler,
+				LightShape rayMode) {
 			PLightShape lightShape;
 			// In case this call is used before the library was initialized
 			if (!PUtil.PLibInit) {
@@ -96,16 +99,27 @@ namespace PeterHan.PLib.Lighting {
 				}
 				if (ls == null) {
 					// Not currently existing
-					lightShape = new PLightShape(n + 1, identifier, handler);
+					lightShape = new PLightShape(n + 1, identifier, handler, rayMode);
 					PUtil.LogDebug("Registered new light shape: " + identifier);
 					list.Add(lightShape);
 				} else {
 					// Exists already
 					PUtil.LogDebug("Found existing light shape: " + identifier);
-					lightShape = new PLightShape(n + 1, identifier, null);
+					lightShape = new PLightShape(n + 1, identifier, null, rayMode);
 				}
 			}
 			return lightShape;
+		}
+
+		/// <summary>
+		/// Registers a light shape handler with no visual rays.
+		/// </summary>
+		/// <param name="identifier">A unique identifier for this shape. If another mod has
+		/// already registered that identifier, the previous mod will take precedence.</param>
+		/// <param name="handler">The handler for that shape.</param>
+		/// <returns>The light shape which can be used.</returns>
+		public static PLightShape Register(string identifier, CastLight handler) {
+			return Register(identifier, handler, (LightShape)(-1));
 		}
 
 		/// <summary>
@@ -119,13 +133,20 @@ namespace PeterHan.PLib.Lighting {
 		public string Identifier { get; }
 
 		/// <summary>
+		/// The raycast mode used by this light shape.
+		/// </summary>
+		internal LightShape RayMode { get; }
+
+		/// <summary>
 		/// The light shape ID.
 		/// </summary>
 		internal int ShapeID { get; }
 
-		internal PLightShape(int id, string identifier, CastLight handler) {
+		internal PLightShape(int id, string identifier, CastLight handler, LightShape rayMode)
+		{
 			Handler = handler;
 			Identifier = identifier ?? throw new ArgumentNullException("identifier");
+			RayMode = rayMode;
 			ShapeID = id;
 		}
 

@@ -81,7 +81,8 @@ namespace PeterHan.AirlockDoor {
 			def.PreventIdleTraversalPastBuilding = true;
 			// /5 multiplier to thermal conductivity
 			def.ThermalConductivity = 0.2f;
-			def.TileLayer = ObjectLayer.FoundationTile;
+			def.TileLayer = PBuilding.GetObjectLayer(nameof(ObjectLayer.FoundationTile),
+				ObjectLayer.FoundationTile);
 			return def;
 		}
 
@@ -98,7 +99,7 @@ namespace PeterHan.AirlockDoor {
 			AirlockDoorTemplate?.CreateLogicPorts(go);
 			var ad = go.AddOrGet<AirlockDoor>();
 			ad.EnergyCapacity = 10000.0f;
-			ad.EnergyPerUse = 2000.0f;
+			ad.EnergyPerUse = 1500.0f;
 			var occupier = go.AddOrGet<SimCellOccupier>();
 			occupier.doReplaceElement = true;
 			occupier.notifyOnMelt = true;

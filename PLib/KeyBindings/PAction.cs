@@ -159,8 +159,8 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// Updates the localized title of this action as shown in the Key Bindings window.
 		/// 
-		/// If you localize your key bindings, use this method in a postload patch to update
-		/// the action title after all mods (including translation mods) have loaded.
+		/// If you localize your key bindings, use this method in an AfterDbInit patch to
+		/// update the action title after all mods (including translation mods) have loaded.
 		/// </summary>
 		/// <param name="newTitle">The new localized title to apply.</param>
 		public void UpdateLocalizedTitle(LocString newTitle) {

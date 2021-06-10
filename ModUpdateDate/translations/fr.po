@@ -266,7 +266,7 @@ msgstr "<b>Un</b> <color=#00CC00>mod a été mis à jour sans erreur</color>\n"
 msgctxt ""
 "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_SINGLE"
 msgid "<b>{0}</b>: <color=#00CC00>Updated</color>\n"
-msgstr "<b>{0}</b>: <color=#00CC00>Mid à jour</color>\n"
+msgstr "<b>{0}</b>: <color=#00CC00>Mis à jour</color>\n"
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.TOOLTIPS.MODUPDATER.OPTION_MAINMENU
 msgctxt ""

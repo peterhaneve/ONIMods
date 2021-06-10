@@ -68,6 +68,7 @@ namespace PeterHan.DebugNotIncluded {
 				public static LocString BUTTON_MODIFY = "Edit";
 				public static LocString BUTTON_SUBSCRIPTION = "Subscription";
 				public static LocString BUTTON_UNSUB = "Unsubscribe";
+
 				public static LocString LABEL_PLIB = "PLib Version: {0}";
 				public static LocString LABEL_DESCRIPTION = "<b>Mod ID</b>: {0}\n";
 				public static LocString LABEL_THISMOD = "Thank you for using Debug Not Included!";
@@ -76,6 +77,41 @@ namespace PeterHan.DebugNotIncluded {
 				public static LocString LABEL_VERSIONS_BOTH = "<b>{0}</b>: Version {1}\n";
 				public static LocString LABEL_PLIB_MERGED = " <b>merged</b>";
 				public static LocString LABEL_PLIB_PACKED = " <b>packed</b>";
+				public static LocString LABEL_ASSEMBLY_NOCODE = "<style=logic_off><b>No code loaded</b></style>";
+
+				public static LocString LABEL_DLC_ENABLE = "<b>Enabled for DLCs</b>: {0}\n";
+				public static LocString LABEL_CONTENT = "<b>Enabled content</b>: {0}\n";
+				public static LocString LABEL_PATCHES = "<b>Patches registered by ONI</b>: {0:D}\n";
+				public static LocString LABEL_ARCHIVED_VERSIONS = "<b>Versions</b>:\n";
+				public static LocString LABEL_ARCHIVED_VERSION_ACTIVE = "\u2022 <style=\"logic_on\"><b>{0}</b>: Supports {1} since version {2:D}</style>\n";
+				public static LocString LABEL_ARCHIVED_VERSION_DEFAULT = "Base";
+				public static LocString LABEL_ARCHIVED_VERSION_INACTIVE = "\u2022 <b>{0}</b>: Supports {1} since version {2:D}\n";
+				public static LocString LABEL_DLC_ALL = "All";
+				public static LocString LABEL_DLC_VANILLA = "Vanilla";
+				public static LocString LABEL_DLC_EXPANSION1 = "Spaced Out";
+
+				/// <summary>
+				/// Gets the localized name of the specified DLC ID, ID being case insensitive.
+				/// </summary>
+				/// <param name="dlcID">The DLC ID to look up.</param>
+				/// <returns>The localized name of that DLC.</returns>
+				public static LocString GetLocalizedName(string dlcID) {
+					if (dlcID == null)
+						throw new System.ArgumentNullException(nameof(dlcID));
+					switch (dlcID.ToUpperInvariant()) {
+					case DlcManager.VANILLA_ID:
+					case "VANILLA_ID":
+						// Sometimes Klei uses "", other times "vanilla_id"
+						return LABEL_DLC_VANILLA;
+					case DlcManager.EXPANSION1_ID:
+						return LABEL_DLC_EXPANSION1;
+					case "ALL":
+						// "all" is a keyword and should not be localized
+						return LABEL_DLC_ALL;
+					default:
+						return dlcID;
+					}
+				}
 			}
 
 			// Not first on the list

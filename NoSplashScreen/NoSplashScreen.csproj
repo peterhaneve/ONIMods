@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyTitle>No Splash Screen</AssemblyTitle>
+    <FileVersion>1.0.0.0</FileVersion>
+    <RootNamespace>PeterHan.NoSplashScreen</RootNamespace>
+    <Description>Hides the splash screen shown in beta and Early Access versions of the game.</Description>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <UsesPLib>false</UsesPLib>
+    <SupportedContent>EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>447598</LastWorkingBuild>
+    <Platforms>Vanilla;Spaced Out</Platforms>
+  </PropertyGroup>
+</Project>

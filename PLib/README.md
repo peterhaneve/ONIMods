@@ -6,7 +6,8 @@ PLib is Peter's library for making mods. All mods in this repository depend on P
 
 ### Source
 
-PLib can be checked out and compiled from source (tested on Visual Studio Community 2019). Make sure to populate the DLL files from the game in /lib.
+PLib can be checked out and compiled from source (tested on Visual Studio Community 2019).
+If Oxygen Not Included is installed in a different location, make a copy of `Directory.Build.Props.default` named `Directory.Build.Props.user` and update the library paths appropriately.
 
 ### Binary
 
@@ -24,7 +25,7 @@ The easiest way to do this is to use ILMerge and add the PLib project or DLL as 
 ILMerge is available as a [NuGet package](https://www.nuget.org/packages/ilmerge) and is best used as a post-build command.
 Suggested command:
 ```powershell
-"$(ILMergeConsolePath)" /ndebug /out:$(TargetName)Merged.dll $(TargetName).dll PLib.dll  /targetplatform:v4,C:\Windows\Microsoft.NET\Framework64\v4.0.30319
+"$(ILMergeConsolePath)" /ndebug /out:$(TargetName)Merged.dll $(TargetName).dll PLib.dll /targetplatform:v4,C:\Windows\Microsoft.NET\Framework64\v4.0.30319
 ```
 
 This helps ensure that each mod gets the version of PLib that it was built against, reducing the risk of breakage due to PLib changes.
@@ -40,7 +41,8 @@ This is not a guarantee that the PLib instance in a particular mod is the loaded
 
 Initialize PLib by calling `PUtil.InitLibrary(bool)` in `OnLoad`. PLib *must* be initialized before using most of PLib functionality.
 
-It will emit your mod's `AssemblyFileVersion` to the log. Using the `AssemblyVersion` instead is discouraged, because changing `AssemblyVersion` breaks any explicit references to the assembly by name. (Ever wonder why .NET 3.5 still uses the .NET 2.0 version string?)
+It will emit your mod's `AssemblyFileVersion` to the log if the `bool` parameter is true.
+Using the `AssemblyVersion` instead is discouraged, because changing `AssemblyVersion` breaks any explicit references to the assembly by name. (Ever wonder why .NET 3.5 still uses the .NET 2.0 version string?)
 
 ## Options
 
@@ -48,14 +50,16 @@ Provides utilities for reading and writing config files, as well as editing conf
 
 #### Reading/writing config files
 
-To read, use `PLib.Options.POptions.ReadSettings<T>()` where T is the type that the config file will be deserialized to. By default, PLib assumes the config file is located in the mod assembly directory and is named `config.json`.
+To read, use `PLib.Options.POptions.ReadSettingsForAssembly<T>()` where T is the type that the config file will be deserialized to.
+By default, PLib will place the config file in the mod assembly directory, named `config.json`, and will respect archived versions to allow the use of a single configuration.
+The `ConfigFile` attribute can be used to modify the name of the configuration file.
 
-To write, use `PLib.Options.POptions.WriteSettings<T>(T settings)`, where again T is the settings type.
+To write, use `PLib.Options.POptions.WriteSettingsForAssembly<T>(T settings)`, where again T is the settings type.
 
 #### Registering for the config screen
 
 PLib.Options adds configuration menus to the Mods screen for mods that are registered.
-Register a mod by invoking `POptions.RegisterOptions(Type settingtype)` in `OnLoad`.
+Register a mod by invoking `POptions.RegisterOptions(Type settingstype)` in `OnLoad`.
 The argument should be the type of the class the mod uses for its options, and must be JSON serializable.
 `Newtonsoft.Json` is bundled with the game and can be referenced.
 
@@ -66,9 +70,10 @@ The URL can be used to specify a custom website for the mod's home page; if left
 The image, if specified, will attempt to load a preview image (best size is 192x192) with that name from the mod's data folder and display it in the settings dialog.
 
 Fields must be a property, not a member, and should be annotated with `PLib.Option(string displaytext, [string tooltip=""])` to be visible in the mod config menu.
-Currently supported types are: `int`, `float`, `string`, `bool`, and `Enum`.
+Currently supported types are: `int`, `int?`, `float`, `float?`, `string`, `bool`, and `Enum`.
 If a property is a read-only `System.Action`, a button will be created that will execute the returned action if clicked.
 If a property is of type `LocText`, no matter what it returns, the text in `displaytext` will be displayed as a full-width label with no input field.
+If a property is of a user-defined type, PLib will check the public properties of that type -- if any of them have `PLib.Option` attributes, the property will be rendered as its own category with each of the inner options grouped inside.
 If a valid localization string key name is used for `displaytext` (such as `STRINGS.YOURMOD.OPTIONS.YOUROPTION`), the localized value of that string from the strings database is used as the display text.
 
 #### Categories
@@ -76,10 +81,11 @@ If a valid localization string key name is used for `displaytext` (such as `STRI
 The optional third parameter of `Option` allows setting a custom category for the option to group related options together.
 The category name is displayed as the title for the section.
 If a valid localization string key name is used for the category (such as `STRINGS.YOURMOD.OPTIONS.YOURCATEGORY`), the localized value of that string from the strings database is used as the title.
+All options inside a nested custom options class are placed under a category matching the title of the declaring `Option` property.
 
 #### Range limits
 
-`int` and `float` options can have validation in the form of a range limit.
+`int`, `int?`, `float` and `float?` options can have validation in the form of a range limit.
 Annotate the property with `PLib.Limit(double min, double max)`.
 Note that users can still enter values outside of the range manually in the configuration file.
 
@@ -116,7 +122,7 @@ public static class Mod_OnLoad
 {
     public static void OnLoad()
     {
-        PLib.PUtil.LogModInit();
+        PLib.PUtil.InitLibrary(false);
         PLib.POptions.RegisterOptions(typeof(TestModSetting));
     }
 }

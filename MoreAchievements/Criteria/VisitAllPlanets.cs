@@ -25,7 +25,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
 	/// Requires all destinations on the starmap to be visited by a rocket.
 	/// </summary>
-	public sealed class VisitAllPlanets : ColonyAchievementRequirement {
+	public sealed class VisitAllPlanets : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
 		/// The destination IDs already visited.
 		/// </summary>
@@ -41,7 +41,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 			beenTo = new HashSet<int>();
 		}
 
-		public override void Deserialize(IReader reader) {
+		public void Deserialize(IReader reader) {
 			int visited = Math.Max(0, reader.ReadInt32());
 			required = int.MaxValue;
 			// Somehow this can be constructed without executing its constructor!!!
