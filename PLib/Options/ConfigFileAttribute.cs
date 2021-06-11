@@ -16,8 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using System;
+using System.Reflection;
 
 namespace PeterHan.PLib.Options {
 	/// <summary>
@@ -35,15 +35,19 @@ namespace PeterHan.PLib.Options {
 		/// possible to retrieve; or null if none could be obtained.</returns>
 		internal static ConfigFileAttribute CreateFrom(object attr) {
 			ConfigFileAttribute cfa = null;
-			if (attr.GetType().Name == typeof(ConfigFileAttribute).Name) {
-				var trAttr = Traverse.Create(attr);
+			var type = attr.GetType();
+			if (type.Name == typeof(ConfigFileAttribute).Name) {
 				string file = null;
 				bool indent = false;
 				// Log any errors from obtaining these values
 				try {
-					file = trAttr.GetProperty<string>(nameof(ConfigFileName));
-					indent = trAttr.GetProperty<bool>(nameof(IndentOutput));
-				} catch (Exception e) {
+					file = type.GetPropertySafe<string>(nameof(ConfigFileName), false)?.
+						GetValue(attr, null)?.ToString();
+					object indentObj = type.GetPropertySafe<bool>(nameof(IndentOutput),
+						false)?.GetValue(attr, null);
+					if (indentObj is bool indentValue)
+						indent = indentValue;
+				} catch (TargetInvocationException e) {
 					PUtil.LogExcWarn(e);
 				}
 				// Remove invalid file names

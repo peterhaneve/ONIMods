@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
@@ -79,16 +78,16 @@ namespace PeterHan.PLib.Buildings {
 				foreach (var building in buildingTable)
 					if (building != null)
 						try {
-							var trBuilding = Traverse.Create(building);
+							var type = building.GetType();
 							// Building is of type object because it is in another assembly
-							var addStr = trBuilding.Method(nameof(AddStrings));
-							if (addStr.MethodExists())
-								addStr.GetValue();
+							var addStr = type.GetMethodSafe(nameof(AddStrings), false);
+							if (addStr != null)
+								addStr.Invoke(building, null);
 							else
 								PRegistry.LogPatchWarning("Invalid building strings!");
-							var addMenu = trBuilding.Method(nameof(AddPlan));
-							if (addMenu.MethodExists())
-								addMenu.GetValue();
+							var addMenu = type.GetMethodSafe(nameof(AddPlan), false);
+							if (addMenu != null)
+								addMenu.Invoke(building, null);
 							else
 								PRegistry.LogPatchWarning("Invalid building plan!");
 						} catch (System.Reflection.TargetInvocationException e) {
@@ -112,10 +111,11 @@ namespace PeterHan.PLib.Buildings {
 				foreach (var building in buildingTable)
 					if (building != null)
 						try {
+							var type = building.GetType();
 							// Building is of type object because it is in another assembly
-							var addTech = Traverse.Create(building).Method(nameof(AddTech));
-							if (addTech.MethodExists())
-								addTech.GetValue();
+							var addTech = type.GetMethodSafe(nameof(AddTech), false);
+							if (addTech != null)
+								addTech.Invoke(building, null);
 							else
 								PRegistry.LogPatchWarning("Invalid building technology!");
 						} catch (System.Reflection.TargetInvocationException e) {

@@ -12,7 +12,7 @@
     <PackageReference Include="ILRepack.MSBuild.Task" Version="2.0.13" />
   </ItemGroup>
   <ItemGroup Condition=" '$(Platform)' == 'Vanilla' ">
-	  <Reference Include="0Harmony" HintPath="$(GameFolderVanilla)/0Harmony.dll" />
+    <Reference Include="0Harmony" HintPath="$(GameFolderVanilla)/0Harmony.dll" />
     <Reference Include="Assembly-CSharp" HintPath="$(GameFolderVanilla)/Assembly-CSharp.dll" />
     <Reference Include="Assembly-CSharp-firstpass" HintPath="$(GameFolderVanilla)/Assembly-CSharp-firstpass.dll" />
     <Reference Include="Newtonsoft.Json" HintPath="$(GameFolderVanilla)/Newtonsoft.Json.dll" />
@@ -25,7 +25,7 @@
     <Reference Include="UnityEngine.UIModule" HintPath="$(GameFolderVanilla)/UnityEngine.UIModule.dll" />
   </ItemGroup>
   <ItemGroup Condition=" '$(Platform)' == 'Spaced Out' ">
-	  <Reference Include="0Harmony" HintPath="$(GameFolderSpacedOut)/0Harmony.dll" />
+    <Reference Include="0Harmony" HintPath="$(GameFolderSpacedOut)/0Harmony.dll" />
     <Reference Include="Assembly-CSharp" HintPath="$(GameFolderSpacedOut)/Assembly-CSharp.dll" />
     <Reference Include="Assembly-CSharp-firstpass" HintPath="$(GameFolderSpacedOut)/Assembly-CSharp-firstpass.dll" />
     <Reference Include="Newtonsoft.Json" HintPath="$(GameFolderSpacedOut)/Newtonsoft.Json.dll" />

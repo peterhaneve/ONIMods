@@ -21,8 +21,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Klei;
-using Harmony;
-using PeterHan.PLib.Detours;
 
 using WidgetMappingList = System.Collections.Generic.List<Tuple<string, System.Type>>;
 
