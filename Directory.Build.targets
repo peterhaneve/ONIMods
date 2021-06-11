@@ -20,21 +20,20 @@
     </ItemGroup>
   </Target>
 
-  <PropertyGroup>
-    <ModInfoFile>$(IntermediateOutputPath)\mod_info.yaml</ModInfoFile>
-    <ModInfoFileContent>
+  <Target Name="WriteModInfoFile" BeforeTargets="PreBuildEvent" Condition=" '$(DistributeMod)' == 'true' ">
+    <PropertyGroup>
+      <ModInfoFile>$(IntermediateOutputPath)\mod_info.yaml</ModInfoFile>
+      <ModInfoFileContent>
 supportedContent: $(SupportedContent)
 lastWorkingBuild: $(LastWorkingBuild)
-    </ModInfoFileContent>
-  </PropertyGroup>
-  <Target Name="WriteModInfoFile" BeforeTargets="PreBuildEvent" Condition=" '$(DistributeMod)' == 'true' ">
+      </ModInfoFileContent>
+    </PropertyGroup>
     <WriteLinesToFile File="$(ModInfoFile)" Overwrite="true" Lines="$(ModInfoFileContent)"/>
   </Target>
 
-  <Target Name="ILRepack" AfterTargets="Build" Condition=" '$(AssemblyName)' != 'PLib' And '$(AssemblyName)' != 'PLibOptions' ">
+  <Target Name="ILRepack" AfterTargets="Build" Condition=" '$(UsesPLib)' != 'false' ">
     <ItemGroup>
-      <InputAssemblies Include="$(TargetDir)\PLib*.dll"
-        Exclude="**\0Harmony.dll" />
+      <InputAssemblies Include="$(TargetDir)PLib*.dll" />
     </ItemGroup>
 
     <ILRepack 

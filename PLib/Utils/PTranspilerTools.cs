@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -268,7 +268,7 @@ namespace PeterHan.PLib {
 		/// Not for production use.
 		/// </summary>
 		internal static void LogAllFailedAsserts() {
-			var inst = HarmonyInstance.Create("PeterHan.PLib.LogFailedAsserts");
+			var inst = new Harmony("PeterHan.PLib.LogFailedAsserts");
 			MethodBase assert;
 			var handler = new HarmonyMethod(typeof(PTranspilerTools), nameof(OnAssertFailed));
 			try {

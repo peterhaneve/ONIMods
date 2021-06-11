@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
+using HarmonyLib;
 using KSerialization;
 using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Datafiles;
@@ -382,7 +382,7 @@ namespace PeterHan.PLib {
 		/// Applies all patches.
 		/// </summary>
 		/// <param name="instance">The Harmony instance to use when patching.</param>
-		private static void PatchAll(HarmonyInstance instance) {
+		private static void PatchAll(Harmony instance) {
 			if (instance == null)
 				throw new ArgumentNullException("instance");
 
@@ -474,10 +474,10 @@ namespace PeterHan.PLib {
 			// PBuilding
 			try {
 				// Non essential, do not crash if fail
-			instance.Patch(typeof(BuildingTemplates), nameof(BuildingTemplates.
-				CreateBuildingDef), null, PatchMethod(nameof(CreateBuildingDef_Postfix)));
-			instance.Patch(typeof(EquipmentTemplates), nameof(EquipmentTemplates.
-				CreateEquipmentDef), null, PatchMethod(nameof(CreateEquipmentDef_Postfix)));
+				instance.Patch(typeof(BuildingTemplates), nameof(BuildingTemplates.
+					CreateBuildingDef), null, PatchMethod(nameof(CreateBuildingDef_Postfix)));
+				instance.Patch(typeof(EquipmentTemplates), nameof(EquipmentTemplates.
+					CreateEquipmentDef), null, PatchMethod(nameof(CreateEquipmentDef_Postfix)));
 			} catch (Exception e) {
 #if DEBUG
 				PUtil.LogExcWarn(e);
@@ -562,7 +562,7 @@ namespace PeterHan.PLib {
 		/// Applies the patches for this version of PLib.
 		/// </summary>
 		/// <param name="instance">The Harmony instance to use for patching.</param>
-		public void Apply(HarmonyInstance instance) {
+		public void Apply(Harmony instance) {
 			PRegistry.LogPatchDebug("Using version " + MyVersion);
 			try {
 				PatchAll(instance);

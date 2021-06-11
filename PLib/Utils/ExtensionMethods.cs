@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
+using HarmonyLib;
 using System;
 using System.Reflection;
 using System.Text;
@@ -43,6 +43,7 @@ namespace PeterHan.PLib {
 		/// <param name="root">The object on which to call the method.</param>
 		/// <param name="name">The method name to call.</param>
 		/// <param name="args">The arguments to supply to the method.</param>
+		[Obsolete("This method will be removed soon - use Detours or delegates instead")]
 		public static void CallMethod(this Traverse root, string name, params object[] args) {
 			root.Method(name, args).GetValue(args);
 		}
@@ -54,6 +55,7 @@ namespace PeterHan.PLib {
 		/// <param name="name">The method name to call.</param>
 		/// <param name="args">The arguments to supply to the method.</param>
 		/// <returns>The method's return value.</returns>
+		[Obsolete("This method will be removed soon - use Detours or delegates instead")]
 		public static T CallMethod<T>(this Traverse root, string name, params object[] args) {
 			return root.Method(name, args).GetValue<T>(args);
 		}
@@ -229,7 +231,7 @@ namespace PeterHan.PLib {
 		/// <param name="methodName">The method to patch.</param>
 		/// <param name="prefix">The prefix to apply, or null if none.</param>
 		/// <param name="postfix">The postfix to apply, or null if none.</param>
-		public static void Patch(this HarmonyInstance instance, Type type, string methodName,
+		public static void Patch(this Harmony instance, Type type, string methodName,
 				HarmonyMethod prefix = null, HarmonyMethod postfix = null) {
 			if (type == null)
 				throw new ArgumentNullException("type");
@@ -257,7 +259,7 @@ namespace PeterHan.PLib {
 		/// <param name="arguments">The constructor's argument types.</param>
 		/// <param name="prefix">The prefix to apply, or null if none.</param>
 		/// <param name="postfix">The postfix to apply, or null if none.</param>
-		public static void PatchConstructor(this HarmonyInstance instance, Type type,
+		public static void PatchConstructor(this Harmony instance, Type type,
 				Type[] arguments, HarmonyMethod prefix = null, HarmonyMethod postfix = null) {
 			if (type == null)
 				throw new ArgumentNullException("type");
@@ -282,7 +284,7 @@ namespace PeterHan.PLib {
 		/// <param name="type">The class to modify.</param>
 		/// <param name="methodName">The method to patch.</param>
 		/// <param name="transpiler">The transpiler to apply.</param>
-		public static void PatchTranspile(this HarmonyInstance instance, Type type,
+		public static void PatchTranspile(this Harmony instance, Type type,
 				string methodName, HarmonyMethod transpiler) {
 			if (type == null)
 				throw new ArgumentNullException("type");

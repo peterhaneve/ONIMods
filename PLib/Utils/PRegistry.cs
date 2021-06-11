@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
+using HarmonyLib;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -222,7 +222,7 @@ namespace PeterHan.PLib {
 				PSharedData.PutData(KEY_VERSION, latestVer.ToString());
 				try {
 					var applyMethod = type.GetMethodSafe(nameof(PLibPatches.Apply), false,
-						new Type[] { typeof(HarmonyInstance) });
+						new Type[] { typeof(Harmony) });
 					// Raise warning if a bad patch made it in somehow
 					if (applyMethod != null)
 						applyMethod.Invoke(latest, new object[] { instance.PLibInstance });
@@ -315,7 +315,7 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// The Harmony instance used by PLib patching.
 		/// </summary>
-		public HarmonyInstance PLibInstance { get; }
+		public Harmony PLibInstance { get; }
 
 		internal PRegistry() {
 			if (instance == null)
@@ -327,7 +327,7 @@ namespace PeterHan.PLib {
 			}
 			modData = new Dictionary<string, object>(64);
 			Patches = new Dictionary<string, object>(32);
-			PLibInstance = HarmonyInstance.Create(PLIB_HARMONY);
+			PLibInstance = new Harmony(PLIB_HARMONY);
 
 			// Action 0 is reserved
 			modData.Add(KEY_ACTION_ID, 1);

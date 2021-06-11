@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
+using HarmonyLib;
 using System;
 using System.Reflection;
 
@@ -89,7 +89,7 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <param name="instance">The Harmony instance to use if the method wants to
 		/// perform a patch.</param>
-		public void Run(HarmonyInstance instance) {
+		public void Run(Harmony instance) {
 			if (PPatchManager.CheckConditions(Descriptor.RequireAssembly, Descriptor.
 					RequireType, out Type requiredType)) {
 				// Only runs once, no meaningful savings with a delegate
@@ -98,7 +98,7 @@ namespace PeterHan.PLib {
 				if (len <= 0)
 					// No parameters, static method only
 					Method.Invoke(null, null);
-				else if (paramTypes[0] == typeof(HarmonyInstance)) {
+				else if (paramTypes[0] == typeof(Harmony)) {
 					if (len == 1)
 						// Harmony instance parameter
 						Method.Invoke(null, new object[] { instance });

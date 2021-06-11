@@ -16,7 +16,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#if VANILLA
 using Harmony;
+#else
+using HarmonyLib;
+#endif
 using System.Reflection;
 
 namespace PeterHan.NoSplashScreen {

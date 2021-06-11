@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using TMPro;
@@ -68,7 +68,7 @@ namespace PeterHan.PLib.Utils {
 			bool found = false;
 			if (patchList != null) {
 				foreach (var patch in patchList) {
-					string ownerName = patch.patch.DeclaringType.Name;
+					string ownerName = patch.PatchMethod.DeclaringType.Name;
 					// Avoid stomping ourselves, or legacy PLibs < 3.14
 					if (ownerName == nameof(TextMeshProPatcher) || ownerName == "PLibPatches")
 					{
@@ -89,14 +89,14 @@ namespace PeterHan.PLib.Utils {
 		/// </summary>
 		/// <param name="tmpType">The type of TMP_InputField.</param>
 		/// <param name="instance">The Harmony instance to use for patching.</param>
-		private static void InputFieldPatches(Type tmpType, HarmonyInstance instance) {
+		private static void InputFieldPatches(Type tmpType, Harmony instance) {
 			var aip = tmpType.GetMethodSafe("AssignPositioningIfNeeded", false,
 				PPatchTools.AnyArguments);
-			if (aip != null && !HasOurPatch(instance.GetPatchInfo(aip)?.Prefixes))
+			if (aip != null && !HasOurPatch(Harmony.GetPatchInfo(aip)?.Prefixes))
 				instance.Patch(aip, prefix: new HarmonyMethod(typeof(TextMeshProPatcher),
 					nameof(AssignPositioningIfNeeded_Prefix)));
 			var oe = tmpType.GetMethodSafe("OnEnable", false, PPatchTools.AnyArguments);
-			if (oe != null && !HasOurPatch(instance.GetPatchInfo(oe)?.Postfixes))
+			if (oe != null && !HasOurPatch(Harmony.GetPatchInfo(oe)?.Postfixes))
 				instance.Patch(oe, postfix: new HarmonyMethod(typeof(TextMeshProPatcher),
 					nameof(OnEnable_Postfix)));
 		}
@@ -119,12 +119,12 @@ namespace PeterHan.PLib.Utils {
 		/// </summary>
 		/// <param name="instance">The Harmony instance to use for patching; if null, an
 		/// instance with the ID "TextMeshProPatch" will be used</param>
-		public static void Patch(HarmonyInstance instance) {
+		public static void Patch(Harmony instance) {
 			var tmpType = PPatchTools.GetTypeSafe("TMPro.TMP_InputField");
 			if (tmpType != null)
 				try {
 					if (instance == null)
-						instance = HarmonyInstance.Create(HARMONY_ID);
+						instance = new Harmony(HARMONY_ID);
 					InputFieldPatches(tmpType, instance);
 				} catch (Exception) {
 					PUtil.LogWarning("Unable to patch TextMeshPro bug, text fields may " +

@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
+using HarmonyLib;
 using KMod;
 using PeterHan.PLib;
 using System;
@@ -275,7 +275,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// <param name="method">The method to check.</param>
 		/// <param name="message">The location where the message will be stored.</param>
 		internal static void GetPatchInfo(MethodBase method, StringBuilder message) {
-			var patches = ModDebugRegistry.Instance.DebugInstance.GetPatchInfo(method);
+			var patches = Harmony.GetPatchInfo(method);
 			if (patches != null) {
 				GetPatchInfo(patches.Prefixes, "Prefixed", message);
 				GetPatchInfo(patches.Postfixes, "Postfixed", message);
@@ -295,7 +295,7 @@ namespace PeterHan.DebugNotIncluded {
 			ModDebugInfo info;
 			foreach (var patch in patches) {
 				string owner = patch.owner;
-				var method = patch.patch;
+				var method = patch.PatchMethod;
 				// Try to resolve to the friendly mod name
 				if ((info = registry.GetDebugInfo(owner)) != null)
 					owner = info.ModName;

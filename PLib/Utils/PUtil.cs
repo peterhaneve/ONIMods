@@ -24,7 +24,7 @@ using System.IO;
 using System.Reflection;
 using UnityEngine;
 
-using PostLoadHandler = System.Action<Harmony.HarmonyInstance>;
+using PostLoadHandler = System.Action<HarmonyLib.Harmony>;
 
 namespace PeterHan.PLib {
 	/// <summary>

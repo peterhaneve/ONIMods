@@ -16,14 +16,13 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using Harmony.ILCopying;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
-using TranspiledMethod = System.Collections.Generic.IEnumerable<Harmony.CodeInstruction>;
+using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.PLib {
 	/// <summary>
@@ -183,11 +182,46 @@ namespace PeterHan.PLib {
 					else if (operand is MethodBase method)
 						FormatMethodCall(result, method);
 					else
-						result.Append(Emitter.FormatArgument(operand));
+						result.Append(FormatArgument(operand));
 				}
 				result.AppendLine();
 			}
 			PUtil.LogDebug(result.ToString());
+		}
+
+		/// <summary>
+		/// This method was taken directly from Harmony (https://github.com/pardeike/Harmony)
+		/// which is also available under the MIT License.
+		/// </summary>
+		/// <param name="argument">The argument to format.</param>
+		/// <returns>The IL argument in string form.</returns>
+		private static string FormatArgument(object argument) {
+			if (argument is null) return "NULL";
+
+			if (argument is MethodBase method)
+				return method.FullDescription();
+
+			if (argument is FieldInfo field)
+				return $"{field.FieldType.FullDescription()} {field.DeclaringType.FullDescription()}::{field.Name}";
+
+			if (argument is Label label)
+				return $"Label{label.GetHashCode()}";
+
+			if (argument is Label[] labels) {
+				int n = labels.Length;
+				string[] labelCodes = new string[n];
+				for (int i = 0; i < n; i++)
+					labelCodes[i] = labels[i].GetHashCode().ToString();
+				return $"Labels{labelCodes.Join(",")}";
+			}
+
+			if (argument is LocalBuilder lb)
+				return $"{lb.LocalIndex} ({lb.LocalType})";
+
+			if (argument is string sval)
+				return sval.ToString().ToLiteral();
+
+			return argument.ToString().Trim();
 		}
 
 		/// <summary>
@@ -392,21 +426,19 @@ namespace PeterHan.PLib {
 		/// Checks to see if a patch with the specified method name (the method used in the
 		/// patch class) and type is defined.
 		/// </summary>
-		/// <param name="instance">The Harmony instance to query for patches.</param>
+		/// <param name="instance">The Harmony instance to query for patches. Unused.</param>
 		/// <param name="target">The target method to search for patches.</param>
 		/// <param name="type">The patch type to look up.</param>
 		/// <param name="name">The patch method name to look up (name as declared by patch owner).</param>
 		/// <returns>true if such a patch was found, or false otherwise</returns>
-		public static bool HasPatchWithMethodName(HarmonyInstance instance, MethodBase target,
+		public static bool HasPatchWithMethodName(Harmony instance, MethodBase target,
 				HarmonyPatchType type, string name) {
 			bool found = false;
-			if (instance == null)
-				throw new ArgumentNullException(nameof(instance));
 			if (target == null)
 				throw new ArgumentNullException(nameof(target));
 			if (string.IsNullOrEmpty(name))
 				throw new ArgumentNullException(nameof(name));
-			var patches = instance.GetPatchInfo(target);
+			var patches = Harmony.GetPatchInfo(target);
 			if (patches != null) {
 				ICollection<Patch> patchList;
 				switch (type) {
@@ -444,7 +476,7 @@ namespace PeterHan.PLib {
 		private static bool HasPatchWithMethodName(IEnumerable<Patch> patchList, string name) {
 			bool found = false;
 			foreach (var patch in patchList)
-				if (patch.patch.Name == name) {
+				if (patch.PatchMethod.Name == name) {
 					found = true;
 					break;
 				}

@@ -16,8 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using Harmony.ILCopying;
+using HarmonyLib;
 using KMod;
 using PeterHan.PLib;
 using PeterHan.PLib.Datafiles;
@@ -142,7 +141,7 @@ namespace PeterHan.DebugNotIncluded {
 			if (DebugNotIncludedOptions.Instance?.LogAsserts ?? true)
 				LogAllFailedAsserts();
 			foreach (var mod in Global.Instance.modManager?.mods)
-				if (mod.GetModBasePath() == path) {
+				if (mod.ContentPath == path) {
 					ThisMod = mod;
 					break;
 				}
@@ -171,7 +170,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		/// <param name="instance">The Harmony instance to execute patches.</param>
 		[PLibMethod(RunAt.AfterModsLoad)]
-		private static void PostloadHandler(HarmonyInstance instance) {
+		private static void PostloadHandler(Harmony instance) {
 			if (DebugNotIncludedOptions.Instance?.PowerUserMode ?? false)
 				instance.Patch(typeof(ModsScreen), "BuildDisplay",
 					new HarmonyMethod(typeof(DebugNotIncludedPatches), nameof(HidePopups)),
@@ -199,14 +198,14 @@ namespace PeterHan.DebugNotIncluded {
 				PPatchTools.AnyArguments));
 			instance.ProfileMethod(typeof(SaveManager).GetMethodSafe("Save", false,
 				PPatchTools.AnyArguments));
-			Traverse.Create(typeof(PLocalization)).CallMethod("DumpAll");
+			typeof(PLocalization).GetMethodSafe("DumpAll", true)?.Invoke(null, null);
 #endif
 		}
 
 		/// <summary>
 		/// Invoked by the game before our patches, so we get a chance to patch Mod.Crash.
 		/// </summary>
-		public static void PrePatch(HarmonyInstance instance) {
+		public static void PrePatch(Harmony instance) {
 			var method = typeof(Mod).GetMethodSafe("Crash", false);
 			if (method == null)
 				method = typeof(Mod).GetMethodSafe("SetCrashed", false);
@@ -220,7 +219,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		/// <param name="instance">The Harmony instance to use for the patch.</param>
 		/// <param name="target">The method to profile.</param>
-		internal static void ProfileMethod(this HarmonyInstance instance, MethodBase target) {
+		internal static void ProfileMethod(this Harmony instance, MethodBase target) {
 			if (target == null)
 				DebugLogger.LogWarning("No method specified to profile!");
 			else {
@@ -566,27 +565,6 @@ namespace PeterHan.DebugNotIncluded {
 			/// </summary>
 			internal static void Postfix(ModsScreen __instance) {
 				__instance?.GetComponent<AllModsHandler>()?.UpdateCheckedState();
-			}
-		}
-#endif
-
-#if DEBUG
-		/// <summary>
-		/// Applied to PatchProcessor to warn about suspicious patches that end up targeting
-		/// a method in another class.
-		/// 
-		/// DEBUG ONLY.
-		/// </summary>
-		[HarmonyPatch(typeof(PatchProcessor), "GetOriginalMethod")]
-		public static class PatchProcessor_GetOriginalMethod_Patch {
-			/// <summary>
-			/// Applied after GetOriginalMethod runs.
-			/// </summary>
-			internal static void Postfix(HarmonyMethod ___containerAttributes,
-					Type ___container, MethodBase __result) {
-				if (__result != null && ___containerAttributes != null)
-					HarmonyPatchInspector.CheckHarmonyMethod(___containerAttributes,
-						___container);
 			}
 		}
 #endif

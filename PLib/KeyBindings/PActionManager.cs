@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -47,7 +47,7 @@ namespace PeterHan.PLib {
 		/// executes after mods load but before PLib patches are applied...
 		/// </summary>
 		private static void AddActionManager() {
-			var hi = HarmonyInstance.Create("PKeyBinding_" + (Assembly.GetExecutingAssembly().
+			var hi = new Harmony("PKeyBinding_" + (Assembly.GetExecutingAssembly().
 				GetNameSafe() ?? "Unknown"));
 			hi.Patch(typeof(GameInputMapping).GetMethodSafe(nameof(GameInputMapping.
 				LoadBindings), true), new HarmonyMethod(typeof(PActionManager),

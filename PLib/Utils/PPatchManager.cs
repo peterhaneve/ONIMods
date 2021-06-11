@@ -16,12 +16,12 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
+using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-using PostLoadHandler = System.Action<Harmony.HarmonyInstance>;
+using PostLoadHandler = System.Action<HarmonyLib.Harmony>;
 using PrivateRunList = System.Collections.Generic.ICollection<PeterHan.PLib.IPatchMethodInstance>;
 using SharedRunList = System.Collections.Generic.ICollection<System.Action<uint>>;
 
@@ -45,7 +45,7 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// The Harmony instance used for patches of type Immediate.
 		/// </summary>
-		private static HarmonyInstance immediateInstance = null;
+		private static Harmony immediateInstance = null;
 
 		/// <summary>
 		/// Cached copy of the master patch dictionary.
@@ -130,7 +130,7 @@ namespace PeterHan.PLib {
 			}
 			// If there were any, run them
 			if (postload != null) {
-				var hInst = HarmonyInstance.Create("PLib.PostLoad");
+				var hInst = new Harmony("PLib.PostLoad");
 				PRegistry.LogPatchDebug("Executing {0:D} legacy post-load handler(s)".F(
 					postload.Count));
 				foreach (var handler in postload)
@@ -152,9 +152,9 @@ namespace PeterHan.PLib {
 		/// </summary>
 		/// <returns>The Harmony instance (only created once) for this mod's immediate PLib
 		/// methods / patches.</returns>
-		private static HarmonyInstance GetImmediateInstance() {
+		private static Harmony GetImmediateInstance() {
 			if (immediateInstance == null)
-				immediateInstance = HarmonyInstance.Create("PLib.PostLoad.Immediate");
+				immediateInstance = new Harmony("PLib.PostLoad.Immediate");
 			return immediateInstance;
 		}
 
@@ -199,7 +199,7 @@ namespace PeterHan.PLib {
 		private static void RunThisMod(uint when) {
 			if (patches.TryGetValue(when, out PrivateRunList toRun)) {
 				// Create Harmony instance for the patches
-				var instance = HarmonyInstance.Create("PLib.PostLoad." + RunAt.ToString(when));
+				var instance = new Harmony("PLib.PostLoad." + RunAt.ToString(when));
 				foreach (var method in toRun)
 					try {
 						method.Run(instance);

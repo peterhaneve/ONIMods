@@ -2,13 +2,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>No Splash Screen</AssemblyTitle>
-    <FileVersion>1.0.0.0</FileVersion>
+    <FileVersion>2.0.0.0</FileVersion>
     <RootNamespace>PeterHan.NoSplashScreen</RootNamespace>
     <Description>Hides the splash screen shown in beta and Early Access versions of the game.</Description>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <UsesPLib>false</UsesPLib>
-    <SupportedContent>EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>447598</LastWorkingBuild>
     <Platforms>Vanilla;Spaced Out</Platforms>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
+    <SupportedContent>EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>466655</LastWorkingBuild>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
+    <ArchivedVersionPath>\archived_versions\merged</ArchivedVersionPath>
+    <SupportedContent>EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>476400</LastWorkingBuild>
   </PropertyGroup>
 </Project>

@@ -16,10 +16,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
+using HarmonyLib;
 using KMod;
 using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Reflection;
 
@@ -38,7 +37,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// <summary>
 		/// The Harmony instance used by this mod.
 		/// </summary>
-		internal HarmonyInstance DebugInstance { get; }
+		internal Harmony DebugInstance { get; }
 
 		/// <summary>
 		/// Stores debug information about each mod. Keyed by label.
@@ -51,7 +50,7 @@ namespace PeterHan.DebugNotIncluded {
 		private readonly ConcurrentDictionary<string, ModDebugInfo> modAssemblies;
 
 		private ModDebugRegistry() {
-			DebugInstance = HarmonyInstance.Create("DebugNotIncluded");
+			DebugInstance = new Harmony("DebugNotIncluded");
 			debugInfo = new ConcurrentDictionary<string, ModDebugInfo>(4, 256);
 			modAssemblies = new ConcurrentDictionary<string, ModDebugInfo>(4, 256);
 		}

@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
+using HarmonyLib;
 using System;
 using System.Reflection;
 
@@ -276,7 +276,7 @@ namespace PeterHan.PLib {
 		/// <exception cref="InvalidOperationException">If the </exception>
 		/// <exception cref="AmbiguousMatchException">If no parameter types were specified,
 		/// and multiple options match the method name.</exception>
-		public void Run(HarmonyInstance instance) {
+		public void Run(Harmony instance) {
 			if (PPatchManager.CheckConditions(Descriptor.RequireAssembly, Descriptor.
 					RequireType, out Type requiredType)) {
 				var dest = new HarmonyMethod(Method);

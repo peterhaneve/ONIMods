@@ -16,10 +16,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
+using HarmonyLib;
 using System;
 
-using PostLoadHandler = System.Action<Harmony.HarmonyInstance>;
+using PostLoadHandler = System.Action<HarmonyLib.Harmony>;
 
 namespace PeterHan.PLib {
 	/// <summary>
@@ -31,7 +31,7 @@ namespace PeterHan.PLib {
 		/// preconditions before executing the target.
 		/// </summary>
 		/// <param name="instance">The Harmony instance to use.</param>
-		void Run(HarmonyInstance instance);
+		void Run(Harmony instance);
 	}
 
 	/// <summary>
@@ -47,7 +47,7 @@ namespace PeterHan.PLib {
 			Handler = handler ?? throw new ArgumentNullException("handler");
 		}
 
-		public void Run(HarmonyInstance instance) {
+		public void Run(Harmony instance) {
 			Handler.Invoke(instance);
 		}
 	}
