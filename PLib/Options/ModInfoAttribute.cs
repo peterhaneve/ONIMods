@@ -16,8 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using System;
+using System.Reflection;
 
 namespace PeterHan.PLib {
 	/// <summary>
@@ -35,14 +35,20 @@ namespace PeterHan.PLib {
 		internal static ModInfoAttribute CreateFrom(object attr) {
 			string title = null, image = null, url = null;
 			bool collapse = false;
-			if (attr.GetType().Name == typeof(ModInfoAttribute).Name) {
-				var trAttr = Traverse.Create(attr);
+			var type = attr.GetType();
+			if (type.Name == typeof(ModInfoAttribute).Name) {
 				try {
-					title = trAttr.GetProperty<string>(nameof(Title));
-					image = trAttr.GetProperty<string>(nameof(Image));
-					url = trAttr.GetProperty<string>(nameof(URL));
-					collapse = trAttr.GetProperty<bool>(nameof(ForceCollapseCategories));
-				} catch (Exception e) {
+					title = type.GetPropertySafe<string>(nameof(Title), false)?.
+						GetValue(attr, null)?.ToString();
+					image = type.GetPropertySafe<string>(nameof(Image), false)?.
+						GetValue(attr, null)?.ToString();
+					url = type.GetPropertySafe<string>(nameof(URL), false)?.
+						GetValue(attr, null)?.ToString();
+					var objVal = type.GetPropertySafe<bool>(nameof(ForceCollapseCategories),
+						false)?.GetValue(attr, null);
+					if (objVal is bool boolVal)
+						collapse = boolVal;
+				} catch (TargetInvocationException e) {
 					PUtil.LogExcWarn(e);
 				}
 			}

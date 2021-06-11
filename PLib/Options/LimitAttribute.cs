@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using System;
 using System.Reflection;
 
@@ -35,14 +34,20 @@ namespace PeterHan.PLib {
 		/// possible to retrieve; or null if none could be obtained.</returns>
 		private static LimitAttribute CreateFrom(object attr) {
 			LimitAttribute la = null;
-			if (attr.GetType().Name == typeof(LimitAttribute).Name) {
+			var type = attr.GetType();
+			if (type.Name == typeof(LimitAttribute).Name) {
 				// Has limit type
-				var trAttr = Traverse.Create(attr);
 				double min = 0.0, max = 0.0;
 				try {
-					min = trAttr.GetProperty<double>(nameof(Minimum));
-					max = trAttr.GetProperty<double>(nameof(Maximum));
-				} catch (Exception e) {
+					var objVal = type.GetPropertySafe<double>(nameof(Minimum), false)?.
+						GetValue(attr, null);
+					if (objVal is double minVal)
+						min = minVal;
+					objVal = type.GetPropertySafe<double>(nameof(Maximum), false)?.
+						GetValue(attr, null);
+					if (objVal is double maxVal)
+						max = maxVal;
+				} catch (TargetInvocationException e) {
 					PUtil.LogExcWarn(e);
 				}
 				if (min != 0.0 || max != 0.0)

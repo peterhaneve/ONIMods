@@ -217,21 +217,20 @@ namespace PeterHan.PLib {
 				PUtil.LogException(e);
 			}
 			if (latest != null) {
+				var type = latest.GetType();
 				// Store the winning version
 				PSharedData.PutData(KEY_VERSION, latestVer.ToString());
 				try {
-					var applyMethod = Traverse.Create(latest).Method(nameof(PLibPatches.Apply),
+					var applyMethod = type.GetMethodSafe(nameof(PLibPatches.Apply), false,
 						new Type[] { typeof(HarmonyInstance) });
 					// Raise warning if a bad patch made it in somehow
-					if (applyMethod.MethodExists())
-						applyMethod.GetValue(instance.PLibInstance);
+					if (applyMethod != null)
+						applyMethod.Invoke(latest, new object[] { instance.PLibInstance });
 					else
 						LogPatchWarning("The first PLib mod in the load order did not use " +
 							"PUtil.InitLibrary()!");
 				} catch (TargetInvocationException e) {
 					PUtil.LogException(e.GetBaseException() ?? e);
-				} catch (Exception e) {
-					PUtil.LogException(e);
 				}
 			}
 			// Reduce memory usage by cleaning up the patch list
@@ -272,9 +271,11 @@ namespace PeterHan.PLib {
 				}
 				// Use reflection to execute the actual AddPatch method
 				try {
-					Traverse.Create(reg).CallMethod(nameof(PRegistry.AddPatch),
-						(object)new PLibPatches());
-				} catch (Exception e) {
+					var type = reg.GetType();
+					var addPatch = type.GetMethodSafe(nameof(PRegistry.AddPatch), false,
+						typeof(object));
+					addPatch?.Invoke(reg, new object[] { new PLibPatches() });
+				} catch (TargetInvocationException e) {
 					PUtil.LogException(e);
 				}
 			} else {
