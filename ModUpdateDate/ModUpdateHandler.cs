@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using KMod;
 using PeterHan.PLib;
 using PeterHan.PLib.UI;
@@ -84,12 +83,17 @@ namespace PeterHan.ModUpdateDate {
 		/// <summary>
 		/// Adds the mod update date to the mods menu.
 		/// </summary>
-		/// <param name="modEntry">The entry in the mod menu.</param>
 		/// <param name="outdated">The mods which are out of date.</param>
+		/// <param name="modEntry">The entry in the mod menu.</param>
 		internal static void AddModUpdateButton(ICollection<ModToUpdate> outdated,
-				Traverse modEntry) {
-			int index = modEntry.GetField<int>("mod_index");
-			var rowInstance = modEntry.GetField<RectTransform>("rect_transform")?.gameObject;
+				object modEntry) {
+			int index = -1;
+			var type = modEntry.GetType();
+			var indexVal = type.GetFieldSafe("mod_index", false)?.GetValue(modEntry);
+			if (indexVal is int intVal)
+				index = intVal;
+			var rowInstance = (type.GetFieldSafe("rect_transform", false)?.GetValue(
+				modEntry) as RectTransform)?.gameObject;
 			var mods = Global.Instance.modManager?.mods;
 			if (rowInstance != null && mods != null && index >= 0 && index < mods.Count) {
 				var mod = mods[index];

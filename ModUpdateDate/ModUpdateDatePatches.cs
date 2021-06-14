@@ -16,7 +16,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#if VANILLA
 using Harmony;
+#else
+using HarmonyLib;
+#endif
 using KMod;
 using PeterHan.PLib;
 using PeterHan.PLib.Datafiles;
@@ -69,7 +73,7 @@ namespace PeterHan.ModUpdateDate {
 			ModUpdateInfo.LoadSettings();
 			// Find our mod
 			foreach (var mod in Global.Instance.modManager?.mods)
-				if (mod.GetModBasePath() == path) {
+				if (mod.ContentPath == path) {
 					ThisMod = mod;
 					break;
 				}
@@ -85,7 +89,11 @@ namespace PeterHan.ModUpdateDate {
 		/// <summary>
 		/// Invoked by the game before our patches, so we get a chance to patch Mod.Crash.
 		/// </summary>
+#if VANILLA
 		public static void PrePatch(HarmonyInstance instance) {
+#else
+		public static void PrePatch(Harmony instance) {
+#endif
 			var method = typeof(Mod).GetMethodSafe(nameof(Mod.SetCrashed), false);
 			if (method != null)
 				instance.Patch(method, prefix: new HarmonyMethod(typeof(ModUpdateDatePatches),
@@ -178,9 +186,9 @@ namespace PeterHan.ModUpdateDate {
 				// Must cast the type because ModsScreen.DisplayedMod is private
 				if (___displayedMods != null) {
 					var outdated = new List<ModToUpdate>(16);
-					foreach (var displayedMod in ___displayedMods)
-						ModUpdateHandler.AddModUpdateButton(outdated, Traverse.Create(
-							displayedMod));
+					foreach (object displayedMod in ___displayedMods)
+						if (displayedMod != null)
+							ModUpdateHandler.AddModUpdateButton(outdated, displayedMod);
 					if (outdated.Count > 0 && ___closeButton != null)
 						ModUpdateHandler.AddUpdateAll(___closeButton.gameObject.GetParent(),
 							outdated);
