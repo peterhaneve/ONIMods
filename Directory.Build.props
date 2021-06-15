@@ -8,7 +8,7 @@
     <ProjectReference Private="False" />
   </ItemDefinitionGroup>
 
-  <ItemGroup Condition=" '$(AssemblyName)' != 'PLib' And '$(AssemblyName)' != 'PLibOptions' ">
+  <ItemGroup Condition=" '$(PLibCore)' != 'true' ">
     <PackageReference Include="ILRepack.MSBuild.Task" Version="2.0.13" />
   </ItemGroup>
   <ItemGroup Condition=" '$(Platform)' == 'Vanilla' ">
@@ -16,10 +16,11 @@
     <Reference Include="Assembly-CSharp" HintPath="$(GameFolderVanilla)/Assembly-CSharp.dll" />
     <Reference Include="Assembly-CSharp-firstpass" HintPath="$(GameFolderVanilla)/Assembly-CSharp-firstpass.dll" />
     <Reference Include="Newtonsoft.Json" HintPath="$(GameFolderVanilla)/Newtonsoft.Json.dll" />
+    <Reference Include="Unity.TextMeshPro" HintPath="$(GameFolderVanilla)/Unity.TextMeshPro.dll" />
     <Reference Include="UnityEngine" HintPath="$(GameFolderVanilla)/UnityEngine.dll" />
     <Reference Include="UnityEngine.CoreModule" HintPath="$(GameFolderVanilla)/UnityEngine.CoreModule.dll" />
     <Reference Include="UnityEngine.ImageConversionModule" HintPath="$(GameFolderVanilla)/UnityEngine.ImageConversionModule.dll" />
-    <Reference Include="Unity.TextMeshPro" HintPath="$(GameFolderVanilla)/Unity.TextMeshPro.dll" />
+    <Reference Include="UnityEngine.InputLegacyModule" HintPath="$(GameFolderVanilla)/UnityEngine.InputLegacyModule.dll" />
     <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(GameFolderVanilla)/UnityEngine.TextRenderingModule.dll" />
     <Reference Include="UnityEngine.UI" HintPath="$(GameFolderVanilla)/UnityEngine.UI.dll" />
     <Reference Include="UnityEngine.UIModule" HintPath="$(GameFolderVanilla)/UnityEngine.UIModule.dll" />
@@ -29,22 +30,31 @@
     <Reference Include="Assembly-CSharp" HintPath="$(GameFolderSpacedOut)/Assembly-CSharp.dll" />
     <Reference Include="Assembly-CSharp-firstpass" HintPath="$(GameFolderSpacedOut)/Assembly-CSharp-firstpass.dll" />
     <Reference Include="Newtonsoft.Json" HintPath="$(GameFolderSpacedOut)/Newtonsoft.Json.dll" />
+    <Reference Include="Unity.TextMeshPro" HintPath="$(GameFolderSpacedOut)/Unity.TextMeshPro.dll" />
     <Reference Include="UnityEngine" HintPath="$(GameFolderSpacedOut)/UnityEngine.dll" />
     <Reference Include="UnityEngine.CoreModule" HintPath="$(GameFolderSpacedOut)/UnityEngine.CoreModule.dll" />
     <Reference Include="UnityEngine.ImageConversionModule" HintPath="$(GameFolderSpacedOut)/UnityEngine.ImageConversionModule.dll" />
-    <Reference Include="Unity.TextMeshPro" HintPath="$(GameFolderSpacedOut)/Unity.TextMeshPro.dll" />
+    <Reference Include="UnityEngine.InputLegacyModule" HintPath="$(GameFolderSpacedOut)/UnityEngine.InputLegacyModule.dll" />
     <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(GameFolderSpacedOut)/UnityEngine.TextRenderingModule.dll" />
     <Reference Include="UnityEngine.UI" HintPath="$(GameFolderSpacedOut)/UnityEngine.UI.dll" />
     <Reference Include="UnityEngine.UIModule" HintPath="$(GameFolderSpacedOut)/UnityEngine.UIModule.dll" />
   </ItemGroup>
   <ItemGroup Condition=" '$(UsesPLib)' != 'false' ">
-    <ProjectReference Include="../PLib/PLib.csproj" Private="True"/>
+    <ProjectReference Include="../PLibCore/PLibCore.csproj" Private="True"/>
+    <ProjectReference Include="../PLibActions/PLibActions.csproj" Private="True"/>
+    <ProjectReference Include="../PLibBuildings/PLibBuildings.csproj" Private="True"/>
+    <ProjectReference Include="../PLibDatabase/PLibDatabase.csproj" Private="True"/>
+    <ProjectReference Include="../PLibLighting/PLibLighting.csproj" Private="True"/>
+    <ProjectReference Include="../PLibOptions/PLibOptions.csproj" Private="True"/>
+    <ProjectReference Include="../PLibUI/PLibUI.csproj" Private="True"/>
   </ItemGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
     <DefineConstants>SPACEDOUT</DefineConstants>
+    <APIVersion>2</APIVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
     <DefineConstants>VANILLA</DefineConstants>
+    <APIVersion>1</APIVersion>
   </PropertyGroup>
   <PropertyGroup>
     <Product>PeterHanONIMods</Product>

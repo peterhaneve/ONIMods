@@ -1,0 +1,96 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.4.1\n"
+"Last-Translator: \n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Language: fr\n"
+
+#. PeterHan.PLib.Core.PLibStrings.BUTTON_MANUAL
+msgctxt "PeterHan.PLib.Core.PLibStrings.BUTTON_MANUAL"
+msgid "MANUAL CONFIG"
+msgstr "CONFIGURATION MANUELLE"
+
+#. PeterHan.PLib.Core.PLibStrings.DIALOG_TITLE
+msgctxt "PeterHan.PLib.Core.PLibStrings.DIALOG_TITLE"
+msgid "Options for {0}"
+msgstr "Options pour {0}"
+
+#. PeterHan.PLib.Core.PLibStrings.MOD_ASSEMBLY_VERSION
+msgctxt "PeterHan.PLib.Core.PLibStrings.MOD_ASSEMBLY_VERSION"
+msgid "Assembly Version: {0}"
+msgstr "Version d'assemblage: {0}"
+
+#. PeterHan.PLib.Core.PLibStrings.MOD_HOMEPAGE
+msgctxt "PeterHan.PLib.Core.PLibStrings.MOD_HOMEPAGE"
+msgid "Mod Homepage"
+msgstr "Page d'accueil du mod"
+
+#. PeterHan.PLib.Core.PLibStrings.MOD_VERSION
+msgctxt "PeterHan.PLib.Core.PLibStrings.MOD_VERSION"
+msgid "Mod Version: {0}"
+msgstr "Version du mod: {0}"
+
+#. PeterHan.PLib.Core.PLibStrings.RESTART_REQUIRED
+msgctxt "PeterHan.PLib.Core.PLibStrings.RESTART_REQUIRED"
+msgid "Oxygen Not Included must be restarted for these options to take effect."
+msgstr ""
+"Oxygen Not Included doit être relancé pour que ces options prennent effet."
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_CANCEL
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_CANCEL"
+msgid "Discard changes."
+msgstr "Annuler les changements."
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_HOMEPAGE
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_HOMEPAGE"
+msgid "Visit the mod's website."
+msgstr "Visiter le site web du mod."
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_MANUAL
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_MANUAL"
+msgid "Opens the folder containing the full mod configuration."
+msgstr "Ouvre le dossier contenant la configuration complète du mod."
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_NEXT
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_NEXT"
+msgid "Next"
+msgstr "Suivant"
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_OK
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_OK"
+msgid ""
+"Save these options. Some mods may require a restart for the options to take "
+"effect."
+msgstr ""
+"Conservez ces options. Certains mods peuvent nécessiter un redémarrage pour "
+"que les options prennent effet."
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_PREVIOUS
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_PREVIOUS"
+msgid "Previous"
+msgstr "Précédent"
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_TOGGLE
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_TOGGLE"
+msgid "Show or hide this options category"
+msgstr "Afficher ou masquer cette catégorie d'options"
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_VERSION
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_VERSION"
+msgid ""
+"The currently installed version of this mod.\n"
+"\n"
+"Compare this version with the mod's Release Notes to see if it is outdated."
+msgstr ""
+"La version actuellement installée de ce mod.\n"
+"\n"
+"Comparez cette version avec les notes de mise à jour du mod pour voir si "
+"elle n'est pas dépassée."

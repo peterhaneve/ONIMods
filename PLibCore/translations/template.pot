@@ -1,0 +1,75 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not Included"
+"POT Version: 2.0"
+
+#. PeterHan.PLib.Core.PLibStrings.BUTTON_MANUAL
+msgctxt "PeterHan.PLib.Core.PLibStrings.BUTTON_MANUAL"
+msgid "MANUAL CONFIG"
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.DIALOG_TITLE
+msgctxt "PeterHan.PLib.Core.PLibStrings.DIALOG_TITLE"
+msgid "Options for {0}"
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.MOD_ASSEMBLY_VERSION
+msgctxt "PeterHan.PLib.Core.PLibStrings.MOD_ASSEMBLY_VERSION"
+msgid "Assembly Version: {0}"
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.MOD_HOMEPAGE
+msgctxt "PeterHan.PLib.Core.PLibStrings.MOD_HOMEPAGE"
+msgid "Mod Homepage"
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.MOD_VERSION
+msgctxt "PeterHan.PLib.Core.PLibStrings.MOD_VERSION"
+msgid "Mod Version: {0}"
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.RESTART_REQUIRED
+msgctxt "PeterHan.PLib.Core.PLibStrings.RESTART_REQUIRED"
+msgid "Oxygen Not Included must be restarted for these options to take effect."
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_CANCEL
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_CANCEL"
+msgid "Discard changes."
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_HOMEPAGE
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_HOMEPAGE"
+msgid "Visit the mod's website."
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_MANUAL
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_MANUAL"
+msgid "Opens the folder containing the full mod configuration."
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_NEXT
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_NEXT"
+msgid "Next"
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_OK
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_OK"
+msgid "Save these options. Some mods may require a restart for the options to take effect."
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_PREVIOUS
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_PREVIOUS"
+msgid "Previous"
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_TOGGLE
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_TOGGLE"
+msgid "Show or hide this options category"
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_VERSION
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_VERSION"
+msgid "The currently installed version of this mod.\n\nCompare this version with the mod's Release Notes to see if it is outdated."
+msgstr ""
+

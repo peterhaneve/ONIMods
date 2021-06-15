@@ -6,11 +6,11 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="PLibTranslationEmbeddedResources" BeforeTargets="ResolveReferences" Condition=" '$(AssemblyName)' == 'PLib' Or '$(AssemblyName)' == 'PLibOptions' ">
+  <Target Name="PLibTranslationEmbeddedResources" BeforeTargets="ResolveReferences" Condition=" '$(AssemblyName)' == 'PLibCore' ">
     <ItemGroup>
-      <PLibTranslationFiles Include="../PLib/translations/*.po" />
+      <PLibTranslationFiles Include="../PLibCore/translations/*.po" />
       <EmbeddedResource Include="%(PLibTranslationFiles.Identity)"
-        LogicalName="PeterHan.PLib.UI.PUIStrings.%(PLibTranslationFiles.Filename)%(PLibTranslationFiles.Extension)" />
+        LogicalName="PeterHan.PLib.Core.PLibStrings.%(PLibTranslationFiles.Filename)%(PLibTranslationFiles.Extension)" />
     </ItemGroup>
   </Target>
 
@@ -26,17 +26,34 @@
       <ModInfoFileContent>
 supportedContent: $(SupportedContent)
 lastWorkingBuild: $(LastWorkingBuild)
+version: $(FileVersion)
+APIVersion: $(APIVersion)
       </ModInfoFileContent>
     </PropertyGroup>
     <WriteLinesToFile File="$(ModInfoFile)" Overwrite="true" Lines="$(ModInfoFileContent)"/>
   </Target>
 
-  <Target Name="ILRepack" AfterTargets="Build" Condition=" '$(UsesPLib)' != 'false' ">
-    <ItemGroup>
+  <Target Name="WriteModDescriptionFile" BeforeTargets="PreBuildEvent" Condition=" '$(DistributeMod)' == 'true' ">
+    <PropertyGroup>
+      <ModDescriptionFile>$(IntermediateOutputPath)\mod.yaml</ModDescriptionFile>
+      <ModDescriptionFileContent>
+title: "$(AssemblyTitle)"
+description: "$(Description)"
+staticID: PeterHan.$(AssemblyName)
+      </ModDescriptionFileContent>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(ModDescriptionFile)" Overwrite="true" Lines="$(ModDescriptionFileContent)"/>
+  </Target>
+
+  <Target Name="ILRepack" AfterTargets="Build" Condition=" '$(PLibCore)' != 'true' ">
+    <ItemGroup Condition=" '$(UsesPLib)' != 'false' ">
       <InputAssemblies Include="$(TargetDir)PLib*.dll" />
     </ItemGroup>
+    <ItemGroup>
+      <InputAssemblies Include="$(TargetPath)" />
+    </ItemGroup>
 
-    <ILRepack 
+    <ILRepack
         TargetPlatformVersion="v4"
         OutputType="SameAsPrimaryAssembly"
         MainAssembly="$(TargetPath)"
@@ -48,10 +65,13 @@ lastWorkingBuild: $(LastWorkingBuild)
 
   <Target Name="CopyArtifactsToInstallFolder" AfterTargets="ILRepack" Condition=" '$(DistributeMod)' == 'true' ">
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <InstallFolder>..\Release\$(ProjectName)$(ArchivedVersionPath)</InstallFolder>
+      <RootInstallFolder>..\Release\$(ProjectName)</RootInstallFolder>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <InstallFolder>$(ModFolder)\$(ProjectName)$(ArchivedVersionPath)</InstallFolder>
+      <RootInstallFolder>$(ModFolder)\$(ProjectName)</RootInstallFolder>
+    </PropertyGroup>
+    <PropertyGroup>
+      <InstallFolder>$(RootInstallFolder)$(ArchivedVersionPath)</InstallFolder>
     </PropertyGroup>
 
     <ItemGroup>
@@ -68,6 +88,7 @@ lastWorkingBuild: $(LastWorkingBuild)
     <Copy SourceFiles="@(WorldGenTemplates)" DestinationFiles="@(WorldGenTemplates->'$(InstallFolder)\templates\%(RecursiveDir)%(Filename)%(Extension)')" />
     <Copy SourceFiles="@(YamlFiles)" DestinationFolder="$(InstallFolder)" />
     <Copy SourceFiles="$(ModInfoFile)" DestinationFolder="$(InstallFolder)" />
+    <Copy SourceFiles="$(ModDescriptionFile)" DestinationFolder="$(RootInstallFolder)" />
     <Copy SourceFiles="$(ProjectDir)\Preview.png" DestinationFiles="$(InstallFolder)\preview.png" Condition=" $(CopyPreview) == true " />
     <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(InstallFolder)\$(TargetFileName)" />
   </Target>

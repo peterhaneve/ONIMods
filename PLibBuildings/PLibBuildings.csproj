@@ -1,21 +1,20 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Title>PeterHan.PLib.Options</Title>
+    <Title>PeterHan.PLib.Buildings</Title>
     <AssemblyTitle>PeterHanLib</AssemblyTitle>
     <Version>4.0.0.0</Version>
     <UsesPLib>false</UsesPLib>
-    <RootNamespace>PeterHan.PLib.Options</RootNamespace>
+    <RootNamespace>PeterHan.PLib.Buildings</RootNamespace>
     <AssemblyVersion>4.0.0.0</AssemblyVersion>
     <DistributeMod>false</DistributeMod>
     <PLibCore>true</PLibCore>
     <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DocumentationFile>bin\Release\PLibOptions.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\PLibBuildings.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../PLibCore/PLibCore.csproj" Private="true" />
-    <ProjectReference Include="../PLibUI/PLibUI.csproj" Private="true" />
   </ItemGroup>
 </Project>

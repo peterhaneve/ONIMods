@@ -53,8 +53,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TileTempSensor", "TileTempS
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThermalTooltips", "ThermalTooltips\ThermalTooltips.csproj", "{01184A60-E812-461A-97BF-8523723B68C4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLibOptions", "PLibOptions\PLibOptions.csproj", "{0BED6413-DABC-4349-B047-547F4E125C3F}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MoreAchievements", "MoreAchievements\MoreAchievements.csproj", "{39240357-3820-4F3E-9D4C-51215C225388}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DebugNotIncluded", "DebugNotIncluded\DebugNotIncluded.csproj", "{121FD801-8404-419F-BB58-47BED5737F04}"
@@ -81,8 +79,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastTrack", "FastTrack\Fast
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoSensorLimits", "NoSensorLimits\NoSensorLimits.csproj", "{136F8525-F65C-4A92-BC9E-2F89ECAFD4E1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DLCModEnabler", "DLCModEnabler\DLCModEnabler.csproj", "{C9E984E2-0229-4389-8942-397EC1EEFF20}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinishTasks", "FinishTasks\FinishTasks.csproj", "{6E8902F8-2969-4A11-B2D2-C8644A00949D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoSplashScreen", "NoSplashScreen\NoSplashScreen.csproj", "{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}"
@@ -92,6 +88,20 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkshopProfiles", "WorkshopProfiles\WorkshopProfiles.csproj", "{E327F5BD-CBF2-47D0-90C6-AE9C56E99B2F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PipPlantOverlay", "PipPlantOverlay\PipPlantOverlay.csproj", "{0153F668-C4B3-400B-A4AE-7B736337FDD4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLibCore", "PLibCore\PLibCore.csproj", "{4603AB9B-32DF-46E2-9B18-8F990EE48859}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLibOptions", "PLibOptions\PLibOptions.csproj", "{C5BE93CE-C278-45AE-8721-CAC6A46069B5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLibUI", "PLibUI\PLibUI.csproj", "{9E527206-D933-4885-9E44-A2763693990C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLibLighting", "PLibLighting\PLibLighting.csproj", "{43EE900D-A651-4886-8F2C-EA9FA7768BC8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLibActions", "PLibActions\PLibActions.csproj", "{A60EDAB0-8BB4-407C-8C4A-7C35CA30F6A0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLibBuildings", "PLibBuildings\PLibBuildings.csproj", "{3E3493BE-CA52-4503-9D78-ACD2059FCA29}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLibDatabase", "PLibDatabase\PLibDatabase.csproj", "{E7871310-6906-45FB-8FE4-47582B758644}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -295,14 +305,6 @@ Global
 		{01184A60-E812-461A-97BF-8523723B68C4}.Release|Spaced Out.Build.0 = Release|Spaced Out
 		{01184A60-E812-461A-97BF-8523723B68C4}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{01184A60-E812-461A-97BF-8523723B68C4}.Release|Vanilla.Build.0 = Release|Vanilla
-		{0BED6413-DABC-4349-B047-547F4E125C3F}.Debug|Spaced Out.ActiveCfg = Debug|Spaced Out
-		{0BED6413-DABC-4349-B047-547F4E125C3F}.Debug|Spaced Out.Build.0 = Debug|Spaced Out
-		{0BED6413-DABC-4349-B047-547F4E125C3F}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
-		{0BED6413-DABC-4349-B047-547F4E125C3F}.Debug|Vanilla.Build.0 = Debug|Vanilla
-		{0BED6413-DABC-4349-B047-547F4E125C3F}.Release|Spaced Out.ActiveCfg = Release|Spaced Out
-		{0BED6413-DABC-4349-B047-547F4E125C3F}.Release|Spaced Out.Build.0 = Release|Spaced Out
-		{0BED6413-DABC-4349-B047-547F4E125C3F}.Release|Vanilla.ActiveCfg = Release|Vanilla
-		{0BED6413-DABC-4349-B047-547F4E125C3F}.Release|Vanilla.Build.0 = Release|Vanilla
 		{39240357-3820-4F3E-9D4C-51215C225388}.Debug|Spaced Out.ActiveCfg = Debug|Spaced Out
 		{39240357-3820-4F3E-9D4C-51215C225388}.Debug|Spaced Out.Build.0 = Debug|Spaced Out
 		{39240357-3820-4F3E-9D4C-51215C225388}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
@@ -405,14 +407,6 @@ Global
 		{136F8525-F65C-4A92-BC9E-2F89ECAFD4E1}.Release|Spaced Out.Build.0 = Release|Spaced Out
 		{136F8525-F65C-4A92-BC9E-2F89ECAFD4E1}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{136F8525-F65C-4A92-BC9E-2F89ECAFD4E1}.Release|Vanilla.Build.0 = Release|Vanilla
-		{C9E984E2-0229-4389-8942-397EC1EEFF20}.Debug|Spaced Out.ActiveCfg = Debug|Spaced Out
-		{C9E984E2-0229-4389-8942-397EC1EEFF20}.Debug|Spaced Out.Build.0 = Debug|Spaced Out
-		{C9E984E2-0229-4389-8942-397EC1EEFF20}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
-		{C9E984E2-0229-4389-8942-397EC1EEFF20}.Debug|Vanilla.Build.0 = Debug|Vanilla
-		{C9E984E2-0229-4389-8942-397EC1EEFF20}.Release|Spaced Out.ActiveCfg = Release|Spaced Out
-		{C9E984E2-0229-4389-8942-397EC1EEFF20}.Release|Spaced Out.Build.0 = Release|Spaced Out
-		{C9E984E2-0229-4389-8942-397EC1EEFF20}.Release|Vanilla.ActiveCfg = Release|Vanilla
-		{C9E984E2-0229-4389-8942-397EC1EEFF20}.Release|Vanilla.Build.0 = Release|Vanilla
 		{6E8902F8-2969-4A11-B2D2-C8644A00949D}.Debug|Spaced Out.ActiveCfg = Debug|Spaced Out
 		{6E8902F8-2969-4A11-B2D2-C8644A00949D}.Debug|Spaced Out.Build.0 = Debug|Spaced Out
 		{6E8902F8-2969-4A11-B2D2-C8644A00949D}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
@@ -449,6 +443,62 @@ Global
 		{0153F668-C4B3-400B-A4AE-7B736337FDD4}.Release|Spaced Out.Build.0 = Release|Spaced Out
 		{0153F668-C4B3-400B-A4AE-7B736337FDD4}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{0153F668-C4B3-400B-A4AE-7B736337FDD4}.Release|Vanilla.Build.0 = Release|Vanilla
+		{4603AB9B-32DF-46E2-9B18-8F990EE48859}.Debug|Spaced Out.ActiveCfg = Debug|Spaced Out
+		{4603AB9B-32DF-46E2-9B18-8F990EE48859}.Debug|Spaced Out.Build.0 = Debug|Spaced Out
+		{4603AB9B-32DF-46E2-9B18-8F990EE48859}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
+		{4603AB9B-32DF-46E2-9B18-8F990EE48859}.Debug|Vanilla.Build.0 = Debug|Vanilla
+		{4603AB9B-32DF-46E2-9B18-8F990EE48859}.Release|Spaced Out.ActiveCfg = Release|Spaced Out
+		{4603AB9B-32DF-46E2-9B18-8F990EE48859}.Release|Spaced Out.Build.0 = Release|Spaced Out
+		{4603AB9B-32DF-46E2-9B18-8F990EE48859}.Release|Vanilla.ActiveCfg = Release|Vanilla
+		{4603AB9B-32DF-46E2-9B18-8F990EE48859}.Release|Vanilla.Build.0 = Release|Vanilla
+		{C5BE93CE-C278-45AE-8721-CAC6A46069B5}.Debug|Spaced Out.ActiveCfg = Debug|Spaced Out
+		{C5BE93CE-C278-45AE-8721-CAC6A46069B5}.Debug|Spaced Out.Build.0 = Debug|Spaced Out
+		{C5BE93CE-C278-45AE-8721-CAC6A46069B5}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
+		{C5BE93CE-C278-45AE-8721-CAC6A46069B5}.Debug|Vanilla.Build.0 = Debug|Vanilla
+		{C5BE93CE-C278-45AE-8721-CAC6A46069B5}.Release|Spaced Out.ActiveCfg = Release|Spaced Out
+		{C5BE93CE-C278-45AE-8721-CAC6A46069B5}.Release|Spaced Out.Build.0 = Release|Spaced Out
+		{C5BE93CE-C278-45AE-8721-CAC6A46069B5}.Release|Vanilla.ActiveCfg = Release|Vanilla
+		{C5BE93CE-C278-45AE-8721-CAC6A46069B5}.Release|Vanilla.Build.0 = Release|Vanilla
+		{9E527206-D933-4885-9E44-A2763693990C}.Debug|Spaced Out.ActiveCfg = Debug|Spaced Out
+		{9E527206-D933-4885-9E44-A2763693990C}.Debug|Spaced Out.Build.0 = Debug|Spaced Out
+		{9E527206-D933-4885-9E44-A2763693990C}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
+		{9E527206-D933-4885-9E44-A2763693990C}.Debug|Vanilla.Build.0 = Debug|Vanilla
+		{9E527206-D933-4885-9E44-A2763693990C}.Release|Spaced Out.ActiveCfg = Release|Spaced Out
+		{9E527206-D933-4885-9E44-A2763693990C}.Release|Spaced Out.Build.0 = Release|Spaced Out
+		{9E527206-D933-4885-9E44-A2763693990C}.Release|Vanilla.ActiveCfg = Release|Vanilla
+		{9E527206-D933-4885-9E44-A2763693990C}.Release|Vanilla.Build.0 = Release|Vanilla
+		{43EE900D-A651-4886-8F2C-EA9FA7768BC8}.Debug|Spaced Out.ActiveCfg = Debug|Spaced Out
+		{43EE900D-A651-4886-8F2C-EA9FA7768BC8}.Debug|Spaced Out.Build.0 = Debug|Spaced Out
+		{43EE900D-A651-4886-8F2C-EA9FA7768BC8}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
+		{43EE900D-A651-4886-8F2C-EA9FA7768BC8}.Debug|Vanilla.Build.0 = Debug|Vanilla
+		{43EE900D-A651-4886-8F2C-EA9FA7768BC8}.Release|Spaced Out.ActiveCfg = Release|Spaced Out
+		{43EE900D-A651-4886-8F2C-EA9FA7768BC8}.Release|Spaced Out.Build.0 = Release|Spaced Out
+		{43EE900D-A651-4886-8F2C-EA9FA7768BC8}.Release|Vanilla.ActiveCfg = Release|Vanilla
+		{43EE900D-A651-4886-8F2C-EA9FA7768BC8}.Release|Vanilla.Build.0 = Release|Vanilla
+		{A60EDAB0-8BB4-407C-8C4A-7C35CA30F6A0}.Debug|Spaced Out.ActiveCfg = Debug|Spaced Out
+		{A60EDAB0-8BB4-407C-8C4A-7C35CA30F6A0}.Debug|Spaced Out.Build.0 = Debug|Spaced Out
+		{A60EDAB0-8BB4-407C-8C4A-7C35CA30F6A0}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
+		{A60EDAB0-8BB4-407C-8C4A-7C35CA30F6A0}.Debug|Vanilla.Build.0 = Debug|Vanilla
+		{A60EDAB0-8BB4-407C-8C4A-7C35CA30F6A0}.Release|Spaced Out.ActiveCfg = Release|Spaced Out
+		{A60EDAB0-8BB4-407C-8C4A-7C35CA30F6A0}.Release|Spaced Out.Build.0 = Release|Spaced Out
+		{A60EDAB0-8BB4-407C-8C4A-7C35CA30F6A0}.Release|Vanilla.ActiveCfg = Release|Vanilla
+		{A60EDAB0-8BB4-407C-8C4A-7C35CA30F6A0}.Release|Vanilla.Build.0 = Release|Vanilla
+		{3E3493BE-CA52-4503-9D78-ACD2059FCA29}.Debug|Spaced Out.ActiveCfg = Debug|Spaced Out
+		{3E3493BE-CA52-4503-9D78-ACD2059FCA29}.Debug|Spaced Out.Build.0 = Debug|Spaced Out
+		{3E3493BE-CA52-4503-9D78-ACD2059FCA29}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
+		{3E3493BE-CA52-4503-9D78-ACD2059FCA29}.Debug|Vanilla.Build.0 = Debug|Vanilla
+		{3E3493BE-CA52-4503-9D78-ACD2059FCA29}.Release|Spaced Out.ActiveCfg = Release|Spaced Out
+		{3E3493BE-CA52-4503-9D78-ACD2059FCA29}.Release|Spaced Out.Build.0 = Release|Spaced Out
+		{3E3493BE-CA52-4503-9D78-ACD2059FCA29}.Release|Vanilla.ActiveCfg = Release|Vanilla
+		{3E3493BE-CA52-4503-9D78-ACD2059FCA29}.Release|Vanilla.Build.0 = Release|Vanilla
+		{E7871310-6906-45FB-8FE4-47582B758644}.Debug|Spaced Out.ActiveCfg = Debug|Spaced Out
+		{E7871310-6906-45FB-8FE4-47582B758644}.Debug|Spaced Out.Build.0 = Debug|Spaced Out
+		{E7871310-6906-45FB-8FE4-47582B758644}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
+		{E7871310-6906-45FB-8FE4-47582B758644}.Debug|Vanilla.Build.0 = Debug|Vanilla
+		{E7871310-6906-45FB-8FE4-47582B758644}.Release|Spaced Out.ActiveCfg = Release|Spaced Out
+		{E7871310-6906-45FB-8FE4-47582B758644}.Release|Spaced Out.Build.0 = Release|Spaced Out
+		{E7871310-6906-45FB-8FE4-47582B758644}.Release|Vanilla.ActiveCfg = Release|Vanilla
+		{E7871310-6906-45FB-8FE4-47582B758644}.Release|Vanilla.Build.0 = Release|Vanilla
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
