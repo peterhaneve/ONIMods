@@ -43,5 +43,19 @@ namespace PeterHan.MooReproduction {
 				}
 			}
 		}
+
+		public static class UI {
+			public static class FRONTEND {
+				public static class MOOREPRODUCTION {
+					public static LocString DISABLE_METEORS = "Disable Moo Meteors";
+				}
+			}
+
+			public static class TOOLTIPS {
+				public static class MOOREPRODUCTION {
+					public static LocString DISABLE_METEORS = "Disables Moo Meteors from falling on any planetoid. Can help avoid an exponential build-up of Gassy Moos.";
+				}
+			}
+		}
 	}
 }

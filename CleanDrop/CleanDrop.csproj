@@ -2,12 +2,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Clean Drop</AssemblyTitle>
-    <FileVersion>1.6.0.0</FileVersion>
+    <FileVersion>2.0.0.0</FileVersion>
     <RootNamespace>PeterHan.CleanDrop</RootNamespace>
     <Description>Drops materials from build, deconstruct, or repair errands in a place where the working Duplicant can usually access them.</Description>
-    <AssemblyVersion>1.2.0.0</AssemblyVersion>
-    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>460672</LastWorkingBuild>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <Platforms>Vanilla;Spaced Out</Platforms>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>466655</LastWorkingBuild>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
+    <ArchivedVersionPath>\archived_versions\merged</ArchivedVersionPath>
+    <SupportedContent>EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>468097</LastWorkingBuild>
   </PropertyGroup>
 </Project>

@@ -16,18 +16,19 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
+using HarmonyLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
+using PeterHan.PLib.PatchManager;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace PeterHan.EfficientFetch {
 	/// <summary>
-	/// Patches which will be applied via annotations for Efficient Fetch.
+	/// Patches which will be applied via annotations for Efficient Supply.
 	/// </summary>
-	public static class EfficientFetchPatches {
+	public sealed class EfficientFetchPatches : KMod.UserMod2 {
 		/// <summary>
 		/// The number of errors encountered so far in the pickup loop.
 		/// </summary>
@@ -43,11 +44,12 @@ namespace PeterHan.EfficientFetch {
 		/// </summary>
 		private static EfficientFetchOptions options;
 
-		public static void OnLoad() {
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 			options = new EfficientFetchOptions();
-			PUtil.RegisterPatchClass(typeof(EfficientFetchPatches));
-			POptions.RegisterOptions(typeof(EfficientFetchOptions));
+			new PPatchManager(harmony).RegisterPatchClass(typeof(EfficientFetchPatches));
+			new POptions().RegisterOptions(typeof(EfficientFetchOptions));
 		}
 
 		/// <summary>

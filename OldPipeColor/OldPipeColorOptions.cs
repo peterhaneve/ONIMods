@@ -17,7 +17,7 @@
  */
 
 using Newtonsoft.Json;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
 using UnityEngine;
 
@@ -25,7 +25,7 @@ namespace PeterHan.OldPipeColor {
 	/// <summary>
 	/// The options class used for Custom Pipe Colors.
 	/// </summary>
-	[ModInfo("Custom Pipe Colors", "https://github.com/peterhaneve/ONIMods")]
+	[ModInfo("https://github.com/peterhaneve/ONIMods")]
 	[JsonObject(MemberSerialization.OptIn)]
 	public sealed class OldPipeColorOptions {
 		[Option("Red", "The RED component of the insulated pipe color from 0 to 255 inclusive", "Insulated")]

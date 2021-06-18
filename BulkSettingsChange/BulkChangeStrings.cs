@@ -20,7 +20,7 @@ namespace PeterHan.BulkSettingsChange {
 	/// <summary>
 	/// Stores the strings used in the Bulk Settings Change tool.
 	/// </summary>
-	static class BulkChangeStrings {
+	internal static class BulkChangeStrings {
 		// Tool tip and name in the tool list
 		public static LocString TOOL_DESCRIPTION = "Enable or disable Auto-Disinfect, Auto-Repair, or buildings {Hotkey}";
 		public static LocString TOOL_TITLE = "Change Settings";
@@ -49,7 +49,7 @@ namespace PeterHan.BulkSettingsChange {
 	/// <summary>
 	/// Store the tool mode information used in the Bulk Settings Change tool.
 	/// </summary>
-	static class BulkChangeTools {
+	internal static class BulkChangeTools {
 		// Available tools
 		public static readonly BulkToolMode DisableBuildings = new BulkToolMode(
 			"DISABLE_BUILDING", STRINGS.UI.USERMENUACTIONS.ENABLEBUILDING.NAME,

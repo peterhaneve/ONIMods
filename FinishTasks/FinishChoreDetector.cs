@@ -17,7 +17,7 @@
  */
 
 
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 
 using PriorityClass = PriorityScreen.PriorityClass;
 

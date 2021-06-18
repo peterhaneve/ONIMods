@@ -16,8 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
+using HarmonyLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
@@ -27,7 +27,7 @@ namespace PeterHan.ResearchQueue {
 	/// <summary>
 	/// Patches which will be applied via annotations for Research Queue.
 	/// </summary>
-	public static class ResearchQueuePatches {
+	public sealed class ResearchQueuePatches : KMod.UserMod2 {
 		/// <summary>
 		/// Caches a reference to the mActiveModifiers field of KInputController.
 		/// </summary>
@@ -45,7 +45,8 @@ namespace PeterHan.ResearchQueue {
 		private static readonly IDetouredField<ManagementMenu, ResearchScreen> RESEARCH_SCREEN =
 			PDetours.DetourField<ManagementMenu, ResearchScreen>("researchScreen");
 
-		public static void OnLoad() {
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 			// Cache a ref to the active modifiers field
 			try {
@@ -124,7 +125,6 @@ namespace PeterHan.ResearchQueue {
 		private static bool OnResearchClicked(Tech targetTech) {
 			var controller = Global.Instance.GetInputManager()?.GetDefaultController();
 			var inst = ManagementMenu.Instance;
-			// TODO Vanilla/DLC code
 			var screen = (inst == null) ? null : RESEARCH_SCREEN.Get(inst);
 			var research = Research.Instance;
 			string id = targetTech.Id;

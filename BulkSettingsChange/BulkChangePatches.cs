@@ -16,9 +16,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
-using PeterHan.PLib.Datafiles;
+using HarmonyLib;
+using PeterHan.PLib.Actions;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
+using PeterHan.PLib.PatchManager;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -28,37 +30,29 @@ namespace PeterHan.BulkSettingsChange {
 	/// 
 	/// This code took inspiration from https://github.com/0Mayall/ONIBlueprints/
 	/// </summary>
-	public static class BulkChangePatches {
+	public sealed class BulkChangePatches : KMod.UserMod2 {
 		/// <summary>
 		/// The action to bring up the bulk change tool.
 		/// </summary>
 		internal static PAction BulkChangeAction { get; private set; }
 
+		[PLibMethod(RunAt.BeforeDbInit)]
+		internal static void BeforeDbInit() {
+			var icon = SpriteRegistry.GetToolIcon();
+			Assets.Sprites.Add(icon.name, icon);
+		}
+
 		/// <summary>
 		/// Logs when the mod is loaded.
 		/// </summary>
-		public static void OnLoad() {
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
-			PLocalization.Register();
-			BulkChangeAction = PAction.Register(BulkChangeStrings.ACTION_KEY,
+			new PLocalization().Register();
+			new PPatchManager(harmony).RegisterPatchClass(typeof(BulkChangePatches));
+			BulkChangeAction = new PActionManager().CreateAction(BulkChangeStrings.ACTION_KEY,
 				BulkChangeStrings.ACTION_TITLE, new PKeyBinding(KKeyCode.Q));
-			PToolMode.RegisterToolIcon(SpriteRegistry.GetToolIcon());
 		}
-
-#if DEBUG
-		/// <summary>
-		/// Handles localization by registering for translation.
-		/// </summary>
-		[HarmonyPatch(typeof(Db), "Initialize")]
-		public static class Db_Initialize_Patch {
-			/// <summary>
-			/// Applied before Initialize runs.
-			/// </summary>
-			internal static void Prefix() {
-				ModUtil.RegisterForTranslation(typeof(BulkChangeStrings));
-			}
-		}
-#endif
 
 		/// <summary>
 		/// Applied to PlayerController to load the change settings tool into the available

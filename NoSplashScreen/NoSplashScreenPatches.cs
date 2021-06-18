@@ -16,20 +16,17 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#if VANILLA
-using Harmony;
-#else
 using HarmonyLib;
-#endif
 using System.Reflection;
 
 namespace PeterHan.NoSplashScreen {
 	/// <summary>
 	/// Patches which will be applied via annotations for No Splash Screen.
 	/// </summary>
-	public static class NoSplashScreenPatches {
-		public static void OnLoad() {
+	public class NoSplashScreenPatches : KMod.UserMod2 {
+		public override void OnLoad(Harmony harmony) {
 			var assembly = Assembly.GetExecutingAssembly();
+			base.OnLoad(harmony);
 			Debug.Log("Mod NoSplashScreen initialized, assembly version " + assembly.
 				GetName()?.Version?.ToString() ?? "Unknown");
 		}

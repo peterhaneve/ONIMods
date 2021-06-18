@@ -3,17 +3,17 @@ msgstr ""
 "Application: Oxygen Not Included"
 "POT Version: 2.0"
 
-#. PeterHan.ThermalPlate.ThermalPlateStrings.THERMALPLATE_NAME
-msgctxt "PeterHan.ThermalPlate.ThermalPlateStrings.THERMALPLATE_NAME"
+#. PeterHan.ThermalPlate.ThermalPlateStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.NAME
+msgctxt "PeterHan.ThermalPlate.ThermalPlateStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.NAME"
 msgid "Thermal Interface Plate"
 msgstr "热量传导板"
 
-#. PeterHan.ThermalPlate.ThermalPlateStrings.THERMALPLATE_DESCRIPTION
-msgctxt "PeterHan.ThermalPlate.ThermalPlateStrings.THERMALPLATE_DESCRIPTION"
+#. PeterHan.ThermalPlate.ThermalPlateStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.DESC
+msgctxt "PeterHan.ThermalPlate.ThermalPlateStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.DESC"
 msgid "With eyes glazed over from proposals such as \"heat pipes\" or \"vapor chambers\", one Duplicant had the bright idea of simply wedging this piece of scrap metal between buildings to transfer heat."
 msgstr "在对诸如\"热管\"或\"蒸汽室\"等建议眼花缭乱的情况下，一位复制人有了一个聪明的想法，那就是简单地将这块废旧金属夹在建筑物之间来传递热量。"
 
-#. PeterHan.ThermalPlate.ThermalPlateStrings.THERMALPLATE_EFFECT
-msgctxt "PeterHan.ThermalPlate.ThermalPlateStrings.THERMALPLATE_EFFECT"
+#. PeterHan.ThermalPlate.ThermalPlateStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.EFFECT
+msgctxt "PeterHan.ThermalPlate.ThermalPlateStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.EFFECt"
 msgid "Transfers <link=\"HEAT\">Heat</link> between buildings, even if they are in a complete <link=\"VACUUM\">Vacuum</link>. \n\nPrevents <link=\"ELEMENTS_GAS\">Gas</link> and <link=\"ELEMENTS_LIQUID\">Liquid</link> loss in space."
 msgstr "在建筑物之间传递<link=\"HEAT\">热量</link>,即使它们处于完全<link=\"VACUUM\">真空</link>状态。\n\n防止<link=\"ELEMENTS_GAS\">气体</link>和<link=\"ELEMENTS_LIQUID\">液体</link>在太空中流失。"

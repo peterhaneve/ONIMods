@@ -16,10 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.Buildings;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
-using System;
-using UnityEngine;
 
 using ReceptacleDirection = SingleEntityReceptacle.ReceptacleDirection;
 
@@ -33,7 +31,7 @@ namespace PeterHan.PipPlantOverlay {
 		/// <summary>
 		/// Reference to the current value of ObjectLayer.Building.
 		/// </summary>
-		private static readonly int BUILDINGS_LAYER = (int)PBuilding.GetObjectLayer(
+		private static readonly int BUILDINGS_LAYER = (int)PGameUtils.GetObjectLayer(
 			nameof(ObjectLayer.Building), ObjectLayer.Building);
 
 		private static readonly CountNearbyPlants COUNT_PLANTS = typeof(PlantableCellQuery).

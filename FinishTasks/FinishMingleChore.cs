@@ -145,9 +145,15 @@ namespace PeterHan.FinishTasks {
 			/// <returns>The destination where the Duplicant will go when the busy day is done.</returns>
 			public int GetMingleCell() {
 				int cell = mingleCellSensor.GetCell();
-				if (!Grid.IsValidCell(cell))
-					cell = VanillaDLCAdapter.Instance?.GetDefaultMingleCell(sm.mingler.Get(
-						smi)) ?? Grid.InvalidCell;
+				if (!Grid.IsValidCell(cell)) {
+					var mingler = sm.mingler.Get(smi);
+					GameObject telepad;
+					if (mingler != null && (telepad = GameUtil.GetTelepad(mingler.
+							GetMyWorldId())) != null)
+						cell = Grid.PosToCell(telepad);
+					else
+						cell = Grid.InvalidCell;
+				}
 				return cell;
 			}
 

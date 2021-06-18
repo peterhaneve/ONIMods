@@ -16,8 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
 using PeterHan.PLib.Buildings;
+using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.SmartPumps {
@@ -38,10 +38,9 @@ namespace PeterHan.SmartPumps {
 		/// <summary>
 		/// Registers this building.
 		/// </summary>
-		internal static void RegisterBuilding() {
+		internal static PBuilding CreateBuilding() {
 			// Inititialize it here to allow localization to change the strings
-			PBuilding.Register(LiquidPumpFiltered = new PBuilding(ID,
-				SmartPumpsStrings.LIQUIDPUMP_NAME) {
+			return LiquidPumpFiltered = new PBuilding(ID, SmartPumpsStrings.LIQUIDPUMP_NAME) {
 				AddAfter = "LiquidMiniPump",
 				Animation = "pumpLiquidFiltered_kanim",
 				Category = "Plumbing",
@@ -70,7 +69,7 @@ namespace PeterHan.SmartPumps {
 				Tech = "ValveMiniaturization",
 				ViewMode = OverlayModes.LiquidConduits.ID,
 				Width = 2
-			});
+			};
 		}
 
 		public override void ConfigureBuildingTemplate(GameObject go, Tag prefab_tag) {
@@ -80,7 +79,7 @@ namespace PeterHan.SmartPumps {
 
 		public override BuildingDef CreateBuildingDef() {
 			// Believe it or not, stock game pumps make no noise pollution
-			PUtil.CopySoundsToAnim(LiquidPumpFiltered.Animation, "pumpliquid_kanim");
+			PGameUtils.CopySoundsToAnim(LiquidPumpFiltered.Animation, "pumpliquid_kanim");
 			GeneratedBuildings.RegisterWithOverlay(OverlayScreen.LiquidVentIDs, ID);
 			return LiquidPumpFiltered?.CreateDef();
 		}

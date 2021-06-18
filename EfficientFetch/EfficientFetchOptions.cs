@@ -17,13 +17,14 @@
  */
 
 using Newtonsoft.Json;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Options;
 
 namespace PeterHan.EfficientFetch {
 	/// <summary>
 	/// The options class used for Efficient Supply.
 	/// </summary>
-	[ModInfo("Efficient Supply", "https://github.com/peterhaneve/ONIMods", "preview.png")]
+	[ModInfo("https://github.com/peterhaneve/ONIMods", "preview.png")]
 	[JsonObject(MemberSerialization.OptIn)]
 	public sealed class EfficientFetchOptions {
 		[Option("Minimum Amount (%)", "The minimum percentage of material required to\r\n" +

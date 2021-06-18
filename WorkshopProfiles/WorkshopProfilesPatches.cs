@@ -16,9 +16,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
-using PeterHan.PLib.Datafiles;
+using HarmonyLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
+using PeterHan.PLib.PatchManager;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -28,7 +29,7 @@ namespace PeterHan.WorkshopProfiles {
 	/// <summary>
 	/// Patches which will be applied via annotations for Workshop Profiles.
 	/// </summary>
-	public static class WorkshopProfilesPatches {
+	public sealed class WorkshopProfilesPatches : KMod.UserMod2 {
 		/// <summary>
 		/// A precondition which checks the Workshop Profile list to see if a Duplicant can
 		/// use the building.
@@ -102,11 +103,12 @@ namespace PeterHan.WorkshopProfiles {
 			};
 		}
 
-		public static void OnLoad() {
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
-			PUtil.RegisterPatchClass(typeof(WorkshopProfilesPatches));
+			new PPatchManager(harmony).RegisterPatchClass(typeof(WorkshopProfilesPatches));
 			LocString.CreateLocStringKeys(typeof(WorkshopProfilesStrings.DUPLICANTS));
-			PLocalization.Register();
+			new PLocalization().Register();
 			// This can live for the whole game and never needs to be removed
 			Components.LiveMinionIdentities.OnRemove += OnRemoveDuplicant;
 		}

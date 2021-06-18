@@ -16,22 +16,13 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
-using PeterHan.PLib.Options;
-using System;
-using System.Reflection;
+using HarmonyLib;
 
 namespace PeterHan.StockBugFix {
 	/// <summary>
 	/// Patches which will be applied via annotations for Stock Bug Fix.
 	/// </summary>
 	public sealed class StockQOLPatches {
-		public static void OnLoad() {
-			PUtil.InitLibrary();
-			POptions.RegisterOptions(typeof(StockBugFixOptions));
-		}
-
 		/// <summary>
 		/// Applied to AlgaeDistilleryConfig to give it a sensible overheat temperature.
 		/// </summary>

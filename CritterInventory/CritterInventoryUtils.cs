@@ -18,11 +18,8 @@
 
 using PeterHan.PLib.Detours;
 using System;
-using System.Collections.Generic;
 
-#if SPACEDOUT
 using TrackerList = System.Collections.Generic.List<WorldTracker>;
-#endif
 
 namespace PeterHan.CritterInventory {
 	/// <summary>
@@ -31,8 +28,6 @@ namespace PeterHan.CritterInventory {
 	internal static class CritterInventoryUtils {
 		/// <summary>
 		/// Creates tool tip text for the critter resource entries and headers.
-		/// 
-		/// TODO Vanilla/DLC code
 		/// </summary>
 		/// <param name="heading">The heading to display on the tool tip.</param>
 		/// <param name="totals">The total quantity available and reserved for errands.</param>
@@ -40,11 +35,6 @@ namespace PeterHan.CritterInventory {
 		/// <returns>The tool tip text formatted for those values.</returns>
 		internal static string FormatTooltip(string heading, CritterTotals totals, float trend)
 		{
-#if VANILLA
-			int total = totals.Total, reserved = totals.Reserved;
-			return heading + "\n" + string.Format(STRINGS.UI.RESOURCESCREEN.AVAILABLE_TOOLTIP,
-				total - reserved, reserved, total);
-#else
 			int total = totals.Total, reserved = totals.Reserved;
 			var ret = new System.Text.StringBuilder(256);
 			ret.Append(heading);
@@ -60,7 +50,6 @@ namespace PeterHan.CritterInventory {
 					STRINGS.UI.RESOURCESCREEN.INCREASING_STR : STRINGS.UI.RESOURCESCREEN.
 					DECREASING_STR, GameUtil.GetFormattedSimple(trend));
 			return ret.ToString();
-#endif
 		}
 
 		/// <summary>
@@ -126,62 +115,6 @@ namespace PeterHan.CritterInventory {
 			return filterUp == "" || tag.ToUpper().Contains(filterUp);
 		}
 
-		// TODO Vanilla/DLC code
-#if VANILLA
-		/// <summary>
-		/// Populates a list of the creatures matching the critter type specified.
-		/// </summary>
-		/// <param name="totals">The location where the quantity of creatures will be stored.</param>
-		/// <param name="type">The critter type to match.</param>
-		public static CritterTotals FindCreatures(IDictionary<Tag, CritterTotals> totals,
-				CritterType type) {
-			if (totals == null)
-				throw new ArgumentNullException("totals");
-			var all = new CritterTotals();
-			IterateCreatures((creature) => {
-				var species = creature.PrefabID();
-				var go = creature.gameObject;
-				if (GetCritterType(creature) == type) {
-					var alignment = go.GetComponent<FactionAlignment>();
-					// Create critter totals if not present
-					if (!totals.TryGetValue(species, out CritterTotals total)) {
-						total = new CritterTotals();
-						totals.Add(species, total);
-					}
-					total.Total++;
-					all.Total++;
-					// Reserve wrangled, marked for attack, and trussed/bagged creatures
-					if ((go.GetComponent<Capturable>()?.IsMarkedForCapture ?? false) ||
-							((alignment?.targeted ?? false) && alignment.targetable) ||
-						creature.HasTag(GameTags.Creatures.Bagged)) {
-						total.Reserved++;
-						all.Reserved++;
-					}
-				}
-			});
-			return all;
-		}
-
-		/// <summary>
-		/// Iterates all active creatures and invokes the delegate for each.
-		/// </summary>
-		/// <param name="action">The method to call for each creature.</param>
-		public static void IterateCreatures(Action<CreatureBrain> action) {
-			var enumerator = Components.Brains.GetEnumerator();
-			try {
-				while (enumerator.MoveNext()) {
-					var creatureBrain = enumerator.Current as CreatureBrain;
-					// Must be spawned, do not check "Unreachable" because most flying critters
-					// are indeed unreachable
-					if ((creatureBrain?.isSpawned ?? false) && !creatureBrain.HasTag(
-							GameTags.Dead))
-						action?.Invoke(creatureBrain);
-				}
-			} finally {
-				(enumerator as IDisposable)?.Dispose();
-			}
-		}
-#else
 		/// <summary>
 		/// The number of cycles to display on resource charts.
 		/// </summary>
@@ -237,6 +170,5 @@ namespace PeterHan.CritterInventory {
 					}
 			return result;
 		}
-#endif
 	}
 }

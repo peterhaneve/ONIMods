@@ -17,26 +17,26 @@
  */
 
 using Newtonsoft.Json;
-using PeterHan.PLib;
+using PeterHan.PLib.Options;
 
 namespace PeterHan.ThermalTooltips {
 	/// <summary>
 	/// The options class used for Thermal Tooltips.
 	/// </summary>
 	[JsonObject(MemberSerialization.OptIn)]
-	[ModInfo("Thermal Tooltips", "https://github.com/peterhaneve/ONIMods", "preview.png")]
+	[ModInfo("https://github.com/peterhaneve/ONIMods", "preview.png")]
 	public sealed class ThermalTooltipsOptions {
 		/// <summary>
 		/// Whether to display all temperature units.
 		/// </summary>
-		[Option("Display All Units", "Displays thermal information in Fahrenheit, Celsius, and Kelvin.")]
+		[Option("STRINGS.UI.THERMALTOOLTIPS.DISPLAY_ALL", "STRINGS.UI.THERMALTOOLTIPS.DISPLAY_ALL_TOOLTIP")]
 		[JsonProperty]
 		public bool AllUnits { get; set; }
 
 		/// <summary>
 		/// Whether to only show tooltips on the thermal overlay.
 		/// </summary>
-		[Option("Only on Thermal Overlay", "Shows thermal information only when the Temperature Overlay is selected.")]
+		[Option("STRINGS.UI.THERMALTOOLTIPS.ONLY_THERMAL", "STRINGS.UI.THERMALTOOLTIPS.ONLY_THERMAL_TOOLTIP")]
 		[JsonProperty]
 		public bool OnlyOnThermalOverlay { get; set; }
 
@@ -46,7 +46,7 @@ namespace PeterHan.ThermalTooltips {
 		}
 
 		public override string ToString() {
-			return "ThermalTooltipsOptions[onlyOverlay={0},allUnits={1}]".F(
+			return string.Format("ThermalTooltipsOptions[onlyOverlay={0},allUnits={1}]",
 				OnlyOnThermalOverlay, AllUnits);
 		}
 	}

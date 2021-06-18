@@ -173,8 +173,11 @@ namespace PeterHan.PLib.Options {
 		/// This type must be the same type configured in RegisterOptions for the mod.</param>
 		/// <param name="onClose">The method to call when the dialog is closed.</param>
 		public static void ShowDialog(Type optionsType, Action<object> onClose = null) {
-			PRegistry.Instance.GetLatestVersion(typeof(POptions).FullName)?.Process(
-				0, new OpenDialogArgs(optionsType, onClose));
+			var args = new OpenDialogArgs(optionsType, onClose);
+			var allOptions = PRegistry.Instance.GetAllComponents(typeof(POptions).FullName);
+			if (allOptions != null)
+				foreach (var mod in allOptions)
+					mod?.Process(0, args);
 		}
 
 		/// <summary>
@@ -234,7 +237,7 @@ namespace PeterHan.PLib.Options {
 		public override Version Version => VERSION;
 
 		public POptions() {
-			modOptions = new SortedList<Assembly, Type>(8);
+			modOptions = new Dictionary<Assembly, Type>(8);
 			registered = new Dictionary<string, ModOptionsHandler>(32);
 			InstanceData = modOptions;
 		}
@@ -301,9 +304,10 @@ namespace PeterHan.PLib.Options {
 
 		public override void Process(uint operation, object args) {
 			// POptions is no longer forwarded, show the dialog from the assembly that has the
-			// options type
+			// options type - ignore calls that are not for our mod
 			if (operation == 0 && PPatchTools.TryGetPropertyValue(args, nameof(OpenDialogArgs.
-					OptionsType), out Type forType)) {
+					OptionsType), out Type forType) && modOptions.ContainsKey(forType.
+					Assembly)) {
 				var dialog = new OptionsDialog(forType);
 				// No close handler = no big deal
 				if (PPatchTools.TryGetPropertyValue(args, nameof(OpenDialogArgs.OnClose),

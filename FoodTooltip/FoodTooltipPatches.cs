@@ -16,9 +16,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
-using PeterHan.PLib.Datafiles;
+using HarmonyLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
+using PeterHan.PLib.PatchManager;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -26,7 +27,7 @@ namespace PeterHan.FoodTooltip {
 	/// <summary>
 	/// Patches which will be applied via annotations for Food Supply Tooltips.
 	/// </summary>
-	public static class FoodTooltipPatches {
+	public sealed class FoodTooltipPatches : KMod.UserMod2 {
 		/// <summary>
 		/// Cleans up the recipe cache on close.
 		/// </summary>
@@ -45,10 +46,11 @@ namespace PeterHan.FoodTooltip {
 			PUtil.LogDebug("Created FoodRecipeCache");
 		}
 
-		public static void OnLoad() {
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
-			PLocalization.Register();
-			PUtil.RegisterPatchClass(typeof(FoodTooltipPatches));
+			new PLocalization().Register();
+			new PPatchManager(harmony).RegisterPatchClass(typeof(FoodTooltipPatches));
 		}
 
 		/// <summary>

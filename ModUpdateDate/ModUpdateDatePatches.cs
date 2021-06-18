@@ -16,14 +16,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#if VANILLA
-using Harmony;
-#else
 using HarmonyLib;
-#endif
 using KMod;
-using PeterHan.PLib;
-using PeterHan.PLib.Datafiles;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.UI;
 using Steamworks;
@@ -36,7 +32,7 @@ namespace PeterHan.ModUpdateDate {
 	/// <summary>
 	/// Patches which will be applied via annotations for Mod Updater.
 	/// </summary>
-	public static class ModUpdateDatePatches {
+	public sealed class ModUpdateDatePatches : KMod.UserMod2 {
 		/// <summary>
 		/// The KMod which describes this mod.
 		/// </summary>
@@ -52,33 +48,6 @@ namespace PeterHan.ModUpdateDate {
 			return SteamUGC.SendQueryUGCRequest(query);
 		}
 
-		public static void OnLoad(string path) {
-			PUtil.InitLibrary();
-			POptions.RegisterOptions(typeof(ModUpdateInfo));
-			LocString.CreateLocStringKeys(typeof(ModUpdateDateStrings.UI));
-			PLocalization.Register();
-			// Try to read the backup config first
-			string backupPath = ExtensionMethods.BackupConfigPath;
-			if (File.Exists(backupPath))
-				try {
-					// Copy and overwrite our config if possible
-					File.Copy(backupPath, ExtensionMethods.ConfigPath, true);
-					File.Delete(backupPath);
-					PUtil.LogDebug("Restored configuration settings after self-update");
-				} catch (IOException) {
-					PUtil.LogWarning("Unable to restore configuration for Mod Updater");
-				} catch (System.UnauthorizedAccessException) {
-					PUtil.LogWarning("Unable to restore configuration for Mod Updater");
-				}
-			ModUpdateInfo.LoadSettings();
-			// Find our mod
-			foreach (var mod in Global.Instance.modManager?.mods)
-				if (mod.ContentPath == path) {
-					ThisMod = mod;
-					break;
-				}
-		}
-
 		/// <summary>
 		/// Handles a mod crash and bypasses disabling the mod if it is this mod.
 		/// </summary>
@@ -87,24 +56,24 @@ namespace PeterHan.ModUpdateDate {
 		}
 
 		/// <summary>
-		/// Invoked by the game before our patches, so we get a chance to patch Mod.Crash.
-		/// </summary>
-#if VANILLA
-		public static void PrePatch(HarmonyInstance instance) {
-#else
-		public static void PrePatch(Harmony instance) {
-#endif
-			var method = typeof(Mod).GetMethodSafe(nameof(Mod.SetCrashed), false);
-			if (method != null)
-				instance.Patch(method, prefix: new HarmonyMethod(typeof(ModUpdateDatePatches),
-					nameof(OnModCrash)));
-		}
-
-		/// <summary>
 		/// Updates the number of outdated mods on the main menu.
 		/// </summary>
 		private static void UpdateMainMenu() {
 			MainMenuWarning.Instance?.UpdateText();
+		}
+
+		public override void OnLoad(Harmony harmony) {
+			var method = typeof(Mod).GetMethodSafe(nameof(Mod.SetCrashed), false);
+			if (method != null)
+				harmony.Patch(method, prefix: new HarmonyMethod(typeof(ModUpdateDatePatches),
+					nameof(OnModCrash)));
+			base.OnLoad(harmony);
+			PUtil.InitLibrary();
+			new POptions().RegisterOptions(typeof(ModUpdateInfo));
+			LocString.CreateLocStringKeys(typeof(ModUpdateDateStrings.UI));
+			new PLocalization().Register();
+			ModUpdateInfo.LoadSettings();
+			ThisMod = mod;
 		}
 
 		/// <summary>

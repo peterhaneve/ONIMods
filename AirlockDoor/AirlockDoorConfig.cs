@@ -17,6 +17,7 @@
  */
 
 using PeterHan.PLib.Buildings;
+using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.AirlockDoor {
@@ -33,12 +34,13 @@ namespace PeterHan.AirlockDoor {
 		internal static PBuilding AirlockDoorTemplate;
 
 		/// <summary>
-		/// Registers this building.
+		/// Creates this building.
 		/// </summary>
-		internal static void RegisterBuilding() {
+		/// <returns>The building prototype.</returns>
+		internal static PBuilding CreateBuilding() {
 			// Inititialize it here to allow localization to change the strings
-			PBuilding.Register(AirlockDoorTemplate = new PBuilding(ID,
-					AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.NAME) {
+			return AirlockDoorTemplate = new PBuilding(ID, AirlockDoorStrings.BUILDINGS.
+					PREFABS.PAIRLOCKDOOR.NAME) {
 				AddAfter = PressureDoorConfig.ID,
 				Animation = "airlock_door_kanim",
 				Category = "Base",
@@ -66,7 +68,7 @@ namespace PeterHan.AirlockDoor {
 				SceneLayer = Grid.SceneLayer.InteriorWall,
 				Tech = "ImprovedGasPiping",
 				Width = 3
-			});
+			};
 		}
 
 		public override void ConfigureBuildingTemplate(GameObject go, Tag prefab_tag) {
@@ -81,7 +83,7 @@ namespace PeterHan.AirlockDoor {
 			def.PreventIdleTraversalPastBuilding = true;
 			// /5 multiplier to thermal conductivity
 			def.ThermalConductivity = 0.2f;
-			def.TileLayer = PBuilding.GetObjectLayer(nameof(ObjectLayer.FoundationTile),
+			def.TileLayer = PGameUtils.GetObjectLayer(nameof(ObjectLayer.FoundationTile),
 				ObjectLayer.FoundationTile);
 			return def;
 		}

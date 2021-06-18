@@ -16,7 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.UI;
 using System;
 using UnityEngine;
 
@@ -24,7 +25,7 @@ namespace PeterHan.BulkSettingsChange {
 	/// <summary>
 	/// Stores sprites used in the bulk change tool.
 	/// </summary>
-	static class SpriteRegistry {
+	internal static class SpriteRegistry {
 		/// <summary>
 		/// Whether the sprites have been loaded.
 		/// </summary>
@@ -56,9 +57,9 @@ namespace PeterHan.BulkSettingsChange {
 		private static void LoadSprites() {
 			if (!spritesLoaded) {
 				try {
-					PLACE_ICON = PUtil.LoadSprite("PeterHan.BulkSettingsChange.Placer.png");
+					PLACE_ICON = PUIUtils.LoadSprite("PeterHan.BulkSettingsChange.Placer.png");
 					PLACE_ICON.name = BulkChangeStrings.PLACE_ICON_NAME;
-					TOOL_ICON = PUtil.LoadSprite("PeterHan.BulkSettingsChange.Toggle.png");
+					TOOL_ICON = PUIUtils.LoadSprite("PeterHan.BulkSettingsChange.Toggle.png");
 					TOOL_ICON.name = BulkChangeStrings.TOOL_ICON_NAME;
 				} catch (ArgumentException e) {
 					// Could not load the icons, but better this than crashing

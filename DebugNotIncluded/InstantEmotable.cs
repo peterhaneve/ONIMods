@@ -16,7 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
+using PeterHan.PLib.Actions;
+using PeterHan.PLib.Core;
 
 namespace PeterHan.DebugNotIncluded {
 	/// <summary>
@@ -29,7 +30,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// Handles user menu refresh events system-wide.
 		/// </summary>
 		private static readonly EventSystem.IntraObjectHandler<InstantEmotable>
-			ON_REFRESH_MENU = PUtil.CreateUserMenuHandler<InstantEmotable>();
+			ON_REFRESH_MENU = PGameUtils.CreateUserMenuHandler<InstantEmotable>();
 
 		protected override void OnCleanUp() {
 			Unsubscribe((int)GameHashes.RefreshUserMenu, ON_REFRESH_MENU);

@@ -22,7 +22,7 @@ namespace PeterHan.BulkSettingsChange {
 	/// <summary>
 	/// The hover popup shown when the bulk change tool is invoked.
 	/// </summary>
-	sealed class BulkChangeHover : HoverTextConfiguration {
+	internal sealed class BulkChangeHover : HoverTextConfiguration {
 		public override void UpdateHoverElements(List<KSelectable> selected) {
 			var hoverInstance = HoverTextScreen.Instance;
 			// Find the active mode

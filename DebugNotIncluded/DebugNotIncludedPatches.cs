@@ -18,9 +18,10 @@
 
 using HarmonyLib;
 using KMod;
-using PeterHan.PLib;
-using PeterHan.PLib.Datafiles;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
+using PeterHan.PLib.PatchManager;
 using PeterHan.PLib.UI;
 using System;
 using System.Collections.Generic;
@@ -34,7 +35,7 @@ namespace PeterHan.DebugNotIncluded {
 	/// <summary>
 	/// Patches which will be applied via annotations for Debug Not Included.
 	/// </summary>
-	public static class DebugNotIncludedPatches {
+	public sealed class DebugNotIncludedPatches : UserMod2 {
 		/*
 		 * Spawned prefabs at launch initialization:
 		 * KObjectManager
@@ -61,13 +62,20 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		internal static Mod ThisMod { get; private set; }
 
+		[PLibMethod(RunAt.AfterLayerableLoad)]
+		internal static void AfterModsLoad() {
+			// Input manager is not set up until this time
+			KInputHandler.Add(Global.Instance.GetInputManager().GetDefaultController(),
+				new UISnapshotHandler(), 1024);
+		}
+
 		/// <summary>
 		/// Applied to ModsScreen to add our buttons and otherwise tweak the dialog.
 		/// </summary>
 		private static void BuildDisplay(ModsScreen __instance, object ___displayedMods) {
 			// Must cast the type because ModsScreen.DisplayedMod is private
 			foreach (var displayedMod in (System.Collections.IEnumerable)___displayedMods)
-				ModDialogs.ConfigureRowInstance(Traverse.Create(displayedMod), __instance);
+				ModDialogs.ConfigureRowInstance(displayedMod, __instance);
 #if ALL_MODS_CHECKBOX
 			__instance.GetComponent<AllModsHandler>()?.UpdateCheckedState();
 #endif
@@ -82,80 +90,39 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
-		/// Applied to DLLLoader to patch in our handling to LoadDLLs.
-		/// </summary>
-		[PLibPatch(RunAt.Immediately, "LoadDLLs", RequireType = "KMod.DLLLoader")]
-		internal static void LoadDLLs_Postfix(object __result) {
-			// LoadedModData is not declared in old versions
-			if (__result != null)
-				ModLoadHandler.LoadAssemblies(__result);
-		}
-
-		/// <summary>
 		/// Logs all failed asserts to the error log.
 		/// </summary>
-		private static void LogAllFailedAsserts() {
+		/// <param name="harmony">The Harmony instance to use for patching.</param>
+		private static void LogAllFailedAsserts(Harmony harmony) {
 			var handler = new HarmonyMethod(typeof(DebugLogger), nameof(DebugLogger.
 				OnAssertFailed));
-			var inst = ModDebugRegistry.Instance.DebugInstance;
 			MethodInfo assert;
 			try {
 				// Assert(bool)
 				assert = typeof(Debug).GetMethodSafe("Assert", true, typeof(bool));
 				if (assert != null)
-					inst.Patch(assert, handler);
+					harmony.Patch(assert, handler);
 				// Assert(bool, object)
 				assert = typeof(Debug).GetMethodSafe("Assert", true, typeof(bool), typeof(
 					object));
 				if (assert != null)
-					inst.Patch(assert, handler);
+					harmony.Patch(assert, handler);
 				// Assert(bool, object, UnityEngine.Object)
 				assert = typeof(Debug).GetMethodSafe("Assert", true, typeof(bool), typeof(
 					object), typeof(UnityEngine.Object));
 				if (assert != null)
-					inst.Patch(assert, handler);
+					harmony.Patch(assert, handler);
 				// Assert(bool, string)
 				assert = typeof(KCrashReporter).GetMethodSafe("Assert", true, typeof(bool),
 					typeof(string));
 				if (assert != null)
-					inst.Patch(assert, handler);
+					harmony.Patch(assert, handler);
 #if DEBUG
 				DebugLogger.LogDebug("Logging all failed asserts");
 #endif
 			} catch (Exception e) {
 				DebugLogger.BaseLogException(e, null);
 			}
-		}
-
-		public static void OnLoad(string path) {
-			var inst = ModDebugRegistry.Instance;
-			RunningPLibAssembly = typeof(PUtil).Assembly;
-			PUtil.InitLibrary();
-			if (DebugNotIncludedOptions.Instance?.DetailedBacktrace ?? true)
-				DebugLogger.InstallExceptionLogger();
-			POptions.RegisterOptions(typeof(DebugNotIncludedOptions));
-			// Set up strings
-			LocString.CreateLocStringKeys(typeof(DebugNotIncludedStrings.UI));
-			LocString.CreateLocStringKeys(typeof(DebugNotIncludedStrings.INPUT_BINDINGS));
-			PLocalization.Register();
-			if (DebugNotIncludedOptions.Instance?.LogAsserts ?? true)
-				LogAllFailedAsserts();
-			foreach (var mod in Global.Instance.modManager?.mods)
-				if (mod.ContentPath == path) {
-					ThisMod = mod;
-					break;
-				}
-			if (ThisMod == null)
-				DebugLogger.LogWarning("Unable to determine KMod instance!");
-			else
-				inst.RegisterModAssembly(Assembly.GetExecutingAssembly(), inst.GetDebugInfo(
-					ThisMod));
-			// Must postload the mods dialog to come out after aki's mods, ony's mods, PLib
-			// options, and so forth
-			PUtil.RegisterPatchClass(typeof(DebugNotIncludedPatches));
-			// Force class initialization to avoid crashes on the background thread if
-			// an Assert fails later
-			DebugUtils.RegisterUIDebug();
 		}
 
 		/// <summary>
@@ -169,82 +136,80 @@ namespace PeterHan.DebugNotIncluded {
 		/// Runs the required postload patches after all other mods load.
 		/// </summary>
 		/// <param name="instance">The Harmony instance to execute patches.</param>
-		[PLibMethod(RunAt.AfterModsLoad)]
-		private static void PostloadHandler(Harmony instance) {
+		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
 			if (DebugNotIncludedOptions.Instance?.PowerUserMode ?? false)
-				instance.Patch(typeof(ModsScreen), "BuildDisplay",
+				harmony.Patch(typeof(ModsScreen), "BuildDisplay",
 					new HarmonyMethod(typeof(DebugNotIncludedPatches), nameof(HidePopups)),
 					new HarmonyMethod(typeof(DebugNotIncludedPatches), nameof(BuildDisplay)));
-			KInputHandler.Add(Global.Instance.GetInputManager().GetDefaultController(),
-				new UISnapshotHandler(), 1024);
-			// New postload architecture requires going back a little ways
-			var st = new StackTrace(6);
-			Assembly assembly = null;
-			if (st.FrameCount > 0)
-				assembly = st.GetFrame(0).GetMethod()?.DeclaringType?.Assembly;
-			RunningPLibAssembly = assembly ?? Assembly.GetCallingAssembly();
+			if (mods != null)
+				ModDebugRegistry.Instance.Populate(mods);
+			else
+				DebugLogger.LogWarning("Mods list is empty! Attribution will not work");
+
+			var runningCore = PRegistry.Instance.GetLatestVersion(
+				"PeterHan.PLib.Core.PLibCorePatches")?.GetOwningAssembly();
+			if (runningCore != null)
+				RunningPLibAssembly = runningCore;
 			// Log which mod is running PLib
 			var latest = ModDebugRegistry.Instance.OwnerOfAssembly(RunningPLibAssembly);
 			if (latest != null)
 				DebugLogger.LogDebug("Executing version of PLib is from: " + latest.ModName);
+
 			HarmonyPatchInspector.Check();
 #if DEBUG
 			// SaveManager.Load:: 13831 ms
-			instance.ProfileMethod(typeof(SaveLoader).GetMethodSafe("Load", false, typeof(
+			harmony.ProfileMethod(typeof(SaveLoader).GetMethodSafe("Load", false, typeof(
 				IReader)));
-			instance.ProfileMethod(typeof(SaveLoader).GetMethodSafe("Save", false, typeof(
+			harmony.ProfileMethod(typeof(SaveLoader).GetMethodSafe("Save", false, typeof(
 				BinaryWriter)));
-			instance.ProfileMethod(typeof(SaveManager).GetMethodSafe("Load", false,
+			harmony.ProfileMethod(typeof(SaveManager).GetMethodSafe("Load", false,
 				PPatchTools.AnyArguments));
-			instance.ProfileMethod(typeof(SaveManager).GetMethodSafe("Save", false,
+			harmony.ProfileMethod(typeof(SaveManager).GetMethodSafe("Save", false,
 				PPatchTools.AnyArguments));
-			typeof(PLocalization).GetMethodSafe("DumpAll", true)?.Invoke(null, null);
+			typeof(PLocalization).GetMethodSafe("DumpAll", false)?.Invoke(loc, null);
 #endif
 		}
 
 		/// <summary>
-		/// Invoked by the game before our patches, so we get a chance to patch Mod.Crash.
+		/// Used to localize this mod.
 		/// </summary>
-		public static void PrePatch(Harmony instance) {
+		private readonly PLocalization loc;
+
+		public DebugNotIncludedPatches() {
+			loc = new PLocalization();
+		}
+
+		public override void OnLoad(Harmony harmony) {
+			var inst = ModDebugRegistry.Instance;
+
 			var method = typeof(Mod).GetMethodSafe("Crash", false);
 			if (method == null)
 				method = typeof(Mod).GetMethodSafe("SetCrashed", false);
 			if (method != null)
-				instance.Patch(method, prefix: new HarmonyMethod(typeof(
+				harmony.Patch(method, prefix: new HarmonyMethod(typeof(
 					DebugNotIncludedPatches), nameof(OnModCrash)));
-		}
 
-		/// <summary>
-		/// Profiles a method, outputting how many milliseconds it took to run on each use.
-		/// </summary>
-		/// <param name="instance">The Harmony instance to use for the patch.</param>
-		/// <param name="target">The method to profile.</param>
-		internal static void ProfileMethod(this Harmony instance, MethodBase target) {
-			if (target == null)
-				DebugLogger.LogWarning("No method specified to profile!");
-			else {
-				instance.Patch(target, new HarmonyMethod(typeof(DebugNotIncludedPatches),
-					nameof(ProfilerPrefix)), new HarmonyMethod(typeof(DebugNotIncludedPatches),
-					nameof(ProfilerPostfix)));
-				DebugLogger.LogDebug("Profiling method {0}.{1}".F(target.DeclaringType, target.
-					Name));
-			}
-		}
+			base.OnLoad(harmony);
+			RunningPLibAssembly = typeof(PUtil).Assembly;
+			PUtil.InitLibrary();
+			if (DebugNotIncludedOptions.Instance?.DetailedBacktrace ?? true)
+				DebugLogger.InstallExceptionLogger();
+			new POptions().RegisterOptions(typeof(DebugNotIncludedOptions));
 
-		/// <summary>
-		/// A postfix method for instrumenting methods in the code base. Logs the total time
-		/// taken in milliseconds.
-		/// </summary>
-		private static void ProfilerPostfix(MethodBase __originalMethod, Stopwatch __state) {
-			DebugLogger.LogDebug("{1}.{2}:: {0:D} ms".F(__state.ElapsedMilliseconds,
-				__originalMethod.DeclaringType, __originalMethod.Name));
-		}
+			LocString.CreateLocStringKeys(typeof(DebugNotIncludedStrings.UI));
+			LocString.CreateLocStringKeys(typeof(DebugNotIncludedStrings.INPUT_BINDINGS));
+			loc.Register();
 
-		/// <summary>
-		/// A prefix method for instrumenting methods in the code base.
-		/// </summary>
-		private static void ProfilerPrefix(ref Stopwatch __state) {
-			__state = Stopwatch.StartNew();
+			if (DebugNotIncludedOptions.Instance?.LogAsserts ?? true)
+				LogAllFailedAsserts(harmony);
+			ThisMod = mod;
+			if (ThisMod == null)
+				DebugLogger.LogWarning("Unable to determine KMod instance!");
+
+			new PPatchManager(harmony).RegisterPatchClass(typeof(DebugNotIncludedPatches));
+			// Force class initialization to avoid crashes on the background thread if
+			// an Assert fails later
+			DebugUtils.RegisterUIDebug();
 		}
 
 		/// <summary>
@@ -408,7 +373,7 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
-		/// Applied to MainMenu to check and move this mod to the top.
+		/// Applied to MainMenu to check and optionally move this mod to the top.
 		/// </summary>
 		[HarmonyPatch(typeof(MainMenu), "OnSpawn")]
 		public static class MainMenu_OnSpawn_Patch {
@@ -418,26 +383,6 @@ namespace PeterHan.DebugNotIncluded {
 			internal static void Postfix(MainMenu __instance) {
 				if (DebugNotIncludedOptions.Instance?.SkipFirstModCheck != true)
 					ModDialogs.CheckFirstMod(__instance.gameObject);
-			}
-		}
-
-		/// <summary>
-		/// Applied to Manager to make the crash and restart dialog better.
-		/// </summary>
-		[HarmonyPatch(typeof(Manager), "DevRestartDialog")]
-		public static class Manager_DevRestartDialog_Patch {
-			/// <summary>
-			/// Applied before DevRestartDialog runs.
-			/// </summary>
-			internal static bool Prefix(Manager __instance, GameObject parent, bool is_crash) {
-				var events = __instance.events;
-				bool cont = true;
-				if (events != null && events.Count > 0 && is_crash) {
-					ModDialogs.BlameFailedMod(parent);
-					events.Clear();
-					cont = false;
-				}
-				return cont;
 			}
 		}
 
@@ -492,19 +437,6 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
-		/// Applied to Mod to set the active mod when loading.
-		/// </summary>
-		[HarmonyPatch(typeof(Mod), "Load")]
-		public static class Mod_Load_Patch {
-			/// <summary>
-			/// Applied before Load runs.
-			/// </summary>
-			internal static void Prefix(Mod __instance) {
-				ModLoadHandler.CurrentMod = ModDebugRegistry.Instance.GetDebugInfo(__instance);
-			}
-		}
-
-		/// <summary>
 		/// Applied to ModUtil to log animations loaded.
 		/// </summary>
 		[HarmonyPatch(typeof(ModUtil), "AddKAnimMod")]
@@ -518,7 +450,7 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
-		/// Applied to ModsScreen to add UI for saving and restoring mod lists.
+		/// Applied to ModsScreen to add UI for performing more actions to mods.
 		/// </summary>
 		[HarmonyPatch(typeof(ModsScreen), "OnActivate")]
 		[HarmonyPriority(Priority.Last)]

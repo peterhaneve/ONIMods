@@ -24,15 +24,6 @@ namespace PeterHan.DebugNotIncluded {
 	/// </summary>
 	public static class DebugNotIncludedStrings {
 		public static class UI {
-			// New restart message
-			public static class LOADERRORDIALOG {
-				public static LocString TEXT = "An error occurred during start-up.\n\n{0}";
-				public static LocString BLAME = "The crashing code is likely from <b>{0}</b>!";
-				public static LocString UNKNOWN = "It is not clear which mod caused the error.";
-				public static LocString DISABLEMOD = "DISABLE AND RESTART";
-				public static LocString OPENLOG = "OPEN OUTPUT LOG";
-			}
-
 			// Mod status changes
 			public static class MODEVENTS {
 				public static LocString ACTIVATED = STRINGS.UI.FormatAsAutomationState("Activated",
@@ -70,7 +61,7 @@ namespace PeterHan.DebugNotIncluded {
 				public static LocString BUTTON_UNSUB = "Unsubscribe";
 
 				public static LocString LABEL_PLIB = "PLib Version: {0}";
-				public static LocString LABEL_DESCRIPTION = "<b>Mod ID</b>: {0}\n";
+				public static LocString LABEL_DESCRIPTION = "<b>Mod ID</b>: {0} ({1})\n";
 				public static LocString LABEL_THISMOD = "Thank you for using Debug Not Included!";
 				public static LocString LABEL_VERSIONS_FILE = "File Version {0}, ";
 				public static LocString LABEL_VERSIONS_ASSEMBLY = "<b>{0}</b>: {1}Assembly Version {2}\n";
@@ -83,9 +74,9 @@ namespace PeterHan.DebugNotIncluded {
 				public static LocString LABEL_CONTENT = "<b>Enabled content</b>: {0}\n";
 				public static LocString LABEL_PATCHES = "<b>Patches registered by ONI</b>: {0:D}\n";
 				public static LocString LABEL_ARCHIVED_VERSIONS = "<b>Versions</b>:\n";
-				public static LocString LABEL_ARCHIVED_VERSION_ACTIVE = "\u2022 <style=\"logic_on\"><b>{0}</b>: Supports {1} since version {2:D}</style>\n";
+				public static LocString LABEL_ARCHIVED_VERSION_ACTIVE = "\u2022 <style=\"logic_on\"><b>{0}</b>: Supports {1} since version {2:D} (API v{3:D})</style>\n";
 				public static LocString LABEL_ARCHIVED_VERSION_DEFAULT = "Base";
-				public static LocString LABEL_ARCHIVED_VERSION_INACTIVE = "\u2022 <b>{0}</b>: Supports {1} since version {2:D}\n";
+				public static LocString LABEL_ARCHIVED_VERSION_INACTIVE = "\u2022 <b>{0}</b>: Supports {1} since version {2:D} (API v{3:D})\n";
 				public static LocString LABEL_DLC_ALL = "All";
 				public static LocString LABEL_DLC_VANILLA = "Vanilla";
 				public static LocString LABEL_DLC_EXPANSION1 = "Spaced Out";

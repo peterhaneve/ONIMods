@@ -17,7 +17,7 @@
  */
 
 using Klei.AI;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using UnityEngine;

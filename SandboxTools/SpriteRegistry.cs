@@ -16,7 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.UI;
 using System;
 using UnityEngine;
 
@@ -24,7 +25,7 @@ namespace PeterHan.SandboxTools {
 	/// <summary>
 	/// Stores sprites used in the filtered destroy tool.
 	/// </summary>
-	static class SpriteRegistry {
+	internal static class SpriteRegistry {
 		/// <summary>
 		/// Whether the sprites have been loaded.
 		/// </summary>
@@ -46,7 +47,7 @@ namespace PeterHan.SandboxTools {
 		private static void LoadSprites() {
 			if (!spritesLoaded) {
 				try {
-					TOOL_ICON = PUtil.LoadSprite("PeterHan.SandboxTools.Destroy.png");
+					TOOL_ICON = PUIUtils.LoadSprite("PeterHan.SandboxTools.Destroy.png");
 					TOOL_ICON.name = SandboxToolsStrings.TOOL_DESTROY_ICON;
 				} catch (ArgumentException e) {
 					// Could not load the icons, but better this than crashing

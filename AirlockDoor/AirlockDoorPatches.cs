@@ -16,10 +16,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
+using HarmonyLib;
 using PeterHan.PLib.Buildings;
-using PeterHan.PLib.Datafiles;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -27,21 +27,11 @@ namespace PeterHan.AirlockDoor {
 	/// <summary>
 	/// Patches which will be applied via annotations for Airlock Door.
 	/// </summary>
-	public static class AirlockDoorPatches {
+	public sealed class AirlockDoorPatches : KMod.UserMod2 {
 		/// <summary>
 		/// The layer to check for airlock doors.
 		/// </summary>
 		private static int BUILDING_LAYER;
-
-		public static void OnLoad() {
-			BUILDING_LAYER = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.Building),
-				ObjectLayer.Building);
-			PUtil.InitLibrary();
-			AirlockDoorConfig.RegisterBuilding();
-			PLocalization.Register();
-			LocString.CreateLocStringKeys(typeof(AirlockDoorStrings.BUILDING));
-			LocString.CreateLocStringKeys(typeof(AirlockDoorStrings.BUILDINGS));
-		}
 
 		/// <summary>
 		/// Checks to see if a grid cell is solid and not an Airlock Door.
@@ -52,6 +42,17 @@ namespace PeterHan.AirlockDoor {
 		private static bool SolidAndNotAirlock(ref Grid.BuildFlagsSolidIndexer _, int cell) {
 			return Grid.Solid[cell] && (!Grid.IsValidCell(cell) || Grid.Objects[cell,
 				BUILDING_LAYER].GetComponentSafe<AirlockDoor>() == null);
+		}
+
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
+			BUILDING_LAYER = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Building),
+				ObjectLayer.Building);
+			PUtil.InitLibrary();
+			new PBuildingManager().Register(AirlockDoorConfig.CreateBuilding());
+			LocString.CreateLocStringKeys(typeof(AirlockDoorStrings.BUILDING));
+			LocString.CreateLocStringKeys(typeof(AirlockDoorStrings.BUILDINGS));
+			new PLocalization().Register();
 		}
 
 		/// <summary>

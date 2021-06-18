@@ -16,6 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using TTS = PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS;
+
 namespace PeterHan.ThermalTooltips {
 	/// <summary>
 	/// Handles the tooltips shown when planning a building.
@@ -54,25 +56,23 @@ namespace PeterHan.ThermalTooltips {
 					STRINGS.ELEMENTS.MATERIAL_MODIFIERS.TOOLTIP.EFFECTS_HEADER);
 				descriptors.Insert(0, desc);
 				// Thermal Conductivity
-				desc.SetupDescriptor(string.Format(ThermalTooltipsStrings.EFFECT_CONDUCTIVITY,
-					tc), string.Format(ThermalTooltipsStrings.BUILDING_CONDUCTIVITY,
-					Def.Name, GameUtil.GetFormattedThermalConductivity(tc), tc, deg,
+				desc.SetupDescriptor(string.Format(TTS.EFFECT_CONDUCTIVITY, tc),
+					string.Format(TTS.BUILDING_CONDUCTIVITY, Def.Name, GameUtil.
+					GetFormattedThermalConductivity(tc), tc, deg,
 					STRINGS.UI.UNITSUFFIXES.HEAT.DTU_S.text.Trim()));
 				desc.IncreaseIndent();
 				descriptors.Add(desc);
 				// Thermal Mass
-				desc.SetupDescriptor(string.Format(ThermalTooltipsStrings.EFFECT_THERMAL_MASS,
-					tMass, kDTU, deg), string.Format(ThermalTooltipsStrings.
-					BUILDING_THERMAL_MASS, Def.Name, tMass, kDTU, deg));
+				desc.SetupDescriptor(string.Format(TTS.EFFECT_THERMAL_MASS, tMass, kDTU, deg),
+					string.Format(TTS.BUILDING_THERMAL_MASS, Def.Name, tMass, kDTU, deg));
 				descriptors.Add(desc);
 				// Melt Temperature
 				var hotElement = element.highTempTransition;
 				if (hotElement.IsValidTransition(element)) {
 					string meltTemp = GameUtil.GetFormattedTemperature(element.highTemp +
 						ExtendedThermalTooltip.TRANSITION_HYSTERESIS);
-					desc.SetupDescriptor(string.Format(ThermalTooltipsStrings.
-						EFFECT_MELT_TEMPERATURE, meltTemp), string.Format(
-						ThermalTooltipsStrings.BUILDING_MELT_TEMPERATURE, Def.Name, meltTemp,
+					desc.SetupDescriptor(string.Format(TTS.EFFECT_MELT_TEMPERATURE, meltTemp),
+						string.Format(TTS.BUILDING_MELT_TEMPERATURE, Def.Name, meltTemp,
 						hotElement.FormatName(STRINGS.UI.StripLinkFormatting(element.name))));
 					descriptors.Add(desc);
 				}

@@ -18,7 +18,7 @@
 
 using HarmonyLib;
 using Microsoft.Win32;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.UI;
 using Steamworks;
 using System.Collections.Generic;

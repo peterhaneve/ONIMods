@@ -16,19 +16,22 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using UnityEngine;
+using HarmonyLib;
+using PeterHan.PLib.Buildings;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
 
-#if VANILLA
-namespace PeterHan.CritterInventory {
+namespace PeterHan.ThermalPlate {
 	/// <summary>
-	/// A marker class used to annotate additional information regarding the critter
-	/// information to be displayed by a ResourceEntry or ResourceCategoryHeader object.
+	/// Instantiates the mod, there are no actual patches to apply but the thermal interface
+	/// plate must be registered with PLib.
 	/// </summary>
-	public sealed class CritterResourceInfo : MonoBehaviour {
-		/// <summary>
-		/// The critter type this ResourceEntry or ResourceCategoryHeader will show.
-		/// </summary>
-		public CritterType CritterType { get; set; }
+	public sealed class ThermalPlatePatches : KMod.UserMod2 {
+		public override void OnLoad(Harmony harmony) {
+			PUtil.InitLibrary();
+			LocString.CreateLocStringKeys(typeof(ThermalPlateStrings.BUILDINGS));
+			new PLocalization().Register();
+			new PBuildingManager().Register(ThermalPlateConfig.CreateBuilding());
+		}
 	}
 }
-#endif

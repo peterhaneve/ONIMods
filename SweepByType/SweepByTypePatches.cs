@@ -16,21 +16,32 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
-using PeterHan.PLib.Datafiles;
+using HarmonyLib;
+using PeterHan.PLib.Actions;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
+using PeterHan.PLib.PatchManager;
 using System;
 
 namespace PeterHan.SweepByType {
 	/// <summary>
 	/// Patches which will be applied via annotations for Sweep By Type.
 	/// </summary>
-	public static class SweepByTypePatches {
+	public sealed class SweepByTypePatches : KMod.UserMod2 {
 		/// <summary>
 		/// The current mod options, set on load.
 		/// </summary>
 		internal static SweepByTypeOptions Options { get; private set; }
+
+		/// <summary>
+		/// Adds the filtered sweep icon to the list of sprites.
+		/// </summary>
+		[PLibMethod(RunAt.AfterDbInit)]
+		internal static void AddToolSprite() {
+			Assets.Sprites.Add(SweepByTypeStrings.TOOL_ICON_NAME, SpriteRegistry.
+				GetToolIcon());
+		}
 
 		/// <summary>
 		/// Cleans up the filtered sweep tool on close.
@@ -41,13 +52,13 @@ namespace PeterHan.SweepByType {
 			FilteredClearTool.DestroyInstance();
 		}
 
-		public static void OnLoad() {
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
-			POptions.RegisterOptions(typeof(SweepByTypeOptions));
-			PLocalization.Register();
+			new POptions().RegisterOptions(typeof(SweepByTypeOptions));
+			new PLocalization().Register();
 			Options = null;
-			PUtil.RegisterPatchClass(typeof(SweepByTypePatches));
-			PToolMode.RegisterToolIcon(SpriteRegistry.GetToolIcon());
+			new PPatchManager(harmony).RegisterPatchClass(typeof(SweepByTypePatches));
 		}
 
 		/// <summary>

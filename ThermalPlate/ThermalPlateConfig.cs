@@ -16,17 +16,15 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
 using PeterHan.PLib.Buildings;
-using PeterHan.PLib.Datafiles;
-using System;
+using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.ThermalPlate {
 	/// <summary>
 	/// A drywall replacement which transfers heat between buildings in that tile, even in vacuum.
 	/// </summary>
-	public class ThermalPlateConfig : IBuildingConfig {
+	public sealed class ThermalPlateConfig : IBuildingConfig {
 		/// <summary>
 		/// The building ID.
 		/// </summary>
@@ -37,27 +35,21 @@ namespace PeterHan.ThermalPlate {
 		/// </summary>
 		internal static PBuilding ThermalInterfacePlate;
 
-		public static void OnLoad() {
-			PUtil.InitLibrary();
-			PLocalization.Register();
-			RegisterBuilding();
-		}
-
 		/// <summary>
-		/// Registers this building.
+		/// Creates this building.
 		/// </summary>
-		internal static void RegisterBuilding() {
-			// Inititialize it here to allow localization to change the strings
-			PBuilding.Register(ThermalInterfacePlate = new PBuilding(ID,
-					ThermalPlateStrings.THERMALPLATE_NAME) {
+		/// <returns>The building instance to be registered.</returns>
+		internal static PBuilding CreateBuilding() {
+			return ThermalInterfacePlate = new PBuilding(ID, ThermalPlateStrings.BUILDINGS.
+					PREFABS.THERMALINTERFACEPLATE.NAME) {
 				AddAfter = "ExteriorWall",
 				AlwaysOperational = true,
 				Animation = "thermalPlate_kanim",
 				AudioCategory = "Metal",
 				Category = "Utilities",
 				ConstructionTime = 30.0f,
-				Description = ThermalPlateStrings.THERMALPLATE_DESCRIPTION,
-				EffectText = ThermalPlateStrings.THERMALPLATE_EFFECT,
+				Description = null,
+				EffectText = null,
 				Entombs = false,
 				Floods = false,
 				Height = 1,
@@ -65,13 +57,13 @@ namespace PeterHan.ThermalPlate {
 				Ingredients = {
 					new BuildIngredient(TUNING.MATERIALS.REFINED_METALS, tier: 3)
 				},
-				ObjectLayer = PBuilding.GetObjectLayer(nameof(ObjectLayer.Backwall),
+				ObjectLayer = PGameUtils.GetObjectLayer(nameof(ObjectLayer.Backwall),
 					ObjectLayer.Backwall),
 				Placement = BuildLocationRule.NotInTiles,
 				SceneLayer = Grid.SceneLayer.Backwall,
 				Tech = "Suits",
 				Width = 1
-			});
+			};
 		}
 
 		public override BuildingDef CreateBuildingDef() {
@@ -88,7 +80,7 @@ namespace PeterHan.ThermalPlate {
 
 		public override void ConfigureBuildingTemplate(GameObject go, Tag prefabTag) {
 			ThermalInterfacePlate?.ConfigureBuildingTemplate(go);
-			go.AddOrGet<AnimTileable>().objectLayer = PBuilding.GetObjectLayer(
+			go.AddOrGet<AnimTileable>().objectLayer = PGameUtils.GetObjectLayer(
 				nameof(ObjectLayer.Backwall), ObjectLayer.Backwall);
 			go.AddComponent<ZoneTile>();
 			BuildingConfigManager.Instance.IgnoreDefaultKComponent(typeof(RequiresFoundation),

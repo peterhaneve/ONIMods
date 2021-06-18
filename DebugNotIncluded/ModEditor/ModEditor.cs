@@ -19,13 +19,11 @@
 using Ionic.Zip;
 using Ionic.Zlib;
 using Microsoft.Win32;
-using PeterHan.PLib;
-using PeterHan.PLib.UI;
+using PeterHan.PLib.Core;
 using Steamworks;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
-using UnityEngine;
 
 #if DEBUG
 namespace PeterHan.DebugNotIncluded {

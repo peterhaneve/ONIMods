@@ -13,13 +13,13 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "Language: zh_CN\n"
 
-#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.AND_JOIN
-msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.AND_JOIN"
+#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.AND_JOIN
+msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.AND_JOIN"
 msgid "[{0}] and "
 msgstr "[{0}] 和 "
 
-#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.BUILDING_CONDUCTIVITY
-msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.BUILDING_CONDUCTIVITY"
+#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.BUILDING_CONDUCTIVITY
+msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.BUILDING_CONDUCTIVITY"
 msgid ""
 "The completed {0} will have a thermal conductivity of <b>{1}</b>\n"
 "\n"
@@ -30,14 +30,14 @@ msgstr ""
 "\n"
 "建筑物和周围环境的<link=\"HEAT\">温度</link>每差别1{3}，会传递{2:##0.#} {4}"
 
-#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.BUILDING_MELT_TEMPERATURE
+#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.BUILDING_MELT_TEMPERATURE
 msgctxt ""
-"PeterHan.ThermalTooltips.ThermalTooltipsStrings.BUILDING_MELT_TEMPERATURE"
+"PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.BUILDING_MELT_TEMPERATURE"
 msgid "The completed {0} will melt at <b>{1}</b> into {2}"
 msgstr "建成的{0}会在<b>{1}</b>熔化成{2}"
 
-#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.BUILDING_THERMAL_MASS
-msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.BUILDING_THERMAL_MASS"
+#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.BUILDING_THERMAL_MASS
+msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.BUILDING_THERMAL_MASS"
 msgid ""
 "The completed {0} will have a thermal mass of <b>{1:##0.#} {2}/{3}</b>\n"
 "\n"
@@ -48,43 +48,43 @@ msgstr ""
 "\n"
 "增加或减少{1:##0.#} {2}会让建筑的<link=\"HEAT\">温度</link>变化1{3}"
 
-#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.CHANGES
-msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.CHANGES"
+#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.CHANGES
+msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.CHANGES"
 msgid "Changes"
 msgstr "改变"
 
-#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.EFFECT_CONDUCTIVITY
-msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.EFFECT_CONDUCTIVITY"
+#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.EFFECT_CONDUCTIVITY
+msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.EFFECT_CONDUCTIVITY"
 msgid "<link=\"HEAT\">Thermal Conductivity</link>: {0}"
 msgstr "<link=\"HEAT\">导热率</link> : {0}"
 
-#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.EFFECT_MELT_TEMPERATURE
+#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.EFFECT_MELT_TEMPERATURE
 msgctxt ""
-"PeterHan.ThermalTooltips.ThermalTooltipsStrings.EFFECT_MELT_TEMPERATURE"
+"PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.EFFECT_MELT_TEMPERATURE"
 msgid "<link=\"HEAT\">Melting Point</link>: {0}"
 msgstr "<link=\"HEAT\">熔点</link> : {0}"
 
-#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.EFFECT_THERMAL_MASS
-msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.EFFECT_THERMAL_MASS"
+#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.EFFECT_THERMAL_MASS
+msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.EFFECT_THERMAL_MASS"
 msgid "<link=\"HEAT\">Thermal Mass</link>: {0:##0.#} {1}/{2}"
 msgstr "<link=\"HEAT\">热容</link> : {0:##0.#} {1}/{2}"
 
-#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.HEAT_ENERGY
-msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.HEAT_ENERGY"
+#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.HEAT_ENERGY
+msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.HEAT_ENERGY"
 msgid "Heat Energy: {0} {1}"
 msgstr "热能： {0} {1}"
 
-#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.SUM
-msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.SUM"
+#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.SUM
+msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.SUM"
 msgid " (Σ)"
 msgstr " (Σ)"
 
-#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.THERMAL_MASS
-msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.THERMAL_MASS"
+#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.THERMAL_MASS
+msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.THERMAL_MASS"
 msgid "Thermal Mass: {0} {1}/{2}"
 msgstr "热容： {0} {1}/{2}"
 
-#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.TO_JOIN
-msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.TO_JOIN"
+#. PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.TO_JOIN
+msgctxt "PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS.TO_JOIN"
 msgid " to "
 msgstr " 至 "

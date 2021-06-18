@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Buildings;
 using System;
 using UnityEngine;
@@ -367,9 +367,9 @@ namespace PeterHan.AirlockDoor {
 			}
 
 			public Instance(AirlockDoor door) : base(door) {
-				minionLayer = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.Minion),
+				minionLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Minion),
 					ObjectLayer.Minion);
-				pickupableLayer = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.
+				pickupableLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.
 					Pickupables), ObjectLayer.Pickupables);
 				pressureSamples = 0;
 				totalPressure = 0.0f;

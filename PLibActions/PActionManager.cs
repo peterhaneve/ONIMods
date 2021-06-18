@@ -59,15 +59,6 @@ namespace PeterHan.PLib.Actions {
 		}
 
 		/// <summary>
-		/// Configures the action entry in the strings database to display its title properly.
-		/// </summary>
-		/// <param name="action">The action to configure.</param>
-		internal static void ConfigureTitle(PAction action) {
-			Strings.Add(GetBindingTitle(CATEGORY, action.GetKAction().ToString()), action.
-				Title);
-		}
-
-		/// <summary>
 		/// Extends the action flags array to the new maximum length.
 		/// </summary>
 		/// <param name="oldActionFlags">The old flags array.</param>
@@ -299,24 +290,46 @@ namespace PeterHan.PLib.Actions {
 		public override void PostInitialize(Harmony plibInstance) {
 			// Needs to occur after localization
 			Strings.Add(GetBindingTitle(CATEGORY, "NAME"), PLibStrings.KEY_CATEGORY_TITLE);
+			var allMods = PRegistry.Instance.GetAllComponents(ID);
+			if (allMods != null)
+				foreach (var mod in allMods)
+					mod.Process(1, null);
 		}
 
 		public override void Process(uint operation, object _) {
 			int n = actions.Count;
-			if (n > 0 && operation == 0) {
-				LogKeyBind("Registering {0:D} key bind(s) for mod {1}".F(n, Assembly.
-					GetExecutingAssembly().GetNameSafe() ?? "?"));
-				var currentBindings = new List<BindingEntry>(GameInputMapping.DefaultBindings);
-				foreach (var action in actions) {
-					var kAction = action.GetKAction();
-					var binding = action.DefaultBinding;
-					if (!FindKeyBinding(currentBindings, kAction) && binding != null)
-						currentBindings.Add(new BindingEntry(CATEGORY, binding.GamePadButton,
-							binding.Key, binding.Modifiers, kAction, true, false));
+			if (n > 0) {
+				if (operation == 0)
+					RegisterKeyBindings();
+				else if (operation == 1) {
+#if DEBUG
+					LogKeyBind("Localizing titles for {0}".F(Assembly.GetExecutingAssembly().
+						GetNameSafe() ?? "?"));
+#endif
+					foreach (var action in actions)
+						Strings.Add(GetBindingTitle(CATEGORY, action.GetKAction().ToString()),
+							action.Title);
 				}
-				GameInputMapping.SetDefaultKeyBindings(currentBindings.ToArray());
-				UpdateMaxAction();
 			}
+		}
+
+		private void RegisterKeyBindings() {
+			int n = actions.Count;
+			LogKeyBind("Registering {0:D} key bind(s) for mod {1}".F(n, Assembly.
+				GetExecutingAssembly().GetNameSafe() ?? "?"));
+			var currentBindings = new List<BindingEntry>(GameInputMapping.DefaultBindings);
+			foreach (var action in actions) {
+				var kAction = action.GetKAction();
+				var binding = action.DefaultBinding;
+				if (!FindKeyBinding(currentBindings, kAction)) {
+					if (binding == null)
+						binding = new PKeyBinding();
+					currentBindings.Add(new BindingEntry(CATEGORY, binding.GamePadButton,
+						binding.Key, binding.Modifiers, kAction));
+				}
+			}
+			GameInputMapping.SetDefaultKeyBindings(currentBindings.ToArray());
+			UpdateMaxAction();
 		}
 
 		/// <summary>

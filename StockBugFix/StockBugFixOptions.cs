@@ -17,7 +17,7 @@
  */
 
 using Newtonsoft.Json;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
 
 namespace PeterHan.StockBugFix {
@@ -25,9 +25,9 @@ namespace PeterHan.StockBugFix {
 	/// The options class used for Stock Bug Fix.
 	/// </summary>
 	[JsonObject(MemberSerialization.OptIn)]
-	[ModInfo("Stock Bug Fix", "https://github.com/peterhaneve/ONIMods", "preview.png")]
+	[ModInfo("https://github.com/peterhaneve/ONIMods", "preview.png")]
 	[RestartRequired]
-	public sealed class StockBugFixOptions : POptions.SingletonOptions<StockBugFixOptions> {
+	public sealed class StockBugFixOptions : SingletonOptions<StockBugFixOptions> {
 		/// <summary>
 		/// If true, neutronium digging errands will be allowed. These will only ever complete
 		/// with the "Super Productive" trait active.

@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Buildings;
 using System;
 using System.Collections.Generic;
@@ -53,9 +53,9 @@ namespace PeterHan.ThermalPlate {
 		private readonly ICollection<GameObject> transferCache;
 
 		public ThermalInterfacePlate() {
-			backwallLayer = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.Backwall),
+			backwallLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Backwall),
 				ObjectLayer.Backwall);
-			numObjectLayers = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.NumLayers),
+			numObjectLayers = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.NumLayers),
 				ObjectLayer.NumLayers);
 			transferCache = new List<GameObject>();
 		}

@@ -16,8 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
-using PeterHan.PLib.Buildings;
+using PeterHan.PLib.Actions;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
@@ -28,7 +28,7 @@ namespace PeterHan.BulkSettingsChange {
 	/// A tool which can change the settings of many buildings at once. Supports enable/disable
 	/// disinfect, enable/disable auto repair, and enable/disable building.
 	/// </summary>
-	sealed class BulkChangeTool : DragTool {
+	internal sealed class BulkChangeTool : DragTool {
 		#region Reflection
 		// Detours for private fields in InterfaceTool
 		private static readonly IDetouredField<DragTool, GameObject> AREA_VISUALIZER =
@@ -61,7 +61,8 @@ namespace PeterHan.BulkSettingsChange {
 		/// <summary>
 		/// The empty storage chore if one is active.
 		/// </summary>
-		private readonly IDetouredField<DropAllWorkable, Chore> emptyChore;
+		private static readonly IDetouredField<DropAllWorkable, Chore> EMPTY_CHORE =
+			PDetours.DetourField<DropAllWorkable, Chore>("Chore");
 
 		/// <summary>
 		/// Enables or disables a building.
@@ -124,7 +125,7 @@ namespace PeterHan.BulkSettingsChange {
 		/// <param name="cell">The cell where the change occurred.</param>
 		private static void ShowPopup(bool enable, BulkToolMode enabled, BulkToolMode disabled,
 				int cell) {
-			PUtil.CreatePopup(enable ? PopFXManager.Instance.sprite_Plus : PopFXManager.
+			PGameUtils.CreatePopup(enable ? PopFXManager.Instance.sprite_Plus : PopFXManager.
 				Instance.sprite_Negative, enable ? enabled.PopupText : disabled.PopupText,
 				cell);
 		}
@@ -150,14 +151,9 @@ namespace PeterHan.BulkSettingsChange {
 		private IDictionary<string, ToolParameterMenu.ToggleState> options;
 
 		public BulkChangeTool() {
-			// TODO Vanilla/DLC code
-			string fieldName = "chore";
-			if (typeof(DropAllWorkable).GetFieldSafe(fieldName, false) == null)
-				fieldName = "Chore";
-			emptyChore = PDetours.DetourField<DropAllWorkable, Chore>(fieldName);
-			numObjectLayers = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.NumLayers),
+			numObjectLayers = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.NumLayers),
 				ObjectLayer.NumLayers);
-			pickupableLayer = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.Pickupables),
+			pickupableLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Pickupables),
 				ObjectLayer.Pickupables);
 		}
 
@@ -421,7 +417,7 @@ namespace PeterHan.BulkSettingsChange {
 		private bool ToggleEmptyStorage(int cell, GameObject item, bool enable) {
 			var daw = item.GetComponentSafe<DropAllWorkable>();
 			bool changed = false;
-			if (daw != null && (emptyChore.Get(daw) != null) != enable) {
+			if (daw != null && (EMPTY_CHORE.Get(daw) != null) != enable) {
 				daw.DropAll();
 #if DEBUG
 				var xy = Grid.CellToXY(cell);

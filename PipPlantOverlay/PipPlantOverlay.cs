@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.Buildings;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -32,12 +31,6 @@ namespace PeterHan.PipPlantOverlay {
 		/// The ID of this overlay mode.
 		/// </summary>
 		public static readonly HashedString ID = new HashedString("PIPPLANT");
-
-		/// <summary>
-		/// The current value of the Plants layer.
-		/// </summary>
-		private static readonly int PLANT_LAYER = (int)PBuilding.GetObjectLayer(nameof(
-			ObjectLayer.Plants), ObjectLayer.Plants);
 
 		/// <summary>
 		/// Retrieves the overlay color for a particular cell when in the crop view.

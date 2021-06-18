@@ -16,9 +16,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
-using PeterHan.PLib.Datafiles;
+using HarmonyLib;
+using PeterHan.PLib.Actions;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
+using PeterHan.PLib.PatchManager;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -29,7 +31,7 @@ namespace PeterHan.SandboxTools {
 	/// <summary>
 	/// Patches which will be applied via annotations for Sandbox Tools.
 	/// </summary>
-	public static class SandboxToolsPatches {
+	public sealed class SandboxToolsPatches : KMod.UserMod2 {
 		/// <summary>
 		/// Whether multi select is available for filtering on Destroy.
 		/// </summary>
@@ -75,18 +77,6 @@ namespace PeterHan.SandboxTools {
 					return prefab != null && (prefab.GetComponent<Geyser>() != null || prefab.
 						PrefabTag.Name == "OilWell");
 				}, null, Def.GetUISprite(Assets.GetPrefab("GeyserGeneric_slush_water"))));
-			// TODO Vanilla/DLC code
-			if (PPatchTools.GetTypeSafe("FullereneCometConfig") == null)
-				// Update the special filter to add other comet types
-				foreach (var filter in filters)
-					if (filter.Name == STRINGS.UI.SANDBOXTOOLS.FILTERS.ENTITIES.SPECIAL) {
-						var oldCondition = filter.condition;
-						filter.condition = (entity) => {
-							var prefab = entity as KPrefabID;
-							return (prefab != null && prefab.GetComponent<Comet>() != null) ||
-								oldCondition.Invoke(entity);
-						};
-					}
 			// Add matching assets
 			var options = ListPool<object, SandboxToolParameterMenu>.Allocate();
 			foreach (var prefab in Assets.Prefabs)
@@ -135,23 +125,29 @@ namespace PeterHan.SandboxTools {
 			return def.Build(cell, orient, storage, elements, temperature, sound, timeBuilt);
 		}
 
+		[PLibMethod(RunAt.BeforeDbInit)]
+		internal static void LoadImages() {
+			var icon = SpriteRegistry.GetToolIcon();
+			Assets.Sprites.Add(icon.name, icon);
+		}
+
 		[PLibMethod(RunAt.OnEndGame)]
 		internal static void OnEndGame() {
 			PUtil.LogDebug("Destroying FilteredDestroyTool");
 			DestroyParameterMenu.DestroyInstance();
 		}
 
-		public static void OnLoad() {
-			PUtil.InitLibrary();
-			PLocalization.Register();
-			PUtil.RegisterPatchClass(typeof(SandboxToolsPatches));
-			PToolMode.RegisterToolIcon(SpriteRegistry.GetToolIcon());
-		}
-
 		[PLibMethod(RunAt.AfterModsLoad)]
 		internal static void TestAdvancedFilter() {
 			AdvancedFilterEnabled = PPatchTools.GetTypeSafe(
 				"AdvancedFilterMenu.AdvancedFiltrationAssets", "AdvancedFilterMenu") != null;
+		}
+
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
+			PUtil.InitLibrary();
+			new PLocalization().Register();
+			new PPatchManager(harmony).RegisterPatchClass(typeof(SandboxToolsPatches));
 		}
 
 		/// <summary>

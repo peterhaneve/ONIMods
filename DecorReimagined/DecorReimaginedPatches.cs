@@ -17,10 +17,12 @@
  */
 
 using Database;
-using Harmony;
+using HarmonyLib;
 using Klei.AI;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
+using PeterHan.PLib.PatchManager;
 using ReimaginationTeam.Reimagination;
 using System;
 using System.Collections.Generic;
@@ -30,7 +32,7 @@ namespace ReimaginationTeam.DecorRework {
 	/// <summary>
 	/// Patches which will be applied via annotations for Decor Reimagined.
 	/// </summary>
-	public static class DecorReimaginedPatches {
+	public sealed class DecorReimaginedPatches : KMod.UserMod2 {
 		/// <summary>
 		/// The achievement name of the bugged initial And It Feels Like Home achievement.
 		/// </summary>
@@ -47,7 +49,7 @@ namespace ReimaginationTeam.DecorRework {
 		[PLibMethod(RunAt.AfterDbInit)]
 		internal static void ApplyDecorEffects() {
 			DecorTuning.InitEffects();
-			PUtil.AddColonyAchievement(new ColonyAchievement(ACHIEVE_NAME, "",
+			PDatabaseUtils.AddColonyAchievement(new ColonyAchievement(ACHIEVE_NAME, "",
 				DecorReimaginedStrings.FEELSLIKEHOME_NAME, DecorReimaginedStrings.
 				FEELSLIKEHOME_DESC.text.F(DecorTuning.NUM_DECOR_FOR_ACHIEVEMENT), false,
 				new List<ColonyAchievementRequirement>() {
@@ -87,11 +89,13 @@ namespace ReimaginationTeam.DecorRework {
 			DecorCellManager.DestroyInstance();
 		}
 
-		public static void OnLoad() {
-			ImaginationLoader.Init(typeof(DecorReimaginedPatches));
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
+			PUtil.InitLibrary();
 			Options = new DecorReimaginedOptions();
-			POptions.RegisterOptions(typeof(DecorReimaginedOptions));
-			PUtil.RegisterPatchClass(typeof(DecorReimaginedPatches));
+			ImaginationLoader.Instance.Register(typeof(DecorReimaginedPatches));
+			new POptions().RegisterOptions(typeof(DecorReimaginedOptions));
+			new PPatchManager(harmony).RegisterPatchClass(typeof(DecorReimaginedPatches));
 			PatchParks();
 			PatchRecBuildings();
 		}
@@ -99,7 +103,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// Patches the park and nature reserve to require living plants.
 		/// </summary>
-		private static void PatchParks() {
+		private void PatchParks() {
 			RoomConstraints.WILDPLANT = new RoomConstraints.Constraint(null, (room) => {
 				return CountValidPlants(room) >= 2;
 			}, 1, STRINGS.ROOMS.CRITERIA.WILDPLANT.NAME, STRINGS.ROOMS.CRITERIA.WILDPLANT.
@@ -117,7 +121,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// 
 		/// Broken, disabled, entombed, and unplugged buildings are not functional.
 		/// </summary>
-		private static void PatchRecBuildings() {
+		private void PatchRecBuildings() {
 			RoomConstraints.REC_BUILDING = new RoomConstraints.Constraint((building) => {
 				var operational = building.GetComponent<Operational>();
 				var enabled = building.GetComponent<BuildingEnabledButton>();
@@ -134,7 +138,7 @@ namespace ReimaginationTeam.DecorRework {
 		[PLibMethod(RunAt.OnStartGame)]
 		internal static void SetupDecor() {
 			DecorCellManager.CreateInstance();
-			ImaginationLoader.IsFinalDestination();
+			//ImaginationLoader.Instance.IsFinalDestination();
 			PUtil.LogDebug("Created DecorCellManager");
 		}
 
@@ -188,30 +192,6 @@ namespace ReimaginationTeam.DecorRework {
 					PUtil.LogDebug("Atmo Suit: {0:D}".F(Options.AtmoSuitDecor));
 					DecorTuning.TuneSuits(Options, __result);
 				}
-			}
-		}
-
-		/// <summary>
-		/// Applied to ColonyAchievementTracker to fix achievement status from old versions of
-		/// this mod.
-		/// </summary>
-		[HarmonyPatch(typeof(ColonyAchievementTracker), nameof(ColonyAchievementTracker.
-			Deserialize))]
-		public static class ColonyAchievementTracker_Deserialize_Patch {
-			/// <summary>
-			/// Applied after Deserialize runs.
-			/// </summary>
-			internal static void Postfix(ColonyAchievementTracker __instance) {
-				foreach (var achieve in __instance.achievements)
-					if (achieve.Key == ACHIEVE_NAME) {
-						var reqs = achieve.Value.Requirements;
-						// It gets deleted
-						if (reqs.Count < 1) {
-							reqs.Add(new NumDecorPositives(DecorTuning.
-								NUM_DECOR_FOR_ACHIEVEMENT));
-							PUtil.LogWarning("Fixing achievement bug from v1.x save");
-						}
-					}
 			}
 		}
 

@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using PeterHan.PLib.UI;
 using Steamworks;
@@ -42,7 +42,7 @@ namespace PeterHan.ModUpdateDate {
 		/// Saves the mod enabled settings and restarts the game.
 		/// </summary>
 		private static void SaveAndRestart() {
-			PUtil.SaveMods();
+			PGameUtils.SaveMods();
 			App.instance.Restart();
 		}
 

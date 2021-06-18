@@ -24,16 +24,22 @@ namespace PeterHan.ThermalPlate {
 	/// </summary>
 	public static class ThermalPlateStrings {
 		// Thermal Interface Plate
-		public static LocString THERMALPLATE_NAME = "Thermal Interface Plate";
-		public static LocString THERMALPLATE_DESCRIPTION = "With eyes glazed over from proposals such as \"heat pipes\" or \"vapor chambers\", one Duplicant had the bright idea of simply wedging this piece of scrap metal between buildings to transfer heat.";
-		public static LocString THERMALPLATE_EFFECT = string.Concat("Transfers ",
-			STRINGS.UI.FormatAsLink("Heat", "HEAT"),
-			" between buildings, even if they are in a complete ",
-			STRINGS.UI.FormatAsLink("Vacuum", "VACUUM"),
-			".\n\nPrevents ",
-			STRINGS.UI.FormatAsLink("Gas", "ELEMENTS_GAS"),
-			" and ",
-			STRINGS.UI.FormatAsLink("Liquid", "ELEMENTS_LIQUID"),
-			" loss in space.");
+		public static class BUILDINGS {
+			public static class PREFABS {
+				public static class THERMALINTERFACEPLATE {
+					public static LocString NAME = "Thermal Interface Plate";
+					public static LocString DESC = "With eyes glazed over from proposals such as \"heat pipes\" or \"vapor chambers\", one Duplicant had the bright idea of simply wedging this piece of scrap metal between buildings to transfer heat.";
+					public static LocString EFFECT = string.Concat("Transfers ",
+						STRINGS.UI.FormatAsLink("Heat", "HEAT"),
+						" between buildings, even if they are in a complete ",
+						STRINGS.UI.FormatAsLink("Vacuum", "VACUUM"),
+						".\n\nPrevents ",
+						STRINGS.UI.FormatAsLink("Gas", "ELEMENTS_GAS"),
+						" and ",
+						STRINGS.UI.FormatAsLink("Liquid", "ELEMENTS_LIQUID"),
+						" loss in space.");
+				}
+			}
+		}
 	}
 }

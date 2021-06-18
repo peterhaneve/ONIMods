@@ -19,7 +19,7 @@
 using Ionic.Zip;
 using Klei;
 using KMod;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;

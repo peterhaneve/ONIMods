@@ -16,11 +16,13 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
+using HarmonyLib;
 using Klei.AI;
-using PeterHan.PLib;
-using PeterHan.PLib.Datafiles;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
 using PeterHan.PLib.Detours;
+using PeterHan.PLib.Options;
+using PeterHan.PLib.PatchManager;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -31,7 +33,7 @@ namespace PeterHan.MooReproduction {
 	/// <summary>
 	/// Patches which will be applied via annotations for Moo Reproduction.
 	/// </summary>
-	public static class MooReproductionPatches {
+	public sealed class MooReproductionPatches : KMod.UserMod2 {
 		/// <summary>
 		/// A tag with the Gassy Moo's ID.
 		/// </summary>
@@ -55,10 +57,13 @@ namespace PeterHan.MooReproduction {
 		private static readonly IdleAnimCallback MOO_IDLE_ANIM = typeof(BaseMooConfig).
 			Detour<IdleAnimCallback>("CustomIdleAnim");
 
-		public static void OnLoad() {
-			PUtil.InitLibrary();
-			LocString.CreateLocStringKeys(typeof(MooReproductionStrings));
-			PLocalization.Register();
+		/// <summary>
+		/// Disables Mooteor showers if the option is set.
+		/// </summary>
+		[PLibMethod(RunAt.AfterDbInit)]
+		internal static void AfterDbInit() {
+			if (MooReproductionOptions.Instance.DisableMooMeteors)
+				Db.Get().GameplaySeasons.GassyMooteorShowers.numEventsToStartEachPeriod = 0;
 		}
 
 		/// <summary>
@@ -90,6 +95,16 @@ namespace PeterHan.MooReproduction {
 				});
 			if (cc != null)
 				cc.choreTable = newChoreTable.CreateTable();
+		}
+
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
+			PUtil.InitLibrary();
+			LocString.CreateLocStringKeys(typeof(MooReproductionStrings.CREATURES));
+			LocString.CreateLocStringKeys(typeof(MooReproductionStrings.UI));
+			new PLocalization().Register();
+			new PPatchManager(harmony).RegisterPatchClass(typeof(MooReproductionPatches));
+			new POptions().RegisterOptions(typeof(MooReproductionOptions));
 		}
 
 		/// <summary>

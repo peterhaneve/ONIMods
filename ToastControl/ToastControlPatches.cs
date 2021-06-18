@@ -16,10 +16,12 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
-using PeterHan.PLib.Datafiles;
+using HarmonyLib;
+using PeterHan.PLib.Actions;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
+using PeterHan.PLib.PatchManager;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -27,13 +29,13 @@ using System.Reflection.Emit;
 using UnityEngine;
 
 using Delivery = FetchAreaChore.StatesInstance.Delivery;
-using TranspiledMethod = System.Collections.Generic.IEnumerable<Harmony.CodeInstruction>;
+using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.ToastControl {
 	/// <summary>
 	/// Patches which will be applied via annotations for Popup Control.
 	/// </summary>
-	public static class ToastControlPatches {
+	public sealed class ToastControlPatches : KMod.UserMod2 {
 		/// <summary>
 		/// The action triggered when the user wants to change settings in game.
 		/// </summary>
@@ -243,18 +245,6 @@ namespace PeterHan.ToastControl {
 			return result;
 		}
 
-		public static void OnLoad() {
-			PUtil.InitLibrary();
-			PLocalization.Register();
-			LocString.CreateLocStringKeys(typeof(ToastControlStrings.UI));
-			POptions.RegisterOptions(typeof(ToastControlOptions));
-			PUtil.RegisterPatchClass(typeof(ToastControlPopups));
-			ToastControlPopups.ReloadOptions();
-			// No default key bind
-			inGameSettings = PAction.Register(ToastControlStrings.ACTION_KEY,
-				ToastControlStrings.ACTION_TITLE);
-		}
-
 		/// <summary>
 		/// Determines if popups should be hidden from pick ups.
 		/// </summary>
@@ -351,6 +341,19 @@ namespace PeterHan.ToastControl {
 				}
 			}
 			return patched;
+		}
+
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
+			PUtil.InitLibrary();
+			new PLocalization().Register();
+			LocString.CreateLocStringKeys(typeof(ToastControlStrings.UI));
+			new POptions().RegisterOptions(typeof(ToastControlOptions));
+			new PPatchManager(harmony).RegisterPatchClass(typeof(ToastControlPopups));
+			ToastControlPopups.ReloadOptions();
+			// No default key bind
+			inGameSettings = new PActionManager().CreateAction(ToastControlStrings.ACTION_KEY,
+				ToastControlStrings.ACTION_TITLE);
 		}
 
 		/// <summary>
@@ -547,7 +550,7 @@ namespace PeterHan.ToastControl {
 			internal static void Postfix(KButtonEvent e) {
 				if (inGameSettings != null && !e.Consumed && e.TryConsume(inGameSettings.
 						GetKAction()))
-					POptions.ShowNow(typeof(ToastControlOptions), onClose: (_) =>
+					POptions.ShowDialog(typeof(ToastControlOptions), onClose: (_) =>
 						ToastControlPopups.ReloadOptions());
 			}
 		}

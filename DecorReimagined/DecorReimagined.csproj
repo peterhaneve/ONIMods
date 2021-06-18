@@ -2,10 +2,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Decor Reimagined</AssemblyTitle>
-    <FileVersion>3.2.0.0</FileVersion>
+    <FileVersion>4.0.0.0</FileVersion>
     <RootNamespace>ReimaginationTeam.DecorRework</RootNamespace>
     <Description>Reworks decor, making an attractive colony a better colony.</Description>
-    <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
     <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
@@ -15,8 +15,9 @@
     <LastWorkingBuild>460672</LastWorkingBuild>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
+    <ArchivedVersionPath>\archived_versions\merged</ArchivedVersionPath>
     <SupportedContent>EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>466411</LastWorkingBuild>
+    <LastWorkingBuild>468097</LastWorkingBuild>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="buildings.json" />

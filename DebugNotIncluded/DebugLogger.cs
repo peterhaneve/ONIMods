@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.Core;
 using System;
 using System.Diagnostics;
 using System.Reflection;
@@ -57,7 +58,7 @@ namespace PeterHan.DebugNotIncluded {
 						string typeName = type.Name, methodName = method.Name;
 						// Do not add info to messages from this mod
 						if (type == typeof(DebugLogger)) break;
-						if ((typeName != nameof(PLib.PUtil) && type != typeof(DebugUtil)) ||
+						if ((typeName != nameof(PUtil) && type != typeof(DebugUtil)) ||
 								!methodName.StartsWith("Log")) {
 							var declaring = type.DeclaringType;
 							// Remove compiler generated delegate classes
@@ -96,7 +97,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// <param name="method">The method to check.</param>
 		public static void DumpPatchInfo(MethodBase method) {
 			if (method == null)
-				throw new ArgumentNullException("method");
+				throw new ArgumentNullException(nameof(method));
 			var message = new StringBuilder(256);
 			// List patches for that method
 			message.Append("Patches for ");

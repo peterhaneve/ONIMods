@@ -16,15 +16,16 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
+using HarmonyLib;
+using PeterHan.PLib.Core;
 
 namespace PeterHan.QueueForSinks {
 	/// <summary>
 	/// Patches which will be applied via annotations for Queue For Sinks.
 	/// </summary>
-	public sealed class QueueForSinkPatches {
-		public static void OnLoad() {
+	public sealed class QueueForSinkPatches : KMod.UserMod2 {
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 		}
 

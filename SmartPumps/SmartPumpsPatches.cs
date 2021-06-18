@@ -16,23 +16,27 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
-using PeterHan.PLib.Datafiles;
+using HarmonyLib;
+using PeterHan.PLib.Buildings;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
+using PeterHan.PLib.PatchManager;
 using UnityEngine;
 
 namespace PeterHan.SmartPumps {
 	/// <summary>
 	/// Patches which will be applied via annotations for Smart Pumps.
 	/// </summary>
-	public static class SmartPumpsPatches {
-		public static void OnLoad() {
+	public sealed class SmartPumpsPatches : KMod.UserMod2 {
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
-			PLocalization.Register();
-			FilteredGasPumpConfig.RegisterBuilding();
-			FilteredLiquidPumpConfig.RegisterBuilding();
-			VacuumPumpConfig.RegisterBuilding();
-			PUtil.RegisterPatchClass(typeof(FilteredPump));
+			new PLocalization().Register();
+			var bm = new PBuildingManager();
+			bm.Register(FilteredGasPumpConfig.CreateBuilding());
+			bm.Register(FilteredLiquidPumpConfig.CreateBuilding());
+			bm.Register(VacuumPumpConfig.CreateBuilding());
+			new PPatchManager(harmony).RegisterPatchClass(typeof(FilteredPump));
 		}
 
 		/// <summary>

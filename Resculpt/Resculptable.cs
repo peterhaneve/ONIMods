@@ -17,7 +17,8 @@
  */
 
 using Klei.AI;
-using PeterHan.PLib;
+using PeterHan.PLib.Actions;
+using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.Resculpt {

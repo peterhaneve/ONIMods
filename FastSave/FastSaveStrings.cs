@@ -20,7 +20,7 @@ namespace PeterHan.FastSave {
 	/// <summary>
 	/// Strings used in Fast Save.
 	/// </summary>
-	static class FastSaveStrings {
+	internal static class FastSaveStrings {
 		// Auto-save failed: non-I/O exception
 		public static LocString AUTOSAVE_FAILED = "Autosave failed!";
 

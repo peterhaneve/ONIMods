@@ -17,8 +17,10 @@
  */
 
 #if DEBUG
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Actions;
 using UnityEngine;
+using PeterHan.PLib.PatchManager;
 
 namespace PeterHan.NotEnoughTags {
 	/// <summary>
@@ -30,16 +32,17 @@ namespace PeterHan.NotEnoughTags {
 		/// </summary>
 		private static PAction SpamObjectsAction;
 
-		[PLibMethod(RunAt.AfterModsLoad)]
+		[PLibMethod(RunAt.AfterLayerableLoad)]
 		internal static void AddSpamHandler() {
 			KInputHandler.Add(Global.Instance.GetInputManager().GetDefaultController(),
 				new SpamObjectsHandler(), 512);
 		}
 
-		internal static void PrepareSpamHandler() {
-			PUtil.RegisterPatchClass(typeof(SpamObjectsHandler));
-			SpamObjectsAction = PAction.Register("NotEnoughTags.SpamObjectsAction",
-				"Spam objects under cursor", new PKeyBinding(KKeyCode.Y, Modifier.Ctrl));
+		internal static void PrepareSpamHandler(PPatchManager manager) {
+			manager.RegisterPatchClass(typeof(SpamObjectsHandler));
+			SpamObjectsAction = new PActionManager().CreateAction(
+				"NotEnoughTags.SpamObjectsAction", "Spam objects under cursor",
+				new PKeyBinding(KKeyCode.Y, Modifier.Ctrl));
 		}
 
 		/// <summary>
@@ -69,9 +72,11 @@ namespace PeterHan.NotEnoughTags {
 			// Chunks of all elements
 			foreach (var element in ElementLoader.elements)
 				if (!element.IsVacuum && element.id != SimHashes.Void) {
+					float temp = 1.0f;
 					PUtil.LogDebug("Spawning element {0}".F(element.name));
-					element.substance.SpawnResource(pos, 1000.0f, element.IsSolid ? 1.0f :
-						Constants.CELSIUS2KELVIN + 20.0f, Sim.InvalidDiseaseIdx, 0);
+					if (element.lowTempTransition != null && element.lowTemp > temp)
+						temp = element.lowTemp + 3.0f;
+					element.substance.SpawnResource(pos, 1000.0f, temp, Sim.InvalidDiseaseIdx, 0);
 					yield return null;
 				}
 		}

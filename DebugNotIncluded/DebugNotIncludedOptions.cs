@@ -17,18 +17,18 @@
  */
 
 using Newtonsoft.Json;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
 
 namespace PeterHan.DebugNotIncluded {
 	/// <summary>
 	/// The options class used for Debug Not Included.
 	/// </summary>
-	[ModInfo("Debug Not Included", "https://github.com/peterhaneve/ONIMods", collapse: true)]
+	[ModInfo("https://github.com/peterhaneve/ONIMods", collapse: true)]
+	[ConfigFile(SharedConfigLocation: true)]
 	[JsonObject(MemberSerialization.OptIn)]
 	[RestartRequired]
-	public sealed class DebugNotIncludedOptions : POptions.SingletonOptions<
-			DebugNotIncludedOptions> {
+	public sealed class DebugNotIncludedOptions : SingletonOptions<DebugNotIncludedOptions> {
 		[Option("Debug Not Included is a debug mod intended for mod developers.\n" +
 			"Most users should <b>only use this mod if directed</b> by a mod owner to generate better logs.\n")]
 		public LocText Description => null;

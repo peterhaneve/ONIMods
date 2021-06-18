@@ -2,13 +2,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Efficient Supply</AssemblyTitle>
-    <FileVersion>2.9.0.0</FileVersion>
+    <FileVersion>3.0.0.0</FileVersion>
     <RootNamespace>PeterHan.EfficientFetch</RootNamespace>
     <Description>Prevents Duplicants from fetching tiny amounts of materials to fulfill chores.</Description>
-    <AssemblyVersion>2.3.0.0</AssemblyVersion>
+    <AssemblyVersion>3.0.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
-    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>460672</LastWorkingBuild>
     <Platforms>Vanilla;Spaced Out</Platforms>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>466655</LastWorkingBuild>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
+    <ArchivedVersionPath>\archived_versions\merged</ArchivedVersionPath>
+    <SupportedContent>EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>468097</LastWorkingBuild>
   </PropertyGroup>
 </Project>

@@ -17,9 +17,10 @@
  */
 
 using Database;
-using Harmony;
-using PeterHan.PLib;
-using PeterHan.PLib.Datafiles;
+using HarmonyLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
+using PeterHan.PLib.PatchManager;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -29,7 +30,7 @@ namespace PeterHan.FinishTasks {
 	/// <summary>
 	/// Patches which will be applied via annotations for Rest for the Weary.
 	/// </summary>
-	public static class FinishTasksPatches {
+	public sealed class FinishTasksPatches : KMod.UserMod2 {
 		/// <summary>
 		/// A dummy schedule block type, since the game compares whether schedule types are
 		/// different by checking to see if they permit different types of jobs. Even if no
@@ -73,8 +74,9 @@ namespace PeterHan.FinishTasks {
 			var state = context.consumerState;
 			var driver = state.choreDriver;
 			var scheduleBlock = state.scheduleBlock;
-			bool start = true, normal = VanillaDLCAdapter.Instance?.IsNormalCondition(driver.
-				gameObject) ?? true;
+			var alertStatus = ClusterManager.Instance.GetWorld(driver.GetMyWorldId());
+			bool start = true, normal = !alertStatus.IsYellowAlert() && !alertStatus.
+				IsRedAlert();
 			// Bypass on red/yellow alert, only evaluate condition during Finish Tasks blocks,
 			// allow the current chore to continue, or new work chores to be evaluated if the
 			// current chore is compulsory like emotes
@@ -92,7 +94,8 @@ namespace PeterHan.FinishTasks {
 			return start;
 		}
 
-		public static void OnLoad() {
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			FinishBlock = null;
 			FinishColor = ScriptableObject.CreateInstance<ColorStyleSetting>();
 			FinishColor.activeColor = new Color(0.8f, 0.6f, 1.0f, 1.0f);
@@ -106,24 +109,7 @@ namespace PeterHan.FinishTasks {
 			PUtil.InitLibrary();
 			LocString.CreateLocStringKeys(typeof(FinishTasksStrings.DUPLICANTS));
 			LocString.CreateLocStringKeys(typeof(FinishTasksStrings.UI));
-			PLocalization.Register();
-			PUtil.RegisterPatchClass(typeof(FinishTasksPatches));
-		}
-
-		[PLibMethod(RunAt.OnEndGame)]
-		internal static void OnEndGame() {
-#if DEBUG
-			PUtil.LogDebug("Destroying FinishTasks VanillaDLCAdapter");
-#endif
-			VanillaDLCAdapter.DestroyInstance();
-		}
-
-		[PLibMethod(RunAt.OnStartGame)]
-		internal static void OnStartGame() {
-			VanillaDLCAdapter.InitInstance();
-#if DEBUG
-			PUtil.LogDebug("Created FinishTasks VanillaDLCAdapter");
-#endif
+			new PLocalization().Register();
 		}
 
 		/// <summary>

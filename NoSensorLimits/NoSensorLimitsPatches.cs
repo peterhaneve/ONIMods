@@ -16,8 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
+using HarmonyLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using UnityEngine;
 
@@ -25,7 +25,7 @@ namespace PeterHan.NoSensorLimits {
 	/// <summary>
 	/// Patches which will be applied via annotations for No Sensor Limits.
 	/// </summary>
-	public static class NoSensorLimitsPatches {
+	public sealed class NoSensorLimitsPatches : KMod.UserMod2 {
 		/// <summary>
 		/// Sensors with a default limit more than this value will not be affected, unless they
 		/// are on the specific whitelist.
@@ -41,10 +41,6 @@ namespace PeterHan.NoSensorLimits {
 		private static readonly UpdateTargetThresholdLabel UPDATE_TARGET_THRESHOLD_LABEL =
 			typeof(ThresholdSwitchSideScreen).Detour<UpdateTargetThresholdLabel>();
 
-		public static void OnLoad() {
-			PUtil.InitLibrary();
-		}
-
 		/// <summary>
 		/// Determines if a sensor should be affected by this mod.
 		/// </summary>
@@ -54,6 +50,11 @@ namespace PeterHan.NoSensorLimits {
 		private static bool ShouldAffect(float normalMax, object target) {
 			return normalMax <= AFFECT_LIMITS_BELOW || target is LogicWattageSensor ||
 				target is LogicDiseaseSensor || target is ConduitDiseaseSensor;
+		}
+
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
+			PUtil.InitLibrary();
 		}
 
 		/// <summary>

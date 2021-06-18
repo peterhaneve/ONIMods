@@ -17,14 +17,14 @@
  */
 
 using Newtonsoft.Json;
-using PeterHan.PLib;
+using PeterHan.PLib.Options;
 using System.Collections.Generic;
 
 namespace PeterHan.AIImprovements {
 	/// <summary>
 	/// The options class used for AI Improvements.
 	/// </summary>
-	[ModInfo("AI Improvements", "https://github.com/peterhaneve/ONIMods", "preview.png")]
+	[ModInfo("https://github.com/peterhaneve/ONIMods", "preview.png")]
 	[JsonObject(MemberSerialization.OptIn)]
 	public sealed class AIImprovementsOptions {
 		/// <summary>

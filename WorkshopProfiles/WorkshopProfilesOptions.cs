@@ -24,8 +24,7 @@ namespace PeterHan.WorkshopProfiles {
 	/// Contains the list of buildings to which Workshop Profiles will always add a profile
 	/// screen.
 	/// </summary>
-	public sealed class WorkshopProfilesOptions : POptions.
-			SingletonOptions<WorkshopProfilesOptions> {
+	public sealed class WorkshopProfilesOptions : SingletonOptions<WorkshopProfilesOptions> {
 		/// <summary>
 		/// The building prefab IDs where an option will always be added.
 		/// </summary>

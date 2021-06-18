@@ -13,8 +13,8 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "Language: zh_CN\n"
 
-#. PeterHan.TileTempSensor.TileTempSensorStrings.TILETEMP_DESCRIPTION
-msgctxt "PeterHan.TileTempSensor.TileTempSensorStrings.TILETEMP_DESCRIPTION"
+#. PeterHan.TileTempSensor.TileTempSensorStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.DESC
+msgctxt "PeterHan.TileTempSensor.TileTempSensorStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.DESC"
 msgid ""
 "Liquid drops have been sent an official eviction notice with the invention "
 "of a Thermo Sensor that can transfer heat effectively with its surrounding "
@@ -23,8 +23,8 @@ msgstr ""
 "液滴测温法已经过时了！因为一种新型温度传感器已经发明出来，它能和周围固体砖"
 "块有效地传热。"
 
-#. PeterHan.TileTempSensor.TileTempSensorStrings.TILETEMP_EFFECT
-msgctxt "PeterHan.TileTempSensor.TileTempSensorStrings.TILETEMP_EFFECT"
+#. PeterHan.TileTempSensor.TileTempSensorStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.EFFECT
+msgctxt "PeterHan.TileTempSensor.TileTempSensorStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.EFFECT"
 msgid ""
 "Sends a <b><style=\"logic_on\">Green Signal</style></b> or a <b><style="
 "\"logic_off\">Red Signal</style></b> when ambient <link=\"HEAT"
@@ -34,7 +34,7 @@ msgstr ""
 "\"logic_on\">绿色信号</style></b>或一个<b><style=\"logic_off\">红色信号</"
 "style></b>。"
 
-#. PeterHan.TileTempSensor.TileTempSensorStrings.TILETEMP_NAME
-msgctxt "PeterHan.TileTempSensor.TileTempSensorStrings.TILETEMP_NAME"
+#. PeterHan.TileTempSensor.TileTempSensorStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.NAME
+msgctxt "PeterHan.TileTempSensor.TileTempSensorStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.NAME"
 msgid "Thermo Sensor Tile"
 msgstr "感温砖"

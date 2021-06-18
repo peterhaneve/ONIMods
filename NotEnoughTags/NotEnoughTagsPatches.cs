@@ -16,20 +16,20 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
+using HarmonyLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 
-using TranspiledMethod = System.Collections.Generic.IEnumerable<Harmony.CodeInstruction>;
+using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.NotEnoughTags {
 	/// <summary>
 	/// Patches which will be applied via annotations for NotEnoughTags.
 	/// </summary>
-	public static class NotEnoughTagsPatches {
+	public sealed class NotEnoughTagsPatches : KMod.UserMod2 {
 		/// <summary>
 		/// This should always be running on Mono, but just in case...
 		/// </summary>
@@ -83,14 +83,12 @@ namespace PeterHan.NotEnoughTags {
 			}
 		}
 
-		public static void OnLoad() {
-#if DEBUG
+		public override void OnLoad(Harmony harmony) {
+			IsMono = PPatchTools.GetTypeSafe("Mono.Runtime") != null;
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
-			SpamObjectsHandler.PrepareSpamHandler();
-#else
-			var assembly = Assembly.GetExecutingAssembly();
-			PUtil.LogDebug("Mod {0} initialized, version {1}".F(assembly.GetName()?.Name,
-				assembly.GetFileVersion() ?? "Unknown"));
+#if DEBUG
+			SpamObjectsHandler.PrepareSpamHandler(new PLib.PatchManager.PPatchManager(harmony));
 #endif
 			var inst = ExtendedTagBits.Instance;
 			// Force these tags into the efficient lower bits
@@ -101,10 +99,6 @@ namespace PeterHan.NotEnoughTags {
 				"s_transientDeliveryMask").Set(null, TagBitOps.Not(new TagBits(new Tag[] {
 					GameTags.Garbage, GameTags.Creatures.Deliverable
 				})));
-		}
-
-		public static void PrePatch(HarmonyInstance _) {
-			IsMono = PPatchTools.GetTypeSafe("Mono.Runtime") != null;
 		}
 
 		/// <summary>
@@ -260,21 +254,7 @@ namespace PeterHan.NotEnoughTags {
 		public static class TagBits_Clear_Patch {
 			/// <summary>
 			/// Applied before Clear runs.
-			/// 
-			/// TODO Vanilla/DLC code
 			/// </summary>
-#if VANILLA
-			internal static bool Prefix(ref ulong ___bits5, Tag tag) {
-				var inst = ExtendedTagBits.Instance;
-				int index = inst.ManifestFlagIndex(tag) - ExtendedTagBits.VANILLA_LIMIT;
-				bool vanilla = index < 0;
-				if (!vanilla && ___bits5 != 0UL) {
-					int id = inst.GetIDWithTagClear(TagBitOps.GetUpperBits(___bits5), index);
-					___bits5 = TagBitOps.GetLowerBits(___bits5) | ((ulong)id << 32);
-				}
-				return vanilla;
-			}
-#else
 			internal static bool Prefix(ref ulong ___bits7, Tag tag) {
 				var inst = ExtendedTagBits.Instance;
 				int index = inst.ManifestFlagIndex(tag) - ExtendedTagBits.VANILLA_LIMIT;
@@ -285,7 +265,6 @@ namespace PeterHan.NotEnoughTags {
 				}
 				return vanilla;
 			}
-#endif
 		}
 
 		/// <summary>
@@ -410,21 +389,7 @@ namespace PeterHan.NotEnoughTags {
 		public static class TagBits_SetTag_Patch {
 			/// <summary>
 			/// Applied before SetTag runs.
-			/// 
-			/// TODO Vanilla/DLC code
 			/// </summary>
-#if VANILLA
-			internal static bool Prefix(ref ulong ___bits5, Tag tag) {
-				var inst = ExtendedTagBits.Instance;
-				int index = inst.ManifestFlagIndex(tag) - ExtendedTagBits.VANILLA_LIMIT;
-				bool vanilla = index < 0;
-				if (!vanilla) {
-					int id = inst.GetIDWithTagSet(TagBitOps.GetUpperBits(___bits5), index);
-					___bits5 = (___bits5 & 0xFFFFFFFFUL) | ((ulong)id << 32);
-				}
-				return vanilla;
-			}
-#else
 			internal static bool Prefix(ref ulong ___bits7, Tag tag) {
 				var inst = ExtendedTagBits.Instance;
 				int index = inst.ManifestFlagIndex(tag) - ExtendedTagBits.VANILLA_LIMIT;
@@ -435,7 +400,6 @@ namespace PeterHan.NotEnoughTags {
 				}
 				return vanilla;
 			}
-#endif
 		}
 
 		/// <summary>

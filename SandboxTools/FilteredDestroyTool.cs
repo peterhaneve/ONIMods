@@ -16,20 +16,23 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
+using HarmonyLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Buildings;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 using CellColorData = ToolMenu.CellColorData;
+using PeterHan.PLib.Detours;
 
 namespace PeterHan.SandboxTools {
 	/// <summary>
 	/// A replacement for "Destroy" that allows filtering of what to get rid of.
 	/// </summary>
 	public sealed class FilteredDestroyTool : BrushTool {
+		private static IDetouredField<SandboxDestroyerTool, Color> RECENTLY_AFFECTED =
+			PDetours.DetourField<SandboxDestroyerTool, Color>("recentlyAffectedCellColor");
+
 		/// <summary>
 		/// Destroys the items in the set and recycles the list.
 		/// </summary>
@@ -91,16 +94,18 @@ namespace PeterHan.SandboxTools {
 			pendingCells = new HashSet<int>();
 			try {
 				// Take from stock tool if possible
-				color = Traverse.Create(SandboxDestroyerTool.instance).GetField<Color>(
-					"recentlyAffectedCellColor");
-			} catch {
+				color = RECENTLY_AFFECTED.Get(SandboxDestroyerTool.instance);
+			} catch (System.Exception e) {
+#if DEBUG
+				PUtil.LogExcWarn(e);
+#endif
 				// Use default
 				color = new Color(1f, 1f, 1f, 0.1f);
 			}
 			// Read value at runtime if possible
-			numObjectLayers = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.NumLayers),
+			numObjectLayers = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.NumLayers),
 				ObjectLayer.NumLayers);
-			pickupLayer = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.Pickupables),
+			pickupLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Pickupables),
 				ObjectLayer.Pickupables);
 			pendingHighlightColor = color;
 		}

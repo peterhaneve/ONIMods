@@ -17,7 +17,7 @@
  */
 
 using KMod;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using PeterHan.PLib.Options;
 using Steamworks;
@@ -42,24 +42,6 @@ namespace PeterHan.ModUpdateDate {
 			nameof(SteamUGCService.FindMod));
 
 		/// <summary>
-		/// Gets the path to the backup copy of this mod's config.
-		/// </summary>
-		internal static string BackupConfigPath {
-			get {
-				return Path.Combine(Manager.GetDirectory(), "modUpdaterConfig.json");
-			}
-		}
-
-		/// <summary>
-		/// Gets the path to this mod's config.
-		/// </summary>
-		internal static string ConfigPath {
-			get {
-				return POptions.GetConfigFilePath(typeof(ModUpdateInfo));
-			}
-		}
-
-		/// <summary>
 		/// Finds a Steam mod by its ID (published file ID).
 		/// </summary>
 		/// <param name="manager">The mod manager.</param>
@@ -77,6 +59,27 @@ namespace PeterHan.ModUpdateDate {
 					break;
 				}
 			}
+			return result;
+		}
+
+		/// <summary>
+		/// Gets the last modified date of a mod on Steam.
+		/// </summary>
+		/// <param name="id">The Steam mod ID to check.</param>
+		/// <param name="when">The location where the last updated date will be stored.</param>
+		/// <returns>true if the date was determined, or false if it is invalid.</returns>
+		internal static bool GetGlobalLastModified(this PublishedFileId_t id,
+				out System.DateTime when) {
+			bool result = false;
+			var inst = SteamUGCService.Instance;
+			var steamMod = (inst == null) ? null : FIND_MOD.Invoke(inst, id);
+			if (steamMod != null) {
+				ulong ticks = steamMod.lastUpdateTime;
+				result = true;
+				when = (ticks == 0U) ? System.DateTime.MinValue : UnixEpochToDateTime(ticks);
+			} else
+				// Mod was not found
+				when = System.DateTime.UtcNow;
 			return result;
 		}
 
@@ -107,27 +110,6 @@ namespace PeterHan.ModUpdateDate {
 					PUtil.LogWarning("I/O error when determining last modified date for " +
 						label.title);
 				}
-			return result;
-		}
-
-		/// <summary>
-		/// Gets the last modified date of a mod on Steam.
-		/// </summary>
-		/// <param name="id">The Steam mod ID to check.</param>
-		/// <param name="when">The location where the last updated date will be stored.</param>
-		/// <returns>true if the date was determined, or false if it is invalid.</returns>
-		internal static bool GetGlobalLastModified(this PublishedFileId_t id,
-				out System.DateTime when) {
-			bool result = false;
-			var inst = SteamUGCService.Instance;
-			var steamMod = (inst == null) ? null : FIND_MOD.Invoke(inst, id);
-			if (steamMod != null) {
-				ulong ticks = steamMod.lastUpdateTime;
-				result = true;
-				when = (ticks == 0U) ? System.DateTime.MinValue : UnixEpochToDateTime(ticks);
-			} else
-				// Mod was not found
-				when = System.DateTime.UtcNow;
 			return result;
 		}
 

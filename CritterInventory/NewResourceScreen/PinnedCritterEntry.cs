@@ -17,7 +17,7 @@
  */
 
 #if SPACEDOUT
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.CritterInventory.NewResourceScreen {
@@ -61,7 +61,7 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 			else
 				selectionIndex = (selectionIndex + 1) % n;
 			if (n > 0)
-				PUtil.CenterAndSelect(matching[selectionIndex]);
+				PGameUtils.CenterAndSelect(matching[selectionIndex]);
 			matching.Recycle();
 		}
 

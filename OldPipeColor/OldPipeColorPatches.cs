@@ -16,18 +16,21 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
+using HarmonyLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
+using PeterHan.PLib.PatchManager;
 
 namespace PeterHan.OldPipeColor {
 	/// <summary>
 	/// Patches which will be applied via annotations for Custom Pipe Colors.
 	/// </summary>
-	public static class OldPipeColorPatches {
-		public static void OnLoad() {
+	public sealed class OldPipeColorPatches : KMod.UserMod2 {
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
-			PUtil.RegisterPatchClass(typeof(OldPipeColorPatches));
-			POptions.RegisterOptions(typeof(OldPipeColorOptions));
+			new PPatchManager(harmony).RegisterPatchClass(typeof(OldPipeColorPatches));
+			new POptions().RegisterOptions(typeof(OldPipeColorOptions));
 		}
 
 		/// <summary>
@@ -36,7 +39,7 @@ namespace PeterHan.OldPipeColor {
 		/// </summary>
 		[PLibMethod(RunAt.OnStartGame)]
 		internal static void OnStartGame() {
-			var colorOptions = POptions.ReadSettingsForAssembly<OldPipeColorOptions>() ??
+			var colorOptions = POptions.ReadSettings<OldPipeColorOptions>() ??
 				new OldPipeColorOptions();
 			// 0 is the default
 			var options = GlobalAssets.Instance.colorSetOptions[0];

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyTitle>NotEnoughTags</AssemblyTitle>
+    <AssemblyTitle>Not Enough Tags</AssemblyTitle>
     <FileVersion>2.1.0.0</FileVersion>
     <RootNamespace>PeterHan.NotEnoughTags</RootNamespace>
     <Description>Fixes a stock game bug where Tags can be exhausted in large bases.</Description>
@@ -10,12 +10,12 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
-    <ArchivedVersionPath>\archived_versions\vanilla</ArchivedVersionPath>
     <SupportedContent>VANILLA_ID</SupportedContent>
-    <LastWorkingBuild>460672</LastWorkingBuild>
+    <LastWorkingBuild>466655</LastWorkingBuild>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
+    <ArchivedVersionPath>\archived_versions\merged</ArchivedVersionPath>
     <SupportedContent>EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>466411</LastWorkingBuild>
+    <LastWorkingBuild>468097</LastWorkingBuild>
   </PropertyGroup>
 </Project>

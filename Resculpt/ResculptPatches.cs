@@ -16,9 +16,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
-using PeterHan.PLib.Datafiles;
+using HarmonyLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
+using PeterHan.PLib.PatchManager;
+using PeterHan.PLib.UI;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -26,7 +28,7 @@ namespace PeterHan.Resculpt {
 	/// <summary>
 	/// Patches which will be applied via annotations for Resculpt.
 	/// </summary>
-	public static class ResculptPatches {
+	public sealed class ResculptPatches : KMod.UserMod2 {
 		/// <summary>
 		/// The default sprite to use for the button if the custom sprites fail to load.
 		/// </summary>
@@ -35,7 +37,8 @@ namespace PeterHan.Resculpt {
 		/// <summary>
 		/// Loads the sprites for this mod and registers them in the Assets class.
 		/// </summary>
-		private static void LoadImages() {
+		[PLibMethod(RunAt.BeforeDbInit)]
+		internal static void LoadImages() {
 			LoadImage("repaint.png", ResculptStrings.REPAINT_SPRITE);
 			LoadImage("resculpt.png", ResculptStrings.RESCULPT_SPRITE);
 		}
@@ -46,7 +49,7 @@ namespace PeterHan.Resculpt {
 		/// <param name="path">The image file name.</param>
 		/// <param name="name">The desired sprite name.</param>
 		private static void LoadImage(string path, string name) {
-			var sprite = PUtil.LoadSprite("PeterHan.Resculpt." + path);
+			var sprite = PUIUtils.LoadSprite("PeterHan.Resculpt." + path);
 			if (sprite == null)
 				sprite = Assets.GetSprite(DEFAULT_SPRITE);
 			if (sprite != null)
@@ -54,9 +57,11 @@ namespace PeterHan.Resculpt {
 			Assets.Sprites.Add(name, sprite);
 		}
 
-		public static void OnLoad() {
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
-			PLocalization.Register();
+			new PLocalization().Register();
+			new PPatchManager(harmony).RegisterPatchClass(typeof(ResculptPatches));
 		}
 
 		/// <summary>
@@ -89,19 +94,6 @@ namespace PeterHan.Resculpt {
 					rs.ButtonText = ResculptStrings.REPAINT_BUTTON;
 					rs.ButtonIcon = ResculptStrings.REPAINT_SPRITE;
 				}
-			}
-		}
-
-		/// <summary>
-		/// Applied to Assets to load the button images when necessary.
-		/// </summary>
-		[HarmonyPatch(typeof(Assets), "OnPrefabInit")]
-		public static class Assets_OnPrefabInit_Patch {
-			/// <summary>
-			/// Applied after OnPrefabInit runs.
-			/// </summary>
-			internal static void Postfix() {
-				LoadImages();
 			}
 		}
 

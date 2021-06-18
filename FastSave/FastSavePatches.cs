@@ -16,9 +16,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
-using PeterHan.PLib.Datafiles;
+using HarmonyLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
 using System.Collections.Generic;
 using UnityEngine;
@@ -28,38 +28,7 @@ namespace PeterHan.FastSave {
 	/// <summary>
 	/// Patches which will be applied via annotations for Fast Save.
 	/// </summary>
-	public sealed class FastSavePatches {
-		/// <summary>
-		/// Retrieves the printing pod if it exists.
-		/// </summary>
-		/// <returns>The printing pod (on the first asteroid if in a cluster), or null if it
-		/// was destroyed/deconstructed.</returns>
-		public static GameObject GetTelepad() {
-			var method = typeof(GameUtil).GetMethodSafe(nameof(GameUtil.GetTelepad), true,
-				PPatchTools.AnyArguments);
-			var arguments = method.GetParameters();
-			GameObject dest = null;
-			// TODO Vanilla/DLC code
-			if (arguments.Length == 0)
-				// Vanilla
-				dest = method.Invoke(null, null) as GameObject;
-			else if (arguments.Length == 1 && arguments[0].ParameterType == typeof(int))
-				// DLC
-				dest = method.Invoke(null, new object[] { 0 }) as GameObject;
-			else
-				PUtil.LogWarning("Unknown GetTelepad signature: " + arguments.Join(", "));
-			return dest;
-		}
-
-		public static void OnLoad() {
-			PUtil.InitLibrary();
-			POptions.RegisterOptions(typeof(FastSaveOptions));
-			CleanUsageLogs.RegisterPostload();
-			// Sorry, Fast Save now requires a restart to take effect because of background!
-			PUtil.LogDebug("FastSave in mode: {0}".F(FastSaveOptions.Instance.Mode));
-			PLocalization.Register();
-		}
-
+	public sealed class FastSavePatches : KMod.UserMod2 {
 		/// <summary>
 		/// Waits in a coroutine for the GPU to complete uploading the timelapse image, and
 		/// then starts a background task to save it.
@@ -115,8 +84,17 @@ namespace PeterHan.FastSave {
 			return data;
 		}
 
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
+			PUtil.InitLibrary();
+			new POptions().RegisterOptions(typeof(FastSaveOptions));
+			// Sorry, Fast Save now requires a restart to take effect because of background!
+			PUtil.LogDebug("FastSave in mode: {0}".F(FastSaveOptions.Instance.Mode));
+			new PLocalization().Register();
+		}
+
 		/// <summary>
-		/// Applied to Game.
+		/// Applied to Game to move part of the autosave to a background thread.
 		/// </summary>
 		[HarmonyPatch(typeof(Game), "DelayedSave")]
 		public static class Game_DelayedSave_Patch {
@@ -280,7 +258,7 @@ namespace PeterHan.FastSave {
 			internal static bool Prefix(RenderTexture ___bufferRenderTexture, float ___camSize,
 					string ___previewSaveGamePath, bool ___previewScreenshot,
 					Vector3 ___camPosition) {
-				var telepad = GetTelepad();
+				var telepad = GameUtil.GetTelepad(0);
 				var rt = ___bufferRenderTexture;
 				var inst = CameraController.Instance;
 				if (telepad == null)

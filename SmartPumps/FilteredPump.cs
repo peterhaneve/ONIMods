@@ -16,22 +16,14 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
-using PeterHan.PLib.Detours;
+using PeterHan.PLib.Database;
+using PeterHan.PLib.PatchManager;
 
 namespace PeterHan.SmartPumps {
 	/// <summary>
 	/// A filtered version of the PumpFixed component.
 	/// </summary>
 	public class FilteredPump : PumpFixed {
-		private delegate StatusItem Construct(string id, string prefix, string icon,
-			StatusItem.IconType icon_type, NotificationType notification_type,
-			bool allow_multiples, HashedString render_overlay);
-
-		// TODO Vanilla/DLC code
-		private static readonly Construct NEW_STATUS_ITEM = typeof(StatusItem).
-			DetourConstructor<Construct>();
-
 		/// <summary>
 		/// Displayed when no matching gas is available to pump.
 		/// </summary>
@@ -49,15 +41,15 @@ namespace PeterHan.SmartPumps {
 		internal static void CreateStatusItems() {
 			const string Category = "BUILDING", NoGasMatch = "NoGasMatchToPump",
 				NoLiquidMatch = "NoLiquidMatchToPump";
-			PUtil.AddStatusItemStrings(NoGasMatch, Category, SmartPumpsStrings.
+			PDatabaseUtils.AddStatusItemStrings(NoGasMatch, Category, SmartPumpsStrings.
 				NOGASTOPUMP_NAME, SmartPumpsStrings.NOGASTOPUMP_DESC);
-			PUtil.AddStatusItemStrings(NoLiquidMatch, Category, SmartPumpsStrings.
+			PDatabaseUtils.AddStatusItemStrings(NoLiquidMatch, Category, SmartPumpsStrings.
 				NOLIQUIDTOPUMP_NAME, SmartPumpsStrings.NOLIQUIDTOPUMP_DESC);
 			// String add must occur first
-			NO_GAS_MATCH_TO_PUMP = NEW_STATUS_ITEM.Invoke(NoGasMatch, Category,
+			NO_GAS_MATCH_TO_PUMP = new StatusItem(NoGasMatch, Category,
 				"status_item_no_gas_to_pump", StatusItem.IconType.Custom,
 				NotificationType.Neutral, false, OverlayModes.GasConduits.ID);
-			NO_LIQUID_MATCH_TO_PUMP = NEW_STATUS_ITEM.Invoke(NoLiquidMatch, Category,
+			NO_LIQUID_MATCH_TO_PUMP = new StatusItem(NoLiquidMatch, Category,
 				"status_item_no_liquid_to_pump", StatusItem.IconType.Custom,
 				NotificationType.Neutral, false, OverlayModes.LiquidConduits.ID);
 		}

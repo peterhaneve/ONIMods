@@ -2,13 +2,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Sandbox Tools</AssemblyTitle>
-    <FileVersion>2.11.0.0</FileVersion>
+    <FileVersion>3.0.0.0</FileVersion>
     <RootNamespace>PeterHan.SandboxTools</RootNamespace>
     <Description>Improves the Sandbox Mode tools with numerous small tweaks.</Description>
-    <AssemblyVersion>2.2.0.0</AssemblyVersion>
-    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>463187</LastWorkingBuild>
+    <AssemblyVersion>3.0.0.0</AssemblyVersion>
     <Platforms>Vanilla;Spaced Out</Platforms>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>466655</LastWorkingBuild>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
+    <ArchivedVersionPath>\archived_versions\merged</ArchivedVersionPath>
+    <SupportedContent>EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>468097</LastWorkingBuild>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Destroy.png" />

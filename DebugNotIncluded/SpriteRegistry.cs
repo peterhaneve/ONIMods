@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
+using PeterHan.PLib.UI;
 using System;
 using UnityEngine;
 
@@ -66,7 +66,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		/// <param name="name">The sprite file name without the extension.</param>
 		private static Sprite LoadSprite(string name) {
-			var sprite = PUtil.LoadSprite(BASE_PATH + name + ".png");
+			var sprite = PUIUtils.LoadSprite(BASE_PATH + name + ".png");
 			sprite.name = name;
 			return sprite;
 		}

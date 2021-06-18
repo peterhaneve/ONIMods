@@ -16,8 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
-using System;
+using PeterHan.PLib.Core;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -28,10 +27,6 @@ namespace PeterHan.StockBugFix {
 	/// Fixes traits that should be mutually exclusive. Mostly DLC specific.
 	/// </summary>
 	internal static class TraitsExclusionPatches {
-		// TODO Vanilla/DLC code
-		private static readonly FieldInfo MUTUALLY_EXCLUSIVE = typeof(TraitVal).
-			GetFieldSafe("mutuallyExclusiveAptitudes", false);
-
 		/// <summary>
 		/// Excludes a trait from occurring on a particular interest.
 		/// </summary>
@@ -39,9 +34,9 @@ namespace PeterHan.StockBugFix {
 		/// <param name="interestID">The interest ID that should not have this trait.</param>
 		/// <returns>true if the trait was excluded, or false if not found.</returns>
 		private static bool ExcludeTraitFromInterest(string traitID, string interestID) {
-			return MUTUALLY_EXCLUSIVE != null && (ExcludeTraitFromInterest(traitID, interestID,
-				TUNING.DUPLICANTSTATS.BADTRAITS) || ExcludeTraitFromInterest(traitID,
-				interestID, TUNING.DUPLICANTSTATS.GOODTRAITS));
+			return ExcludeTraitFromInterest(traitID, interestID, TUNING.DUPLICANTSTATS.
+				BADTRAITS) || ExcludeTraitFromInterest(traitID, interestID, TUNING.
+				DUPLICANTSTATS.GOODTRAITS);
 		}
 
 		/// <summary>

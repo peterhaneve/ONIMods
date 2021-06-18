@@ -65,8 +65,8 @@ namespace PeterHan.MooReproduction {
 			return prefab;
 		}
 
-		public string GetDlcId() {
-			return DlcManager.VANILLA_ID;
+		public string[] GetDlcIds() {
+			return DlcManager.AVAILABLE_EXPANSION1_ONLY;
 		}
 
 		public void OnPrefabInit(GameObject inst) {

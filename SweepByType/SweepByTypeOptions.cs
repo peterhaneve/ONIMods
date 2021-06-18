@@ -17,13 +17,14 @@
  */
 
 using Newtonsoft.Json;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Options;
 
 namespace PeterHan.SweepByType {
 	/// <summary>
 	/// The options class used for Sweep by Type.
 	/// </summary>
-	[ModInfo("Sweep by Type", "https://github.com/peterhaneve/ONIMods", "preview.png")]
+	[ModInfo("https://github.com/peterhaneve/ONIMods", "preview.png")]
 	[JsonObject(MemberSerialization.OptIn)]
 	public sealed class SweepByTypeOptions {
 		/// <summary>

@@ -16,7 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.UI;
 using System;
 using UnityEngine;
 
@@ -46,7 +47,7 @@ namespace PeterHan.SweepByType {
 		private static void LoadSprites() {
 			if (!spritesLoaded) {
 				try {
-					TOOL_ICON = PUtil.LoadSprite("PeterHan.SweepByType.Sweep.png");
+					TOOL_ICON = PUIUtils.LoadSprite("PeterHan.SweepByType.Sweep.png");
 					TOOL_ICON.name = SweepByTypeStrings.TOOL_ICON_NAME;
 				} catch (ArgumentException e) {
 					// Could not load the icons, but better this than crashing

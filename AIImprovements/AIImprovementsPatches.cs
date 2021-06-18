@@ -16,16 +16,17 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
+using HarmonyLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
+using PeterHan.PLib.PatchManager;
 using UnityEngine;
 
 namespace PeterHan.AIImprovements {
 	/// <summary>
 	/// Patches which will be applied via annotations for AI Improvements.
 	/// </summary>
-	public static class AIImprovementsPatches {
+	public sealed class AIImprovementsPatches : KMod.UserMod2 {
 		/// <summary>
 		/// The chore type used for Build chores.
 		/// </summary>
@@ -90,47 +91,6 @@ namespace PeterHan.AIImprovements {
 		}
 
 		/// <summary>
-		/// Determines whether a Duplicant could plausibly navigate to the target cell.
-		/// </summary>
-		/// <param name="navigator">The Duplicant to check.</param>
-		/// <param name="cell">The destination cell.</param>
-		/// <returns>true if the Duplicant could move there, or false otherwise.</returns>
-		internal static bool IsValidNavCell(Navigator navigator, int cell) {
-			return navigator.NavGrid.NavTable.IsValid(cell, navigator.CurrentNavType);
-		}
-
-		[PLibMethod(RunAt.AfterDbInit)]
-		internal static void OnDbInit() {
-			var db = Db.Get();
-			BuildChore = db.ChoreTypes.Build;
-			DeconstructChore = db.ChoreTypes.Deconstruct;
-		}
-
-		[PLibMethod(RunAt.OnEndGame)]
-		internal static void OnEndGame() {
-#if DEBUG
-			PUtil.LogDebug("Destroying AllMinionsLocationHistory");
-#endif
-			AllMinionsLocationHistory.DestroyInstance();
-		}
-
-		public static void OnLoad() {
-			Options = new AIImprovementsOptionsInstance();
-			PUtil.InitLibrary();
-			PUtil.RegisterPatchClass(typeof(AIImprovementsPatches));
-		}
-
-		[PLibMethod(RunAt.OnStartGame)]
-		internal static void OnStartGame() {
-			Options = AIImprovementsOptionsInstance.Create(POptions.ReadSettingsForAssembly<
-				AIImprovementsOptions>() ?? new AIImprovementsOptions());
-#if DEBUG
-			PUtil.LogDebug("Creating AllMinionsLocationHistory");
-#endif
-			AllMinionsLocationHistory.InitInstance();
-		}
-
-		/// <summary>
 		/// Moves the Duplicant from the cell to a destination cell, using a smooth transition
 		/// if possible.
 		/// </summary>
@@ -166,6 +126,41 @@ namespace PeterHan.AIImprovements {
 				instance.UpdateFalling();
 				instance.GoTo(instance.sm.standing);
 			}
+		}
+
+		/// <summary>
+		/// Determines whether a Duplicant could plausibly navigate to the target cell.
+		/// </summary>
+		/// <param name="navigator">The Duplicant to check.</param>
+		/// <param name="cell">The destination cell.</param>
+		/// <returns>true if the Duplicant could move there, or false otherwise.</returns>
+		internal static bool IsValidNavCell(Navigator navigator, int cell) {
+			return navigator.NavGrid.NavTable.IsValid(cell, navigator.CurrentNavType);
+		}
+
+		[PLibMethod(RunAt.AfterDbInit)]
+		internal static void OnDbInit() {
+			var db = Db.Get();
+			BuildChore = db.ChoreTypes.Build;
+			DeconstructChore = db.ChoreTypes.Deconstruct;
+		}
+
+		[PLibMethod(RunAt.OnEndGame)]
+		internal static void OnEndGame() {
+#if DEBUG
+			PUtil.LogDebug("Destroying AllMinionsLocationHistory");
+#endif
+			AllMinionsLocationHistory.DestroyInstance();
+		}
+
+		[PLibMethod(RunAt.OnStartGame)]
+		internal static void OnStartGame() {
+			Options = AIImprovementsOptionsInstance.Create(POptions.ReadSettings<
+				AIImprovementsOptions>() ?? new AIImprovementsOptions());
+#if DEBUG
+			PUtil.LogDebug("Creating AllMinionsLocationHistory");
+#endif
+			AllMinionsLocationHistory.InitInstance();
 		}
 
 		/// <summary>
@@ -217,6 +212,14 @@ namespace PeterHan.AIImprovements {
 				}
 			}
 			return moved;
+		}
+
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
+			Options = new AIImprovementsOptionsInstance();
+			new POptions().RegisterOptions(typeof(AIImprovementsOptions));
+			PUtil.InitLibrary();
+			new PPatchManager(harmony).RegisterPatchClass(typeof(AIImprovementsPatches));
 		}
 
 		/// <summary>

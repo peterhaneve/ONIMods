@@ -16,16 +16,15 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Buildings;
-using PeterHan.PLib.Datafiles;
 using UnityEngine;
 
 namespace PeterHan.TileTempSensor {
 	/// <summary>
 	/// A Thermo Sensor which occupies a full tile.
 	/// </summary>
-	public class TileTempSensorConfig : IBuildingConfig {
+	public sealed class TileTempSensorConfig : IBuildingConfig {
 		/// <summary>
 		/// The building ID.
 		/// </summary>
@@ -36,19 +35,12 @@ namespace PeterHan.TileTempSensor {
 		/// </summary>
 		internal static PBuilding TileTempSensor;
 
-		public static void OnLoad() {
-			PUtil.InitLibrary();
-			PLocalization.Register();
-			RegisterBuilding();
-			LocString.CreateLocStringKeys(typeof(TileTempSensorStrings.BUILDINGS));
-		}
-
 		/// <summary>
-		/// Registers this building.
+		/// Creates this building.
 		/// </summary>
-		internal static void RegisterBuilding() {
-			// Inititialize it here to allow localization to change the strings
-			PBuilding.Register(TileTempSensor = new PBuilding(ID,
+		/// <returns>The building instance to be registered.</returns>
+		internal static PBuilding CreateBuilding() {
+			return TileTempSensor = new PBuilding(ID,
 					TileTempSensorStrings.BUILDINGS.PREFABS.TILETEMPSENSOR.NAME) {
 				AddAfter = LogicTemperatureSensorConfig.ID,
 				Animation = "thermo_tile_kanim",
@@ -73,14 +65,14 @@ namespace PeterHan.TileTempSensor {
 					STRINGS.BUILDINGS.PREFABS.LOGICTEMPERATURESENSOR.LOGIC_PORT_ACTIVE,
 					STRINGS.BUILDINGS.PREFABS.LOGICTEMPERATURESENSOR.LOGIC_PORT_INACTIVE, true)
 				},
-				ObjectLayer = PBuilding.GetObjectLayer(nameof(ObjectLayer.Backwall),
+				ObjectLayer = PGameUtils.GetObjectLayer(nameof(ObjectLayer.Backwall),
 					ObjectLayer.Backwall),
 				Placement = BuildLocationRule.Tile,
 				SceneLayer = Grid.SceneLayer.TileMain,
 				Tech = "HVAC",
 				ViewMode = OverlayModes.Logic.ID,
 				Width = 1
-			});
+			};
 		}
 
 		public override BuildingDef CreateBuildingDef() {

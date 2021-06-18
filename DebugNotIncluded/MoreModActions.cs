@@ -134,7 +134,7 @@ namespace PeterHan.DebugNotIncluded {
 			var manager = Global.Instance.modManager;
 			if (actionsScreen != null && manager != null) {
 				int index = actionsScreen.Index;
-				manager.Reinsert(index, Math.Min(manager.mods.Count, index + 10), manager);
+				manager.Reinsert(index, Math.Min(manager.mods.Count, index + 10), false, manager);
 			}
 		}
 
@@ -144,7 +144,7 @@ namespace PeterHan.DebugNotIncluded {
 		private void OnMoveFirst(GameObject _) {
 			var manager = Global.Instance.modManager;
 			if (actionsScreen != null && manager != null)
-				manager.Reinsert(actionsScreen.Index, 0, manager);
+				manager.Reinsert(actionsScreen.Index, 0, false, manager);
 		}
 
 		/// <summary>
@@ -153,7 +153,7 @@ namespace PeterHan.DebugNotIncluded {
 		private void OnMoveLast(GameObject _) {
 			var manager = Global.Instance.modManager;
 			if (actionsScreen != null && manager != null)
-				manager.Reinsert(actionsScreen.Index, manager.mods.Count, manager);
+				manager.Reinsert(actionsScreen.Index, manager.mods.Count, true, manager);
 		}
 
 		/// <summary>
@@ -164,7 +164,7 @@ namespace PeterHan.DebugNotIncluded {
 			if (actionsScreen != null && manager != null) {
 				int index = actionsScreen.Index;
 				// Actually up 9 to account for the index change after removal
-				manager.Reinsert(index, Math.Max(0, index - 9), manager);
+				manager.Reinsert(index, Math.Max(0, index - 9), false, manager);
 			}
 		}
 
@@ -324,7 +324,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// the dropdown while open, and closes it if so.
 		/// </summary>
 		internal void Update() {
-			if (actionsScreen != null && (PUIUtils.GetMouseButton(0) || PUIUtils.GetInputAxis(
+			if (actionsScreen != null && (Input.GetMouseButton(0) || Input.GetAxis(
 					"Mouse ScrollWheel") != 0.0f) && !actionsScreen.IsOver &&
 					(callingButton == null || !callingButton.GetMouseOver))
 				HidePopup();

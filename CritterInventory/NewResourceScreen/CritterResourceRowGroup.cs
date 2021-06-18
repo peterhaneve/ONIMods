@@ -17,7 +17,7 @@
  */
 
 #if SPACEDOUT
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using System.Collections.Generic;
 using UnityEngine.UI;
 

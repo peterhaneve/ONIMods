@@ -17,7 +17,6 @@
  */
 
 using KMod;
-using PeterHan.PLib;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -232,7 +231,7 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		public override string ToString() {
-			return "ModEvents[{0:D} events]".F(EventCount);
+			return string.Format("ModEvents[{0:D} events]", EventCount);
 		}
 	}
 }

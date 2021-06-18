@@ -2,12 +2,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Custom Pipe Colors</AssemblyTitle>
-    <FileVersion>1.2.0.0</FileVersion>
+    <FileVersion>2.0.0.0</FileVersion>
     <RootNamespace>PeterHan.OldPipeColor</RootNamespace>
     <Description>Restores the former colo(u)r of Insulated Pipes and allows configuration of custom colors.</Description>
-    <AssemblyVersion>1.2.0.0</AssemblyVersion>
-    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>460672</LastWorkingBuild>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <Platforms>Vanilla;Spaced Out</Platforms>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>466655</LastWorkingBuild>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
+    <ArchivedVersionPath>\archived_versions\merged</ArchivedVersionPath>
+    <SupportedContent>EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>468097</LastWorkingBuild>
   </PropertyGroup>
 </Project>

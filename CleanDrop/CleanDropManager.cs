@@ -16,8 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
-
 namespace PeterHan.CleanDrop {
 	/// <summary>
 	/// Stores information mapping workers to the drop direction for each tile in the game.

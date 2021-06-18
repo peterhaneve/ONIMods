@@ -17,9 +17,8 @@
  */
 
 using Database;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using System;
-using System.IO;
 
 namespace ReimaginationTeam.DecorRework {
 	/// <summary>
@@ -28,14 +27,8 @@ namespace ReimaginationTeam.DecorRework {
 	/// 
 	/// The deprecated interface must be implemented to allow previous saves with this
 	/// achievement to load.
-	/// 
-	/// TODO Vanilla/DLC code
 	/// </summary>
-#if VANILLA
-	public sealed class NumDecorPositives : ColonyAchievementRequirement {
-#else
 	public sealed class NumDecorPositives : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
-#endif
 		/// <summary>
 		/// The number of decor items required.
 		/// </summary>
@@ -47,15 +40,7 @@ namespace ReimaginationTeam.DecorRework {
 			this.required = required;
 		}
 
-#if VANILLA
-		public override void Serialize(BinaryWriter writer) {
-			writer.Write(required);
-		}
-
-		public override void Deserialize(IReader reader) {
-#else
 		public void Deserialize(IReader reader) {
-#endif
 			required = reader.ReadInt32();
 		}
 

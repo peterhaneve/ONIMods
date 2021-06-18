@@ -18,7 +18,8 @@
 
 using HarmonyLib;
 using KMod;
-using PeterHan.PLib;
+using PeterHan.PLib.Actions;
+using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -390,10 +391,43 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
+		/// Profiles a method, outputting how many milliseconds it took to run on each use.
+		/// </summary>
+		/// <param name="instance">The Harmony instance to use for the patch.</param>
+		/// <param name="target">The method to profile.</param>
+		internal static void ProfileMethod(this Harmony instance, MethodBase target) {
+			if (target == null)
+				DebugLogger.LogWarning("No method specified to profile!");
+			else {
+				instance.Patch(target, new HarmonyMethod(typeof(DebugUtils),
+					nameof(ProfilerPrefix)), new HarmonyMethod(typeof(DebugUtils),
+					nameof(ProfilerPostfix)));
+				DebugLogger.LogDebug("Profiling method {0}.{1}".F(target.DeclaringType, target.
+					Name));
+			}
+		}
+
+		/// <summary>
+		/// A postfix method for instrumenting methods in the code base. Logs the total time
+		/// taken in milliseconds.
+		/// </summary>
+		private static void ProfilerPostfix(MethodBase __originalMethod, Stopwatch __state) {
+			DebugLogger.LogDebug("{1}.{2}:: {0:D} ms".F(__state.ElapsedMilliseconds,
+				__originalMethod.DeclaringType, __originalMethod.Name));
+		}
+
+		/// <summary>
+		/// A prefix method for instrumenting methods in the code base.
+		/// </summary>
+		private static void ProfilerPrefix(ref Stopwatch __state) {
+			__state = Stopwatch.StartNew();
+		}
+
+		/// <summary>
 		/// Registers the UI debug action (default Alt+U) to dump UI element trees to the log.
 		/// </summary>
 		internal static void RegisterUIDebug() {
-			UIDebugAction = PAction.Register("DebugNotIncluded.UIDebugAction",
+			UIDebugAction = new PActionManager().CreateAction("DebugNotIncluded.UIDebugAction",
 				DebugNotIncludedStrings.INPUT_BINDINGS.DEBUG.SNAPSHOT, new PKeyBinding(
 				KKeyCode.U, Modifier.Alt));
 		}

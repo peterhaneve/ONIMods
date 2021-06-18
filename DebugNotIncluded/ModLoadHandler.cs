@@ -16,11 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-
 namespace PeterHan.DebugNotIncluded {
 	/// <summary>
 	/// Handles debugging existing mod loading.
@@ -43,65 +38,8 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
-		/// The last mod which began loading content.
-		/// </summary>
-		internal static ModDebugInfo CurrentMod { get; set; }
-
-		/// <summary>
-		/// The title of the current mod.
-		/// </summary>
-		internal static string CurrentModTitle => CurrentMod?.ModName;
-
-		/// <summary>
 		/// The last mod which crashed, or null if none have / the crash has been cleared.
 		/// </summary>
 		private static ModDebugInfo lastCrashedMod;
-
-		/// <summary>
-		/// Handles an exception thrown when loading a mod.
-		/// </summary>
-		/// <param name="ex">The exception thrown.</param>
-		internal static void HandleModException(object ex) {
-			if (ex is Exception e) {
-				string title = CurrentModTitle;
-				if (!string.IsNullOrEmpty(title))
-					DebugLogger.LogDebug("When loading mod {0}:", title);
-				DebugLogger.LogException(e);
-			}
-		}
-
-		/// <summary>
-		/// Loads the assembly from the path just like Assembly.LoadFrom, but saves the mod
-		/// associated with that assembly.
-		/// </summary>
-		/// <param name="path">The path to load.</param>
-		/// <returns>The assembly loaded.</returns>
-		internal static Assembly LoadAssembly(string path) {
-			var assembly = string.IsNullOrEmpty(path) ? null : Assembly.LoadFrom(path);
-			if (assembly != null && CurrentMod != null) {
-#if DEBUG
-				DebugLogger.LogDebug("Loaded assembly {0} for mod {1}", assembly.FullName,
-					CurrentModTitle);
-#endif
-				ModDebugRegistry.Instance.RegisterModAssembly(assembly, CurrentMod);
-			}
-			return assembly;
-		}
-
-		/// <summary>
-		/// Adds the assemblies in the loaded mod data to the active mod.
-		/// </summary>
-		/// <param name="data">The assemblies loaded.</param>
-		internal static void LoadAssemblies(object data) {
-			var dllList = data.GetType().GetFieldSafe("dlls", false);
-			if (dllList != null && dllList.GetValue(data) is ICollection<Assembly> dlls)
-				foreach (var assembly in dlls) {
-#if DEBUG
-					DebugLogger.LogDebug("Attributed assembly {0} to mod {1}", assembly.
-						FullName, CurrentModTitle);
-#endif
-					ModDebugRegistry.Instance.RegisterModAssembly(assembly, CurrentMod);
-				}
-		}
 	}
 }

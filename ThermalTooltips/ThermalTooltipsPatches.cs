@@ -16,17 +16,18 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
-using PeterHan.PLib.Datafiles;
+using HarmonyLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
+using PeterHan.PLib.PatchManager;
 using System.Collections.Generic;
 
 namespace PeterHan.ThermalTooltips {
 	/// <summary>
 	/// Patches which will be applied via annotations for Thermal Tooltips.
 	/// </summary>
-	public static class ThermalTooltipsPatches {
+	public sealed class ThermalTooltipsPatches : KMod.UserMod2 {
 		/// <summary>
 		/// Handles compatibility with Better Info Cards.
 		/// </summary>
@@ -50,55 +51,6 @@ namespace PeterHan.ThermalTooltips {
 			PUtil.LogDebug("Destroying ExtendedThermalTooltip");
 			buildingInstance?.ClearDef();
 			TooltipInstance = null;
-		}
-
-		/// <summary>
-		/// Formats a transition element name, adding a prefix if it has the same name as the
-		/// original element.
-		/// </summary>
-		/// <param name="element">The result of the state transition.</param>
-		/// <param name="originalName">The original element name with link formatting removed.</param>
-		/// <returns>The proper name for the result that is unambiguous from the original
-		/// element.</returns>
-		public static string FormatName(this Element element, string originalName) {
-			string name = STRINGS.UI.StripLinkFormatting(element.name);
-			if (name == originalName) {
-				// Do not switch case on State, it is a bit field
-				if (element.IsLiquid)
-					name = STRINGS.ELEMENTS.STATE.LIQUID + " " + name;
-				else if (element.IsSolid)
-					name = STRINGS.ELEMENTS.STATE.SOLID + " " + name;
-				else if (element.IsGas)
-					name = STRINGS.ELEMENTS.STATE.GAS + " " + name;
-			}
-			return name;
-		}
-
-		/// <summary>
-		/// Reports whether the element is a valid state transition.
-		/// </summary>
-		/// <param name="element">The element to check.</param>
-		/// <param name="original">The original element.</param>
-		/// <returns>true if it is a valid element, or false if it is null, Vacuum, the
-		/// original element, or Void.</returns>
-		public static bool IsValidTransition(this Element element, Element original) {
-			bool valid = element != null;
-			if (valid) {
-				var id = element.id;
-				valid = id != SimHashes.Void && id != SimHashes.Vacuum && (original == null ||
-					id != original.id);
-			}
-			return valid;
-		}
-
-		public static void OnLoad() {
-			bicCompat = null;
-			buildingInstance = new BuildThermalTooltip();
-			PUtil.InitLibrary();
-			POptions.RegisterOptions(typeof(ThermalTooltipsOptions));
-			PLocalization.Register();
-			TooltipInstance = null;
-			PUtil.RegisterPatchClass(typeof(ThermalTooltipsPatches));
 		}
 
 		/// <summary>
@@ -126,6 +78,18 @@ namespace PeterHan.ThermalTooltips {
 			}
 			TooltipInstance = new ExtendedThermalTooltip(options, bicCompat);
 			PUtil.LogDebug("Created ExtendedThermalTooltip");
+		}
+
+		public override void OnLoad(Harmony harmony) {
+			bicCompat = null;
+			base.OnLoad(harmony);
+			buildingInstance = new BuildThermalTooltip();
+			PUtil.InitLibrary();
+			new POptions().RegisterOptions(typeof(ThermalTooltipsOptions));
+			LocString.CreateLocStringKeys(typeof(ThermalTooltipsStrings.UI));
+			new PLocalization().Register();
+			TooltipInstance = null;
+			new PPatchManager(harmony).RegisterPatchClass(typeof(ThermalTooltipsPatches));
 		}
 
 		/// <summary>
@@ -184,6 +148,47 @@ namespace PeterHan.ThermalTooltips {
 					IEnumerable<CodeInstruction> method) {
 				return new ThermalTranspilerPatch().DoTranspile(method);
 			}
+		}
+	}
+
+	internal static class ExtensionMethods {
+		/// <summary>
+		/// Formats a transition element name, adding a prefix if it has the same name as the
+		/// original element.
+		/// </summary>
+		/// <param name="element">The result of the state transition.</param>
+		/// <param name="originalName">The original element name with link formatting removed.</param>
+		/// <returns>The proper name for the result that is unambiguous from the original
+		/// element.</returns>
+		public static string FormatName(this Element element, string originalName) {
+			string name = STRINGS.UI.StripLinkFormatting(element.name);
+			if (name == originalName) {
+				// Do not switch case on State, it is a bit field
+				if (element.IsLiquid)
+					name = STRINGS.ELEMENTS.STATE.LIQUID + " " + name;
+				else if (element.IsSolid)
+					name = STRINGS.ELEMENTS.STATE.SOLID + " " + name;
+				else if (element.IsGas)
+					name = STRINGS.ELEMENTS.STATE.GAS + " " + name;
+			}
+			return name;
+		}
+
+		/// <summary>
+		/// Reports whether the element is a valid state transition.
+		/// </summary>
+		/// <param name="element">The element to check.</param>
+		/// <param name="original">The original element.</param>
+		/// <returns>true if it is a valid element, or false if it is null, Vacuum, the
+		/// original element, or Void.</returns>
+		public static bool IsValidTransition(this Element element, Element original) {
+			bool valid = element != null;
+			if (valid) {
+				var id = element.id;
+				valid = id != SimHashes.Void && id != SimHashes.Vacuum && (original == null ||
+					id != original.id);
+			}
+			return valid;
 		}
 	}
 }

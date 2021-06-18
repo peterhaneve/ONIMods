@@ -16,8 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
 using PeterHan.PLib.Buildings;
+using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.SmartPumps {
@@ -38,10 +38,9 @@ namespace PeterHan.SmartPumps {
 		/// <summary>
 		/// Registers this building.
 		/// </summary>
-		internal static void RegisterBuilding() {
+		internal static PBuilding CreateBuilding() {
 			// Inititialize it here to allow localization to change the strings
-			PBuilding.Register(GasPumpFiltered = new PBuilding(ID,
-				SmartPumpsStrings.GASPUMP_NAME) {
+			return GasPumpFiltered = new PBuilding(ID, SmartPumpsStrings.GASPUMP_NAME) {
 				AddAfter = "GasMiniPump",
 				Animation = "pumpGasFiltered_kanim",
 				Category = "HVAC",
@@ -70,7 +69,7 @@ namespace PeterHan.SmartPumps {
 				Tech = "ValveMiniaturization",
 				ViewMode = OverlayModes.GasConduits.ID,
 				Width = 2
-			});
+			};
 		}
 
 		public override void ConfigureBuildingTemplate(GameObject go, Tag prefab_tag) {
@@ -79,7 +78,7 @@ namespace PeterHan.SmartPumps {
 		}
 
 		public override BuildingDef CreateBuildingDef() {
-			PUtil.CopySoundsToAnim(GasPumpFiltered.Animation, "pumpgas_kanim");
+			PGameUtils.CopySoundsToAnim(GasPumpFiltered.Animation, "pumpgas_kanim");
 			GeneratedBuildings.RegisterWithOverlay(OverlayScreen.GasVentIDs, ID);
 			return GasPumpFiltered?.CreateDef();
 		}

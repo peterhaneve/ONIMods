@@ -17,7 +17,7 @@
  */
 
 using Newtonsoft.Json;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
 using UnityEngine;
 
@@ -26,7 +26,7 @@ namespace ReimaginationTeam.DecorRework {
 	/// The options class used for Decor Reimagined.
 	/// </summary>
 	[JsonObject(MemberSerialization.OptIn)]
-	[ModInfo("Decor Reimagined", "https://github.com/peterhaneve/ONIMods", "preview.png")]
+	[ModInfo("https://github.com/peterhaneve/ONIMods", "preview.png")]
 	[RestartRequired]
 	public sealed class DecorReimaginedOptions {
 		// String names for the art stages.

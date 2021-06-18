@@ -16,16 +16,17 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
-using PeterHan.PLib.Datafiles;
+using HarmonyLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
+using PeterHan.PLib.PatchManager;
 
 namespace PeterHan.DeselectNewMaterials {
 	/// <summary>
 	/// Patches for Deselect New Materials.
 	/// </summary>
-	public sealed class DeselectMaterialsPatches {
+	public sealed class DeselectMaterialsPatches : KMod.UserMod2 {
 		/// <summary>
 		/// The options for this mod.
 		/// </summary>
@@ -43,12 +44,13 @@ namespace PeterHan.DeselectNewMaterials {
 				IgnoreFoodBoxes));
 		}
 
-		public static void OnLoad() {
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
-			PLocalization.Register();
+			new PLocalization().Register();
 			Options = new DeselectMaterialsOptions();
-			POptions.RegisterOptions(typeof(DeselectMaterialsOptions));
-			PUtil.RegisterPatchClass(typeof(DeselectMaterialsPatches));
+			new POptions().RegisterOptions(typeof(DeselectMaterialsOptions));
+			new PPatchManager(harmony).RegisterPatchClass(typeof(DeselectMaterialsPatches));
 		}
 
 		/// <summary>

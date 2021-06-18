@@ -16,14 +16,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
 using Klei.AI;
 using Newtonsoft.Json;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Buildings;
-using PeterHan.PLib.Detours;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
@@ -108,7 +105,7 @@ namespace ReimaginationTeam.DecorRework {
 			}
 			if (entries != null) {
 				var editDecor = DictionaryPool<string, DecorDbEntry, DecorDbEntry>.Allocate();
-				var tileLayer = PBuilding.GetObjectLayer(nameof(ObjectLayer.FoundationTile),
+				var tileLayer = PGameUtils.GetObjectLayer(nameof(ObjectLayer.FoundationTile),
 					ObjectLayer.FoundationTile);
 				string id;
 				// Add to dictionary, way faster

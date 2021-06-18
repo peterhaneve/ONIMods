@@ -14,7 +14,8 @@
     <LastWorkingBuild>460672</LastWorkingBuild>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
+    <ArchivedVersionPath>\archived_versions\merged</ArchivedVersionPath>
     <SupportedContent>EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>466411</LastWorkingBuild>
+    <LastWorkingBuild>468097</LastWorkingBuild>
   </PropertyGroup>
 </Project>

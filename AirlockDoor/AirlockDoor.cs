@@ -28,14 +28,6 @@ namespace PeterHan.AirlockDoor {
 	[SerializationConfig(MemberSerialization.OptIn)]
 	public sealed partial class AirlockDoor : StateMachineComponent<AirlockDoor.Instance>,
 			ISaveLoadable, ISim200ms {
-		private delegate StatusItem Construct(string id, string prefix, string icon,
-			StatusItem.IconType icon_type, NotificationType notification_type,
-			bool allow_multiples, HashedString render_overlay);
-
-		// TODO Vanilla/DLC code
-		private static readonly Construct NEW_STATUS_ITEM = typeof(StatusItem).
-			DetourConstructor<Construct>();
-
 		/// <summary>
 		/// The status item showing the door's current state.
 		/// </summary>
@@ -71,7 +63,7 @@ namespace PeterHan.AirlockDoor {
 		/// crash that the stock Door has if it is loaded too early.
 		/// </summary>
 		private static void StaticInit() {
-			doorControlState = NEW_STATUS_ITEM.Invoke("CurrentDoorControlState", "BUILDING",
+			doorControlState = new StatusItem("CurrentDoorControlState", "BUILDING",
 				"", StatusItem.IconType.Info, NotificationType.Neutral, false, OverlayModes.
 				None.ID);
 			doorControlState.resolveStringCallback = (str, data) => {
@@ -80,7 +72,7 @@ namespace PeterHan.AirlockDoor {
 					"STRINGS.BUILDING.STATUSITEMS.CURRENTDOORCONTROLSTATE." + (locked ?
 					"LOCKED" : "AUTO")));
 			};
-			storedCharge = NEW_STATUS_ITEM.Invoke("AirlockStoredCharge", "BUILDING", "",
+			storedCharge = new StatusItem("AirlockStoredCharge", "BUILDING", "",
 				StatusItem.IconType.Info, NotificationType.Neutral, false, OverlayModes.None.
 				ID);
 			storedCharge.resolveStringCallback = (str, data) => {

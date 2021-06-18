@@ -20,6 +20,7 @@ using HarmonyLib;
 using KMod;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace PeterHan.DebugNotIncluded {
@@ -35,11 +36,6 @@ namespace PeterHan.DebugNotIncluded {
 		public static ModDebugRegistry Instance { get; } = new ModDebugRegistry();
 
 		/// <summary>
-		/// The Harmony instance used by this mod.
-		/// </summary>
-		internal Harmony DebugInstance { get; }
-
-		/// <summary>
 		/// Stores debug information about each mod. Keyed by label.
 		/// </summary>
 		private readonly ConcurrentDictionary<string, ModDebugInfo> debugInfo;
@@ -50,7 +46,6 @@ namespace PeterHan.DebugNotIncluded {
 		private readonly ConcurrentDictionary<string, ModDebugInfo> modAssemblies;
 
 		private ModDebugRegistry() {
-			DebugInstance = new Harmony("DebugNotIncluded");
 			debugInfo = new ConcurrentDictionary<string, ModDebugInfo>(4, 256);
 			modAssemblies = new ConcurrentDictionary<string, ModDebugInfo>(4, 256);
 		}
@@ -86,7 +81,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// <returns>The debug information about that mod.</returns>
 		internal ModDebugInfo GetDebugInfo(Mod mod) {
 			if (mod == null)
-				throw new ArgumentNullException("mod");
+				throw new ArgumentNullException(nameof(mod));
 			return debugInfo.GetOrAdd(ModDebugInfo.GetIdentifier(mod), (_) =>
 				new ModDebugInfo(mod));
 		}
@@ -104,16 +99,30 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
+		/// Registers assemblies for their particular mod.
+		/// </summary>
+		internal void Populate(IReadOnlyCollection<Mod> allMods) {
+			foreach (var mod in allMods) {
+				var assemblies = mod.loaded_mod_data?.dlls;
+				if (assemblies != null)
+					foreach (var assembly in assemblies)
+						RegisterAssembly(assembly, GetDebugInfo(mod));
+			}
+		}
+
+		/// <summary>
 		/// Registers an assembly as loaded by a particular mod.
 		/// </summary>
 		/// <param name="assembly">The assembly to register.</param>
 		/// <param name="owner">The owning mod.</param>
-		internal void RegisterModAssembly(Assembly assembly, ModDebugInfo owner) {
+		internal void RegisterAssembly(Assembly assembly, ModDebugInfo owner) {
 			if (assembly == null)
-				throw new ArgumentNullException("assembly");
+				throw new ArgumentNullException(nameof(assembly));
+			if (owner == null)
+				throw new ArgumentNullException(nameof(owner));
 			string fullName = assembly.FullName;
-			ModDebugInfo oldMod;
-			if ((oldMod = modAssemblies.GetOrAdd(fullName, owner)) != owner) {
+			var oldMod = modAssemblies.GetOrAdd(fullName, owner);
+			if (oldMod != owner) {
 				// Possible if multiple mods include the same dependency DLL
 				DebugLogger.LogDebug("Assembly \"{0}\" is used by multiple mods:", fullName);
 				DebugLogger.LogDebug("First loaded by {0} (used), also loaded by {1} (ignored)",

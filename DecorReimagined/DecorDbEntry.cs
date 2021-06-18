@@ -17,11 +17,11 @@
  */
 
 using Newtonsoft.Json;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 
 namespace ReimaginationTeam.DecorRework {
-	/// <summary> 
-	/// A database 
+	/// <summary>
+	/// A database entry for item decor.
 	/// </summary>
 	[JsonObject(MemberSerialization.OptIn)]
 	internal sealed class DecorDbEntry {

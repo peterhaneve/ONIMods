@@ -29,7 +29,7 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// The margin around dialog buttons.
 		/// </summary>
-		public static readonly RectOffset BUTTON_MARGIN = new RectOffset(15, 15, 15, 15);
+		public static readonly RectOffset BUTTON_MARGIN = new RectOffset(13, 13, 13, 13);
 
 		/// <summary>
 		/// The margin inside the dialog close button.

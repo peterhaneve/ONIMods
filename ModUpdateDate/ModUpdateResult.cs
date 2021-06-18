@@ -17,7 +17,7 @@
  */
 
 using KMod;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using Steamworks;
 using System;
 

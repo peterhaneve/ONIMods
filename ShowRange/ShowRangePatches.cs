@@ -16,15 +16,15 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
+using HarmonyLib;
+using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.ShowRange {
 	/// <summary>
 	/// Patches which will be applied via annotations for Show Building Ranges.
 	/// </summary>
-	public static class ShowRangePatches {
+	public sealed class ShowRangePatches : KMod.UserMod2 {
 		/// <summary>
 		/// The type name to ignore to avoid a crash with Wall Pumps and Vents.
 		/// </summary>
@@ -73,7 +73,8 @@ namespace PeterHan.ShowRange {
 			existing.Recycle();
 		}
 
-		public static void OnLoad() {
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 		}
 

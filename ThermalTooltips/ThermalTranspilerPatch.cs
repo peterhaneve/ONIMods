@@ -16,10 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
-using PeterHan.PLib.Buildings;
-using System;
+using HarmonyLib;
+using PeterHan.PLib.Core;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -33,7 +31,7 @@ namespace PeterHan.ThermalTooltips {
 		/// <summary>
 		/// The current runtime value of the buildings layer.
 		/// </summary>
-		private static readonly int LAYER_BUILDINGS = (int)PBuilding.GetObjectLayer(nameof(
+		private static readonly int LAYER_BUILDINGS = (int)PGameUtils.GetObjectLayer(nameof(
 			ObjectLayer.Building), ObjectLayer.Building);
 
 		/// <summary>

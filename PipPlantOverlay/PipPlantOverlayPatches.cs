@@ -16,14 +16,15 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
-using PeterHan.PLib.Datafiles;
+using HarmonyLib;
+using PeterHan.PLib.Actions;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
 using PeterHan.PLib.Detours;
+using PeterHan.PLib.PatchManager;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Reflection.Emit;
 using UnityEngine;
 
 using StatusItemOverlays = StatusItem.StatusItemOverlays;
@@ -32,7 +33,7 @@ namespace PeterHan.PipPlantOverlay {
 	/// <summary>
 	/// Patches which will be applied via annotations for Pip Plant Overlay.
 	/// </summary>
-	public static class PipPlantOverlayPatches {
+	public sealed class PipPlantOverlayPatches : KMod.UserMod2 {
 		/// <summary>
 		/// Public and non-public instance methods/constructors/types/fields.
 		/// </summary>
@@ -69,9 +70,6 @@ namespace PeterHan.PipPlantOverlay {
 				// Pip anim is somehow missing?
 				sprite = Assets.GetSprite("overlay_farming");
 			Assets.Sprites.Add(PipPlantOverlayStrings.OVERLAY_ICON, sprite);
-			// Required for compatibility
-			OpenOverlay?.UpdateLocalizedTitle(PipPlantOverlayStrings.INPUT_BINDINGS.ROOT.
-				PIPPLANT);
 			// SPPR fixes the symmetry rule
 			bool ruleFix = PPatchTools.GetTypeSafe("MightyVincent.Patches",
 				"SimplerPipPlantRule") != null;
@@ -129,15 +127,16 @@ namespace PeterHan.PipPlantOverlay {
 			return info;
 		}
 
-		public static void OnLoad() {
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
-			PUtil.RegisterPatchClass(typeof(PipPlantOverlayPatches));
+			new PPatchManager(harmony).RegisterPatchClass(typeof(PipPlantOverlayPatches));
 			LocString.CreateLocStringKeys(typeof(PipPlantOverlayStrings.INPUT_BINDINGS));
 			LocString.CreateLocStringKeys(typeof(PipPlantOverlayStrings.UI));
 			PipPlantOverlayTests.SymmetricalRadius = false;
-			OpenOverlay = PAction.Register(PipPlantOverlayStrings.OVERLAY_ACTION,
-				PipPlantOverlayStrings.INPUT_BINDINGS.ROOT.PIPPLANT);
-			PLocalization.Register();
+			OpenOverlay = new PActionManager().CreateAction(PipPlantOverlayStrings.
+				OVERLAY_ACTION, PipPlantOverlayStrings.INPUT_BINDINGS.ROOT.PIPPLANT);
+			new PLocalization().Register();
 			// If possible, make farming status items appear properly in pip plant mode
 			var overlayBitsField = typeof(StatusItem).GetFieldSafe("overlayBitfieldMap", true);
 			if (overlayBitsField != null && overlayBitsField.GetValue(null) is

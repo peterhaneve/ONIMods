@@ -17,7 +17,7 @@
  */
 
 using KMod;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using PeterHan.PLib.Options;
 using Steamworks;
@@ -95,7 +95,7 @@ namespace PeterHan.ModUpdateDate {
 				foreach (var info in remove)
 					existing.Remove(info);
 				remove.Recycle();
-				POptions.WriteSettingsForAssembly(settings);
+				POptions.WriteSettings(settings);
 			}
 		}
 
@@ -180,7 +180,7 @@ namespace PeterHan.ModUpdateDate {
 				} else
 					info.LastUpdated = lastUpdated.Ticks;
 				info.Status = ModUpdateStatus.PendingUpdate;
-				POptions.WriteSettingsForAssembly(settings);
+				POptions.WriteSettings(settings);
 			}
 		}
 

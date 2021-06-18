@@ -38,22 +38,16 @@ namespace ReimaginationTeam.DecorRework {
 		private BuildingHP breakStatus;
 
 		/// <summary>
-		/// Monitors manual building disabled.
-		/// </summary>
-		[MyCmpGet]
-		private BuildingEnabledButton disableStatus;
-
-		/// <summary>
-		/// Monitors building entombment.
-		/// </summary>
-		[MyCmpGet]
-		private Structure entombStatus;
-
-		/// <summary>
 		/// Monitors status modifiers like "glum".
 		/// </summary>
 		[MyCmpGet]
 		private Klei.AI.Modifiers glumStatus;
+
+		/// <summary>
+		/// Monitors building disablement such as flooding, entombment, or floating in midair.
+		/// </summary>
+		[MyCmpGet]
+		private Operational operational;
 
 		/// <summary>
 		/// The ID of this object.
@@ -194,9 +188,8 @@ namespace ReimaginationTeam.DecorRework {
 			var happiness = glumStatus?.attributes?.Get(DecorCellManager.Instance.
 				HappinessAttribute);
 			// Entombed/disabled = 0 decor, broken = use value in DecorTuning for broken
-			bool disabled = (entombStatus != null && entombStatus.IsEntombed()) ||
-				(disableStatus != null && !disableStatus.IsEnabled) || (happiness != null &&
-				happiness.GetTotalValue() < 0.0f);
+			bool disabled = (operational != null && !operational.IsOperational) ||
+				(happiness != null && happiness.GetTotalValue() < 0.0f);
 			bool broken = breakStatus != null && breakStatus.IsBroken;
 			RefreshCells(broken, disabled);
 			// Handle rooms which require an item with 20 decor: has to actually be functional

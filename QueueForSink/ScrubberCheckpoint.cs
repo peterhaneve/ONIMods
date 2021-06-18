@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.Buildings;
+using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.QueueForSinks {
@@ -33,7 +33,7 @@ namespace PeterHan.QueueForSinks {
 		private readonly int buildingLayer;
 
 		public ScrubberCheckpoint() : base() {
-			buildingLayer = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.Building),
+			buildingLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Building),
 				ObjectLayer.Building);
 		}
 

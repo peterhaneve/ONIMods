@@ -17,7 +17,7 @@
  */
 
 using Newtonsoft.Json;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
 using System.Collections.Generic;
 
@@ -26,7 +26,8 @@ namespace PeterHan.ModUpdateDate {
 	/// The options class for Mod Updater.
 	/// </summary>
 	[JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-	[ModInfo("Mod Updater", "https://github.com/peterhaneve/ONIMods")]
+	[ModInfo("https://github.com/peterhaneve/ONIMods")]
+	[ConfigFile(SharedConfigLocation: true)]
 	[RestartRequired]
 	public sealed class ModUpdateInfo {
 		/// <summary>
@@ -57,8 +58,7 @@ namespace PeterHan.ModUpdateDate {
 		/// Loads the settings for this mod.
 		/// </summary>
 		internal static void LoadSettings() {
-			Settings = POptions.ReadSettingsForAssembly<ModUpdateInfo>() ??
-				new ModUpdateInfo();
+			Settings = POptions.ReadSettings<ModUpdateInfo>() ?? new ModUpdateInfo();
 		}
 
 		/// <summary>

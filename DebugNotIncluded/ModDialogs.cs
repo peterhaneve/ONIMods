@@ -19,6 +19,7 @@
 using HarmonyLib;
 using KMod;
 using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.UI;
 using System;
@@ -68,7 +69,8 @@ namespace PeterHan.DebugNotIncluded {
 			handler.UpdateCheckedState();
 #endif
 			// Current PLib version
-			string version = PSharedData.GetData<string>("PLib.Version");
+			string version = PRegistry.Instance.GetLatestVersion(
+				"PeterHan.PLib.Core.PLibCorePatches")?.Version?.ToString() ?? "Unknown";
 			string name = ModDebugRegistry.Instance.OwnerOfAssembly(DebugNotIncludedPatches.
 				RunningPLibAssembly)?.ModName ?? "Unknown";
 			new PLabel("PLibVersion") {
@@ -96,7 +98,7 @@ namespace PeterHan.DebugNotIncluded {
 				supported[i] = UI.MODSSCREEN.GetLocalizedName(supported[i].Trim());
 			tooltip.AppendFormat(message, string.IsNullOrEmpty(relPath) ? UI.MODSSCREEN.
 				LABEL_ARCHIVED_VERSION_DEFAULT.ToString() : relPath, supported.Join(", "),
-				info.lastWorkingBuild);
+				info.lastWorkingBuild, info.APIVersion);
 		}
 
 		/// <summary>
@@ -131,25 +133,6 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
-		/// Blames the mod which failed using a popup message.
-		/// </summary>
-		/// <param name="parent">The parent of the dialog.</param>
-		internal static void BlameFailedMod(GameObject parent) {
-			string blame;
-			var mod = ModLoadHandler.CrashingMod;
-			if (mod == null)
-				blame = UI.LOADERRORDIALOG.UNKNOWN;
-			else
-				blame = string.Format(UI.LOADERRORDIALOG.BLAME, mod.ModName);
-			// All mods will have "restart required" and/or "active during crash"
-			Manager.Dialog(parent, STRINGS.UI.FRONTEND.MOD_DIALOGS.MOD_ERRORS_ON_BOOT.TITLE,
-				string.Format(UI.LOADERRORDIALOG.TEXT, blame),
-				UI.LOADERRORDIALOG.DISABLEMOD, () => DisableAndRestart(mod),
-				STRINGS.UI.FRONTEND.MOD_DIALOGS.RESTART.CANCEL, delegate { },
-				UI.LOADERRORDIALOG.OPENLOG, DebugUtils.OpenOutputLog);
-		}
-
-		/// <summary>
 		/// Checks to see if Debug Not Included is the first enabled mod. If not, asks the
 		/// user to do so, later, or suppress dialog.
 		/// </summary>
@@ -176,12 +159,18 @@ namespace PeterHan.DebugNotIncluded {
 		/// <summary>
 		/// Adds buttons to a mod entry to move the mod around.
 		/// </summary>
-		/// <param name="modEntry">The mod entry to modify.</param>
+		/// <param name="displayedMod">The mod entry to modify.</param>
 		/// <param name="instance">The Mods screen that is the parent of these entries.</param>
-		internal static void ConfigureRowInstance(Traverse modEntry, ModsScreen instance) {
-			int index = modEntry.GetField<int>("mod_index");
-			var refs = modEntry.GetField<RectTransform>("rect_transform")?.gameObject.
-				GetComponentSafe<HierarchyReferences>();
+		internal static void ConfigureRowInstance(object displayedMod, ModsScreen instance) {
+			if (displayedMod == null)
+				throw new ArgumentNullException(nameof(displayedMod));
+			var type = displayedMod.GetType();
+			if (!PPatchTools.TryGetFieldValue(displayedMod, "mod_index", out int index))
+				throw new ArgumentException("Unable to get mod index");
+			if (!PPatchTools.TryGetFieldValue(displayedMod, "rect_transform",
+					out Transform transform))
+				throw new ArgumentException("Unable to get rect transform");
+			var refs = transform.gameObject.GetComponentSafe<HierarchyReferences>();
 			KButton button;
 			// "More mod actions"
 			if (refs != null && (button = refs.GetReference<KButton>(REF_MORE)) != null) {
@@ -236,7 +225,7 @@ namespace PeterHan.DebugNotIncluded {
 		private static void DisableFirstModCheck() {
 			var instance = DebugNotIncludedOptions.Instance;
 			instance.SkipFirstModCheck = true;
-			POptions.WriteSettingsForAssembly(instance);
+			POptions.WriteSettings(instance);
 		}
 
 		/// <summary>
@@ -320,7 +309,7 @@ namespace PeterHan.DebugNotIncluded {
 					if (mods[i].label.Match(target.label))
 						oldIndex = i;
 				if (oldIndex > 0) {
-					manager.Reinsert(oldIndex, 0, manager);
+					manager.Reinsert(oldIndex, 0, false, manager);
 					manager.Report(parent);
 				} else
 					DebugLogger.LogWarning("Unable to move Debug Not Included to top");
@@ -373,7 +362,9 @@ namespace PeterHan.DebugNotIncluded {
 					var isEnabled = ListPool<string, ModActionDelegates>.Allocate();
 					var thisMod = DebugNotIncludedPatches.ThisMod;
 					var lc = modInfo.loaded_content;
-					tooltip.AppendFormat(UI.MODSSCREEN.LABEL_DESCRIPTION, modInfo.label.id);
+					string staticID = modInfo.staticID;
+					tooltip.AppendFormat(UI.MODSSCREEN.LABEL_DESCRIPTION, modInfo.label.id,
+						string.IsNullOrEmpty(staticID) ? "-" : staticID);
 					// Which DLCs use it?
 					foreach (var dlcID in DlcManager.RELEASE_ORDER)
 						if (modInfo.IsEnabledForDlc(dlcID))

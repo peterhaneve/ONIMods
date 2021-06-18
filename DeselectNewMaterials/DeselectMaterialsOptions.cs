@@ -17,13 +17,13 @@
  */
 
 using Newtonsoft.Json;
-using PeterHan.PLib;
+using PeterHan.PLib.Options;
 
 namespace PeterHan.DeselectNewMaterials {
 	/// <summary>
 	/// The options class used for Deselect New Materials.
 	/// </summary>
-	[ModInfo("Deselect New Materials", "https://github.com/peterhaneve/ONIMods", "preview.png")]
+	[ModInfo("https://github.com/peterhaneve/ONIMods", "preview.png")]
 	[JsonObject(MemberSerialization.OptIn)]
 	public sealed class DeselectMaterialsOptions {
 		[Option("Food Storage Accepts By Default", "Sets the default setting on Ration Boxes and Refrigerators to Accepts New Materials.")]
@@ -35,7 +35,7 @@ namespace PeterHan.DeselectNewMaterials {
 		}
 
 		public override string ToString() {
-			return "DeselectMaterialsOptions[ignoreFood={0}]".F(IgnoreFoodBoxes);
+			return string.Format("DeselectMaterialsOptions[ignoreFood={0}]", IgnoreFoodBoxes);
 		}
 	}
 }

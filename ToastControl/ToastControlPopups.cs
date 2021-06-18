@@ -16,8 +16,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
+using PeterHan.PLib.PatchManager;
 using System;
 using System.Collections.Generic;
 
@@ -92,7 +93,7 @@ namespace PeterHan.ToastControl {
 		/// </summary>
 		[PLibMethod(RunAt.OnStartGame)]
 		public static void ReloadOptions() {
-			var newOptions = POptions.ReadSettingsForAssembly<ToastControlOptions>();
+			var newOptions = POptions.ReadSettings<ToastControlOptions>();
 			if (newOptions != null) {
 				PUtil.LogDebug("Reloaded options for Popup Control");
 				Options = newOptions;

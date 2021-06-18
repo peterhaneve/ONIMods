@@ -17,7 +17,8 @@
  */
 
 using Klei.AI;
-using PeterHan.PLib;
+using PeterHan.PLib.Actions;
+using PeterHan.PLib.Core;
 
 namespace PeterHan.DebugNotIncluded {
 	/// <summary>
@@ -30,7 +31,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// Handles user menu refresh events system-wide.
 		/// </summary>
 		private static readonly EventSystem.IntraObjectHandler<InstantGrowable>
-			ON_REFRESH_MENU = PUtil.CreateUserMenuHandler<InstantGrowable>();
+			ON_REFRESH_MENU = PGameUtils.CreateUserMenuHandler<InstantGrowable>();
 
 #pragma warning disable CS0649
 #pragma warning disable IDE0044

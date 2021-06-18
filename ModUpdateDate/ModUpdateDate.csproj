@@ -15,7 +15,7 @@
   <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
     <ArchivedVersionPath>\archived_versions\merged</ArchivedVersionPath>
     <SupportedContent>EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>476401</LastWorkingBuild>
+    <LastWorkingBuild>468097</LastWorkingBuild>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Ionic.Zip" HintPath="$(GameFolder)/Ionic.Zip.dll" />

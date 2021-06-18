@@ -34,14 +34,8 @@ namespace PeterHan.NotEnoughTags {
 		private const ulong UPPER_MASK = 0xFFFFFFFF00000000UL;
 
 		// Allows accessing the fifth/seventh bit of TagBits without an instance.
-		// TODO Vanilla/DLC code
-#if VANILLA
-		internal static readonly IDetouredField<object, ulong> FIFTH_BIT = typeof(TagBits).
-			DetourStructField<ulong>("bits5");
-#else
 		internal static readonly IDetouredField<object, ulong> FIFTH_BIT = typeof(TagBits).
 			DetourStructField<ulong>("bits7");
-#endif
 
 		/// <summary>
 		/// Ands two sets of tag bits and replaces Tag Bits A with the result A & B.

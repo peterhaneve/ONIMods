@@ -16,11 +16,13 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+
+using TTS = PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS;
 
 namespace PeterHan.ThermalTooltips {
 	/// <summary>
@@ -71,9 +73,8 @@ namespace PeterHan.ThermalTooltips {
 			float sum = 0;
 			foreach (var value in values)
 				sum += value;
-			return string.Format(ThermalTooltipsStrings.HEAT_ENERGY, ExtendedThermalTooltip.
-				DoScientific(sum), STRINGS.UI.UNITSUFFIXES.HEAT.KDTU.text.Trim()) +
-				ThermalTooltipsStrings.SUM;
+			return string.Format(TTS.HEAT_ENERGY, ExtendedThermalTooltip.DoScientific(sum),
+				STRINGS.UI.UNITSUFFIXES.HEAT.KDTU.text.Trim()) + TTS.SUM;
 		}
 
 		/// <summary>
@@ -85,9 +86,9 @@ namespace PeterHan.ThermalTooltips {
 			float sum = 0;
 			foreach (var value in values)
 				sum += value;
-			return string.Format(ThermalTooltipsStrings.THERMAL_MASS, ExtendedThermalTooltip.
-				DoScientific(sum), STRINGS.UI.UNITSUFFIXES.HEAT.KDTU.text.Trim(), GameUtil.
-				GetTemperatureUnitSuffix()?.Trim()) + ThermalTooltipsStrings.SUM;
+			return string.Format(TTS.THERMAL_MASS, ExtendedThermalTooltip.DoScientific(sum),
+				STRINGS.UI.UNITSUFFIXES.HEAT.KDTU.text.Trim(), GameUtil.
+				GetTemperatureUnitSuffix()?.Trim()) + TTS.SUM;
 		}
 
 		/// <summary>

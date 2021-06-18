@@ -16,11 +16,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.UI;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -29,9 +28,6 @@ namespace PeterHan.SweepByType {
 	/// A control which allows selection of types.
 	/// </summary>
 	public sealed class TypeSelectControl {
-		// The method to call to check for discovered resources. Varies between DLC and vanilla.
-		private delegate bool ResourceCheckDelegate(Tag category, out HashSet<Tag> found);
-
 		/// <summary>
 		/// The margin around the scrollable area to avoid stomping on the scrollbar.
 		/// </summary>
@@ -152,13 +148,7 @@ namespace PeterHan.SweepByType {
 		/// </summary>
 		private readonly SortedList<Tag, TypeSelectCategory> children;
 
-		/// <summary>
-		/// The discovered resources so far.
-		/// </summary>
-		private ResourceCheckDelegate discovered;
-
 		public TypeSelectControl(bool disableIcons = false) {
-			discovered = null;
 			DisableIcons = disableIcons;
 			// Select/deselect all types
 			var cp = new PPanel("Categories") {
@@ -226,33 +216,6 @@ namespace PeterHan.SweepByType {
 				child.Value.ClearAll();
 		}
 
-		/// <summary>
-		/// Initializes the list of discovered resources, accounting for both DLC and Vanilla.
-		/// </summary>
-		private void InitDiscovered() {
-			Type baseType;
-			object instance;
-			// TODO Vanilla/DLC code
-			if ((baseType = PPatchTools.GetTypeSafe("DiscoveredResources")) == null) {
-				// Vanilla
-				baseType = PPatchTools.GetTypeSafe(nameof(WorldInventory));
-				instance = baseType?.GetProperty("Instance", BindingFlags.Static |
-					BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(null, null);
-			} else {
-				// DLC
-				instance = baseType.GetFieldSafe("Instance", true)?.GetValue(null);
-			}
-#if DEBUG
-			PUtil.LogDebug("Using inventory type: " + (baseType?.Name ?? "None"));
-#endif
-			if (instance != null) {
-				discovered = baseType.CreateDelegate<ResourceCheckDelegate>(
-					"TryGetDiscoveredResourcesFromTag", instance, typeof(Tag), typeof(
-					HashSet<Tag>).MakeByRefType());
-			} else
-				PUtil.LogWarning("Unable to find discovered resource list, no resources will be available to sweep");
-		}
-
 		private void OnCheck(GameObject source, int state) {
 			if (state == PCheckBox.STATE_UNCHECKED)
 				// Clicked when unchecked, check all
@@ -303,9 +266,7 @@ namespace PeterHan.SweepByType {
 		/// Updates the list of available elements.
 		/// </summary>
 		public void Update() {
-			if (discovered == null)
-				InitDiscovered();
-			if (discovered != null) {
+			if (DiscoveredResources.Instance != null) {
 				// Find categories with discovered materials
 				// This is the same logic as used in ResourceCategoryScreen
 				foreach (var category in GameTags.MaterialCategories)
@@ -326,7 +287,8 @@ namespace PeterHan.SweepByType {
 		/// <param name="category">The category to search.</param>
 		/// <param name="overrideName">The name to override the category title</param>
 		private void UpdateCategory(Tag category, string overrideName = null) {
-			if (discovered.Invoke(category, out HashSet<Tag> found) && found.Count > 0) {
+			if (DiscoveredResources.Instance.TryGetDiscoveredResourcesFromTag(category,
+					out HashSet<Tag> found) && found.Count > 0) {
 				// Attempt to add to type select control
 				if (!children.TryGetValue(category, out TypeSelectCategory current)) {
 					current = new TypeSelectCategory(this, category, overrideName);

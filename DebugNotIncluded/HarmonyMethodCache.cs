@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -55,8 +55,8 @@ namespace PeterHan.DebugNotIncluded {
 		private readonly IDictionary<string, ICollection<MethodBase>> cache;
 
 		internal HarmonyMethodCache() {
-			var patched = ModDebugRegistry.Instance.DebugInstance.GetPatchedMethods();
-			cache = new Dictionary<string, ICollection<MethodBase>>(256);
+			var patched = HarmonyLib.Harmony.GetAllPatchedMethods();
+			cache = new Dictionary<string, ICollection<MethodBase>>(512);
 			// Cache the patched methods
 			foreach (var method in patched) {
 				string key = method.DeclaringType.FullName + "." + method.Name;
@@ -64,6 +64,35 @@ namespace PeterHan.DebugNotIncluded {
 					cache[key] = methods = new List<MethodBase>(16);
 				methods.Add(method);
 			}
+		}
+
+		/// <summary>
+		/// Parses the (wrapper dynamic-method) internal name into a method that Harmony can
+		/// target.
+		/// </summary>
+		/// <param name="methodName">The method name as reported by Mono.</param>
+		/// <param name="methodParams">The parameter types.</param>
+		/// <returns>The method that it represents, or null if no matching method could be found.</returns>
+		internal MethodBase ParseDynamicMethod(string methodName, string methodParams) {
+			MethodBase method = null;
+			// Harmony 2 will double up the type name
+			int firstDot = methodName.IndexOf('.');
+			if (firstDot > 0 && firstDot < methodName.Length - 1) {
+				string prefix = methodName.Substring(0, firstDot), suffix = methodName.
+					Substring(firstDot + 1);
+				if (suffix.StartsWith(prefix, StringComparison.InvariantCulture))
+					methodName = suffix;
+			}
+			if (cache.TryGetValue(methodName, out ICollection<MethodBase> methods)) {
+				var typeNames = methodParams.Split(',');
+				int nTypes = typeNames.Length;
+				// Convert each type, strip the spaces between them
+				var paramTypes = new Type[nTypes];
+				for (int i = 0; i < nTypes; i++)
+					paramTypes[i] = typeNames[i].Trim().GetTypeByUnityName();
+				method = DebugUtils.BestEffortMatch(methods, paramTypes);
+			}
+			return method;
 		}
 
 		/// <summary>
@@ -84,16 +113,8 @@ namespace PeterHan.DebugNotIncluded {
 			if (!string.IsNullOrEmpty(internalName)) {
 				var match = DYNAMIC_METHOD.Match(internalName);
 				// Group 0 is the whole string
-				if (match.Success && !string.IsNullOrEmpty(mName = match.Groups[1].Value) &&
-						cache.TryGetValue(mName, out ICollection<MethodBase> methods)) {
-					var typeNames = match.Groups[2].Value.Split(',');
-					int nTypes = typeNames.Length;
-					// Convert each type, strip the spaces between them
-					var paramTypes = new Type[nTypes];
-					for (int i = 0; i < nTypes; i++)
-						paramTypes[i] = typeNames[i].Trim().GetTypeByUnityName();
-					method = DebugUtils.BestEffortMatch(methods, paramTypes);
-				}
+				if (match.Success && !string.IsNullOrEmpty(mName = match.Groups[1].Value))
+					method = ParseDynamicMethod(mName, match.Groups[2].Value);
 				if (method == null) {
 					// All else fails, log the internal name
 					message.Append("  at ");

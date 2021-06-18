@@ -16,8 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
-using PeterHan.PLib.Buildings;
+using PeterHan.PLib.Core;
 using System.Collections.Generic;
 
 namespace PeterHan.AirlockDoor {
@@ -36,7 +35,7 @@ namespace PeterHan.AirlockDoor {
 		private readonly IDictionary<AirlockDoor, DoorRequestType> doors;
 
 		public AirlockDoorTransitionLayer(Navigator navigator) : base(navigator) {
-			buildingLayer = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.Building),
+			buildingLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Building),
 				ObjectLayer.Building);
 			doors = new Dictionary<AirlockDoor, DoorRequestType>(4);
 		}

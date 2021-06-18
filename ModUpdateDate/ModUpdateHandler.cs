@@ -17,7 +17,7 @@
  */
 
 using KMod;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.UI;
 using Steamworks;
 using System;
@@ -120,7 +120,7 @@ namespace PeterHan.ModUpdateDate {
 					COLOR_UPDATED;
 				updButton.ToolTip = tooltip.ToString();
 				// Just before subscription button, and after the Options button
-				PButton.SetButtonEnabled(updButton.AddTo(rowInstance, 3), updated != ModStatus.
+				PButton.SetButtonEnabled(updButton.AddTo(rowInstance, 4), updated != ModStatus.
 					Disabled);
 			}
 		}
@@ -305,24 +305,6 @@ namespace PeterHan.ModUpdateDate {
 		}
 
 		/// <summary>
-		/// Backs up the configuration file for this mod.
-		/// </summary>
-		private void BackupOurConfig() {
-			// Path to our config
-			try {
-				var backup = ExtensionMethods.BackupConfigPath;
-				File.Copy(ExtensionMethods.ConfigPath, backup, true);
-				PUtil.LogDebug("Mod Updater self updating, backing up config file to {0}".F(
-					backup));
-			} catch (IOException) {
-				// I wish for multi catch
-				PUtil.LogWarning("Unable to back up configuration for Mod Updater; some mods may have the wrong status after restart");
-			} catch (UnauthorizedAccessException) {
-				PUtil.LogWarning("Unable to back up configuration for Mod Updater; some mods may have the wrong status after restart");
-			}
-		}
-
-		/// <summary>
 		/// Called when a download completes.
 		/// </summary>
 		/// <param name="result">The downloaded mod information.</param>
@@ -350,17 +332,11 @@ namespace PeterHan.ModUpdateDate {
 					// Mod has been updated
 					mod.status = Mod.Status.ReinstallPending;
 					mod.reinstall_path = active.DownloadPath;
-					PUtil.SaveMods();
-					// Backup our config if needed
-					if (mod.label.Match(ModUpdateDatePatches.ThisMod.label))
-						selfUpdated = true;
+					PGameUtils.SaveMods();
 					// Update the config
 					var when = active.LastSteamUpdate;
-					if (when > System.DateTime.MinValue) {
+					if (when > System.DateTime.MinValue)
 						ModUpdateDetails.UpdateConfigFor(id, when);
-						if (selfUpdated)
-							BackupOurConfig();
-					}
 				}
 				task.Results.Add(status);
 				active = null;

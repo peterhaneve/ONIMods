@@ -17,14 +17,13 @@
  */
 
 using Newtonsoft.Json;
-using PeterHan.PLib;
+using PeterHan.PLib.Options;
 
 namespace PeterHan.ToastControl {
 	/// <summary>
 	/// The options class for Popup Control.
 	/// </summary>
-	[ModInfo("STRINGS.UI.FRONTEND.TOASTCONTROL.NAME", "https://github.com/peterhaneve/ONIMods",
-		collapse: true)]
+	[ModInfo("https://github.com/peterhaneve/ONIMods", collapse: true)]
 	[JsonObject(MemberSerialization = MemberSerialization.OptOut)]
 	public sealed class ToastControlOptions {
 		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.OPTIONS_CAPTION")]

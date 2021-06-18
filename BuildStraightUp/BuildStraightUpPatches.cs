@@ -16,9 +16,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
-using PeterHan.PLib.Buildings;
+using HarmonyLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.PatchManager;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -28,7 +28,7 @@ namespace PeterHan.BuildStraightUp {
 	/// <summary>
 	/// Patches which will be applied via annotations for Build Straight Up.
 	/// </summary>
-	public static class BuildStraightUpPatches {
+	public sealed class BuildStraightUpPatches : KMod.UserMod2 {
 		/// <summary>
 		/// The last building checked.
 		/// </summary>
@@ -38,19 +38,6 @@ namespace PeterHan.BuildStraightUp {
 		/// The number of object layers to check.
 		/// </summary>
 		private static int numObjectLayers;
-
-		public static void OnLoad() {
-			numObjectLayers = (int)PBuilding.GetObjectLayer(nameof(ObjectLayer.NumLayers),
-				ObjectLayer.NumLayers);
-			PUtil.InitLibrary();
-			lastChecked.Reset();
-			PUtil.RegisterPatchClass(typeof(BuildStraightUpPatches));
-		}
-
-		[PLibMethod(RunAt.OnStartGame)]
-		internal static void OnStartGame() {
-			lastChecked.Reset();
-		}
 
 		/// <summary>
 		/// Checks to see if a building can be placed on attachment points.
@@ -157,6 +144,11 @@ namespace PeterHan.BuildStraightUp {
 			return valid;
 		}
 
+		[PLibMethod(RunAt.OnStartGame)]
+		internal static void OnStartGame() {
+			lastChecked.Reset();
+		}
+
 		/// <summary>
 		/// Transpiles the IsAreaClear method to modify the check for attachment points.
 		/// </summary>
@@ -214,6 +206,15 @@ namespace PeterHan.BuildStraightUp {
 					PUtil.LogWarning("Could not transpile {0} - no anchor found!".F(name));
 			}
 			return instructions;
+		}
+
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
+			numObjectLayers = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.NumLayers),
+				ObjectLayer.NumLayers);
+			PUtil.InitLibrary();
+			lastChecked.Reset();
+			new PPatchManager(harmony).RegisterPatchClass(typeof(BuildStraightUpPatches));
 		}
 
 		/// <summary>

@@ -17,8 +17,10 @@
  */
 
 using Database;
-using Harmony;
-using PeterHan.PLib;
+using HarmonyLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Options;
+using PeterHan.PLib.PatchManager;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -35,7 +37,7 @@ namespace PeterHan.StockBugFix {
 	/// <summary>
 	/// Patches which will be applied via annotations for Stock Bug Fix.
 	/// </summary>
-	public static class StockBugsPatches {
+	public sealed class StockBugsPatches : KMod.UserMod2 {
 		/// <summary>
 		/// Base divisor is 10000, so 6000/10000 = 0.6 priority.
 		/// </summary>
@@ -91,14 +93,14 @@ namespace PeterHan.StockBugFix {
 		}
 
 		[PLibMethod(RunAt.AfterModsLoad)]
-		internal static void FixDiggable(HarmonyInstance instance) {
+		internal static void FixDiggable(Harmony instance) {
 			const string BUG_KEY = "Bugs.DisableNeutroniumDig";
-			if (!StockBugFixOptions.Instance.AllowNeutroniumDig && !PSharedData.GetData<bool>(
+			if (!StockBugFixOptions.Instance.AllowNeutroniumDig && !PRegistry.GetData<bool>(
 					BUG_KEY)) {
 #if DEBUG
 				PUtil.LogDebug("Disabling Neutronium digging");
 #endif
-				PSharedData.PutData(BUG_KEY, true);
+				PRegistry.PutData(BUG_KEY, true);
 				instance.Patch(typeof(Diggable).GetMethodSafe("OnSolidChanged", false,
 					PPatchTools.AnyArguments), prefix: new HarmonyMethod(
 					typeof(StockBugsPatches), nameof(PrefixSolidChanged)));
@@ -143,29 +145,6 @@ namespace PeterHan.StockBugFix {
 			return cell;
 		}
 
-		public static void PostPatch(HarmonyInstance instance) {
-			var steamMod = PPatchTools.GetTypeSafe("KMod.Steam");
-			const string BUG_KEY = "Bugs.ModUpdateRace";
-			PUtil.InitLibrary();
-			PUtil.RegisterPatchClass(typeof(StockBugsPatches));
-#if false
-			PUtil.RegisterPatchClass(typeof(SweepFixPatches));
-#endif
-			if (steamMod != null && !PSharedData.GetData<bool>(BUG_KEY)) {
-#if DEBUG
-				PUtil.LogDebug("Transpiling Steam.UpdateMods()");
-#endif
-				// Transpile UpdateMods only for Steam versions (not EGS)
-				PSharedData.PutData(BUG_KEY, true);
-				instance.Patch(steamMod.GetMethodSafe("UpdateMods", false, PPatchTools.
-					AnyArguments), transpiler: new HarmonyMethod(typeof(StockBugsPatches),
-					nameof(TranspileUpdateMods)));
-				instance.Patch(typeof(MainMenu).GetMethodSafe("Update", false), postfix:
-					new HarmonyMethod(typeof(StockBugsPatches), nameof(PostfixMenuUpdate)));
-			}
-			PSharedData.PutData("Bugs.FishReleaseCount", true);
-		}
-
 		/// <summary>
 		/// Applied to Diggable to cancel the chore if neutronium digging is not allowed.
 		/// </summary>
@@ -202,6 +181,32 @@ namespace PeterHan.StockBugFix {
 					QueuedReportManager.QueueDelayedSanitize), true, typeof(KMod.Manager),
 					typeof(GameObject)) }
 			});
+		}
+
+		public override void OnLoad(Harmony instance) {
+			base.OnLoad(instance);
+			var steamMod = PPatchTools.GetTypeSafe("KMod.Steam");
+			var pm = new PPatchManager(instance);
+			const string BUG_KEY = "Bugs.ModUpdateRace";
+			PUtil.InitLibrary();
+			pm.RegisterPatchClass(typeof(StockBugsPatches));
+#if false
+			pm.RegisterPatchClass(typeof(SweepFixPatches));
+#endif
+			if (steamMod != null && !PRegistry.GetData<bool>(BUG_KEY)) {
+#if DEBUG
+				PUtil.LogDebug("Transpiling Steam.UpdateMods()");
+#endif
+				// Transpile UpdateMods only for Steam versions (not EGS)
+				PRegistry.PutData(BUG_KEY, true);
+				instance.Patch(steamMod.GetMethodSafe("UpdateMods", false, PPatchTools.
+					AnyArguments), transpiler: new HarmonyMethod(typeof(StockBugsPatches),
+					nameof(TranspileUpdateMods)));
+				instance.Patch(typeof(MainMenu).GetMethodSafe("Update", false), postfix:
+					new HarmonyMethod(typeof(StockBugsPatches), nameof(PostfixMenuUpdate)));
+			}
+			PRegistry.PutData("Bugs.FishReleaseCount", true);
+			new POptions().RegisterOptions(typeof(StockBugFixOptions));
 		}
 
 		/// <summary>
@@ -395,19 +400,8 @@ namespace PeterHan.StockBugFix {
 		/// <summary>
 		/// Applied to HoverTextHelper to fix the integer overflow error on huge masses.
 		/// </summary>
-		[HarmonyPatch]
+		[HarmonyPatch(typeof(HoverTextHelper), "MassStringsReadOnly")]
 		public static class MassStringsReadOnly_Patch {
-			private const string METHOD = "MassStringsReadOnly";
-
-			internal static MethodBase TargetMethod() {
-				// Target HoverTextHelper in DLC, and WorldInspector in vanilla
-				// TODO Vanilla/DLC code
-				var type = PPatchTools.GetTypeSafe("HoverTextHelper");
-				if (type == null)
-					type = PPatchTools.GetTypeSafe("WorldInspector");
-				return type?.GetMethodSafe(METHOD, true, typeof(int));
-			}
-
 			/// <summary>
 			/// Applied after MassStringsReadOnly runs.
 			/// </summary>

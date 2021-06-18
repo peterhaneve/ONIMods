@@ -16,8 +16,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
+using HarmonyLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.PatchManager;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -25,7 +26,7 @@ namespace PeterHan.FallingSand {
 	/// <summary>
 	/// Patches which will be applied via annotations for Falling Sand.
 	/// </summary>
-	public static class FallingSandPatches {
+	public sealed class FallingSandPatches : KMod.UserMod2 {
 		/// <summary>
 		/// Checks a falling object to see if a dig errand must be placed.
 		/// </summary>
@@ -51,9 +52,10 @@ namespace PeterHan.FallingSand {
 			FallingSandManager.Instance.ClearAll();
 		}
 
-		public static void OnLoad() {
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
-			PUtil.RegisterPatchClass(typeof(FallingSandPatches));
+			new PPatchManager(harmony).RegisterPatchClass(typeof(FallingSandPatches));
 		}
 
 		/// <summary>

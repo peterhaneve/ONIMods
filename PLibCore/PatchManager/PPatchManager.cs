@@ -194,8 +194,10 @@ namespace PeterHan.PLib.PatchManager {
 			if (patches.TryGetValue(when, out PrivateRunList atTime) && atTime != null &&
 					atTime.Count > 0) {
 				string stage = RunAt.ToString(when);
+#if DEBUG
 				PRegistry.LogPatchDebug("Executing {0:D} handler(s) from {1} for stage {2}".F(
 					atTime.Count, Assembly.GetExecutingAssembly().GetNameSafe() ?? "?", stage));
+#endif
 				foreach (var patch in atTime)
 					try {
 						patch.Run(harmony);

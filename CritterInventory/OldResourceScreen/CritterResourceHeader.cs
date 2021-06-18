@@ -17,7 +17,7 @@
  */
 
 #if SPACEDOUT
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using UnityEngine;
 
@@ -77,7 +77,7 @@ namespace PeterHan.CritterInventory.OldResourceScreen {
 			int id = ClusterManager.Instance.activeWorldId;
 			CritterInventoryUtils.GetCritters(id, (creature) => {
 				if (creature.GetCritterType() == type)
-					PUtil.HighlightEntity(creature, color);
+					PGameUtils.HighlightEntity(creature, color);
 			});
 		}
 

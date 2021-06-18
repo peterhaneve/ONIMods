@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using PeterHan.PLib.UI;
 using System;
@@ -39,8 +39,6 @@ namespace PeterHan.FastSave {
 
 		private delegate void CompressContents(BinaryWriter writer, byte[] data, int length);
 
-		private delegate List<string> GetSaveFiles(string save_dir);
-
 		private static readonly IDetouredField<KButtonMenu, IList<ButtonInfo>> BUTTONS =
 			PDetours.DetourField<KButtonMenu, IList<ButtonInfo>>("buttons");
 
@@ -49,9 +47,6 @@ namespace PeterHan.FastSave {
 
 		private static readonly IDetouredField<SaveLoader, bool> COMPRESS_SAVE_DATA =
 			PDetours.DetourField<SaveLoader, bool>("compressSaveData");
-
-		private static readonly GetSaveFiles GET_SAVE_FILES = typeof(SaveLoader).
-			Detour<GetSaveFiles>();
 
 		private static readonly Action<SaveLoader, BinaryWriter> SAVE =
 			typeof(SaveLoader).Detour<Action<SaveLoader, BinaryWriter>>("Save");
@@ -151,16 +146,24 @@ namespace PeterHan.FastSave {
 		/// <summary>
 		/// Cleans up old autosaves.
 		/// </summary>
-		/// <param name="filename">The path to the current save.</param>
-		private void CleanAutosaves(string filename) {
-			if (!Klei.GenericGameSettings.instance.keepAllAutosaves) {
-				string autoSavePath = PUtil.GameVersion > 420700 ? GetActiveAutoSavePath() :
-					Path.GetDirectoryName(filename);
-				// SearchOption.AllDirectories is the default value for Cloud Save Preview
-				var saveFiles = GET_SAVE_FILES.Invoke(autoSavePath);
+		private void CleanAutosaves() {
+			var inst = SaveLoader.Instance;
+			if (!Klei.GenericGameSettings.instance.keepAllAutosaves && inst != null) {
+				string autoSavePath = GetActiveAutoSavePath(), colonyID = inst.GameInfo.
+					colonyGuid.ToString();
+				var autoSaveFiles = ListPool<string, BackgroundAutosave>.Allocate();
 				// Clean up old autosaves and their preview images
-				for (int i = saveFiles.Count - 1; i >= SaveLoader.MAX_AUTOSAVE_FILES - 1; i--) {
-					string autoName = saveFiles[i], autoImage = Path.ChangeExtension(
+				foreach (var candidate in SaveLoader.GetSaveFiles(autoSavePath, true)) {
+					var info = SaveGame.GetFileInfo(candidate.path);
+					if (info != null) {
+						string uniqueID = SaveGame.GetSaveUniqueID(info.second);
+						if (uniqueID == colonyID)
+							autoSaveFiles.Add(candidate.path);
+					}
+				}
+				for (int i = autoSaveFiles.Count - 1; i >= SaveLoader.MAX_AUTOSAVE_FILES - 1;
+						i--) {
+					string autoName = autoSaveFiles[i], autoImage = Path.ChangeExtension(
 						autoName, ".png");
 					try {
 						PUtil.LogDebug("Deleting old autosave: " + autoName);
@@ -177,6 +180,7 @@ namespace PeterHan.FastSave {
 						PUtil.LogExcWarn(e);
 					}
 				}
+				autoSaveFiles.Recycle();
 			}
 		}
 
@@ -189,7 +193,7 @@ namespace PeterHan.FastSave {
 				var stream = data.Stream;
 				PUtil.LogDebug("Background save to: " + data.FileName);
 				stream.Seek(0L, SeekOrigin.Begin);
-				CleanAutosaves(data.FileName);
+				CleanAutosaves();
 				// Write the file header
 				using (var writer = new BinaryWriter(File.Open(data.FileName, FileMode.
 						Create))) {

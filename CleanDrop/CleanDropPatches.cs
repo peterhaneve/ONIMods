@@ -16,15 +16,16 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
+using HarmonyLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.PatchManager;
 using UnityEngine;
 
 namespace PeterHan.CleanDrop {
 	/// <summary>
 	/// Patches which will be applied via annotations for CleanDrop.
 	/// </summary>
-	public static class CleanDropPatches {
+	public sealed class CleanDropPatches : KMod.UserMod2 {
 		/// <summary>
 		/// Creates the drop manager based on the current world size.
 		/// </summary>
@@ -150,9 +151,10 @@ namespace PeterHan.CleanDrop {
 			}
 		}
 
-		public static void OnLoad() {
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
-			PUtil.RegisterPatchClass(typeof(CleanDropPatches));
+			new PPatchManager(harmony).RegisterPatchClass(typeof(CleanDropPatches));
 		}
 
 		/// <summary>

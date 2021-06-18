@@ -16,9 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -46,13 +45,8 @@ namespace PeterHan.NotEnoughTags {
 
 		/// <summary>
 		/// The number of indexes which can be efficiently still used by the base game.
-		/// TODO Vanilla/DLC code
 		/// </summary>
-#if VANILLA
-		public const int VANILLA_LIMIT = 352;
-#else
 		public const int VANILLA_LIMIT = 480;
-#endif
 
 		/// <summary>
 		/// Maps indexes to their tag.

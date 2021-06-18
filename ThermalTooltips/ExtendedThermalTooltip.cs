@@ -16,12 +16,13 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using System;
 using System.Globalization;
 using UnityEngine;
 
 using TEMP_SUFFIXES = STRINGS.UI.UNITSUFFIXES.TEMPERATURE;
+using TTS = PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS;
 
 namespace PeterHan.ThermalTooltips {
 	/// <summary>
@@ -53,12 +54,12 @@ namespace PeterHan.ThermalTooltips {
 				// Reformat by splitting over the "e"
 				int index = defSci.IndexOf('e');
 				if (index > 0 && int.TryParse(defSci.Substring(index + 1), out int exp))
-					formatted = string.Format(ThermalTooltipsStrings.NUM_FORMAT_BIG, defSci.
-						Substring(0, index), exp);
+					formatted = string.Format(TTS.NUM_FORMAT_BIG, defSci.Substring(0, index),
+						exp);
 				else
 					formatted = defSci;
 			} else
-				formatted = value.ToString(ThermalTooltipsStrings.NUM_FORMAT_SMALL);
+				formatted = value.ToString(TTS.NUM_FORMAT_SMALL);
 			return formatted;
 		}
 
@@ -197,14 +198,14 @@ namespace PeterHan.ThermalTooltips {
 			Drawer.DrawIcon(spriteDash);
 			// Thermal mass (mass is in kg so result is in kDTU/C)
 			bicCompat?.Export(BetterInfoCardsCompat.EXPORT_THERMAL_MASS, tMass);
-			Drawer.DrawText(string.Format(ThermalTooltipsStrings.THERMAL_MASS, DoScientific(
-				tMass), kDTU, GameUtil.GetTemperatureUnitSuffix()?.Trim()), Style);
+			Drawer.DrawText(string.Format(TTS.THERMAL_MASS, DoScientific(tMass), kDTU,
+				GameUtil.GetTemperatureUnitSuffix()?.Trim()), Style);
 			Drawer.NewLine();
 			Drawer.DrawIcon(spriteDash);
 			// Heat energy in kDTU
 			bicCompat?.Export(BetterInfoCardsCompat.EXPORT_HEAT_ENERGY, tEnergy);
-			Drawer.DrawText(string.Format(ThermalTooltipsStrings.HEAT_ENERGY, DoScientific(
-				tEnergy), kDTU), Style);
+			Drawer.DrawText(string.Format(TTS.HEAT_ENERGY, DoScientific(tEnergy), kDTU),
+				Style);
 		}
 
 		/// <summary>
@@ -224,8 +225,8 @@ namespace PeterHan.ThermalTooltips {
 				ratio *= 100.0f;
 				if (altElement != null) {
 					// "and <other element>"
-					Drawer.DrawText(string.Format(ThermalTooltipsStrings.AND_JOIN, GameUtil.
-						GetFormattedPercent(100.0f - ratio)), Style);
+					Drawer.DrawText(string.Format(TTS.AND_JOIN, GameUtil.GetFormattedPercent(
+						100.0f - ratio)), Style);
 					DisplayElement(altElement, oldName);
 					Drawer.DrawText(string.Format("[{0}]", GameUtil.GetFormattedPercent(
 						ratio)), Style);
@@ -246,8 +247,8 @@ namespace PeterHan.ThermalTooltips {
 			if (sprite != null)
 				Drawer.DrawIcon(sprite, Color.white, 22);
 			else
-				Drawer.DrawText(ThermalTooltipsStrings.CHANGES, Style);
-			Drawer.DrawText(ThermalTooltipsStrings.TO_JOIN, Style);
+				Drawer.DrawText(TTS.CHANGES, Style);
+			Drawer.DrawText(TTS.TO_JOIN, Style);
 		}
 
 		/// <summary>
@@ -258,25 +259,23 @@ namespace PeterHan.ThermalTooltips {
 		private string GetTemperatureString(float temp) {
 			string result;
 			if (options.AllUnits == true) {
-				string c = ThermalTooltipsStrings.TEMP_FORMAT.F(GameUtil.
-					GetTemperatureConvertedFromKelvin(temp, GameUtil.TemperatureUnit.
-					Celsius), TEMP_SUFFIXES.CELSIUS);
-				string f = ThermalTooltipsStrings.TEMP_FORMAT.F(GameUtil.
-					GetTemperatureConvertedFromKelvin(temp, GameUtil.TemperatureUnit.
-					Fahrenheit), TEMP_SUFFIXES.FAHRENHEIT);
-				string k = ThermalTooltipsStrings.TEMP_FORMAT.F(temp, TEMP_SUFFIXES.KELVIN);
+				string c = TTS.TEMP_FORMAT.F(GameUtil.GetTemperatureConvertedFromKelvin(temp,
+					GameUtil.TemperatureUnit.Celsius), TEMP_SUFFIXES.CELSIUS);
+				string f = TTS.TEMP_FORMAT.F(GameUtil.GetTemperatureConvertedFromKelvin(temp,
+					GameUtil.TemperatureUnit.Fahrenheit), TEMP_SUFFIXES.FAHRENHEIT);
+				string k = TTS.TEMP_FORMAT.F(temp, TEMP_SUFFIXES.KELVIN);
 				// Put the user preferred temperature first
 				switch (GameUtil.temperatureUnit) {
 				case GameUtil.TemperatureUnit.Celsius:
-					result = ThermalTooltipsStrings.ALL_TEMPS.F(c, f, k);
+					result = TTS.ALL_TEMPS.F(c, f, k);
 					break;
 				case GameUtil.TemperatureUnit.Fahrenheit:
-					result = ThermalTooltipsStrings.ALL_TEMPS.F(f, c, k);
+					result = TTS.ALL_TEMPS.F(f, c, k);
 					break;
 				case GameUtil.TemperatureUnit.Kelvin:
 				default:
 					// No k, f, c for you!
-					result = ThermalTooltipsStrings.ALL_TEMPS.F(k, c, f);
+					result = TTS.ALL_TEMPS.F(k, c, f);
 					break;
 				}
 			} else
