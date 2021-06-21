@@ -6,8 +6,15 @@
     <RootNamespace>PeterHan.StarmapQueue</RootNamespace>
     <Description>Automatically selects new destinations to be analyzed when the Telescope finishes discovering a starmap destination.</Description>
     <AssemblyVersion>2.1.0.0</AssemblyVersion>
-    <SupportedContent>VANILLA_ID</SupportedContent>
-    <LastWorkingBuild>447213</LastWorkingBuild>
     <Platforms>Vanilla;Spaced Out</Platforms>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
+    <ArchivedVersionPath>\archived_versions\vanilla</ArchivedVersionPath>
+    <SupportedContent>VANILLA_ID</SupportedContent>
+    <LastWorkingBuild>460672</LastWorkingBuild>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
+    <SupportedContent>EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>466411</LastWorkingBuild>
   </PropertyGroup>
 </Project>

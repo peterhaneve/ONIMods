@@ -6,9 +6,9 @@
     <RootNamespace>PeterHan.Claustrophobia</RootNamespace>
     <Description>Issues warnings when Duplicants are stuck in small, confined spaces.</Description>
     <AssemblyVersion>2.2.0.0</AssemblyVersion>
-    <CopyPreview>true</CopyPreview>
     <SupportedContent>VANILLA_ID</SupportedContent>
-    <LastWorkingBuild>447213</LastWorkingBuild>
+    <LastWorkingBuild>460672</LastWorkingBuild>
+    <CopyPreview>true</CopyPreview>
     <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
 </Project>

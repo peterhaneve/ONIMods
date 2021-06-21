@@ -6,8 +6,15 @@
     <RootNamespace>PeterHan.QueueForSinks</RootNamespace>
     <Description>Forces Duplicants to queue up for sinks, wash basins, and ore scrubbers.</Description>
     <AssemblyVersion>2.2.0.0</AssemblyVersion>
-    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>460672</LastWorkingBuild>
     <Platforms>Vanilla;Spaced Out</Platforms>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
+    <ArchivedVersionPath>\archived_versions\vanilla</ArchivedVersionPath>
+    <SupportedContent>VANILLA_ID</SupportedContent>
+    <LastWorkingBuild>460672</LastWorkingBuild>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
+    <SupportedContent>EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>466411</LastWorkingBuild>
   </PropertyGroup>
 </Project>

@@ -6,9 +6,16 @@
     <RootNamespace>PeterHan.Resculpt</RootNamespace>
     <Description>Allows the design of sculpting blocks and paintings to be changed without reconstructing them.</Description>
     <AssemblyVersion>2.2.0.0</AssemblyVersion>
-    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>461084</LastWorkingBuild>
     <Platforms>Vanilla;Spaced Out</Platforms>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
+    <ArchivedVersionPath>\archived_versions\vanilla</ArchivedVersionPath>
+    <SupportedContent>VANILLA_ID</SupportedContent>
+    <LastWorkingBuild>460672</LastWorkingBuild>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
+    <SupportedContent>EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>466411</LastWorkingBuild>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="repaint.png" />

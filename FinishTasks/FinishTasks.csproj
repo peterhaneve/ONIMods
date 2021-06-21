@@ -6,8 +6,15 @@
     <RootNamespace>PeterHan.FinishTasks</RootNamespace>
     <Description>Defines a schedule block type to allow Duplicants to finish their current task but not start new ones.</Description>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>460672</LastWorkingBuild>
     <Platforms>Vanilla;Spaced Out</Platforms>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
+    <ArchivedVersionPath>\archived_versions\vanilla</ArchivedVersionPath>
+    <SupportedContent>VANILLA_ID</SupportedContent>
+    <LastWorkingBuild>460672</LastWorkingBuild>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
+    <SupportedContent>EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>466411</LastWorkingBuild>
   </PropertyGroup>
 </Project>
