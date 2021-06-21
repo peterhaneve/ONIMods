@@ -53,6 +53,7 @@ namespace PeterHan.StockBugFix {
 		/// <returns>true if the trait was excluded, or false if not found.</returns>
 		private static bool ExcludeTraitFromInterest(string traitID, string interestID,
 				List<TraitVal> toSearch) {
+#if SPACEDOUT
 			int n = toSearch.Count;
 			bool found = false;
 			for (int i = 0; i < n; i++) {
@@ -71,6 +72,9 @@ namespace PeterHan.StockBugFix {
 				}
 			}
 			return found;
+#else
+			return false;
+#endif
 		}
 
 		/// <summary>

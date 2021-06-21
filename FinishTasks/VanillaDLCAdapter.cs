@@ -130,11 +130,13 @@ namespace PeterHan.FinishTasks {
 			public override bool IsNormalCondition(GameObject reference) {
 				int id;
 				bool normal = true;
+#if SPACEDOUT
 				if (reference != null && getWorldID != null && (id = getWorldID.Invoke(
 						reference)) >= 0) {
 					var am = ClusterManager.Instance.GetWorld(id);
 					normal = !am.IsRedAlert() && !am.IsYellowAlert();
 				}
+#endif
 				return normal;
 			}
 		}

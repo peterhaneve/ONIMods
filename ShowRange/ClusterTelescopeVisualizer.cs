@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#if SPACEDOUT
 using PeterHan.PLib;
 using PeterHan.PLib.Buildings;
 using System.Collections.Generic;
@@ -77,3 +78,4 @@ namespace PeterHan.ShowRange {
 		}
 	}
 }
+#endif

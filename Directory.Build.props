@@ -4,8 +4,8 @@
   <Import Condition=" Exists('Directory.Build.props.user') " Project="Directory.Build.props.user" />
 
   <ItemDefinitionGroup>
-    <Reference Private="false" />
-    <ProjectReference Private="false" />
+    <Reference Private="False" />
+    <ProjectReference Private="False" />
   </ItemDefinitionGroup>
 
   <ItemGroup Condition=" '$(AssemblyName)' != 'PLib' And '$(AssemblyName)' != 'PLibOptions' ">
@@ -38,7 +38,7 @@
     <Reference Include="UnityEngine.UIModule" HintPath="$(GameFolderSpacedOut)/UnityEngine.UIModule.dll" />
   </ItemGroup>
   <ItemGroup Condition=" '$(UsesPLib)' != 'false' ">
-    <ProjectReference Include="../PLib/PLib.csproj" Private="true"/>
+    <ProjectReference Include="../PLib/PLib.csproj" Private="True"/>
   </ItemGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
     <DefineConstants>SPACEDOUT</DefineConstants>

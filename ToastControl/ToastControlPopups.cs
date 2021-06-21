@@ -64,8 +64,10 @@ namespace PeterHan.ToastControl {
 			{ nameof(MinionResume), (c, t) => Options.SkillPointEarned },
 			{ nameof(Moppable), (c, t) => Options.ElementMopped },
 			{ nameof(MopTool), ShowMopError },
+#if SPACEDOUT
 			{ nameof(NuclearResearchCenterWorkable), ShowResearchGained },
 			{ nameof(ReorderableBuilding), ShowInvalidLocation },
+#endif
 			{ nameof(ResearchCenter), ShowResearchGained },
 			{ nameof(ResearchPointObject), ShowResearchGained },
 			{ nameof(RotPile), ShowFoodRotted },

@@ -162,7 +162,7 @@ namespace PeterHan.PipPlantOverlay {
 		/// <returns>true if it is too hard to plant, or false otherwise.</returns>
 		private static bool IsTooHard(int cell) {
 			var element = Grid.Element[cell];
-			return element == null || element.hardness > GameUtil.Hardness.NEARLY_IMPENETRABLE;
+			return element == null || element.hardness >= GameUtil.Hardness.NEARLY_IMPENETRABLE;
 		}
 
 		/// <summary>

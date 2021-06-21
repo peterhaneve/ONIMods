@@ -33,7 +33,7 @@ lastWorkingBuild: $(LastWorkingBuild)
 
   <Target Name="ILRepack" AfterTargets="Build" Condition=" '$(AssemblyName)' != 'PLib' And '$(AssemblyName)' != 'PLibOptions' ">
     <ItemGroup>
-      <InputAssemblies Include="$(TargetDir)\*.dll"
+      <InputAssemblies Include="$(TargetDir)\PLib*.dll"
         Exclude="**\0Harmony.dll" />
     </ItemGroup>
 

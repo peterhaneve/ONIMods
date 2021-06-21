@@ -18,6 +18,7 @@
 
 using Harmony;
 using PeterHan.PLib;
+using PeterHan.PLib.Buildings;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -30,6 +31,12 @@ namespace PeterHan.ThermalTooltips {
 	/// </summary>
 	internal sealed class ThermalTranspilerPatch {
 		/// <summary>
+		/// The current runtime value of the buildings layer.
+		/// </summary>
+		private static readonly int LAYER_BUILDINGS = (int)PBuilding.GetObjectLayer(nameof(
+			ObjectLayer.Building), ObjectLayer.Building);
+
+		/// <summary>
 		/// Called when thermal information needs to be displayed for buildings and other
 		/// items in game (like debris).
 		/// </summary>
@@ -38,11 +45,16 @@ namespace PeterHan.ThermalTooltips {
 			var instance = ThermalTooltipsPatches.TooltipInstance;
 			var primaryElement = instance?.PrimaryElement;
 			if (primaryElement != null) {
+				float insulation = 1.0f;
+				// Check for insulation
+				var building = primaryElement.GetComponent<Building>();
+				if (building != null)
+					insulation = building.Def.ThermalConductivity;
 				float mass = GetAdjustedMass(primaryElement.gameObject, primaryElement.Mass);
 				instance.Drawer = drawer;
 				instance.Style = style;
 				instance.DisplayThermalInfo(primaryElement.Element, primaryElement.Temperature,
-					mass);
+					mass, insulation);
 				instance.PrimaryElement = null;
 			}
 		}

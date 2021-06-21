@@ -78,7 +78,7 @@ namespace PeterHan.ThermalTooltips {
 		public PrimaryElement PrimaryElement { get; set; }
 
 		/// <summary>
-		/// The text style to use.
+		/// The text style to use in the tooltip.
 		/// </summary>
 		public TextStyleSetting Style { get; set; }
 
@@ -136,20 +136,22 @@ namespace PeterHan.ThermalTooltips {
 		}
 
 		/// <summary>
-		/// Called when thermal information needs to be displayed.
+		/// Displays thermal information in the current tooltip.
 		/// </summary>
 		/// <param name="defaultText">The default temperature text.</param>
 		/// <param name="element">The element that is being displayed.</param>
 		/// <param name="temperature">The element's temperature in K.</param>
 		/// <param name="mass">The element's mass in kg.</param>
-		public void DisplayThermalInfo(Element element, float temperature, float mass) {
+		/// <param name="insulation">The insulation multiplier for thermal conductivity.</param>
+		public void DisplayThermalInfo(Element element, float temperature, float mass,
+				float insulation = 1.0f) {
 			if (Drawer != null && Style != null) {
 				// Ignore SHC <= 0: vacuum, void, neutronium
 				if (element != null && (SimDebugView.Instance.GetMode() == OverlayModes.
 						Temperature.ID || options.OnlyOnThermalOverlay == false) &&
 						element.specificHeatCapacity > 0.0f) {
 					string name = STRINGS.UI.StripLinkFormatting(element.name);
-					DisplayThermalStats(element, temperature, mass);
+					DisplayThermalStats(element, temperature, mass, insulation);
 					var coldElement = element.lowTempTransition;
 					// Freeze to
 					if (coldElement.IsValidTransition(element)) {
@@ -178,7 +180,9 @@ namespace PeterHan.ThermalTooltips {
 		/// <param name="element">The element's material.</param>
 		/// <param name="temp">The temperature in K.</param>
 		/// <param name="mass">The element's mass.</param>
-		private void DisplayThermalStats(Element element, float temp, float mass) {
+		/// <param name="insulation">The insulation multiplier (1.0 is none, 0.01 is insulated tile)</param>
+		private void DisplayThermalStats(Element element, float temp, float mass,
+				float insulation) {
 			float tc = element.thermalConductivity, shc = element.specificHeatCapacity;
 			float tMass = GameUtil.GetDisplaySHC(mass * shc), tEnergy = mass * shc * temp;
 			string kDTU = STRINGS.UI.UNITSUFFIXES.HEAT.KDTU.text.Trim();
@@ -188,7 +192,7 @@ namespace PeterHan.ThermalTooltips {
 			Drawer.DrawIcon(spriteDash);
 			// Thermal conductivity
 			Drawer.DrawText(string.Format(STRINGS.UI.ELEMENTAL.THERMALCONDUCTIVITY.NAME,
-				GameUtil.GetFormattedThermalConductivity(tc)), Style);
+				GameUtil.GetFormattedThermalConductivity(tc * insulation)), Style);
 			Drawer.NewLine();
 			Drawer.DrawIcon(spriteDash);
 			// Thermal mass (mass is in kg so result is in kDTU/C)
