@@ -41,7 +41,11 @@ namespace PeterHan.MoreAchievements.Criteria {
 			beenTo = new HashSet<int>();
 		}
 
+#if VANILLA
+		public override void Deserialize(IReader reader) {
+#else
 		public void Deserialize(IReader reader) {
+#endif
 			int visited = Math.Max(0, reader.ReadInt32());
 			required = int.MaxValue;
 			// Somehow this can be constructed without executing its constructor!!!

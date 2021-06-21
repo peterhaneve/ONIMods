@@ -7,7 +7,7 @@
     <Description>Shows the range of buildings such as the Pump, Deodorizer, Space Scanner, and Telescope.</Description>
     <AssemblyVersion>2.2.0.0</AssemblyVersion>
     <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>447213</LastWorkingBuild>
+    <LastWorkingBuild>460672</LastWorkingBuild>
     <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
 </Project>

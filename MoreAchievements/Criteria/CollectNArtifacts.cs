@@ -40,7 +40,11 @@ namespace PeterHan.MoreAchievements.Criteria {
 			this.required = Math.Max(1, required);
 		}
 
+#if VANILLA
+		public override void Deserialize(IReader reader) {
+#else
 		public void Deserialize(IReader reader) {
+#endif
 			obtained = 0;
 			required = Math.Max(1, reader.ReadInt32());
 		}

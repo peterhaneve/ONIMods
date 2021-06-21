@@ -49,7 +49,11 @@ namespace PeterHan.MoreAchievements.Criteria {
 				overloaded = true;
 		}
 
+#if VANILLA
+		public override void Deserialize(IReader reader) {
+#else
 		public void Deserialize(IReader reader) {
+#endif
 			type = (Wire.WattageRating)reader.ReadInt32();
 			overloaded = false;
 		}

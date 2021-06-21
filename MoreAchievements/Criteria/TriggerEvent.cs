@@ -50,7 +50,11 @@ namespace PeterHan.MoreAchievements.Criteria {
 			UpdateDescription();
 		}
 
+#if VANILLA
+		public override void Deserialize(IReader reader) {
+#else
 		public void Deserialize(IReader reader) {
+#endif
 			ID = reader.ReadKleiString();
 			triggered = reader.ReadInt32() != 0;
 			UpdateDescription();

@@ -8,7 +8,7 @@
     <AssemblyVersion>2.4.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
     <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>447213</LastWorkingBuild>
+    <LastWorkingBuild>460672</LastWorkingBuild>
     <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
 </Project>

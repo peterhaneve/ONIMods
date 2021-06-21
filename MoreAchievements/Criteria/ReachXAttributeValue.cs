@@ -50,7 +50,11 @@ namespace PeterHan.MoreAchievements.Criteria {
 			this.required = Math.Max(0.0f, required);
 		}
 
+#if VANILLA
+		public override void Deserialize(IReader reader) {
+#else
 		public void Deserialize(IReader reader) {
+#endif
 			attribute = reader.ReadKleiString();
 			maxValue = 0;
 			required = Math.Max(0.0f, reader.ReadSingle());

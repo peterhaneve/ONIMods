@@ -7,7 +7,7 @@
     <Description>Restores the former colo(u)r of Insulated Pipes and allows configuration of custom colors.</Description>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>447213</LastWorkingBuild>
+    <LastWorkingBuild>460672</LastWorkingBuild>
     <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
 </Project>

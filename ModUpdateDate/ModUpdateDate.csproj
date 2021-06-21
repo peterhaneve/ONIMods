@@ -7,7 +7,7 @@
     <Description>Identifies mods that are not updating and allows them to be manually updated.</Description>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>447213</LastWorkingBuild>
+    <LastWorkingBuild>460672</LastWorkingBuild>
     <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
   <ItemGroup>

@@ -43,7 +43,11 @@ namespace PeterHan.MoreAchievements.Criteria {
 			triggered = false;
 		}
 
+#if VANILLA
+		public override void Deserialize(IReader reader) {
+#else
 		public void Deserialize(IReader reader) {
+#endif
 			cause = reader.ReadKleiString();
 			triggered = reader.ReadInt32() != 0;
 		}

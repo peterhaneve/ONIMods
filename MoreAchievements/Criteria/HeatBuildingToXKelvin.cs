@@ -44,7 +44,11 @@ namespace PeterHan.MoreAchievements.Criteria {
 			maxValue = 0.0f;
 		}
 
+#if VANILLA
+		public override void Deserialize(IReader reader) {
+#else
 		public void Deserialize(IReader reader) {
+#endif
 			maxValue = 0.0f;
 			required = Math.Max(0.0f, reader.ReadSingle());
 		}

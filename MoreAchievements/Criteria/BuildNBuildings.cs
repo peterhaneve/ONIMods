@@ -47,7 +47,11 @@ namespace PeterHan.MoreAchievements.Criteria {
 			built++;
 		}
 
+#if VANILLA
+		public override void Deserialize(IReader reader) {
+#else
 		public void Deserialize(IReader reader) {
+#endif
 			required = Math.Max(reader.ReadInt32(), 1);
 			built = Math.Max(reader.ReadInt32(), 0);
 		}

@@ -42,7 +42,11 @@ namespace PeterHan.MoreAchievements.Criteria {
 			lastDeath = -1;
 		}
 
+#if VANILLA
+		public override void Deserialize(IReader reader) {
+#else
 		public void Deserialize(IReader reader) {
+#endif
 			cycles = Math.Max(1, reader.ReadInt32());
 			lastDeath = Math.Max(-1, reader.ReadInt32());
 		}

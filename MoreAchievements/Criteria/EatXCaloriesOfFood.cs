@@ -44,7 +44,11 @@ namespace PeterHan.MoreAchievements.Criteria {
 			this.foodTag = foodTag;
 		}
 
+#if VANILLA
+		public override void Deserialize(IReader reader) {
+#else
 		public void Deserialize(IReader reader) {
+#endif
 			numCalories = Math.Max(1.0f, reader.ReadSingle());
 			foodTag = reader.ReadKleiString();
 		}

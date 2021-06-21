@@ -7,7 +7,7 @@
     <Description>Allows Rocket and Monument parts to be planned while other parts are still under construction.</Description>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>448420</LastWorkingBuild>
+    <LastWorkingBuild>460672</LastWorkingBuild>
     <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
 </Project>

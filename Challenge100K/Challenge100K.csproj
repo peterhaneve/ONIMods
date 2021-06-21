@@ -6,6 +6,8 @@
     <RootNamespace>PeterHan.Challenge100K</RootNamespace>
     <Description>Can you survive a world with a temperature of 100 K?</Description>
     <AssemblyVersion>2.1.0.0</AssemblyVersion>
+    <SupportedContent>VANILLA_ID</SupportedContent>
+    <LastWorkingBuild>460672</LastWorkingBuild>
     <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
   <ItemGroup>
