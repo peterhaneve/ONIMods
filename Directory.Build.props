@@ -11,31 +11,24 @@
   <ItemGroup Condition=" '$(AssemblyName)' != 'PLib' And '$(AssemblyName)' != 'PLibOptions' ">
     <PackageReference Include="ILRepack.MSBuild.Task" Version="2.0.13" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(Platform)' == 'Vanilla' ">
-    <Reference Include="0Harmony" HintPath="$(GameFolderVanilla)/0Harmony.dll" />
-    <Reference Include="Assembly-CSharp" HintPath="$(GameFolderVanilla)/Assembly-CSharp.dll" />
-    <Reference Include="Assembly-CSharp-firstpass" HintPath="$(GameFolderVanilla)/Assembly-CSharp-firstpass.dll" />
-    <Reference Include="Newtonsoft.Json" HintPath="$(GameFolderVanilla)/Newtonsoft.Json.dll" />
-    <Reference Include="UnityEngine" HintPath="$(GameFolderVanilla)/UnityEngine.dll" />
-    <Reference Include="UnityEngine.CoreModule" HintPath="$(GameFolderVanilla)/UnityEngine.CoreModule.dll" />
-    <Reference Include="UnityEngine.ImageConversionModule" HintPath="$(GameFolderVanilla)/UnityEngine.ImageConversionModule.dll" />
-    <Reference Include="Unity.TextMeshPro" HintPath="$(GameFolderVanilla)/Unity.TextMeshPro.dll" />
-    <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(GameFolderVanilla)/UnityEngine.TextRenderingModule.dll" />
-    <Reference Include="UnityEngine.UI" HintPath="$(GameFolderVanilla)/UnityEngine.UI.dll" />
-    <Reference Include="UnityEngine.UIModule" HintPath="$(GameFolderVanilla)/UnityEngine.UIModule.dll" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(Platform)' == 'Spaced Out' ">
-    <Reference Include="0Harmony" HintPath="$(GameFolderSpacedOut)/0Harmony.dll" />
-    <Reference Include="Assembly-CSharp" HintPath="$(GameFolderSpacedOut)/Assembly-CSharp.dll" />
-    <Reference Include="Assembly-CSharp-firstpass" HintPath="$(GameFolderSpacedOut)/Assembly-CSharp-firstpass.dll" />
-    <Reference Include="Newtonsoft.Json" HintPath="$(GameFolderSpacedOut)/Newtonsoft.Json.dll" />
-    <Reference Include="UnityEngine" HintPath="$(GameFolderSpacedOut)/UnityEngine.dll" />
-    <Reference Include="UnityEngine.CoreModule" HintPath="$(GameFolderSpacedOut)/UnityEngine.CoreModule.dll" />
-    <Reference Include="UnityEngine.ImageConversionModule" HintPath="$(GameFolderSpacedOut)/UnityEngine.ImageConversionModule.dll" />
-    <Reference Include="Unity.TextMeshPro" HintPath="$(GameFolderSpacedOut)/Unity.TextMeshPro.dll" />
-    <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(GameFolderSpacedOut)/UnityEngine.TextRenderingModule.dll" />
-    <Reference Include="UnityEngine.UI" HintPath="$(GameFolderSpacedOut)/UnityEngine.UI.dll" />
-    <Reference Include="UnityEngine.UIModule" HintPath="$(GameFolderSpacedOut)/UnityEngine.UIModule.dll" />
+  <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
+    <GameFolderActive>$(GameFolderVanilla)</GameFolderActive>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' != 'Vanilla' ">
+    <GameFolderActive>$(GameFolderSpacedOut)</GameFolderActive>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="0Harmony" HintPath="$(GameFolderActive)/0Harmony.dll" />
+    <Reference Include="Assembly-CSharp" HintPath="$(GameFolderActive)/Assembly-CSharp.dll" />
+    <Reference Include="Assembly-CSharp-firstpass" HintPath="$(GameFolderActive)/Assembly-CSharp-firstpass.dll" />
+    <Reference Include="Newtonsoft.Json" HintPath="$(GameFolderActive)/Newtonsoft.Json.dll" />
+    <Reference Include="UnityEngine" HintPath="$(GameFolderActive)/UnityEngine.dll" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(GameFolderActive)/UnityEngine.CoreModule.dll" />
+    <Reference Include="UnityEngine.ImageConversionModule" HintPath="$(GameFolderActive)/UnityEngine.ImageConversionModule.dll" />
+    <Reference Include="Unity.TextMeshPro" HintPath="$(GameFolderActive)/Unity.TextMeshPro.dll" />
+    <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(GameFolderActive)/UnityEngine.TextRenderingModule.dll" />
+    <Reference Include="UnityEngine.UI" HintPath="$(GameFolderActive)/UnityEngine.UI.dll" />
+    <Reference Include="UnityEngine.UIModule" HintPath="$(GameFolderActive)/UnityEngine.UIModule.dll" />
   </ItemGroup>
   <ItemGroup Condition=" '$(UsesPLib)' != 'false' ">
     <ProjectReference Include="../PLib/PLib.csproj" Private="True"/>
