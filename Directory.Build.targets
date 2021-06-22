@@ -16,7 +16,7 @@
 
   <Target Name="ClearGameFolderCopyLocal" AfterTargets="ResolveAssemblyReferences">
     <ItemGroup>
-      <ReferenceCopyLocalPaths Remove="$(GameFolder)\*" />
+      <ReferenceCopyLocalPaths Remove="$(GameFolderActive)\*" />
     </ItemGroup>
   </Target>
 
@@ -49,7 +49,7 @@ staticID: PeterHan.$(AssemblyName)
     <ItemGroup Condition=" '$(UsesPLib)' != 'false' ">
       <InputAssemblies Include="$(TargetDir)PLib*.dll" />
     </ItemGroup>
-    <ItemGroup>
+    <ItemGroup Condition=" '$(UsesPLib)' == 'false' ">
       <InputAssemblies Include="$(TargetPath)" />
     </ItemGroup>
 
@@ -60,7 +60,7 @@ staticID: PeterHan.$(AssemblyName)
         OutputAssembly="$(TargetPath)"
         InputAssemblies="@(InputAssemblies)"
         WilcardInputAssemblies="true"
-        WorkingDirectory="$(GameFolder)" />
+        WorkingDirectory="$(GameFolderActive)" />
   </Target>
 
   <Target Name="CopyArtifactsToInstallFolder" AfterTargets="ILRepack" Condition=" '$(DistributeMod)' == 'true' ">
