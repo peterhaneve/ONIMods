@@ -12,7 +12,7 @@
     <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DocumentationFile>bin\Release\PLibUI.xml</DocumentationFile>
+    <DocumentationFile>bin\$(Platform)\Release\PLibUI.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../PLibCore/PLibCore.csproj" Private="true" />

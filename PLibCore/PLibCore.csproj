@@ -14,7 +14,7 @@
     <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DocumentationFile>bin\Release\PLib.xml</DocumentationFile>
+    <DocumentationFile>bin\$(Platform)\Release\PLibCore.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Utils\**" />

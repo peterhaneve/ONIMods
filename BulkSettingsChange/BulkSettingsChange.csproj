@@ -14,8 +14,8 @@
     <LastWorkingBuild>460672</LastWorkingBuild>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
-    <SupportedContent>EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>468097</LastWorkingBuild>
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>469112</LastWorkingBuild>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Placer.png" />

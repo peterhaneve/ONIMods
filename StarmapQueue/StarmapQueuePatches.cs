@@ -16,19 +16,15 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
+using HarmonyLib;
+using PeterHan.PLib.Core;
 using System.Collections.Generic;
 
 namespace PeterHan.StarmapQueue {
 	/// <summary>
 	/// Patches which will be applied via annotations for Starmap Queue.
 	/// </summary>
-	public static class StarmapQueuePatches {
-		public static void OnLoad() {
-			PUtil.InitLibrary();
-		}
-
+	public sealed class StarmapQueuePatches : KMod.UserMod2 {
 		/// <summary>
 		/// The substitute method which queues up the next destination when the old one would
 		/// simply remove the destination. Note that the value of the second parameter is
@@ -72,6 +68,11 @@ namespace PeterHan.StarmapQueue {
 				}
 			}
 			instance.SetStarmapAnalysisDestinationID(toSet);
+		}
+
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
+			PUtil.InitLibrary();
 		}
 
 		/// <summary>

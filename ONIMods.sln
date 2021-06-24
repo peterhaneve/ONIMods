@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLib", "PLib\PLib.csproj", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CritterInventory", "CritterInventory\CritterInventory.csproj", "{0E69A516-4440-4B16-880F-44D8F297600E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Claustrophobia", "Claustrophobia\Claustrophobia.csproj", "{8636B2F7-E6A1-44A3-8927-12C6368C2624}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BulkSettingsChange", "BulkSettingsChange\BulkSettingsChange.csproj", "{7EE6FD5E-3125-4B7B-A05B-51B5A65B2C40}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FallingSand", "FallingSand\FallingSand.csproj", "{E4030A99-A84E-4B60-AF54-926DE71F1A68}"
@@ -129,12 +127,6 @@ Global
 		{0E69A516-4440-4B16-880F-44D8F297600E}.Release|Spaced Out.Build.0 = Release|Spaced Out
 		{0E69A516-4440-4B16-880F-44D8F297600E}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{0E69A516-4440-4B16-880F-44D8F297600E}.Release|Vanilla.Build.0 = Release|Vanilla
-		{8636B2F7-E6A1-44A3-8927-12C6368C2624}.Debug|Spaced Out.ActiveCfg = Debug|Spaced Out
-		{8636B2F7-E6A1-44A3-8927-12C6368C2624}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
-		{8636B2F7-E6A1-44A3-8927-12C6368C2624}.Debug|Vanilla.Build.0 = Debug|Vanilla
-		{8636B2F7-E6A1-44A3-8927-12C6368C2624}.Release|Spaced Out.ActiveCfg = Release|Spaced Out
-		{8636B2F7-E6A1-44A3-8927-12C6368C2624}.Release|Vanilla.ActiveCfg = Release|Vanilla
-		{8636B2F7-E6A1-44A3-8927-12C6368C2624}.Release|Vanilla.Build.0 = Release|Vanilla
 		{7EE6FD5E-3125-4B7B-A05B-51B5A65B2C40}.Debug|Spaced Out.ActiveCfg = Debug|Spaced Out
 		{7EE6FD5E-3125-4B7B-A05B-51B5A65B2C40}.Debug|Spaced Out.Build.0 = Debug|Spaced Out
 		{7EE6FD5E-3125-4B7B-A05B-51B5A65B2C40}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
