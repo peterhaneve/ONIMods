@@ -210,6 +210,7 @@ namespace PeterHan.DebugNotIncluded {
 			// Force class initialization to avoid crashes on the background thread if
 			// an Assert fails later
 			DebugUtils.RegisterUIDebug();
+			new PLib.AVC.PVersionCheck().Register(this, new PLib.AVC.SteamVersionChecker());
 		}
 
 		/// <summary>
