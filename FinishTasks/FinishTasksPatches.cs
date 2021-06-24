@@ -20,7 +20,6 @@ using Database;
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
-using PeterHan.PLib.PatchManager;
 using System.Collections.Generic;
 using UnityEngine;
 

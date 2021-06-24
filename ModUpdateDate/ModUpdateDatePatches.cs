@@ -24,7 +24,6 @@ using PeterHan.PLib.Options;
 using PeterHan.PLib.UI;
 using Steamworks;
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -37,16 +36,6 @@ namespace PeterHan.ModUpdateDate {
 		/// The KMod which describes this mod.
 		/// </summary>
 		internal static Mod ThisMod { get; private set; }
-
-		/// <summary>
-		/// Configures the request to limit the cache time to 1 hour, then sends it.
-		/// </summary>
-		/// <param name="query">The UGC query to send.</param>
-		/// <returns>The API call result of the query.</returns>
-		internal static SteamAPICall_t ConfigureAndSend(UGCQueryHandle_t query) {
-			SteamUGC.SetAllowCachedResponse(query, 3600U);
-			return SteamUGC.SendQueryUGCRequest(query);
-		}
 
 		/// <summary>
 		/// Handles a mod crash and bypasses disabling the mod if it is this mod.
@@ -69,11 +58,13 @@ namespace PeterHan.ModUpdateDate {
 					nameof(OnModCrash)));
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
-			new POptions().RegisterOptions(typeof(ModUpdateInfo));
+			new POptions().RegisterOptions(this, typeof(ModUpdateInfo));
 			LocString.CreateLocStringKeys(typeof(ModUpdateDateStrings.UI));
 			new PLocalization().Register();
 			ModUpdateInfo.LoadSettings();
 			ThisMod = mod;
+			// Shut off AVC
+			PRegistry.PutData("PLib.VersionCheck.ModUpdaterActive", true);
 		}
 
 		/// <summary>
@@ -167,7 +158,8 @@ namespace PeterHan.ModUpdateDate {
 		}
 
 		/// <summary>
-		/// Applied to SteamUGCService to make the update bypass the cache.
+		/// Applied to SteamUGCService to display the number of outdated mods after each mod
+		/// update is checked.
 		/// </summary>
 		[HarmonyPatch(typeof(SteamUGCService), "Update")]
 		public static class SteamUGCService_Update_Patch {
@@ -177,18 +169,6 @@ namespace PeterHan.ModUpdateDate {
 			internal static void Postfix() {
 				if (ModUpdateDetails.ScrubConfig())
 					UpdateMainMenu();
-			}
-
-			/// <summary>
-			/// Transpiles Update to make the request max caching interval 1 hour.
-			/// </summary>
-			internal static IEnumerable<CodeInstruction> Transpiler(
-					IEnumerable<CodeInstruction> method) {
-				var argType = typeof(UGCQueryHandle_t);
-				return PPatchTools.ReplaceMethodCall(method, typeof(SteamUGC).GetMethodSafe(
-					nameof(SteamUGC.SendQueryUGCRequest), true, argType), typeof(
-					ModUpdateDatePatches).GetMethodSafe(nameof(ConfigureAndSend), true,
-					argType));
 			}
 		}
 

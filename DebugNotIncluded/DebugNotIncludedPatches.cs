@@ -194,7 +194,7 @@ namespace PeterHan.DebugNotIncluded {
 			PUtil.InitLibrary();
 			if (DebugNotIncludedOptions.Instance?.DetailedBacktrace ?? true)
 				DebugLogger.InstallExceptionLogger();
-			new POptions().RegisterOptions(typeof(DebugNotIncludedOptions));
+			new POptions().RegisterOptions(this, typeof(DebugNotIncludedOptions));
 
 			LocString.CreateLocStringKeys(typeof(DebugNotIncludedStrings.UI));
 			LocString.CreateLocStringKeys(typeof(DebugNotIncludedStrings.INPUT_BINDINGS));

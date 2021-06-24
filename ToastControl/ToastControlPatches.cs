@@ -131,8 +131,8 @@ namespace PeterHan.ToastControl {
 					// Resolve the type, descending by '+' if needed
 					var type = PPatchTools.GetTypeSafe(types[0]);
 					for (int i = 1; i < n && type != null; i++)
-						type = type.GetNestedType(types[i], BindingFlags.NonPublic |
-							BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+						type = type.GetNestedType(types[i], PPatchTools.BASE_FLAGS |
+							BindingFlags.Instance | BindingFlags.Static);
 					// Access constructor or method
 					if (type == null)
 						PUtil.LogWarning("Unable to find type: " + mSpec);
@@ -226,14 +226,14 @@ namespace PeterHan.ToastControl {
 			try {
 				if (method == ".ctor") {
 					// No way to specify which one
-					var cons = type.GetConstructors(BindingFlags.NonPublic | BindingFlags.
-						Public | BindingFlags.Instance);
+					var cons = type.GetConstructors(PPatchTools.BASE_FLAGS | BindingFlags.
+						Instance);
 					if (cons == null || cons.Length != 1)
 						PUtil.LogWarning("No single constructor found for " + type);
 					else
 						result = cons[0];
 				} else {
-					result = type.GetMethod(method, BindingFlags.Public | BindingFlags.NonPublic |
+					result = type.GetMethod(method, PPatchTools.BASE_FLAGS |
 						BindingFlags.Instance | BindingFlags.Static);
 					if (result == null)
 						PUtil.LogWarning("No match found for {0}.{1}".F(type, method));
@@ -348,7 +348,7 @@ namespace PeterHan.ToastControl {
 			PUtil.InitLibrary();
 			new PLocalization().Register();
 			LocString.CreateLocStringKeys(typeof(ToastControlStrings.UI));
-			new POptions().RegisterOptions(typeof(ToastControlOptions));
+			new POptions().RegisterOptions(this, typeof(ToastControlOptions));
 			new PPatchManager(harmony).RegisterPatchClass(typeof(ToastControlPopups));
 			ToastControlPopups.ReloadOptions();
 			// No default key bind
@@ -440,8 +440,8 @@ namespace PeterHan.ToastControl {
 		[HarmonyPatch]
 		public static class PopFX_Spawn_Patch {
 			internal static MethodBase TargetMethod() {
-				var options = typeof(PopFX).GetMethods(BindingFlags.Public | BindingFlags.
-					NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+				var options = typeof(PopFX).GetMethods(PPatchTools.BASE_FLAGS | BindingFlags.
+					Instance | BindingFlags.DeclaredOnly);
 				MethodBase target = null;
 				// Look for a match that is not KMonoBehaviour.Spawn()
 				foreach (var method in options)

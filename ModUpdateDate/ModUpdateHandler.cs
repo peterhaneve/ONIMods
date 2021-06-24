@@ -17,6 +17,7 @@
  */
 
 using KMod;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.UI;
 using Steamworks;
@@ -57,11 +58,6 @@ namespace PeterHan.ModUpdateDate {
 		/// The checked or warning icon size on the version.
 		/// </summary>
 		private static readonly Vector2 ICON_SIZE = new Vector2(16.0f, 16.0f);
-
-		/// <summary>
-		/// The number of minutes allowed before a mod is considered out of date.
-		/// </summary>
-		internal const double UPDATE_JITTER = 10.0;
 
 		static ModUpdateHandler() {
 			COLOR_OUTDATED = ScriptableObject.CreateInstance<ColorStyleSetting>();
@@ -232,9 +228,9 @@ namespace PeterHan.ModUpdateDate {
 				if (ours != null)
 					ourDate = new System.DateTime(ours.LastUpdated, DateTimeKind.Utc);
 				// Allow some time for download delays etc
-				if (localDate.AddMinutes(UPDATE_JITTER) >= steamDate)
+				if (localDate.AddMinutes(SteamVersionChecker.UPDATE_JITTER) >= steamDate)
 					updated = ModStatus.UpToDate;
-				else if (ourDate.AddMinutes(UPDATE_JITTER) >= steamDate) {
+				else if (ourDate.AddMinutes(SteamVersionChecker.UPDATE_JITTER) >= steamDate) {
 					localDate = ourDate;
 					updated = ModStatus.UpToDateLocal;
 				} else
@@ -268,16 +264,10 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		private ModUpdateTask task;
 
-		/// <summary>
-		/// Whether the mod has force updated itself.
-		/// </summary>
-		private bool selfUpdated;
-		
 		private ModUpdateHandler() {
 			caller = new CallResult<RemoteStorageDownloadUGCResult_t>(OnDownloadComplete);
 			active = null;
 			task = null;
-			selfUpdated = false;
 		}
 
 		/// <summary>

@@ -55,7 +55,7 @@ namespace PeterHan.SweepByType {
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
-			new POptions().RegisterOptions(typeof(SweepByTypeOptions));
+			new POptions().RegisterOptions(this, typeof(SweepByTypeOptions));
 			new PLocalization().Register();
 			Options = null;
 			new PPatchManager(harmony).RegisterPatchClass(typeof(SweepByTypePatches));

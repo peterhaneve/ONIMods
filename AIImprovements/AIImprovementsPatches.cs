@@ -217,7 +217,7 @@ namespace PeterHan.AIImprovements {
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			Options = new AIImprovementsOptionsInstance();
-			new POptions().RegisterOptions(typeof(AIImprovementsOptions));
+			new POptions().RegisterOptions(this, typeof(AIImprovementsOptions));
 			PUtil.InitLibrary();
 			new PPatchManager(harmony).RegisterPatchClass(typeof(AIImprovementsPatches));
 		}

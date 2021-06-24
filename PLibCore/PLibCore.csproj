@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Title>PeterHan.PLib.Core</Title>
-    <AssemblyTitle>PeterHanLib</AssemblyTitle>
+    <Title>PLib Core</Title>
+    <AssemblyTitle>PLib.Core</AssemblyTitle>
     <Version>4.0.0.0</Version>
     <UsesPLib>false</UsesPLib>
     <RootNamespace>PeterHan.PLib.Core</RootNamespace>

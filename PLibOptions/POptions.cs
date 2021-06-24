@@ -224,9 +224,9 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
-		/// Maps mod assemblies to their options.
+		/// Maps mod static IDs to their options.
 		/// </summary>
-		private readonly IDictionary<Assembly, Type> modOptions;
+		private readonly IDictionary<string, Type> modOptions;
 
 		/// <summary>
 		/// Maps mod assemblies to handlers that can fire their options. Only populated in
@@ -237,7 +237,7 @@ namespace PeterHan.PLib.Options {
 		public override Version Version => VERSION;
 
 		public POptions() {
-			modOptions = new Dictionary<Assembly, Type>(8);
+			modOptions = new Dictionary<string, Type>(8);
 			registered = new Dictionary<string, ModOptionsHandler>(32);
 			InstanceData = modOptions;
 		}
@@ -258,11 +258,11 @@ namespace PeterHan.PLib.Options {
 				transform = parent.transform.GetChild(index);
 			if (mods != null && index >= 0 && index < mods.Count && transform != null) {
 				var modSpec = mods[index];
-				string label = modSpec.label.id + "_" + modSpec.label.distribution_platform;
+				string label = modSpec.staticID;
 				if (modSpec.IsEnabledForActiveDlc() && registered.TryGetValue(label,
 						out ModOptionsHandler handler)) {
 #if DEBUG
-					PUtil.LogDebug("Adding options for mod: {0}".F(modSpec.label.id));
+					PUtil.LogDebug("Adding options for mod: {0}".F(modSpec.staticID));
 #endif
 					// Create delegate to open settings dialog
 					new PButton("ModSettingsButton") {
@@ -282,21 +282,21 @@ namespace PeterHan.PLib.Options {
 		public override void Initialize(Harmony plibInstance) {
 			Instance = this;
 
-			var lookup = PUtil.CreateAssemblyToModTable();
 			registered.Clear();
 			foreach (var optionsProvider in PRegistry.Instance.GetAllComponents(ID)) {
-				var options = optionsProvider.GetInstanceData<IDictionary<Assembly, Type>>();
+				var options = optionsProvider.GetInstanceData<IDictionary<string, Type>>();
 				if (options != null)
+					// Map the static ID to the mod's option type and fire the correct handler
 					foreach (var pair in options) {
-						var assembly = pair.Key;
-						if (lookup.TryGetValue(assembly, out KMod.Mod mod))
-							RegisterModOptions(mod, optionsProvider, pair.Value);
+						string label = pair.Key;
+						if (registered.ContainsKey(label))
+							PUtil.LogWarning("Mod {0} already has options registered - only one option type per mod".
+								F(label ?? "?"));
 						else
-							PUtil.LogWarning("No mod found for options type {0}".F(pair.Value.
-								AssemblyQualifiedName));
+							registered.Add(label, new ModOptionsHandler(optionsProvider,
+								pair.Value));
 					}
 			}
-			SetSharedData(lookup);
 
 			plibInstance.Patch(typeof(ModsScreen), "BuildDisplay", postfix: PatchMethod(nameof(
 				BuildDisplay_Postfix)));
@@ -306,50 +306,42 @@ namespace PeterHan.PLib.Options {
 			// POptions is no longer forwarded, show the dialog from the assembly that has the
 			// options type - ignore calls that are not for our mod
 			if (operation == 0 && PPatchTools.TryGetPropertyValue(args, nameof(OpenDialogArgs.
-					OptionsType), out Type forType) && modOptions.ContainsKey(forType.
-					Assembly)) {
-				var dialog = new OptionsDialog(forType);
-				// No close handler = no big deal
-				if (PPatchTools.TryGetPropertyValue(args, nameof(OpenDialogArgs.OnClose),
-						out Action<object> handler))
-					dialog.OnClose = handler;
-				dialog.ShowDialog();
+					OptionsType), out Type forType)) {
+				foreach (var pair in modOptions)
+					// Linear search is not phenomenal, but there is usually only one options
+					// type per instance
+					if (pair.Value == forType) {
+						var dialog = new OptionsDialog(forType);
+						if (PPatchTools.TryGetPropertyValue(args, nameof(OpenDialogArgs.
+								OnClose), out Action<object> handler))
+							dialog.OnClose = handler;
+						dialog.ShowDialog();
+						break;
+					}
 			}
 		}
 
 		/// <summary>
-		/// Registers the options for a particular mod.
+		/// Registers a class as a mod options class. The type is registered for the mod
+		/// instance specified, which is easily available in OnLoad.
 		/// </summary>
-		/// <param name="mod">The mod whose options will be shown.</param>
-		/// <param name="optionsProvider">The POptions instance that can handle the request.</param>
-		/// <param name="forType">The options type which will be displayed.</param>
-		private void RegisterModOptions(KMod.Mod mod, PForwardedComponent optionsProvider,
-				Type forType) {
-			string label = mod.label.id + "_" + mod.label.distribution_platform;
-			if (registered.ContainsKey(label))
-				PUtil.LogWarning("Mod {0} already has options registered - only one option type per mod".
-					F(mod.title ?? "?"));
-			else
-				registered.Add(label, new ModOptionsHandler(optionsProvider, forType));
-		}
-
-		/// <summary>
-		/// Registers a class as a mod options class. The type is registered for the assembly
-		/// defining the options type.
-		/// </summary>
+		/// <param name="mod">The mod for which the type will be registered.</param>
 		/// <param name="optionsType">The class which will represent the options for this mod.</param>
-		public void RegisterOptions(Type optionsType) {
+		public void RegisterOptions(KMod.UserMod2 mod, Type optionsType) {
+			var kmod = mod?.mod;
 			if (optionsType == null)
 				throw new ArgumentNullException(nameof(optionsType));
-			var assembly = optionsType.Assembly;
+			if (kmod == null)
+				throw new ArgumentNullException(nameof(mod));
 			RegisterForForwarding();
-			if (modOptions.TryGetValue(assembly, out Type curType))
-				PUtil.LogWarning("Mod {0} already has options type {1}".F(assembly.
-					GetNameSafe() ?? "?", curType.FullName));
+			string id = kmod.staticID;
+			if (modOptions.TryGetValue(id, out Type curType))
+				PUtil.LogWarning("Mod {0} already has options type {1}".F(id, curType.
+					FullName));
 			else {
-				modOptions.Add(assembly, optionsType);
+				modOptions.Add(id, optionsType);
 				PUtil.LogDebug("Registered mod options class {0} for {1}".F(optionsType.
-					FullName, assembly.GetNameSafe() ?? "?"));
+					FullName, id));
 			}
 		}
 

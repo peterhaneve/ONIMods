@@ -85,7 +85,7 @@ namespace PeterHan.ThermalTooltips {
 			base.OnLoad(harmony);
 			buildingInstance = new BuildThermalTooltip();
 			PUtil.InitLibrary();
-			new POptions().RegisterOptions(typeof(ThermalTooltipsOptions));
+			new POptions().RegisterOptions(this, typeof(ThermalTooltipsOptions));
 			LocString.CreateLocStringKeys(typeof(ThermalTooltipsStrings.UI));
 			new PLocalization().Register();
 			TooltipInstance = null;

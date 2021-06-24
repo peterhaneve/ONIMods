@@ -25,7 +25,7 @@
       <ModInfoFile>$(IntermediateOutputPath)\mod_info.yaml</ModInfoFile>
       <ModInfoFileContent>
 supportedContent: $(SupportedContent)
-lastWorkingBuild: $(LastWorkingBuild)
+minimumSupportedBuild: $(LastWorkingBuild)
 version: $(FileVersion)
 APIVersion: $(APIVersion)
       </ModInfoFileContent>

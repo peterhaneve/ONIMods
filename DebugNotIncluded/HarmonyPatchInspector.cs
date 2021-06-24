@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -44,9 +45,8 @@ namespace PeterHan.DebugNotIncluded {
 		/// <summary>
 		/// Denotes all bindable objects to inspect private types.
 		/// </summary>
-		private const BindingFlags ALL = BindingFlags.Public | BindingFlags.NonPublic |
-			BindingFlags.Static | BindingFlags.Instance | BindingFlags.GetProperty |
-			BindingFlags.SetProperty;
+		private const BindingFlags ALL = PPatchTools.BASE_FLAGS | BindingFlags.Static |
+			BindingFlags.Instance | BindingFlags.GetProperty | BindingFlags.SetProperty;
 
 		/// <summary>
 		/// Checks all types currently loaded for issues.

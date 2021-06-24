@@ -104,7 +104,7 @@ namespace PeterHan.MooReproduction {
 			LocString.CreateLocStringKeys(typeof(MooReproductionStrings.UI));
 			new PLocalization().Register();
 			new PPatchManager(harmony).RegisterPatchClass(typeof(MooReproductionPatches));
-			new POptions().RegisterOptions(typeof(MooReproductionOptions));
+			new POptions().RegisterOptions(this, typeof(MooReproductionOptions));
 		}
 
 		/// <summary>

@@ -33,6 +33,9 @@ namespace PeterHan.PLib.Options {
 	/// </summary>
 	public abstract class OptionsEntry : IOptionsEntry, IComparable<OptionsEntry>,
 			IUIComponent {
+		private const BindingFlags INSTANCE_PUBLIC = BindingFlags.Public | BindingFlags.
+			Instance;
+
 		/// <summary>
 		/// The margins around the control used in each entry.
 		/// </summary>
@@ -64,8 +67,7 @@ namespace PeterHan.PLib.Options {
 		/// <returns>A list of all public properties annotated for options dialogs.</returns>
 		internal static AllOptions BuildOptions(Type forType) {
 			var entries = new SortedList<string, OptionsList>(8);
-			foreach (var prop in forType.GetProperties(BindingFlags.Public | BindingFlags.
-					Instance)) {
+			foreach (var prop in forType.GetProperties(INSTANCE_PUBLIC)) {
 				// Must have the annotation
 				var entry = TryCreateEntry(prop, 0);
 				if (entry != null)
@@ -269,8 +271,7 @@ namespace PeterHan.PLib.Options {
 		public virtual void ReadFrom(object settings) {
 			if (Field != null)
 				try {
-					var prop = settings.GetType().GetProperty(Field, BindingFlags.Public |
-						BindingFlags.Instance);
+					var prop = settings.GetType().GetProperty(Field, INSTANCE_PUBLIC);
 					if (prop != null && prop.CanRead)
 						Value = prop.GetValue(settings, null);
 				} catch (TargetInvocationException e) {
@@ -292,8 +293,7 @@ namespace PeterHan.PLib.Options {
 		public virtual void WriteTo(object settings) {
 			if (Field != null)
 				try {
-					var prop = settings.GetType().GetProperty(Field, BindingFlags.Public |
-						BindingFlags.Instance);
+					var prop = settings.GetType().GetProperty(Field, INSTANCE_PUBLIC);
 					if (prop != null && prop.CanWrite)
 						prop.SetValue(settings, Value, null);
 				} catch (TargetInvocationException e) {

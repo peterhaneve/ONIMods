@@ -77,17 +77,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotEnoughTags", "NotEnoughT
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastTrack", "FastTrack\FastTrack.csproj", "{5031ADAF-C406-4EA0-8003-6C88A2A64802}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoSensorLimits", "NoSensorLimits\NoSensorLimits.csproj", "{136F8525-F65C-4A92-BC9E-2F89ECAFD4E1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NoSensorLimits", "NoSensorLimits\NoSensorLimits.csproj", "{136F8525-F65C-4A92-BC9E-2F89ECAFD4E1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinishTasks", "FinishTasks\FinishTasks.csproj", "{6E8902F8-2969-4A11-B2D2-C8644A00949D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FinishTasks", "FinishTasks\FinishTasks.csproj", "{6E8902F8-2969-4A11-B2D2-C8644A00949D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoSplashScreen", "NoSplashScreen\NoSplashScreen.csproj", "{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MooReproduction", "MooReproduction\MooReproduction.csproj", "{07BE03BD-84A8-4202-82A3-F64829B3D786}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkshopProfiles", "WorkshopProfiles\WorkshopProfiles.csproj", "{E327F5BD-CBF2-47D0-90C6-AE9C56E99B2F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WorkshopProfiles", "WorkshopProfiles\WorkshopProfiles.csproj", "{E327F5BD-CBF2-47D0-90C6-AE9C56E99B2F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PipPlantOverlay", "PipPlantOverlay\PipPlantOverlay.csproj", "{0153F668-C4B3-400B-A4AE-7B736337FDD4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PipPlantOverlay", "PipPlantOverlay\PipPlantOverlay.csproj", "{0153F668-C4B3-400B-A4AE-7B736337FDD4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLibCore", "PLibCore\PLibCore.csproj", "{4603AB9B-32DF-46E2-9B18-8F990EE48859}"
 EndProject
@@ -102,6 +102,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLibBuildings", "PLibBuildings\PLibBuildings.csproj", "{3E3493BE-CA52-4503-9D78-ACD2059FCA29}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLibDatabase", "PLibDatabase\PLibDatabase.csproj", "{E7871310-6906-45FB-8FE4-47582B758644}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLibAVC", "PLibAVC\PLibAVC.csproj", "{769785FD-B0CD-4363-9AD4-100BFF22E205}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -499,6 +501,14 @@ Global
 		{E7871310-6906-45FB-8FE4-47582B758644}.Release|Spaced Out.Build.0 = Release|Spaced Out
 		{E7871310-6906-45FB-8FE4-47582B758644}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{E7871310-6906-45FB-8FE4-47582B758644}.Release|Vanilla.Build.0 = Release|Vanilla
+		{769785FD-B0CD-4363-9AD4-100BFF22E205}.Debug|Spaced Out.ActiveCfg = Debug|Spaced Out
+		{769785FD-B0CD-4363-9AD4-100BFF22E205}.Debug|Spaced Out.Build.0 = Debug|Spaced Out
+		{769785FD-B0CD-4363-9AD4-100BFF22E205}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
+		{769785FD-B0CD-4363-9AD4-100BFF22E205}.Debug|Vanilla.Build.0 = Debug|Vanilla
+		{769785FD-B0CD-4363-9AD4-100BFF22E205}.Release|Spaced Out.ActiveCfg = Release|Spaced Out
+		{769785FD-B0CD-4363-9AD4-100BFF22E205}.Release|Spaced Out.Build.0 = Release|Spaced Out
+		{769785FD-B0CD-4363-9AD4-100BFF22E205}.Release|Vanilla.ActiveCfg = Release|Vanilla
+		{769785FD-B0CD-4363-9AD4-100BFF22E205}.Release|Vanilla.Build.0 = Release|Vanilla
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

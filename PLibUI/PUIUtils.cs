@@ -41,7 +41,7 @@ namespace PeterHan.PLib.UI {
 		private static void AddComponentText(StringBuilder result, Component component) {
 			// Include all fields
 			var fields = component.GetType().GetFields(BindingFlags.DeclaredOnly |
-				BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+				BindingFlags.Instance | PPatchTools.BASE_FLAGS);
 			// Class specific
 			if (component is TMP_Text lt)
 				result.AppendFormat(", Text={0}, Color={1}, Font={2}", lt.text, lt.color,

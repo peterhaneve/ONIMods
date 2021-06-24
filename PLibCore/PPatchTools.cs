@@ -33,7 +33,7 @@ namespace PeterHan.PLib.Core {
 		/// <summary>
 		/// The base binding flags for all reflection methods.
 		/// </summary>
-		internal const BindingFlags BASE_FLAGS = BindingFlags.Public | BindingFlags.NonPublic;
+		public const BindingFlags BASE_FLAGS = BindingFlags.Public | BindingFlags.NonPublic;
 
 		/// <summary>
 		/// Passed to GetMethodSafe to match any method arguments.

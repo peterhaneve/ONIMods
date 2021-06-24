@@ -120,7 +120,7 @@ namespace PeterHan.ThermalTooltips {
 					BIC_ASSEMBLY)?.Detour<RegisterMethodFunc>("AddConverterReflect");
 				var patchType = PPatchTools.GetTypeSafe(BIC_NAMESPACE + "CollectHoverInfo",
 					BIC_ASSEMBLY)?.GetNestedType("GetSelectInfo_Patch", BindingFlags.Static |
-					BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+					BindingFlags.Instance | PPatchTools.BASE_FLAGS);
 				if (patchType != null)
 					exportMethod = patchType.Detour<ExportMethodFunc>("Export");
 			} catch (AmbiguousMatchException e) {

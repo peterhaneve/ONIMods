@@ -31,7 +31,8 @@ namespace PeterHan.ResearchQueue {
 		/// <summary>
 		/// Caches a reference to the mActiveModifiers field of KInputController.
 		/// </summary>
-		private static FieldInfo activeModifiers = null;
+		private static IDetouredField<KInputController, Modifier> ACTIVE_MODIFIERS = PDetours.
+			DetourField<KInputController, Modifier>("mActiveModifiers");
 
 		/// <summary>
 		/// Adds a tech to the research queue.
@@ -44,18 +45,6 @@ namespace PeterHan.ResearchQueue {
 
 		private static readonly IDetouredField<ManagementMenu, ResearchScreen> RESEARCH_SCREEN =
 			PDetours.DetourField<ManagementMenu, ResearchScreen>("researchScreen");
-
-		public override void OnLoad(Harmony harmony) {
-			base.OnLoad(harmony);
-			PUtil.InitLibrary();
-			// Cache a ref to the active modifiers field
-			try {
-				activeModifiers = typeof(KInputController).GetField("mActiveModifiers",
-					BindingFlags.NonPublic | BindingFlags.Instance);
-			} catch (AmbiguousMatchException e) {
-				PUtil.LogException(e);
-			}
-		}
 
 		/// <summary>
 		/// Adds techs to the queue... in the proper order!
@@ -97,8 +86,8 @@ namespace PeterHan.ResearchQueue {
 			var screen = (inst == null) ? null : RESEARCH_SCREEN.Get(inst);
 			var research = Research.Instance;
 			// If SHIFT is down (have to use reflection!)
-			bool shiftDown = activeModifiers != null && (activeModifiers.GetValue(controller)
-				is Modifier mods) && mods == Modifier.Shift, cont = true;
+			bool shiftDown = (ACTIVE_MODIFIERS.Get(controller) & Modifier.Shift) != 0, cont =
+				true;
 			if (research != null && screen != null && !targetTech.IsComplete()) {
 #if DEBUG
 				PUtil.LogDebug("Dequeue tech: " + targetTech.Name);
@@ -129,8 +118,8 @@ namespace PeterHan.ResearchQueue {
 			var research = Research.Instance;
 			string id = targetTech.Id;
 			// If SHIFT is down (have to use reflection!)
-			bool cont = true, shiftDown = activeModifiers != null && (activeModifiers.
-				GetValue(controller) is Modifier mods) && mods == Modifier.Shift;
+			bool cont = true, shiftDown = (ACTIVE_MODIFIERS.Get(controller) & Modifier.
+				Shift) != 0;
 			if (controller != null && research != null && !DebugHandler.InstantBuildMode) {
 #if DEBUG
 				PUtil.LogDebug("Queue tech: " + targetTech.Name);
@@ -189,6 +178,11 @@ namespace PeterHan.ResearchQueue {
 				}
 				techIndex.Recycle();
 			}
+		}
+
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
+			PUtil.InitLibrary();
 		}
 
 		/// <summary>

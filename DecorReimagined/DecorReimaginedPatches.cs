@@ -94,7 +94,7 @@ namespace ReimaginationTeam.DecorRework {
 			PUtil.InitLibrary();
 			Options = new DecorReimaginedOptions();
 			ImaginationLoader.Instance.Register(typeof(DecorReimaginedPatches));
-			new POptions().RegisterOptions(typeof(DecorReimaginedOptions));
+			new POptions().RegisterOptions(this, typeof(DecorReimaginedOptions));
 			new PPatchManager(harmony).RegisterPatchClass(typeof(DecorReimaginedPatches));
 			PatchParks();
 			PatchRecBuildings();

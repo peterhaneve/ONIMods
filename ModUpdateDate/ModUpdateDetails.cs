@@ -17,6 +17,7 @@
  */
 
 using KMod;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using PeterHan.PLib.Options;
@@ -58,7 +59,7 @@ namespace PeterHan.ModUpdateDate {
 				var target = mod.GetLocalLastModified();
 				// Compare date just like the button does
 				if (mod.GetSteamModID().GetGlobalLastModified(out System.DateTime steamTime) &&
-						target.AddMinutes(ModUpdateHandler.UPDATE_JITTER) >= steamTime) {
+						target.AddMinutes(SteamVersionChecker.UPDATE_JITTER) >= steamTime) {
 					PUtil.LogDebug("Mod {0} has been updated by Steam".F(mod.label.title));
 					// Steam fixed up its act
 					remove = true;

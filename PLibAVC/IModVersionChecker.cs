@@ -16,37 +16,27 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using HarmonyLib;
-using PeterHan.PLib.Core;
-using PeterHan.PLib.Options;
-using PeterHan.PLib.PatchManager;
-
-namespace PeterHan.OldPipeColor {
+namespace PeterHan.PLib.AVC {
 	/// <summary>
-	/// Patches which will be applied via annotations for Custom Pipe Colors.
+	/// Implemented by classes which can check the current mod version and detect if it is out
+	/// of date.
 	/// </summary>
-	public sealed class OldPipeColorPatches : KMod.UserMod2 {
-		public override void OnLoad(Harmony harmony) {
-			base.OnLoad(harmony);
-			PUtil.InitLibrary();
-			new PPatchManager(harmony).RegisterPatchClass(typeof(OldPipeColorPatches));
-			new POptions().RegisterOptions(this, typeof(OldPipeColorOptions));
-		}
+	public interface IModVersionChecker {
+		/// <summary>
+		/// The event to subscribe for when the check completes.
+		/// </summary>
+		event PVersionCheck.OnVersionCheckComplete OnVersionCheckCompleted;
 
 		/// <summary>
-		/// Run at game start to alter the pipe colors to the configured colors. The active
-		/// ColorSet is a reference to the options array so changes copy through.
+		/// Checks the mod and reports if it is out of date. The mod's current version as
+		/// reported by its mod_info.yaml file is available on the packagedModInfo member.
+		/// 
+		/// This method might not be run on the foreground thread. Do not create new behaviors
+		/// or components without a coroutine to an existing GameObject.
 		/// </summary>
-		[PLibMethod(RunAt.OnStartGame)]
-		internal static void OnStartGame() {
-			var colorOptions = POptions.ReadSettings<OldPipeColorOptions>() ??
-				new OldPipeColorOptions();
-			// 0 is the default
-			var options = GlobalAssets.Instance.colorSetOptions[0];
-			options.conduitInsulated = colorOptions.InsulatedColor;
-			options.conduitNormal = colorOptions.NormalColor;
-			options.conduitRadiant = colorOptions.RadiantColor;
-			options.RefreshLookup();
-		}
+		/// <param name="mod">The mod whose version is being checked.</param>
+		/// <returns>true if the version check has started, or false if it could not be
+		/// started, which will trigger the next version checker in line.</returns>
+		bool CheckVersion(KMod.Mod mod);
 	}
 }

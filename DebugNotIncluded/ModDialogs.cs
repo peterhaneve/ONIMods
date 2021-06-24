@@ -80,6 +80,7 @@ namespace PeterHan.DebugNotIncluded {
 			}.AddTo(bottom, 0);
 		}
 
+#pragma warning disable CS0618 // Type or member is obsolete
 		/// <summary>
 		/// Adds tooltips for one archived mod version, bolding it if it is active.
 		/// </summary>
@@ -93,12 +94,14 @@ namespace PeterHan.DebugNotIncluded {
 				IsEnabledForActiveDlc()) ? UI.MODSSCREEN.LABEL_ARCHIVED_VERSION_ACTIVE :
 				UI.MODSSCREEN.LABEL_ARCHIVED_VERSION_INACTIVE;
 			string[] supported = (info.supportedContent ?? "").Split(',');
-			int n = supported.Length;
+			int n = supported.Length, version = info.minimumSupportedBuild;
 			for (int i = 0; i < n; i++)
 				supported[i] = UI.MODSSCREEN.GetLocalizedName(supported[i].Trim());
+			if (version <= 0)
+				version = info.lastWorkingBuild;
 			tooltip.AppendFormat(message, string.IsNullOrEmpty(relPath) ? UI.MODSSCREEN.
 				LABEL_ARCHIVED_VERSION_DEFAULT.ToString() : relPath, supported.Join(", "),
-				info.lastWorkingBuild, info.APIVersion);
+				version, info.APIVersion);
 		}
 
 		/// <summary>
@@ -113,7 +116,8 @@ namespace PeterHan.DebugNotIncluded {
 			if (info == null)
 				// No mod info? Give it vanilla since forever
 				info = new Mod.PackagedModInfo {
-					lastWorkingBuild = 0, supportedContent = "VANILLA_ID"
+					lastWorkingBuild = 0, minimumSupportedBuild = 0,
+					supportedContent = "VANILLA_ID"
 				};
 			AppendArchivedVersion(tooltip, modInfo, "", info);
 			if (fs.Exists(DebugUtils.ARCHIVED_VERSIONS_FOLDER)) {
@@ -131,6 +135,7 @@ namespace PeterHan.DebugNotIncluded {
 				archivedItems.Recycle();
 			}
 		}
+#pragma warning restore CS0618 // Type or member is obsolete
 
 		/// <summary>
 		/// Checks to see if Debug Not Included is the first enabled mod. If not, asks the

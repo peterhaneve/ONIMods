@@ -34,6 +34,7 @@
   <ItemGroup Condition=" '$(UsesPLib)' != 'false' ">
     <ProjectReference Include="../PLibCore/PLibCore.csproj" Private="True"/>
     <ProjectReference Include="../PLibActions/PLibActions.csproj" Private="True"/>
+    <ProjectReference Include="../PLibAVC/PLibAVC.csproj" Private="True"/>
     <ProjectReference Include="../PLibBuildings/PLibBuildings.csproj" Private="True"/>
     <ProjectReference Include="../PLibDatabase/PLibDatabase.csproj" Private="True"/>
     <ProjectReference Include="../PLibLighting/PLibLighting.csproj" Private="True"/>

@@ -52,8 +52,8 @@ namespace PeterHan.DebugNotIncluded {
 		/// <summary>
 		/// Finds only declared members of a class of any visibility and static/instance.
 		/// </summary>
-		private const BindingFlags DEC_FLAGS = PUBLIC_PRIVATE | INSTANCE_STATIC | BindingFlags.
-			DeclaredOnly;
+		private const BindingFlags DEC_FLAGS = PPatchTools.BASE_FLAGS | INSTANCE_STATIC |
+			BindingFlags.DeclaredOnly;
 
 		/// <summary>
 		/// Binding flags used to find instance and static members of a class.
@@ -65,12 +65,6 @@ namespace PeterHan.DebugNotIncluded {
 		/// The mod information file name used for archived versions.
 		/// </summary>
 		private const string MOD_INFO_FILENAME = "mod_info.yaml";
-
-		/// <summary>
-		/// Binding flags used to find members in a class of any visibility.
-		/// </summary>
-		private const BindingFlags PUBLIC_PRIVATE = BindingFlags.Public |
-			BindingFlags.NonPublic;
 
 		/// <summary>
 		/// The pattern to match for generic types.
@@ -255,13 +249,13 @@ namespace PeterHan.DebugNotIncluded {
 					paramTypes[i] = parameters[i].ParameterType;
 				// Look for the new method that does not have the _Patch suffix
 				try {
-					newMethod = patched.DeclaringType.GetMethod(name, PUBLIC_PRIVATE |
+					newMethod = patched.DeclaringType.GetMethod(name, PPatchTools.BASE_FLAGS |
 						BindingFlags.Instance, null, StripThisObject(paramTypes, true), null);
 				} catch (AmbiguousMatchException) { }
 				if (newMethod == null)
 					try {
-						newMethod = patched.DeclaringType.GetMethod(name, PUBLIC_PRIVATE |
-							BindingFlags.Static, null, paramTypes, null);
+						newMethod = patched.DeclaringType.GetMethod(name, PPatchTools.
+							BASE_FLAGS | BindingFlags.Static, null, paramTypes, null);
 					} catch (AmbiguousMatchException) { }
 				if (newMethod != null)
 					// Found a better match!

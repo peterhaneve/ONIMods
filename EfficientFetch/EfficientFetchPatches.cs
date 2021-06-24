@@ -49,7 +49,7 @@ namespace PeterHan.EfficientFetch {
 			PUtil.InitLibrary();
 			options = new EfficientFetchOptions();
 			new PPatchManager(harmony).RegisterPatchClass(typeof(EfficientFetchPatches));
-			new POptions().RegisterOptions(typeof(EfficientFetchOptions));
+			new POptions().RegisterOptions(this, typeof(EfficientFetchOptions));
 		}
 
 		/// <summary>

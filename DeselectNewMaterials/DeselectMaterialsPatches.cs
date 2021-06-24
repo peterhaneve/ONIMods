@@ -49,7 +49,7 @@ namespace PeterHan.DeselectNewMaterials {
 			PUtil.InitLibrary();
 			new PLocalization().Register();
 			Options = new DeselectMaterialsOptions();
-			new POptions().RegisterOptions(typeof(DeselectMaterialsOptions));
+			new POptions().RegisterOptions(this, typeof(DeselectMaterialsOptions));
 			new PPatchManager(harmony).RegisterPatchClass(typeof(DeselectMaterialsPatches));
 		}
 

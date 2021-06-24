@@ -37,8 +37,8 @@ namespace PeterHan.PipPlantOverlay {
 		/// <summary>
 		/// Public and non-public instance methods/constructors/types/fields.
 		/// </summary>
-		private const BindingFlags INSTANCE_ALL = BindingFlags.Public | BindingFlags.
-			NonPublic | BindingFlags.Instance;
+		private const BindingFlags INSTANCE_ALL = PPatchTools.BASE_FLAGS | BindingFlags.
+			Instance;
 
 		private delegate void RegisterMode(OverlayScreen screen, OverlayModes.Mode mode);
 

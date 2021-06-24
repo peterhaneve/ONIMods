@@ -31,7 +31,7 @@ namespace PeterHan.StockBugFix {
 	/// </summary>
 	internal static class SweepFixPatches {
 		private static readonly BindingFlags METHOD_FLAGS = BindingFlags.DeclaredOnly |
-			BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+			BindingFlags.Instance | PPatchTools.BASE_FLAGS;
 
 		/// <summary>
 		/// The interrupt priority for Top Priority chores.

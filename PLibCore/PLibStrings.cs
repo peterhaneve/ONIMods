@@ -95,6 +95,16 @@ namespace PeterHan.PLib.Core {
 		public static LocString RESTART_OK = STRINGS.UI.FRONTEND.MOD_DIALOGS.RESTART.OK;
 
 		/// <summary>
+		/// The details tooltip when AVC detects a mod to be outdated.
+		/// </summary>
+		public static LocString OUTDATED_TOOLTIP = "This mod is out of date!\nNew version: <b>{0}</b>\n\nUpdate local mods manually, or use <b>Mod Updater</b> to force update Steam mods";
+
+		/// <summary>
+		/// Displayed when AVC detects a mod to be outdated.
+		/// </summary>
+		public static LocString OUTDATED_WARNING = "<b><style=\"logic_off\">Outdated!</style></b>";
+
+		/// <summary>
 		/// The message prompting the user to restart.
 		/// </summary>
 		public static LocString RESTART_REQUIRED = "Oxygen Not Included must be restarted " +

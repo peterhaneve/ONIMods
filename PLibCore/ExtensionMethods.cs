@@ -196,8 +196,8 @@ namespace PeterHan.PLib.Core {
 				throw new ArgumentNullException(nameof(methodName));
 			// Fetch the method
 			try {
-				var method = type.GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.
-					Public | BindingFlags.Static | BindingFlags.Instance);
+				var method = type.GetMethod(methodName, PPatchTools.BASE_FLAGS | BindingFlags.
+					Static | BindingFlags.Instance);
 				if (method != null)
 					instance.Patch(method, prefix, postfix);
 				else
@@ -222,8 +222,8 @@ namespace PeterHan.PLib.Core {
 				throw new ArgumentNullException(nameof(type));
 			// Fetch the constructor
 			try {
-				var cons = type.GetConstructor(BindingFlags.NonPublic | BindingFlags.Public |
-					BindingFlags.Static | BindingFlags.Instance, null, arguments, null);
+				var cons = type.GetConstructor(PPatchTools.BASE_FLAGS | BindingFlags.Static |
+					BindingFlags.Instance, null, arguments, null);
 				if (cons != null)
 					instance.Patch(cons, prefix, postfix);
 				else
@@ -249,8 +249,8 @@ namespace PeterHan.PLib.Core {
 				throw new ArgumentNullException(nameof(methodName));
 			// Fetch the method
 			try {
-				var method = type.GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.
-					Public | BindingFlags.Static | BindingFlags.Instance);
+				var method = type.GetMethod(methodName, PPatchTools.BASE_FLAGS |
+					BindingFlags.Static | BindingFlags.Instance);
 				if (method != null)
 					instance.Patch(method, null, null, transpiler);
 				else

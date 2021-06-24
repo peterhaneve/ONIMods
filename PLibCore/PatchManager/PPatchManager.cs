@@ -33,8 +33,7 @@ namespace PeterHan.PLib.PatchManager {
 		/// <summary>
 		/// The base flags to use when matching instance or static methods.
 		/// </summary>
-		internal const BindingFlags FLAGS = BindingFlags.Public | BindingFlags.NonPublic |
-			BindingFlags.DeclaredOnly;
+		internal const BindingFlags FLAGS = PPatchTools.BASE_FLAGS | BindingFlags.DeclaredOnly;
 
 		/// <summary>
 		/// The flags to use when matching instance and static methods.

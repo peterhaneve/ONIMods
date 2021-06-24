@@ -87,7 +87,7 @@ namespace PeterHan.FastSave {
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
-			new POptions().RegisterOptions(typeof(FastSaveOptions));
+			new POptions().RegisterOptions(this, typeof(FastSaveOptions));
 			// Sorry, Fast Save now requires a restart to take effect because of background!
 			PUtil.LogDebug("FastSave in mode: {0}".F(FastSaveOptions.Instance.Mode));
 			new PLocalization().Register();

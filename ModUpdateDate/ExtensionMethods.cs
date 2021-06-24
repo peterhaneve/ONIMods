@@ -17,6 +17,7 @@
  */
 
 using KMod;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using PeterHan.PLib.Options;
@@ -29,18 +30,6 @@ namespace PeterHan.ModUpdateDate {
 	/// Extension methods for Mod Updater.
 	/// </summary>
 	internal static class ExtensionMethods {
-		/// <summary>
-		/// The epoch time for Steam time stamps.
-		/// </summary>
-		private static readonly System.DateTime UNIX_EPOCH = new System.DateTime(1970, 1, 1,
-			0, 0, 0, DateTimeKind.Utc);
-
-		// SteamUGCService.FindMod
-		private delegate SteamUGCService.Mod FindMod(SteamUGCService svc, PublishedFileId_t id);
-
-		private static readonly FindMod FIND_MOD = typeof(SteamUGCService).Detour<FindMod>(
-			nameof(SteamUGCService.FindMod));
-
 		/// <summary>
 		/// Finds a Steam mod by its ID (published file ID).
 		/// </summary>
@@ -72,11 +61,12 @@ namespace PeterHan.ModUpdateDate {
 				out System.DateTime when) {
 			bool result = false;
 			var inst = SteamUGCService.Instance;
-			var steamMod = (inst == null) ? null : FIND_MOD.Invoke(inst, id);
+			var steamMod = (inst == null) ? null : inst.FindMod(id);
 			if (steamMod != null) {
 				ulong ticks = steamMod.lastUpdateTime;
 				result = true;
-				when = (ticks == 0U) ? System.DateTime.MinValue : UnixEpochToDateTime(ticks);
+				when = (ticks == 0U) ? System.DateTime.MinValue : SteamVersionChecker.
+					UnixEpochToDateTime(ticks);
 			} else
 				// Mod was not found
 				when = System.DateTime.UtcNow;
@@ -97,7 +87,7 @@ namespace PeterHan.ModUpdateDate {
 				// 260 = MAX_PATH
 				if (SteamUGC.GetItemInstallInfo(mod.GetSteamModID(), out _,
 						out string _, 260U, out uint timestamp) && timestamp > 0U)
-					result = UnixEpochToDateTime(timestamp);
+					result = SteamVersionChecker.UnixEpochToDateTime(timestamp);
 				else
 					PUtil.LogWarning("Unable to get Steam install information for " +
 						label.title);
@@ -138,15 +128,6 @@ namespace PeterHan.ModUpdateDate {
 			} catch (UnauthorizedAccessException) {
 				PUtil.LogWarning("Unable to access temporary download {0}".F(path));
 			}
-		}
-
-		/// <summary>
-		/// Converts a time from Steam (seconds since Unix epoch) to a C# DateTime.
-		/// </summary>
-		/// <param name="timeSeconds">The timestamp since the epoch.</param>
-		/// <returns>The UTC date and time that it represents.</returns>
-		private static System.DateTime UnixEpochToDateTime(ulong timeSeconds) {
-			return UNIX_EPOCH.AddSeconds(timeSeconds);
 		}
 	}
 }

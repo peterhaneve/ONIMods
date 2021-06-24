@@ -183,21 +183,18 @@ namespace PeterHan.StockBugFix {
 			});
 		}
 
-		public override void OnLoad(Harmony instance) {
-			base.OnLoad(instance);
+		/// <summary>
+		/// Fixes the race condition in Steam.UpdateMods.
+		/// </summary>
+		/// <param name="instance">The Harmony instance to use for patching.</param>
+		private void FixModUpdateRace(Harmony instance) {
 			var steamMod = PPatchTools.GetTypeSafe("KMod.Steam");
-			var pm = new PPatchManager(instance);
 			const string BUG_KEY = "Bugs.ModUpdateRace";
-			PUtil.InitLibrary();
-			pm.RegisterPatchClass(typeof(StockBugsPatches));
-#if false
-			pm.RegisterPatchClass(typeof(SweepFixPatches));
-#endif
 			if (steamMod != null && !PRegistry.GetData<bool>(BUG_KEY)) {
+				// Transpile UpdateMods only for Steam versions (not EGS)
 #if DEBUG
 				PUtil.LogDebug("Transpiling Steam.UpdateMods()");
 #endif
-				// Transpile UpdateMods only for Steam versions (not EGS)
 				PRegistry.PutData(BUG_KEY, true);
 				instance.Patch(steamMod.GetMethodSafe("UpdateMods", false, PPatchTools.
 					AnyArguments), transpiler: new HarmonyMethod(typeof(StockBugsPatches),
@@ -205,8 +202,21 @@ namespace PeterHan.StockBugFix {
 				instance.Patch(typeof(MainMenu).GetMethodSafe("Update", false), postfix:
 					new HarmonyMethod(typeof(StockBugsPatches), nameof(PostfixMenuUpdate)));
 			}
+		}
+
+		public override void OnLoad(Harmony instance) {
+			base.OnLoad(instance);
+			PUtil.InitLibrary();
+			var pm = new PPatchManager(instance);
+			pm.RegisterPatchClass(typeof(StockBugsPatches));
+#if false
+			pm.RegisterPatchClass(typeof(SweepFixPatches));
+#endif
+			FixModUpdateRace(instance);
 			PRegistry.PutData("Bugs.FishReleaseCount", true);
-			new POptions().RegisterOptions(typeof(StockBugFixOptions));
+			PRegistry.PutData("Bugs.TepidizerPulse", true);
+			PRegistry.PutData("Bugs.TraitExclusionSpacedOut", true);
+			new POptions().RegisterOptions(this, typeof(StockBugFixOptions));
 		}
 
 		/// <summary>
@@ -219,7 +229,7 @@ namespace PeterHan.StockBugFix {
 			/// </summary>
 			internal static MethodBase TargetMethod() {
 				var methods = typeof(ChoreTypes).GetMethods(BindingFlags.DeclaredOnly |
-					BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+					PPatchTools.BASE_FLAGS | BindingFlags.Instance);
 				foreach (var method in methods)
 					if (method.Name == nameof(ChoreTypes.Add))
 						return method;
@@ -301,7 +311,7 @@ namespace PeterHan.StockBugFix {
 					IEnumerable<CodeInstruction> method) {
 				const int SEARCH_LIMIT = 16;
 				var messages = typeof(SimMessages).GetMethods(BindingFlags.DeclaredOnly |
-					BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+					BindingFlags.Static | PPatchTools.BASE_FLAGS);
 				var targets = new List<MethodBase>(4);
 				// Match any of the overloads, no matter what their parameters contain, in
 				// case new optional parameters are added
