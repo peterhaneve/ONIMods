@@ -1,6 +1,6 @@
 # Peter Han&#39;s Mods for Oxygen Not Included
 
-Last tested on game version: **CS-460672** and **EX1-466654**
+Last tested on game version: **CS-469008** and **MD-469112**
 
 **No support** for Public Testing branches.
 
@@ -40,7 +40,8 @@ Mods should remain in their own subfolder.
 | [Fast Save](https://steamcommunity.com/sharedfiles/filedetails/?id=1867707267) | Improves performance when loading, saving, or automatically saving the game | Yes | Yes |
 | [Food Supply Tooltips](https://steamcommunity.com/sharedfiles/filedetails/?id=1914501780) | Adds tooltips to food sources indicating their calorie production per cycle | Yes | Yes |
 | [Mod Updater](https://steamcommunity.com/sharedfiles/filedetails/?id=2018291283) | Updates mods that Steam leaves at old versions | Yes | Yes |
-| [Not Enough Tags](https://steamcommunity.com/sharedfiles/filedetails/?id=2230218796) | Fixes Tag exhaustion in large bases | Yes | No |
+| [No Splash Screen](https://steamcommunity.com/sharedfiles/filedetails/?id=2361698345) | Hides the Early Access splash screen | No | Yes |
+| [Not Enough Tags](https://steamcommunity.com/sharedfiles/filedetails/?id=2230218796) | Fixes Tag exhaustion in large bases | Yes | Yes |
 | [Pip Plant Overlay](https://steamcommunity.com/sharedfiles/filedetails/?id=2493100777) | Adds an overlay showing where Pips can plant seeds | Yes | Yes |
 | [Popup Control](https://steamcommunity.com/sharedfiles/filedetails/?id=2032187035) | Shows or hides text info popups for each source | Yes | Yes |
 | [Reloading In Motion](https://steamcommunity.com/sharedfiles/filedetails/?id=2182976959) | Saves the timings of Doors and Plants across reloads | Yes | No |
@@ -57,7 +58,7 @@ Mods should remain in their own subfolder.
 |  **Name**  |  **Description**  |  **Vanilla**  |  **Spaced Out! DLC**  |
 | :--------: | :---------------: | :-----------: | :-------------------: |
 | [100K Challenge](https://steamcommunity.com/sharedfiles/filedetails/?id=2228381429) | A frigid map with an average temperature of 100 K (-173 C) | Yes | No |
-| [AI Improvements](https://steamcommunity.com/sharedfiles/filedetails/?id=2128885110) | Improves Duplicant AI to reduce cases of stuck Duplicants | Yes | No |
+| [AI Improvements](https://steamcommunity.com/sharedfiles/filedetails/?id=2128885110) | Improves Duplicant AI to reduce cases of stuck Duplicants | Yes | Yes |
 | [Airlock Door](https://steamcommunity.com/sharedfiles/filedetails/?id=2094698134) | A door allowing Duplicants to pass while maintaining full atmospheric isolation | Yes | Yes |
 | [Build Straight Up](https://steamcommunity.com/sharedfiles/filedetails/?id=2135682628) | Allows Rockets and Monuments to be planned out all at once | Yes | Yes |
 | [Moo Reproduction](https://steamcommunity.com/sharedfiles/filedetails/?id=2400500058) | Allows Gassy Moos to reproduce by live birth with multiple in one ranch | No | Yes |
