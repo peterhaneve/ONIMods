@@ -53,7 +53,7 @@
     <Product>PeterHanONIMods</Product>
     <Authors>Peter Han</Authors>
     <Copyright>Copyright ©Peter Han 2021</Copyright>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFramework>net471</TargetFramework>
     <SupportedContent>VANILLA_ID,EXPANSION1_ID</SupportedContent>
     <LastWorkingBuild>0</LastWorkingBuild>
     <DistributeMod>true</DistributeMod>

@@ -222,8 +222,8 @@ namespace PeterHan.PLib.Database {
 		private readonly ISet<string> plantPaths;
 
 		public PCodexManager() {
-			creaturePaths = new HashSet<string>(8);
-			plantPaths = new HashSet<string>(8);
+			creaturePaths = new HashSet<string>();
+			plantPaths = new HashSet<string>();
 			// Data is a hacky but usable 2 item dictionary
 			InstanceData = new CodexDictionary(4) {
 				{ CREATURES_CATEGORY, creaturePaths },
