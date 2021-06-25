@@ -1,6 +1,6 @@
 # Peter Han&#39;s Mods for Oxygen Not Included
 
-Last tested on game version: **CS-469008** and **MD-469112**
+Last tested on game version: **CS-469300** and **MD-469369**
 
 **No support** for Public Testing branches.
 
