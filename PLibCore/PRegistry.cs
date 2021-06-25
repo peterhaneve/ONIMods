@@ -81,7 +81,7 @@ namespace PeterHan.PLib.Core {
 						LogPatchWarning(INTENDED_NAME + " has the type name " + typeName +
 							"; this may be the result of ILMerging PLib more than once!");
 #if DEBUG
-					LogPatchDebug("Creating PLib Registry from " + Assembly.
+					LogPatchDebug("Creating PLib Registry from " + System.Reflection.Assembly.
 						GetExecutingAssembly()?.FullName ?? "?");
 #endif
 					// Patch in the bootstrap method
