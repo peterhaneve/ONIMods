@@ -325,6 +325,7 @@ namespace PeterHan.ModUpdateDate {
 		/// <param name="failed">Whether an I/O error occurred during download.</param>
 		private void OnDownloadComplete(RemoteStorageDownloadUGCResult_t result, bool failed) {
 			var steamStatus = result.m_eResult;
+			var tm = ModUpdateDatePatches.ThisMod;
 			if (active != null) {
 				ulong id = active.SteamID;
 				ModUpdateResult status;
@@ -348,7 +349,7 @@ namespace PeterHan.ModUpdateDate {
 					mod.reinstall_path = active.DownloadPath;
 					PUtil.SaveMods();
 					// Backup our config if needed
-					if (mod.label.Match(ModUpdateDatePatches.ThisMod.label))
+					if (tm != null && mod.label.Match(tm.label))
 						selfUpdated = true;
 					// Update the config
 					var when = active.LastSteamUpdate;

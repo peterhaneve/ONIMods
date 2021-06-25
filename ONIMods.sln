@@ -79,19 +79,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotEnoughTags", "NotEnoughT
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastTrack", "FastTrack\FastTrack.csproj", "{5031ADAF-C406-4EA0-8003-6C88A2A64802}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoSensorLimits", "NoSensorLimits\NoSensorLimits.csproj", "{136F8525-F65C-4A92-BC9E-2F89ECAFD4E1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NoSensorLimits", "NoSensorLimits\NoSensorLimits.csproj", "{136F8525-F65C-4A92-BC9E-2F89ECAFD4E1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DLCModEnabler", "DLCModEnabler\DLCModEnabler.csproj", "{C9E984E2-0229-4389-8942-397EC1EEFF20}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinishTasks", "FinishTasks\FinishTasks.csproj", "{6E8902F8-2969-4A11-B2D2-C8644A00949D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FinishTasks", "FinishTasks\FinishTasks.csproj", "{6E8902F8-2969-4A11-B2D2-C8644A00949D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoSplashScreen", "NoSplashScreen\NoSplashScreen.csproj", "{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MooReproduction", "MooReproduction\MooReproduction.csproj", "{07BE03BD-84A8-4202-82A3-F64829B3D786}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WorkshopProfiles", "WorkshopProfiles\WorkshopProfiles.csproj", "{E327F5BD-CBF2-47D0-90C6-AE9C56E99B2F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkshopProfiles", "WorkshopProfiles\WorkshopProfiles.csproj", "{E327F5BD-CBF2-47D0-90C6-AE9C56E99B2F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PipPlantOverlay", "PipPlantOverlay\PipPlantOverlay.csproj", "{0153F668-C4B3-400B-A4AE-7B736337FDD4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PipPlantOverlay", "PipPlantOverlay\PipPlantOverlay.csproj", "{0153F668-C4B3-400B-A4AE-7B736337FDD4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -427,12 +425,6 @@ Global
 		{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}.Release|Spaced Out.ActiveCfg = Release|Spaced Out
 		{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}.Release|Spaced Out.Build.0 = Release|Spaced Out
 		{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}.Release|Vanilla.ActiveCfg = Release|Vanilla
-		{07BE03BD-84A8-4202-82A3-F64829B3D786}.Debug|Spaced Out.ActiveCfg = Debug|Spaced Out
-		{07BE03BD-84A8-4202-82A3-F64829B3D786}.Debug|Spaced Out.Build.0 = Debug|Spaced Out
-		{07BE03BD-84A8-4202-82A3-F64829B3D786}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
-		{07BE03BD-84A8-4202-82A3-F64829B3D786}.Release|Spaced Out.ActiveCfg = Release|Spaced Out
-		{07BE03BD-84A8-4202-82A3-F64829B3D786}.Release|Spaced Out.Build.0 = Release|Spaced Out
-		{07BE03BD-84A8-4202-82A3-F64829B3D786}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{E327F5BD-CBF2-47D0-90C6-AE9C56E99B2F}.Debug|Spaced Out.ActiveCfg = Debug|Spaced Out
 		{E327F5BD-CBF2-47D0-90C6-AE9C56E99B2F}.Debug|Spaced Out.Build.0 = Debug|Spaced Out
 		{E327F5BD-CBF2-47D0-90C6-AE9C56E99B2F}.Debug|Vanilla.ActiveCfg = Debug|Vanilla

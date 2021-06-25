@@ -142,7 +142,7 @@ namespace PeterHan.DebugNotIncluded {
 			if (DebugNotIncludedOptions.Instance?.LogAsserts ?? true)
 				LogAllFailedAsserts();
 			foreach (var mod in Global.Instance.modManager?.mods)
-				if (mod.GetModBasePath() == path) {
+				if (mod.ContentPath == path) {
 					ThisMod = mod;
 					break;
 				}

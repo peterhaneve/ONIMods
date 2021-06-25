@@ -69,7 +69,7 @@ namespace PeterHan.ModUpdateDate {
 			ModUpdateInfo.LoadSettings();
 			// Find our mod
 			foreach (var mod in Global.Instance.modManager?.mods)
-				if (mod.GetModBasePath() == path) {
+				if (mod.ContentPath == path) {
 					ThisMod = mod;
 					break;
 				}
