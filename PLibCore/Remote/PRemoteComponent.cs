@@ -51,6 +51,11 @@ namespace PeterHan.PLib.Core {
 		}
 
 		/// <summary>
+		/// Points to the component's version of Bootstrap.
+		/// </summary>
+		private readonly InitializeDelegate doBootstrap;
+
+		/// <summary>
 		/// Points to the component's version of Initialize.
 		/// </summary>
 		private readonly InitializeDelegate doInitialize;
@@ -97,12 +102,19 @@ namespace PeterHan.PLib.Core {
 				Initialize), wrapped, typeof(Harmony));
 			if (doInitialize == null)
 				throw new ArgumentException("Remote component missing Initialize");
+			// Bootstrap
+			doBootstrap = type.CreateDelegate<InitializeDelegate>(nameof(PForwardedComponent.
+				Bootstrap), wrapped, typeof(Harmony));
 			doPostInitialize = type.CreateDelegate<InitializeDelegate>(nameof(
 				PForwardedComponent.PostInitialize), wrapped, typeof(Harmony));
 			getData = type.CreateGetDelegate<object>(nameof(InstanceData), wrapped);
 			setData = type.CreateSetDelegate<object>(nameof(InstanceData), wrapped);
 			process = type.CreateDelegate<ProcessDelegate>(nameof(PForwardedComponent.
 				Process), wrapped, typeof(uint), typeof(object));
+		}
+
+		public override void Bootstrap(Harmony plibInstance) {
+			doBootstrap?.Invoke(plibInstance);
 		}
 
 		internal override object DoInitialize(Harmony plibInstance) {

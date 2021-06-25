@@ -17,7 +17,6 @@
  */
 
 using System;
-using System.Reflection;
 
 namespace PeterHan.PLib.Core {
 	/// <summary>

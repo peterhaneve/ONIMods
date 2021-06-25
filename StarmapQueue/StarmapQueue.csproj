@@ -14,7 +14,7 @@
     <LastWorkingBuild>469300</LastWorkingBuild>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
-    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <SupportedContent>VANILLA_ID</SupportedContent>
     <LastWorkingBuild>469369</LastWorkingBuild>
   </PropertyGroup>
 </Project>

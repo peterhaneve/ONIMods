@@ -37,7 +37,7 @@ namespace PeterHan.PLib.Core {
 		/// <summary>
 		/// Gets the latest version of a forwarded component of PLib (or another mod).
 		/// </summary>
-		/// <param name="id">The component ID to look up.</typeparam>
+		/// <param name="id">The component ID to look up.</param>
 		/// <returns>The latest version of that component, or a forwarded proxy of the
 		/// component if functionality is provided by another mod.</returns>
 		PForwardedComponent GetLatestVersion(string id);
@@ -53,7 +53,7 @@ namespace PeterHan.PLib.Core {
 		/// <summary>
 		/// Gets all registered forwarded components for the given ID.
 		/// </summary>
-		/// <param name="id">The component ID to look up.</typeparam>
+		/// <param name="id">The component ID to look up.</param>
 		/// <returns>All registered components with that ID, with forwarded proxies for any
 		/// whose functionality is provided by another mod.</returns>
 		IEnumerable<PForwardedComponent> GetAllComponents(string id);

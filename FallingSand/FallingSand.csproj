@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Falling Sand</AssemblyTitle>
-    <FileVersion>3.0.0.0</FileVersion>
+    <FileVersion>3.1.0.0</FileVersion>
     <RootNamespace>PeterHan.FallingSand</RootNamespace>
     <Description>Places Dig errands on unstable materials which fall during mining.</Description>
     <AssemblyVersion>3.0.0.0</AssemblyVersion>
