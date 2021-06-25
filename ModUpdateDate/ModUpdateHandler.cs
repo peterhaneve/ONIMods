@@ -33,7 +33,7 @@ namespace PeterHan.ModUpdateDate {
 	/// <summary>
 	/// Adds an update button to the mod menu.
 	/// </summary>
-	public sealed class ModUpdateHandler {
+	public sealed class ModUpdateHandler : IDisposable {
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
@@ -257,7 +257,7 @@ namespace PeterHan.ModUpdateDate {
 		/// <summary>
 		/// The CallResult for handling the Steam API call to download mod data.
 		/// </summary>
-		private readonly CallResult<RemoteStorageDownloadUGCResult_t> caller;
+		private CallResult<RemoteStorageDownloadUGCResult_t> caller;
 
 		/// <summary>
 		/// The mod information that is being updated.
@@ -265,7 +265,7 @@ namespace PeterHan.ModUpdateDate {
 		private ModUpdateTask task;
 
 		private ModUpdateHandler() {
-			caller = new CallResult<RemoteStorageDownloadUGCResult_t>(OnDownloadComplete);
+			caller = null;
 			active = null;
 			task = null;
 		}
@@ -292,6 +292,13 @@ namespace PeterHan.ModUpdateDate {
 				throw;
 			}
 			return success;
+		}
+
+		public void Dispose() {
+			if (caller != null) {
+				caller.Dispose();
+				caller = null;
+			}
 		}
 
 		/// <summary>
@@ -374,6 +381,10 @@ namespace PeterHan.ModUpdateDate {
 						EResult.k_EResultServiceUnavailable);
 				else {
 					active = task;
+					if (caller != null)
+						caller.Dispose();
+					caller = new CallResult<RemoteStorageDownloadUGCResult_t>(
+						OnDownloadComplete);
 					caller.Set(res);
 					PUtil.LogDebug("Start download of file {0:D} to {1}".F(content.m_UGCHandle,
 						downloadPath));
