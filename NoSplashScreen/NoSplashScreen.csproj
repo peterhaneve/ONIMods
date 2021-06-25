@@ -8,7 +8,7 @@
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <UsesPLib>false</UsesPLib>
     <SupportedContent>EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>447598</LastWorkingBuild>
+    <LastWorkingBuild>469300</LastWorkingBuild>
     <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
 </Project>
