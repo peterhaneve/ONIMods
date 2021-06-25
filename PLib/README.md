@@ -93,7 +93,7 @@ To write, use `PLib.Options.POptions.WriteSettings<T>(T settings)`, where again 
 #### Registering for the config screen
 
 PLib.Options adds configuration menus to the Mods screen for mods that are registered.
-Register a mod by using `POptions.RegisterOptions(Type settingsType)` in `OnLoad`.
+Register a mod by using `POptions.RegisterOptions(UserMod2, Type settingsType)` in `OnLoad`.
 Creating a new `POptions` instance is required to use this method, but only one `POptions` instance should be created per mod.
 
 The argument should be the type of the class the mod uses for its options, and must be JSON serializable.
@@ -101,7 +101,6 @@ The argument should be the type of the class the mod uses for its options, and m
 
 The class used for mod options can also contain a `ModInfo([string url=""], [string image=""])` annotation to display additional mod information.
 **Note that the title from PLib 2.0 and 3.0 is no longer part of this attribute**, as this functionality has been moved to the Klei `mod.yaml` file.
-If a valid localization string key name is used for `title` (such as `STRINGS.YOURMOD.OPTIONS.TITLE`), the localized value of that string from the strings database is used as the display text.
 The URL can be used to specify a custom website for the mod's home page; if left empty, it defaults to the Steam Workshop page for the mod.
 The image, if specified, will attempt to load a preview image (best size is 192x192) with that name from the mod's data folder and display it in the settings dialog.
 

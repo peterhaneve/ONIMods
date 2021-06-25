@@ -46,6 +46,12 @@ staticID: PeterHan.$(AssemblyName)
   </Target>
 
   <Target Name="ILRepack" AfterTargets="Build" Condition=" '$(PLibCore)' != 'true' ">
+    <PropertyGroup Condition=" '$(AssemblyName)' == 'PLib' ">
+      <Internalize>false</Internalize>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(AssemblyName)' != 'PLib' ">
+      <Internalize>true</Internalize>
+    </PropertyGroup>
     <ItemGroup Condition=" '$(UsesPLib)' != 'false' Or '$(AssemblyName)' == 'PLib' ">
       <InputAssemblies Include="$(TargetDir)PLib*.dll" />
     </ItemGroup>
@@ -60,6 +66,7 @@ staticID: PeterHan.$(AssemblyName)
         OutputAssembly="$(TargetPath)"
         InputAssemblies="@(InputAssemblies)"
         XmlDocumentation="true"
+        Internalize="$(Internalize)"
         WilcardInputAssemblies="true"
         WorkingDirectory="$(GameFolderActive)" />
   </Target>

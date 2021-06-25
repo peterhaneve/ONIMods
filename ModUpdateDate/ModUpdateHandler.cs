@@ -252,7 +252,7 @@ namespace PeterHan.ModUpdateDate {
 		/// <summary>
 		/// The active mod to be updated.
 		/// </summary>
-		private ModToUpdate active;
+		private volatile ModToUpdate active;
 
 		/// <summary>
 		/// The CallResult for handling the Steam API call to download mod data.
@@ -352,7 +352,7 @@ namespace PeterHan.ModUpdateDate {
 		/// <param name="mod">The mod to update.</param>
 		/// <param name="details">The mod details to force update.</param>
 		/// <returns>true if the update began, or false if it failed.</returns>
-		private bool StartModUpdate(ModToUpdate task) {
+		private bool StartSteamUpdate(ModToUpdate task) {
 			var mod = task.Mod;
 			var globalDate = task.LastSteamUpdate;
 			ModUpdateResult status = null;
@@ -373,10 +373,10 @@ namespace PeterHan.ModUpdateDate {
 					status = new ModUpdateResult(ModDownloadStatus.SteamError, mod,
 						EResult.k_EResultServiceUnavailable);
 				else {
+					active = task;
 					caller.Set(res);
 					PUtil.LogDebug("Start download of file {0:D} to {1}".F(content.m_UGCHandle,
 						downloadPath));
-					active = task;
 				}
 			}
 			if (status != null)
@@ -389,7 +389,7 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		private void UpdateNext() {
 			int n;
-			while ((n = task.Mods.Count) > 0 && !StartModUpdate(task.Mods.Dequeue()));
+			while ((n = task.Mods.Count) > 0 && !StartSteamUpdate(task.Mods.Dequeue()));
 			if (n <= 0 && active == null) {
 				// All done
 				task.OnComplete();
