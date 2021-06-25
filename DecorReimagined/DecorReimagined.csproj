@@ -12,11 +12,11 @@
   <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
     <ArchivedVersionPath>\archived_versions\vanilla</ArchivedVersionPath>
     <SupportedContent>VANILLA_ID</SupportedContent>
-    <LastWorkingBuild>460672</LastWorkingBuild>
+    <LastWorkingBuild>469300</LastWorkingBuild>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
     <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>469112</LastWorkingBuild>
+    <LastWorkingBuild>469301</LastWorkingBuild>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="buildings.json" />

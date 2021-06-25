@@ -7,7 +7,7 @@
     <Description>Reworks traits to make Duplicant selection more interesting.</Description>
     <AssemblyVersion>2.1.0.0</AssemblyVersion>
     <SupportedContent>VANILLA_ID</SupportedContent>
-    <LastWorkingBuild>447213</LastWorkingBuild>
+    <LastWorkingBuild>469300</LastWorkingBuild>
     <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
 </Project>
