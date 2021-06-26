@@ -256,8 +256,8 @@ namespace PeterHan.PLib.AVC {
 		internal void RunVersionCheck() {
 			var allMods = PRegistry.Instance.GetAllComponents(ID);
 			// See if Mod Updater triggered master disable
-			/*if (!PRegistry.GetData<bool>("PLib.VersionCheck.ModUpdaterActive") &&
-					allMods != null)*/
+			if (!PRegistry.GetData<bool>("PLib.VersionCheck.ModUpdaterActive") &&
+					allMods != null)
 				new AllVersionCheckTask(allMods, this).Run();
 		}
 

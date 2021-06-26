@@ -3,10 +3,10 @@
   <PropertyGroup>
     <Title>PLib Options</Title>
     <AssemblyTitle>PLib.Options</AssemblyTitle>
-    <Version>4.1.0.0</Version>
+    <Version>4.2.0.0</Version>
     <UsesPLib>false</UsesPLib>
     <RootNamespace>PeterHan.PLib.Options</RootNamespace>
-    <AssemblyVersion>4.1.0.0</AssemblyVersion>
+    <AssemblyVersion>4.2.0.0</AssemblyVersion>
     <DistributeMod>false</DistributeMod>
     <PLibCore>true</PLibCore>
     <Platforms>Vanilla;Spaced Out</Platforms>
@@ -15,7 +15,7 @@
     <DocumentationFile>bin\$(Platform)\Release\PLibOptions.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../PLibCore/PLibCore.csproj" Private="true" />
-    <ProjectReference Include="../PLibUI/PLibUI.csproj" Private="true" />
+    <ProjectReference Include="../PLibCore/PLibCore.csproj" />
+    <ProjectReference Include="../PLibUI/PLibUI.csproj" />
   </ItemGroup>
 </Project>

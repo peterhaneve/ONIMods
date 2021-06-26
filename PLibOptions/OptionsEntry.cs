@@ -269,7 +269,7 @@ namespace PeterHan.PLib.Options {
 		public abstract GameObject GetUIComponent();
 
 		public virtual void ReadFrom(object settings) {
-			if (Field != null)
+			if (Field != null && settings != null)
 				try {
 					var prop = settings.GetType().GetProperty(Field, INSTANCE_PUBLIC);
 					if (prop != null && prop.CanRead)
@@ -291,7 +291,7 @@ namespace PeterHan.PLib.Options {
 		}
 
 		public virtual void WriteTo(object settings) {
-			if (Field != null)
+			if (Field != null && settings != null)
 				try {
 					var prop = settings.GetType().GetProperty(Field, INSTANCE_PUBLIC);
 					if (prop != null && prop.CanWrite)

@@ -5,11 +5,11 @@
 
   <ItemDefinitionGroup>
     <Reference Private="False" />
-    <ProjectReference Private="False" />
+    <ProjectReference Private="True" />
   </ItemDefinitionGroup>
 
   <ItemGroup Condition=" '$(PLibCore)' != 'true' ">
-    <PackageReference Include="ILRepack.MSBuild.Task" Version="2.0.13" />
+    <PackageReference Include="ILRepack.MSBuild.Task" Version="2.0.13" Private="True" PrivateAssets="all" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
     <GameFolderActive>$(GameFolderVanilla)</GameFolderActive>
