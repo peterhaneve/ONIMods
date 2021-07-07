@@ -22,7 +22,8 @@ using System;
 namespace PeterHan.PLib {
 	/// <summary>
 	/// An attribute placed on an option property for a class used as mod options in order to
-	/// make PLib use a custom options handler.
+	/// make PLib use a custom options handler. The type used for the handler must inherit
+	/// from IOptionsEntry.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
 	public sealed class DynamicOptionAttribute : Attribute {

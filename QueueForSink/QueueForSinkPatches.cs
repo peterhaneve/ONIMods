@@ -30,8 +30,8 @@ namespace PeterHan.QueueForSinks {
 		}
 
 		/// <summary>
-		/// Applied to HandSanitizer.Work to add a checkpoint for hand sanitizers, sinks, and
-		/// wash basins.
+		/// Applied to HandSanitizer.Work to add a checkpoint for hand sanitizers, sinks,
+		/// wash basins, and the decontamination shower.
 		/// </summary>
 		[HarmonyPatch(typeof(HandSanitizer.Work), "OnPrefabInit")]
 		public static class HandSanitizer_Work_OnPrefabInit_Patch {

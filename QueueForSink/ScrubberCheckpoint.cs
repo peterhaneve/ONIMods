@@ -72,17 +72,16 @@ namespace PeterHan.QueueForSinks {
 		protected override bool MustStop(GameObject reactor, float direction) {
 			var storage = reactor.GetComponent<Storage>();
 			bool stop = false;
-			byte noDisease = Klei.SimUtil.DiseaseInfo.Invalid.idx;
-			PrimaryElement element;
 			if (storage != null)
 				// Search all items, blacklist food, require a disease
-				foreach (var item in storage.items)
-					if (item != null && (element = item.GetComponent<PrimaryElement>()) !=
-							null && element.DiseaseIdx != noDisease && !item.HasTag(
-							GameTags.Edible)) {
+				foreach (var item in storage.items) {
+					var element = item.GetComponentSafe<PrimaryElement>();
+					if (element != null && element.DiseaseIdx != Klei.SimUtil.DiseaseInfo.
+							Invalid.idx && !item.HasTag(GameTags.Edible)) {
 						stop = true;
 						break;
 					}
+				}
 			return stop && CheckForOtherScrubber(direction > 0.0f); 
 		}
 	}

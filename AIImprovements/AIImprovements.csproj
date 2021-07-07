@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>AI Improvements</AssemblyTitle>
-    <FileVersion>2.1.0.0</FileVersion>
+    <FileVersion>2.2.0.0</FileVersion>
     <RootNamespace>PeterHan.AIImprovements</RootNamespace>
     <Description>Makes Duplicants just a little smarter during common tasks to reduce cases of entrapment and entombment.</Description>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>

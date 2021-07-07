@@ -38,13 +38,13 @@ namespace PeterHan.PLib.Options {
 		/// fields to create sub-options if needed (recursively).
 		/// </summary>
 		/// <param name="info">The property to wrap.</param>
-		/// <param name="oa">The option title and tool tip.</param>
+		/// <param name="spec">The option title and tool tip.</param>
 		/// <param name="depth">The current depth of iteration to avoid infinite loops.</param>
 		/// <returns>An options wrapper, or null if no inner properties are themselves options.</returns>
-		internal static CompositeOptionsEntry Create(OptionAttribute oa, PropertyInfo info,
+		internal static CompositeOptionsEntry Create(IOptionSpec spec, PropertyInfo info,
 				int depth) {
 			var type = info.PropertyType;
-			var composite = new CompositeOptionsEntry(info.Name, oa, type);
+			var composite = new CompositeOptionsEntry(info.Name, spec, type);
 			// Skip static properties if they exist
 			foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.
 					Instance)) {

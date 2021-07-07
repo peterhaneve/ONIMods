@@ -21,7 +21,7 @@ using UnityEngine;
 
 namespace PeterHan.QueueForSinks {
 	/// <summary>
-	/// Forces duplicants to stop if necessary when passing sinks.
+	/// Forces duplicants to stop if necessary when passing sink like buildings.
 	/// </summary>
 	public sealed class SinkCheckpoint : WorkCheckpoint<HandSanitizer.Work> {
 		// Sinks are 2x3
@@ -31,6 +31,13 @@ namespace PeterHan.QueueForSinks {
 		/// The layer for buildings.
 		/// </summary>
 		private readonly int buildingLayer;
+
+#pragma warning disable CS0649
+#pragma warning disable IDE0044 // Add readonly modifier
+		[MyCmpReq]
+		private HandSanitizer handSanitizer;
+#pragma warning restore IDE0044
+#pragma warning restore CS0649
 
 		public SinkCheckpoint() : base() {
 			buildingLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Building),
@@ -68,10 +75,25 @@ namespace PeterHan.QueueForSinks {
 			return stop;
 		}
 
+		/// <summary>
+		/// Checks to see if the sink should be used by the specified Duplicant.
+		/// </summary>
+		/// <param name="dupe">The Duplicant which is passing by.</param>
+		/// <returns>true if they should use the sink, or false otherwise.</returns>
+		private bool NeedsToUse(GameObject dupe) {
+			var element = dupe.GetComponent<PrimaryElement>();
+			var identity = dupe.GetComponent<MinionIdentity>();
+			// If not ready, or (wearing suit and cannot sanitize suit), cannot use
+			// If always use, can use
+			// Otherwise, use if primary element has a disease
+			return (!handSanitizer.smi.IsReady() || (!handSanitizer.canSanitizeSuit &&
+				identity.GetEquipment().IsSlotOccupied(Db.Get().AssignableSlots.Suit))) &&
+				(handSanitizer.alwaysUse || (element != null && element.DiseaseIdx != Klei.
+				SimUtil.DiseaseInfo.Invalid.idx));
+		}
+
 		protected override bool MustStop(GameObject reactor, float direction) {
-			var element = reactor.GetComponent<PrimaryElement>();
-			return element != null && element.DiseaseIdx != Klei.SimUtil.DiseaseInfo.
-				Invalid.idx && CheckForOtherSink(direction > 0.0f);
+			return NeedsToUse(reactor) && CheckForOtherSink(direction > 0.0f);
 		}
 	}
 }

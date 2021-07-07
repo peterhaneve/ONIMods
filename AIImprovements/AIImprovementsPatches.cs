@@ -129,13 +129,18 @@ namespace PeterHan.AIImprovements {
 		}
 
 		/// <summary>
-		/// Determines whether a Duplicant could plausibly navigate to the target cell.
+		/// Determines whether a Duplicant could plausibly navigate to the target cell. Now
+		/// also checks the cell above due to how entombment works post Mergedown.
 		/// </summary>
 		/// <param name="navigator">The Duplicant to check.</param>
 		/// <param name="cell">The destination cell.</param>
 		/// <returns>true if the Duplicant could move there, or false otherwise.</returns>
 		internal static bool IsValidNavCell(Navigator navigator, int cell) {
-			return navigator.NavGrid.NavTable.IsValid(cell, navigator.CurrentNavType);
+			int above = Grid.CellAbove(cell);
+			var navType = navigator.CurrentNavType;
+			// Duplicants in a tube are 1x1
+			return navigator.NavGrid.NavTable.IsValid(cell, navType) && !Grid.Solid[cell] &&
+				(navType == NavType.Tube || (Grid.IsValidCell(above) && !Grid.Solid[above]));
 		}
 
 		[PLibMethod(RunAt.AfterDbInit)]
@@ -164,46 +169,19 @@ namespace PeterHan.AIImprovements {
 		}
 
 		/// <summary>
-		/// Tries to move a Duplicant to a more sensible location when entombed.
+		/// Tries to move a Duplicant to a more sensible location when entombed or falling.
 		/// </summary>
-		/// <param name="instance">The fall monitor to update if successful.</param>
-		/// <param name="navigator">The Duplicant to check.</param>
 		/// <param name="layer">The location history of the Duplicant.</param>
-		/// <returns>true if the Duplicant was successfully moved away from entombment, or
-		/// false otherwise.</returns>
-		private static bool TryClearEntombment(LocationHistoryTransitionLayer layer,
+		/// <param name="navigator">The Duplicant to check.</param>
+		/// <param name="instance">The fall monitor to update if successful.</param>
+		/// <returns>true if the Duplicant was successfully moved away, or false otherwise.</returns>
+		private static bool TryEscape(LocationHistoryTransitionLayer layer,
 				Navigator navigator, FallMonitor.Instance instance, ref bool flipEmote) {
 			bool moved = false;
 			for (int i = 0; i < LocationHistoryTransitionLayer.TRACK_CELLS; i++) {
-				int last = layer.VisitedCells[i], above = Grid.CellAbove(last);
+				int last = layer.VisitedCells[i];
 #if DEBUG
-				PUtil.LogDebug("{0} is entombed, trying to move to {1:D}".F(navigator.
-					gameObject?.name, last));
-#endif
-				if (Grid.IsValidCell(last) && (IsValidNavCell(navigator, last) || (Grid.
-						IsValidCell(above) && !Grid.Solid[last] && !Grid.Solid[above]))) {
-					ForceMoveTo(instance, last, navigator, ref flipEmote);
-					break;
-				}
-			}
-			return moved;
-		}
-
-		/// <summary>
-		/// Tries to move a Duplicant to a more sensible location when they are about to fall.
-		/// </summary>
-		/// <param name="instance">The fall monitor to update if successful.</param>
-		/// <param name="navigator">The Duplicant to check.</param>
-		/// <param name="layer">The location history of the Duplicant.</param>
-		/// <returns>true if the Duplicant was successfully moved away from entombment, or
-		/// false otherwise.</returns>
-		private static bool TryEscapeFalling(LocationHistoryTransitionLayer layer,
-				Navigator navigator, FallMonitor.Instance instance, ref bool flipEmote) {
-			bool moved = false;
-			for (int i = 0; i < LocationHistoryTransitionLayer.TRACK_CELLS; i++) {
-				int last = layer.VisitedCells[i], above = Grid.CellAbove(last);
-#if DEBUG
-				PUtil.LogDebug("{0} is falling, trying to move to {1:D}".F(navigator.
+				PUtil.LogDebug("{0} is in trouble, trying to escape to {1:D}".F(navigator.
 					gameObject?.name, last));
 #endif
 				if (Grid.IsValidCell(last) && IsValidNavCell(navigator, last)) {
@@ -257,7 +235,7 @@ namespace PeterHan.AIImprovements {
 				if (layers != null)
 					foreach (var layer in layers)
 						if (layer is LocationHistoryTransitionLayer lhs) {
-							moved = TryEscapeFalling(lhs, ___navigator, __instance,
+							moved = TryEscape(lhs, ___navigator, __instance,
 								ref ___flipRecoverEmote);
 							if (moved) break;
 						}
@@ -283,7 +261,7 @@ namespace PeterHan.AIImprovements {
 				if (layers != null)
 					foreach (var layer in layers)
 						if (layer is LocationHistoryTransitionLayer lhs) {
-							moved = TryClearEntombment(lhs, ___navigator, __instance,
+							moved = TryEscape(lhs, ___navigator, __instance,
 								ref ___flipRecoverEmote);
 							if (moved) break;
 						}

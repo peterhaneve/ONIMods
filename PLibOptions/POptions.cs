@@ -283,6 +283,7 @@ namespace PeterHan.PLib.Options {
 			Instance = this;
 
 			registered.Clear();
+			SetSharedData(PUtil.CreateAssemblyToModTable());
 			foreach (var optionsProvider in PRegistry.Instance.GetAllComponents(ID)) {
 				var options = optionsProvider.GetInstanceData<IDictionary<string, Type>>();
 				if (options != null)

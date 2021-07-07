@@ -16,18 +16,13 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib;
-using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
 using System;
 using UnityEngine;
 
-using NavTransition = NavGrid.Transition;
-
 namespace PeterHan.QueueForSinks {
 	/// <summary>
-	/// A checkpoint component which prevents Duplicants from passing if a sink, wash basin,
-	/// or ore scrubber is in use and they could use it.
+	/// A checkpoint component which prevents Duplicants from passing if a workable is in use
+	/// and they could use it.
 	/// </summary>
 	public abstract class WorkCheckpoint<T> : KMonoBehaviour, ISaveLoadable where T : Workable
 	{

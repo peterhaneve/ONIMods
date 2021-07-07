@@ -42,6 +42,24 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// Denotes a mod option field. Can also be used on members of an Enum type to give
 		/// them a friendly display name.
+		/// 
+		/// This overload will take the option strings from STRINGS, using the namespace of the
+		/// declaring type and the name of the property. A type declared in the MyName.
+		/// MyNamespace namespace with a property named TestProperty will get the title
+		/// STRINGS.MYNAME.MYNAMESPACE.OPTIONS.TESTPROPERTY.NAME, the tooltip
+		/// STRINGS.MYNAME.MYNAMESPACE.OPTIONS.TESTPROPERTY.TOOLTIP, and the category
+		/// STRINGS.MYNAME.MYNAMESPACE.OPTIONS.TESTPROPERTY.CATEGORY.
+		/// </summary>
+		public OptionAttribute() {
+			Format = null;
+			Title = null;
+			Tooltip = null;
+			Category = null;
+		}
+
+		/// <summary>
+		/// Denotes a mod option field. Can also be used on members of an Enum type to give
+		/// them a friendly display name.
 		/// </summary>
 		/// <param name="title">The field title to display.</param>
 		/// <param name="tooltip">The tool tip for the field.</param>

@@ -102,37 +102,37 @@ namespace PeterHan.PLib.Options {
 		/// Creates an options entry wrapper for the specified property.
 		/// </summary>
 		/// <param name="info">The property to wrap.</param>
-		/// <param name="oa">The option title and tool tip.</param>
+		/// <param name="spec">The option title and tool tip.</param>
 		/// <returns>An options wrapper, or null if none can handle this type.</returns>
-		private static OptionsEntry FindOptionClass(OptionAttribute oa, PropertyInfo info) {
+		private static OptionsEntry FindOptionClass(IOptionSpec spec, PropertyInfo info) {
 			OptionsEntry entry = null;
 			Type type = info.PropertyType;
 			string field = info.Name;
 			// Enumeration type
 			if (type.IsEnum)
-				entry = new SelectOneOptionsEntry(field, oa, type);
+				entry = new SelectOneOptionsEntry(field, spec, type);
 			else if (type == typeof(bool))
-				entry = new CheckboxOptionsEntry(field, oa);
+				entry = new CheckboxOptionsEntry(field, spec);
 			else if (type == typeof(int))
-				entry = new IntOptionsEntry(field, oa, info.
+				entry = new IntOptionsEntry(field, spec, info.
 					GetCustomAttribute<LimitAttribute>());
 			else if (type == typeof(int?))
-				entry = new NullableIntOptionsEntry(field, oa, info.
+				entry = new NullableIntOptionsEntry(field, spec, info.
 					GetCustomAttribute<LimitAttribute>());
 			else if (type == typeof(float))
-				entry = new FloatOptionsEntry(field, oa, info.
+				entry = new FloatOptionsEntry(field, spec, info.
 					GetCustomAttribute<LimitAttribute>());
 			else if (type == typeof(float?))
-				entry = new NullableFloatOptionsEntry(field, oa, info.
+				entry = new NullableFloatOptionsEntry(field, spec, info.
 					GetCustomAttribute<LimitAttribute>());
 			else if (type == typeof(string))
-				entry = new StringOptionsEntry(field, oa, info.
+				entry = new StringOptionsEntry(field, spec, info.
 					GetCustomAttribute<LimitAttribute>());
 			else if (type == typeof(Action<object>))
 				// Should not actually be serialized to the JSON
-				entry = new ButtonOptionsEntry(field, oa);
+				entry = new ButtonOptionsEntry(field, spec);
 			else if (type == typeof(LocText))
-				entry = new TextBlockOptionsEntry(field, oa);
+				entry = new TextBlockOptionsEntry(field, spec);
 			return entry;
 		}
 
@@ -145,7 +145,7 @@ namespace PeterHan.PLib.Options {
 		/// <param name="keyOrValue">The string key to check.</param>
 		/// <returns>The string value with that key, or the key if there is no such localized
 		/// string value.</returns>
-		internal static string LookInStrings(string keyOrValue) {
+		public static string LookInStrings(string keyOrValue) {
 			string result = keyOrValue;
 			if (!string.IsNullOrEmpty(keyOrValue) && Strings.TryGet(keyOrValue, out StringEntry
 					entry))
@@ -164,30 +164,58 @@ namespace PeterHan.PLib.Options {
 			IOptionsEntry result = null;
 			// Must have the annotation, cannot be indexed
 			var indexes = prop.GetIndexParameters();
-			if (indexes == null || indexes.Length < 1) {
-				DynamicOptionAttribute doa;
-				OptionAttribute oa;
-				if ((oa = prop.GetCustomAttribute<OptionAttribute>()) != null) {
-					// Attempt to find a class that will represent it
-					var type = prop.PropertyType;
-					result = FindOptionClass(oa, prop);
-					// See if it has entries that can themselves be added, ignore
-					// value types and avoid infinite recursion
-					if (result == null && !type.IsValueType && depth < 16 && type !=
-							prop.DeclaringType)
-						result = CompositeOptionsEntry.Create(oa, prop, depth);
-				} else if ((doa = prop.GetCustomAttribute<DynamicOptionAttribute>()) != null &&
-						typeof(IOptionsEntry).IsAssignableFrom(doa.Handler))
-					try {
-						result = Activator.CreateInstance(doa.Handler) as IOptionsEntry;
-					} catch (TargetInvocationException e) {
-						PUtil.LogError("Unable to create option handler for property " +
-							prop.Name + ":");
-						PUtil.LogException(e.GetBaseException() ?? e);
-					} catch (MissingMethodException) {
-						PUtil.LogWarning("Unable to create option handler for property " +
-							prop.Name + ", it must have a public default constructor");
-					}
+			if (indexes == null || indexes.Length < 1)
+				foreach (var attribute in prop.GetCustomAttributes()) {
+					result = TryCreateEntry(attribute, prop, depth);
+					if (result != null)
+						break;
+				}
+			return result;
+		}
+
+		/// <summary>
+		/// Creates an options entry if an attribute is a valid IOptionSpec or
+		/// DynamicOptionAttribute.
+		/// </summary>
+		/// <param name="attribute">The attribute to parse.</param>
+		/// <param name="prop">The property to inspect.</param>
+		/// <param name="depth">The current depth of iteration to avoid infinite loops.</param>
+		/// <returns>The OptionsEntry created from the attribute, or null if none was.</returns>
+		private static IOptionsEntry TryCreateEntry(Attribute attribute, PropertyInfo prop,
+				int depth) {
+			IOptionsEntry result = null;
+			if (prop == null)
+				throw new ArgumentNullException(nameof(prop));
+			if (attribute is IOptionSpec spec) {
+				if (string.IsNullOrEmpty(spec.Title)) {
+					// Replace with entries takem from the strings
+					string prefix = "STRINGS.{0}.OPTIONS.{1}.".F(prop.DeclaringType?.
+						Namespace?.ToUpperInvariant(), prop.Name?.ToUpperInvariant());
+					spec = new OptionAttribute(prefix + "NAME", prefix + "TOOLTIP",
+							LookInStrings(prefix + "CATEGORY")) {
+						Format = spec.Format
+					};
+				}
+				// Attempt to find a class that will represent it
+				var type = prop.PropertyType;
+				result = FindOptionClass(spec, prop);
+				// See if it has entries that can themselves be added, ignore
+				// value types and avoid infinite recursion
+				if (result == null && !type.IsValueType && depth < 16 && type !=
+						prop.DeclaringType)
+					result = CompositeOptionsEntry.Create(spec, prop, depth);
+			} else if (attribute is DynamicOptionAttribute doa &&
+					typeof(IOptionsEntry).IsAssignableFrom(doa.Handler)) {
+				try {
+					result = Activator.CreateInstance(doa.Handler) as IOptionsEntry;
+				} catch (TargetInvocationException e) {
+					PUtil.LogError("Unable to create option handler for property " +
+						prop.Name + ":");
+					PUtil.LogException(e.GetBaseException() ?? e);
+				} catch (MissingMethodException) {
+					PUtil.LogWarning("Unable to create option handler for property " +
+						prop.Name + ", it must have a public default constructor");
+				}
 			}
 			return result;
 		}
@@ -226,13 +254,13 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		public abstract object Value { get; set; }
 
-		internal OptionsEntry(string field, IOptionSpec attr)
+		protected OptionsEntry(string field, IOptionSpec attr)
 		{
 			if (attr == null)
 				throw new ArgumentNullException(nameof(attr));
 			Field = field;
 			Format = attr.Format;
-			Title = attr.Title;
+			Title = attr.Title ?? throw new ArgumentException("attr.Title is null");
 			Tooltip = attr.Tooltip;
 			Category = attr.Category;
 		}
