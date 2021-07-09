@@ -26,8 +26,7 @@ namespace PeterHan.PLib.Options {
 	/// 
 	/// This interface is <b>optional</b>. There is no need to implement it to use PLib
 	/// Options. But if one method is implemented, the other must also be. If not used,
-	/// OnOptionsChanged should be empty, and CreateOptions should return null or an empty
-	/// collection.
+	/// OnOptionsChanged should be empty, and CreateOptions should an empty collection.
 	/// </summary>
 	public interface IOptions {
 		/// <summary>

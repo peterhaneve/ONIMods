@@ -287,6 +287,7 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <param name="dialog">The dialog to populate.</param>
 		private void FillModOptions(PDialog dialog) {
+			IEnumerable<IOptionsEntry> dynamicOptions;
 			var body = dialog.Body;
 			var margin = new RectOffset(CATEGORY_MARGIN, CATEGORY_MARGIN, CATEGORY_MARGIN,
 				CATEGORY_MARGIN);
@@ -297,9 +298,11 @@ namespace PeterHan.PLib.Options {
 				TextAnchor.UpperCenter, FlexSize = Vector2.right
 			};
 			var allOptions = optionCategories;
-			if (options is IOptions dynOptions) {
+			// Add options from the user's class
+			if (options is IOptions dynOptions && (dynamicOptions = dynOptions.
+					CreateOptions()) != null) {
 				allOptions = new Dictionary<string, OptionsList>(optionCategories);
-				foreach (var dynamicOption in dynOptions.CreateOptions())
+				foreach (var dynamicOption in dynamicOptions)
 					OptionsEntry.AddToCategory(allOptions, dynamicOption);
 			}
 			// Display all categories

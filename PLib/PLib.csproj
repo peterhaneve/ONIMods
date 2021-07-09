@@ -3,8 +3,8 @@
   <PropertyGroup>
     <Title>PeterHan.PLib</Title>
     <AssemblyTitle>PLib</AssemblyTitle>
-    <Version>4.2.0.0</Version>
-    <!--<PackageVersion>4.2.0-beta</PackageVersion>-->
+    <Version>4.3.0.0</Version>
+    <!--<PackageVersion>4.3.0-beta</PackageVersion>-->
     <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
     <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -15,11 +15,11 @@
     <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
     
 Contains methods aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
-    <PackageReleaseNotes>Fix a potential NRE for unintialized composite option fields. Fix master disable not working for AVC.
+    <PackageReleaseNotes>Allow use of Option with no parameters to auto select strings (see README or XML documentation for details).
 
-ILRepack is no longer a required dependency for users who wish to use ILMerge instead.</PackageReleaseNotes>
+Fix titles and assembly versions in options dialogs.</PackageReleaseNotes>
     <RootNamespace>PeterHan.PLib</RootNamespace>
-    <AssemblyVersion>4.2.0.0</AssemblyVersion>
+    <AssemblyVersion>4.3.0.0</AssemblyVersion>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
     <UsesPLib>false</UsesPLib>
