@@ -36,6 +36,9 @@ namespace PeterHan.QueueForSinks {
 #pragma warning disable IDE0044 // Add readonly modifier
 		[MyCmpReq]
 		private HandSanitizer handSanitizer;
+
+		[MyCmpGet]
+		private Operational operational;
 #pragma warning restore IDE0044
 #pragma warning restore CS0649
 
@@ -83,13 +86,12 @@ namespace PeterHan.QueueForSinks {
 		private bool NeedsToUse(GameObject dupe) {
 			var element = dupe.GetComponent<PrimaryElement>();
 			var identity = dupe.GetComponent<MinionIdentity>();
-			// If not ready, or (wearing suit and cannot sanitize suit), cannot use
+			// If wearing suit and cannot sanitize suit, cannot use
 			// If always use, can use
 			// Otherwise, use if primary element has a disease
-			return (!handSanitizer.smi.IsReady() || (!handSanitizer.canSanitizeSuit &&
-				identity.GetEquipment().IsSlotOccupied(Db.Get().AssignableSlots.Suit))) &&
-				(handSanitizer.alwaysUse || (element != null && element.DiseaseIdx != Klei.
-				SimUtil.DiseaseInfo.Invalid.idx));
+			return (handSanitizer.canSanitizeSuit || !identity.GetEquipment().IsSlotOccupied(
+				Db.Get().AssignableSlots.Suit)) && (handSanitizer.alwaysUse || (element !=
+				null && element.DiseaseIdx != Klei.SimUtil.DiseaseInfo.Invalid.idx));
 		}
 
 		protected override bool MustStop(GameObject reactor, float direction) {
