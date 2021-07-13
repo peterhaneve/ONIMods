@@ -61,6 +61,10 @@ namespace PeterHan.DebugNotIncluded {
 		[JsonProperty]
 		public bool SkipFirstModCheck { get; set; }
 
+		[Option("Sort Schedules", "Sorts schedules alphabetically on load.", "Quality of Life")]
+		[JsonProperty]
+		public bool SortSchedules { get; set; }
+
 		public DebugNotIncludedOptions() {
 			DetailedBacktrace = true;
 			DisableCrashDialog = false;
@@ -69,6 +73,7 @@ namespace PeterHan.DebugNotIncluded {
 			PowerUserMode = false;
 			ShowLogSenders = false;
 			SkipFirstModCheck = false;
+			SortSchedules = false;
 		}
 
 		public override string ToString() {

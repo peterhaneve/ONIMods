@@ -42,9 +42,11 @@ namespace PeterHan.PLib.Options {
 				if (enumField.DeclaringType == fieldType) {
 					// Search for OptionsAttribute
 					foreach (var attrib in enumField.GetCustomAttributes(false))
-						if (attrib is OptionAttribute oa) {
-							title = LookInStrings(oa.Title);
-							tooltip = LookInStrings(oa.Tooltip);
+						if (attrib is IOptionSpec spec) {
+							if (string.IsNullOrEmpty(spec.Title))
+								spec = HandleDefaults(spec, enumField);
+							title = LookInStrings(spec.Title);
+							tooltip = LookInStrings(spec.Tooltip);
 							break;
 						}
 					break;

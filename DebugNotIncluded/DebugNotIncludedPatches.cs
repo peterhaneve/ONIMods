@@ -516,6 +516,24 @@ namespace PeterHan.DebugNotIncluded {
 			}
 		}
 
+		/// <summary>
+		/// Applied to ScheduleManager to sort schedules upon game load.
+		/// </summary>
+		[HarmonyPatch(typeof(ScheduleManager), "OnSpawn")]
+		public static class ScheduleManager_OnSpawn_Patch {
+			internal static bool Prepare() {
+				return DebugNotIncludedOptions.Instance?.SortSchedules ?? false;
+			}
+
+			/// <summary>
+			/// Applied after OnSpawn runs.
+			/// </summary>
+			internal static void Postfix(ScheduleManager __instance) {
+				DebugLogger.LogDebug("Sorting schedules");
+				__instance.GetSchedules().Sort((a, b) => a.name.CompareTo(b.name));
+			}
+		}
+
 #if false
 		private static ConcurrentDictionary<string, int> hitCount;
 		private static ConcurrentDictionary<int, int> threadCount;

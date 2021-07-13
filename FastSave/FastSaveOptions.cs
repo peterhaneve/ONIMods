@@ -45,28 +45,33 @@ namespace PeterHan.FastSave {
 		[JsonProperty]
 		public FastSaveMode Mode { get; set; }
 
+		[Option("Use Delegates", "Reduces time consuming reflection during saves to reduce total time to save")]
+		[JsonProperty]
+		public bool DelegateSave { get; set; }
+
 		public FastSaveOptions() {
 			Mode = FastSaveMode.Safe;
+			DelegateSave = false;
 			BackgroundSave = true;
 		}
 
 		public override string ToString() {
-			return "FastSaveOptions[mode={0},background={1}]".F(Mode, BackgroundSave);
+			return "FastSaveOptions[mode={0},background={1},delegate={2}]".F(Mode,
+				BackgroundSave, DelegateSave);
 		}
 
 		/// <summary>
 		/// The available modes.
 		/// 
-		/// Safe mode does not affect colony summary or uptime. Moderate retains 20 cycles of
-		/// colony summary and 600s of uptime. Aggressive retains 4 cycles of colony summary
-		/// and 60s of uptime.
+		/// Safe mode does not affect colony summary. Moderate retains 20 cycles of colony
+		/// summary. Aggressive retains 4 cycles of colony summary.
 		/// </summary>
 		public enum FastSaveMode {
 			[Option("Safe", "Daily Reports: All")]
 			Safe,
 			[Option("Moderate", "Daily Reports: 20 Cycles")]
 			Moderate,
-			[Option("Aggressive", "Daily Reports: 2 Cycles")]
+			[Option("Aggressive", "Daily Reports: 4 Cycles")]
 			Aggressive
 		}
 	}

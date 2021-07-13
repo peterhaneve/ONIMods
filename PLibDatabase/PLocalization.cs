@@ -46,7 +46,10 @@ namespace PeterHan.PLib.Database {
 		/// <param name="locale">The locale file name to be used.</param>
 		private static void Localize(Assembly modAssembly, Localization.Locale locale) {
 			string path = PUtil.GetModPath(modAssembly);
-			var poFile = Path.Combine(Path.Combine(path, TRANSLATIONS_DIR), locale.Code +
+			string locCode = locale.Code;
+			if (string.IsNullOrEmpty(locCode))
+				locCode = Localization.GetCurrentLanguageCode();
+			var poFile = Path.Combine(Path.Combine(path, TRANSLATIONS_DIR), locCode +
 				PLibLocalization.TRANSLATIONS_EXT);
 			try {
 				Localization.OverloadStrings(Localization.LoadStringsFile(poFile, false));
@@ -54,12 +57,12 @@ namespace PeterHan.PLib.Database {
 				// No localization available for this locale
 #if DEBUG
 				PDatabaseUtils.LogDatabaseDebug("No {0} localization available for mod {1}".F(
-					locale.Code, modAssembly.GetNameSafe() ?? "?"));
+					locCode, modAssembly.GetNameSafe() ?? "?"));
 #endif
 			} catch (DirectoryNotFoundException) {
 			} catch (IOException e) {
 				PDatabaseUtils.LogDatabaseWarning("Failed to load {0} localization for mod {1}:".
-					F(locale.Code, modAssembly.GetNameSafe() ?? "?"));
+					F(locCode, modAssembly.GetNameSafe() ?? "?"));
 				PUtil.LogExcWarn(e);
 			}
 		}

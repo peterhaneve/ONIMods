@@ -37,6 +37,9 @@ namespace PeterHan.PLib.Core {
 			var locale = Localization.GetLocale();
 			if (locale != null) {
 				int n = 0;
+				string locCode = locale.Code;
+				if (string.IsNullOrEmpty(locCode))
+					locCode = Localization.GetCurrentLanguageCode();
 				var libLocal = PRegistry.Instance.GetAllComponents(typeof(PLibCorePatches).
 					FullName);
 				if (libLocal != null)
@@ -51,7 +54,7 @@ namespace PeterHan.PLib.Core {
 					}
 				if (n > 0)
 					PRegistry.LogPatchDebug("Localized {0:D} mod(s) to locale {1}".F(
-						n, locale.Code));
+						n, locCode));
 			}
 		}
 

@@ -48,11 +48,15 @@ namespace PeterHan.PLib.Core {
 				throw new ArgumentNullException(nameof(locale));
 			Localization.RegisterForTranslation(typeof(PLibStrings));
 			var assembly = Assembly.GetExecutingAssembly();
+			string locCode = locale.Code;
+			if (string.IsNullOrEmpty(locCode))
+				locCode = Localization.GetCurrentLanguageCode();
 			try {
 				using (var stream = assembly.GetManifestResourceStream(
-						TRANSLATIONS_RES_PATH + locale.Code + TRANSLATIONS_EXT)) {
+						TRANSLATIONS_RES_PATH + locCode + TRANSLATIONS_EXT)) {
 					if (stream != null) {
-						var lines = new List<string>();
+						// File.ReadAllLines does not work on streams unfortunately
+						var lines = new List<string>(128);
 						using (var reader = new StreamReader(stream, Encoding.UTF8)) {
 							string line;
 							while ((line = reader.ReadLine()) != null)
@@ -61,12 +65,12 @@ namespace PeterHan.PLib.Core {
 						Localization.OverloadStrings(Localization.ExtractTranslatedStrings(
 							lines.ToArray()));
 #if DEBUG
-						PUtil.LogDebug("Localizing PLib Core to locale {0}".F(locale.Code));
+						PUtil.LogDebug("Localizing PLib Core to locale {0}".F(locCode));
 #endif
 					}
 				}
 			} catch (Exception e) {
-				PUtil.LogWarning("Failed to load {0} localization for PLib Core:".F(locale.Code));
+				PUtil.LogWarning("Failed to load {0} localization for PLib Core:".F(locCode));
 				PUtil.LogExcWarn(e);
 			}
 		}

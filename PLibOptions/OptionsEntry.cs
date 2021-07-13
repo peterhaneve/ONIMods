@@ -137,6 +137,24 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
+		/// Substitutes default strings for an options entry with an empty title.
+		/// </summary>
+		/// <param name="spec">The option attribute supplied (Format is still accepted!)</param>
+		/// <param name="member">The item declaring the attribute.</param>
+		/// <returns>A substitute attribute with default values from STRINGS.</returns>
+		internal static IOptionSpec HandleDefaults(IOptionSpec spec, MemberInfo member) {
+			// Replace with entries takem from the strings
+			string prefix = "STRINGS.{0}.OPTIONS.{1}.".F(member.DeclaringType?.
+				Namespace?.ToUpperInvariant(), member.Name?.ToUpperInvariant());
+			string category = "";
+			if (Strings.TryGet(prefix + "CATEGORY", out StringEntry entry))
+				category = entry.String;
+			return new OptionAttribute(prefix + "NAME", prefix + "TOOLTIP", category) {
+				Format = spec.Format
+			};
+		}
+
+		/// <summary>
 		/// First looks to see if the string exists in the string database; if it does, returns
 		/// the localized value, otherwise returns the string unmodified.
 		/// 
@@ -187,15 +205,8 @@ namespace PeterHan.PLib.Options {
 			if (prop == null)
 				throw new ArgumentNullException(nameof(prop));
 			if (attribute is IOptionSpec spec) {
-				if (string.IsNullOrEmpty(spec.Title)) {
-					// Replace with entries takem from the strings
-					string prefix = "STRINGS.{0}.OPTIONS.{1}.".F(prop.DeclaringType?.
-						Namespace?.ToUpperInvariant(), prop.Name?.ToUpperInvariant());
-					spec = new OptionAttribute(prefix + "NAME", prefix + "TOOLTIP",
-							LookInStrings(prefix + "CATEGORY")) {
-						Format = spec.Format
-					};
-				}
+				if (string.IsNullOrEmpty(spec.Title))
+					spec = HandleDefaults(spec, prop);
 				// Attempt to find a class that will represent it
 				var type = prop.PropertyType;
 				result = FindOptionClass(spec, prop);
