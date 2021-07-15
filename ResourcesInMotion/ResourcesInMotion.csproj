@@ -7,7 +7,7 @@
     <Description>Saves and restores the state of doors across reloads.</Description>
     <AssemblyVersion>1.1.0.0</AssemblyVersion>
     <SupportedContent>VANILLA_ID</SupportedContent>
-    <LastWorkingBuild>469300</LastWorkingBuild>
-    <Platforms>Vanilla;Spaced Out</Platforms>
+    <LastWorkingBuild>471618</LastWorkingBuild>
+    <Platforms>Vanilla</Platforms>
   </PropertyGroup>
 </Project>

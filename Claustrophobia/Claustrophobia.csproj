@@ -9,6 +9,6 @@
     <CopyPreview>true</CopyPreview>
     <SupportedContent>VANILLA_ID</SupportedContent>
     <LastWorkingBuild>447213</LastWorkingBuild>
-    <Platforms>Vanilla;Spaced Out</Platforms>
+    <Platforms>Vanilla</Platforms>
   </PropertyGroup>
 </Project>

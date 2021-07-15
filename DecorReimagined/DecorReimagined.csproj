@@ -7,16 +7,8 @@
     <Description>Reworks decor, making an attractive colony a better colony.</Description>
     <AssemblyVersion>4.0.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
-    <Platforms>Vanilla;Spaced Out</Platforms>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
-    <ArchivedVersionPath>\archived_versions\vanilla</ArchivedVersionPath>
-    <SupportedContent>VANILLA_ID</SupportedContent>
-    <LastWorkingBuild>469300</LastWorkingBuild>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
-    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>469369</LastWorkingBuild>
+    <LastWorkingBuild>471618</LastWorkingBuild>
+    <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="buildings.json" />

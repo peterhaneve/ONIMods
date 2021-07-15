@@ -36,9 +36,10 @@ namespace PeterHan.FastSave {
 		/// </summary>
 		/// <param name="rt">The texture where the timelapse image was rendered.</param>
 		/// <param name="savePath">The path to save the image.</param>
+		/// <param name="worldName">The name of the world to write.</param>
 		/// <param name="preview">true if the image is a colony preview.</param>
 		private static System.Collections.IEnumerator TimelapseCoroutine(RenderTexture rt,
-				string savePath, bool preview) {
+				string savePath, string worldName, bool preview) {
 			int width = rt.width, height = rt.height;
 			if (width > 0 && height > 0) {
 				var request = AsyncGPUReadback.Request(rt, 0);
@@ -49,13 +50,13 @@ namespace PeterHan.FastSave {
 					PUtil.LogWarning("Error saving background timelapse image!");
 					var oldRT = RenderTexture.active;
 					RenderTexture.active = rt;
-					Game.Instance.timelapser.WriteToPng(rt);
+					Game.Instance.timelapser.WriteToPng(rt, worldName);
 					RenderTexture.active = oldRT;
 				} else {
 					byte[] rawARGB = request.GetData<byte>().ToArray();
 					if (rawARGB != null)
 						BackgroundTimelapser.Instance.Start(savePath, TextureToPNG(rawARGB,
-							width, height), preview);
+							width, height), worldName, preview);
 				}
 			}
 		}
@@ -259,25 +260,33 @@ namespace PeterHan.FastSave {
 			/// </summary>
 			internal static bool Prefix(RenderTexture ___bufferRenderTexture, float ___camSize,
 					string ___previewSaveGamePath, bool ___previewScreenshot,
-					Vector3 ___camPosition) {
-				var telepad = GameUtil.GetTelepad(0);
+					Vector3 ___camPosition, int world_id) {
+				var world = ClusterManager.Instance.GetWorld(world_id);
 				var rt = ___bufferRenderTexture;
 				var inst = CameraController.Instance;
-				if (telepad == null)
-					Debug.Log("No telepad present, aborting screenshot.");
-				else if (rt != null && inst != null) {
-					var centerPos = telepad.transform.position;
+				if (world != null && rt != null && inst != null) {
+					float z = inst.transform.position.z;
+					var grid = world.GetComponent<ClusterGridEntity>();
+					if (world.IsStartWorld) {
+						var telepad = GameUtil.GetTelepad(0);
+						if (telepad == null)
+							Debug.Log("No telepad present, aborting screenshot.");
+						else {
+							var centerPos = telepad.transform.position;
+							centerPos.z = z;
+							inst.SetPosition(centerPos);
+						}
+					} else
+						inst.SetPosition(new Vector3(world.WorldOffset.x + world.WorldSize.x *
+							0.5f, world.WorldOffset.y + world.WorldSize.y * 0.5f, z));
 					var oldRT = RenderTexture.active;
 					// Center camera on the printing pod
 					RenderTexture.active = rt;
-					inst.SetPosition(new Vector3(centerPos.x, centerPos.y, inst.transform.
-						position.z));
 					inst.RenderForTimelapser(ref rt);
 					inst.StartCoroutine(TimelapseCoroutine(rt, ___previewSaveGamePath,
-						___previewScreenshot));
+						(grid == null) ? "" : grid.Name, ___previewScreenshot));
 					inst.SetOrthographicsSize(___camSize);
 					inst.SetPosition(___camPosition);
-					inst.SetTargetPos(___camPosition, ___camSize, false);
 					RenderTexture.active = oldRT;
 				}
 				return false;

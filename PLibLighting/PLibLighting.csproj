@@ -9,7 +9,7 @@
     <AssemblyVersion>4.4.0.0</AssemblyVersion>
     <DistributeMod>false</DistributeMod>
     <PLibCore>true</PLibCore>
-    <Platforms>Vanilla;Spaced Out</Platforms>
+    <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DocumentationFile>bin\$(Platform)\Release\PLibLighting.xml</DocumentationFile>

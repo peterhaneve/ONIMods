@@ -11,11 +11,11 @@
   <ItemGroup Condition=" '$(PLibCore)' != 'true' ">
     <PackageReference Include="ILRepack.MSBuild.Task" Version="2.0.13" Private="True" PrivateAssets="all" />
   </ItemGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
-    <GameFolderActive>$(GameFolderVanilla)</GameFolderActive>
+  <PropertyGroup Condition=" '$(Platform)' == 'Mergedown' ">
+    <GameFolderActive>$(GameFolderMergedown)</GameFolderActive>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Platform)' != 'Vanilla' ">
-    <GameFolderActive>$(GameFolderSpacedOut)</GameFolderActive>
+  <PropertyGroup Condition=" '$(Platform)' != 'Mergedown' ">
+    <GameFolderActive>$(GameFolderLegacy)</GameFolderActive>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony" HintPath="$(GameFolderActive)/0Harmony.dll" />
@@ -41,12 +41,12 @@
     <ProjectReference Include="../PLibOptions/PLibOptions.csproj" />
     <ProjectReference Include="../PLibUI/PLibUI.csproj" />
   </ItemGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
-    <DefineConstants>SPACEDOUT</DefineConstants>
+  <PropertyGroup Condition=" '$(Platform)' == 'Mergedown' ">
+    <DefineConstants>MERGEDOWN</DefineConstants>
     <APIVersion>2</APIVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
-    <DefineConstants>VANILLA</DefineConstants>
+    <DefineConstants>LEGACY</DefineConstants>
     <APIVersion>1</APIVersion>
   </PropertyGroup>
   <PropertyGroup>

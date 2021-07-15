@@ -27,8 +27,6 @@ using PeterHan.PLib.UI;
 using System.Collections.Generic;
 using UnityEngine;
 
-using AchieveDict = System.Collections.Generic.IDictionary<string, ColonyAchievementStatus>;
-
 namespace PeterHan.MoreAchievements {
 	/// <summary>
 	/// Patches which will be applied via annotations for One Giant Leap.
@@ -38,11 +36,6 @@ namespace PeterHan.MoreAchievements {
 		/// The base path to the embedded images.
 		/// </summary>
 		private const string BASE_PATH = "PeterHan.MoreAchievements.images.";
-
-		/// <summary>
-		/// The current options used for the mod.
-		/// </summary>
-		internal static MoreAchievementsOptions Options { get; private set; }
 
 		/// <summary>
 		/// The tag used when a Duplicant is incapacitated due to scalding.
@@ -134,7 +127,6 @@ namespace PeterHan.MoreAchievements {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 			new PLocalization().Register();
-			Options = new MoreAchievementsOptions();
 			new PPatchManager(harmony).RegisterPatchClass(typeof(MoreAchievementsPatches));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
 			// Set hidden achievements
@@ -306,10 +298,6 @@ namespace PeterHan.MoreAchievements {
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
 			internal static void Postfix(Game __instance) {
-				// Reload options
-				var newOptions = POptions.ReadSettings<MoreAchievementsOptions>();
-				if (newOptions != null)
-					Options = newOptions;
 				__instance.gameObject.AddOrGet<AchievementStateComponent>();
 			}
 		}

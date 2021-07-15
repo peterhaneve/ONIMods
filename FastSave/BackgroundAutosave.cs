@@ -204,7 +204,10 @@ namespace PeterHan.FastSave {
 					writer.Write(header.headerVersion);
 					writer.Write(header.compression);
 					writer.Write(saveHeader);
-					KSerialization.Manager.SerializeDirectory(writer);
+					if (FastSaveOptions.Instance.DelegateSave)
+						FastSerializationManager.SerializeDirectory(writer);
+					else
+						KSerialization.Manager.SerializeDirectory(writer);
 					writer.Flush();
 					if (data.Compress)
 						COMPRESS_CONTENTS.Invoke(writer, stream.GetBuffer(), (int)stream.
@@ -212,6 +215,7 @@ namespace PeterHan.FastSave {
 					else
 						stream.CopyTo(writer.BaseStream);
 				}
+				stream.Dispose();
 				status = SaveStatus.Done;
 				PUtil.LogDebug("Background save complete");
 			} catch (IOException e) {
@@ -256,7 +260,10 @@ namespace PeterHan.FastSave {
 			var inst = SaveLoader.Instance;
 			bool save = true;
 			if (inst != null) {
-				KSerialization.Manager.Clear();
+				if (FastSaveOptions.Instance.DelegateSave)
+					FastSerializationManager.ClearSmart();
+				else
+					KSerialization.Manager.Clear();
 #if DEBUG
 				PUtil.LogDebug("Starting serialization of save");
 #endif

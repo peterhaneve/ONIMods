@@ -6,15 +6,7 @@
     <RootNamespace>PeterHan.ResearchQueue</RootNamespace>
     <Description>Allows multiple tech tree research items to be queued.</Description>
     <AssemblyVersion>3.0.0.0</AssemblyVersion>
-    <Platforms>Vanilla;Spaced Out</Platforms>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
-    <ArchivedVersionPath>\archived_versions\vanilla</ArchivedVersionPath>
-    <SupportedContent>VANILLA_ID</SupportedContent>
-    <LastWorkingBuild>469300</LastWorkingBuild>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
-    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>469369</LastWorkingBuild>
+    <LastWorkingBuild>471618</LastWorkingBuild>
+    <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
 </Project>

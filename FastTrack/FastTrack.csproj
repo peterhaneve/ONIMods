@@ -6,8 +6,7 @@
     <RootNamespace>PeterHan.FastTrack</RootNamespace>
     <Description>Optimizes Duplicant path finding.</Description>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>0</LastWorkingBuild>
-    <Platforms>Vanilla;Spaced Out</Platforms>
+    <LastWorkingBuild>471618</LastWorkingBuild>
+    <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
 </Project>

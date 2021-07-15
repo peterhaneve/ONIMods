@@ -3,8 +3,8 @@
   <PropertyGroup>
     <SteamFolder>C:\Program Files (x86)\Steam</SteamFolder>
     <GameFolder>$(SteamFolder)\steamapps\common\OxygenNotIncluded\OxygenNotIncluded_Data\Managed</GameFolder>
-    <GameFolderSpacedOut>$(GameFolder)</GameFolderSpacedOut>
-    <GameFolderVanilla>$(GameFolder)</GameFolderVanilla>
+    <GameFolderMergedown>$(GameFolder)</GameFolderMergedown>
+    <GameFolderLegacy>$(GameFolder)</GameFolderLegacy>
     <ModFolder>$(UserProfile)\Documents\Klei\OxygenNotIncluded\mods\dev</ModFolder>
   </PropertyGroup>
 </Project>

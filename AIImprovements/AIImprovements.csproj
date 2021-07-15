@@ -7,17 +7,7 @@
     <Description>Makes Duplicants just a little smarter during common tasks to reduce cases of entrapment and entombment.</Description>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
-    <SupportedContent>VANILLA_ID</SupportedContent>
-    <LastWorkingBuild>460672</LastWorkingBuild>
-    <Platforms>Vanilla;Spaced Out</Platforms>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
-    <ArchivedVersionPath>\archived_versions\vanilla</ArchivedVersionPath>
-    <SupportedContent>VANILLA_ID</SupportedContent>
-    <LastWorkingBuild>469300</LastWorkingBuild>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'Spaced Out' ">
-    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
-    <LastWorkingBuild>469369</LastWorkingBuild>
+    <LastWorkingBuild>471618</LastWorkingBuild>
+    <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
 </Project>
