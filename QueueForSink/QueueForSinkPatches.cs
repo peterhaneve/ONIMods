@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 
 namespace PeterHan.QueueForSinks {
@@ -27,6 +28,7 @@ namespace PeterHan.QueueForSinks {
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

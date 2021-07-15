@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
@@ -90,6 +91,7 @@ namespace PeterHan.ThermalTooltips {
 			new PLocalization().Register();
 			TooltipInstance = null;
 			new PPatchManager(harmony).RegisterPatchClass(typeof(ThermalTooltipsPatches));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

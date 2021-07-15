@@ -143,11 +143,12 @@ namespace PeterHan.PLib.Core {
 			T result = defValue;
 			using (var buffer = new MemoryStream(1024)) {
 				try {
-					SerializationSettings.Serialize(new StreamWriter(buffer, Encoding.UTF8),
-						remoteData);
+					var writer = new StreamWriter(buffer, Encoding.UTF8);
+					SerializationSettings.Serialize(writer, remoteData);
+					writer.Flush();
 					buffer.Position = 0L;
-					if (SerializationSettings.Deserialize(new StreamReader(buffer,
-							Encoding.UTF8), typeof(T)) is T decoded)
+					var reader = new StreamReader(buffer, Encoding.UTF8);
+					if (SerializationSettings.Deserialize(reader, typeof(T)) is T decoded)
 						result = decoded;
 				} catch (JsonException e) {
 					PUtil.LogError("Unable to serialize instance data for component " + ID +

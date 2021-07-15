@@ -17,37 +17,37 @@
  */
 
 using Database;
-using KSerialization;
 using System;
-using System.IO;
 
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
 	/// Requires a Duplicant death from the specified cause.
 	/// </summary>
-	public class DeathFromCause : ColonyAchievementRequirement, IDeathRequirement, AchievementRequirementSerialization_Deprecated {
+	public class DeathFromCause : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
+		/// <summary>
+		/// The trigger cause used for deaths.
+		/// </summary>
+		public const string PREFIX = "DeathFrom_";
+
 		/// <summary>
 		/// The cause of death which must occur.
 		/// </summary>
 		private string cause;
 
 		/// <summary>
-		/// Whether this death has occurred.
+		/// Whether a death from this cause occurred, when deserialized from a legacy save.
 		/// </summary>
-		private bool triggered;
+		private bool? triggered;
 
 		public DeathFromCause(string cause) {
 			if (string.IsNullOrEmpty(cause))
 				throw new ArgumentNullException("cause");
 			this.cause = cause;
-			triggered = false;
+			triggered = null;
 		}
 
-#if VANILLA
-		public override void Deserialize(IReader reader) {
-#else
 		public void Deserialize(IReader reader) {
-#endif
+			// Needs special case deserialization for save file migration
 			cause = reader.ReadKleiString();
 			triggered = reader.ReadInt32() != 0;
 		}
@@ -58,18 +58,14 @@ namespace PeterHan.MoreAchievements.Criteria {
 				null) ? cause : death.Name);
 		}
 
-		public void OnDeath(Death cause) {
-			if (cause.Id == this.cause)
-				triggered = true;
-		}
-
-		public override void Serialize(BinaryWriter writer) {
-			writer.WriteKleiString(cause);
-			writer.Write(triggered ? 1 : 0);
-		}
-
 		public override bool Success() {
-			return triggered;
+			var te = AchievementStateComponent.Instance?.TriggerEvents;
+			if (this.triggered != null && te != null) {
+				te[PREFIX + cause] = this.triggered ?? false;
+				this.triggered = null;
+			}
+			return te != null && te.TryGetValue(PREFIX + cause, out bool triggered) &&
+				triggered;
 		}
 	}
 }

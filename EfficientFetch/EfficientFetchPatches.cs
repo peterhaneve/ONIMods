@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
@@ -50,6 +51,7 @@ namespace PeterHan.EfficientFetch {
 			options = new EfficientFetchOptions();
 			new PPatchManager(harmony).RegisterPatchClass(typeof(EfficientFetchPatches));
 			new POptions().RegisterOptions(this, typeof(EfficientFetchOptions));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

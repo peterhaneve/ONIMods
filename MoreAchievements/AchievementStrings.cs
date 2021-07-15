@@ -329,7 +329,7 @@ namespace PeterHan.MoreAchievements {
 		// Whole New Worlds
 		public static class WHOLENEWWORLDS {
 			public static LocString NAME = "Whole New Worlds";
-			public static LocString DESC = "Send a Space Mission to each destination on the Starmap.";
+			public static LocString DESC = "Send a Space Mission to each planetoid on the Starmap.";
 			public static LocString PROGRESS = "Destinations visited: {0:D} / {1:D}";
 		}
 

@@ -25,9 +25,9 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// </summary>
 	public sealed class OverloadWire : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
-		/// Whether the wire has been overloaded.
+		/// The trigger cause used for overloads.
 		/// </summary>
-		private bool overloaded;
+		public const string PREFIX = "OverloadWire_";
 
 		/// <summary>
 		/// The wire type that must be overloaded.
@@ -36,26 +36,11 @@ namespace PeterHan.MoreAchievements.Criteria {
 
 		public OverloadWire(Wire.WattageRating type) {
 			this.type = type;
-			overloaded = false;
 		}
 
-		/// <summary>
-		/// Triggered when overload occurs on a wire. Updates the result of this requirement if
-		/// it is tracking that wire type.
-		/// </summary>
-		/// <param name="type">The type of wire that overloaded.</param>
-		public void CheckOverload(Wire.WattageRating type) {
-			if (this.type == type)
-				overloaded = true;
-		}
-
-#if VANILLA
-		public override void Deserialize(IReader reader) {
-#else
 		public void Deserialize(IReader reader) {
-#endif
+			// Needs special case deserialization for save file migration
 			type = (Wire.WattageRating)reader.ReadInt32();
-			overloaded = false;
 		}
 
 		public override string GetProgress(bool complete) {
@@ -63,12 +48,10 @@ namespace PeterHan.MoreAchievements.Criteria {
 				GetFormattedWattage(Wire.GetMaxWattageAsFloat(type)));
 		}
 
-		public override void Serialize(BinaryWriter writer) {
-			writer.Write((int)type);
-		}
-
 		public override bool Success() {
-			return overloaded;
+			var te = AchievementStateComponent.Instance?.TriggerEvents;
+			return te != null && te.TryGetValue(PREFIX + type.ToString(), out bool
+				overloaded) && overloaded;
 		}
 	}
 }

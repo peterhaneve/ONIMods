@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
@@ -198,6 +199,7 @@ namespace PeterHan.AIImprovements {
 			new POptions().RegisterOptions(this, typeof(AIImprovementsOptions));
 			PUtil.InitLibrary();
 			new PPatchManager(harmony).RegisterPatchClass(typeof(AIImprovementsPatches));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

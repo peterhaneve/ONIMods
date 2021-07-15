@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
@@ -32,6 +33,7 @@ namespace PeterHan.TileTempSensor {
 			LocString.CreateLocStringKeys(typeof(TileTempSensorStrings.BUILDINGS));
 			new PLocalization().Register();
 			new PBuildingManager().Register(TileTempSensorConfig.CreateBuilding());
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 	}
 }

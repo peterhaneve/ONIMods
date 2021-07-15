@@ -18,6 +18,7 @@
 
 using Database;
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using System.Collections.Generic;
@@ -109,6 +110,7 @@ namespace PeterHan.FinishTasks {
 			LocString.CreateLocStringKeys(typeof(FinishTasksStrings.DUPLICANTS));
 			LocString.CreateLocStringKeys(typeof(FinishTasksStrings.UI));
 			new PLocalization().Register();
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

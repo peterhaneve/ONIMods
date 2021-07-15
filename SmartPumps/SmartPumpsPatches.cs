@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
@@ -37,6 +38,7 @@ namespace PeterHan.SmartPumps {
 			bm.Register(FilteredLiquidPumpConfig.CreateBuilding());
 			bm.Register(VacuumPumpConfig.CreateBuilding());
 			new PPatchManager(harmony).RegisterPatchClass(typeof(FilteredPump));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Actions;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.PatchManager;
@@ -52,6 +53,7 @@ namespace PeterHan.BulkSettingsChange {
 			new PPatchManager(harmony).RegisterPatchClass(typeof(BulkChangePatches));
 			BulkChangeAction = new PActionManager().CreateAction(BulkChangeStrings.ACTION_KEY,
 				BulkChangeStrings.ACTION_TITLE, new PKeyBinding(KKeyCode.Q));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

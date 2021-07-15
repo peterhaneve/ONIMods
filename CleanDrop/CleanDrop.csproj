@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Clean Drop</AssemblyTitle>
-    <FileVersion>2.1.0.0</FileVersion>
+    <FileVersion>2.2.0.0</FileVersion>
     <RootNamespace>PeterHan.CleanDrop</RootNamespace>
     <Description>Drops materials from build, deconstruct, or repair errands in a place where the working Duplicant can usually access them.</Description>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>

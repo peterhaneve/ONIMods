@@ -3,10 +3,10 @@
   <PropertyGroup>
     <Title>PLib Automatic Version Check</Title>
     <AssemblyTitle>PLib.AVC</AssemblyTitle>
-    <Version>4.3.0.0</Version>
+    <Version>4.4.0.0</Version>
     <UsesPLib>false</UsesPLib>
     <RootNamespace>PeterHan.PLib.AVC</RootNamespace>
-    <AssemblyVersion>4.3.0.0</AssemblyVersion>
+    <AssemblyVersion>4.4.0.0</AssemblyVersion>
     <DistributeMod>false</DistributeMod>
     <PLibCore>true</PLibCore>
     <Platforms>Vanilla;Spaced Out</Platforms>

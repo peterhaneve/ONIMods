@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Actions;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
@@ -59,6 +60,7 @@ namespace PeterHan.SweepByType {
 			new PLocalization().Register();
 			Options = null;
 			new PPatchManager(harmony).RegisterPatchClass(typeof(SweepByTypePatches));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

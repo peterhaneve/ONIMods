@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
@@ -91,6 +92,7 @@ namespace PeterHan.FastSave {
 			// Sorry, Fast Save now requires a restart to take effect because of background!
 			PUtil.LogDebug("FastSave in mode: {0}".F(FastSaveOptions.Instance.Mode));
 			new PLocalization().Register();
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

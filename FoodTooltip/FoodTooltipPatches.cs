@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.PatchManager;
@@ -51,6 +52,7 @@ namespace PeterHan.FoodTooltip {
 			PUtil.InitLibrary();
 			new PLocalization().Register();
 			new PPatchManager(harmony).RegisterPatchClass(typeof(FoodTooltipPatches));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

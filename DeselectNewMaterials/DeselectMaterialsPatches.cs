@@ -17,10 +17,12 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
+using System.Collections.Generic;
 
 namespace PeterHan.DeselectNewMaterials {
 	/// <summary>
@@ -51,6 +53,7 @@ namespace PeterHan.DeselectNewMaterials {
 			Options = new DeselectMaterialsOptions();
 			new POptions().RegisterOptions(this, typeof(DeselectMaterialsOptions));
 			new PPatchManager(harmony).RegisterPatchClass(typeof(DeselectMaterialsPatches));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>
@@ -62,12 +65,17 @@ namespace PeterHan.DeselectNewMaterials {
 			/// Applied after OnDiscover runs.
 			/// </summary>
 			internal static void Postfix(TreeFilterable __instance, Storage ___storage,
-					Tag category_tag, Tag tag) {
+					Tag category_tag, Tag tag, List<Tag> ___acceptedTags) {
 				// Check the value of the storage-specific accepts/rejects new materials
 				bool accept = ___storage.gameObject.GetComponentSafe<NewMaterialsSettings>()?.
 					AcceptsNewMaterials ?? false;
-				if (!accept &&  ___storage.storageFilters.Contains(category_tag))
-					__instance.RemoveTagFromFilter(tag);
+				if (!accept && ___storage.storageFilters.Contains(category_tag)) {
+					// There should not be anything in the storage matching types that were
+					// just found, but there were racy crashes on load of legacy saves
+					// Update filter without dropping any items
+					___acceptedTags.Remove(tag);
+					__instance.OnFilterChanged?.Invoke(___acceptedTags.ToArray());
+				}
 			}
 		}
 

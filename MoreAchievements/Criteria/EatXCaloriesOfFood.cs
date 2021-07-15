@@ -17,9 +17,7 @@
  */
 
 using Database;
-using KSerialization;
 using System;
-using System.IO;
 
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
@@ -44,11 +42,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 			this.foodTag = foodTag;
 		}
 
-#if VANILLA
-		public override void Deserialize(IReader reader) {
-#else
 		public void Deserialize(IReader reader) {
-#endif
 			numCalories = Math.Max(1.0f, reader.ReadSingle());
 			foodTag = reader.ReadKleiString();
 		}
@@ -69,11 +63,6 @@ namespace PeterHan.MoreAchievements.Criteria {
 				TagManager.Create(foodTag).ProperName(), GameUtil.GetFormattedCalories(
 				complete ? numCalories : GetCaloriesConsumed()), GameUtil.GetFormattedCalories(
 				numCalories));
-		}
-
-		public override void Serialize(BinaryWriter writer) {
-			writer.Write(numCalories);
-			writer.WriteKleiString(foodTag);
 		}
 
 		public override bool Success() {

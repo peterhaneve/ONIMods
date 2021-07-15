@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.PatchManager;
 using System.Collections.Generic;
@@ -56,6 +57,7 @@ namespace PeterHan.FallingSand {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 			new PPatchManager(harmony).RegisterPatchClass(typeof(FallingSandPatches));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

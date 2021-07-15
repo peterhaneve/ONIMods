@@ -17,21 +17,14 @@
  */
 
 using Database;
-using Harmony;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using System;
-using System.IO;
 
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
 	/// Requires a building to be heated to a specified temperature.
 	/// </summary>
 	public sealed class HeatBuildingToXKelvin : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
-		/// <summary>
-		/// The maximum temperature seen.
-		/// </summary>
-		private float maxValue;
-
 		/// <summary>
 		/// The temperature required.
 		/// </summary>
@@ -41,36 +34,22 @@ namespace PeterHan.MoreAchievements.Criteria {
 			if (required.IsNaNOrInfinity())
 				throw new ArgumentOutOfRangeException("required");
 			this.required = Math.Max(0.0f, required);
-			maxValue = 0.0f;
 		}
 
-#if VANILLA
-		public override void Deserialize(IReader reader) {
-#else
 		public void Deserialize(IReader reader) {
-#endif
-			maxValue = 0.0f;
 			required = Math.Max(0.0f, reader.ReadSingle());
 		}
 
 		public override string GetProgress(bool complete) {
+			var inst = AchievementStateComponent.Instance;
 			return string.Format(AchievementStrings.ISITHOTINHERE.PROGRESS, GameUtil.
-				GetFormattedTemperature(complete ? required : maxValue), GameUtil.
+				GetFormattedTemperature(complete ? required : inst.MaxKelvinSeen), GameUtil.
 				GetFormattedTemperature(required));
 		}
 
-		public override void Serialize(BinaryWriter writer) {
-			writer.Write(required);
-		}
-
 		public override bool Success() {
-			return maxValue >= required;
-		}
-
-		public override void Update() {
-			var asc = Game.Instance?.GetComponent<AchievementStateComponent>();
-			if (asc != null)
-				maxValue = asc.MaxKelvinSeen;
+			var inst = AchievementStateComponent.Instance;
+			return inst != null && inst.MaxKelvinSeen >= required;
 		}
 	}
 }

@@ -16,11 +16,14 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
+using HarmonyLib;
 using PeterHan.MoreAchievements.Criteria;
-using PeterHan.PLib;
-using PeterHan.PLib.Datafiles;
+using PeterHan.PLib.AVC;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
+using PeterHan.PLib.PatchManager;
+using PeterHan.PLib.UI;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -30,7 +33,7 @@ namespace PeterHan.MoreAchievements {
 	/// <summary>
 	/// Patches which will be applied via annotations for One Giant Leap.
 	/// </summary>
-	public static class MoreAchievementsPatches {
+	public sealed class MoreAchievementsPatches : KMod.UserMod2 {
 		/// <summary>
 		/// The base path to the embedded images.
 		/// </summary>
@@ -57,7 +60,7 @@ namespace PeterHan.MoreAchievements {
 			foreach (var aDesc in Achievements.AllAchievements) {
 				var achieve = aDesc.GetColonyAchievement();
 				string icon = achieve.icon;
-				PUtil.AddColonyAchievement(achieve);
+				PDatabaseUtils.AddColonyAchievement(achieve);
 				// Load image if necessary
 				if (Assets.GetSprite(icon) == null) {
 					LoadAndAddSprite(icon);
@@ -120,43 +123,26 @@ namespace PeterHan.MoreAchievements {
 		/// <param name="sprite">The sprite to load.</param>
 		private static void LoadAndAddSprite(string sprite) {
 			try {
-				Assets.Sprites.Add(sprite, PUtil.LoadSprite(BASE_PATH + sprite + ".png",
+				Assets.Sprites.Add(sprite, PUIUtils.LoadSprite(BASE_PATH + sprite + ".png",
 					log: false));
 			} catch (System.ArgumentException) {
 				PUtil.LogWarning("Unable to load image " + sprite + "!");
 			}
 		}
 
-		public static void OnLoad() {
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
-			PLocalization.Register();
-			POptions.RegisterOptions(typeof(MoreAchievementsOptions));
+			new PLocalization().Register();
 			Options = new MoreAchievementsOptions();
-			PUtil.RegisterPatchClass(typeof(MoreAchievementsPatches));
-		}
-
-		/// <summary>
-		/// Pushes achievements from this mod onto the temporary dictionary and removes them
-		/// from the original dictionary.
-		/// </summary>
-		/// <param name="achievements">The original achievement list.</param>
-		/// <param name="state">The temporary location to store them.</param>
-		private static void PushAchievements(AchieveDict achievements, AchieveDict state) {
-			var ourAssembly = typeof(MoreAchievementsAPI).Assembly;
-			// Strip out and save achievements from our assembly
-			foreach (var achievement in achievements) {
-				bool ourMod = false;
-				foreach (var requirement in achievement.Value.Requirements)
-					if (requirement.GetType().Assembly == ourAssembly) {
-						ourMod = true;
-						break;
-					}
-				// If from our mod, nuke it
-				if (ourMod)
-					state[achievement.Key] = achievement.Value;
-			}
-			foreach (var remove in state)
-				achievements.Remove(remove.Key);
+			new PPatchManager(harmony).RegisterPatchClass(typeof(MoreAchievementsPatches));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
+			// Set hidden achievements
+			var acAPI = new MoreAchievementsAPI();
+			acAPI.AddAchievementInformation(AchievementStrings.HAVEIWONYET.ID, "", true);
+			acAPI.AddAchievementInformation(AchievementStrings.ALLTHEDUPLICANTS.ID, "", true);
+			acAPI.AddAchievementInformation(AchievementStrings.ISEEWHATYOUDIDTHERE.ID, "",
+				true);
 		}
 
 		/// <summary>
@@ -260,60 +246,6 @@ namespace PeterHan.MoreAchievements {
 		}
 
 		/// <summary>
-		/// Applied to ColonyAchievementTracker to prepare achievement lists when they are
-		/// fully loaded.
-		/// </summary>
-		[HarmonyPatch(typeof(ColonyAchievementTracker), "OnSpawn")]
-		public static class ColonyAchievementTracker_OnSpawn_Patch {
-			/// <summary>
-			/// Applied after OnSpawn runs.
-			/// </summary>
-			internal static void Postfix() {
-#if DEBUG
-				PUtil.LogDebug("Collecting colony achievements");
-#endif
-				AchievementStateComponent.Instance?.CollectRequirements();
-			}
-		}
-
-		/// <summary>
-		/// Applied to ColonyAchievementTracker to properly remove achievements used by this
-		/// mod if the "do not serialize" is selected.
-		/// </summary>
-		[HarmonyPatch(typeof(ColonyAchievementTracker), nameof(ColonyAchievementTracker.
-			Serialize))]
-		public static class ColonyAchievementTracker_Serialize_Patch {
-			/// <summary>
-			/// Applied before Serialize runs.
-			/// </summary>
-			internal static void Prefix(ColonyAchievementTracker __instance,
-					ref AchieveDict __state) {
-				AchieveDict achieves;
-				if (Options.DoNotSerialize && (achieves = __instance.achievements) != null) {
-					PushAchievements(achieves, __state = new Dictionary<string,
-						ColonyAchievementStatus>(achieves.Count));
-#if DEBUG
-					PUtil.LogDebug("Removed achievements from save: {0:D}".F(__state.Count));
-#endif
-				} else
-					__state = null;
-			}
-
-			/// <summary>
-			/// Applied after Serialize runs.
-			/// </summary>
-			internal static void Postfix(ColonyAchievementTracker __instance,
-					AchieveDict __state) {
-				if (__state != null) {
-					// Reinstate everything
-					foreach (var achievement in __state)
-						__instance.achievements[achievement.Key] = achievement.Value;
-					__state.Clear();
-				}
-			}
-		}
-
-		/// <summary>
 		/// Applied to DeathMonitor.Instance to track Duplicant deaths.
 		/// </summary>
 		[HarmonyPatch(typeof(DeathMonitor.Instance), nameof(DeathMonitor.Instance.Kill))]
@@ -349,12 +281,29 @@ namespace PeterHan.MoreAchievements {
 		}
 
 		/// <summary>
+		/// Applied to DiscoveredResources to grant an achievement upon discovering items.
+		/// </summary>
+		[HarmonyPatch(typeof(DiscoveredResources), nameof(DiscoveredResources.Discover))]
+		public static class DiscoveredResources_Discover_Patch {
+			/// <summary>
+			/// Applied after Discover runs.
+			/// </summary>
+			internal static void Postfix(Tag tag) {
+				var neutronium = ElementLoader.FindElementByHash(SimHashes.Unobtanium);
+				if (neutronium != null && tag.Equals(neutronium.tag))
+					// I See What You Did There
+					AchievementStateComponent.Trigger(AchievementStrings.ISEEWHATYOUDIDTHERE.
+						ID);
+			}
+		}
+
+		/// <summary>
 		/// Applied to Game to add our achievement state tracker to it on game start.
 		/// </summary>
-		[HarmonyPatch(typeof(Game), "OnSpawn")]
-		public static class Game_OnSpawn_Patch {
+		[HarmonyPatch(typeof(Game), "OnPrefabInit")]
+		public static class Game_OnPrefabInit_Patch {
 			/// <summary>
-			/// Applied after OnSpawn runs.
+			/// Applied after OnPrefabInit runs.
 			/// </summary>
 			internal static void Postfix(Game __instance) {
 				// Reload options
@@ -457,42 +406,13 @@ namespace PeterHan.MoreAchievements {
 		}
 
 		/// <summary>
-		/// Applied to RetiredColonyInfoScreen to hide the hidden achievements on load.
-		/// </summary>
-		[HarmonyPatch(typeof(RetiredColonyInfoScreen), "UpdateAchievementData")]
-		public static class RetiredColonyInfoScreen_UpdateAchievementData_Patch {
-			/// <summary>
-			/// Applied after UpdateAchievementData runs.
-			/// </summary>
-			internal static void Postfix(Dictionary<string, GameObject> ___achievementEntries,
-					string[] newlyAchieved) {
-				var newly = HashSetPool<string, AchievementStateComponent>.Allocate();
-				// Achievements just obtained should always be shown
-				if (newlyAchieved != null)
-					foreach (string achieved in newlyAchieved)
-						newly.Add(achieved);
-				foreach (var pair in ___achievementEntries) {
-					var obj = pair.Value;
-					string id = pair.Key;
-					MultiToggle toggle;
-					var info = MoreAchievementsAPI.TranslateAchievement(id);
-					if (obj != null && (toggle = obj.GetComponent<MultiToggle>()) != null &&
-							info.Hidden)
-						// Inactivate achievements that have never been achieved
-						obj.SetActive(toggle.CurrentState != 2 || newly.Contains(id));
-				}
-				newly.Recycle();
-			}
-		}
-
-		/// <summary>
 		/// Applied to SimTemperatureTransfer to check for POIs melting down.
 		/// </summary>
 		[HarmonyPatch(typeof(SimTemperatureTransfer), nameof(SimTemperatureTransfer.
-			DoStateTransition))]
-		public static class SimTemperatureTransfer_DoStateTransition_Patch {
+			DoOreMeltTransition))]
+		public static class SimTemperatureTransfer_DoOreMeltTransition_Patch {
 			/// <summary>
-			/// Applied before DoStateTransition runs.
+			/// Transpiles DoOreMeltTransition to flag destruction of POI objects.
 			/// </summary>
 			internal static IEnumerable<CodeInstruction> Transpiler(
 					IEnumerable<CodeInstruction> method) {
@@ -530,23 +450,6 @@ namespace PeterHan.MoreAchievements {
 				SpaceDestination destination;
 				if ((destination = instance.GetSpacecraftDestination(__instance.id)) != null)
 					AchievementStateComponent.OnVisit(destination.id);
-			}
-		}
-
-		/// <summary>
-		/// Applied to WorldInventory to grant an achievement upon discovering items.
-		/// </summary>
-		[HarmonyPatch(typeof(WorldInventory), nameof(WorldInventory.Discover))]
-		public static class WorldInventory_Discover_Patch {
-			/// <summary>
-			/// Applied after Discover runs.
-			/// </summary>
-			internal static void Postfix(Tag tag) {
-				var neutronium = ElementLoader.FindElementByHash(SimHashes.Unobtanium);
-				if (neutronium != null && tag.Equals(neutronium.tag))
-					// I See What You Did There
-					AchievementStateComponent.Trigger(AchievementStrings.ISEEWHATYOUDIDTHERE.
-						ID);
 			}
 		}
 	}

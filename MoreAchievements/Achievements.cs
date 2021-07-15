@@ -20,6 +20,7 @@ using Database;
 using PeterHan.MoreAchievements.Criteria;
 using System;
 using System.Collections.Generic;
+
 using AS = PeterHan.MoreAchievements.AchievementStrings;
 
 namespace PeterHan.MoreAchievements {
@@ -49,7 +50,7 @@ namespace PeterHan.MoreAchievements {
 			var tags = new List<Tag>(ids.Length);
 			foreach (string id in ids)
 				tags.Add(TagManager.Create(id));
-			return new CritterTypesWithTraits(tags, false);
+			return new CritterTypesWithTraits(tags);
 		}
 
 		/// <summary>
@@ -57,6 +58,47 @@ namespace PeterHan.MoreAchievements {
 		/// </summary>
 		internal static void InitAchievements() {
 			var db = Db.Get();
+			var dietRequirements = new ColonyAchievementRequirement[] {
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FieldRationConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, MushBarConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FriedMushBarConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, BasicPlantFoodConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, BasicPlantBarConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, PickledMealConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, PrickleFruitConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, GrilledPrickleFruitConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, SalsaConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, CookedEggConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, MeatConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, CookedMeatConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FishMeatConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, CookedFishConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, SurfAndTurfConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, ColdWheatBreadConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, SpiceBreadConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FruitCakeConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, MushroomConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FriedMushroomConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, MushroomWrapConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, LettuceConfig.ID),
+				new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, BurgerConfig.ID)
+			};
+			// If in DLC, require Grubfruit, Spindly Grubfruit, Roast Grubfruit Nut,
+			// Grubfruit Preserve, and Mixed Berry Pie
+			if (DlcManager.IsExpansion1Active()) {
+				var dlcDietRequirements = new ColonyAchievementRequirement[] {
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, WormBasicFruitConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, WormBasicFoodConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, WormSuperFruitConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, WormSuperFoodConfig.ID),
+					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, BerryPieConfig.ID),
+				};
+				int n1 = dietRequirements.Length, n2 = dlcDietRequirements.Length;
+				var temp = new ColonyAchievementRequirement[n1 + n2];
+				Array.Copy(dietRequirements, temp, n1);
+				Array.Copy(dlcDietRequirements, 0, temp, n1, n2);
+				dietRequirements = temp;
+			}
 			AllAchievements = new AD[] {
 				new AD("EmpireBuilder", "build_2500", new BuildNBuildings(AS.EMPIREBUILDER.
 					QUANTITY)),
@@ -104,30 +146,7 @@ namespace PeterHan.MoreAchievements {
 					new DeathFromCause(db.Deaths.Slain.Id),
 					new DeathFromCause(db.Deaths.Suffocation.Id),
 					new DeathFromCause(db.Deaths.Starvation.Id)),
-				new AD("ABalancedDiet", "balanced_diet",
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FieldRationConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, MushBarConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FriedMushBarConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, BasicPlantFoodConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, BasicPlantBarConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, PickledMealConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, PrickleFruitConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, GrilledPrickleFruitConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, SalsaConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, CookedEggConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, MeatConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, CookedMeatConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FishMeatConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, CookedFishConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, SurfAndTurfConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, ColdWheatBreadConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, SpiceBreadConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FruitCakeConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, MushroomConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, FriedMushroomConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, MushroomWrapConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, LettuceConfig.ID),
-					new EatXCaloriesOfFood(AS.ABALANCEDDIET.KCAL, BurgerConfig.ID)),
+				new AD("ABalancedDiet", "balanced_diet", dietRequirements),
 				new AD("JackOfAllTrades", "well_rounded", new ReachXAllAttributes(AS.
 					JACKOFALLTRADES.LEVEL)),
 				new AD("DestroyerOfWorlds", "dig_20", new ReachXAttributeValue(db.Attributes.
@@ -177,13 +196,26 @@ namespace PeterHan.MoreAchievements {
 			POI_PROPS.Add("PropFacilityStatue");
 			POI_PROPS.Add("PropFacilityTable");
 			POI_PROPS.Add("PropFacilityWallDegree");
+			POI_PROPS.Add("PropGravitasCeilingRobot");
+			POI_PROPS.Add("PropGravitasDecorativeWindow");
+			POI_PROPS.Add("PropGravitasDisplay4");
+			POI_PROPS.Add("PropGravitasFloorRobot");
+			POI_PROPS.Add("PropGravitasHandScanner");
+			POI_PROPS.Add("PropGravitasJar1");
+			POI_PROPS.Add("PropGravitasJar2");
+			POI_PROPS.Add("PropGravitasLabTable");
+			POI_PROPS.Add("PropGravitasLabWindow");
+			POI_PROPS.Add("PropGravitasLabWindowHorizontal");
+			POI_PROPS.Add("PropGravitasRobitcTable");
+			POI_PROPS.Add("PropGravitasShelf");
 			POI_PROPS.Add("PropLight");
 			POI_PROPS.Add("PropReceptionDesk");
+			POI_PROPS.Add("PropSkeleton");
+			POI_PROPS.Add("PropSurfaceSatellite1");
+			POI_PROPS.Add("PropSurfaceSatellite2");
+			POI_PROPS.Add("PropSurfaceSatellite3");
+			POI_PROPS.Add("PropTable");
 			POI_PROPS.Add("PropTallPlant");
-			// Set hidden achievements
-			MoreAchievementsAPI.SetAchievementHidden(AS.HAVEIWONYET.ID);
-			MoreAchievementsAPI.SetAchievementHidden(AS.ALLTHEDUPLICANTS.ID);
-			MoreAchievementsAPI.SetAchievementHidden(AS.ISEEWHATYOUDIDTHERE.ID);
 		}
 	}
 }

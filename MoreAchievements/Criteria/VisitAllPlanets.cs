@@ -19,7 +19,6 @@
 using Database;
 using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
@@ -27,70 +26,37 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// </summary>
 	public sealed class VisitAllPlanets : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
-		/// The destination IDs already visited.
+		/// The planets already visited, when deserialized from a legacy save.
 		/// </summary>
-		private ICollection<int> beenTo;
-
-		/// <summary>
-		/// The number of planets which must be visited.
-		/// </summary>
-		private int required;
+		private ICollection<int> planetsVisited;
 
 		public VisitAllPlanets() {
-			required = int.MaxValue;
-			beenTo = new HashSet<int>();
+			planetsVisited = null;
 		}
 
-#if VANILLA
-		public override void Deserialize(IReader reader) {
-#else
 		public void Deserialize(IReader reader) {
-#endif
 			int visited = Math.Max(0, reader.ReadInt32());
-			required = int.MaxValue;
-			// Somehow this can be constructed without executing its constructor!!!
-			if (beenTo == null)
-				beenTo = new HashSet<int>();
-			else
-				beenTo.Clear();
-			for (int i = 0; i < visited; i++)
-				beenTo.Add(reader.ReadInt32());
+			if (visited > 0) {
+				planetsVisited = new HashSet<int>();
+				for (int i = 0; i < visited; i++)
+					planetsVisited.Add(reader.ReadInt32());
+			}
 		}
 
 		public override string GetProgress(bool complete) {
+			var inst = AchievementStateComponent.Instance;
 			return string.Format(AchievementStrings.WHOLENEWWORLDS.PROGRESS, complete ?
-				required : beenTo.Count, required);
-		}
-
-		/// <summary>
-		/// Triggered when a space destination is visited.
-		/// </summary>
-		/// <param name="id">The destination ID that was visited.</param>
-		public void OnVisit(int id) {
-			beenTo.Add(id);
-		}
-
-		public override void Serialize(BinaryWriter writer) {
-			writer.Write(beenTo.Count);
-			foreach (int id in beenTo)
-				writer.Write(id);
+				inst.PlanetsRequired : inst.PlanetsVisited.Count, inst.PlanetsRequired);
 		}
 
 		public override bool Success() {
-			return beenTo.Count >= required;
-		}
-
-		public override void Update() {
-			var dest = SpacecraftManager.instance?.destinations;
-			if (dest != null) {
-				int count = 0;
-				// Exclude unreachable destinations (earth) but include temporal tear
-				foreach (var destination in dest)
-					if (destination.GetDestinationType()?.visitable == true)
-						count++;
-				if (count > 0)
-					required = count;
+			var inst = AchievementStateComponent.Instance;
+			if (inst != null && planetsVisited != null) {
+				foreach (int id in planetsVisited)
+					inst.PlanetsVisited.Add(id);
+				planetsVisited = null;
 			}
+			return inst != null && inst.PlanetsVisited.Count >= inst.PlanetsRequired;
 		}
 	}
 }

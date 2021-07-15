@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
@@ -53,6 +54,7 @@ namespace PeterHan.AirlockDoor {
 			LocString.CreateLocStringKeys(typeof(AirlockDoorStrings.BUILDING));
 			LocString.CreateLocStringKeys(typeof(AirlockDoorStrings.BUILDINGS));
 			new PLocalization().Register();
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

@@ -7,8 +7,8 @@
     <Description>Adds many new Colony Initiatives.</Description>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
-    <SupportedContent>VANILLA_ID</SupportedContent>
-    <LastWorkingBuild>469300</LastWorkingBuild>
+    <SupportedContent>VANILLA_ID, EXPANSION1_ID</SupportedContent>
+    <LastWorkingBuild>469369</LastWorkingBuild>
     <Platforms>Vanilla;Spaced Out</Platforms>
   </PropertyGroup>
   <ItemGroup>

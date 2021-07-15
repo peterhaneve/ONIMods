@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Actions;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
@@ -354,6 +355,7 @@ namespace PeterHan.ToastControl {
 			// No default key bind
 			inGameSettings = new PActionManager().CreateAction(ToastControlStrings.ACTION_KEY,
 				ToastControlStrings.ACTION_TITLE);
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

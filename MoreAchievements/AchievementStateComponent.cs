@@ -16,18 +16,19 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using KSerialization;
 using PeterHan.MoreAchievements.Criteria;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
-
-using IOldList = System.Collections.IList;
+using UnityEngine;
 
 namespace PeterHan.MoreAchievements {
 	/// <summary>
 	/// Tracks the state of custom achievements as a component on Game.
 	/// </summary>
-	public sealed class AchievementStateComponent : KMonoBehaviour {
+	[SerializationConfig(MemberSerialization.OptIn)]
+	public sealed class AchievementStateComponent : KMonoBehaviour, ISim1000ms {
 		/// <summary>
 		/// Retrieves the singleton instance of this component, which is created when a game
 		/// is loaded or started.
@@ -47,8 +48,7 @@ namespace PeterHan.MoreAchievements {
 		public static void OnCritterKilled() {
 			var asc = Instance;
 			if (asc != null)
-				foreach (var requirement in asc.killRequirements)
-					requirement.AddKilledCritter();
+				asc.CrittersKilled++;
 		}
 
 		/// <summary>
@@ -57,11 +57,11 @@ namespace PeterHan.MoreAchievements {
 		/// <param name="cause">The cause of death.</param>
 		public static void OnDeath(Death cause) {
 			var asc = Instance;
-			if (cause != null && asc != null) {
-				foreach (var requirement in asc.deathRequirements)
-					requirement.OnDeath(cause);
-				foreach (var requirement in asc.noDeathRequirements)
-					requirement.OnDeath(cause);
+			var instance = GameClock.Instance;
+			if (cause != null) {
+				Trigger(DeathFromCause.PREFIX + cause.Id);
+				if (instance != null)
+					asc.LastDeath = instance.GetCycle();
 			}
 		}
 
@@ -71,8 +71,7 @@ namespace PeterHan.MoreAchievements {
 		public static void OnGeneShuffleComplete() {
 			var asc = Instance;
 			if (asc != null)
-				foreach (var requirement in asc.geneRequirements)
-					requirement.AddUse();
+				asc.GeneShufflerUses++;
 		}
 
 		/// <summary>
@@ -80,10 +79,7 @@ namespace PeterHan.MoreAchievements {
 		/// </summary>
 		/// <param name="rating">The rating of the overloaded wire.</param>
 		public static void OnOverload(Wire.WattageRating rating) {
-			var asc = Instance;
-			if (asc != null)
-				foreach (var requirement in asc.overloadRequirements)
-					requirement.CheckOverload(rating);
+			Trigger(OverloadWire.PREFIX + rating.ToString());
 		}
 
 		/// <summary>
@@ -91,10 +87,7 @@ namespace PeterHan.MoreAchievements {
 		/// </summary>
 		/// <param name="destination">The destination of the mission.</param>
 		public static void OnVisit(int destination) {
-			var asc = Instance;
-			if (asc != null)
-				foreach (var requirement in asc.visitPlanetRequirements)
-					requirement.OnVisit(destination);
+			Instance?.PlanetsVisited?.Add(destination);
 		}
 
 		/// <summary>
@@ -106,9 +99,9 @@ namespace PeterHan.MoreAchievements {
 #if DEBUG
 				PUtil.LogDebug("Achievement requirement triggered: " + achievement);
 #endif
-				var asc = Instance;
-				if (asc != null && asc.events.TryGetValue(achievement, out TriggerEvent evt))
-					evt.Trigger();
+				var te = Instance?.TriggerEvents;
+				if (te != null)
+					te[achievement] = true;
 			}
 		}
 
@@ -124,121 +117,157 @@ namespace PeterHan.MoreAchievements {
 			}
 		}
 
+		#region BuildNBuildings
+		/// <summary>
+		/// The number of buildings built.
+		/// </summary>
+		[Serialize]
+		internal int BuildingsBuilt;
+		#endregion
+
+		#region CollectNArtifacts
+		/// <summary>
+		/// The number of artifact types obtained. Not serialized!
+		/// </summary>
+		internal int ArtifactsObtained;
+		#endregion
+
+		#region DigNTiles
+		/// <summary>
+		/// The number of tiles dug up.
+		/// </summary>
+		[Serialize]
+		internal int TilesDug;
+		#endregion
+
+		#region HeatBuildingToXKelvin
 		/// <summary>
 		/// The maximum temperature seen on a building.
 		/// </summary>
-		public float MaxKelvinSeen { get; private set; }
+		internal float MaxKelvinSeen;
+		#endregion
+
+		#region KillNCritters
+		/// <summary>
+		/// The number of critters killed.
+		/// </summary>
+		internal int CrittersKilled;
+		#endregion
+
+		#region NoDeathsForNCycles
+		/// <summary>
+		/// The cycle number of the last death.
+		/// </summary>
+		[Serialize]
+		internal int LastDeath;
+		#endregion
+
+		#region ReachXAllAttributes
+		/// <summary>
+		/// The attributes which will be checked for "Jack of All Trades".
+		/// </summary>
+		private Klei.AI.Attribute[] VarietyAttributes;
 
 		/// <summary>
-		/// Cached build N buildings requirements.
+		/// The highest value achieved by a Duplicant across all attributes checked. This
+		/// works differently than BestAttributeValue because it is scored across one Duplicant
+		/// at a time - Machinery 20 Athletics 18 scores as 18, but two different Duplicants
+		/// with Machinery 20 and Athletics 18 may score lower.
 		/// </summary>
-		private readonly List<BuildNBuildings> buildRequirements;
+		[Serialize]
+		internal float BestVarietyValue;
+		#endregion
+
+		#region ReachXAttributeValue
+		/// <summary>
+		/// The highest value achieved by a Duplicant for the attributes listed in the
+		/// collection.
+		/// </summary>
+		[Serialize]
+		internal IDictionary<string, float> BestAttributeValue;
+		#endregion
+
+		#region TriggerEvent
+		/// <summary>
+		/// Logs the status of events which can be triggered.
+		/// </summary>
+		[Serialize]
+		internal IDictionary<string, bool> TriggerEvents;
+		#endregion
+
+		#region UseGeneShufflerNTimes
+		/// <summary>
+		/// The number of times that the Neural Vacillator has been used.
+		/// </summary>
+		[Serialize]
+		internal int GeneShufflerUses;
+		#endregion
+
+		#region VisitAllPlanets
+		/// <summary>
+		/// The destination IDs already visited.
+		/// </summary>
+		[Serialize]
+		internal ICollection<int> PlanetsVisited;
 
 		/// <summary>
-		/// Cached death from cause requirements.
+		/// The number of planets which must be visited. Not serialized.
 		/// </summary>
-		private readonly List<DeathFromCause> deathRequirements;
+		internal int PlanetsRequired;
+		#endregion
 
-		/// <summary>
-		/// Cached dig N tiles requirements.
-		/// </summary>
-		private readonly List<DigNTiles> digRequirements;
-
-		/// <summary>
-		/// Cached events which can be triggered.
-		/// </summary>
-		private readonly IDictionary<string, TriggerEvent> events;
-
-		/// <summary>
-		/// Cached use neural vacillator N times requirements.
-		/// </summary>
-		private readonly List<UseGeneShufflerNTimes> geneRequirements;
-
-		/// <summary>
-		/// Cached kill N critters requirements.
-		/// </summary>
-		private readonly List<KillNCritters> killRequirements;
-
-		/// <summary>
-		/// Cached no deaths for N cycles requirements.
-		/// </summary>
-		private readonly List<NoDeathsForNCycles> noDeathRequirements;
-
-		/// <summary>
-		/// Cached overload X wire requirements.
-		/// </summary>
-		private readonly List<OverloadWire> overloadRequirements;
-
-		/// <summary>
-		/// Cached visit all planets requirements.
-		/// </summary>
-		private readonly List<VisitAllPlanets> visitPlanetRequirements;
-
-		internal AchievementStateComponent() {
-			buildRequirements = new List<BuildNBuildings>(8);
-			deathRequirements = new List<DeathFromCause>(8);
-			digRequirements = new List<DigNTiles>(8);
-			events = new Dictionary<string, TriggerEvent>(32);
-			geneRequirements = new List<UseGeneShufflerNTimes>(4);
-			killRequirements = new List<KillNCritters>(8);
-			noDeathRequirements = new List<NoDeathsForNCycles>(4);
-			overloadRequirements = new List<OverloadWire>(8);
-			visitPlanetRequirements = new List<VisitAllPlanets>(4);
+		public AchievementStateComponent() {
+			ArtifactsObtained = 0;
+			BestVarietyValue = 0.0f;
+			BuildingsBuilt = 0;
+			CrittersKilled = 0;
+			GeneShufflerUses = 0;
+			MaxKelvinSeen = 0.0f;
+			LastDeath = -1;
+			PlanetsRequired = int.MaxValue;
+			TilesDug = 0;
 		}
 
 		/// <summary>
-		/// Collects and caches colony achievement requirements of the parameter type.
-		/// 
-		/// Achievements cannot change during a game so cache the requirements that need to be
-		/// updated.
+		/// Checks the colony summary to guess the date of the last possible death.
 		/// </summary>
-		/// <param name="requirements">The location to save those requirements.</param>
-		private void CollectRequirements(IDictionary<Type, IOldList> requirements) {
-			var achievements = SaveGame.Instance.GetComponent<ColonyAchievementTracker>();
-			if (requirements == null)
-				throw new ArgumentNullException("requirements");
-			if (achievements == null)
-				PUtil.LogError("Achievement list is not initialized!");
-			else {
-				foreach (var list in requirements.Values)
-					list.Clear();
-				// Works with any number of achievements that use this type
-				foreach (var achievement in achievements.achievements.Values)
-					foreach (var requirement in achievement.Requirements)
-						if (requirement is TriggerEvent evt) {
-							string id = evt.ID;
-							// Add event trigger
-							if (events.ContainsKey(id))
-								PUtil.LogWarning("Duplicant trigger event ID: " + id);
-							events[id] = evt;
-						} else if (requirements.TryGetValue(requirement.GetType(), out
-								IOldList ofThisType))
-							ofThisType.Add(requirement);
+		private void InitGrimReaper() {
+			// Look for the last dip in Duplicant count
+			float lastValue = -1.0f;
+			RetiredColonyData.RetiredColonyStatistic[] stats;
+			try {
+				var data = RetireColonyUtility.GetCurrentColonyRetiredColonyData();
+				if ((stats = data?.Stats) != null && data.cycleCount > 0) {
+					var liveDupes = new SortedList<int, float>(stats.Length);
+					// Copy and sort the values
+					foreach (var cycleData in stats)
+						if (cycleData.id == RetiredColonyData.DataIDs.LiveDuplicants) {
+							foreach (var entry in cycleData.value)
+								liveDupes[Mathf.RoundToInt(entry.first)] = entry.second;
+							break;
+						}
+					LastDeath = 0;
+					// Sorted by cycle now
+					foreach (var pair in liveDupes) {
+						float dupes = pair.Value;
+						if (dupes < lastValue)
+							LastDeath = pair.Key;
+						lastValue = dupes;
+					}
+					liveDupes.Clear();
+				}
+			} catch (Exception e) {
+				PUtil.LogWarning("Unable to determine the last date of death:");
+				PUtil.LogExcWarn(e);
+				LastDeath = GameClock.Instance?.GetCycle() ?? 0;
 			}
-		}
-
-		/// <summary>
-		/// Collects and caches the required colony achievement requirements.
-		/// </summary>
-		internal void CollectRequirements() {
-			CollectRequirements(new Dictionary<Type, IOldList>(16) {
-				{ typeof(BuildNBuildings), buildRequirements },
-				{ typeof(DeathFromCause), deathRequirements },
-				{ typeof(DigNTiles), digRequirements },
-				{ typeof(KillNCritters), killRequirements },
-				{ typeof(NoDeathsForNCycles), noDeathRequirements },
-				{ typeof(OverloadWire), overloadRequirements },
-				{ typeof(UseGeneShufflerNTimes), geneRequirements },
-				{ typeof(VisitAllPlanets), visitPlanetRequirements }
-			});
 		}
 
 		/// <summary>
 		/// Called when a building is completed.
 		/// </summary>
 		private void OnBuildingCompleted(object _) {
-			foreach (var requirement in buildRequirements)
-				requirement.AddBuilding();
+			BuildingsBuilt++;
 		}
 
 		protected override void OnCleanUp() {
@@ -251,24 +280,97 @@ namespace PeterHan.MoreAchievements {
 		/// Called when a dig errand is completed.
 		/// </summary>
 		private void OnDigCompleted(object _) {
-			foreach (var requirement in digRequirements)
-				requirement.AddDugTile();
+			TilesDug++;
 		}
 
 		protected override void OnPrefabInit() {
 			base.OnPrefabInit();
 			Instance = this;
-			MaxKelvinSeen = 0.0f;
 		}
 
 		protected override void OnSpawn() {
 			base.OnSpawn();
+			if (BuildingsBuilt == 0)
+				// Not yet initialized, fill with number of completed buildings
+				BuildingsBuilt = Components.BuildingCompletes.Count;
+			if (PlanetsVisited == null)
+				PlanetsVisited = new HashSet<int>();
+			if (TriggerEvents == null)
+				TriggerEvents = new Dictionary<string, bool>(64);
+			if (BestAttributeValue == null)
+				BestAttributeValue = new Dictionary<string, float>(64);
+			if (LastDeath < 0)
+				InitGrimReaper();
+			var dbAttr = Db.Get().Attributes;
+			VarietyAttributes = new Klei.AI.Attribute[] { dbAttr.Art, dbAttr.Athletics,
+				dbAttr.Botanist, dbAttr.Caring, dbAttr.Construction, dbAttr.Cooking,
+				dbAttr.Digging, dbAttr.Learning, dbAttr.Machinery, dbAttr.Ranching,
+				dbAttr.Strength };
+			// Neutronium discovered?
+			var neutronium = ElementLoader.FindElementByHash(SimHashes.Unobtanium);
+			if (neutronium != null && DiscoveredResources.Instance.IsDiscovered(neutronium.tag))
+				Trigger(AchievementStrings.ISEEWHATYOUDIDTHERE.ID);
+			PUtil.LogDebug("World count: " + ClusterManager.Instance.worldCount);
+			if (DlcManager.IsExpansion1Active())
+				// DLC STARMAP
+				PlanetsRequired = ClusterManager.Instance.worldCount;
+			else {
+				// VANILLA STARMAP
+				var dest = SpacecraftManager.instance?.destinations;
+				if (dest != null) {
+					int count = 0;
+					// Exclude unreachable destinations (earth) but include temporal tear
+					foreach (var destination in dest)
+						if (destination.GetDestinationType()?.visitable == true)
+							count++;
+					if (count > 0)
+						PlanetsRequired = count;
+				}
+			}
 			Subscribe((int)GameHashes.NewBuilding, OnBuildingCompleted);
 			Subscribe(DigNTiles.DigComplete, OnDigCompleted);
-			// Neutronium discovered in the past?
-			var neutronium = ElementLoader.FindElementByHash(SimHashes.Unobtanium);
-			if (neutronium != null && WorldInventory.Instance.IsDiscovered(neutronium.tag))
-				Trigger(AchievementStrings.ISEEWHATYOUDIDTHERE.ID);
+		}
+
+		public void Sim1000ms(float dt) {
+			int have = 0;
+			// Count artifacts discovered
+			foreach (string name in ArtifactConfig.artifactItems)
+				if (DiscoveredResources.Instance.IsDiscovered(Assets.GetPrefab(name).
+						PrefabID()))
+					have++;
+			ArtifactsObtained = have;
+			foreach (var duplicant in Components.LiveMinionIdentities.Items)
+				if (duplicant != null) {
+					float minValue = float.MaxValue;
+					// Find the worst attribute on this Duplicant for JoaT
+					foreach (var attribute in VarietyAttributes) {
+						float attrValue = attribute.Lookup(duplicant)?.GetTotalValue() ?? 0.0f;
+						if (attrValue < minValue)
+							minValue = attrValue;
+					}
+					// If this Duplicant is better than previous jester, update it
+					if (minValue >= BestVarietyValue)
+						BestVarietyValue = minValue;
+				}
+			// For each value requested, update the value if needed
+			var keys = ListPool<string, AchievementStateComponent>.Allocate();
+			keys.Clear();
+			keys.AddRange(BestAttributeValue.Keys);
+			foreach (var attribute in keys) {
+				// Check each duplicant for the best value
+				float best = 0.0f;
+				var attr = Db.Get().Attributes.Get(attribute);
+				foreach (var duplicant in Components.LiveMinionIdentities.Items)
+					if (duplicant != null)
+						best = Math.Max(best, attr.Lookup(duplicant).GetTotalValue());
+				BestAttributeValue[attribute] = best;
+			}
+			keys.Recycle();
+			// Mark visited worlds for DLC
+			if (DlcManager.IsExpansion1Active())
+				foreach (var world in ClusterManager.Instance.WorldContainers)
+					if (world.IsDupeVisited)
+						PlanetsVisited.Add(world.id);
 		}
 	}
 }

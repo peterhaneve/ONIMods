@@ -17,28 +17,16 @@
  */
 
 using Newtonsoft.Json;
-using PeterHan.PLib;
+using PeterHan.PLib.Options;
 
 namespace PeterHan.MoreAchievements {
 	/// <summary>
 	/// The options class used for One Giant Leap.
 	/// </summary>
-	[ModInfo("One Giant Leap", "https://github.com/peterhaneve/ONIMods", "preview.png")]
+	[ModInfo("https://github.com/peterhaneve/ONIMods", "preview.png")]
 	[JsonObject(MemberSerialization = MemberSerialization.OptIn)]
 	public sealed class MoreAchievementsOptions {
-		/// <summary>
-		/// If true, achievements will not be serialized to file, allowing removal of this mod.
-		/// </summary>
-		[Option("Remove from Save Files", "Erases this mod's achievements from the game when saved, allowing safe uninstallation of this mod.\r\n\r\nResets your progress on achievements added by this mod!")]
-		[JsonProperty]
-		public bool DoNotSerialize { get; set; }
-
 		public MoreAchievementsOptions() {
-			DoNotSerialize = false;
-		}
-
-		public override string ToString() {
-			return "MoreAchievementsOptions[doNotSerialize={0}]".F(DoNotSerialize);
 		}
 	}
 }

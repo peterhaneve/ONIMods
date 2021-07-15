@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Critter Inventory</AssemblyTitle>
-    <FileVersion>4.1.0.0</FileVersion>
+    <FileVersion>4.2.0.0</FileVersion>
     <RootNamespace>PeterHan.CritterInventory</RootNamespace>
     <Description>Displays available critters in the Inventory screen.</Description>
     <AssemblyVersion>4.0.0.0</AssemblyVersion>

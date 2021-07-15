@@ -16,128 +16,144 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
+using HarmonyLib;
+using Newtonsoft.Json;
+using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
-
-using AchievementDict = System.Collections.Generic.IDictionary<string, object>;
+using UnityEngine;
 
 namespace PeterHan.MoreAchievements {
 	/// <summary>
 	/// The API class for this mod, which allows custom achievements to be hidden or
 	/// (future work) categorized.
 	/// </summary>
-	public static class MoreAchievementsAPI {
+	public sealed class MoreAchievementsAPI : PForwardedComponent {
 		/// <summary>
-		/// The achievement API information.
+		/// The instantiated copy of this class.
 		/// </summary>
-		private const string ACHIEVEMENTS_API_INFO = "PeterHan.MoreAchievements.AchievementInfo";
+		internal static MoreAchievementsAPI Instance { get; private set; }
 
 		/// <summary>
-		/// The lock to prevent concurrent modification of the achievement information.
+		/// The version of this component.
 		/// </summary>
-		private const string ACHIEVEMENTS_API_LOCK = "PeterHan.MoreAchievements.Lock";
+		internal static readonly Version VERSION = new Version(1, 0, 0, 0);
+
+		private static void UpdateAchievementData_Postfix(string[] newlyAchieved,
+				Dictionary<string, GameObject> ___achievementEntries) {
+			var newly = HashSetPool<string, AchievementStateComponent>.Allocate();
+			// Achievements just obtained should always be shown
+			if (newlyAchieved != null)
+				foreach (string achieved in newlyAchieved)
+					newly.Add(achieved);
+			foreach (var pair in ___achievementEntries) {
+				var obj = pair.Value;
+				string id = pair.Key;
+				MultiToggle toggle;
+				var info = Instance?.GetAchievement(id);
+				if (obj != null && (toggle = obj.GetComponent<MultiToggle>()) != null &&
+						info != null && info.Hidden)
+					// Hide achievements that have never been achieved
+					obj.SetActive(toggle.CurrentState != 2 || newly.Contains(id));
+			}
+			newly.Recycle();
+		}
+
+		public override Version Version => VERSION;
 
 		/// <summary>
-		/// Gets the information for the specified achievement. The achievement lock must be
-		/// held for this method to work properly.
+		/// The achievements registered for this mod.
 		/// </summary>
-		/// <param name="id">The achievement ID to look up.</param>
-		/// <returns>The achievement information.</returns>
-		private static Traverse GetAchievement(string id) {
-			var data = PSharedData.GetData<AchievementDict>(ACHIEVEMENTS_API_INFO);
-			if (data == null)
-				PSharedData.PutData(ACHIEVEMENTS_API_INFO, data =
-					new Dictionary<string, object>(32));
-			if (!data.TryGetValue(id, out object info))
-				data.Add(id, info = new AchievementInfo(id));
-			return Traverse.Create(info);
+		private readonly ICollection<AchievementInfo> achievements;
+
+		/// <summary>
+		/// The achievements registered for all mods. Only used in the instantiated copy
+		/// of MoreAchievementsAPI.
+		/// </summary>
+		private readonly IDictionary<string, AchievementInfo> allAchievements;
+
+		public MoreAchievementsAPI() {
+			achievements = new List<AchievementInfo>();
+			allAchievements = new Dictionary<string, AchievementInfo>(64);
+			InstanceData = achievements;
 		}
 
 		/// <summary>
-		/// Gets the lock object for the achievement list.
-		/// </summary>
-		/// <returns>An object used to synchronize mods accessing the achievement list.</returns>
-		private static object GetAchievementLock() {
-			var obj = PSharedData.GetData<object>(ACHIEVEMENTS_API_LOCK);
-			if (obj == null)
-				PSharedData.PutData(ACHIEVEMENTS_API_LOCK, obj = new object());
-			return obj;
-		}
-
-		/// <summary>
-		/// Sets the category of an achievement.
+		/// Sets the category of an achievement and optionally hides it. Currently the
+		/// category is not yet implemented.
 		/// 
-		/// This method currently is not yet implemented.
-		/// 
-		/// This method uses PLib and thus PUtil.InitLibrary must be called before using it.
+		/// This method must be used in OnLoad.
 		/// </summary>
 		/// <param name="id">The achievement ID.</param>
 		/// <param name="category">The category to assign.</param>
-		public static void SetAchievementCategory(string id, string category) {
-			lock (GetAchievementLock()) {
-				var trInfo = GetAchievement(id);
-				trInfo.SetProperty(nameof(AchievementInfo.Category), category);
-			}
-		}
-
-		/// <summary>
-		/// Sets an achievement to be hidden until it is achieved.
-		/// 
-		/// This method uses PLib and thus PUtil.InitLibrary must be called before using it.
-		/// </summary>
-		/// <param name="id">The achievement ID to hide.</param>
-		public static void SetAchievementHidden(string id) {
-			lock (GetAchievementLock()) {
-				var trInfo = GetAchievement(id);
-				trInfo.SetProperty(nameof(AchievementInfo.Hidden), true);
-			}
+		/// <param name="hidden">true to make the achievement hidden until achieved, or
+		/// false otherwise.</param>
+		public void AddAchievementInformation(string id, string category,
+				bool hidden = false) {
+			RegisterForForwarding();
+			if (string.IsNullOrEmpty(id))
+				throw new ArgumentNullException(nameof(id));
+			achievements.Add(new AchievementInfo() {
+				ID = id, Category = category ?? "", Hidden = hidden
+			});
 		}
 
 		/// <summary>
 		/// Retrieves the shared information about the specified achievement, translated into
-		/// the local mod's version of AchievementInfo.
+		/// the local mod's version of AchievementInfo. Only works on the instantiated
+		/// copy of MoreAchievementsAPI!
 		/// </summary>
 		/// <param name="id">The achievement ID to look up.</param>
 		/// <returns>The extra information about that achievement.</returns>
-		internal static AchievementInfo TranslateAchievement(string id) {
-			var newInfo = new AchievementInfo(id);
-			lock (GetAchievementLock()) {
-				var trInfo = GetAchievement(id);
-				try {
-					newInfo.Category = trInfo.GetProperty<string>(nameof(AchievementInfo.
-						Category));
-					newInfo.Hidden = trInfo.GetProperty<bool>(nameof(AchievementInfo.Hidden));
-				} catch (Exception e) {
-					// Unable to parse, but this is warning only
-					PUtil.LogExcWarn(e);
+		internal AchievementInfo GetAchievement(string id) {
+			if (!allAchievements.TryGetValue(id, out AchievementInfo info))
+				info = null;
+			return info;
+		}
+
+		public override void Initialize(Harmony plibInstance) {
+			Instance = this;
+			foreach (var achievementProvider in PRegistry.Instance.GetAllComponents(ID))
+				if (achievementProvider != null) {
+					var toAdd = achievementProvider.GetInstanceDataSerialized<ICollection<
+						AchievementInfo>>();
+					if (toAdd != null)
+						foreach (var achievement in toAdd) {
+							allAchievements[achievement.ID] = achievement;
+#if DEBUG
+							PUtil.LogDebug("Added data for achievement " + achievement.ID);
+#endif
+						}
 				}
-			}
-			return newInfo;
+			plibInstance.Patch(typeof(RetiredColonyInfoScreen), "UpdateAchievementData",
+				postfix: PatchMethod(nameof(UpdateAchievementData_Postfix)));
 		}
 
 		/// <summary>
 		/// Extra information about a colony achievement.
 		/// </summary>
+		[JsonObject(MemberSerialization.OptIn)]
 		internal sealed class AchievementInfo {
 			/// <summary>
 			/// The achievement category. Not currently used.
 			/// </summary>
+			[JsonProperty]
 			public string Category { get; set; }
 
 			/// <summary>
 			/// Whether the achievement is hidden until achieved.
 			/// </summary>
+			[JsonProperty]
 			public bool Hidden { get; set; }
 
 			/// <summary>
 			/// The achievement ID.
 			/// </summary>
-			public string ID { get; }
+			[JsonProperty]
+			public string ID { get; set; }
 
-			public AchievementInfo(string id) {
-				ID = id;
+			public AchievementInfo() {
+				ID = "";
 				Category = "";
 				Hidden = false;
 			}

@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.PatchManager;
 using System.Collections.Generic;
@@ -215,6 +216,7 @@ namespace PeterHan.BuildStraightUp {
 			PUtil.InitLibrary();
 			lastChecked.Reset();
 			new PPatchManager(harmony).RegisterPatchClass(typeof(BuildStraightUpPatches));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

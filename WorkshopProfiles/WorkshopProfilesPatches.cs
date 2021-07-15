@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.PatchManager;
@@ -111,6 +112,7 @@ namespace PeterHan.WorkshopProfiles {
 			new PLocalization().Register();
 			// This can live for the whole game and never needs to be removed
 			Components.LiveMinionIdentities.OnRemove += OnRemoveDuplicant;
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

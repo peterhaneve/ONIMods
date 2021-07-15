@@ -18,7 +18,6 @@
 
 using Database;
 using System;
-using System.IO;
 
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
@@ -26,7 +25,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// </summary>
 	public class BuildNBuildings : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
-		/// The number of buildings built.
+		/// The number of buildings built, when deserialized from a legacy save.
 		/// </summary>
 		protected int built;
 
@@ -40,40 +39,24 @@ namespace PeterHan.MoreAchievements.Criteria {
 			this.required = Math.Max(1, required);
 		}
 
-		/// <summary>
-		/// Adds a completed building.
-		/// </summary>
-		public void AddBuilding() {
-			built++;
-		}
-
-#if VANILLA
-		public override void Deserialize(IReader reader) {
-#else
 		public void Deserialize(IReader reader) {
-#endif
 			required = Math.Max(reader.ReadInt32(), 1);
 			built = Math.Max(reader.ReadInt32(), 0);
 		}
 
 		public override string GetProgress(bool complete) {
+			var inst = AchievementStateComponent.Instance;
 			return string.Format(AchievementStrings.EMPIREBUILDER.PROGRESS, complete ?
-				required : built, required);
-		}
-
-		public override void Serialize(BinaryWriter writer) {
-			writer.Write(required);
-			writer.Write(built);
+				required : inst.BuildingsBuilt, required);
 		}
 
 		public override bool Success() {
-			return built >= required;
-		}
-
-		public override void Update() {
-			if (built == 0)
-				// Not yet initialized, fill with number of completed buildings
-				built = Components.BuildingCompletes.Count;
+			var inst = AchievementStateComponent.Instance;
+			if (built != 0 && inst != null) {
+				inst.BuildingsBuilt = built;
+				built = 0;
+			}
+			return inst != null && inst.BuildingsBuilt >= required;
 		}
 	}
 }

@@ -17,10 +17,8 @@
  */
 
 using Database;
-using KSerialization;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using System;
-using System.IO;
 
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
@@ -33,11 +31,6 @@ namespace PeterHan.MoreAchievements.Criteria {
 		protected string attribute;
 
 		/// <summary>
-		/// The maximum attribute value currently present in the colony.
-		/// </summary>
-		protected float maxValue;
-
-		/// <summary>
 		/// The attribute value required.
 		/// </summary>
 		protected float required;
@@ -46,42 +39,36 @@ namespace PeterHan.MoreAchievements.Criteria {
 			if (required.IsNaNOrInfinity())
 				throw new ArgumentOutOfRangeException("required");
 			this.attribute = attribute ?? throw new ArgumentNullException("attribute");
-			maxValue = 0;
 			this.required = Math.Max(0.0f, required);
 		}
 
-#if VANILLA
-		public override void Deserialize(IReader reader) {
-#else
 		public void Deserialize(IReader reader) {
-#endif
 			attribute = reader.ReadKleiString();
-			maxValue = 0;
 			required = Math.Max(0.0f, reader.ReadSingle());
+		}
+
+		/// <summary>
+		/// Gets the best value of this attribute ever seen in the colony, registering to
+		/// track it if not already tracked.
+		/// </summary>
+		/// <returns>The best attribute value seen.</returns>
+		protected float GetBestValue() {
+			var bv = AchievementStateComponent.Instance?.BestAttributeValue;
+			float bestValue = 0.0f;
+			if (bv != null && !bv.TryGetValue(attribute, out bestValue)) {
+				bestValue = 0.0f;
+				bv.Add(attribute, 0.0f);
+			}
+			return bestValue;
 		}
 
 		public override string GetProgress(bool complete) {
 			return string.Format(AchievementStrings.DESTROYEROFWORLDS.PROGRESS, complete ?
-				required : maxValue, required);
-		}
-
-		public override void Serialize(BinaryWriter writer) {
-			writer.WriteKleiString(attribute);
-			writer.Write(required);
+				required : GetBestValue(), required);
 		}
 
 		public override bool Success() {
-			return maxValue >= required;
-		}
-
-		public override void Update() {
-			// Check each duplicant for the best value
-			float best = 0.0f;
-			var attr = Db.Get().Attributes.Get(attribute);
-			foreach (var duplicant in Components.LiveMinionIdentities.Items)
-				if (duplicant != null)
-					best = Math.Max(best, attr.Lookup(duplicant).GetTotalValue());
-			maxValue = best;
+			return GetBestValue() >= required;
 		}
 	}
 }

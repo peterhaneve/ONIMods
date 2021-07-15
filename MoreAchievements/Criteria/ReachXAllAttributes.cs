@@ -17,25 +17,14 @@
  */
 
 using Database;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using System;
-using System.IO;
 
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
 	/// Requires a single Duplicant to reach the specified value in all attributes.
 	/// </summary>
 	public sealed class ReachXAllAttributes : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
-		/// <summary>
-		/// Whether this requirement has been achieved.
-		/// </summary>
-		private bool achieved;
-
-		/// <summary>
-		/// The attribute which will be checked.
-		/// </summary>
-		private Klei.AI.Attribute[] check;
-
 		/// <summary>
 		/// The attribute value required.
 		/// </summary>
@@ -44,57 +33,20 @@ namespace PeterHan.MoreAchievements.Criteria {
 		public ReachXAllAttributes(float required) {
 			if (required.IsNaNOrInfinity())
 				throw new ArgumentOutOfRangeException("required");
-			achieved = false;
 			this.required = Math.Max(0.0f, required);
 		}
 
-#if VANILLA
-		public override void Deserialize(IReader reader) {
-#else
 		public void Deserialize(IReader reader) {
-#endif
 			required = Math.Max(0.0f, reader.ReadSingle());
-			achieved = false;
 		}
 
 		public override string GetProgress(bool complete) {
 			return string.Format(AchievementStrings.JACKOFALLTRADES.PROGRESS, required);
 		}
 
-		public override void Serialize(BinaryWriter writer) {
-			writer.Write(required);
-		}
-
 		public override bool Success() {
-			return achieved;
-		}
-
-		public override void Update() {
-			var attributes = check;
-			// Avoid recreating this every update
-			if (attributes == null) {
-				var dbAttr = Db.Get().Attributes;
-				check = attributes = new Klei.AI.Attribute[] { dbAttr.Art, dbAttr.Athletics,
-					dbAttr.Botanist, dbAttr.Caring, dbAttr.Construction, dbAttr.Cooking,
-					dbAttr.Digging, dbAttr.Learning, dbAttr.Machinery, dbAttr.Ranching,
-					dbAttr.Strength };
-			}
-			// Check each duplicant
-			foreach (var duplicant in Components.LiveMinionIdentities.Items)
-				if (duplicant != null) {
-					bool ok = true;
-					// All attributes must be over the threshold
-					foreach (var attribute in attributes)
-						if ((attribute.Lookup(duplicant)?.GetTotalValue() ?? 0.0f) < required)
-						{
-							ok = false;
-							break;
-						}
-					if (ok) {
-						achieved = true;
-						break;
-					}
-				}
+			var inst = AchievementStateComponent.Instance;
+			return inst != null && inst.BestVarietyValue >= required;
 		}
 	}
 }

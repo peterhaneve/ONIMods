@@ -17,9 +17,7 @@
  */
 
 using Database;
-using KSerialization;
 using System;
-using System.IO;
 
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
@@ -38,23 +36,19 @@ namespace PeterHan.MoreAchievements.Criteria {
 		private string description;
 
 		/// <summary>
-		/// Whether this event has been triggered.
+		/// Whether this event has been triggered, when deserialized from a legacy save.
 		/// </summary>
-		private bool triggered;
+		private bool? triggered;
 
 		public TriggerEvent(string id) {
 			if (string.IsNullOrEmpty(id))
 				throw new ArgumentNullException("id");
 			ID = id;
-			triggered = false;
+			triggered = null;
 			UpdateDescription();
 		}
 
-#if VANILLA
-		public override void Deserialize(IReader reader) {
-#else
 		public void Deserialize(IReader reader) {
-#endif
 			ID = reader.ReadKleiString();
 			triggered = reader.ReadInt32() != 0;
 			UpdateDescription();
@@ -64,20 +58,13 @@ namespace PeterHan.MoreAchievements.Criteria {
 			return description;
 		}
 
-		public override void Serialize(BinaryWriter writer) {
-			writer.WriteKleiString(ID);
-			writer.Write(triggered ? 1 : 0);
-		}
-
 		public override bool Success() {
-			return triggered;
-		}
-
-		/// <summary>
-		/// Triggers the event for this achievement.
-		/// </summary>
-		public void Trigger() {
-			triggered = true;
+			var te = AchievementStateComponent.Instance?.TriggerEvents;
+			if (te != null && triggered != null) {
+				te[ID] = triggered ?? false;
+				triggered = null;
+			}
+			return te != null && te.TryGetValue(ID, out bool set) && set;
 		}
 
 		/// <summary>

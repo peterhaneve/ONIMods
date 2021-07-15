@@ -17,9 +17,7 @@
  */
 
 using Database;
-using Harmony;
 using System;
-using System.IO;
 
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
@@ -28,7 +26,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// </summary>
 	public class KillNCritters : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
-		/// The number of critters killed.
+		/// The number of critters killed, when deserialized from a legacy save.
 		/// </summary>
 		protected int killed;
 
@@ -42,34 +40,24 @@ namespace PeterHan.MoreAchievements.Criteria {
 			this.required = Math.Max(1, required);
 		}
 
-		/// <summary>
-		/// Adds a killed critter.
-		/// </summary>
-		public void AddKilledCritter() {
-			killed++;
-		}
-
-#if VANILLA
-		public override void Deserialize(IReader reader) {
-#else
 		public void Deserialize(IReader reader) {
-#endif
 			required = Math.Max(reader.ReadInt32(), 1);
 			killed = Math.Max(reader.ReadInt32(), 0);
 		}
 
 		public override string GetProgress(bool complete) {
+			var inst = AchievementStateComponent.Instance;
 			return string.Format(AchievementStrings.YOUMONSTER.PROGRESS, complete ?
-				required : killed, required);
-		}
-
-		public override void Serialize(BinaryWriter writer) {
-			writer.Write(required);
-			writer.Write(killed);
+				required : inst.CrittersKilled, required);
 		}
 
 		public override bool Success() {
-			return killed >= required;
+			var inst = AchievementStateComponent.Instance;
+			if (inst != null && killed > 0) {
+				inst.CrittersKilled = killed;
+				killed = 0;
+			}
+			return inst != null && inst.CrittersKilled >= required;
 		}
 	}
 }

@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using Klei.AI;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.Detours;
@@ -105,6 +106,7 @@ namespace PeterHan.MooReproduction {
 			new PLocalization().Register();
 			new PPatchManager(harmony).RegisterPatchClass(typeof(MooReproductionPatches));
 			new POptions().RegisterOptions(this, typeof(MooReproductionOptions));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

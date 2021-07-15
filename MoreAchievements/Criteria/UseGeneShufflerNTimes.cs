@@ -17,9 +17,7 @@
  */
 
 using Database;
-using Harmony;
 using System;
-using System.IO;
 
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
@@ -32,7 +30,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 		private int required;
 
 		/// <summary>
-		/// The number of times that it has been used.
+		/// The number of times that it has been used, when deserialized from a legacy save.
 		/// </summary>
 		private int used;
 
@@ -41,34 +39,23 @@ namespace PeterHan.MoreAchievements.Criteria {
 			this.required = Math.Max(1, required);
 		}
 
-		/// <summary>
-		/// Adds a completed gene shuffler usage.
-		/// </summary>
-		public void AddUse() {
-			used++;
-		}
-
-#if VANILLA
-		public override void Deserialize(IReader reader) {
-#else
 		public void Deserialize(IReader reader) {
-#endif
 			required = Math.Max(reader.ReadInt32(), 1);
 			used = Math.Max(reader.ReadInt32(), 0);
 		}
 
 		public override string GetProgress(bool complete) {
 			return string.Format(AchievementStrings.THINKINGAHEAD.PROGRESS, complete ?
-				required : used, required);
-		}
-
-		public override void Serialize(BinaryWriter writer) {
-			writer.Write(required);
-			writer.Write(used);
+				required : AchievementStateComponent.Instance.GeneShufflerUses, required);
 		}
 
 		public override bool Success() {
-			return used >= required;
+			var inst = AchievementStateComponent.Instance;
+			if (inst != null && used > 0) {
+				inst.GeneShufflerUses = used;
+				used = 0;
+			}
+			return inst != null && inst.GeneShufflerUses >= required;
 		}
 	}
 }

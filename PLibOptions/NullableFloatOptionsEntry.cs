@@ -108,6 +108,8 @@ namespace PeterHan.PLib.Options {
 				// otherwise?
 				value = null;
 			else if (float.TryParse(text, out float newValue)) {
+				if (Format != null && Format.ToUpperInvariant().IndexOf('P') >= 0)
+					newValue *= 0.01f;
 				if (limits != null)
 					newValue = limits.ClampToRange(newValue);
 				// Record the valid value

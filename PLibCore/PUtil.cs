@@ -70,7 +70,7 @@ namespace PeterHan.PLib.Core {
 					var dlls = mod?.loaded_mod_data?.dlls;
 					if (dlls != null)
 						foreach (var assembly in dlls)
-							result.Add(assembly, mod);
+							result[assembly] = mod;
 				}
 			return result;
 		}

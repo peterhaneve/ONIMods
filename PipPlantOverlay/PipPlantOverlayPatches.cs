@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Actions;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.Detours;
@@ -142,6 +143,7 @@ namespace PeterHan.PipPlantOverlay {
 			if (overlayBitsField != null && overlayBitsField.GetValue(null) is
 					IDictionary<HashedString, StatusItemOverlays> overlayBits)
 				overlayBits.Add(PipPlantOverlay.ID, StatusItemOverlays.Farming);
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

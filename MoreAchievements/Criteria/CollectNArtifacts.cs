@@ -18,7 +18,6 @@
 
 using Database;
 using System;
-using System.IO;
 
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
@@ -26,49 +25,27 @@ namespace PeterHan.MoreAchievements.Criteria {
 	/// </summary>
 	public sealed class CollectNArtifacts : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
-		/// The number of artifact types obtained.
+		/// The number of artifacts required.
 		/// </summary>
-		private int obtained;
-
-		/// <summary>
-		/// The number of artifact types which must be collected.
-		/// </summary>
-		private int required;
+		protected int required;
 
 		public CollectNArtifacts(int required) {
-			obtained = 0;
 			this.required = Math.Max(1, required);
 		}
 
-#if VANILLA
-		public override void Deserialize(IReader reader) {
-#else
 		public void Deserialize(IReader reader) {
-#endif
-			obtained = 0;
 			required = Math.Max(1, reader.ReadInt32());
 		}
 
 		public override string GetProgress(bool complete) {
+			var inst = AchievementStateComponent.Instance;
 			return string.Format(AchievementStrings.BELONGSINAMUSEUM.PROGRESS, complete ?
-				required : obtained, required);
-		}
-
-		public override void Serialize(BinaryWriter writer) {
-			writer.Write(required);
+				required : inst.ArtifactsObtained, required);
 		}
 
 		public override bool Success() {
-			return obtained >= required;
-		}
-
-		public override void Update() {
-			int have = 0;
-			// Count artifacts discovered
-			foreach (string name in ArtifactConfig.artifactItems)
-				if (WorldInventory.Instance.IsDiscovered(Assets.GetPrefab(name).PrefabID()))
-					have++;
-			obtained = have;
+			var inst = AchievementStateComponent.Instance;
+			return inst != null && inst.ArtifactsObtained >= required;
 		}
 	}
 }

@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using System.Collections.Generic;
@@ -99,6 +100,7 @@ namespace PeterHan.NotEnoughTags {
 				"s_transientDeliveryMask").Set(null, TagBitOps.Not(new TagBits(new Tag[] {
 					GameTags.Garbage, GameTags.Creatures.Deliverable
 				})));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

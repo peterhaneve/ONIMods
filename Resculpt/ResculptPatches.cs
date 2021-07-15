@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.PatchManager;
@@ -62,6 +63,7 @@ namespace PeterHan.Resculpt {
 			PUtil.InitLibrary();
 			new PLocalization().Register();
 			new PPatchManager(harmony).RegisterPatchClass(typeof(ResculptPatches));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

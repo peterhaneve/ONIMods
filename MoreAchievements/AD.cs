@@ -17,7 +17,7 @@
  */
 
 using Database;
-using PeterHan.PLib;
+using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -35,7 +35,7 @@ namespace PeterHan.MoreAchievements {
 		/// was found in AchievementStrings.</returns>
 		internal static Type GetAchievementData(string id) {
 			return typeof(AchievementStrings).GetNestedType(id.ToUpperInvariant(),
-				BindingFlags.Public | BindingFlags.Static | BindingFlags.NonPublic);
+				PPatchTools.BASE_FLAGS | BindingFlags.Static);
 		}
 
 		/// <summary>

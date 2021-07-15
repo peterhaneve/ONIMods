@@ -18,6 +18,7 @@
 
 using Database;
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
@@ -217,6 +218,7 @@ namespace PeterHan.StockBugFix {
 			PRegistry.PutData("Bugs.TepidizerPulse", true);
 			PRegistry.PutData("Bugs.TraitExclusionSpacedOut", true);
 			new POptions().RegisterOptions(this, typeof(StockBugFixOptions));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

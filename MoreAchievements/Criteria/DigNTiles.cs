@@ -17,9 +17,7 @@
  */
 
 using Database;
-using Harmony;
 using System;
-using System.IO;
 
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
@@ -32,7 +30,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 		public const int DigComplete = -1485451493;
 
 		/// <summary>
-		/// The number of tiles dug.
+		/// The number of tiles previously dug, when deserialized from a legacy save.
 		/// </summary>
 		protected int dug;
 
@@ -46,34 +44,23 @@ namespace PeterHan.MoreAchievements.Criteria {
 			this.required = Math.Max(1, required);
 		}
 
-		/// <summary>
-		/// Adds a dug tile.
-		/// </summary>
-		public void AddDugTile() {
-			dug++;
-		}
-
-#if VANILLA
-		public override void Deserialize(IReader reader) {
-#else
 		public void Deserialize(IReader reader) {
-#endif
 			required = Math.Max(reader.ReadInt32(), 1);
 			dug = Math.Max(reader.ReadInt32(), 0);
 		}
 
 		public override string GetProgress(bool complete) {
 			return string.Format(AchievementStrings.JOHNHENRY.PROGRESS, complete ?
-				required : dug, required);
-		}
-
-		public override void Serialize(BinaryWriter writer) {
-			writer.Write(required);
-			writer.Write(dug);
+				required : AchievementStateComponent.Instance.TilesDug, required);
 		}
 
 		public override bool Success() {
-			return dug >= required;
+			var inst = AchievementStateComponent.Instance;
+			if (inst != null && dug > 0) {
+				inst.TilesDug = dug;
+				dug = 0;
+			}
+			return inst != null && inst.TilesDug >= required;
 		}
 	}
 }

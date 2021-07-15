@@ -19,6 +19,7 @@
 using HarmonyLib;
 using PeterHan.CritterInventory.NewResourceScreen;
 using PeterHan.CritterInventory.OldResourceScreen;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
@@ -34,6 +35,7 @@ namespace PeterHan.CritterInventory {
 			PUtil.InitLibrary();
 			LocString.CreateLocStringKeys(typeof(CritterInventoryStrings.CREATURES));
 			new PLib.Database.PLocalization().Register();
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

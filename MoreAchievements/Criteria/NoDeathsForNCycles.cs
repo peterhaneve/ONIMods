@@ -18,22 +18,19 @@
 
 using Database;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using UnityEngine;
 
 namespace PeterHan.MoreAchievements.Criteria {
 	/// <summary>
 	/// Requires no Duplicants to die for the specified number of consecutive cycles.
 	/// </summary>
-	public sealed class NoDeathsForNCycles : ColonyAchievementRequirement, IDeathRequirement, AchievementRequirementSerialization_Deprecated {
+	public sealed class NoDeathsForNCycles : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
 		/// <summary>
 		/// How many cycles is required for no deaths.
 		/// </summary>
 		private int cycles;
 
 		/// <summary>
-		/// The cycle number of the last death.
+		/// The cycle of the last death, when deserialized from a legacy save.
 		/// </summary>
 		private int lastDeath;
 
@@ -52,57 +49,18 @@ namespace PeterHan.MoreAchievements.Criteria {
 		}
 
 		public override string GetProgress(bool complete) {
-			return string.Format(AchievementStrings.SAFESPACE.PROGRESS, Math.Max(0, lastDeath));
-		}
-
-		public override void Serialize(BinaryWriter writer) {
-			writer.Write(cycles);
-			// Try to update this before writing out
-			if (lastDeath < 0)
-				Update();
-			writer.Write(lastDeath);
-		}
-
-		/// <summary>
-		/// Triggered when any Duplicant dies.
-		/// </summary>
-		public void OnDeath(Death _) {
-			var instance = GameClock.Instance;
-			if (instance != null)
-				lastDeath = instance.GetCycle();
+			return string.Format(AchievementStrings.SAFESPACE.PROGRESS, Math.Max(0,
+				AchievementStateComponent.Instance.LastDeath));
 		}
 
 		public override bool Success() {
+			var inst = AchievementStateComponent.Instance;
 			int cycle = GameClock.Instance?.GetCycle() ?? 0;
-			return lastDeath >= 0 && cycle - lastDeath >= cycles;
-		}
-
-		public override void Update() {
-			if (lastDeath < 0) {
-				// Look for the last dip in Duplicant count
-				float lastValue = -1.0f;
-				RetiredColonyData.RetiredColonyStatistic[] stats;
-				var data = RetireColonyUtility.GetCurrentColonyRetiredColonyData();
-				if ((stats = data?.Stats) != null && data.cycleCount > 0) {
-					var liveDupes = new SortedList<int, float>(stats.Length);
-					// Copy and sort the values
-					foreach (var cycleData in stats)
-						if (cycleData.id == RetiredColonyData.DataIDs.LiveDuplicants) {
-							foreach (var entry in cycleData.value)
-								liveDupes[Mathf.RoundToInt(entry.first)] = entry.second;
-							break;
-						}
-					lastDeath = 0;
-					// Sorted by cycle now
-					foreach (var pair in liveDupes) {
-						float dupes = pair.Value;
-						if (dupes < lastValue)
-							lastDeath = pair.Key;
-						lastValue = dupes;
-					}
-					liveDupes.Clear();
-				}
+			if (inst != null && lastDeath >= 0) {
+				inst.LastDeath = lastDeath;
+				lastDeath = -1;
 			}
+			return inst != null && inst.LastDeath >= 0 && cycle - inst.LastDeath >= cycles;
 		}
 	}
 }

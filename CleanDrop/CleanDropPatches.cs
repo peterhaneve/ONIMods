@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.PatchManager;
 using UnityEngine;
@@ -155,6 +156,7 @@ namespace PeterHan.CleanDrop {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 			new PPatchManager(harmony).RegisterPatchClass(typeof(CleanDropPatches));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

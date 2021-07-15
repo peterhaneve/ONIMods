@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Efficient Supply</AssemblyTitle>
-    <FileVersion>3.1.0.0</FileVersion>
+    <FileVersion>3.2.0.0</FileVersion>
     <RootNamespace>PeterHan.EfficientFetch</RootNamespace>
     <Description>Prevents Duplicants from fetching tiny amounts of materials to fulfill chores.</Description>
     <AssemblyVersion>3.0.0.0</AssemblyVersion>

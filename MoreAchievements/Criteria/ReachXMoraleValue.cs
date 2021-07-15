@@ -26,7 +26,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 
 		public override string GetProgress(bool complete) {
 			return string.Format(AchievementStrings.TOTALLYECSTATIC.PROGRESS, complete ?
-				required : maxValue, required);
+				required : GetBestValue(), required);
 		}
 	}
 }
