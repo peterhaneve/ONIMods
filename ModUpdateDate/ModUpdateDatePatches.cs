@@ -21,6 +21,7 @@ using KMod;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
+using PeterHan.PLib.PatchManager;
 using PeterHan.PLib.UI;
 using Steamworks;
 using System.Collections.Generic;
@@ -58,13 +59,18 @@ namespace PeterHan.ModUpdateDate {
 					nameof(OnModCrash)));
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
+			new PPatchManager(harmony).RegisterPatchClass(typeof(ModUpdateDatePatches));
 			new POptions().RegisterOptions(this, typeof(ModUpdateInfo));
-			LocString.CreateLocStringKeys(typeof(ModUpdateDateStrings.UI));
 			new PLocalization().Register();
 			ModUpdateInfo.LoadSettings();
 			ThisMod = mod;
 			// Shut off AVC
 			PRegistry.PutData("PLib.VersionCheck.ModUpdaterActive", true);
+		}
+
+		[PLibMethod(RunAt.BeforeDbInit)]
+		private static void BeforeDbInit() {
+			LocString.CreateLocStringKeys(typeof(ModUpdateDateStrings.UI));
 		}
 
 		/// <summary>

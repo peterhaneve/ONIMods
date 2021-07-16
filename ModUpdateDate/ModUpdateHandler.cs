@@ -23,6 +23,7 @@ using PeterHan.PLib.UI;
 using Steamworks;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using UnityEngine;
@@ -76,6 +77,8 @@ namespace PeterHan.ModUpdateDate {
 			Instance = new ModUpdateHandler();
 		}
 
+		private static CultureInfo cultureInfo;
+
 		/// <summary>
 		/// Adds the mod update date to the mods menu.
 		/// </summary>
@@ -101,13 +104,22 @@ namespace PeterHan.ModUpdateDate {
 					Margin = BUTTON_MARGIN, SpriteSize = ICON_SIZE,
 					MaintainSpriteAspect = true
 				};
+				// formatting DateTime
+				if (cultureInfo == null) {
+					var langCode = Localization.GetLocale()?.Code;
+					if (string.IsNullOrEmpty(langCode))
+						langCode = Localization.GetCurrentLanguageCode();
+					if (string.IsNullOrEmpty(langCode))
+						langCode = Localization.DEFAULT_LANGUAGE_CODE;
+					cultureInfo = new CultureInfo(langCode);
+				}
 				if (mod.label.distribution_platform == Label.DistributionPlatform.Steam) {
 					var modUpdate = new ModToUpdate(mod);
 					updated = AddSteamUpdate(tooltip, modUpdate, localDate, updButton);
 					if (updated == ModStatus.Outdated)
 						outdated.Add(modUpdate);
 				} else
-					tooltip.AppendFormat(UISTRINGS.LOCAL_UPDATE, localDate.ToLocalTime());
+					tooltip.AppendFormat(cultureInfo, UISTRINGS.LOCAL_UPDATE, localDate.ToLocalTime());
 				// Icon, color, and tooltip
 				updButton.Sprite = (updated == ModStatus.UpToDate || updated == ModStatus.
 					Disabled) ? PUITuning.Images.Checked : PUITuning.Images.GetSpriteByName(
@@ -149,12 +161,12 @@ namespace PeterHan.ModUpdateDate {
 			}
 			// AppendLine appends platform specific separator
 			tooltip.Append("\n");
-			tooltip.AppendFormat(UISTRINGS.LOCAL_UPDATE, localDate.ToLocalTime());
+			tooltip.AppendFormat(cultureInfo, UISTRINGS.LOCAL_UPDATE, localDate.ToLocalTime());
 			tooltip.Append("\n");
 			if (updated == ModStatus.Disabled)
 				tooltip.AppendFormat(UISTRINGS.STEAM_UPDATE_UNKNOWN);
 			else {
-				tooltip.AppendFormat(UISTRINGS.STEAM_UPDATE, steamDate.ToLocalTime());
+				tooltip.AppendFormat(cultureInfo, UISTRINGS.STEAM_UPDATE, steamDate.ToLocalTime());
 				updButton.OnClick = new ModUpdateTask(modUpdate).TryUpdateMods;
 			}
 			return updated;

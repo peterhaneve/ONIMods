@@ -1,17 +1,60 @@
 msgid ""
 msgstr ""
-"Application: Oxygen Not Included"
-"POT Version: 2.0"
+"Application: Oxygen Not Included\n"
+"POT Version: 2.0\n"
+"Project-Id-Version:\n"
+"POT-Creation-Date:\n"
+"PO-Revision-Date:\n"
+"Language-Team:\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.0.6\n"
+"Last-Translator:\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Language: ru\n"
+"X-Poedit-SourceCharset: UTF-8\n"
 
 #. PeterHan.PLib.Core.PLibStrings.BUTTON_MANUAL
 msgctxt "PeterHan.PLib.Core.PLibStrings.BUTTON_MANUAL"
 msgid "MANUAL CONFIG"
 msgstr "РУЧНАЯ НАСТРОЙКА"
 
+#. PeterHan.PLib.Core.PLibStrings.BUTTON_RESET
+msgctxt "PeterHan.PLib.Core.PLibStrings.BUTTON_RESET"
+msgid "RESET TO DEFAULT"
+msgstr "СБРОС ПО УМОЛЧАНИЮ"
+
 #. PeterHan.PLib.Core.PLibStrings.DIALOG_TITLE
 msgctxt "PeterHan.PLib.Core.PLibStrings.DIALOG_TITLE"
 msgid "Options for {0}"
 msgstr "Настройки для {0}"
+
+#. PeterHan.PLib.Core.PLibStrings.KEY_ARROWDOWN
+msgctxt "PeterHan.PLib.Core.PLibStrings.KEY_ARROWDOWN"
+msgid "Down Arrow"
+msgstr "Стрелка Вниз"
+
+#. PeterHan.PLib.Core.PLibStrings.KEY_ARROWLEFT
+msgctxt "PeterHan.PLib.Core.PLibStrings.KEY_ARROWLEFT"
+msgid "Left Arrow"
+msgstr "Стрелка Влево"
+
+#. PeterHan.PLib.Core.PLibStrings.KEY_ARROWRIGHT
+msgctxt "PeterHan.PLib.Core.PLibStrings.KEY_ARROWRIGHT"
+msgid "Right Arrow"
+msgstr "Стрелка Вправо"
+
+#. PeterHan.PLib.Core.PLibStrings.KEY_ARROWUP
+msgctxt "PeterHan.PLib.Core.PLibStrings.KEY_ARROWUP"
+msgid "Up Arrow"
+msgstr "Стрелка Вверх"
+
+#. PeterHan.PLib.Core.PLibStrings.KEY_CATEGORY_TITLE
+msgctxt "PeterHan.PLib.Core.PLibStrings.KEY_CATEGORY_TITLE"
+msgid "Mods"
+msgstr "Моды"
 
 #. PeterHan.PLib.Core.PLibStrings.MOD_ASSEMBLY_VERSION
 msgctxt "PeterHan.PLib.Core.PLibStrings.MOD_ASSEMBLY_VERSION"
@@ -27,6 +70,16 @@ msgstr "Страница мода"
 msgctxt "PeterHan.PLib.Core.PLibStrings.MOD_VERSION"
 msgid "Mod Version: {0}"
 msgstr "Версия мода: {0}"
+
+#. PeterHan.PLib.Core.PLibStrings.OUTDATED_TOOLTIP
+msgctxt "PeterHan.PLib.Core.PLibStrings.OUTDATED_TOOLTIP"
+msgid "This mod is out of date!\nNew version: <b>{0}</b>\n\nUpdate local mods manually, or use <b>Mod Updater</b> to force update Steam mods"
+msgstr "Этот мод устарел!\nНовая версия: <b>{0}</b>\n\nОбновите локальные моды вручную или используйте <b>Mod Updater</b> для принудительного обновления модов Steam"
+
+#. PeterHan.PLib.Core.PLibStrings.OUTDATED_WARNING
+msgctxt "PeterHan.PLib.Core.PLibStrings.OUTDATED_WARNING"
+msgid "<b><style=\"logic_off\">Outdated!</style></b>"
+msgstr "<b><style=\"logic_off\">Устарел!</style></b>"
 
 #. PeterHan.PLib.Core.PLibStrings.RESTART_REQUIRED
 msgctxt "PeterHan.PLib.Core.PLibStrings.RESTART_REQUIRED"
@@ -63,6 +116,11 @@ msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_PREVIOUS"
 msgid "Previous"
 msgstr "Предыдущий"
 
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_RESET
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_RESET"
+msgid "Resets the mod configuration to default values."
+msgstr "Сбросить конфигурацию мода до значений по умолчанию."
+
 #. PeterHan.PLib.Core.PLibStrings.TOOLTIP_TOGGLE
 msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_TOGGLE"
 msgid "Show or hide this options category"
@@ -71,5 +129,5 @@ msgstr "Показать или скрыть эту категорию наст�
 #. PeterHan.PLib.Core.PLibStrings.TOOLTIP_VERSION
 msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_VERSION"
 msgid "The currently installed version of this mod.\n\nCompare this version with the mod's Release Notes to see if it is outdated."
-msgstr "Текущая установленная версия этого мода.\n\nСравните эту версию с примечаниями к выпуску мода, чтобы узнать, не устарела ли она."
+msgstr "Текущая установленная версия этого мода.\n\nСравните эту версию с примечаниями к выпуску мода, чтобы узнать, не устарел ли он."
 

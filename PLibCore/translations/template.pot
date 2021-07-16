@@ -8,9 +8,39 @@ msgctxt "PeterHan.PLib.Core.PLibStrings.BUTTON_MANUAL"
 msgid "MANUAL CONFIG"
 msgstr ""
 
+#. PeterHan.PLib.Core.PLibStrings.BUTTON_RESET
+msgctxt "PeterHan.PLib.Core.PLibStrings.BUTTON_RESET"
+msgid "RESET TO DEFAULT"
+msgstr ""
+
 #. PeterHan.PLib.Core.PLibStrings.DIALOG_TITLE
 msgctxt "PeterHan.PLib.Core.PLibStrings.DIALOG_TITLE"
 msgid "Options for {0}"
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.KEY_ARROWDOWN
+msgctxt "PeterHan.PLib.Core.PLibStrings.KEY_ARROWDOWN"
+msgid "Down Arrow"
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.KEY_ARROWLEFT
+msgctxt "PeterHan.PLib.Core.PLibStrings.KEY_ARROWLEFT"
+msgid "Left Arrow"
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.KEY_ARROWRIGHT
+msgctxt "PeterHan.PLib.Core.PLibStrings.KEY_ARROWRIGHT"
+msgid "Right Arrow"
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.KEY_ARROWUP
+msgctxt "PeterHan.PLib.Core.PLibStrings.KEY_ARROWUP"
+msgid "Up Arrow"
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.KEY_CATEGORY_TITLE
+msgctxt "PeterHan.PLib.Core.PLibStrings.KEY_CATEGORY_TITLE"
+msgid "Mods"
 msgstr ""
 
 #. PeterHan.PLib.Core.PLibStrings.MOD_ASSEMBLY_VERSION
@@ -26,6 +56,16 @@ msgstr ""
 #. PeterHan.PLib.Core.PLibStrings.MOD_VERSION
 msgctxt "PeterHan.PLib.Core.PLibStrings.MOD_VERSION"
 msgid "Mod Version: {0}"
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.OUTDATED_TOOLTIP
+msgctxt "PeterHan.PLib.Core.PLibStrings.OUTDATED_TOOLTIP"
+msgid "This mod is out of date!\nNew version: <b>{0}</b>\n\nUpdate local mods manually, or use <b>Mod Updater</b> to force update Steam mods"
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.OUTDATED_WARNING
+msgctxt "PeterHan.PLib.Core.PLibStrings.OUTDATED_WARNING"
+msgid "<b><style=\"logic_off\">Outdated!</style></b>"
 msgstr ""
 
 #. PeterHan.PLib.Core.PLibStrings.RESTART_REQUIRED
@@ -61,6 +101,11 @@ msgstr ""
 #. PeterHan.PLib.Core.PLibStrings.TOOLTIP_PREVIOUS
 msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_PREVIOUS"
 msgid "Previous"
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_RESET
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_RESET"
+msgid "Resets the mod configuration to default values."
 msgstr ""
 
 #. PeterHan.PLib.Core.PLibStrings.TOOLTIP_TOGGLE
