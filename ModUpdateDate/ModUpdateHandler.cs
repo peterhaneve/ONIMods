@@ -60,6 +60,11 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		private static readonly Vector2 ICON_SIZE = new Vector2(16.0f, 16.0f);
 
+		/// <summary>
+		/// The culture to be used for displaying date formats.
+		/// </summary>
+		private static CultureInfo cultureInfo;
+
 		static ModUpdateHandler() {
 			COLOR_OUTDATED = ScriptableObject.CreateInstance<ColorStyleSetting>();
 			COLOR_OUTDATED.inactiveColor = new Color(0.753f, 0.0f, 0.0f);
@@ -76,8 +81,6 @@ namespace PeterHan.ModUpdateDate {
 				COLOR_UPDATED.disabledhoverColor = new Color(0.549f, 0.706f, 0.549f);
 			Instance = new ModUpdateHandler();
 		}
-
-		private static CultureInfo cultureInfo;
 
 		/// <summary>
 		/// Adds the mod update date to the mods menu.
@@ -104,14 +107,16 @@ namespace PeterHan.ModUpdateDate {
 					Margin = BUTTON_MARGIN, SpriteSize = ICON_SIZE,
 					MaintainSpriteAspect = true
 				};
-				// formatting DateTime
+				// Format DateTime to the current Klei culture (otherwise it uses
+				// CurrentCulture which defaults to the Steam culture)
 				if (cultureInfo == null) {
 					var langCode = Localization.GetLocale()?.Code;
 					if (string.IsNullOrEmpty(langCode))
 						langCode = Localization.GetCurrentLanguageCode();
 					if (string.IsNullOrEmpty(langCode))
-						langCode = Localization.DEFAULT_LANGUAGE_CODE;
-					cultureInfo = new CultureInfo(langCode);
+						cultureInfo = CultureInfo.CurrentCulture;
+					else
+						cultureInfo = new CultureInfo(langCode);
 				}
 				if (mod.label.distribution_platform == Label.DistributionPlatform.Steam) {
 					var modUpdate = new ModToUpdate(mod);
@@ -119,7 +124,8 @@ namespace PeterHan.ModUpdateDate {
 					if (updated == ModStatus.Outdated)
 						outdated.Add(modUpdate);
 				} else
-					tooltip.AppendFormat(cultureInfo, UISTRINGS.LOCAL_UPDATE, localDate.ToLocalTime());
+					tooltip.AppendFormat(cultureInfo, UISTRINGS.LOCAL_UPDATE, localDate.
+						ToLocalTime());
 				// Icon, color, and tooltip
 				updButton.Sprite = (updated == ModStatus.UpToDate || updated == ModStatus.
 					Disabled) ? PUITuning.Images.Checked : PUITuning.Images.GetSpriteByName(
