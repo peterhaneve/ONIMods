@@ -142,10 +142,10 @@ namespace PeterHan.FastSave {
 					template)) {
 				if (!SERIALIZATION_TEMPLATES.TryGetValue(type, out FastSerializationTemplate
 						cached)) {
-					template = cached = new FastSerializationTemplate(type);
+					cached = new FastSerializationTemplate(type);
 					SERIALIZATION_TEMPLATES.Add(type, cached);
-				} else
-					SERIALIZATION_TEMPLATES_ACTIVE.Add(type, template = cached);
+				}
+				SERIALIZATION_TEMPLATES_ACTIVE.Add(type, template = cached);
 			}
 			return template;
 		}

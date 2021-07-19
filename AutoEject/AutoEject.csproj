@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyTitle>Auto-Eject</AssemblyTitle>
+    <FileVersion>1.0.0.0</FileVersion>
+    <RootNamespace>PeterHan.AutoEject</RootNamespace>
+    <Description>Automatically completes several chores in the UI that can be easily forgotten.</Description>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <LastWorkingBuild>471618</LastWorkingBuild>
+    <Platforms>Vanilla;Mergedown</Platforms>
+  </PropertyGroup>
+</Project>

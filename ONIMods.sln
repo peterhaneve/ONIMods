@@ -103,6 +103,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLibDatabase", "PLibDatabas
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLibAVC", "PLibAVC\PLibAVC.csproj", "{769785FD-B0CD-4363-9AD4-100BFF22E205}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoEject", "AutoEject\AutoEject.csproj", "{EF8C2C5E-03B7-46F9-B8B7-D6ED11170542}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mergedown = Debug|Mergedown
@@ -501,6 +503,13 @@ Global
 		{769785FD-B0CD-4363-9AD4-100BFF22E205}.Release|Mergedown.Build.0 = Release|Mergedown
 		{769785FD-B0CD-4363-9AD4-100BFF22E205}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{769785FD-B0CD-4363-9AD4-100BFF22E205}.Release|Vanilla.Build.0 = Release|Vanilla
+		{EF8C2C5E-03B7-46F9-B8B7-D6ED11170542}.Debug|Mergedown.ActiveCfg = Debug|Vanilla
+		{EF8C2C5E-03B7-46F9-B8B7-D6ED11170542}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
+		{EF8C2C5E-03B7-46F9-B8B7-D6ED11170542}.Debug|Vanilla.Build.0 = Debug|Vanilla
+		{EF8C2C5E-03B7-46F9-B8B7-D6ED11170542}.Release|Mergedown.ActiveCfg = Release|Mergedown
+		{EF8C2C5E-03B7-46F9-B8B7-D6ED11170542}.Release|Mergedown.Build.0 = Release|Mergedown
+		{EF8C2C5E-03B7-46F9-B8B7-D6ED11170542}.Release|Vanilla.ActiveCfg = Release|Vanilla
+		{EF8C2C5E-03B7-46F9-B8B7-D6ED11170542}.Release|Vanilla.Build.0 = Release|Vanilla
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

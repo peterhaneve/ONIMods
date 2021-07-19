@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#if SPACEDOUT
 namespace PeterHan.CritterInventory {
 	/// <summary>
 	/// A resource tracker which tracks critter counts for all critters of a specific type.
@@ -35,4 +34,3 @@ namespace PeterHan.CritterInventory {
 		}
 	}
 }
-#endif
