@@ -125,7 +125,11 @@ namespace PeterHan.AIImprovements {
 				if (instance.gameObject.HasTag(GameTags.Incapacitated))
 					navigator.SetCurrentNavType(NavType.Floor);
 				instance.UpdateFalling();
-				instance.GoTo(instance.sm.standing);
+				// If they get pushed into entombment, start entombment animation
+				if (instance.sm.isEntombed.Get(instance))
+					instance.GoTo(instance.sm.entombed.stuck);
+				else
+					instance.GoTo(instance.sm.standing);
 			}
 		}
 
@@ -141,7 +145,8 @@ namespace PeterHan.AIImprovements {
 			var navType = navigator.CurrentNavType;
 			// Duplicants in a tube are 1x1
 			return navigator.NavGrid.NavTable.IsValid(cell, navType) && !Grid.Solid[cell] &&
-				(navType == NavType.Tube || (Grid.IsValidCell(above) && !Grid.Solid[above]));
+				!Grid.DupeImpassable[cell] && (navType == NavType.Tube || (Grid.IsValidCell(
+				above) && !Grid.Solid[above] && !Grid.DupeImpassable[above]));
 		}
 
 		[PLibMethod(RunAt.AfterDbInit)]
