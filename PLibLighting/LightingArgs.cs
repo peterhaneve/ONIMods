@@ -26,13 +26,14 @@ namespace PeterHan.PLib.Lighting {
 	/// Arguments which are passed to lighting callbacks to perform lighting calculations.
 	/// 
 	/// The range is the light radius supplied during the Light2D creation; do not light up
-	/// tiles outside of this radius (measured by taxicab distance to SourceCell)!
+	/// tiles outside of this radius (measured by a square around SourceCell)!
 	/// 
 	/// The source cell is the cell nearest to where the Light2D is currently located.
 	/// 
 	/// Use the IDictionary interface to store the relative brightness of cells by their cell
 	/// location. These values should be between 0 and 1 normally, with the maximum brightness
-	/// being set by the intensity parameter of the Light2D.
+	/// being set by the intensity parameter of the Light2D. The user is responsible for
+	/// ensuring that cells are valid before lighting them up.
 	/// </summary>
 	public sealed class LightingArgs : EventArgs, IDictionary<int, float> {
 		/// <summary>

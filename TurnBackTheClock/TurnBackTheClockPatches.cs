@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
@@ -47,6 +48,8 @@ namespace PeterHan.TurnBackTheClock {
 			PUtil.InitLibrary();
 			new POptions().RegisterOptions(this, typeof(TurnBackTheClockOptions));
 			new PPatchManager(harmony).RegisterPatchClass(typeof(TurnBackTheClockPatches));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
+			TUNING.FOOD.FOOD_TYPES.COOKED_MEAT.DlcId = "";
 		}
 
 		[PLibMethod(RunAt.OnStartGame)]
