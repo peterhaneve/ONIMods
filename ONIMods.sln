@@ -105,6 +105,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLibAVC", "PLibAVC\PLibAVC.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoEject", "AutoEject\AutoEject.csproj", "{EF8C2C5E-03B7-46F9-B8B7-D6ED11170542}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TurnBackTheClock", "TurnBackTheClock\TurnBackTheClock.csproj", "{775898D1-4014-49D4-902B-F6873BA86616}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mergedown = Debug|Mergedown
@@ -510,6 +512,14 @@ Global
 		{EF8C2C5E-03B7-46F9-B8B7-D6ED11170542}.Release|Mergedown.Build.0 = Release|Mergedown
 		{EF8C2C5E-03B7-46F9-B8B7-D6ED11170542}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{EF8C2C5E-03B7-46F9-B8B7-D6ED11170542}.Release|Vanilla.Build.0 = Release|Vanilla
+		{775898D1-4014-49D4-902B-F6873BA86616}.Debug|Mergedown.ActiveCfg = Debug|Mergedown
+		{775898D1-4014-49D4-902B-F6873BA86616}.Debug|Mergedown.Build.0 = Debug|Mergedown
+		{775898D1-4014-49D4-902B-F6873BA86616}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
+		{775898D1-4014-49D4-902B-F6873BA86616}.Debug|Vanilla.Build.0 = Debug|Vanilla
+		{775898D1-4014-49D4-902B-F6873BA86616}.Release|Mergedown.ActiveCfg = Release|Mergedown
+		{775898D1-4014-49D4-902B-F6873BA86616}.Release|Mergedown.Build.0 = Release|Mergedown
+		{775898D1-4014-49D4-902B-F6873BA86616}.Release|Vanilla.ActiveCfg = Release|Vanilla
+		{775898D1-4014-49D4-902B-F6873BA86616}.Release|Vanilla.Build.0 = Release|Vanilla
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

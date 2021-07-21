@@ -472,6 +472,22 @@ namespace PeterHan.StockBugFix {
 		}
 
 		/// <summary>
+		/// Applied to PacuCleanerConfig to insulate its storage and prevent instantly
+		/// entombing the critters.
+		/// </summary>
+		[HarmonyPatch(typeof(PacuCleanerConfig), "CreatePacu")]
+		public static class PacuCleanerConfig_CreatePacu_Patch {
+			/// <summary>
+			/// Applied after CreatePacu runs.
+			/// </summary>
+			internal static void Postfix(GameObject __result) {
+				var storage = __result.GetComponentSafe<Storage>();
+				if (storage != null)
+					storage.SetDefaultStoredItemModifiers(Storage.StandardInsulatedStorage);
+			}
+		}
+
+		/// <summary>
 		/// Applied to PolymerizerConfig to fix a symmetry error when emitting the plastic.
 		/// </summary>
 		[HarmonyPatch(typeof(PolymerizerConfig), nameof(PolymerizerConfig.

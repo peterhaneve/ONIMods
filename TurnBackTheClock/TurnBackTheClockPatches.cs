@@ -17,16 +17,41 @@
  */
 
 using HarmonyLib;
-using PeterHan.PLib;
-using System;
-using System.Collections.Generic;
-using UnityEngine;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Options;
+using PeterHan.PLib.PatchManager;
 
-namespace PeterHan.StockBugFix {
+namespace PeterHan.TurnBackTheClock {
 	/// <summary>
-	/// Patches which will be applied via annotations for Stock Bug Fix only on the Spaced Out!
-	/// DLC. Must be compiled against the DLC but runs fine against vanilla.
+	/// Patches which will be applied via annotations for Turn Back the Clock.
 	/// </summary>
-	internal static class DLCSpecificPatches {
+	public sealed class TurnBackTheClockPatches : KMod.UserMod2 {
+		/// <summary>
+		/// Applied to Techs to apply tech tree changes.
+		/// </summary>
+		[HarmonyPatch(typeof(Database.Techs), nameof(Database.Techs.PostProcess))]
+		public static class Techs_PostProcess_Patch {
+			internal static void Prefix() {
+				if (TurnBackTheClockOptions.Instance.MD471618_TechTree)
+					MD471618.TechTreeFix();
+			}
+		}
+
+		[PLibMethod(RunAt.AfterDbInit)]
+		internal static void AfterDbInit() {
+			MD471618.AfterDbInit();
+		}
+
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
+			PUtil.InitLibrary();
+			new POptions().RegisterOptions(this, typeof(TurnBackTheClockOptions));
+			new PPatchManager(harmony).RegisterPatchClass(typeof(TurnBackTheClockPatches));
+		}
+
+		[PLibMethod(RunAt.OnStartGame)]
+		internal static void OnStartGame() {
+			MD471618.AllDiscovered = false;
+		}
 	}
 }
