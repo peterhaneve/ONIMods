@@ -169,6 +169,22 @@ namespace PeterHan.TurnBackTheClock {
 		}
 
 		/// <summary>
+		/// Applied to CoughMonitor to prevent application of Yucky Lungs.
+		/// </summary>
+		[HarmonyPatch(typeof(CoughMonitor), "OnBreatheDirtyAir")]
+		public static class CoughMonitor_OnBreatheDirtyAir_Patch {
+			internal static bool Prepare() => TurnBackTheClockOptions.Instance.
+				MD471618_Debuffs;
+
+			internal static bool Prefix(CoughMonitor __instance, CoughMonitor.Instance smi) {
+				__instance.shouldCough.Set(false, smi);
+				smi.lastConsumeTime = 0.0f;
+				smi.amountConsumed = 0.0f;
+				return false;
+			}
+		}
+
+		/// <summary>
 		/// Applied to CraftingTableConfig to disable it when MD-471618 buildings are turned off.
 		/// </summary>
 		[HarmonyPatch(typeof(CraftingTableConfig), nameof(IBuildingConfig.CreateBuildingDef))]
@@ -260,6 +276,22 @@ namespace PeterHan.TurnBackTheClock {
 
 			internal static void Postfix(BuildingDef __result) {
 				__result.Deprecated = true;
+			}
+		}
+
+		/// <summary>
+		/// Applied to GasLiquidExposureMonitor to prevent the application of any exposure
+		/// effects for eye irritation.
+		/// </summary>
+		[HarmonyPatch(typeof(GasLiquidExposureMonitor), "ApplyEffects")]
+		public static class GasLiquidExposureMonitor_ApplyEffects_Patch {
+			internal static bool Prepare() => TurnBackTheClockOptions.Instance.
+				MD471618_Debuffs;
+
+			internal static void Prefix(GasLiquidExposureMonitor __instance,
+					GasLiquidExposureMonitor.Instance smi) {
+				smi.exposure = 0.0f;
+				__instance.isIrritated.Set(false, smi);
 			}
 		}
 

@@ -77,6 +77,8 @@ namespace PeterHan.ToastControl {
 			"MinionResume:OnSkillPointGained",
 			"MopTool:OnDragTool",
 			"SandboxSampleTool:OnLeftClickDown",
+			"Storage:DropSome",
+			"Storage:Store",
 			"SuperProductive+<>c:<InitializeStates>b__3_0",
 			"Toilet:Flush",
 			"ToiletWorkableUse:OnCompleteWork",
@@ -101,6 +103,7 @@ namespace PeterHan.ToastControl {
 			"Klei.AI.SlimeSickness+SlimeLungComponent+StatesInstance:ProduceSlime",
 			"Moppable:Sim1000ms",
 			"NuclearResearchCenterWorkable:OnWorkTick",
+			"PeeChore+States+<>c:<InitializeStates>b__2_6",
 			"ReorderableBuilding:ConvertModule",
 			"ResearchCenter:ConvertMassToResearchPoints",
 			"ResearchPointObject:OnSpawn",
@@ -110,6 +113,7 @@ namespace PeterHan.ToastControl {
 			"SeedProducer:ProduceSeed",
 			"SetLocker:DropContents",
 			"SolidConsumerMonitor+Instance:OnEatSolidComplete",
+			"VomitChore+States+<>c:<InitializeStates>b__7_4",
 			"WorldDamage:OnDigComplete"
 		};
 

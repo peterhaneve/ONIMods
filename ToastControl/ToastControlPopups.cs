@@ -65,10 +65,9 @@ namespace PeterHan.ToastControl {
 			{ nameof(MinionResume), (c, t) => Options.SkillPointEarned },
 			{ nameof(Moppable), (c, t) => Options.ElementMopped },
 			{ nameof(MopTool), ShowMopError },
-#if SPACEDOUT
 			{ nameof(NuclearResearchCenterWorkable), ShowResearchGained },
+			{ "PeeChore+States", ShowRadiationRemoved },
 			{ nameof(ReorderableBuilding), ShowInvalidLocation },
-#endif
 			{ nameof(ResearchCenter), ShowResearchGained },
 			{ nameof(ResearchPointObject), ShowResearchGained },
 			{ nameof(RotPile), ShowFoodRotted },
@@ -83,8 +82,9 @@ namespace PeterHan.ToastControl {
 			{ nameof(Storage), ShowItemStored },
 			{ nameof(SuperProductive), ShowOverjoyed },
 			{ nameof(Toilet), ShowGermsAdded },
-			{ nameof(ToiletWorkableUse), (c, t) => Options.RadiationRemoved },
+			{ nameof(ToiletWorkableUse), ShowRadiationRemoved },
 			{ nameof(UtilityBuildTool), (c, t) => Options.InvalidConnection },
+			{ "VomitChore+States", ShowRadiationRemoved },
 			{ nameof(WorldDamage), (c, t) => Options.ElementDug }
 		};
 
@@ -160,6 +160,9 @@ namespace PeterHan.ToastControl {
 		}
 
 		private static bool ShowOverjoyed(object _, string text) => Options.Overjoyed;
+
+		private static bool ShowRadiationRemoved(object _, string text) => Options.
+			RadiationRemoved;
 
 		private static bool ShowResearchGained(object _, string text) => Options.ResearchGained;
 

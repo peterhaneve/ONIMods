@@ -86,9 +86,16 @@ namespace PeterHan.TurnBackTheClock {
 		public bool MD471618_DeodorizerPower { get; set; } = false;
 
 		/// <summary>
+		/// Prevents Duplicants from getting debuffs in bad gases.
+		/// </summary>
+		[Option("Remove Debuffs", "Yucky Lungs and Eye Irritation cannot be inflicted upon Duplicants.", "MD-471618: Breath of Fresh Air")]
+		[JsonProperty]
+		public bool MD471618_Debuffs { get; set; } = false;
+
+		/// <summary>
 		/// Changes Solar Panels from SCO to LI/GI to allow Heavy-Watt wire to be built in them again.
 		/// </summary>
-		[Option("Solar Panel Occupies Floor", "Solar Panels are no longer considered solid tiles, allowing Heavy-Watt Wire and\nHeavy-Watt Conductive Wire to be built through them.", "MD-471618: Breath of Fresh Air")]
+		[Option("Solar Panel Occupies Floor", "Solar Panels are no longer considered solid tiles, changing how Heat transfer works with them.", "MD-471618: Breath of Fresh Air")]
 		[JsonProperty]
 		public bool MD471618_SolarPanelWiring { get; set; } = false;
 
@@ -100,7 +107,7 @@ namespace PeterHan.TurnBackTheClock {
 		public bool MD471618_TechTree { get; set; } = false;
 
 		/// <summary>
-		/// Uses the old gas weight values.
+		/// Removes all the new traits and makes initial attributes 7/3/1 again.
 		/// </summary>
 		[Option("Traits and Skills", "Prevents the acquisition of traits introduced in this update,\nand reverts initial skill distributions to their previous values.", "MD-471618: Breath of Fresh Air")]
 		[JsonProperty]

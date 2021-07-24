@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Turn Back The Clock</AssemblyTitle>
-    <FileVersion>1.0.0.0</FileVersion>
+    <FileVersion>1.1.0.0</FileVersion>
     <RootNamespace>PeterHan.TurnBackTheClock</RootNamespace>
     <Description>Changes the game to be more like previous versions.</Description>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
