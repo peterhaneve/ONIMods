@@ -42,7 +42,7 @@ namespace PeterHan.FastSave {
 				string savePath, string worldName, bool preview) {
 			int width = rt.width, height = rt.height;
 			if (width > 0 && height > 0) {
-				var request = AsyncGPUReadback.Request(rt, 0);
+				var request = AsyncGPUReadback.Request(rt, 0, TextureFormat.RGBA32);
 				// Wait for texture to be read back from the GPU
 				while (!request.done)
 					yield return null;
@@ -79,6 +79,7 @@ namespace PeterHan.FastSave {
 			byte[] data;
 			try {
 				pngTexture.LoadRawTextureData(rawData);
+				pngTexture.Apply();
 				data = pngTexture.EncodeToPNG();
 			} finally {
 				Object.Destroy(pngTexture);
