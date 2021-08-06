@@ -16,21 +16,22 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using HarmonyLib;
 using PeterHan.PLib.Actions;
 using PeterHan.PLib.Core;
 
-namespace PeterHan.DebugNotIncluded {
+namespace PeterHan.NoWasteWant {
+#if DEBUG
 	/// <summary>
-	/// Adds a button, only in sandbox mode, to instantly cause a Duplicant to become overjoyed
-	/// or stressed out.
+	/// Adds a button, only in sandbox mode, to instantly rot or unrot food.
 	/// </summary>
 	[SkipSaveFileSerialization]
-	public sealed class InstantEmotable : KMonoBehaviour, IRefreshUserMenu {
+	public sealed class InstantRottable : KMonoBehaviour, IRefreshUserMenu {
 		/// <summary>
 		/// Handles user menu refresh events system-wide.
 		/// </summary>
-		private static readonly EventSystem.IntraObjectHandler<InstantEmotable>
-			ON_REFRESH_MENU = PGameUtils.CreateUserMenuHandler<InstantEmotable>();
+		private static readonly EventSystem.IntraObjectHandler<InstantRottable>
+			ON_REFRESH_MENU = PGameUtils.CreateUserMenuHandler<InstantRottable>();
 
 		protected override void OnCleanUp() {
 			Unsubscribe((int)GameHashes.RefreshUserMenu, ON_REFRESH_MENU);
@@ -42,35 +43,42 @@ namespace PeterHan.DebugNotIncluded {
 			Subscribe((int)GameHashes.RefreshUserMenu, ON_REFRESH_MENU);
 		}
 
-		/// <summary>
-		/// Called when a Duplicant needs to become stressed out.
-		/// </summary>
-		private void OnStressOut() {
-			var stress = Db.Get().Amounts.Stress;
-			stress.Lookup(gameObject)?.SetValue(stress.maxAttribute.BaseValue);
+		private void OnRot() {
+			var smi = gameObject.GetSMI<Rottable.Instance>();
+			if (smi != null)
+				smi.RotValue = 0.01f;
 		}
 
-		/// <summary>
-		/// Called when a Duplicant needs to become overjoyed.
-		/// </summary>
-		private void OnOverjoyed() {
-			gameObject.GetSMI<JoyBehaviourMonitor.Instance>()?.GoToOverjoyed();
+		private void OnFreshen() {
+			var smi = gameObject.GetSMI<Rottable.Instance>();
+			if (smi != null)
+				smi.RotValue = smi.def.spoilTime * 0.5f;
 		}
 
 		/// <summary>
 		/// Called when the info screen for the plant or creature is refreshed.
 		/// </summary>
 		public void OnRefreshUserMenu() {
-			if (Game.Instance.SandboxModeActive) {
+			if (Game.Instance.SandboxModeActive && gameObject.GetSMI<Rottable.Instance>() !=
+					null) {
 				Game.Instance?.userMenu?.AddButton(gameObject, new KIconButtonMenu.
-					ButtonInfo("action_repair", DebugNotIncludedStrings.
-					UI.USERMENUOPTIONS.OVERJOY, OnOverjoyed, PAction.MaxAction, null,
-					null, null, DebugNotIncludedStrings.UI.TOOLTIPS.DNI_OVERJOY));
+					ButtonInfo("action_repair", "Unrot food", OnFreshen, PAction.MaxAction,
+					null, null, null, "Set freshness to 50%"));
 				Game.Instance?.userMenu?.AddButton(gameObject, new KIconButtonMenu.
-					ButtonInfo("action_building_cancel", DebugNotIncludedStrings.
-					UI.USERMENUOPTIONS.STRESSOUT, OnStressOut, PAction.MaxAction, null,
-					null, null, DebugNotIncludedStrings.UI.TOOLTIPS.DNI_STRESSOUT));
+					ButtonInfo("action_building_cancel", "Rot food", OnRot, PAction.MaxAction,
+					null, null, null, "Set freshness to almost 0%"));
+			}
+		}
+
+		/// <summary>
+		/// Debug only handler to manipulate freshness values for testing.
+		/// </summary>
+		[HarmonyPatch(typeof(Edible), "OnPrefabInit")]
+		public static class Edible_OnPrefabInit_Patch {
+			internal static void Postfix(Edible __instance) {
+				__instance.gameObject.AddOrGet<InstantRottable>();
 			}
 		}
 	}
+#endif
 }

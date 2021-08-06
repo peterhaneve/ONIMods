@@ -69,7 +69,7 @@ msgid ""
 msgstr ""
 "\n"
 "\n"
-"<color=#FFCC00>{0:D} les mods peuvent être obsolètes</color>"
+"<color=#FFCC00>{0:D} mods peuvent être obsolètes</color>"
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_UPDATE_1
 msgctxt ""
@@ -81,7 +81,7 @@ msgid ""
 msgstr ""
 "\n"
 "\n"
-"<color=#FFCC00>1 mod être obsolète</color>"
+"<color=#FFCC00>1 mod peut être obsolète</color>"
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_OUTDATED
 msgctxt ""

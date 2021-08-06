@@ -384,6 +384,24 @@ namespace PeterHan.StockBugFix {
 		}
 
 		/// <summary>
+		/// Applied to GlassForgeConfig to mitigate the zero mass object race condition on
+		/// the Glass Forge by insulating its output storage.
+		/// </summary>
+		[HarmonyPatch(typeof(GlassForgeConfig), nameof(IBuildingConfig.
+			ConfigureBuildingTemplate))]
+		public static class GlassForgeConfig_ConfigureBuildingTemplate_Patch {
+			/// <summary>
+			/// Applied after ConfigureBuildingTemplate runs.
+			/// </summary>
+			internal static void Postfix(GameObject go) {
+				var forge = go.GetComponentSafe<GlassForge>();
+				if (forge != null)
+					forge.outStorage.SetDefaultStoredItemModifiers(Storage.
+						StandardInsulatedStorage);
+			}
+		}
+
+		/// <summary>
 		/// Applied to GourmetCookingStationConfig to make the CO2 output in the right place.
 		/// </summary>
 		[HarmonyPatch(typeof(GourmetCookingStationConfig), nameof(GourmetCookingStationConfig.

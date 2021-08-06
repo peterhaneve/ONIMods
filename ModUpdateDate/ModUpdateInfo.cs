@@ -68,11 +68,16 @@ namespace PeterHan.ModUpdateDate {
 		public List<ModUpdateData> ModUpdates { get; set; }
 
 		[JsonProperty]
+		[Option("STRINGS.UI.MODUPDATER.OPTION_PASSIVE", "STRINGS.UI.TOOLTIPS.MODUPDATER.OPTION_PASSIVE")]
+		public bool PassiveMode { get; set; }
+
+		[JsonProperty]
 		[Option("STRINGS.UI.MODUPDATER.OPTION_MAINMENU", "STRINGS.UI.TOOLTIPS.MODUPDATER.OPTION_MAINMENU")]
 		public bool ShowMainMenuWarning { get; set; }
 
 		public ModUpdateInfo() {
 			ModUpdates = new List<ModUpdateData>(8);
+			PassiveMode = false;
 			ShowMainMenuWarning = true;
 		}
 	}

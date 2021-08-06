@@ -111,7 +111,7 @@ namespace PeterHan.PLib.UI {
 		/// `AddSideScreenContentWithOrdering&lt;MySideScreen&gt;(typeof(CapacityControlSideScreen).FullName);`
 		/// `typeof(TargetedSideScreen).FullName` is the suggested value of this parameter.
 		/// Side screens from other mods can be used with their qualified names, even if no
-		/// no reference to their type is available, but the target mod must have added their
+		/// reference to their type is available, but the target mod must have added their
 		/// custom side screen to the list first.</param>
 		/// <param name="insertBefore">Whether to insert the new screen before or after the
 		/// target side screen in the list. Defaults to before (true).

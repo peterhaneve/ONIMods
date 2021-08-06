@@ -50,6 +50,9 @@ namespace PeterHan.ModUpdateDate {
 				public static LocString MOD_UPDATE_ALL = "Update {0:D} mods which appear to be out of date";
 				public static LocString MOD_UPDATE_1 = "Update one mod which appears to be out of date";
 
+				// Passive mode
+				public static LocString OPTION_PASSIVE = "Passive Mode";
+
 				// Steam update date
 				public static LocString STEAM_UPDATE = "<b>Steam Updated:</b> {0:f}";
 
@@ -82,6 +85,7 @@ namespace PeterHan.ModUpdateDate {
 			public static class TOOLTIPS {
 				public static class MODUPDATER {
 					public static LocString OPTION_MAINMENU = "If selected, a warning with the number of potentially\noutdated mods is shown in the main menu.";
+					public static LocString OPTION_PASSIVE = "Experimental! Enables Passive Mode which automatically keeps all mods up to date in the background.";
 				}
 			}
 		}

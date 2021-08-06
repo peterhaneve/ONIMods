@@ -71,6 +71,7 @@ Mods should remain in their own subfolder.
 | [Thermal Interface Plate](https://steamcommunity.com/sharedfiles/filedetails/?id=1938747693) | Transfers heat between buildings in its tile, even in a complete Vacuum | Yes | Yes |
 | [Thermo Sensor Tile](https://steamcommunity.com/sharedfiles/filedetails/?id=1974008313) | A Thermo Sensor in tile form for effective heat measurement of adjacent tiles | Yes | Yes |
 | [Turn Back the Clock](https://steamcommunity.com/sharedfiles/filedetails/?id=2553917491) | Revert gameplay changes to play mature colonies under legacy mechanics | Yes | No |
+| [Waste Not, Want Not](https://steamcommunity.com/sharedfiles/filedetails/?id=2567122431) | Make Duplicants prefer older leftovers to minimize food waste | Yes | Yes |
 
 ## Reimagination Team Mods
 

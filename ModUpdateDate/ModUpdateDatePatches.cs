@@ -39,6 +39,25 @@ namespace PeterHan.ModUpdateDate {
 		internal static Mod ThisMod { get; private set; }
 
 		/// <summary>
+		/// Passive method replacement method for SteamUGC.DownloadItem to use the correct,
+		/// updated version.
+		/// </summary>
+		/// <param name="id">The mod ID to download.</param>
+		/// <param name="highPriority">Always false when called.</param>
+		/// <returns>true to wait for the result (ignored by Klei! The real cause of the race
+		/// condition on download!), or false on error.</returns>
+		private static bool DownloadCorrectItem(PublishedFileId_t id, bool highPriority) {
+			UGCHandle_t content;
+			bool ok = false;
+			if (id != null && ModUpdateDetails.TryGetDetails(id.m_PublishedFileId, out
+					SteamUGCDetails_t details) && (content = details.m_hFile) != UGCHandle_t.
+					Invalid)
+				ok = SteamRemoteStorage.UGCDownload(content, highPriority ? 1U : 0U) !=
+					SteamAPICall_t.Invalid;
+			return ok;
+		}
+
+		/// <summary>
 		/// Handles a mod crash and bypasses disabling the mod if it is this mod.
 		/// </summary>
 		private static bool OnModCrash(Mod __instance) {
@@ -66,6 +85,8 @@ namespace PeterHan.ModUpdateDate {
 			ThisMod = mod;
 			// Shut off AVC
 			PRegistry.PutData("PLib.VersionCheck.ModUpdaterActive", true);
+			if (ModUpdateInfo.Settings?.PassiveMode == true)
+				PRegistry.PutData("PLib.VersionCheck.PassiveSteamUpdate", true);
 		}
 
 		[PLibMethod(RunAt.BeforeDbInit)]
@@ -78,6 +99,8 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		[HarmonyPatch(typeof(MainMenu), "OnPrefabInit")]
 		public static class MainMenu_OnPrefabInit_Patch {
+			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode != true;
+
 			/// <summary>
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
@@ -93,6 +116,8 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		[HarmonyPatch(typeof(Manager), nameof(Manager.Subscribe))]
 		public static class Manager_Subscribe_Patch {
+			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode != true;
+
 			/// <summary>
 			/// Transpiles Subscribe to insert a call to SuppressContentChanged after the
 			/// comparison, and a call to UpdateContentChanged instead of CopyPersistentDataTo.
@@ -164,11 +189,29 @@ namespace PeterHan.ModUpdateDate {
 		}
 
 		/// <summary>
+		/// Applied to SteamUGCService to get detailed mod info when it is requested.
+		/// </summary>
+		[HarmonyPatch(typeof(SteamUGCService), "OnSteamUGCQueryDetailsCompleted")]
+		public static class SteamUGCService_OnSteamUGCQueryDetailsCompleted_Patch {
+			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode != true;
+
+			/// <summary>
+			/// Applied after OnSteamUGCQueryDetailsCompleted runs.
+			/// </summary>
+			internal static void Postfix(HashSet<SteamUGCDetails_t> ___publishes) {
+				if (___publishes != null)
+					ModUpdateDetails.OnInstalledUpdate(___publishes);
+			}
+		}
+
+		/// <summary>
 		/// Applied to SteamUGCService to display the number of outdated mods after each mod
 		/// update is checked.
 		/// </summary>
 		[HarmonyPatch(typeof(SteamUGCService), "Update")]
-		public static class SteamUGCService_Update_Patch {
+		public static class SteamUGCService_UpdateActive_Patch {
+			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode != true;
+
 			/// <summary>
 			/// Applied after Update runs.
 			/// </summary>
@@ -179,16 +222,23 @@ namespace PeterHan.ModUpdateDate {
 		}
 
 		/// <summary>
-		/// Applied to SteamUGCService to get detailed mod info when it is requested.
+		/// Applied to SteamUGCService when passive mode is enabled to download the correct
+		/// version of the mod in the first place!
 		/// </summary>
-		[HarmonyPatch(typeof(SteamUGCService), "OnSteamUGCQueryDetailsCompleted")]
-		public static class SteamUGCService_OnSteamUGCQueryDetailsCompleted_Patch {
+		[HarmonyPatch(typeof(SteamUGCService), "Update")]
+		public static class SteamUGCService_UpdatePassive_Patch {
+			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode == true;
+
 			/// <summary>
-			/// Applied after OnSteamUGCQueryDetailsCompleted runs.
+			/// Transpiles Update to use our DownloadItem replacement.
 			/// </summary>
-			internal static void Postfix(HashSet<SteamUGCDetails_t> ___publishes) {
-				if (___publishes != null)
-					ModUpdateDetails.OnInstalledUpdate(___publishes);
+			internal static IEnumerable<CodeInstruction> Transpiler(
+					IEnumerable<CodeInstruction> method) {
+				var downloadOld = typeof(SteamUGC).GetMethodSafe(nameof(SteamUGC.DownloadItem),
+					true, typeof(PublishedFileId_t), typeof(bool));
+				var downloadNew = typeof(ModUpdateDatePatches).GetMethodSafe(nameof(
+					DownloadCorrectItem), true, typeof(PublishedFileId_t), typeof(bool));
+				return PPatchTools.ReplaceMethodCall(method, downloadOld, downloadNew);
 			}
 		}
 	}
