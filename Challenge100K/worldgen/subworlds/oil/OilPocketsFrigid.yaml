@@ -12,22 +12,6 @@ biomes:
     tags:
       - CactusPlantSeed
       - EvilFlowerSeed
-pointsOfInterest:
- geysers_a:
-  - poi_oilpockets_geyser_a
-  - poi_oilpockets_geyser_b
-  - poi_oilpockets_geyser_c    
- geysers_b:
-  - poi_oilpockets_geyser_d
-  - poi_oilpockets_geyser_e
-  - poi_oilpockets_geyser_f
- geysers_c:
-  - poi_oilpockets_geyser_a
-  - poi_oilpockets_geyser_b
-  - poi_oilpockets_geyser_c
-  - poi_oilpockets_geyser_d
-  - poi_oilpockets_geyser_e
-  - poi_oilpockets_geyser_f
 tags:
   - IgnoreCaveOverride
 zoneType: OilField

@@ -14,5 +14,4 @@ biomes:
       - ColdBreatherSparse
 tags:
   - IgnoreCaveOverride
-pointsOfInterest:
 zoneType: Rust

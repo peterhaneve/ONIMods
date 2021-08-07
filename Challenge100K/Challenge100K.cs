@@ -16,10 +16,12 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Harmony;
-using PeterHan.PLib;
-using PeterHan.PLib.Datafiles;
+using HarmonyLib;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
+using PeterHan.PLib.PatchManager;
+using PeterHan.PLib.UI;
 using ProcGen;
 using ProcGenGame;
 using System.Collections.Generic;
@@ -30,7 +32,7 @@ namespace PeterHan.Challenge100K {
 	/// <summary>
 	/// Registers the required world gen information for the 100 K Challenge!
 	/// </summary>
-	public static class Challenge100K {
+	public sealed class Challenge100K : KMod.UserMod2 {
 		/// <summary>
 		/// The enum value used for 100K subworlds.
 		/// </summary>
@@ -55,14 +57,14 @@ namespace PeterHan.Challenge100K {
 
 		/// <summary>
 		/// Retrieves the "minimum" temperature of an element on stock worlds. However, on
-		/// 100 K, returns zero to disable the check.
+		/// 100 K, returns 1 K to disable the check.
 		/// </summary>
 		/// <param name="element">The element to look up.</param>
 		/// <param name="worldGen">The currently generating world.</param>
 		/// <returns>The minimum temperature to be used for world gen.</returns>
 		private static float GetMinTemperature(Element element, WorldGen worldGen) {
 			var world = worldGen?.Settings?.world;
-			return (world != null && world.name == WORLD_NAME) ? 0.0f : element.lowTemp;
+			return (world != null && world.name == WORLD_NAME) ? 1.0f : element.lowTemp;
 		}
 
 		/// <summary>
@@ -73,26 +75,32 @@ namespace PeterHan.Challenge100K {
 			Strings.Add(WORLD_NAME, Challenge100KStrings.NAME);
 			Strings.Add("STRINGS.WORLDS.ONEHUNDREDK.DESCRIPTION", Challenge100KStrings.
 				DESCRIPTION);
-			var sprite = PUtil.LoadSprite("PeterHan.Challenge100K." + SPRITE + ".png");
+			Strings.Add("STRINGS.CLUSTER_NAMES.ONEHUNDREDK.NAME", Challenge100KStrings.NAME);
+			Strings.Add("STRINGS.CLUSTER_NAMES.ONEHUNDREDK.DESCRIPTION", Challenge100KStrings.
+				DESCRIPTION);
+			var sprite = PUIUtils.LoadSprite("PeterHan.Challenge100K." + SPRITE + ".png");
 			if (sprite != null)
 				Assets.Sprites.Add(SPRITE, sprite);
 		}
 
-		public static void OnLoad() {
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 			to11 = new Temperature();
-			var tr11 = Traverse.Create(to11);
-			tr11.SetProperty("min", 80.0f);
-			tr11.SetProperty("max", 110.0f);
-			PLocalization.Register();
-			POptions.RegisterOptions(typeof(Challenge100KOptions));
-			PUtil.RegisterPatchClass(typeof(Challenge100K));
+			typeof(Temperature).GetPropertySafe<float>(nameof(Temperature.min), false)?.
+				SetValue(to11, 80.0f);
+			typeof(Temperature).GetPropertySafe<float>(nameof(Temperature.max), false)?.
+				SetValue(to11, 110.0f);
+			new PLocalization().Register();
+			new POptions().RegisterOptions(this, typeof(Challenge100KOptions));
+			new PPatchManager(harmony).RegisterPatchClass(typeof(Challenge100K));
 		}
 
 		/// <summary>
 		/// Applied to SettingsCache to create a custom 100K temperature range.
 		/// </summary>
-		[HarmonyPatch(typeof(SettingsCache), nameof(SettingsCache.LoadFiles))]
+		[HarmonyPatch(typeof(SettingsCache), nameof(SettingsCache.LoadFiles),
+			typeof(List<Klei.YamlIO.Error>))]
 		public static class SettingsCache_LoadFiles_Patch {
 			/// <summary>
 			/// Applied after LoadFiles runs.
@@ -117,34 +125,36 @@ namespace PeterHan.Challenge100K {
 				var world = __instance.world;
 				var subworlds = __instance.subworlds;
 				if (world.name == WORLD_NAME) {
-					var options = POptions.ReadSettingsForAssembly<Challenge100KOptions>();
+					var options = POptions.ReadSettings<Challenge100KOptions>();
 					if (options != null && options.RemoveGeysers) {
 #if DEBUG
 						PUtil.LogDebug("Hard mode: removing geysers");
 #endif
-						world.globalFeatureTemplates?.Clear();
+						world.worldTemplateRules?.Clear();
 						// Remove the POI geysers too
 						if (subworlds != null)
 							foreach (var subworld in subworlds)
-								subworld.Value.pointsOfInterest?.Clear();
+								subworld.Value.subworldTemplateRules?.Clear();
 					}
 				}
 			}
 		}
 
 		/// <summary>
-		/// Applied to TerrainCell.
+		/// Applied to TerrainCell to allow elements to be spawned in at lower than their
+		/// normal transition temperature (and thus instantly freeze).
 		/// </summary>
 		[HarmonyPatch(typeof(TerrainCell), "ApplyBackground")]
 		public static class TerrainCell_ApplyBackground_Patch {
-			internal static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> method) {
+			internal static IEnumerable<CodeInstruction> Transpiler(
+					IEnumerable<CodeInstruction> method) {
 				var target = typeof(Element).GetFieldSafe(nameof(Element.lowTemp), false);
 				var replacement = typeof(Challenge100K).GetMethodSafe(nameof(
 					GetMinTemperature), true, typeof(Element), typeof(WorldGen));
 				foreach (var instruction in method)
 					if (instruction.opcode == OpCodes.Ldfld && target != null && target ==
 							(FieldInfo)instruction.operand) {
-						// With the Element on the stack, push the WorldGenGame (arg 1)
+						// With the Element on the stack, push the WorldGen (first arg)
 						yield return new CodeInstruction(OpCodes.Ldarg_1);
 						// Replacement for "Element.lowTemp"
 						yield return new CodeInstruction(OpCodes.Call, replacement);
@@ -175,5 +185,17 @@ namespace PeterHan.Challenge100K {
 				}
 			}
 		}
+
+#if DEBUG
+		/// <summary>
+		/// Reports world generation errors in debug builds.
+		/// </summary>
+		[HarmonyPatch(typeof(WorldGen), "ReportWorldGenError")]
+		public static class WorldGen_ReportWorldGenError_Patch {
+			internal static void Postfix(System.Exception e) {
+				PUtil.LogExcWarn(e);
+			}
+		}
+#endif
 	}
 }

@@ -16,10 +16,4 @@ biomes:
       - LeafyPlantSeed
 tags:
   - IgnoreCaveOverride
-pointsOfInterest:
-  geysers_a:
-    - poi_jungle_geyser_steam 
-  geysers_b:
-    - poi_jungle_geyser_methane
-    - poi_jungle_geyser_chlorine
 zoneType: ToxicJungle

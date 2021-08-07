@@ -15,20 +15,4 @@ biomes:
       - ColdBreather
 tags:
   - IgnoreCaveOverride
-pointsOfInterest:
-   heatsinks_a:
-    - poi_ice_heatsink_a
-    - poi_ice_heatsink_b
-    - poi_ice_heatsink_c
-    - poi_ice_heatsink_d
-   heatsinks_b:
-    - poi_ice_heatsink_a
-    - poi_ice_heatsink_b
-    - poi_ice_heatsink_c
-    - poi_ice_heatsink_d
-   heatsinks_c:
-    - poi_ice_heatsink_a
-    - poi_ice_heatsink_b
-    - poi_ice_heatsink_c
-    - poi_ice_heatsink_d
 zoneType: FrozenWastes

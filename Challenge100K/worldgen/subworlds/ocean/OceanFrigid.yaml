@@ -13,7 +13,4 @@ biomes:
       - SpiceVineSeed
 tags:
   - IgnoreCaveOverride
-pointsOfInterest:
-  geysers_a:
-    - poi_ocean_geyser_saltwater
 zoneType: Ocean

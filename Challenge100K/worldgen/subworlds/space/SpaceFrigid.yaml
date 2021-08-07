@@ -9,7 +9,6 @@ sampleBehaviour: PoissonDisk
 biomes:
   - name: biomes/Misc/Space
     weight: 1
-pointsOfInterest:
 tags:
   - IgnoreCaveOverride
   - NoGlobalFeatureSpawning

@@ -17,14 +17,14 @@
  */
 
 using Newtonsoft.Json;
-using PeterHan.PLib;
+using PeterHan.PLib.Options;
 
 namespace PeterHan.Challenge100K {
 	/// <summary>
 	/// The options class used for the 100 K Challenge.
 	/// </summary>
 	[JsonObject(MemberSerialization.OptIn)]
-	[ModInfo("100K Challenge", "https://github.com/peterhaneve/ONIMods")]
+	[ModInfo("https://github.com/peterhaneve/ONIMods")]
 	public sealed class Challenge100KOptions {
 		/// <summary>
 		/// Whether hard mode (no geysers) is enabled.
@@ -38,7 +38,7 @@ namespace PeterHan.Challenge100K {
 		}
 
 		public override string ToString() {
-			return "Challenge100KOptions[hard={0}]".F(RemoveGeysers);
+			return string.Format("Challenge100KOptions[hard={0}]", RemoveGeysers);
 		}
 	}
 }

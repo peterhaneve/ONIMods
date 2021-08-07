@@ -1,9 +1,6 @@
 name: STRINGS.WORLDS.ONEHUNDREDK.NAME
 description: STRINGS.WORLDS.ONEHUNDREDK.DESCRIPTION
-spriteName: Asteroid_onehundredk
-coordinatePrefix: S-100K
-difficulty: 6
-tier: 2
+asteroidIcon: Asteroid_onehundredk
 
 worldsize:
   X: 256
@@ -20,7 +17,6 @@ subworldFiles:
   - name: subworlds/marsh/MarshFrigid
   - name: subworlds/jungle/JungleFrigid
   - name: subworlds/frozen/FrozenFrigid
-  - name: subworlds/Impenetrable
   - name: subworlds/oil/OilPocketsFrigid
   - name: subworlds/space/SpaceFrigid
   - name: subworlds/space/SurfaceFrigid
@@ -29,7 +25,7 @@ subworldFiles:
   - name: subworlds/forest/ForestFrigid
 
 startSubworldName: subworlds/sandstone/SandstoneStartFrigid
-startingBaseTemplate: sandstoneBase
+startingBaseTemplate: bases/sandstoneBase
 startingBasePositionHorizontal:
   min: 0.4
   max: 0.5
@@ -37,11 +33,79 @@ startingBasePositionVertical:
   min: 0.45
   max: 0.55
 
-globalFeatureTemplates:
-  feature_geyser_generic: 16
+seasons:
+  - MeteorShowers
 
-# When we are converting unknown cells, this will give us the options, processed in this order, the effects are cumlative
-unknownCellsAllowedSubworlds: 
+worldTemplateRules:
+  # Jungle
+  - names:
+      - poi/jungle/geyser_steam
+    listRule: TryOne
+    priority: 100
+    allowedCellsFilter:
+      - command: Replace
+        zoneTypes: [ToxicJungle]
+  - names:
+      - poi/jungle/geyser_methane
+      - poi/jungle/geyser_chlorine
+    listRule: TryOne
+    priority: 100
+    allowedCellsFilter:
+      - command: Replace
+        zoneTypes: [ToxicJungle]
+  # Marsh
+  - names:
+      - poi/hotmarsh/geyser_steam
+    listRule: TryOne
+    priority: 100
+    allowedCellsFilter:
+      - command: Replace
+        zoneTypes: [BoggyMarsh]
+  - names:
+      - poi/hotmarsh/geyser_methane
+    listRule: TryOne
+    priority: 100
+    allowedCellsFilter:
+      - command: Replace
+        zoneTypes: [BoggyMarsh]
+  # Ocean
+  - names:
+      - poi/poi_ocean_geyser_saltwater
+    listRule: TryOne
+    priority: 100 
+    allowedCellsFilter:
+      - command: Replace
+        zoneTypes: [Ocean]
+  # Oil
+  - names:
+    - poi/oil/small_oilpockets_geyser_a
+    - poi/oil/small_oilpockets_geyser_b
+    - poi/oil/small_oilpockets_geyser_c
+    - poi/oil/small_oilpockets_geyser_d
+    - poi/oil/small_oilpockets_geyser_e
+    - poi/oil/small_oilpockets_geyser_f
+    - poi/oil/small_oilpockets_geyser_g
+    - poi/oil/small_oilpockets_geyser_h
+    listRule: TryOne
+    times: 3
+    allowDuplicates: true # be more flexible due to high temperature borders
+    priority: 100
+    allowedCellsFilter:
+      - command: Replace
+        zoneTypes: [OilField]
+  # Geysers
+  - names:
+    - geysers/generic
+    listRule: TryOne
+    times: 12
+    ruleId: GenericGeysers
+    allowDuplicates: true
+    allowedCellsFilter:
+      - command: Replace
+        tagcommand: NotAtTag
+        tag: NoGlobalFeatureSpawning
+
+unknownCellsAllowedSubworlds:
   - tagcommand: Default
     command: Replace
     subworldNames:

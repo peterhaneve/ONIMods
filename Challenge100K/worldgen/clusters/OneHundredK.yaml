@@ -1,0 +1,14 @@
+name: STRINGS.CLUSTER_NAMES.ONEHUNDREDK.NAME
+description: STRINGS.CLUSTER_NAMES.ONEHUNDREDK.DESCRIPTION
+coordinatePrefix: S-100K
+forbiddenDlcId: EXPANSION1_ID
+
+difficulty: 6
+menuOrder: 10
+
+startWorldIndex: 0
+worldPlacements:
+- world: worlds/OneHundredK
+  allowedRings:
+    min: 0
+	max: 0

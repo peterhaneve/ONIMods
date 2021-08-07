@@ -30,7 +30,7 @@ features:
   - type: features/sedimentary/SmallFrozenLake
   - type: features/sedimentary/MetalVacuumBlob
   - type: features/sedimentary/FlatFrozenLake
-  - type: features/sedimentary/MediumFrozenLake  
+  - type: features/sedimentary/MediumFrozenLake
 tags:
   - IgnoreCaveOverride
 zoneType: Sandstone

@@ -14,9 +14,4 @@ biomes:
       - BulbPlantSeed
 tags:
   - IgnoreCaveOverride
-pointsOfInterest:
-  geysers_a:
-    - poi_swamp_geyser_steam
-  geysers_b:
-    - poi_swamp_geyser_methane
 zoneType: BoggyMarsh
