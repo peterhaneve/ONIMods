@@ -141,12 +141,11 @@ namespace PeterHan.AIImprovements {
 		/// <param name="cell">The destination cell.</param>
 		/// <returns>true if the Duplicant could move there, or false otherwise.</returns>
 		internal static bool IsValidNavCell(Navigator navigator, int cell) {
-			int above = Grid.CellAbove(cell);
 			var navType = navigator.CurrentNavType;
-			// Duplicants in a tube are 1x1
-			return navigator.NavGrid.NavTable.IsValid(cell, navType) && !Grid.Solid[cell] &&
-				!Grid.DupeImpassable[cell] && (navType == NavType.Tube || (Grid.IsValidCell(
-				above) && !Grid.Solid[above] && !Grid.DupeImpassable[above]));
+			int above = Grid.CellAbove(cell);
+			return navigator.NavGrid.NavTable.IsValid(cell, navType) && !Grid.
+				Solid[cell] && !Grid.DupeImpassable[cell] && Grid.IsValidCell(above) &&
+				!Grid.Solid[above] && !Grid.DupeImpassable[above];
 		}
 
 		[PLibMethod(RunAt.AfterDbInit)]
@@ -186,12 +185,12 @@ namespace PeterHan.AIImprovements {
 			bool moved = false;
 			for (int i = 0; i < LocationHistoryTransitionLayer.TRACK_CELLS; i++) {
 				int last = layer.VisitedCells[i];
-#if DEBUG
-				PUtil.LogDebug("{0} is in trouble, trying to escape to {1:D}".F(navigator.
-					gameObject?.name, last));
-#endif
 				if (Grid.IsValidCell(last) && IsValidNavCell(navigator, last)) {
+					PUtil.LogDebug("{0} is in trouble, trying to escape to {1:D}".F(navigator.
+						gameObject?.name, last));
 					ForceMoveTo(instance, last, navigator, ref flipEmote);
+					// Prevents a loop back and forth between two cells in the history
+					layer.Reset();
 					break;
 				}
 			}
@@ -200,9 +199,9 @@ namespace PeterHan.AIImprovements {
 
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
+			PUtil.InitLibrary();
 			Options = new AIImprovementsOptionsInstance();
 			new POptions().RegisterOptions(this, typeof(AIImprovementsOptions));
-			PUtil.InitLibrary();
 			new PPatchManager(harmony).RegisterPatchClass(typeof(AIImprovementsPatches));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}

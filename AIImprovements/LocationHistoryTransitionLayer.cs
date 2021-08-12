@@ -35,8 +35,7 @@ namespace PeterHan.AIImprovements {
 			// Yes a linked list is algorithmically faster, but in reality with TRACK_CELLS
 			// being so small the better cache behavior of int[] is faster
 			VisitedCells = new int[TRACK_CELLS];
-			for (int i = 0; i < TRACK_CELLS; i++)
-				VisitedCells[i] = Grid.InvalidCell;
+			Reset();
 		}
 
 		public override void BeginTransition(Navigator navigator, Navigator.
@@ -67,6 +66,14 @@ namespace PeterHan.AIImprovements {
 						inst.DecrementRefCount(cell);
 				}
 			base.Destroy();
+		}
+
+		/// <summary>
+		/// Resets the location history to all invalid cells.
+		/// </summary>
+		internal void Reset() {
+			for (int i = 0; i < TRACK_CELLS; i++)
+				VisitedCells[i] = Grid.InvalidCell;
 		}
 	}
 }
