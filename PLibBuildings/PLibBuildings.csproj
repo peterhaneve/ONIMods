@@ -3,10 +3,10 @@
   <PropertyGroup>
     <Title>PLib Buildings</Title>
     <AssemblyTitle>PLib.Buildings</AssemblyTitle>
-    <Version>4.4.0.0</Version>
+    <Version>4.5.0.0</Version>
     <UsesPLib>false</UsesPLib>
     <RootNamespace>PeterHan.PLib.Buildings</RootNamespace>
-    <AssemblyVersion>4.4.0.0</AssemblyVersion>
+    <AssemblyVersion>4.5.0.0</AssemblyVersion>
     <DistributeMod>false</DistributeMod>
     <PLibCore>true</PLibCore>
     <Platforms>Vanilla;Mergedown</Platforms>

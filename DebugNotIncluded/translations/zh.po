@@ -1,0 +1,438 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.0\n"
+"Last-Translator: Ventulus\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"Language: zh_CN\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.INPUT_BINDINGS.DEBUG.SNAPSHOT
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.INPUT_BINDINGS.DEBUG."
+"SNAPSHOT"
+msgid "Log UI element under cursor"
+msgstr "登录界面元素在光标下"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.LOADERRORDIALOG.BLAME
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.LOADERRORDIALOG.BLAME"
+msgid "The crashing code is likely from <b>{0}</b>!"
+msgstr "崩溃代码似乎来自<b>{0}</b>！"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.LOADERRORDIALOG.DISABLEMOD
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.LOADERRORDIALOG."
+"DISABLEMOD"
+msgid "DISABLE AND RESTART"
+msgstr "禁用并重启"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.LOADERRORDIALOG.OPENLOG
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.LOADERRORDIALOG.OPENLOG"
+msgid "OPEN OUTPUT LOG"
+msgstr "打开日志输出"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.LOADERRORDIALOG.TEXT
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.LOADERRORDIALOG.TEXT"
+msgid ""
+"An error occurred during start-up.\n"
+"\n"
+"{0}"
+msgstr ""
+"启动时发生了错误。\n"
+"\n"
+"{0}"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.LOADERRORDIALOG.UNKNOWN
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.LOADERRORDIALOG.UNKNOWN"
+msgid "It is not clear which mod caused the error."
+msgstr "不清楚是哪个mod引起了错误。"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODEVENTS.ACTIVATED
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODEVENTS.ACTIVATED"
+msgid "<b><style=\"logic_on\">Activated</style></b>"
+msgstr "<b><style=\"logic_on\">激活</style></b>"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODEVENTS.DEACTIVATED
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODEVENTS.DEACTIVATED"
+msgid "<b><style=\"logic_off\">Deactivated</style></b>"
+msgstr "<b><style=\"logic_off\">关闭</style></b>"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODEVENTS.NOTLOADED
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODEVENTS.NOTLOADED"
+msgid "<b><style=\"logic_off\">Not loaded</style></b>"
+msgstr "<b><style=\"logic_off\">未加载</style></b>"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.CANCEL
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.CANCEL"
+msgid "CANCEL"
+msgstr "取消"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.CAPTION
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.CAPTION"
+msgid "Title"
+msgstr "标题"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.DATA_PATH
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.DATA_PATH"
+msgid "Mod Data"
+msgstr "mod数据"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.DESC
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.DESC"
+msgid "Description"
+msgstr "描述"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.IMAGE_PATH
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.IMAGE_PATH"
+msgid "Preview Image"
+msgstr "预览图片"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.OK
+msgctxt "PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.OK"
+msgid "OK"
+msgstr "OK"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.PATCHNOTES
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.PATCHNOTES"
+msgid "Patch Notes"
+msgstr "补丁笔记"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.SUCCESS
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.SUCCESS"
+msgid "Succesfully updated mod <b>{0}</b>!"
+msgstr "成功更新mod<b>{0}</b>！"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.TITLE
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.TITLE"
+msgid "UPDATE MOD <i>{0}</i>"
+msgstr "更新mod<i>{0}</i>"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYFAILEDDIALOG.TEXT
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYFAILEDDIALOG.TEXT"
+msgid ""
+"Unable to modify mod <b>{0}</b>.\n"
+"Mods can only be edited if you are the owner."
+msgstr ""
+"无法修改mod<b>{0}</b>。\n"
+"只有你是所有者时mod才能被编辑。"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.BUTTON_ALL
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.BUTTON_ALL"
+msgid "ALL"
+msgstr "所有"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.BUTTON_LOCAL
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.BUTTON_LOCAL"
+msgid "Local Folder"
+msgstr "本地目录"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.BUTTON_MODIFY
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.BUTTON_MODIFY"
+msgid "Edit"
+msgstr "编辑"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.BUTTON_SUBSCRIPTION
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"BUTTON_SUBSCRIPTION"
+msgid "Subscription"
+msgstr "订阅"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.BUTTON_UNSUB
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.BUTTON_UNSUB"
+msgid "Unsubscribe"
+msgstr "取消订阅"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_ARCHIVED_VERSION_ACTIVE
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_ARCHIVED_VERSION_ACTIVE"
+msgid ""
+"• <style=\"logic_on\"><b>{0}</b>: Supports {1} since version {2:D}</style>\n"
+msgstr "• <style=\"logic_on\"><b>{0}</b>：支持 {1}自从版本{2:D}</style>\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_ARCHIVED_VERSION_DEFAULT
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_ARCHIVED_VERSION_DEFAULT"
+msgid "Base"
+msgstr "基础"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_ARCHIVED_VERSION_INACTIVE
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_ARCHIVED_VERSION_INACTIVE"
+msgid "• <b>{0}</b>: Supports {1} since version {2:D}\n"
+msgstr "• <b>{0}</b>：支持{1}自从版本 {2:D}\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_ARCHIVED_VERSIONS
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_ARCHIVED_VERSIONS"
+msgid "<b>Versions</b>:\n"
+msgstr "<b>版本</b>:\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_ASSEMBLY_NOCODE
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_ASSEMBLY_NOCODE"
+msgid "<style=logic_off><b>No code loaded</b></style>"
+msgstr "<style=logic_off><b>无代码加载</b></style>"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_CONTENT
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_CONTENT"
+msgid "<b>Enabled content</b>: {0}\n"
+msgstr "<b>启用内容</b>：{0}\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_DESCRIPTION
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_DESCRIPTION"
+msgid "<b>Mod ID</b>: {0}\n"
+msgstr "<b>Mod ID</b>：{0}\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_DLC_ALL
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_DLC_ALL"
+msgid "All"
+msgstr "所有"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_DLC_ENABLE
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_DLC_ENABLE"
+msgid "<b>Enabled for DLCs</b>: {0}\n"
+msgstr "<b>为DLC可用</b>：{0}\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_DLC_EXPANSION1
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_DLC_EXPANSION1"
+msgid "Spaced Out"
+msgstr "Spaced Out"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_DLC_VANILLA
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_DLC_VANILLA"
+msgid "Vanilla"
+msgstr "Vanilla"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_PATCHES
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_PATCHES"
+msgid "<b>Patches registered by ONI</b>: {0:D}\n"
+msgstr "<b>由《缺氧》注册的补丁</b>：{0:D}\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_PLIB
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_PLIB"
+msgid "PLib Version: {0}"
+msgstr "PLib版本：{0}"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_PLIB_MERGED
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_PLIB_MERGED"
+msgid " <b>merged</b>"
+msgstr " <b>合并</b>"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_PLIB_PACKED
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_PLIB_PACKED"
+msgid " <b>packed</b>"
+msgstr " <b>打包</b>"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_THISMOD
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_THISMOD"
+msgid "Thank you for using Debug Not Included!"
+msgstr "欢迎您使用「捉虫不足」！"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_VERSIONS_ASSEMBLY
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_VERSIONS_ASSEMBLY"
+msgid "<b>{0}</b>: {1}Assembly Version {2}\n"
+msgstr "<b>{0}</b>：{1}Assembly版本{2}\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_VERSIONS_BOTH
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_VERSIONS_BOTH"
+msgid "<b>{0}</b>: Version {1}\n"
+msgstr "<b>{0}</b>：版本{1}\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_VERSIONS_FILE
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_VERSIONS_FILE"
+msgid "File Version {0}, "
+msgstr "文件版本{0}， "
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.CANCEL
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.CANCEL"
+msgid "CONTINUE"
+msgstr "继续"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.CONFIRM
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.CONFIRM"
+msgid "MOVE TO TOP"
+msgstr "移至顶部"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.IGNORE
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.IGNORE"
+msgid "DISABLE THIS WARNING"
+msgstr "忽略这条告警"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.TEXT
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.TEXT"
+msgid ""
+"Debug Not Included is not the first active mod in the load order.\n"
+"Debug Not Included can only debug mods loaded after it.\n"
+"\n"
+"Move Debug Not Included to the first position?"
+msgstr ""
+"「捉虫不足」不是加载顺序中第一个激活的mod。\n"
+"「捉虫不足」只能debug后面加载的mod。\n"
+"\n"
+"是否将「捉虫不足」移至第一位？"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.TITLE
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.TITLE"
+msgid "LOAD ORDER"
+msgstr "加载顺序"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_ALL
+msgctxt "PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_ALL"
+msgid "Enable or disable all"
+msgstr "启用或禁止所有"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_BOTTOM
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_BOTTOM"
+msgid "Move to bottom"
+msgstr "移至底部"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_DOWN
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_DOWN"
+msgid "Move down 10 slots"
+msgstr "下移10位"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_INSTANT_GROW
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS."
+"DNI_INSTANT_GROW"
+msgid "Set plant growth to 100%"
+msgstr "设置植物生长至100%"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_INSTANT_TAME
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS."
+"DNI_INSTANT_TAME"
+msgid "Set wildness to 0%"
+msgstr "设置野性至0%"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_MODIFY
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_MODIFY"
+msgid "Modify this mod"
+msgstr "修改这个mod"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_OVERJOY
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_OVERJOY"
+msgid "Start this Duplicant's Overjoyed reaction immediately"
+msgstr "立即启动这个复制人的喜悦反应"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_PLIB
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_PLIB"
+msgid ""
+"The currently active version of PLib\n"
+"From Mod: <b>{0}</b>"
+msgstr ""
+"当前激活的PLib版本\n"
+"由mod：<b>{0}</b>"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_STRESSOUT
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_STRESSOUT"
+msgid "Start this Duplicant's Stress reaction immediately"
+msgstr "立即启动这个复制人的压力反应"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_TOP
+msgctxt "PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_TOP"
+msgid "Move to top"
+msgstr "移至顶部"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_UNSUB
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_UNSUB"
+msgid "Unsubscribe from this mod"
+msgstr "从这个mod取消订阅"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_UP
+msgctxt "PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_UP"
+msgid "Move up 10 slots"
+msgstr "上移10位"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.UNSUBFAILEDDIALOG.TEXT
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.UNSUBFAILEDDIALOG.TEXT"
+msgid "Unable to unsubscribe from mod <b>{0}</b>."
+msgstr "无法从mod<b>{0}</b>取消订阅。"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.USERMENUOPTIONS.INSTANTGROW
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.USERMENUOPTIONS."
+"INSTANTGROW"
+msgid "Instantly Grow"
+msgstr "瞬间生长"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.USERMENUOPTIONS.OVERJOY
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.USERMENUOPTIONS.OVERJOY"
+msgid "Start Overjoyed Reaction"
+msgstr "开始喜悦反应"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.USERMENUOPTIONS.STRESSOUT
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.USERMENUOPTIONS."
+"STRESSOUT"
+msgid "Start Stress Reaction"
+msgstr "开始压力反应"

@@ -292,12 +292,12 @@ namespace PeterHan.PLib.UI {
 			/// <summary>
 			/// The text font name.
 			/// </summary>
-			private const string FONT_TEXT = "NotoSans-Regular";
+			private const string DEFAULT_FONT_TEXT = "NotoSans-Regular";
 
 			/// <summary>
 			/// The UI font name.
 			/// </summary>
-			private const string FONT_UI = "GRAYSTROKE REGULAR SDF";
+			private const string DEFAULT_FONT_UI = "GRAYSTROKE REGULAR SDF";
 
 			/// <summary>
 			/// The default font size.
@@ -305,9 +305,27 @@ namespace PeterHan.PLib.UI {
 			public static int DefaultSize { get; }
 
 			/// <summary>
+			/// The default font asset for text strings.
+			/// </summary>
+			private static readonly TMP_FontAsset DefaultTextFont;
+
+			/// <summary>
+			/// The default font asset for UI titles and buttons.
+			/// </summary>
+			private static readonly TMP_FontAsset DefaultUIFont;
+
+			/// <summary>
 			/// The font used on text.
 			/// </summary>
-			internal static TMP_FontAsset Text { get; }
+			internal static TMP_FontAsset Text {
+				get {
+					TMP_FontAsset font = null;
+					if (Localization.GetSelectedLanguageType() != Localization.
+							SelectedLanguageType.None)
+						font = Localization.FontAsset;
+					return font ?? DefaultTextFont;
+				}
+			}
 
 			/// <summary>
 			/// The text styles used on all items with a light background.
@@ -322,7 +340,15 @@ namespace PeterHan.PLib.UI {
 			/// <summary>
 			/// The font used on UI elements.
 			/// </summary>
-			internal static TMP_FontAsset UI { get; }
+			internal static TMP_FontAsset UI {
+				get {
+					TMP_FontAsset font = null;
+					if (Localization.GetSelectedLanguageType() != Localization.
+							SelectedLanguageType.None)
+						font = Localization.FontAsset;
+					return font ?? DefaultUIFont;
+				}
+			}
 
 			/// <summary>
 			/// The text styles used on all UI items with a light background.
@@ -349,10 +375,10 @@ namespace PeterHan.PLib.UI {
 				}
 
 				// Initialization: UI fonts
-				if ((Text = GetFontByName(FONT_TEXT)) == null)
-					PUIUtils.LogUIWarning("Unable to find font " + FONT_TEXT);
-				if ((UI = GetFontByName(FONT_UI)) == null)
-					PUIUtils.LogUIWarning("Unable to find font " + FONT_UI);
+				if ((DefaultTextFont = GetFontByName(DEFAULT_FONT_TEXT)) == null)
+					PUIUtils.LogUIWarning("Unable to find font " + DEFAULT_FONT_TEXT);
+				if ((DefaultUIFont = GetFontByName(DEFAULT_FONT_UI)) == null)
+					PUIUtils.LogUIWarning("Unable to find font " + DEFAULT_FONT_UI);
 
 				// Initialization: Text style
 				DefaultSize = 14;

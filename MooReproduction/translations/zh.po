@@ -1,0 +1,48 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.0\n"
+"Last-Translator: Ventulus\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"Language: zh_CN\n"
+
+#. PeterHan.MooReproduction.MooReproductionStrings.CREATURES.SPECIES.MOO.BABY.DESC
+msgctxt ""
+"PeterHan.MooReproduction.MooReproductionStrings.CREATURES.SPECIES."
+"MOO.BABY.DESC"
+msgid ""
+"A cute little Gassy Moolet.\n"
+"\n"
+"One day it will grow into an adult <link=\"MOO\">Gassy Moo</link>."
+msgstr ""
+"一只小可爱释气海牛宝宝。\n"
+"\n"
+"有一天它将会成长为一只成年的<link=\"MOO\">释气海牛</link>."
+
+#. PeterHan.MooReproduction.MooReproductionStrings.CREATURES.SPECIES.MOO.BABY.NAME
+msgctxt ""
+"PeterHan.MooReproduction.MooReproductionStrings.CREATURES.SPECIES."
+"MOO.BABY.NAME"
+msgid "<link=\"MOO\">Gassy Moolet</link>"
+msgstr "<link=\"MOO\">释气海牛宝宝</link>"
+
+#. PeterHan.MooReproduction.MooReproductionStrings.CREATURES.STATUSITEMS.GIVINGBIRTH.NAME
+msgctxt ""
+"PeterHan.MooReproduction.MooReproductionStrings.CREATURES."
+"STATUSITEMS.GIVINGBIRTH.NAME"
+msgid "Giving Birth"
+msgstr "分娩"
+
+#. PeterHan.MooReproduction.MooReproductionStrings.CREATURES.STATUSITEMS.GIVINGBIRTH.TOOLTIP
+msgctxt ""
+"PeterHan.MooReproduction.MooReproductionStrings.CREATURES."
+"STATUSITEMS.GIVINGBIRTH.TOOLTIP"
+msgid "Here it comes!"
+msgstr "生出来了！"

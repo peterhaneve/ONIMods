@@ -1,0 +1,39 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.0\n"
+"Last-Translator: Ventulus\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"Language: zh_CN\n"
+
+#. PeterHan.Resculpt.ResculptStrings.REPAINT_BUTTON
+msgctxt "PeterHan.Resculpt.ResculptStrings.REPAINT_BUTTON"
+msgid "Repaint"
+msgstr "重画"
+
+#. PeterHan.Resculpt.ResculptStrings.RESCULPT_BUTTON
+msgctxt "PeterHan.Resculpt.ResculptStrings.RESCULPT_BUTTON"
+msgid "Resculpt"
+msgstr "重塑"
+
+#. PeterHan.Resculpt.ResculptStrings.RESCULPT_TOOLTIP
+msgctxt "PeterHan.Resculpt.ResculptStrings.RESCULPT_TOOLTIP"
+msgid "Changes the design of this object"
+msgstr "更改设计"
+
+#. PeterHan.Resculpt.ResculptStrings.ROTATE_BUTTON
+msgctxt "PeterHan.Resculpt.ResculptStrings.ROTATE_BUTTON"
+msgid "Rotate"
+msgstr "转向"
+
+#. PeterHan.Resculpt.ResculptStrings.ROTATE_TOOLTIP
+msgctxt "PeterHan.Resculpt.ResculptStrings.ROTATE_TOOLTIP"
+msgid "Rotates artwork. {Hotkey}"
+msgstr "艺术品转向。 {Hotkey}"

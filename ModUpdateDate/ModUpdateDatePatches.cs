@@ -39,25 +39,6 @@ namespace PeterHan.ModUpdateDate {
 		internal static Mod ThisMod { get; private set; }
 
 		/// <summary>
-		/// Passive method replacement method for SteamUGC.DownloadItem to use the correct,
-		/// updated version.
-		/// </summary>
-		/// <param name="id">The mod ID to download.</param>
-		/// <param name="highPriority">Always false when called.</param>
-		/// <returns>true to wait for the result (ignored by Klei! The real cause of the race
-		/// condition on download!), or false on error.</returns>
-		private static bool DownloadCorrectItem(PublishedFileId_t id, bool highPriority) {
-			UGCHandle_t content;
-			bool ok = false;
-			if (id != null && ModUpdateDetails.TryGetDetails(id.m_PublishedFileId, out
-					SteamUGCDetails_t details) && (content = details.m_hFile) != UGCHandle_t.
-					Invalid)
-				ok = SteamRemoteStorage.UGCDownload(content, highPriority ? 1U : 0U) !=
-					SteamAPICall_t.Invalid;
-			return ok;
-		}
-
-		/// <summary>
 		/// Handles a mod crash and bypasses disabling the mod if it is this mod.
 		/// </summary>
 		private static bool OnModCrash(Mod __instance) {
@@ -76,12 +57,12 @@ namespace PeterHan.ModUpdateDate {
 			if (method != null)
 				harmony.Patch(method, prefix: new HarmonyMethod(typeof(ModUpdateDatePatches),
 					nameof(OnModCrash)));
-			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 			new PPatchManager(harmony).RegisterPatchClass(typeof(ModUpdateDatePatches));
 			new POptions().RegisterOptions(this, typeof(ModUpdateInfo));
 			new PLocalization().Register();
 			ModUpdateInfo.LoadSettings();
+			base.OnLoad(harmony);
 			ThisMod = mod;
 			// Shut off AVC
 			PRegistry.PutData("PLib.VersionCheck.ModUpdaterActive", true);
@@ -169,6 +150,8 @@ namespace PeterHan.ModUpdateDate {
 		[HarmonyPatch(typeof(ModsScreen), "BuildDisplay")]
 		[HarmonyPriority(Priority.High)]
 		public static class ModsScreen_BuildDisplay_Patch {
+			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode != true;
+
 			/// <summary>
 			/// Applied after BuildDisplay runs.
 			/// </summary>
@@ -189,6 +172,86 @@ namespace PeterHan.ModUpdateDate {
 		}
 
 		/// <summary>
+		/// Applied to SteamUGCService to add clients to the fixed version instead.
+		/// </summary>
+		[HarmonyPatch(typeof(SteamUGCService), nameof(SteamUGCService.AddClient))]
+		public static class SteamUGCService_AddClient_Patch {
+			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode == true;
+
+			/// <summary>
+			/// Applied before AddClient runs.
+			/// </summary>
+			internal static bool Prefix(SteamUGCService.IClient client) {
+				SteamUGCServiceFixed.Instance.AddClient(client);
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Applied to SteamUGCService to retrieve mod lookups from the fixed version instead.
+		/// </summary>
+		[HarmonyPatch(typeof(SteamUGCService), nameof(SteamUGCService.FindMod))]
+		public static class SteamUGCService_FindMod_Patch {
+			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode == true;
+
+			/// <summary>
+			/// Applied after FindMod runs.
+			/// </summary>
+			internal static void Postfix(PublishedFileId_t item,
+					ref SteamUGCService.Mod __result) {
+				__result = SteamUGCServiceFixed.Instance.FindMod(item);
+			}
+		}
+
+		/// <summary>
+		/// Applied to SteamUGCService to initialize the fixed version when the broken Klei
+		/// version is initialized.
+		/// </summary>
+		[HarmonyPatch(typeof(SteamUGCService), nameof(SteamUGCService.Initialize))]
+		public static class SteamUGCService_Initialize_Patch {
+			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode == true;
+
+			/// <summary>
+			/// Applied after Initialize runs.
+			/// </summary>
+			internal static void Postfix() {
+				SteamUGCServiceFixed.Instance.Initialize();
+			}
+		}
+
+		/// <summary>
+		/// Applied to SteamUGCService to retrieve mod status from the fixed version instead.
+		/// </summary>
+		[HarmonyPatch(typeof(SteamUGCService), nameof(SteamUGCService.IsSubscribed))]
+		public static class SteamUGCService_IsSubscribed_Patch {
+			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode == true;
+
+			/// <summary>
+			/// Applied after IsSubscribed runs.
+			/// </summary>
+			internal static void Postfix(PublishedFileId_t item,
+					ref bool __result) {
+				__result = SteamUGCServiceFixed.Instance.IsSubscribed(item);
+			}
+		}
+
+		/// <summary>
+		/// Applied to SteamUGCService to clean up our version when the Klei version is
+		/// destroyed.
+		/// </summary>
+		[HarmonyPatch(typeof(SteamUGCService), "OnDestroy")]
+		public static class SteamUGCService_OnDestroy_Patch {
+			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode == true;
+
+			/// <summary>
+			/// Applied after OnDestroy runs.
+			/// </summary>
+			internal static void Postfix() {
+				SteamUGCServiceFixed.Instance.Dispose();
+			}
+		}
+
+		/// <summary>
 		/// Applied to SteamUGCService to get detailed mod info when it is requested.
 		/// </summary>
 		[HarmonyPatch(typeof(SteamUGCService), "OnSteamUGCQueryDetailsCompleted")]
@@ -201,6 +264,22 @@ namespace PeterHan.ModUpdateDate {
 			internal static void Postfix(HashSet<SteamUGCDetails_t> ___publishes) {
 				if (___publishes != null)
 					ModUpdateDetails.OnInstalledUpdate(___publishes);
+			}
+		}
+
+		/// <summary>
+		/// Applied to SteamUGCService to remove clients from the fixed version instead.
+		/// </summary>
+		[HarmonyPatch(typeof(SteamUGCService), nameof(SteamUGCService.RemoveClient))]
+		public static class SteamUGCService_RemoveClient_Patch {
+			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode == true;
+
+			/// <summary>
+			/// Applied before RemoveClient runs.
+			/// </summary>
+			internal static bool Prefix(SteamUGCService.IClient client) {
+				SteamUGCServiceFixed.Instance.RemoveClient(client);
+				return false;
 			}
 		}
 
@@ -222,23 +301,18 @@ namespace PeterHan.ModUpdateDate {
 		}
 
 		/// <summary>
-		/// Applied to SteamUGCService when passive mode is enabled to download the correct
-		/// version of the mod in the first place!
+		/// Applied to SteamUGCService to replace Update with the fixed version.
 		/// </summary>
 		[HarmonyPatch(typeof(SteamUGCService), "Update")]
 		public static class SteamUGCService_UpdatePassive_Patch {
 			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode == true;
 
 			/// <summary>
-			/// Transpiles Update to use our DownloadItem replacement.
+			/// Applied before Update runs.
 			/// </summary>
-			internal static IEnumerable<CodeInstruction> Transpiler(
-					IEnumerable<CodeInstruction> method) {
-				var downloadOld = typeof(SteamUGC).GetMethodSafe(nameof(SteamUGC.DownloadItem),
-					true, typeof(PublishedFileId_t), typeof(bool));
-				var downloadNew = typeof(ModUpdateDatePatches).GetMethodSafe(nameof(
-					DownloadCorrectItem), true, typeof(PublishedFileId_t), typeof(bool));
-				return PPatchTools.ReplaceMethodCall(method, downloadOld, downloadNew);
+			internal static bool Prefix() {
+				SteamUGCServiceFixed.Instance.Process();
+				return false;
 			}
 		}
 	}

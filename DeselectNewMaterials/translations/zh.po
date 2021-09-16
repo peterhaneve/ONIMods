@@ -1,0 +1,32 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.0\n"
+"Last-Translator: Ventulus\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"Language: zh_CN\n"
+
+#. PeterHan.DeselectNewMaterials.DeselectMaterialsStrings.ACCEPT_TOOLTIP
+msgctxt "PeterHan.DeselectNewMaterials.DeselectMaterialsStrings.ACCEPT_TOOLTIP"
+msgid ""
+"Toggles whether this storage Accepts or Rejects newly discovered materials"
+msgstr "切换储存箱 接受 或 拒绝 新发现的材料"
+
+#. PeterHan.DeselectNewMaterials.DeselectMaterialsStrings.ACCEPTS_MATERIALS
+msgctxt ""
+"PeterHan.DeselectNewMaterials.DeselectMaterialsStrings.ACCEPTS_MATERIALS"
+msgid "Accepts New Types"
+msgstr "接受新材料"
+
+#. PeterHan.DeselectNewMaterials.DeselectMaterialsStrings.REJECTS_MATERIALS
+msgctxt ""
+"PeterHan.DeselectNewMaterials.DeselectMaterialsStrings.REJECTS_MATERIALS"
+msgid "Rejects New Types"
+msgstr "拒绝新材料"

@@ -1,17 +1,17 @@
 msgid ""
 msgstr ""
-"Application: Oxygen Not IncludedPOT Version: 2.0\n"
 "Project-Id-Version: \n"
 "POT-Creation-Date: \n"
 "PO-Revision-Date: \n"
+"Last-Translator: Ventulus\n"
 "Language-Team: \n"
+"Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
 "X-Generator: Poedit 2.4.2\n"
-"Last-Translator: Ventulus\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"Language: zh_CN\n"
 
 #. PeterHan.ToastControl.ToastControlStrings.ACTION_TITLE
 msgctxt "PeterHan.ToastControl.ToastControlStrings.ACTION_TITLE"
@@ -27,8 +27,7 @@ msgstr "建造完成"
 
 #. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.BUILDINGS
 msgctxt ""
-"PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL."
-"BUILDINGS"
+"PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.BUILDINGS"
 msgid "Buildings"
 msgstr "建筑"
 
@@ -112,6 +111,20 @@ msgctxt ""
 "DELIVERED_MACHINE"
 msgid "Delivered: Item (Machine)"
 msgstr "送达：物品 (由机器)"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DISABLE_MOVING
+msgctxt ""
+"PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL."
+"DISABLE_MOVING"
+msgid "Disable Motion"
+msgstr "停止行动"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DISABLE_MOVING_TOOLTIP
+msgctxt ""
+"PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL."
+"DISABLE_MOVING_TOOLTIP"
+msgid "If selected, popup text will no longer move upwards after creation"
+msgstr "选中后，弹出消息不再向上移动"
 
 #. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DISEASE_CURED
 msgctxt ""
@@ -199,8 +212,7 @@ msgstr "获得物品"
 
 #. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.MATERIALS
 msgctxt ""
-"PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL."
-"MATERIALS"
+"PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.MATERIALS"
 msgid "Materials"
 msgstr "材料"
 
@@ -225,8 +237,7 @@ msgstr ""
 
 #. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.OVERJOYED
 msgctxt ""
-"PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL."
-"OVERJOYED"
+"PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.OVERJOYED"
 msgid "Overjoyed reactions"
 msgstr "欣喜若狂的反应"
 
@@ -243,6 +254,13 @@ msgctxt ""
 "PICKEDUP_MACHINE"
 msgid "Picked Up: Item (Machine)"
 msgstr "捡起：物品 (由机器)"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.RADS_REMOVED
+msgctxt ""
+"PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL."
+"RADS_REMOVED"
+msgid "Radiation removed"
+msgstr "辐射清除"
 
 #. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.RESEARCH_GAINED
 msgctxt ""
@@ -461,8 +479,7 @@ msgstr "太多<link=\"LIQUID\">液体</link>要清扫"
 
 #. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.OVERJOYED
 msgctxt ""
-"PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL."
-"OVERJOYED"
+"PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.OVERJOYED"
 msgid ""
 "Duplicants' Overjoyed reactions:\n"
 " - Super Productive"
@@ -483,6 +500,15 @@ msgctxt ""
 "PICKEDUP_MACHINE"
 msgid "Item was removed from storage or building by a machine"
 msgstr "物品由机器从容器或建筑中捡出"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.RADS_REMOVED
+msgctxt ""
+"PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL."
+"RADS_REMOVED"
+msgid ""
+"<link=\"RADIATION\">Radiation</link> was removed by a building or Duplicant "
+"action"
+msgstr "<link=\"RADIATION\">辐射</link>由建筑或复制人的行为清除"
 
 #. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.RESEARCH_GAINED
 msgctxt ""

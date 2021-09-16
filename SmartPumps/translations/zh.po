@@ -1,0 +1,122 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.0\n"
+"Last-Translator: Ventulus\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"Language: zh_CN\n"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.GASPUMP_DESCRIPTION
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.GASPUMP_DESCRIPTION"
+msgid ""
+"Rumors hold that hidden behind the parts from discarded Carbon Skimmers used "
+"in this pump is a demon with a pair of chopsticks, picking gas molecules "
+"from the air forever and ever."
+msgstr ""
+"有传言说，在这个泵中使用的废弃除碳器的零件背后，隐藏着一个拿着筷子的恶魔，永"
+"远在从空气中挑选气体分子。"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.GASPUMP_EFFECT
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.GASPUMP_EFFECT"
+msgid ""
+"Draws in only the specified <link=\"ELEMENTSGAS\">Gas</link> and runs it "
+"through <link=\"GASPIPING\">Pipes</link>.\n"
+"\n"
+"Must be immersed in <link=\"ELEMENTSGAS\">Gas</link>."
+msgstr ""
+"收集仅特定<link=\"ELEMENTSGAS\">气体</link>并输送进<link=\"GASPIPING\">管道</"
+"link>。\n"
+"\n"
+"必须浸没在<link=\"ELEMENTSGAS\">气体</link>中。"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.GASPUMP_NAME
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.GASPUMP_NAME"
+msgid "<link=\"FILTEREDGASPUMP\">Filtered Gas Pump</link>"
+msgstr "<link=\"FILTEREDGASPUMP\">过滤式气泵</link>"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.LIQUIDPUMP_DESCRIPTION
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.LIQUIDPUMP_DESCRIPTION"
+msgid ""
+"Scarred by nightmares of mixed liquid pools, an obsessive colony AI "
+"commissioned this pump with an attached Element Sensor in an attempt to "
+"purge this heresy forever."
+msgstr ""
+"由于被混合液体池的噩梦吓到了，一个痴迷的殖民地AI委托制作了这个带有元素传感器"
+"的泵，试图永远清除这种异端。"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.LIQUIDPUMP_EFFECT
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.LIQUIDPUMP_EFFECT"
+msgid ""
+"Draws in only the specified <link=\"ELEMENTSLIQUID\">Liquid</link> and runs "
+"it through <link=\"LIQUIDPIPING\">Pipes</link>.\n"
+"\n"
+"Must be submerged in <link=\"ELEMENTSLIQUID\">Liquid</link>."
+msgstr ""
+"收集仅特定<link=\"ELEMENTSLIQUID\">液体</link>并输送进<link=\"LIQUIDPIPING\">"
+"管道</link>。\n"
+"\n"
+"必须浸没在<link=\"ELEMENTSLIQUID\">液体</link>中。"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.LIQUIDPUMP_NAME
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.LIQUIDPUMP_NAME"
+msgid "<link=\"FILTEREDLIQUIDPUMP\">Filtered Liquid Pump</link>"
+msgstr "<link=\"FILTEREDLIQUIDPUMP\">过滤式液泵</link>"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.NOGASTOPUMP_DESC
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.NOGASTOPUMP_DESC"
+msgid ""
+"This pump must be immersed in the proper <style=\"KKeyword\">Gas</style> to "
+"work"
+msgstr "此泵必须浸没在正确的<style=\"KKeyword\">气体</style>中才能工作"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.NOGASTOPUMP_NAME
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.NOGASTOPUMP_NAME"
+msgid "No Configured Gas to Pump"
+msgstr "未配置气体泵"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.NOLIQUIDTOPUMP_DESC
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.NOLIQUIDTOPUMP_DESC"
+msgid ""
+"This pump must be immersed in the proper <style=\"KKeyword\">Liquid</style> "
+"to work"
+msgstr "此泵必须浸没在正确的<style=\"KKeyword\">液体</style>中才能工作"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.NOLIQUIDTOPUMP_NAME
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.NOLIQUIDTOPUMP_NAME"
+msgid "No Configured Liquid to Pump"
+msgstr "未配置液体泵"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.VACUUMPUMP_DESCRIPTION
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.VACUUMPUMP_DESCRIPTION"
+msgid ""
+"After watching a Gas Pump work all night to lower the pressure in a room "
+"from 5 mg to 4 mg, Liam decided to invent this Vacuum Pump instead of "
+"wasting his time on the Manual Generator all day."
+msgstr ""
+"看着一台气泵工作了一整夜也不过把房间里的气压从5毫克降到4毫克，利亚姆决定发明"
+"这种真空泵，而不是整天把时间浪费在踩人力发电机上。"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.VACUUMPUMP_EFFECT
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.VACUUMPUMP_EFFECT"
+msgid ""
+"Draws in low-pressure <link=\"ELEMENTSGAS\">Gas</link> and runs it through "
+"<link=\"GASPIPING\">Pipes</link>.\n"
+"\n"
+"Must be immersed in <link=\"ELEMENTSGAS\">Gas</link>."
+msgstr ""
+"收集低压<link=\"ELEMENTSGAS\">气体</link>并输送进<link=\"GASPIPING\">管道</"
+"link>中。\n"
+"\n"
+"必须浸没在<link=\"ELEMENTSGAS\">气体</link>中。"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.VACUUMPUMP_NAME
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.VACUUMPUMP_NAME"
+msgid "<link=\"VACUUMPUMP\">Vacuum Pump</link>"
+msgstr "<link=\"VACUUMPUMP\">真空泵</link>"

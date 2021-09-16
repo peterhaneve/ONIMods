@@ -301,51 +301,6 @@ namespace PeterHan.StockBugFix {
 		}
 
 		/// <summary>
-		/// Applied to EntombedItemManager to remove the "tower of terror" that spawns on load.
-		/// </summary>
-		[HarmonyPatch(typeof(EntombedItemManager), "AddMassToWorlIfPossible")]
-		public static class EntombedItemManager_AddMassToWorlIfPossible_Patch {
-			/// <summary>
-			/// Transpiles AddMassToWorlIfPossible to flip the flag that Klei forgot about.
-			/// Method name misspelling is intentional as it matches the typo in code.
-			/// </summary>
-			internal static IEnumerable<CodeInstruction> Transpiler(
-					IEnumerable<CodeInstruction> method) {
-				const int SEARCH_LIMIT = 16;
-				var messages = typeof(SimMessages).GetMethods(BindingFlags.DeclaredOnly |
-					BindingFlags.Static | PPatchTools.BASE_FLAGS);
-				var targets = new List<MethodBase>(4);
-				// Match any of the overloads, no matter what their parameters contain, in
-				// case new optional parameters are added
-				foreach (var target in messages)
-					if (target.Name == nameof(SimMessages.AddRemoveSubstance))
-						targets.Add(target);
-				var opcodes = new List<CodeInstruction>(method);
-				for (int i = opcodes.Count - 1; i > 0; i--) {
-					var instr = opcodes[i];
-					// Is it a call to SimMessages.AddRemoveSubstance?
-					if (instr.opcode == OpCodes.Call && instr.operand is MethodBase target &&
-							targets.Contains(target)) {
-						int cutoff = Math.Max(0, i - SEARCH_LIMIT);
-						// Backward search for the first "ldc.i4.1"
-						for (int j = i - 1; j > cutoff; j--) {
-							instr = opcodes[j];
-							// Switch "true" for DoVerticalSolidDisplacement to "false"
-							if (instr.opcode == OpCodes.Ldc_I4_1) {
-								instr.opcode = OpCodes.Ldc_I4_0;
-#if DEBUG
-								PUtil.LogDebug("Patched EntombedItemManager flag");
-#endif
-								break;
-							}
-						}
-					}
-				}
-				return opcodes;
-			}
-		}
-
-		/// <summary>
 		/// Applied to FuelTank's property setter to properly update the chore when its
 		/// capacity is changed.
 		/// </summary>

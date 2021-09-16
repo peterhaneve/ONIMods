@@ -317,9 +317,9 @@ namespace PeterHan.PLib.Buildings {
 			var def = BuildingTemplates.CreateBuildingDef(ID, Width, Height, Animation, HP,
 				Math.Max(0.1f, ConstructionTime), quantity, tag, 2400.0f, Placement, Decor,
 				Noise);
-			// Solid tile
+			// Solid tile?
 			if (IsSolidTile) {
-				def.isSolidTile = true;
+				//def.isSolidTile = true;
 				def.BaseTimeUntilRepair = -1.0f;
 				def.UseStructureTemperature = false;
 				BuildingTemplates.CreateFoundationTileDef(def);
