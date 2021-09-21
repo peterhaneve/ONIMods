@@ -40,6 +40,7 @@ Mods should remain in their own subfolder.
 | [Falling Sand](https://steamcommunity.com/sharedfiles/filedetails/?id=1855163252) | Automatically places Dig errands on fallen unstable tiles caused by mining | Yes | Yes |
 | [Fast Save](https://steamcommunity.com/sharedfiles/filedetails/?id=1867707267) | Improves performance when loading, saving, or automatically saving the game | Yes | Yes |
 | [Food Supply Tooltips](https://steamcommunity.com/sharedfiles/filedetails/?id=1914501780) | Adds tooltips to food sources indicating their calorie production per cycle | Yes | Yes |
+| [Mismatched Wire Finder](https://steamcommunity.com/sharedfiles/filedetails/?id=2607620648) | Finds wires and pipes that do not match the rest of their network | Yes | Yes |
 | [Mod Updater](https://steamcommunity.com/sharedfiles/filedetails/?id=2018291283) | Updates mods that Steam leaves at old versions | Yes | Yes |
 | [No Splash Screen](https://steamcommunity.com/sharedfiles/filedetails/?id=2361698345) | Hides the Early Access splash screen | Yes | Yes |
 | [Not Enough Tags](https://steamcommunity.com/sharedfiles/filedetails/?id=2230218796) | Fixes Tag exhaustion in large bases | Yes | Yes |

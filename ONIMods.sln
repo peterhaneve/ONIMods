@@ -109,6 +109,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TurnBackTheClock", "TurnBac
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoWasteWant", "NoWasteWant\NoWasteWant.csproj", "{F6BC965A-0B7C-4165-B3A5-F2D60D4CEA6B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MismatchedFinder", "MismatchedFinder\MismatchedFinder.csproj", "{F76C5A4D-B2AB-4DA5-A9A9-5B30D87971E0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mergedown = Debug|Mergedown
@@ -530,6 +532,14 @@ Global
 		{F6BC965A-0B7C-4165-B3A5-F2D60D4CEA6B}.Release|Mergedown.Build.0 = Release|Mergedown
 		{F6BC965A-0B7C-4165-B3A5-F2D60D4CEA6B}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{F6BC965A-0B7C-4165-B3A5-F2D60D4CEA6B}.Release|Vanilla.Build.0 = Release|Vanilla
+		{F76C5A4D-B2AB-4DA5-A9A9-5B30D87971E0}.Debug|Mergedown.ActiveCfg = Debug|Mergedown
+		{F76C5A4D-B2AB-4DA5-A9A9-5B30D87971E0}.Debug|Mergedown.Build.0 = Debug|Mergedown
+		{F76C5A4D-B2AB-4DA5-A9A9-5B30D87971E0}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
+		{F76C5A4D-B2AB-4DA5-A9A9-5B30D87971E0}.Debug|Vanilla.Build.0 = Debug|Vanilla
+		{F76C5A4D-B2AB-4DA5-A9A9-5B30D87971E0}.Release|Mergedown.ActiveCfg = Release|Mergedown
+		{F76C5A4D-B2AB-4DA5-A9A9-5B30D87971E0}.Release|Mergedown.Build.0 = Release|Mergedown
+		{F76C5A4D-B2AB-4DA5-A9A9-5B30D87971E0}.Release|Vanilla.ActiveCfg = Release|Vanilla
+		{F76C5A4D-B2AB-4DA5-A9A9-5B30D87971E0}.Release|Vanilla.Build.0 = Release|Vanilla
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
