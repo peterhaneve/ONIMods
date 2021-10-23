@@ -196,13 +196,15 @@ namespace ReimaginationTeam.DecorRework {
 			bool hasTag = prefabID.HasTag(RoomConstraints.ConstraintTags.Decor20);
 			bool needsTag = provider.decor.GetTotalValue() >= 20f && !broken && !disabled;
 			if (hasTag != needsTag) {
+				int pos = Grid.PosToCell(gameObject);
 				// Tag needs to be added/removed
 				if (needsTag)
 					prefabID.AddTag(RoomConstraints.ConstraintTags.Decor20, false);
 				else
 					prefabID.RemoveTag(RoomConstraints.ConstraintTags.Decor20);
 				// Force room recalculation
-				Game.Instance.roomProber.SolidChangedEvent(Grid.PosToCell(gameObject), true);
+				if (Grid.IsValidCell(pos))
+					Game.Instance.roomProber.SolidChangedEvent(pos, true);
 			}
 		}
 
