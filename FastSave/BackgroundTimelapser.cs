@@ -53,9 +53,10 @@ namespace PeterHan.FastSave {
 					// Colony preview
 					path = Path.ChangeExtension(previewPath, ".png");
 				else {
-					string saveFolder = Path.Combine(retiredPath, saveName), worldName = data.
-						WorldName;
+					string saveFolder = Path.Combine(retiredPath, saveName), worldName =
+						data.WorldName;
 					if (!string.IsNullOrWhiteSpace(worldName)) {
+						saveFolder = Path.Combine(saveFolder, data.WorldID.ToString("D5"));
 						saveFolder = Path.Combine(saveFolder, worldName);
 						saveName = worldName;
 					}
@@ -86,14 +87,14 @@ namespace PeterHan.FastSave {
 		/// </summary>
 		/// <param name="previewPath">The path to save the preview; ignored if saving a colony summary / timelapse image.</param>
 		/// <param name="rawData">The image data to save, encoded as PNG.</param>
-		/// <param name="worldName">The name of the world to write.</param>
+		/// <param name="worldID">The ID of the world to write.</param>
 		/// <param name="preview">true if the image is a colony preview, or false otherwise.</param>
-		public void Start(string previewPath, byte[] rawData, string worldName, bool preview) {
+		public void Start(string previewPath, byte[] rawData, int worldID, bool preview) {
 #if DEBUG
 			PUtil.LogDebug("Encoding preview image");
 #endif
 			var task = new Thread(() => DoSave(new BackgroundTimelapseData(previewPath,
-				rawData, worldName, preview)));
+				rawData, worldID, preview)));
 			Util.ApplyInvariantCultureToThread(task);
 			task.Priority = ThreadPriority.BelowNormal;
 			task.Name = "Background Timelapser";
@@ -122,18 +123,31 @@ namespace PeterHan.FastSave {
 		internal byte[] RawData { get; }
 
 		/// <summary>
+		/// The ID of the world being written.
+		/// </summary>
+		internal int WorldID { get; }
+
+		/// <summary>
 		/// The name of the world being written.
 		/// </summary>
 		internal string WorldName { get; }
 
-		public BackgroundTimelapseData(string savePath, byte[] rawData, string worldName,
+		public BackgroundTimelapseData(string savePath, byte[] rawData, int worldID,
 				bool preview) {
 			if (string.IsNullOrEmpty(savePath) && preview)
 				throw new ArgumentNullException("savePath");
 			Preview = preview;
 			SaveGamePath = savePath;
 			RawData = rawData ?? throw new ArgumentNullException("rawData");
-			WorldName = worldName ?? "";
+			WorldID = worldID;
+			if (worldID >= 0) {
+				var world = ClusterManager.Instance.GetWorld(worldID);
+				if (world == null)
+					WorldName = "";
+				else
+					WorldName = world.GetComponent<ClusterGridEntity>().Name;
+			} else
+				WorldName = "";
 		}
 	}
 }

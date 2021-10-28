@@ -11,4 +11,4 @@ worldPlacements:
 - world: worlds/OneHundredK
   allowedRings:
     min: 0
-	max: 0
+    max: 0

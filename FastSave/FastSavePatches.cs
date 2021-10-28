@@ -36,10 +36,10 @@ namespace PeterHan.FastSave {
 		/// </summary>
 		/// <param name="rt">The texture where the timelapse image was rendered.</param>
 		/// <param name="savePath">The path to save the image.</param>
-		/// <param name="worldName">The name of the world to write.</param>
+		/// <param name="worldID">The ID of the world to write.</param>
 		/// <param name="preview">true if the image is a colony preview.</param>
 		private static System.Collections.IEnumerator TimelapseCoroutine(RenderTexture rt,
-				string savePath, string worldName, bool preview) {
+				string savePath, int worldID, bool preview) {
 			int width = rt.width, height = rt.height;
 			if (width > 0 && height > 0) {
 				var request = AsyncGPUReadback.Request(rt, 0, TextureFormat.RGBA32);
@@ -50,13 +50,13 @@ namespace PeterHan.FastSave {
 					PUtil.LogWarning("Error saving background timelapse image!");
 					var oldRT = RenderTexture.active;
 					RenderTexture.active = rt;
-					Game.Instance.timelapser.WriteToPng(rt, worldName);
+					Game.Instance.timelapser.WriteToPng(rt, worldID);
 					RenderTexture.active = oldRT;
 				} else {
 					byte[] rawARGB = request.GetData<byte>().ToArray();
 					if (rawARGB != null)
 						BackgroundTimelapser.Instance.Start(savePath, TextureToPNG(rawARGB,
-							width, height), worldName, preview);
+							width, height), worldID, preview);
 				}
 			}
 		}
@@ -267,7 +267,6 @@ namespace PeterHan.FastSave {
 				var inst = CameraController.Instance;
 				if (world != null && rt != null && inst != null) {
 					float z = inst.transform.position.z;
-					var grid = world.GetComponent<ClusterGridEntity>();
 					if (world.IsStartWorld) {
 						var telepad = GameUtil.GetTelepad(0);
 						if (telepad == null)
@@ -285,7 +284,7 @@ namespace PeterHan.FastSave {
 					RenderTexture.active = rt;
 					inst.RenderForTimelapser(ref rt);
 					inst.StartCoroutine(TimelapseCoroutine(rt, ___previewSaveGamePath,
-						(grid == null) ? "" : grid.Name, ___previewScreenshot));
+						world_id, ___previewScreenshot));
 					inst.SetOrthographicsSize(___camSize);
 					inst.SetPosition(___camPosition);
 					RenderTexture.active = oldRT;
