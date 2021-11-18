@@ -358,7 +358,10 @@ namespace PeterHan.AirlockDoor {
 			for (int i = 0; i < width; i++) {
 				int target = Grid.OffsetCell(start, i, height);
 				if (Grid.IsValidCell(target)) {
-					Grid.FakeFloor[target] = enable;
+					if (enable)
+						Grid.FakeFloor.Add(target);
+					else
+						Grid.FakeFloor.Remove(target);
 					Pathfinding.Instance.AddDirtyNavGridCell(target);
 				}
 			}
