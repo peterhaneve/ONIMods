@@ -29,11 +29,18 @@ namespace PeterHan.ThermalPlate {
 	/// </summary>
 	public sealed class ThermalPlatePatches : KMod.UserMod2 {
 		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
 			PUtil.InitLibrary();
-			LocString.CreateLocStringKeys(typeof(ThermalPlateStrings.BUILDINGS));
 			new PLocalization().Register();
 			new PBuildingManager().Register(ThermalPlateConfig.CreateBuilding());
 			new PVersionCheck().Register(this, new SteamVersionChecker());
+		}
+
+		[HarmonyPatch(typeof(GeneratedBuildings), "LoadGeneratedBuildings")]
+		public static class GeneratedBuildings_LoadGeneratedBuildings_Patch {
+			internal static void Prefix() {
+				LocString.CreateLocStringKeys(typeof(ThermalPlateStrings.BUILDINGS));
+			}
 		}
 	}
 }

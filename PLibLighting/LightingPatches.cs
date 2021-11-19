@@ -32,8 +32,8 @@ namespace PeterHan.PLib.Lighting {
 	/// the latest version of PLightManager.
 	/// </summary>
 	internal static class LightingPatches {
-		private delegate IntHandle AddToLayerDelegate(Light2D instance, Vector2I xy_min,
-			int width, int height, ScenePartitionerLayer layer);
+		private delegate IntHandle AddToLayerDelegate(Light2D instance, Extents ext,
+			ScenePartitionerLayer layer);
 
 		private static readonly DetouredMethod<AddToLayerDelegate> ADD_TO_LAYER =
 			typeof(Light2D).DetourLazy<AddToLayerDelegate>("AddToLayer");
@@ -87,11 +87,11 @@ namespace PeterHan.PLib.Lighting {
 			if (shape != LightShape.Cone && shape != LightShape.Circle && ORIGIN.Get(instance)
 					is int cell && rad > 0 && Grid.IsValidCell(cell)) {
 				var origin = Grid.CellToXY(cell);
-				var minCoords = new Vector2I(origin.x - rad, origin.y - rad);
+				var extents = new Extents(origin.x - rad, origin.y - rad, 2 * rad, 2 * rad);
 				// Better safe than sorry, check whole possible radius
 				var gsp = GameScenePartitioner.Instance;
-				solidPart = AddToLayer(instance, minCoords, rad, gsp.solidChangedLayer);
-				liquidPart = AddToLayer(instance, minCoords, rad, gsp.liquidChangedLayer);
+				solidPart = AddToLayer(instance, extents, gsp.solidChangedLayer);
+				liquidPart = AddToLayer(instance, extents, gsp.liquidChangedLayer);
 				handled = true;
 			}
 			return handled;
@@ -101,14 +101,13 @@ namespace PeterHan.PLib.Lighting {
 		/// Adds a light's scene change partitioner to a layer.
 		/// </summary>
 		/// <param name="instance">The light to add.</param>
-		/// <param name="minCoords">The coordinates of the upper left corner.</param>
-		/// <param name="rad">The light "radius" (square).</param>
+		/// <param name="extents">The extents that this light occupies.</param>
 		/// <param name="layer">The layer to add it on.</param>
 		/// <returns>A handle to the change partitioner, or InvalidHandle if it could not be
 		/// added.</returns>
-		private static IntHandle AddToLayer(Light2D instance, Vector2I minCoords, int rad,
+		private static IntHandle AddToLayer(Light2D instance, Extents extents,
 				ScenePartitionerLayer layer) {
-			return ADD_TO_LAYER.Invoke(instance, minCoords, 2 * rad, 2 * rad, layer);
+			return ADD_TO_LAYER.Invoke(instance, extents, layer);
 		}
 
 		/// <summary>

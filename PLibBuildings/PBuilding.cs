@@ -345,8 +345,8 @@ namespace PeterHan.PLib.Buildings {
 			}
 			def.Breakable = Breaks;
 			def.PermittedRotations = RotateMode;
-			def.ExhaustKilowattsWhenActive = Math.Max(0.0f, ExhaustHeatGeneration);
-			def.SelfHeatKilowattsWhenActive = Math.Max(0.0f, HeatGeneration);
+			def.ExhaustKilowattsWhenActive = ExhaustHeatGeneration;
+			def.SelfHeatKilowattsWhenActive = HeatGeneration;
 			def.Floodable = Floods;
 			def.Entombable = Entombs;
 			def.ObjectLayer = ObjectLayer;

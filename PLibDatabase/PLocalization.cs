@@ -53,6 +53,7 @@ namespace PeterHan.PLib.Database {
 				PLibLocalization.TRANSLATIONS_EXT);
 			try {
 				Localization.OverloadStrings(Localization.LoadStringsFile(poFile, false));
+				RewriteStrings(modAssembly);
 			} catch (FileNotFoundException) {
 				// No localization available for this locale
 #if DEBUG
@@ -65,6 +66,23 @@ namespace PeterHan.PLib.Database {
 					F(locCode, modAssembly.GetNameSafe() ?? "?"));
 				PUtil.LogExcWarn(e);
 			}
+		}
+
+		/// <summary>
+		/// Searches types in the assembly (no worries, Localization did this anyways, so they
+		/// all either loaded or failed to load) for fields that already had loc string keys
+		/// created, and fixes them if so.
+		/// </summary>
+		/// <param name="assembly">The assembly to check for strings.</param>
+		internal static void RewriteStrings(Assembly assembly) {
+			foreach (var type in assembly.GetTypes())
+				foreach (var field in type.GetFields(PPatchTools.BASE_FLAGS | BindingFlags.
+						FlattenHierarchy | BindingFlags.Static)) {
+					// Only use fields of type LocString
+					if (field.FieldType == typeof(LocString) && field.GetValue(null) is
+							LocString ls)
+						Strings.Add(ls.key.String, ls.text);
+				}
 		}
 
 		public override Version Version => VERSION;
