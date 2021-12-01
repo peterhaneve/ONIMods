@@ -117,18 +117,18 @@ namespace ReimaginationTeam.DecorRework {
 
 		protected override void OnCleanUp() {
 			RemoveDecor();
-			Unsubscribe((int)GameHashes.OperationalFlagChanged, OnOperationalFlagChanged);
+			Unsubscribe((int)GameHashes.FunctionalChanged, OnFunctionalChanged);
 			base.OnCleanUp();
 		}
 
-		private void OnOperationalFlagChanged(object argument) {
+		private void OnFunctionalChanged(object argument) {
 			if (gameObject != null)
 				RefreshDecor();
 		}
 
 		protected override void OnSpawn() {
 			base.OnSpawn();
-			Subscribe((int)GameHashes.OperationalFlagChanged, OnOperationalFlagChanged);
+			Subscribe((int)GameHashes.FunctionalChanged, OnFunctionalChanged);
 		}
 
 		/// <summary>
@@ -188,7 +188,7 @@ namespace ReimaginationTeam.DecorRework {
 			var happiness = glumStatus?.attributes?.Get(DecorCellManager.Instance.
 				HappinessAttribute);
 			// Entombed/disabled = 0 decor, broken = use value in DecorTuning for broken
-			bool disabled = (operational != null && !operational.IsOperational) ||
+			bool disabled = (operational != null && !operational.IsFunctional) ||
 				(happiness != null && happiness.GetTotalValue() < 0.0f);
 			bool broken = breakStatus != null && breakStatus.IsBroken;
 			RefreshCells(broken, disabled);

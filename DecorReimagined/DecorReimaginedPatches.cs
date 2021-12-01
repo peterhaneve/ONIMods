@@ -19,6 +19,7 @@
 using Database;
 using HarmonyLib;
 using Klei.AI;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
@@ -96,6 +97,7 @@ namespace ReimaginationTeam.DecorRework {
 			ImaginationLoader.Instance.Register(typeof(DecorReimaginedPatches));
 			new POptions().RegisterOptions(this, typeof(DecorReimaginedOptions));
 			new PPatchManager(harmony).RegisterPatchClass(typeof(DecorReimaginedPatches));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 			PatchParks();
 			PatchRecBuildings();
 		}
