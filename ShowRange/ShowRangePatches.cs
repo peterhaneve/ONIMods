@@ -102,15 +102,13 @@ namespace PeterHan.ShowRange {
 							TelescopeVisualizer.Create(def.BuildingPreview);
 							TelescopeVisualizer.Create(def.BuildingUnderConstruction);
 						}
-#if SPACEDOUT
-						if (def.PrefabID == "ClusterTelescope") {
-							// Not reachable in Vanilla
+						if (def.PrefabID == ClusterTelescopeConfig.ID || def.PrefabID ==
+								ClusterTelescopeEnclosedConfig.ID) {
 							PUtil.LogDebug("Cluster Telescope visualizer added");
 							ClusterTelescopeVisualizer.Create(def.BuildingComplete);
 							ClusterTelescopeVisualizer.Create(def.BuildingPreview);
 							ClusterTelescopeVisualizer.Create(def.BuildingUnderConstruction);
 						}
-#endif
 						if (def.PrefabID == CometDetectorConfig.ID) {
 							PUtil.LogDebug("Space scanner visualizer added");
 							SpaceScannerVisualizer.Create(def.BuildingComplete);

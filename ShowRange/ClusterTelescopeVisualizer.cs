@@ -47,8 +47,6 @@ namespace PeterHan.ShowRange {
 		private int scanRadius;
 
 		internal ClusterTelescopeVisualizer() {
-			// Is hard coded in ClusterTelescopeConfig, will be updated using the
-			// ClusterTelescope object if available
 			scanRadius = 5;
 		}
 
