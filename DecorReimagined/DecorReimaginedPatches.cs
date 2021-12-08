@@ -50,13 +50,16 @@ namespace ReimaginationTeam.DecorRework {
 		[PLibMethod(RunAt.AfterDbInit)]
 		internal static void ApplyDecorEffects() {
 			DecorTuning.InitEffects();
-			PDatabaseUtils.AddColonyAchievement(new ColonyAchievement(ACHIEVE_NAME, "",
-				DecorReimaginedStrings.FEELSLIKEHOME_NAME, DecorReimaginedStrings.
-				FEELSLIKEHOME_DESC.text.F(DecorTuning.NUM_DECOR_FOR_ACHIEVEMENT), false,
-				new List<ColonyAchievementRequirement>() {
+			new PColonyAchievement(ACHIEVE_NAME) {
+				Name = DecorReimaginedStrings.FEELSLIKEHOME_NAME,
+				Description = DecorReimaginedStrings.FEELSLIKEHOME_DESC.text.F(DecorTuning.
+					NUM_DECOR_FOR_ACHIEVEMENT),
+				Requirements = new List<ColonyAchievementRequirement>() {
 					// Specified number of +decor items on one cell
 					new NumDecorPositives(DecorTuning.NUM_DECOR_FOR_ACHIEVEMENT)
-				}, "", "", "", "", null, "", "art_underground"));
+				},
+				Icon = "art_underground"
+			}.AddAchievement();
 			PUtil.LogDebug("Initialized decor effects");
 		}
 

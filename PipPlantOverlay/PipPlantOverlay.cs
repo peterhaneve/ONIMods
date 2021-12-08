@@ -122,6 +122,9 @@ namespace PeterHan.PipPlantOverlay {
 				"MaskedOverlayBG"
 			});
 			cells = new PipPlantFailedReasons[Grid.CellCount];
+			for (int i = 0; i < Grid.CellCount; i++)
+				// Avoid a big green screen flash on first load
+				cells[i] = PipPlantFailedReasons.NoPlantablePlot;
 			conditions = new OverlayModes.ColorHighlightCondition[] {
 				new OverlayModes.ColorHighlightCondition(GetHighlightColor, ShouldHighlight)
 			};

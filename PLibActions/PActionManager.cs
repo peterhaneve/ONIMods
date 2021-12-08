@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
+using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -28,9 +29,22 @@ namespace PeterHan.PLib.Actions {
 	/// </summary>
 	public sealed class PActionManager : PForwardedComponent {
 		/// <summary>
+		/// Prototypes the required parameters for new BindingEntry() since they changed in
+		/// U39-489490.
+		/// </summary>
+		private delegate BindingEntry NewEntry(string group, GamepadButton button,
+			KKeyCode key_code, Modifier modifier, Action action);
+
+		/// <summary>
 		/// The category used for all PLib keys.
 		/// </summary>
 		public const string CATEGORY = "PLib";
+
+		/// <summary>
+		/// Creates a new BindingEntry.
+		/// </summary>
+		private static readonly NewEntry NEW_BINDING_ENTRY = typeof(BindingEntry).
+			DetourConstructor<NewEntry>();
 
 		/// <summary>
 		/// The version of this component. Uses the running PLib version.
@@ -324,8 +338,9 @@ namespace PeterHan.PLib.Actions {
 				if (!FindKeyBinding(currentBindings, kAction)) {
 					if (binding == null)
 						binding = new PKeyBinding();
-					currentBindings.Add(new BindingEntry(CATEGORY, binding.GamePadButton,
-						binding.Key, binding.Modifiers, kAction));
+					// This constructor changes often enough to be worth detouring
+					currentBindings.Add(NEW_BINDING_ENTRY.Invoke(CATEGORY, binding.
+						GamePadButton, binding.Key, binding.Modifiers, kAction));
 				}
 			}
 			GameInputMapping.SetDefaultKeyBindings(currentBindings.ToArray());

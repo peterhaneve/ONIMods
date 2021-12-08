@@ -52,8 +52,8 @@ namespace PeterHan.MoreAchievements {
 			Achievements.InitAchievements();
 			foreach (var aDesc in Achievements.AllAchievements) {
 				var achieve = aDesc.GetColonyAchievement();
-				string icon = achieve.icon;
-				PDatabaseUtils.AddColonyAchievement(achieve);
+				string icon = achieve.Icon;
+				achieve.AddAchievement();
 				// Load image if necessary
 				if (Assets.GetSprite(icon) == null) {
 					LoadAndAddSprite(icon);

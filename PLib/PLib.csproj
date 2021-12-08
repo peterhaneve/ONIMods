@@ -3,8 +3,8 @@
   <PropertyGroup>
     <Title>PeterHan.PLib</Title>
     <AssemblyTitle>PLib</AssemblyTitle>
-    <Version>4.6.0.0</Version>
-    <!--<PackageVersion>4.6.0-beta</PackageVersion>-->
+    <Version>4.7.0.0</Version>
+    <!--<PackageVersion>4.7.0-beta</PackageVersion>-->
     <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
     <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -15,13 +15,11 @@
     <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
     
 Contains methods aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
-    <PackageReleaseNotes>Update Lighting for compatibility with U38-486499.
+    <PackageReleaseNotes>Update PLib Actions for compatibility with the upcoming release.
 
-Localization now updates strings after load so that building descriptions are properly localized.
-
-Buildings can now have negative self-heat or exhaust heat.</PackageReleaseNotes>
+Add convenience wrapper for colony achievement construction.</PackageReleaseNotes>
     <RootNamespace>PeterHan.PLib</RootNamespace>
-    <AssemblyVersion>4.6.0.0</AssemblyVersion>
+    <AssemblyVersion>4.7.0.0</AssemblyVersion>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
     <UsesPLib>false</UsesPLib>

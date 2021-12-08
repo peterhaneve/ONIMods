@@ -18,6 +18,7 @@
 
 using Database;
 using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -79,12 +80,15 @@ namespace PeterHan.MoreAchievements {
 		/// Creates a colony achievement object.
 		/// </summary>
 		/// <returns>The colony achievement for this descriptor.</returns>
-		public ColonyAchievement GetColonyAchievement() {
+		public PColonyAchievement GetColonyAchievement() {
 			// Get strings from the AchievementStrings class
 			var type = GetAchievementData(ID);
-			return new ColonyAchievement(ID, "", GetStringValue(type, "NAME"), GetStringValue(
-				type, "DESC"), false, new List<ColonyAchievementRequirement>(requirements),
-				icon: Icon);
+			return new PColonyAchievement(ID) {
+				Name = GetStringValue(type, "NAME"),
+				Description = GetStringValue(type, "DESC"),
+				Icon = Icon,
+				Requirements = new List<ColonyAchievementRequirement>(requirements)
+			};
 		}
 	}
 }
