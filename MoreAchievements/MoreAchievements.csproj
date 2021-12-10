@@ -2,12 +2,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>One Giant Leap</AssemblyTitle>
-    <FileVersion>2.0.1.0</FileVersion>
+    <FileVersion>2.1.0.0</FileVersion>
     <RootNamespace>PeterHan.MoreAchievements</RootNamespace>
     <Description>Adds many new Colony Initiatives.</Description>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
-    <LastWorkingBuild>486499</LastWorkingBuild>
+    <LastWorkingBuild>489681</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
   <ItemGroup>

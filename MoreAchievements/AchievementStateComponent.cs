@@ -334,10 +334,11 @@ namespace PeterHan.MoreAchievements {
 		public void Sim1000ms(float dt) {
 			int have = 0;
 			// Count artifacts discovered
-			foreach (string name in ArtifactConfig.artifactItems)
-				if (DiscoveredResources.Instance.IsDiscovered(Assets.GetPrefab(name).
-						PrefabID()))
-					have++;
+			foreach (var pair in ArtifactConfig.artifactItems)
+				foreach (string name in pair.Value)
+					if (DiscoveredResources.Instance.IsDiscovered(Assets.GetPrefab(name).
+							PrefabID()))
+						have++;
 			ArtifactsObtained = have;
 			foreach (var duplicant in Components.LiveMinionIdentities.Items)
 				if (duplicant != null) {
