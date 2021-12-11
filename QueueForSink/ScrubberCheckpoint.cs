@@ -24,9 +24,6 @@ namespace PeterHan.QueueForSinks {
 	/// Forces duplicants to stop if necessary when passing ore scrubbers.
 	/// </summary>
 	public sealed class ScrubberCheckpoint : WorkCheckpoint<OreScrubber.Work> {
-		// Scrubbers are 3x3
-		private const int OFFSET = 3;
-
 		/// <summary>
 		/// The layer for buildings.
 		/// </summary>
@@ -47,9 +44,12 @@ namespace PeterHan.QueueForSinks {
 		private bool CheckForOtherScrubber(bool dir) {
 			GameObject scrubber = gameObject, nScrub;
 			bool stop = true;
-			int cell;
+			int cell, offset = 3;
+			var def = scrubber.GetComponentSafe<Building>()?.Def;
+			if (def != null)
+				offset = def.WidthInCells;
 			if (scrubber != null && Grid.IsValidCell(cell = Grid.PosToCell(scrubber))) {
-				cell = Grid.OffsetCell(cell, new CellOffset(dir ? OFFSET : -OFFSET, 0));
+				cell = Grid.OffsetCell(cell, new CellOffset(dir ? offset : -offset, 0));
 				// Is cell valid?
 				if (Grid.IsValidBuildingCell(cell) && (nScrub = Grid.Objects[cell,
 						buildingLayer]) != null) {

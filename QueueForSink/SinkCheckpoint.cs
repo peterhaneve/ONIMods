@@ -24,9 +24,6 @@ namespace PeterHan.QueueForSinks {
 	/// Forces duplicants to stop if necessary when passing sink like buildings.
 	/// </summary>
 	public sealed class SinkCheckpoint : WorkCheckpoint<HandSanitizer.Work> {
-		// Sinks are 2x3
-		private const int OFFSET = 2;
-
 		/// <summary>
 		/// The layer for buildings.
 		/// </summary>
@@ -57,9 +54,12 @@ namespace PeterHan.QueueForSinks {
 		private bool CheckForOtherSink(bool dir) {
 			GameObject sink = gameObject, nSink;
 			bool stop = true;
-			int cell;
+			int cell, offset = 2;
+			var def = sink.GetComponentSafe<Building>()?.Def;
+			if (def != null)
+				offset = def.WidthInCells;
 			if (sink != null && Grid.IsValidCell(cell = Grid.PosToCell(sink))) {
-				cell = Grid.OffsetCell(cell, new CellOffset(dir ? OFFSET : -OFFSET, 0));
+				cell = Grid.OffsetCell(cell, new CellOffset(dir ? offset : -offset, 0));
 				// Is cell valid?
 				if (Grid.IsValidBuildingCell(cell) && (nSink = Grid.Objects[cell,
 						buildingLayer]) != null) {
