@@ -28,12 +28,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
 
-#if false
-using MobSettings = ProcGen.MobSettings;
-using SettingsCache = ProcGen.SettingsCache;
-using YamlError = Klei.YamlIO.Error;
-#endif
-
 namespace PeterHan.StockBugFix {
 	/// <summary>
 	/// Patches which will be applied via annotations for Stock Bug Fix.
@@ -43,36 +37,6 @@ namespace PeterHan.StockBugFix {
 		/// Base divisor is 10000, so 6000/10000 = 0.6 priority.
 		/// </summary>
 		public const int JOY_PRIORITY_MOD = 6000;
-
-#if false
-		/// <summary>
-		/// Adds the missing entries to mobs.yaml for buried Forest objects.
-		/// </summary>
-		/// <param name="errors">The location where errors in YAML parsing will be stored.</param>
-		private static void AddForestSpawnables(List<YamlError> errors) {
-			// Read in forestMobs.yaml from the mod dir
-			string path = PLib.Options.POptions.GetModDir(Assembly.GetExecutingAssembly());
-			var mobs = SettingsCache.mobs;
-			if (mobs != null)
-				try {
-					var text = File.ReadAllText(Path.Combine(path, "forestMobs.yaml"));
-					// TODO Vanilla/DLC code
-					// Return value only (which is ignored!) is different
-					var method = typeof(MobSettings).GetMethodSafe(nameof(MobSettings.Merge),
-						false, typeof(MobSettings));
-					if (!string.IsNullOrEmpty(text) && method != null) {
-						var parsed = YamlIO.Parse<MobSettings>(text, default, (error, _) =>
-							errors.Add(error));
-						if (parsed != null)
-							method.Invoke(mobs, new object[] { parsed });
-					} else
-						PUtil.LogWarning("Unable to load forest spawnables!");
-				} catch (IOException e) {
-					PUtil.LogWarning("Unable to load forest spawnables:");
-					PUtil.LogExcWarn(e);
-				}
-		}
-#endif
 
 		/// <summary>
 		/// Sets the default chore type of food storage depending on the user options. Also
@@ -105,6 +69,18 @@ namespace PeterHan.StockBugFix {
 				instance.Patch(typeof(Diggable).GetMethodSafe("OnSolidChanged", false,
 					PPatchTools.AnyArguments), prefix: new HarmonyMethod(
 					typeof(StockBugsPatches), nameof(PrefixSolidChanged)));
+			}
+		}
+
+		/// <summary>
+		/// A coroutine used to fix the fish feeder by waiting a frame before refilling it
+		/// after a Pacu eats.
+		/// </summary>
+		private static System.Collections.IEnumerator FishFeederFix(FishFeeder.Instance smi) {
+			yield return null;
+			if (smi != null && smi.gameObject != null) {
+				smi.fishFeederTop.RefreshStorage();
+				smi.fishFeederBot.RefreshStorage();
 			}
 		}
 
@@ -297,6 +273,23 @@ namespace PeterHan.StockBugFix {
 					}
 				}
 				return cont;
+			}
+		}
+
+		/// <summary>
+		/// Applied to FishFeeder to fix a race condition with refilling the feeder when the
+		/// Pacu eats the entire blob on the bottom of the feeder.
+		/// </summary>
+		[HarmonyPatch(typeof(FishFeeder), "OnStorageChange")]
+		public static class FishFeeder_OnStorageChange_Patch {
+			/// <summary>
+			/// Applied before OnStorageChange runs.
+			/// </summary>
+			internal static bool Prefix(FishFeeder.Instance smi, object data) {
+				if (data is GameObject go && go != null)
+					smi.Get<Storage>().StartCoroutine(FishFeederFix(smi));
+				// Stop the bugged original method from running at all
+				return false;
 			}
 		}
 
