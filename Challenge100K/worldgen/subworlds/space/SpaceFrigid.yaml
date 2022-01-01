@@ -12,4 +12,5 @@ biomes:
 tags:
   - IgnoreCaveOverride
   - NoGlobalFeatureSpawning
+  - RemoveWorldBorderOverVacuum
 zoneType: Space

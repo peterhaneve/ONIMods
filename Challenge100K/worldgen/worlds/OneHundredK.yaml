@@ -2,6 +2,7 @@ name: STRINGS.WORLDS.ONEHUNDREDK.NAME
 description: STRINGS.WORLDS.ONEHUNDREDK.DESCRIPTION
 asteroidIcon: Asteroid_onehundredk
 
+worldTraitScale: 1 # Adjust with worldSize. Traits are tuned to base game world sizes.
 worldsize:
   X: 256
   Y: 384
@@ -15,12 +16,17 @@ subworldFiles:
   - name: subworlds/sandstone/SandstoneMiniWaterFrigid
   - name: subworlds/sandstone/SandstoneMiniAlgaeFrigid
   - name: subworlds/marsh/MarshFrigid
+    minCount: 2
   - name: subworlds/jungle/JungleFrigid
+    minCount: 2
   - name: subworlds/frozen/FrozenFrigid
+    minCount: 3
   - name: subworlds/oil/OilPocketsFrigid
+    minCount: 4
   - name: subworlds/space/SpaceFrigid
   - name: subworlds/space/SurfaceFrigid
   - name: subworlds/ocean/OceanFrigid
+    minCount: 2
   - name: subworlds/rust/RustFrigid
   - name: subworlds/forest/ForestFrigid
 

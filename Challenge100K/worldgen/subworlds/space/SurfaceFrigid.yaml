@@ -15,4 +15,5 @@ tags:
   - IgnoreCaveOverride
   - ErodePointToWorldTop
   - NoGlobalFeatureSpawning
+  - RemoveWorldBorderOverVacuum
 zoneType: Space
