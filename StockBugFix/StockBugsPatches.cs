@@ -101,9 +101,10 @@ namespace PeterHan.StockBugFix {
 		/// <summary>
 		/// Applied to MainMenu to display a queued Steam mod status report if pending.
 		/// </summary>
-		private static void PostfixMenuUpdate(MainMenu __instance) {
-			if (__instance != null)
-				QueuedReportManager.Instance.CheckQueuedReport(__instance.gameObject);
+		private static void PostfixMenuSpawn(MainMenu __instance) {
+			GameObject go;
+			if (__instance != null && (go = __instance.gameObject) != null)
+				go.AddOrGet<QueuedModReporter>();
 		}
 
 		/// <summary>
@@ -176,8 +177,8 @@ namespace PeterHan.StockBugFix {
 				instance.Patch(steamMod.GetMethodSafe("UpdateMods", false, PPatchTools.
 					AnyArguments), transpiler: new HarmonyMethod(typeof(StockBugsPatches),
 					nameof(TranspileUpdateMods)));
-				instance.Patch(typeof(MainMenu).GetMethodSafe("Update", false), postfix:
-					new HarmonyMethod(typeof(StockBugsPatches), nameof(PostfixMenuUpdate)));
+				instance.Patch(typeof(MainMenu).GetMethodSafe("OnSpawn", false), postfix:
+					new HarmonyMethod(typeof(StockBugsPatches), nameof(PostfixMenuSpawn)));
 			}
 		}
 
