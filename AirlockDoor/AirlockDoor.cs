@@ -17,7 +17,6 @@
  */
 
 using KSerialization;
-using PeterHan.PLib.Detours;
 using System;
 using UnityEngine;
 
@@ -65,23 +64,25 @@ namespace PeterHan.AirlockDoor {
 		private static void StaticInit() {
 			doorControlState = new StatusItem("CurrentDoorControlState", "BUILDING",
 				"", StatusItem.IconType.Info, NotificationType.Neutral, false, OverlayModes.
-				None.ID);
-			doorControlState.resolveStringCallback = (str, data) => {
-				bool locked = (data as AirlockDoor)?.locked ?? true;
-				return str.Replace("{ControlState}", Strings.Get(
-					"STRINGS.BUILDING.STATUSITEMS.CURRENTDOORCONTROLSTATE." + (locked ?
-					"LOCKED" : "AUTO")));
+				None.ID) {
+				resolveStringCallback = (str, data) => {
+					bool locked = (data as AirlockDoor)?.locked ?? true;
+					return str.Replace("{ControlState}", Strings.Get(
+						"STRINGS.BUILDING.STATUSITEMS.CURRENTDOORCONTROLSTATE." + (locked ?
+						"LOCKED" : "AUTO")));
+				}
 			};
 			storedCharge = new StatusItem("AirlockStoredCharge", "BUILDING", "",
 				StatusItem.IconType.Info, NotificationType.Neutral, false, OverlayModes.None.
-				ID);
-			storedCharge.resolveStringCallback = (str, data) => {
-				if (data is AirlockDoor door)
-					str = string.Format(str, GameUtil.GetFormattedRoundedJoules(door.
-						EnergyAvailable), GameUtil.GetFormattedRoundedJoules(door.
-						EnergyCapacity), GameUtil.GetFormattedRoundedJoules(door.
-						EnergyPerUse));
-				return str;
+				ID) {
+				resolveStringCallback = (str, data) => {
+					if (data is AirlockDoor door)
+						str = string.Format(str, GameUtil.GetFormattedRoundedJoules(door.
+							EnergyAvailable), GameUtil.GetFormattedRoundedJoules(door.
+							EnergyCapacity), GameUtil.GetFormattedRoundedJoules(door.
+							EnergyPerUse));
+					return str;
+				}
 			};
 		}
 
@@ -101,7 +102,7 @@ namespace PeterHan.AirlockDoor {
 		public float EnergyCapacity;
 
 		/// <summary>
-		/// The energy consumed per use.
+		/// The maximum energy consumed per use.
 		/// </summary>
 		[SerializeField]
 		public float EnergyPerUse;
@@ -398,7 +399,7 @@ namespace PeterHan.AirlockDoor {
 		/// Updates the energy meter.
 		/// </summary>
 		private void UpdateMeter() {
-			meter?.SetPositionPercent(energyAvailable / EnergyCapacity);
+			meter?.SetPositionPercent(Math.Min(1.0f, energyAvailable / EnergyCapacity));
 		}
 
 		/// <summary>

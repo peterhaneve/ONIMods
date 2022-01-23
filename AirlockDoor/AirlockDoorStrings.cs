@@ -34,7 +34,7 @@ namespace PeterHan.AirlockDoor {
 						STRINGS.UI.PRE_KEYWORD,
 						"Power",
 						STRINGS.UI.PST_KEYWORD,
-						"\n\nIt consumes ",
+						"\n\nIt consumes up to ",
 						STRINGS.UI.FormatAsNegativeRate("{2}"),
 						" per use");
 				}

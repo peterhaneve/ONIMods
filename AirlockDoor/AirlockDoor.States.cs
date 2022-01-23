@@ -43,6 +43,17 @@ namespace PeterHan.AirlockDoor {
 			private const float PRESSURE_THRESHOLD = 3.0f;
 
 			/// <summary>
+			/// Calculates the energy required to vacuum the airlock. The energy requirement
+			/// can be reduced by as much as 50% if less gas must be removed.
+			/// </summary>
+			/// <param name="smi">The door's state machine instance.</param>
+			/// <returns>The energy to use in the vacuum state.</returns>
+			internal static float CalculateVacuumEnergy(AirlockDoor.Instance smi) {
+				return Mathf.Lerp(0.5f, 1.0f, smi.AveragePressure /
+					PRESSURE_THRESHOLD) * smi.master.EnergyPerUse;
+			}
+
+			/// <summary>
 			/// Calculates the time in in-game seconds required to vacuum the airlock.
 			/// </summary>
 			/// <param name="smi">The door's state machine instance.</param>
@@ -495,8 +506,8 @@ namespace PeterHan.AirlockDoor {
 			/// </summary>
 			internal void WithdrawEnergy() {
 				// Door was closed and has started to open, withdraw energy
-				master.energyAvailable = Math.Max(0.0f, master.energyAvailable - master.
-					EnergyPerUse);
+				master.energyAvailable = Math.Max(0.0f, master.energyAvailable -
+					States.CalculateVacuumEnergy(smi));
 				master.UpdateMeter();
 			}
 		}

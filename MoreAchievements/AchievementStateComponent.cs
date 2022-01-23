@@ -208,7 +208,7 @@ namespace PeterHan.MoreAchievements {
 		/// The destination IDs already visited.
 		/// </summary>
 		[Serialize]
-		internal ICollection<int> PlanetsVisited;
+		internal HashSet<int> PlanetsVisited;
 
 		/// <summary>
 		/// The number of planets which must be visited. Not serialized.
@@ -310,7 +310,6 @@ namespace PeterHan.MoreAchievements {
 			var neutronium = ElementLoader.FindElementByHash(SimHashes.Unobtanium);
 			if (neutronium != null && DiscoveredResources.Instance.IsDiscovered(neutronium.tag))
 				Trigger(AchievementStrings.ISEEWHATYOUDIDTHERE.ID);
-			PUtil.LogDebug("World count: " + ClusterManager.Instance.worldCount);
 			if (DlcManager.IsExpansion1Active())
 				// DLC STARMAP
 				PlanetsRequired = ClusterManager.Instance.worldCount;
