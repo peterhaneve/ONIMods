@@ -23,8 +23,6 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
 
-using TypeInfo = KSerialization.TypeInfo;
-
 namespace PeterHan.FastSave {
 	/// <summary>
 	/// A faster version of SerializationTemplate that uses delegates to speed up saving.

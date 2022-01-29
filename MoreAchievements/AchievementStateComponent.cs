@@ -184,7 +184,7 @@ namespace PeterHan.MoreAchievements {
 		/// collection.
 		/// </summary>
 		[Serialize]
-		internal IDictionary<string, float> BestAttributeValue;
+		internal Dictionary<string, float> BestAttributeValue;
 		#endregion
 
 		#region TriggerEvent
@@ -192,7 +192,7 @@ namespace PeterHan.MoreAchievements {
 		/// Logs the status of events which can be triggered.
 		/// </summary>
 		[Serialize]
-		internal IDictionary<string, bool> TriggerEvents;
+		internal Dictionary<string, bool> TriggerEvents;
 		#endregion
 
 		#region UseGeneShufflerNTimes
