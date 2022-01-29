@@ -290,19 +290,6 @@ namespace PeterHan.MoreAchievements {
 		}
 
 		/// <summary>
-		/// Applied to Game to add our achievement state tracker to it on game start.
-		/// </summary>
-		[HarmonyPatch(typeof(Game), "OnPrefabInit")]
-		public static class Game_OnPrefabInit_Patch {
-			/// <summary>
-			/// Applied after OnPrefabInit runs.
-			/// </summary>
-			internal static void Postfix(Game __instance) {
-				__instance.gameObject.AddOrGet<AchievementStateComponent>();
-			}
-		}
-
-		/// <summary>
 		/// Applied to GeneShuffer to count towards the achievement on each vacillator use.
 		/// </summary>
 		[HarmonyPatch(typeof(GeneShuffler), "ApplyRandomTrait")]
@@ -390,6 +377,19 @@ namespace PeterHan.MoreAchievements {
 			/// </summary>
 			internal static void Postfix(RecoverBreathChore.States __instance) {
 				__instance.recover.Enter(CheckBreath);
+			}
+		}
+
+		/// <summary>
+		/// Applied to SaveGame to add our achievement state tracker to it on game start.
+		/// </summary>
+		[HarmonyPatch(typeof(SaveGame), "OnPrefabInit")]
+		public static class SaveGame_OnPrefabInit_Patch {
+			/// <summary>
+			/// Applied after OnPrefabInit runs.
+			/// </summary>
+			internal static void Postfix(SaveGame __instance) {
+				__instance.gameObject.AddOrGet<AchievementStateComponent>();
 			}
 		}
 

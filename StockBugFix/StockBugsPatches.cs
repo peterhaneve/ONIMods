@@ -195,6 +195,7 @@ namespace PeterHan.StockBugFix {
 			PRegistry.PutData("Bugs.FishReleaseCount", true);
 			PRegistry.PutData("Bugs.TepidizerPulse", true);
 			PRegistry.PutData("Bugs.TraitExclusionSpacedOut", true);
+			PRegistry.PutData("Bugs.JoyReactionFix", true);
 			new POptions().RegisterOptions(this, typeof(StockBugFixOptions));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
@@ -315,21 +316,6 @@ namespace PeterHan.StockBugFix {
 			internal static void Postfix(FuelTank __instance) {
 				var obj = __instance.gameObject;
 				obj.GetComponentSafe<Storage>()?.Trigger((int)GameHashes.OnStorageChange, obj);
-			}
-		}
-
-		/// <summary>
-		/// Applied to GeneShuffler to fix a bug where it would not update after recharging.
-		/// </summary>
-		[HarmonyPatch(typeof(GeneShuffler), "Recharge")]
-		public static class GeneShuffler_Recharge_Patch {
-			/// <summary>
-			/// Applied after Recharge runs.
-			/// </summary>
-			internal static void Postfix(GeneShuffler.GeneShufflerSM.Instance
-					___geneShufflerSMI) {
-				if (___geneShufflerSMI != null)
-					___geneShufflerSMI.GoTo(___geneShufflerSMI.sm.recharging);
 			}
 		}
 

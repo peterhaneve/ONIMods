@@ -3,8 +3,8 @@
   <PropertyGroup>
     <Title>PeterHan.PLib</Title>
     <AssemblyTitle>PLib</AssemblyTitle>
-    <Version>4.7.0.0</Version>
-    <!--<PackageVersion>4.7.0-beta</PackageVersion>-->
+    <Version>4.7.1.0</Version>
+    <!--<PackageVersion>4.7.1-beta</PackageVersion>-->
     <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
     <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -19,7 +19,7 @@ Contains methods aimed at improving cross-mod compatibility, in-game user interf
 
 Add convenience wrapper for colony achievement construction.</PackageReleaseNotes>
     <RootNamespace>PeterHan.PLib</RootNamespace>
-    <AssemblyVersion>4.7.0.0</AssemblyVersion>
+    <AssemblyVersion>4.7.1.0</AssemblyVersion>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
     <UsesPLib>false</UsesPLib>

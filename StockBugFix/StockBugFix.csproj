@@ -2,12 +2,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Stock Bug Fix</AssemblyTitle>
-    <FileVersion>3.6.0.0</FileVersion>
+    <FileVersion>3.7.0.0</FileVersion>
     <RootNamespace>PeterHan.StockBugFix</RootNamespace>
     <Description>Fixes bugs and annoyances in the stock game.</Description>
     <AssemblyVersion>3.0.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
-    <LastWorkingBuild>490405</LastWorkingBuild>
+    <LastWorkingBuild>493472</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
 </Project>

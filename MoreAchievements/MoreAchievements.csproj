@@ -7,7 +7,7 @@
     <Description>Adds many new Colony Initiatives.</Description>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
-    <LastWorkingBuild>490405</LastWorkingBuild>
+    <LastWorkingBuild>493472</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
   <ItemGroup>
