@@ -2,12 +2,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Deselect New Materials</AssemblyTitle>
-    <FileVersion>3.2.0.0</FileVersion>
+    <FileVersion>3.3.0.0</FileVersion>
     <RootNamespace>PeterHan.DeselectNewMaterials</RootNamespace>
     <Description>Deselects all newly discovered materials from storage buildings even if their category was checked.</Description>
     <AssemblyVersion>3.0.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
-    <LastWorkingBuild>471618</LastWorkingBuild>
+    <LastWorkingBuild>493472</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
 </Project>

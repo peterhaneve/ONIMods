@@ -76,6 +76,7 @@ namespace PeterHan.TileTempSensor {
 		}
 
 		public override BuildingDef CreateBuildingDef() {
+			LocString.CreateLocStringKeys(typeof(TileTempSensorStrings.BUILDINGS));
 #if false
 			// An honest effort, but the thermo sensor has no sounds anyways
 			string animName = TileTempSensor.Animation;

@@ -35,12 +35,5 @@ namespace PeterHan.ThermalPlate {
 			new PBuildingManager().Register(ThermalPlateConfig.CreateBuilding());
 			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
-
-		[HarmonyPatch(typeof(GeneratedBuildings), "LoadGeneratedBuildings")]
-		public static class GeneratedBuildings_LoadGeneratedBuildings_Patch {
-			internal static void Prefix() {
-				LocString.CreateLocStringKeys(typeof(ThermalPlateStrings.BUILDINGS));
-			}
-		}
 	}
 }

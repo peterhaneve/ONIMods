@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2020 Peter Han
+ * Copyright 2022 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -77,6 +77,8 @@ namespace PeterHan.AirlockDoor {
 		}
 
 		public override BuildingDef CreateBuildingDef() {
+			LocString.CreateLocStringKeys(typeof(AirlockDoorStrings.BUILDING));
+			LocString.CreateLocStringKeys(typeof(AirlockDoorStrings.BUILDINGS));
 			var def = AirlockDoorTemplate?.CreateDef();
 			def.ForegroundLayer = Grid.SceneLayer.TileMain;
 			def.IsFoundation = true;

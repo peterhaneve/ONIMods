@@ -30,7 +30,6 @@ namespace PeterHan.TileTempSensor {
 	public sealed class TileTempSensorPatches : KMod.UserMod2 {
 		public override void OnLoad(Harmony harmony) {
 			PUtil.InitLibrary();
-			LocString.CreateLocStringKeys(typeof(TileTempSensorStrings.BUILDINGS));
 			new PLocalization().Register();
 			new PBuildingManager().Register(TileTempSensorConfig.CreateBuilding());
 			new PVersionCheck().Register(this, new SteamVersionChecker());

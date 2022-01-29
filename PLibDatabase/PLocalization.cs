@@ -80,8 +80,13 @@ namespace PeterHan.PLib.Database {
 						FlattenHierarchy | BindingFlags.Static)) {
 					// Only use fields of type LocString
 					if (field.FieldType == typeof(LocString) && field.GetValue(null) is
-							LocString ls)
+							LocString ls) {
+#if DEBUG
+						PDatabaseUtils.LogDatabaseDebug("Rewrote string {0}: {1} to {2}".F(ls.
+							key.String, Strings.Get(ls.key.String), ls.text));
+#endif
 						Strings.Add(ls.key.String, ls.text);
+					}
 				}
 		}
 
