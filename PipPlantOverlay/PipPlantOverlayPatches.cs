@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2021 Peter Han
+ * Copyright 2022 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -133,7 +133,6 @@ namespace PeterHan.PipPlantOverlay {
 			PUtil.InitLibrary();
 			new PPatchManager(harmony).RegisterPatchClass(typeof(PipPlantOverlayPatches));
 			LocString.CreateLocStringKeys(typeof(PipPlantOverlayStrings.INPUT_BINDINGS));
-			LocString.CreateLocStringKeys(typeof(PipPlantOverlayStrings.UI));
 			PipPlantOverlayTests.SymmetricalRadius = false;
 			OpenOverlay = new PActionManager().CreateAction(PipPlantOverlayStrings.
 				OVERLAY_ACTION, PipPlantOverlayStrings.INPUT_BINDINGS.ROOT.PIPPLANT);
@@ -178,6 +177,7 @@ namespace PeterHan.PipPlantOverlay {
 			/// Applied after InitializeToggles runs.
 			/// </summary>
 			internal static void Postfix(ICollection<KIconToggleMenu.ToggleInfo> ___overlayToggleInfos) {
+				LocString.CreateLocStringKeys(typeof(PipPlantOverlayStrings.UI));
 				var action = (OpenOverlay == null) ? PAction.MaxAction : OpenOverlay.
 					GetKAction();
 				var info = CreateOverlayInfo(PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.
