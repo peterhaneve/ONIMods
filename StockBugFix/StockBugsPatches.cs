@@ -35,8 +35,9 @@ namespace PeterHan.StockBugFix {
 	public sealed class StockBugsPatches : KMod.UserMod2 {
 		/// <summary>
 		/// Base divisor is 10000, so 6000/10000 = 0.6 priority.
+		/// The default -1 value means that the auto calculated priority value will be used.
 		/// </summary>
-		public const int JOY_PRIORITY_MOD = 6000;
+		public const int JOY_PRIORITY_MOD = -1;
 
 		/// <summary>
 		/// Sets the default chore type of food storage depending on the user options. Also
