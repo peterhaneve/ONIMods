@@ -264,10 +264,12 @@ namespace PeterHan.MoreAchievements {
 			/// </summary>
 			internal static void Postfix(bool ___isDigComplete, Diggable __instance) {
 				if (___isDigComplete) {
+					var inst = Game.Instance;
 #if DEBUG
 					PUtil.LogDebug("Tile dug: " + Grid.PosToCell(__instance));
 #endif
-					Game.Instance?.Trigger(DigNTiles.DigComplete, __instance);
+					if (inst != null)
+						inst.Trigger(DigNTiles.DigComplete, __instance);
 				}
 			}
 		}

@@ -151,6 +151,7 @@ namespace PeterHan.MoreAchievements {
 		/// <summary>
 		/// The number of critters killed.
 		/// </summary>
+		[Serialize]
 		internal int CrittersKilled;
 		#endregion
 
@@ -219,13 +220,8 @@ namespace PeterHan.MoreAchievements {
 		public AchievementStateComponent() {
 			ArtifactsObtained = 0;
 			BestVarietyValue = 0.0f;
-			BuildingsBuilt = 0;
-			CrittersKilled = 0;
-			GeneShufflerUses = 0;
 			MaxKelvinSeen = 0.0f;
-			LastDeath = -1;
 			PlanetsRequired = int.MaxValue;
-			TilesDug = 0;
 		}
 
 		/// <summary>
@@ -271,8 +267,11 @@ namespace PeterHan.MoreAchievements {
 		}
 
 		protected override void OnCleanUp() {
-			Unsubscribe((int)GameHashes.NewBuilding);
-			Unsubscribe(DigNTiles.DigComplete);
+			var inst = Game.Instance;
+			if (inst != null) {
+				inst.Unsubscribe((int)GameHashes.NewBuilding);
+				inst.Unsubscribe(DigNTiles.DigComplete);
+			}
 			base.OnCleanUp();
 		}
 
@@ -289,6 +288,7 @@ namespace PeterHan.MoreAchievements {
 		}
 
 		protected override void OnSpawn() {
+			var inst = Game.Instance;
 			base.OnSpawn();
 			if (BuildingsBuilt == 0)
 				// Not yet initialized, fill with number of completed buildings
@@ -299,7 +299,7 @@ namespace PeterHan.MoreAchievements {
 				TriggerEvents = new Dictionary<string, bool>(64);
 			if (BestAttributeValue == null)
 				BestAttributeValue = new Dictionary<string, float>(64);
-			if (LastDeath < 0)
+			if (LastDeath <= 0)
 				InitGrimReaper();
 			var dbAttr = Db.Get().Attributes;
 			VarietyAttributes = new Klei.AI.Attribute[] { dbAttr.Art, dbAttr.Athletics,
@@ -326,8 +326,10 @@ namespace PeterHan.MoreAchievements {
 						PlanetsRequired = count;
 				}
 			}
-			Subscribe((int)GameHashes.NewBuilding, OnBuildingCompleted);
-			Subscribe(DigNTiles.DigComplete, OnDigCompleted);
+			if (inst != null) {
+				inst.Subscribe((int)GameHashes.NewBuilding, OnBuildingCompleted);
+				inst.Subscribe(DigNTiles.DigComplete, OnDigCompleted);
+			}
 		}
 
 		public void Sim1000ms(float dt) {
