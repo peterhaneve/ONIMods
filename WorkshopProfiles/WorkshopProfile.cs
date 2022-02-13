@@ -150,7 +150,22 @@ namespace PeterHan.WorkshopProfiles {
 		protected override void OnCleanUp() {
 			Cmps.Remove(this);
 			Game.Instance.Unsubscribe((int)GameHashes.DuplicantDied, ON_DEATH);
+			Unsubscribe((int)GameHashes.CopySettings, OnCopySettings);
 			base.OnCleanUp();
+		}
+
+		/// <summary>
+		/// Called when the building settings are copied.
+		/// </summary>
+		/// <param name="data">The GameObject with the source settings.</param>
+		private void OnCopySettings(object data) {
+			var other = (data as GameObject).GetComponentSafe<WorkshopProfile>();
+			if (other != null) {
+				if (other.IsPublicAllowed())
+					AllowAll();
+				else
+					allowIDs = new HashSet<int>(other.allowIDs);
+			}
 		}
 
 		/// <summary>
@@ -167,6 +182,7 @@ namespace PeterHan.WorkshopProfiles {
 			hc = base.GetHashCode();
 			base.OnSpawn();
 			Game.Instance.Subscribe((int)GameHashes.DuplicantDied, ON_DEATH);
+			Subscribe((int)GameHashes.CopySettings, OnCopySettings);
 			Cmps.Add(this);
 		}
 

@@ -40,14 +40,15 @@ namespace PeterHan.SmartPumps {
 		/// </summary>
 		internal static PBuilding CreateBuilding() {
 			// Inititialize it here to allow localization to change the strings
-			return LiquidPumpFiltered = new PBuilding(ID, SmartPumpsStrings.LIQUIDPUMP_NAME) {
+			return LiquidPumpFiltered = new PBuilding(ID, SmartPumpsStrings.BUILDINGS.PREFABS.
+					FILTEREDLIQUIDPUMP.NAME) {
 				AddAfter = "LiquidMiniPump",
 				Animation = "pumpLiquidFiltered_kanim",
 				Category = "Plumbing",
 				ConstructionTime = 90.0f,
 				Decor = TUNING.BUILDINGS.DECOR.PENALTY.TIER1,
-				Description = SmartPumpsStrings.LIQUIDPUMP_DESCRIPTION,
-				EffectText = SmartPumpsStrings.LIQUIDPUMP_EFFECT,
+				Description = null,
+				EffectText = null,
 				Entombs = true,
 				Floods = false,
 				HeatGeneration = 2.0f,

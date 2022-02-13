@@ -41,14 +41,15 @@ namespace PeterHan.SmartPumps {
 		/// </summary>
 		internal static PBuilding CreateBuilding() {
 			// Inititialize it here to allow localization to change the strings
-			return VacuumPump = new PBuilding(ID, SmartPumpsStrings.VACUUMPUMP_NAME) {
+			return VacuumPump = new PBuilding(ID, SmartPumpsStrings.BUILDINGS.PREFABS.
+					VACUUMPUMP.NAME) {
 				AddAfter = FilteredGasPumpConfig.ID,
 				Animation = "pumpVacuum_kanim",
 				Category = "HVAC",
 				ConstructionTime = 90.0f,
 				Decor = TUNING.BUILDINGS.DECOR.PENALTY.TIER1,
-				Description = SmartPumpsStrings.VACUUMPUMP_DESCRIPTION,
-				EffectText = SmartPumpsStrings.VACUUMPUMP_EFFECT,
+				Description = null,
+				EffectText = null,
 				Entombs = true,
 				Floods = true,
 				HeatGeneration = 0.1f,

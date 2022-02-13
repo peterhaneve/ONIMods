@@ -40,14 +40,15 @@ namespace PeterHan.SmartPumps {
 		/// </summary>
 		internal static PBuilding CreateBuilding() {
 			// Inititialize it here to allow localization to change the strings
-			return GasPumpFiltered = new PBuilding(ID, SmartPumpsStrings.GASPUMP_NAME) {
+			return GasPumpFiltered = new PBuilding(ID, SmartPumpsStrings.BUILDINGS.PREFABS.
+					FILTEREDGASPUMP.NAME) {
 				AddAfter = "GasMiniPump",
 				Animation = "pumpGasFiltered_kanim",
 				Category = "HVAC",
 				ConstructionTime = 45.0f,
 				Decor = TUNING.BUILDINGS.DECOR.PENALTY.TIER1,
-				Description = SmartPumpsStrings.GASPUMP_DESCRIPTION,
-				EffectText = SmartPumpsStrings.GASPUMP_EFFECT,
+				Description = null,
+				EffectText = null,
 				Entombs = true,
 				Floods = true,
 				HeatGeneration = 2.0f,
@@ -80,6 +81,8 @@ namespace PeterHan.SmartPumps {
 		public override BuildingDef CreateBuildingDef() {
 			PGameUtils.CopySoundsToAnim(GasPumpFiltered.Animation, "pumpgas_kanim");
 			GeneratedBuildings.RegisterWithOverlay(OverlayScreen.GasVentIDs, ID);
+			// Added before the others, because it was registered first
+			LocString.CreateLocStringKeys(typeof(SmartPumpsStrings.BUILDINGS));
 			return GasPumpFiltered?.CreateDef();
 		}
 

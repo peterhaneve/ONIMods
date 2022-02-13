@@ -2,11 +2,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Smart Pumps</AssemblyTitle>
-    <FileVersion>4.3.0.0</FileVersion>
+    <FileVersion>4.4.0.0</FileVersion>
     <RootNamespace>PeterHan.SmartPumps</RootNamespace>
     <Description>Adds advanced liquid and gas pumps with configurable options.</Description>
     <AssemblyVersion>4.0.0.0</AssemblyVersion>
-    <LastWorkingBuild>486499</LastWorkingBuild>
+    <LastWorkingBuild>493472</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
 </Project>

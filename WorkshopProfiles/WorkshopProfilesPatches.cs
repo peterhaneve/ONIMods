@@ -32,6 +32,13 @@ namespace PeterHan.WorkshopProfiles {
 	/// </summary>
 	public sealed class WorkshopProfilesPatches : KMod.UserMod2 {
 		/// <summary>
+		/// Building IDs that should not have workshop profiles.
+		/// </summary>
+		public static readonly ICollection<string> BLACKLIST_IDS = new List<string>() {
+			LiquidPumpingStationConfig.ID
+		};
+
+		/// <summary>
 		/// A precondition which checks the Workshop Profile list to see if a Duplicant can
 		/// use the building.
 		/// </summary>
@@ -68,8 +75,11 @@ namespace PeterHan.WorkshopProfiles {
 		{
 			var cf = go.GetComponent<ComplexFabricator>();
 			var bc = go.GetComponent<BuildingComplete>();
+			// The pitcher pump should not have a profile as it only can be used for fetch
+			// errands, which are not modified by Workshop Profiles
 			if (go.GetComponent<Assignable>() == null && ((cf != null && cf.
-					duplicantOperated) || (bc != null && bc.isManuallyOperated) ||
+					duplicantOperated) || (bc != null && bc.isManuallyOperated && 
+					!BLACKLIST_IDS.Contains(bc.prefabid.PrefabTag.ToString())) ||
 					options.AddToBuildings.Contains(go.PrefabID().Name)))
 				// Since we do not affect Supply errands, ignore automated buildings like
 				// the kiln; BuildingComplete.isManuallyOperated covers grills, research

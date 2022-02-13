@@ -20,39 +20,46 @@ namespace PeterHan.SmartPumps {
 	/// <summary>
 	/// Strings used in Smart Pumps.
 	/// </summary>
-	static class SmartPumpsStrings {
-		// Filtered Gas Pump
-		public static LocString GASPUMP_NAME = STRINGS.UI.FormatAsLink("Filtered Gas Pump", FilteredGasPumpConfig.ID);
-		public static LocString GASPUMP_DESCRIPTION = "Rumors hold that hidden behind the parts from discarded Carbon Skimmers used in this pump is a demon with a pair of chopsticks, picking gas molecules from the air forever and ever.";
-		public static LocString GASPUMP_EFFECT = string.Concat("Draws in only the specified ",
-			STRINGS.UI.FormatAsLink("Gas", "ELEMENTS_GAS"),
-			" and runs it through ",
-			STRINGS.UI.FormatAsLink("Pipes", "GASPIPING"),
-			".\n\nMust be immersed in ",
-			STRINGS.UI.FormatAsLink("Gas", "ELEMENTS_GAS"),
-			".");
+	public static class SmartPumpsStrings {
+		public static class BUILDINGS {
+			public static class PREFABS {
+				public static class FILTEREDGASPUMP {
+					public static LocString NAME = STRINGS.UI.FormatAsLink("Filtered Gas Pump", FilteredGasPumpConfig.ID);
+					public static LocString DESC = "Rumors hold that hidden behind the parts from discarded Carbon Skimmers used in this pump is a demon with a pair of chopsticks, picking gas molecules from the air forever and ever.";
+					public static LocString EFFECT = string.Concat("Draws in only the specified ",
+						STRINGS.UI.FormatAsLink("Gas", "ELEMENTS_GAS"),
+						" and runs it through ",
+						STRINGS.UI.FormatAsLink("Pipes", "GASPIPING"),
+						".\n\nMust be immersed in ",
+						STRINGS.UI.FormatAsLink("Gas", "ELEMENTS_GAS"),
+						".");
+				}
 
-		// Filtered Liquid Pump
-		public static LocString LIQUIDPUMP_NAME = STRINGS.UI.FormatAsLink("Filtered Liquid Pump", FilteredLiquidPumpConfig.ID);
-		public static LocString LIQUIDPUMP_DESCRIPTION = "Scarred by nightmares of mixed liquid pools, an obsessive colony AI commissioned this pump with an attached Element Sensor in an attempt to purge this heresy forever.";
-		public static LocString LIQUIDPUMP_EFFECT = string.Concat("Draws in only the specified ",
-			STRINGS.UI.FormatAsLink("Liquid", "ELEMENTS_LIQUID"),
-			" and runs it through ",
-			STRINGS.UI.FormatAsLink("Pipes", "LIQUIDPIPING"),
-			".\n\nMust be submerged in ",
-			STRINGS.UI.FormatAsLink("Liquid", "ELEMENTS_LIQUID"),
-			".");
+				public static class FILTEREDLIQUIDPUMP {
+					public static LocString NAME = STRINGS.UI.FormatAsLink("Filtered Liquid Pump", FilteredLiquidPumpConfig.ID);
+					public static LocString DESC = "Scarred by nightmares of mixed liquid pools, an obsessive colony AI commissioned this pump with an attached Element Sensor in an attempt to purge this heresy forever.";
+					public static LocString EFFECT = string.Concat("Draws in only the specified ",
+						STRINGS.UI.FormatAsLink("Liquid", "ELEMENTS_LIQUID"),
+						" and runs it through ",
+						STRINGS.UI.FormatAsLink("Pipes", "LIQUIDPIPING"),
+						".\n\nMust be submerged in ",
+						STRINGS.UI.FormatAsLink("Liquid", "ELEMENTS_LIQUID"),
+						".");
+				}
 
-		// Vacuum Pump
-		public static LocString VACUUMPUMP_NAME = STRINGS.UI.FormatAsLink("Vacuum Pump", VacuumPumpConfig.ID);
-		public static LocString VACUUMPUMP_DESCRIPTION = "After watching a Gas Pump work all night to lower the pressure in a room from 5 mg to 4 mg, Liam decided to invent this Vacuum Pump instead of wasting his time on the Manual Generator all day.";
-		public static LocString VACUUMPUMP_EFFECT = string.Concat("Draws in low-pressure ",
-			STRINGS.UI.FormatAsLink("Gas", "ELEMENTS_GAS"),
-			" and runs it through ",
-			STRINGS.UI.FormatAsLink("Pipes", "GASPIPING"),
-			".\n\nMust be immersed in ",
-			STRINGS.UI.FormatAsLink("Gas", "ELEMENTS_GAS"),
-			".");
+				public static class VACUUMPUMP {
+					public static LocString NAME = STRINGS.UI.FormatAsLink("Vacuum Pump", VacuumPumpConfig.ID);
+					public static LocString DESC = "After watching a Gas Pump work all night to lower the pressure in a room from 5 mg to 4 mg, Liam decided to invent this Vacuum Pump instead of wasting his time on the Manual Generator all day.";
+					public static LocString EFFECT = string.Concat("Draws in low-pressure ",
+						STRINGS.UI.FormatAsLink("Gas", "ELEMENTS_GAS"),
+						" and runs it through ",
+						STRINGS.UI.FormatAsLink("Pipes", "GASPIPING"),
+						".\n\nMust be immersed in ",
+						STRINGS.UI.FormatAsLink("Gas", "ELEMENTS_GAS"),
+						".");
+				}
+			}
+		}
 
 		// "No Matching Gas to Pump"
 		public static LocString NOGASTOPUMP_NAME = "No Configured Gas to Pump";
