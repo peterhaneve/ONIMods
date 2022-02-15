@@ -85,13 +85,11 @@ namespace PeterHan.QueueForSinks {
 		/// <returns>true if they should use the sink, or false otherwise.</returns>
 		private bool NeedsToUse(GameObject dupe) {
 			var element = dupe.GetComponent<PrimaryElement>();
-			var identity = dupe.GetComponent<MinionIdentity>();
-			// If wearing suit and cannot sanitize suit, cannot use
+			// CanSanitizeSuit still exists, but is unused!!!
 			// If always use, can use
 			// Otherwise, use if primary element has a disease
-			return (handSanitizer.canSanitizeSuit || !identity.GetEquipment().IsSlotOccupied(
-				Db.Get().AssignableSlots.Suit)) && (handSanitizer.alwaysUse || (element !=
-				null && element.DiseaseIdx != Klei.SimUtil.DiseaseInfo.Invalid.idx));
+			return handSanitizer.alwaysUse || (element != null && element.DiseaseIdx !=
+				Klei.SimUtil.DiseaseInfo.Invalid.idx);
 		}
 
 		protected override bool MustStop(GameObject reactor, float direction) {
