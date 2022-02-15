@@ -66,6 +66,7 @@ namespace PeterHan.NoWasteWant {
 		[PLibMethod(RunAt.AfterDbInit)]
 		internal static void AfterDbInit() {
 			// For compatibility with Not Enough Tags
+			EDIBLE_BITS.SetTag(GameTags.CookingIngredient);
 			EDIBLE_BITS.SetTag(GameTags.Edible);
 		}
 
