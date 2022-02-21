@@ -3,10 +3,10 @@
   <PropertyGroup>
     <Title>PLib Database</Title>
     <AssemblyTitle>PLib.Database</AssemblyTitle>
-    <Version>4.7.1.0</Version>
+    <Version>4.8.0.0</Version>
     <UsesPLib>false</UsesPLib>
     <RootNamespace>PeterHan.PLib.Database</RootNamespace>
-    <AssemblyVersion>4.7.1.0</AssemblyVersion>
+    <AssemblyVersion>4.8.0.0</AssemblyVersion>
     <DistributeMod>false</DistributeMod>
     <PLibCore>true</PLibCore>
     <Platforms>Vanilla;Mergedown</Platforms>

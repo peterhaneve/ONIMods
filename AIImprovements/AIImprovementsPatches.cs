@@ -57,7 +57,7 @@ namespace PeterHan.AIImprovements {
 					priorityMod += AIImprovementsOptions.BUILD_PRIORIY_MOD;
 				else if (Options.DeprioritizeBuildings.Contains(id))
 					priorityMod -= AIImprovementsOptions.BUILD_PRIORIY_MOD;
-				if (def.IsFoundation || def.isSolidTile) {
+				if (def.IsFoundation) {
 					// Avoid building a tile which would block a location recently used by
 					// a dupe
 					int cell = Grid.PosToCell(target);

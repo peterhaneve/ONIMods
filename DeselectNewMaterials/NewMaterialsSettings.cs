@@ -18,6 +18,7 @@
 
 using KSerialization;
 using PeterHan.PLib.Actions;
+using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.DeselectNewMaterials {
@@ -55,11 +56,25 @@ namespace PeterHan.DeselectNewMaterials {
 
 		protected override void OnCleanUp() {
 			Unsubscribe((int)GameHashes.RefreshUserMenu);
+			Unsubscribe((int)GameHashes.CopySettings, OnCopySettings);
 			base.OnCleanUp();
+		}
+
+		/// <summary>
+		/// Called when the building settings are copied.
+		/// </summary>
+		/// <param name="data">The GameObject with the source settings.</param>
+		private void OnCopySettings(object data) {
+			var other = (data as GameObject).GetComponentSafe<NewMaterialsSettings>();
+			if (other != null) {
+				acceptsNew = other.acceptsNew;
+				Game.Instance.userMenu?.Refresh(gameObject);
+			}
 		}
 
 		protected override void OnPrefabInit() {
 			base.OnPrefabInit();
+			Subscribe((int)GameHashes.CopySettings, OnCopySettings);
 			Subscribe((int)GameHashes.RefreshUserMenu, OnRefreshUserMenu);
 			if (acceptsNew != NewMaterialSetting.Accepts && acceptsNew != NewMaterialSetting.
 					Rejects)

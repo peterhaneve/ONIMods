@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
@@ -94,6 +95,7 @@ namespace PeterHan.Challenge100K {
 			new PLocalization().Register();
 			new POptions().RegisterOptions(this, typeof(Challenge100KOptions));
 			new PPatchManager(harmony).RegisterPatchClass(typeof(Challenge100K));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

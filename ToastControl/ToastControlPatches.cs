@@ -108,7 +108,7 @@ namespace PeterHan.ToastControl {
 			"ResearchCenter:ConvertMassToResearchPoints",
 			"ResearchPointObject:OnSpawn",
 			"RotPile:ConvertToElement",
-			"Rottable+<>c:<InitializeStates>b__10_6",
+			"Rottable+<>c:<InitializeStates>b__10_8",
 			"SandboxClearFloorTool:OnPaintCell",
 			"SeedProducer:ProduceSeed",
 			"SetLocker:DropContents",

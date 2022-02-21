@@ -61,6 +61,7 @@ namespace PeterHan.ThermalPlate {
 					ObjectLayer.Backwall),
 				Placement = BuildLocationRule.NotInTiles,
 				SceneLayer = Grid.SceneLayer.Backwall,
+				SubCategory = "temperature",
 				Tech = "Suits",
 				Width = 1
 			};

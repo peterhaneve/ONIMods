@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.PatchManager;
@@ -76,6 +77,7 @@ namespace PeterHan.NoWasteWant {
 			new PPatchManager(harmony).RegisterPatchClass(typeof(NoWasteWantPatches));
 			LocString.CreateLocStringKeys(typeof(NoWasteWantStrings.UI));
 			new PLocalization().Register();
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

@@ -17,8 +17,8 @@
  */
 
 using PeterHan.PLib.Core;
-using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace PeterHan.PLib.Buildings {
@@ -30,6 +30,12 @@ namespace PeterHan.PLib.Buildings {
 		/// The default building category.
 		/// </summary>
 		private static readonly HashedString DEFAULT_CATEGORY = new HashedString("Base");
+
+		/// <summary>
+		/// Retrieves the subcategory list, on builds newer than 496423.
+		/// </summary>
+		private static readonly FieldInfo PLAN_SUBCATEGORY_SORTING = typeof(TUNING.BUILDINGS).
+			GetFieldSafe("PLANSUBCATEGORYSORTING", true);
 
 		/// <summary>
 		/// Makes the building always operational.
@@ -102,6 +108,10 @@ namespace PeterHan.PLib.Buildings {
 				}
 				if (!add)
 					data.Add(ID);
+				// Attempt to set the subcategory on newer builds
+				if (PLAN_SUBCATEGORY_SORTING != null && PLAN_SUBCATEGORY_SORTING.GetValue(
+						null) is IDictionary<string, string> subcategories)
+					subcategories[ID] = SubCategory;
 			} else
 				PUtil.LogWarning("Build menu " + Category + " has invalid entries!");
 		}

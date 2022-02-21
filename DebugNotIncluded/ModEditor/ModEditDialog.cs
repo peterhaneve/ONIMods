@@ -22,7 +22,7 @@ using UnityEngine;
 
 using UI = PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI;
 
-#if DEBUG
+#if false
 namespace PeterHan.DebugNotIncluded {
 	internal sealed class ModEditDialog : IDisposable {
 		private static void ToggleCheckbox(GameObject checkbox, int state) {

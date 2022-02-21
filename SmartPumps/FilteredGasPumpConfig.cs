@@ -67,6 +67,7 @@ namespace PeterHan.SmartPumps {
 				OverheatTemperature = 75.0f + Constants.CELSIUS2KELVIN,
 				Placement = BuildLocationRule.Anywhere,
 				PowerInput = new PowerRequirement(240.0f, new CellOffset(0, 1)),
+				SubCategory = "pumps",
 				Tech = "ValveMiniaturization",
 				ViewMode = OverlayModes.GasConduits.ID,
 				Width = 2

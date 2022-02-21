@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 
 namespace PeterHan.AutoEject {
@@ -27,6 +28,7 @@ namespace PeterHan.AutoEject {
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>
@@ -48,7 +50,8 @@ namespace PeterHan.AutoEject {
 		}
 
 		/// <summary>
-		/// Applied to WarpPortal.WarpPortalSM.
+		/// Applied to WarpPortal.WarpPortalSM to immediately fire "Teleport" when the
+		/// Duplicant arrives.
 		/// </summary>
 		[HarmonyPatch(typeof(WarpPortal.WarpPortalSM), nameof(WarpPortal.WarpPortalSM.
 			InitializeStates))]

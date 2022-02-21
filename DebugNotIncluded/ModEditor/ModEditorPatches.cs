@@ -26,7 +26,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
 
-#if DEBUG
+#if false
 namespace PeterHan.DebugNotIncluded {
 	internal static class ModEditorPatches {
 		private static readonly RectOffset ROW_MARGIN = new RectOffset(2, 2, 2, 2);

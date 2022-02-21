@@ -5,11 +5,12 @@
     <FileVersion>2.5.0.0</FileVersion>
     <RootNamespace>PeterHan.ModUpdateDate</RootNamespace>
     <Description>Updates outdated mods to the latest version.</Description>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <LastWorkingBuild>493472</LastWorkingBuild>
+    <AssemblyVersion>2.1.0.0</AssemblyVersion>
+    <LastWorkingBuild>496423</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Ionic.Zip" HintPath="$(GameFolder)/Ionic.Zip.dll" />
+    <Reference Include="com.rlabrecque.steamworks.net" HintPath="$(GameFolder)/com.rlabrecque.steamworks.net.dll" />
   </ItemGroup>
 </Project>

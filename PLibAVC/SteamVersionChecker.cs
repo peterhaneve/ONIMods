@@ -20,6 +20,7 @@ using KMod;
 using PeterHan.PLib.Core;
 using Steamworks;
 using System;
+using System.Reflection;
 
 namespace PeterHan.PLib.AVC {
 	/// <summary>
@@ -27,11 +28,40 @@ namespace PeterHan.PLib.AVC {
 	/// </summary>
 	public sealed class SteamVersionChecker : IModVersionChecker {
 		/// <summary>
+		/// A reference to the PublishedFileId_t type, or null if running on the EGS/WeGame
+		/// version.
+		/// </summary>
+		private static readonly Type PUBLISHED_FILE_ID = PPatchTools.GetTypeSafe(
+			nameof(Steamworks) + "." + nameof(PublishedFileId_t));
+
+		/// <summary>
+		/// A reference to the SteamUGC type, or null if running on the EGS/WeGame version.
+		/// </summary>
+		private static readonly Type STEAM_UGC = PPatchTools.GetTypeSafe(
+			nameof(Steamworks) + "." + nameof(SteamUGC));
+
+		/// <summary>
 		/// A reference to the game's version of SteamUGCService, or null if running on the
-		/// EGS version.
+		/// EGS/WeGame version.
 		/// </summary>
 		private static readonly Type STEAM_UGC_SERVICE = PPatchTools.GetTypeSafe(
 			nameof(SteamUGCService), "Assembly-CSharp");
+
+		/// <summary>
+		/// Detours requires knowing the types at compile time, which might not be available,
+		/// and these methods are only called once at startup.
+		/// </summary>
+		private static readonly MethodInfo FIND_MOD = STEAM_UGC_SERVICE?.GetMethodSafe(
+			nameof(SteamUGCService.FindMod), false, PUBLISHED_FILE_ID);
+
+		private static readonly MethodInfo GET_ITEM_INSTALL_INFO = STEAM_UGC?.GetMethodSafe(
+			nameof(SteamUGC.GetItemInstallInfo), true, PUBLISHED_FILE_ID, typeof(ulong).
+			MakeByRefType(), typeof(string).MakeByRefType(), typeof(uint), typeof(uint).
+			MakeByRefType());
+
+		private static readonly ConstructorInfo NEW_PUBLISHED_FILE_ID = PUBLISHED_FILE_ID?.
+			GetConstructor(PPatchTools.BASE_FLAGS | BindingFlags.Instance, null,
+			new Type[] { typeof(ulong) }, null);
 
 		/// <summary>
 		/// The number of minutes allowed before a mod is considered out of date.
@@ -51,10 +81,19 @@ namespace PeterHan.PLib.AVC {
 		/// <returns>The date and time of its last modification.</returns>
 		private static System.DateTime GetLocalLastModified(ulong id) {
 			var result = System.DateTime.UtcNow;
-			// 260 = MAX_PATH
-			if (SteamUGC.GetItemInstallInfo(new PublishedFileId_t(id), out _,
-					out string _, 260U, out uint timestamp) && timestamp > 0U)
-				result = UnixEpochToDateTime(timestamp);
+			// Create a published file object, leave it boxed
+			if (GET_ITEM_INSTALL_INFO != null) {
+				// 260 = MAX_PATH
+				var methodArgs = new object[] {
+					NEW_PUBLISHED_FILE_ID.Invoke(new object[] { id }), 0UL, "", 260U, 0U
+				};
+				if (GET_ITEM_INSTALL_INFO.Invoke(null, methodArgs) is bool success &&
+						success && methodArgs.Length == 5 && methodArgs[4] is uint timestamp &&
+						timestamp > 0U)
+					result = UnixEpochToDateTime(timestamp);
+				else
+					PUtil.LogDebug("Unable to determine last modified date for: " + id);
+			}
 			return result;
 		}
 
@@ -71,7 +110,7 @@ namespace PeterHan.PLib.AVC {
 
 		public bool CheckVersion(Mod mod) {
 			// Epic editions of the game do not even have SteamUGCService
-			return STEAM_UGC_SERVICE != null && DoCheckVersion(mod);
+			return FIND_MOD != null && NEW_PUBLISHED_FILE_ID != null && DoCheckVersion(mod);
 		}
 
 		/// <summary>
@@ -86,21 +125,45 @@ namespace PeterHan.PLib.AVC {
 			bool check = false;
 			if (mod.label.distribution_platform == Label.DistributionPlatform.Steam && ulong.
 					TryParse(mod.label.id, out ulong id)) {
-				var steamMod = SteamUGCService.Instance?.FindMod(new PublishedFileId_t(id));
-				if (steamMod != null) {
+				// Jump into a coroutine and wait for it to be initialized
+				Global.Instance.StartCoroutine(WaitForSteamInit(id, mod));
+				check = true;
+			} else
+				PUtil.LogWarning("SteamVersionChecker cannot check version for non-Steam mod {0}".
+					F(mod.staticID));
+			return check;
+		}
+
+		/// <summary>
+		/// To avoid blowing the stack, waits for Steam to initialize in a coroutine.
+		/// </summary>
+		/// <param name="id">The Steam file ID of the mod.</param>
+		/// <param name="mod">The mod to check for updates.</param>
+		private System.Collections.IEnumerator WaitForSteamInit(ulong id, Mod mod) {
+			var boxedID = NEW_PUBLISHED_FILE_ID.Invoke(new object[] { id });
+			ModVersionCheckResults results = null;
+			int timeout = 0;
+			do {
+				yield return null;
+				var inst = SteamUGCService.Instance;
+				// Mod takes time to be populated in the list
+				if (inst != null && FIND_MOD.Invoke(inst, new object[] { boxedID }) is
+						SteamUGCService.Mod steamMod) {
 					ulong ticks = steamMod.lastUpdateTime;
 					var steamUpdate = (ticks == 0U) ? System.DateTime.MinValue :
 						UnixEpochToDateTime(ticks);
 					bool updated = steamUpdate <= GetLocalLastModified(id).AddMinutes(
 						UPDATE_JITTER);
-					check = true;
-					OnVersionCheckCompleted?.Invoke(new ModVersionCheckResults(mod.staticID,
-						updated, updated ? null : steamUpdate.ToString("f")));
+					results = new ModVersionCheckResults(mod.staticID,
+						updated, updated ? null : steamUpdate.ToString("f"));
 				}
-			} else
-				PUtil.LogWarning("SteamVersionChecker cannot check version for non-Steam mod {0}".
-					F(mod.staticID));
-			return check;
+				// 2 seconds at 60 FPS
+			} while (results == null && ++timeout < 120);
+			if (results == null)
+				PUtil.LogWarning("Unable to check version for mod {0} (SteamUGCService timeout)".
+					F(mod.label.title));
+			OnVersionCheckCompleted?.Invoke(results);
+			yield break;
 		}
 	}
 }

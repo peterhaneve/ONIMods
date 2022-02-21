@@ -115,6 +115,7 @@ namespace PeterHan.PipPlantOverlay {
 			var colors = GlobalAssets.Instance.colorSet;
 			int pc = PipPlantOverlayTests.PlantCount;
 			// Plural forms are annoying
+			PipPlantOverlayTests.UpdatePlantCriteria();
 			string plantCountText = string.Format((pc == 1) ? PPO.TOOLTIPS.PLANTCOUNT_1 :
 				PPO.TOOLTIPS.PLANTCOUNT, pc, PipPlantOverlayTests.PlantRadius);
 			cameraLayerMask = LayerMask.GetMask(new string[] {
@@ -131,7 +132,6 @@ namespace PeterHan.PipPlantOverlay {
 			layerTargets = new HashSet<Uprootable>();
 			legendFilters = CreateDefaultFilters();
 			Instance = this;
-			PipPlantOverlayTests.UpdatePlantCriteria();
 			pipPlantLegend = new List<LegendEntry>
 			{
 				new LegendEntry(PPO.CANPLANT, PPO.TOOLTIPS.CANPLANT,

@@ -2,11 +2,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Thermo Sensor Tile</AssemblyTitle>
-    <FileVersion>3.4.0.0</FileVersion>
+    <FileVersion>3.5.0.0</FileVersion>
     <RootNamespace>PeterHan.TileTempSensor</RootNamespace>
     <Description>A Thermo Sensor in tile form, allowing heat transfer to it even in Vacuum.</Description>
-    <AssemblyVersion>3.0.0.0</AssemblyVersion>
-    <LastWorkingBuild>490405</LastWorkingBuild>
+    <AssemblyVersion>3.1.0.0</AssemblyVersion>
+    <LastWorkingBuild>493472</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
 </Project>

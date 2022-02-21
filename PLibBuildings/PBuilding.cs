@@ -199,6 +199,46 @@ namespace PeterHan.PLib.Buildings {
 		public Grid.SceneLayer SceneLayer { get; set; }
 
 		/// <summary>
+		/// The subcategory for this building.
+		/// 
+		/// The base game currently defines the following:
+		/// Base:
+		/// ladders, tiles, printing pods, doors, storage, tubes, default
+		/// Oxygen:
+		/// producers, scrubbers
+		/// Power:
+		/// generators, wires, batteries, transformers, switches
+		/// Food:
+		/// cooking, farming, ranching
+		/// Plumbing:
+		/// bathroom, pipes, pumps, valves, sensors
+		/// HVAC:
+		/// pipes, pumps, valves, sensors
+		/// Refining:
+		/// materials, oil, advanced
+		/// Medical:
+		/// cleaning, hospital, wellness
+		/// Furniture:
+		/// bed, lights, dining, recreation, pots, sculpture, electronic decor, moulding,
+		/// canvas, dispaly, monument, signs
+		/// Equipment:
+		/// research, exploration, work stations, suits general, oxygen masks, atmo suits,
+		/// jet suits, lead suits
+		/// Utilities:
+		/// temperature, other utilities, special
+		/// Automation:
+		/// wires, sensors, logic gates, utilities
+		/// Solid Transport:
+		/// conduit, valves, utilities
+		/// Rocketry:
+		/// telescopes, launch pad, railguns, engines, fuel and oxidizer, cargo, utility,
+		/// command, fittings
+		/// Radiation:
+		/// HEP, uranium, radiation
+		/// </summary>
+		public string SubCategory { get; set; }
+
+		/// <summary>
 		/// The technology name required to unlock the building.
 		/// </summary>
 		public string Tech { get; set; }
@@ -277,6 +317,8 @@ namespace PeterHan.PLib.Buildings {
 			PowerOutput = null;
 			RotateMode = PermittedRotations.Unrotatable;
 			SceneLayer = Grid.SceneLayer.Building;
+			// Hard coded strings in base game, no const to reference
+			SubCategory = "default";
 			Tech = null;
 			ViewMode = OverlayModes.None.ID;
 			Width = 1;
@@ -352,7 +394,7 @@ namespace PeterHan.PLib.Buildings {
 			def.ObjectLayer = ObjectLayer;
 			def.SceneLayer = SceneLayer;
 			def.ViewMode = ViewMode;
-			// Conduits
+			// Conduits (multiple per building are hard but will be added someday...)
 			if (InputConduits.Count > 1)
 				throw new InvalidOperationException("Only supports one input conduit");
 			foreach (var conduit in InputConduits) {

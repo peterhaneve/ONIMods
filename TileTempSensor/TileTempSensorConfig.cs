@@ -69,6 +69,7 @@ namespace PeterHan.TileTempSensor {
 					ObjectLayer.Backwall),
 				Placement = BuildLocationRule.Tile,
 				SceneLayer = Grid.SceneLayer.TileMain,
+				SubCategory = "sensors",
 				Tech = "HVAC",
 				ViewMode = OverlayModes.Logic.ID,
 				Width = 1

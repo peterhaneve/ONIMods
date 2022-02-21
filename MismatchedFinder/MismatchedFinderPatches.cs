@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 
 namespace PeterHan.MismatchedFinder {
@@ -28,6 +29,7 @@ namespace PeterHan.MismatchedFinder {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 			PRegistry.PutData("Bugs.FlowUtilityNetworkConduits", true);
+			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>

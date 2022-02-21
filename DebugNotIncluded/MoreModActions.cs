@@ -109,7 +109,7 @@ namespace PeterHan.DebugNotIncluded {
 				actionsScreen.Mod?.on_managed();
 		}
 
-#if DEBUG
+#if false
 		/// <summary>
 		/// Edits the mod on Steam if the current user is the owner.
 		/// </summary>
@@ -197,7 +197,7 @@ namespace PeterHan.DebugNotIncluded {
 				BUTTON_MARGIN
 			}.SetKleiBlueStyle().AddOnRealize((obj) => buttonUnsub = obj.
 				GetComponent<KButton>()));
-#if DEBUG
+#if false
 			panel.AddChild(new PButton("ModifyMod") {
 				Text = UI.MODSSCREEN.BUTTON_MODIFY, DynamicSize = false,
 				OnClick = OnModify, ToolTip = UI.TOOLTIPS.DNI_MODIFY, Margin = DebugUtils.
@@ -206,7 +206,7 @@ namespace PeterHan.DebugNotIncluded {
 				GetComponent<KButton>()));
 #endif
 			var actionsObj = panel.AddTo(gameObject);
-#if DEBUG
+#if false
 			PButton.SetButtonEnabled(buttonModify.gameObject, false);
 #endif
 			actionsObj.SetActive(false);

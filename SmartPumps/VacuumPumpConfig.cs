@@ -69,6 +69,7 @@ namespace PeterHan.SmartPumps {
 				Placement = BuildLocationRule.Anywhere,
 				PowerInput = new PowerRequirement(90.0f, CellOffset.none),
 				RotateMode = PermittedRotations.R360,
+				SubCategory = "pumps",
 				Tech = "ValveMiniaturization",
 				ViewMode = OverlayModes.GasConduits.ID,
 				Width = 1

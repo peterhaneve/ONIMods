@@ -65,13 +65,6 @@ namespace PeterHan.TurnBackTheClock {
 		public bool MD471618_EzFoodStorage { get; set; } = false;
 
 		/// <summary>
-		/// Uses the old gas weight values.
-		/// </summary>
-		[Option("Gas Weight", "Resets Gas weights to their values before the Breath of Fresh Air update.", "MD-471618: Breath of Fresh Air")]
-		[JsonProperty]
-		public bool MD471618_GasWeights { get; set; } = false;
-
-		/// <summary>
 		/// Removes seeds from the diet of all Pacu.
 		/// </summary>
 		[Option("Pacu Diet", "Pacu will no longer be able to eat seeds.", "MD-471618: Breath of Fresh Air")]

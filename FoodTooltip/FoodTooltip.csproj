@@ -5,8 +5,8 @@
     <FileVersion>3.2.0.0</FileVersion>
     <RootNamespace>PeterHan.FoodTooltip</RootNamespace>
     <Description>Shows tooltips on plants and critters for how much food they can supply per cycle in their current states.</Description>
-    <AssemblyVersion>3.0.0.0</AssemblyVersion>
-    <LastWorkingBuild>471618</LastWorkingBuild>
+    <AssemblyVersion>3.1.0.0</AssemblyVersion>
+    <LastWorkingBuild>493472</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
 </Project>

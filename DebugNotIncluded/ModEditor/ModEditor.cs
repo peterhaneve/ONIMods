@@ -25,7 +25,7 @@ using System;
 using System.Collections.Concurrent;
 using System.IO;
 
-#if DEBUG
+#if false
 namespace PeterHan.DebugNotIncluded {
 	internal sealed class ModEditor : IDisposable {
 		private static readonly ConcurrentDictionary<ulong, SteamUGCDetails_t> MOD_DETAILS =

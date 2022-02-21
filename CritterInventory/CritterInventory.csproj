@@ -5,8 +5,8 @@
     <FileVersion>4.2.0.0</FileVersion>
     <RootNamespace>PeterHan.CritterInventory</RootNamespace>
     <Description>Displays available critters in the Inventory screen.</Description>
-    <AssemblyVersion>4.0.0.0</AssemblyVersion>
-    <LastWorkingBuild>471618</LastWorkingBuild>
+    <AssemblyVersion>4.1.0.0</AssemblyVersion>
+    <LastWorkingBuild>493472</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
 </Project>

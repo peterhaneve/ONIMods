@@ -59,6 +59,7 @@ namespace PeterHan.PLib.AVC {
 		/// </summary>
 		/// <param name="result">The results from the version check.</param>
 		private void OnComplete(ModVersionCheckResults result) {
+			method.OnVersionCheckCompleted -= OnComplete;
 			if (result != null) {
 				results.TryAdd(result.ModChecked, result);
 				if (!result.IsUpToDate)
@@ -81,9 +82,20 @@ namespace PeterHan.PLib.AVC {
 			if (results.ContainsKey(mod.staticID))
 				RunNext();
 			else {
+				bool run = false;
 				method.OnVersionCheckCompleted += OnComplete;
-				if (!method.CheckVersion(mod))
+				// Version check errors should not crash the game
+				try {
+					run = method.CheckVersion(mod);
+				} catch (Exception e) {
+					PUtil.LogWarning("Unable to check version for mod " + mod.label.title + ":");
+					PUtil.LogExcWarn(e);
+					run = false;
+				}
+				if (!run) {
+					method.OnVersionCheckCompleted -= OnComplete;
 					RunNext();
+				}
 			}
 		}
 
@@ -91,7 +103,6 @@ namespace PeterHan.PLib.AVC {
 		/// Runs the next version check.
 		/// </summary>
 		private void RunNext() {
-			method.OnVersionCheckCompleted -= OnComplete;
 			Next?.Invoke();
 		}
 	}

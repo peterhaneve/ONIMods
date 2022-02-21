@@ -252,21 +252,6 @@ namespace PeterHan.TurnBackTheClock {
 		}
 
 		/// <summary>
-		/// Applied to ElementLoader to reset Steam to its old gas weight.
-		/// </summary>
-		[HarmonyPatch(typeof(ElementLoader), nameof(ElementLoader.Load))]
-		public static class ElementLoader_Load_Patch {
-			internal static bool Prepare() => TurnBackTheClockOptions.Instance.
-				MD471618_GasWeights;
-
-			internal static void Postfix() {
-				var steam = ElementLoader.FindElementByHash(SimHashes.Steam);
-				if (steam != null)
-					steam.molarMass = 18.01528f;
-			}
-		}
-
-		/// <summary>
 		/// Applied to GasLimitValveConfig to disable it when MD-471618 buildings are turned off.
 		/// </summary>
 		[HarmonyPatch(typeof(GasLimitValveConfig), nameof(IBuildingConfig.CreateBuildingDef))]

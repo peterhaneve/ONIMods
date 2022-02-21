@@ -66,6 +66,7 @@ namespace PeterHan.AirlockDoor {
 				PowerInput = new PowerRequirement(120.0f, new CellOffset(0, 0)),
 				RotateMode = PermittedRotations.Unrotatable,
 				SceneLayer = Grid.SceneLayer.InteriorWall,
+				SubCategory = "doors",
 				Tech = "ImprovedGasPiping",
 				Width = 3
 			};
