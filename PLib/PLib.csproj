@@ -3,8 +3,8 @@
   <PropertyGroup>
     <Title>PeterHan.PLib</Title>
     <AssemblyTitle>PLib</AssemblyTitle>
-    <Version>4.8.0.0</Version>
-    <!--<PackageVersion>4.8.0-beta</PackageVersion>-->
+    <Version>4.8.1.0</Version>
+    <!--<PackageVersion>4.8.1-beta</PackageVersion>-->
     <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
     <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -21,7 +21,7 @@ Improve Chinese translation.
 
 Add a sub-category field to PLib Buildings, which will be used in future game releases.</PackageReleaseNotes>
     <RootNamespace>PeterHan.PLib</RootNamespace>
-    <AssemblyVersion>4.8.0.0</AssemblyVersion>
+    <AssemblyVersion>4.8.1.0</AssemblyVersion>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
     <UsesPLib>false</UsesPLib>

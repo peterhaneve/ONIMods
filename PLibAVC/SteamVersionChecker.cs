@@ -18,7 +18,6 @@
 
 using KMod;
 using PeterHan.PLib.Core;
-using Steamworks;
 using System;
 using System.Reflection;
 
@@ -32,13 +31,13 @@ namespace PeterHan.PLib.AVC {
 		/// version.
 		/// </summary>
 		private static readonly Type PUBLISHED_FILE_ID = PPatchTools.GetTypeSafe(
-			nameof(Steamworks) + "." + nameof(PublishedFileId_t));
+			"Steamworks.PublishedFileId_t");
 
 		/// <summary>
 		/// A reference to the SteamUGC type, or null if running on the EGS/WeGame version.
 		/// </summary>
 		private static readonly Type STEAM_UGC = PPatchTools.GetTypeSafe(
-			nameof(Steamworks) + "." + nameof(SteamUGC));
+			"Steamworks.SteamUGC");
 
 		/// <summary>
 		/// A reference to the game's version of SteamUGCService, or null if running on the
@@ -55,7 +54,7 @@ namespace PeterHan.PLib.AVC {
 			nameof(SteamUGCService.FindMod), false, PUBLISHED_FILE_ID);
 
 		private static readonly MethodInfo GET_ITEM_INSTALL_INFO = STEAM_UGC?.GetMethodSafe(
-			nameof(SteamUGC.GetItemInstallInfo), true, PUBLISHED_FILE_ID, typeof(ulong).
+			"GetItemInstallInfo", true, PUBLISHED_FILE_ID, typeof(ulong).
 			MakeByRefType(), typeof(string).MakeByRefType(), typeof(uint), typeof(uint).
 			MakeByRefType());
 

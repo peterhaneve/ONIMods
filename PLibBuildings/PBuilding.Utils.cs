@@ -32,12 +32,6 @@ namespace PeterHan.PLib.Buildings {
 		private static readonly HashedString DEFAULT_CATEGORY = new HashedString("Base");
 
 		/// <summary>
-		/// Retrieves the subcategory list, on builds newer than 496423.
-		/// </summary>
-		private static readonly FieldInfo PLAN_SUBCATEGORY_SORTING = typeof(TUNING.BUILDINGS).
-			GetFieldSafe("PLANSUBCATEGORYSORTING", true);
-
-		/// <summary>
 		/// Makes the building always operational.
 		/// </summary>
 		/// <param name="go">The game object to configure.</param>
@@ -93,7 +87,7 @@ namespace PeterHan.PLib.Buildings {
 		/// <param name="menu">The menu to which to add the building.</param>
 		private void AddPlanToCategory(PlanScreen.PlanInfo menu) {
 			// Found category
-			var data = menu.data;
+			var data = menu.buildingAndSubcategoryData;
 			if (data != null) {
 				string addID = AddAfter;
 				bool add = false;
@@ -101,17 +95,14 @@ namespace PeterHan.PLib.Buildings {
 					// Optionally choose the position
 					int n = data.Count;
 					for (int i = 0; i < n - 1 && !add; i++)
-						if (data[i] == addID) {
-							data.Insert(i + 1, ID);
+						if (data[i].Key == addID) {
+							data.Insert(i + 1, new KeyValuePair<string, string>(ID,
+								SubCategory));
 							add = true;
 						}
 				}
 				if (!add)
-					data.Add(ID);
-				// Attempt to set the subcategory on newer builds
-				if (PLAN_SUBCATEGORY_SORTING != null && PLAN_SUBCATEGORY_SORTING.GetValue(
-						null) is IDictionary<string, string> subcategories)
-					subcategories[ID] = SubCategory;
+					data.Add(new KeyValuePair<string, string>(ID, SubCategory));
 			} else
 				PUtil.LogWarning("Build menu " + Category + " has invalid entries!");
 		}
