@@ -180,18 +180,17 @@ namespace PeterHan.StockBugFix {
 			/// <summary>
 			/// Fix calories calculation.
 			/// </summary>
-			internal static bool Prefix(FoodDiagnostic __instance, ref ColonyDiagnostic.DiagnosticResult __result) {
+			internal static bool Prefix(FoodDiagnostic __instance, ref ColonyDiagnostic.DiagnosticResult __result, float ___trackerSampleCountSeconds) {
 				__result = new ColonyDiagnostic.DiagnosticResult(ColonyDiagnostic.DiagnosticResult.Opinion.Normal, STRINGS.UI.COLONY_DIAGNOSTICS.GENERIC_CRITERIA_PASS);
 				if (__instance.tracker.GetDataTimeLength() < 10f) {
 					__result.opinion = ColonyDiagnostic.DiagnosticResult.Opinion.Normal;
 					__result.Message = STRINGS.UI.COLONY_DIAGNOSTICS.NO_DATA;
 				} else {
 					var dupes = Components.LiveMinionIdentities.GetWorldItems(__instance.worldID);
-					var trackerSampleCountSeconds = Traverse.Create<FoodDiagnostic>().Field("trackerSampleCountSeconds").GetValue<float>();
 					var requiredCaloriesPerCycle = GetRequiredFoodPerCycleByAttributeModifier(dupes);
 					// show warning if food doesn't last for 3 days
 					var daysReserve = 3;
-					if (requiredCaloriesPerCycle * daysReserve > __instance.tracker.GetAverageValue(trackerSampleCountSeconds)) {
+					if (requiredCaloriesPerCycle * daysReserve > __instance.tracker.GetAverageValue(___trackerSampleCountSeconds)) {
 						__result.opinion = ColonyDiagnostic.DiagnosticResult.Opinion.Concern;
 						var currentValue = __instance.tracker.GetCurrentValue();
 						var text = STRINGS.MISC.NOTIFICATIONS.FOODLOW.TOOLTIP;
