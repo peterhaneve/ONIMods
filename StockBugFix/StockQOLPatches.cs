@@ -19,7 +19,6 @@
 using HarmonyLib;
 using System.Collections.Generic;
 using UnityEngine;
-using Klei.AI;
 
 namespace PeterHan.StockBugFix {
 	/// <summary>
@@ -213,7 +212,7 @@ namespace PeterHan.StockBugFix {
 				var totalCalories = 0f;
 				if (dupes != null) {
 					foreach (var dupe in dupes) {
-						var caloriesPerSecond = dupe.GetAmounts().Get(Db.Get().Amounts.Calories).GetDelta();
+						var caloriesPerSecond = Db.Get().Amounts.Calories.Lookup(dupe).GetDelta();
 						// "tummyless" attribute adds float.PositiveInfinity
 						if (caloriesPerSecond != float.PositiveInfinity) {
 							totalCalories += ToCaloriesPerCycle(caloriesPerSecond);
