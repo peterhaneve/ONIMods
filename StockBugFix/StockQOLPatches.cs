@@ -17,6 +17,9 @@
  */
 
 using HarmonyLib;
+using System.Collections.Generic;
+using UnityEngine;
+using Klei.AI;
 
 namespace PeterHan.StockBugFix {
 	/// <summary>
@@ -166,6 +169,59 @@ namespace PeterHan.StockBugFix {
 			/// </summary>
 			internal static void Postfix(BuildingDef __result) {
 				__result.Overheatable = false;
+			}
+		}
+
+		/// <summary>
+		/// Applied to FoodDiagnostic.CheckEnoughFood to fix the calories calculation in the diagnostics panel.
+		/// </summary>
+		[HarmonyPatch(typeof(FoodDiagnostic), "CheckEnoughFood")]
+		public static class FoodDiagnostic_CheckEnoughFood_Patch {
+			/// <summary>
+			/// Fix calories calculation.
+			/// </summary>
+			internal static bool Prefix(FoodDiagnostic __instance, ref ColonyDiagnostic.DiagnosticResult __result) {
+				__result = new ColonyDiagnostic.DiagnosticResult(ColonyDiagnostic.DiagnosticResult.Opinion.Normal, STRINGS.UI.COLONY_DIAGNOSTICS.GENERIC_CRITERIA_PASS);
+				if (__instance.tracker.GetDataTimeLength() < 10f) {
+					__result.opinion = ColonyDiagnostic.DiagnosticResult.Opinion.Normal;
+					__result.Message = STRINGS.UI.COLONY_DIAGNOSTICS.NO_DATA;
+				} else {
+					var dupes = Components.LiveMinionIdentities.GetWorldItems(__instance.worldID);
+					var trackerSampleCountSeconds = Traverse.Create<FoodDiagnostic>().Field("trackerSampleCountSeconds").GetValue<float>();
+					var requiredCaloriesPerCycle = GetRequiredFoodPerCycleByAttributeModifier(dupes);
+					// show warning if food doesn't last for 3 days
+					var daysReserve = 3;
+					if (requiredCaloriesPerCycle * daysReserve > __instance.tracker.GetAverageValue(trackerSampleCountSeconds)) {
+						__result.opinion = ColonyDiagnostic.DiagnosticResult.Opinion.Concern;
+						var currentValue = __instance.tracker.GetCurrentValue();
+						var text = STRINGS.MISC.NOTIFICATIONS.FOODLOW.TOOLTIP;
+						text = text.Replace("{0}", GameUtil.GetFormattedCalories(currentValue));
+						text = text.Replace("{1}", GameUtil.GetFormattedCalories(requiredCaloriesPerCycle));
+						__result.Message = text;
+					}
+				}
+				return false;
+			}
+
+			private static float ToCaloriesPerCycle(float caloriesPerSec) {
+				return caloriesPerSec * 600f;
+			}
+
+			/// <summary>
+			///  Get required calories per cycle from minion attributes
+			/// </summary>
+			private static float GetRequiredFoodPerCycleByAttributeModifier(List<MinionIdentity> dupes) {
+				var totalCalories = 0f;
+				if (dupes != null) {
+					foreach (var dupe in dupes) {
+						var caloriesPerSecond = dupe.GetAmounts().Get(Db.Get().Amounts.Calories).GetDelta();
+						// "tummyless" attribute adds float.PositiveInfinity
+						if (caloriesPerSecond != float.PositiveInfinity) {
+							totalCalories += ToCaloriesPerCycle(caloriesPerSecond);
+						}
+					}
+				}
+				return Mathf.Abs(totalCalories);
 			}
 		}
 	}
