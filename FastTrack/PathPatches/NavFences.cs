@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace PeterHan.FastTrack {
+namespace PeterHan.FastTrack.PathPatches {
 	/// <summary>
 	/// Pairs up with NavGrid objects to allow path optimization if the grid is not updated by
 	/// setting up fences based on serial numbers. Mostly thread safe.

@@ -16,14 +16,13 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using KSerialization;
-
+using HarmonyLib;
 namespace PeterHan.FastTrack.SensorPatches {
 	/// <summary>
 	/// Wraps several sensors that were removed from the Sensors class, and only invokes them
 	/// when required.
 	/// </summary>
-	[SerializationConfig(MemberSerialization.OptIn)]
+	[SkipSaveFileSerialization]
 	public sealed class SensorWrapper : KMonoBehaviour, ISlicedSim1000ms {
 		/// <summary>
 		/// The sensor used to find a balloon stand location.
@@ -100,14 +99,13 @@ namespace PeterHan.FastTrack.SensorPatches {
 				pathSensor = sensors.GetSensor<PathProberSensor>();
 				pickupSensor = sensors.GetSensor<PickupableSensor>();
 			}
-			RunUpdate();
 			SlicedUpdaterSim1000ms<SensorWrapper>.instance.RegisterUpdate1000ms(this);
 		}
 
 		/// <summary>
 		/// Updates the sensors only once a second, as opposed to every frame.
 		/// </summary>
-		private void RunUpdate() {
+		internal void RunUpdate() {
 			if (id != null && !id.HasTag(GameTags.Dead)) {
 				// The order of sensors matters here
 				if (pathSensor != null)
@@ -134,4 +132,62 @@ namespace PeterHan.FastTrack.SensorPatches {
 			RunUpdate();
 		}
 	}
+
+#if false
+	/// <summary>
+	/// Applied to RationalAi.Instance to force update the sensors one time (when sensor
+	/// optimizations are active) right before the first chore is chosen.
+	/// Unfortunately this patch did not fix the idle on startup "problem". SafeCellSensor
+	/// needs to be run while the dupe is idle...
+	/// </summary>
+	[HarmonyPatch(typeof(RationalAi.Instance), MethodType.Constructor,
+		typeof(IStateMachineTarget))]
+	public static class RationalAi_Instance_Constructor_Patch {
+		internal static bool Prepare() {
+			var opts = FastTrackOptions.Instance;
+			return opts.SensorOpts || opts.PickupOpts;
+		}
+
+		/// <summary>
+		/// Applied after the constructor runs.
+		/// </summary>
+		internal static void Postfix(RationalAi.Instance __instance) {
+			var opts = FastTrackOptions.Instance;
+			var sensors = __instance.GetComponent<Sensors>();
+			if (sensors != null) {
+				// Manually update the sensors required
+				if (opts.PickupOpts) {
+					var pathSensor = sensors.GetSensor<PathProberSensor>();
+					var pickupSensor = sensors.GetSensor<PickupableSensor>();
+					var edibleSensor = sensors.GetSensor<ClosestEdibleSensor>();
+					if (pathSensor != null)
+						PathProberSensorUpdater.Update(pathSensor);
+					if (pickupSensor != null)
+						PickupableSensorUpdater.Update(pickupSensor);
+					if (edibleSensor != null)
+						ClosestEdibleSensorUpdater.Update(edibleSensor);
+				}
+				// This might look like duplicate code with RunUpdate, but SensorWrapper is not
+				// yet instantiated when these sensors need to run first
+				if (opts.SensorOpts) {
+					var balloonSensor = sensors.GetSensor<BalloonStandCellSensor>();
+					var idleSensor = sensors.GetSensor<IdleCellSensor>();
+					var mingleSensor = sensors.GetSensor<MingleCellSensor>();
+					var safeSensor = sensors.GetSensor<SafeCellSensor>();
+					var toiletSensor = sensors.GetSensor<ToiletSensor>();
+					if (balloonSensor != null)
+						BalloonStandCellSensorUpdater.Update(balloonSensor);
+					if (idleSensor != null)
+						IdleCellSensorUpdater.Update(idleSensor);
+					if (mingleSensor != null)
+						MingleCellSensorUpdater.Update(mingleSensor);
+					if (safeSensor != null)
+						SafeCellSensorUpdater.Update(safeSensor);
+					if (toiletSensor != null)
+						ToiletSensorUpdater.Update(toiletSensor);
+				}
+			}
+		}
+	}
+#endif
 }

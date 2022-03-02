@@ -186,7 +186,7 @@ namespace PeterHan.BuildStraightUp {
 						var store = PPatchTools.GetMatchingStoreInstruction(
 							instructions[i - 1]);
 						// Stack has "flag" on it, pass it to our method
-						instructions.InsertRange(i, new List<CodeInstruction>(3) {
+						instructions.InsertRange(i, new List<CodeInstruction>(5) {
 							// this
 							new CodeInstruction(OpCodes.Ldarg_0),
 							// cell

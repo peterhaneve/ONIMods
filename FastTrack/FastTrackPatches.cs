@@ -18,35 +18,57 @@
 
 using HarmonyLib;
 using KMod;
-using PeterHan.FastTrack.Metrics;
-using PeterHan.FastTrack.SensorPatches;
 using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
-using System;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
 using UnityEngine;
-
-using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack {
 	/// <summary>
 	/// Patches which will be applied via annotations for FastTrack.
 	/// </summary>
 	public sealed class FastTrackPatches : KMod.UserMod2 {
-		// Workaround for private nav grids + AddNavGrid being inlined
-		private static readonly IDetouredField<Pathfinding, List<NavGrid>> NAV_GRID_LIST =
-			PDetours.DetourField<Pathfinding, List<NavGrid>>("NavGrids");
-
 		/// <summary>
 		/// Caches the value of the debug flag.
 		/// </summary>
-		private static bool debug = false;
+		internal static bool DEBUG = false;
+
+		/// <summary>
+		/// Initializes several patches after Db is initialized.
+		/// </summary>
+		[PLibMethod(RunAt.AfterDbInit)]
+		internal static void AfterDbInit() {
+			var options = FastTrackOptions.Instance;
+			if (options.ThreatOvercrowding)
+				CritterPatches.OvercrowdingMonitor_UpdateState_Patch.InitTagBits();
+			if (options.DisableConduitAnimation != FastTrackOptions.ConduitAnimationQuality.
+					Full)
+				ConduitPatches.ConduitFlowVisualizer_Render_Patch.SetupDelegates();
+		}
+
+		/// <summary>
+		/// Cleans up the mod caches after the game ends.
+		/// </summary>
+		[PLibMethod(RunAt.OnEndGame)]
+		internal static void OnEndGame() {
+			var options = FastTrackOptions.Instance;
+			ConduitPatches.ConduitFlowVisualizer_Render_Patch.Cleanup();
+			if (options.CachePaths) {
+				PathPatches.NavGrid_InitializeGraph_Patch.Cleanup();
+				PathPatches.PathCacher.Cleanup();
+			}
+#if false
+			Singleton<FastCellChangeMonitor>.Instance?.Cleanup();
+			Singleton<FastCellChangeMonitor>.DestroyInstance();
+#endif
+			if (options.UnstackLights)
+				VisualPatches.LightBufferManager.Cleanup();
+			if (options.ReduceTileUpdates)
+				VisualPatches.PropertyTextureUpdater.DestroyInstance();
+			AsyncJobManager.DestroyInstance();
+		}
 
 		/// <summary>
 		/// Initializes the nav grids on game start, since Pathfinding.AddNavGrid gets inlined.
@@ -55,31 +77,25 @@ namespace PeterHan.FastTrack {
 		internal static void OnStartGame() {
 			var inst = Game.Instance;
 			var options = FastTrackOptions.Instance;
-			if (options.CachePaths) {
-				var fences = NavFences.AllFences;
-				PathCacher.Init();
-				foreach (var nav_grid in NAV_GRID_LIST.Get(Pathfinding.Instance)) {
-					string id = nav_grid.id;
-#if DEBUG
-					PUtil.LogDebug("Add nav grid: {0}".F(id));
-#endif
-					if (fences.TryGetValue(id, out NavFences current))
-						current.Reset();
-					else
-						fences.Add(id, new NavFences());
-				}
-			}
+			if (options.CachePaths)
+				PathPatches.NavGrid_InitializeGraph_Patch.Init();
 			// Slices updates to Duplicant sensors
 			if (inst != null) {
 				var go = inst.gameObject;
+				go.AddOrGet<AsyncJobManager>();
 				if (options.SensorOpts || options.PickupOpts)
-					go.AddOrGet<SensorWrapperUpdater>();
+					go.AddOrGet<SensorPatches.SensorWrapperUpdater>();
 				if (options.AsyncPathProbe)
-					go.AddOrGet<PathProbeJobManager>();
+					go.AddOrGet<PathPatches.PathProbeJobManager>();
+				if (options.ReduceSoundUpdates)
+					go.AddOrGet<SoundUpdater>();
 				// If debugging is on, start logging
-				if (debug)
-					go.AddOrGet<DebugMetrics>();
+				if (DEBUG)
+					go.AddOrGet<Metrics.DebugMetrics>();
 			}
+			ConduitPatches.ConduitFlowVisualizer_Render_Patch.Init();
+			if (options.UnstackLights)
+				VisualPatches.LightBufferManager.Init();
 		}
 
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
@@ -92,8 +108,10 @@ namespace PeterHan.FastTrack {
 					harmony.Patch(typeof(FetchManager.FetchablesByPrefabId),
 						nameof(FetchManager.FetchablesByPrefabId.UpdatePickups),
 						prefix: new HarmonyMethod(typeof(FetchManagerFastUpdate),
-						nameof(FetchManagerFastUpdate.Prefix)));
+						nameof(FetchManagerFastUpdate.BeforeUpdatePickups)));
+#if DEBUG
 					PUtil.LogDebug("Patched FetchManager for fast pickup updates");
+#endif
 				} else
 					PUtil.LogWarning("Disabling fast pickup updates: Efficient Supply active");
 			}
@@ -101,73 +119,19 @@ namespace PeterHan.FastTrack {
 
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
+			var options = FastTrackOptions.Instance;
 			PUtil.InitLibrary();
 			new POptions().RegisterOptions(this, typeof(FastTrackOptions));
 			new PPatchManager(harmony).RegisterPatchClass(typeof(FastTrackPatches));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
-			debug = FastTrackOptions.Instance.Metrics;
+			DEBUG = options.Metrics;
+			// In case this goes in stock bug fix later
+			if (options.UnstackLights)
+				PRegistry.PutData("Bugs.StackedLights", true);
 		}
 
 		/// <summary>
-		/// Applied to multiple methods in Grid to pre-emptively update the path grid when
-		/// access control is modified.
-		/// </summary>
-		[HarmonyPatch]
-		public static class Grid_Restrictions_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
-
-			internal static IEnumerable<MethodBase> TargetMethods() {
-				var targetType = typeof(Grid);
-				return new List<MethodBase>(4) {
-					targetType.GetMethodSafe(nameof(Grid.ClearRestriction), true, typeof(int),
-						typeof(int)),
-					targetType.GetMethodSafe(nameof(Grid.RegisterRestriction), true,
-						typeof(int), typeof(Grid.Restriction.Orientation)),
-					targetType.GetMethodSafe(nameof(Grid.SetRestriction), true, typeof(int),
-						typeof(int), typeof(Grid.Restriction.Directions)),
-					targetType.GetMethodSafe(nameof(Grid.UnregisterRestriction), true,
-						typeof(int))
-				};
-			}
-
-			/// <summary>
-			/// Applied after each of the target methods run.
-			/// </summary>
-			internal static void Postfix(int cell) {
-				var fences = NavFences.AllFences;
-				// Access control only affects dupes and (DLC) rovers
-				if (fences.TryGetValue("MinionNavGrid", out NavFences dupeGrid))
-					dupeGrid.UpdateSerial(cell);
-				if (fences.TryGetValue("RobotNavGrid", out NavFences roverGrid))
-					roverGrid.UpdateSerial(cell);
-			}
-		}
-
-		/// <summary>
-		/// Applied to LoopingSoundManager to reduce sound updates to every other frame.
-		/// </summary>
-		[HarmonyPatch(typeof(LoopingSoundManager), nameof(LoopingSoundManager.
-			RenderEveryTick))]
-		public static class LoopingSoundManager_RenderEveryTick_Patch {
-			/// <summary>
-			/// Whether sounds were updated last frame.
-			/// </summary>
-			internal static bool updated;
-
-			internal static bool Prepare() => FastTrackOptions.Instance.ReduceSoundUpdates;
-
-			/// <summary>
-			/// Applied before RenderEveryTick runs.
-			/// </summary>
-			internal static bool Prefix() {
-				bool wasUpdated = updated;
-				updated = !updated;
-				return wasUpdated;
-			}
-		}
-
-		/// <summary>
-		/// Applied to MinionConfig to add an instance of SensorWrapper.
+		/// Applied to MinionConfig to add an instance of SensorWrapper to each Duplicant.
 		/// </summary>
 		[HarmonyPatch(typeof(MinionConfig), nameof(MinionConfig.OnSpawn))]
 		public static class MinionConfig_OnSpawn_Patch {
@@ -177,90 +141,7 @@ namespace PeterHan.FastTrack {
 			internal static void Postfix(GameObject go) {
 				var opts = FastTrackOptions.Instance;
 				if (opts.SensorOpts || opts.PickupOpts)
-					go.AddOrGet<SensorWrapper>();
-			}
-		}
-
-		/// <summary>
-		/// Applied to NavGrid to mark all cells as invalid serials when it is initialized.
-		/// </summary>
-		[HarmonyPatch(typeof(NavGrid), nameof(NavGrid.InitializeGraph))]
-		public static class NavGrid_InitializeGraph_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
-
-			/// <summary>
-			/// Applied before InitializeGraph runs.
-			/// </summary>
-			internal static void Postfix(NavGrid __instance) {
-				if (NavFences.AllFences.TryGetValue(__instance.id, out NavFences fences))
-					fences.UpdateSerial();
-			}
-		}
-
-		/// <summary>
-		/// Applied to NavGrid to replace unnecessary allocations with a Clear call.
-		/// </summary>
-		[HarmonyPatch(typeof(NavGrid), nameof(NavGrid.UpdateGraph), new Type[0])]
-		public static class NavGrid_UpdateGraph_Patch {
-			internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-				var setType = typeof(HashSet<int>);
-				var clearMethod = setType.GetMethodSafe(nameof(HashSet<int>.Clear), false);
-				var instructions = new List<CodeInstruction>(method);
-				int n = instructions.Count;
-				if (clearMethod == null)
-					// Should be unreachable
-					PUtil.LogError("What happened to HashSet.Clear?");
-				else {
-					var instr = instructions[0];
-					for (int i = 0; i < n - 1; i++) {
-						var next = instructions[i + 1];
-						if (instr.opcode == OpCodes.Newobj && (instr.operand as MethodBase)?.
-								DeclaringType == setType && next.opcode == OpCodes.Stfld) {
-							// Change "newobj" to "ldfld"
-							instr.opcode = OpCodes.Ldfld;
-							instr.operand = next.operand;
-							// Change "stfld" to "callvirt"
-							next.opcode = OpCodes.Callvirt;
-							next.operand = clearMethod;
-						}
-						instr = next;
-					}
-				}
-				return instructions;
-			}
-		}
-
-		/// <summary>
-		/// Applied to NavGrid to track serial numbers.
-		/// </summary>
-		[HarmonyPatch(typeof(NavGrid), nameof(NavGrid.UpdateGraph), typeof(HashSet<int>))]
-		public static class NavGrid_UpdateGraph2_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
-
-			/// <summary>
-			/// Applied after UpdateGraph runs.
-			/// </summary>
-			internal static void Postfix(NavGrid __instance, HashSet<int> dirty_nav_cells) {
-				if (dirty_nav_cells.Count > 0 && NavFences.AllFences.TryGetValue(__instance.id,
-						out NavFences fences))
-					fences.UpdateSerial(dirty_nav_cells);
-			}
-		}
-
-		/// <summary>
-		/// Applied to Navigator.PathProbeTask to estimate the hitrate.
-		/// </summary>
-		[HarmonyPatch(typeof(Navigator.PathProbeTask), nameof(Navigator.PathProbeTask.Run))]
-		public static class Navigator_PathProbeTask_Run_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
-
-			internal static bool Prefix(Navigator ___navigator, int ___cell) {
-				// If nothing has changed since last time, it is a hit!
-				var cached = PathCacher.Lookup(___navigator.PathProber);
-				bool hit = cached.CheckAndUpdate(___navigator, ___cell);
-				if (debug)
-					DebugMetrics.LogHit(hit);
-				return !hit;
+					go.AddOrGet<SensorPatches.SensorWrapper>();
 			}
 		}
 	}

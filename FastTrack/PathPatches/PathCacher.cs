@@ -23,7 +23,7 @@ using System.Collections.Generic;
 
 using PathFlags = PathFinder.PotentialPath.Flags;
 
-namespace PeterHan.FastTrack {
+namespace PeterHan.FastTrack.PathPatches {
 	/// <summary>
 	/// Caches global pathfind requests, drastically reducing work by avoiding repathing when
 	/// nothing has changed.
@@ -41,6 +41,13 @@ namespace PeterHan.FastTrack {
 		/// PathFinder.InvalidHandle is not even readonly!
 		/// </summary>
 		public const int InvalidHandle = -1;
+
+		/// <summary>
+		/// Avoid leaking the PathProbers when the game ends.
+		/// </summary>
+		internal static void Cleanup() {
+			pathCache.Clear();
+		}
 
 		/// <summary>
 		/// When a PathProber is destroyed, remove its cached information.

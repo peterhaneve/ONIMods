@@ -17,38 +17,53 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.Core;
 using System.Diagnostics;
+using System.Reflection.Emit;
+
+using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.Metrics {
 #if true
 	// Replace with method to patch
 	// Brain#UpdateChores is shockingly cheap, just 10-20 ms/1000 ms
-	// Game#LateUpdate is 100-200ms
+	// Game#LateUpdate is 100-150ms
 	// Game#Update is 250-300ms
 	// Game#SimEveryTick is most of Game#Update
 	// StateMachineUpdater#AdvanceOneSimSubTick calls the ISim handlers (200ms)
 	// Pathfinding#UpdateNavGrids is <20ms
+	// Pathfinding#RenderEveryTick is nearly instant
 	// StateMachineUpdater#Render calls the IRender handlers
-	// StateMachineUpdater#RenderEveryTick calls the IRenderEveryTick handlers (80ms)
-	[HarmonyPatch(typeof(StateMachineUpdater), "Render")]
+	// StateMachineUpdater#RenderEveryTick calls the IRenderEveryTick handlers
+	// StatusItemRenderer#RenderEveryTick could use some work but is only ~10ms (need to excise GetComponent calls which is a massive transpiler)
+	// ElectricalUtilityNetwork#Update is ~10ms
+	// KBatchedAnimUpdater#LateUpdate is ~50ms
+	// PropertyTextures#LateUpdate is ~40ms
+	[HarmonyPatch(typeof(VisualPatches.PropertyTextureUpdater), "StartUpdate")]
 	public static class TimePatch {
+		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
+
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
 
 		internal static void Postfix(Stopwatch __state) {
-			DebugMetrics.TRACKED[0].Log(__state.ElapsedTicks);
+			if (__state != null)
+				DebugMetrics.TRACKED[0].Log(__state.ElapsedTicks);
 		}
 	}
 
-	[HarmonyPatch(typeof(StateMachineUpdater), "RenderEveryTick")]
+	[HarmonyPatch(typeof(VisualPatches.PropertyTextureUpdater), "FinishUpdate")]
 	public static class TimePatch2 {
+		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
+
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
 
 		internal static void Postfix(Stopwatch __state) {
-			DebugMetrics.TRACKED[1].Log(__state.ElapsedTicks);
+			if (__state != null)
+				DebugMetrics.TRACKED[1].Log(__state.ElapsedTicks);
 		}
 	}
 #endif
@@ -119,6 +134,7 @@ namespace PeterHan.FastTrack.Metrics {
 		}
 	}
 
+#if true
 	/// <summary>
 	/// Applied to SimAndRenderScheduler.RenderEveryTickUpdater to log sim/render update
 	/// metrics if enabled.
@@ -133,7 +149,44 @@ namespace PeterHan.FastTrack.Metrics {
 	/// optimized
 	/// PumpingStationGuide and LightSymbolTracker can be cut to 200ms
 	/// </summary>
-#if false
+	[HarmonyPatch(typeof(StateMachineUpdater.BucketGroup), nameof(StateMachineUpdater.
+		BucketGroup.AdvanceOneSubTick))]
+	public static class StateMachineUpdater_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
+
+		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+			var victim = typeof(StateMachineUpdater.BaseUpdateBucket).GetMethodSafe(nameof(
+				StateMachineUpdater.BaseUpdateBucket.Update), false, typeof(float));
+			foreach (var instr in method) {
+				if (victim != null && instr.Is(OpCodes.Callvirt, victim)) {
+					yield return new CodeInstruction(OpCodes.Ldarg_0);
+					instr.operand = typeof(StateMachineUpdater_Patch).GetMethodSafe(nameof(
+						UpdateAndReport), true, typeof(StateMachineUpdater.BaseUpdateBucket),
+						typeof(float), typeof(StateMachineUpdater.BucketGroup));
+				}
+				yield return instr;
+			}
+		}
+
+		private static void UpdateAndReport(StateMachineUpdater.BaseUpdateBucket bucket,
+				float dt, StateMachineUpdater.BucketGroup group) {
+			var genArgs = bucket.GetType().GetGenericArguments();
+			string targetType = null;
+			Stopwatch now;
+			if (genArgs != null && genArgs.Length > 0)
+				targetType = genArgs[0]?.FullName;
+			if (targetType == null || targetType.StartsWith("ISim") || targetType.StartsWith(
+					"IRender"))
+				bucket.Update(dt);
+			else {
+				now = Stopwatch.StartNew();
+				bucket.Update(dt);
+				DebugMetrics.SIMANDRENDER[(int)group.updateRate].AddSlice(targetType, now.
+					ElapsedTicks);
+			}
+		}
+	}
+
 	[HarmonyPatch(typeof(SimAndRenderScheduler.RenderEveryTickUpdater),
 		nameof(SimAndRenderScheduler.RenderEveryTickUpdater.Update))]
 	public static class SimAndRenderScheduler_RenderEveryTickUpdater_Update_Patch {

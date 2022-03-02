@@ -18,14 +18,16 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
 using System;
-using System.Collections.Generic;
+using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.UI;
 
-namespace PeterHan.FastTrack {
+using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
+
+namespace PeterHan.FastTrack.VisualPatches {
 	/// <summary>
 	/// Applied to ArtifactModule to only update the artifact's position (and thus lag) when
 	/// the module is being launched or landed.
@@ -60,6 +62,21 @@ namespace PeterHan.FastTrack {
 	}
 
 	/// <summary>
+	/// Applied to Bouncer to turn off notification bounces.
+	/// </summary>
+	[HarmonyPatch(typeof(Bouncer), nameof(Bouncer.Bounce))]
+	public static class Bouncer_Bounce_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.NoBounce;
+
+		/// <summary>
+		/// Applied before Bounce runs.
+		/// </summary>
+		internal static bool Prefix() {
+			return false;
+		}
+	}
+
+	/// <summary>
 	/// Applied to BubbleManager to turn off its dead but possibly slow RenderEveryTick method.
 	/// </summary>
 	[HarmonyPatch(typeof(BubbleManager), nameof(BubbleManager.RenderEveryTick))]
@@ -72,164 +89,100 @@ namespace PeterHan.FastTrack {
 		internal static bool Prefix() => false;
 	}
 
-	/// <summary>
-	/// Applied to Light2D to add SlowLightSymbolTracker when necessary.
-	/// </summary>
-	[HarmonyPatch(typeof(Light2D), "OnSpawn")]
-	public static class Light2D_OnSpawn_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
+	public static class ColonyDiagnosticRowPatches {
+		/// <summary>
+		/// Resolves to the private type ColonyDiagnosticScreen.DiagnosticRow.
+		/// </summary>
+		internal static readonly Type DIAGNOSTIC_ROW = typeof(ColonyDiagnosticScreen).
+			GetNestedType("DiagnosticRow", PPatchTools.BASE_FLAGS | BindingFlags.Instance);
 
 		/// <summary>
-		/// Applied after OnSpawn runs.
+		/// Applied to ColonyDiagnosticScreen.DiagnosticRow to suppress SparkChart updates if
+		/// not visible.
 		/// </summary>
-		internal static void Postfix(Light2D __instance) {
-			var go = __instance.gameObject;
-			if (go.GetComponentSafe<LightSymbolTracker>() != null)
-				go.AddOrGet<SlowLightSymbolTracker>();
+		[HarmonyPatch]
+		internal static class Sim4000ms_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
+
+			/// <summary>
+			/// DiagnosticRow is a private class, so calculate the target with reflection.
+			/// </summary>
+			internal static MethodBase TargetMethod() {
+				if (DIAGNOSTIC_ROW == null)
+					PUtil.LogWarning("Unable to resolve target: ColonyDiagnosticScreen.DiagnosticRow");
+				return DIAGNOSTIC_ROW?.GetMethodSafe(nameof(ISim4000ms.Sim4000ms), false,
+					typeof(float));
+			}
+
+			/// <summary>
+			/// Applied before Sim4000ms runs.
+			/// </summary>
+			internal static bool Prefix(KMonoBehaviour ___sparkLayer) {
+				return ___sparkLayer == null || ___sparkLayer.isActiveAndEnabled;
+			}
+		}
+
+		/// <summary>
+		/// Applied to ColonyDiagnosticScreen.DiagnosticRow to turn off the bouncing effect.
+		/// </summary>
+		[HarmonyPatch]
+		internal static class TriggerVisualNotification_Patch {
+			private static readonly MethodBase RESOLVE_NOTIFICATION = DIAGNOSTIC_ROW?.
+				GetMethodSafe("ResolveNotificationRoutine", false);
+
+			internal static bool Prepare() => FastTrackOptions.Instance.NoBounce;
+
+			/// <summary>
+			/// DiagnosticRow is a private class, so calculate the target with reflection.
+			/// </summary>
+			internal static MethodBase TargetMethod() {
+				return DIAGNOSTIC_ROW?.GetMethodSafe(nameof(ISim4000ms.Sim4000ms), false,
+					typeof(float));
+			}
+
+			/// <summary>
+			/// A replacement coroutine that waits 3 seconds and then resolves it with no bounce.
+			/// </summary>
+			private static System.Collections.IEnumerator NoMoveRoutine(object row) {
+				// Wait for 3 seconds unscaled
+				yield return new WaitForSeconds(3.0f);
+				try {
+					// Ignore exception if the notification cannot be resolved
+					RESOLVE_NOTIFICATION?.Invoke(row, new object[] { });
+				} catch (Exception) { }
+				yield break;
+			}
+
+			/// <summary>
+			/// Transpiles TriggerVisualNotification to remove calls to the bouncy coroutine.
+			/// </summary>
+			internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+				return PPatchTools.ReplaceMethodCall(instructions, DIAGNOSTIC_ROW?.
+					GetMethodSafe("VisualNotificationRoutine", false), typeof(
+					TriggerVisualNotification_Patch).GetMethodSafe(nameof(NoMoveRoutine),
+					true, typeof(object)));
+			}
 		}
 	}
 
 	/// <summary>
-	/// Applied to LightSymbolTracker to reduce its update frequency to 200ms.
+	/// Applied to NotificationAnimator to turn off the bouncing effect.
 	/// </summary>
-	[HarmonyPatch(typeof(LightSymbolTracker), nameof(LightSymbolTracker.RenderEveryTick))]
-	public static class LightSymbolTrackerRenderer {
-		internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
+	[HarmonyPatch(typeof(NotificationAnimator), nameof(NotificationAnimator.Begin))]
+	public static class NotificationAnimator_Begin_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.NoBounce;
 
 		/// <summary>
-		/// Applied before RenderEveryTick runs.
+		/// Applied before Begin runs.
 		/// </summary>
-		internal static bool Prefix() {
+		internal static bool Prefix(NotificationAnimator __instance, ref bool ___animating,
+				ref LayoutElement ___layoutElement) {
+			var le = __instance.GetComponent<LayoutElement>();
+			if (le != null)
+				le.minWidth = 0.0f;
+			___layoutElement = le;
+			___animating = false;
 			return false;
-		}
-
-		[HarmonyReversePatch(HarmonyReversePatchType.Original)]
-		[HarmonyPatch(nameof(LightSymbolTracker.RenderEveryTick))]
-		[MethodImpl(MethodImplOptions.NoInlining)]
-		internal static void RenderEveryTick(LightSymbolTracker instance, float dt) {
-			_ = instance;
-			_ = dt;
-			// Dummy code to ensure no inlining
-			while (System.DateTime.Now.Ticks > 0L)
-				throw new NotImplementedException("Reverse patch stub");
-		}
-	}
-
-	/// <summary>
-	/// Groups patches for the logic bit selector sidescreen.
-	/// </summary>
-	public static class LogicBitSelectorSideScreenPatches {
-		// Side screen is a singleton so this is safe for now
-		private static readonly IList<bool> lastValues = new List<bool>(4);
-
-		/// <summary>
-		/// A delegate to call the UpdateInputOutputDisplay method.
-		/// </summary>
-		private static readonly Action<LogicBitSelectorSideScreen> UPDATE_IO_DISPLAY =
-			typeof(LogicBitSelectorSideScreen).Detour<Action<LogicBitSelectorSideScreen>>(
-			"UpdateInputOutputDisplay");
-
-		/// <summary>
-		/// Updates all bits of the logic bit selector side screen.
-		/// </summary>
-		private static void ForceUpdate(LogicBitSelectorSideScreen instance,
-				Color activeColor, Color inactiveColor, ILogicRibbonBitSelector target) {
-			lastValues.Clear();
-			foreach (var pair in instance.toggles_by_int) {
-				int bit = pair.Key;
-				bool active = target.IsBitActive(bit);
-				while (lastValues.Count <= bit)
-					lastValues.Add(false);
-				lastValues[bit] = active;
-				UpdateBit(pair.Value, active, activeColor, inactiveColor);
-			}
-		}
-
-		/// <summary>
-		/// Updates one bit of the logic bit selector side screen.
-		/// </summary>
-		private static void UpdateBit(MultiToggle multiToggle, bool active,
-				Color activeColor, Color inactiveColor) {
-			if (multiToggle != null) {
-				var hr = multiToggle.gameObject.GetComponentSafe<HierarchyReferences>();
-				hr.GetReference<KImage>("stateIcon").color = active ? activeColor :
-					inactiveColor;
-				hr.GetReference<LocText>("stateText").SetText(active ?
-					STRINGS.UI.UISIDESCREENS.LOGICBITSELECTORSIDESCREEN.STATE_ACTIVE :
-					STRINGS.UI.UISIDESCREENS.LOGICBITSELECTORSIDESCREEN.STATE_INACTIVE);
-			}
-		}
-
-		/// <summary>
-		/// Applied to LogicBitSelectorSideScreen to update the visuals after it spawns
-		/// (because side screens can have targets set for the first time before they are
-		/// initialized).
-		/// </summary>
-		[HarmonyPatch(typeof(LogicBitSelectorSideScreen), "OnSpawn")]
-		public static class OnSpawn_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
-
-			/// <summary>
-			/// Applied after OnSpawn runs.
-			/// </summary>
-			internal static void Postfix(LogicBitSelectorSideScreen __instance,
-					Color ___activeColor, Color ___inactiveColor,
-					ILogicRibbonBitSelector ___target) {
-				if (__instance != null)
-					UPDATE_IO_DISPLAY.Invoke(__instance);
-				ForceUpdate(__instance, ___activeColor, ___inactiveColor, ___target);
-			}
-		}
-
-		/// <summary>
-		/// Applied to LogicBitSelectorSideScreen to set the initial states of LAST_VALUES
-		/// for each bit.
-		/// </summary>
-		[HarmonyPatch(typeof(LogicBitSelectorSideScreen), "RefreshToggles")]
-		public static class RefreshToggles_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
-
-			/// <summary>
-			/// Applied after RefreshToggles runs.
-			/// </summary>
-			internal static void Postfix(LogicBitSelectorSideScreen __instance,
-					Color ___activeColor, Color ___inactiveColor,
-					ILogicRibbonBitSelector ___target) {
-				ForceUpdate(__instance, ___activeColor, ___inactiveColor, ___target);
-			}
-		}
-
-		/// <summary>
-		/// Applied to LogicBitSelectorSideScreen to optimize down its RenderEveryTick method,
-		/// limiting it only to when visible and to only what is necessary.
-		/// </summary>
-		[HarmonyPatch(typeof(LogicBitSelectorSideScreen), nameof(LogicBitSelectorSideScreen.
-			RenderEveryTick))]
-		public static class RenderEveryTick_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
-
-			/// <summary>
-			/// Applied before RenderEveryTick runs.
-			/// </summary>
-			internal static bool Prefix(LogicBitSelectorSideScreen __instance,
-					Color ___activeColor, Color ___inactiveColor,
-					ILogicRibbonBitSelector ___target) {
-				if (__instance != null && __instance.isActiveAndEnabled && ___target != null)
-					foreach (var pair in __instance.toggles_by_int) {
-						int bit = pair.Key;
-						bool active = ___target.IsBitActive(bit), update = bit >= lastValues.
-							Count;
-						if (!update) {
-							// If in range, see if bit changed
-							update = active != lastValues[bit];
-							if (update)
-								lastValues[bit] = active;
-						}
-						if (update)
-							UpdateBit(pair.Value, active, ___activeColor, ___inactiveColor);
-					}
-				return false;
-			}
 		}
 	}
 
@@ -280,6 +233,7 @@ namespace PeterHan.FastTrack {
 	/// <summary>
 	/// Updates the Pitcher Pump visuals every 200ms instead of every frame.
 	/// </summary>
+	[SkipSaveFileSerialization]
 	internal sealed class PumpingStationUpdater : KMonoBehaviour, IRender200ms,
 			IRenderEveryTick {
 #pragma warning disable IDE0044 // Add readonly modifier
@@ -314,23 +268,6 @@ namespace PeterHan.FastTrack {
 		internal static void Postfix(SingleEntityReceptacle __instance, float dt) {
 			if (__instance is ArtifactModule am) // and is thus not null too!
 				ArtifactModuleRenderer.RenderEveryTick(am, dt);
-		}
-	}
-
-	/// <summary>
-	/// Only updates LightSymbolTracker every 200 ms realtime, not every frame.
-	/// </summary>
-	internal sealed class SlowLightSymbolTracker : KMonoBehaviour, IRender200ms {
-#pragma warning disable IDE0044 // Add readonly modifier
-#pragma warning disable CS0649
-		[MyCmpReq]
-		private LightSymbolTracker tracker;
-#pragma warning restore CS0649
-#pragma warning restore IDE0044
-
-		public void Render200ms(float dt) {
-			if (tracker != null)
-				LightSymbolTrackerRenderer.RenderEveryTick(tracker, dt);
 		}
 	}
 
@@ -370,8 +307,7 @@ namespace PeterHan.FastTrack {
 		/// Transpiles Emit to use our SpawnFX function instead which delegates to Game.SpawnFX
 		/// only if the item is on screen.
 		/// </summary>
-		internal static IEnumerable<CodeInstruction> Transpiler(
-				IEnumerable<CodeInstruction> instructions) {
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
 			var target = typeof(Game).GetMethodSafe(nameof(Game.SpawnFX), false,
 				typeof(SpawnFXHashes), typeof(Vector3), typeof(float));
 			if (target == null)
@@ -382,24 +318,55 @@ namespace PeterHan.FastTrack {
 					yield return new CodeInstruction(OpCodes.Ldarg_0);
 					instr.operand = typeof(Sublimates_Emit_Patch).GetMethodSafe(nameof(
 						SpawnFXIf), true, PPatchTools.AnyArguments);
+#if DEBUG
+					PUtil.LogDebug("Patched Sublimates.SpawnFX");
+#endif
 				}
 				yield return instr;
 			}
 		}
 	}
 
+#if false
 	/// <summary>
-	/// Applied to TimerSideScreen to only update the side screen if it is active.
+	/// Applied to Workable to add a missing variable update to optimize the most common
+	/// case for all workables.
+	/// 
+	/// This barely saved anything...
 	/// </summary>
-	[HarmonyPatch(typeof(TimerSideScreen), nameof(TimerSideScreen.RenderEveryTick))]
-	public static class TimerSideScreen_RenderEveryTick_Patch {
+	[HarmonyPatch(typeof(Workable), nameof(Workable.GetEfficiencyMultiplier))]
+	public static class Workable_GetEfficiencyMultiplier_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
 
 		/// <summary>
-		/// Applied before RenderEveryTick runs.
+		/// Transpiles GetEfficiencyMultiplier to reset the Guid to empty.
 		/// </summary>
-		internal static bool Prefix(TimerSideScreen __instance) {
-			return __instance != null && __instance.isActiveAndEnabled;
+		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+			// After this method
+			var target = typeof(KSelectable).GetMethodSafe(nameof(KSelectable.
+				RemoveStatusItem), false, typeof(Guid), typeof(bool));
+			// Modify this field
+			var field = typeof(Workable).GetFieldSafe(
+				"lightEfficiencyBonusStatusItemHandle", false);
+			if (target == null || field == null) {
+				PUtil.LogWarning("Unable to find target field for Workable light efficiency");
+				foreach (var instr in method)
+					yield return instr;
+			} else
+				foreach (var instr in method) {
+					yield return instr;
+					if (instr.Is(OpCodes.Callvirt, target)) {
+						// Right after it, load Guid.Empty into the field
+						yield return new CodeInstruction(OpCodes.Ldarg_0);
+						yield return new CodeInstruction(OpCodes.Ldsfld, typeof(Guid).
+							GetFieldSafe(nameof(Guid.Empty), true));
+						yield return new CodeInstruction(OpCodes.Stfld, field);
+#if DEBUG
+						PUtil.LogDebug("Patched Workable.GetEfficiencyMultiplier");
+#endif
+					}
+				}
 		}
 	}
+#endif
 }

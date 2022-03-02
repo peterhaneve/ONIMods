@@ -31,6 +31,8 @@ using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
 
+using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
+
 namespace PeterHan.DebugNotIncluded {
 	/// <summary>
 	/// Patches which will be applied via annotations for Debug Not Included.
@@ -217,8 +219,8 @@ namespace PeterHan.DebugNotIncluded {
 		/// Transpiles the Spawn and InitializeComponent methods of KMonoBehaviour to better
 		/// handle debug messages.
 		/// </summary>
-		private static IEnumerable<CodeInstruction> TranspileSpawn(
-				IEnumerable<CodeInstruction> method) {
+		private static TranspiledMethod TranspileSpawn(
+				TranspiledMethod method) {
 			var instructions = new List<CodeInstruction>(method);
 			var target = typeof(DebugLogger).GetMethodSafe(nameof(DebugLogger.
 				LogKMonoException), true, typeof(Exception));
@@ -507,11 +509,21 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		[HarmonyPatch(typeof(SaveLoader), "OnSpawn")]
 		public static class SaveLoader_OnSpawn_Patch {
-			internal static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> method) {
-				return PPatchTools.ReplaceMethodCall(method, new Dictionary<MethodInfo, MethodInfo>() {
-					{ typeof(Sim).GetMethodSafe(nameof(Sim.SIM_Initialize), true, PPatchTools.AnyArguments), null },
-					{ typeof(SimMessages).GetMethodSafe(nameof(SimMessages.CreateSimElementsTable), true, PPatchTools.AnyArguments), null },
-					{ typeof(SimMessages).GetMethodSafe(nameof(SimMessages.CreateDiseaseTable), true, PPatchTools.AnyArguments), null }
+			internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+				return PPatchTools.ReplaceMethodCall(method, new Dictionary<MethodInfo,
+						MethodInfo>() {
+					{
+						typeof(Sim).GetMethodSafe(nameof(Sim.SIM_Initialize), true,
+							PPatchTools.AnyArguments), null
+					},
+					{
+						typeof(SimMessages).GetMethodSafe(nameof(SimMessages.
+							CreateSimElementsTable), true, PPatchTools.AnyArguments), null
+					},
+					{
+						typeof(SimMessages).GetMethodSafe(nameof(SimMessages.
+							CreateDiseaseTable), true, PPatchTools.AnyArguments), null
+					}
 				});
 			}
 		}

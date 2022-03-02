@@ -37,7 +37,7 @@ namespace PeterHan.FastTrack {
 		/// <summary>
 		/// Applied before UpdatePickups runs.
 		/// </summary>
-		internal static bool Prefix(FetchManager.FetchablesByPrefabId __instance,
+		internal static bool BeforeUpdatePickups(FetchManager.FetchablesByPrefabId __instance,
 				Navigator worker_navigator, GameObject worker_go) {
 			UpdatePickups(__instance, worker_navigator, worker_go);
 			// Prevent the original method from running

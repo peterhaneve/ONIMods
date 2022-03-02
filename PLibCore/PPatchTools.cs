@@ -763,10 +763,9 @@ namespace PeterHan.PLib.Core {
 			}
 			foreach (var instruction in method) {
 				var opcode = instruction.opcode;
-				MethodInfo target;
 				if ((opcode == OpCodes.Call || opcode == OpCodes.Calli || opcode == OpCodes.
-						Callvirt) && translation.TryGetValue(target = instruction.operand as
-						MethodInfo, out MethodInfo newMethod)) {
+						Callvirt) && instruction.operand is MethodInfo target && translation.
+						TryGetValue(target, out MethodInfo newMethod)) {
 					if (newMethod != null) {
 						// Replace with new method
 						instruction.opcode = newMethod.IsStatic ? OpCodes.Call :

@@ -19,7 +19,6 @@
 using PeterHan.PLib.Core;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 
@@ -249,6 +248,11 @@ namespace PeterHan.FastTrack.Metrics {
 		/// </summary>
 		internal sealed class SimBucketProfiler : Profiler {
 			/// <summary>
+			/// The minimum time in us/1000ms to be displayed. 10000us/1000ms is 1%.
+			/// </summary>
+			public const long MIN_TIME = 1000;
+
+			/// <summary>
 			/// Categorizes the time taken by the class name updated.
 			/// </summary>
 			private readonly ConcurrentDictionary<string, long> timeByClassName;
@@ -286,15 +290,22 @@ namespace PeterHan.FastTrack.Metrics {
 			public override string ToString() {
 				var byTime = ListPool<SimBucketResults, SimBucketProfiler>.Allocate();
 				var header = new System.Text.StringBuilder(base.ToString());
+				int n = timeByClassName.Count;
 				foreach (var pair in timeByClassName)
 					byTime.Add(new SimBucketResults(pair.Value, pair.Key));
 				byTime.Sort();
 				foreach (var entry in byTime) {
+					if (entry.Time < MIN_TIME) break;
 					header.AppendLine();
 					header.Append(' ');
 					header.Append(entry.ToString());
+					n--;
 				}
 				byTime.Recycle();
+				if (n > 0) {
+					header.AppendLine();
+					header.AppendFormat("  and {0:D} more...", n);
+				}
 				return header.ToString();
 			}
 		}
@@ -314,7 +325,7 @@ namespace PeterHan.FastTrack.Metrics {
 			public long Time;
 			
 			public SimBucketResults(long time, string className) {
-				Time = time;
+				Time = TicksToUS(time);
 				ClassName = className;
 			}
 
@@ -332,7 +343,7 @@ namespace PeterHan.FastTrack.Metrics {
 			}
 
 			public override string ToString() {
-				return "{0}: {1:N0}us".F(ClassName, TicksToUS(Time));
+				return "{0}: {1:N0}us".F(ClassName, Time);
 			}
 		}
 	}

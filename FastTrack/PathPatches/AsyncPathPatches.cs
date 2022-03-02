@@ -19,11 +19,12 @@
 using HarmonyLib;
 using PeterHan.FastTrack.Metrics;
 using PeterHan.PLib.Core;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using System.Threading;
+using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
-namespace PeterHan.FastTrack {
+namespace PeterHan.FastTrack.PathPatches {
 	/// <summary>
 	/// Applied to BrainScheduler.BrainGroup to move the path probe updates to a fully
 	/// asychronous task.
@@ -42,8 +43,7 @@ namespace PeterHan.FastTrack {
 		/// <summary>
 		/// Transpiles AsyncPathProbe to use our job manager instead.
 		/// </summary>
-		internal static IEnumerable<CodeInstruction> Transpiler(
-				IEnumerable<CodeInstruction> instructions) {
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
 			var workItemType = typeof(IWorkItemCollection);
 			return PPatchTools.ReplaceMethodCall(instructions, typeof(GlobalJobManager).
 				GetMethodSafe(nameof(GlobalJobManager.Run), true, workItemType),
@@ -71,35 +71,51 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
-		/// Cached value of FastTrackOptions.Instance.AsyncPathProbes.
+		/// Tracks the job count currently outstanding for path probes.
 		/// </summary>
-		private bool debug;
+		private volatile int jobCount;
 
 		/// <summary>
-		/// The job manager to use for executing path probes.
+		/// The event to trigger when path probing is done.
 		/// </summary>
-		private AsyncJobManager jobManager;
+		private readonly ManualResetEvent onPathDone;
 
 		/// <summary>
-		/// Destroys the job manager.
+		/// Set to true if any path probes were started since the last update.
 		/// </summary>
-		private void Dispose() {
-			jobManager?.Dispose();
+		private bool running;
+
+		/// <summary>
+		/// The total runtime used for metrics.
+		/// </summary>
+		private long totalRuntime;
+
+		internal PathProbeJobManager() {
+			onPathDone = new ManualResetEvent(false);
+			running = false;
+			totalRuntime = 0L;
 		}
 
 		protected override void OnCleanUp() {
-			Dispose();
+			onPathDone.Dispose();
 			Instance = null;
 			base.OnCleanUp();
 		}
 
+		/// <summary>
+		/// Called when one pathfinding job completes. When all do, the event is triggered.
+		/// </summary>
+		/// <param name="completed">The path job that completed.</param>
+		private void OnPathComplete(AsyncJobManager.Work completed) {
+			if (Interlocked.Decrement(ref jobCount) <= 0)
+				onPathDone.Set();
+			if (completed != null)
+				Interlocked.Add(ref totalRuntime, completed.Runtime);
+		}
+
 		protected override void OnPrefabInit() {
 			base.OnPrefabInit();
-			if (Instance != null)
-				Instance.Dispose();
 			Instance = this;
-			debug = FastTrackOptions.Instance.AsyncPathProbe;
-			jobManager = new AsyncJobManager();
 		}
 
 		/// <summary>
@@ -107,23 +123,30 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		/// <param name="workItems">The job to start.</param>
 		private void StartJob(IWorkItemCollection workItems) {
-			jobManager?.Start(workItems);
+			var jobManager = AsyncJobManager.Instance;
+			if (jobManager != null) {
+				if (Interlocked.Increment(ref jobCount) <= 1)
+					onPathDone.Reset();
+				jobManager.Run(new AsyncJobManager.Work(workItems, null, OnPathComplete));
+				running = true;
+			}
 		}
 
 		/// <summary>
 		/// Avoids stacking up queues by waiting for the async path probe. Game updates almost
-		/// all Sim and Render handlers (including BrainScheduler) in a LateUpdate call
-		/// (not Update, KLEI PLEASE), so we let it spill over into the next frame and just
-		/// hold up the next LateUpdate with a regular Update.
+		/// all Sim and Render handlers (including BrainScheduler) in a LateUpdate call, so
+		/// we let it spill over into the next frame and just hold up the next LateUpdate with
+		/// a regular Update.
 		/// </summary>
 		public void Update() {
-			if (jobManager != null) {
-				if (debug) {
-					var now = Stopwatch.StartNew();
-					jobManager.Wait();
-					DebugMetrics.LogPathProbe(now.ElapsedTicks, jobManager.LastRunTime);
-				} else
-					jobManager.Wait();
+			var jobManager = AsyncJobManager.Instance;
+			if (jobManager != null && running) {
+				var now = Stopwatch.StartNew();
+				onPathDone.WaitOne(Timeout.Infinite);
+				DebugMetrics.LogPathProbe(now.ElapsedTicks, totalRuntime);
+				jobCount = 0;
+				totalRuntime = 0L;
+				running = false;
 			}
 		}
 	}

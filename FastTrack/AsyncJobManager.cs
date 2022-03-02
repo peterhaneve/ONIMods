@@ -26,12 +26,20 @@ namespace PeterHan.FastTrack {
 	/// <summary>
 	/// A version of JobManager that can be non-blocking.
 	/// </summary>
-	public sealed class AsyncJobManager : IDisposable {
+	[SkipSaveFileSerialization]
+	public sealed class AsyncJobManager : KMonoBehaviour, IDisposable {
 		/// <summary>
-		/// The total number of Stopwatch ticks (not us, ms, or ns!) that elapsed from the
-		/// first job in the queue until queue emptying.
+		/// The singleton instance of this class.
 		/// </summary>
-		public long LastRunTime { get; private set; }
+		public static AsyncJobManager Instance { get; private set; }
+
+		/// <summary>
+		/// Destroys the singleton instance.
+		/// </summary>
+		internal static void DestroyInstance() {
+			Instance?.Dispose();
+			Instance = null;
+		}
 
 		/// <summary>
 		/// The number of worker threads still finishing a task.
@@ -41,27 +49,17 @@ namespace PeterHan.FastTrack {
 		/// <summary>
 		/// Cached reference to the head of workQueue.
 		/// </summary>
-		private IWorkItemCollection currentJob;
+		private Work currentJob;
 
 		/// <summary>
 		/// Used to prevent multiple disposes.
 		/// </summary>
-		private volatile bool isDisposed;
-
-		/// <summary>
-		/// Records when the last job began.
-		/// </summary>
-		private Stopwatch lastStartTime;
+		private bool isDisposed;
 
 		/// <summary>
 		/// The index of the next not yet started work item.
 		/// </summary>
 		private volatile int nextWorkIndex;
-
-		/// <summary>
-		/// Signaled when work completes.
-		/// </summary>
-		private readonly ManualResetEvent onComplete;
 
 		/// <summary>
 		/// The semaphore signaled to release the workers.
@@ -76,9 +74,9 @@ namespace PeterHan.FastTrack {
 		/// <summary>
 		/// The queue of jobs waiting to be started.
 		/// </summary>
-		private readonly Queue<IWorkItemCollection> workQueue;
+		private readonly Queue<Work> workQueue;
 
-		public AsyncJobManager() {
+		internal AsyncJobManager() {
 			int n = CPUBudget.coreCount;
 			if (n < 1)
 				// Ensure at least one thread is created
@@ -86,14 +84,11 @@ namespace PeterHan.FastTrack {
 			activeThreads = 0;
 			currentJob = null;
 			isDisposed = false;
-			LastRunTime = 0L;
-			lastStartTime = null;
+			Instance = this;
 			nextWorkIndex = -1;
-			onComplete = new ManualResetEvent(false);
 			semaphore = new Semaphore(0, n);
 			threads = new WorkerThread[n];
-			// Should only be 2 tasks - dupes and critters
-			workQueue = new Queue<IWorkItemCollection>();
+			workQueue = new Queue<Work>();
 			for (int i = 0; i < n; i++)
 				threads[i] = new WorkerThread(this, "FastTrackWorker{0}".F(i));
 		}
@@ -102,13 +97,14 @@ namespace PeterHan.FastTrack {
 		/// Advances to the next task in the queue.
 		/// </summary>
 		/// <param name="toStart">The job that will be started.</param>
-		private void AdvanceNext(IWorkItemCollection toStart) {
+		private void AdvanceNext(Work toStart) {
 			int n = threads.Length;
 			nextWorkIndex = -1;
 			activeThreads = n;
 			currentJob = toStart;
 			// Not sure if this matters, borrowed from Klei code
 			Thread.MemoryBarrier();
+			currentJob.TriggerStart();
 			semaphore.Release(n);
 		}
 
@@ -116,13 +112,11 @@ namespace PeterHan.FastTrack {
 			if (!isDisposed) {
 				currentJob = null;
 				isDisposed = true;
-				lastStartTime = null;
 				semaphore.Release(threads.Length);
 				// Clear work queue
 				lock (workQueue) {
 					workQueue.Clear();
 				}
-				onComplete.Set();
 			}
 		}
 
@@ -131,12 +125,18 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		internal bool DoNextWorkItem() {
 			int index = Interlocked.Increment(ref nextWorkIndex);
+			IWorkItemCollection items;
 			bool executed = false;
-			if (currentJob != null && index >= 0 && index < currentJob.Count) {
-				currentJob.InternalDoWorkItem(index);
+			if (currentJob != null && index >= 0 && index < (items = currentJob.Jobs).Count) {
+				items.InternalDoWorkItem(index);
 				executed = true;
 			}
 			return executed;
+		}
+
+		protected override void OnCleanUp() {
+			Dispose();
+			base.OnCleanUp();
 		}
 
 		/// <summary>
@@ -144,7 +144,7 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		internal void ReportInactive() {
 			if (Interlocked.Decrement(ref activeThreads) <= 0) {
-				IWorkItemCollection next = null;
+				Work next = null;
 				lock (workQueue) {
 					// Remove the old head, and check for a new one
 					int n = workQueue.Count;
@@ -153,16 +153,13 @@ namespace PeterHan.FastTrack {
 					if (n > 1)
 						next = workQueue.Peek();
 				}
+				currentJob?.TriggerComplete();
 				if (next != null)
 					AdvanceNext(next);
 				else {
 					currentJob = null;
-					if (lastStartTime != null) {
-						// Measure the runtime
-						LastRunTime = lastStartTime.ElapsedTicks;
-						lastStartTime = null;
-					}
-					onComplete.Set();
+					foreach (var thread in threads)
+						thread.PrintExceptions();
 				}
 			}
 		}
@@ -172,7 +169,7 @@ namespace PeterHan.FastTrack {
 		/// after execution begins; use Wait to monitor the status.
 		/// </summary>
 		/// <param name="workItems">The work items to run in parallel.</param>
-		public void Start(IWorkItemCollection workItems) {
+		public void Run(Work workItems) {
 			int n = threads.Length;
 			bool starting = false;
 			if (isDisposed)
@@ -181,36 +178,8 @@ namespace PeterHan.FastTrack {
 				starting = workQueue.Count == 0;
 				workQueue.Enqueue(workItems);
 			}
-			if (starting) {
-				lastStartTime = Stopwatch.StartNew();
+			if (starting)
 				AdvanceNext(workItems);
-			}
-		}
-
-		/// <summary>
-		/// Waits for all current work to complete.
-		/// </summary>
-		/// <param name="timeout">The maximum time to wait in milliseconds, or Timeout.Infinite
-		/// to wait indefinitely.</param>
-		/// <returns>true if the tasks are complete, or false otherwise.</returns>
-		public bool Wait(int timeout = Timeout.Infinite) {
-			bool done = true;
-			int n;
-			if (isDisposed)
-				throw new ObjectDisposedException(nameof(AsyncJobManager));
-			lock (workQueue) {
-				n = workQueue.Count;
-			}
-			// If the queue is empty, do not bother waiting
-			if (n > 0) {
-				done = onComplete.WaitOne(timeout);
-				if (done) {
-					onComplete.Reset();
-					foreach (var thread in threads)
-						thread.PrintExceptions();
-				}
-			}
-			return done;
 		}
 
 		/// <summary>
@@ -262,6 +231,67 @@ namespace PeterHan.FastTrack {
 					if (!disposed)
 						parent.ReportInactive();
 				}
+			}
+		}
+
+		/// <summary>
+		/// A class representing a series of related tasks to be performed. Allows calling a
+		/// notification method (can occur on any thread!) when they all complete.
+		/// </summary>
+		public sealed class Work {
+			/// <summary>
+			/// The event that will be signaled when the work completes.
+			/// </summary>
+			private readonly EventWaitHandle completeEvent;
+
+			/// <summary>
+			/// The callback to run when the work completes.
+			/// </summary>
+			private readonly Action<Work> onComplete;
+
+			/// <summary>
+			/// The jobs to run.
+			/// </summary>
+			public IWorkItemCollection Jobs { get; }
+
+			/// <summary>
+			/// The runtime of this job in Stopwatch ticks.
+			/// </summary>
+			public long Runtime { get; private set; }
+
+			/// <summary>
+			/// The stopwatch used for timing this task's total runtime.
+			/// </summary>
+			private Stopwatch timer;
+
+			public Work(IWorkItemCollection jobs, EventWaitHandle completeEvent = null,
+					Action<Work> onComplete = null) {
+				Jobs = jobs ?? throw new ArgumentNullException(nameof(jobs));
+				this.onComplete = onComplete;
+				this.completeEvent = completeEvent;
+				Runtime = 0L;
+				timer = null;
+			}
+
+			public override string ToString() {
+				return "AsyncJobManager.Work[{0:D} tasks]".F(Jobs.Count);
+			}
+
+			/// <summary>
+			/// Called by AsyncJobManager when the work item collection completes.
+			/// </summary>
+			internal void TriggerComplete() {
+				if (timer != null)
+					Runtime = timer.ElapsedTicks;
+				completeEvent?.Set();
+				onComplete?.Invoke(this);
+			}
+
+			/// <summary>
+			/// Called by AsyncJobManager when the work item collection is started.
+			/// </summary>
+			internal void TriggerStart() {
+				timer = Stopwatch.StartNew();
 			}
 		}
 	}
