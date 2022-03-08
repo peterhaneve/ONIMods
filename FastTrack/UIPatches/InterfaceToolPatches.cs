@@ -21,7 +21,7 @@ using PeterHan.PLib.Detours;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace PeterHan.FastTrack {
+namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
 	/// Applied to InterfaceTool to replace the monster LateUpdate with a far more efficient
 	/// alternative. Only really makes a difference on large piles, but does matter.

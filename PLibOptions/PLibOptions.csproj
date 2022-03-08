@@ -3,10 +3,10 @@
   <PropertyGroup>
     <Title>PLib Options</Title>
     <AssemblyTitle>PLib.Options</AssemblyTitle>
-    <Version>4.8.1.0</Version>
+    <Version>4.8.2.0</Version>
     <UsesPLib>false</UsesPLib>
     <RootNamespace>PeterHan.PLib.Options</RootNamespace>
-    <AssemblyVersion>4.8.1.0</AssemblyVersion>
+    <AssemblyVersion>4.8.2.0</AssemblyVersion>
     <DistributeMod>false</DistributeMod>
     <PLibCore>true</PLibCore>
     <Platforms>Vanilla;Mergedown</Platforms>

@@ -75,9 +75,17 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool ReduceSoundUpdates { get; set; }
 
+		[Option("Fast Raycast", "Speeds up searching for UI elements under the cursor." + PERF_HIGH, "Interface")]
+		[JsonProperty]
+		public bool FastRaycast { get; set; }
+
 		[Option("Info Card Optimization", "Optimize slow code in the info card handlers." + PERF_LOW, "Interface")]
 		[JsonProperty]
 		public bool InfoCardOpts { get; set; }
+
+		[Option("Other UI Optimizations", "Optimize slow code in a variety of event and UI handlers." + PERF_LOW, "Interface")]
+		[JsonProperty]
+		public bool MiscOpts { get; set; }
 
 		[Option("No Notification Bounce", "Disables the bounce effect when new notifications appear." + PERF_LOW, "Visual")]
 		[JsonProperty]
@@ -104,10 +112,12 @@ namespace PeterHan.FastTrack {
 			CachePaths = true;
 			CritterConsumers = true;
 			DisableConduitAnimation = ConduitAnimationQuality.Reduced;
+			FastRaycast = true;
 			FastUpdatePickups = false;
 			InfoCardOpts = true;
 			SensorOpts = true;
 			Metrics = false;
+			MiscOpts = true;
 			NoBounce = true;
 			NoConversations = false;
 			PickupOpts = true;

@@ -51,14 +51,9 @@ namespace PeterHan.FastTrack.Metrics {
 		}
 
 		/// <summary>
-		/// Tracks calls to Game.Update.
+		/// Tracks Unity LateUpdate() methods.
 		/// </summary>
-		internal static readonly Profiler GAME_UPDATE = new Profiler();
-
-		/// <summary>
-		/// Tracks calls to Game.LateUpdate.
-		/// </summary>
-		internal static readonly Profiler GAME_LATEUPDATE = new Profiler();
+		internal static readonly NameBucketProfiler LATE_UPDATE = new NameBucketProfiler();
 
 		/// <summary>
 		/// Tracks calls to asychronous path probes.
@@ -73,7 +68,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Tracks Sim and Render buckets.
 		/// </summary>
-		internal static readonly SimBucketProfiler[] SIMANDRENDER = new SimBucketProfiler[8];
+		internal static readonly NameBucketProfiler[] SIMANDRENDER = new NameBucketProfiler[8];
 
 		/// <summary>
 		/// Tracks a specific method.
@@ -81,6 +76,11 @@ namespace PeterHan.FastTrack.Metrics {
 		internal static readonly Profiler[] TRACKED = new Profiler[] {
 			new Profiler(), new Profiler()
 		};
+
+		/// <summary>
+		/// Tracks Unity Update() methods.
+		/// </summary>
+		internal static readonly NameBucketProfiler UPDATE = new NameBucketProfiler();
 
 		/// <summary>
 		/// The number of times the path cache hit since the last reset.
@@ -102,7 +102,7 @@ namespace PeterHan.FastTrack.Metrics {
 		static DebugMetrics() {
 			int n = SIMANDRENDER.Length;
 			for (int i = 0; i < n; i++)
-				SIMANDRENDER[i] = new SimBucketProfiler();
+				SIMANDRENDER[i] = new NameBucketProfiler();
 		}
 
 		/// <summary>
@@ -138,8 +138,8 @@ namespace PeterHan.FastTrack.Metrics {
 		/// </summary>
 		internal static void ResetMethodHits() {
 			int n = TRACKED.Length;
-			GAME_LATEUPDATE.Reset();
-			GAME_UPDATE.Reset();
+			LATE_UPDATE.Reset();
+			UPDATE.Reset();
 			SENSORS.Reset();
 			for (int i = 0; i < n; i++)
 				TRACKED[i].Reset();
@@ -174,6 +174,8 @@ namespace PeterHan.FastTrack.Metrics {
 			long probeTotal = PATH_PROBES.TimeInMethod, probeSaved = Math.Max(0L, probeTotal -
 				TicksToUS(probeWaiting));
 			int probeCount = PATH_PROBES.MethodCalls;
+			PUtil.LogDebug("Methods Run: {0}(s), {1}(t), {2}(t)".F(SENSORS, TRACKED[0],
+				TRACKED[1]));
 			PUtil.LogDebug("Path Cache: {0:D}/{1:D} hits, {2:F1}%".F(cacheHits, cacheTotal,
 				cacheHits * 100.0f / Math.Max(1, cacheTotal)));
 			PUtil.LogDebug("Path Probes: executed {0:N0}us, saved {1:N0}us ({2:N0}/frame)".F(
@@ -188,8 +190,7 @@ namespace PeterHan.FastTrack.Metrics {
 				SIMANDRENDER[(int)UpdateRate.SIM_200ms],
 				SIMANDRENDER[(int)UpdateRate.SIM_1000ms],
 				SIMANDRENDER[(int)UpdateRate.SIM_4000ms]));
-			PUtil.LogDebug("Methods Run: {0}(s), {1}(u), {2}(l), {3}(t), {4}(t)".F(SENSORS,
-				GAME_UPDATE, GAME_LATEUPDATE, TRACKED[0], TRACKED[1]));
+			PUtil.LogDebug("Update: {0}\nLateUpdate: {1}".F(UPDATE, LATE_UPDATE));
 			ResetAsyncPath();
 			ResetMethodHits();
 			ResetPathCache();
@@ -246,7 +247,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Profiles calls to Sim and Render methods by the class name used.
 		/// </summary>
-		internal sealed class SimBucketProfiler : Profiler {
+		internal sealed class NameBucketProfiler : Profiler {
 			/// <summary>
 			/// The minimum time in us/1000ms to be displayed. 10000us/1000ms is 1%.
 			/// </summary>
@@ -257,7 +258,7 @@ namespace PeterHan.FastTrack.Metrics {
 			/// </summary>
 			private readonly ConcurrentDictionary<string, long> timeByClassName;
 
-			public SimBucketProfiler() {
+			public NameBucketProfiler() {
 				timeByClassName = new ConcurrentDictionary<string, long>(2, 32);
 			}
 
@@ -288,7 +289,7 @@ namespace PeterHan.FastTrack.Metrics {
 			}
 
 			public override string ToString() {
-				var byTime = ListPool<SimBucketResults, SimBucketProfiler>.Allocate();
+				var byTime = ListPool<SimBucketResults, NameBucketProfiler>.Allocate();
 				var header = new System.Text.StringBuilder(base.ToString());
 				int n = timeByClassName.Count;
 				foreach (var pair in timeByClassName)

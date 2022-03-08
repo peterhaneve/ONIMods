@@ -19,11 +19,9 @@
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using System;
-using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using UnityEngine;
-using UnityEngine.UI;
 
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
@@ -62,21 +60,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 	}
 
 	/// <summary>
-	/// Applied to Bouncer to turn off notification bounces.
-	/// </summary>
-	[HarmonyPatch(typeof(Bouncer), nameof(Bouncer.Bounce))]
-	public static class Bouncer_Bounce_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.NoBounce;
-
-		/// <summary>
-		/// Applied before Bounce runs.
-		/// </summary>
-		internal static bool Prefix() {
-			return false;
-		}
-	}
-
-	/// <summary>
 	/// Applied to BubbleManager to turn off its dead but possibly slow RenderEveryTick method.
 	/// </summary>
 	[HarmonyPatch(typeof(BubbleManager), nameof(BubbleManager.RenderEveryTick))]
@@ -89,100 +72,17 @@ namespace PeterHan.FastTrack.VisualPatches {
 		internal static bool Prefix() => false;
 	}
 
-	public static class ColonyDiagnosticRowPatches {
-		/// <summary>
-		/// Resolves to the private type ColonyDiagnosticScreen.DiagnosticRow.
-		/// </summary>
-		internal static readonly Type DIAGNOSTIC_ROW = typeof(ColonyDiagnosticScreen).
-			GetNestedType("DiagnosticRow", PPatchTools.BASE_FLAGS | BindingFlags.Instance);
-
-		/// <summary>
-		/// Applied to ColonyDiagnosticScreen.DiagnosticRow to suppress SparkChart updates if
-		/// not visible.
-		/// </summary>
-		[HarmonyPatch]
-		internal static class Sim4000ms_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
-
-			/// <summary>
-			/// DiagnosticRow is a private class, so calculate the target with reflection.
-			/// </summary>
-			internal static MethodBase TargetMethod() {
-				if (DIAGNOSTIC_ROW == null)
-					PUtil.LogWarning("Unable to resolve target: ColonyDiagnosticScreen.DiagnosticRow");
-				return DIAGNOSTIC_ROW?.GetMethodSafe(nameof(ISim4000ms.Sim4000ms), false,
-					typeof(float));
-			}
-
-			/// <summary>
-			/// Applied before Sim4000ms runs.
-			/// </summary>
-			internal static bool Prefix(KMonoBehaviour ___sparkLayer) {
-				return ___sparkLayer == null || ___sparkLayer.isActiveAndEnabled;
-			}
-		}
-
-		/// <summary>
-		/// Applied to ColonyDiagnosticScreen.DiagnosticRow to turn off the bouncing effect.
-		/// </summary>
-		[HarmonyPatch]
-		internal static class TriggerVisualNotification_Patch {
-			private static readonly MethodBase RESOLVE_NOTIFICATION = DIAGNOSTIC_ROW?.
-				GetMethodSafe("ResolveNotificationRoutine", false);
-
-			internal static bool Prepare() => FastTrackOptions.Instance.NoBounce;
-
-			/// <summary>
-			/// DiagnosticRow is a private class, so calculate the target with reflection.
-			/// </summary>
-			internal static MethodBase TargetMethod() {
-				return DIAGNOSTIC_ROW?.GetMethodSafe(nameof(ISim4000ms.Sim4000ms), false,
-					typeof(float));
-			}
-
-			/// <summary>
-			/// A replacement coroutine that waits 3 seconds and then resolves it with no bounce.
-			/// </summary>
-			private static System.Collections.IEnumerator NoMoveRoutine(object row) {
-				// Wait for 3 seconds unscaled
-				yield return new WaitForSeconds(3.0f);
-				try {
-					// Ignore exception if the notification cannot be resolved
-					RESOLVE_NOTIFICATION?.Invoke(row, new object[] { });
-				} catch (Exception) { }
-				yield break;
-			}
-
-			/// <summary>
-			/// Transpiles TriggerVisualNotification to remove calls to the bouncy coroutine.
-			/// </summary>
-			internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-				return PPatchTools.ReplaceMethodCall(instructions, DIAGNOSTIC_ROW?.
-					GetMethodSafe("VisualNotificationRoutine", false), typeof(
-					TriggerVisualNotification_Patch).GetMethodSafe(nameof(NoMoveRoutine),
-					true, typeof(object)));
-			}
-		}
-	}
-
 	/// <summary>
-	/// Applied to NotificationAnimator to turn off the bouncing effect.
+	/// Applied to KAnimBatch to... actually clear the dirty flag when it updates.
+	/// Unfortunately most anims are marked dirty every frame.
 	/// </summary>
-	[HarmonyPatch(typeof(NotificationAnimator), nameof(NotificationAnimator.Begin))]
-	public static class NotificationAnimator_Begin_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.NoBounce;
-
+	[HarmonyPatch(typeof(KAnimBatch), "ClearDirty")]
+	public static class KAnimBatch_ClearDirty_Patch {
 		/// <summary>
-		/// Applied before Begin runs.
+		/// Applied after ClearDirty runs.
 		/// </summary>
-		internal static bool Prefix(NotificationAnimator __instance, ref bool ___animating,
-				ref LayoutElement ___layoutElement) {
-			var le = __instance.GetComponent<LayoutElement>();
-			if (le != null)
-				le.minWidth = 0.0f;
-			___layoutElement = le;
-			___animating = false;
-			return false;
+		internal static void Postfix(ref bool ___needsWrite) {
+			___needsWrite = false;
 		}
 	}
 
@@ -272,6 +172,83 @@ namespace PeterHan.FastTrack.VisualPatches {
 	}
 
 	/// <summary>
+	/// Applied to SmartReservoir to force update the state once on spawn.
+	/// </summary>
+	[HarmonyPatch(typeof(SmartReservoir), "OnSpawn")]
+	public static class SmartReservoir_OnSpawn_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+
+		/// <summary>
+		/// Applied after OnSpawn runs.
+		/// </summary>
+		internal static void Postfix(LogicPorts ___logicPorts, bool ___activated) {
+			___logicPorts.SendSignal(SmartReservoir.PORT_ID, ___activated ? 1 : 0);
+		}
+	}
+
+	/// <summary>
+	/// Applied to SmartReservoir to stop sending logic updates every 200ms even if nothing
+	/// has changed.
+	/// </summary>
+	[HarmonyPatch(typeof(SmartReservoir), "UpdateLogicCircuit")]
+	public static class SmartReservoir_UpdateLogicCircuit_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+
+		/// <summary>
+		/// Only sends the logic signal update if the new value has changed from the last
+		/// value.
+		/// </summary>
+		/// <param name="ports">The logic port object to which to send the signal.</param>
+		/// <param name="portID">The logic port ID to update.</param>
+		/// <param name="newValue">The new value of the port.</param>
+		/// <param name="lastValue">The previous value of the activated flag.</param>
+		private static void SendSignalIf(LogicPorts ports, HashedString portID, int newValue,
+				bool lastValue) {
+			int lastIntValue = lastValue ? 1 : 0;
+			if (newValue != lastIntValue)
+				ports.SendSignal(portID, newValue);
+		}
+
+		/// <summary>
+		/// Transpiles UpdateLogicCircuit to only conditionally send the signal by swapping
+		/// out the calls to SendSignal.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
+				ILGenerator generator) {
+			var target = typeof(LogicPorts).GetMethodSafe(nameof(LogicPorts.SendSignal),
+				false, typeof(HashedString), typeof(int));
+			var replacement = typeof(SmartReservoir_UpdateLogicCircuit_Patch).GetMethodSafe(
+				nameof(SendSignalIf), true, PPatchTools.AnyArguments);
+			var activatedField = typeof(SmartReservoir).GetFieldSafe("activated", false);
+			if (target == null || replacement == null || activatedField == null) {
+				PUtil.LogWarning("Unable to patch SmartReservoir.UpdateLogicCircuit");
+				foreach (var instr in instructions)
+					yield return instr;
+			} else {
+				var oldActivated = generator.DeclareLocal(typeof(bool));
+				yield return new CodeInstruction(OpCodes.Ldarg_0);
+				yield return new CodeInstruction(OpCodes.Ldfld, activatedField);
+				yield return new CodeInstruction(OpCodes.Stloc_S, (byte)oldActivated.
+					LocalIndex);
+				foreach (var instr in instructions) {
+					if (instr.Is(OpCodes.Callvirt, target)) {
+						// Call the replacement
+						instr.opcode = OpCodes.Ldloc_S;
+						instr.operand = (byte)oldActivated.LocalIndex;
+						yield return instr;
+						// Push the old value
+						yield return new CodeInstruction(OpCodes.Call, replacement);
+#if DEBUG
+						PUtil.LogDebug("Patched SmartReservoir.UpdateLogicCircuit");
+#endif
+					} else
+						yield return instr;
+				}
+			}
+		}
+	}
+
+	/// <summary>
 	/// Applied to Sublimates to stop spawning the bubble effect if the sublimated item is
 	/// in a different world or not on screen.
 	/// </summary>
@@ -326,47 +303,4 @@ namespace PeterHan.FastTrack.VisualPatches {
 			}
 		}
 	}
-
-#if false
-	/// <summary>
-	/// Applied to Workable to add a missing variable update to optimize the most common
-	/// case for all workables.
-	/// 
-	/// This barely saved anything...
-	/// </summary>
-	[HarmonyPatch(typeof(Workable), nameof(Workable.GetEfficiencyMultiplier))]
-	public static class Workable_GetEfficiencyMultiplier_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
-
-		/// <summary>
-		/// Transpiles GetEfficiencyMultiplier to reset the Guid to empty.
-		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-			// After this method
-			var target = typeof(KSelectable).GetMethodSafe(nameof(KSelectable.
-				RemoveStatusItem), false, typeof(Guid), typeof(bool));
-			// Modify this field
-			var field = typeof(Workable).GetFieldSafe(
-				"lightEfficiencyBonusStatusItemHandle", false);
-			if (target == null || field == null) {
-				PUtil.LogWarning("Unable to find target field for Workable light efficiency");
-				foreach (var instr in method)
-					yield return instr;
-			} else
-				foreach (var instr in method) {
-					yield return instr;
-					if (instr.Is(OpCodes.Callvirt, target)) {
-						// Right after it, load Guid.Empty into the field
-						yield return new CodeInstruction(OpCodes.Ldarg_0);
-						yield return new CodeInstruction(OpCodes.Ldsfld, typeof(Guid).
-							GetFieldSafe(nameof(Guid.Empty), true));
-						yield return new CodeInstruction(OpCodes.Stfld, field);
-#if DEBUG
-						PUtil.LogDebug("Patched Workable.GetEfficiencyMultiplier");
-#endif
-					}
-				}
-		}
-	}
-#endif
 }

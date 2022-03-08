@@ -188,9 +188,7 @@ namespace PeterHan.StockBugFix {
 			PUtil.InitLibrary();
 			var pm = new PPatchManager(instance);
 			pm.RegisterPatchClass(typeof(StockBugsPatches));
-#if false
 			pm.RegisterPatchClass(typeof(SweepFixPatches));
-#endif
 			FixModUpdateRace(instance);
 			PRegistry.PutData("Bugs.FishReleaseCount", true);
 			PRegistry.PutData("Bugs.TepidizerPulse", true);

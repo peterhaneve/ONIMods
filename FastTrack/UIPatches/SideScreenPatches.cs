@@ -23,7 +23,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace PeterHan.FastTrack.VisualPatches {
+namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
 	/// Groups patches for the logic bit selector sidescreen.
 	/// </summary>
@@ -76,7 +76,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(LogicBitSelectorSideScreen), "OnSpawn")]
 		public static class OnSpawn_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
+			internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
 
 			/// <summary>
 			/// Applied after OnSpawn runs.
@@ -96,7 +96,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(LogicBitSelectorSideScreen), "RefreshToggles")]
 		public static class RefreshToggles_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
+			internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
 
 			/// <summary>
 			/// Applied after RefreshToggles runs.
@@ -115,7 +115,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		[HarmonyPatch(typeof(LogicBitSelectorSideScreen), nameof(LogicBitSelectorSideScreen.
 			RenderEveryTick))]
 		public static class RenderEveryTick_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
+			internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
 
 			/// <summary>
 			/// Applied before RenderEveryTick runs.
@@ -147,7 +147,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(TimerSideScreen), nameof(TimerSideScreen.RenderEveryTick))]
 	public static class TimerSideScreen_RenderEveryTick_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
+		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
 
 		/// <summary>
 		/// Applied before RenderEveryTick runs.

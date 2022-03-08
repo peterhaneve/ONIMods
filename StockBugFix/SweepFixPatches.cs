@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#if false
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.PatchManager;
@@ -172,4 +171,3 @@ namespace PeterHan.StockBugFix {
 		}
 	}
 }
-#endif

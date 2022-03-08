@@ -18,7 +18,7 @@
 
 using HarmonyLib;
 
-namespace PeterHan.FastTrack {
+namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
 	/// Applied to ConversationManager to turn off all updates.
 	/// </summary>

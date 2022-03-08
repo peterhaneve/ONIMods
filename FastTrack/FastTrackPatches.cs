@@ -59,10 +59,8 @@ namespace PeterHan.FastTrack {
 				PathPatches.NavGrid_InitializeGraph_Patch.Cleanup();
 				PathPatches.PathCacher.Cleanup();
 			}
-#if false
-			Singleton<FastCellChangeMonitor>.Instance?.Cleanup();
-			Singleton<FastCellChangeMonitor>.DestroyInstance();
-#endif
+			// FastCellChangeMonitor did not help, because pretty much all updates were to
+			// things that actually had a listener
 			if (options.UnstackLights)
 				VisualPatches.LightBufferManager.Cleanup();
 			if (options.ReduceTileUpdates)

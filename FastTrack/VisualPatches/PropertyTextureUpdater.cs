@@ -107,20 +107,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 		}
 
 		/// <summary>
-		/// Gets the visible range of cells to update property textures.
-		/// </summary>
-		/// <param name="min">The minimum cell coordinates.</param>
-		/// <param name="max">The maximum cell coordinates.</param>
-		private static void GetVisibleCellRange(out Vector2I min, out Vector2I max) {
-			int width = Grid.WidthInCells, height = Grid.HeightInCells;
-			Grid.GetVisibleExtents(out int xMin, out int yMin, out int xMax, out int yMax);
-			min = new Vector2I(Mathf.Clamp(xMin - TEXTURE_RESOLUTION, 0, width - 1),
-				Mathf.Clamp(yMin - TEXTURE_RESOLUTION, 0, height - 1));
-			max = new Vector2I(Mathf.Clamp(xMax + TEXTURE_RESOLUTION, 0, width - 1),
-				Mathf.Clamp(yMax + TEXTURE_RESOLUTION, 0, height - 1));
-		}
-
-		/// <summary>
 		/// Creates a texture updater delegate for a method in PropertyTextures.
 		/// </summary>
 		/// <param name="method">The method name to delegate.</param>
@@ -144,6 +130,22 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// The external textures from PropertyTextures.
 		/// </summary>
 		private Texture2D[] external;
+
+		/// <summary>
+		/// Forces a start update in the LateUpdate pass for one frame only. Used to stop a
+		/// black screen on initialize.
+		/// </summary>
+		private bool forceLateUpdate;
+
+		/// <summary>
+		/// The last coordinates of the upper right visible cell.
+		/// </summary>
+		private Vector2I lastViewMax;
+
+		/// <summary>
+		/// The last coordinates of the bottom left visible cell.
+		/// </summary>
+		private Vector2I lastViewMin;
 
 		/// <summary>
 		/// The ID of the last active world.
@@ -190,12 +192,14 @@ namespace PeterHan.FastTrack.VisualPatches {
 			allProperties = new List<TextureProperties>(16);
 			constantsDirty = true;
 			external = null;
+			forceLateUpdate = true;
+			lastViewMax = new Vector2I(Grid.InvalidCell, Grid.InvalidCell);
+			lastViewMin = new Vector2I(Grid.InvalidCell, Grid.InvalidCell);
 			lastWorldID = ClusterManager.INVALID_WORLD_IDX;
 			nextPropertyIndex = 0;
 			onComplete = new AutoResetEvent(false);
 			outstanding = 0;
 			running = new List<TextureWorkItemCollection>(64);
-			Instance = this;
 		}
 
 		/// <summary>
@@ -207,7 +211,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 			if (constantsDirty || id != lastWorldID) {
 				float w = Grid.WidthInCells, h = Grid.HeightInCells;
 				var activeWorld = inst.GetWorld(id);
-				// Constant-conditions update... but it is pretty fast
 				Vector4 clusterSize;
 				var worldOffset = activeWorld.WorldOffset;
 				var worldSize = activeWorld.WorldSize;
@@ -221,10 +224,11 @@ namespace PeterHan.FastTrack.VisualPatches {
 				Shader.SetGlobalVector(tIDClusterWorldSize, clusterSize);
 				Shader.SetGlobalFloat(tIDTopBorderHeight, activeWorld.FullyEnclosedBorder ?
 					0f : Grid.TopBorderHeight);
-				Shader.SetGlobalFloat(tIDFogOfWarScale, PropertyTextures.FogOfWarScale);
 				constantsDirty = false;
 				lastWorldID = id;
 			}
+			// This one could be updated even if constants are the same
+			Shader.SetGlobalFloat(tIDFogOfWarScale, PropertyTextures.FogOfWarScale);
 		}
 
 		/// <summary>
@@ -242,6 +246,27 @@ namespace PeterHan.FastTrack.VisualPatches {
 		private void FinishOne() {
 			if (Interlocked.Decrement(ref outstanding) <= 0)
 				onComplete.Set();
+		}
+
+		/// <summary>
+		/// Gets the visible range of cells to update property textures.
+		/// </summary>
+		/// <param name="min">The minimum cell coordinates.</param>
+		/// <param name="max">The maximum cell coordinates.</param>
+		/// <returns>true if the viewport changed since the last call, or false otherwise.</returns>
+		private bool GetVisibleCellRange(out Vector2I min, out Vector2I max) {
+			int width = Grid.WidthInCells, height = Grid.HeightInCells;
+			bool changed;
+			Grid.GetVisibleExtents(out int xMin, out int yMin, out int xMax, out int yMax);
+			min = new Vector2I(Mathf.Clamp(xMin - TEXTURE_RESOLUTION, 0, width - 1),
+				Mathf.Clamp(yMin - TEXTURE_RESOLUTION, 0, height - 1));
+			max = new Vector2I(Mathf.Clamp(xMax + TEXTURE_RESOLUTION, 0, width - 1),
+				Mathf.Clamp(yMax + TEXTURE_RESOLUTION, 0, height - 1));
+			changed = xMin != lastViewMin.x || xMax != lastViewMax.x || yMin != lastViewMin.
+				y || yMax != lastViewMax.y;
+			lastViewMin.x = xMin; lastViewMin.y = yMin;
+			lastViewMax.x = xMax; lastViewMax.y = yMax;
+			return changed;
 		}
 
 		/// <summary>
@@ -265,6 +290,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 				}
 			}
 			constantsDirty = true;
+			lastWorldID = ClusterManager.INVALID_WORLD_IDX;
 		}
 
 		/// <summary>
@@ -274,12 +300,16 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <param name="instance">The property textures to finish updating.</param>
 		internal void FinishUpdate(PropertyTextures instance) {
 			var lerpers = instance.lerpers;
-			int n = lerpers.Length;
+			if (forceLateUpdate && outstanding < 1) {
+				StartUpdate();
+				forceLateUpdate = false;
+			}
 			// Wait out the update
 			if (outstanding > 0)
 				onComplete.WaitOne(Timeout.Infinite);
 			DisposeAll();
-			if (lerpers != null)
+			if (lerpers != null) {
+				int n = lerpers.Length;
 				for (int i = 0; i < n; i++) {
 					var lerper = lerpers[i];
 					if (lerper != null) {
@@ -290,6 +320,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 							Update());
 					}
 				}
+			}
 		}
 
 		/// <summary>
@@ -337,16 +368,12 @@ namespace PeterHan.FastTrack.VisualPatches {
 				updater = UPDATE_RADIATION;
 				break;
 			default:
-				throw new ArgumentException("For property: " + property);
+				throw new ArgumentException("No updater for property: " + property);
 			}
 			if (updater == null)
 				throw new InvalidOperationException("Missing texture updater: " + property);
-			else {
-				var task = new TextureWorkItemCollection(this, buffer, min, max, updater);
-				running.Add(task);
-				AsyncJobManager.Instance.Run(new AsyncJobManager.Work(task, null,
-					TextureWorkItemCollection.Finish));
-			}
+			else
+				running.Add(new TextureWorkItemCollection(this, buffer, min, max, updater));
 		}
 
 		/// <summary>
@@ -360,20 +387,25 @@ namespace PeterHan.FastTrack.VisualPatches {
 				bool timelapse = GameUtil.IsCapturingTimeLapse() || constantsDirty;
 				int n = allProperties.Count, update = nextPropertyIndex;
 				ConstantParamsUpdate();
-				GetVisibleCellRange(out Vector2I min, out Vector2I max);
+				bool redrawFlashy = GetVisibleCellRange(out Vector2I min, out Vector2I max);
 				// Page through the textures to update, once per frame
 				do {
 					update = (update + 1) % n;
 				} while (allProperties[update].UpdateEveryFrame);
 				nextPropertyIndex = update;
-				outstanding = 0;
-				onComplete.Reset();
+				running.Clear();
 				for (int i = 0; i < n; i++) {
 					var properties = allProperties[i];
-					if ((update == i || properties.UpdateEveryFrame || timelapse) &&
-							UpdateProperty(properties.PropertyIndex, buffers, min, max))
-						Interlocked.Increment(ref outstanding);
+					if (update == i || properties.UpdateEveryFrame || timelapse ||
+							(redrawFlashy && i == (int)SimProperty.SolidDigAmount))
+						UpdateProperty(properties.PropertyIndex, buffers, min, max);
 				}
+				// Start them all at once
+				onComplete.Reset();
+				outstanding = running.Count;
+				foreach (var task in running)
+					AsyncJobManager.Instance.Run(new AsyncJobManager.Work(task, null,
+						TextureWorkItemCollection.Finish));
 			}
 		}
 
@@ -384,9 +416,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <param name="buffers">The texture buffers for locally generated textures.</param>
 		/// <param name="min">The minimum cell coordinates to update.</param>
 		/// <param name="max">The maximum cell coordinates to update.</param>
-		private bool UpdateProperty(SimProperty property, TextureBuffer[] buffers,
+		private void UpdateProperty(SimProperty property, TextureBuffer[] buffers,
 				Vector2I min, Vector2I max) {
-			bool started = false;
 			int cells = Grid.CellCount, p = (int)property;
 			switch (property) {
 			case SimProperty.Flow:
@@ -399,18 +430,14 @@ namespace PeterHan.FastTrack.VisualPatches {
 				UpdateSimProperty(p, PropertyTextures.externalExposedToSunlight, cells);
 				break;
 			default:
-				if (p < buffers.Length) {
+				if (p < buffers.Length)
 					StartTextureUpdate(property, buffers[p], min, max);
-					started = true;
-				}
 				break;
 			}
-			return started;
 		}
 
 		/// <summary>
-		/// Updates texture data from the Sim. This is not as free as it looks, it costs about
-		/// 150 us to load and apply a Sim texture.
+		/// Updates texture data from the Sim.
 		/// </summary>
 		/// <param name="index">The property texture index to update.</param>
 		/// <param name="simTexture">The texture data from the Sim.</param>
@@ -428,7 +455,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		private sealed class TextureWorkItemCollection : IWorkItemCollection, IDisposable {
 			/// <summary>
-			/// When a job completes, unlocks the updating region.
+			/// When a job completes, updates the running job count.
 			/// </summary>
 			/// <param name="result">The result of the update.</param>
 			internal static void Finish(AsyncJobManager.Work result) {
@@ -579,7 +606,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied after OnSpawn runs.
 		/// </summary>
-		internal static void Postfix() {
+		internal static void Postfix(PropertyTextures __instance) {
 			PropertyTextureUpdater.CreateInstance();
 		}
 	}

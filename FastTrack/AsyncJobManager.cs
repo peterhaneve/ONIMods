@@ -104,7 +104,7 @@ namespace PeterHan.FastTrack {
 			currentJob = toStart;
 			// Not sure if this matters, borrowed from Klei code
 			Thread.MemoryBarrier();
-			currentJob.TriggerStart();
+			toStart.TriggerStart();
 			semaphore.Release(n);
 		}
 
@@ -170,8 +170,9 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		/// <param name="workItems">The work items to run in parallel.</param>
 		public void Run(Work workItems) {
-			int n = threads.Length;
 			bool starting = false;
+			if (workItems == null)
+				throw new ArgumentNullException(nameof(workItems));
 			if (isDisposed)
 				throw new ObjectDisposedException(nameof(AsyncJobManager));
 			lock (workQueue) {

@@ -18,13 +18,16 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using System.Reflection.Emit;
 
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.Metrics {
-#if true
+#if DEBUG
 	// Replace with method to patch
 	// Brain#UpdateChores is shockingly cheap, just 10-20 ms/1000 ms
 	// Game#LateUpdate is 100-150ms
@@ -38,8 +41,10 @@ namespace PeterHan.FastTrack.Metrics {
 	// StatusItemRenderer#RenderEveryTick could use some work but is only ~10ms (need to excise GetComponent calls which is a massive transpiler)
 	// ElectricalUtilityNetwork#Update is ~10ms
 	// KBatchedAnimUpdater#LateUpdate is ~50ms
-	// PropertyTextures#LateUpdate is ~40ms
-	[HarmonyPatch(typeof(VisualPatches.PropertyTextureUpdater), "StartUpdate")]
+	// AnimEventManager#Update is 20ms but not much can be done
+	// KBatchedAnimUpdater#UpdateRegisteredAnims is 40ms
+	// KAnimBatchManager#Render is 25ms
+	[HarmonyPatch(typeof(PlayerController), "UpdateHover")]
 	public static class TimePatch {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
@@ -53,7 +58,7 @@ namespace PeterHan.FastTrack.Metrics {
 		}
 	}
 
-	[HarmonyPatch(typeof(VisualPatches.PropertyTextureUpdater), "FinishUpdate")]
+	[HarmonyPatch(typeof(KAnimBatchManager), "UpdateDirty")]
 	public static class TimePatch2 {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
@@ -69,46 +74,64 @@ namespace PeterHan.FastTrack.Metrics {
 #endif
 
 	/// <summary>
-	/// Applied to Game to log Game update metrics if enabled.
+	/// Applied to every Update() to log update metrics.
 	/// </summary>
-	[HarmonyPatch(typeof(Game), "Update")]
-	public static class Game_Update_Patch {
+	[HarmonyPatch]
+	public static class ProfileGameUpdates {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
 		/// <summary>
-		/// Applied before Update runs.
+		/// Finds all Unity base methods on classes with the specified name.
 		/// </summary>
+		/// <param name="name">The method name to look up.</param>
+		/// <returns>A list of all base game classes defining that method.</returns>
+		internal static IEnumerable<MethodBase> FindTargets(string name) {
+			var targets = new List<MethodBase>(128);
+			foreach (var type in Assembly.GetAssembly(typeof(Game)).DefinedTypes)
+				if (type != null && typeof(UnityEngine.Behaviour).IsAssignableFrom(type)) {
+					var method = type.GetMethod(name, PPatchTools.BASE_FLAGS |
+						BindingFlags.Instance | BindingFlags.DeclaredOnly, null, Type.
+						EmptyTypes, null);
+					if (method != null)
+						targets.Add(method);
+				}
+			return targets;
+		}
+
+		internal static IEnumerable<MethodBase> TargetMethods() {
+			return FindTargets("Update");
+		}
+
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
 
-		/// <summary>
-		/// Applied after Update runs.
-		/// </summary>
-		internal static void Postfix(Stopwatch __state) {
-			DebugMetrics.GAME_UPDATE.Log(__state.ElapsedTicks);
+		internal static void Postfix(UnityEngine.Behaviour __instance, Stopwatch __state) {
+			if (__state != null && __instance != null)
+				DebugMetrics.UPDATE.AddSlice(__instance.GetType().FullName, __state.
+					ElapsedTicks);
 		}
 	}
 
 	/// <summary>
-	/// Applied to Game to log Game late update metrics if enabled.
+	/// Applied to every Update() to log update metrics.
 	/// </summary>
-	[HarmonyPatch(typeof(Game), "LateUpdate")]
-	public static class Game_LateUpdate_Patch {
+	[HarmonyPatch]
+	public static class ProfileGameLateUpdates {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
-		/// <summary>
-		/// Applied before Update runs.
-		/// </summary>
+		internal static IEnumerable<MethodBase> TargetMethods() {
+			return ProfileGameUpdates.FindTargets("LateUpdate");
+		}
+
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
 
-		/// <summary>
-		/// Applied after Update runs.
-		/// </summary>
-		internal static void Postfix(Stopwatch __state) {
-			DebugMetrics.GAME_LATEUPDATE.Log(__state.ElapsedTicks);
+		internal static void Postfix(UnityEngine.Behaviour __instance, Stopwatch __state) {
+			if (__state != null && __instance != null)
+				DebugMetrics.LATE_UPDATE.AddSlice(__instance.GetType().FullName, __state.
+					ElapsedTicks);
 		}
 	}
 
@@ -134,7 +157,6 @@ namespace PeterHan.FastTrack.Metrics {
 		}
 	}
 
-#if true
 	/// <summary>
 	/// Applied to SimAndRenderScheduler.RenderEveryTickUpdater to log sim/render update
 	/// metrics if enabled.
@@ -382,5 +404,4 @@ namespace PeterHan.FastTrack.Metrics {
 				GetType().FullName, __state.ElapsedTicks);
 		}
 	}
-#endif
 }
