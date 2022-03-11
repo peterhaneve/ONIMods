@@ -171,8 +171,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			// If nothing has changed since last time, it is a hit!
 			var cached = PathCacher.Lookup(___navigator.PathProber);
 			bool hit = cached.CheckAndUpdate(___navigator, ___cell);
-			if (FastTrackPatches.DEBUG)
-				Metrics.DebugMetrics.LogHit(hit);
+			Metrics.DebugMetrics.LogHit(hit);
 			return !hit;
 		}
 	}

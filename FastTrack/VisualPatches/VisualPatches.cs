@@ -19,6 +19,8 @@
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using System;
+using System.Collections.Generic;
+using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using UnityEngine;
@@ -83,6 +85,32 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		internal static void Postfix(ref bool ___needsWrite) {
 			___needsWrite = false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to PopFXManager to hush the torrent of popups at the start of the game.
+	/// </summary>
+	[HarmonyPatch]
+	public static class PopFXManager_SpawnFX_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
+
+		/// <summary>
+		/// Patch all of the SpawnFX overloads.
+		/// </summary>
+		internal static IEnumerable<MethodBase> TargetMethods() {
+			foreach (var method in typeof(PopFXManager).GetMethods(BindingFlags.Instance |
+					PPatchTools.BASE_FLAGS))
+				if (method.Name == nameof(PopFXManager.SpawnFX))
+					yield return method;
+			yield break;
+		}
+
+		/// <summary>
+		/// Applied before SpawnFX runs.
+		/// </summary>
+		internal static bool Prefix() {
+			return FastTrackPatches.GameRunning;
 		}
 	}
 

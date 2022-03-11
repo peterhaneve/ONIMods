@@ -49,7 +49,7 @@ namespace PeterHan.FastTrack {
 		/// <summary>
 		/// Cached reference to the head of workQueue.
 		/// </summary>
-		private Work currentJob;
+		private IWork currentJob;
 
 		/// <summary>
 		/// Used to prevent multiple disposes.
@@ -74,7 +74,7 @@ namespace PeterHan.FastTrack {
 		/// <summary>
 		/// The queue of jobs waiting to be started.
 		/// </summary>
-		private readonly Queue<Work> workQueue;
+		private readonly Queue<IWork> workQueue;
 
 		internal AsyncJobManager() {
 			int n = CPUBudget.coreCount;
@@ -88,7 +88,7 @@ namespace PeterHan.FastTrack {
 			nextWorkIndex = -1;
 			semaphore = new Semaphore(0, n);
 			threads = new WorkerThread[n];
-			workQueue = new Queue<Work>();
+			workQueue = new Queue<IWork>();
 			for (int i = 0; i < n; i++)
 				threads[i] = new WorkerThread(this, "FastTrackWorker{0}".F(i));
 		}
@@ -97,7 +97,7 @@ namespace PeterHan.FastTrack {
 		/// Advances to the next task in the queue.
 		/// </summary>
 		/// <param name="toStart">The job that will be started.</param>
-		private void AdvanceNext(Work toStart) {
+		private void AdvanceNext(IWork toStart) {
 			int n = threads.Length;
 			nextWorkIndex = -1;
 			activeThreads = n;
@@ -144,7 +144,8 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		internal void ReportInactive() {
 			if (Interlocked.Decrement(ref activeThreads) <= 0) {
-				Work next = null;
+				IWork next = null;
+				currentJob?.TriggerComplete();
 				lock (workQueue) {
 					// Remove the old head, and check for a new one
 					int n = workQueue.Count;
@@ -152,15 +153,13 @@ namespace PeterHan.FastTrack {
 						workQueue.Dequeue();
 					if (n > 1)
 						next = workQueue.Peek();
+					currentJob = null;
 				}
-				currentJob?.TriggerComplete();
 				if (next != null)
 					AdvanceNext(next);
-				else {
-					currentJob = null;
+				else
 					foreach (var thread in threads)
 						thread.PrintExceptions();
-				}
 			}
 		}
 
@@ -169,7 +168,7 @@ namespace PeterHan.FastTrack {
 		/// after execution begins; use Wait to monitor the status.
 		/// </summary>
 		/// <param name="workItems">The work items to run in parallel.</param>
-		public void Run(Work workItems) {
+		public void Run(IWork workItems) {
 			bool starting = false;
 			if (workItems == null)
 				throw new ArgumentNullException(nameof(workItems));
@@ -236,64 +235,23 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
-		/// A class representing a series of related tasks to be performed. Allows calling a
-		/// notification method (can occur on any thread!) when they all complete.
+		/// An interface implemented to handle a collection of related tasks.
 		/// </summary>
-		public sealed class Work {
-			/// <summary>
-			/// The event that will be signaled when the work completes.
-			/// </summary>
-			private readonly EventWaitHandle completeEvent;
-
-			/// <summary>
-			/// The callback to run when the work completes.
-			/// </summary>
-			private readonly Action<Work> onComplete;
-
+		public interface IWork {
 			/// <summary>
 			/// The jobs to run.
 			/// </summary>
-			public IWorkItemCollection Jobs { get; }
-
-			/// <summary>
-			/// The runtime of this job in Stopwatch ticks.
-			/// </summary>
-			public long Runtime { get; private set; }
-
-			/// <summary>
-			/// The stopwatch used for timing this task's total runtime.
-			/// </summary>
-			private Stopwatch timer;
-
-			public Work(IWorkItemCollection jobs, EventWaitHandle completeEvent = null,
-					Action<Work> onComplete = null) {
-				Jobs = jobs ?? throw new ArgumentNullException(nameof(jobs));
-				this.onComplete = onComplete;
-				this.completeEvent = completeEvent;
-				Runtime = 0L;
-				timer = null;
-			}
-
-			public override string ToString() {
-				return "AsyncJobManager.Work[{0:D} tasks]".F(Jobs.Count);
-			}
+			IWorkItemCollection Jobs { get; }
 
 			/// <summary>
 			/// Called by AsyncJobManager when the work item collection completes.
 			/// </summary>
-			internal void TriggerComplete() {
-				if (timer != null)
-					Runtime = timer.ElapsedTicks;
-				completeEvent?.Set();
-				onComplete?.Invoke(this);
-			}
+			void TriggerComplete();
 
 			/// <summary>
 			/// Called by AsyncJobManager when the work item collection is started.
 			/// </summary>
-			internal void TriggerStart() {
-				timer = Stopwatch.StartNew();
-			}
+			void TriggerStart();
 		}
 	}
 }

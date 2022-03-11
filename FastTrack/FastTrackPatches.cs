@@ -27,13 +27,13 @@ using UnityEngine;
 
 namespace PeterHan.FastTrack {
 	/// <summary>
-	/// Patches which will be applied via annotations for FastTrack.
+	/// Patches which will be applied via annotations for Fast Track.
 	/// </summary>
 	public sealed class FastTrackPatches : KMod.UserMod2 {
 		/// <summary>
-		/// Caches the value of the debug flag.
+		/// Set to true when the game gets off its feet, and false while it is still loading.
 		/// </summary>
-		internal static bool DEBUG = false;
+		internal static bool GameRunning { get; private set; }
 
 		/// <summary>
 		/// Initializes several patches after Db is initialized.
@@ -46,6 +46,8 @@ namespace PeterHan.FastTrack {
 			if (options.DisableConduitAnimation != FastTrackOptions.ConduitAnimationQuality.
 					Full)
 				ConduitPatches.ConduitFlowVisualizer_Render_Patch.SetupDelegates();
+			if (options.SensorOpts)
+				SensorPatches.SensorPatches.Init();
 		}
 
 		/// <summary>
@@ -65,7 +67,10 @@ namespace PeterHan.FastTrack {
 				VisualPatches.LightBufferManager.Cleanup();
 			if (options.ReduceTileUpdates)
 				VisualPatches.PropertyTextureUpdater.DestroyInstance();
+			if (options.ConduitOpts)
+				ConduitPatches.BackgroundConduitUpdater.DestroyInstance();
 			AsyncJobManager.DestroyInstance();
+			GameRunning = false;
 		}
 
 		/// <summary>
@@ -81,16 +86,17 @@ namespace PeterHan.FastTrack {
 			if (inst != null) {
 				var go = inst.gameObject;
 				go.AddOrGet<AsyncJobManager>();
-				if (options.SensorOpts || options.PickupOpts)
-					go.AddOrGet<SensorPatches.SensorWrapperUpdater>();
 				if (options.AsyncPathProbe)
 					go.AddOrGet<PathPatches.PathProbeJobManager>();
 				if (options.ReduceSoundUpdates)
 					go.AddOrGet<SoundUpdater>();
 				// If debugging is on, start logging
-				if (DEBUG)
+				if (options.Metrics)
 					go.AddOrGet<Metrics.DebugMetrics>();
+				inst.StartCoroutine(WaitForCleanLoad());
 			}
+			if (options.ConduitOpts)
+				ConduitPatches.BackgroundConduitUpdater.CreateInstance();
 			ConduitPatches.ConduitFlowVisualizer_Render_Patch.Init();
 			if (options.UnstackLights)
 				VisualPatches.LightBufferManager.Init();
@@ -122,24 +128,82 @@ namespace PeterHan.FastTrack {
 			new POptions().RegisterOptions(this, typeof(FastTrackOptions));
 			new PPatchManager(harmony).RegisterPatchClass(typeof(FastTrackPatches));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
-			DEBUG = options.Metrics;
 			// In case this goes in stock bug fix later
 			if (options.UnstackLights)
 				PRegistry.PutData("Bugs.StackedLights", true);
+			GameRunning = false;
 		}
 
 		/// <summary>
-		/// Applied to MinionConfig to add an instance of SensorWrapper to each Duplicant.
+		/// Waits a few frames as a coroutine, then allows things that require game stability
+		/// to run.
+		/// </summary>
+		private static System.Collections.IEnumerator WaitForCleanLoad() {
+			for (int i = 0; i < 4; i++)
+				yield return null;
+			GameRunning = true;
+			yield break;
+		}
+
+		/// <summary>
+		/// Applied to MinionConfig to apply several patches from different areas of the mod.
 		/// </summary>
 		[HarmonyPatch(typeof(MinionConfig), nameof(MinionConfig.OnSpawn))]
 		public static class MinionConfig_OnSpawn_Patch {
+			internal static bool Prepare() {
+				var options = FastTrackOptions.Instance;
+				return options.SensorOpts;
+			}
+
 			/// <summary>
 			/// Applied after OnSpawn runs.
 			/// </summary>
 			internal static void Postfix(GameObject go) {
-				var opts = FastTrackOptions.Instance;
-				if (opts.SensorOpts || opts.PickupOpts)
-					go.AddOrGet<SensorPatches.SensorWrapper>();
+				if (go != null) {
+					var options = FastTrackOptions.Instance;
+					if (options.SensorOpts)
+						SensorPatches.SensorPatches.RemoveBalloonArtistSensor(go);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Applied to Global to start up some expensive things before Game.LateUpdate runs.
+		/// </summary>
+		[HarmonyPatch(typeof(Global), "LateUpdate")]
+		public static class Global_LateUpdate_Patch {
+			internal static bool Prepare() {
+				var options = FastTrackOptions.Instance;
+				return options.ConduitOpts;
+			}
+
+			/// <summary>
+			/// Applied before LateUpdate runs.
+			/// </summary>
+			internal static void Prefix() {
+				var options = FastTrackOptions.Instance;
+				if (options.ConduitOpts)
+					ConduitPatches.BackgroundConduitUpdater.StartUpdateAll();
+			}
+		}
+
+		/// <summary>
+		/// Applied to Global to start up some expensive things before Game.Update runs.
+		/// </summary>
+		[HarmonyPatch(typeof(Global), "Update")]
+		public static class Global_Update_Patch {
+			internal static bool Prepare() {
+				var options = FastTrackOptions.Instance;
+				return options.ConduitOpts;
+			}
+
+			/// <summary>
+			/// Applied before Update runs.
+			/// </summary>
+			internal static void Prefix() {
+				var options = FastTrackOptions.Instance;
+				if (options.ConduitOpts)
+					ConduitPatches.BackgroundConduitUpdater.StartUpdateAll();
 			}
 		}
 	}

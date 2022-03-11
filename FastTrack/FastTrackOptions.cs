@@ -39,7 +39,7 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool ThreatOvercrowding { get; set; }
 
-		[Option("Simplify Eating", "Optimize how Critters find objects to eat.\n<i>Some minor changes to Critter behaviour may occur</i>" + PERF_MEDIUM, "Critters")]
+		[Option("Optimize Eating", "Optimize how Critters find objects to eat.\n<i>Some minor changes to Critter behaviour may occur</i>" + PERF_MEDIUM, "Critters")]
 		[JsonProperty]
 		public bool CritterConsumers { get; set; }
 
@@ -71,7 +71,15 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool PickupOpts { get; set; }
 
-		[Option("Batch Sounds", "Reduce the frequency of sound location updates." + PERF_LOW, "Interface")]
+		[Option("Threaded Conduit Updates", "Multi-threads some updates to liquid and gas conduits." + PERF_LOW, "Items")]
+		[JsonProperty]
+		public bool ConduitOpts { get; set; }
+
+		[Option("Vector Minimization", "Reduces memory allocations in most game-wide lists of items." + PERF_LOW, "Items")]
+		[JsonProperty]
+		public bool MinimalKCV { get; set; }
+
+		[Option("Batch Sounds", "Reduces the frequency of sound location updates." + PERF_LOW, "Interface")]
 		[JsonProperty]
 		public bool ReduceSoundUpdates { get; set; }
 
@@ -79,11 +87,11 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool FastRaycast { get; set; }
 
-		[Option("Info Card Optimization", "Optimize slow code in the info card handlers." + PERF_LOW, "Interface")]
+		[Option("Info Card Optimization", "Optimizes the info cards shown on hover." + PERF_LOW, "Interface")]
 		[JsonProperty]
 		public bool InfoCardOpts { get; set; }
 
-		[Option("Other UI Optimizations", "Optimize slow code in a variety of event and UI handlers." + PERF_LOW, "Interface")]
+		[Option("Other UI Optimizations", "Optimizes a variety of event and UI handlers." + PERF_LOW, "Interface")]
 		[JsonProperty]
 		public bool MiscOpts { get; set; }
 
@@ -95,11 +103,11 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool RenderTicks { get; set; }
 
-		[Option("Pipe Animation Quality", "Controls the visual fidelity of pipe animations.\nNo changes to actual pipe mechanics will occur." + PERF_MEDIUM, "Visual")]
+		[Option("Pipe Animation Quality", "Controls the visual fidelity of pipe animations.\n<i>No changes to actual pipe mechanics will occur</i>" + PERF_MEDIUM, "Visual")]
 		[JsonProperty]
 		public ConduitAnimationQuality DisableConduitAnimation { get; set; }
 
-		[Option("Reduce Tile Updates", "Reduces the frequency of updates to tile textures." + PERF_HIGH, "Visual")]
+		[Option("Threaded Tile Updates", "Multi-threads updates to most tile textures." + PERF_HIGH, "Visual")]
 		[JsonProperty]
 		public bool ReduceTileUpdates { get; set; }
 
@@ -110,6 +118,7 @@ namespace PeterHan.FastTrack {
 		public FastTrackOptions() {
 			AsyncPathProbe = true;
 			CachePaths = true;
+			ConduitOpts = false;
 			CritterConsumers = true;
 			DisableConduitAnimation = ConduitAnimationQuality.Reduced;
 			FastRaycast = true;
@@ -117,6 +126,7 @@ namespace PeterHan.FastTrack {
 			InfoCardOpts = true;
 			SensorOpts = true;
 			Metrics = false;
+			MinimalKCV = false;
 			MiscOpts = true;
 			NoBounce = true;
 			NoConversations = false;

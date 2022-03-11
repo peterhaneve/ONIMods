@@ -148,6 +148,129 @@ namespace PeterHan.FastTrack.UIPatches {
 	}
 
 	/// <summary>
+	/// 11388
+	/// </summary>
+	[HarmonyPatch(typeof(NameDisplayScreen), nameof(NameDisplayScreen.AddNewEntry))]
+	public static class NameDisplayScreen_AddNewEntry_Patch {
+		internal static bool Prepare() => false;
+
+		/// <summary>
+		/// Locks down the layout and removes unnecessary layout components from name displays,
+		/// to reduce time spent laying out the components.
+		/// </summary>
+		/// <param name="displayObj">The object displaying the name information.</param>
+		private static System.Collections.IEnumerator LockLayoutLater(GameObject displayObj) {
+			yield return new WaitForEndOfFrame();
+			if (displayObj != null) {
+				// Outer object is a vertical layout group of the name and the bars
+				// Bars have a vertical layout group of the bar members
+				displayObj.AddOrGet<Canvas>();
+			}
+		}
+
+		/// <summary>
+		/// Applied after AddNewEntry runs.
+		/// </summary>
+		internal static void Postfix(IList<NameDisplayScreen.Entry> ___entries) {
+			int n;
+			if (___entries != null && (n = ___entries.Count) > 0) {
+				// Wait a frame for it to lay out
+				var added = ___entries[n - 1];
+				var refs = added?.refs;
+				if (refs != null) {
+					refs.StartCoroutine(LockLayoutLater(added.display_go));
+				}
+			}
+		}
+	}
+
+	/// <summary>
+	/// Applied to NameDisplayScreen to slightly speed up visibility checking. Every bit
+	/// counts!
+	/// </summary>
+	[HarmonyPatch(typeof(NameDisplayScreen), "LateUpdatePos")]
+	public static class NameDisplayScreen_LateUpdatePos_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+
+		/// <summary>
+		/// Replaces the IsVisiblePos call with a check to the local variable Contains which
+		/// is way faster.
+		/// Searches up to six instructions back for the arguments and fixes them up too.
+		/// </summary>
+		/// <param name="allInstr">The method IL to patch.</param>
+		/// <param name="index">The instruction index to modify.</param>
+		/// <param name="bounds">The local variable containing the area.</param>
+		private static bool FixupCall(IList<CodeInstruction> allInstr, int index,
+				LocalBuilder bounds, MethodBase getInstance) {
+			int maxDepth = Math.Max(1, index - 6);
+			bool patched = false;
+			var contains = typeof(GridArea).GetMethodSafe(nameof(GridArea.Contains), false,
+				typeof(Vector3));
+			var current = allInstr[index];
+			if (contains != null) {
+				// Swap the previous GetInstance to ldloca.s
+				for (int j = index - 1; j >= maxDepth && !patched; j--) {
+					var instr = allInstr[j];
+					if (instr.Is(OpCodes.Call, getInstance)) {
+						instr.opcode = OpCodes.Ldloca_S;
+						instr.operand = (byte)bounds.LocalIndex;
+						patched = true;
+					}
+				}
+				if (patched) {
+					// Swap the call to Contains
+					current.opcode = OpCodes.Call;
+					current.operand = contains;
+#if DEBUG
+					PUtil.LogDebug("Patched NameDisplayScreen.LateUpdatePos");
+#endif
+				}
+			}
+			return patched;
+		}
+
+		/// <summary>
+		/// Transpiles LateUpdatePos to replace CameraController.Instance.IsVisiblePos with
+		/// a comparison that avoids recalculating the bounds again and again.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
+				ILGenerator generator) {
+			var curArea = typeof(GridVisibleArea).GetPropertySafe<GridArea>(nameof(
+				GridVisibleArea.CurrentArea), false)?.GetGetMethod();
+			var target = typeof(CameraController).GetMethodSafe(nameof(CameraController.
+				IsVisiblePos), false, typeof(Vector3));
+			var getInstance = typeof(CameraController).GetPropertySafe<CameraController>(
+				nameof(CameraController.Instance), true)?.GetGetMethod();
+			var areaField = typeof(CameraController).GetFieldSafe(nameof(CameraController.
+				VisibleArea), false);
+			var allInstr = new List<CodeInstruction>(instructions);
+			bool patched = false;
+			// The visible area test only really matters when zoomed in
+			if (curArea != null && target != null && getInstance != null && areaField != null)
+			{
+				var bounds = generator.DeclareLocal(typeof(GridArea));
+				int n = allInstr.Count;
+				for (int i = 0; i < n; i++) {
+					var instr = allInstr[i];
+					if (!patched && instr.Is(OpCodes.Callvirt, target))
+						patched = FixupCall(allInstr, i, bounds, getInstance);
+				}
+				if (patched)
+					// Get the area and save it
+					allInstr.InsertRange(0, new CodeInstruction[] {
+						new CodeInstruction(OpCodes.Call, getInstance),
+						new CodeInstruction(OpCodes.Ldfld, areaField),
+						new CodeInstruction(OpCodes.Call, curArea),
+						new CodeInstruction(OpCodes.Stloc_S, (byte)bounds.LocalIndex)
+					});
+			}
+			if (!patched)
+				PUtil.LogWarning("Unable to patch NameDisplayScreen.LateUpdatePos");
+			return allInstr;
+		}
+	}
+
+	/// <summary>
 	/// Applied to NotificationAnimator to turn off the bouncing effect.
 	/// </summary>
 	[HarmonyPatch(typeof(NotificationAnimator), nameof(NotificationAnimator.Begin))]
@@ -185,15 +308,16 @@ namespace PeterHan.FastTrack.UIPatches {
 			var markerField = typeof(WorldInventory).GetFieldSafe("accessibleUpdateIndex",
 				false);
 			var updateField = typeof(WorldInventory).GetFieldSafe("firstUpdate", false);
-			var getTimeScale = typeof(Time).GetPropertySafe<float>(nameof(Time.timeScale),
-				true)?.GetGetMethod();
+			var getSCS = typeof(SpeedControlScreen).GetPropertySafe<float>(nameof(
+				SpeedControlScreen.Instance), true)?.GetGetMethod();
+			var isPaused = typeof(SpeedControlScreen).GetMethodSafe(nameof(SpeedControlScreen.
+				IsPaused), false);
 			bool storeField = false, done = false;
 			var end = generator.DefineLabel();
-			if (getTimeScale != null) {
-				// Exit the method if timeScale is 0.0f (paused)
-				yield return new CodeInstruction(OpCodes.Call, getTimeScale);
-				yield return new CodeInstruction(OpCodes.Ldc_R4, 0.0f);
-				yield return new CodeInstruction(OpCodes.Ceq);
+			if (getSCS != null && isPaused != null) {
+				// Exit the method if the speed screen reports paused
+				yield return new CodeInstruction(OpCodes.Call, getSCS);
+				yield return new CodeInstruction(OpCodes.Callvirt, isPaused);
 				yield return new CodeInstruction(OpCodes.Brtrue, end);
 			}
 			foreach (var instr in instructions) {

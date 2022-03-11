@@ -171,26 +171,27 @@ namespace PeterHan.FastTrack.Metrics {
 		}
 
 		public void Render1000ms(float dt) {
-			long probeTotal = PATH_PROBES.TimeInMethod, probeSaved = Math.Max(0L, probeTotal -
-				TicksToUS(probeWaiting));
-			int probeCount = PATH_PROBES.MethodCalls;
-			PUtil.LogDebug("Methods Run: {0}(s), {1}(t), {2}(t)".F(SENSORS, TRACKED[0],
-				TRACKED[1]));
-			PUtil.LogDebug("Path Cache: {0:D}/{1:D} hits, {2:F1}%".F(cacheHits, cacheTotal,
-				cacheHits * 100.0f / Math.Max(1, cacheTotal)));
-			PUtil.LogDebug("Path Probes: executed {0:N0}us, saved {1:N0}us ({2:N0}/frame)".F(
-				probeTotal, probeSaved, probeCount > 0 ? (double)probeSaved / probeCount :
-				0.0));
-			PUtil.LogDebug("Sim/Render: *r{0}\n200r{1}\n1000r{2}\n*s{3}\n33s{4}\n200s{5}\n1000s{6}\n4000s{7}".F(
-				SIMANDRENDER[(int)UpdateRate.RENDER_EVERY_TICK],
-				SIMANDRENDER[(int)UpdateRate.RENDER_200ms],
-				SIMANDRENDER[(int)UpdateRate.RENDER_1000ms],
-				SIMANDRENDER[(int)UpdateRate.SIM_EVERY_TICK],
-				SIMANDRENDER[(int)UpdateRate.SIM_33ms],
-				SIMANDRENDER[(int)UpdateRate.SIM_200ms],
-				SIMANDRENDER[(int)UpdateRate.SIM_1000ms],
-				SIMANDRENDER[(int)UpdateRate.SIM_4000ms]));
-			PUtil.LogDebug("Update: {0}\nLateUpdate: {1}".F(UPDATE, LATE_UPDATE));
+			if (FastTrackPatches.GameRunning) {
+				long probeTotal = PATH_PROBES.TimeInMethod, probeSaved = Math.Max(0L,
+					probeTotal - TicksToUS(probeWaiting));
+				int probeCount = PATH_PROBES.MethodCalls;
+				PUtil.LogDebug("Methods Run: {0}(s), {1}(t), {2}(t)".F(SENSORS, TRACKED[0],
+					TRACKED[1]));
+				PUtil.LogDebug("Path Cache: {0:D}/{1:D} hits, {2:F1}%".F(cacheHits, cacheTotal,
+					cacheHits * 100.0f / Math.Max(1, cacheTotal)));
+				PUtil.LogDebug("Path Probes: executed {0:N0}us, saved {1:N0}us ({2:N0}/frame)".
+					F(probeTotal, probeSaved, (double)probeSaved / Math.Max(1, probeCount)));
+				PUtil.LogDebug("Sim/Render: *r{0}\n200r{1}\n1000r{2}\n*s{3}\n33s{4}\n200s{5}\n1000s{6}\n4000s{7}".F(
+					SIMANDRENDER[(int)UpdateRate.RENDER_EVERY_TICK],
+					SIMANDRENDER[(int)UpdateRate.RENDER_200ms],
+					SIMANDRENDER[(int)UpdateRate.RENDER_1000ms],
+					SIMANDRENDER[(int)UpdateRate.SIM_EVERY_TICK],
+					SIMANDRENDER[(int)UpdateRate.SIM_33ms],
+					SIMANDRENDER[(int)UpdateRate.SIM_200ms],
+					SIMANDRENDER[(int)UpdateRate.SIM_1000ms],
+					SIMANDRENDER[(int)UpdateRate.SIM_4000ms]));
+				PUtil.LogDebug("Update: {0}\nLateUpdate: {1}".F(UPDATE, LATE_UPDATE));
+			}
 			ResetAsyncPath();
 			ResetMethodHits();
 			ResetPathCache();

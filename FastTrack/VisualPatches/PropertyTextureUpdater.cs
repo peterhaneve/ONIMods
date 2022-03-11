@@ -404,8 +404,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 				onComplete.Reset();
 				outstanding = running.Count;
 				foreach (var task in running)
-					AsyncJobManager.Instance.Run(new AsyncJobManager.Work(task, null,
-						TextureWorkItemCollection.Finish));
+					AsyncJobManager.Instance.Run(task);
 			}
 		}
 
@@ -453,16 +452,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Generates work items for updating a texture.
 		/// </summary>
-		private sealed class TextureWorkItemCollection : IWorkItemCollection, IDisposable {
-			/// <summary>
-			/// When a job completes, updates the running job count.
-			/// </summary>
-			/// <param name="result">The result of the update.</param>
-			internal static void Finish(AsyncJobManager.Work result) {
-				if (result.Jobs is TextureWorkItemCollection collection)
-					collection.Finish();
-			}
-
+		private sealed class TextureWorkItemCollection : AsyncJobManager.IWork, IDisposable,
+				IWorkItemCollection {
 			/// <summary>
 			/// The parent to notify when it finishes.
 			/// </summary>
@@ -503,6 +494,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// </summary>
 			public int Count { get; private set; }
 
+			public IWorkItemCollection Jobs => this;
+
 			public TextureWorkItemCollection(PropertyTextureUpdater instance,
 					TextureBuffer buffer, Vector2I min, Vector2I max, UpdateTexture updater) {
 				parent = instance ?? throw new ArgumentNullException(nameof(instance));
@@ -523,18 +516,17 @@ namespace PeterHan.FastTrack.VisualPatches {
 				region.Unlock();
 			}
 
-			/// <summary>
-			/// Marks this texture update as completed.
-			/// </summary>
-			private void Finish() {
-				parent.FinishOne();
-			}
-
 			public void InternalDoWorkItem(int index) {
 				int regionMin = index * TEXTURE_RESOLUTION + yMin;
 				int regionMax = Math.Min(regionMin + TEXTURE_RESOLUTION - 1, yMax);
 				updateTexture.Invoke(region, xMin, regionMin, xMax, regionMax);
 			}
+
+			public void TriggerComplete() {
+				parent.FinishOne();
+			}
+
+			public void TriggerStart() { }
 		}
 	}
 

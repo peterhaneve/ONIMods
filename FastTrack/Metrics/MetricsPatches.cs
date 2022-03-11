@@ -27,24 +27,24 @@ using System.Reflection.Emit;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.Metrics {
+	// Global, Game, World
 #if DEBUG
 	// Replace with method to patch
-	// Brain#UpdateChores is shockingly cheap, just 10-20 ms/1000 ms
-	// Game#LateUpdate is 100-150ms
-	// Game#Update is 250-300ms
-	// Game#SimEveryTick is most of Game#Update
-	// StateMachineUpdater#AdvanceOneSimSubTick calls the ISim handlers (200ms)
+	// Game#LateUpdate is 100-150ms/1000ms
+	// Game#Update is 200-250ms
 	// Pathfinding#UpdateNavGrids is <20ms
 	// Pathfinding#RenderEveryTick is nearly instant
-	// StateMachineUpdater#Render calls the IRender handlers
-	// StateMachineUpdater#RenderEveryTick calls the IRenderEveryTick handlers
 	// StatusItemRenderer#RenderEveryTick could use some work but is only ~10ms (need to excise GetComponent calls which is a massive transpiler)
 	// ElectricalUtilityNetwork#Update is ~10ms
 	// KBatchedAnimUpdater#LateUpdate is ~50ms
 	// AnimEventManager#Update is 20ms but not much can be done
 	// KBatchedAnimUpdater#UpdateRegisteredAnims is 40ms
 	// KAnimBatchManager#Render is 25ms
-	[HarmonyPatch(typeof(PlayerController), "UpdateHover")]
+	// KAnimBatchManager#UpdateDirty is 30ms+
+	// ConduitFlow.Sim200ms is <10ms
+	// ChoreConsumer.FindNextChore is <10ms
+	// PickupableSensor.Update is 70ms
+	[HarmonyPatch(typeof(GlobalChoreProvider), "UpdateFetches")]
 	public static class TimePatch {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
@@ -58,7 +58,7 @@ namespace PeterHan.FastTrack.Metrics {
 		}
 	}
 
-	[HarmonyPatch(typeof(KAnimBatchManager), "UpdateDirty")]
+	[HarmonyPatch(typeof(FetchManager), "UpdatePickups")]
 	public static class TimePatch2 {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
@@ -69,6 +69,55 @@ namespace PeterHan.FastTrack.Metrics {
 		internal static void Postfix(Stopwatch __state) {
 			if (__state != null)
 				DebugMetrics.TRACKED[1].Log(__state.ElapsedTicks);
+		}
+	}
+#endif
+
+#if false
+	/// <summary>
+	/// Applied to BrainScheduler.BrainGroup to dump load balancing statistics.
+	/// </summary>
+	[HarmonyPatch]
+	public static class BrainScheduler_BrainGroup_AdjustLoad_Patch {
+		/// <summary>
+		/// References the private inner type BrainScheduler.BrainGroup.
+		/// </summary>
+		private static readonly Type BRAIN_GROUP = typeof(BrainScheduler).GetNestedType(
+			"BrainGroup", BindingFlags.Instance | PPatchTools.BASE_FLAGS);
+
+		/// <summary>
+		/// Gets the number of probes to run.
+		/// </summary>
+		private static readonly MethodInfo GET_PROBE_COUNT = BRAIN_GROUP?.
+			GetPropertySafe<int>("probeCount", false)?.GetGetMethod();
+
+		/// <summary>
+		/// Gets the depth that probes will iterate.
+		/// </summary>
+		private static readonly MethodInfo GET_PROBE_SIZE = BRAIN_GROUP?.
+			GetPropertySafe<int>("probeSize", false)?.GetGetMethod();
+
+		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
+
+		internal static MethodBase TargetMethod() {
+			return BRAIN_GROUP?.GetMethodSafe(nameof(ICPULoad.AdjustLoad), false,
+				typeof(float), typeof(float));
+		}
+
+		/// <summary>
+		/// Applied after AdjustLoad runs.
+		/// </summary>
+		internal static void Postfix(float currentFrameTime, float frameTimeDelta,
+				object __instance) {
+			if (GET_PROBE_COUNT == null || !(GET_PROBE_COUNT.Invoke(__instance, null) is
+					int probeCount))
+				probeCount = 0;
+			if (GET_PROBE_SIZE == null || !(GET_PROBE_SIZE.Invoke(__instance, null) is
+					int probeSize))
+				probeSize = 0;
+			PUtil.LogDebug("For {0}: adjusting from {1:F3} to {2:F3}, now probing {3:D}x{4:D}".
+				F(__instance.GetType().Name, frameTimeDelta, currentFrameTime, probeCount,
+				probeSize));
 		}
 	}
 #endif
