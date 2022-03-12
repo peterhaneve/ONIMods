@@ -113,9 +113,9 @@ namespace PeterHan.FastTrack.PathPatches {
 			var newFlags = navigator.flags;
 			var navGrid = navigator.NavGrid;
 			if (NavFences.AllFences.TryGetValue(navGrid.id, out NavFences fences)) {
-				ok = flags == newFlags && cell == newCell && fences.IsPathCurrent(globalSerial,
-					ref navigator.path) && PathFinder.ValidatePath(navGrid, ABILITIES.Get(
-					navigator), ref navigator.path);
+				ok = flags == newFlags && fences.IsPathCurrent(globalSerial, ref navigator.
+					path) && PathFinder.ValidatePath(navGrid, ABILITIES.Get(navigator),
+					ref navigator.path);
 				if (!ok) {
 					// Guaranteed out of date
 					flags = newFlags;

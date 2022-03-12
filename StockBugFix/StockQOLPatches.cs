@@ -22,213 +22,208 @@ using UnityEngine;
 
 namespace PeterHan.StockBugFix {
 	/// <summary>
-	/// Patches which will be applied via annotations for Stock Bug Fix.
+	/// Applied to AlgaeDistilleryConfig to give it a sensible overheat temperature.
 	/// </summary>
-	public sealed class StockQOLPatches {
-		/// <summary>
-		/// Applied to AlgaeDistilleryConfig to give it a sensible overheat temperature.
-		/// </summary>
-		[HarmonyPatch(typeof(AlgaeDistilleryConfig), "CreateBuildingDef")]
-		public static class AlgaeDistilleryConfig_CreateBuildingDef_Patch {
-			internal static bool Prepare() {
-				return StockBugFixOptions.Instance.FixOverheat;
-			}
-
-			/// <summary>
-			/// Applied after CreateBuildingDef runs.
-			/// </summary>
-			internal static void Postfix(BuildingDef __result) {
-				// Overheat at 125 C
-				__result.Overheatable = true;
-				__result.OverheatTemperature = TUNING.BUILDINGS.OVERHEAT_TEMPERATURES.HIGH_2;
-			}
+	[HarmonyPatch(typeof(AlgaeDistilleryConfig), "CreateBuildingDef")]
+	public static class AlgaeDistilleryConfig_CreateBuildingDef_Patch {
+		internal static bool Prepare() {
+			return StockBugFixOptions.Instance.FixOverheat;
 		}
 
 		/// <summary>
-		/// Applied to EthanolDistilleryConfig to give it a sensible overheat temperature.
+		/// Applied after CreateBuildingDef runs.
 		/// </summary>
-		[HarmonyPatch(typeof(EthanolDistilleryConfig), "CreateBuildingDef")]
-		public static class EthanolDistilleryConfig_CreateBuildingDef_Patch {
-			internal static bool Prepare() {
-				return StockBugFixOptions.Instance.FixOverheat;
-			}
+		internal static void Postfix(BuildingDef __result) {
+			// Overheat at 125 C
+			__result.Overheatable = true;
+			__result.OverheatTemperature = TUNING.BUILDINGS.OVERHEAT_TEMPERATURES.HIGH_2;
+		}
+	}
 
-			/// <summary>
-			/// Applied after CreateBuildingDef runs.
-			/// </summary>
-			internal static void Postfix(BuildingDef __result) {
-				// Overheat at 75 C (the product will break pipes at this temp anyways)
-				__result.Overheatable = true;
-				__result.OverheatTemperature = TUNING.BUILDINGS.OVERHEAT_TEMPERATURES.NORMAL;
-			}
+	/// <summary>
+	/// Applied to EthanolDistilleryConfig to give it a sensible overheat temperature.
+	/// </summary>
+	[HarmonyPatch(typeof(EthanolDistilleryConfig), "CreateBuildingDef")]
+	public static class EthanolDistilleryConfig_CreateBuildingDef_Patch {
+		internal static bool Prepare() {
+			return StockBugFixOptions.Instance.FixOverheat;
 		}
 
 		/// <summary>
-		/// Applied to IceMachineConfig to give it a sensible overheat temperature.
+		/// Applied after CreateBuildingDef runs.
 		/// </summary>
-		[HarmonyPatch(typeof(IceMachineConfig), "CreateBuildingDef")]
-		public static class IceMachineConfig_CreateBuildingDef_Patch {
-			internal static bool Prepare() {
-				return StockBugFixOptions.Instance.FixOverheat;
-			}
+		internal static void Postfix(BuildingDef __result) {
+			// Overheat at 75 C (the product will break pipes at this temp anyways)
+			__result.Overheatable = true;
+			__result.OverheatTemperature = TUNING.BUILDINGS.OVERHEAT_TEMPERATURES.NORMAL;
+		}
+	}
 
-			/// <summary>
-			/// Applied after CreateBuildingDef runs.
-			/// </summary>
-			internal static void Postfix(BuildingDef __result) {
-				// Overheat at 125 C
-				__result.Overheatable = true;
-				__result.OverheatTemperature = TUNING.BUILDINGS.OVERHEAT_TEMPERATURES.HIGH_2;
-			}
+	/// <summary>
+	/// Applied to IceMachineConfig to give it a sensible overheat temperature.
+	/// </summary>
+	[HarmonyPatch(typeof(IceMachineConfig), "CreateBuildingDef")]
+	public static class IceMachineConfig_CreateBuildingDef_Patch {
+		internal static bool Prepare() {
+			return StockBugFixOptions.Instance.FixOverheat;
 		}
 
 		/// <summary>
-		/// Applied to KilnConfig to give it a sensible overheat temperature.
+		/// Applied after CreateBuildingDef runs.
 		/// </summary>
-		[HarmonyPatch(typeof(KilnConfig), "CreateBuildingDef")]
-		public static class KilnConfig_CreateBuildingDef_Patch {
-			internal static bool Prepare() {
-				return StockBugFixOptions.Instance.FixOverheat;
-			}
+		internal static void Postfix(BuildingDef __result) {
+			// Overheat at 125 C
+			__result.Overheatable = true;
+			__result.OverheatTemperature = TUNING.BUILDINGS.OVERHEAT_TEMPERATURES.HIGH_2;
+		}
+	}
 
-			/// <summary>
-			/// Applied after CreateBuildingDef runs.
-			/// </summary>
-			internal static void Postfix(BuildingDef __result) {
-				// Overheat at 125 C
-				__result.Overheatable = true;
-				__result.OverheatTemperature = TUNING.BUILDINGS.OVERHEAT_TEMPERATURES.HIGH_2;
-			}
+	/// <summary>
+	/// Applied to KilnConfig to give it a sensible overheat temperature.
+	/// </summary>
+	[HarmonyPatch(typeof(KilnConfig), "CreateBuildingDef")]
+	public static class KilnConfig_CreateBuildingDef_Patch {
+		internal static bool Prepare() {
+			return StockBugFixOptions.Instance.FixOverheat;
 		}
 
 		/// <summary>
-		/// Applied to OxyliteRefineryConfig to give it a sensible overheat temperature.
+		/// Applied after CreateBuildingDef runs.
 		/// </summary>
-		[HarmonyPatch(typeof(OxyliteRefineryConfig), "CreateBuildingDef")]
-		public static class OxyliteRefineryConfig_CreateBuildingDef_Patch {
-			internal static bool Prepare() {
-				return StockBugFixOptions.Instance.FixOverheat;
-			}
+		internal static void Postfix(BuildingDef __result) {
+			// Overheat at 125 C
+			__result.Overheatable = true;
+			__result.OverheatTemperature = TUNING.BUILDINGS.OVERHEAT_TEMPERATURES.HIGH_2;
+		}
+	}
 
-			/// <summary>
-			/// Applied after CreateBuildingDef runs.
-			/// </summary>
-			internal static void Postfix(BuildingDef __result) {
-				// Overheat at 125 C
-				__result.Overheatable = true;
-				__result.OverheatTemperature = TUNING.BUILDINGS.OVERHEAT_TEMPERATURES.HIGH_2;
-			}
+	/// <summary>
+	/// Applied to OxyliteRefineryConfig to give it a sensible overheat temperature.
+	/// </summary>
+	[HarmonyPatch(typeof(OxyliteRefineryConfig), "CreateBuildingDef")]
+	public static class OxyliteRefineryConfig_CreateBuildingDef_Patch {
+		internal static bool Prepare() {
+			return StockBugFixOptions.Instance.FixOverheat;
 		}
 
 		/// <summary>
-		/// Applied to ParkSignConfig to remove its overheat temperature.
+		/// Applied after CreateBuildingDef runs.
 		/// </summary>
-		[HarmonyPatch(typeof(ParkSignConfig), "CreateBuildingDef")]
-		public static class ParkSignConfig_CreateBuildingDef_Patch {
-			internal static bool Prepare() {
-				return StockBugFixOptions.Instance.FixOverheat;
-			}
+		internal static void Postfix(BuildingDef __result) {
+			// Overheat at 125 C
+			__result.Overheatable = true;
+			__result.OverheatTemperature = TUNING.BUILDINGS.OVERHEAT_TEMPERATURES.HIGH_2;
+		}
+	}
 
-			/// <summary>
-			/// Applied after CreateBuildingDef runs.
-			/// </summary>
-			internal static void Postfix(BuildingDef __result) {
-				__result.Overheatable = false;
-			}
+	/// <summary>
+	/// Applied to ParkSignConfig to remove its overheat temperature.
+	/// </summary>
+	[HarmonyPatch(typeof(ParkSignConfig), "CreateBuildingDef")]
+	public static class ParkSignConfig_CreateBuildingDef_Patch {
+		internal static bool Prepare() {
+			return StockBugFixOptions.Instance.FixOverheat;
 		}
 
 		/// <summary>
-		/// Applied to CreatureDeliveryPointConfig to remove its overheat temperature.
+		/// Applied after CreateBuildingDef runs.
 		/// </summary>
-		[HarmonyPatch(typeof(CreatureDeliveryPointConfig), "CreateBuildingDef")]
-		public static class CreatureDeliveryPointConfig_CreateBuildingDef_Patch {
-			internal static bool Prepare() {
-				return StockBugFixOptions.Instance.FixOverheat;
-			}
+		internal static void Postfix(BuildingDef __result) {
+			__result.Overheatable = false;
+		}
+	}
 
-			/// <summary>
-			/// Applied after CreateBuildingDef runs.
-			/// </summary>
-			internal static void Postfix(BuildingDef __result) {
-				__result.Overheatable = false;
-			}
+	/// <summary>
+	/// Applied to CreatureDeliveryPointConfig to remove its overheat temperature.
+	/// </summary>
+	[HarmonyPatch(typeof(CreatureDeliveryPointConfig), "CreateBuildingDef")]
+	public static class CreatureDeliveryPointConfig_CreateBuildingDef_Patch {
+		internal static bool Prepare() {
+			return StockBugFixOptions.Instance.FixOverheat;
 		}
 
 		/// <summary>
-		/// Applied to FishDeliveryPointConfig to remove its overheat temperature.
+		/// Applied after CreateBuildingDef runs.
 		/// </summary>
-		[HarmonyPatch(typeof(FishDeliveryPointConfig), "CreateBuildingDef")]
-		public static class FishDeliveryPointConfig_CreateBuildingDef_Patch {
-			internal static bool Prepare() {
-				return StockBugFixOptions.Instance.FixOverheat;
-			}
+		internal static void Postfix(BuildingDef __result) {
+			__result.Overheatable = false;
+		}
+	}
 
-			/// <summary>
-			/// Applied after CreateBuildingDef runs.
-			/// </summary>
-			internal static void Postfix(BuildingDef __result) {
-				__result.Overheatable = false;
-			}
+	/// <summary>
+	/// Applied to FishDeliveryPointConfig to remove its overheat temperature.
+	/// </summary>
+	[HarmonyPatch(typeof(FishDeliveryPointConfig), "CreateBuildingDef")]
+	public static class FishDeliveryPointConfig_CreateBuildingDef_Patch {
+		internal static bool Prepare() {
+			return StockBugFixOptions.Instance.FixOverheat;
 		}
 
 		/// <summary>
-		/// Applied to FoodDiagnostic.CheckEnoughFood to fix the calories calculation in the
-		/// diagnostics panel.
+		/// Applied after CreateBuildingDef runs.
 		/// </summary>
-		[HarmonyPatch(typeof(FoodDiagnostic), "CheckEnoughFood")]
-		public static class FoodDiagnostic_CheckEnoughFood_Patch {
-			/// <summary>
-			/// Gets the number of calories required per cycle, adjusting for Duplicant
-			/// attributes (including difficulty level).
-			/// </summary>
-			private static float GetRequiredFoodPerCycle(IEnumerable<MinionIdentity> dupes) {
-				var totalCalories = 0f;
-				if (dupes != null)
-					foreach (var dupe in dupes) {
-						var caloriesPerSecond = Db.Get().Amounts.Calories.Lookup(dupe).
-							GetDelta();
-						// "tummyless" attribute adds float.PositiveInfinity
-						if (caloriesPerSecond != float.PositiveInfinity)
-							totalCalories += ToCaloriesPerCycle(caloriesPerSecond);
-					}
-				return Mathf.Abs(totalCalories);
-			}
+		internal static void Postfix(BuildingDef __result) {
+			__result.Overheatable = false;
+		}
+	}
 
-			/// <summary>
-			/// Fix calories calculation.
-			/// </summary>
-			internal static bool Prefix(FoodDiagnostic __instance,
-					ref ColonyDiagnostic.DiagnosticResult __result,
-					float ___trackerSampleCountSeconds) {
-				__result = new ColonyDiagnostic.DiagnosticResult(ColonyDiagnostic.
-					DiagnosticResult.Opinion.Normal, STRINGS.UI.COLONY_DIAGNOSTICS.
-					GENERIC_CRITERIA_PASS);
-				if (__instance.tracker.GetDataTimeLength() < 10f) {
-					__result.opinion = ColonyDiagnostic.DiagnosticResult.Opinion.Normal;
-					__result.Message = STRINGS.UI.COLONY_DIAGNOSTICS.NO_DATA;
-				} else {
-					var dupes = Components.LiveMinionIdentities.GetWorldItems(
-						__instance.worldID);
-					var requiredCaloriesPerCycle = GetRequiredFoodPerCycle(dupes);
-					// show warning if food doesn't last for 3 days
-					var daysReserve = 3;
-					if (requiredCaloriesPerCycle * daysReserve > __instance.tracker.
-							GetAverageValue(___trackerSampleCountSeconds)) {
-						var currentValue = __instance.tracker.GetCurrentValue();
-						var text = STRINGS.MISC.NOTIFICATIONS.FOODLOW.TOOLTIP;
-						__result.opinion = ColonyDiagnostic.DiagnosticResult.Opinion.Concern;
-						text = text.Replace("{0}", GameUtil.GetFormattedCalories(
-							currentValue)).Replace("{1}", GameUtil.GetFormattedCalories(
-							requiredCaloriesPerCycle));
-						__result.Message = text;
-					}
+	/// <summary>
+	/// Applied to FoodDiagnostic.CheckEnoughFood to fix the calories calculation in the
+	/// diagnostics panel.
+	/// </summary>
+	[HarmonyPatch(typeof(FoodDiagnostic), "CheckEnoughFood")]
+	public static class FoodDiagnostic_CheckEnoughFood_Patch {
+		/// <summary>
+		/// Gets the number of calories required per cycle, adjusting for Duplicant
+		/// attributes (including difficulty level).
+		/// </summary>
+		private static float GetRequiredFoodPerCycle(IEnumerable<MinionIdentity> dupes) {
+			var totalCalories = 0f;
+			if (dupes != null)
+				foreach (var dupe in dupes) {
+					var caloriesPerSecond = Db.Get().Amounts.Calories.Lookup(dupe).
+						GetDelta();
+					// "tummyless" attribute adds float.PositiveInfinity
+					if (caloriesPerSecond != float.PositiveInfinity)
+						totalCalories += ToCaloriesPerCycle(caloriesPerSecond);
 				}
-				return false;
-			}
+			return Mathf.Abs(totalCalories);
+		}
 
-			private static float ToCaloriesPerCycle(float caloriesPerSec) {
-				return caloriesPerSec * Constants.SECONDS_PER_CYCLE;
+		/// <summary>
+		/// Fix calories calculation.
+		/// </summary>
+		internal static bool Prefix(FoodDiagnostic __instance,
+				ref ColonyDiagnostic.DiagnosticResult __result,
+				float ___trackerSampleCountSeconds) {
+			__result = new ColonyDiagnostic.DiagnosticResult(ColonyDiagnostic.
+				DiagnosticResult.Opinion.Normal, STRINGS.UI.COLONY_DIAGNOSTICS.
+				GENERIC_CRITERIA_PASS);
+			if (__instance.tracker.GetDataTimeLength() < 10f) {
+				__result.opinion = ColonyDiagnostic.DiagnosticResult.Opinion.Normal;
+				__result.Message = STRINGS.UI.COLONY_DIAGNOSTICS.NO_DATA;
+			} else {
+				var dupes = Components.LiveMinionIdentities.GetWorldItems(
+					__instance.worldID);
+				var requiredCaloriesPerCycle = GetRequiredFoodPerCycle(dupes);
+				// show warning if food doesn't last for 3 days
+				var daysReserve = 3;
+				if (requiredCaloriesPerCycle * daysReserve > __instance.tracker.
+						GetAverageValue(___trackerSampleCountSeconds)) {
+					var currentValue = __instance.tracker.GetCurrentValue();
+					var text = STRINGS.MISC.NOTIFICATIONS.FOODLOW.TOOLTIP;
+					__result.opinion = ColonyDiagnostic.DiagnosticResult.Opinion.Concern;
+					text = text.Replace("{0}", GameUtil.GetFormattedCalories(
+						currentValue)).Replace("{1}", GameUtil.GetFormattedCalories(
+						requiredCaloriesPerCycle));
+					__result.Message = text;
+				}
 			}
+			return false;
+		}
+
+		private static float ToCaloriesPerCycle(float caloriesPerSec) {
+			return caloriesPerSec * Constants.SECONDS_PER_CYCLE;
 		}
 	}
 }

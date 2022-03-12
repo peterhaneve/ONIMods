@@ -89,13 +89,13 @@ namespace PeterHan.FastTrack.Metrics {
 		/// Gets the number of probes to run.
 		/// </summary>
 		private static readonly MethodInfo GET_PROBE_COUNT = BRAIN_GROUP?.
-			GetPropertySafe<int>("probeCount", false)?.GetGetMethod();
+			GetPropertySafe<int>("probeCount", false)?.GetGetMethod(true);
 
 		/// <summary>
 		/// Gets the depth that probes will iterate.
 		/// </summary>
 		private static readonly MethodInfo GET_PROBE_SIZE = BRAIN_GROUP?.
-			GetPropertySafe<int>("probeSize", false)?.GetGetMethod();
+			GetPropertySafe<int>("probeSize", false)?.GetGetMethod(true);
 
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 

@@ -31,6 +31,11 @@ namespace PeterHan.FastTrack {
 	/// </summary>
 	public sealed class FastTrackPatches : KMod.UserMod2 {
 		/// <summary>
+		/// The maximum time that any of the blocking joins will wait, in real time ms.
+		/// </summary>
+		public const int MAX_TIMEOUT = 5000;
+
+		/// <summary>
 		/// Set to true when the game gets off its feet, and false while it is still loading.
 		/// </summary>
 		internal static bool GameRunning { get; private set; }

@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Threading;
 
@@ -47,7 +46,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// </summary>
 		public long CurrentSerial {
 			get {
-				return globalSerial;
+				return Interlocked.Read(ref globalSerial);
 			}
 		}
 
@@ -65,16 +64,17 @@ namespace PeterHan.FastTrack.PathPatches {
 		public bool IsPathCurrent(long oldSerial, ref PathFinder.Path path) {
 			long startSerial, newSerial = Interlocked.Read(ref globalSerial);
 			bool current = true;
-			do {
-				// If the grid is updated mid-execution, loop until it is stable
-				startSerial = newSerial;
-				foreach (PathFinder.Path.Node node in path.nodes)
-					if (oldSerial < localSerial[node.cell]) {
-						current = false;
-						break;
-					}
-			} while (current && (newSerial = Interlocked.Read(ref globalSerial)) !=
-				startSerial);
+			if (path.nodes != null)
+				do {
+					// If the grid is updated mid-execution, loop until it is stable
+					startSerial = newSerial;
+					foreach (PathFinder.Path.Node node in path.nodes)
+						if (oldSerial < localSerial[node.cell]) {
+							current = false;
+							break;
+						}
+				} while (current && (newSerial = Interlocked.Read(ref globalSerial)) !=
+					startSerial);
 			return current;
 		}
 

@@ -149,7 +149,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		private void WaitForCompletion() {
 			var inst = Game.Instance;
 			if (running && inst != null && inst.IsInitialized() && !inst.IsLoading()) {
-				onComplete.WaitOne(Timeout.Infinite);
+				onComplete.WaitOne(FastTrackPatches.MAX_TIMEOUT);
 				// They are always clean after running
 				if (updated[0])
 					ConduitUtilityNetworkUpdater.TriggerEvent(inst.gasConduitSystem);

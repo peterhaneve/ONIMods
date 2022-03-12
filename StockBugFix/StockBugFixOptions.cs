@@ -45,6 +45,13 @@ namespace PeterHan.StockBugFix {
 		public bool AllowTepidizerPulsing { get; set; }
 
 		/// <summary>
+		/// If true, constructable and deconstructable items will have their build locations fixed.
+		/// </summary>
+		[Option("Fix Build Locations", "Fixes the locations where rotated buildings can be built or deconstructed.")]
+		[JsonProperty]
+		public bool FixOffsetTables { get; set; }
+
+		/// <summary>
 		/// If true, overheat temperature patches will be applied.
 		/// </summary>
 		[Option("Fix Overheat Temperatures", "Adds missing overheat temperatures to some buildings, and\r\nremoves it from other buildings where it does not make sense.")]
@@ -61,6 +68,7 @@ namespace PeterHan.StockBugFix {
 		public StockBugFixOptions() {
 			AllowNeutroniumDig = false;
 			AllowTepidizerPulsing = false;
+			FixOffsetTables = true;
 			FixOverheat = true;
 			StoreFoodChoreType = StoreFoodCategory.Store;
 		}

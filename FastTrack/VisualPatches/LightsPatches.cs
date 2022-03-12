@@ -110,7 +110,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			var init = typeof(LightBufferManager).GetMethodSafe(nameof(LightBufferManager.
 				Init), true);
 			var target = typeof(Behaviour).GetPropertySafe<bool>(nameof(Behaviour.enabled),
-				false)?.GetGetMethod();
+				false)?.GetGetMethod(true);
 			var replacement = typeof(LightBufferManager).GetMethodSafe(nameof(
 				LightBufferManager.ShouldRender), true, typeof(Behaviour));
 			if (init != null)

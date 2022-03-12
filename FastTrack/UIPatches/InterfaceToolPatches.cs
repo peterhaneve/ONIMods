@@ -201,8 +201,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					var selectable = collider.GetComponent<KSelectable>();
 					if (selectable == null)
 						selectable = collider.GetComponentInParent<KSelectable>();
-					if (selectable != null && selectable.IsSelectable && ((1 << selectable.
-							gameObject.layer) & layerMask) != 0) {
+					if (selectable != null && selectable.IsSelectable) {
 						float distance = selectable.transform.GetPosition().z - coords.z;
 						if (seen.TryGetValue(selectable, out float oldDistance))
 							seen[selectable] = Mathf.Min(oldDistance, distance);
@@ -233,8 +232,6 @@ namespace PeterHan.FastTrack.UIPatches {
 			return Grid.PosToCell(coords);
 		}
 
-		// Base: 79us+36us bic on
-
 		/// <summary>
 		/// Retrieves a list of KSelectable objects currently under the mouse cursor.
 		/// </summary>
@@ -249,13 +246,14 @@ namespace PeterHan.FastTrack.UIPatches {
 				List<KSelectable> hits, HashSet<Component> previousItems, int layerMask,
 				ref int hitCycleCount) {
 			var compareSet = HashSetPool<Component, InterfaceTool>.Allocate();
-			KSelectable result;
+			KSelectable result = null;
 			if (Grid.IsVisible(cell))
 				FindSelectables(cell, coords, hits, compareSet, layerMask);
 			if (compareSet.Count < 1) {
 				previousItems.Clear();
-				result = null;
+				hitCycleCount = 0;
 			} else {
+				int n = hits.Count;
 				if (!previousItems.Equals(compareSet)) {
 					previousItems.Clear();
 					// Copy for next time
@@ -264,7 +262,11 @@ namespace PeterHan.FastTrack.UIPatches {
 					hitCycleCount = 0;
 				}
 				// hits is already sorted, nice
-				result = hits[0];
+				for (int i = 0; i < n && result == null; i++) {
+					var candidate = hits[i];
+					if (((1 << candidate.gameObject.layer) & layerMask) != 0)
+						result = candidate;
+				}
 			}
 			compareSet.Recycle();
 			return result;

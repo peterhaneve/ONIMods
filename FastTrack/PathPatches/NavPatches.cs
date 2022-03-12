@@ -134,16 +134,36 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(NavGrid), nameof(NavGrid.UpdateGraph), new Type[0])]
 	public static class NavGrid_UpdateGraph_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
+
+		/// <summary>
+		/// Transpiles UpdateGraph to clean up allocations and mark cells dirty when required.
+		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
 			var setType = typeof(HashSet<int>);
 			var clearMethod = setType.GetMethodSafe(nameof(HashSet<int>.Clear), false);
 			var instructions = new List<CodeInstruction>(method);
+			var dirtyCellsField = typeof(NavGrid).GetFieldSafe("DirtyCells", false);
+			var updateSerials = typeof(NavGrid_UpdateGraph_Patch).GetMethodSafe(nameof(
+				NavGrid_UpdateGraph_Patch.UpdateSerials), true, typeof(NavGrid),
+				typeof(ISet<int>));
 			int n = instructions.Count;
 			if (clearMethod == null)
 				// Should be unreachable
 				PUtil.LogError("What happened to HashSet.Clear?");
 			else {
-				var instr = instructions[0];
+				CodeInstruction instr;
+				// Effectively prefix with a call to UpdateSerials
+				if (dirtyCellsField != null && updateSerials != null)
+					instructions.InsertRange(0, new CodeInstruction[] {
+						new CodeInstruction(OpCodes.Ldarg_0),
+						new CodeInstruction(OpCodes.Dup),
+						new CodeInstruction(OpCodes.Ldfld, dirtyCellsField),
+						new CodeInstruction(OpCodes.Call, updateSerials)
+					});
+				else
+					PUtil.LogWarning("Unable to mark cells dirty in NavGrid.UpdateGraph");
+				instr = instructions[0];
 				for (int i = 0; i < n - 1; i++) {
 					var next = instructions[i + 1];
 					if (instr.opcode == OpCodes.Newobj && (instr.operand as MethodBase)?.
@@ -163,22 +183,30 @@ namespace PeterHan.FastTrack.PathPatches {
 			}
 			return instructions;
 		}
+
+		/// <summary>
+		/// Updates the serial numbers of a set of cells.
+		/// </summary>
+		/// <param name="instance">The nav grid to update.</param>
+		/// <param name="dirty">The cells which were changed.</param>
+		private static void UpdateSerials(NavGrid instance, ISet<int> dirty) {
+			if (dirty.Count > 0 && NavFences.AllFences.TryGetValue(instance.id,
+					out NavFences fences))
+				fences.UpdateSerial(dirty);
+		}
 	}
 
 	/// <summary>
-	/// Applied to NavGrid to track serial numbers.
+	/// Applied to Pathfinding to make debug refresh nav cell update the serial numbers.
 	/// </summary>
-	[HarmonyPatch(typeof(NavGrid), nameof(NavGrid.UpdateGraph), typeof(HashSet<int>))]
-	public static class NavGrid_UpdateGraph2_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
-
+	[HarmonyPatch(typeof(Pathfinding), nameof(Pathfinding.RefreshNavCell))]
+	public static class Pathfinding_RefreshNavCell_Patch {
 		/// <summary>
-		/// Applied after UpdateGraph runs.
+		/// Applied before RefreshNavCell runs.
 		/// </summary>
-		internal static void Postfix(NavGrid __instance, HashSet<int> dirty_nav_cells) {
-			if (dirty_nav_cells.Count > 0 && NavFences.AllFences.TryGetValue(__instance.id,
-					out NavFences fences))
-				fences.UpdateSerial(dirty_nav_cells);
+		internal static void Prefix(int cell) {
+			foreach (var fence in NavFences.AllFences)
+				fence.Value.UpdateSerial(cell);
 		}
 	}
 

@@ -148,39 +148,19 @@ namespace PeterHan.FastTrack.UIPatches {
 	}
 
 	/// <summary>
-	/// 11388
+	/// Applied to LoadScreen to turn off the colony previews in exchange for a faster load.
 	/// </summary>
-	[HarmonyPatch(typeof(NameDisplayScreen), nameof(NameDisplayScreen.AddNewEntry))]
-	public static class NameDisplayScreen_AddNewEntry_Patch {
-		internal static bool Prepare() => false;
+	[HarmonyPatch(typeof(LoadScreen), "SetPreview")]
+	public static class LoadScreen_SetPreview_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.DisableLoadPreviews;
 
 		/// <summary>
-		/// Locks down the layout and removes unnecessary layout components from name displays,
-		/// to reduce time spent laying out the components.
+		/// Applied before SetPreview runs.
 		/// </summary>
-		/// <param name="displayObj">The object displaying the name information.</param>
-		private static System.Collections.IEnumerator LockLayoutLater(GameObject displayObj) {
-			yield return new WaitForEndOfFrame();
-			if (displayObj != null) {
-				// Outer object is a vertical layout group of the name and the bars
-				// Bars have a vertical layout group of the bar members
-				displayObj.AddOrGet<Canvas>();
-			}
-		}
-
-		/// <summary>
-		/// Applied after AddNewEntry runs.
-		/// </summary>
-		internal static void Postfix(IList<NameDisplayScreen.Entry> ___entries) {
-			int n;
-			if (___entries != null && (n = ___entries.Count) > 0) {
-				// Wait a frame for it to lay out
-				var added = ___entries[n - 1];
-				var refs = added?.refs;
-				if (refs != null) {
-					refs.StartCoroutine(LockLayoutLater(added.display_go));
-				}
-			}
+		internal static bool Prefix(Image preview) {
+			preview.color = Color.black;
+			preview.gameObject.SetActive(false);
+			return false;
 		}
 	}
 
@@ -236,11 +216,11 @@ namespace PeterHan.FastTrack.UIPatches {
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
 				ILGenerator generator) {
 			var curArea = typeof(GridVisibleArea).GetPropertySafe<GridArea>(nameof(
-				GridVisibleArea.CurrentArea), false)?.GetGetMethod();
+				GridVisibleArea.CurrentArea), false)?.GetGetMethod(true);
 			var target = typeof(CameraController).GetMethodSafe(nameof(CameraController.
 				IsVisiblePos), false, typeof(Vector3));
 			var getInstance = typeof(CameraController).GetPropertySafe<CameraController>(
-				nameof(CameraController.Instance), true)?.GetGetMethod();
+				nameof(CameraController.Instance), true)?.GetGetMethod(true);
 			var areaField = typeof(CameraController).GetFieldSafe(nameof(CameraController.
 				VisibleArea), false);
 			var allInstr = new List<CodeInstruction>(instructions);
@@ -309,7 +289,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				false);
 			var updateField = typeof(WorldInventory).GetFieldSafe("firstUpdate", false);
 			var getSCS = typeof(SpeedControlScreen).GetPropertySafe<float>(nameof(
-				SpeedControlScreen.Instance), true)?.GetGetMethod();
+				SpeedControlScreen.Instance), true)?.GetGetMethod(true);
 			var isPaused = typeof(SpeedControlScreen).GetMethodSafe(nameof(SpeedControlScreen.
 				IsPaused), false);
 			bool storeField = false, done = false;

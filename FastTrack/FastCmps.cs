@@ -57,9 +57,6 @@ namespace PeterHan.FastTrack {
 							// Components.CmpsByWorld<...>
 							var subtype = type.GenericTypeArguments[0];
 							TYPES_TO_PATCH.Add(subtype);
-#if DEBUG
-							PUtil.LogDebug("Will patch type: " + subtype.FullName);
-#endif
 						}
 					}
 				}

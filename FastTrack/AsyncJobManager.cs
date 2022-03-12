@@ -223,7 +223,7 @@ namespace PeterHan.FastTrack {
 			private void Run() {
 				bool disposed = false;
 				while (!disposed) {
-					parent.semaphore.WaitOne(Timeout.Infinite);
+					parent.semaphore.WaitOne(FastTrackPatches.MAX_TIMEOUT);
 					try {
 						while (!(disposed = parent.isDisposed) && parent.DoNextWorkItem());
 					} catch (Exception e) {

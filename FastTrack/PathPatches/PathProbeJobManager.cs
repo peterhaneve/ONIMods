@@ -130,7 +130,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			var jobManager = AsyncJobManager.Instance;
 			if (jobManager != null && running) {
 				var now = Stopwatch.StartNew();
-				onPathDone.WaitOne(Timeout.Infinite);
+				onPathDone.WaitOne(FastTrackPatches.MAX_TIMEOUT);
 				Metrics.DebugMetrics.LogPathProbe(now.ElapsedTicks, totalRuntime);
 				jobCount = 0;
 				totalRuntime = 0L;

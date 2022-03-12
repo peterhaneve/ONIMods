@@ -208,7 +208,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				var fetches = inst.fetches;
 				var pickups = GET_PICKUPS.Get(fm);
 				// Wait out the pickups update
-				onComplete.WaitOne(Timeout.Infinite);
+				onComplete.WaitOne(FastTrackPatches.MAX_TIMEOUT);
 				foreach (var entry in updatingPickups) {
 					UpdateFetches(entry.navigator, fetchPool);
 					// Copy fetch list
@@ -228,7 +228,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				}
 			} else {
 				// Clean up anyways
-				onComplete.WaitOne(Timeout.Infinite);
+				onComplete.WaitOne(FastTrackPatches.MAX_TIMEOUT);
 				foreach (var entry in updatingPickups)
 					entry.Dispose();
 			}
@@ -555,10 +555,13 @@ namespace PeterHan.FastTrack.PathPatches {
 
 			internal static bool Prefix(object __instance, bool isAsyncPathProbeEnabled) {
 				var inst = Instance;
-				if (inst != null && AsyncJobManager.Instance != null && __instance == inst.
-						dupeBrainGroup)
-					inst.StartBrainUpdate(isAsyncPathProbeEnabled);
-				return false;
+				bool update = true;
+				if (inst != null && __instance == inst.dupeBrainGroup) {
+					update = AsyncJobManager.Instance == null;
+					if (!update)
+						inst.StartBrainUpdate(isAsyncPathProbeEnabled);
+				}
+				return update;
 			}
 		}
 	}
