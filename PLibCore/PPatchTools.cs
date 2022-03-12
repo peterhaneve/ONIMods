@@ -53,7 +53,7 @@ namespace PeterHan.PLib.Core {
 		/// <param name="method">The target method name.</param>
 		/// <param name="caller">The object on which to call the method.</param>
 		/// <param name="argumentTypes">The types of the target method arguments, or PPatchTools.
-		/// AnyArguments (not recommended, type safety is good) to match any static method with
+		/// AnyArguments (not recommended, type safety is good) to match any method with
 		/// that name.</param>
 		/// <returns>A delegate which calls this method, or null if the method could not be
 		/// found or did not match the types.</returns>

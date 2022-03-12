@@ -194,6 +194,7 @@ namespace PeterHan.StockBugFix {
 			PRegistry.PutData("Bugs.TepidizerPulse", true);
 			PRegistry.PutData("Bugs.TraitExclusionSpacedOut", true);
 			PRegistry.PutData("Bugs.JoyReactionFix", true);
+			PRegistry.PutData("Bugs.AutosaveDragFix", true);
 			new POptions().RegisterOptions(this, typeof(StockBugFixOptions));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
@@ -540,6 +541,8 @@ namespace PeterHan.StockBugFix {
 			internal static void GetValidBuildingCells(int cell, int radius, List<int> cells,
 					Component component) {
 				var building = component.GetComponent<Building>();
+				_ = cell;
+				_ = radius;
 				foreach (int targetCell in building.PlacementCells) {
 					if (Grid.IsValidCell(targetCell) && !Grid.Solid[targetCell] &&
 							!Grid.DupePassable[targetCell])
@@ -577,6 +580,36 @@ namespace PeterHan.StockBugFix {
 					}
 				} else
 					PUtil.LogWarning("No SpaceHeater update handler found");
+			}
+		}
+
+		/// <summary>
+		/// Applied to StaterpillarGeneratorConfig to prevent it from overheating, breaking,
+		/// or in any way being damaged.
+		/// </summary>
+		[HarmonyPatch(typeof(StaterpillarGeneratorConfig), nameof(StaterpillarGeneratorConfig.
+			CreateBuildingDef))]
+		public static class StaterpillarGeneratorConfig_CreateBuildingDef_Patch {
+			/// <summary>
+			/// Applied after CreateBuildingDef runs.
+			/// </summary>
+			internal static void Postfix(BuildingDef __result) {
+				__result.Invincible = true;
+				__result.Overheatable = false;
+				__result.OverheatTemperature = 9999.0f;
+			}
+		}
+
+		/// <summary>
+		/// Applied to Timelapser to cancel the current tool when autosave begins.
+		/// </summary>
+		[HarmonyPatch(typeof(Timelapser), "SaveScreenshot")]
+		public static class Timelapser_SaveScreenshot_Patch {
+			/// <summary>
+			/// Applied after SaveScreenshot runs.
+			/// </summary>
+			internal static void Postfix() {
+				PlayerController.Instance?.CancelDragging();
 			}
 		}
 	}

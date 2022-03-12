@@ -153,13 +153,14 @@ namespace PeterHan.FastTrack {
 						workQueue.Dequeue();
 					if (n > 1)
 						next = workQueue.Peek();
+					else
+						// Avoid concurrent mod exception if another task starts up afterwards
+						foreach (var thread in threads)
+							thread.PrintExceptions();
 					currentJob = null;
 				}
 				if (next != null)
 					AdvanceNext(next);
-				else
-					foreach (var thread in threads)
-						thread.PrintExceptions();
 			}
 		}
 

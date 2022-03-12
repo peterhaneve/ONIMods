@@ -113,4 +113,22 @@ namespace PeterHan.FastTrack {
 			}
 		}
 	}
+
+	/// <summary>
+	/// Applied to NotificationScreen to suppress sounds queued very early in the load.
+	/// sequence.
+	/// </summary>
+	[HarmonyPatch(typeof(NotificationScreen), "PlayDingSound")]
+	public static class NotificationScreen_PlayDingSound_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.ReduceSoundUpdates;
+
+		/// <summary>
+		/// Applied before PlayDingSound runs.
+		/// </summary>
+		internal static bool Prefix(NotificationScreen __instance, Notification notification) {
+			// No const for that sound name
+			return notification == null || __instance.GetNotificationSound(notification.
+				Type) != "Notification" || FastTrackPatches.GameRunning;
+		}
+	}
 }

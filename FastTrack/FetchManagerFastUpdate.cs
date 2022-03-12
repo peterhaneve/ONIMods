@@ -30,6 +30,9 @@ namespace PeterHan.FastTrack {
 	/// it stores stateful information required for chore selection and other sensors.
 	/// </summary>
 	internal static class FetchManagerFastUpdate {
+		/// <summary>
+		/// Access the priority-based comparator of FetchManager.
+		/// </summary>
 		private static readonly IDetouredField<FetchManager, PickupComparer>
 			PICKUP_COMPARER = PDetours.DetourField<FetchManager, PickupComparer>(
 			"ComparerIncludingPriority");

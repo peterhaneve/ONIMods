@@ -59,19 +59,17 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// Checks to see if the specific path is still valid.
 		/// </summary>
 		/// <param name="oldSerial">The serial number when this path was last calculated.</param>
-		/// <param name="cells">The cells on this path.</param>
+		/// <param name="path">The cells on this path.</param>
 		/// <returns>true if the cells on this path were not updated since then, or false if
 		/// they were.</returns>
-		public bool IsPathCurrent(long oldSerial, IEnumerable<int> cells) {
+		public bool IsPathCurrent(long oldSerial, ref PathFinder.Path path) {
 			long startSerial, newSerial = Interlocked.Read(ref globalSerial);
-			if (cells == null)
-				throw new ArgumentNullException("cells");
 			bool current = true;
 			do {
 				// If the grid is updated mid-execution, loop until it is stable
 				startSerial = newSerial;
-				foreach (int cell in cells)
-					if (oldSerial < localSerial[cell]) {
+				foreach (PathFinder.Path.Node node in path.nodes)
+					if (oldSerial < localSerial[node.cell]) {
 						current = false;
 						break;
 					}

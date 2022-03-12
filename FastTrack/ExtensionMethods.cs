@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using HarmonyLib;
 using PeterHan.PLib.Core;
 using System;
 using System.Reflection;
@@ -31,13 +30,14 @@ namespace PeterHan.FastTrack {
 		/// Generates a getter for a type that is not known at compile time. The getter will
 		/// be emitted as a non-type checked function that accepts an object and blindly
 		/// attempts to retrieve the field type. Use with caution!
+		/// 
+		/// Value types will be copied when using this method.
 		/// </summary>
 		/// <typeparam name="D">The field type to return.</typeparam>
 		/// <param name="type">The containing type of the field.</param>
 		/// <param name="fieldName">The field name.</param>
 		/// <returns>A delegate that can access that field.</returns>
-		public static Func<object, D> GenerateGetter<D>(this Type type, string fieldName)
-				where D : class {
+		public static Func<object, D> GenerateGetter<D>(this Type type, string fieldName) {
 			if (type == null)
 				throw new ArgumentNullException(nameof(type));
 			if (string.IsNullOrEmpty(fieldName))
@@ -67,6 +67,51 @@ namespace PeterHan.FastTrack {
 				F(type.FullName, fieldName, typeof(D).FullName));
 #endif
 			return getter.CreateDelegate(typeof(Func<object, D>)) as Func<object, D>;
+		}
+
+		/// <summary>
+		/// Generates a setter for a type that is not known at compile time. The setter will
+		/// be emitted as a non-type checked function that accepts an object and blindly
+		/// attempts to set the field type. Use with caution!
+		/// 
+		/// Value types will be copied when using this method.
+		/// </summary>
+		/// <typeparam name="D">The field type to modify.</typeparam>
+		/// <param name="type">The containing type of the field.</param>
+		/// <param name="fieldName">The field name.</param>
+		/// <returns>A delegate that can access that field.</returns>
+		public static Action<object, D> GenerateSetter<D>(this Type type, string fieldName) {
+			if (type == null)
+				throw new ArgumentNullException(nameof(type));
+			if (string.IsNullOrEmpty(fieldName))
+				throw new ArgumentNullException(nameof(fieldName));
+			var field = type.GetField(fieldName, PPatchTools.BASE_FLAGS | BindingFlags.
+				Instance | BindingFlags.Static);
+			if (field == null)
+				throw new ArgumentException("No such field: {0}.{1}".F(type.FullName,
+					fieldName));
+			if (!field.FieldType.IsAssignableFrom(typeof(D)))
+				throw new ArgumentException("Field type {0} does not match desired {1}".F(
+					field.FieldType.FullName, typeof(D).FullName));
+			var setter = new DynamicMethod(fieldName + "_SetDelegate", null, new Type[] {
+				typeof(object), typeof(D)
+			}, true);
+			var generator = setter.GetILGenerator();
+			// Setter will load the first argument and use stfld/stsfld
+			if (field.IsStatic) {
+				generator.Emit(OpCodes.Ldarg_1);
+				generator.Emit(OpCodes.Stsfld, field);
+			} else {
+				generator.Emit(OpCodes.Ldarg_0);
+				generator.Emit(OpCodes.Ldarg_1);
+				generator.Emit(OpCodes.Stfld, field);
+			}
+			generator.Emit(OpCodes.Ret);
+#if DEBUG
+			PUtil.LogDebug("Created delegate for field {0}.{1} with type {2}".
+				F(type.FullName, fieldName, typeof(D).FullName));
+#endif
+			return setter.CreateDelegate(typeof(Action<object, D>)) as Action<object, D>;
 		}
 	}
 }

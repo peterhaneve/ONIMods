@@ -51,6 +51,13 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
+		/// Fixes the drag order spam bug, if Stock Bug Fix did not get to it first.
+		/// </summary>
+		internal static void FixTimeLapseDrag() {
+			PlayerController.Instance?.CancelDragging();
+		}
+
+		/// <summary>
 		/// Cleans up the mod caches after the game ends.
 		/// </summary>
 		[PLibMethod(RunAt.OnEndGame)]
@@ -69,6 +76,7 @@ namespace PeterHan.FastTrack {
 				VisualPatches.PropertyTextureUpdater.DestroyInstance();
 			if (options.ConduitOpts)
 				ConduitPatches.BackgroundConduitUpdater.DestroyInstance();
+			PathPatches.DupeBrainGroupUpdater.DestroyInstance();
 			AsyncJobManager.DestroyInstance();
 			GameRunning = false;
 		}
@@ -119,6 +127,10 @@ namespace PeterHan.FastTrack {
 				} else
 					PUtil.LogWarning("Disabling fast pickup updates: Efficient Supply active");
 			}
+			if (!PRegistry.GetData<bool>("Bugs.AutosaveDragFix"))
+				// Fix the annoying autosave bug
+				harmony.Patch(typeof(Timelapser), "SaveScreenshot", postfix: new HarmonyMethod(
+					typeof(FastTrackPatches), nameof(FastTrackPatches.FixTimeLapseDrag)));
 		}
 
 		public override void OnLoad(Harmony harmony) {
@@ -139,7 +151,7 @@ namespace PeterHan.FastTrack {
 		/// to run.
 		/// </summary>
 		private static System.Collections.IEnumerator WaitForCleanLoad() {
-			for (int i = 0; i < 4; i++)
+			for (int i = 0; i < 3; i++)
 				yield return null;
 			GameRunning = true;
 			yield break;
@@ -204,6 +216,26 @@ namespace PeterHan.FastTrack {
 				var options = FastTrackOptions.Instance;
 				if (options.ConduitOpts)
 					ConduitPatches.BackgroundConduitUpdater.StartUpdateAll();
+			}
+		}
+
+		/// <summary>
+		/// Applied to World to finish up expensive things after Game.LateUpdate has run.
+		/// </summary>
+		[HarmonyPatch(typeof(World), "LateUpdate")]
+		public static class World_LateUpdate_Patch {
+			internal static bool Prepare() {
+				var options = FastTrackOptions.Instance;
+				return options.PickupOpts;
+			}
+
+			/// <summary>
+			/// Applied after LateUpdate runs.
+			/// </summary>
+			internal static void Postfix() {
+				var options = FastTrackOptions.Instance;
+				if (options.PickupOpts)
+					PathPatches.DupeBrainGroupUpdater.Instance?.EndBrainUpdate();
 			}
 		}
 	}

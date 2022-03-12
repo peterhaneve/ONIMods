@@ -63,6 +63,28 @@ namespace PeterHan.FastTrack.PathPatches {
 	}
 
 	/// <summary>
+	/// Applied to Grid to pre-emptively update the path grid when Atmo Suit checkpoints
+	/// (or their counterparts) update.
+	/// </summary>
+	[HarmonyPatch(typeof(Grid), nameof(Grid.UpdateSuitMarker))]
+	public static class Grid_UpdateSuitMarker_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
+
+		/// <summary>
+		/// Applied before UpdateSuitMarker runs.
+		/// </summary>
+		internal static void Prefix(int cell, Grid.SuitMarker.Flags flags,
+				PathFinder.PotentialPath.Flags pathFlags) {
+			var fences = NavFences.AllFences;
+			if (Grid.TryGetSuitMarkerFlags(cell, out Grid.SuitMarker.Flags oldFlags,
+					out PathFinder.PotentialPath.Flags oldPathFlags) && (oldFlags != flags ||
+					oldPathFlags != pathFlags) && fences.TryGetValue("MinionNavGrid",
+					out NavFences dupeGrid))
+				dupeGrid.UpdateSerial(cell);
+		}
+	}
+
+	/// <summary>
 	/// Applied to NavGrid to mark all cells as invalid serials when it is initialized.
 	/// </summary>
 	[HarmonyPatch(typeof(NavGrid), nameof(NavGrid.InitializeGraph))]

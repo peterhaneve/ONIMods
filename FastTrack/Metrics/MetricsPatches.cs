@@ -23,7 +23,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
-
+using UnityEngine;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.Metrics {
@@ -44,7 +44,7 @@ namespace PeterHan.FastTrack.Metrics {
 	// ConduitFlow.Sim200ms is <10ms
 	// ChoreConsumer.FindNextChore is <10ms
 	// PickupableSensor.Update is 70ms
-	[HarmonyPatch(typeof(GlobalChoreProvider), "UpdateFetches")]
+	[HarmonyPatch(typeof(PathPatches.DupeBrainGroupUpdater), "UpdateFetches")]
 	public static class TimePatch {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
@@ -58,7 +58,7 @@ namespace PeterHan.FastTrack.Metrics {
 		}
 	}
 
-	[HarmonyPatch(typeof(FetchManager), "UpdatePickups")]
+	[HarmonyPatch(typeof(SymbolOverrideController), "ApplyOverrides")]
 	public static class TimePatch2 {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
@@ -123,10 +123,42 @@ namespace PeterHan.FastTrack.Metrics {
 #endif
 
 	/// <summary>
+	/// Applied to every RenderImage() to log render metrics.
+	/// </summary>
+	[HarmonyPatch]
+	public static class ProfileRenderImages {
+		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
+
+		internal static IEnumerable<MethodBase> TargetMethods() {
+			var targets = new List<MethodBase>(128);
+			foreach (var type in Assembly.GetAssembly(typeof(Game)).DefinedTypes)
+				if (type != null && typeof(Behaviour).IsAssignableFrom(type)) {
+					var method = type.GetMethod("OnRenderImage", PPatchTools.BASE_FLAGS |
+						BindingFlags.Instance | BindingFlags.DeclaredOnly, null, new Type[] {
+							typeof(RenderTexture), typeof(RenderTexture)
+						}, null);
+					if (method != null)
+						targets.Add(method);
+				}
+			return targets;
+		}
+
+		internal static void Prefix(ref Stopwatch __state) {
+			__state = Stopwatch.StartNew();
+		}
+
+		internal static void Postfix(Behaviour __instance, Stopwatch __state) {
+			if (__state != null && __instance != null)
+				DebugMetrics.RENDER_IMAGE.AddSlice(__instance.GetType().FullName, __state.
+					ElapsedTicks);
+		}
+	}
+
+	/// <summary>
 	/// Applied to every Update() to log update metrics.
 	/// </summary>
 	[HarmonyPatch]
-	public static class ProfileGameUpdates {
+	public static class ProfileUpdates {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
 		/// <summary>
@@ -137,10 +169,9 @@ namespace PeterHan.FastTrack.Metrics {
 		internal static IEnumerable<MethodBase> FindTargets(string name) {
 			var targets = new List<MethodBase>(128);
 			foreach (var type in Assembly.GetAssembly(typeof(Game)).DefinedTypes)
-				if (type != null && typeof(UnityEngine.Behaviour).IsAssignableFrom(type)) {
-					var method = type.GetMethod(name, PPatchTools.BASE_FLAGS |
-						BindingFlags.Instance | BindingFlags.DeclaredOnly, null, Type.
-						EmptyTypes, null);
+				if (type != null && typeof(Behaviour).IsAssignableFrom(type)) {
+					var method = type.GetMethod(name, PPatchTools.BASE_FLAGS | BindingFlags.
+						Instance | BindingFlags.DeclaredOnly, null, Type.EmptyTypes, null);
 					if (method != null)
 						targets.Add(method);
 				}
@@ -155,7 +186,7 @@ namespace PeterHan.FastTrack.Metrics {
 			__state = Stopwatch.StartNew();
 		}
 
-		internal static void Postfix(UnityEngine.Behaviour __instance, Stopwatch __state) {
+		internal static void Postfix(Behaviour __instance, Stopwatch __state) {
 			if (__state != null && __instance != null)
 				DebugMetrics.UPDATE.AddSlice(__instance.GetType().FullName, __state.
 					ElapsedTicks);
@@ -163,21 +194,21 @@ namespace PeterHan.FastTrack.Metrics {
 	}
 
 	/// <summary>
-	/// Applied to every Update() to log update metrics.
+	/// Applied to every LateUpdate() to log late update metrics.
 	/// </summary>
 	[HarmonyPatch]
-	public static class ProfileGameLateUpdates {
+	public static class ProfileLateUpdates {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
 		internal static IEnumerable<MethodBase> TargetMethods() {
-			return ProfileGameUpdates.FindTargets("LateUpdate");
+			return ProfileUpdates.FindTargets("LateUpdate");
 		}
 
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
 
-		internal static void Postfix(UnityEngine.Behaviour __instance, Stopwatch __state) {
+		internal static void Postfix(Behaviour __instance, Stopwatch __state) {
 			if (__state != null && __instance != null)
 				DebugMetrics.LATE_UPDATE.AddSlice(__instance.GetType().FullName, __state.
 					ElapsedTicks);
@@ -209,16 +240,6 @@ namespace PeterHan.FastTrack.Metrics {
 	/// <summary>
 	/// Applied to SimAndRenderScheduler.RenderEveryTickUpdater to log sim/render update
 	/// metrics if enabled.
-	/// 
-	/// By far the worst: 4917/89,257us|1/18us.
-	/// FishFeeder is cheap
-	/// BrainScheduler is fairly expensive but covered elsewhere
-	/// K*Collider2D and SpriteSheetAnimManager are necessary
-	/// ColonyAchievementTracker is not easy to optimize any further
-	/// BubbleManager is dead code
-	/// TimerSideScreen, PlayerControlledToggleSideScreen, LogicBitSelectorSideScreen can be
-	/// optimized
-	/// PumpingStationGuide and LightSymbolTracker can be cut to 200ms
 	/// </summary>
 	[HarmonyPatch(typeof(StateMachineUpdater.BucketGroup), nameof(StateMachineUpdater.
 		BucketGroup.AdvanceOneSubTick))]
@@ -258,6 +279,9 @@ namespace PeterHan.FastTrack.Metrics {
 		}
 	}
 
+	/// <summary>
+	/// Applied to SimAndRenderScheduler.RenderEveryTickUpdater to log sim/render update
+	/// metrics if enabled.
 	[HarmonyPatch(typeof(SimAndRenderScheduler.RenderEveryTickUpdater),
 		nameof(SimAndRenderScheduler.RenderEveryTickUpdater.Update))]
 	public static class SimAndRenderScheduler_RenderEveryTickUpdater_Update_Patch {

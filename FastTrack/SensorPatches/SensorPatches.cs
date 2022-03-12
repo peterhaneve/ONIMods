@@ -24,8 +24,10 @@ using UnityEngine;
 namespace PeterHan.FastTrack.SensorPatches {
 	/// <summary>
 	/// Patches applied to optimize Duplicant Sensors which are quite slow and run every frame.
-	/// ToiletSensor is very cheap so no big deal
+	/// ToiletSensor and AssignableReachabilitySensor are very cheap so no big deal
 	/// IdleCellSensor already only runs if the Duplicant has the idle tag
+	/// Anything using PathFinder.RunQuery (idle cell, safe cell) has to be foreground as
+	///   those use shared/static path grid state
 	/// </summary>
 	public static class SensorPatches {
 		/// <summary>
@@ -111,6 +113,38 @@ namespace PeterHan.FastTrack.SensorPatches {
 				if (cost >= ___targetCost)
 					__result = true;
 			}
+		}
+	}
+
+	/// <summary>
+	/// Applied to PathProberSensor to shut it off unconditionally if pickup opts have been
+	/// moved to a background task.
+	/// </summary>
+	[HarmonyPatch(typeof(PathProberSensor), nameof(PathProberSensor.Update))]
+	public static class PathProberSensor_Update_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
+
+		/// <summary>
+		/// Applied before Update runs.
+		/// </summary>
+		internal static bool Prefix() {
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to PickupableSensor to shut it off unconditionally if pickup opts have been
+	/// moved to a background task.
+	/// </summary>
+	[HarmonyPatch(typeof(PickupableSensor), nameof(PickupableSensor.Update))]
+	public static class PickupableSensor_Update_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
+
+		/// <summary>
+		/// Applied before Update runs.
+		/// </summary>
+		internal static bool Prefix() {
+			return false;
 		}
 	}
 }

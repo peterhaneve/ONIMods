@@ -17,11 +17,91 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
+using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
+
 namespace PeterHan.FastTrack.UIPatches {
+	/// <summary>
+	/// Patches for slow code in the BuildTool.
+	/// </summary>
+	public static class BuildToolPatches {
+		/// <summary>
+		/// The prototype matching BuildTool.UpdateVis.
+		/// </summary>
+		private delegate void UpdateVis(BuildTool tool, Vector3 pos);
+
+		/// <summary>
+		/// BuildTool.UpdateVis is private so compute the patch target with reflection.
+		/// </summary>
+		private static readonly MethodInfo UPDATE_VIS = typeof(BuildTool).GetMethodSafe(
+			nameof(UpdateVis), false, typeof(Vector3));
+
+		/// <summary>
+		/// A delegate that can invoke the UpdateVis method of BuildTool.
+		/// </summary>
+		private static readonly UpdateVis DO_UPDATE_VIS = PDetours.Detour<UpdateVis>(
+			UPDATE_VIS);
+
+		/// <summary>
+		/// Accesses the def field of BuildTool.
+		/// </summary>
+		private static readonly IDetouredField<BuildTool, BuildingDef> GET_DEF = PDetours.
+			DetourField<BuildTool, BuildingDef>("def");
+
+		/// <summary>
+		/// The last cell the mouse was over when the build tool was used.
+		/// </summary>
+		private static int lastCell;
+
+		/// <summary>
+		/// Initializes tracking of the build tool.
+		/// </summary>
+		internal static void Init() {
+			lastCell = Grid.InvalidCell;
+		}
+
+		/// <summary>
+		/// Updates the build tool visualizer only if the mouse actually moved.
+		/// </summary>
+		/// <param name="tool">The build tool to update.</param>
+		/// <param name="pos">The mouse position.</param>
+		private static void ShouldUpdateVis(BuildTool tool, Vector3 pos) {
+			int cell = Grid.PosToCell(pos);
+			if (cell != lastCell) {
+				if (GET_DEF == null || GET_DEF.Get(tool) != null)
+					DO_UPDATE_VIS?.Invoke(tool, pos);
+				lastCell = cell;
+			}
+		}
+
+		/// <summary>
+		/// Applied to BuildTool to fix wasteful updates when moving the mouse by small amounts.
+		/// </summary>
+		[HarmonyPatch(typeof(BuildTool), nameof(BuildTool.OnMouseMove))]
+		internal static class OnMouseMove_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.InfoCardOpts;
+
+			/// <summary>
+			/// Transpiles OnMouseMove to call through a filter method.
+			/// </summary>
+			internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+				var method = instructions;
+				if (UPDATE_VIS == null)
+					PUtil.LogWarning("Unable to patch BuildTool.OnMouseMove");
+				else
+					method = PPatchTools.ReplaceMethodCall(instructions, UPDATE_VIS, typeof(
+						BuildToolPatches).GetMethodSafe(nameof(BuildToolPatches.
+						ShouldUpdateVis), true, typeof(BuildTool), typeof(Vector3)));
+				return method;
+			}
+		}
+	}
+
 	/// <summary>
 	/// Applied to InterfaceTool to replace the monster LateUpdate with a far more efficient
 	/// alternative. Only really makes a difference on large piles, but does matter.
