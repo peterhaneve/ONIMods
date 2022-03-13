@@ -148,7 +148,21 @@ namespace PeterHan.FastTrack {
 			// In case this goes in stock bug fix later
 			if (options.UnstackLights)
 				PRegistry.PutData("Bugs.StackedLights", true);
+			// This patch is Windows only apparently
+			var target = typeof(Global).GetMethodSafe("TestDataLocations", true);
+			if (options.MiscOpts && target != null && typeof(Global).GetFieldSafe(
+					"saveFolderTestResult", true) != null) {
+				harmony.Patch(target, prefix: new HarmonyMethod(typeof(FastTrackPatches),
+					nameof(RemoveTestDataLocations)));
+				PUtil.LogDebug("Patched Global.TestDataLocations");
+			} else
+				PUtil.LogDebug("Skipping TestDataLocations patch");
 			GameRunning = false;
+		}
+
+		internal static bool RemoveTestDataLocations(ref string ___saveFolderTestResult) {
+			___saveFolderTestResult = "both";
+			return false;
 		}
 
 		/// <summary>

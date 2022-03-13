@@ -58,9 +58,9 @@ namespace PeterHan.FastTrack.Metrics {
 		}
 	}
 
-	[HarmonyPatch(typeof(SymbolOverrideController), "ApplyOverrides")]
+	[HarmonyPatch(typeof(PathPatches.DupeBrainGroupUpdater), "EndBrainUpdate")]
 	public static class TimePatch2 {
-		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
+		internal static bool Prepare() => false;
 
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();

@@ -121,23 +121,6 @@ namespace PeterHan.FastTrack.UIPatches {
 	}
 
 	/// <summary>
-	/// Applied to Global to get rid of a time consuming check for data read/write used only
-	/// in the metrics.
-	/// </summary>
-	[HarmonyPatch(typeof(Global), "TestDataLocations")]
-	public static class Global_TestDataLocations_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
-
-		/// <summary>
-		/// Applied before TestDataLocations runs.
-		/// </summary>
-		internal static bool Prefix(ref string ___saveFolderTestResult) {
-			___saveFolderTestResult = "both";
-			return false;
-		}
-	}
-
-	/// <summary>
 	/// Applied to InterfaceTool to get rid of an expensive raycast for UI elements.
 	/// </summary>
 	[HarmonyPatch(typeof(InterfaceTool), nameof(InterfaceTool.ShowHoverUI))]

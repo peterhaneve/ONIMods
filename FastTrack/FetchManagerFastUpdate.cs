@@ -77,7 +77,7 @@ namespace PeterHan.FastTrack {
 						};
 						if (canBePickedUp.TryGetValue(key, out FetchManager.Pickup current)) {
 							// Is the new one better?
-							int result = comparer.Compare(current, candidate);
+							int result = comparer.Compare(candidate, current);
 							if (result > 0 || (result == 0 && candidate.pickupable.
 									UnreservedAmount > current.pickupable.UnreservedAmount))
 								canBePickedUp[key] = candidate;
@@ -125,7 +125,6 @@ namespace PeterHan.FastTrack {
 			}
 
 			public override int GetHashCode() {
-				// Priority is 0-9
 				return hash;
 			}
 
