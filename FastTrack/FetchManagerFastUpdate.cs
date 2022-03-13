@@ -100,7 +100,7 @@ namespace PeterHan.FastTrack {
 		/// Wraps TagBits and its hash in a key structure that can be very quickly and properly
 		/// hashed and compared for a dictionary key.
 		/// </summary>
-		private sealed class PickupTagKey {
+		private struct PickupTagKey {
 			/// <summary>
 			/// The full tag bits of the pickup. Cannot be readonly because TagBits.AreEqual
 			/// uses a ref parameter (even though it is const in the method).
@@ -126,7 +126,6 @@ namespace PeterHan.FastTrack {
 
 			public override int GetHashCode() {
 				// Priority is 0-9
-				//return (hash << 4) | priority;
 				return hash;
 			}
 

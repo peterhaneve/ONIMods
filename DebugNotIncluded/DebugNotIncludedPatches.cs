@@ -236,314 +236,390 @@ namespace PeterHan.DebugNotIncluded {
 			}
 			return instructions;
 		}
+	}
 
-		/// <summary>
-		/// Applied to AudioSheets to log audio event information.
-		/// </summary>
-		[HarmonyPatch(typeof(AudioSheets), "CreateSound")]
-		public static class AudioSheets_CreateSound_Patch {
-			internal static bool Prepare() {
-				return DebugNotIncludedOptions.Instance?.LogSounds ?? false;
-			}
-
-			/// <summary>
-			/// Applied after CreateSound runs.
-			/// </summary>
-			internal static void Postfix(string file_name, string anim_name, string sound_name) {
-				// Add sound "GasPump_intake" to anim pumpgas_kanim.working_loop
-				DebugLogger.LogDebug("Add sound \"{0}\" to anim {1}.{2}".F(sound_name,
-					file_name, anim_name));
-			}
+	/// <summary>
+	/// Applied to AudioSheets to log audio event information.
+	/// </summary>
+	[HarmonyPatch(typeof(AudioSheets), "CreateSound")]
+	public static class AudioSheets_CreateSound_Patch {
+		internal static bool Prepare() {
+			return DebugNotIncludedOptions.Instance?.LogSounds ?? false;
 		}
 
 		/// <summary>
-		/// Applied to Debug to log which methods are actually sending log messages.
+		/// Applied after CreateSound runs.
 		/// </summary>
-		[HarmonyPatch(typeof(Debug), "TimeStamp")]
-		public static class Debug_TimeStamp_Patch {
-			internal static bool Prepare() {
-				return DebugNotIncludedOptions.Instance?.ShowLogSenders ?? false;
-			}
+		internal static void Postfix(string file_name, string anim_name, string sound_name) {
+			// Add sound "GasPump_intake" to anim pumpgas_kanim.working_loop
+			DebugLogger.LogDebug("Add sound \"{0}\" to anim {1}.{2}".F(sound_name,
+				file_name, anim_name));
+		}
+	}
 
-			/// <summary>
-			/// Applied after TimeStamp runs.
-			/// </summary>
-			internal static void Postfix(ref string __result) {
-				/*
-				 * Postfix()
-				 * TimeStamp_Patch1()
-				 * WriteTimeStamped
-				 * Log/LogFormat/...
-				 */
-				__result = DebugLogger.AddCallingLocation(__result, new StackTrace(4));
-			}
+	/// <summary>
+	/// Applied to Debug to log which methods are actually sending log messages.
+	/// </summary>
+	[HarmonyPatch(typeof(Debug), "TimeStamp")]
+	public static class Debug_TimeStamp_Patch {
+		internal static bool Prepare() {
+			return DebugNotIncludedOptions.Instance?.ShowLogSenders ?? false;
 		}
 
 		/// <summary>
-		/// Applied to DebugUtil to log exceptions more cleanly.
+		/// Applied after TimeStamp runs.
 		/// </summary>
-		[HarmonyPatch(typeof(DebugUtil), "LogException")]
-		public static class DebugUtil_LogException_Patch {
-			/// <summary>
-			/// Applied before LogException runs.
-			/// </summary>
-			internal static bool Prefix(Exception e, string errorMessage) {
-				DebugLogger.LogError(errorMessage);
-				DebugLogger.LogException(e);
-				return false;
-			}
+		internal static void Postfix(ref string __result) {
+			/*
+			 * Postfix()
+			 * TimeStamp_Patch1()
+			 * WriteTimeStamped
+			 * Log/LogFormat/...
+			 */
+			__result = DebugLogger.AddCallingLocation(__result, new StackTrace(4));
 		}
+	}
+
+	/// <summary>
+	/// Applied to DebugUtil to log exceptions more cleanly.
+	/// </summary>
+	[HarmonyPatch(typeof(DebugUtil), nameof(DebugUtil.LogException))]
+	public static class DebugUtil_LogException_Patch {
+		/// <summary>
+		/// Applied before LogException runs.
+		/// </summary>
+		internal static bool Prefix(Exception e, string errorMessage) {
+			DebugLogger.LogError(errorMessage);
+			DebugLogger.LogException(e);
+			return false;
+		}
+	}
 
 #if DEBUG
+	/// <summary>
+	/// Applied to EntityTemplates to allow things to be instantly tamed in sandbox mode.
+	/// </summary>
+	[HarmonyPatch(typeof(EntityTemplates), nameof(EntityTemplates.ExtendEntityToWildCreature))]
+	public static class EntityTemplates_ExtendEntityToWildCreature_Patch {
 		/// <summary>
-		/// Applied to EntityTemplates to allow things to be instantly tamed in sandbox mode.
+		/// Applied after ExtendEntityToWildCreature runs.
 		/// </summary>
-		[HarmonyPatch(typeof(EntityTemplates), "ExtendEntityToWildCreature")]
-		public static class EntityTemplates_ExtendEntityToWildCreature_Patch {
-			/// <summary>
-			/// Applied after ExtendEntityToWildCreature runs.
-			/// </summary>
-			internal static void Postfix(GameObject __result) {
-				__result.AddOrGet<InstantGrowable>();
-			}
+		internal static void Postfix(GameObject __result) {
+			__result.AddOrGet<InstantGrowable>();
 		}
+	}
 #endif
 
 #if DEBUG
+	/// <summary>
+	/// Applied to EventSystem to debug the cause of the pesky "Not subscribed to event"
+	/// log spam.
+	/// </summary>
+	[HarmonyPatch(typeof(EventSystem), nameof(EventSystem.Unsubscribe), typeof(int),
+		typeof(int), typeof(bool))]
+	public static class EventSystem_Unsubscribe_Patch {
 		/// <summary>
-		/// Applied to EventSystem to debug the cause of the pesky "Not subscribed to event"
-		/// log spam.
+		/// Applied before Unsubscribe runs.
 		/// </summary>
-		[HarmonyPatch(typeof(EventSystem), "Unsubscribe", typeof(int), typeof(int),
-			typeof(bool))]
-		public static class EventSystem_Unsubscribe_Patch {
-			/// <summary>
-			/// Applied before Unsubscribe runs.
-			/// </summary>
-			internal static void Prefix(ArrayRef<IntraObjectRoute> ___intraObjectRoutes,
-					int eventName, int subscribeHandle, bool suppressWarnings) {
-				if (!suppressWarnings && ___intraObjectRoutes.FindIndex((route) => route.
-						eventHash == eventName && route.handlerIndex == subscribeHandle) < 0)
-					DebugLogger.DumpStack();
-			}
+		internal static void Prefix(ArrayRef<IntraObjectRoute> ___intraObjectRoutes,
+				int eventName, int subscribeHandle, bool suppressWarnings) {
+			if (!suppressWarnings && ___intraObjectRoutes.FindIndex((route) => route.
+					eventHash == eventName && route.handlerIndex == subscribeHandle) < 0)
+				DebugLogger.DumpStack();
+		}
 
-			// Mirror struct to the private struct EventSystem.IntraObjectRoute
-			internal struct IntraObjectRoute {
+		// Mirror struct to the private struct EventSystem.IntraObjectRoute
+		internal struct IntraObjectRoute {
 #pragma warning disable CS0649
-				public int eventHash;
-				public int handlerIndex;
+			public int eventHash;
+			public int handlerIndex;
 #pragma warning restore CS0649
 
-				public override string ToString() {
-					return "IntraObjectRoute[hash={0:D},index={1:D}]".F(eventHash,
-						handlerIndex);
-				}
+			public override string ToString() {
+				return "IntraObjectRoute[hash={0:D},index={1:D}]".F(eventHash,
+					handlerIndex);
 			}
 		}
+	}
 #endif
 
 #if DEBUG
+	/// <summary>
+	/// Applied to Growing to allow things to be instantly grown in sandbox mode.
+	/// </summary>
+	[HarmonyPatch(typeof(Growing), "OnPrefabInit")]
+	public static class Growing_OnPrefabInit_Patch {
 		/// <summary>
-		/// Applied to Growing to allow things to be instantly grown in sandbox mode.
+		/// Applied after OnPrefabInit runs.
 		/// </summary>
-		[HarmonyPatch(typeof(Growing), "OnPrefabInit")]
-		public static class Growing_OnPrefabInit_Patch {
-			/// <summary>
-			/// Applied after OnPrefabInit runs.
-			/// </summary>
-			internal static void Postfix(Growing __instance) {
-				__instance.gameObject.AddOrGet<InstantGrowable>();
-			}
+		internal static void Postfix(Growing __instance) {
+			__instance.gameObject.AddOrGet<InstantGrowable>();
 		}
+	}
 #endif
 
+	/// <summary>
+	/// Applied to KCrashReporter to crash to desktop instead of showing the crash dialog.
+	/// </summary>
+	[HarmonyPatch(typeof(KCrashReporter), nameof(KCrashReporter.ShowDialog))]
+	public static class KCrashReporter_ShowDialog_Patch {
 		/// <summary>
-		/// Applied to KCrashReporter to crash to desktop instead of showing the crash dialog.
+		/// Applied before ShowDialog runs.
 		/// </summary>
-		[HarmonyPatch(typeof(KCrashReporter), "ShowDialog")]
-		public static class KCrashReporter_ShowDialog_Patch {
-			/// <summary>
-			/// Applied before ShowDialog runs.
-			/// </summary>
-			internal static bool Prefix(ref bool __result) {
-				bool ctd = DebugNotIncludedOptions.Instance.DisableCrashDialog;
-				if (ctd) {
-					__result = false;
-					Application.Quit();
-				}
-				return !ctd;
+		internal static bool Prefix(ref bool __result) {
+			bool ctd = DebugNotIncludedOptions.Instance.DisableCrashDialog;
+			if (ctd) {
+				__result = false;
+				Application.Quit();
 			}
+			return !ctd;
 		}
+	}
 
+	/// <summary>
+	/// Applied to MainMenu to check and optionally move this mod to the top.
+	/// </summary>
+	[HarmonyPatch(typeof(MainMenu), "OnSpawn")]
+	public static class MainMenu_OnSpawn_Patch {
 		/// <summary>
-		/// Applied to MainMenu to check and optionally move this mod to the top.
+		/// Applied after Update runs.
 		/// </summary>
-		[HarmonyPatch(typeof(MainMenu), "OnSpawn")]
-		public static class MainMenu_OnSpawn_Patch {
-			/// <summary>
-			/// Applied after Update runs.
-			/// </summary>
-			internal static void Postfix(MainMenu __instance) {
-				if (DebugNotIncludedOptions.Instance?.SkipFirstModCheck != true)
-					ModDialogs.CheckFirstMod(__instance.gameObject);
-			}
+		internal static void Postfix(MainMenu __instance) {
+			if (DebugNotIncludedOptions.Instance?.SkipFirstModCheck != true)
+				ModDialogs.CheckFirstMod(__instance.gameObject);
 		}
+	}
 
+	/// <summary>
+	/// Applied to Manager to make the mod events dialog more user friendly.
+	/// </summary>
+	[HarmonyPatch(typeof(Manager), "MakeEventList")]
+	public static class Manager_MakeEventList_Patch {
 		/// <summary>
-		/// Applied to Manager to make the mod events dialog more user friendly.
+		/// Applied after MakeEventList runs.
 		/// </summary>
-		[HarmonyPatch(typeof(Manager), "MakeEventList")]
-		public static class Manager_MakeEventList_Patch {
-			/// <summary>
-			/// Applied after MakeEventList runs.
-			/// </summary>
-			internal static void Postfix(List<Event> events, ref string __result) {
-				string result = ModEvents.Describe(events);
-				if (!string.IsNullOrEmpty(result))
-					__result = result;
-			}
+		internal static void Postfix(List<Event> events, ref string __result) {
+			string result = ModEvents.Describe(events);
+			if (!string.IsNullOrEmpty(result))
+				__result = result;
 		}
+	}
+
+	/// <summary>
+	/// Applied to Manager to make the Subscribe function not log.
+	/// </summary>
+	[HarmonyPatch(typeof(Manager), nameof(Manager.Subscribe))]
+	public static class Manager_Subscribe_Patch {
+		/// <summary>
+		/// Transpiles Subscribe to remove all debug log calls.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+			return PPatchTools.ReplaceMethodCall(method, typeof(Debug).GetMethodSafe(nameof(
+				Debug.LogFormat), true, typeof(string), typeof(object[])));
+		}
+	}
 
 #if DEBUG
-		/// <summary>
-		/// Applied to Memory to warn about suspicious patches that target empty methods.
-		/// 
-		/// DEBUG ONLY.
-		/// </summary>
-		[HarmonyPatch(typeof(Memory), "DetourMethod")]
-		public static class Memory_DetourMethod_Patch {
-			private const int MIN_METHOD_SIZE = 8;
+	/// <summary>
+	/// Applied to Memory to warn about suspicious patches that target empty methods.
+	/// 
+	/// DEBUG ONLY.
+	/// </summary>
+	[HarmonyPatch(typeof(Memory), nameof(Memory.DetourMethod))]
+	public static class Memory_DetourMethod_Patch {
+		private const int MIN_METHOD_SIZE = 8;
 
-			/// <summary>
-			/// Applied before DetourMethod runs.
-			/// </summary>
-			internal static void Prefix(MethodBase original, MethodBase replacement) {
-				var body = original.GetMethodBody();
-				if (body.GetILAsByteArray().Length < MIN_METHOD_SIZE)
-					DebugLogger.LogWarning("Patch {0} targets empty method {1}.{2}".F(
-						replacement.Name, original.DeclaringType, original.Name));
-			}
+		/// <summary>
+		/// Applied before DetourMethod runs.
+		/// </summary>
+		internal static void Prefix(MethodBase original, MethodBase replacement) {
+			var body = original.GetMethodBody();
+			if (body.GetILAsByteArray().Length < MIN_METHOD_SIZE)
+				DebugLogger.LogWarning("Patch {0} targets empty method {1}.{2}".F(
+					replacement.Name, original.DeclaringType, original.Name));
 		}
+	}
 #endif
 
+	/// <summary>
+	/// Applied to MinionConfig to add buttons for triggering stress and joy reactions.
+	/// </summary>
+	[HarmonyPatch(typeof(MinionConfig), nameof(MinionConfig.CreatePrefab))]
+	public static class MinionConfig_CreatePrefab_Patch {
 		/// <summary>
-		/// Applied to MinionConfig to add buttons for triggering stress and joy reactions.
+		/// Applied after CreatePrefab runs.
 		/// </summary>
-		[HarmonyPatch(typeof(MinionConfig), "CreatePrefab")]
-		public static class MinionConfig_CreatePrefab_Patch {
-			/// <summary>
-			/// Applied after CreatePrefab runs.
-			/// </summary>
-			internal static void Postfix(GameObject __result) {
-				__result.AddOrGet<InstantEmotable>();
+		internal static void Postfix(GameObject __result) {
+			__result.AddOrGet<InstantEmotable>();
+		}
+	}
+
+	/// <summary>
+	/// Applied to Mod to reduce logging when checking for archived versions.
+	/// </summary>
+	[HarmonyPatch(typeof(Mod), "GetMostSuitableArchive")]
+	public static class Mod_GetMostSuitableArchive_Patch {
+		/// <summary>
+		/// Transpiles GetMostSuitableArchive to remove all debug log calls.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+			return PPatchTools.ReplaceMethodCall(method, typeof(Mod).GetMethodSafe(nameof(
+				Mod.ModDevLog), false, typeof(string)));
+		}
+	}
+
+	/// <summary>
+	/// Applied to Mod to make the ScanContent method log less.
+	/// </summary>
+	[HarmonyPatch(typeof(Mod), nameof(Mod.ScanContent))]
+	public static class Mod_ScanContent_Patch {
+		/// <summary>
+		/// Logs mod load information to the debug log.
+		/// </summary>
+		/// <param name="mod">The mod that was loaded.</param>
+		private static void LogModScanned(Mod mod) {
+			if (mod != null) {
+				string path = mod.relative_root;
+				DebugLogger.LogDebug("{3} ({0}): Successfully loaded {2} from '{1}'".F(
+					mod.label.title, string.IsNullOrEmpty(path) ? "root" : path,
+					mod.available_content.ToString(), mod.staticID));
 			}
 		}
 
 		/// <summary>
-		/// Applied to ModUtil to log animations loaded.
+		/// Transpiles ScanContent to remove the logs and add a call to a consolidated log
+		/// method.
 		/// </summary>
-		[HarmonyPatch(typeof(ModUtil), "AddKAnimMod")]
-		public static class ModUtil_AddKAnimMod_Patch {
-			/// <summary>
-			/// Applied after AddKAnimMod runs.
-			/// </summary>
-			internal static void Postfix(string name) {
-				DebugLogger.LogDebug("Adding anim \"{0}\"", name);
-			}
-		}
-
-		/// <summary>
-		/// Applied to ModsScreen to add UI for performing more actions to mods.
-		/// </summary>
-		[HarmonyPatch(typeof(ModsScreen), "OnActivate")]
-		[HarmonyPriority(Priority.Last)]
-		public static class ModsScreen_OnActivate_Patch {
-			/// <summary>
-			/// Applied before OnActivate runs.
-			/// </summary>
-			internal static void Prefix(GameObject ___entryPrefab) {
-				if (___entryPrefab != null)
-					ModDialogs.ConfigureRowPrefab(___entryPrefab);
-			}
-
-			internal static bool Prepare() {
-				return DebugNotIncludedOptions.Instance?.PowerUserMode ?? false;
-			}
-
-			/// <summary>
-			/// Applied after OnActivate runs.
-			/// </summary>
-			internal static void Postfix(KButton ___workshopButton, ModsScreen __instance) {
-				if (___workshopButton != null) {
-					// Hide the "STEAM WORKSHOP" button
-					var obj = ___workshopButton.gameObject;
-					obj.SetActive(false);
-					var parent = obj.GetParent();
-					if (parent != null)
-						ModDialogs.AddExtraButtons(__instance.gameObject, parent);
+		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+			var devLog = typeof(Mod).GetMethodSafe(nameof(Mod.ModDevLog), false,
+				typeof(string));
+			var debugLog = typeof(Debug).GetMethodSafe(nameof(Debug.Log), true,
+				typeof(object));
+			var postfix = typeof(Mod_ScanContent_Patch).GetMethodSafe(nameof(LogModScanned),
+				true, typeof(Mod));
+			int replaced = 0;
+			foreach (var instr in method) {
+				if (instr.Is(OpCodes.Call, devLog)) {
+					yield return new CodeInstruction(OpCodes.Pop);
+					instr.opcode = OpCodes.Pop;
+					instr.operand = null;
+				} else if (debugLog != null && instr.Is(OpCodes.Call, debugLog)) {
+					instr.opcode = OpCodes.Pop;
+					instr.operand = null;
+					if (++replaced == 3 && postfix != null) {
+						yield return new CodeInstruction(OpCodes.Ldarg_0);
+						yield return new CodeInstruction(OpCodes.Call, postfix);
+					}
 				}
+				yield return instr;
 			}
 		}
+	}
+
+	/// <summary>
+	/// Applied to ModUtil to log animations loaded.
+	/// </summary>
+	[HarmonyPatch(typeof(ModUtil), nameof(ModUtil.AddKAnimMod))]
+	public static class ModUtil_AddKAnimMod_Patch {
+		/// <summary>
+		/// Applied after AddKAnimMod runs.
+		/// </summary>
+		internal static void Postfix(string name) {
+			DebugLogger.LogDebug("Adding anim \"{0}\"", name);
+		}
+	}
+
+	/// <summary>
+	/// Applied to ModsScreen to add UI for performing more actions to mods.
+	/// </summary>
+	[HarmonyPatch(typeof(ModsScreen), "OnActivate")]
+	[HarmonyPriority(Priority.Last)]
+	public static class ModsScreen_OnActivate_Patch {
+		/// <summary>
+		/// Applied before OnActivate runs.
+		/// </summary>
+		internal static void Prefix(GameObject ___entryPrefab) {
+			if (___entryPrefab != null)
+				ModDialogs.ConfigureRowPrefab(___entryPrefab);
+		}
+
+		internal static bool Prepare() {
+			return DebugNotIncludedOptions.Instance?.PowerUserMode ?? false;
+		}
+
+		/// <summary>
+		/// Applied after OnActivate runs.
+		/// </summary>
+		internal static void Postfix(KButton ___workshopButton, ModsScreen __instance) {
+			if (___workshopButton != null) {
+				// Hide the "STEAM WORKSHOP" button
+				var obj = ___workshopButton.gameObject;
+				obj.SetActive(false);
+				var parent = obj.GetParent();
+				if (parent != null)
+					ModDialogs.AddExtraButtons(__instance.gameObject, parent);
+			}
+		}
+	}
 
 #if ALL_MODS_CHECKBOX
-		/// <summary>
-		/// Applied to ModsScreen to update the All checkbox when mods are toggled.
-		/// </summary>
-		[HarmonyPatch(typeof(ModsScreen), "OnToggleClicked")]
-		public static class ModsScreen_OnToggleClicked_Patch {
-			internal static bool Prepare() {
-				return DebugNotIncludedOptions.Instance?.PowerUserMode ?? false;
-			}
-
-			/// <summary>
-			/// Applied after OnToggleClicked runs.
-			/// </summary>
-			internal static void Postfix(ModsScreen __instance) {
-				__instance?.GetComponent<AllModsHandler>()?.UpdateCheckedState();
-			}
+	/// <summary>
+	/// Applied to ModsScreen to update the All checkbox when mods are toggled.
+	/// </summary>
+	[HarmonyPatch(typeof(ModsScreen), "OnToggleClicked")]
+	public static class ModsScreen_OnToggleClicked_Patch {
+		internal static bool Prepare() {
+			return DebugNotIncludedOptions.Instance?.PowerUserMode ?? false;
 		}
+
+		/// <summary>
+		/// Applied after OnToggleClicked runs.
+		/// </summary>
+		internal static void Postfix(ModsScreen __instance) {
+			__instance?.GetComponent<AllModsHandler>()?.UpdateCheckedState();
+		}
+	}
 #endif
 
-		/// <summary>
-		/// Applied to SaveLoader to try and get rid of a duplicate Sim initialization.
-		/// </summary>
-		[HarmonyPatch(typeof(SaveLoader), "OnSpawn")]
-		public static class SaveLoader_OnSpawn_Patch {
-			internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-				return PPatchTools.ReplaceMethodCall(method, new Dictionary<MethodInfo,
-						MethodInfo>() {
-					{
-						typeof(Sim).GetMethodSafe(nameof(Sim.SIM_Initialize), true,
-							PPatchTools.AnyArguments), null
-					},
-					{
-						typeof(SimMessages).GetMethodSafe(nameof(SimMessages.
-							CreateSimElementsTable), true, PPatchTools.AnyArguments), null
-					},
-					{
-						typeof(SimMessages).GetMethodSafe(nameof(SimMessages.
-							CreateDiseaseTable), true, PPatchTools.AnyArguments), null
-					}
-				});
-			}
+	/// <summary>
+	/// Applied to SaveLoader to try and get rid of a duplicate Sim initialization.
+	/// </summary>
+	[HarmonyPatch(typeof(SaveLoader), "OnSpawn")]
+	public static class SaveLoader_OnSpawn_Patch {
+		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+			return PPatchTools.ReplaceMethodCall(method, new Dictionary<MethodInfo,
+				MethodInfo>() {
+				{
+					typeof(Sim).GetMethodSafe(nameof(Sim.SIM_Initialize), true,
+						PPatchTools.AnyArguments), null
+				},
+				{
+					typeof(SimMessages).GetMethodSafe(nameof(SimMessages.
+						CreateSimElementsTable), true, PPatchTools.AnyArguments), null
+				},
+				{
+					typeof(SimMessages).GetMethodSafe(nameof(SimMessages.
+						CreateDiseaseTable), true, PPatchTools.AnyArguments), null
+				}
+			});
+		}
+	}
+
+	/// <summary>
+	/// Applied to ScheduleManager to sort schedules upon game load.
+	/// </summary>
+	[HarmonyPatch(typeof(ScheduleManager), "OnSpawn")]
+	public static class ScheduleManager_OnSpawn_Patch {
+		internal static bool Prepare() {
+			return DebugNotIncludedOptions.Instance?.SortSchedules ?? false;
 		}
 
 		/// <summary>
-		/// Applied to ScheduleManager to sort schedules upon game load.
+		/// Applied after OnSpawn runs.
 		/// </summary>
-		[HarmonyPatch(typeof(ScheduleManager), "OnSpawn")]
-		public static class ScheduleManager_OnSpawn_Patch {
-			internal static bool Prepare() {
-				return DebugNotIncludedOptions.Instance?.SortSchedules ?? false;
-			}
-
-			/// <summary>
-			/// Applied after OnSpawn runs.
-			/// </summary>
-			internal static void Postfix(ScheduleManager __instance) {
-				DebugLogger.LogDebug("Sorting schedules");
-				__instance.GetSchedules().Sort((a, b) => a.name.CompareTo(b.name));
-			}
+		internal static void Postfix(ScheduleManager __instance) {
+			DebugLogger.LogDebug("Sorting schedules");
+			__instance.GetSchedules().Sort((a, b) => a.name.CompareTo(b.name));
 		}
 	}
 }

@@ -51,7 +51,7 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool AsyncPathProbe { get; set; }
 
-		[Option("Cache Paths", "Cache frequently used paths and reuse them in future calculations." + PERF_MEDIUM, "Duplicants")]
+		//[Option("Cache Paths", "Cache frequently used paths and reuse them in future calculations." + PERF_MEDIUM, "Duplicants")]
 		[JsonProperty]
 		public bool CachePaths { get; set; }
 
@@ -82,6 +82,10 @@ namespace PeterHan.FastTrack {
 		[Option("Batch Sounds", "Reduces the frequency of sound location updates." + PERF_LOW, "Interface")]
 		[JsonProperty]
 		public bool ReduceSoundUpdates { get; set; }
+
+		[Option("Colony Tracker Reduction", "Reduces the update rate of Colony Diagnostics.\n<i>Some notifications may take longer to trigger</i>" + PERF_LOW, "Interface")]
+		[JsonProperty]
+		public bool ReduceColonyTracking { get; set; }
 
 		[Option("Disable Load Previews", "Disables loading of colony previews on the Load screen." + PERF_MEDIUM, "Interface")]
 		[JsonProperty]
@@ -121,7 +125,7 @@ namespace PeterHan.FastTrack {
 
 		public FastTrackOptions() {
 			AsyncPathProbe = true;
-			CachePaths = true;
+			CachePaths = false;
 			ConduitOpts = false;
 			CritterConsumers = true;
 			DisableConduitAnimation = ConduitAnimationQuality.Reduced;
@@ -136,6 +140,7 @@ namespace PeterHan.FastTrack {
 			NoBounce = true;
 			NoConversations = false;
 			PickupOpts = true;
+			ReduceColonyTracking = false;
 			ReduceSoundUpdates = true;
 			ReduceTileUpdates = true;
 			RenderTicks = true;

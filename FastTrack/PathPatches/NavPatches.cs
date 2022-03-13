@@ -201,6 +201,8 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(Pathfinding), nameof(Pathfinding.RefreshNavCell))]
 	public static class Pathfinding_RefreshNavCell_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
+
 		/// <summary>
 		/// Applied before RefreshNavCell runs.
 		/// </summary>
@@ -211,7 +213,7 @@ namespace PeterHan.FastTrack.PathPatches {
 	}
 
 	/// <summary>
-	/// Applied to Navigator.PathProbeTask to estimate the hitrate.
+	/// Applied to Navigator.PathProbeTask to use the path cache first.
 	/// </summary>
 	[HarmonyPatch(typeof(Navigator.PathProbeTask), nameof(Navigator.PathProbeTask.Run))]
 	public static class Navigator_PathProbeTask_Run_Patch {

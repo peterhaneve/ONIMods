@@ -121,6 +121,23 @@ namespace PeterHan.FastTrack.UIPatches {
 	}
 
 	/// <summary>
+	/// Applied to Global to get rid of a time consuming check for data read/write used only
+	/// in the metrics.
+	/// </summary>
+	[HarmonyPatch(typeof(Global), "TestDataLocations")]
+	public static class Global_TestDataLocations_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+
+		/// <summary>
+		/// Applied before TestDataLocations runs.
+		/// </summary>
+		internal static bool Prefix(ref string ___saveFolderTestResult) {
+			___saveFolderTestResult = "both";
+			return false;
+		}
+	}
+
+	/// <summary>
 	/// Applied to InterfaceTool to get rid of an expensive raycast for UI elements.
 	/// </summary>
 	[HarmonyPatch(typeof(InterfaceTool), nameof(InterfaceTool.ShowHoverUI))]
@@ -161,6 +178,60 @@ namespace PeterHan.FastTrack.UIPatches {
 			preview.color = Color.black;
 			preview.gameObject.SetActive(false);
 			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to MainMenu to get rid of the 15 MB file write and speed up boot!
+	/// </summary>
+	[HarmonyPatch(typeof(MainMenu), "OnSpawn")]
+	public static class MainMenu_OnSpawn_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+
+		/// <summary>
+		/// Transpiles OnSpawn to remove everything in try/catch IOException blocks.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+			var method = new List<CodeInstruction>(instructions);
+			int tryStart = -1, n = method.Count;
+			var remove = new RangeInt(-1, 1);
+			bool isIOBlock = false;
+			for (int i = 0; i < n; i++) {
+				var blocks = method[i].blocks;
+				if (blocks != null)
+					foreach (var block in blocks)
+						switch (block.blockType) {
+						case ExceptionBlockType.BeginExceptionBlock:
+							if (tryStart < 0) {
+								tryStart = i;
+								isIOBlock = false;
+							}
+							break;
+						case ExceptionBlockType.BeginCatchBlock:
+							if (tryStart >= 0)
+								isIOBlock = true;
+							break;
+						case ExceptionBlockType.EndExceptionBlock:
+							if (tryStart >= 0 && isIOBlock && remove.start < 0) {
+								remove.start = tryStart;
+								remove.length = i - tryStart + 1;
+#if DEBUG
+								PUtil.LogDebug("Patched MainMenu.OnSpawn: {0:D} to {1:D}".F(
+									tryStart, i));
+#endif
+								tryStart = -1;
+								isIOBlock = false;
+							}
+							break;
+						default:
+							break;
+						}
+			}
+			if (remove.start >= 0)
+				method.RemoveRange(remove.start, remove.length);
+			else
+				PUtil.LogWarning("Unable to patch MainMenu.OnSpawn");
+			return method;
 		}
 	}
 
@@ -268,6 +339,26 @@ namespace PeterHan.FastTrack.UIPatches {
 			___layoutElement = le;
 			___animating = false;
 			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to TrackerTool to reduce the update rate from 50 trackers/frame to 10/frame.
+	/// </summary>
+	[HarmonyPatch(typeof(TrackerTool), "OnSpawn")]
+	public static class TrackerTool_OnSpawn_Patch {
+		/// <summary>
+		/// The number of trackers to update every rendered frame (disabled while paused).
+		/// </summary>
+		private const int UPDATES_PER_FRAME = 10;
+
+		internal static bool Prepare() => FastTrackOptions.Instance.ReduceColonyTracking;
+
+		/// <summary>
+		/// Applied after OnSpawn runs.
+		/// </summary>
+		internal static void Postfix(ref int ___numUpdatesPerFrame) {
+			___numUpdatesPerFrame = UPDATES_PER_FRAME;
 		}
 	}
 

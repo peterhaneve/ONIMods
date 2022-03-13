@@ -29,6 +29,9 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// nothing has changed.
 	/// </summary>
 	public sealed class PathCacher {
+		/// <summary>
+		/// Retrieves the path finder abilities from the current navigator.
+		/// </summary>
 		private static readonly IDetouredField<Navigator, PathFinderAbilities> ABILITIES =
 			PDetours.DetourField<Navigator, PathFinderAbilities>("abilities");
 
