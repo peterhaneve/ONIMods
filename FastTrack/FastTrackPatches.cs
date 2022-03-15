@@ -81,6 +81,8 @@ namespace PeterHan.FastTrack {
 				VisualPatches.PropertyTextureUpdater.DestroyInstance();
 			if (options.ConduitOpts)
 				ConduitPatches.BackgroundConduitUpdater.DestroyInstance();
+			if (options.ParallelInventory)
+				UIPatches.BackgroundInventoryUpdater.DestroyInstance();
 			PathPatches.DupeBrainGroupUpdater.DestroyInstance();
 			AsyncJobManager.DestroyInstance();
 			GameRunning = false;
@@ -103,6 +105,8 @@ namespace PeterHan.FastTrack {
 					go.AddOrGet<PathPatches.PathProbeJobManager>();
 				if (options.ReduceSoundUpdates)
 					go.AddOrGet<SoundUpdater>();
+				if (options.ParallelInventory)
+					UIPatches.BackgroundInventoryUpdater.CreateInstance();
 				// If debugging is on, start logging
 				if (options.Metrics)
 					go.AddOrGet<Metrics.DebugMetrics>();
@@ -154,12 +158,18 @@ namespace PeterHan.FastTrack {
 					"saveFolderTestResult", true) != null) {
 				harmony.Patch(target, prefix: new HarmonyMethod(typeof(FastTrackPatches),
 					nameof(RemoveTestDataLocations)));
+#if DEBUG
 				PUtil.LogDebug("Patched Global.TestDataLocations");
+#endif
 			} else
 				PUtil.LogDebug("Skipping TestDataLocations patch");
 			GameRunning = false;
 		}
 
+		/// <summary>
+		/// Disables a time-consuming check on whether the save folders could successfully be
+		/// written. Only used in the metrics reports anyways.
+		/// </summary>
 		internal static bool RemoveTestDataLocations(ref string ___saveFolderTestResult) {
 			___saveFolderTestResult = "both";
 			return false;
@@ -212,9 +222,11 @@ namespace PeterHan.FastTrack {
 			/// Applied before LateUpdate runs.
 			/// </summary>
 			internal static void Prefix() {
-				var options = FastTrackOptions.Instance;
-				if (options.ConduitOpts)
-					ConduitPatches.BackgroundConduitUpdater.StartUpdateAll();
+				if (Game.Instance != null) {
+					var options = FastTrackOptions.Instance;
+					if (options.ConduitOpts)
+						ConduitPatches.BackgroundConduitUpdater.StartUpdateAll();
+				}
 			}
 		}
 
@@ -225,16 +237,20 @@ namespace PeterHan.FastTrack {
 		public static class Global_Update_Patch {
 			internal static bool Prepare() {
 				var options = FastTrackOptions.Instance;
-				return options.ConduitOpts;
+				return options.ConduitOpts || options.ParallelInventory;
 			}
 
 			/// <summary>
 			/// Applied before Update runs.
 			/// </summary>
 			internal static void Prefix() {
-				var options = FastTrackOptions.Instance;
-				if (options.ConduitOpts)
-					ConduitPatches.BackgroundConduitUpdater.StartUpdateAll();
+				if (Game.Instance != null) {
+					var options = FastTrackOptions.Instance;
+					if (options.ConduitOpts)
+						ConduitPatches.BackgroundConduitUpdater.StartUpdateAll();
+					if (options.ParallelInventory)
+						UIPatches.BackgroundInventoryUpdater.Instance?.StartUpdateAll();
+				}
 			}
 		}
 

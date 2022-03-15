@@ -115,7 +115,8 @@ namespace PeterHan.FastTrack {
 				semaphore.Release(threads.Length);
 				// Clear work queue
 				lock (workQueue) {
-					workQueue.Clear();
+					while (workQueue.Count > 0)
+						workQueue.Dequeue().TriggerAbort();
 				}
 			}
 		}
@@ -223,7 +224,7 @@ namespace PeterHan.FastTrack {
 			private void Run() {
 				bool disposed = false;
 				while (!disposed) {
-					parent.semaphore.WaitOne(FastTrackPatches.MAX_TIMEOUT);
+					parent.semaphore.WaitOne();
 					try {
 						while (!(disposed = parent.isDisposed) && parent.DoNextWorkItem());
 					} catch (Exception e) {
@@ -243,6 +244,11 @@ namespace PeterHan.FastTrack {
 			/// The jobs to run.
 			/// </summary>
 			IWorkItemCollection Jobs { get; }
+
+			/// <summary>
+			/// Called by AsyncJobManager when the work item execution is aborted.
+			/// </summary>
+			void TriggerAbort();
 
 			/// <summary>
 			/// Called by AsyncJobManager when the work item collection completes.

@@ -177,7 +177,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			pickupComparer = COMPARER_NO_PRIORITY.Get(null);
 			if (pickupComparer == null)
 				PUtil.LogError("ComparerNoPriority not found!");
-			runAsyncPathProbe = ASYNC_PATH_PROBE?.CreateDelegate<System.Action>(
+			runAsyncPathProbe = ASYNC_PATH_PROBE.CreateDelegate<System.Action>(
 				dupeBrainGroup);
 			if (runAsyncPathProbe == null)
 				PUtil.LogDebug("AsyncPathProbe not found!");
@@ -188,6 +188,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			// These need to be cleaned up, or memory gets leaked
 			foreach (var entry in updatingPickups)
 				entry.Dispose();
+			onComplete.Dispose();
 			byId.Clear();
 			updatingPickups.Clear();
 		}
@@ -198,37 +199,34 @@ namespace PeterHan.FastTrack.PathPatches {
 		internal void EndBrainUpdate() {
 			var fm = Game.Instance.fetchManager;
 			var inst = GlobalChoreProvider.Instance;
-			if (fm != null && inst != null) {
-				var fetches = inst.fetches;
-				var pickups = GET_PICKUPS.Get(fm);
+			if (updatingPickups.Count > 0) {
 				// Wait out the pickups update
-				var timer = System.Diagnostics.Stopwatch.StartNew();
 				onComplete.WaitOne(FastTrackPatches.MAX_TIMEOUT);
-				Metrics.DebugMetrics.TRACKED[1].Log(timer.ElapsedTicks);
-				foreach (var entry in updatingPickups) {
-					// Copy fetch list
-					fetches.Clear();
-					foreach (var fetchInfo in entry.fetches)
-						fetches.Add(new GlobalChoreProvider.Fetch {
-							category = fetchInfo.category, chore = fetchInfo.chore,
-							cost = fetchInfo.cost, priority = fetchInfo.chore.masterPriority,
-							tagBitsHash = fetchInfo.tagBitsHash
-						});
-					// Copy pickup list
-					pickups.Clear();
-					pickups.AddRange(entry.pickups);
-					entry.Dispose();
-					// Calls into Sensors, but Pickupable and PathProber were bypassed
-					entry.brain.UpdateBrain();
-				}
-			} else {
-				// Clean up anyways
-				onComplete.WaitOne(FastTrackPatches.MAX_TIMEOUT);
-				foreach (var entry in updatingPickups)
-					entry.Dispose();
+				if (fm != null && inst != null) {
+					var fetches = inst.fetches;
+					var pickups = GET_PICKUPS.Get(fm);
+					foreach (var entry in updatingPickups) {
+						// Copy fetch list
+						fetches.Clear();
+						foreach (var fetchInfo in entry.fetches)
+							fetches.Add(new GlobalChoreProvider.Fetch {
+								category = fetchInfo.category, chore = fetchInfo.chore,
+								cost = fetchInfo.cost, priority = fetchInfo.chore.masterPriority,
+								tagBitsHash = fetchInfo.tagBitsHash
+							});
+						// Copy pickup list
+						pickups.Clear();
+						pickups.AddRange(entry.pickups);
+						entry.Dispose();
+						// Calls into Sensors, but Pickupable and PathProber were bypassed
+						entry.brain.UpdateBrain();
+					}
+				} else
+					foreach (var entry in updatingPickups)
+						entry.Dispose();
+				updatingPickups.Clear();
 			}
 			byId.Clear();
-			updatingPickups.Clear();
 		}
 
 		/// <summary>
@@ -286,11 +284,14 @@ namespace PeterHan.FastTrack.PathPatches {
 		internal void StartBrainUpdate(bool asyncPathProbe) {
 			var update = ListPool<MinionBrain, DupeBrainGroupUpdater>.Allocate();
 			var fm = Game.Instance.fetchManager;
+			int n = updatingPickups.Count;
 			if (asyncPathProbe)
 				runAsyncPathProbe.Invoke();
+			if (n > 0)
+				PUtil.LogWarning("{0:D} pickup collection jobs did not finish in time!".F(n));
+			updatingPickups.Clear();
 			if (GetBrainsToUpdate(update) > 0 && fm != null) {
 				currentIndex = -1;
-				updatingPickups.Clear();
 				// Brains.... Brains!!!!
 				foreach (var brain in update) {
 					var nav = brain.GetComponent<Navigator>();
@@ -306,11 +307,8 @@ namespace PeterHan.FastTrack.PathPatches {
 					foreach (var pair in fm.prefabIdToFetchables)
 						byId.Add(pair.Value);
 					AsyncJobManager.Instance?.Run(new UpdateOffsetTablesWork(this));
-				} else
-					onComplete.Set();
-			} else
-				// Avoid sitting and waiting
-				onComplete.Set();
+				}
+			}
 			update.Recycle();
 		}
 
@@ -380,6 +378,10 @@ namespace PeterHan.FastTrack.PathPatches {
 					byId[index].UpdatePickups(navigator.PathProber, navigator, worker);
 			}
 
+			public void TriggerAbort() {
+				updater.Finish();
+			}
+
 			public void TriggerComplete() {
 				pickups.Clear();
 				foreach (var pair in byId)
@@ -424,6 +426,10 @@ namespace PeterHan.FastTrack.PathPatches {
 					UpdateFetches(task.navigator, task.fetches);
 			}
 
+			public void TriggerAbort() {
+				updater.Finish();
+			}
+
 			public void TriggerComplete() {
 				updater.Finish();
 			}
@@ -458,6 +464,10 @@ namespace PeterHan.FastTrack.PathPatches {
 			public void InternalDoWorkItem(int index) {
 				if (index >= 0 && index < byId.Count)
 					byId[index].UpdateOffsetTables();
+			}
+
+			public void TriggerAbort() {
+				updater.Finish();
 			}
 
 			public void TriggerComplete() {

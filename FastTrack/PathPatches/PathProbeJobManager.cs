@@ -166,6 +166,10 @@ namespace PeterHan.FastTrack.PathPatches {
 				time = new Stopwatch();
 			}
 
+			public void TriggerAbort() {
+				Instance?.OnPathComplete(this);
+			}
+
 			public void TriggerComplete() {
 				runtime = time.ElapsedTicks;
 				if (budget != null && FastTrackPatches.GameRunning)

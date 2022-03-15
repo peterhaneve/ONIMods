@@ -62,6 +62,10 @@ namespace PeterHan.FastTrack {
 		[Option("Optimize Sensors", "Only check for locations to Idle, Mingle, or Balloon Artist when necessary." + PERF_LOW, "Duplicants")]
 		[JsonProperty]
 		public bool SensorOpts { get; set; }
+		
+		[Option("Background Inventory", "Compiles the item quantites in the Resources panel on a non-blocking thread." + PERF_MEDIUM, "Items")]
+		[JsonProperty]
+		public bool ParallelInventory { get; set; }
 
 		[Option("Optimize Debris Collection", "Speed up inefficient and memory-intensive checks for items.\n<i>Not compatible with mods: Efficient Supply</i>" + PERF_LOW, "Items")]
 		[JsonProperty]
@@ -139,6 +143,7 @@ namespace PeterHan.FastTrack {
 			MiscOpts = true;
 			NoBounce = true;
 			NoConversations = false;
+			ParallelInventory = true;
 			PickupOpts = true;
 			ReduceColonyTracking = false;
 			ReduceSoundUpdates = true;

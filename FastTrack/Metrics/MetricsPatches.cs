@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
+
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.Metrics {
@@ -44,7 +45,7 @@ namespace PeterHan.FastTrack.Metrics {
 	// ConduitFlow.Sim200ms is <10ms
 	// ChoreConsumer.FindNextChore is <10ms
 	// PickupableSensor.Update is 70ms
-	[HarmonyPatch(typeof(PathPatches.DupeBrainGroupUpdater), "UpdateFetches")]
+	[HarmonyPatch(typeof(KAnimBatchManager), "Render")]
 	public static class TimePatch {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
@@ -58,9 +59,9 @@ namespace PeterHan.FastTrack.Metrics {
 		}
 	}
 
-	[HarmonyPatch(typeof(PathPatches.DupeBrainGroupUpdater), "EndBrainUpdate")]
+	[HarmonyPatch(typeof(KBatchedAnimUpdater), "UpdateRegisteredAnims")]
 	public static class TimePatch2 {
-		internal static bool Prepare() => false;
+		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();

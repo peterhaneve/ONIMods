@@ -142,6 +142,16 @@ namespace PeterHan.FastTrack.ConduitPatches {
 			}
 		}
 
+		public void TriggerAbort() {
+			onComplete.Set();
+		}
+
+		public void TriggerComplete() {
+			onComplete.Set();
+		}
+
+		public void TriggerStart() { }
+
 		/// <summary>
 		/// Waits for completion of all updates and then fires the rebuild events if
 		/// necessary.
@@ -160,12 +170,6 @@ namespace PeterHan.FastTrack.ConduitPatches {
 				running = false;
 			}
 		}
-
-		public void TriggerComplete() {
-			onComplete.Set();
-		}
-
-		public void TriggerStart() { }
 	}
 
 	/// <summary>

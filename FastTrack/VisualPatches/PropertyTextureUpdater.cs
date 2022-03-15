@@ -29,7 +29,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// <summary>
 	/// Queues up the expensive PropertyTexture updates on a background thread.
 	/// </summary>
-	public sealed class PropertyTextureUpdater {
+	public sealed class PropertyTextureUpdater : IDisposable {
 		/// <summary>
 		/// A delegate which can update property textures. Uses reverse patches pulled from
 		/// the original PropertyTextures class.
@@ -101,7 +101,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// Destroys the singleton instance of this class.
 		/// </summary>
 		internal static void DestroyInstance() {
-			Instance?.DisposeAll();
+			Instance?.Dispose();
 			Instance = null;
 		}
 
@@ -230,13 +230,19 @@ namespace PeterHan.FastTrack.VisualPatches {
 			Shader.SetGlobalFloat(tIDFogOfWarScale, PropertyTextures.FogOfWarScale);
 		}
 
+		public void Dispose() {
+			DisposeAll();
+			onComplete.Dispose();
+		}
+
 		/// <summary>
 		/// Disposes of all the running tasks.
 		/// </summary>
-		internal void DisposeAll() {
+		private void DisposeAll() {
 			foreach (var task in running)
 				task.Dispose();
 			running.Clear();
+			outstanding = 0;
 		}
 
 		/// <summary>
@@ -404,7 +410,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 				outstanding = running.Count;
 				foreach (var task in running)
 					AsyncJobManager.Instance.Run(task);
-			}
+			} else
+				outstanding = 0;
 		}
 
 		/// <summary>
@@ -519,6 +526,11 @@ namespace PeterHan.FastTrack.VisualPatches {
 				int regionMin = index * TEXTURE_RESOLUTION + yMin;
 				int regionMax = Math.Min(regionMin + TEXTURE_RESOLUTION - 1, yMax);
 				updateTexture.Invoke(region, xMin, regionMin, xMax, regionMax);
+			}
+
+			public void TriggerAbort() {
+				// Sadly unlocking probably will throw as it happens on a background thread
+				parent.FinishOne();
 			}
 
 			public void TriggerComplete() {

@@ -350,8 +350,11 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// run due to a misplaced "break".
 	/// </summary>
 	[HarmonyPatch(typeof(WorldInventory), "Update")]
-	public static class WorldInventory_Update_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+	public static class WorldInventory_UpdateTweak_Patch {
+		internal static bool Prepare() {
+			var options = FastTrackOptions.Instance;
+			return options.MiscOpts && !options.ParallelInventory;
+		}
 
 		/// <summary>
 		/// Transpiles Update to bypass the "break" if firstUpdate is true. Only matters on
