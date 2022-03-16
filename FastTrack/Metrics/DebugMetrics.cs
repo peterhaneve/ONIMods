@@ -42,15 +42,6 @@ namespace PeterHan.FastTrack.Metrics {
 		}
 
 		/// <summary>
-		/// Gets the elapsed time in microseconds.
-		/// </summary>
-		/// <param name="ticks">The time elapsed in stopwatch ticks.</param>
-		/// <returns>The elapsed time in microseconds.</returns>
-		public static long TicksToUS(long ticks) {
-			return ticks * 1000000L / Stopwatch.Frequency;
-		}
-
-		/// <summary>
 		/// Tracks Unity LateUpdate() methods.
 		/// </summary>
 		internal static readonly NameBucketProfiler LATE_UPDATE = new NameBucketProfiler();
@@ -179,7 +170,7 @@ namespace PeterHan.FastTrack.Metrics {
 		public void Render1000ms(float dt) {
 			if (FastTrackPatches.GameRunning) {
 				long probeTotal = PATH_PROBES.TimeInMethod, probeSaved = Math.Max(0L,
-					probeTotal - TicksToUS(probeWaiting));
+					probeTotal - probeWaiting.TicksToUS());
 				int probeCount = PATH_PROBES.MethodCalls;
 				PUtil.LogDebug("Methods Run: {0}(s), {1}(t), {2}(t)".F(SENSORS, TRACKED[0],
 					TRACKED[1]));
@@ -210,7 +201,7 @@ namespace PeterHan.FastTrack.Metrics {
 		internal class Profiler {
 			public int MethodCalls => methodCalls;
 
-			public long TimeInMethod => TicksToUS(timeInMethod);
+			public long TimeInMethod => timeInMethod.TicksToUS();
 
 			/// <summary>
 			/// The number of times the method was called since the last reset.
@@ -333,7 +324,7 @@ namespace PeterHan.FastTrack.Metrics {
 			public long Time;
 			
 			public SimBucketResults(long time, string className) {
-				Time = TicksToUS(time);
+				Time = time.TicksToUS();
 				ClassName = className;
 			}
 

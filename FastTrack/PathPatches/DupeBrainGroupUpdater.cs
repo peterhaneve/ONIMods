@@ -243,19 +243,22 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <returns>The number of brains that will be updated.</returns>
 		internal int GetBrainsToUpdate(ICollection<MinionBrain> toUpdate) {
 			var brains = GET_BRAIN_LIST.Invoke(dupeBrainGroup);
-			int count = getInitialProbeCount.Invoke(), index = GET_NEXT_UPDATE_BRAIN.Invoke(
-				dupeBrainGroup), n = brains.Count;
+			int count = getInitialProbeCount.Invoke(), n = brains.Count, index =
+				GET_NEXT_UPDATE_BRAIN.Invoke(dupeBrainGroup);
 			if (toUpdate == null)
 				throw new ArgumentNullException(nameof(toUpdate));
 			toUpdate.Clear();
-			while (count-- > 0) {
-				var brain = brains[index];
-				if (brain.IsRunning() && brain is MinionBrain mb && mb != null)
-					// Always should be true, this is a dupe brain group
-					toUpdate.Add(mb);
-				index = (index + 1) % n;
+			if (n > 0) {
+				index %= n;
+				while (count-- > 0) {
+					var brain = brains[index];
+					if (brain.IsRunning() && brain is MinionBrain mb && mb != null)
+						// Always should be true, this is a dupe brain group
+						toUpdate.Add(mb);
+					index = (index + 1) % n;
+				}
+				SET_NEXT_UPDATE_BRAIN.Invoke(dupeBrainGroup, index);
 			}
-			SET_NEXT_UPDATE_BRAIN.Invoke(dupeBrainGroup, index);
 			return toUpdate.Count;
 		}
 

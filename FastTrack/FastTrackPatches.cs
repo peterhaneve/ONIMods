@@ -22,7 +22,9 @@ using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 namespace PeterHan.FastTrack {
@@ -39,6 +41,11 @@ namespace PeterHan.FastTrack {
 		/// Set to true when the game gets off its feet, and false while it is still loading.
 		/// </summary>
 		internal static bool GameRunning { get; private set; }
+
+		/// <summary>
+		/// The handle that is signaled when worldgen loading completes.
+		/// </summary>
+		private static readonly EventWaitHandle onWorldGenLoad = new AutoResetEvent(false);
 
 		/// <summary>
 		/// Initializes several patches after Db is initialized.
@@ -60,6 +67,18 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		internal static void FixTimeLapseDrag() {
 			PlayerController.Instance?.CancelDragging();
+		}
+
+		/// <summary>
+		/// Loads worldgen data in the background while other parts of the game load.
+		/// </summary>
+		private static void LoadWorldGenInBackground() {
+			try {
+				ProcGenGame.WorldGen.LoadSettings();
+			} catch (Exception e) {
+				PUtil.LogError(e);
+			}
+			onWorldGenLoad.Set();
 		}
 
 		/// <summary>
@@ -86,6 +105,30 @@ namespace PeterHan.FastTrack {
 			PathPatches.DupeBrainGroupUpdater.DestroyInstance();
 			AsyncJobManager.DestroyInstance();
 			GameRunning = false;
+		}
+
+		/// <summary>
+		/// Starts up some asynchronous tasks after everything is fully loaded.
+		/// </summary>
+		[PLibMethod(RunAt.AfterLayerableLoad)]
+		private static void OnLayerablesLoaded() {
+			if (FastTrackOptions.Instance.OptimizeDialogs) {
+				var thread = new Thread(LoadWorldGenInBackground) {
+					Name = "Load Worldgen Async", IsBackground = true,
+					Priority = System.Threading.ThreadPriority.BelowNormal
+				};
+				Util.ApplyInvariantCultureToThread(thread);
+				thread.Start();
+			}
+		}
+
+		/// <summary>
+		/// Waits for worldgen loading to complete for up to 3 seconds.
+		/// </summary>
+		[PLibMethod(RunAt.InMainMenu)]
+		internal static void OnMainMenu() {
+			if (FastTrackOptions.Instance.OptimizeDialogs)
+				onWorldGenLoad.WaitOne(3000);
 		}
 
 		/// <summary>
@@ -145,6 +188,7 @@ namespace PeterHan.FastTrack {
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			var options = FastTrackOptions.Instance;
+			onWorldGenLoad.Reset();
 			PUtil.InitLibrary();
 			new POptions().RegisterOptions(this, typeof(FastTrackOptions));
 			new PPatchManager(harmony).RegisterPatchClass(typeof(FastTrackPatches));

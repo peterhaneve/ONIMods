@@ -24,6 +24,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
 using UnityEngine.UI;
+
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.UIPatches {
@@ -143,23 +144,6 @@ namespace PeterHan.FastTrack.UIPatches {
 					// Consult the Unity system which did this raycast already
 					__result = !es.IsPointerOverGameObject();
 			}
-			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to LoadScreen to turn off the colony previews in exchange for a faster load.
-	/// </summary>
-	[HarmonyPatch(typeof(LoadScreen), "SetPreview")]
-	public static class LoadScreen_SetPreview_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.DisableLoadPreviews;
-
-		/// <summary>
-		/// Applied before SetPreview runs.
-		/// </summary>
-		internal static bool Prefix(Image preview) {
-			preview.color = Color.black;
-			preview.gameObject.SetActive(false);
 			return false;
 		}
 	}

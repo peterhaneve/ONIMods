@@ -137,6 +137,15 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
+		/// Gets the elapsed time in microseconds.
+		/// </summary>
+		/// <param name="ticks">The time elapsed in stopwatch ticks.</param>
+		/// <returns>The elapsed time in microseconds.</returns>
+		public static long TicksToUS(this long ticks) {
+			return ticks * 1000000L / System.Diagnostics.Stopwatch.Frequency;
+		}
+
+		/// <summary>
 		/// Converts a float to a standard string like ONI would, but with less memory used.
 		/// </summary>
 		/// <param name="f">The value to format.</param>

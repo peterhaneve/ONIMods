@@ -62,7 +62,31 @@ namespace PeterHan.FastTrack {
 		[Option("Optimize Sensors", "Only check for locations to Idle, Mingle, or Balloon Artist when necessary." + PERF_LOW, "Duplicants")]
 		[JsonProperty]
 		public bool SensorOpts { get; set; }
-		
+
+		[Option("Batch Sounds", "Reduces the frequency of sound location updates." + PERF_LOW, "Interface")]
+		[JsonProperty]
+		public bool ReduceSoundUpdates { get; set; }
+
+		[Option("Colony Tracker Reduction", "Reduces the update rate of Colony Diagnostics.\n<i>Some notifications may take longer to trigger</i>" + PERF_LOW, "Interface")]
+		[JsonProperty]
+		public bool ReduceColonyTracking { get; set; }
+
+		[Option("Disable Load Previews", "Disables loading of colony previews on the Load screen." + PERF_MEDIUM, "Interface")]
+		[JsonProperty]
+		public bool DisableLoadPreviews { get; set; }
+
+		[Option("Fast Raycast", "Speeds up searching for UI elements under the cursor." + PERF_HIGH, "Interface")]
+		[JsonProperty]
+		public bool FastRaycast { get; set; }
+
+		[Option("Optimize Dialogs", "Speeds up a variety of dialog boxes." + PERF_MEDIUM, "Interface")]
+		[JsonProperty]
+		public bool OptimizeDialogs { get; set; }
+
+		[Option("Other UI Optimizations", "Optimizes a variety of event and UI handlers." + PERF_LOW, "Interface")]
+		[JsonProperty]
+		public bool MiscOpts { get; set; }
+
 		[Option("Background Inventory", "Compiles the item quantites in the Resources panel on a non-blocking thread." + PERF_MEDIUM, "Items")]
 		[JsonProperty]
 		public bool ParallelInventory { get; set; }
@@ -83,29 +107,9 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool MinimalKCV { get; set; }
 
-		[Option("Batch Sounds", "Reduces the frequency of sound location updates." + PERF_LOW, "Interface")]
-		[JsonProperty]
-		public bool ReduceSoundUpdates { get; set; }
-
-		[Option("Colony Tracker Reduction", "Reduces the update rate of Colony Diagnostics.\n<i>Some notifications may take longer to trigger</i>" + PERF_LOW, "Interface")]
-		[JsonProperty]
-		public bool ReduceColonyTracking { get; set; }
-
-		[Option("Disable Load Previews", "Disables loading of colony previews on the Load screen." + PERF_MEDIUM, "Interface")]
-		[JsonProperty]
-		public bool DisableLoadPreviews { get; set; }
-
-		[Option("Fast Raycast", "Speeds up searching for UI elements under the cursor." + PERF_HIGH, "Interface")]
-		[JsonProperty]
-		public bool FastRaycast { get; set; }
-
-		[Option("Info Card Optimization", "Optimizes the info cards shown on hover." + PERF_MEDIUM, "Interface")]
+		[Option("Info Card Optimization", "Optimizes the info cards shown on hover.\n<i>Values in info cards may be formatted slightly differently</i>" + PERF_MEDIUM, "Visual")]
 		[JsonProperty]
 		public bool InfoCardOpts { get; set; }
-
-		[Option("Other UI Optimizations", "Optimizes a variety of event and UI handlers." + PERF_LOW, "Interface")]
-		[JsonProperty]
-		public bool MiscOpts { get; set; }
 
 		[Option("No Notification Bounce", "Disables the bounce effect when new notifications appear." + PERF_LOW, "Visual")]
 		[JsonProperty]
@@ -143,6 +147,7 @@ namespace PeterHan.FastTrack {
 			MiscOpts = true;
 			NoBounce = true;
 			NoConversations = false;
+			OptimizeDialogs = true;
 			ParallelInventory = true;
 			PickupOpts = true;
 			ReduceColonyTracking = false;

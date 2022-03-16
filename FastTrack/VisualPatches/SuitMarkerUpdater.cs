@@ -217,7 +217,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 	}
 
 	/// <summary>
-	/// Applied to SuitMarker.
+	/// Applied to SuitMarker to add an improved updater to each instance.
 	/// </summary>
 	[HarmonyPatch(typeof(SuitMarker), "OnSpawn")]
 	public static class SuitMarker_OnSpawn_Patch {
