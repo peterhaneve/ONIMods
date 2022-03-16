@@ -20,12 +20,34 @@ using PeterHan.PLib.Core;
 using System;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Text;
+using UnityEngine;
 
 namespace PeterHan.FastTrack {
 	/// <summary>
 	/// Extension methods make life easier!
 	/// </summary>
 	public static class ExtensionMethods {
+		/// <summary>
+		/// Appends the time slice unit (like "/s") to the string buffer. Allocates less than
+		/// a string concatenation.
+		/// </summary>
+		/// <param name="buffer">The string builder to append.</param>
+		/// <param name="timeSlice">The time slice unit to use.</param>
+		/// <returns>The string builder.</returns>
+		public static StringBuilder AppendTimeSlice(this StringBuilder buffer,
+				GameUtil.TimeSlice timeSlice) {
+			switch (timeSlice) {
+			case GameUtil.TimeSlice.PerSecond:
+				buffer.Append(STRINGS.UI.UNITSUFFIXES.PERSECOND);
+				break;
+			case GameUtil.TimeSlice.PerCycle:
+				buffer.Append(STRINGS.UI.UNITSUFFIXES.PERCYCLE);
+				break;
+			}
+			return buffer;
+		}
+
 		/// <summary>
 		/// Generates a getter for a type that is not known at compile time. The getter will
 		/// be emitted as a non-type checked function that accepts an object and blindly
@@ -112,6 +134,25 @@ namespace PeterHan.FastTrack {
 				F(type.FullName, fieldName, typeof(D).FullName));
 #endif
 			return setter.CreateDelegate(typeof(Action<object, D>)) as Action<object, D>;
+		}
+
+		/// <summary>
+		/// Converts a float to a standard string like ONI would, but with less memory used.
+		/// </summary>
+		/// <param name="f">The value to format.</param>
+		/// <returns>The value formatted like ONI wants it for display.</returns>
+		public static string ToStandardString(this float f) {
+			string result;
+			float absF = Mathf.Abs(f);
+			if (f == 0f)
+				result = "0";
+			else if (absF < 1f)
+				result = f.ToString("F1");
+			else if (absF < 10f)
+				result = f.ToString("N1");
+			else
+				result = f.ToString("N0");
+			return result;
 		}
 	}
 }

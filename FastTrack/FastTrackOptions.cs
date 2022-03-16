@@ -99,7 +99,7 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool FastRaycast { get; set; }
 
-		[Option("Info Card Optimization", "Optimizes the info cards shown on hover." + PERF_LOW, "Interface")]
+		[Option("Info Card Optimization", "Optimizes the info cards shown on hover." + PERF_MEDIUM, "Interface")]
 		[JsonProperty]
 		public bool InfoCardOpts { get; set; }
 
