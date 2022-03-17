@@ -92,12 +92,8 @@ namespace PeterHan.FastTrack.UIPatches {
 					suffix = "";
 					timeSlice = TimeSlice.None;
 				}
-				var buffer = new StringBuilder(16);
-				if (floatFormat == "{0:0.#}")
-					buffer.AppendFormat("{0:F1}", mass);
-				else
-					buffer.AppendFormat(floatFormat, mass);
-				__result = buffer.Append(suffix).AppendTimeSlice(timeSlice).ToString();
+				__result = new StringBuilder(16).AppendFormat(floatFormat, mass).
+					Append(suffix).AppendTimeSlice(timeSlice).ToString();
 			}
 			return false;
 		}
@@ -140,9 +136,9 @@ namespace PeterHan.FastTrack.UIPatches {
 			else if (float.IsNegativeInfinity(temp))
 				text.Append(STRINGS.UI.NEG_INFINITY);
 			else if (Mathf.Abs(temp) < 0.1f)
-				text.AppendFormat("{0:F4}", temp);
+				text.AppendFormat("{0:##0.####}", temp);
 			else
-				text.AppendFormat("{0:F1}", temp);
+				text.AppendFormat("{0:##0.#}", temp);
 			if (displayUnits)
 				text.Append(GameUtil.GetTemperatureUnitSuffix());
 			__result = text.AppendTimeSlice(timeSlice).ToString();

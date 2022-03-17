@@ -125,9 +125,19 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// </summary>
 		private void StartUpdate() {
 			var inst = Game.Instance;
+			bool startUpdate = inst.solidConduitSystem.IsDirty;
 			running = false;
-			if (inst != null && !inst.IsLoading() && (inst.gasConduitSystem.IsDirty || inst.
-					liquidConduitSystem.IsDirty || inst.solidConduitSystem.IsDirty)) {
+			if (inst.gasConduitSystem.IsDirty) {
+				// Invalidate: gas
+				startUpdate = true;
+				ConduitFlowVisualizerRenderer.ForceUpdate(inst.gasFlowVisualizer);
+			}
+			if (inst.liquidConduitSystem.IsDirty) {
+				// Invalidate: liquid
+				startUpdate = true;
+				ConduitFlowVisualizerRenderer.ForceUpdate(inst.liquidFlowVisualizer);
+			}
+			if (inst != null && !inst.IsLoading() && startUpdate) {
 				var jobManager = AsyncJobManager.Instance;
 				if (jobManager == null) {
 					// Trigger a synchronous update if job manager is somehow unavailable

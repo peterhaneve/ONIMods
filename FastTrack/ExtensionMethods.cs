@@ -156,9 +156,9 @@ namespace PeterHan.FastTrack {
 			if (f == 0f)
 				result = "0";
 			else if (absF < 1f)
-				result = f.ToString("F1");
+				result = f.ToString("#,##0.#");
 			else if (absF < 10f)
-				result = f.ToString("N1");
+				result = f.ToString("#,###.#");
 			else
 				result = f.ToString("N0");
 			return result;

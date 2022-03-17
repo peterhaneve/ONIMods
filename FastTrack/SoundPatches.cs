@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -125,10 +126,12 @@ namespace PeterHan.FastTrack {
 		/// <summary>
 		/// Applied before PlayDingSound runs.
 		/// </summary>
-		internal static bool Prefix(NotificationScreen __instance, Notification notification) {
+		internal static bool Prefix(Notification notification,
+				IDictionary<NotificationType, string> ___notificationSounds) {
 			// No const for that sound name
-			return notification == null || __instance.GetNotificationSound(notification.
-				Type) != "Notification" || FastTrackPatches.GameRunning;
+			return notification == null || FastTrackPatches.GameRunning ||
+				!___notificationSounds.TryGetValue(notification.Type, out string sound) ||
+				sound != "Notification";
 		}
 	}
 }

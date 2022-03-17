@@ -28,6 +28,25 @@ using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeI
 
 namespace PeterHan.FastTrack.PathPatches {
 	/// <summary>
+	/// Applied to ChoreDriver.States to reduce the tracking of the activity reports to
+	/// Sim1000 vs Sim200.
+	/// </summary>
+	[HarmonyPatch(typeof(ChoreDriver.States), nameof(ChoreDriver.States.InitializeStates))]
+	public static class ChoreDriver_States_InitializeStates_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.ReduceColonyTracking;
+
+		/// <summary>
+		/// Transpiles InitializeStates to convert the 200ms to 1000ms. Note that postfixing
+		/// and swapping is not enough, Update mutates the buckets for the singleton state
+		/// machine updater, CLAY PLEASE.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+			return PPatchTools.ReplaceConstant(method, (int)UpdateRate.SIM_200ms, (int)
+				UpdateRate.SIM_1000ms, true);
+		}
+	}
+
+	/// <summary>
 	/// Applied to multiple methods in Grid to pre-emptively update the path grid when
 	/// access control is modified.
 	/// </summary>

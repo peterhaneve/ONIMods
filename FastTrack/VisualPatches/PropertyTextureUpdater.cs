@@ -542,7 +542,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 	}
 
 	/// <summary>
-	/// Applied to Game to start property texture updates.
+	/// Applied to Game to start property texture updates after Sim data arrives.
 	/// </summary>
 	[HarmonyPatch(typeof(Game), "Update")]
 	[HarmonyPriority(Priority.Low)]

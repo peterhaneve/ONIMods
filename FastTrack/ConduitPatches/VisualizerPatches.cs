@@ -33,7 +33,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	/// quality has been turned down.
 	/// </summary>
 	[HarmonyPatch(typeof(ConduitFlowVisualizer), nameof(ConduitFlowVisualizer.Render))]
-	public static class ConduitFlowVisualizer_Render_Patch {
+	public static class ConduitFlowVisualizerRenderer {
 		/// <summary>
 		/// The ConduitFlowMesh class is private, but thankfully it is not a mutable struct!
 		/// </summary>
@@ -106,6 +106,17 @@ namespace PeterHan.FastTrack.ConduitPatches {
 				Graphics.DrawMesh(mesh, new Vector3(0.5f, 0.5f, z - 0.1f), Quaternion.identity,
 					material, layer);
 			}
+		}
+
+		/// <summary>
+		/// Forces a conduit update to run next time.
+		/// </summary>
+		/// <param name="instance">The conduit flow visualizer to invalidate, or null to invalidate all.</param>
+		internal static void ForceUpdate(ConduitFlowVisualizer instance) {
+			if (instance == null)
+				NEXT_UPDATE.Clear();
+			else if (NEXT_UPDATE.Count > 0)
+				NEXT_UPDATE.Remove(instance);
 		}
 
 		/// <summary>
@@ -301,6 +312,31 @@ namespace PeterHan.FastTrack.ConduitPatches {
 				if (!patched)
 					PUtil.LogWarning("Failed to patch ConduitFlowVisualizer.RenderMeshContext");
 			}
+		}
+	}
+
+	/// <summary>
+	/// Applied to Game if conduit optimizations are off, to update the visualizer if conduits
+	/// are dirty.
+	/// </summary>
+	[HarmonyPatch]
+	public static class Game_Update_Patch {
+		internal static bool Prepare() => !FastTrackOptions.Instance.ConduitOpts &&
+			ConduitFlowVisualizerRenderer.Prepare();
+
+		internal static IEnumerable<MethodBase> TargetMethods() {
+			yield return typeof(Game).GetMethodSafe("Update", false);
+			yield return typeof(Game).GetMethodSafe("LateUpdate", false);
+		}
+
+		/// <summary>
+		/// Applied before Update and LateUpdate run.
+		/// </summary>
+		internal static void Prefix(Game __instance) {
+			if (__instance.gasConduitSystem.IsDirty)
+				ConduitFlowVisualizerRenderer.ForceUpdate(__instance.gasFlowVisualizer);
+			if (__instance.liquidConduitSystem.IsDirty)
+				ConduitFlowVisualizerRenderer.ForceUpdate(__instance.liquidFlowVisualizer);
 		}
 	}
 }

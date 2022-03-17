@@ -115,6 +115,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool NoBounce { get; set; }
 
+		[Option("No Splashes", "Disables most puff, splash, and breath animations." + PERF_LOW, "Visual")]
+		[JsonProperty]
+		public bool NoSplash { get; set; }
+
 		[Option("Optimize Renderers", "Optimizes several renderers that run every frame.\n<i>Some visual artifacts may appear with no effect on gameplay</i>" + PERF_MEDIUM, "Visual")]
 		[JsonProperty]
 		public bool RenderTicks { get; set; }
@@ -147,6 +151,7 @@ namespace PeterHan.FastTrack {
 			MiscOpts = true;
 			NoBounce = true;
 			NoConversations = false;
+			NoSplash = true;
 			OptimizeDialogs = true;
 			ParallelInventory = true;
 			PickupOpts = true;

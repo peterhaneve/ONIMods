@@ -21,6 +21,8 @@ using PeterHan.PLib.Core;
 using System;
 using UnityEngine;
 
+using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
+
 namespace PeterHan.FastTrack.CritterPatches {
 	/// <summary>
 	/// A class used to query locations for GasAndLiquidConsumerMonitor to consume cells. This
@@ -118,13 +120,18 @@ namespace PeterHan.FastTrack.CritterPatches {
 				GasAndLiquidConsumerMonitor.Instance, IStateMachineTarget,
 				GasAndLiquidConsumerMonitor.Def>.State ___lookingforfood) {
 			var actions = ___lookingforfood?.updateActions;
-			if (actions != null) {
-				// It has a TagTransition and a ToggleBehaviour which do not add to Update
-				actions.RemoveAll((action) => action.updateRate == UpdateRate.SIM_1000ms);
+			if (actions != null)
 				___lookingforfood.Enter((smi) => smi.FindFood());
-				___lookingforfood.Update((smi, dt) => smi.FindFood(), UpdateRate.SIM_4000ms,
-					true);
-			}
+		}
+
+		/// <summary>
+		/// Transpiles InitializeStates to convert the 1000ms to 4000ms. Note that postfixing
+		/// and swapping is not enough, Update mutates the buckets for the singleton state
+		/// machine updater, CLAY PLEASE.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+			return PPatchTools.ReplaceConstant(method, (int)UpdateRate.SIM_1000ms, (int)
+				UpdateRate.SIM_4000ms, true);
 		}
 	}
 
@@ -328,12 +335,16 @@ namespace PeterHan.FastTrack.CritterPatches {
 			var actions = ___lookingforfood?.updateActions;
 			// Initialize those masks
 			SolidConsumerMonitorFoodFinder.UpdateMasks(ref ___plantMask, ref ___creatureMask);
-			if (actions != null) {
-				actions.RemoveAll((action) => action.updateRate == UpdateRate.SIM_1000ms);
+			if (actions != null)
 				___lookingforfood.Enter(SolidConsumerMonitorFoodFinder.FindFood);
-				___lookingforfood.Update(SolidConsumerMonitorFoodFinder.FindFood,
-					UpdateRate.SIM_4000ms, true);
-			}
+		}
+
+		/// <summary>
+		/// Transpiles InitializeStates to convert the 1000ms to 4000ms.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+			return PPatchTools.ReplaceConstant(method, (int)UpdateRate.SIM_1000ms, (int)
+				UpdateRate.SIM_4000ms, true);
 		}
 	}
 }

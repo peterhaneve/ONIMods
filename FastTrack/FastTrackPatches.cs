@@ -57,7 +57,7 @@ namespace PeterHan.FastTrack {
 				CritterPatches.OvercrowdingMonitor_UpdateState_Patch.InitTagBits();
 			if (options.DisableConduitAnimation != FastTrackOptions.ConduitAnimationQuality.
 					Full)
-				ConduitPatches.ConduitFlowVisualizer_Render_Patch.SetupDelegates();
+				ConduitPatches.ConduitFlowVisualizerRenderer.SetupDelegates();
 			if (options.SensorOpts)
 				SensorPatches.SensorPatches.Init();
 		}
@@ -87,7 +87,7 @@ namespace PeterHan.FastTrack {
 		[PLibMethod(RunAt.OnEndGame)]
 		internal static void OnEndGame() {
 			var options = FastTrackOptions.Instance;
-			ConduitPatches.ConduitFlowVisualizer_Render_Patch.Cleanup();
+			ConduitPatches.ConduitFlowVisualizerRenderer.Cleanup();
 			if (options.CachePaths) {
 				PathPatches.NavGrid_InitializeGraph_Patch.Cleanup();
 				PathPatches.PathCacher.Cleanup();
@@ -157,7 +157,7 @@ namespace PeterHan.FastTrack {
 			}
 			if (options.ConduitOpts)
 				ConduitPatches.BackgroundConduitUpdater.CreateInstance();
-			ConduitPatches.ConduitFlowVisualizer_Render_Patch.Init();
+			ConduitPatches.ConduitFlowVisualizerRenderer.Init();
 			if (options.UnstackLights)
 				VisualPatches.LightBufferManager.Init();
 		}
@@ -237,7 +237,7 @@ namespace PeterHan.FastTrack {
 		public static class MinionConfig_OnSpawn_Patch {
 			internal static bool Prepare() {
 				var options = FastTrackOptions.Instance;
-				return options.SensorOpts;
+				return options.SensorOpts || options.NoSplash;
 			}
 
 			/// <summary>
@@ -246,8 +246,12 @@ namespace PeterHan.FastTrack {
 			internal static void Postfix(GameObject go) {
 				if (go != null) {
 					var options = FastTrackOptions.Instance;
+					var nav = go.GetComponentSafe<Navigator>();
 					if (options.SensorOpts)
 						SensorPatches.SensorPatches.RemoveBalloonArtistSensor(go);
+					if (options.NoSplash && nav != null)
+						nav.transitionDriver.overrideLayers.RemoveAll((layer) => layer is
+							SplashTransitionLayer);
 				}
 			}
 		}
