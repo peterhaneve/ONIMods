@@ -84,34 +84,37 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(MingleCellSensor), nameof(MingleCellSensor.Update))]
 		internal static class MingleCellSensor_Update {
+			/// <summary>
+			/// Compatibility for Rest for the Weary, allow mingle cell sensor during
+			/// Finish Tasks time.
+			/// </summary>
+			private static ScheduleBlockType finishTasks = null;
+
 			internal static bool Prepare() => FastTrackOptions.Instance.SensorOpts;
+
+			/// <summary>
+			/// Looks up and caches the Finish Tasks schedule block type, if available.
+			/// </summary>
+			internal static void Init() {
+				finishTasks = Db.Get().ScheduleBlockTypes.TryGet("FinishTask");
+			}
 
 			/// <summary>
 			/// Applied before Update runs.
 			/// </summary>
 			internal static bool Prefix(MinionBrain ___brain) {
 				bool run = false;
-				if (___brain != null && recreation != null) {
+				var inst = ScheduleManager.Instance;
+				if (___brain != null) {
 					var schedulable = ___brain.GetComponent<Schedulable>();
-					run = schedulable == null || ScheduleManager.Instance.IsAllowed(
-						schedulable, recreation);
+					if (schedulable != null && inst != null && recreation != null) {
+						var block = schedulable.GetSchedule().GetBlock(Schedule.GetBlockIdx());
+						run = block.IsAllowed(recreation) || (finishTasks != null && block.
+							IsAllowed(finishTasks));
+					} else
+						run = true;
 				}
 				return run;
-			}
-		}
-
-		/// <summary>
-		/// Applied to SafeCellQuery to dramatically speed it up by cancelling the query once
-		/// a target cell has been found.
-		/// </summary>
-		[HarmonyPatch(typeof(SafeCellQuery), nameof(SafeCellQuery.IsMatch))]
-		internal static class SafeCellQuery_IsMatch {
-			/// <summary>
-			/// Applied after IsMatch runs.
-			/// </summary>
-			internal static void Postfix(ref bool __result, int cost, int ___targetCost) {
-				if (cost >= ___targetCost)
-					__result = true;
 			}
 		}
 	}
@@ -145,6 +148,21 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// </summary>
 		internal static bool Prefix() {
 			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to SafeCellQuery to dramatically speed it up by cancelling the query once
+	/// a target cell has been found.
+	/// </summary>
+	[HarmonyPatch(typeof(SafeCellQuery), nameof(SafeCellQuery.IsMatch))]
+	public static class SafeCellQuery_IsMatch_Patch {
+		/// <summary>
+		/// Applied after IsMatch runs.
+		/// </summary>
+		internal static void Postfix(ref bool __result, int cost, int ___targetCost) {
+			if (cost >= ___targetCost)
+				__result = true;
 		}
 	}
 }

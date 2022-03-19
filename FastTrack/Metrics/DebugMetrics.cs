@@ -312,7 +312,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Wraps sim bucket results and allows sorting by time.
 		/// </summary>
-		private struct SimBucketResults : IComparable<SimBucketResults> {
+		private sealed class SimBucketResults : IComparable<SimBucketResults> {
 			/// <summary>
 			/// The class name in this bucket.
 			/// </summary>

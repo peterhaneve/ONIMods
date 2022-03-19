@@ -58,8 +58,10 @@ namespace PeterHan.FastTrack {
 			if (options.DisableConduitAnimation != FastTrackOptions.ConduitAnimationQuality.
 					Full)
 				ConduitPatches.ConduitFlowVisualizerRenderer.SetupDelegates();
-			if (options.SensorOpts)
+			if (options.SensorOpts) {
 				SensorPatches.SensorPatches.Init();
+				SensorPatches.SensorPatches.MingleCellSensor_Update.Init();
+			}
 		}
 
 		/// <summary>
@@ -146,7 +148,7 @@ namespace PeterHan.FastTrack {
 				go.AddOrGet<AsyncJobManager>();
 				if (options.AsyncPathProbe)
 					go.AddOrGet<PathPatches.PathProbeJobManager>();
-				if (options.ReduceSoundUpdates)
+				if (options.ReduceSoundUpdates && !options.DisableSound)
 					go.AddOrGet<SoundUpdater>();
 				if (options.ParallelInventory)
 					UIPatches.BackgroundInventoryUpdater.CreateInstance();
@@ -196,6 +198,7 @@ namespace PeterHan.FastTrack {
 			// In case this goes in stock bug fix later
 			if (options.UnstackLights)
 				PRegistry.PutData("Bugs.StackedLights", true);
+			PRegistry.PutData("Bugs.AnimFree", true);
 			// This patch is Windows only apparently
 			var target = typeof(Global).GetMethodSafe("TestDataLocations", true);
 			if (options.MiscOpts && target != null && typeof(Global).GetFieldSafe(

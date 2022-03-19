@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
+using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -28,6 +29,52 @@ using UnityEngine;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.VisualPatches {
+	/// <summary>
+	/// Applied to AnimEventManager to fix a bug where the anim indirection data list grows
+	/// without bound, consuming memory, causing GC pauses, and eventually crashing when it
+	/// overflows.
+	/// </summary>
+	[HarmonyPatch(typeof(AnimEventManager), nameof(AnimEventManager.StopAnim))]
+	public static class AnimEventManager_StopAnim_Patch {
+		/// <summary>
+		/// Transpiles StopAnim to throw away the event handle properly.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+			var indirectionDataType = typeof(AnimEventManager).GetNestedType("IndirectionData",
+				PPatchTools.BASE_FLAGS | BindingFlags.Instance);
+			MethodInfo target = null, setData = null;
+			if (indirectionDataType != null) {
+				var kcv = typeof(KCompactedVector<>).MakeGenericType(indirectionDataType);
+				target = kcv?.GetMethodSafe(nameof(KCompactedVector<AnimEventManager.
+					EventPlayerData>.Free), false, typeof(HandleVector<int>.Handle));
+				setData = kcv?.GetMethodSafe(nameof(KCompactedVector<AnimEventManager.
+					EventPlayerData>.SetData), false, typeof(HandleVector<int>.Handle),
+					indirectionDataType);
+			}
+			if (target != null && setData != null)
+				foreach (var instr in instructions) {
+					if (instr.Is(OpCodes.Callvirt, setData)) {
+						// Remove "data"
+						yield return new CodeInstruction(OpCodes.Pop);
+						// Call Free
+						yield return new CodeInstruction(OpCodes.Callvirt, target);
+						// Pop the retval
+						instr.opcode = OpCodes.Pop;
+						instr.operand = null;
+#if DEBUG
+						PUtil.LogDebug("Patched AnimEventManager.StopAnim");
+#endif
+					}
+					yield return instr;
+				}
+			else {
+				PUtil.LogWarning("Unable to patch AnimEventManager.StopAnim");
+				foreach (var instr in instructions)
+					yield return instr;
+			}
+		}
+	}
+
 	/// <summary>
 	/// Applied to ArtifactModule to only update the artifact's position (and thus lag) when
 	/// the module is being launched or landed.
@@ -221,7 +268,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		internal static bool Prepare() => FastTrackOptions.Instance.NoSplash;
 
 		/// <summary>
-		/// Transpiles TryAbsort to make it think EffectPrefabs.Instance is always null.
+		/// Transpiles TryAbsorb to make it think EffectPrefabs.Instance is always null.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
 			var target = typeof(EffectPrefabs).GetPropertySafe<EffectPrefabs>(nameof(

@@ -63,10 +63,6 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool SensorOpts { get; set; }
 
-		[Option("Batch Sounds", "Reduces the frequency of sound location updates." + PERF_LOW, "Interface")]
-		[JsonProperty]
-		public bool ReduceSoundUpdates { get; set; }
-
 		[Option("Colony Tracker Reduction", "Reduces the update rate of Colony Diagnostics.\n<i>Some notifications may take longer to trigger</i>" + PERF_LOW, "Interface")]
 		[JsonProperty]
 		public bool ReduceColonyTracking { get; set; }
@@ -111,6 +107,14 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool InfoCardOpts { get; set; }
 
+		[Option("Batch Sounds", "Reduces the frequency of sound location updates." + PERF_LOW, "Sound")]
+		[JsonProperty]
+		public bool ReduceSoundUpdates { get; set; }
+
+		[Option("Disable <color=#FF0000>ALL</color> Sounds", "Completely disables all sound playback." + PERF_LOW, "Sound")]
+		[JsonProperty]
+		public bool DisableSound { get; set; }
+
 		[Option("No Notification Bounce", "Disables the bounce effect when new notifications appear." + PERF_LOW, "Visual")]
 		[JsonProperty]
 		public bool NoBounce { get; set; }
@@ -131,6 +135,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool ReduceTileUpdates { get; set; }
 
+		[Option("Use Mesh Renderers", "Use mesh renderers instead of redrawing meshes every frame." + PERF_LOW, "Visual")]
+		[JsonProperty]
+		public bool UseMeshRenderers { get; set; }
+
 		[Option("Log Debug Metrics", "Logs extra debug information to the game log.\n\n<b>Only use this option if directed to do so by a developer.</b>", "Miscellaneous")]
 		[JsonProperty]
 		public bool Metrics { get; set; }
@@ -142,6 +150,7 @@ namespace PeterHan.FastTrack {
 			CritterConsumers = true;
 			DisableConduitAnimation = ConduitAnimationQuality.Reduced;
 			DisableLoadPreviews = false;
+			DisableSound = false;
 			FastRaycast = true;
 			FastUpdatePickups = false;
 			InfoCardOpts = true;
@@ -160,6 +169,7 @@ namespace PeterHan.FastTrack {
 			ReduceTileUpdates = true;
 			RenderTicks = true;
 			ThreatOvercrowding = true;
+			UseMeshRenderers = true;
 			UnstackLights = true;
 		}
 

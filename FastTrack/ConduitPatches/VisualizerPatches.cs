@@ -225,6 +225,129 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	}
 
 	/// <summary>
+	/// Applied to ConduitFlowVisualizer.RenderMeshTask.ctor to fix a call that excessively
+	/// allocates memory.
+	/// </summary>
+	[HarmonyPatch]
+	public static class ConduitRendererMemoryPatch {
+		/// <summary>
+		/// Accesses the private struct type ConduitFlowVisualizer.RenderMeshTask.
+		/// </summary>
+		private static readonly Type RENDER_MESH_TASK = typeof(ConduitFlowVisualizer).
+			GetNestedType("RenderMeshTask", PPatchTools.BASE_FLAGS | BindingFlags.Instance);
+
+		/// <summary>
+		/// The dynamic method to run when replacing the conduit capacity.
+		/// </summary>
+		private static MethodBase cachedDynamicMethod = null;
+
+		/// <summary>
+		/// Targets the ConduitFlowVisualizer.RenderMeshTask constructor.
+		/// </summary>
+		internal static MethodBase TargetMethod() {
+			return RENDER_MESH_TASK?.GetConstructor(PPatchTools.BASE_FLAGS | BindingFlags.
+				Instance, null, new Type[] { typeof(int), typeof(int) }, null);
+		}
+
+		/// <summary>
+		/// Create a method at runtime to use for resizing lists!
+		/// </summary>
+		/// <param name="ballType">The retrieved type of ConduitFlowVisualizer.RenderMeshTask.Ball.</param>
+		/// <param name="resizeBalls">The Capacity property to modify.</param>
+		private static MethodBase GenerateDynamicMethod(Type ballType,
+				PropertyInfo resizeBalls) {
+			if (ballType == null)
+				throw new ArgumentNullException(nameof(ballType));
+			if (resizeBalls == null)
+				throw new ArgumentNullException(nameof(resizeBalls));
+			if (cachedDynamicMethod == null) {
+				var ballListType = typeof(List<>).MakeGenericType(ballType);
+				var newMethod = new DynamicMethod("SetCapacityIfNeeded", null, new Type[] {
+					ballListType, typeof(int)
+				});
+				var generator = newMethod.GetILGenerator();
+				var end = generator.DefineLabel();
+				// Get current capacity
+				generator.Emit(OpCodes.Ldarg_0);
+				generator.Emit(OpCodes.Callvirt, resizeBalls.GetGetMethod(true));
+				// Compare to new capacity
+				generator.Emit(OpCodes.Ldarg_1);
+				generator.Emit(OpCodes.Bge, end);
+				// Set new capacity
+				generator.Emit(OpCodes.Ldarg_0);
+				generator.Emit(OpCodes.Ldarg_1);
+				generator.Emit(OpCodes.Callvirt, resizeBalls.GetSetMethod(true));
+				// Return
+				generator.MarkLabel(end);
+				generator.Emit(OpCodes.Ret);
+				var delegateType = typeof(Action<,>).MakeGenericType(ballListType,
+					typeof(int));
+				newMethod.CreateDelegate(delegateType);
+				cachedDynamicMethod = newMethod;
+			}
+			return cachedDynamicMethod;
+		}
+
+		/// <summary>
+		/// Resizes a list only if needed.
+		/// </summary>
+		/// <param name="list">The list to resize.</param>
+		/// <param name="capacity">The new list capacity.</param>
+		private static void SetCapacity(List<ConduitFlow.Conduit> list, int capacity) {
+			if (capacity > list.Capacity)
+				list.Capacity = capacity;
+		}
+
+		/// <summary>
+		/// Transpiles the constructor to avoid unnecessary resizes.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
+				ILGenerator generator) {
+			var ballType = RENDER_MESH_TASK.GetNestedType("Ball", PPatchTools.BASE_FLAGS |
+				BindingFlags.Instance);
+			var resizeConduits = typeof(List<>).MakeGenericType(typeof(ConduitFlow.Conduit)).
+				GetPropertySafe<int>(nameof(List<int>.Capacity), false);
+			PropertyInfo resizeBalls = null;
+			bool patched = false;
+			// Calculate the target using the private Ball struct type
+			if (ballType != null)
+				resizeBalls = typeof(List<>).MakeGenericType(ballType).GetPropertySafe<int>(
+					nameof(List<int>.Capacity), false);
+			var targetConduits = typeof(ConduitRendererMemoryPatch).GetMethodSafe(nameof(
+				SetCapacity), true, typeof(List<ConduitFlow.Conduit>), typeof(int));
+			if (resizeBalls != null && resizeConduits != null && targetConduits != null) {
+				var setBallCap = resizeBalls.GetSetMethod(true);
+				var setConduitCap = resizeConduits.GetSetMethod(true);
+				var dynamicMethod = GenerateDynamicMethod(ballType, resizeBalls);
+				foreach (var instr in instructions) {
+					var labels = instr.labels;
+					if (instr.Is(OpCodes.Callvirt, setConduitCap)) {
+						// Easy, swap it with our method
+						instr.opcode = OpCodes.Call;
+						instr.operand = targetConduits;
+#if DEBUG
+						PUtil.LogDebug("Patched RenderMeshTask.set_Capacity 1");
+#endif
+						patched = true;
+					} else if (instr.Is(OpCodes.Callvirt, setBallCap)) {
+						// Harder, have to use the method we generated at runtime :/
+						instr.opcode = OpCodes.Call;
+						instr.operand = dynamicMethod;
+#if DEBUG
+						PUtil.LogDebug("Patched RenderMeshTask.set_Capacity 2");
+#endif
+					}
+					yield return instr;
+				}
+			} else
+				foreach (var instr in instructions)
+					yield return instr;
+			if (!patched)
+				PUtil.LogWarning("Unable to patch ConduitFlowVisualizer.RenderMeshTask");
+		}
+	}
+
+	/// <summary>
 	/// Applied to ConduitFlowVisualizer.RenderMeshContext.ctor to avoid updating liquid and
 	/// gas conduits inside tiles when not in a conduit overlay. Makes a small difference on
 	/// most bases, but zoomed out pipe spaghetti can make a huge difference!
@@ -233,10 +356,13 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	/// </summary>
 	[HarmonyPatch]
 	public static class ConduitFlowVisualizer_RenderMeshContext_Constructor_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
+		internal static bool Prepare() {
+			var options = FastTrackOptions.Instance;
+			return options.RenderTicks || options.ConduitOpts;
+		}
 
 		/// <summary>
-		/// Targets the ConduitFlowVisualizer.RenderMestContext constructor.
+		/// Targets the ConduitFlowVisualizer.RenderMeshContext constructor.
 		/// </summary>
 		internal static MethodBase TargetMethod() {
 			var meshContext = typeof(ConduitFlowVisualizer).GetNestedType("RenderMeshContext",

@@ -153,8 +153,6 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(NavGrid), nameof(NavGrid.UpdateGraph), new Type[0])]
 	public static class NavGrid_UpdateGraph_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
-
 		/// <summary>
 		/// Transpiles UpdateGraph to clean up allocations and mark cells dirty when required.
 		/// </summary>
@@ -172,16 +170,18 @@ namespace PeterHan.FastTrack.PathPatches {
 				PUtil.LogError("What happened to HashSet.Clear?");
 			else {
 				CodeInstruction instr;
-				// Effectively prefix with a call to UpdateSerials
-				if (dirtyCellsField != null && updateSerials != null)
-					instructions.InsertRange(0, new CodeInstruction[] {
-						new CodeInstruction(OpCodes.Ldarg_0),
-						new CodeInstruction(OpCodes.Dup),
-						new CodeInstruction(OpCodes.Ldfld, dirtyCellsField),
-						new CodeInstruction(OpCodes.Call, updateSerials)
-					});
-				else
-					PUtil.LogWarning("Unable to mark cells dirty in NavGrid.UpdateGraph");
+				if (FastTrackOptions.Instance.CachePaths) {
+					// Effectively prefix with a call to UpdateSerials
+					if (dirtyCellsField != null && updateSerials != null)
+						instructions.InsertRange(0, new CodeInstruction[] {
+							new CodeInstruction(OpCodes.Ldarg_0),
+							new CodeInstruction(OpCodes.Dup),
+							new CodeInstruction(OpCodes.Ldfld, dirtyCellsField),
+							new CodeInstruction(OpCodes.Call, updateSerials)
+						});
+					else
+						PUtil.LogWarning("Unable to mark cells dirty in NavGrid.UpdateGraph");
+				}
 				instr = instructions[0];
 				for (int i = 0; i < n - 1; i++) {
 					var next = instructions[i + 1];
