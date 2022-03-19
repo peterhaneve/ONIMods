@@ -38,34 +38,25 @@ namespace PeterHan.FastTrack {
 			"ComparerIncludingPriority");
 
 		/// <summary>
-		/// Applied before UpdatePickups runs.
+		/// Applied before UpdatePickups runs. A more optimized UpdatePickups whose aggregate
+		/// runtime on a test world dropped from ~60 ms/1000 ms to ~45 ms/1000 ms.
 		/// </summary>
 		internal static bool BeforeUpdatePickups(FetchManager.FetchablesByPrefabId __instance,
 				Navigator worker_navigator, GameObject worker_go) {
-			UpdatePickups(__instance, worker_navigator, worker_go);
-			// Prevent the original method from running
-			return false;
-		}
-
-		/// <summary>
-		/// The better and more optimized UpdatePickups. Aggregate runtime on a test world
-		/// dropped from ~60 ms/1000 ms to ~45 ms/1000 ms.
-		/// </summary>
-		private static void UpdatePickups(FetchManager.FetchablesByPrefabId targets,
-				Navigator navigator, GameObject worker) {
 			var canBePickedUp = DictionaryPool<PickupTagKey, FetchManager.Pickup,
 				FetchManager>.Allocate();
 			var pathCosts = DictionaryPool<int, int, FetchManager>.Allocate();
-			var finalPickups = targets.finalPickups;
+			var finalPickups = __instance.finalPickups;
 			// Will reflect the changes from Waste Not, Want Not and No Manual Delivery
 			var comparer = PICKUP_COMPARER.Get(null);
-			foreach (var fetchable in targets.fetchables.GetDataList()) {
+			foreach (var fetchable in __instance.fetchables.GetDataList()) {
 				var target = fetchable.pickupable;
 				int cell = target.cachedCell;
-				if (target.CouldBePickedUpByMinion(worker)) {
+				if (target.CouldBePickedUpByMinion(worker_go)) {
 					// Look for cell cost, share costs across multiple queries to a cell
 					if (!pathCosts.TryGetValue(cell, out int cost))
-						pathCosts.Add(cell, cost = target.GetNavigationCost(navigator, cell));
+						pathCosts.Add(cell, cost = target.GetNavigationCost(worker_navigator,
+							cell));
 					// Exclude unreachable items
 					if (cost >= 0) {
 						int hash = fetchable.tagBitsHash;
@@ -94,18 +85,19 @@ namespace PeterHan.FastTrack {
 				finalPickups.Add(pair.Value);
 			pathCosts.Recycle();
 			canBePickedUp.Recycle();
+			// Prevent the original method from running
+			return false;
 		}
 
 		/// <summary>
-		/// Wraps TagBits and its hash in a key structure that can be very quickly and properly
-		/// hashed and compared for a dictionary key.
+		/// Wraps a prefab and its tag bit hash in a key structure that can be very quickly and
+		/// properly hashed and compared for a dictionary key.
 		/// </summary>
 		private sealed class PickupTagKey {
 			/// <summary>
-			/// The full tag bits of the pickup. Cannot be readonly because TagBits.AreEqual
-			/// uses a ref parameter (even though it is const in the method).
+			/// The prefab ID of the tagged object.
 			/// </summary>
-			private TagBits bits;
+			private readonly KPrefabID id;
 
 			/// <summary>
 			/// The tag bits' hash.
@@ -114,14 +106,20 @@ namespace PeterHan.FastTrack {
 
 			public PickupTagKey(int hash, KPrefabID id) {
 				this.hash = hash;
-				bits = new TagBits(ref FetchManager.disallowedTagMask);
-				// AndTagBits updates the argument!
-				id.AndTagBits(ref bits);
+				this.id = id;
 			}
 
 			public override bool Equals(object obj) {
-				return obj is PickupTagKey other && hash == other.hash && other.bits.
-					AreEqual(ref bits);
+				bool ret = false;
+				if (obj is PickupTagKey other && hash == other.hash) {
+					var bits = new TagBits(ref FetchManager.disallowedTagMask);
+					// AndTagBits updates the argument!
+					id.AndTagBits(ref bits);
+					var otherBits = new TagBits(ref FetchManager.disallowedTagMask);
+					other.id.AndTagBits(ref otherBits);
+					ret = otherBits.AreEqual(ref bits);
+				}
+				return ret;
 			}
 
 			public override int GetHashCode() {
@@ -129,7 +127,7 @@ namespace PeterHan.FastTrack {
 			}
 
 			public override string ToString() {
-				return "Tags[Hash={0:D},Bits={1}]".F(hash, bits.GetTagsVerySlow().Join());
+				return "PickupTagKey[Hash={0:D},Tags=[{1}]]".F(hash, id.Tags.Join());
 			}
 		}
 	}

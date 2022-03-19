@@ -185,7 +185,7 @@ namespace PeterHan.FastTrack {
 		internal static bool Prefix(Notification notification,
 				IDictionary<NotificationType, string> ___notificationSounds) {
 			// No const for that sound name
-			return notification == null || FastTrackPatches.GameRunning ||
+			return notification == null || FastTrackMod.GameRunning ||
 				!___notificationSounds.TryGetValue(notification.Type, out string sound) ||
 				sound != "Notification";
 		}

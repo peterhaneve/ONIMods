@@ -47,23 +47,23 @@ namespace PeterHan.FastTrack.PathPatches {
 				PathProbeJobManager.SetCPUBudget), true, typeof(ICPULoad));
 			return PPatchTools.ReplaceMethodCall(instructions, new Dictionary<MethodInfo,
 					MethodInfo> {
-					{
-						typeof(GlobalJobManager).GetMethodSafe(nameof(GlobalJobManager.Run),
-							true, workItemType),
-						typeof(PathProbeJobManager).GetMethodSafe(nameof(PathProbeJobManager.
-							RunAsync), true, workItemType)
-					},
-					{
-						typeof(CPUBudget).GetMethodSafe(nameof(CPUBudget.Start), true,
-							typeof(ICPULoad)),
-						cpuCharge
-					},
-					{
-						typeof(CPUBudget).GetMethodSafe(nameof(CPUBudget.End), true,
-							typeof(ICPULoad)),
-						cpuCharge
-					}
-				});
+				{
+					typeof(GlobalJobManager).GetMethodSafe(nameof(GlobalJobManager.Run),
+						true, workItemType),
+					typeof(PathProbeJobManager).GetMethodSafe(nameof(PathProbeJobManager.
+						RunAsync), true, workItemType)
+				},
+				{
+					typeof(CPUBudget).GetMethodSafe(nameof(CPUBudget.Start), true,
+						typeof(ICPULoad)),
+					cpuCharge
+				},
+				{
+					typeof(CPUBudget).GetMethodSafe(nameof(CPUBudget.End), true,
+						typeof(ICPULoad)),
+					cpuCharge
+				}
+			});
 		}
 	}
 

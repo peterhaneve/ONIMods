@@ -20,6 +20,7 @@ using HarmonyLib;
 using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
 
@@ -29,7 +30,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// <summary>
 	/// Renders PrioritizableRenderer with a MeshRenderer instead of using Graphics.DrawMesh.
 	/// </summary>
-	public sealed class PrioritizableMeshRenderer : KMonoBehaviour {
+	public sealed class PrioritizableMeshRenderer : MonoBehaviour {
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
@@ -42,29 +43,18 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <param name="shader">The shader to use for rendering.</param>
 		internal static void CreateInstance(Mesh targetMesh, Material shader) {
 			var game = Game.Instance;
-			if (targetMesh == null)
-				throw new ArgumentNullException(nameof(targetMesh));
 			if (game == null)
 				throw new ArgumentNullException(nameof(Game.Instance));
 			DestroyInstance();
-			var go = new GameObject("Priority Overlay", typeof(PrioritizableMeshRenderer),
-				typeof(MeshRenderer), typeof(MeshFilter));
-			go.layer = LayerMask.NameToLayer("UI");
+			var go = targetMesh.CreateMeshRenderer("Priority Overlay", LayerMask.NameToLayer(
+				"UI"));
 			var t = go.transform;
-			t.SetParent(game.gameObject.transform);
-			t.SetPositionAndRotation(new Vector3(0.0f, 0.0f, Grid.GetLayerZ(Grid.SceneLayer.
-				FXFront2)), Quaternion.identity);
-			Instance = go.GetComponent<PrioritizableMeshRenderer>();
+			t.SetParent(game.transform);
+			t.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
 			// Set up the mesh with the right material
-			var renderer = go.GetComponent<MeshRenderer>();
-			renderer.allowOcclusionWhenDynamic = false;
-			renderer.material = shader;
-			renderer.receiveShadows = false;
-			renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-			// Set the mesh to render
-			var filter = go.GetComponent<MeshFilter>();
-			filter.sharedMesh = targetMesh;
+			go.GetComponent<MeshRenderer>().material = shader;
 			go.SetActive(false);
+			Instance = go.AddOrGet<PrioritizableMeshRenderer>();
 		}
 
 		/// <summary>
@@ -133,7 +123,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
 
 		/// <summary>
-		/// Applied before Cleanup runs.
+		/// Applied after the constructor runs.
 		/// </summary>
 		internal static void Postfix(Mesh ___mesh, Material ___material) {
 			PrioritizableMeshRenderer.CreateInstance(___mesh, ___material);
@@ -158,11 +148,16 @@ namespace PeterHan.FastTrack.VisualPatches {
 				true, typeof(Mesh), typeof(Vector3), typeof(Quaternion), typeof(Material),
 				typeof(int), typeof(Camera), typeof(int), typeof(MaterialPropertyBlock),
 				typeof(bool), typeof(bool));
+			var recalculateBounds = typeof(Mesh).GetMethodSafe(nameof(Mesh.RecalculateBounds),
+				false);
 			yield return new CodeInstruction(OpCodes.Call, target);
 			var newMethod = instructions;
 			// Assigning triangles automatically recalculates bounds!
-			if (drawMesh != null)
-				newMethod = PPatchTools.ReplaceMethodCall(instructions, drawMesh, null);
+			if (drawMesh != null && recalculateBounds != null)
+				newMethod = PPatchTools.ReplaceMethodCall(instructions,
+					new Dictionary<MethodInfo, MethodInfo> {
+						{ drawMesh, null }, { recalculateBounds, null }
+					});
 			else
 				PUtil.LogWarning("Unable to patch PrioritizableRenderer.RenderEveryTick");
 			foreach (var instr in newMethod)

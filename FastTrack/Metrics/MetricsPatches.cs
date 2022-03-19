@@ -39,7 +39,7 @@ namespace PeterHan.FastTrack.Metrics {
 	// KBatchedAnimUpdater#LateUpdate is ~50ms
 	// AnimEventManager#Update is 20ms but not much can be done
 	// KBatchedAnimUpdater#UpdateRegisteredAnims is 40ms
-	// KAnimBatchManager#Render is 25ms
+	// KAnimBatchManager#Render was 25ms
 	// KAnimBatchManager#UpdateDirty is 30ms+
 	// ConduitFlow.Sim200ms is <10ms
 	// ChoreConsumer.FindNextChore is <10ms
@@ -72,7 +72,6 @@ namespace PeterHan.FastTrack.Metrics {
 	}
 #endif
 
-#if false
 	/// <summary>
 	/// Applied to BrainScheduler.BrainGroup to dump load balancing statistics.
 	/// </summary>
@@ -114,12 +113,10 @@ namespace PeterHan.FastTrack.Metrics {
 			if (GET_PROBE_SIZE == null || !(GET_PROBE_SIZE.Invoke(__instance, null) is
 					int probeSize))
 				probeSize = 0;
-			PUtil.LogDebug("For {0}: adjusting from {1:F3} to {2:F3}, now probing {3:D}x{4:D}".
-				F(__instance.GetType().Name, frameTimeDelta, currentFrameTime, probeCount,
-				probeSize));
+			DebugMetrics.LogBrainBalance(__instance.GetType().Name, frameTimeDelta,
+				currentFrameTime, probeCount, probeSize);
 		}
 	}
-#endif
 
 	/// <summary>
 	/// Applied to every RenderImage() to log render metrics.

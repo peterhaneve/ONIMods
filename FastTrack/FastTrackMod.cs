@@ -25,13 +25,12 @@ using PeterHan.PLib.PatchManager;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using UnityEngine;
 
 namespace PeterHan.FastTrack {
 	/// <summary>
 	/// Patches which will be applied via annotations for Fast Track.
 	/// </summary>
-	public sealed class FastTrackPatches : KMod.UserMod2 {
+	public sealed class FastTrackMod : KMod.UserMod2 {
 		/// <summary>
 		/// The maximum time that any of the blocking joins will wait, in real time ms.
 		/// </summary>
@@ -104,6 +103,10 @@ namespace PeterHan.FastTrack {
 				ConduitPatches.BackgroundConduitUpdater.DestroyInstance();
 			if (options.ParallelInventory)
 				UIPatches.BackgroundInventoryUpdater.DestroyInstance();
+			if (options.UseMeshRenderers)
+				VisualPatches.TerrainMeshRenderer.DestroyInstance();
+			ConduitPatches.ConduitFlowMeshPatches.CleanupAll();
+			VisualPatches.GroundRendererDataPatches.CleanupAll();
 			PathPatches.DupeBrainGroupUpdater.DestroyInstance();
 			AsyncJobManager.DestroyInstance();
 			GameRunning = false;
@@ -184,7 +187,7 @@ namespace PeterHan.FastTrack {
 			if (!PRegistry.GetData<bool>("Bugs.AutosaveDragFix"))
 				// Fix the annoying autosave bug
 				harmony.Patch(typeof(Timelapser), "SaveScreenshot", postfix: new HarmonyMethod(
-					typeof(FastTrackPatches), nameof(FastTrackPatches.FixTimeLapseDrag)));
+					typeof(FastTrackMod), nameof(FastTrackMod.FixTimeLapseDrag)));
 		}
 
 		public override void OnLoad(Harmony harmony) {
@@ -193,17 +196,17 @@ namespace PeterHan.FastTrack {
 			onWorldGenLoad.Reset();
 			PUtil.InitLibrary();
 			new POptions().RegisterOptions(this, typeof(FastTrackOptions));
-			new PPatchManager(harmony).RegisterPatchClass(typeof(FastTrackPatches));
+			new PPatchManager(harmony).RegisterPatchClass(typeof(FastTrackMod));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
 			// In case this goes in stock bug fix later
 			if (options.UnstackLights)
 				PRegistry.PutData("Bugs.StackedLights", true);
 			PRegistry.PutData("Bugs.AnimFree", true);
 			// This patch is Windows only apparently
-			var target = typeof(Global).GetMethodSafe("TestDataLocations", true);
+			var target = typeof(Global).GetMethodSafe("TestDataLocations", false);
 			if (options.MiscOpts && target != null && typeof(Global).GetFieldSafe(
 					"saveFolderTestResult", true) != null) {
-				harmony.Patch(target, prefix: new HarmonyMethod(typeof(FastTrackPatches),
+				harmony.Patch(target, prefix: new HarmonyMethod(typeof(FastTrackMod),
 					nameof(RemoveTestDataLocations)));
 #if DEBUG
 				PUtil.LogDebug("Patched Global.TestDataLocations");
@@ -231,98 +234,6 @@ namespace PeterHan.FastTrack {
 				yield return null;
 			GameRunning = true;
 			yield break;
-		}
-
-		/// <summary>
-		/// Applied to MinionConfig to apply several patches from different areas of the mod.
-		/// </summary>
-		[HarmonyPatch(typeof(MinionConfig), nameof(MinionConfig.OnSpawn))]
-		public static class MinionConfig_OnSpawn_Patch {
-			internal static bool Prepare() {
-				var options = FastTrackOptions.Instance;
-				return options.SensorOpts || options.NoSplash;
-			}
-
-			/// <summary>
-			/// Applied after OnSpawn runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				if (go != null) {
-					var options = FastTrackOptions.Instance;
-					var nav = go.GetComponentSafe<Navigator>();
-					if (options.SensorOpts)
-						SensorPatches.SensorPatches.RemoveBalloonArtistSensor(go);
-					if (options.NoSplash && nav != null)
-						nav.transitionDriver.overrideLayers.RemoveAll((layer) => layer is
-							SplashTransitionLayer);
-				}
-			}
-		}
-
-		/// <summary>
-		/// Applied to Global to start up some expensive things before Game.LateUpdate runs.
-		/// </summary>
-		[HarmonyPatch(typeof(Global), "LateUpdate")]
-		public static class Global_LateUpdate_Patch {
-			internal static bool Prepare() {
-				var options = FastTrackOptions.Instance;
-				return options.ConduitOpts;
-			}
-
-			/// <summary>
-			/// Applied before LateUpdate runs.
-			/// </summary>
-			internal static void Prefix() {
-				if (Game.Instance != null) {
-					var options = FastTrackOptions.Instance;
-					if (options.ConduitOpts)
-						ConduitPatches.BackgroundConduitUpdater.StartUpdateAll();
-				}
-			}
-		}
-
-		/// <summary>
-		/// Applied to Global to start up some expensive things before Game.Update runs.
-		/// </summary>
-		[HarmonyPatch(typeof(Global), "Update")]
-		public static class Global_Update_Patch {
-			internal static bool Prepare() {
-				var options = FastTrackOptions.Instance;
-				return options.ConduitOpts || options.ParallelInventory;
-			}
-
-			/// <summary>
-			/// Applied before Update runs.
-			/// </summary>
-			internal static void Prefix() {
-				if (Game.Instance != null) {
-					var options = FastTrackOptions.Instance;
-					if (options.ConduitOpts)
-						ConduitPatches.BackgroundConduitUpdater.StartUpdateAll();
-					if (options.ParallelInventory)
-						UIPatches.BackgroundInventoryUpdater.Instance?.StartUpdateAll();
-				}
-			}
-		}
-
-		/// <summary>
-		/// Applied to World to finish up expensive things after Game.LateUpdate has run.
-		/// </summary>
-		[HarmonyPatch(typeof(World), "LateUpdate")]
-		public static class World_LateUpdate_Patch {
-			internal static bool Prepare() {
-				var options = FastTrackOptions.Instance;
-				return options.PickupOpts;
-			}
-
-			/// <summary>
-			/// Applied after LateUpdate runs.
-			/// </summary>
-			internal static void Postfix() {
-				var options = FastTrackOptions.Instance;
-				if (options.PickupOpts)
-					PathPatches.DupeBrainGroupUpdater.Instance?.EndBrainUpdate();
-			}
 		}
 	}
 }

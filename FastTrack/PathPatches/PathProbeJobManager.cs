@@ -130,7 +130,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			var jobManager = AsyncJobManager.Instance;
 			if (jobManager != null && running) {
 				var now = Stopwatch.StartNew();
-				onPathDone.WaitOne(FastTrackPatches.MAX_TIMEOUT);
+				onPathDone.WaitOne(FastTrackMod.MAX_TIMEOUT);
 				Metrics.DebugMetrics.LogPathProbe(now.ElapsedTicks, totalRuntime);
 				jobCount = 0;
 				totalRuntime = 0L;
@@ -172,7 +172,7 @@ namespace PeterHan.FastTrack.PathPatches {
 
 			public void TriggerComplete() {
 				runtime = time.ElapsedTicks;
-				if (budget != null && FastTrackPatches.GameRunning)
+				if (budget != null && FastTrackMod.GameRunning)
 					lock (CPU_BUDGET_LOCK) {
 						CPUBudget.End(budget);
 					}
@@ -180,7 +180,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			}
 
 			public void TriggerStart() {
-				if (budget != null && FastTrackPatches.GameRunning)
+				if (budget != null && FastTrackMod.GameRunning)
 					lock (CPU_BUDGET_LOCK) {
 						CPUBudget.Start(budget);
 					}

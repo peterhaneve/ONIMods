@@ -49,6 +49,34 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
+		/// Creates a GameObject to render meshes using a MeshRenderer.
+		/// </summary>
+		/// <param name="targetMesh">The mesh to be rendered.</param>
+		/// <param name="name">The object's name.</param>
+		/// <param name="layer">The layer on which the mesh will be rendered.</param>
+		/// <returns>The game object to use for rendering.</returns>
+		public static GameObject CreateMeshRenderer(this Mesh targetMesh, string name,
+				int layer) {
+			if (targetMesh == null)
+				throw new ArgumentNullException(nameof(targetMesh));
+			var go = new GameObject(name ?? "Mesh Renderer", typeof(MeshRenderer), typeof(
+					MeshFilter)) {
+				layer = layer
+			};
+			// Set up the mesh with the right material
+			var renderer = go.GetComponent<MeshRenderer>();
+			renderer.allowOcclusionWhenDynamic = false;
+			renderer.receiveShadows = false;
+			renderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+			renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+			renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+			// Set the mesh to render
+			var filter = go.GetComponent<MeshFilter>();
+			filter.sharedMesh = targetMesh;
+			return go;
+		}
+
+		/// <summary>
 		/// Generates a getter for a type that is not known at compile time. The getter will
 		/// be emitted as a non-type checked function that accepts an object and blindly
 		/// attempts to retrieve the field type. Use with caution!

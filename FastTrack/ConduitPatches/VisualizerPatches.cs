@@ -60,6 +60,8 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		private static readonly IDictionary<ConduitFlowVisualizer, double> NEXT_UPDATE =
 			new Dictionary<ConduitFlowVisualizer, double>(8);
 
+		private static readonly bool USE_MESH = FastTrackOptions.Instance.UseMeshRenderers;
+
 		/// <summary>
 		/// The time interval in seconds for updates in Minimal mode.
 		/// </summary>
@@ -167,8 +169,10 @@ namespace PeterHan.FastTrack.ConduitPatches {
 			// If not updating, render the last mesh
 			if (!update) {
 				___animTime += Time.deltaTime;
-				DrawMesh(___movingBallMesh, z, ___layer);
-				DrawMesh(___staticBallMesh, z, ___layer);
+				if (!USE_MESH) {
+					DrawMesh(___movingBallMesh, z, ___layer);
+					DrawMesh(___staticBallMesh, z, ___layer);
+				}
 			}
 			return update;
 		}

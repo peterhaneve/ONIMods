@@ -311,7 +311,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			}
 			// Wait out the update
 			if (outstanding > 0)
-				onComplete.WaitOne(FastTrackPatches.MAX_TIMEOUT);
+				onComplete.WaitOne(FastTrackMod.MAX_TIMEOUT);
 			DisposeAll();
 			if (lerpers != null) {
 				int n = lerpers.Length;

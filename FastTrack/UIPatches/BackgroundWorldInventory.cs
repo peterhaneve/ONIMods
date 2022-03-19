@@ -218,7 +218,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		internal void EndUpdateAll() {
 			if (toUpdate.Count > 0)
-				onComplete.WaitOne(FastTrackPatches.MAX_TIMEOUT);
+				onComplete.WaitOne(FastTrackMod.MAX_TIMEOUT);
 			toUpdate.Clear();
 		}
 
@@ -235,7 +235,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			var inst = ClusterManager.Instance;
 			var jm = AsyncJobManager.Instance;
 			toUpdate.Clear();
-			if (!SpeedControlScreen.Instance.IsPaused && FastTrackPatches.GameRunning &&
+			if (!SpeedControlScreen.Instance.IsPaused && FastTrackMod.GameRunning &&
 					inst != null && jm != null) {
 				var worlds = inst.WorldContainers;
 				foreach (var container in worlds) {
@@ -301,8 +301,9 @@ namespace PeterHan.FastTrack.UIPatches {
 				var prefabTag = kpid.PrefabTag;
 				if (!___Inventory.ContainsKey(prefabTag)) {
 					var category = DiscoveredResources.GetCategoryForEntity(kpid);
-					DebugUtil.DevAssertArgs(category.IsValid, pickupable.name,
-						"was found by WorldInventory, but has no category! Add it to the element definition.");
+					if (!category.IsValid)
+						PUtil.LogWarning(pickupable.name +
+							" was found by WorldInventory, but has no category! Add it to the element definition.");
 					DiscoveredResources.Instance.Discover(prefabTag, category);
 				}
 				foreach (var itemTag in kpid.Tags)

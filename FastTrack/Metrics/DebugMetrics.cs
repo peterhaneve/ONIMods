@@ -19,7 +19,6 @@
 using PeterHan.PLib.Core;
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Threading;
 
 namespace PeterHan.FastTrack.Metrics {
@@ -40,6 +39,12 @@ namespace PeterHan.FastTrack.Metrics {
 			} while (Interlocked.CompareExchange(ref accumulator, newValue, oldValue) !=
 				oldValue);
 		}
+
+		/// <summary>
+		/// Monitors Brain load balancing.
+		/// </summary>
+		private static readonly ConcurrentDictionary<string, BrainStats> BRAIN_LOAD =
+			new ConcurrentDictionary<string, BrainStats>(2, 8);
 
 		/// <summary>
 		/// Tracks Unity LateUpdate() methods.
@@ -99,6 +104,19 @@ namespace PeterHan.FastTrack.Metrics {
 			int n = SIMANDRENDER.Length;
 			for (int i = 0; i < n; i++)
 				SIMANDRENDER[i] = new NameBucketProfiler();
+		}
+
+		/// <summary>
+		/// Logs brain load balancing stats.
+		/// </summary>
+		/// <param name="name">The brain group name.</param>
+		/// <param name="actual">The actual frame time in s.</param>
+		/// <param name="target">The target frame time in s.</param>
+		/// <param name="count">The number of probes run in the frame.</param>
+		/// <param name="size">The number of cells to probe.</param>
+		internal static void LogBrainBalance(string name, float actual, float target,
+				int count, int size) {
+			BRAIN_LOAD[name] = new BrainStats(actual, target, count, size);
 		}
 
 		/// <summary>
@@ -168,14 +186,22 @@ namespace PeterHan.FastTrack.Metrics {
 		}
 
 		public void Render1000ms(float dt) {
-			if (FastTrackPatches.GameRunning) {
+			if (FastTrackMod.GameRunning) {
 				long probeTotal = PATH_PROBES.TimeInMethod, probeSaved = Math.Max(0L,
 					probeTotal - probeWaiting.TicksToUS());
 				int probeCount = PATH_PROBES.MethodCalls;
+				var brainStats = new System.Text.StringBuilder(128);
 				PUtil.LogDebug("Methods Run: {0}(s), {1}(t), {2}(t)".F(SENSORS, TRACKED[0],
 					TRACKED[1]));
+#if false
 				PUtil.LogDebug("Path Cache: {0:D}/{1:D} hits, {2:F1}%".F(cacheHits, cacheTotal,
 					cacheHits * 100.0f / Math.Max(1, cacheTotal)));
+				ResetPathCache();
+#endif
+				brainStats.Append("Brain Stats:");
+				foreach (var pair in BRAIN_LOAD)
+					brainStats.Append(pair.Key).Append(" [").Append(pair.Value).Append(']');
+				PUtil.LogDebug(brainStats);
 				PUtil.LogDebug("Path Probes: executed {0:N0}us, saved {1:N0}us ({2:N0}/frame)".
 					F(probeTotal, probeSaved, (double)probeSaved / Math.Max(1, probeCount)));
 				PUtil.LogDebug("Sim/Render: *r{0}\n200r{1}\n1000r{2}\n*s{3}\n33s{4}\n200s{5}\n1000s{6}\n4000s{7}".F(
@@ -191,158 +217,32 @@ namespace PeterHan.FastTrack.Metrics {
 			}
 			ResetAsyncPath();
 			ResetMethodHits();
-			ResetPathCache();
 			ResetSimAndRenderStats();
 		}
 
 		/// <summary>
-		/// Profiles calls of a particular method.
+		/// Stores brain update statistics.
 		/// </summary>
-		internal class Profiler {
-			public int MethodCalls => methodCalls;
+		private struct BrainStats {
+			public float frameTime;
 
-			public long TimeInMethod => timeInMethod.TicksToUS();
+			public float targetFrameTime;
 
-			/// <summary>
-			/// The number of times the method was called since the last reset.
-			/// </summary>
-			private volatile int methodCalls;
+			public int probeCount;
 
-			/// <summary>
-			/// The time in ticks spent in the method since the last reset.
-			/// </summary>
-			private long timeInMethod;
+			public int probeSize;
 
-			public Profiler() {
-				methodCalls = 0;
-				timeInMethod = 0L;
-			}
-
-			/// <summary>
-			/// Logs a method invocation.
-			/// </summary>
-			/// <param name="time">The time it took the method to run in microseconds.</param>
-			public void Log(long time) {
-				Interlocked.Increment(ref methodCalls);
-				Accumulate(ref timeInMethod, time);
-			}
-
-			/// <summary>
-			/// Resets the method call and time counts.
-			/// </summary>
-			public virtual void Reset() {
-				methodCalls = 0;
-				timeInMethod = 0L;
+			public BrainStats(float frameTime, float targetFrameTime, int probeCount,
+					int probeSize) {
+				this.frameTime = frameTime;
+				this.targetFrameTime = targetFrameTime;
+				this.probeCount = probeCount;
+				this.probeSize = probeSize;
 			}
 
 			public override string ToString() {
-				long t = TimeInMethod;
-				return "[{0:D}/{1:N0}us|1/{2:N0}us]".F(methodCalls, t, (methodCalls > 0) ?
-					((double)t / methodCalls) : 0.0);
-			}
-		}
-
-		/// <summary>
-		/// Profiles calls to Sim and Render methods by the class name used.
-		/// </summary>
-		internal sealed class NameBucketProfiler : Profiler {
-			/// <summary>
-			/// The minimum time in us/1000ms to be displayed. 10000us/1000ms is 1%.
-			/// </summary>
-			public const long MIN_TIME = 1000;
-
-			/// <summary>
-			/// Categorizes the time taken by the class name updated.
-			/// </summary>
-			private readonly ConcurrentDictionary<string, long> timeByClassName;
-
-			public NameBucketProfiler() {
-				timeByClassName = new ConcurrentDictionary<string, long>(2, 32);
-			}
-
-			/// <summary>
-			/// Logs time taken by a particular sim/update class.
-			/// </summary>
-			/// <param name="className">The class which was just run.</param>
-			/// <param name="time">The time it took in ticks.</param>
-			public void AddSlice(string className, long time) {
-				timeByClassName.AddOrUpdate(className, time, (_, oldTotal) => oldTotal + time);
-				Log(time);
-			}
-
-			/// <summary>
-			/// Gets the time taken by a particular class name in this update bucket.
-			/// </summary>
-			/// <param name="updaterClass">The class that used SimXXms or RenderXXms.</param>
-			/// <returns>The total time it took since the last reset in ticks.</returns>
-			public long GetTimeByClassName(string updaterClass) {
-				if (!timeByClassName.TryGetValue(updaterClass, out long time))
-					time = 0L;
-				return time;
-			}
-
-			public override void Reset() {
-				base.Reset();
-				timeByClassName.Clear();
-			}
-
-			public override string ToString() {
-				var byTime = ListPool<SimBucketResults, NameBucketProfiler>.Allocate();
-				var header = new System.Text.StringBuilder(base.ToString());
-				int n = timeByClassName.Count;
-				foreach (var pair in timeByClassName)
-					byTime.Add(new SimBucketResults(pair.Value, pair.Key));
-				byTime.Sort();
-				foreach (var entry in byTime) {
-					if (entry.Time < MIN_TIME) break;
-					header.AppendLine();
-					header.Append(' ');
-					header.Append(entry.ToString());
-					n--;
-				}
-				byTime.Recycle();
-				if (n > 0) {
-					header.AppendLine();
-					header.AppendFormat("  and {0:D} more...", n);
-				}
-				return header.ToString();
-			}
-		}
-
-		/// <summary>
-		/// Wraps sim bucket results and allows sorting by time.
-		/// </summary>
-		private sealed class SimBucketResults : IComparable<SimBucketResults> {
-			/// <summary>
-			/// The class name in this bucket.
-			/// </summary>
-			public string ClassName;
-
-			/// <summary>
-			/// The time taken in ticks.
-			/// </summary>
-			public long Time;
-			
-			public SimBucketResults(long time, string className) {
-				Time = time.TicksToUS();
-				ClassName = className;
-			}
-
-			public int CompareTo(SimBucketResults other) {
-				return -Time.CompareTo(other.Time);
-			}
-
-			public override bool Equals(object obj) {
-				return obj is SimBucketResults other && Time == other.Time && ClassName ==
-					other.ClassName;
-			}
-
-			public override int GetHashCode() {
-				return ClassName.GetHashCode();
-			}
-
-			public override string ToString() {
-				return "{0}: {1:N0}us".F(ClassName, Time);
+				return "{0:F3}s/{1:F3}s,{2:D}x{3:D}".F(frameTime, targetFrameTime, probeCount,
+					probeSize);
 			}
 		}
 	}

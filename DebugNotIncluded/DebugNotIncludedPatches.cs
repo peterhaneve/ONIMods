@@ -281,6 +281,19 @@ namespace PeterHan.DebugNotIncluded {
 	}
 
 	/// <summary>
+	/// Applied to DebugUtil to log errors more cleanly.
+	/// </summary>
+	[HarmonyPatch(typeof(DebugUtil), nameof(DebugUtil.LogErrorArgs), typeof(object[]))]
+	public static class DebugUtil_LogErrorArgs_Patch {
+		/// <summary>
+		/// Applied after LogErrorArgs runs.
+		/// </summary>
+		internal static void Postfix() {
+			DebugLogger.DumpStack();
+		}
+	}
+
+	/// <summary>
 	/// Applied to DebugUtil to log exceptions more cleanly.
 	/// </summary>
 	[HarmonyPatch(typeof(DebugUtil), nameof(DebugUtil.LogException))]
