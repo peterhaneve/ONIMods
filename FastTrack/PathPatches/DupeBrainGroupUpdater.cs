@@ -80,6 +80,12 @@ namespace PeterHan.FastTrack.PathPatches {
 		private static readonly Func<object, IList<Brain>> GET_BRAIN_LIST = BRAIN_GROUP?.
 			GenerateGetter<IList<Brain>>("brains");
 
+		/// <summary>
+		/// Retrieves the list of pickups at runtime from FetchManager.
+		/// </summary>
+		private static readonly IDetouredField<FetchManager, List<Pickup>> GET_PICKUPS =
+			PDetours.DetourField<FetchManager, List<Pickup>>("pickups");
+
 		private const string NEXT_UPDATE_BRAIN = "nextUpdateBrain";
 
 		/// <summary>
@@ -89,46 +95,10 @@ namespace PeterHan.FastTrack.PathPatches {
 			GenerateGetter<int>(NEXT_UPDATE_BRAIN);
 
 		/// <summary>
-		/// Retrieves the list of pickups at runtime from FetchManager.
-		/// </summary>
-		private static readonly IDetouredField<FetchManager, List<Pickup>> GET_PICKUPS =
-			PDetours.DetourField<FetchManager, List<Pickup>>("pickups");
-
-		/// <summary>
-		/// Retrieves the offset tracker from a workable (like Pickupable or Storage).
-		/// </summary>
-		private static readonly IDetouredField<Workable, OffsetTracker> OFFSET_TRACKER =
-			PDetours.DetourField<Workable, OffsetTracker>("offsetTracker");
-
-		/// <summary>
-		/// Gets the offsets from an offset tracker, without updating them which could trigger
-		/// nasty things like scene partitioner rebuilds.
-		/// </summary>
-		private static readonly IDetouredField<OffsetTracker, CellOffset[]> RAW_OFFSETS =
-			PDetours.DetourField<OffsetTracker, CellOffset[]>("offsets");
-
-		/// <summary>
 		/// A delegate that modifies the next brain to update.
 		/// </summary>
 		private static readonly Action<object, int> SET_NEXT_UPDATE_BRAIN = BRAIN_GROUP?.
 			GenerateSetter<int>(NEXT_UPDATE_BRAIN);
-
-		/// <summary>
-		/// A non-mutating version of Navigator.GetNavigationCost that can be run on
-		/// background threads.
-		/// </summary>
-		/// <param name="navigator">The navigator to calculate.</param>
-		/// <param name="destination">The destination to find the cost.</param>
-		/// <returns>The navigation cost to the destination.</returns>
-		private static int GetNavigationCost(Navigator navigator, Workable destination) {
-			CellOffset[] offsets = null;
-			int cell = destination.GetCell();
-			var offsetTracker = OFFSET_TRACKER?.Get(destination);
-			if (offsetTracker != null)
-				offsets = RAW_OFFSETS?.Get(offsetTracker);
-			return (offsets == null) ? navigator.GetNavigationCost(cell) : navigator.
-				GetNavigationCost(cell, offsets);
-		}
 
 		/// <summary>
 		/// A more efficient (slightly) version of GlobalChoreProber.UpdateFetches.
@@ -145,8 +115,8 @@ namespace PeterHan.FastTrack.PathPatches {
 					// Not already taken, allows manual use
 					if (fetchChore.driver == null && (fetchChore.automatable == null ||
 							!fetchChore.automatable.GetAutomationOnly()) && (destination =
-							fetchChore.destination) != null && (cost = GetNavigationCost(
-							navigator, destination)) >= 0)
+							fetchChore.destination) != null && (cost = navigator.
+							GetNavigationCost(destination)) >= 0)
 						fetches.Add(new FetchInfo(fetchChore, cost, destination));
 				fetches.Sort();
 			}
@@ -156,6 +126,11 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// The list of fetchables collected by prefab ID.
 		/// </summary>
 		private readonly IList<FetchablesByPrefabId> byId;
+
+		/// <summary>
+		/// How many pickup compilations are complete.
+		/// </summary>
+		private volatile int completed;
 
 		/// <summary>
 		/// The current DupeBrainGroup used for updates.
@@ -170,12 +145,12 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Fired when it is safe to mutate the offset tables off the main thread.
 		/// </summary>
-		private readonly EventWaitHandle onAnimsStart;
+		private readonly EventWaitHandle onFetchComplete;
 
 		/// <summary>
 		/// Fired when the pickups are all compiled.
 		/// </summary>
-		private readonly EventWaitHandle onComplete;
+		private readonly EventWaitHandle onPickupComplete;
 
 		/// <summary>
 		/// Compares pickups for sorting.
@@ -195,29 +170,37 @@ namespace PeterHan.FastTrack.PathPatches {
 
 		private DupeBrainGroupUpdater(object dupeBrainGroup) {
 			byId = new List<FetchablesByPrefabId>(64);
+			completed = 0;
 			this.dupeBrainGroup = dupeBrainGroup ?? throw new ArgumentNullException(nameof(
 				dupeBrainGroup));
 			getInitialProbeCount = BRAIN_GROUP.CreateDelegate<Func<int>>("InitialProbeCount",
 				dupeBrainGroup);
-			if (getInitialProbeCount == null)
-				PUtil.LogError("InitialProbeCount not found!");
-			onAnimsStart = new AutoResetEvent(false);
-			onComplete = new AutoResetEvent(false);
+			onFetchComplete = new AutoResetEvent(false);
+			onPickupComplete = new AutoResetEvent(false);
 			pickupComparer = COMPARER_NO_PRIORITY.Get(null);
-			if (pickupComparer == null)
-				PUtil.LogError("ComparerNoPriority not found!");
 			runAsyncPathProbe = ASYNC_PATH_PROBE.CreateDelegate<System.Action>(
 				dupeBrainGroup);
-			if (runAsyncPathProbe == null)
-				PUtil.LogDebug("AsyncPathProbe not found!");
 			updatingPickups = new List<CompilePickupsWork>(8);
+			if (getInitialProbeCount == null || pickupComparer == null ||
+					runAsyncPathProbe == null)
+				PUtil.LogError("Unable to patch BrainGroup.AsyncPathProbe");
+		}
+
+		/// <summary>
+		/// Cleans up any pickup jobs that are still running, as they leak memory if not
+		/// disposed.
+		/// </summary>
+		private void Cleanup() {
+			foreach (var entry in updatingPickups)
+				entry.Dispose();
 		}
 
 		public void Dispose() {
-			// These need to be cleaned up, or memory gets leaked
-			foreach (var entry in updatingPickups)
-				entry.Dispose();
-			onComplete.Dispose();
+			FinishFetches();
+			FinishPickups();
+			Cleanup();
+			onFetchComplete.Dispose();
+			onPickupComplete.Dispose();
 			byId.Clear();
 			updatingPickups.Clear();
 		}
@@ -230,7 +213,8 @@ namespace PeterHan.FastTrack.PathPatches {
 			var inst = GlobalChoreProvider.Instance;
 			if (updatingPickups.Count > 0) {
 				// Wait out the pickups update
-				onComplete.WaitOne(FastTrackMod.MAX_TIMEOUT);
+				onPickupComplete.WaitOne(FastTrackMod.MAX_TIMEOUT >> 1);
+				onFetchComplete.WaitOne(FastTrackMod.MAX_TIMEOUT >> 1);
 				if (fm != null && inst != null) {
 					var fetches = inst.fetches;
 					var pickups = GET_PICKUPS.Get(fm);
@@ -251,8 +235,7 @@ namespace PeterHan.FastTrack.PathPatches {
 						entry.brain.UpdateBrain();
 					}
 				} else
-					foreach (var entry in updatingPickups)
-						entry.Dispose();
+					Cleanup();
 				updatingPickups.Clear();
 			}
 			byId.Clear();
@@ -261,8 +244,15 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Called when all fetches are up to date.
 		/// </summary>
-		private void Finish() {
-			onComplete.Set();
+		private void FinishFetches() {
+			onFetchComplete.Set();
+		}
+
+		/// <summary>
+		/// Called when all pickups are up to date.
+		/// </summary>
+		private void FinishPickups() {
+			onPickupComplete.Set();
 		}
 
 		/// <summary>
@@ -292,6 +282,27 @@ namespace PeterHan.FastTrack.PathPatches {
 		}
 
 		/// <summary>
+		/// Called when a pickup task completes, to trigger an event when all finish.
+		/// </summary>
+		internal void NextPickup() {
+			int n = Interlocked.Increment(ref completed);
+			if (AsyncJobManager.Instance == null || n >= updatingPickups.Count)
+				FinishPickups();
+		}
+
+		/// <summary>
+		/// Releases the task to collect fetch errands, which should only be run during
+		/// kanims.
+		/// </summary>
+		internal void ReleaseFetches() {
+			var inst = AsyncJobManager.Instance;
+			if (inst != null) {
+				onFetchComplete.Reset();
+				inst.Run(new FinishFetchesWork(this));
+			}
+		}
+
+		/// <summary>
 		/// Starts a Duplicant brain update cycle.
 		/// </summary>
 		/// <param name="asyncPathProbe">true to start path probes asynchronously, or false
@@ -299,34 +310,34 @@ namespace PeterHan.FastTrack.PathPatches {
 		internal void StartBrainUpdate(bool asyncPathProbe) {
 			var update = ListPool<MinionBrain, DupeBrainGroupUpdater>.Allocate();
 			var fm = Game.Instance.fetchManager;
+			var inst = AsyncJobManager.Instance;
 			int n = updatingPickups.Count;
 			if (asyncPathProbe)
 				runAsyncPathProbe.Invoke();
-			if (n > 0)
+			if (n > 0) {
 				PUtil.LogWarning("{0:D} pickup collection jobs did not finish in time!".F(n));
+				Cleanup();
+			}
 			updatingPickups.Clear();
 			if (GetBrainsToUpdate(update) > 0 && fm != null) {
-				var inst = AsyncJobManager.Instance;
 				// Brains.... Brains!!!!
+				completed = 0;
+				n = fm.prefabIdToFetchables.Count;
 				foreach (var brain in update) {
 					var nav = brain.GetComponent<Navigator>();
 					if (nav != null) {
 						// What PathProberSensor did
 						nav.UpdateProbe(false);
-						updatingPickups.Add(new CompilePickupsWork(this, brain, nav));
+						updatingPickups.Add(new CompilePickupsWork(this, brain, nav, n));
 					}
 				}
 				if (updatingPickups.Count > 0 && inst != null) {
-					onAnimsStart.Reset();
-					onComplete.Reset();
 					foreach (var pair in fm.prefabIdToFetchables)
 						byId.Add(pair.Value);
-					// Add a task to update the offset tables first
+					onPickupComplete.Reset();
 					inst.Run(new UpdateOffsetTablesWork(this));
 					foreach (var task in updatingPickups)
 						inst.Run(task);
-					// Only the last task will release
-					inst.Run(new FinishFetchesWork(this, updatingPickups));
 				}
 			}
 			update.Recycle();
@@ -337,7 +348,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// </summary>
 		private sealed class CompilePickupsWork : AsyncJobManager.IWork, IWorkItemCollection,
 				IDisposable {
-			public int Count => byId.Count;
+			public int Count { get; }
 
 			public IWorkItemCollection Jobs => this;
 
@@ -345,11 +356,6 @@ namespace PeterHan.FastTrack.PathPatches {
 			/// The brain to update when this task is done.
 			/// </summary>
 			internal readonly MinionBrain brain;
-
-			/// <summary>
-			/// The prefab IDs that will be compiled.
-			/// </summary>
-			private readonly IList<FetchablesByPrefabId> byId;
 
 			/// <summary>
 			/// The location where the compiled fetch errands are stored.
@@ -377,9 +383,9 @@ namespace PeterHan.FastTrack.PathPatches {
 			private readonly GameObject worker;
 
 			internal CompilePickupsWork(DupeBrainGroupUpdater updater, MinionBrain brain,
-					Navigator navigator) {
+					Navigator navigator, int n) {
 				this.brain = brain;
-				byId = updater.byId;
+				Count = n;
 				fetches = ListPool<FetchInfo, CompilePickupsWork>.Allocate();
 				pickups = ListPool<Pickup, CompilePickupsWork>.Allocate();
 				this.navigator = navigator;
@@ -393,21 +399,21 @@ namespace PeterHan.FastTrack.PathPatches {
 			}
 
 			public void InternalDoWorkItem(int index) {
-				int n = byId.Count;
-				if (index >= 0 && index < n)
-					byId[index].UpdatePickups(navigator.PathProber, navigator, worker);
+				if (index >= 0 && index < Count)
+					updater.byId[index].UpdatePickups(navigator.PathProber, navigator, worker);
 			}
 
 			public void TriggerAbort() {
-				updater.Finish();
+				updater.FinishPickups();
 			}
 
 			public void TriggerComplete() {
 				pickups.Clear();
-				foreach (var pair in byId)
+				foreach (var pair in updater.byId)
 					pickups.AddRange(pair.finalPickups);
 				pickups.Sort(updater.pickupComparer);
 				OffsetTracker.isExecutingWithinJob = false;
+				updater.NextPickup();
 			}
 
 			public void TriggerStart() {
@@ -416,43 +422,36 @@ namespace PeterHan.FastTrack.PathPatches {
 		}
 
 		/// <summary>
-		/// Unfortunately it must be serial, but updates the fetches for all Duplicants that
-		/// are queued.
+		/// Updates the fetch errands for all Duplicants that are queued.
 		/// </summary>
 		private sealed class FinishFetchesWork : AsyncJobManager.IWork, IWorkItemCollection {
-			public int Count => tasks.Count;
+			public int Count { get; }
 
 			public IWorkItemCollection Jobs => this;
-
-			/// <summary>
-			/// The jobs that need their fetches finished.
-			/// </summary>
-			private readonly IList<CompilePickupsWork> tasks;
 
 			/// <summary>
 			/// The parent object to notify when this completes.
 			/// </summary>
 			private readonly DupeBrainGroupUpdater updater;
 
-			internal FinishFetchesWork(DupeBrainGroupUpdater updater,
-					IList<CompilePickupsWork> toDo) {
-				tasks = toDo;
+			internal FinishFetchesWork(DupeBrainGroupUpdater updater) {
+				Count = updater.updatingPickups.Count;
 				this.updater = updater;
 			}
 
 			public void InternalDoWorkItem(int index) {
-				if (index >= 0 && index < tasks.Count) {
-					var task = tasks[index];
+				if (index >= 0 && index < Count) {
+					var task = updater.updatingPickups[index];
 					UpdateFetches(task.navigator, task.fetches);
 				}
 			}
 
 			public void TriggerAbort() {
-				updater.Finish();
+				updater.FinishFetches();
 			}
 
 			public void TriggerComplete() {
-				updater.Finish();
+				updater.FinishFetches();
 			}
 
 			public void TriggerStart() { }
@@ -483,75 +482,19 @@ namespace PeterHan.FastTrack.PathPatches {
 			}
 
 			public void InternalDoWorkItem(int index) {
-				// No offset tables really should be updated here, as the offset tables are
-				// always recalculated when the pickupable's cached cell is updated
+				// Few offset tables should be updated here, as the offset tables are already
+				// recalculated when the pickupable's cached cell is updated
 				if (index >= 0 && index < byId.Count)
 					byId[index].UpdateOffsetTables();
 			}
 
 			public void TriggerAbort() {
-				updater.Finish();
+				updater.FinishFetches();
 			}
 
 			public void TriggerComplete() { }
 
 			public void TriggerStart() { }
-		}
-	}
-
-	/// <summary>
-	/// Allows much faster fetch handling by dictionary sorting using priority value and
-	/// class.
-	/// </summary>
-	internal struct FetchInfo : IComparable<FetchInfo> {
-		/// <summary>
-		/// The category of the errand.
-		/// </summary>
-		internal readonly Storage.FetchCategory category;
-
-		/// <summary>
-		/// The chore to be executed.
-		/// </summary>
-		internal readonly FetchChore chore;
-
-		/// <summary>
-		/// The navigation cost to the errand.
-		/// </summary>
-		internal readonly int cost;
-
-		/// <summary>
-		/// The hash of the tag bits for the errand item.
-		/// </summary>
-		internal readonly int tagBitsHash;
-
-		internal FetchInfo(FetchChore fetchChore, int cost, Storage destination) {
-			category = destination.fetchCategory;
-			this.cost = cost;
-			chore = fetchChore;
-			tagBitsHash = fetchChore.tagBitsHash;
-		}
-
-		public int CompareTo(FetchInfo other) {
-			int result = other.chore.masterPriority.CompareTo(chore.masterPriority);
-			if (result == 0)
-				result = cost.CompareTo(other.cost);
-			return result;
-		}
-
-		public override bool Equals(object obj) {
-			return obj is FetchInfo other && tagBitsHash == other.tagBitsHash &&
-				category == other.category && chore.choreType == other.chore.choreType &&
-				chore.tagBits.AreEqual(ref other.chore.tagBits);
-		}
-
-		public override int GetHashCode() {
-			return tagBitsHash;
-		}
-
-		public override string ToString() {
-			var p = chore.masterPriority;
-			return "FetchInfo[category={0},cost={1:D},priority={2},{3:D}]".F(category,
-				cost, p.priority_class, p.priority_value);
 		}
 	}
 }

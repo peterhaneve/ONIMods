@@ -113,11 +113,8 @@ namespace PeterHan.FastTrack {
 		/// Applied before LateUpdate runs.
 		/// </summary>
 		internal static void Prefix() {
-			if (Game.Instance != null) {
-				var options = FastTrackOptions.Instance;
-				if (options.ConduitOpts)
-					ConduitPatches.BackgroundConduitUpdater.StartUpdateAll();
-			}
+			if (Game.Instance != null)
+				ConduitPatches.BackgroundConduitUpdater.StartUpdateAll();
 		}
 	}
 
@@ -196,12 +193,17 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
+		/// Applied before LateUpdate runs.
+		/// </summary>
+		internal static void Prefix() {
+			PathPatches.DupeBrainGroupUpdater.Instance?.ReleaseFetches();
+		}
+
+		/// <summary>
 		/// Applied after LateUpdate runs.
 		/// </summary>
 		internal static void Postfix() {
-			var options = FastTrackOptions.Instance;
-			if (options.PickupOpts)
-				PathPatches.DupeBrainGroupUpdater.Instance?.EndBrainUpdate();
+			PathPatches.DupeBrainGroupUpdater.Instance?.EndBrainUpdate();
 		}
 	}
 }

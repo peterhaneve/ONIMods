@@ -31,11 +31,40 @@ namespace PeterHan.FastTrack {
 	/// </summary>
 	internal static class FetchManagerFastUpdate {
 		/// <summary>
+		/// A delegate to trigger OffsetTracker updates off the main thread.
+		/// </summary>
+		private delegate void UpdateOffsets(OffsetTracker table, int current_cell);
+
+		/// <summary>
+		/// Retrieves the offset tracker from a workable (like Pickupable or Storage).
+		/// </summary>
+		private static readonly IDetouredField<Workable, OffsetTracker> OFFSET_TRACKER =
+			PDetours.DetourField<Workable, OffsetTracker>("offsetTracker");
+
+		/// <summary>
 		/// Access the priority-based comparator of FetchManager.
 		/// </summary>
 		private static readonly IDetouredField<FetchManager, PickupComparer>
 			PICKUP_COMPARER = PDetours.DetourField<FetchManager, PickupComparer>(
 			"ComparerIncludingPriority");
+
+		/// <summary>
+		/// Gets the offsets from an offset tracker, without updating them which could trigger
+		/// nasty things like scene partitioner rebuilds.
+		/// </summary>
+		private static readonly IDetouredField<OffsetTracker, CellOffset[]> RAW_OFFSETS =
+			PDetours.DetourField<OffsetTracker, CellOffset[]>("offsets");
+
+		/// <summary>
+		/// A delegate to call the UpdateOffsets method manually of OffsetTracker.
+		/// </summary>
+		private static readonly UpdateOffsets UPDATE_OFFSETS = typeof(OffsetTracker).
+			Detour<UpdateOffsets>();
+
+		static FetchManagerFastUpdate() {
+			if (OFFSET_TRACKER == null || RAW_OFFSETS == null || UPDATE_OFFSETS == null)
+				PUtil.LogWarning("Unable to patch Navigator.GetNavigationCost");
+		}
 
 		/// <summary>
 		/// Applied before UpdatePickups runs. A more optimized UpdatePickups whose aggregate
@@ -55,8 +84,8 @@ namespace PeterHan.FastTrack {
 				if (target.CouldBePickedUpByMinion(worker_go)) {
 					// Look for cell cost, share costs across multiple queries to a cell
 					if (!pathCosts.TryGetValue(cell, out int cost))
-						pathCosts.Add(cell, cost = target.GetNavigationCost(worker_navigator,
-							cell));
+						pathCosts.Add(cell, cost = GetNavigationCost(worker_navigator,
+							target, cell));
 					// Exclude unreachable items
 					if (cost >= 0) {
 						int hash = fetchable.tagBitsHash;
@@ -87,6 +116,32 @@ namespace PeterHan.FastTrack {
 			canBePickedUp.Recycle();
 			// Prevent the original method from running
 			return false;
+		}
+
+		/// <summary>
+		/// A non-mutating version of Navigator.GetNavigationCost that can be run on
+		/// background threads.
+		/// </summary>
+		/// <param name="navigator">The navigator to calculate.</param>
+		/// <param name="destination">The destination to find the cost.</param>
+		/// <param name="cell">The workable's current cell.</param>
+		/// <returns>The navigation cost to the destination.</returns>
+		internal static int GetNavigationCost(Navigator navigator, Workable destination,
+				int cell) {
+			CellOffset[] offsets = null;
+			if (OFFSET_TRACKER != null && RAW_OFFSETS != null && UPDATE_OFFSETS != null) {
+				var offsetTracker = OFFSET_TRACKER.Get(destination);
+				if (offsetTracker != null && (offsets = RAW_OFFSETS.Get(offsetTracker)) ==
+						null) {
+#if DEBUG
+					PUtil.LogWarning("Updating Pickupable offsets!");
+#endif
+					UPDATE_OFFSETS.Invoke(offsetTracker, cell);
+					offsets = RAW_OFFSETS.Get(offsetTracker);
+				}
+			}
+			return (offsets == null) ? navigator.GetNavigationCost(cell) : navigator.
+				GetNavigationCost(cell, offsets);
 		}
 
 		/// <summary>

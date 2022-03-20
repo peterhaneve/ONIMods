@@ -34,7 +34,8 @@ namespace PeterHan.FastTrack.Metrics {
 	// Game#LateUpdate is 100-150ms/1000ms
 	// Game#Update is 200-250ms
 	// Pathfinding#UpdateNavGrids is <20ms
-	// StatusItemRenderer#RenderEveryTick could use some work but is only ~10ms (need to excise GetComponent calls which is a massive transpiler)
+	// StatusItemRenderer#RenderEveryTick could use some work but is only ~10ms
+	//  (need to excise GetComponent calls which is a massive transpiler)
 	// ElectricalUtilityNetwork#Update is ~10ms
 	// KBatchedAnimUpdater#LateUpdate is ~50ms
 	// AnimEventManager#Update is 20ms but not much can be done
@@ -43,8 +44,8 @@ namespace PeterHan.FastTrack.Metrics {
 	// KAnimBatchManager#UpdateDirty is 30ms+
 	// ConduitFlow.Sim200ms is <10ms
 	// ChoreConsumer.FindNextChore is <10ms
-	[HarmonyPatch(typeof(KAnimBatchManager), "Render")]
-	public static class TimePatch {
+	[HarmonyPatch(typeof(KBatchedAnimUpdater), "UpdateVisibility")]
+	public static class TimePatch1 {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
 		internal static void Prefix(ref Stopwatch __state) {
