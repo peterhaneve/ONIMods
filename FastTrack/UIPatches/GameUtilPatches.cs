@@ -44,56 +44,53 @@ namespace PeterHan.FastTrack.UIPatches {
 				string suffix;
 				float absMass = Mathf.Abs(mass);
 				mass = GameUtil.ApplyTimeSlice(mass, timeSlice);
-				if (includeSuffix) {
-					if (GameUtil.massUnit == GameUtil.MassUnit.Kilograms) {
-						if (massFormat == GameUtil.MetricMassFormat.UseThreshold) {
-							if (absMass > 0.0f) {
-								if (absMass < 5E-06f) {
-									suffix = STRINGS.UI.UNITSUFFIXES.MASS.MICROGRAM;
-									mass = Mathf.Floor(mass * 1.0E+09f);
-								} else if (absMass < 0.005f) {
-									mass *= 1000000.0f;
-									suffix = STRINGS.UI.UNITSUFFIXES.MASS.MILLIGRAM;
-								} else if (absMass < 5.0f) {
-									mass *= 1000.0f;
-									suffix = STRINGS.UI.UNITSUFFIXES.MASS.GRAM;
-								} else if (absMass < 5000.0f)
-									suffix = STRINGS.UI.UNITSUFFIXES.MASS.KILOGRAM;
-								else {
-									mass /= 1000.0f;
-									suffix = STRINGS.UI.UNITSUFFIXES.MASS.TONNE;
-								}
-							} else
+				if (GameUtil.massUnit == GameUtil.MassUnit.Kilograms) {
+					if (massFormat == GameUtil.MetricMassFormat.UseThreshold) {
+						if (absMass > 0.0f) {
+							if (absMass < 5E-06f) {
+								suffix = STRINGS.UI.UNITSUFFIXES.MASS.MICROGRAM;
+								mass = Mathf.Floor(mass * 1.0E+09f);
+							} else if (absMass < 0.005f) {
+								mass *= 1000000.0f;
+								suffix = STRINGS.UI.UNITSUFFIXES.MASS.MILLIGRAM;
+							} else if (absMass < 5.0f) {
+								mass *= 1000.0f;
+								suffix = STRINGS.UI.UNITSUFFIXES.MASS.GRAM;
+							} else if (absMass < 5000.0f)
 								suffix = STRINGS.UI.UNITSUFFIXES.MASS.KILOGRAM;
-						} else if (massFormat == GameUtil.MetricMassFormat.Kilogram)
-							suffix = STRINGS.UI.UNITSUFFIXES.MASS.KILOGRAM;
-						else if (massFormat == GameUtil.MetricMassFormat.Gram) {
-							mass *= 1000f;
-							suffix = STRINGS.UI.UNITSUFFIXES.MASS.GRAM;
-						} else if (massFormat == GameUtil.MetricMassFormat.Tonne) {
-							mass /= 1000f;
-							suffix = STRINGS.UI.UNITSUFFIXES.MASS.TONNE;
-						} else
-							suffix = STRINGS.UI.UNITSUFFIXES.MASS.TONNE;
-					} else {
-						mass /= 2.2f;
-						if (massFormat == GameUtil.MetricMassFormat.UseThreshold)
-							if (absMass < 5.0f && absMass > 0.001f) {
-								mass *= 256.0f;
-								suffix = STRINGS.UI.UNITSUFFIXES.MASS.DRACHMA;
-							} else {
-								mass *= 7000.0f;
-								suffix = STRINGS.UI.UNITSUFFIXES.MASS.GRAIN;
+							else {
+								mass /= 1000.0f;
+								suffix = STRINGS.UI.UNITSUFFIXES.MASS.TONNE;
 							}
-						else
-							suffix = STRINGS.UI.UNITSUFFIXES.MASS.POUND;
-					}
+						} else
+							suffix = STRINGS.UI.UNITSUFFIXES.MASS.KILOGRAM;
+					} else if (massFormat == GameUtil.MetricMassFormat.Kilogram)
+						suffix = STRINGS.UI.UNITSUFFIXES.MASS.KILOGRAM;
+					else if (massFormat == GameUtil.MetricMassFormat.Gram) {
+						mass *= 1000f;
+						suffix = STRINGS.UI.UNITSUFFIXES.MASS.GRAM;
+					} else if (massFormat == GameUtil.MetricMassFormat.Tonne) {
+						mass /= 1000f;
+						suffix = STRINGS.UI.UNITSUFFIXES.MASS.TONNE;
+					} else
+						suffix = STRINGS.UI.UNITSUFFIXES.MASS.TONNE;
 				} else {
-					suffix = "";
-					timeSlice = TimeSlice.None;
+					mass /= 2.2f;
+					if (massFormat == GameUtil.MetricMassFormat.UseThreshold)
+						if (absMass < 5.0f && absMass > 0.001f) {
+							mass *= 256.0f;
+							suffix = STRINGS.UI.UNITSUFFIXES.MASS.DRACHMA;
+						} else {
+							mass *= 7000.0f;
+							suffix = STRINGS.UI.UNITSUFFIXES.MASS.GRAIN;
+						}
+					else
+						suffix = STRINGS.UI.UNITSUFFIXES.MASS.POUND;
 				}
-				__result = new StringBuilder(16).AppendFormat(floatFormat, mass).
-					Append(suffix).AppendTimeSlice(timeSlice).ToString();
+				var sb = new StringBuilder(16).AppendFormat(floatFormat, mass);
+				if (includeSuffix)
+					sb.Append(suffix).AppendTimeSlice(timeSlice);
+				__result = sb.ToString();
 			}
 			return false;
 		}

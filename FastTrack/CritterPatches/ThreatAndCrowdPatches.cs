@@ -68,24 +68,24 @@ namespace PeterHan.FastTrack.CritterPatches {
 				cramped = false;
 			} else {
 				var fishMonitor = smi.GetSMI<FishOvercrowdingMonitor.Instance>();
+				int eggs = 0, critters = 0;
 				// Voles/burrowed Hatches cannot be confined, otherwise check for either
 				// no room (stuck in wall) or tiny room < 1 critter space
 				confined = !prefabID.HasAnyTags_AssumeLaundered(ref IMMUNE_CONFINEMENT) &&
 					(room == null || room.numCells < requiredSpace);
-				if (room == null) {
-					cramped = false;
-					if (fishMonitor == null)
-						overcrowded = false;
-					else {
-						int fishCount = fishMonitor.fishCount;
-						overcrowded = fishCount > 0 && fishMonitor.cellCount < requiredSpace *
-							fishCount;
-					}
-				} else {
-					int eggs = room.eggs.Count, critters = room.creatures.Count;
-					cramped = eggs > 0 && room.numCells < (eggs + critters) * requiredSpace;
-					overcrowded = critters > 1 && room.numCells < requiredSpace * critters;
+				if (room != null) {
+					eggs = room.eggs.Count;
+					critters = room.creatures.Count;
 				}
+				if (fishMonitor != null) {
+					int fishCount = fishMonitor.fishCount;
+					overcrowded = fishCount > 0 && fishMonitor.cellCount < requiredSpace *
+						fishCount;
+				} else
+					overcrowded = room != null && critters > 1 && room.numCells <
+						requiredSpace * critters;
+				cramped = room != null && eggs > 0 && room.numCells < (eggs + critters) *
+					requiredSpace;
 			}
 			return overcrowded;
 		}

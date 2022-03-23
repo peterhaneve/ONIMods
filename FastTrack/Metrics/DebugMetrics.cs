@@ -200,7 +200,8 @@ namespace PeterHan.FastTrack.Metrics {
 #endif
 				brainStats.Append("Brain Stats:");
 				foreach (var pair in BRAIN_LOAD)
-					brainStats.Append(pair.Key).Append(" [").Append(pair.Value).Append(']');
+					brainStats.Append(' ').Append(pair.Key).Append('[').Append(pair.Value).
+						Append(']');
 				PUtil.LogDebug(brainStats);
 				PUtil.LogDebug("Path Probes: executed {0:N0}us, saved {1:N0}us ({2:N0}/frame)".
 					F(probeTotal, probeSaved, (double)probeSaved / Math.Max(1, probeCount)));

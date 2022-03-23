@@ -19,6 +19,7 @@
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -103,11 +104,9 @@ namespace PeterHan.FastTrack.UIPatches {
 	}
 
 	/// <summary>
-	/// Applied to InterfaceTool to replace the monster LateUpdate with a far more efficient
-	/// alternative. Only really makes a difference on large piles, but does matter.
+	/// Patches for slow code in InterfaceTool.
 	/// </summary>
-	[HarmonyPatch(typeof(InterfaceTool), nameof(InterfaceTool.LateUpdate))]
-	public static class InterfaceTool_LateUpdate_Patch {
+	public static class InterfaceToolPatches {
 		/// <summary>
 		/// Calls through to InterfaceTool.UpdateHoverElements which is subclassed by each
 		/// tool (like SelectToolHoverTextCard which Aze considers to be cursed).
@@ -115,10 +114,14 @@ namespace PeterHan.FastTrack.UIPatches {
 		private delegate void UpdateHoverElements(InterfaceTool instance,
 			List<KSelectable> hits);
 
+		/// <summary>
+		/// Avoids allocating a new Comparison every frame.
+		/// </summary>
+		private static readonly Comparison<KSelectable> COMPARE_SELECTABLES =
+			CompareSelectables;
+
 		private static readonly UpdateHoverElements UPDATE_HOVER_ELEMENTS =
 			typeof(InterfaceTool).Detour<UpdateHoverElements>();
-
-		internal static bool Prepare() => FastTrackOptions.Instance.InfoCardOpts;
 
 		/// <summary>
 		/// Adds the intersections of existing status items to the list by distance.
@@ -139,18 +142,6 @@ namespace PeterHan.FastTrack.UIPatches {
 					// Distance is always -100
 					seen[selectable] = intersection.distance;
 			intersections.Recycle();
-		}
-
-		/// <summary>
-		/// Clears the hovered object of an interface tool.
-		/// </summary>
-		private static void ClearHover(InterfaceTool instance) {
-			var hover = instance.hover;
-			if (hover != null) {
-				instance.hover = null;
-				hover.Unhover();
-				Game.Instance.Trigger((int)GameHashes.HighlightObject, null);
-			}
 		}
 
 		/// <summary>
@@ -183,9 +174,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="coords">The raw mouse coordinates.</param>
 		/// <param name="hits">The location where all hits will be stored.</param>
 		/// <param name="compareSet">The set of objects to compare.</param>
-		/// <param name="layerMask">The mask of objects that should not be selected.</param>
 		private static void FindSelectables(int cell, Vector3 coords, List<KSelectable> hits,
-				ISet<Component> compareSet, int layerMask) {
+				ISet<Component> compareSet) {
 			var gsp = GameScenePartitioner.Instance;
 			var seen = DictionaryPool<KSelectable, float, SelectTool>.Allocate();
 			var xy = new Vector2(coords.x, coords.y);
@@ -217,19 +207,9 @@ namespace PeterHan.FastTrack.UIPatches {
 				hits.Add(selectable);
 			}
 			seen.Recycle();
-			// Sort the hits; compares fewer objects at the expense of comparing a
+			// Sort the hits; compares fewer objects at the expense of comparing a slightly
 			// different behaviour (the original compares the collider)
-			hits.Sort(CompareSelectables);
-		}
-
-		/// <summary>
-		/// Gets the mouse position on screen.
-		/// </summary>
-		/// <param name="coords">The location where the raw coordinates will be stored.</param>
-		/// <returns>The mouse position as a cell, or Grid.InvalidCell if it is not valid.</returns>
-		private static int GetMousePosition(out Vector3 coords) {
-			coords = Camera.main.ScreenToWorldPoint(KInputManager.GetMousePos());
-			return Grid.PosToCell(coords);
+			hits.Sort(COMPARE_SELECTABLES);
 		}
 
 		/// <summary>
@@ -237,59 +217,131 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="cell">The cell that the cursor occupies.</param>
 		/// <param name="coords">The raw mouse coordinates.</param>
-		/// <param name="hits">The location where the hits will be stored.</param>
 		/// <param name="previousItems">The previously selected items.</param>
-		/// <param name="hitCycleCount">The cycle count of which object is selected.</param>
-		/// <param name="layerMask">The mask of objects that should not be selected.</param>
-		/// <returns>The object that should be currently selected.</returns>
-		private static KSelectable GetSelectablesUnderCursor(int cell, Vector3 coords,
-				List<KSelectable> hits, HashSet<Component> previousItems, int layerMask,
-				ref int hitCycleCount) {
+		/// <param name="hits">The location where the hits will be stored.</param>
+		/// <returns>true to reset the cycle count, or false to leave it as is.</returns>
+		private static bool GetAllSelectables(int cell, Vector3 coords,
+				HashSet<Component> previousItems, List<KSelectable> hits) {
 			var compareSet = HashSetPool<Component, InterfaceTool>.Allocate();
-			KSelectable result = null;
+			bool reset = false;
 			if (Grid.IsVisible(cell))
-				FindSelectables(cell, coords, hits, compareSet, layerMask);
-			if (compareSet.Count < 1) {
+				FindSelectables(cell, coords, hits, compareSet);
+			if (compareSet.Count < 1)
 				previousItems.Clear();
-				hitCycleCount = 0;
-			} else {
-				int n = hits.Count;
-				if (!previousItems.Equals(compareSet)) {
-					previousItems.Clear();
-					// Copy for next time
-					foreach (var selectable in hits)
-						previousItems.Add(selectable);
-					hitCycleCount = 0;
-				}
-				// hits is already sorted, nice
-				for (int i = 0; i < n && result == null; i++) {
-					var candidate = hits[i];
-					if (((1 << candidate.gameObject.layer) & layerMask) != 0)
-						result = candidate;
-				}
+			else if (!previousItems.SetEquals(compareSet)) {
+				reset = true;
+				previousItems.Clear();
+				// Copy for next time
+				previousItems.UnionWith(compareSet);
 			}
 			compareSet.Recycle();
+			return reset;
+		}
+
+		/// <summary>
+		/// Retrieves the first object under the cursor. Faster than GetIndexedSelectable with
+		/// an argument of 0.
+		/// </summary>
+		/// <param name="hits">The list of sorted hits.</param>
+		/// <param name="layerMask">The mask of objects that should not be selected.</param>
+		/// <returns>The object that would be selected.</returns>
+		private static KSelectable GetFirstSelectable(List<KSelectable> hits, int layerMask) {
+			KSelectable result = null;
+			// hits is already sorted and non-null
+			foreach (var item in hits)
+				if (((1 << item.gameObject.layer) & layerMask) != 0) {
+					result = item;
+					break;
+				}
 			return result;
 		}
 
 		/// <summary>
-		/// Applied before LateUpdate runs.
+		/// Retrieves the component at the specified index when paging through info cards.
 		/// </summary>
-		internal static bool Prefix(InterfaceTool __instance, ref bool ___playedSoundThisFrame,
-				bool ___populateHitsList, bool ___isAppFocused, ref int ___hitCycleCount,
-				KSelectable ___hoverOverride, HashSet<Component> ___prevIntersectionGroup,
-				int ___layerMask, List<KSelectable> ___hits) {
-			if (!___populateHitsList)
-				UPDATE_HOVER_ELEMENTS(__instance, null);
-			else if (___isAppFocused) {
-				int cell = GetMousePosition(out Vector3 coords);
-				// The game uses different math to arrive at the same answer in two ways...
-				if (Grid.IsValidCell(cell)) {
+		/// <param name="hits">The list of sorted hits.</param>
+		/// <param name="index">The index to look up.</param>
+		/// <param name="layerMask">The mask of objects that should not be selected.</param>
+		/// <param name="lastSelected">The object last selected by this method.</param>
+		/// <returns>The object that would be selected.</returns>
+		private static KSelectable GetIndexedSelectable(List<KSelectable> hits, ref int index,
+				int layerMask, KSelectable lastSelected) {
+			var filteredHits = ListPool<KSelectable, InterfaceTool>.Allocate();
+			KSelectable result = null;
+			// hits is already sorted and non-null
+			foreach (var item in hits)
+				if (((1 << item.gameObject.layer) & layerMask) != 0)
+					filteredHits.Add(item);
+			int n = filteredHits.Count;
+			if (n > 0) {
+				// Since index has to be modulo by number, have to make the full list even if
+				// the item to select could be determined partway through
+				int newIndex = index % n;
+				if (lastSelected == null || filteredHits[newIndex] != lastSelected) {
+					index = 0;
+					newIndex = 0;
+				} else {
+					// index is allowed to keep increasing, even if n changes
+					index++;
+					newIndex = (newIndex + 1) % n;
+				}
+				result = filteredHits[newIndex];
+			}
+			filteredHits.Recycle();
+			return result;
+		}
+
+		/// <summary>
+		/// Applied to InterfaceTool to replace the monster LateUpdate with a far more efficient
+		/// alternative. Only really makes a difference on large piles, but does matter.
+		/// </summary>
+		[HarmonyPatch(typeof(InterfaceTool), nameof(InterfaceTool.LateUpdate))]
+		internal static class LateUpdate_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.InfoCardOpts;
+
+			/// <summary>
+			/// Clears the hovered object of an interface tool.
+			/// </summary>
+			private static void ClearHover(InterfaceTool instance) {
+				var hover = instance.hover;
+				if (hover != null) {
+					instance.hover = null;
+					hover.Unhover();
+					Game.Instance.Trigger((int)GameHashes.HighlightObject, null);
+				}
+			}
+
+			/// <summary>
+			/// Gets the mouse position on screen.
+			/// </summary>
+			/// <param name="coords">The location where the raw coordinates will be stored.</param>
+			/// <returns>The mouse position as a cell, or Grid.InvalidCell if it is not valid.</returns>
+			private static int GetMousePosition(out Vector3 coords) {
+				coords = Camera.main.ScreenToWorldPoint(KInputManager.GetMousePos());
+				return Grid.PosToCell(coords);
+			}
+
+			/// <summary>
+			/// Applied before LateUpdate runs.
+			/// </summary>
+			internal static bool Prefix(InterfaceTool __instance, List<KSelectable> ___hits,
+					bool ___populateHitsList, bool ___isAppFocused, ref int ___hitCycleCount,
+					KSelectable ___hoverOverride, HashSet<Component> ___prevIntersectionGroup,
+					int ___layerMask, ref bool ___playedSoundThisFrame) {
+				int cell;
+				if (!___populateHitsList)
+					UPDATE_HOVER_ELEMENTS(__instance, null);
+				else if (___isAppFocused && Grid.IsValidCell(cell = GetMousePosition(
+						out Vector3 coords))) {
+					bool soundPlayed = false;
+					// The game uses different math to arrive at the same answer in two ways...
 					___hits.Clear();
 					if (___hoverOverride != null)
 						___hits.Add(___hoverOverride);
-					var objectUnderCursor = GetSelectablesUnderCursor(cell, coords, ___hits,
-						___prevIntersectionGroup, ___layerMask, ref ___hitCycleCount);
+					// If the items have changed, reset cycle count
+					if (GetAllSelectables(cell, coords, ___prevIntersectionGroup, ___hits))
+						___hitCycleCount = 0;
+					var objectUnderCursor = GetFirstSelectable(___hits, ___layerMask);
 					UPDATE_HOVER_ELEMENTS(__instance, ___hits);
 					if (!__instance.hasFocus && ___hoverOverride == null)
 						ClearHover(__instance);
@@ -299,26 +351,57 @@ namespace PeterHan.FastTrack.UIPatches {
 							Game.Instance.Trigger((int)GameHashes.HighlightStatusItem,
 								objectUnderCursor.gameObject);
 							objectUnderCursor.Hover(!___playedSoundThisFrame);
-							// Dead store of ___playedSoundThisFrame to true
+							// This store was dead in the base game, but the intent is
+							// obviously to avoid playing more than one sound per frame...
+							soundPlayed = true;
 						}
 					}
-					___playedSoundThisFrame = false;
+					___playedSoundThisFrame = soundPlayed;
 				}
+				// Stop the slow original method from running
+				return false;
 			}
-			// Stop the slow original method from running
-			return false;
+
+			/// <summary>
+			/// Sets the hovered object of an interface tool.
+			/// </summary>
+			private static void SetHover(InterfaceTool instance, KSelectable newHover) {
+				var hover = instance.hover;
+				if (hover != null) {
+					hover.Unhover();
+					Game.Instance.Trigger((int)GameHashes.HighlightObject, null);
+				}
+				instance.hover = newHover;
+			}
 		}
 
 		/// <summary>
-		/// Sets the hovered object of an interface tool.
+		/// Applied to SelectTool to reuse our logic for determining objects that were clicked
+		/// instead of the slow vanilla GetObjectUnderCursor.
 		/// </summary>
-		private static void SetHover(InterfaceTool instance, KSelectable newHover) {
-			var hover = instance.hover;
-			if (hover != null) {
-				hover.Unhover();
-				Game.Instance.Trigger((int)GameHashes.HighlightObject, null);
+		[HarmonyPatch(typeof(SelectTool), nameof(SelectTool.OnLeftClickDown))]
+		internal static class OnLeftClickDown_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.InfoCardOpts;
+
+			/// <summary>
+			/// Applied before OnLeftClickDown runs.
+			/// </summary>
+			internal static bool Prefix(Vector3 cursor_pos, ref int ___selectedCell,
+					SelectTool __instance, List<KSelectable> ___hits, int ___layerMask,
+					HashSet<Component> ___prevIntersectionGroup, ref int ___hitCycleCount,
+					KSelectable ___selected) {
+				int cell = Grid.PosToCell(cursor_pos);
+				if (Grid.IsValidCell(cell)) {
+					int index = ___hitCycleCount;
+					if (GetAllSelectables(cell, cursor_pos, ___prevIntersectionGroup, ___hits))
+						index = 0;
+					__instance.Select(GetIndexedSelectable(___hits, ref index, ___layerMask,
+						___selected), false);
+					___hitCycleCount = index;
+				}
+				___selectedCell = cell;
+				return false;
 			}
-			instance.hover = newHover;
 		}
 	}
 }
