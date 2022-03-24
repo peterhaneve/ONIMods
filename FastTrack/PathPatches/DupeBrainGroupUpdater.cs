@@ -128,11 +128,6 @@ namespace PeterHan.FastTrack.PathPatches {
 		private readonly IList<FetchablesByPrefabId> byId;
 
 		/// <summary>
-		/// How many pickup compilations are complete.
-		/// </summary>
-		private volatile int completed;
-
-		/// <summary>
 		/// The current DupeBrainGroup used for updates.
 		/// </summary>
 		internal readonly object dupeBrainGroup;
@@ -146,11 +141,6 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// Fired when it is safe to mutate the offset tables off the main thread.
 		/// </summary>
 		private readonly EventWaitHandle onFetchComplete;
-
-		/// <summary>
-		/// Fired when the pickups are all compiled.
-		/// </summary>
-		private readonly EventWaitHandle onPickupComplete;
 
 		/// <summary>
 		/// Compares pickups for sorting.
@@ -170,13 +160,11 @@ namespace PeterHan.FastTrack.PathPatches {
 
 		private DupeBrainGroupUpdater(object dupeBrainGroup) {
 			byId = new List<FetchablesByPrefabId>(64);
-			completed = 0;
 			this.dupeBrainGroup = dupeBrainGroup ?? throw new ArgumentNullException(nameof(
 				dupeBrainGroup));
 			getInitialProbeCount = BRAIN_GROUP.CreateDelegate<Func<int>>("InitialProbeCount",
 				dupeBrainGroup);
 			onFetchComplete = new AutoResetEvent(false);
-			onPickupComplete = new AutoResetEvent(false);
 			pickupComparer = COMPARER_NO_PRIORITY.Get(null);
 			runAsyncPathProbe = ASYNC_PATH_PROBE.CreateDelegate<System.Action>(
 				dupeBrainGroup);
@@ -197,10 +185,8 @@ namespace PeterHan.FastTrack.PathPatches {
 
 		public void Dispose() {
 			FinishFetches();
-			FinishPickups();
 			Cleanup();
 			onFetchComplete.Dispose();
-			onPickupComplete.Dispose();
 			byId.Clear();
 			updatingPickups.Clear();
 		}
@@ -213,7 +199,6 @@ namespace PeterHan.FastTrack.PathPatches {
 			var inst = GlobalChoreProvider.Instance;
 			if (updatingPickups.Count > 0) {
 				// Wait out the pickups update
-				onPickupComplete.WaitOne(FastTrackMod.MAX_TIMEOUT >> 1);
 				onFetchComplete.WaitOne(FastTrackMod.MAX_TIMEOUT >> 1);
 				if (fm != null && inst != null) {
 					var fetches = inst.fetches;
@@ -249,13 +234,6 @@ namespace PeterHan.FastTrack.PathPatches {
 		}
 
 		/// <summary>
-		/// Called when all pickups are up to date.
-		/// </summary>
-		private void FinishPickups() {
-			onPickupComplete.Set();
-		}
-
-		/// <summary>
 		/// Populates the list of Duplicant brains to be updated.
 		/// </summary>
 		/// <param name="toUpdate">The location where the brains to update will be populated.</param>
@@ -282,22 +260,18 @@ namespace PeterHan.FastTrack.PathPatches {
 		}
 
 		/// <summary>
-		/// Called when a pickup task completes, to trigger an event when all finish.
-		/// </summary>
-		internal void NextPickup() {
-			int n = Interlocked.Increment(ref completed);
-			if (AsyncJobManager.Instance == null || n >= updatingPickups.Count)
-				FinishPickups();
-		}
-
-		/// <summary>
 		/// Releases the task to collect fetch errands, which should only be run during
-		/// kanims.
+		/// kanim updates (other RenderEveryTicks apparently can update pickupables!)
 		/// </summary>
 		internal void ReleaseFetches() {
 			var inst = AsyncJobManager.Instance;
 			if (inst != null) {
-				onFetchComplete.Reset();
+				if (updatingPickups.Count > 0) {
+					onFetchComplete.Reset();
+					foreach (var task in updatingPickups)
+						inst.Run(task);
+				}
+				// This will not start until all the updatingPickups are completed
 				inst.Run(new FinishFetchesWork(this));
 			}
 		}
@@ -321,23 +295,20 @@ namespace PeterHan.FastTrack.PathPatches {
 			updatingPickups.Clear();
 			if (GetBrainsToUpdate(update) > 0 && fm != null) {
 				// Brains.... Brains!!!!
-				completed = 0;
 				n = fm.prefabIdToFetchables.Count;
 				foreach (var brain in update) {
 					var nav = brain.GetComponent<Navigator>();
 					if (nav != null) {
 						// What PathProberSensor did
 						nav.UpdateProbe(false);
-						updatingPickups.Add(new CompilePickupsWork(this, brain, nav, n));
+						if (inst != null)
+							updatingPickups.Add(new CompilePickupsWork(this, brain, nav, n));
 					}
 				}
 				if (updatingPickups.Count > 0 && inst != null) {
 					foreach (var pair in fm.prefabIdToFetchables)
 						byId.Add(pair.Value);
-					onPickupComplete.Reset();
 					inst.Run(new UpdateOffsetTablesWork(this));
-					foreach (var task in updatingPickups)
-						inst.Run(task);
 				}
 			}
 			update.Recycle();
@@ -404,7 +375,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			}
 
 			public void TriggerAbort() {
-				updater.FinishPickups();
+				OffsetTracker.isExecutingWithinJob = false;
 			}
 
 			public void TriggerComplete() {
@@ -413,7 +384,6 @@ namespace PeterHan.FastTrack.PathPatches {
 					pickups.AddRange(pair.finalPickups);
 				pickups.Sort(updater.pickupComparer);
 				OffsetTracker.isExecutingWithinJob = false;
-				updater.NextPickup();
 			}
 
 			public void TriggerStart() {

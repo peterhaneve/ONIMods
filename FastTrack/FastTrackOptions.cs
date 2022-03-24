@@ -51,7 +51,7 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool AsyncPathProbe { get; set; }
 
-		//[Option("Cache Paths", "Cache frequently used paths and reuse them in future calculations." + PERF_MEDIUM, "Duplicants")]
+		[Option("Cache Paths", "Cache frequently used paths and reuse them in future calculations." + PERF_MEDIUM, "Duplicants")]
 		[JsonProperty]
 		public bool CachePaths { get; set; }
 
@@ -145,7 +145,7 @@ namespace PeterHan.FastTrack {
 
 		public FastTrackOptions() {
 			AsyncPathProbe = true;
-			CachePaths = false;
+			CachePaths = true;
 			ConduitOpts = false;
 			CritterConsumers = true;
 			DisableConduitAnimation = ConduitAnimationQuality.Reduced;

@@ -62,6 +62,35 @@ namespace PeterHan.FastTrack.VisualPatches {
 	}
 
 	/// <summary>
+	/// Applied to ClusterCometDetector.Instance to avoid sending logic signals every 200ms
+	/// unless something has actually changed.
+	/// </summary>
+	[HarmonyPatch(typeof(ClusterCometDetector.Instance), nameof(ClusterCometDetector.Instance.
+		UpdateDetectionState))]
+	public static class ClusterCometDetector_Instance_UpdateDetectionState_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+
+		/// <summary>
+		/// Applied before UpdateDetectionState runs.
+		/// </summary>
+		internal static bool Prefix(ClusterCometDetector.Instance __instance,
+				bool currentDetection) {
+			if (__instance != null) {
+				var prefabID = __instance.GetComponent<KPrefabID>();
+				bool hasTag = prefabID.HasTag(GameTags.Detecting);
+				if (currentDetection && !hasTag)
+					prefabID.AddTag(GameTags.Detecting, false);
+				else if (!currentDetection && hasTag)
+					prefabID.RemoveTag(GameTags.Detecting);
+				if (currentDetection != hasTag)
+					// State changed, this would trigger a state transition anyways
+					__instance.SetLogicSignal(currentDetection);
+			}
+			return false;
+		}
+	}
+
+	/// <summary>
 	/// Applied to PopFXManager to hush the torrent of popups at the start of the game.
 	/// </summary>
 	[HarmonyPatch]

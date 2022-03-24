@@ -89,10 +89,8 @@ namespace PeterHan.FastTrack {
 		internal static void OnEndGame() {
 			var options = FastTrackOptions.Instance;
 			ConduitPatches.ConduitFlowVisualizerRenderer.Cleanup();
-			if (options.CachePaths) {
-				PathPatches.NavGrid_InitializeGraph_Patch.Cleanup();
+			if (options.CachePaths)
 				PathPatches.PathCacher.Cleanup();
-			}
 			// FastCellChangeMonitor did not help, because pretty much all updates were to
 			// things that actually had a listener
 			if (options.UnstackLights)
@@ -144,7 +142,7 @@ namespace PeterHan.FastTrack {
 			var inst = Game.Instance;
 			var options = FastTrackOptions.Instance;
 			if (options.CachePaths)
-				PathPatches.NavGrid_InitializeGraph_Patch.Init();
+				PathPatches.PathCacher.Init();
 			// Slices updates to Duplicant sensors
 			if (inst != null) {
 				var go = inst.gameObject;
@@ -165,6 +163,7 @@ namespace PeterHan.FastTrack {
 			ConduitPatches.ConduitFlowVisualizerRenderer.Init();
 			if (options.UnstackLights)
 				VisualPatches.LightBufferManager.Init();
+			VisualPatches.FullScreenDialogPatches.Init();
 		}
 
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {

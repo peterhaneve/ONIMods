@@ -22,6 +22,7 @@ using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Reflection.Emit;
 using UnityEngine;
 
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
@@ -108,6 +109,12 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// </summary>
 	public static class InterfaceToolPatches {
 		/// <summary>
+		/// The minimal prototype for InterfaceTool.GetObjectUnderCursor.
+		/// </summary>
+		private delegate KSelectable GetObjectUnderCursor(InterfaceTool instance,
+			bool cycleSelection);
+
+		/// <summary>
 		/// Calls through to InterfaceTool.UpdateHoverElements which is subclassed by each
 		/// tool (like SelectToolHoverTextCard which Aze considers to be cursed).
 		/// </summary>
@@ -119,6 +126,14 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		private static readonly Comparison<KSelectable> COMPARE_SELECTABLES =
 			CompareSelectables;
+
+		/// <summary>
+		/// Target the KSelectable version of the generic method InterfaceTool.
+		/// GetObjectUnderCursor.
+		/// </summary>
+		private static readonly MethodInfo GET_OBJECT_UNDER_CURSOR = typeof(InterfaceTool).
+			GetMethodSafe("GetObjectUnderCursor", false, PPatchTools.AnyArguments)?.
+			MakeGenericMethod(typeof(KSelectable));
 
 		private static readonly UpdateHoverElements UPDATE_HOVER_ELEMENTS =
 			typeof(InterfaceTool).Detour<UpdateHoverElements>();
@@ -292,6 +307,30 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
+		/// Applied to InterfaceTool to allow Better Info Cards to work around the replacement
+		/// for GetObjectUnderCursor.
+		/// </summary>
+		[HarmonyPatch]
+		internal static class BetterInfoCardsHack_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.InfoCardOpts;
+
+			/// <summary>
+			/// Target the KSelectable version of this generic method.
+			/// </summary>
+			internal static MethodBase TargetMethod() {
+				return GET_OBJECT_UNDER_CURSOR;
+			}
+
+			/// <summary>
+			/// Applied before GetObjectUnderCursor runs.
+			/// </summary>
+			internal static TranspiledMethod Transpiler(TranspiledMethod _) {
+				yield return new CodeInstruction(OpCodes.Ldnull);
+				yield return new CodeInstruction(OpCodes.Ret);
+			}
+		}
+
+		/// <summary>
 		/// Applied to InterfaceTool to replace the monster LateUpdate with a far more efficient
 		/// alternative. Only really makes a difference on large piles, but does matter.
 		/// </summary>
@@ -381,6 +420,9 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(SelectTool), nameof(SelectTool.OnLeftClickDown))]
 		internal static class OnLeftClickDown_Patch {
+			private static readonly GetObjectUnderCursor GET_OBJECT_DETOUR =
+				GET_OBJECT_UNDER_CURSOR.Detour<GetObjectUnderCursor>();
+
 			internal static bool Prepare() => FastTrackOptions.Instance.InfoCardOpts;
 
 			/// <summary>
@@ -395,9 +437,16 @@ namespace PeterHan.FastTrack.UIPatches {
 					int index = ___hitCycleCount;
 					if (GetAllSelectables(cell, cursor_pos, ___prevIntersectionGroup, ___hits))
 						index = 0;
-					__instance.Select(GetIndexedSelectable(___hits, ref index, ___layerMask,
-						___selected), false);
+					var target = GetIndexedSelectable(___hits, ref index, ___layerMask,
+						___selected);
 					___hitCycleCount = index;
+					// Try Aze's override
+					if (GET_OBJECT_DETOUR != null) {
+						var newTarget = GET_OBJECT_DETOUR.Invoke(__instance, true);
+						if (newTarget != null)
+							target = newTarget;
+					}
+					__instance.Select(target, false);
 				}
 				___selectedCell = cell;
 				return false;

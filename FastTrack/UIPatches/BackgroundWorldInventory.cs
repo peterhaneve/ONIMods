@@ -21,13 +21,11 @@ using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
-using System.Reflection.Emit;
 using System.Threading;
 
 using AmountsDict = System.Collections.Generic.IDictionary<Tag, float>;
 using InventoryDict = System.Collections.Generic.IDictionary<Tag, System.Collections.Generic.
 	HashSet<Pickupable>>;
-using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>

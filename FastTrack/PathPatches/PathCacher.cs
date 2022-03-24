@@ -16,12 +16,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
 using System;
-using System.Collections.Generic;
-
-using PathFlags = PathFinder.PotentialPath.Flags;
+using System.Collections.Concurrent;
+using System.Threading;
 
 namespace PeterHan.FastTrack.PathPatches {
 	/// <summary>
@@ -30,20 +27,9 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// </summary>
 	public sealed class PathCacher {
 		/// <summary>
-		/// Retrieves the path finder abilities from the current navigator.
-		/// </summary>
-		private static readonly IDetouredField<Navigator, PathFinderAbilities> ABILITIES =
-			PDetours.DetourField<Navigator, PathFinderAbilities>("abilities");
-
-		/// <summary>
 		/// Map path cache IDs to path cache values.
 		/// </summary>
-		private static IDictionary<PathProber, PathCacher> pathCache;
-
-		/// <summary>
-		/// PathFinder.InvalidHandle is not even readonly!
-		/// </summary>
-		public const int InvalidHandle = -1;
+		private static ConcurrentDictionary<PathProber, PathCacher> pathCache;
 
 		/// <summary>
 		/// Avoid leaking the PathProbers when the game ends.
@@ -57,14 +43,14 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// </summary>
 		/// <param name="prober">The path prober that was destroyed.</param>
 		internal static void Cleanup(PathProber prober) {
-			pathCache.Remove(prober);
+			pathCache.TryRemove(prober, out _);
 		}
 
 		/// <summary>
 		/// When the game is started, reset the path prober caches.
 		/// </summary>
 		internal static void Init() {
-			pathCache = new Dictionary<PathProber, PathCacher>(128);
+			pathCache = new ConcurrentDictionary<PathProber, PathCacher>(4, 128);
 		}
 
 		/// <summary>
@@ -75,72 +61,44 @@ namespace PeterHan.FastTrack.PathPatches {
 		internal static PathCacher Lookup(PathProber prober) {
 			if (prober == null)
 				throw new ArgumentNullException("prober");
-			if (!pathCache.TryGetValue(prober, out PathCacher cache))
-				pathCache.Add(prober, cache = new PathCacher());
-			return cache;
+			return pathCache.GetOrAdd(prober, NewCacher);
 		}
 
 		/// <summary>
-		/// The cell where the navigator was standing when the cache was last valid.
+		/// Generates a new PathCacher.
 		/// </summary>
-		private int cell;
+		private static PathCacher NewCacher(PathProber _) => new PathCacher();
 
 		/// <summary>
-		/// The global serial number from NavFences (for the nav type in use) when the cache
-		/// was last valid.
+		/// Set to true if the path was forced invalid.
 		/// </summary>
-		private long globalSerial;
-
-		/// <summary>
-		/// The flags used when evaluating a path when the cache was last valid.
-		/// </summary>
-		private PathFlags flags;
+		private volatile int force;
 
 		private PathCacher() {
-			cell = -1;
-			flags = PathFlags.None;
-			globalSerial = 0L;
+			force = 0;
 		}
 
 		/// <summary>
 		/// Checks to see if this cached path is still valid. If not, the cached parameters are
 		/// updated assuming that pathing is recalculated.
 		/// </summary>
-		/// <param name="navigator">The navigator to use.</param>
-		/// <param name="newCell">The starting cell.</param>
 		/// <returns>true if cached information can be used, or false otherwise.</returns>
-		public bool CheckAndUpdate(Navigator navigator, int newCell) {
-			if (navigator == null)
-				throw new ArgumentNullException("navigator");
-			bool ok = false;
-			var newFlags = navigator.flags;
-			var navGrid = navigator.NavGrid;
-			if (NavFences.AllFences.TryGetValue(navGrid.id, out NavFences fences)) {
-				ok = flags == newFlags && fences.IsPathCurrent(globalSerial, ref navigator.
-					path) && PathFinder.ValidatePath(navGrid, ABILITIES.Get(navigator),
-					ref navigator.path);
-				if (!ok) {
-					// Guaranteed out of date
-					flags = newFlags;
-					globalSerial = fences.CurrentSerial;
-				}
-				cell = newCell;
-			}
-			return ok;
+		public bool CheckAndMarkValid() {
+			return Interlocked.Exchange(ref force, 0) == 0;
 		}
 
-		public override bool Equals(object obj) {
-			return obj is PathCacher other && other.cell == cell && other.flags == flags &&
-				other.globalSerial == globalSerial;
+		/// <summary>
+		/// Marks the cached path as invalid.
+		/// </summary>
+		public void MarkInvalid() {
+			force = 1;
 		}
 
-		public override int GetHashCode() {
-			return globalSerial.GetHashCode() * 37 + cell;
-		}
-
-		public override string ToString() {
-			return "PathCacher[cell={0:D},serial={1:D},flags={2}]".F(cell, globalSerial,
-				flags);
+		/// <summary>
+		/// Marks the cached path as valid.
+		/// </summary>
+		public void MarkValid() {
+			force = 0;
 		}
 	}
 }

@@ -193,11 +193,9 @@ namespace PeterHan.FastTrack.Metrics {
 				var brainStats = new System.Text.StringBuilder(128);
 				PUtil.LogDebug("Methods Run: {0}(s), {1}(t), {2}(t)".F(SENSORS, TRACKED[0],
 					TRACKED[1]));
-#if false
 				PUtil.LogDebug("Path Cache: {0:D}/{1:D} hits, {2:F1}%".F(cacheHits, cacheTotal,
 					cacheHits * 100.0f / Math.Max(1, cacheTotal)));
 				ResetPathCache();
-#endif
 				brainStats.Append("Brain Stats:");
 				foreach (var pair in BRAIN_LOAD)
 					brainStats.Append(' ').Append(pair.Key).Append('[').Append(pair.Value).

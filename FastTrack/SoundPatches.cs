@@ -240,6 +240,8 @@ namespace PeterHan.FastTrack {
 				PPatchTools.AnyArguments);
 			yield return typeof(KFMOD).GetMethodSafe(nameof(KFMOD.RenderEveryTick), true,
 				PPatchTools.AnyArguments);
+			yield return typeof(SoundEvent).GetMethodSafe(nameof(SoundEvent.PlaySound), false,
+				typeof(AnimEventManager.EventPlayerData), typeof(string));
 		}
 
 		/// <summary>
