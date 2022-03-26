@@ -75,7 +75,8 @@ namespace PeterHan.FastTrack.PathPatches {
 		private volatile int force;
 
 		private PathCacher() {
-			force = 0;
+			// Start out dirty
+			force = 1;
 		}
 
 		/// <summary>

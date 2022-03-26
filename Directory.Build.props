@@ -58,5 +58,6 @@
     <LastWorkingBuild>0</LastWorkingBuild>
     <DistributeMod>true</DistributeMod>
     <ArchivedVersionPath></ArchivedVersionPath>
+    <AllowedReferenceRelatedFileExtensions>.yaml</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
 </Project>

@@ -24,6 +24,7 @@ using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
 using PeterHan.PLib.UI;
 using Steamworks;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -33,6 +34,17 @@ namespace PeterHan.ModUpdateDate {
 	/// Patches which will be applied via annotations for Mod Updater.
 	/// </summary>
 	public sealed class ModUpdateDatePatches : KMod.UserMod2 {
+		/// <summary>
+		/// Private structs are no fun...
+		/// </summary>
+		private static readonly Type ZIP_FILE_TYPE = PPatchTools.GetTypeSafe("KMod.ZipFile",
+			"Assembly-CSharp");
+
+		/// <summary>
+		/// Whether the mod is in safe mode.
+		/// </summary>
+		internal static bool SafeMode { get; private set; }
+
 		/// <summary>
 		/// The KMod which describes this mod.
 		/// </summary>
@@ -53,21 +65,36 @@ namespace PeterHan.ModUpdateDate {
 		}
 
 		public override void OnLoad(Harmony harmony) {
-			var method = typeof(Mod).GetMethodSafe(nameof(Mod.SetCrashed), false);
-			if (method != null)
-				harmony.Patch(method, prefix: new HarmonyMethod(typeof(ModUpdateDatePatches),
-					nameof(OnModCrash)));
-			PUtil.InitLibrary();
-			new PPatchManager(harmony).RegisterPatchClass(typeof(ModUpdateDatePatches));
-			new POptions().RegisterOptions(this, typeof(ModUpdateInfo));
-			new PLocalization().Register();
-			ModUpdateInfo.LoadSettings();
-			base.OnLoad(harmony);
-			ThisMod = mod;
-			// Shut off AVC
-			PRegistry.PutData("PLib.VersionCheck.ModUpdaterActive", true);
-			if (ModUpdateInfo.Settings?.PassiveMode == true)
-				PRegistry.PutData("PLib.VersionCheck.PassiveSteamUpdate", true);
+			try {
+				var method = typeof(Mod).GetMethodSafe(nameof(Mod.SetCrashed), false);
+				if (method != null)
+					harmony.Patch(method, prefix: new HarmonyMethod(typeof(
+						ModUpdateDatePatches), nameof(OnModCrash)));
+				SafeMode = false;
+				PUtil.InitLibrary();
+				new PPatchManager(harmony).RegisterPatchClass(typeof(ModUpdateDatePatches));
+				new POptions().RegisterOptions(this, typeof(ModUpdateInfo));
+				new PLocalization().Register();
+				ModUpdateInfo.LoadSettings();
+				base.OnLoad(harmony);
+				ThisMod = mod;
+				// Shut off AVC
+				PRegistry.PutData("PLib.VersionCheck.ModUpdaterActive", true);
+				if (ModUpdateInfo.Settings?.AutoUpdate == true)
+					PRegistry.PutData("PLib.VersionCheck.PassiveSteamUpdate", true);
+			} catch (Exception e) {
+				// AAAAAAAAH!
+				PUtil.LogWarning("Mod Updater failed to load! Entering safe mode...");
+				PUtil.LogExcWarn(e);
+				SafeMode = true;
+			}
+		}
+
+		/// <summary>
+		/// Navigates to the mod's GitHub page.
+		/// </summary>
+		private static void OnOpenGithub() {
+			UnityEngine.Application.OpenURL(ModUpdateInfo.GITHUB_README);
 		}
 
 		[PLibMethod(RunAt.BeforeDbInit)]
@@ -80,14 +107,20 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		[HarmonyPatch(typeof(MainMenu), "OnPrefabInit")]
 		public static class MainMenu_OnPrefabInit_Patch {
-			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode != true;
-
 			/// <summary>
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
 			internal static void Postfix(MainMenu __instance) {
-				if (ModUpdateInfo.Settings?.ShowMainMenuWarning == true)
-					__instance.gameObject.AddOrGet<MainMenuWarning>();
+				if (__instance != null) {
+					var go = __instance.gameObject;
+					if (SafeMode)
+						PUIElements.ShowConfirmDialog(go, string.Format(ModUpdateDateStrings.
+							UI.MODUPDATER.SAFE_MODE, ModVersion.FILE_VERSION, ModVersion.
+							BUILD_VERSION), OnOpenGithub, null, ModUpdateDateStrings.UI.
+							MODUPDATER.SAFE_MODE_GITHUB);
+					else if (ModUpdateInfo.Settings?.ShowMainMenuWarning == true)
+						go.AddOrGet<MainMenuWarning>();
+				}
 			}
 		}
 
@@ -97,7 +130,7 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		[HarmonyPatch(typeof(Manager), nameof(Manager.Subscribe))]
 		public static class Manager_Subscribe_Patch {
-			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode != true;
+			internal static bool Prepare() => ModUpdateInfo.Settings?.AutoUpdate != true;
 
 			/// <summary>
 			/// Transpiles Subscribe to insert a call to SuppressContentChanged after the
@@ -145,20 +178,52 @@ namespace PeterHan.ModUpdateDate {
 		}
 
 		/// <summary>
+		/// Applied to Manager to close the ZIP file handle after updating. This handles the
+		/// path of MakeMod from Steam mods.
+		/// </summary>
+		[HarmonyPatch]
+		public static class Manager_Update_Patch {
+			/// <summary>
+			/// Accesses the private field zipfile on the private struct ZipFile.
+			/// </summary>
+			private static readonly FieldInfo ZIP_FILE_HANDLE = ZIP_FILE_TYPE?.GetFieldSafe(
+				"zipfile", false);
+
+			/// <summary>
+			/// Targets both Update and Subscribe.
+			/// </summary>
+			internal static IEnumerable<MethodBase> TargetMethods() {
+				yield return typeof(Manager).GetMethodSafe(nameof(Manager.Subscribe), false,
+					typeof(Mod), typeof(object));
+				yield return typeof(Manager).GetMethodSafe(nameof(Manager.Update), false,
+					typeof(Mod), typeof(object));
+			}
+
+			/// <summary>
+			/// Applied after these methods run.
+			/// </summary>
+			internal static void Postfix(Mod mod) {
+				var src = mod.file_source;
+				if (src != null && ZIP_FILE_HANDLE != null && ZIP_FILE_TYPE.IsAssignableFrom(
+						src.GetType()) && ZIP_FILE_HANDLE.GetValue(src) is Ionic.Zip.ZipFile
+						file)
+					file.Dispose();
+			}
+		}
+
+		/// <summary>
 		/// Applied to ModsScreen to add the update mod buttons.
 		/// </summary>
 		[HarmonyPatch(typeof(ModsScreen), "BuildDisplay")]
 		[HarmonyPriority(Priority.High)]
 		public static class ModsScreen_BuildDisplay_Patch {
-			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode != true;
-
 			/// <summary>
 			/// Applied after BuildDisplay runs.
 			/// </summary>
 			internal static void Postfix(KButton ___closeButton, System.Collections.
 					IEnumerable ___displayedMods) {
 				// Must cast the type because ModsScreen.DisplayedMod is private
-				if (___displayedMods != null) {
+				if (___displayedMods != null && !SafeMode) {
 					var outdated = new List<ModToUpdate>(16);
 					foreach (object displayedMod in ___displayedMods)
 						if (displayedMod != null)
@@ -176,14 +241,15 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		[HarmonyPatch(typeof(SteamUGCService), nameof(SteamUGCService.AddClient))]
 		public static class SteamUGCService_AddClient_Patch {
-			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode == true;
+			internal static bool Prepare() => ModUpdateInfo.Settings?.AutoUpdate == true;
 
 			/// <summary>
 			/// Applied before AddClient runs.
 			/// </summary>
 			internal static bool Prefix(SteamUGCService.IClient client) {
-				SteamUGCServiceFixed.Instance.AddClient(client);
-				return false;
+				if (!SafeMode)
+					SteamUGCServiceFixed.Instance.AddClient(client);
+				return SafeMode;
 			}
 		}
 
@@ -192,14 +258,15 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		[HarmonyPatch(typeof(SteamUGCService), nameof(SteamUGCService.FindMod))]
 		public static class SteamUGCService_FindMod_Patch {
-			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode == true;
+			internal static bool Prepare() => ModUpdateInfo.Settings?.AutoUpdate == true;
 
 			/// <summary>
 			/// Applied after FindMod runs.
 			/// </summary>
 			internal static void Postfix(PublishedFileId_t item,
 					ref SteamUGCService.Mod __result) {
-				__result = SteamUGCServiceFixed.Instance.FindMod(item);
+				if (!SafeMode)
+					__result = SteamUGCServiceFixed.Instance.FindMod(item);
 			}
 		}
 
@@ -209,13 +276,14 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		[HarmonyPatch(typeof(SteamUGCService), nameof(SteamUGCService.Initialize))]
 		public static class SteamUGCService_Initialize_Patch {
-			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode == true;
+			internal static bool Prepare() => ModUpdateInfo.Settings?.AutoUpdate == true;
 
 			/// <summary>
 			/// Applied after Initialize runs.
 			/// </summary>
 			internal static void Postfix() {
-				SteamUGCServiceFixed.Instance.Initialize();
+				if (!SafeMode)
+					SteamUGCServiceFixed.Instance.Initialize();
 			}
 		}
 
@@ -224,14 +292,15 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		[HarmonyPatch(typeof(SteamUGCService), nameof(SteamUGCService.IsSubscribed))]
 		public static class SteamUGCService_IsSubscribed_Patch {
-			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode == true;
+			internal static bool Prepare() => ModUpdateInfo.Settings?.AutoUpdate == true;
 
 			/// <summary>
 			/// Applied after IsSubscribed runs.
 			/// </summary>
 			internal static void Postfix(PublishedFileId_t item,
 					ref bool __result) {
-				__result = SteamUGCServiceFixed.Instance.IsSubscribed(item);
+				if (!SafeMode)
+					__result = SteamUGCServiceFixed.Instance.IsSubscribed(item);
 			}
 		}
 
@@ -241,13 +310,14 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		[HarmonyPatch(typeof(SteamUGCService), "OnDestroy")]
 		public static class SteamUGCService_OnDestroy_Patch {
-			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode == true;
+			internal static bool Prepare() => ModUpdateInfo.Settings?.AutoUpdate == true;
 
 			/// <summary>
 			/// Applied after OnDestroy runs.
 			/// </summary>
 			internal static void Postfix() {
-				SteamUGCServiceFixed.Instance.Dispose();
+				if (!SafeMode)
+					SteamUGCServiceFixed.Instance.Dispose();
 			}
 		}
 
@@ -256,13 +326,13 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		[HarmonyPatch(typeof(SteamUGCService), "OnSteamUGCQueryDetailsCompleted")]
 		public static class SteamUGCService_OnSteamUGCQueryDetailsCompleted_Patch {
-			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode != true;
+			internal static bool Prepare() => ModUpdateInfo.Settings?.AutoUpdate != true;
 
 			/// <summary>
 			/// Applied after OnSteamUGCQueryDetailsCompleted runs.
 			/// </summary>
 			internal static void Postfix(HashSet<SteamUGCDetails_t> ___publishes) {
-				if (___publishes != null)
+				if (!SafeMode && ___publishes != null)
 					ModUpdateDetails.OnInstalledUpdate(___publishes);
 			}
 		}
@@ -272,14 +342,15 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		[HarmonyPatch(typeof(SteamUGCService), nameof(SteamUGCService.RemoveClient))]
 		public static class SteamUGCService_RemoveClient_Patch {
-			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode == true;
+			internal static bool Prepare() => ModUpdateInfo.Settings?.AutoUpdate == true;
 
 			/// <summary>
 			/// Applied before RemoveClient runs.
 			/// </summary>
 			internal static bool Prefix(SteamUGCService.IClient client) {
-				SteamUGCServiceFixed.Instance.RemoveClient(client);
-				return false;
+				if (!SafeMode)
+					SteamUGCServiceFixed.Instance.RemoveClient(client);
+				return SafeMode;
 			}
 		}
 
@@ -289,13 +360,13 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		[HarmonyPatch(typeof(SteamUGCService), "Update")]
 		public static class SteamUGCService_UpdateActive_Patch {
-			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode != true;
+			internal static bool Prepare() => ModUpdateInfo.Settings?.AutoUpdate != true;
 
 			/// <summary>
 			/// Applied after Update runs.
 			/// </summary>
 			internal static void Postfix() {
-				if (ModUpdateDetails.ScrubConfig())
+				if (!SafeMode && ModUpdateDetails.ScrubConfig())
 					UpdateMainMenu();
 			}
 		}
@@ -305,14 +376,33 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		[HarmonyPatch(typeof(SteamUGCService), "Update")]
 		public static class SteamUGCService_UpdatePassive_Patch {
-			internal static bool Prepare() => ModUpdateInfo.Settings?.PassiveMode == true;
+			internal static bool Prepare() => ModUpdateInfo.Settings?.AutoUpdate == true;
 
 			/// <summary>
 			/// Applied before Update runs.
 			/// </summary>
 			internal static bool Prefix() {
-				SteamUGCServiceFixed.Instance.Process();
-				return false;
+				if (!SafeMode)
+					SteamUGCServiceFixed.Instance.Process();
+				return SafeMode;
+			}
+		}
+
+		/// <summary>
+		/// Applied to ZipFile (Klei) to destroy the file_source after copying and thus unlock
+		/// the file.
+		/// </summary>
+		[HarmonyPatch]
+		public static class ZipFile_CopyTo_Patch {
+			internal static MethodBase TargetMethod() {
+				return ZIP_FILE_TYPE?.GetMethodSafe("CopyTo", false, PPatchTools.AnyArguments);
+			}
+
+			/// <summary>
+			/// Applied after Install runs.
+			/// </summary>
+			internal static void Postfix(Ionic.Zip.ZipFile ___zipfile) {
+				___zipfile.Dispose();
 			}
 		}
 	}

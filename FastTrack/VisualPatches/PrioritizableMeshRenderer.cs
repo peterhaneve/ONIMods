@@ -87,12 +87,11 @@ namespace PeterHan.FastTrack.VisualPatches {
 		}
 
 		/// <summary>
-		/// Turns the mesh rendere object on or off.
+		/// Turns the mesh renderer object on or off.
 		/// </summary>
 		/// <param name="visible">true to make it visible, or false to make it invisible.</param>
 		internal void SetVisible(bool visible) {
 			if (visible != wasActive) {
-				PUtil.LogDebug("Set visible to " + visible);
 				gameObject.SetActive(visible);
 				wasActive = visible;
 			}

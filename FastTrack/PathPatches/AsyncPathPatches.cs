@@ -24,7 +24,6 @@ using System.Reflection;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.PathPatches {
-	
 	/// <summary>
 	/// Applied to BrainScheduler.BrainGroup to move the path probe updates to a fully
 	/// asychronous task.

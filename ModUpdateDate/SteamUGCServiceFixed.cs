@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using Steamworks;
 using System;
@@ -262,7 +263,7 @@ namespace PeterHan.ModUpdateDate {
 							details.m_rgchTitle));
 #endif
 						mod.Populate(details);
-						// Queue up a download and a preview
+						// Queue up the preview image
 						download.Queue(id);
 						preview.Queue(id);
 					}
@@ -364,7 +365,7 @@ namespace PeterHan.ModUpdateDate {
 			/// <summary>
 			/// The timestamp of the last update for the local mod files.
 			/// </summary>
-			internal uint updateTimestamp;
+			internal System.DateTime updateTimestamp;
 
 			internal ModInfo(PublishedFileId_t id) {
 				clientSeen = false;
@@ -434,11 +435,19 @@ namespace PeterHan.ModUpdateDate {
 			/// Updates the mod local update time and archive path.
 			/// </summary>
 			internal void Summon() {
-				if (!SteamUGC.GetItemInstallInfo(ugcMod.fileId, out _, out installPath, 260U,
-						out updateTimestamp)) {
+				var id = ugcMod.fileId;
+				if (SteamUGC.GetItemInstallInfo(id, out _, out installPath, 260U,
+						out uint ts))
+					updateTimestamp = SteamVersionChecker.UnixEpochToDateTime(ts);
+				else {
 					installPath = null;
-					updateTimestamp = 0U;
+					updateTimestamp = System.DateTime.MinValue;
 				}
+				// But reuse the local timestamp if we updated it
+				var ourData = ModUpdateInfo.FindModInConfig(id.m_PublishedFileId);
+				if (ourData != null)
+					updateTimestamp = new System.DateTime(ourData.LastUpdated, DateTimeKind.
+						Utc);
 			}
 
 			public override string ToString() {

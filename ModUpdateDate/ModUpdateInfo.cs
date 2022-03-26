@@ -26,10 +26,20 @@ namespace PeterHan.ModUpdateDate {
 	/// The options class for Mod Updater.
 	/// </summary>
 	[JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-	[ModInfo("https://github.com/peterhaneve/ONIMods")]
+	[ModInfo(GITHUB_BASE)]
 	[ConfigFile(SharedConfigLocation: true)]
 	[RestartRequired]
 	public sealed class ModUpdateInfo {
+		/// <summary>
+		/// The base URL for the mod's GitHub page.
+		/// </summary>
+		public const string GITHUB_BASE = "https://github.com/peterhaneve/ONIMods";
+
+		/// <summary>
+		/// The URL for the local install readme page.
+		/// </summary>
+		public const string GITHUB_README = GITHUB_BASE + "/blob/main/README.md";
+
 		/// <summary>
 		/// The mod settings for this mod.
 		/// </summary>
@@ -69,7 +79,7 @@ namespace PeterHan.ModUpdateDate {
 
 		[JsonProperty]
 		[Option("STRINGS.UI.MODUPDATER.OPTION_PASSIVE", "STRINGS.UI.TOOLTIPS.MODUPDATER.OPTION_PASSIVE")]
-		public bool PassiveMode { get; set; }
+		public bool AutoUpdate { get; set; }
 
 		[JsonProperty]
 		[Option("STRINGS.UI.MODUPDATER.OPTION_MAINMENU", "STRINGS.UI.TOOLTIPS.MODUPDATER.OPTION_MAINMENU")]
@@ -77,7 +87,7 @@ namespace PeterHan.ModUpdateDate {
 
 		public ModUpdateInfo() {
 			ModUpdates = new List<ModUpdateData>(8);
-			PassiveMode = false;
+			AutoUpdate = true;
 			ShowMainMenuWarning = true;
 		}
 	}

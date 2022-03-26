@@ -46,6 +46,11 @@ namespace PeterHan.ModUpdateDate {
 		private static readonly RectOffset BUTTON_MARGIN = new RectOffset(6, 6, 6, 6);
 
 		/// <summary>
+		/// The background color if auto updates are on.
+		/// </summary>
+		private static readonly ColorStyleSetting COLOR_AUTO;
+
+		/// <summary>
 		/// The background color if outdated.
 		/// </summary>
 		private static readonly ColorStyleSetting COLOR_OUTDATED;
@@ -66,6 +71,13 @@ namespace PeterHan.ModUpdateDate {
 		private static CultureInfo cultureInfo;
 
 		static ModUpdateHandler() {
+			COLOR_AUTO = ScriptableObject.CreateInstance<ColorStyleSetting>();
+			// Button is always disabled
+			COLOR_AUTO.disabledColor = COLOR_AUTO.inactiveColor = new Color(0.2f, 0.6f, 0.6f);
+			COLOR_AUTO.disabledActiveColor = COLOR_AUTO.activeColor =
+				new Color(0.2f, 0.6f, 0.6f);
+			COLOR_AUTO.disabledhoverColor = COLOR_AUTO.hoverColor =
+				new Color(0.3f, 0.8f, 0.8f);
 			COLOR_OUTDATED = ScriptableObject.CreateInstance<ColorStyleSetting>();
 			COLOR_OUTDATED.inactiveColor = new Color(0.753f, 0.0f, 0.0f);
 			COLOR_OUTDATED.activeColor = new Color(1.0f, 0.0f, 0.0f);
@@ -90,6 +102,7 @@ namespace PeterHan.ModUpdateDate {
 		internal static void AddModUpdateButton(ICollection<ModToUpdate> outdated,
 				object modEntry) {
 			int index = -1;
+			bool autoUpdate = false;
 			var type = modEntry.GetType();
 			var indexVal = type.GetFieldSafe("mod_index", false)?.GetValue(modEntry);
 			if (indexVal is int intVal)
@@ -97,6 +110,10 @@ namespace PeterHan.ModUpdateDate {
 			var rowInstance = (type.GetFieldSafe("rect_transform", false)?.GetValue(
 				modEntry) as RectTransform)?.gameObject;
 			var mods = Global.Instance.modManager?.mods;
+			var settings = ModUpdateInfo.Settings;
+			ColorStyleSetting color;
+			if (settings != null)
+				autoUpdate = settings.AutoUpdate;
 			if (rowInstance != null && mods != null && index >= 0 && index < mods.Count) {
 				var mod = mods[index];
 				var tooltip = new StringBuilder(128);
@@ -120,7 +137,10 @@ namespace PeterHan.ModUpdateDate {
 				}
 				if (mod.label.distribution_platform == Label.DistributionPlatform.Steam) {
 					var modUpdate = new ModToUpdate(mod);
-					updated = AddSteamUpdate(tooltip, modUpdate, localDate, updButton);
+					if (autoUpdate)
+						tooltip.Append(UISTRINGS.MOD_AUTO_UPDATE);
+					updated = AddSteamUpdate(tooltip, modUpdate, localDate, updButton,
+						autoUpdate);
 					if (updated == ModStatus.Outdated)
 						outdated.Add(modUpdate);
 				} else
@@ -130,8 +150,11 @@ namespace PeterHan.ModUpdateDate {
 				updButton.Sprite = (updated == ModStatus.UpToDate || updated == ModStatus.
 					Disabled) ? PUITuning.Images.Checked : PUITuning.Images.GetSpriteByName(
 					"iconWarning");
-				updButton.Color = (updated == ModStatus.Outdated) ? COLOR_OUTDATED :
-					COLOR_UPDATED;
+				if (updated == ModStatus.Outdated)
+					color = COLOR_OUTDATED;
+				else
+					color = autoUpdate ? COLOR_AUTO : COLOR_UPDATED;
+				updButton.Color = color;
 				updButton.ToolTip = tooltip.ToString();
 				// Just before subscription button, and after the Options button
 				PButton.SetButtonEnabled(updButton.AddTo(rowInstance, 4), updated != ModStatus.
@@ -146,9 +169,10 @@ namespace PeterHan.ModUpdateDate {
 		/// <param name="modUpdate">The mod update executor which can update this mod.</param>
 		/// <param name="localDate">The local last update date.</param>
 		/// <param name="updButton">The button to be used for updating this mod.</param>
+		/// <param name="autoUpdate">Whether automatic updates are enabled.</param>
 		/// <returns>The status of the Steam mod.</returns>
 		private static ModStatus AddSteamUpdate(StringBuilder tooltip, ModToUpdate modUpdate,
-				System.DateTime localDate, PButton updButton) {
+				System.DateTime localDate, PButton updButton, bool autoUpdate) {
 			var steamDate = modUpdate.LastSteamUpdate;
 			var updated = GetModStatus(modUpdate, ref localDate);
 			// Generate tooltip for mod's current date and last Steam update
@@ -160,7 +184,7 @@ namespace PeterHan.ModUpdateDate {
 				tooltip.Append(UISTRINGS.MOD_UPDATED_BYUS);
 				break;
 			case ModStatus.Outdated:
-				tooltip.Append(UISTRINGS.MOD_OUTDATED);
+				tooltip.Append(autoUpdate ? UISTRINGS.MOD_ERR_UPDATE : UISTRINGS.MOD_OUTDATED);
 				break;
 			default:
 				break;
@@ -172,7 +196,8 @@ namespace PeterHan.ModUpdateDate {
 			if (updated == ModStatus.Disabled)
 				tooltip.AppendFormat(UISTRINGS.STEAM_UPDATE_UNKNOWN);
 			else {
-				tooltip.AppendFormat(cultureInfo, UISTRINGS.STEAM_UPDATE, steamDate.ToLocalTime());
+				tooltip.AppendFormat(cultureInfo, UISTRINGS.STEAM_UPDATE, steamDate.
+					ToLocalTime());
 				updButton.OnClick = new ModUpdateTask(modUpdate).TryUpdateMods;
 			}
 			return updated;

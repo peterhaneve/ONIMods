@@ -542,26 +542,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 	}
 
 	/// <summary>
-	/// Applied to Game to start property texture updates after Sim data arrives.
-	/// </summary>
-	[HarmonyPatch(typeof(Game), "Update")]
-	[HarmonyPriority(Priority.Low)]
-	public static class Game_Update_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.ReduceTileUpdates;
-
-		/// <summary>
-		/// Applied after Update runs.
-		/// </summary>
-		internal static void Postfix() {
-			try {
-				PropertyTextureUpdater.Instance?.StartUpdate();
-			} catch (Exception e) {
-				PUtil.LogError(e);
-			}
-		}
-	}
-
-	/// <summary>
 	/// Applied to PropertyTextures to replace LateUpdate with the finishing touches of
 	/// PropertyTextureUpdater.
 	/// </summary>

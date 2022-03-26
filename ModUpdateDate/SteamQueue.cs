@@ -21,6 +21,7 @@ using PeterHan.PLib.Core;
 using Steamworks;
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using UnityEngine;
 
 namespace PeterHan.ModUpdateDate {
@@ -39,10 +40,9 @@ namespace PeterHan.ModUpdateDate {
 			// the Steam date
 			bool update = (state & EItemState.k_EItemStateNeedsUpdate) != EItemState.
 				k_EItemStateNone;
-			if (!update && mod != null && mod.updateTimestamp > 0U) {
-				update = SteamVersionChecker.UnixEpochToDateTime(mod.updateTimestamp).
-					AddMinutes(SteamVersionChecker.UPDATE_JITTER) < SteamVersionChecker.
-					UnixEpochToDateTime(mod.ugcMod.lastUpdateTime);
+			if (!update && mod?.installPath != null) {
+				update = mod.updateTimestamp.AddMinutes(SteamVersionChecker.UPDATE_JITTER) <
+					SteamVersionChecker.UnixEpochToDateTime(mod.ugcMod.lastUpdateTime);
 				if (update)
 					PUtil.LogDebug("Mod {0:D} is outdated, forcing correct download".F(id.
 						m_PublishedFileId));
@@ -55,9 +55,15 @@ namespace PeterHan.ModUpdateDate {
 			var mod = SteamUGCServiceFixed.Instance.GetInfo(id);
 			var ret = SteamAPICall_t.Invalid;
 			if (mod != null) {
+				string tempPath = ModUpdateHandler.GetDownloadPath(id.m_PublishedFileId);
+				// Purge any stale temporary zip
+				ExtensionMethods.RemoveOldDownload(tempPath);
+#if DEBUG
+				PUtil.LogDebug("Downloading mod {0:D} to {1}".F(id.m_PublishedFileId,
+					tempPath));
+#endif
 				if (!string.IsNullOrEmpty(mod.installPath))
-					ret = SteamRemoteStorage.UGCDownloadToLocation(mod.fileId, mod.installPath,
-						0U);
+					ret = SteamRemoteStorage.UGCDownloadToLocation(mod.fileId, tempPath, 0U);
 				else
 					ret = SteamRemoteStorage.UGCDownload(mod.fileId, 0U);
 			}
@@ -66,15 +72,34 @@ namespace PeterHan.ModUpdateDate {
 
 		protected override void OnComplete(PublishedFileId_t id, int size) {
 			var mod = SteamUGCServiceFixed.Instance.GetInfo(id);
+			string path = ModUpdateHandler.GetDownloadPath(id.m_PublishedFileId);
+			bool ok = false;
 #if DEBUG
 			PUtil.LogDebug("Downloaded mod: {0:D}".F(id.m_PublishedFileId));
 #endif
+			// Copy zip to the install_path and destroy it
+			try {
+				File.Copy(path, mod.installPath, true);
+				ok = true;
+			} catch (IOException e) {
+				PUtil.LogWarning("Unable to copy file {0} to {1}:".F(path, mod.installPath));
+				PUtil.LogExcWarn(e);
+			} catch (UnauthorizedAccessException) {
+				PUtil.LogWarning("Access to {0} is denied!".F(mod.installPath));
+			}
+			ExtensionMethods.RemoveOldDownload(path);
 			if (mod != null)
 				mod.state = SteamUGCServiceFixed.SteamModState.Updated;
+			if (ok && id.GetGlobalLastModified(out System.DateTime when))
+				ModUpdateDetails.UpdateConfigFor(id.m_PublishedFileId, when);
 		}
 
-		protected override void OnError(PublishedFileId_t id) {
-			PUtil.LogWarning("Unable to download mod: {0:D}".F(id.m_PublishedFileId));
+		protected override void OnError(PublishedFileId_t id, EResult result) {
+			PUtil.LogWarning("Unable to download mod: {0:D}, code: {1}".F(id.
+				m_PublishedFileId, result));
+			// Purge the dead zip
+			ExtensionMethods.RemoveOldDownload(ModUpdateHandler.GetDownloadPath(id.
+				m_PublishedFileId));
 		}
 	}
 
@@ -107,9 +132,6 @@ namespace PeterHan.ModUpdateDate {
 
 		protected override void OnComplete(PublishedFileId_t id, int size) {
 			var mod = SteamUGCServiceFixed.Instance.GetInfo(id);
-#if DEBUG
-			PUtil.LogDebug("Downloaded preview: {0:D}".F(id.m_PublishedFileId));
-#endif
 			if (size > 0 && mod != null) {
 				byte[] rawData = new byte[size];
 				int read = SteamRemoteStorage.UGCRead(mod.previewId, rawData, size, 0U,
@@ -122,7 +144,7 @@ namespace PeterHan.ModUpdateDate {
 			}
 		}
 
-		protected override void OnError(PublishedFileId_t id) {
+		protected override void OnError(PublishedFileId_t id, EResult result) {
 			TryLoadPreview(id, null);
 		}
 
@@ -130,7 +152,8 @@ namespace PeterHan.ModUpdateDate {
 		/// Tries to load the preview image directly from the mod zip if unavailable.
 		/// </summary>
 		/// <param name="id">The mod ID to load.</param>
-		/// <param name="rawData">The preview image data downloaded from Steam, or null if the Steam download failed.</param>
+		/// <param name="rawData">The preview image data downloaded from Steam, or null if the
+		/// Steam download failed.</param>
 		private void TryLoadPreview(PublishedFileId_t id, byte[] rawData) {
 			var mod = SteamUGCServiceFixed.Instance.GetInfo(id);
 			if (rawData == null)
@@ -257,7 +280,7 @@ namespace PeterHan.ModUpdateDate {
 				bool ioError) {
 			var result = callback.m_eResult;
 			if (ioError || result != EResult.k_EResultOK)
-				OnError(pending);
+				OnError(pending, ioError ? EResult.k_EResultIOFailure : result);
 			else
 				OnComplete(pending, callback.m_nSizeInBytes);
 			onComplete?.Dispose();
@@ -270,7 +293,8 @@ namespace PeterHan.ModUpdateDate {
 		/// Called when an error occurs during download.
 		/// </summary>
 		/// <param name="id">The mod ID that failed to download.</param>
-		protected abstract void OnError(PublishedFileId_t id);
+		/// <param name="result">The result of the download.</param>
+		protected abstract void OnError(PublishedFileId_t id, EResult result);
 
 		/// <summary>
 		/// Queues up a mod ID for processing.

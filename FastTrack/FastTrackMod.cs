@@ -103,6 +103,8 @@ namespace PeterHan.FastTrack {
 				UIPatches.BackgroundInventoryUpdater.DestroyInstance();
 			if (options.UseMeshRenderers)
 				VisualPatches.TerrainMeshRenderer.DestroyInstance();
+			if (options.FastReachability)
+				SensorPatches.FastGroupProber.Cleanup();
 			ConduitPatches.ConduitFlowMeshPatches.CleanupAll();
 			VisualPatches.GroundRendererDataPatches.CleanupAll();
 			PathPatches.DupeBrainGroupUpdater.DestroyInstance();

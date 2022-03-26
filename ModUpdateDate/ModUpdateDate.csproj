@@ -2,15 +2,29 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Mod Updater</AssemblyTitle>
-    <FileVersion>2.5.0.0</FileVersion>
+    <FileVersion>2.6.0.0</FileVersion>
     <RootNamespace>PeterHan.ModUpdateDate</RootNamespace>
     <Description>Updates outdated mods to the latest version.</Description>
     <AssemblyVersion>2.1.0.0</AssemblyVersion>
-    <LastWorkingBuild>496423</LastWorkingBuild>
+    <LastWorkingBuild>498381</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
+    <VersionFileContent>
+namespace PeterHan.ModUpdateDate {
+  public static class ModVersion {
+    public static string BUILD_VERSION = "$(LastWorkingBuild)"%3B
+    public static string FILE_VERSION = "$(FileVersion)"%3B
+  }
+}
+    </VersionFileContent>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Ionic.Zip" HintPath="$(GameFolder)/Ionic.Zip.dll" />
     <Reference Include="com.rlabrecque.steamworks.net" HintPath="$(GameFolder)/com.rlabrecque.steamworks.net.dll" />
+  </ItemGroup>
+  <Target Name="WriteModVersionFile" BeforeTargets="PreBuildEvent">
+    <WriteLinesToFile File="$(IntermediateOutputPath)\Version.cs" Overwrite="true" Lines="$(VersionFileContent)"/>
+  </Target>
+  <ItemGroup>
+    <Compile Include="$(IntermediateOutputPath)\Version.cs" />
   </ItemGroup>
 </Project>

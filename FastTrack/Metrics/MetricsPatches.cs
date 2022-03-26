@@ -44,14 +44,16 @@ namespace PeterHan.FastTrack.Metrics {
 	// KAnimBatchManager#UpdateDirty is 30ms+
 	// ConduitFlow.Sim200ms is <10ms
 	// ChoreConsumer.FindNextChore is <10ms
-	[HarmonyPatch(typeof(KBatchedAnimUpdater), "UpdateVisibility")]
+	[HarmonyPatch(typeof(SensorPatches.FastGroupProber), "Update")]
 	public static class TimePatch1 {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
+		[HarmonyPriority(Priority.High)]
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
 
+		[HarmonyPriority(Priority.Low)]
 		internal static void Postfix(Stopwatch __state) {
 			if (__state != null)
 				DebugMetrics.TRACKED[0].Log(__state.ElapsedTicks);
@@ -62,10 +64,12 @@ namespace PeterHan.FastTrack.Metrics {
 	public static class TimePatch2 {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
+		[HarmonyPriority(Priority.High)]
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
 
+		[HarmonyPriority(Priority.Low)]
 		internal static void Postfix(Stopwatch __state) {
 			if (__state != null)
 				DebugMetrics.TRACKED[1].Log(__state.ElapsedTicks);
@@ -106,6 +110,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied after AdjustLoad runs.
 		/// </summary>
+		[HarmonyPriority(Priority.High)]
 		internal static void Postfix(float currentFrameTime, float frameTimeDelta,
 				object __instance) {
 			if (GET_PROBE_COUNT == null || !(GET_PROBE_COUNT.Invoke(__instance, null) is
@@ -140,10 +145,12 @@ namespace PeterHan.FastTrack.Metrics {
 			return targets;
 		}
 
+		[HarmonyPriority(Priority.High)]
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
 
+		[HarmonyPriority(Priority.Low)]
 		internal static void Postfix(Behaviour __instance, Stopwatch __state) {
 			if (__state != null && __instance != null)
 				DebugMetrics.RENDER_IMAGE.AddSlice(__instance.GetType().FullName, __state.
@@ -179,10 +186,12 @@ namespace PeterHan.FastTrack.Metrics {
 			return FindTargets("Update");
 		}
 
+		[HarmonyPriority(Priority.High)]
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
 
+		[HarmonyPriority(Priority.Low)]
 		internal static void Postfix(Behaviour __instance, Stopwatch __state) {
 			if (__state != null && __instance != null)
 				DebugMetrics.UPDATE.AddSlice(__instance.GetType().FullName, __state.
@@ -201,10 +210,12 @@ namespace PeterHan.FastTrack.Metrics {
 			return ProfileUpdates.FindTargets("LateUpdate");
 		}
 
+		[HarmonyPriority(Priority.High)]
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
 
+		[HarmonyPriority(Priority.Low)]
 		internal static void Postfix(Behaviour __instance, Stopwatch __state) {
 			if (__state != null && __instance != null)
 				DebugMetrics.LATE_UPDATE.AddSlice(__instance.GetType().FullName, __state.
@@ -222,6 +233,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied before UpdateSensors runs.
 		/// </summary>
+		[HarmonyPriority(Priority.High)]
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
@@ -229,6 +241,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied after UpdateSensors runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static void Postfix(Stopwatch __state) {
 			DebugMetrics.SENSORS.Log(__state.ElapsedTicks);
 		}
@@ -287,6 +300,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied before Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.High)]
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
@@ -294,6 +308,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied after Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static void Postfix(IRenderEveryTick updater, Stopwatch __state) {
 			DebugMetrics.SIMANDRENDER[(int)UpdateRate.RENDER_EVERY_TICK].AddSlice(updater.
 				GetType().FullName, __state.ElapsedTicks);
@@ -312,6 +327,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied before Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.High)]
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
@@ -319,6 +335,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied after Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static void Postfix(IRender200ms updater, Stopwatch __state) {
 			DebugMetrics.SIMANDRENDER[(int)UpdateRate.RENDER_200ms].AddSlice(updater.
 				GetType().FullName, __state.ElapsedTicks);
@@ -337,6 +354,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied before Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.High)]
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
@@ -344,6 +362,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied after Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static void Postfix(IRender1000ms updater, Stopwatch __state) {
 			DebugMetrics.SIMANDRENDER[(int)UpdateRate.RENDER_1000ms].AddSlice(updater.
 				GetType().FullName, __state.ElapsedTicks);
@@ -362,6 +381,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied before Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.High)]
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
@@ -369,6 +389,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied after Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static void Postfix(ISimEveryTick updater, Stopwatch __state) {
 			DebugMetrics.SIMANDRENDER[(int)UpdateRate.SIM_EVERY_TICK].AddSlice(updater.
 				GetType().FullName, __state.ElapsedTicks);
@@ -387,6 +408,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied before Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.High)]
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
@@ -394,6 +416,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied after Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static void Postfix(ISim33ms updater, Stopwatch __state) {
 			DebugMetrics.SIMANDRENDER[(int)UpdateRate.SIM_33ms].AddSlice(updater.
 				GetType().FullName, __state.ElapsedTicks);
@@ -412,6 +435,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied before Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.High)]
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
@@ -419,6 +443,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied after Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static void Postfix(ISim200ms updater, Stopwatch __state) {
 			DebugMetrics.SIMANDRENDER[(int)UpdateRate.SIM_200ms].AddSlice(updater.
 				GetType().FullName, __state.ElapsedTicks);
@@ -437,6 +462,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied before Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.High)]
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
@@ -444,6 +470,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied after Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static void Postfix(ISim1000ms updater, Stopwatch __state) {
 			DebugMetrics.SIMANDRENDER[(int)UpdateRate.SIM_1000ms].AddSlice(updater.
 				GetType().FullName, __state.ElapsedTicks);
@@ -462,6 +489,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied before Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.High)]
 		internal static void Prefix(ref Stopwatch __state) {
 			__state = Stopwatch.StartNew();
 		}
@@ -469,6 +497,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied after Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static void Postfix(ISim4000ms updater, Stopwatch __state) {
 			DebugMetrics.SIMANDRENDER[(int)UpdateRate.SIM_4000ms].AddSlice(updater.
 				GetType().FullName, __state.ElapsedTicks);

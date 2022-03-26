@@ -100,14 +100,42 @@ namespace PeterHan.FastTrack {
 	}
 
 	/// <summary>
+	/// Applied to Game to start property texture updates after Sim data arrives and
+	/// fast Reachability updates before the sim cycle starts.
+	/// </summary>
+	[HarmonyPatch(typeof(Game), "Update")]
+	[HarmonyPriority(Priority.Low)]
+	public static class Game_Update_Patch {
+		internal static bool Prepare() {
+			var options = FastTrackOptions.Instance;
+			return options.ReduceTileUpdates || options.FastReachability;
+		}
+
+		/// <summary>
+		/// Applied before Update runs.
+		/// </summary>
+		internal static void Prefix() {
+			SensorPatches.FastGroupProber.Instance?.Update();
+		}
+
+		/// <summary>
+		/// Applied after Update runs.
+		/// </summary>
+		internal static void Postfix() {
+			try {
+				VisualPatches.PropertyTextureUpdater.Instance?.StartUpdate();
+			} catch (System.Exception e) {
+				PUtil.LogError(e);
+			}
+		}
+	}
+
+	/// <summary>
 	/// Applied to Global to start up some expensive things before Game.LateUpdate runs.
 	/// </summary>
 	[HarmonyPatch(typeof(Global), "LateUpdate")]
 	public static class Global_LateUpdate_Patch {
-		internal static bool Prepare() {
-			var options = FastTrackOptions.Instance;
-			return options.ConduitOpts;
-		}
+		internal static bool Prepare() => FastTrackOptions.Instance.ConduitOpts;
 
 		/// <summary>
 		/// Applied before LateUpdate runs.
@@ -187,10 +215,7 @@ namespace PeterHan.FastTrack {
 	/// </summary>
 	[HarmonyPatch(typeof(World), "LateUpdate")]
 	public static class World_LateUpdate_Patch {
-		internal static bool Prepare() {
-			var options = FastTrackOptions.Instance;
-			return options.PickupOpts;
-		}
+		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
 
 		/// <summary>
 		/// Applied before LateUpdate runs.

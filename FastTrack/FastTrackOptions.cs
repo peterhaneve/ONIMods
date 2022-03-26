@@ -39,6 +39,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool ThreatOvercrowding { get; set; }
 
+		[Option("Fast Reachability Checks", "Only check items and chores for reachability when necessary." + PERF_LOW, "Duplicants")]
+		[JsonProperty]
+		public bool FastReachability { get; set; }
+
 		[Option("Optimize Eating", "Optimize how Critters find objects to eat.\n<i>Some minor changes to Critter behaviour may occur</i>" + PERF_MEDIUM, "Critters")]
 		[JsonProperty]
 		public bool CritterConsumers { get; set; }
@@ -115,7 +119,7 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool DisableSound { get; set; }
 
-		[Option("No Notification Bounce", "Disables the bounce effect when new notifications appear." + PERF_LOW, "Visual")]
+		[Option("No Notification Bounce", "Disables the bounce effect when new notifications appear." + PERF_MEDIUM, "Visual")]
 		[JsonProperty]
 		public bool NoBounce { get; set; }
 
@@ -152,6 +156,7 @@ namespace PeterHan.FastTrack {
 			DisableLoadPreviews = false;
 			DisableSound = false;
 			FastRaycast = true;
+			FastReachability = true;
 			FastUpdatePickups = false;
 			InfoCardOpts = true;
 			SensorOpts = true;

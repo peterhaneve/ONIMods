@@ -168,6 +168,8 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(Navigator), nameof(Navigator.Stop))]
 	public static class Navigator_Stop_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
+
 		/// <summary>
 		/// Applied after Stop runs.
 		/// </summary>
@@ -182,6 +184,8 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(PathProber), "OnCleanUp")]
 	public static class PathProber_OnCleanUp_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
+
 		/// <summary>
 		/// Applied before OnCleanUp runs.
 		/// </summary>

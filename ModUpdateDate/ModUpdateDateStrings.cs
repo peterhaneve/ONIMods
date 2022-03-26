@@ -44,14 +44,16 @@ namespace PeterHan.ModUpdateDate {
 				public static LocString OPTION_MAINMENU = "Show Updates in Main Menu";
 				
 				// Mod update status
+				public static LocString MOD_AUTO_UPDATE = "<b>Automatic updates are enabled.</b>\n";
 				public static LocString MOD_UPDATED = "This mod appears to be up to date.";
 				public static LocString MOD_UPDATED_BYUS = "This mod was locally updated by Mod Updater.";
 				public static LocString MOD_OUTDATED = "This mod appears to be out of date!";
 				public static LocString MOD_UPDATE_ALL = "Update {0:D} mods which appear to be out of date";
 				public static LocString MOD_UPDATE_1 = "Update one mod which appears to be out of date";
+				public static LocString MOD_ERR_UPDATE = "Unable to automatically update this mod!\nA manual update may be required.";
 
 				// Passive mode
-				public static LocString OPTION_PASSIVE = "Passive Mode";
+				public static LocString OPTION_PASSIVE = "Auto-Update";
 
 				// Steam update date
 				public static LocString STEAM_UPDATE = "<b>Steam Updated:</b> {0:f}";
@@ -80,12 +82,20 @@ namespace PeterHan.ModUpdateDate {
 				public static LocString UPDATE_FOOTER_OK = "\n{0} will be updated on the next restart.";
 				public static LocString UPDATE_FOOTER_CONFIG = "\n<b><color=#FFCC00>Back up any valuable mod configurations now manually!</color></b>";
 				public static LocString UPDATE_FOOTER_ERROR = "\nCheck your connection, and that the mods directory has sufficient disk space and permissions.";
+
+				// Safe mode
+				public static LocString SAFE_MODE = "<b>Mod Updater did not start correctly.</b>\n\n" +
+					"Due to a recent Klei update, Mod Updater was unable to start.\n" +
+					"Steam may automatically update Mod Updater to the latest version.\n" +
+					"If not, install the latest version manually from the mod website.\n\n" +
+					"<b>Mod Updater version:</b> {0}\n<b>Compiled for game version:</b> {1}";
+				public static LocString SAFE_MODE_GITHUB = "VISIT WEBSITE";
 			}
 
 			public static class TOOLTIPS {
 				public static class MODUPDATER {
 					public static LocString OPTION_MAINMENU = "If selected, a warning with the number of potentially\noutdated mods is shown in the main menu.";
-					public static LocString OPTION_PASSIVE = "Experimental! Enables Passive Mode which automatically keeps all mods up to date in the background.";
+					public static LocString OPTION_PASSIVE = "Automatically keeps all mods up to date in the background\nby downloading the correct version in the first place.";
 				}
 			}
 		}

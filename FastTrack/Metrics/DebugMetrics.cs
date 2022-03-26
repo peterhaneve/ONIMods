@@ -223,12 +223,24 @@ namespace PeterHan.FastTrack.Metrics {
 		/// Stores brain update statistics.
 		/// </summary>
 		private struct BrainStats {
+			/// <summary>
+			/// The elapsed frame time in milliseconds.
+			/// </summary>
 			public float frameTime;
 
+			/// <summary>
+			/// The target frame time in milliseconds.
+			/// </summary>
 			public float targetFrameTime;
 
+			/// <summary>
+			/// The number of probes run per frame.
+			/// </summary>
 			public int probeCount;
 
+			/// <summary>
+			/// The number of cells to probe per frame for each probe.
+			/// </summary>
 			public int probeSize;
 
 			public BrainStats(float frameTime, float targetFrameTime, int probeCount,
@@ -240,8 +252,8 @@ namespace PeterHan.FastTrack.Metrics {
 			}
 
 			public override string ToString() {
-				return "{0:F3}s/{1:F3}s,{2:D}x{3:D}".F(frameTime, targetFrameTime, probeCount,
-					probeSize);
+				return "{0:F3}ms/{1:F3}ms,{2:D}x{3:D}".F(frameTime, targetFrameTime,
+					probeCount, probeSize);
 			}
 		}
 	}
