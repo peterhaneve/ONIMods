@@ -1,0 +1,99 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.7\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Last-Translator: \n"
+"Language: ru\n"
+
+#. PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_ALL
+msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_ALL"
+msgid "All"
+msgstr "Все"
+
+#. PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_AUTO
+msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_AUTO"
+msgid "Automation"
+msgstr "Автоматизация"
+
+#. PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_BUILDINGS
+msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_BUILDINGS"
+msgid "Buildings"
+msgstr "Здания"
+
+#. PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_CREATURES
+msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_CREATURES"
+msgid "Creatures"
+msgstr "Существа"
+
+#. PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_DRYWALL
+msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_DRYWALL"
+msgid "Background Buildings"
+msgstr "Постройки на фоне"
+
+#. PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_ELEMENTS
+msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_ELEMENTS"
+msgid "Elements"
+msgstr "Элементы"
+
+#. PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_GPIPES
+msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_GPIPES"
+msgid "Gas Pipes"
+msgstr "Газовые трубы"
+
+#. PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_ITEMS
+msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_ITEMS"
+msgid "Items"
+msgstr "Предметы"
+
+#. PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_LPIPES
+msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_LPIPES"
+msgid "Liquid Pipes"
+msgstr "Жидкостные трубы"
+
+#. PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_PLANTS
+msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_PLANTS"
+msgid "Plants"
+msgstr "Растения"
+
+#. PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_POWER
+msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_POWER"
+msgid "Power Wires"
+msgstr "Провода"
+
+#. PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_SHIPPING
+msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_SHIPPING"
+msgid "Conveyor Rails"
+msgstr "Рельсы конвеера"
+
+#. PeterHan.SandboxTools.SandboxToolsStrings.FILTER_ARTIFACTS
+msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.FILTER_ARTIFACTS"
+msgid "Artifacts"
+msgstr "Артифакты"
+
+#. PeterHan.SandboxTools.SandboxToolsStrings.FILTER_GEYSERS
+msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.FILTER_GEYSERS"
+msgid "Geysers"
+msgstr "Гейзеры"
+
+#. PeterHan.SandboxTools.SandboxToolsStrings.FILTER_POIPROPS
+msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.FILTER_POIPROPS"
+msgid "Props"
+msgstr "Объекты"
+
+#. PeterHan.SandboxTools.SandboxToolsStrings.TOOL_DESTROY_NAME
+msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.TOOL_DESTROY_NAME"
+msgid "Filtered Destroy"
+msgstr "Удалить по фильтру"
+
+#. PeterHan.SandboxTools.SandboxToolsStrings.TOOL_DESTROY_TOOLTIP
+msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.TOOL_DESTROY_TOOLTIP"
+msgid "Delete objects from the selected cell(s) {Hotkey}"
+msgstr "Удалить объекты из выбранной ячейки (ячеек) {Hotkey}"
