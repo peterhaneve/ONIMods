@@ -44,6 +44,7 @@ namespace PeterHan.FastTrack.Metrics {
 	// KAnimBatchManager#UpdateDirty is 30ms+
 	// ConduitFlow.Sim200ms is <10ms
 	// ChoreConsumer.FindNextChore is <10ms
+	// None of the RenderImage methods are more than 1ms
 	[HarmonyPatch(typeof(SensorPatches.FastGroupProber), "Update")]
 	public static class TimePatch1 {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
@@ -60,7 +61,8 @@ namespace PeterHan.FastTrack.Metrics {
 		}
 	}
 
-	[HarmonyPatch(typeof(KBatchedAnimUpdater), "UpdateRegisteredAnims")]
+	//[HarmonyPatch(typeof(KBatchedAnimUpdater), "UpdateRegisteredAnims")]
+	[HarmonyPatch(typeof(Klei.AI.AmountInstance), "BatchUpdate")]
 	public static class TimePatch2 {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
@@ -100,7 +102,8 @@ namespace PeterHan.FastTrack.Metrics {
 		private static readonly MethodInfo GET_PROBE_SIZE = BRAIN_GROUP?.
 			GetPropertySafe<int>("probeSize", false)?.GetGetMethod(true);
 
-		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
+		internal static bool Prepare() => FastTrackOptions.Instance.Metrics && BRAIN_GROUP !=
+			null;
 
 		internal static MethodBase TargetMethod() {
 			return BRAIN_GROUP?.GetMethodSafe(nameof(ICPULoad.AdjustLoad), false,
@@ -121,40 +124,6 @@ namespace PeterHan.FastTrack.Metrics {
 				probeSize = 0;
 			DebugMetrics.LogBrainBalance(__instance.GetType().Name, frameTimeDelta,
 				currentFrameTime, probeCount, probeSize);
-		}
-	}
-
-	/// <summary>
-	/// Applied to every RenderImage() to log render metrics.
-	/// </summary>
-	[HarmonyPatch]
-	public static class ProfileRenderImages {
-		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
-
-		internal static IEnumerable<MethodBase> TargetMethods() {
-			var targets = new List<MethodBase>(128);
-			foreach (var type in Assembly.GetAssembly(typeof(Game)).DefinedTypes)
-				if (type != null && typeof(Behaviour).IsAssignableFrom(type)) {
-					var method = type.GetMethod("OnRenderImage", PPatchTools.BASE_FLAGS |
-						BindingFlags.Instance | BindingFlags.DeclaredOnly, null, new Type[] {
-							typeof(RenderTexture), typeof(RenderTexture)
-						}, null);
-					if (method != null)
-						targets.Add(method);
-				}
-			return targets;
-		}
-
-		[HarmonyPriority(Priority.High)]
-		internal static void Prefix(ref Stopwatch __state) {
-			__state = Stopwatch.StartNew();
-		}
-
-		[HarmonyPriority(Priority.Low)]
-		internal static void Postfix(Behaviour __instance, Stopwatch __state) {
-			if (__state != null && __instance != null)
-				DebugMetrics.RENDER_IMAGE.AddSlice(__instance.GetType().FullName, __state.
-					ElapsedTicks);
 		}
 	}
 
@@ -248,7 +217,7 @@ namespace PeterHan.FastTrack.Metrics {
 	}
 
 	/// <summary>
-	/// Applied to SimAndRenderScheduler.RenderEveryTickUpdater to log sim/render update
+	/// Applied to StateMachineUpdater.BucketGroup.AdvanceOneSubTick to log sim/render update
 	/// metrics if enabled.
 	/// </summary>
 	[HarmonyPatch(typeof(StateMachineUpdater.BucketGroup), nameof(StateMachineUpdater.
@@ -256,6 +225,9 @@ namespace PeterHan.FastTrack.Metrics {
 	public static class StateMachineUpdater_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
+		/// <summary>
+		/// Transpiles AdvanceOneSubTick to call our method wrapper instead.
+		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
 			var victim = typeof(StateMachineUpdater.BaseUpdateBucket).GetMethodSafe(nameof(
 				StateMachineUpdater.BaseUpdateBucket.Update), false, typeof(float));

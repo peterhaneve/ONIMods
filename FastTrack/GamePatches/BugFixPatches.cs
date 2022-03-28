@@ -21,11 +21,10 @@ using PeterHan.PLib.Core;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
-using UnityEngine;
 
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
-namespace PeterHan.FastTrack {
+namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
 	/// Applied to AnimEventManager to fix a bug where the anim indirection data list grows
 	/// without bound, consuming memory, causing GC pauses, and eventually crashing when it
@@ -100,79 +99,8 @@ namespace PeterHan.FastTrack {
 	}
 
 	/// <summary>
-	/// Applied to Game to start property texture updates after Sim data arrives and
-	/// fast Reachability updates before the sim cycle starts.
-	/// </summary>
-	[HarmonyPatch(typeof(Game), "Update")]
-	[HarmonyPriority(Priority.Low)]
-	public static class Game_Update_Patch {
-		internal static bool Prepare() {
-			var options = FastTrackOptions.Instance;
-			return options.ReduceTileUpdates || options.FastReachability;
-		}
-
-		/// <summary>
-		/// Applied before Update runs.
-		/// </summary>
-		internal static void Prefix() {
-			SensorPatches.FastGroupProber.Instance?.Update();
-		}
-
-		/// <summary>
-		/// Applied after Update runs.
-		/// </summary>
-		internal static void Postfix() {
-			try {
-				VisualPatches.PropertyTextureUpdater.Instance?.StartUpdate();
-			} catch (System.Exception e) {
-				PUtil.LogError(e);
-			}
-		}
-	}
-
-	/// <summary>
-	/// Applied to Global to start up some expensive things before Game.LateUpdate runs.
-	/// </summary>
-	[HarmonyPatch(typeof(Global), "LateUpdate")]
-	public static class Global_LateUpdate_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.ConduitOpts;
-
-		/// <summary>
-		/// Applied before LateUpdate runs.
-		/// </summary>
-		internal static void Prefix() {
-			if (Game.Instance != null)
-				ConduitPatches.BackgroundConduitUpdater.StartUpdateAll();
-		}
-	}
-
-	/// <summary>
-	/// Applied to Global to start up some expensive things before Game.Update runs.
-	/// </summary>
-	[HarmonyPatch(typeof(Global), "Update")]
-	public static class Global_Update_Patch {
-		internal static bool Prepare() {
-			var options = FastTrackOptions.Instance;
-			return options.ConduitOpts || options.ParallelInventory;
-		}
-
-		/// <summary>
-		/// Applied before Update runs.
-		/// </summary>
-		internal static void Prefix() {
-			if (Game.Instance != null) {
-				var options = FastTrackOptions.Instance;
-				if (options.ConduitOpts)
-					ConduitPatches.BackgroundConduitUpdater.StartUpdateAll();
-				if (options.ParallelInventory)
-					UIPatches.BackgroundInventoryUpdater.Instance?.StartUpdateAll();
-			}
-		}
-	}
-
-	/// <summary>
 	/// Applied to KAnimBatch to... actually clear the dirty flag when it updates.
-	/// Unfortunately most anims are marked dirty every frame.
+	/// Unfortunately most anims are marked dirty every frame anyways.
 	/// </summary>
 	[HarmonyPatch(typeof(KAnimBatch), "ClearDirty")]
 	public static class KAnimBatch_ClearDirty_Patch {
@@ -181,54 +109,6 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		internal static void Postfix(ref bool ___needsWrite) {
 			___needsWrite = false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to MinionConfig to apply several patches from different areas of the mod.
-	/// </summary>
-	[HarmonyPatch(typeof(MinionConfig), nameof(MinionConfig.OnSpawn))]
-	public static class MinionConfig_OnSpawn_Patch {
-		internal static bool Prepare() {
-			var options = FastTrackOptions.Instance;
-			return options.SensorOpts || options.NoSplash;
-		}
-
-		/// <summary>
-		/// Applied after OnSpawn runs.
-		/// </summary>
-		internal static void Postfix(GameObject go) {
-			if (go != null) {
-				var options = FastTrackOptions.Instance;
-				var nav = go.GetComponentSafe<Navigator>();
-				if (options.SensorOpts)
-					SensorPatches.SensorPatches.RemoveBalloonArtistSensor(go);
-				if (options.NoSplash && nav != null)
-					nav.transitionDriver.overrideLayers.RemoveAll((layer) => layer is
-						SplashTransitionLayer);
-			}
-		}
-	}
-
-	/// <summary>
-	/// Applied to World to finish up expensive things after Game.LateUpdate has run.
-	/// </summary>
-	[HarmonyPatch(typeof(World), "LateUpdate")]
-	public static class World_LateUpdate_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
-
-		/// <summary>
-		/// Applied before LateUpdate runs.
-		/// </summary>
-		internal static void Prefix() {
-			PathPatches.DupeBrainGroupUpdater.Instance?.ReleaseFetches();
-		}
-
-		/// <summary>
-		/// Applied after LateUpdate runs.
-		/// </summary>
-		internal static void Postfix() {
-			PathPatches.DupeBrainGroupUpdater.Instance?.EndBrainUpdate();
 		}
 	}
 }

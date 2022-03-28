@@ -18,8 +18,6 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using System;
-using System.Collections.Generic;
 using System.Reflection.Emit;
 using UnityEngine;
 
@@ -32,7 +30,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(AxialI), nameof(AxialI.GetHashCode))]
 	public static class AxialI_GetHashCode_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+		internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
 
 		/// <summary>
 		/// Transpiles GetHashCode to replace (x ^ y) with (x ^ (y << 16)).

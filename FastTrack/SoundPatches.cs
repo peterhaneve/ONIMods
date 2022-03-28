@@ -22,7 +22,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 
 namespace PeterHan.FastTrack {
 	/// <summary>
@@ -226,6 +225,10 @@ namespace PeterHan.FastTrack {
 		internal static bool Prepare() => FastTrackOptions.Instance.DisableSound;
 
 		internal static IEnumerable<MethodBase> TargetMethods() {
+			yield return typeof(AnimEventManager).GetMethodSafe("PlayEvents", false,
+				PPatchTools.AnyArguments);
+			yield return typeof(AnimEventManager).GetMethodSafe("StopEvents", false,
+				PPatchTools.AnyArguments);
 			yield return typeof(AudioMixer).GetMethodSafe(nameof(AudioMixer.
 				SetSnapshotParameter), false, PPatchTools.AnyArguments);
 			yield return typeof(AudioMixer).GetMethodSafe(nameof(AudioMixer.Start), false,

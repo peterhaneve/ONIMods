@@ -96,7 +96,10 @@ namespace PeterHan.ModUpdateDate {
 				// How many are out of date?
 				int outdated = ModUpdateHandler.CountOutdatedMods();
 				string text = STRINGS.UI.FRONTEND.MODS.TITLE;
-				if (outdated == 1)
+				var inst = SteamUGCServiceFixed.Instance;
+				if (inst != null && inst.UpdateInProgress)
+					text += UISTRINGS.MAINMENU_UPDATING;
+				else if (outdated == 1)
 					text += UISTRINGS.MAINMENU_UPDATE_1;
 				else if (outdated > 1)
 					text += string.Format(UISTRINGS.MAINMENU_UPDATE, outdated);

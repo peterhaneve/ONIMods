@@ -23,7 +23,7 @@ using UnityEngine;
 
 using PickupComparer = System.Collections.Generic.IComparer<FetchManager.Pickup>;
 
-namespace PeterHan.FastTrack {
+namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
 	/// Applied to FetchManager.FetchablesByPrefabId to optimize UpdatePickups. It already
 	/// runs in a Job Manager for parallelism, so it cannot access components, but for now

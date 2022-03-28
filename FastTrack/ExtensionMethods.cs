@@ -66,9 +66,10 @@ namespace PeterHan.FastTrack {
 			// Set up the mesh with the right material
 			var renderer = go.GetComponent<MeshRenderer>();
 			renderer.allowOcclusionWhenDynamic = false;
-			renderer.receiveShadows = false;
 			renderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
 			renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+			renderer.receiveShadows = false;
+			renderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
 			renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 			// Set the mesh to render
 			var filter = go.GetComponent<MeshFilter>();

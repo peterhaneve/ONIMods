@@ -75,7 +75,7 @@ namespace PeterHan.FastTrack.PathPatches {
 						next.opcode = OpCodes.Callvirt;
 						next.operand = clearMethod;
 #if DEBUG
-						PUtil.LogDebug("Patched NavGrid.UpdateGraph");
+						PUtil.LogDebug("Patched NavGrid.UpdateGraph at {0:D}".F(i));
 #endif
 					}
 					instr = next;

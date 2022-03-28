@@ -35,13 +35,21 @@ namespace PeterHan.FastTrack {
 		private const string PERF_MEDIUM = "\n\n<b>Performance Impact: <color=#FF8827>Medium</color></b>";
 		private const string PERF_HIGH = "\n\n<b>Performance Impact: <color=#FF3300>High</color></b>";
 
+		[Option("Heat Generation", "Reduces memory allocations used when generating heat." + PERF_MEDIUM, "Buildings")]
+		[JsonProperty]
+		public bool FastStructureTemperature { get; set; }
+
+		[Option("Logic Optimizations", "Optimizes some buildings to not trigger logic network updates every frame." + PERF_LOW, "Buildings")]
+		[JsonProperty]
+		public bool LogicUpdates { get; set; }
+
+		[Option("Threaded Conduit Updates", "Multi-threads some updates to liquid and gas conduits." + PERF_LOW, "Buildings")]
+		[JsonProperty]
+		public bool ConduitOpts { get; set; }
+
 		[Option("Critter Monitors", "Optimizes critter Threat and Overcrowding monitors.\n<i>May conflict with mods that add new critters</i>" + PERF_MEDIUM, "Critters")]
 		[JsonProperty]
 		public bool ThreatOvercrowding { get; set; }
-
-		[Option("Fast Reachability Checks", "Only check items and chores for reachability when necessary." + PERF_LOW, "Duplicants")]
-		[JsonProperty]
-		public bool FastReachability { get; set; }
 
 		[Option("Optimize Eating", "Optimize how Critters find objects to eat.\n<i>Some minor changes to Critter behaviour may occur</i>" + PERF_MEDIUM, "Critters")]
 		[JsonProperty]
@@ -50,6 +58,10 @@ namespace PeterHan.FastTrack {
 		[Option("Unstack Lights", "Reduces the visual effects shown when many light sources are stacked.\nIntended for ranching critters like Shine Bugs." + PERF_LOW, "Critters")]
 		[JsonProperty]
 		public bool UnstackLights { get; set; }
+
+		[Option("Attribute Leveling", "Optimize attribute leveling and work efficiency calculation." + PERF_MEDIUM, "Duplicants")]
+		[JsonProperty]
+		public bool FastAttributesMode { get; set; }
 
 		[Option("Background Pathing", "Moves some pathfinding calculations to a non-blocking thread." + PERF_HIGH, "Duplicants")]
 		[JsonProperty]
@@ -63,6 +75,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool NoConversations { get; set; }
 
+		[Option("Fast Reachability Checks", "Only check items and chores for reachability when necessary." + PERF_LOW, "Duplicants")]
+		[JsonProperty]
+		public bool FastReachability { get; set; }
+
 		[Option("Optimize Sensors", "Only check for locations to Idle, Mingle, or Balloon Artist when necessary." + PERF_LOW, "Duplicants")]
 		[JsonProperty]
 		public bool SensorOpts { get; set; }
@@ -75,6 +91,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool DisableLoadPreviews { get; set; }
 
+		[Option("Disable Tutorials", "Disables tutorial messages." + PERF_LOW, "Interface")]
+		[JsonProperty]
+		public TutorialMessageDisable DisableTutorial { get; set; }
+
 		[Option("Fast Raycast", "Speeds up searching for UI elements under the cursor." + PERF_HIGH, "Interface")]
 		[JsonProperty]
 		public bool FastRaycast { get; set; }
@@ -83,7 +103,7 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool OptimizeDialogs { get; set; }
 
-		[Option("Other UI Optimizations", "Optimizes a variety of event and UI handlers." + PERF_LOW, "Interface")]
+		[Option("Other UI Optimizations", "Optimizes many event and UI handlers." + PERF_LOW, "Interface")]
 		[JsonProperty]
 		public bool MiscOpts { get; set; }
 
@@ -99,17 +119,9 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool PickupOpts { get; set; }
 
-		[Option("Threaded Conduit Updates", "Multi-threads some updates to liquid and gas conduits." + PERF_LOW, "Items")]
-		[JsonProperty]
-		public bool ConduitOpts { get; set; }
-
 		[Option("Vector Minimization", "Reduces memory allocations in most game-wide lists of items." + PERF_LOW, "Items")]
 		[JsonProperty]
 		public bool MinimalKCV { get; set; }
-
-		[Option("Info Card Optimization", "Optimizes the info cards shown on hover.\n<i>Values in info cards may be formatted slightly differently</i>" + PERF_MEDIUM, "Visual")]
-		[JsonProperty]
-		public bool InfoCardOpts { get; set; }
 
 		[Option("Batch Sounds", "Reduces the frequency of sound location updates." + PERF_LOW, "Sound")]
 		[JsonProperty]
@@ -118,6 +130,10 @@ namespace PeterHan.FastTrack {
 		[Option("Disable <color=#FF0000>ALL</color> Sounds", "Completely disables all sound playback." + PERF_LOW, "Sound")]
 		[JsonProperty]
 		public bool DisableSound { get; set; }
+
+		[Option("Info Card Optimization", "Optimizes the info cards shown on hover.\n<i>Values in info cards may be formatted slightly differently</i>" + PERF_MEDIUM, "Visual")]
+		[JsonProperty]
+		public bool InfoCardOpts { get; set; }
 
 		[Option("No Notification Bounce", "Disables the bounce effect when new notifications appear." + PERF_MEDIUM, "Visual")]
 		[JsonProperty]
@@ -155,11 +171,14 @@ namespace PeterHan.FastTrack {
 			DisableConduitAnimation = ConduitAnimationQuality.Reduced;
 			DisableLoadPreviews = false;
 			DisableSound = false;
+			DisableTutorial = TutorialMessageDisable.All;
+			FastAttributesMode = true;
 			FastRaycast = true;
 			FastReachability = true;
+			FastStructureTemperature = true;
 			FastUpdatePickups = false;
 			InfoCardOpts = true;
-			SensorOpts = true;
+			LogicUpdates = true;
 			Metrics = false;
 			MinimalKCV = false;
 			MiscOpts = true;
@@ -173,6 +192,7 @@ namespace PeterHan.FastTrack {
 			ReduceSoundUpdates = true;
 			ReduceTileUpdates = true;
 			RenderTicks = true;
+			SensorOpts = true;
 			ThreatOvercrowding = true;
 			UseMeshRenderers = true;
 			UnstackLights = true;
@@ -188,6 +208,18 @@ namespace PeterHan.FastTrack {
 			Reduced,
 			[Option("Minimal", "Pipe animations are disabled outside the Liquid or Gas overlay.")]
 			Minimal
+		}
+
+		/// <summary>
+		/// How many tutorial message and warnings to show.
+		/// </summary>
+		public enum TutorialMessageDisable {
+			[Option("All", "All tutorial messages are shown when they would normally appear.")]
+			All,
+			[Option("Warnings", "Tutorial messages are disabled, but warnings such as\n<b>Insufficient Oxygen Generation</b> will still appear.")]
+			WarningsOnly,
+			[Option("Off", "Tutorial messages and most warnings will be disabled.\n<i>Keep a careful eye on your colony...</i>")]
+			None
 		}
 	}
 }

@@ -51,7 +51,8 @@ namespace PeterHan.ModUpdateDate {
 				k_EItemStateNone) && (state & IS_DOWNLOADING) == EItemState.k_EItemStateNone;
 		}
 
-		protected override SteamAPICall_t ExecuteDownload(PublishedFileId_t id) {
+		protected override SteamAPICall_t ExecuteDownload(PublishedFileId_t id,
+				out bool globalEvent) {
 			var mod = SteamUGCServiceFixed.Instance.GetInfo(id);
 			var ret = SteamAPICall_t.Invalid;
 			if (mod != null) {
@@ -62,36 +63,51 @@ namespace PeterHan.ModUpdateDate {
 				PUtil.LogDebug("Downloading mod {0:D} to {1}".F(id.m_PublishedFileId,
 					tempPath));
 #endif
-				if (!string.IsNullOrEmpty(mod.installPath))
+				if (mod.installPath == null) {
+					// Newly installed mod, populate the expected path
+					globalEvent = true;
+					SteamUGC.DownloadItem(id, false);
+				} else
 					ret = SteamRemoteStorage.UGCDownloadToLocation(mod.fileId, tempPath, 0U);
-				else
-					ret = SteamRemoteStorage.UGCDownload(mod.fileId, 0U);
 			}
+			globalEvent = false;
 			return ret;
 		}
 
-		protected override void OnComplete(PublishedFileId_t id, int size) {
+		protected override void OnComplete(PublishedFileId_t id, int _) {
 			var mod = SteamUGCServiceFixed.Instance.GetInfo(id);
 			string path = ModUpdateHandler.GetDownloadPath(id.m_PublishedFileId);
 			bool ok = false;
+			string expectedPath = mod.installPath;
 #if DEBUG
 			PUtil.LogDebug("Downloaded mod: {0:D}".F(id.m_PublishedFileId));
 #endif
-			// Copy zip to the install_path and destroy it
-			try {
-				File.Copy(path, mod.installPath, true);
-				ok = true;
-			} catch (IOException e) {
-				PUtil.LogWarning("Unable to copy file {0} to {1}:".F(path, mod.installPath));
-				PUtil.LogExcWarn(e);
-			} catch (UnauthorizedAccessException) {
-				PUtil.LogWarning("Access to {0} is denied!".F(mod.installPath));
+			if (expectedPath == null) {
+				mod.Summon();
+				expectedPath = mod.installPath;
 			}
-			ExtensionMethods.RemoveOldDownload(path);
-			if (mod != null)
-				mod.state = SteamUGCServiceFixed.SteamModState.Updated;
-			if (ok && id.GetGlobalLastModified(out System.DateTime when))
-				ModUpdateDetails.UpdateConfigFor(id.m_PublishedFileId, when);
+			// Copy zip to the install_path and destroy it
+			if (expectedPath != null) {
+				if (File.Exists(path)) {
+					try {
+						File.Copy(path, expectedPath, true);
+						ok = true;
+					} catch (IOException e) {
+						PUtil.LogWarning("Unable to copy file {0} to {1}:".F(path,
+							expectedPath));
+						PUtil.LogExcWarn(e);
+					} catch (UnauthorizedAccessException) {
+						PUtil.LogWarning("Access to {0} is denied!".F(expectedPath));
+					}
+					ExtensionMethods.RemoveOldDownload(path);
+				}
+				if (mod != null)
+					mod.state = SteamUGCServiceFixed.SteamModState.Updated;
+				if (ok && id.GetGlobalLastModified(out System.DateTime when))
+					ModUpdateDetails.UpdateConfigFor(id.m_PublishedFileId, when);
+			} else
+				PUtil.LogWarning("Unable to find install path for {0:D}!".F(id.
+					m_PublishedFileId));
 		}
 
 		protected override void OnError(PublishedFileId_t id, EResult result) {
@@ -124,8 +140,10 @@ namespace PeterHan.ModUpdateDate {
 			return true;
 		}
 
-		protected override SteamAPICall_t ExecuteDownload(PublishedFileId_t id) {
+		protected override SteamAPICall_t ExecuteDownload(PublishedFileId_t id,
+				out bool globalEvent) {
 			var mod = SteamUGCServiceFixed.Instance.GetInfo(id);
+			globalEvent = false;
 			return (mod == null) ? SteamAPICall_t.Invalid : SteamRemoteStorage.UGCDownload(mod.
 				previewId, 0U);
 		}
@@ -191,6 +209,11 @@ namespace PeterHan.ModUpdateDate {
 		private CallResult<RemoteStorageDownloadUGCResult_t> onComplete;
 
 		/// <summary>
+		/// Triggered when a download completes.
+		/// </summary>
+		private Callback<DownloadItemResult_t> onGlobalComplete;
+
+		/// <summary>
 		/// The callback only stores the file ID, not the original mod ID, so store the active
 		/// mod here.
 		/// </summary>
@@ -202,6 +225,7 @@ namespace PeterHan.ModUpdateDate {
 		private readonly ConcurrentQueue<PublishedFileId_t> toDo;
 
 		protected SteamQueue() {
+			onGlobalComplete = null;
 			onComplete = null;
 			pending = PublishedFileId_t.Invalid;
 			toDo = new ConcurrentQueue<PublishedFileId_t>();
@@ -233,9 +257,15 @@ namespace PeterHan.ModUpdateDate {
 					if (CanStart(id) && Download(id)) break;
 		}
 
-		public void Dispose() {
+		private void DestroyCallbacks() {
 			onComplete?.Dispose();
 			onComplete = null;
+			onGlobalComplete?.Dispose();
+			onGlobalComplete = null;
+		}
+
+		public void Dispose() {
+			DestroyCallbacks();
 		}
 
 		/// <summary>
@@ -245,10 +275,16 @@ namespace PeterHan.ModUpdateDate {
 		/// <returns>true if the download has started and callback set, or false otherwise.</returns>
 		protected bool Download(PublishedFileId_t id) {
 			bool ok = false;
-			var apiCall = ExecuteDownload(id);
-			if (apiCall != SteamAPICall_t.Invalid) {
+			var apiCall = ExecuteDownload(id, out bool globalEvent);
+			if (globalEvent) {
 				pending = id;
-				onComplete?.Dispose();
+				DestroyCallbacks();
+				onGlobalComplete = Callback<DownloadItemResult_t>.Create(
+					OnGlobalDownloadComplete);
+				ok = true;
+			} else if (apiCall != SteamAPICall_t.Invalid) {
+				pending = id;
+				DestroyCallbacks();
 				onComplete = new CallResult<RemoteStorageDownloadUGCResult_t>(
 					OnDownloadComplete);
 				onComplete.Set(apiCall);
@@ -266,8 +302,11 @@ namespace PeterHan.ModUpdateDate {
 		/// Executes the Steam remote storage call to download this mod.
 		/// </summary>
 		/// <param name="id">The mod ID in the queue.</param>
+		/// <param name="globalEvent">If true, waits for the global DownloadItem event instead
+		/// of the result.</param>
 		/// <returns>The ID of the content to be downloaded.</returns>
-		protected abstract SteamAPICall_t ExecuteDownload(PublishedFileId_t id);
+		protected abstract SteamAPICall_t ExecuteDownload(PublishedFileId_t id,
+			out bool globalEvent);
 
 		/// <summary>
 		/// Called when a mod successfully downloads.
@@ -283,8 +322,7 @@ namespace PeterHan.ModUpdateDate {
 				OnError(pending, ioError ? EResult.k_EResultIOFailure : result);
 			else
 				OnComplete(pending, callback.m_nSizeInBytes);
-			onComplete?.Dispose();
-			onComplete = null;
+			DestroyCallbacks();
 			pending = PublishedFileId_t.Invalid;
 			Check();
 		}
@@ -295,6 +333,20 @@ namespace PeterHan.ModUpdateDate {
 		/// <param name="id">The mod ID that failed to download.</param>
 		/// <param name="result">The result of the download.</param>
 		protected abstract void OnError(PublishedFileId_t id, EResult result);
+
+		private void OnGlobalDownloadComplete(DownloadItemResult_t callback) {
+			var id = callback.m_nPublishedFileId;
+			var result = callback.m_eResult;
+			if (id == pending) {
+				if (result != EResult.k_EResultOK)
+					OnError(pending, result);
+				else
+					OnComplete(pending, 0);
+				DestroyCallbacks();
+				pending = PublishedFileId_t.Invalid;
+				Check();
+			}
+		}
 
 		/// <summary>
 		/// Queues up a mod ID for processing.

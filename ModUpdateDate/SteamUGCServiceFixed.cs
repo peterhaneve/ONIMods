@@ -36,6 +36,15 @@ namespace PeterHan.ModUpdateDate {
 		public static SteamUGCServiceFixed Instance { get; } = new SteamUGCServiceFixed();
 
 		/// <summary>
+		/// Reports if downloading (auto update) is still in progress.
+		/// </summary>
+		public bool UpdateInProgress {
+			get {
+				return !download.Idle;
+			}
+		}
+
+		/// <summary>
 		/// Stores the status of each Steam mod subscribed.
 		/// </summary>
 		private readonly ConcurrentDictionary<PublishedFileId_t, ModInfo> allMods;
@@ -80,6 +89,11 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		private readonly SteamQueue preview;
 
+		/// <summary>
+		/// Manages updating the main menu button when the idle state changes.
+		/// </summary>
+		private volatile bool wasIdle;
+
 		private SteamUGCServiceFixed() {
 			allMods = new ConcurrentDictionary<PublishedFileId_t, ModInfo>(2, 64);
 			clients = new List<SteamUGCService.IClient>(8);
@@ -92,6 +106,7 @@ namespace PeterHan.ModUpdateDate {
 			onItemUpdated = Callback<RemoteStoragePublishedFileUpdated_t>.Create(OnUGCUpdated);
 			onQueryComplete = null;
 			preview = new SteamPreviewQueue();
+			wasIdle = false;
 		}
 
 		/// <summary>
@@ -185,6 +200,7 @@ namespace PeterHan.ModUpdateDate {
 			var toAdd = HashSetPool<PublishedFileId_t, SteamUGCServiceFixed>.Allocate();
 			var toUpdate = HashSetPool<PublishedFileId_t, SteamUGCServiceFixed>.Allocate();
 			var loadPreviews = ListPool<SteamUGCService.Mod, SteamUGCServiceFixed>.Allocate();
+			bool idle;
 			// Mass request the details of all mods at once
 			foreach (var pair in allMods) {
 				var mod = pair.Value;
@@ -217,7 +233,8 @@ namespace PeterHan.ModUpdateDate {
 			if (toQuery.Count > 0 && onQueryComplete == null)
 				QueryUGCDetails(toQuery.ToArray());
 			toQuery.Recycle();
-			if (download.Idle)
+			idle = download.Idle;
+			if (idle)
 				// Avoid spamming by only notifying when all outstanding mods are downloaded
 				foreach (var pair in allMods) {
 					var mod = pair.Value;
@@ -247,13 +264,19 @@ namespace PeterHan.ModUpdateDate {
 			toAdd.Recycle();
 			toUpdate.Recycle();
 			toRemove.Recycle();
+			if (wasIdle != idle || ModUpdateDetails.ScrubConfig()) {
+				// Runs on foreground thread
+				wasIdle = idle;
+				ModUpdateDatePatches.UpdateMainMenu();
+			}
 		}
 
 		private void OnUGCDetailsComplete(SteamUGCQueryCompleted_t callback, bool ioError) {
 			var result = callback.m_eResult;
 			var handle = callback.m_handle;
 			PublishedFileId_t id;
-			if (!ioError && result == EResult.k_EResultOK)
+			if (!ioError && result == EResult.k_EResultOK) {
+				var allResults = ListPool<SteamUGCDetails_t, SteamUGCServiceFixed>.Allocate();
 				for (uint i = 0U; i < callback.m_unNumResultsReturned; i++) {
 					if (SteamUGC.GetQueryUGCResult(handle, i, out SteamUGCDetails_t details) &&
 							allMods.TryGetValue(id = details.m_nPublishedFileId,
@@ -266,8 +289,12 @@ namespace PeterHan.ModUpdateDate {
 						// Queue up the preview image
 						download.Queue(id);
 						preview.Queue(id);
+						allResults.Add(details);
 					}
 				}
+				ModUpdateDetails.OnInstalledUpdate(allResults);
+				allResults.Recycle();
+			}
 			SteamUGC.ReleaseQueryUGCRequest(handle);
 			onQueryComplete?.Dispose();
 			onQueryComplete = null;

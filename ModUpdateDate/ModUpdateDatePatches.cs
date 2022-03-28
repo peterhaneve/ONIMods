@@ -60,7 +60,7 @@ namespace PeterHan.ModUpdateDate {
 		/// <summary>
 		/// Updates the number of outdated mods on the main menu.
 		/// </summary>
-		private static void UpdateMainMenu() {
+		internal static void UpdateMainMenu() {
 			MainMenuWarning.Instance?.UpdateText();
 		}
 

@@ -40,6 +40,7 @@ namespace PeterHan.ModUpdateDate {
 				// Main menu update
 				public static LocString MAINMENU_UPDATE = "\n\n<color=#FFCC00>{0:D} mods may be out of date</color>";
 				public static LocString MAINMENU_UPDATE_1 = "\n\n<color=#FFCC00>1 mod may be out of date</color>";
+				public static LocString MAINMENU_UPDATING = "\n\n<color=#00CC00>Auto-Update in progress</color>";
 
 				public static LocString OPTION_MAINMENU = "Show Updates in Main Menu";
 				

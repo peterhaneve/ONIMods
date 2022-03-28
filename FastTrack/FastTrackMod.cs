@@ -155,6 +155,8 @@ namespace PeterHan.FastTrack {
 					go.AddOrGet<SoundUpdater>();
 				if (options.ParallelInventory)
 					UIPatches.BackgroundInventoryUpdater.CreateInstance();
+				if (options.MiscOpts)
+					go.AddOrGet<GamePatches.RadiationGridUpdater>();
 				// If debugging is on, start logging
 				if (options.Metrics)
 					go.AddOrGet<Metrics.DebugMetrics>();
@@ -177,8 +179,8 @@ namespace PeterHan.FastTrack {
 						null) {
 					harmony.Patch(typeof(FetchManager.FetchablesByPrefabId),
 						nameof(FetchManager.FetchablesByPrefabId.UpdatePickups),
-						prefix: new HarmonyMethod(typeof(FetchManagerFastUpdate),
-						nameof(FetchManagerFastUpdate.BeforeUpdatePickups)));
+						prefix: new HarmonyMethod(typeof(GamePatches.FetchManagerFastUpdate),
+						nameof(GamePatches.FetchManagerFastUpdate.BeforeUpdatePickups)));
 #if DEBUG
 					PUtil.LogDebug("Patched FetchManager for fast pickup updates");
 #endif

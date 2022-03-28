@@ -57,11 +57,6 @@ namespace PeterHan.FastTrack.Metrics {
 		private static readonly Profiler PATH_PROBES = new Profiler();
 
 		/// <summary>
-		/// Tracks Unity OnRenderImage() and related methods.
-		/// </summary>
-		internal static readonly NameBucketProfiler RENDER_IMAGE = new NameBucketProfiler();
-
-		/// <summary>
 		/// Tracks calls to sensor updates.
 		/// </summary>
 		internal static readonly Profiler SENSORS = new Profiler();
@@ -153,7 +148,6 @@ namespace PeterHan.FastTrack.Metrics {
 		internal static void ResetMethodHits() {
 			int n = TRACKED.Length;
 			LATE_UPDATE.Reset();
-			RENDER_IMAGE.Reset();
 			SENSORS.Reset();
 			UPDATE.Reset();
 			for (int i = 0; i < n; i++)

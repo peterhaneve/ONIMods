@@ -23,7 +23,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
-namespace PeterHan.FastTrack.VisualPatches {
+namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
 	/// A component added to SuitMarker instances to update things slower.
 	/// </summary>
