@@ -43,6 +43,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool LogicUpdates { get; set; }
 
+		[Option("Radiation Tweaks", "Speeds up radiation calculations." + PERF_LOW, "Buildings")]
+		[JsonProperty]
+		public bool RadiationOpts { get; set; }
+
 		[Option("Threaded Conduit Updates", "Multi-threads some updates to liquid and gas conduits." + PERF_LOW, "Buildings")]
 		[JsonProperty]
 		public bool ConduitOpts { get; set; }
@@ -188,6 +192,7 @@ namespace PeterHan.FastTrack {
 			OptimizeDialogs = true;
 			ParallelInventory = true;
 			PickupOpts = true;
+			RadiationOpts = true;
 			ReduceColonyTracking = false;
 			ReduceSoundUpdates = true;
 			ReduceTileUpdates = true;

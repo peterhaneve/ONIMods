@@ -30,7 +30,8 @@ namespace PeterHan.FastTrack {
 	public static class Game_Update_Patch {
 		internal static bool Prepare() {
 			var options = FastTrackOptions.Instance;
-			return options.ReduceTileUpdates || options.FastReachability;
+			return options.ReduceTileUpdates || options.FastReachability || options.
+				PickupOpts || options.MiscOpts;
 		}
 
 		/// <summary>
@@ -44,11 +45,9 @@ namespace PeterHan.FastTrack {
 		/// Applied after Update runs.
 		/// </summary>
 		internal static void Postfix() {
-			try {
-				VisualPatches.PropertyTextureUpdater.Instance?.StartUpdate();
-			} catch (System.Exception e) {
-				PUtil.LogError(e);
-			}
+			VisualPatches.PropertyTextureUpdater.Instance?.StartUpdate();
+			GamePatches.AsyncAmountsUpdater.Instance?.Finish();
+			GamePatches.SolidTransferArmUpdater.Instance?.Finish();
 		}
 	}
 

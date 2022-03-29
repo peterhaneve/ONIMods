@@ -42,6 +42,15 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
+		/// The number of job threads which will work on tasks in this job manager.
+		/// </summary>
+		public int ThreadCount {
+			get {
+				return threads.Length;
+			}
+		}
+
+		/// <summary>
 		/// The number of worker threads still finishing a task.
 		/// </summary>
 		private volatile int activeThreads;

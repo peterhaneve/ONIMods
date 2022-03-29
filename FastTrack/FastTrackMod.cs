@@ -105,6 +105,8 @@ namespace PeterHan.FastTrack {
 				VisualPatches.TerrainMeshRenderer.DestroyInstance();
 			if (options.FastReachability)
 				SensorPatches.FastGroupProber.Cleanup();
+			if (options.PickupOpts)
+				GamePatches.SolidTransferArmUpdater.DestroyInstance();
 			ConduitPatches.ConduitFlowMeshPatches.CleanupAll();
 			VisualPatches.GroundRendererDataPatches.CleanupAll();
 			PathPatches.DupeBrainGroupUpdater.DestroyInstance();
@@ -156,14 +158,17 @@ namespace PeterHan.FastTrack {
 				if (options.ParallelInventory)
 					UIPatches.BackgroundInventoryUpdater.CreateInstance();
 				if (options.MiscOpts)
-					go.AddOrGet<GamePatches.RadiationGridUpdater>();
+					go.AddOrGet<GamePatches.SlicedRadiationGridUpdater>();
+				// Requires the AJM to work
+				if (options.PickupOpts)
+					GamePatches.SolidTransferArmUpdater.CreateInstance();
+				if (options.ConduitOpts)
+					ConduitPatches.BackgroundConduitUpdater.CreateInstance();
 				// If debugging is on, start logging
 				if (options.Metrics)
 					go.AddOrGet<Metrics.DebugMetrics>();
 				inst.StartCoroutine(WaitForCleanLoad());
 			}
-			if (options.ConduitOpts)
-				ConduitPatches.BackgroundConduitUpdater.CreateInstance();
 			ConduitPatches.ConduitFlowVisualizerRenderer.Init();
 			if (options.UnstackLights)
 				VisualPatches.LightBufferManager.Init();
