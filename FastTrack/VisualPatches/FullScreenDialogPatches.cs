@@ -18,7 +18,7 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using System;
+using Rendering;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -28,13 +28,36 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// is visible, as the kanims would be hidden anyways.
 	/// </summary>
 	public static class FullScreenDialogPatches {
-		private static bool visible = true;
+		/// <summary>
+		/// Returns true if a full-screen dialog is visible, or false otherwise.
+		/// </summary>
+		internal static bool DialogVisible { get; private set; }
 
 		/// <summary>
 		/// On startup, no dialog is visible.
 		/// </summary>
 		internal static void Init() {
-			visible = true;
+			DialogVisible = false;
+		}
+
+		/// <summary>
+		/// Applied to BlockTileRenderer to stop rendering tiles if a full-screen dialog is
+		/// visible.
+		/// </summary>
+		[HarmonyPatch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.LateUpdate))]
+		public static class BlockTileRenderer_LateUpdate_Patch {
+			internal static bool Prepare() {
+				var options = FastTrackOptions.Instance;
+				return options.RenderTicks && options.MeshRendererOptions == FastTrackOptions.
+					MeshRendererSettings.None;
+			}
+
+			/// <summary>
+			/// Applied before LateUpdate runs.
+			/// </summary>
+			internal static bool Prefix() {
+				return !DialogVisible || GameUtil.IsCapturingTimeLapse();
+			}
 		}
 
 		/// <summary>
@@ -48,11 +71,13 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// Patches each fullscreen dialog's OnShow method.
 			/// </summary>
 			internal static IEnumerable<MethodBase> TargetMethods() {
-				yield return typeof(ResearchScreen).GetMethodSafe("OnShow", false,
-					typeof(bool));
 				yield return typeof(ClusterMapScreen).GetMethodSafe("OnShow", false,
 					typeof(bool));
+				yield return typeof(ResearchScreen).GetMethodSafe("OnShow", false,
+					typeof(bool));
 				yield return typeof(StarmapScreen).GetMethodSafe("OnShow", false,
+					typeof(bool));
+				yield return typeof(SkillsScreen).GetMethodSafe("OnShow", false,
 					typeof(bool));
 			}
 
@@ -60,7 +85,26 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// Applied after OnShow runs.
 			/// </summary>
 			internal static void Postfix(bool show) {
-				visible = !show;
+				DialogVisible = show;
+			}
+		}
+
+		/// <summary>
+		/// Applied to GroundRenderer to hide the ground if a full-screen dialog is visible.
+		/// </summary>
+		[HarmonyPatch(typeof(GroundRenderer), nameof(GroundRenderer.Render))]
+		public static class GroundRenderer_Render_Patch {
+			internal static bool Prepare() {
+				var options = FastTrackOptions.Instance;
+				return options.RenderTicks && options.MeshRendererOptions == FastTrackOptions.
+					MeshRendererSettings.None;
+			}
+
+			/// <summary>
+			/// Applied before Render runs.
+			/// </summary>
+			internal static bool Prefix(bool forceVisibleRebuild) {
+				return forceVisibleRebuild || !DialogVisible;
 			}
 		}
 
@@ -78,7 +122,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			internal static void Prefix(ref Vector2I vis_chunk_min, ref Vector2I vis_chunk_max)
 			{
 				int maxX = vis_chunk_max.x, maxY = vis_chunk_max.y;
-				if (maxX <= 9000 && maxY <= 9000 && !visible) {
+				if (maxX <= 9000 && maxY <= 9000 && DialogVisible) {
 					// It is not over 9000! (9999 is used for "show all" in the timelapse)
 					vis_chunk_min.x = int.MinValue;
 					vis_chunk_min.y = int.MinValue;

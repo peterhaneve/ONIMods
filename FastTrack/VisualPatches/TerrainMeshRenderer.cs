@@ -134,7 +134,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(TerrainBG), "OnSpawn")]
 	public static class TerrainBG_OnSpawn_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+			FastTrackOptions.MeshRendererSettings.None;
 
 		/// <summary>
 		/// Applied after OnSpawn runs.
@@ -152,7 +153,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(TerrainBG), "LateUpdate")]
 	public static class TerrainBG_LateUpdate_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+			FastTrackOptions.MeshRendererSettings.None;
 
 		/// <summary>
 		/// Wraps Material.SetTexture to update the correct stars material to its mesh

@@ -60,7 +60,11 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		private static readonly IDictionary<ConduitFlowVisualizer, double> NEXT_UPDATE =
 			new Dictionary<ConduitFlowVisualizer, double>(8);
 
-		private static readonly bool USE_MESH = FastTrackOptions.Instance.UseMeshRenderers;
+		/// <summary>
+		/// Whether to use a mesh for flow visualization.
+		/// </summary>
+		private static readonly bool USE_MESH = FastTrackOptions.Instance.
+			MeshRendererOptions != FastTrackOptions.MeshRendererSettings.None;
 
 		/// <summary>
 		/// The time interval in seconds for updates in Minimal mode.

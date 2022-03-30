@@ -132,7 +132,8 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// </summary>
 		[HarmonyPatch]
 		internal static class Cleanup_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+			internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+				FastTrackOptions.MeshRendererSettings.None;
 
 			internal static MethodBase TargetMethod() {
 				return CONDUIT_FLOW_MESH?.GetMethodSafe("Cleanup", false);
@@ -155,7 +156,8 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// </summary>
 		[HarmonyPatch]
 		internal static class Constructor_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+			internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+				FastTrackOptions.MeshRendererSettings.None;
 
 			internal static MethodBase TargetMethod() {
 				return CONDUIT_FLOW_MESH?.GetConstructor(PPatchTools.BASE_FLAGS | BindingFlags.
@@ -180,7 +182,8 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// </summary>
 		[HarmonyPatch]
 		internal static class End_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+			internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+				FastTrackOptions.MeshRendererSettings.None;
 
 			internal static MethodBase TargetMethod() {
 				return CONDUIT_FLOW_MESH?.GetMethodSafe("End", false, typeof(float),

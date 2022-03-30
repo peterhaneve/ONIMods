@@ -125,7 +125,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		[HarmonyPatch]
 		internal static class ClearMesh_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+			internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+				FastTrackOptions.MeshRendererSettings.None;
 
 			internal static MethodBase TargetMethod() {
 				return RENDER_DATA?.GetMethodSafe("ClearMesh", false);
@@ -148,7 +149,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		[HarmonyPatch]
 		internal static class Constructor_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+			internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+				FastTrackOptions.MeshRendererSettings.None;
 
 			internal static MethodBase TargetMethod() {
 				return RENDER_DATA?.GetConstructor(PPatchTools.BASE_FLAGS | BindingFlags.
@@ -173,7 +175,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		[HarmonyPatch]
 		internal static class Render_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+			internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+				FastTrackOptions.MeshRendererSettings.None;
 
 			internal static MethodBase TargetMethod() {
 				return RENDER_DATA?.GetMethodSafe("Render", false, typeof(Vector3),
@@ -186,7 +189,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 			internal static bool Prefix(Vector3 position, List<Vector3> ___pos, Mesh ___mesh) {
 				if (___mesh != null && visualizers.TryGetValue(___mesh,
 						out GroundMeshRenderer visualizer))
-					visualizer.UpdatePosition(position, ___pos.Count > 0);
+					visualizer.UpdatePosition(position, ___pos.Count > 0 && !
+						FullScreenDialogPatches.DialogVisible);
 				return false;
 			}
 		}

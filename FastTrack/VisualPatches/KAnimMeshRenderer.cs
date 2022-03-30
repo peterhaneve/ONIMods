@@ -168,7 +168,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(KAnimBatch), nameof(KAnimBatch.Clear))]
 		internal static class Clear_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+			internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+				FastTrackOptions.MeshRendererSettings.None;
 
 			/// <summary>
 			/// Applied before Clear runs.
@@ -190,7 +191,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		[HarmonyPatch(typeof(KAnimBatch), MethodType.Constructor, typeof(KAnimBatchGroup),
 			typeof(int), typeof(float), typeof(MaterialType))]
 		internal static class Constructor_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+			internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+				FastTrackOptions.MeshRendererSettings.None;
 
 			/// <summary>
 			/// Applied after the constructor runs.
@@ -216,6 +218,9 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(KAnimBatch), nameof(KAnimBatch.Deactivate))]
 		public static class Deactivate_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+				FastTrackOptions.MeshRendererSettings.None;
+
 			/// <summary>
 			/// Applied after Deactivate runs.
 			/// </summary>
@@ -234,7 +239,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(KAnimBatch), nameof(KAnimBatch.Init))]
 		internal static class Init_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+			internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+				FastTrackOptions.MeshRendererSettings.None;
 
 			/// <summary>
 			/// Applied after Init runs.
@@ -249,7 +255,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(KAnimBatchManager), nameof(KAnimBatchManager.Render))]
 		internal static class Render_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+			internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+				FastTrackOptions.MeshRendererSettings.None;
 
 			/// <summary>
 			/// Applied before Render runs.
@@ -266,6 +273,9 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(KAnimBatch), nameof(KAnimBatch.SetBatchSet))]
 		public static class SetBatchSet_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+				FastTrackOptions.MeshRendererSettings.None;
+
 			/// <summary>
 			/// Applied after Deactivate runs.
 			/// </summary>
@@ -284,7 +294,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(KAnimBatch), nameof(KAnimBatch.UpdateDirty))]
 		internal static class UpdateDirty_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+			internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+				FastTrackOptions.MeshRendererSettings.None;
 
 			/// <summary>
 			/// Applied after UpdateDirty runs.

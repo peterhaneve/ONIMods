@@ -103,7 +103,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(PrioritizableRenderer), nameof(PrioritizableRenderer.Cleanup))]
 	public static class PrioritizableRenderer_Cleanup_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+			FastTrackOptions.MeshRendererSettings.None;
 
 		/// <summary>
 		/// Applied before Cleanup runs.
@@ -119,7 +120,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(PrioritizableRenderer), MethodType.Constructor, new Type[0])]
 	public static class PrioritizableRenderer_Constructor_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+			FastTrackOptions.MeshRendererSettings.None;
 
 		/// <summary>
 		/// Applied after the constructor runs.
@@ -134,7 +136,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(PrioritizableRenderer), nameof(PrioritizableRenderer.RenderEveryTick))]
 	public static class PrioritizableRenderer_RenderEveryTick_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+			FastTrackOptions.MeshRendererSettings.None;
 
 		/// <summary>
 		/// Transpiles PrioritizableRenderer to first update the mesh renderer status, then

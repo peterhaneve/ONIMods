@@ -370,8 +370,14 @@ namespace PeterHan.FastTrack.PathPatches {
 			}
 
 			public void InternalDoWorkItem(int index) {
-				if (index >= 0 && index < Count)
-					updater.byId[index].UpdatePickups(navigator.PathProber, navigator, worker);
+				if (index >= 0 && index < Count) {
+					var thisPrefab = updater.byId[index];
+					var solidArmUpdater = GamePatches.SolidTransferArmUpdater.Instance;
+					thisPrefab.UpdatePickups(navigator.PathProber, navigator, worker);
+					// Help out our poor transfer arms in need
+					if (solidArmUpdater != null)
+						solidArmUpdater.UpdateCache(thisPrefab.fetchables.GetDataList());
+				}
 			}
 
 			public void TriggerAbort() {

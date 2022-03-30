@@ -20,10 +20,12 @@ using HarmonyLib;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 
+using CachedPickupable = SolidTransferArm.CachedPickupable;
 using SolidTransferArmBucket = UpdateBucketWithUpdater<ISim1000ms>.Entry;
 
 namespace PeterHan.FastTrack.GamePatches {
@@ -62,6 +64,17 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal static SolidTransferArmUpdater Instance { get; private set; }
 
 		/// <summary>
+		/// Tests an object to see if a sweeper can pick it up.
+		/// </summary>
+		/// <param name="pickupable">The item to pick up.</param>
+		/// <param name="go">The sweeper trying to pick it up.</param>
+		/// <returns>true if it can be picked up, or false otherwise.</returns>
+		private static bool CanUse(Pickupable pickupable, GameObject go) {
+			return pickupable.CouldBePickedUpByTransferArm(go) && pickupable.KPrefabID.
+				HasAnyTags(ref SolidTransferArm.tagBits);
+		}
+
+		/// <summary>
 		/// Creates the singleton instance of this class.
 		/// </summary>
 		internal static void CreateInstance() {
@@ -82,6 +95,11 @@ namespace PeterHan.FastTrack.GamePatches {
 		public IWorkItemCollection Jobs => this;
 
 		/// <summary>
+		/// The cached pickupables from async fetches.
+		/// </summary>
+		private readonly ConcurrentQueue<CachedPickupable> cached;
+
+		/// <summary>
 		/// Fired when the sweepers are all updated.
 		/// </summary>
 		private readonly EventWaitHandle onComplete;
@@ -92,6 +110,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		private readonly IList<SolidTransferArmInfo> sweepers;
 
 		private SolidTransferArmUpdater() {
+			cached = new ConcurrentQueue<CachedPickupable>();
 			onComplete = new AutoResetEvent(false);
 			sweepers = new List<SolidTransferArmInfo>(32);
 		}
@@ -109,19 +128,32 @@ namespace PeterHan.FastTrack.GamePatches {
 				WidthInCells, x + range), minY = Math.Max(0, y - range), minX = Math.Max(0,
 				x - range);
 			var oldReachable = REACHABLE.Get(sweeper);
+			var go = info.gameObject;
 			// Recalculate the visible cells
 			for (int ny = minY; ny <= maxY; ny++)
 				for (int nx = minX; nx <= maxX; nx++) {
 					cell = Grid.XYToCell(nx, ny);
-					if (Grid.IsValidCell(cell) && Grid.IsPhysicallyAccessible(x, y, nx, ny,
-							true))
+					if (Grid.IsPhysicallyAccessible(x, y, nx, ny, true))
 						reachableCells.Add(cell);
 				}
 			if (!oldReachable.SetEquals(reachableCells)) {
-				// O(n) operation worse case
+				// O(n) operation worst case
 				oldReachable.Clear();
 				oldReachable.UnionWith(reachableCells);
 				info.refreshedCells = true;
+			}
+			// Gather stored objects not found by the partitioner
+			var pickupables = ITEMS.Get(sweeper);
+			pickupables.Clear();
+			foreach (var entry in cached) {
+				var pickupable = entry.pickupable;
+				if (pickupable != null) {
+					cell = entry.storage_cell;
+					Grid.CellToXY(cell, out x, out y);
+					if (x >= minX && x <= maxX && y >= minY && y <= maxY && reachableCells.
+							Contains(cell) && CanUse(pickupable, go))
+						pickupables.Add(pickupable);
+				}
 			}
 			var gsp = GameScenePartitioner.Instance;
 			// Gather nearby pickupables with the scene partitioner, faster and more memory
@@ -129,8 +161,6 @@ namespace PeterHan.FastTrack.GamePatches {
 			if (gsp != null) {
 				var found = ListPool<ScenePartitionerEntry, SolidTransferArmUpdater>.
 					Allocate();
-				var pickupables = ITEMS.Get(sweeper);
-				pickupables.Clear();
 				// Avoid contention, as unfortunately GSP is not very thread safe
 				lock (sweepers) {
 					gsp.GatherEntries(new Extents(minX, minY, maxX - minX + 1, maxY - minY +
@@ -139,10 +169,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				foreach (var entry in found)
 					if (entry.obj is Pickupable pickupable && pickupable != null) {
 						cell = pickupable.cachedCell;
-						// Must be in range, can be picked up, not banned tags
-						if (reachableCells.Contains(cell) && pickupable.KPrefabID.HasAnyTags(
-								ref SolidTransferArm.tagBits) && pickupable.
-								CouldBePickedUpByTransferArm(info.gameObject))
+						if (reachableCells.Contains(cell) && CanUse(pickupable, go))
 							pickupables.Add(pickupable);
 					}
 				found.Recycle();
@@ -167,8 +194,11 @@ namespace PeterHan.FastTrack.GamePatches {
 							autoSweeper).IsOperational)
 						sweepers.Add(new SolidTransferArmInfo(autoSweeper));
 				}
-				onComplete.Reset();
-				inst.Run(this);
+				if (sweepers.Count > 0) {
+					onComplete.Reset();
+					inst.Run(this);
+				} else
+					onComplete.Set();
 			}
 		}
 
@@ -193,6 +223,8 @@ namespace PeterHan.FastTrack.GamePatches {
 				}
 				sweepers.Clear();
 			}
+			// Clear the cached pickupables
+			while (cached.TryDequeue(out _)) ;
 		}
 
 		public void InternalDoWorkItem(int index) {
@@ -209,6 +241,22 @@ namespace PeterHan.FastTrack.GamePatches {
 		}
 
 		public void TriggerStart() { }
+
+		/// <summary>
+		/// Updates the cache with items from the Async Fetch manager.
+		/// </summary>
+		/// <param name="items">The fetchables for a prefab ID.</param>
+		internal void UpdateCache(IList<FetchManager.Fetchable> items) {
+			int n = items.Count;
+			for (int i = 0; i < n; i++) {
+				var pickupable = items[i].pickupable;
+				if (pickupable.KPrefabID.HasTag(GameTags.Stored))
+					cached.Enqueue(new CachedPickupable {
+						pickupable = pickupable,
+						storage_cell = pickupable.cachedCell
+					});
+			}
+		}
 
 		/// <summary>
 		/// Holds job information for one Auto-Sweeper.

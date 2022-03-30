@@ -101,14 +101,17 @@ namespace PeterHan.FastTrack {
 				ConduitPatches.BackgroundConduitUpdater.DestroyInstance();
 			if (options.ParallelInventory)
 				UIPatches.BackgroundInventoryUpdater.DestroyInstance();
-			if (options.UseMeshRenderers)
+			if (options.MeshRendererOptions != FastTrackOptions.MeshRendererSettings.None) {
 				VisualPatches.TerrainMeshRenderer.DestroyInstance();
+				ConduitPatches.ConduitFlowMeshPatches.CleanupAll();
+				VisualPatches.GroundRendererDataPatches.CleanupAll();
+			}
+			if (options.MeshRendererOptions == FastTrackOptions.MeshRendererSettings.All)
+				VisualPatches.TileMeshRenderer.DestroyInstance();
 			if (options.FastReachability)
 				SensorPatches.FastGroupProber.Cleanup();
 			if (options.PickupOpts)
 				GamePatches.SolidTransferArmUpdater.DestroyInstance();
-			ConduitPatches.ConduitFlowMeshPatches.CleanupAll();
-			VisualPatches.GroundRendererDataPatches.CleanupAll();
 			PathPatches.DupeBrainGroupUpdater.DestroyInstance();
 			AsyncJobManager.DestroyInstance();
 			GameRunning = false;

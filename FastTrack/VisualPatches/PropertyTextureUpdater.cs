@@ -313,7 +313,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			if (outstanding > 0)
 				onComplete.WaitOne(FastTrackMod.MAX_TIMEOUT);
 			DisposeAll();
-			if (lerpers != null) {
+			if (lerpers != null && !FullScreenDialogPatches.DialogVisible) {
 				int n = lerpers.Length;
 				for (int i = 0; i < n; i++) {
 					var lerper = lerpers[i];
@@ -387,7 +387,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		internal void StartUpdate() {
 			var inst = PropertyTextures.instance;
-			if (Grid.IsInitialized() && !Game.Instance.IsLoading() && inst != null) {
+			if (Grid.IsInitialized() && !Game.Instance.IsLoading() && inst != null &&
+					(!FullScreenDialogPatches.DialogVisible || forceLateUpdate)) {
 				var buffers = inst.textureBuffers;
 				bool timelapse = GameUtil.IsCapturingTimeLapse() || constantsDirty;
 				int n = allProperties.Count, update = nextPropertyIndex;

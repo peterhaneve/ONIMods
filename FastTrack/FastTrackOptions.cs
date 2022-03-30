@@ -147,6 +147,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool NoSplash { get; set; }
 
+		[Option("No Tile Caps", "Disables all ornamentals on constructed tiles." + PERF_LOW, "Visual")]
+		[JsonProperty]
+		public bool NoTileDecor { get; set; }
+
 		[Option("Optimize Renderers", "Optimizes several renderers that run every frame.\n<i>Some visual artifacts may appear with no effect on gameplay</i>" + PERF_MEDIUM, "Visual")]
 		[JsonProperty]
 		public bool RenderTicks { get; set; }
@@ -159,9 +163,9 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool ReduceTileUpdates { get; set; }
 
-		[Option("Use Mesh Renderers", "Use mesh renderers instead of redrawing meshes every frame." + PERF_LOW, "Visual")]
+		[Option("Use Mesh Renderers", "Use mesh renderers instead of redrawing meshes every frame." + PERF_MEDIUM, "Visual")]
 		[JsonProperty]
-		public bool UseMeshRenderers { get; set; }
+		public MeshRendererSettings MeshRendererOptions { get; set; }
 
 		[Option("Log Debug Metrics", "Logs extra debug information to the game log.\n\n<b>Only use this option if directed to do so by a developer.</b>", "Miscellaneous")]
 		[JsonProperty]
@@ -183,12 +187,14 @@ namespace PeterHan.FastTrack {
 			FastUpdatePickups = false;
 			InfoCardOpts = true;
 			LogicUpdates = true;
+			MeshRendererOptions = MeshRendererSettings.All;
 			Metrics = false;
 			MinimalKCV = false;
 			MiscOpts = true;
 			NoBounce = true;
 			NoConversations = false;
 			NoSplash = true;
+			NoTileDecor = false;
 			OptimizeDialogs = true;
 			ParallelInventory = true;
 			PickupOpts = true;
@@ -199,7 +205,6 @@ namespace PeterHan.FastTrack {
 			RenderTicks = true;
 			SensorOpts = true;
 			ThreatOvercrowding = true;
-			UseMeshRenderers = true;
 			UnstackLights = true;
 		}
 
@@ -213,6 +218,18 @@ namespace PeterHan.FastTrack {
 			Reduced,
 			[Option("Minimal", "Pipe animations are disabled outside the Liquid or Gas overlay.")]
 			Minimal
+		}
+
+		/// <summary>
+		/// Where to use mesh renderers.
+		/// </summary>
+		public enum MeshRendererSettings {
+			[Option("All", "Use mesh renderers for all graphics.\r\n<i>Incompatible with mods: True Tiles</i>")]
+			All,
+			[Option("All But Tiles", "Use mesh renderers for all non-tileable graphics.")]
+			AllButTiles,
+			[Option("Disabled", "Do not use mesh renderers for any graphics.")]
+			None
 		}
 
 		/// <summary>

@@ -73,7 +73,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(FallingWater), "OnCleanUp")]
 	public static class FallingWater_OnCleanUp_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+			FastTrackOptions.MeshRendererSettings.None;
 
 		/// <summary>
 		/// Applied before OnCleanUp runs.
@@ -92,7 +93,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(FallingWater), "OnSpawn")]
 	public static class FallingWater_OnSpawn_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+			FastTrackOptions.MeshRendererSettings.None;
 
 		/// <summary>
 		/// Applied after OnSpawn runs.
@@ -108,7 +110,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(FallingWater), nameof(FallingWater.Render))]
 	public static class FallingWater_Render_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.UseMeshRenderers;
+		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
+			FastTrackOptions.MeshRendererSettings.None;
 
 		/// <summary>
 		/// Transpiles Render to disable the actual Graphics.DrawMesh call.
