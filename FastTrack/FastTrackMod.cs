@@ -137,8 +137,8 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		[PLibMethod(RunAt.InMainMenu)]
 		internal static void OnMainMenu() {
-			if (FastTrackOptions.Instance.OptimizeDialogs)
-				onWorldGenLoad.WaitOne(3000);
+			if (FastTrackOptions.Instance.OptimizeDialogs && !onWorldGenLoad.WaitOne(3000))
+				PUtil.LogWarning("Worldgen was not loaded within the timeout!");
 		}
 
 		/// <summary>

@@ -164,7 +164,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				mult += converter.Evaluate();
 			}
 			if (___lightEfficiencyBonus && Grid.IsValidCell(cell = Grid.PosToCell(worker.
-					gameObject))) {
+					transform.position))) {
 				Guid handle = ___lightEfficiencyBonusStatusItemHandle;
 				if (Grid.LightIntensity[cell] > 0) {
 					___currentlyLit = true;

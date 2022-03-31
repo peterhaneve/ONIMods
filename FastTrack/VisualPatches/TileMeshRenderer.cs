@@ -543,7 +543,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 								GenerateVertices(x, y, color, chunk);
 							}
 						}
-					if (chunk.vertices.Count > 0) {
+					if (MeshUtil.vertices.Count > 0) {
 						chunk.CreateMesh();
 						chunk.BuildMesh();
 						chunk.SetActive(true);
@@ -574,7 +574,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 				int w = Grid.WidthInCells, maxY = CHUNK_SIZE * (chunkY + 1), minX =
 					CHUNK_SIZE * chunkX, maxX = CHUNK_SIZE + minX;
 				var chunk = decorChunks[chunkX, chunkY];
-				var indices = chunk.indices;
 				// Create vertex arrays
 				chunk.Clear();
 				decorTriangles.Clear();
@@ -586,7 +585,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 							GenerateDecorVertices(x, y, color, chunk);
 						}
 					}
-				if (chunk.vertices.Count > 0) {
+				if (MeshUtil.vertices.Count > 0) {
+					var indices = MeshUtil.indices;
 					int d = decorTriangles.Count;
 					chunk.CreateMesh();
 					// Triangles must be in sorted order

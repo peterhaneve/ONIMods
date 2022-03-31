@@ -199,8 +199,10 @@ namespace PeterHan.FastTrack.PathPatches {
 			var inst = GlobalChoreProvider.Instance;
 			if (updatingPickups.Count > 0) {
 				// Wait out the pickups update
-				onFetchComplete.WaitOne(FastTrackMod.MAX_TIMEOUT >> 1);
-				if (fm != null && inst != null) {
+				bool updated = onFetchComplete.WaitOne(FastTrackMod.MAX_TIMEOUT);
+				if (!updated)
+					PUtil.LogWarning("Fetch updates did not complete within the timeout!");
+				if (fm != null && inst != null && updated) {
 					var fetches = inst.fetches;
 					var pickups = GET_PICKUPS.Get(fm);
 					foreach (var entry in updatingPickups) {

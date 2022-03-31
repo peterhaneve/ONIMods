@@ -202,7 +202,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		private static void SpawnFXIf(Game instance, SpawnFXHashes fx, Vector3 position,
 				float rotation, Sublimates caller) {
 			if (caller != null && instance != null) {
-				int cell = Grid.PosToCell(caller);
+				int cell = Grid.PosToCell(caller.transform.position);
 				// GetMyWorldId but with precomputed cell
 				if (Grid.IsValidCell(cell)) {
 					byte id = Grid.WorldIdx[cell];

@@ -213,14 +213,16 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal void Finish() {
 			int n = sweepers.Count;
 			if (n > 0 && AsyncJobManager.Instance != null) {
-				onComplete.WaitOne(FastTrackMod.MAX_TIMEOUT);
-				for (int i = 0; i < n; i++) {
-					var info = sweepers[i];
-					var sweeper = info.sweeper;
-					if (info.refreshedCells)
-						INCREMENT_SERIAL_NO.Invoke(sweeper);
-					SIM.Invoke(sweeper);
-				}
+				if (onComplete.WaitOne(FastTrackMod.MAX_TIMEOUT))
+					for (int i = 0; i < n; i++) {
+						var info = sweepers[i];
+						var sweeper = info.sweeper;
+						if (info.refreshedCells)
+							INCREMENT_SERIAL_NO.Invoke(sweeper);
+						SIM.Invoke(sweeper);
+					}
+				else
+					PUtil.LogWarning("Auto-Sweepers did not update within the timeout!");
 				sweepers.Clear();
 			}
 			// Clear the cached pickupables
@@ -287,7 +289,7 @@ namespace PeterHan.FastTrack.GamePatches {
 					throw new ArgumentNullException(nameof(sweeper));
 				var go = sweeper.gameObject;
 				gameObject = go;
-				cell = Grid.PosToCell(go);
+				cell = Grid.PosToCell(sweeper.transform.position);
 				refreshedCells = false;
 				this.sweeper = sweeper;
 			}

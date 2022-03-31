@@ -215,8 +215,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Ensures that all world inventories are done updating.
 		/// </summary>
 		internal void EndUpdateAll() {
-			if (toUpdate.Count > 0)
-				onComplete.WaitOne(FastTrackMod.MAX_TIMEOUT);
+			if (toUpdate.Count > 0 && !onComplete.WaitOne(FastTrackMod.MAX_TIMEOUT))
+				PUtil.LogWarning("Inventory updates did not complete within the timeout!");
 			toUpdate.Clear();
 		}
 

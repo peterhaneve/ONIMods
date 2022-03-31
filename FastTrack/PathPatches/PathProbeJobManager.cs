@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.Core;
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -130,8 +131,10 @@ namespace PeterHan.FastTrack.PathPatches {
 			var jobManager = AsyncJobManager.Instance;
 			if (jobManager != null && running) {
 				var now = Stopwatch.StartNew();
-				onPathDone.WaitOne(FastTrackMod.MAX_TIMEOUT);
-				Metrics.DebugMetrics.LogPathProbe(now.ElapsedTicks, totalRuntime);
+				if (onPathDone.WaitOne(FastTrackMod.MAX_TIMEOUT))
+					Metrics.DebugMetrics.LogPathProbe(now.ElapsedTicks, totalRuntime);
+				else
+					PUtil.LogWarning("Path probing did not complete within the timeout!");
 				jobCount = 0;
 				totalRuntime = 0L;
 				running = false;

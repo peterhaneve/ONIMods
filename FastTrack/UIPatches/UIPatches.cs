@@ -310,6 +310,33 @@ namespace PeterHan.FastTrack.UIPatches {
 	}
 
 	/// <summary>
+	/// Applied to TechItems to remove a duplicate Add call.
+	/// </summary>
+	[HarmonyPatch(typeof(Database.TechItems), nameof(Database.TechItems.AddTechItem))]
+	public static class TechItems_AddTechItem_Patch {
+		/// <summary>
+		/// Transpiles AddTechItem to remove an Add call that duplicates every item, as it was
+		/// already added to the constructor
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+			var target = typeof(ResourceSet<TechItem>).GetMethodSafe(nameof(
+				ResourceSet<TechItem>.Add), false, typeof(TechItem));
+			foreach (var instr in instructions) {
+				if (target != null && instr.Is(OpCodes.Callvirt, target)) {
+					// Original method was 1 arg to 1 arg and result was ignored, so just rip
+					// it out
+					instr.opcode = OpCodes.Nop;
+					instr.operand = null;
+#if DEBUG
+					PUtil.LogDebug("Patched TechItems.AddTechItem");
+#endif
+				}
+				yield return instr;
+			}
+		}
+	}
+
+	/// <summary>
 	/// Applied to TrackerTool to reduce the update rate from 50 trackers/frame to 10/frame.
 	/// </summary>
 	[HarmonyPatch(typeof(TrackerTool), "OnSpawn")]

@@ -164,7 +164,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		protected override void OnSpawn() {
 			base.OnSpawn();
 			hadAvailableSuit = false;
-			cell = Grid.PosToCell(this);
+			cell = Grid.PosToCell(transform.position);
 			if (suitCheckpoint != null)
 				suitCheckpoint.GetAttachedLockers(docks);
 			UpdateSuitStatus();

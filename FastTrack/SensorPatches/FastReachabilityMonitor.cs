@@ -94,7 +94,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 			var inst = FastGroupProber.Instance;
 			if (inst != null && smi != null) {
 				var offsets = smi.master.GetOffsets();
-				var extents = new Extents(Grid.PosToCell(this), offsets);
+				var extents = new Extents(Grid.PosToCell(transform.position), offsets);
 				// Only if the extents actually changed
 				if (extents.x != lastExtents.x || extents.y != lastExtents.y || extents.
 						width != lastExtents.width || extents.height != lastExtents.height) {

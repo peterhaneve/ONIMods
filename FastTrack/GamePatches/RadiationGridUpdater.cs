@@ -37,7 +37,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		public void SlicedSim1000ms(float dt) {
 			RadiationGridEmitter emitter;
 			if (radiator != null && (emitter = radiator.emitter) != null) {
-				emitter.originCell = Grid.PosToCell(this);
+				emitter.originCell = Grid.PosToCell(transform.position);
 				emitter.Emit();
 			}
 		}

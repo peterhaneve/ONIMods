@@ -290,7 +290,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 					DrowningMonitor monitor) {
 				var go = item.gameObject;
 				// Was already null checked
-				int cell = Grid.PosToCell(go.transform.GetPosition());
+				int cell = Grid.PosToCell(item.transform.position);
 				if (monitor == null || !monitor.canDrownToDeath || monitor.livesUnderWater ||
 						monitor.IsCellSafe(cell)) {
 					// Is it closer?

@@ -147,7 +147,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 		private static CavityInfo UpdateRoom(OvercrowdingMonitor.Instance smi,
 				KPrefabID prefabID) {
 			CavityInfo room = smi.cavity, newRoom = Game.Instance.roomProber?.GetCavityForCell(
-				Grid.PosToCell(smi));
+				Grid.PosToCell(smi.transform.position));
 			prefabID.UpdateTagBits();
 			if (newRoom != room) {
 				bool isEgg = prefabID.HasAnyTags_AssumeLaundered(ref EGG), light =
@@ -203,7 +203,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 		private static void FindThreatCritter(ThreatMonitor.Instance instance,
 				List<FactionAlignment> threats, Navigator navigator) {
 			// Base game uses hard coded 20 here
-			var extents = new Extents(Grid.PosToCell(instance.gameObject), 20);
+			var extents = new Extents(Grid.PosToCell(instance.transform.position), 20);
 			var myAlign = instance.alignment;
 			var friendly = instance.def.friendlyCreatureTags;
 			var gsp = GameScenePartitioner.Instance;

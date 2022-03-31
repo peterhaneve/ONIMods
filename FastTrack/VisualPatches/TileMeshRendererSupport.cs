@@ -42,22 +42,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// Contains the mesh renderer used to render a particular chunk of tileables.
 	/// </summary>
 	internal sealed class MeshChunk : IDisposable {
-		private const int PRESIZE = 32;
-
-		/// <summary>
-		/// The color array to use for the mesh.
-		/// </summary>
-		internal readonly List<Color> colors;
-
 		/// <summary>
 		/// Whether this chunk is dirty.
 		/// </summary>
 		internal bool dirty;
-
-		/// <summary>
-		/// The index array to use for the mesh.
-		/// </summary>
-		internal readonly List<int> indices;
 
 		/// <summary>
 		/// The material to use for rendering.
@@ -80,16 +68,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 		private readonly int renderLayer;
 
 		/// <summary>
-		/// The texture coordinates array to use for the mesh.
-		/// </summary>
-		internal readonly List<Vector2> uvs;
-
-		/// <summary>
-		/// The vertex array to use for the mesh.
-		/// </summary>
-		internal readonly List<Vector3> vertices;
-
-		/// <summary>
 		/// Whether this mesh was active last frame.
 		/// </summary>
 		private bool wasActive;
@@ -102,15 +80,11 @@ namespace PeterHan.FastTrack.VisualPatches {
 		public MeshChunk(Material material, int renderLayer, float z) {
 			// MeshUtil was useful before for shared arrays, but Unity's mesh renderers
 			// extract the array, so it needs to be separate
-			colors = new List<Color>(PRESIZE);
 			dirty = true;
-			indices = new List<int>(PRESIZE);
 			this.material = material ?? throw new ArgumentNullException(nameof(material));
 			mesh = null;
 			renderer = null;
 			this.renderLayer = renderLayer;
-			uvs = new List<Vector2>(PRESIZE);
-			vertices = new List<Vector3>(PRESIZE);
 			wasActive = false;
 			this.z = z;
 		}
@@ -119,22 +93,23 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// Builds the mesh from the vertex arrays.
 		/// </summary>
 		public void BuildMesh() {
+			var vertices = MeshUtil.vertices;
 			int n = vertices.Count;
 			mesh.Clear();
 			mesh.SetVertices(vertices, 0, n, MeshUpdateFlags.DontValidateIndices);
-			mesh.SetUVs(0, uvs, 0, n, MeshUpdateFlags.DontValidateIndices);
-			mesh.SetColors(colors, 0, n, MeshUpdateFlags.DontValidateIndices);
-			mesh.SetTriangles(indices, 0, true);
+			mesh.SetUVs(0, MeshUtil.uvs, 0, n, MeshUpdateFlags.DontValidateIndices);
+			mesh.SetColors(MeshUtil.colours, 0, n, MeshUpdateFlags.DontValidateIndices);
+			mesh.SetTriangles(MeshUtil.indices, 0, true);
 		}
 
 		/// <summary>
 		/// Clears all of the vertex arrays.
 		/// </summary>
 		public void Clear() {
-			vertices.Clear();
-			uvs.Clear();
-			indices.Clear();
-			colors.Clear();
+			MeshUtil.vertices.Clear();
+			MeshUtil.uvs.Clear();
+			MeshUtil.indices.Clear();
+			MeshUtil.colours.Clear();
 		}
 
 		/// <summary>
@@ -229,9 +204,9 @@ namespace PeterHan.FastTrack.VisualPatches {
 				int y, float score, Color color, ICollection<TriangleInfo> triangles,
 				MeshChunk chunk) {
 			var variants = decor.variants;
-			var vertices = chunk.vertices;
-			var colors = chunk.colors;
-			var uvs = chunk.uvs;
+			var vertices = MeshUtil.vertices;
+			var colors = MeshUtil.colours;
+			var uvs = MeshUtil.uvs;
 			int index = (int)((variants.Length - 1) * score);
 			var variant = variants[index];
 			Vector3 offset = new Vector3(x, y, 0.0f) + variant.offset;
@@ -274,10 +249,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 			Vector2 topRight = new Vector2(x + size, y + size);
 			Vector2 uvWX = new Vector2(atlasInfo.uvBox.x, atlasInfo.uvBox.w);
 			Vector2 uvYZ = new Vector2(atlasInfo.uvBox.z, atlasInfo.uvBox.y);
-			var vertices = chunk.vertices;
-			var uvs = chunk.uvs;
-			var indices = chunk.indices;
-			var colors = chunk.colors;
+			var vertices = MeshUtil.vertices;
+			var uvs = MeshUtil.uvs;
+			var indices = MeshUtil.indices;
+			var colors = MeshUtil.colours;
 			if ((connected & Bits.Left) == 0)
 				botLeft.x -= WORLD_TRIM_SIZE;
 			else

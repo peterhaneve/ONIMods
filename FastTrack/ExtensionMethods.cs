@@ -166,6 +166,18 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
+		/// Checks to see if the cell allows pipe visibility; shared by conduit culling code.
+		/// </summary>
+		/// <param name="cell">The cell to test.</param>
+		/// <returns>true if a pipe could be seen in the cell (visible, not fully solid or
+		/// transparent), or false otherwise</returns>
+		public static bool IsVisibleCell(this int cell) {
+			var element = Grid.Element[cell];
+			return Grid.IsValidCell(cell) && Grid.IsVisible(cell) && (element == null ||
+				!element.IsSolid || Grid.Transparent[cell]);
+		}
+
+		/// <summary>
 		/// Gets the elapsed time in microseconds.
 		/// </summary>
 		/// <param name="ticks">The time elapsed in stopwatch ticks.</param>

@@ -235,6 +235,10 @@ namespace PeterHan.FastTrack {
 				PPatchTools.AnyArguments);
 			yield return typeof(AudioMixer).GetMethodSafe(nameof(AudioMixer.Stop), false,
 				PPatchTools.AnyArguments);
+			yield return typeof(ConduitFlowVisualizer).GetMethodSafe("AddAudioSource",
+				false, PPatchTools.AnyArguments);
+			yield return typeof(ConduitFlowVisualizer).GetMethodSafe("TriggerAudio",
+				false, PPatchTools.AnyArguments);
 			yield return typeof(MusicManager).GetMethodSafe(nameof(MusicManager.StopSong),
 				false, PPatchTools.AnyArguments);
 			yield return typeof(KFMOD).GetMethodSafe(nameof(KFMOD.CreateInstance), true,
@@ -243,6 +247,10 @@ namespace PeterHan.FastTrack {
 				PPatchTools.AnyArguments);
 			yield return typeof(KFMOD).GetMethodSafe(nameof(KFMOD.RenderEveryTick), true,
 				PPatchTools.AnyArguments);
+			yield return typeof(SolidConduitFlowVisualizer).GetMethodSafe("AddAudioSource",
+				false, PPatchTools.AnyArguments);
+			yield return typeof(SolidConduitFlowVisualizer).GetMethodSafe("TriggerAudio",
+				false, PPatchTools.AnyArguments);
 			yield return typeof(SoundEvent).GetMethodSafe(nameof(SoundEvent.PlaySound), false,
 				typeof(AnimEventManager.EventPlayerData), typeof(string));
 		}

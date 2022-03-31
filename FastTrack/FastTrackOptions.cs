@@ -135,6 +135,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool DisableSound { get; set; }
 
+		[Option("Cull Buildings in Tiles", "Hide conduits and wires inside solid walls." + PERF_LOW, "Visual")]
+		[JsonProperty]
+		public bool CullConduits { get; set; }
+
 		[Option("Info Card Optimization", "Optimizes the info cards shown on hover.\n<i>Values in info cards may be formatted slightly differently</i>" + PERF_MEDIUM, "Visual")]
 		[JsonProperty]
 		public bool InfoCardOpts { get; set; }
@@ -176,6 +180,7 @@ namespace PeterHan.FastTrack {
 			CachePaths = true;
 			ConduitOpts = false;
 			CritterConsumers = true;
+			CullConduits = true;
 			DisableConduitAnimation = ConduitAnimationQuality.Reduced;
 			DisableLoadPreviews = false;
 			DisableSound = false;

@@ -85,7 +85,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		internal static bool ShouldRender(Behaviour light) {
 			bool render = false;
 			// Was already null checked
-			int cell = Grid.PosToCell(light.gameObject);
+			int cell = Grid.PosToCell(light.transform.position);
 			if (Grid.IsValidCell(cell) && light.enabled) {
 				if (!raysInCell.TryGetValue(cell, out int count))
 					count = 0;
