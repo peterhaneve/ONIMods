@@ -47,7 +47,6 @@ namespace PeterHan.FastTrack {
 		internal static void Postfix() {
 			VisualPatches.PropertyTextureUpdater.Instance?.StartUpdate();
 			GamePatches.AsyncAmountsUpdater.Instance?.Finish();
-			GamePatches.SolidTransferArmUpdater.Instance?.Finish();
 		}
 	}
 

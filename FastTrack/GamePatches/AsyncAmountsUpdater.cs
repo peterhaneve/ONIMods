@@ -19,7 +19,6 @@
 using HarmonyLib;
 using Klei.AI;
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -100,6 +99,9 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal void BatchUpdate(IList<AmountInstanceBucket> entries, float dt) {
 			var inst = AsyncJobManager.Instance;
 			int n = entries.Count;
+			// In case multiple updates get run in one frame, finish the previous one before
+			// starting a new one
+			Finish();
 			allAmounts = entries;
 			if (inst != null && n > 0) {
 				int bins = Count, perBucketInt = n / bins;
@@ -131,6 +133,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				// Make best effort even if the amounts did not post in time
 				while (results.TryDequeue(out AmountUpdated result))
 					result.instance.Publish(result.delta, result.lastValue);
+				dt = 0.0f;
 			}
 		}
 

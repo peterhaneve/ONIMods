@@ -18,12 +18,11 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
-
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.ConduitPatches {
@@ -138,7 +137,8 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	/// Applied to SolidConduitFlowVisualizer to hide carts and items that are inside solid
 	/// tiles.
 	/// </summary>
-	[HarmonyPatch(typeof(SolidConduitFlowVisualizer), nameof(SolidConduitFlowVisualizer.Render))]
+	[HarmonyPatch(typeof(SolidConduitFlowVisualizer), nameof(SolidConduitFlowVisualizer.
+		Render))]
 	public static class SolidConduitFlowVisualizer_Render_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.CullConduits;
 
@@ -306,39 +306,85 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	/// the current overlay.
 	/// </summary>
 	[HarmonyPatch]
-	public static class OverlayModes_Mode_AddTargetIfVisible_Patch {
+	public static class OverlayModes_Modes_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.CullConduits;
 
 		/// <summary>
-		/// Target the specific SaveLoadRoot version of the generic method.
+		/// Target the update method of each conduit overlay.
 		/// </summary>
-		internal static MethodBase TargetMethod() {
-			return typeof(OverlayModes.Mode).GetMethod("AddTargetIfVisible", PPatchTools.
-				BASE_FLAGS | BindingFlags.Instance)?.MakeGenericMethod(typeof(SaveLoadRoot));
+		internal static IEnumerable<MethodBase> TargetMethods() {
+			const string name = nameof(OverlayModes.Mode.Update);
+			yield return typeof(OverlayModes.ConduitMode).GetMethodSafe(name, false);
+			yield return typeof(OverlayModes.Logic).GetMethodSafe(name, false);
+			yield return typeof(OverlayModes.Power).GetMethodSafe(name, false);
+			yield return typeof(OverlayModes.SolidConveyor).GetMethodSafe(name, false);
 		}
 
 		/// <summary>
-		/// Sets the animation controller's layer normally, but then checks to see if the
-		/// conduit on that tile should be made visible.
+		/// A replacement for the particular AddTargetIfVisible version using SaveLoadRoot.
 		/// </summary>
-		/// <param name="controller">The controller to check.</param>
-		/// <param name="layer">The new target layer.</param>
-		private static void SetLayerReplace(KAnimControllerBase controller, int layer) {
-			controller.SetLayer(layer);
-			var component = controller.GetComponent<UpdateGraphIfEntombed>();
-			if (component != null)
-				component.UpdateOverlay(true);
+		/// <param name="instance">The object under test.</param>
+		/// <param name="visMin">The minimum visible cell coordinate.</param>
+		/// <param name="visMax">The maximum visible cell coordinate.</param>
+		/// <param name="targets">The location to add the target if it matches.</param>
+		/// <param name="layer">The layer to move the target if it matches.</param>
+		/// <param name="onAdded">The callback to invoke if it matches.</param>
+		/// <param name="shouldAdd">The callback to invoke and check if it matches.</param>
+		private static void AddTargetIfVisible(OverlayModes.Mode _, SaveLoadRoot instance,
+				Vector2I visMin, Vector2I visMax, ICollection<SaveLoadRoot> targets, int layer,
+				Action<SaveLoadRoot> onAdded, Func<KMonoBehaviour, bool> shouldAdd) {
+			if (instance != null) {
+				Vector2 min = instance.PosMin(), max = instance.PosMax();
+				int xMin = (int)min.x, yMin = (int)min.y, yMax = (int)max.y, xMax = (int)max.x;
+				if (xMax >= visMin.x && yMax >= visMin.y && xMin <= visMax.x && yMin <= visMax.
+						y && !targets.Contains(instance)) {
+					bool found = !PropertyTextures.IsFogOfWarEnabled;
+					int curWorld = ClusterManager.Instance.activeWorldId, w = Grid.
+						WidthInCells, cell = w * yMin + xMin;
+					int width = xMax - xMin + 1, height = yMax - yMin + 1;
+					// Iterate the extents of the object to see if any cell is visible
+					w -= width;
+					for (int y = height; y > 0 && !found; y--) {
+						for (int x = width; x > 0 && !found; x--) {
+							// 20 is hardcoded in original method
+							if (Grid.IsValidCell(cell) && Grid.Visible[cell] > 20 &&
+									Grid.WorldIdx[cell] == curWorld)
+								found = true;
+							cell++;
+						}
+						cell += w;
+					}
+					if (found) {
+						var kmb = instance as KMonoBehaviour;
+						if (shouldAdd == null || kmb == null || shouldAdd(kmb)) {
+							// Add to list and trigger overlay mode update
+							if (kmb != null) {
+								var kbac = kmb.GetComponent<KBatchedAnimController>();
+								if (kbac != null)
+									kbac.SetLayer(layer);
+								var updateGraph = kmb.GetComponent<UpdateGraphIfEntombed>();
+								if (updateGraph != null)
+									updateGraph.UpdateOverlay(true);
+							}
+							targets.Add(instance);
+							onAdded?.Invoke(instance);
+						}
+					}
+				}
+			}
 		}
 
 		/// <summary>
-		/// Transpiles AddTargetIfVisible to insert a call to set the conduit visible when it
+		/// Transpiles Update to replace calls to a specific AddTargetIfVisible version with
+		/// a version that is not only a bit faster, but also sets the conduit visible when it
 		/// matches the criteria.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			return PPatchTools.ReplaceMethodCall(instructions, typeof(KAnimControllerBase).
-				GetMethodSafe(nameof(KAnimControllerBase.SetLayer), false, typeof(int)),
-				typeof(OverlayModes_Mode_AddTargetIfVisible_Patch).GetMethodSafe(nameof(
-				SetLayerReplace), true, typeof(KBatchedAnimController), typeof(int)));
+			return PPatchTools.ReplaceMethodCall(instructions, typeof(OverlayModes.Mode).
+				GetMethod("AddTargetIfVisible", PPatchTools.BASE_FLAGS | BindingFlags.
+				Instance)?.MakeGenericMethod(typeof(SaveLoadRoot)),
+				typeof(OverlayModes_Modes_Patch).GetMethodSafe(nameof(AddTargetIfVisible),
+				true, PPatchTools.AnyArguments));
 		}
 	}
 
@@ -358,6 +404,8 @@ namespace PeterHan.FastTrack.ConduitPatches {
 			var component = controller.GetComponent<UpdateGraphIfEntombed>();
 			if (component != null)
 				component.UpdateOverlay(false);
+			// SolidConduitFlow.ApplyOverlayVisualization can be used to show the pickupables
+			// if they ever get culled behind tiles
 		}
 	}
 }

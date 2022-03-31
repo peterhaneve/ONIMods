@@ -194,11 +194,23 @@ namespace PeterHan.FastTrack.GamePatches {
 							autoSweeper).IsOperational)
 						sweepers.Add(new SolidTransferArmInfo(autoSweeper));
 				}
-				if (sweepers.Count > 0) {
+				n = sweepers.Count;
+				if (n > 0) {
 					onComplete.Reset();
 					inst.Run(this);
-				} else
-					onComplete.Set();
+					// This has to be waited out, because it could be run more than once in
+					// a frame and could race against things like SolidConsumerMonitor
+					if (onComplete.WaitOne(FastTrackMod.MAX_TIMEOUT))
+						for (int i = 0; i < n; i++) {
+							var info = sweepers[i];
+							var sweeper = info.sweeper;
+							if (info.refreshedCells)
+								INCREMENT_SERIAL_NO.Invoke(sweeper);
+							SIM.Invoke(sweeper);
+						}
+					else
+						PUtil.LogWarning("Auto-Sweepers did not update within the timeout!");
+				}
 			}
 		}
 
@@ -207,38 +219,20 @@ namespace PeterHan.FastTrack.GamePatches {
 			onComplete.Dispose();
 		}
 
-		/// <summary>
-		/// Waits for the job to complete, then posts the update to the main thread.
-		/// </summary>
-		internal void Finish() {
-			int n = sweepers.Count;
-			if (n > 0 && AsyncJobManager.Instance != null) {
-				if (onComplete.WaitOne(FastTrackMod.MAX_TIMEOUT))
-					for (int i = 0; i < n; i++) {
-						var info = sweepers[i];
-						var sweeper = info.sweeper;
-						if (info.refreshedCells)
-							INCREMENT_SERIAL_NO.Invoke(sweeper);
-						SIM.Invoke(sweeper);
-					}
-				else
-					PUtil.LogWarning("Auto-Sweepers did not update within the timeout!");
-				sweepers.Clear();
-			}
-			// Clear the cached pickupables
-			while (cached.TryDequeue(out _)) ;
-		}
-
 		public void InternalDoWorkItem(int index) {
 			if (index >= 0 && index < sweepers.Count)
 				AsyncUpdate(sweepers[index]);
 		}
 
 		public void TriggerAbort() {
+			// Clear the cached pickupables
+			while (cached.TryDequeue(out _)) ;
 			onComplete.Set();
 		}
 
 		public void TriggerComplete() {
+			// Clear the cached pickupables
+			while (cached.TryDequeue(out _)) ;
 			onComplete.Set();
 		}
 

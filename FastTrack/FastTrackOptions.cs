@@ -167,7 +167,7 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool ReduceTileUpdates { get; set; }
 
-		[Option("Use Mesh Renderers", "Use mesh renderers instead of redrawing meshes every frame." + PERF_MEDIUM, "Visual")]
+		[Option("Use Mesh Renderers", "Use faster mesh renderers instead of redrawing meshes every frame." + PERF_MEDIUM, "Visual")]
 		[JsonProperty]
 		public MeshRendererSettings MeshRendererOptions { get; set; }
 

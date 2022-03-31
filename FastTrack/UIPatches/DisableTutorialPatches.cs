@@ -73,7 +73,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				PPatchTools.AnyArguments);
 			yield return typeof(HandSanitizer.Work).GetMethodSafe("OnPrefabInit", false);
 			yield return typeof(HotTub).GetMethodSafe("OnSpawn", false);
-			yield return typeof(IceCooledFan).GetMethodSafe("OnSpawn", false);
+			yield return typeof(IceCooledFanWorkable).GetMethodSafe("OnSpawn", false);
 			yield return typeof(Juicer).GetMethodSafe("OnSpawn", false);
 			yield return typeof(LiquidCooledFanWorkable).GetMethodSafe("OnSpawn", false);
 			yield return typeof(MicrobeMusher).GetMethodSafe("OnSpawn", false);
