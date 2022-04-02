@@ -17,10 +17,7 @@
  */
 
 using HarmonyLib;
-using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 
 namespace PeterHan.FastTrack.GamePatches {
@@ -29,12 +26,6 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	[SkipSaveFileSerialization]
 	public sealed class SuitMarkerUpdater : KMonoBehaviour, ISim1000ms, ISim200ms {
-		/// <summary>
-		/// Grid flags include "vacancy only" and "has a suit".
-		/// </summary>
-		private static readonly IDetouredField<SuitMarker, Grid.SuitMarker.Flags> GRID_FLAGS =
-			PDetours.DetourField<SuitMarker, Grid.SuitMarker.Flags>("gridFlags");
-
 		/// <summary>
 		/// Checks the status of a suit locker to see if the suit can be used.
 		/// </summary>
@@ -161,7 +152,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			docks = new List<SuitLocker>();
 		}
 
-		protected override void OnSpawn() {
+		public override void OnSpawn() {
 			base.OnSpawn();
 			hadAvailableSuit = false;
 			cell = Grid.PosToCell(transform.position);
@@ -210,7 +201,7 @@ namespace PeterHan.FastTrack.GamePatches {
 					anim.Play(hasSuit ? "off" : "no_suit", KAnim.PlayMode.Once, 1f, 0f);
 					hadAvailableSuit = hasSuit;
 				}
-				Grid.UpdateSuitMarker(cell, charged, vacancies, GRID_FLAGS.Get(suitCheckpoint),
+				Grid.UpdateSuitMarker(cell, charged, vacancies, suitCheckpoint.gridFlags,
 					suitCheckpoint.PathFlag);
 			}
 		}
@@ -219,7 +210,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
 	/// Applied to SuitMarker to add an improved updater to each instance.
 	/// </summary>
-	[HarmonyPatch(typeof(SuitMarker), "OnSpawn")]
+	[HarmonyPatch(typeof(SuitMarker), nameof(SuitMarker.OnSpawn))]
 	public static class SuitMarker_OnSpawn_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
 
@@ -237,18 +228,10 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// Applied to SuitMarker.SuitMarkerReactable to make the Run method more efficient and
 	/// use the SuitMarkerUpdater..
 	/// </summary>
-	[HarmonyPatch]
+	[HarmonyPatch(typeof(SuitMarker.SuitMarkerReactable), nameof(SuitMarker.
+		SuitMarkerReactable.Run))]
 	public static class SuitMarker_SuitMarkerReactable_Run_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
-
-		/// <summary>
-		/// SuitMarker.SuitMarkerReactable is a private class, so calculate the target with
-		/// reflection.
-		/// </summary>
-		internal static MethodBase TargetMethod() {
-			return typeof(SuitMarker).GetNestedType("SuitMarkerReactable", BindingFlags.
-				Instance | PPatchTools.BASE_FLAGS)?.GetMethodSafe("Run", false);
-		}
 
 		/// <summary>
 		/// Applied before Run runs.
@@ -264,7 +247,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// Applied to SuitMarker to turn off the expensive Update method. The SuitMarkerUpdater
 	/// component can update the SuitMarker at more appropriate rates.
 	/// </summary>
-	[HarmonyPatch(typeof(SuitMarker), "Update")]
+	[HarmonyPatch(typeof(SuitMarker), nameof(SuitMarker.Update))]
 	public static class SuitMarker_Update_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
 

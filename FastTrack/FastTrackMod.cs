@@ -54,9 +54,6 @@ namespace PeterHan.FastTrack {
 			var options = FastTrackOptions.Instance;
 			if (options.ThreatOvercrowding)
 				CritterPatches.OvercrowdingMonitor_UpdateState_Patch.InitTagBits();
-			if (options.DisableConduitAnimation != FastTrackOptions.ConduitAnimationQuality.
-					Full)
-				ConduitPatches.ConduitFlowVisualizerRenderer.SetupDelegates();
 			if (options.SensorOpts) {
 				SensorPatches.SensorPatches.Init();
 				SensorPatches.SensorPatches.MingleCellSensor_Update.Init();
@@ -112,6 +109,7 @@ namespace PeterHan.FastTrack {
 				SensorPatches.FastGroupProber.Cleanup();
 			if (options.PickupOpts)
 				GamePatches.SolidTransferArmUpdater.DestroyInstance();
+			GamePatches.AchievementPatches.DestroyInstance();
 			PathPatches.DupeBrainGroupUpdater.DestroyInstance();
 			AsyncJobManager.DestroyInstance();
 			GameRunning = false;
@@ -160,8 +158,10 @@ namespace PeterHan.FastTrack {
 					go.AddOrGet<SoundUpdater>();
 				if (options.ParallelInventory)
 					UIPatches.BackgroundInventoryUpdater.CreateInstance();
-				if (options.MiscOpts)
+				if (options.MiscOpts) {
 					go.AddOrGet<GamePatches.SlicedRadiationGridUpdater>();
+					go.AddOrGet<GamePatches.AchievementPatches>();
+				}
 				// Requires the AJM to work
 				if (options.PickupOpts)
 					GamePatches.SolidTransferArmUpdater.CreateInstance();

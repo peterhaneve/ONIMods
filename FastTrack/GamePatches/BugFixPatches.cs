@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 
+using IndirectionData = AnimEventManager.IndirectionData;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.GamePatches {
@@ -36,17 +37,13 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Transpiles StopAnim to throw away the event handle properly.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			var indirectionDataType = typeof(AnimEventManager).GetNestedType("IndirectionData",
-				PPatchTools.BASE_FLAGS | BindingFlags.Instance);
 			MethodInfo target = null, setData = null;
-			if (indirectionDataType != null) {
-				var kcv = typeof(KCompactedVector<>).MakeGenericType(indirectionDataType);
-				target = kcv?.GetMethodSafe(nameof(KCompactedVector<AnimEventManager.
-					EventPlayerData>.Free), false, typeof(HandleVector<int>.Handle));
-				setData = kcv?.GetMethodSafe(nameof(KCompactedVector<AnimEventManager.
-					EventPlayerData>.SetData), false, typeof(HandleVector<int>.Handle),
-					indirectionDataType);
-			}
+			target = typeof(KCompactedVector<IndirectionData>).GetMethodSafe(nameof(
+				KCompactedVector<IndirectionData>.Free), false, typeof(HandleVector<int>.
+				Handle));
+			setData = typeof(KCompactedVector<IndirectionData>).GetMethodSafe(nameof(
+				KCompactedVector<IndirectionData>.SetData), false, typeof(HandleVector<int>.
+				Handle), typeof(IndirectionData));
 			if (target != null && setData != null)
 				foreach (var instr in instructions) {
 					if (instr.Is(OpCodes.Callvirt, setData)) {
@@ -95,20 +92,6 @@ namespace PeterHan.FastTrack.GamePatches {
 			} else
 				PUtil.LogWarning("Unable to patch ClusterManager.WorldContainers");
 			return method;
-		}
-	}
-
-	/// <summary>
-	/// Applied to KAnimBatch to... actually clear the dirty flag when it updates.
-	/// Unfortunately most anims are marked dirty every frame anyways.
-	/// </summary>
-	[HarmonyPatch(typeof(KAnimBatch), "ClearDirty")]
-	public static class KAnimBatch_ClearDirty_Patch {
-		/// <summary>
-		/// Applied after ClearDirty runs.
-		/// </summary>
-		internal static void Postfix(ref bool ___needsWrite) {
-			___needsWrite = false;
 		}
 	}
 }

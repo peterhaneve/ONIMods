@@ -34,12 +34,12 @@ namespace PeterHan.FastTrack.UIPatches {
 			FastTrackOptions.TutorialMessageDisable.None;
 
 		internal static IEnumerable<MethodBase> TargetMethods() {
-			yield return typeof(Tutorial).GetMethodSafe("Render1000ms", false,
+			yield return typeof(Tutorial).GetMethodSafe(nameof(Tutorial.Render1000ms), false,
 				PPatchTools.AnyArguments);
-			yield return typeof(Tutorial).GetMethodSafe("LoadHiddenTutorialMessages", false,
-				PPatchTools.AnyArguments);
-			yield return typeof(Tutorial).GetMethodSafe("OnSpawn", false);
-			yield return typeof(Tutorial).GetMethodSafe("OnCleanUp", false);
+			yield return typeof(Tutorial).GetMethodSafe(nameof(Tutorial.
+				LoadHiddenTutorialMessages), false, PPatchTools.AnyArguments);
+			yield return typeof(Tutorial).GetMethodSafe(nameof(Tutorial.OnSpawn), false);
+			yield return typeof(Tutorial).GetMethodSafe(nameof(Tutorial.OnCleanUp), false);
 		}
 
 		/// <summary>
@@ -59,34 +59,46 @@ namespace PeterHan.FastTrack.UIPatches {
 			FastTrackOptions.TutorialMessageDisable.All;
 
 		internal static IEnumerable<MethodBase> TargetMethods() {
-			yield return typeof(AirConditioner).GetMethodSafe("OnSpawn", false);
-			yield return typeof(AlgaeHabitat).GetMethodSafe("OnSpawn", false);
-			yield return typeof(ArcadeMachine).GetMethodSafe("OnSpawn", false);
-			yield return typeof(ConduitConsumer).GetMethodSafe("OnSpawn", false);
-			yield return typeof(ConduitDispenser).GetMethodSafe("OnSpawn", false);
-			yield return typeof(Diggable).GetMethodSafe("OnReachableChanged", false,
-				PPatchTools.AnyArguments);
-			yield return typeof(ElectricalUtilityNetwork).GetMethodSafe("UpdateOverloadTime",
+			yield return typeof(AirConditioner).GetMethodSafe(nameof(AirConditioner.OnSpawn),
+				false);
+			yield return typeof(AlgaeHabitat).GetMethodSafe(nameof(AlgaeHabitat.OnSpawn),
+				false);
+			yield return typeof(ArcadeMachine).GetMethodSafe(nameof(ArcadeMachine.OnSpawn),
+				false);
+			yield return typeof(ConduitConsumer).GetMethodSafe(nameof(ConduitConsumer.OnSpawn),
+				false);
+			yield return typeof(ConduitDispenser).GetMethodSafe(nameof(ConduitDispenser.
+				OnSpawn), false);
+			yield return typeof(Diggable).GetMethodSafe(nameof(Diggable.OnReachableChanged),
 				false, PPatchTools.AnyArguments);
-			yield return typeof(EspressoMachine).GetMethodSafe("OnSpawn", false);
-			yield return typeof(FetchList2).GetMethodSafe("UpdateStatusItem", false,
-				PPatchTools.AnyArguments);
-			yield return typeof(HandSanitizer.Work).GetMethodSafe("OnPrefabInit", false);
-			yield return typeof(HotTub).GetMethodSafe("OnSpawn", false);
-			yield return typeof(IceCooledFanWorkable).GetMethodSafe("OnSpawn", false);
-			yield return typeof(Juicer).GetMethodSafe("OnSpawn", false);
-			yield return typeof(LiquidCooledFanWorkable).GetMethodSafe("OnSpawn", false);
-			yield return typeof(MicrobeMusher).GetMethodSafe("OnSpawn", false);
+			yield return typeof(ElectricalUtilityNetwork).GetMethodSafe(nameof(
+				ElectricalUtilityNetwork.UpdateOverloadTime), false, PPatchTools.AnyArguments);
+			yield return typeof(EspressoMachine).GetMethodSafe(nameof(EspressoMachine.OnSpawn),
+				false);
+			yield return typeof(FetchList2).GetMethodSafe(nameof(FetchList2.UpdateStatusItem),
+				false, PPatchTools.AnyArguments);
+			yield return typeof(HandSanitizer.Work).GetMethodSafe(nameof(HandSanitizer.Work.
+				OnPrefabInit), false);
+			yield return typeof(HotTub).GetMethodSafe(nameof(HotTub.OnSpawn), false);
+			yield return typeof(IceCooledFanWorkable).GetMethodSafe(nameof(
+				IceCooledFanWorkable.OnSpawn), false);
+			yield return typeof(Juicer).GetMethodSafe(nameof(Juicer.OnSpawn), false);
+			yield return typeof(LiquidCooledFanWorkable).GetMethodSafe(nameof(
+				LiquidCooledFanWorkable.OnSpawn), false);
+			yield return typeof(MicrobeMusher).GetMethodSafe(nameof(MicrobeMusher.OnSpawn),
+				false);
 			yield return typeof(MinionResume).GetMethodSafe(nameof(MinionResume.MasterSkill),
 				false, PPatchTools.AnyArguments);
-			yield return typeof(Moppable).GetMethodSafe("OnReachableChanged", false,
-				PPatchTools.AnyArguments);
-			yield return typeof(Phonobox).GetMethodSafe("OnSpawn", false);
-			yield return typeof(SodaFountain).GetMethodSafe("OnSpawn", false);
-			yield return typeof(SpaceHeater).GetMethodSafe("OnSpawn", false);
-			yield return typeof(Telephone).GetMethodSafe("OnSpawn", false);
-			yield return typeof(VerticalWindTunnel).GetMethodSafe("OnSpawn", false);
-			yield return typeof(WaterCooler).GetMethodSafe("OnSpawn", false);
+			yield return typeof(Moppable).GetMethodSafe(nameof(Moppable.OnReachableChanged),
+				false, PPatchTools.AnyArguments);
+			yield return typeof(Phonobox).GetMethodSafe(nameof(Phonobox.OnSpawn), false);
+			yield return typeof(SodaFountain).GetMethodSafe(nameof(SodaFountain.OnSpawn),
+				false);
+			yield return typeof(SpaceHeater).GetMethodSafe(nameof(SpaceHeater.OnSpawn), false);
+			yield return typeof(Telephone).GetMethodSafe(nameof(Telephone.OnSpawn), false);
+			yield return typeof(VerticalWindTunnel).GetMethodSafe(nameof(VerticalWindTunnel.
+				OnSpawn), false);
+			yield return typeof(WaterCooler).GetMethodSafe(nameof(WaterCooler.OnSpawn), false);
 		}
 
 		/// <summary>
@@ -126,10 +138,10 @@ namespace PeterHan.FastTrack.UIPatches {
 			FastTrackOptions.TutorialMessageDisable.All;
 
 		internal static IEnumerable<MethodBase> TargetMethods() {
-			yield return typeof(Tutorial).GetMethodSafe("OnDiscover", false,
+			yield return typeof(Tutorial).GetMethodSafe(nameof(Tutorial.OnDiscover), false,
 				PPatchTools.AnyArguments);
-			yield return typeof(Tutorial).GetMethodSafe("TutorialMessage", false,
-				PPatchTools.AnyArguments);
+			yield return typeof(Tutorial).GetMethodSafe(nameof(Tutorial.TutorialMessage),
+				false, PPatchTools.AnyArguments);
 		}
 
 		/// <summary>

@@ -31,7 +31,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
 	/// Applied to LoadScreen to remove a duplicate file read on every colony.
 	/// </summary>
-	[HarmonyPatch(typeof(LoadScreen), "GetColoniesDetails")]
+	[HarmonyPatch(typeof(LoadScreen), nameof(LoadScreen.GetColoniesDetails))]
 	public static class LoadScreen_GetColoniesDetails_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.OptimizeDialogs;
 
@@ -47,19 +47,14 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
 				ILGenerator generator) {
-			var target = typeof(LoadScreen).GetMethodSafe("IsFileValid", false,
-				typeof(string));
+			var target = typeof(LoadScreen).GetMethodSafe(nameof(LoadScreen.IsFileValid),
+				false, typeof(string));
 			var stub = typeof(LoadScreen_GetColoniesDetails_Patch).GetMethodSafe(
 				nameof(IsValidFake), true, typeof(LoadScreen), typeof(string));
 			var getInfo = typeof(SaveGame).GetMethodSafe(nameof(SaveGame.GetFileInfo), true,
 				typeof(string));
-			var saveGameDetailsType = typeof(LoadScreen).GetNestedType("SaveGameFileDetails",
-				PPatchTools.BASE_FLAGS | BindingFlags.Instance);
-			MethodBase addList = null;
-			// List<SaveGameFileDetails>.Add
-			if (saveGameDetailsType != null)
-				addList = typeof(List<>).MakeGenericType(saveGameDetailsType).GetMethodSafe(
-					nameof(List<int>.Add), false, saveGameDetailsType);
+			var addList = typeof(List<LoadScreen.SaveGameFileDetails>).GetMethodSafe(
+				nameof(List<int>.Add), false, typeof(LoadScreen.SaveGameFileDetails));
 			if (target != null && stub != null && getInfo != null && addList != null) {
 				Label skipMe = generator.DefineLabel(), success = generator.DefineLabel();
 				int state = 0;
@@ -107,7 +102,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
 	/// Applied to LoadScreen to turn off the colony previews in exchange for a faster load.
 	/// </summary>
-	[HarmonyPatch(typeof(LoadScreen), "SetPreview")]
+	[HarmonyPatch(typeof(LoadScreen), nameof(LoadScreen.SetPreview))]
 	public static class LoadScreen_SetPreview_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.DisableLoadPreviews;
 
@@ -150,8 +145,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		internal static IEnumerable<MethodBase> TargetMethods() {
 			yield return typeof(NewGameSettingsPanel).GetMethodSafe(nameof(
 				NewGameSettingsPanel.Init), false);
-			yield return typeof(ModeSelectScreen).GetMethodSafe("LoadWorldAndClusterData",
-				false);
+			yield return typeof(ModeSelectScreen).GetMethodSafe(nameof(ModeSelectScreen.
+				LoadWorldAndClusterData), false);
 		}
 
 		/// <summary>

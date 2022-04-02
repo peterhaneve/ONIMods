@@ -28,14 +28,10 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// Applied to BrainScheduler.BrainGroup to move the path probe updates to a fully
 	/// asychronous task.
 	/// </summary>
-	[HarmonyPatch]
-	internal static class AsyncPathProbe_Patch {
+	[HarmonyPatch(typeof(BrainScheduler.BrainGroup), nameof(BrainScheduler.BrainGroup.
+		AsyncPathProbe))]
+	internal static class BrainScheduler_BrainGroup_AsyncPathProbe_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.AsyncPathProbe;
-
-		internal static MethodBase TargetMethod() {
-			// Private type with private method
-			return DupeBrainGroupUpdater.BRAIN_GROUP?.GetMethodSafe("AsyncPathProbe", false);
-		}
 
 		/// <summary>
 		/// Transpiles AsyncPathProbe to use our job manager instead.
@@ -70,24 +66,23 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// Applied to BrainScheduler to initialize the singleton instance with the current
 	/// Duplicant brain group.
 	/// </summary>
-	[HarmonyPatch(typeof(BrainScheduler), "OnPrefabInit")]
-	internal static class OnPrefabInit_Patch {
+	[HarmonyPatch(typeof(BrainScheduler), nameof(BrainScheduler.OnPrefabInit))]
+	internal static class BrainScheduler_OnPrefabInit_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
 
 		/// <summary>
 		/// Applied after OnPrefabInit runs.
 		/// </summary>
-		internal static void Postfix(System.Collections.IList ___brainGroups) {
+		internal static void Postfix(IList<BrainScheduler.BrainGroup> ___brainGroups) {
 			DupeBrainGroupUpdater.DestroyInstance();
-			if (DupeBrainGroupUpdater.ASYNC_PATH_PROBE != null)
-				foreach (object brainGroup in ___brainGroups)
-					if (brainGroup.GetType().Name.EndsWith("DupeBrainGroup")) {
-						DupeBrainGroupUpdater.CreateInstance(brainGroup);
+			foreach (var brainGroup in ___brainGroups)
+				if (brainGroup.GetType() == typeof(BrainScheduler.DupeBrainGroup)) {
+					DupeBrainGroupUpdater.CreateInstance(brainGroup);
 #if DEBUG
-						PUtil.LogDebug("Created DupeBrainGroupUpdater");
+					PUtil.LogDebug("Created DupeBrainGroupUpdater");
 #endif
-						break;
-					}
+					break;
+				}
 		}
 	}
 
@@ -95,16 +90,13 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// Applied to BrainScheduler.BrainGroup to only start up the sensors if the pickup
 	/// optimizations are being backgrounded.
 	/// </summary>
-	[HarmonyPatch]
+	[HarmonyPatch(typeof(BrainScheduler.BrainGroup), nameof(BrainScheduler.BrainGroup.
+		RenderEveryTick))]
 	internal static class RenderEveryTick_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
 
-		internal static MethodBase TargetMethod() {
-			return DupeBrainGroupUpdater.BRAIN_GROUP?.GetMethodSafe("RenderEveryTick", false,
-				typeof(float), typeof(bool));
-		}
-
-		internal static bool Prefix(object __instance, bool isAsyncPathProbeEnabled) {
+		internal static bool Prefix(BrainScheduler.BrainGroup __instance,
+				bool isAsyncPathProbeEnabled) {
 			var inst = DupeBrainGroupUpdater.Instance;
 			bool update = true;
 			if (inst != null && __instance == inst.dupeBrainGroup) {

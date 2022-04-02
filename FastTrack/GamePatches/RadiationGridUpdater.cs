@@ -53,7 +53,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// Applied to Game to stop using the GameScheduler for radiation grid updates which it is
 	/// not designed to do efficiently.
 	/// </summary>
-	[HarmonyPatch(typeof(Game), "RefreshRadiationLoop")]
+	[HarmonyPatch(typeof(Game), nameof(Game.RefreshRadiationLoop))]
 	public static class Game_RefreshRadiationLoop_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.RadiationOpts;
 
@@ -70,24 +70,20 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	[HarmonyPatch(typeof(RadiationGridEmitter), nameof(RadiationGridEmitter.Emit))]
 	public static class RadiationGridEmitter_Emit_Patch {
-		/// <summary>
-		/// Originally declared in RadiationGridEmitter.
-		/// </summary>
-		private const float MAX_EMIT_DISTANCE = 128.0f;
-
 		internal static bool Prepare() => FastTrackOptions.Instance.RadiationOpts;
 
 		/// <summary>
 		/// Applied before Emit runs.
 		/// </summary>
-		internal static bool Prefix(RadiationGridEmitter __instance, ISet<int> ___scanCells) {
+		internal static bool Prefix(RadiationGridEmitter __instance) {
 			int n = __instance.projectionCount;
 			if (n > 0) {
 				var startPos = (Vector2)Grid.CellToPosCCC(__instance.originCell, Grid.
 					SceneLayer.Building);
 				float angle = __instance.angle, direction = __instance.direction - 0.5f *
 					angle, step = angle / n, intensity = __instance.intensity;
-				___scanCells.Clear();
+				var scanCells = __instance.scanCells;
+				scanCells.Clear();
 				for (int i = 0; i < n; i++) {
 					float netAngle = Mathf.Deg2Rad * (direction + Random.Range(-step, step) *
 						0.5f);
@@ -95,16 +91,16 @@ namespace PeterHan.FastTrack.GamePatches {
 					float rads = intensity;
 					Vector2 a2 = unitVector;
 					float dist = 0f;
-					while (rads > 0.01f && dist < MAX_EMIT_DISTANCE) {
+					while (rads > 0.01f && dist < RadiationGridEmitter.MAX_EMIT_DISTANCE) {
 						int cell = Grid.PosToCell(startPos + a2 * dist);
 						// 1 / 3
 						dist += 0.333333f;
 						if (!Grid.IsValidCell(cell)) {
 							break;
 						}
-						if (!___scanCells.Contains(cell)) {
+						if (!scanCells.Contains(cell)) {
 							SimMessages.ModifyRadiationOnCell(cell, Mathf.RoundToInt(rads));
-							___scanCells.Add(cell);
+							scanCells.Add(cell);
 						}
 						float mass = Grid.Mass[cell];
 						// Attenuate over distance, with a slight random factor
@@ -122,7 +118,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
 	/// Applied to Radiator to add a copy of our radiation emitter component.
 	/// </summary>
-	[HarmonyPatch(typeof(Radiator), "OnSpawn")]
+	[HarmonyPatch(typeof(Radiator), nameof(Radiator.OnSpawn))]
 	public static class Radiator_OnSpawn_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.RadiationOpts;
 
@@ -138,7 +134,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
 	/// Applied to Radiator to turn off its Update method.
 	/// </summary>
-	[HarmonyPatch(typeof(Radiator), "Update")]
+	[HarmonyPatch(typeof(Radiator), nameof(Radiator.Update))]
 	public static class Radiator_Update_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.RadiationOpts;
 

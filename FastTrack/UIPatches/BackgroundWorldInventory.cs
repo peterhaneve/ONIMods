@@ -18,12 +18,10 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 using System.Threading;
 
-using AmountsDict = System.Collections.Generic.IDictionary<Tag, float>;
 using InventoryDict = System.Collections.Generic.IDictionary<Tag, System.Collections.Generic.
 	HashSet<Pickupable>>;
 
@@ -33,18 +31,6 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// </summary>
 	[SkipSaveFileSerialization]
 	public sealed class BackgroundWorldInventory : KMonoBehaviour {
-		/// <summary>
-		/// Looks up the accessibleAmounts field on WorldInventory.
-		/// </summary>
-		private static readonly IDetouredField<WorldInventory, AmountsDict> AMOUNTS =
-			PDetours.DetourField<WorldInventory, AmountsDict>("accessibleAmounts");
-
-		/// <summary>
-		/// Looks up the Inventory field on WorldInventory.
-		/// </summary>
-		private static readonly IDetouredField<WorldInventory, InventoryDict> INVENTORY =
-			PDetours.DetourField<WorldInventory, InventoryDict>("Inventory");
-
 		/// <summary>
 		/// Checks to see if the tag is valid for addition/removal. These tags are applied to
 		/// every single chunk, but are never requested.
@@ -56,11 +42,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
-		/// The reachable amounts reference taken from the WorldInventory object.
-		/// </summary>
-		private AmountsDict accessibleAmounts;
-
-		/// <summary>
 		/// Whether this is the first update since load.
 		/// </summary>
 		private bool firstUpdate;
@@ -69,11 +50,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Set exactly once after the first full update.
 		/// </summary>
 		private bool forceRefresh;
-
-		/// <summary>
-		/// The inventory reference taken from the WorldInventory object.
-		/// </summary>
-		private InventoryDict inventory;
 
 		/// <summary>
 		/// The currently updating resource index.
@@ -117,15 +93,11 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 		}
 
-		protected override void OnPrefabInit() {
+		public override void OnPrefabInit() {
 			base.OnPrefabInit();
 			firstUpdate = true;
 			forceRefresh = false;
 			updateIndex = 0;
-			accessibleAmounts = AMOUNTS?.Get(worldInventory);
-			inventory = INVENTORY?.Get(worldInventory);
-			if (inventory == null || accessibleAmounts == null)
-				PUtil.LogError("No valid world inventory found!");
 		}
 
 		/// <summary>
@@ -133,6 +105,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		internal void RunUpdate() {
 			int worldId = -1;
+			var inventory = worldInventory.Inventory;
+			var accessibleAmounts = worldInventory.accessibleAmounts;
 			if (worldContainer != null)
 				worldId = worldContainer.id;
 			if (inventory != null && accessibleAmounts != null && worldId >= 0 && worldId !=
@@ -279,7 +253,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// HasChores or PedestalDisplayable tags which match every chunk on the asteroid. Also
 	/// removes many wasteful GetComponent calls.
 	/// </summary>
-	[HarmonyPatch(typeof(WorldInventory), "OnAddedFetchable")]
+	[HarmonyPatch(typeof(WorldInventory), nameof(WorldInventory.OnAddedFetchable))]
 	public static class WorldInventory_OnAddedFetchable_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.ParallelInventory;
 
@@ -306,9 +280,9 @@ namespace PeterHan.FastTrack.UIPatches {
 				}
 				foreach (var itemTag in kpid.Tags)
 					if (BackgroundWorldInventory.IsAcceptable(itemTag)) {
-						if (!___Inventory.TryGetValue(itemTag, out HashSet<Pickupable> hashSet))
-							___Inventory[itemTag] = hashSet = new HashSet<Pickupable>();
-						hashSet.Add(pickupable);
+						if (!___Inventory.TryGetValue(itemTag, out HashSet<Pickupable> entry))
+							___Inventory[itemTag] = entry = new HashSet<Pickupable>();
+						entry.Add(pickupable);
 					}
 			}
 			return false;
@@ -318,7 +292,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
 	/// Applied to WorldInventory to add a copy of BackgroundWorldInventory when it is created.
 	/// </summary>
-	[HarmonyPatch(typeof(WorldInventory), "OnPrefabInit")]
+	[HarmonyPatch(typeof(WorldInventory), nameof(WorldInventory.OnPrefabInit))]
 	public static class WorldInventory_OnPrefabInit_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.ParallelInventory;
 
@@ -334,7 +308,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
 	/// Applied to WorldInventory to remove the calculations, as we run them in the background.
 	/// </summary>
-	[HarmonyPatch(typeof(WorldInventory), "Update")]
+	[HarmonyPatch(typeof(WorldInventory), nameof(WorldInventory.Update))]
 	public static class WorldInventory_UpdateReplace_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.ParallelInventory;
 

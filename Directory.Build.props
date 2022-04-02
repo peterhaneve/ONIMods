@@ -17,10 +17,19 @@
   <PropertyGroup Condition=" '$(Platform)' != 'Mergedown' ">
     <GameFolderActive>$(GameFolderLegacy)</GameFolderActive>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="0Harmony" HintPath="$(GameFolderActive)/0Harmony.dll" />
+  <ItemGroup Condition=" '$(UsePublicized)' == 'true' " >
+    <PubliciseInputAssemblies Include="$(GameFolderActive)/Assembly-CSharp.dll;
+      $(GameFolderActive)/Assembly-CSharp-firstpass.dll"/>
+    <Reference Include="Assembly-CSharp_public" HintPath="../public-lib/Assembly-CSharp_public.dll" />
+    <Reference Include="Assembly-CSharp-firstpass_public" HintPath="../public-lib/Assembly-CSharp-firstpass_public.dll" />
+    <PackageReference Include="Aze.Publicise.MSBuild.Task" Version="1.0.0"/>
+  </ItemGroup>
+  <ItemGroup Condition=" '$(UsePublicized)' != 'true' " >
     <Reference Include="Assembly-CSharp" HintPath="$(GameFolderActive)/Assembly-CSharp.dll" />
     <Reference Include="Assembly-CSharp-firstpass" HintPath="$(GameFolderActive)/Assembly-CSharp-firstpass.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="0Harmony" HintPath="$(GameFolderActive)/0Harmony.dll" />
     <Reference Include="Newtonsoft.Json" HintPath="$(GameFolderActive)/Newtonsoft.Json.dll" />
     <Reference Include="UnityEngine" HintPath="$(GameFolderActive)/UnityEngine.dll" />
     <Reference Include="UnityEngine.CoreModule" HintPath="$(GameFolderActive)/UnityEngine.CoreModule.dll" />
@@ -59,5 +68,6 @@
     <DistributeMod>true</DistributeMod>
     <ArchivedVersionPath></ArchivedVersionPath>
     <AllowedReferenceRelatedFileExtensions>.yaml</AllowedReferenceRelatedFileExtensions>
+    <UsePublicized>false</UsePublicized>
   </PropertyGroup>
 </Project>

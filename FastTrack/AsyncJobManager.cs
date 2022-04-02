@@ -144,7 +144,7 @@ namespace PeterHan.FastTrack {
 			return executed;
 		}
 
-		protected override void OnCleanUp() {
+		public override void OnCleanUp() {
 			Dispose();
 			base.OnCleanUp();
 		}

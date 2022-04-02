@@ -24,6 +24,8 @@ using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
 
+using ConduitFlowMesh = ConduitFlowVisualizer.ConduitFlowMesh;
+using RenderMeshTask = ConduitFlowVisualizer.RenderMeshTask;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.ConduitPatches {
@@ -33,19 +35,6 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(ConduitFlowVisualizer), nameof(ConduitFlowVisualizer.Render))]
 	public static class ConduitFlowVisualizerRenderer {
-		/// <summary>
-		/// The ConduitFlowMesh class is private, but thankfully it is not a mutable struct!
-		/// </summary>
-		private static readonly Type CONDUIT_FLOW_MESH = typeof(ConduitFlowVisualizer).
-			GetNestedType("ConduitFlowMesh", PPatchTools.BASE_FLAGS | BindingFlags.Instance);
-
-		/// <summary>
-		/// Getters generated at runtime for ConduitFlowVisualizer.
-		/// </summary>
-		private static Func<object, Material> GET_MATERIAL;
-
-		private static Func<object, Mesh> GET_MESH;
-
 		/// <summary>
 		/// If the width or height of the visible grid exceeds this many cells, updates are
 		/// automatically reduced even further, as you can barely see them anyways, and many
@@ -73,7 +62,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// <summary>
 		/// The time interval in seconds for updates in Reduced mode.
 		/// </summary>
-		private const double UPDATE_RATE_REDUCED = 1.0 / 10.0;
+		private const double UPDATE_RATE_REDUCED = 0.1;
 
 		/// <summary>
 		/// The time interval in seconds for updates when zoomed far out.
@@ -85,9 +74,6 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// </summary>
 		private static double updateRate;
 
-		/// <summary>
-		/// Sets up the delegates that will be used for this patch.
-		/// </summary>
 		internal static bool Prepare() => FastTrackOptions.Instance.DisableConduitAnimation !=
 			FastTrackOptions.ConduitAnimationQuality.Full;
 
@@ -104,19 +90,17 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// <param name="flowMesh">The mesh to draw.</param>
 		/// <param name="z">The z coordinate to render the mesh.</param>
 		/// <param name="layer">The layer for rendering.</param>
-		private static void DrawMesh(object flowMesh, float z, int layer) {
-			if (flowMesh != null && CONDUIT_FLOW_MESH.IsAssignableFrom(flowMesh.GetType())) {
-				var mesh = GET_MESH.Invoke(flowMesh);
-				var material = GET_MATERIAL.Invoke(flowMesh);
-				Graphics.DrawMesh(mesh, new Vector3(0.5f, 0.5f, z - 0.1f), Quaternion.identity,
-					material, layer);
-			}
+		private static void DrawMesh(ConduitFlowMesh flowMesh, float z, int layer) {
+			if (flowMesh != null)
+				Graphics.DrawMesh(flowMesh.mesh, new Vector3(0.5f, 0.5f, z - 0.1f), Quaternion.
+					identity, flowMesh.material, layer);
 		}
 
 		/// <summary>
 		/// Forces a conduit update to run next time.
 		/// </summary>
-		/// <param name="instance">The conduit flow visualizer to invalidate, or null to invalidate all.</param>
+		/// <param name="instance">The conduit flow visualizer to invalidate, or null to
+		/// invalidate all.</param>
 		internal static void ForceUpdate(ConduitFlowVisualizer instance) {
 			if (instance == null)
 				NEXT_UPDATE.Clear();
@@ -129,29 +113,24 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// </summary>
 		internal static void Init() {
 			NEXT_UPDATE.Clear();
-			if (GET_MATERIAL == null || GET_MESH == null)
+			switch (FastTrackOptions.Instance.DisableConduitAnimation) {
+			case FastTrackOptions.ConduitAnimationQuality.Reduced:
+				updateRate = UPDATE_RATE_REDUCED;
+				break;
+			case FastTrackOptions.ConduitAnimationQuality.Minimal:
+				updateRate = UPDATE_RATE_MINIMAL;
+				break;
+			case FastTrackOptions.ConduitAnimationQuality.Full:
+			default:
 				updateRate = 0.0;
-			else
-				switch (FastTrackOptions.Instance.DisableConduitAnimation) {
-				case FastTrackOptions.ConduitAnimationQuality.Reduced:
-					updateRate = UPDATE_RATE_REDUCED;
-					break;
-				case FastTrackOptions.ConduitAnimationQuality.Minimal:
-					updateRate = UPDATE_RATE_MINIMAL;
-					break;
-				case FastTrackOptions.ConduitAnimationQuality.Full:
-				default:
-					updateRate = 0.0;
-					break;
-				}
+				break;
+			}
 		}
 
 		/// <summary>
 		/// Applied before Render runs.
 		/// </summary>
-		internal static bool Prefix(ConduitFlowVisualizer __instance, bool ___showContents,
-				ref double ___animTime, float z, int ___layer, object ___movingBallMesh,
-				object ___staticBallMesh) {
+		internal static bool Prefix(ConduitFlowVisualizer __instance, float z) {
 			double now = Time.unscaledTime, calcUpdateRate = updateRate;
 			var cc = CameraController.Instance;
 			bool update = true;
@@ -168,35 +147,24 @@ namespace PeterHan.FastTrack.ConduitPatches {
 				if (update)
 					NEXT_UPDATE[__instance] = now + calcUpdateRate;
 			}
-			update |= ___showContents;
+			update |= __instance.showContents;
 			// If not updating, render the last mesh
 			if (!update) {
-				___animTime += Time.deltaTime;
+				__instance.animTime += Time.deltaTime;
 				if (!USE_MESH) {
-					DrawMesh(___movingBallMesh, z, ___layer);
-					DrawMesh(___staticBallMesh, z, ___layer);
+					int layer = __instance.layer;
+					DrawMesh(__instance.movingBallMesh, z, layer);
+					DrawMesh(__instance.staticBallMesh, z, layer);
 				}
 			}
 			return update;
-		}
-
-		/// <summary>
-		/// Creates the runtime delegates for getting the private fields required.
-		/// </summary>
-		internal static void SetupDelegates() {
-			if (CONDUIT_FLOW_MESH != null) {
-				GET_MATERIAL = CONDUIT_FLOW_MESH.GenerateGetter<Material>("material");
-				GET_MESH = CONDUIT_FLOW_MESH.GenerateGetter<Mesh>("mesh");
-			}
-			if (GET_MATERIAL == null || GET_MESH == null)
-				PUtil.LogWarning("Unable to create delegates for ConduitFlowMesh");
 		}
 	}
 
 	/// <summary>
 	/// Applied to ConduitFlowVisualizer to save some math when calculating conduit flow.
 	/// </summary>
-	[HarmonyPatch(typeof(ConduitFlowVisualizer), "RenderMesh")]
+	[HarmonyPatch(typeof(ConduitFlowVisualizer), nameof(ConduitFlowVisualizer.RenderMesh))]
 	public static class ConduitFlowVisualizer_RenderMesh_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
 
@@ -235,42 +203,23 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	/// Applied to ConduitFlowVisualizer.RenderMeshTask.ctor to fix a call that excessively
 	/// allocates memory.
 	/// </summary>
-	[HarmonyPatch]
-	public static class ConduitFlowVisualizer_RenderMeshTask_Constructor_Patch {
-		/// <summary>
-		/// Accesses the private struct type ConduitFlowVisualizer.RenderMeshTask.
-		/// </summary>
-		private static readonly Type RENDER_MESH_TASK = typeof(ConduitFlowVisualizer).
-			GetNestedType("RenderMeshTask", PPatchTools.BASE_FLAGS | BindingFlags.Instance);
-
+	[HarmonyPatch(typeof(RenderMeshTask), MethodType.Constructor, typeof(int), typeof(int))]
+	public static class ConduitFlowVisualizer_RenderMeshConstructor_Patch {
 		/// <summary>
 		/// The dynamic method to run when replacing the conduit capacity.
 		/// </summary>
 		private static MethodBase cachedDynamicMethod = null;
 
 		/// <summary>
-		/// Targets the ConduitFlowVisualizer.RenderMeshTask constructor.
-		/// </summary>
-		internal static MethodBase TargetMethod() {
-			return RENDER_MESH_TASK?.GetConstructor(PPatchTools.BASE_FLAGS | BindingFlags.
-				Instance, null, new Type[] { typeof(int), typeof(int) }, null);
-		}
-
-		/// <summary>
 		/// Create a method at runtime to use for resizing lists!
 		/// </summary>
-		/// <param name="ballType">The retrieved type of ConduitFlowVisualizer.RenderMeshTask.Ball.</param>
 		/// <param name="resizeBalls">The Capacity property to modify.</param>
-		private static MethodBase GenerateDynamicMethod(Type ballType,
-				PropertyInfo resizeBalls) {
-			if (ballType == null)
-				throw new ArgumentNullException(nameof(ballType));
+		private static MethodBase GenerateDynamicMethod(PropertyInfo resizeBalls) {
 			if (resizeBalls == null)
 				throw new ArgumentNullException(nameof(resizeBalls));
 			if (cachedDynamicMethod == null) {
-				var ballListType = typeof(List<>).MakeGenericType(ballType);
 				var newMethod = new DynamicMethod("SetCapacityIfNeeded", null, new Type[] {
-					ballListType, typeof(int)
+					typeof(List<RenderMeshTask.Ball>), typeof(int)
 				});
 				var generator = newMethod.GetILGenerator();
 				var end = generator.DefineLabel();
@@ -287,9 +236,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 				// Return
 				generator.MarkLabel(end);
 				generator.Emit(OpCodes.Ret);
-				var delegateType = typeof(Action<,>).MakeGenericType(ballListType,
-					typeof(int));
-				newMethod.CreateDelegate(delegateType);
+				newMethod.CreateDelegate(typeof(Action<List<RenderMeshTask.Ball>, int>));
 				cachedDynamicMethod = newMethod;
 			}
 			return cachedDynamicMethod;
@@ -310,23 +257,20 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
 				ILGenerator generator) {
-			var ballType = RENDER_MESH_TASK.GetNestedType("Ball", PPatchTools.BASE_FLAGS |
-				BindingFlags.Instance);
 			var resizeConduits = typeof(List<>).MakeGenericType(typeof(ConduitFlow.Conduit)).
 				GetPropertySafe<int>(nameof(List<int>.Capacity), false);
 			PropertyInfo resizeBalls = null;
 			bool patched = false;
 			// Calculate the target using the private Ball struct type
-			if (ballType != null)
-				resizeBalls = typeof(List<>).MakeGenericType(ballType).GetPropertySafe<int>(
-					nameof(List<int>.Capacity), false);
-			var targetConduits = typeof(ConduitFlowVisualizer_RenderMeshTask_Constructor_Patch).
+			resizeBalls = typeof(List<RenderMeshTask.Ball>).GetPropertySafe<int>(
+				nameof(List<int>.Capacity), false);
+			var targetConduits = typeof(ConduitFlowVisualizer_RenderMeshConstructor_Patch).
 				GetMethodSafe(nameof(SetCapacity), true, typeof(List<ConduitFlow.Conduit>),
 				typeof(int));
 			if (resizeBalls != null && resizeConduits != null && targetConduits != null) {
 				var setBallCap = resizeBalls.GetSetMethod(true);
 				var setConduitCap = resizeConduits.GetSetMethod(true);
-				var dynamicMethod = GenerateDynamicMethod(ballType, resizeBalls);
+				var dynamicMethod = GenerateDynamicMethod(resizeBalls);
 				foreach (var instr in instructions) {
 					var labels = instr.labels;
 					if (instr.Is(OpCodes.Callvirt, setConduitCap)) {
@@ -352,31 +296,6 @@ namespace PeterHan.FastTrack.ConduitPatches {
 					yield return instr;
 			if (!patched)
 				PUtil.LogWarning("Unable to patch ConduitFlowVisualizer.RenderMeshTask");
-		}
-	}
-
-	/// <summary>
-	/// Applied to Game if conduit optimizations are off, to update the visualizer if conduits
-	/// are dirty.
-	/// </summary>
-	[HarmonyPatch]
-	public static class Game_Update_Patch {
-		internal static bool Prepare() => !FastTrackOptions.Instance.ConduitOpts &&
-			ConduitFlowVisualizerRenderer.Prepare();
-
-		internal static IEnumerable<MethodBase> TargetMethods() {
-			yield return typeof(Game).GetMethodSafe("Update", false);
-			yield return typeof(Game).GetMethodSafe("LateUpdate", false);
-		}
-
-		/// <summary>
-		/// Applied before Update and LateUpdate run.
-		/// </summary>
-		internal static void Prefix(Game __instance) {
-			if (__instance.gasConduitSystem.IsDirty)
-				ConduitFlowVisualizerRenderer.ForceUpdate(__instance.gasFlowVisualizer);
-			if (__instance.liquidConduitSystem.IsDirty)
-				ConduitFlowVisualizerRenderer.ForceUpdate(__instance.liquidFlowVisualizer);
 		}
 	}
 }

@@ -30,7 +30,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// <summary>
 	/// Applied to Light2D to add SlowLightSymbolTracker when necessary.
 	/// </summary>
-	[HarmonyPatch(typeof(Light2D), "OnSpawn")]
+	[HarmonyPatch(typeof(Light2D), nameof(Light2D.OnSpawn))]
 	public static class Light2D_OnSpawn_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
 
@@ -100,7 +100,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// Applied to LightBuffer to patch in checks to turn down the lights on big Shine Bug
 	/// farms.
 	/// </summary>
-	[HarmonyPatch(typeof(LightBuffer), "LateUpdate")]
+	[HarmonyPatch(typeof(LightBuffer), nameof(LightBuffer.LateUpdate))]
 	public static class LightBuffer_LateUpdate_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.UnstackLights;
 

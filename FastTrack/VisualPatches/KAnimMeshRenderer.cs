@@ -128,7 +128,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// Stores a mapping from the meshes to their visualizers for cleanup.
 		/// </summary>
 		private static readonly IList<KAnimMeshRenderer> visualizers =
-			new List<KAnimMeshRenderer>(512);
+			new List<KAnimMeshRenderer>(256);
 
 		/// <summary>
 		/// Renders the active kanims.
@@ -153,7 +153,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// Updates the material properties on the mesh renderer for an animation batch.
 		/// </summary>
 		/// <param name="batch">The batch to update.</param>
-		private static void UpdateMaterialProperties(KAnimBatch batch) {
+		internal static void UpdateMaterialProperties(KAnimBatch batch) {
 			int id = batch.id;
 			KAnimMeshRenderer renderer;
 			if (batch.materialType != MaterialType.UI && id < visualizers.Count &&
@@ -261,9 +261,9 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// <summary>
 			/// Applied before Render runs.
 			/// </summary>
-			internal static bool Prefix(bool ___ready, IList<BatchSet> ___activeBatchSets) {
-				if (___ready)
-					Render(___activeBatchSets);
+			internal static bool Prefix(KAnimBatchManager __instance) {
+				if (__instance.ready)
+					Render(__instance.activeBatchSets);
 				return false;
 			}
 		}
@@ -285,24 +285,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 				if (newBatchSet == null && __instance.materialType != MaterialType.UI &&
 						id < visualizers.Count && (renderer = visualizers[id]) != null)
 					renderer.Deactivate();
-			}
-		}
-
-		/// <summary>
-		/// Applied to KAnimBatch to update the material properties when they need to be
-		/// updated.
-		/// </summary>
-		[HarmonyPatch(typeof(KAnimBatch), nameof(KAnimBatch.UpdateDirty))]
-		internal static class UpdateDirty_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
-				FastTrackOptions.MeshRendererSettings.None;
-
-			/// <summary>
-			/// Applied after UpdateDirty runs.
-			/// </summary>
-			internal static void Postfix(int __result, KAnimBatch __instance) {
-				if (__result > 0)
-					UpdateMaterialProperties(__instance);
 			}
 		}
 	}

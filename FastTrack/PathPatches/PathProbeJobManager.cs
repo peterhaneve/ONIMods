@@ -86,7 +86,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			totalRuntime = 0L;
 		}
 
-		protected override void OnCleanUp() {
+		public override void OnCleanUp() {
 			onPathDone.Dispose();
 			budget = null;
 			Instance = null;
@@ -102,7 +102,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			Interlocked.Add(ref totalRuntime, job.runtime);
 		}
 
-		protected override void OnPrefabInit() {
+		public override void OnPrefabInit() {
 			base.OnPrefabInit();
 			Instance = this;
 		}

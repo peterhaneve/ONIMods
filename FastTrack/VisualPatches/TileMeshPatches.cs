@@ -145,7 +145,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// <summary>
 	/// Applied to World to create a tile mesh renderer before the Game is loaded.
 	/// </summary>
-	[HarmonyPatch(typeof(World), "OnPrefabInit")]
+	[HarmonyPatch(typeof(World), nameof(World.OnPrefabInit))]
 	public static class World_OnPrefabInit_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions ==
 			FastTrackOptions.MeshRendererSettings.All;

@@ -68,44 +68,43 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// updates in ScreenUpdate.
 		/// </summary>
 		/// <param name="instance">The map screen rendering this method.</param>
-		/// <param name="targetPosition">The target NIS position.</param>
 		/// <param name="scale">The current scale of the starmap.</param>
 		/// <param name="targetScale">The scale that the starmap is moving towards.</param>
 		/// <param name="position">The current and new position of the starmap</param>
-		/// <param name="cells">The current objects in the starmap.</param>
 		/// <param name="selectWhenComplete">The hex to select when complete.</param>
 		/// <param name="selected">The currently selected hex.</param>
-		/// <returns>true to continue moving, or false to stop moving.</returns>
-		private static bool NISMoveCore(ClusterMapScreen instance, Vector3 targetPosition,
-				float scale, ref float targetScale, ref Vector3 position,
-				CellVisByLocation cells, AxialI selectWhenComplete, ClusterMapHex selected) {
+		private static void NISMoveCore(ClusterMapScreen instance,
+				float scale, ref float targetScale, ref Vector3 position) {
 			float dt = Time.unscaledDeltaTime, distance;
 			bool move = true;
 			Vector3 pos = position;
+			var targetPosition = instance.targetNISPosition;
 			var destination = new Vector3(-targetPosition.x * scale, -targetPosition.y *
 				scale, targetPosition.z);
+			var cells = instance.m_cellVisByLocation;
 			// Always 150.0 when reached
 			targetScale = Mathf.Lerp(targetScale, 150.0f, dt * 2.0f);
 			position = pos = Vector3.Lerp(pos, destination, dt * 2.5f);
 			distance = Vector3.Distance(pos, destination);
 			// Close to destination?
-			if (distance < 100.0f && cells.TryGetValue(selectWhenComplete,
+			if (distance < 100.0f && cells.TryGetValue(instance.selectOnMoveNISComplete,
 					out ClusterMapVisualizer visualizer)) {
 				var hex = visualizer.GetComponent<ClusterMapHex>();
-				if (selected != hex)
+				if (instance.m_selectedHex != hex)
 					instance.SelectHex(hex);
 				// Reached destination?
 				if (distance < 10.0f)
 					move = false;
 			}
-			return move;
+			instance.movingToTargetNISPosition = move;
 		}
 
 		/// <summary>
 		/// Applied to ClusterMapScreen to turn off the floating asteroid animation which is
 		/// shockingly slow.
 		/// </summary>
-		[HarmonyPatch(typeof(ClusterMapScreen), "FloatyAsteroidAnimation")]
+		[HarmonyPatch(typeof(ClusterMapScreen), nameof(ClusterMapScreen.
+			FloatyAsteroidAnimation))]
 		internal static class FloatyAsteroidAnimation_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.NoBounce;
 
@@ -120,25 +119,21 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied to ClusterMapScreen to optimize the move-to animation.
 		/// </summary>
-		[HarmonyPatch(typeof(ClusterMapScreen), "MoveToNISPosition")]
+		[HarmonyPatch(typeof(ClusterMapScreen), nameof(ClusterMapScreen.MoveToNISPosition))]
 		internal static class MoveToNISPosition_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
 
 			/// <summary>
 			/// Applied before MoveToNISPosition runs.
 			/// </summary>
-			internal static bool Prefix(ClusterMapScreen __instance,
-					KScrollRect ___mapScrollRect, Vector3 ___targetNISPosition,
-					float ___m_currentZoomScale, ref float ___m_targetZoomScale,
-					ref bool ___movingToTargetNISPosition, AxialI ___selectOnMoveNISComplete,
-					ClusterMapHex ___m_selectedHex, CellVisByLocation ___m_cellVisByLocation) {
+			internal static bool Prefix(ClusterMapScreen __instance) {
 				RectTransform content;
-				if (___movingToTargetNISPosition && ___mapScrollRect != null && (content =
-						___mapScrollRect.content) != null) {
+				var mapScrollRect = __instance.mapScrollRect;
+				if (__instance.movingToTargetNISPosition && mapScrollRect != null && (content =
+						mapScrollRect.content) != null) {
 					var pos = content.localPosition;
-					___movingToTargetNISPosition = NISMoveCore(__instance, ___targetNISPosition,
-						___m_currentZoomScale, ref ___m_targetZoomScale, ref pos,
-						___m_cellVisByLocation, ___selectOnMoveNISComplete, ___m_selectedHex);
+					NISMoveCore(__instance, __instance.m_currentZoomScale, ref __instance.
+						m_targetZoomScale, ref pos);
 					content.localPosition = pos;
 				}
 				return false;
@@ -155,22 +150,20 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before ScreenUpdate runs.
 			/// </summary>
-			internal static bool Prefix(ClusterMapScreen __instance,
-					KScrollRect ___mapScrollRect, Vector3 ___targetNISPosition,
-					ref float ___m_currentZoomScale, ref float ___m_targetZoomScale,
-					ref bool ___movingToTargetNISPosition, AxialI ___selectOnMoveNISComplete,
-					ClusterMapHex ___m_selectedHex, CellVisByLocation ___m_cellVisByLocation) {
+			internal static bool Prefix(ClusterMapScreen __instance) {
 				RectTransform content;
-				if (___mapScrollRect != null && (content = ___mapScrollRect.content) != null) {
-					float scale = ___m_currentZoomScale, target = ___m_targetZoomScale;
+				var mapScrollRect = __instance.mapScrollRect;
+				if (mapScrollRect != null && (content = mapScrollRect.content) != null) {
+					float scale = __instance.m_currentZoomScale, target = __instance.
+						m_targetZoomScale;
 					var mousePos = KInputManager.GetMousePos();
 					var ip = content.InverseTransformPoint(mousePos);
 					Vector3 pos = content.localPosition;
 					bool move = false;
 					if (!Mathf.Approximately(target, scale)) {
 						// Only if necessary
-						___m_currentZoomScale = scale = Mathf.Lerp(scale, target, Mathf.Min(
-							4.0f * Time.unscaledDeltaTime, 0.9f));
+						__instance.m_currentZoomScale = scale = Mathf.Lerp(scale, target,
+							Mathf.Min(4.0f * Time.unscaledDeltaTime, 0.9f));
 						content.localScale = new Vector3(scale, scale, 1f);
 						var fp = content.InverseTransformPoint(mousePos);
 						if (!Mathf.Approximately(ip.x, fp.x) || !Mathf.Approximately(ip.y,
@@ -180,14 +173,10 @@ namespace PeterHan.FastTrack.UIPatches {
 							move = true;
 						}
 					}
-					if (___movingToTargetNISPosition) {
+					if (__instance.movingToTargetNISPosition) {
 						move = true;
-						// Ugly but fast!
-						___movingToTargetNISPosition = NISMoveCore(__instance,
-							___targetNISPosition, scale, ref target, ref pos,
-							___m_cellVisByLocation, ___selectOnMoveNISComplete,
-							___m_selectedHex);
-						___m_targetZoomScale = target;
+						NISMoveCore(__instance, scale, ref target, ref pos);
+						__instance.m_targetZoomScale = target;
 					}
 					if (move)
 						content.localPosition = pos;

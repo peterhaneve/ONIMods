@@ -81,7 +81,8 @@ namespace PeterHan.FastTrack {
 					typeof(Components.Cmps<>)) {
 				// Components.Cmps<argument>
 				var t = cmpType.GenericTypeArguments[0];
-				var itemsField = cmpType.GetFieldSafe("items", false);
+				var itemsField = cmpType.GetFieldSafe(nameof(Components.Cmps<Brain>.items),
+					false);
 				var eventField = cmpType.GetFieldSafe(evtName, false);
 				var kcv = typeof(KCompactedVector<>).MakeGenericType(t);
 				// Need concrete versions of the methods in that class

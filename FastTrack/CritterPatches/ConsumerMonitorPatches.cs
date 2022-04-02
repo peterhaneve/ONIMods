@@ -85,18 +85,17 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// <summary>
 		/// Applied before FindFood runs.
 		/// </summary>
-		internal static bool Prefix(GasAndLiquidConsumerMonitor.Instance __instance,
-				Navigator ___navigator, ref int ___targetCell, ref Element ___targetElement) {
+		internal static bool Prefix(GasAndLiquidConsumerMonitor.Instance __instance) {
 			int targetCell;
 			// The original query limited to 25 results, pufts have a typical path cost of 2
 			// for a move and slicksters 1, but pufts can go 4 directions while slicksters only
 			// 2. Go with a 15 cost limit which is 7 tiles (pufts) or 15 tiles (slicksters).
 			var query = new ConsumableCellQuery(__instance, 15);
-			___navigator.RunQuery(query);
+			__instance.navigator.RunQuery(query);
 			targetCell = query.TargetCell;
 			if (Grid.IsValidCell(targetCell)) {
-				___targetCell = targetCell;
-				___targetElement = query.TargetElement;
+				__instance.targetCell = targetCell;
+				__instance.targetElement = query.TargetElement;
 			}
 			// Stop the slow original from running
 			return false;
@@ -116,12 +115,11 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// <summary>
 		/// Applied after InitializeStates runs.
 		/// </summary>
-		internal static void Postfix(GameStateMachine<GasAndLiquidConsumerMonitor,
-				GasAndLiquidConsumerMonitor.Instance, IStateMachineTarget,
-				GasAndLiquidConsumerMonitor.Def>.State ___lookingforfood) {
-			var actions = ___lookingforfood?.updateActions;
+		internal static void Postfix(GasAndLiquidConsumerMonitor __instance) {
+			var lookingForFood = __instance.lookingforfood;
+			var actions = lookingForFood?.updateActions;
 			if (actions != null)
-				___lookingforfood.Enter((smi) => smi.FindFood());
+				lookingForFood.Enter((smi) => smi.FindFood());
 		}
 
 		/// <summary>
@@ -146,16 +144,6 @@ namespace PeterHan.FastTrack.CritterPatches {
 		private const int RADIUS = 8;
 
 		/// <summary>
-		/// The tag bits set on items already reserved by another creature.
-		/// </summary>
-		private static TagBits CREATURE_MASK;
-
-		/// <summary>
-		/// The tag bits set on plants.
-		/// </summary>
-		private static TagBits PLANT_MASK;
-
-		/// <summary>
 		/// Checks to see if the item can be eaten by a critter. This overload assumes that
 		/// the item is not a plant.
 		/// </summary>
@@ -166,8 +154,8 @@ namespace PeterHan.FastTrack.CritterPatches {
 			bool edible = item != null;
 			if (edible) {
 				item.UpdateTagBits();
-				if (item.HasAnyTags_AssumeLaundered(ref CREATURE_MASK) || diet.
-						GetDietInfo(item.PrefabTag) == null)
+				if (item.HasAnyTags_AssumeLaundered(ref SolidConsumerMonitor.creatureMask) ||
+						diet.GetDietInfo(item.PrefabTag) == null)
 					edible = false;
 			}
 			return edible;
@@ -182,7 +170,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 		private static bool CanEatItem(KMonoBehaviour item, Diet diet) {
 			var pid = item.GetComponent<KPrefabID>();
 			bool edible = CanEatItem(pid, diet);
-			if (edible && pid.HasAnyTags_AssumeLaundered(ref PLANT_MASK)) {
+			if (edible && pid.HasAnyTags_AssumeLaundered(ref SolidConsumerMonitor.plantMask)) {
 				float grown = 0f;
 				var trunk = item.GetComponent<BuddingTrunk>();
 				// Trees are special cased in the Klei code
@@ -251,16 +239,6 @@ namespace PeterHan.FastTrack.CritterPatches {
 		}
 
 		/// <summary>
-		/// Updates the tag bits used for critters and plants.
-		/// </summary>
-		/// <param name="plantMask">The tag bits set on plants.</param>
-		/// <param name="creatureMask">The tag bits set on items already reserved by another creature.</param>
-		public static void UpdateMasks(ref TagBits plantMask, ref TagBits creatureMask) {
-			PLANT_MASK = new TagBits(ref plantMask);
-			CREATURE_MASK = new TagBits(ref creatureMask);
-		}
-
-		/// <summary>
 		/// Stores the current closest edible food item.
 		/// </summary>
 		private sealed class ClosestEdible {
@@ -285,7 +263,8 @@ namespace PeterHan.FastTrack.CritterPatches {
 			/// </summary>
 			/// <param name="item">The item to be eaten.</param>
 			/// <param name="navigator">The navigator of this critter.</param>
-			/// <param name="monitor">The drowning monitor of this critter to avoid pathing to food under water.</param>
+			/// <param name="monitor">The drowning monitor of this critter to avoid pathing to
+			/// food under water.</param>
 			public void CheckUpdate(KMonoBehaviour item, Navigator navigator,
 					DrowningMonitor monitor) {
 				var go = item.gameObject;
@@ -329,14 +308,11 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// <summary>
 		/// Applied after InitializeStates runs.
 		/// </summary>
-		internal static void Postfix(TagBits ___plantMask, TagBits ___creatureMask,
-				GameStateMachine<SolidConsumerMonitor, SolidConsumerMonitor.Instance,
-				IStateMachineTarget, SolidConsumerMonitor.Def>.State ___lookingforfood) {
-			var actions = ___lookingforfood?.updateActions;
-			// Initialize those masks
-			SolidConsumerMonitorFoodFinder.UpdateMasks(ref ___plantMask, ref ___creatureMask);
+		internal static void Postfix(SolidConsumerMonitor __instance) {
+			var lookingForFood = __instance.lookingforfood;
+			var actions = lookingForFood?.updateActions;
 			if (actions != null)
-				___lookingforfood.Enter(SolidConsumerMonitorFoodFinder.FindFood);
+				lookingForFood.Enter(SolidConsumerMonitorFoodFinder.FindFood);
 		}
 
 		/// <summary>

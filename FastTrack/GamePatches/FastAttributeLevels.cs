@@ -42,7 +42,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			attrConverters = new Dictionary<string, AttributeConverterInstance>(32);
 		}
 
-		protected override void OnPrefabInit() {
+		public override void OnPrefabInit() {
 			base.OnPrefabInit();
 			foreach (var instance in converters.converters)
 				attrConverters.Add(instance.converter.Id, instance);

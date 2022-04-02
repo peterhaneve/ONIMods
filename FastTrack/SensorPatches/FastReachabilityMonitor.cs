@@ -65,7 +65,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 				gsp.Free(ref partitionerEntry);
 		}
 
-		protected override void OnCleanUp() {
+		public override void OnCleanUp() {
 			DestroyPartitioner();
 			base.OnCleanUp();
 		}
@@ -77,7 +77,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 			FastGroupProber.Instance?.Enqueue(smi);
 		}
 
-		protected override void OnSpawn() {
+		public override void OnSpawn() {
 			base.OnSpawn();
 			smi = gameObject.GetSMI<ReachabilityMonitor.Instance>();
 			UpdateOffsets();
@@ -116,7 +116,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 	/// <summary>
 	/// Applied to GameScenePartitioner to create a mask for triggering reachability updates.
 	/// </summary>
-	[HarmonyPatch(typeof(GameScenePartitioner), "OnPrefabInit")]
+	[HarmonyPatch(typeof(GameScenePartitioner), nameof(GameScenePartitioner.OnPrefabInit))]
 	public static class GameScenePartitioner_OnPrefabInit_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
 
@@ -181,7 +181,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 	/// <summary>
 	/// Applied to MinionGroupProber to use our check for reachability instead of its own.
 	/// </summary>
-	[HarmonyPatch(typeof(MinionGroupProber), "IsReachable_AssumeLock")]
+	[HarmonyPatch(typeof(MinionGroupProber), nameof(MinionGroupProber.IsReachable_AssumeLock))]
 	public static class MinionGroupProber_IsReachableAssumeLock_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
 

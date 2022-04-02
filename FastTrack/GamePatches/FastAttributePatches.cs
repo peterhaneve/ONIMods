@@ -76,7 +76,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// Applied to AttributeConverters to add a copy of our fast component alongside each
 	/// instance.
 	/// </summary>
-	[HarmonyPatch(typeof(AttributeConverters), "OnPrefabInit")]
+	[HarmonyPatch(typeof(AttributeConverters), nameof(AttributeConverters.OnPrefabInit))]
 	public static class AttributeConverters_OnPrefabInit_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.FastAttributesMode;
 
@@ -94,18 +94,18 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
 	/// Applied to AttributeLevels to add a copy of our fast component alongside each instance.
 	/// </summary>
-	[HarmonyPatch(typeof(AttributeLevels), "OnPrefabInit")]
+	[HarmonyPatch(typeof(AttributeLevels), nameof(AttributeLevels.OnPrefabInit))]
 	public static class AttributeLevels_OnPrefabInit_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.FastAttributesMode;
 
 		/// <summary>
 		/// Applied after OnPrefabInit runs.
 		/// </summary>
-		internal static void Postfix(AttributeLevels __instance,
-				IList<AttributeLevel> ___levels) {
-			if (__instance != null && ___levels != null) {
+		internal static void Postfix(AttributeLevels __instance) {
+			var levels = __instance.levels;
+			if (levels != null) {
 				var fl = __instance.gameObject.AddOrGet<FastAttributeLevels>();
-				fl.Initialize(___levels);
+				fl.Initialize(levels);
 			} else
 				PUtil.LogWarning("Tried to add fast levels, but no attributes found!");
 		}
@@ -114,7 +114,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
 	/// Applied to ManualGenerator to use the fast version of attribute leveling.
 	/// </summary>
-	[HarmonyPatch(typeof(ManualGenerator), "OnWorkTick")]
+	[HarmonyPatch(typeof(ManualGenerator), nameof(ManualGenerator.OnWorkTick))]
 	public static class ManualGenerator_OnWorkTick_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.FastAttributesMode;
 
@@ -151,38 +151,38 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before GetEfficiencyMultiplier runs.
 		/// </summary>
-		internal static bool Prefix(Worker worker, AttributeConverter ___attributeConverter,
-				ref float __result, bool ___lightEfficiencyBonus, ref bool ___currentlyLit,
-				ref Guid ___lightEfficiencyBonusStatusItemHandle,
-				float ___minimumAttributeMultiplier, Workable __instance) {
+		internal static bool Prefix(Worker worker, ref float __result, Workable __instance) {
 			float mult = 1f;
 			int cell;
-			if (___attributeConverter != null) {
+			var ac = __instance.attributeConverter;
+			if (ac != null) {
 				// Use fast attribute converters where possible
 				var converter = worker.GetComponent<FastAttributeConverters>().GetConverter(
-					___attributeConverter.Id);
+					ac.Id);
 				mult += converter.Evaluate();
 			}
-			if (___lightEfficiencyBonus && Grid.IsValidCell(cell = Grid.PosToCell(worker.
-					transform.position))) {
-				Guid handle = ___lightEfficiencyBonusStatusItemHandle;
+			if (__instance.lightEfficiencyBonus && Grid.IsValidCell(cell = Grid.PosToCell(
+					worker.transform.position))) {
+				Guid handle = __instance.lightEfficiencyBonusStatusItemHandle;
+				bool lit;
 				if (Grid.LightIntensity[cell] > 0) {
-					___currentlyLit = true;
+					lit = true;
 					mult += TUNING.DUPLICANTSTATS.LIGHT.LIGHT_WORK_EFFICIENCY_BONUS;
 					if (handle == Guid.Empty)
-						___lightEfficiencyBonusStatusItemHandle = worker.
+						__instance.lightEfficiencyBonusStatusItemHandle = worker.
 							GetComponent<KSelectable>().AddStatusItem(Db.Get().
 							DuplicantStatusItems.LightWorkEfficiencyBonus, __instance);
 				} else {
-					___currentlyLit = false;
+					lit = false;
 					if (handle != Guid.Empty) {
 						// Properly zero the Guid to avoid spamming the call later
 						worker.GetComponent<KSelectable>().RemoveStatusItem(handle, false);
-						___lightEfficiencyBonusStatusItemHandle = Guid.Empty;
+						__instance.lightEfficiencyBonusStatusItemHandle = Guid.Empty;
 					}
 				}
+				__instance.currentlyLit = lit;
 			}
-			__result = Mathf.Max(mult, ___minimumAttributeMultiplier);
+			__result = Mathf.Max(mult, __instance.minimumAttributeMultiplier);
 			return false;
 		}
 	}
@@ -223,7 +223,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
 			var getAttribute = typeof(Workable).GetMethodSafe(nameof(Workable.
 				GetWorkAttribute), false);
-			var getResume = typeof(Worker).GetFieldSafe("resume", false);
+			var getResume = typeof(Worker).GetFieldSafe(nameof(Worker.resume), false);
 			var updateExp = typeof(Worker_Work_Patch).GetMethodSafe(nameof(UpdateExperience),
 				true, typeof(Attribute), typeof(Worker), typeof(float), typeof(MinionResume));
 			var getEfficiency = typeof(Workable).GetMethodSafe(nameof(Workable.

@@ -23,6 +23,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
+using RenderData = GroundRenderer.ElementChunk.RenderData;
+
 namespace PeterHan.FastTrack.VisualPatches {
 	/// <summary>
 	/// Renders the ground in MeshRenderers instead of using Graphics.DrawMesh.
@@ -94,18 +96,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// </summary>
 	public static class GroundRendererDataPatches {
 		/// <summary>
-		/// Accesses the private type GroundRenderer.ElementChunk.
-		/// </summary>
-		private static readonly Type ELEMENT_CHUNK = typeof(GroundRenderer).
-			GetNestedType("ElementChunk", PPatchTools.BASE_FLAGS | BindingFlags.Instance);
-
-		/// <summary>
-		/// Accesses the private type GroundRenderer.ElementChunk.RenderData.
-		/// </summary>
-		private static readonly Type RENDER_DATA = ELEMENT_CHUNK?.
-			GetNestedType("RenderData", PPatchTools.BASE_FLAGS | BindingFlags.Instance);
-
-		/// <summary>
 		/// Stores a mapping from the meshes to their visualizers for cleanup.
 		/// </summary>
 		private static readonly IDictionary<Mesh, GroundMeshRenderer> visualizers =
@@ -123,14 +113,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied to RenderData to destroy the renderer when it dies.
 		/// </summary>
-		[HarmonyPatch]
+		[HarmonyPatch(typeof(RenderData), nameof(RenderData.ClearMesh))]
 		internal static class ClearMesh_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
 				FastTrackOptions.MeshRendererSettings.None;
-
-			internal static MethodBase TargetMethod() {
-				return RENDER_DATA?.GetMethodSafe("ClearMesh", false);
-			}
 
 			/// <summary>
 			/// Applied before ClearMesh runs.
@@ -147,15 +133,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied to RenderData to create the renderer when it is created.
 		/// </summary>
-		[HarmonyPatch]
+		[HarmonyPatch(typeof(RenderData), MethodType.Constructor, typeof(Material))]
 		internal static class Constructor_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
 				FastTrackOptions.MeshRendererSettings.None;
-
-			internal static MethodBase TargetMethod() {
-				return RENDER_DATA?.GetConstructor(PPatchTools.BASE_FLAGS | BindingFlags.
-					Instance, null, new Type[] { typeof(Material) }, null);
-			}
 
 			/// <summary>
 			/// Applied after the constructor runs.
@@ -173,23 +154,19 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied to RenderData to remove the DrawMesh call.
 		/// </summary>
-		[HarmonyPatch]
+		[HarmonyPatch(typeof(RenderData), nameof(RenderData.Render))]
 		internal static class Render_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
 				FastTrackOptions.MeshRendererSettings.None;
 
-			internal static MethodBase TargetMethod() {
-				return RENDER_DATA?.GetMethodSafe("Render", false, typeof(Vector3),
-					typeof(int));
-			}
-
 			/// <summary>
 			/// Applied before Render runs.
 			/// </summary>
-			internal static bool Prefix(Vector3 position, List<Vector3> ___pos, Mesh ___mesh) {
-				if (___mesh != null && visualizers.TryGetValue(___mesh,
-						out GroundMeshRenderer visualizer))
-					visualizer.UpdatePosition(position, ___pos.Count > 0 && !
+			internal static bool Prefix(Vector3 position, RenderData __instance) {
+				var mesh = __instance.mesh;
+				if (mesh != null && visualizers.TryGetValue(mesh, out GroundMeshRenderer
+						visualizer))
+					visualizer.UpdatePosition(position, __instance.pos.Count > 0 && !
 						FullScreenDialogPatches.DialogVisible);
 				return false;
 			}

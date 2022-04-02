@@ -60,36 +60,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 		private const int TEXTURE_RESOLUTION = 16;
 
 		/// <summary>
-		/// Updaters for each of the static texture update methods in PropertyTextures.
-		/// </summary>
-		private static readonly UpdateTexture UPDATE_DANGER = UpdaterFor("UpdateDanger");
-
-		private static readonly UpdateTexture UPDATE_FALLING_SAND =
-			UpdaterFor("UpdateFallingSolidChange");
-
-		private static readonly UpdateTexture UPDATE_FOG_OF_WAR = UpdaterFor("UpdateFogOfWar");
-
-		private static readonly UpdateTexture UPDATE_GAS = UpdaterFor("UpdateGasColour");
-
-		private static readonly UpdateTexture UPDATE_DIGGING =
-			UpdaterFor("UpdateSolidDigAmount");
-
-		private static readonly UpdateTexture UPDATE_LIGHT = UpdaterFor("UpdateWorldLight");
-
-		private static readonly UpdateTexture UPDATE_MASS =
-			UpdaterFor("UpdateSolidLiquidGasMass");
-
-		private static readonly UpdateTexture UPDATE_PRESSURE = UpdaterFor("UpdatePressure");
-
-		private static readonly UpdateTexture UPDATE_RADIATION = UpdaterFor("UpdateRadiation");
-
-		private static readonly UpdateTexture UPDATE_STATE_CHANGE =
-			UpdaterFor("UpdateStateChange");
-
-		private static readonly UpdateTexture UPDATE_TEMPERATURE =
-			UpdaterFor("UpdateTemperature");
-
-		/// <summary>
 		/// Creates the singleton instance of this class.
 		/// </summary>
 		internal static void CreateInstance() {
@@ -103,16 +73,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 		internal static void DestroyInstance() {
 			Instance?.Dispose();
 			Instance = null;
-		}
-
-		/// <summary>
-		/// Creates a texture updater delegate for a method in PropertyTextures.
-		/// </summary>
-		/// <param name="method">The method name to delegate.</param>
-		/// <returns>A static delegate to call that method quickly.</returns>
-		private static UpdateTexture UpdaterFor(string method) {
-			return typeof(PropertyTextures).CreateStaticDelegate<UpdateTexture>(method,
-				typeof(TextureRegion), typeof(int), typeof(int), typeof(int), typeof(int));
 		}
 
 		/// <summary>
@@ -279,7 +239,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		/// <param name="allTextureProperties">The texture properties to use.</param>
 		/// <param name="externalTextures">The external textures from Sim.</param>
-		internal void Init(IList<KTextureProperties> allTextureProperties,
+		internal void Init(IList<PropertyTextures.TextureProperties> allTextureProperties,
 				Texture2D[] externalTextures) {
 			external = externalTextures;
 			allProperties.Clear();
@@ -340,37 +300,37 @@ namespace PeterHan.FastTrack.VisualPatches {
 			UpdateTexture updater;
 			switch (property) {
 			case SimProperty.StateChange:
-				updater = UPDATE_STATE_CHANGE;
+				updater = PropertyTextures.UpdateStateChange;
 				break;
 			case SimProperty.GasPressure:
-				updater = UPDATE_PRESSURE;
+				updater = PropertyTextures.UpdatePressure;
 				break;
 			case SimProperty.GasColour:
-				updater = UPDATE_GAS;
+				updater = PropertyTextures.UpdateGasColour;
 				break;
 			case SimProperty.GasDanger:
-				updater = UPDATE_DANGER;
+				updater = PropertyTextures.UpdateDanger;
 				break;
 			case SimProperty.FogOfWar:
-				updater = UPDATE_FOG_OF_WAR;
+				updater = PropertyTextures.UpdateFogOfWar;
 				break;
 			case SimProperty.SolidDigAmount:
-				updater = UPDATE_DIGGING;
+				updater = PropertyTextures.UpdateSolidDigAmount;
 				break;
 			case SimProperty.SolidLiquidGasMass:
-				updater = UPDATE_MASS;
+				updater = PropertyTextures.UpdateSolidLiquidGasMass;
 				break;
 			case SimProperty.WorldLight:
-				updater = UPDATE_LIGHT;
+				updater = PropertyTextures.UpdateWorldLight;
 				break;
 			case SimProperty.Temperature:
-				updater = UPDATE_TEMPERATURE;
+				updater = PropertyTextures.UpdateTemperature;
 				break;
 			case SimProperty.FallingSolid:
-				updater = UPDATE_FALLING_SAND;
+				updater = PropertyTextures.UpdateFallingSolidChange;
 				break;
 			case SimProperty.Radiation:
-				updater = UPDATE_RADIATION;
+				updater = PropertyTextures.UpdateRadiation;
 				break;
 			default:
 				throw new ArgumentException("No updater for property: " + property);
@@ -546,7 +506,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// Applied to PropertyTextures to replace LateUpdate with the finishing touches of
 	/// PropertyTextureUpdater.
 	/// </summary>
-	[HarmonyPatch(typeof(PropertyTextures), "LateUpdate")]
+	[HarmonyPatch(typeof(PropertyTextures), nameof(PropertyTextures.LateUpdate))]
 	public static class PropertyTextures_LateUpdate_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.ReduceTileUpdates;
 
@@ -566,24 +526,25 @@ namespace PeterHan.FastTrack.VisualPatches {
 	}
 
 	/// <summary>
-	/// Applied to PropertyTextures.
+	/// Applied to PropertyTextures to reset the updater when property textures are reset.
 	/// </summary>
-	[HarmonyPatch(typeof(PropertyTextures), "OnReset")]
+	[HarmonyPatch(typeof(PropertyTextures), nameof(PropertyTextures.OnReset))]
 	public static class PropertyTextures_OnReset_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.ReduceTileUpdates;
+
 		/// <summary>
 		/// Applied after OnReset runs.
 		/// </summary>
-		internal static void Postfix(Texture2D[] ___externallyUpdatedTextures,
-				IList<KTextureProperties> ___allTextureProperties) {
-			PropertyTextureUpdater.Instance?.Init(___allTextureProperties,
-				___externallyUpdatedTextures);
+		internal static void Postfix(PropertyTextures __instance) {
+			PropertyTextureUpdater.Instance?.Init(__instance.allTextureProperties,
+				__instance.externallyUpdatedTextures);
 		}
 	}
 
 	/// <summary>
 	/// Applied to PropertyTextures to initialize our instance with its field values.
 	/// </summary>
-	[HarmonyPatch(typeof(PropertyTextures), "OnSpawn")]
+	[HarmonyPatch(typeof(PropertyTextures), nameof(PropertyTextures.OnSpawn))]
 	public static class PropertyTextures_OnSpawn_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.ReduceTileUpdates;
 
@@ -596,7 +557,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 	}
 
 	/// <summary>
-	/// A cleaner and safer version of KTextureProperties to be used locally.
+	/// A cleaner and safer version of PropertyTextures.TextureProperties to be used locally.
 	/// </summary>
 	internal sealed class TextureProperties {
 		/// <summary>
@@ -619,7 +580,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		public bool UpdateExternally { get; }
 
-		public TextureProperties(ref KTextureProperties kProps) {
+		public TextureProperties(ref PropertyTextures.TextureProperties kProps) {
 			PropertyName = kProps.texturePropertyName;
 			PropertyIndex = kProps.simProperty;
 			UpdateEveryFrame = kProps.updateEveryFrame;
@@ -630,30 +591,4 @@ namespace PeterHan.FastTrack.VisualPatches {
 			return "TextureProperties[PropertyName={0}]".F(PropertyName);
 		}
 	}
-
-	/// <summary>
-	/// This struct's layout matches the private struct with this name in PropertyTextures.
-	/// Harmony allows a substitution in ___ arguments and it works!
-	/// </summary>
-#pragma warning disable CS0649
-	internal struct KTextureProperties {
-		public string name;
-
-		public SimProperty simProperty;
-
-		public TextureFormat textureFormat;
-
-		public FilterMode filterMode;
-
-		public bool updateEveryFrame;
-
-		public bool updatedExternally;
-
-		public bool blend;
-
-		public float blendSpeed;
-
-		public string texturePropertyName;
-	}
-#pragma warning restore CS0649
 }

@@ -18,11 +18,9 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 using UnityEngine;
 
 using CachedPickupable = SolidTransferArm.CachedPickupable;
@@ -32,32 +30,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
 	/// A singleton class that updates Auto-Sweepers in the background quickly.
 	/// </summary>
-	internal sealed class SolidTransferArmUpdater : AsyncJobManager.IWork, IWorkItemCollection,
-			IDisposable {
-		/// <summary>
-		/// Increments the "reachability" serial number of the sweeper.
-		/// </summary>
-		private static readonly Action<SolidTransferArm> INCREMENT_SERIAL_NO =
-			typeof(SolidTransferArm).Detour<Action<SolidTransferArm>>("IncrementSerialNo");
-
-		/// <summary>
-		/// Modding private fields is hard...
-		/// </summary>
-		private static readonly IDetouredField<SolidTransferArm, List<Pickupable>> ITEMS =
-			PDetours.DetourField<SolidTransferArm, List<Pickupable>>("pickupables");
-
-		private static readonly IDetouredField<SolidTransferArm, Operational> OPERATIONAL =
-			PDetours.DetourField<SolidTransferArm, Operational>("operational");
-
-		private static readonly IDetouredField<SolidTransferArm, HashSet<int>> REACHABLE =
-			PDetours.DetourField<SolidTransferArm, HashSet<int>>("reachableCells");
-
-		/// <summary>
-		/// Simulates a chore assignment to the sweeper.
-		/// </summary>
-		private static readonly Action<SolidTransferArm> SIM =
-			typeof(SolidTransferArm).Detour<Action<SolidTransferArm>>("Sim");
-
+	internal sealed class SolidTransferArmUpdater : IWorkItemCollection, IDisposable {
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
@@ -92,17 +65,10 @@ namespace PeterHan.FastTrack.GamePatches {
 
 		public int Count => sweepers.Count;
 
-		public IWorkItemCollection Jobs => this;
-
 		/// <summary>
 		/// The cached pickupables from async fetches.
 		/// </summary>
-		private readonly ConcurrentQueue<CachedPickupable> cached;
-
-		/// <summary>
-		/// Fired when the sweepers are all updated.
-		/// </summary>
-		private readonly EventWaitHandle onComplete;
+		private readonly ConcurrentStack<CachedPickupable> cached;
 
 		/// <summary>
 		/// The current sweeper job.
@@ -110,8 +76,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		private readonly IList<SolidTransferArmInfo> sweepers;
 
 		private SolidTransferArmUpdater() {
-			cached = new ConcurrentQueue<CachedPickupable>();
-			onComplete = new AutoResetEvent(false);
+			cached = new ConcurrentStack<CachedPickupable>();
 			sweepers = new List<SolidTransferArmInfo>(32);
 		}
 
@@ -127,7 +92,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			int maxY = Math.Min(Grid.HeightInCells, y + range), maxX = Math.Min(Grid.
 				WidthInCells, x + range), minY = Math.Max(0, y - range), minX = Math.Max(0,
 				x - range);
-			var oldReachable = REACHABLE.Get(sweeper);
+			var oldReachable = sweeper.reachableCells;
 			var go = info.gameObject;
 			// Recalculate the visible cells
 			for (int ny = minY; ny <= maxY; ny++)
@@ -143,7 +108,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				info.refreshedCells = true;
 			}
 			// Gather stored objects not found by the partitioner
-			var pickupables = ITEMS.Get(sweeper);
+			var pickupables = sweeper.pickupables;
 			pickupables.Clear();
 			foreach (var entry in cached) {
 				var pickupable = entry.pickupable;
@@ -182,61 +147,40 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		/// <param name="entries">The sweepers to update.</param>
 		internal void BatchUpdate(IList<SolidTransferArmBucket> entries) {
-			var inst = AsyncJobManager.Instance;
 			sweepers.Clear();
-			if (inst != null) {
-				int n = entries.Count;
+			int n = entries.Count;
+			for (int i = 0; i < n; i++) {
+				var entry = entries[i];
+				// Filter for usable auto-sweepers
+				entry.lastUpdateTime = 0.0f;
+				if (entry.data is SolidTransferArm autoSweeper && autoSweeper.operational.
+						IsOperational)
+					sweepers.Add(new SolidTransferArmInfo(autoSweeper));
+			}
+			n = sweepers.Count;
+			if (n > 0) {
+				GlobalJobManager.Run(this);
+				// This has to be waited out, because it could be run more than once in
+				// a frame and could race against things like SolidConsumerMonitor
 				for (int i = 0; i < n; i++) {
-					var entry = entries[i];
-					// Filter for usable auto-sweepers
-					entry.lastUpdateTime = 0.0f;
-					if (entry.data is SolidTransferArm autoSweeper && OPERATIONAL.Get(
-							autoSweeper).IsOperational)
-						sweepers.Add(new SolidTransferArmInfo(autoSweeper));
+					var info = sweepers[i];
+					var sweeper = info.sweeper;
+					if (info.refreshedCells)
+						sweeper.IncrementSerialNo();
+					sweeper.Sim();
 				}
-				n = sweepers.Count;
-				if (n > 0) {
-					onComplete.Reset();
-					inst.Run(this);
-					// This has to be waited out, because it could be run more than once in
-					// a frame and could race against things like SolidConsumerMonitor
-					if (onComplete.WaitOne(FastTrackMod.MAX_TIMEOUT))
-						for (int i = 0; i < n; i++) {
-							var info = sweepers[i];
-							var sweeper = info.sweeper;
-							if (info.refreshedCells)
-								INCREMENT_SERIAL_NO.Invoke(sweeper);
-							SIM.Invoke(sweeper);
-						}
-					else
-						PUtil.LogWarning("Auto-Sweepers did not update within the timeout!");
-				}
+				cached.Clear();
 			}
 		}
 
 		public void Dispose() {
 			sweepers.Clear();
-			onComplete.Dispose();
 		}
 
 		public void InternalDoWorkItem(int index) {
 			if (index >= 0 && index < sweepers.Count)
 				AsyncUpdate(sweepers[index]);
 		}
-
-		public void TriggerAbort() {
-			// Clear the cached pickupables
-			while (cached.TryDequeue(out _)) ;
-			onComplete.Set();
-		}
-
-		public void TriggerComplete() {
-			// Clear the cached pickupables
-			while (cached.TryDequeue(out _)) ;
-			onComplete.Set();
-		}
-
-		public void TriggerStart() { }
 
 		/// <summary>
 		/// Updates the cache with items from the Async Fetch manager.
@@ -247,7 +191,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			for (int i = 0; i < n; i++) {
 				var pickupable = items[i].pickupable;
 				if (pickupable.KPrefabID.HasTag(GameTags.Stored))
-					cached.Enqueue(new CachedPickupable {
+					cached.Push(new CachedPickupable {
 						pickupable = pickupable,
 						storage_cell = pickupable.cachedCell
 					});

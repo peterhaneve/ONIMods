@@ -171,7 +171,7 @@ namespace PeterHan.FastTrack.Metrics {
 				SIMANDRENDER[i].Reset();
 		}
 
-		protected override void OnPrefabInit() {
+		public override void OnPrefabInit() {
 			base.OnPrefabInit();
 			ResetAsyncPath();
 			ResetMethodHits();

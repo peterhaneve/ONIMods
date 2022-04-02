@@ -6,6 +6,11 @@
     </PropertyGroup>
   </Target>
 
+  <!-- Fast Track only -->
+  <Target Name="Publicize" AfterTargets="Clean" Condition=" '$(UsePublicized)' == 'true' ">
+    <Publicise InputAssemblies="@(PubliciseInputAssemblies)" OutputPath="../public-lib/"/>
+  </Target>
+
   <Target Name="PLibTranslationEmbeddedResources" BeforeTargets="ResolveReferences" Condition=" '$(AssemblyName)' == 'PLibCore' ">
     <ItemGroup>
       <PLibTranslationFiles Include="../PLibCore/translations/*.po" />

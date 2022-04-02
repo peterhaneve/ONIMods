@@ -71,14 +71,14 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// Patches each fullscreen dialog's OnShow method.
 			/// </summary>
 			internal static IEnumerable<MethodBase> TargetMethods() {
-				yield return typeof(ClusterMapScreen).GetMethodSafe("OnShow", false,
-					typeof(bool));
-				yield return typeof(ResearchScreen).GetMethodSafe("OnShow", false,
-					typeof(bool));
-				yield return typeof(StarmapScreen).GetMethodSafe("OnShow", false,
-					typeof(bool));
-				yield return typeof(SkillsScreen).GetMethodSafe("OnShow", false,
-					typeof(bool));
+				yield return typeof(ClusterMapScreen).GetMethodSafe(nameof(ClusterMapScreen.
+					OnShow), false, typeof(bool));
+				yield return typeof(ResearchScreen).GetMethodSafe(nameof(ResearchScreen.
+					OnShow), false, typeof(bool));
+				yield return typeof(StarmapScreen).GetMethodSafe(nameof(StarmapScreen.OnShow),
+					false, typeof(bool));
+				yield return typeof(SkillsScreen).GetMethodSafe(nameof(SkillsScreen.OnShow),
+					false, typeof(bool));
 			}
 
 			/// <summary>

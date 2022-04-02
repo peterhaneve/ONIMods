@@ -25,20 +25,50 @@ namespace PeterHan.FastTrack {
 	/// Applied to Game to start property texture updates after Sim data arrives and
 	/// fast Reachability updates before the sim cycle starts.
 	/// </summary>
-	[HarmonyPatch(typeof(Game), "Update")]
+	[HarmonyPatch(typeof(Game), nameof(Game.LateUpdate))]
+	[HarmonyPriority(Priority.Low)]
+	public static class Game_LateUpdate_Patch {
+		internal static bool Prepare() => !FastTrackOptions.Instance.ConduitOpts &&
+			ConduitPatches.ConduitFlowVisualizerRenderer.Prepare();
+
+		/// <summary>
+		/// Applied before LateUpdate runs.
+		/// </summary>
+		internal static void Prefix(Game __instance) {
+			if (__instance.gasConduitSystem.IsDirty)
+				ConduitPatches.ConduitFlowVisualizerRenderer.ForceUpdate(__instance.
+					gasFlowVisualizer);
+			if (__instance.liquidConduitSystem.IsDirty)
+				ConduitPatches.ConduitFlowVisualizerRenderer.ForceUpdate(__instance.
+					liquidFlowVisualizer);
+		}
+	}
+
+	/// <summary>
+	/// Applied to Game to start property texture updates after Sim data arrives and
+	/// fast Reachability updates before the sim cycle starts.
+	/// </summary>
+	[HarmonyPatch(typeof(Game), nameof(Game.Update))]
 	[HarmonyPriority(Priority.Low)]
 	public static class Game_Update_Patch {
 		internal static bool Prepare() {
 			var options = FastTrackOptions.Instance;
 			return options.ReduceTileUpdates || options.FastReachability || options.
-				PickupOpts || options.MiscOpts;
+				PickupOpts || options.MiscOpts || (!options.ConduitOpts &&
+				ConduitPatches.ConduitFlowVisualizerRenderer.Prepare());
 		}
 
 		/// <summary>
 		/// Applied before Update runs.
 		/// </summary>
-		internal static void Prefix() {
+		internal static void Prefix(Game __instance) {
 			SensorPatches.FastGroupProber.Instance?.Update();
+			if (__instance.gasConduitSystem.IsDirty)
+				ConduitPatches.ConduitFlowVisualizerRenderer.ForceUpdate(__instance.
+					gasFlowVisualizer);
+			if (__instance.liquidConduitSystem.IsDirty)
+				ConduitPatches.ConduitFlowVisualizerRenderer.ForceUpdate(__instance.
+					liquidFlowVisualizer);
 		}
 
 		/// <summary>
@@ -53,7 +83,7 @@ namespace PeterHan.FastTrack {
 	/// <summary>
 	/// Applied to Global to start up some expensive things before Game.LateUpdate runs.
 	/// </summary>
-	[HarmonyPatch(typeof(Global), "LateUpdate")]
+	[HarmonyPatch(typeof(Global), nameof(Global.LateUpdate))]
 	public static class Global_LateUpdate_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.ConduitOpts;
 
@@ -69,7 +99,7 @@ namespace PeterHan.FastTrack {
 	/// <summary>
 	/// Applied to Global to start up some expensive things before Game.Update runs.
 	/// </summary>
-	[HarmonyPatch(typeof(Global), "Update")]
+	[HarmonyPatch(typeof(Global), nameof(Global.Update))]
 	public static class Global_Update_Patch {
 		internal static bool Prepare() {
 			var options = FastTrackOptions.Instance;
@@ -119,7 +149,7 @@ namespace PeterHan.FastTrack {
 	/// <summary>
 	/// Applied to World to finish up expensive things after Game.LateUpdate has run.
 	/// </summary>
-	[HarmonyPatch(typeof(World), "LateUpdate")]
+	[HarmonyPatch(typeof(World), nameof(World.LateUpdate))]
 	public static class World_LateUpdate_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
 

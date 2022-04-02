@@ -18,8 +18,6 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -32,17 +30,13 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static readonly IList<bool> lastValues = new List<bool>(4);
 
 		/// <summary>
-		/// A delegate to call the UpdateInputOutputDisplay method.
-		/// </summary>
-		private static readonly Action<LogicBitSelectorSideScreen> UPDATE_IO_DISPLAY =
-			typeof(LogicBitSelectorSideScreen).Detour<Action<LogicBitSelectorSideScreen>>(
-			"UpdateInputOutputDisplay");
-
-		/// <summary>
 		/// Updates all bits of the logic bit selector side screen.
 		/// </summary>
-		private static void ForceUpdate(LogicBitSelectorSideScreen instance,
-				Color activeColor, Color inactiveColor, ILogicRibbonBitSelector target) {
+		/// <param name="instance">The screen to update.</param>
+		private static void ForceUpdate(LogicBitSelectorSideScreen instance) {
+			var target = instance.target;
+			var activeColor = instance.activeColor;
+			var inactiveColor = instance.inactiveColor;
 			lastValues.Clear();
 			foreach (var pair in instance.toggles_by_int) {
 				int bit = pair.Key;
@@ -74,19 +68,18 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// (because side screens can have targets set for the first time before they are
 		/// initialized).
 		/// </summary>
-		[HarmonyPatch(typeof(LogicBitSelectorSideScreen), "OnSpawn")]
+		[HarmonyPatch(typeof(LogicBitSelectorSideScreen), nameof(LogicBitSelectorSideScreen.
+			OnSpawn))]
 		public static class OnSpawn_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
 
 			/// <summary>
 			/// Applied after OnSpawn runs.
 			/// </summary>
-			internal static void Postfix(LogicBitSelectorSideScreen __instance,
-					Color ___activeColor, Color ___inactiveColor,
-					ILogicRibbonBitSelector ___target) {
+			internal static void Postfix(LogicBitSelectorSideScreen __instance) {
 				if (__instance != null)
-					UPDATE_IO_DISPLAY.Invoke(__instance);
-				ForceUpdate(__instance, ___activeColor, ___inactiveColor, ___target);
+					__instance.UpdateInputOutputDisplay();
+				ForceUpdate(__instance);
 			}
 		}
 
@@ -94,17 +87,16 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Applied to LogicBitSelectorSideScreen to set the initial states of LAST_VALUES
 		/// for each bit.
 		/// </summary>
-		[HarmonyPatch(typeof(LogicBitSelectorSideScreen), "RefreshToggles")]
+		[HarmonyPatch(typeof(LogicBitSelectorSideScreen), nameof(LogicBitSelectorSideScreen.
+			RefreshToggles))]
 		public static class RefreshToggles_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
 
 			/// <summary>
 			/// Applied after RefreshToggles runs.
 			/// </summary>
-			internal static void Postfix(LogicBitSelectorSideScreen __instance,
-					Color ___activeColor, Color ___inactiveColor,
-					ILogicRibbonBitSelector ___target) {
-				ForceUpdate(__instance, ___activeColor, ___inactiveColor, ___target);
+			internal static void Postfix(LogicBitSelectorSideScreen __instance) {
+				ForceUpdate(__instance);
 			}
 		}
 
@@ -120,13 +112,13 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before RenderEveryTick runs.
 			/// </summary>
-			internal static bool Prefix(LogicBitSelectorSideScreen __instance,
-					Color ___activeColor, Color ___inactiveColor,
-					ILogicRibbonBitSelector ___target) {
-				if (__instance != null && __instance.isActiveAndEnabled && ___target != null)
+			internal static bool Prefix(LogicBitSelectorSideScreen __instance) {
+				ILogicRibbonBitSelector target;
+				if (__instance != null && __instance.isActiveAndEnabled && (target =
+						__instance.target) != null)
 					foreach (var pair in __instance.toggles_by_int) {
 						int bit = pair.Key;
-						bool active = ___target.IsBitActive(bit), update = bit >= lastValues.
+						bool active = target.IsBitActive(bit), update = bit >= lastValues.
 							Count;
 						if (!update) {
 							// If in range, see if bit changed
@@ -135,7 +127,8 @@ namespace PeterHan.FastTrack.UIPatches {
 								lastValues[bit] = active;
 						}
 						if (update)
-							UpdateBit(pair.Value, active, ___activeColor, ___inactiveColor);
+							UpdateBit(pair.Value, active, __instance.activeColor, __instance.
+								inactiveColor);
 					}
 				return false;
 			}

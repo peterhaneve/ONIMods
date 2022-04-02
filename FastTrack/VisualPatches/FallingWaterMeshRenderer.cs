@@ -36,24 +36,21 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Creates a mesh renderer object for falling water.
 		/// </summary>
-		/// <param name="targetMesh">The mesh to render.</param>
-		/// <param name="shader">The shader to use for rendering.</param>
-		/// <param name="block">The material properties of the falling water mesh.</param>
-		internal static void CreateInstance(Mesh targetMesh, Material shader,
-				MaterialPropertyBlock block) {
+		/// <param name="instance">The falling water object to render.</param>
+		internal static void CreateInstance(FallingWater instance) {
 			var game = Game.Instance;
 			if (game == null)
 				throw new ArgumentNullException(nameof(Game.Instance));
 			DestroyInstance();
-			var go = targetMesh.CreateMeshRenderer("Falling Water", LayerMask.NameToLayer(
+			var go = instance.mesh.CreateMeshRenderer("Falling Water", LayerMask.NameToLayer(
 				"Water"));
 			var t = go.transform;
 			t.SetParent(game.transform);
 			t.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
 			// Set up the mesh with the right material
 			var renderer = go.GetComponent<MeshRenderer>();
-			renderer.material = shader;
-			renderer.SetPropertyBlock(block);
+			renderer.material = instance.material;
+			renderer.SetPropertyBlock(instance.propertyBlock);
 			Instance = go.AddOrGet<FallingWaterMeshRenderer>();
 		}
 
@@ -71,7 +68,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// <summary>
 	/// Applied to FallingWater to destroy the mesh renderer object on close.
 	/// </summary>
-	[HarmonyPatch(typeof(FallingWater), "OnCleanUp")]
+	[HarmonyPatch(typeof(FallingWater), nameof(FallingWater.OnCleanUp))]
 	public static class FallingWater_OnCleanUp_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
 			FastTrackOptions.MeshRendererSettings.None;
@@ -79,19 +76,19 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before OnCleanUp runs.
 		/// </summary>
-		internal static void Prefix(ref Mesh ___mesh) {
+		internal static void Prefix(FallingWater __instance) {
 			// Destroy the mesh renderer game object
 			FallingWaterMeshRenderer.DestroyInstance();
 			// Destroy the mesh
-			UnityEngine.Object.Destroy(___mesh);
-			___mesh = null;
+			UnityEngine.Object.Destroy(__instance.mesh);
+			__instance.mesh = null;
 		}
 	}
 
 	/// <summary>
 	/// Applied to FallingWater to create the mesh renderer object on startup.
 	/// </summary>
-	[HarmonyPatch(typeof(FallingWater), "OnSpawn")]
+	[HarmonyPatch(typeof(FallingWater), nameof(FallingWater.OnSpawn))]
 	public static class FallingWater_OnSpawn_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
 			FastTrackOptions.MeshRendererSettings.None;
@@ -99,9 +96,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied after OnSpawn runs.
 		/// </summary>
-		internal static void Postfix(Mesh ___mesh, Material ___material,
-				MaterialPropertyBlock ___propertyBlock) {
-			FallingWaterMeshRenderer.CreateInstance(___mesh, ___material, ___propertyBlock);
+		internal static void Postfix(FallingWater __instance) {
+			FallingWaterMeshRenderer.CreateInstance(__instance);
 		}
 	}
 

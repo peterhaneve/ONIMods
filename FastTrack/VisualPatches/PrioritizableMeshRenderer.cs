@@ -126,8 +126,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied after the constructor runs.
 		/// </summary>
-		internal static void Postfix(Mesh ___mesh, Material ___material) {
-			PrioritizableMeshRenderer.CreateInstance(___mesh, ___material);
+		internal static void Postfix(PrioritizableRenderer __instance) {
+			PrioritizableMeshRenderer.CreateInstance(__instance.mesh, __instance.material);
 		}
 	}
 

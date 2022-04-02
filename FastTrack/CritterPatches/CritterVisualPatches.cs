@@ -33,11 +33,11 @@ namespace PeterHan.FastTrack.CritterPatches {
 		internal static IEnumerable<MethodBase> TargetMethods() {
 			var targetType = typeof(SegmentedCreature);
 			return new List<MethodBase>(3) {
-				targetType.GetMethodSafe("UpdateFreeMovement", false,
+				targetType.GetMethodSafe(nameof(SegmentedCreature.UpdateFreeMovement), false,
 					typeof(SegmentedCreature.Instance), typeof(float)),
-				targetType.GetMethodSafe("UpdateRetractedLoop", false,
+				targetType.GetMethodSafe(nameof(SegmentedCreature.UpdateRetractedLoop), false,
 					typeof(SegmentedCreature.Instance), typeof(float)),
-				targetType.GetMethodSafe("UpdateRetractedPre", false,
+				targetType.GetMethodSafe(nameof(SegmentedCreature.UpdateRetractedPre), false,
 					typeof(SegmentedCreature.Instance), typeof(float))
 			};
 		}

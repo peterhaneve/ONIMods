@@ -107,7 +107,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// Applied to PumpingStationGuide to add an auxiliary component which renders for it
 	/// at a slower rate.
 	/// </summary>
-	[HarmonyPatch(typeof(PumpingStationGuide), "OnSpawn")]
+	[HarmonyPatch(typeof(PumpingStationGuide), nameof(PumpingStationGuide.OnSpawn))]
 	public static class PumpingStationGuide_OnSpawn_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
 
@@ -192,7 +192,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// Applied to Sublimates to stop spawning the bubble effect if the sublimated item is
 	/// in a different world or not on screen.
 	/// </summary>
-	[HarmonyPatch(typeof(Sublimates), "Emit")]
+	[HarmonyPatch(typeof(Sublimates), nameof(Sublimates.Emit))]
 	public static class Sublimates_Emit_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
 

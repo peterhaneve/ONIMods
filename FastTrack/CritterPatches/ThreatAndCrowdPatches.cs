@@ -30,7 +30,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 	/// <summary>
 	/// Applied to OvercrowdingMonitor to replace UpdateState with a faster version.
 	/// </summary>
-	[HarmonyPatch(typeof(OvercrowdingMonitor), "UpdateState")]
+	[HarmonyPatch(typeof(OvercrowdingMonitor), nameof(OvercrowdingMonitor.UpdateState))]
 	public static class OvercrowdingMonitor_UpdateState_Patch {
 		/// <summary>
 		/// Tag bits are faster ways to check for tags being present than HasTag.
@@ -275,26 +275,28 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// <summary>
 		/// Applied before FindThreat runs.
 		/// </summary>
-		internal static bool Prefix(ThreatMonitor.Instance __instance, ref GameObject __result,
-				List<FactionAlignment> ___threats, Navigator ___navigator) {
+		internal static bool Prefix(ThreatMonitor.Instance __instance,
+				ref GameObject __result) {
 			if (__instance.isMasterNull)
 				__result = null;
 			else {
-				if (___threats == null)
+				var threats = __instance.threats;
+				var navigator = __instance.navigator;
+				if (threats == null)
 					throw new ArgumentNullException("threats");
-				___threats.Clear();
+				threats.Clear();
 				if (NEEDS_THREAT_SEARCH == null)
 					InitThreatList();
 				if (__instance.IAmADuplicant)
-					FindThreatDuplicant(__instance, ___threats, ___navigator);
+					FindThreatDuplicant(__instance, threats, navigator);
 				else if (NEEDS_THREAT_SEARCH.Contains(__instance.alignment.Alignment))
 					// This branch is never reachable as Duplicant, because the Duplicant
 					// faction has Attack disposition to nothing
-					FindThreatCritter(__instance, ___threats, ___navigator);
-				if (___threats.Count == 0)
+					FindThreatCritter(__instance, threats, navigator);
+				if (threats.Count < 1)
 					__result = null;
 				else
-					__result = __instance.PickBestTarget(___threats);
+					__result = __instance.PickBestTarget(threats);
 			}
 			return false;
 		}

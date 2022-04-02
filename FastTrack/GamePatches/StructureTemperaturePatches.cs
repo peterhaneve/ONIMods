@@ -33,11 +33,6 @@ namespace PeterHan.FastTrack.GamePatches {
 	[HarmonyPatch(typeof(StructureTemperatureComponents), nameof(
 		StructureTemperatureComponents.Sim200ms))]
 	public static class StructureTemperatureComponents_Sim200ms_Patch {
-		/// <summary>
-		/// Originally declared in StructureTemperatureComponents, but is private.
-		/// </summary>
-		private const float MAX_PRESSURE = 1.5f;
-
 		internal static bool Prepare() => FastTrackOptions.Instance.FastStructureTemperature;
 
 		/// <summary>
@@ -68,12 +63,12 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Sim200ms runs.
 		/// </summary>
-		internal static bool Prefix(StructureTemperatureComponents __instance, float dt,
-				StatusItem ___operatingEnergyStatusItem) {
+		internal static bool Prefix(StructureTemperatureComponents __instance, float dt) {
 			__instance.GetDataLists(out List<StructureTemperatureHeader> headers,
 				out List<StructureTemperaturePayload> payloads);
 			int n = headers.Count;
 			var energyCategory = Db.Get().StatusItemCategories.OperatingEnergy;
+			var energyStatus = __instance.operatingEnergyStatusItem;
 			// No allocation required at all!
 			for (int i = 0; i < n; i++) {
 				var header = headers[i];
@@ -93,8 +88,7 @@ namespace PeterHan.FastTrack.GamePatches {
 						headers[i] = header;
 					}
 					if (header.isActiveBuilding && !payload.bypass)
-						dirty |= UpdateActive(ref payload, dt, energyCategory,
-							___operatingEnergyStatusItem);
+						dirty |= UpdateActive(ref payload, dt, energyCategory, energyStatus);
 					if (dirty)
 						payloads[i] = payload;
 				}
@@ -113,6 +107,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		private static bool UpdateActive(ref StructureTemperaturePayload payload, float dt,
 				StatusItemCategory energyCategory, StatusItem operatingEnergy) {
 			bool dirty = false;
+			const float MAX_PRESSURE = StructureTemperatureComponents.MAX_PRESSURE;
 			var operational = payload.operational;
 			if (operational == null || operational.IsActive) {
 				float exhaust = payload.ExhaustKilowatts;

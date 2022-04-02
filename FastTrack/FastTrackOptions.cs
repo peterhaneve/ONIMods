@@ -35,13 +35,13 @@ namespace PeterHan.FastTrack {
 		private const string PERF_MEDIUM = "\n\n<b>Performance Impact: <color=#FF8827>Medium</color></b>";
 		private const string PERF_HIGH = "\n\n<b>Performance Impact: <color=#FF3300>High</color></b>";
 
-		[Option("Heat Generation", "Reduces memory allocations used when generating heat." + PERF_MEDIUM, "Buildings")]
-		[JsonProperty]
-		public bool FastStructureTemperature { get; set; }
-
 		[Option("Logic Optimizations", "Optimizes some buildings to not trigger logic network updates every frame." + PERF_LOW, "Buildings")]
 		[JsonProperty]
 		public bool LogicUpdates { get; set; }
+
+		[Option("Optimize Heat Generation", "Reduces memory allocations used when generating heat." + PERF_MEDIUM, "Buildings")]
+		[JsonProperty]
+		public bool FastStructureTemperature { get; set; }
 
 		[Option("Radiation Tweaks", "Speeds up radiation calculations." + PERF_LOW, "Buildings")]
 		[JsonProperty]
@@ -91,6 +91,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool ReduceColonyTracking { get; set; }
 
+		[Option("Disable Achievements", "Turn off checking for Colony Initiatives.\n<color=#FF0000>Disabling will prevent unlocking any Steam achievement</color>" + PERF_LOW, "Interface")]
+		[JsonProperty]
+		public AchievementDisable DisableAchievements { get; set; }
+
 		[Option("Disable Load Previews", "Disables loading of colony previews on the Load screen." + PERF_MEDIUM, "Interface")]
 		[JsonProperty]
 		public bool DisableLoadPreviews { get; set; }
@@ -139,6 +143,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool CullConduits { get; set; }
 
+		[Option("Faster Animations", "Optimizes slow code in animation playback." + PERF_MEDIUM, "Visual")]
+		[JsonProperty]
+		public bool AnimOpts { get; set; }
+
 		[Option("Info Card Optimization", "Optimizes the info cards shown on hover.\n<i>Values in info cards may be formatted slightly differently</i>" + PERF_MEDIUM, "Visual")]
 		[JsonProperty]
 		public bool InfoCardOpts { get; set; }
@@ -151,7 +159,7 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool NoSplash { get; set; }
 
-		[Option("No Tile Caps", "Disables all ornamentals on constructed tiles." + PERF_LOW, "Visual")]
+		[Option("No Tile Caps", "Disables all ornaments and edges on constructed tiles." + PERF_LOW, "Visual")]
 		[JsonProperty]
 		public bool NoTileDecor { get; set; }
 
@@ -167,20 +175,22 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool ReduceTileUpdates { get; set; }
 
-		[Option("Use Mesh Renderers", "Use faster mesh renderers instead of redrawing meshes every frame." + PERF_MEDIUM, "Visual")]
+		[Option("Use Mesh Renderers", "Use faster mesh renderers instead of redrawing\nevery frame for these graphics." + PERF_MEDIUM, "Visual")]
 		[JsonProperty]
 		public MeshRendererSettings MeshRendererOptions { get; set; }
 
-		[Option("Log Debug Metrics", "Logs extra debug information to the game log.\n\n<b>Only use this option if directed to do so by a developer.</b>", "Miscellaneous")]
+		[Option("Log Debug Metrics", "Logs extra debug information to the game log.\n\n<b>Only use this option if directed to do so by a developer.</b>", "Debug")]
 		[JsonProperty]
 		public bool Metrics { get; set; }
 
 		public FastTrackOptions() {
+			AnimOpts = true;
 			AsyncPathProbe = true;
 			CachePaths = true;
 			ConduitOpts = false;
 			CritterConsumers = true;
 			CullConduits = true;
+			DisableAchievements = AchievementDisable.SandboxDebug;
 			DisableConduitAnimation = ConduitAnimationQuality.Reduced;
 			DisableLoadPreviews = false;
 			DisableSound = false;
@@ -211,6 +221,18 @@ namespace PeterHan.FastTrack {
 			SensorOpts = true;
 			ThreatOvercrowding = true;
 			UnstackLights = true;
+		}
+
+		/// <summary>
+		/// Controls when achievements are checked.
+		/// </summary>
+		public enum AchievementDisable {
+			[Option("Never", "Achievements will always be checked.")]
+			Never,
+			[Option("In Sandbox/Debug", "Achievements will not be checked in sandbox or debug mode.")]
+			SandboxDebug,
+			[Option("Always Disabled", "<color=#FF0000>Achievements cannot be unlocked and\nno progress towards any achievement can be made.</color>")]
+			Always
 		}
 
 		/// <summary>
@@ -245,7 +267,10 @@ namespace PeterHan.FastTrack {
 			All,
 			[Option("Warnings", "Tutorial messages are disabled, but warnings such as\n<b>Insufficient Oxygen Generation</b> will still appear.")]
 			WarningsOnly,
-			[Option("Off", "Tutorial messages and most warnings will be disabled.\n<i>Keep a careful eye on your colony...</i>")]
+			[Option("Off", "Tutorial messages and these warnings will be disabled:\n" +
+				"- Insufficient Oxygen Generation\n- Colony requires a food source\n- Long Commutes\n" +
+				"- No Outhouse built\n- No Wash Basin built\n- No Oxygen Generator built\n" +
+				"- Unrefrigerated Food\n- No Sick Bay built\n\n<i>Keep a careful eye on your colony...</i>")]
 			None
 		}
 	}

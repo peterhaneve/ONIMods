@@ -18,7 +18,6 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -91,7 +90,27 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(Navigator), nameof(Navigator.AdvancePath))]
 	public static class Navigator_AdvancePath_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
+		internal static bool Prepare() {
+			var options = FastTrackOptions.Instance;
+			return options.CachePaths || options.DisableAchievements != FastTrackOptions.
+				AchievementDisable.Never;
+		}
+
+		/// <summary>
+		/// Updates the distance traveled only if the achievements are unlocked.
+		/// </summary>
+		/// <param name="instance">The particle to check.</param>
+		/// <param name="dt">The time elapsed since the last check.</param>
+		private static void AchievementUpdate(Navigator instance) {
+			if (GamePatches.AchievementDisablePatches.TrackAchievements()) {
+				var distanceByType = instance.distanceTravelledByNavType;
+				var nt = instance.CurrentNavType;
+				int dist = distanceByType[nt];
+				if (dist < int.MaxValue)
+					dist++;
+				distanceByType[nt] = dist;
+			}
+		}
 
 		/// <summary>
 		/// Sets the cached path to invalid.
@@ -105,24 +124,58 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Transpiles AdvancePath to trigger an invalidation if the path is updated.
 		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
 			var target = typeof(PathFinder).GetMethodSafe(nameof(PathFinder.UpdatePath), true,
 				PPatchTools.AnyArguments);
 			var forceInvalid = typeof(Navigator_AdvancePath_Patch).GetMethodSafe(nameof(
 				ForceInvalid), true, typeof(Navigator));
-			if (target == null || forceInvalid == null)
-				PUtil.LogWarning("Unable to patch Navigator.AdvancePath");
-			foreach (var instr in method) {
-				if (target != null && forceInvalid != null && instr.Is(OpCodes.Call, target)) {
-					// Load "this"
-					yield return new CodeInstruction(OpCodes.Ldarg_0);
-					yield return new CodeInstruction(OpCodes.Call, forceInvalid);
+			var replacement = typeof(Navigator_AdvancePath_Patch).GetMethodSafe(nameof(
+				AchievementUpdate), true, typeof(Navigator));
+			var start = typeof(Navigator).GetFieldSafe(nameof(Navigator.
+				distanceTravelledByNavType), false);
+			// Compiler generated name
+			var end = typeof(Dictionary<NavType, int>).GetMethodSafe("set_Item", false,
+				typeof(NavType), typeof(int));
+			var options = FastTrackOptions.Instance;
+			bool cache = options.CachePaths, achieve = options.DisableAchievements !=
+				FastTrackOptions.AchievementDisable.Never;
+			int state = 0;
+			if (start != null && end != null && target != null && forceInvalid != null)
+				foreach (var instr in instructions) {
+					if (achieve) {
+						if (state == 0 && instr.Is(OpCodes.Ldfld, start)) {
+							instr.opcode = OpCodes.Pop;
+							instr.operand = null;
+							yield return instr;
+							state = 1;
+						} else if (state == 1 && instr.Is(OpCodes.Callvirt, end)) {
+							state = 2;
+							yield return new CodeInstruction(OpCodes.Ldarg_0);
+							instr.opcode = OpCodes.Call;
+							instr.operand = replacement;
 #if DEBUG
-					PUtil.LogDebug("Patched Navigator.AdvancePath");
+							PUtil.LogDebug("Patched Navigator.AdvancePath [Achievement]");
 #endif
+						}
+					}
+					if (state != 1) {
+						if (cache && target != null && forceInvalid != null && instr.Is(
+								OpCodes.Call, target)) {
+							// Load "this"
+							yield return new CodeInstruction(OpCodes.Ldarg_0);
+							yield return new CodeInstruction(OpCodes.Call, forceInvalid);
+#if DEBUG
+							PUtil.LogDebug("Patched Navigator.AdvancePath [Cache]");
+#endif
+						}
+						yield return instr;
+					}
 				}
-				yield return instr;
-			}
+			else
+				foreach (var instr in instructions)
+					yield return instr;
+			if (state != 2 && achieve)
+				PUtil.LogWarning("Unable to patch Navigator.AdvancePath");
 		}
 	}
 
@@ -150,15 +203,19 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(Navigator), nameof(Navigator.Sim4000ms))]
 	public static class Navigator_Sim4000ms_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
+		internal static bool Prepare() {
+			var options = FastTrackOptions.Instance;
+			return options.CachePaths || options.AsyncPathProbe;
+		}
 
 		/// <summary>
 		/// Applied before Sim4000ms runs.
 		/// </summary>
 		internal static bool Prefix(Navigator __instance) {
-			if (__instance != null)
+			var options = FastTrackOptions.Instance;
+			if (__instance != null && options.CachePaths)
 				PathCacher.Lookup(__instance.PathProber).MarkInvalid();
-			return !FastTrackOptions.Instance.AsyncPathProbe;
+			return !options.AsyncPathProbe;
 		}
 	}
 
@@ -182,7 +239,7 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// <summary>
 	/// Applied to PathProber to remove the instance from the cache when it is destroyed.
 	/// </summary>
-	[HarmonyPatch(typeof(PathProber), "OnCleanUp")]
+	[HarmonyPatch(typeof(PathProber), nameof(PathProber.OnCleanUp))]
 	public static class PathProber_OnCleanUp_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
 

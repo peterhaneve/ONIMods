@@ -20,11 +20,11 @@ using HarmonyLib;
 using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
 using UnityEngine.UI;
 
+using DiagnosticRow = ColonyDiagnosticScreen.DiagnosticRow;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.UIPatches {
@@ -43,81 +43,49 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 	}
 
-	/// <summary>
-	/// Collects all patches applied to the ColonyDiagnosticScreen and its inner classes.
+	/// Applied to ColonyDiagnosticScreen.DiagnosticRow to suppress SparkChart updates if
+	/// not visible.
 	/// </summary>
-	public static class ColonyDiagnosticScreenPatches {
-		/// <summary>
-		/// Resolves to the private type ColonyDiagnosticScreen.DiagnosticRow.
-		/// </summary>
-		internal static readonly Type DIAGNOSTIC_ROW = typeof(ColonyDiagnosticScreen).
-			GetNestedType("DiagnosticRow", PPatchTools.BASE_FLAGS | BindingFlags.Instance);
+	[HarmonyPatch(typeof(DiagnosticRow), nameof(DiagnosticRow.Sim4000ms))]
+	public static class DiagnosticRow_Sim4000ms_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
 
 		/// <summary>
-		/// Applied to ColonyDiagnosticScreen.DiagnosticRow to suppress SparkChart updates if
-		/// not visible.
+		/// Applied before Sim4000ms runs.
 		/// </summary>
-		[HarmonyPatch]
-		internal static class Sim4000ms_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
+		internal static bool Prefix(KMonoBehaviour ___sparkLayer) {
+			return ___sparkLayer == null || ___sparkLayer.isActiveAndEnabled;
+		}
+	}
 
-			/// <summary>
-			/// DiagnosticRow is a private class, so calculate the target with reflection.
-			/// </summary>
-			internal static MethodBase TargetMethod() {
-				if (DIAGNOSTIC_ROW == null)
-					PUtil.LogWarning("Unable to resolve target: ColonyDiagnosticScreen.DiagnosticRow");
-				return DIAGNOSTIC_ROW?.GetMethodSafe(nameof(ISim4000ms.Sim4000ms), false,
-					typeof(float));
-			}
+	/// <summary>
+	/// Applied to ColonyDiagnosticScreen.DiagnosticRow to turn off the bouncing effect.
+	/// </summary>
+	[HarmonyPatch(typeof(DiagnosticRow), nameof(DiagnosticRow.TriggerVisualNotification))]
+	public static class DiagnosticRow_TriggerVisualNotification_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.NoBounce;
 
-			/// <summary>
-			/// Applied before Sim4000ms runs.
-			/// </summary>
-			internal static bool Prefix(KMonoBehaviour ___sparkLayer) {
-				return ___sparkLayer == null || ___sparkLayer.isActiveAndEnabled;
-			}
+		/// <summary>
+		/// A replacement coroutine that waits 3 seconds and then resolves it with no bounce.
+		/// </summary>
+		private static System.Collections.IEnumerator NoMoveRoutine(DiagnosticRow row) {
+			// Wait for 3 seconds unscaled
+			yield return new WaitForSeconds(3.0f);
+			try {
+				// Ignore exception if the notification cannot be resolved
+				row.ResolveNotificationRoutine();
+			} catch (Exception) { }
+			yield break;
 		}
 
 		/// <summary>
-		/// Applied to ColonyDiagnosticScreen.DiagnosticRow to turn off the bouncing effect.
+		/// Transpiles TriggerVisualNotification to remove calls to the bouncy coroutine.
 		/// </summary>
-		[HarmonyPatch]
-		internal static class TriggerVisualNotification_Patch {
-			private static readonly MethodBase RESOLVE_NOTIFICATION = DIAGNOSTIC_ROW?.
-				GetMethodSafe("ResolveNotificationRoutine", false);
-
-			internal static bool Prepare() => FastTrackOptions.Instance.NoBounce;
-
-			/// <summary>
-			/// DiagnosticRow is a private class, so calculate the target with reflection.
-			/// </summary>
-			internal static MethodBase TargetMethod() {
-				return DIAGNOSTIC_ROW?.GetMethodSafe("TriggerVisualNotification", false);
-			}
-
-			/// <summary>
-			/// A replacement coroutine that waits 3 seconds and then resolves it with no bounce.
-			/// </summary>
-			private static System.Collections.IEnumerator NoMoveRoutine(object row) {
-				// Wait for 3 seconds unscaled
-				yield return new UnityEngine.WaitForSeconds(3.0f);
-				try {
-					// Ignore exception if the notification cannot be resolved
-					RESOLVE_NOTIFICATION?.Invoke(row, new object[] { });
-				} catch (Exception) { }
-				yield break;
-			}
-
-			/// <summary>
-			/// Transpiles TriggerVisualNotification to remove calls to the bouncy coroutine.
-			/// </summary>
-			internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-				return PPatchTools.ReplaceMethodCall(instructions, DIAGNOSTIC_ROW?.
-					GetMethodSafe("VisualNotificationRoutine", false), typeof(
-					TriggerVisualNotification_Patch).GetMethodSafe(nameof(NoMoveRoutine),
-					true, typeof(object)));
-			}
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+			return PPatchTools.ReplaceMethodCall(instructions, typeof(DiagnosticRow).
+				GetMethodSafe(nameof(DiagnosticRow.VisualNotificationRoutine), false),
+				typeof(DiagnosticRow_TriggerVisualNotification_Patch).GetMethodSafe(nameof(
+				NoMoveRoutine), true, typeof(DiagnosticRow)));
 		}
 	}
 
@@ -151,7 +119,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
 	/// Applied to MainMenu to get rid of the 15 MB file write and speed up boot!
 	/// </summary>
-	[HarmonyPatch(typeof(MainMenu), "OnSpawn")]
+	[HarmonyPatch(typeof(MainMenu), nameof(MainMenu.OnSpawn))]
 	public static class MainMenu_OnSpawn_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
 
@@ -203,88 +171,102 @@ namespace PeterHan.FastTrack.UIPatches {
 	}
 
 	/// <summary>
-	/// Applied to NameDisplayScreen to slightly speed up visibility checking. Every bit
-	/// counts!
+	/// Applied to NameDisplayScreen to speed up checking name card positions.
 	/// </summary>
-	[HarmonyPatch(typeof(NameDisplayScreen), "LateUpdatePos")]
+	[HarmonyPatch(typeof(NameDisplayScreen), nameof(NameDisplayScreen.LateUpdatePos))]
 	public static class NameDisplayScreen_LateUpdatePos_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
 
 		/// <summary>
-		/// Replaces the IsVisiblePos call with a check to the local variable Contains which
-		/// is way faster.
-		/// Searches up to six instructions back for the arguments and fixes them up too.
+		/// Applied before LateUpdatePos runs.
 		/// </summary>
-		/// <param name="allInstr">The method IL to patch.</param>
-		/// <param name="index">The instruction index to modify.</param>
-		/// <param name="bounds">The local variable containing the area.</param>
-		private static bool FixupCall(IList<CodeInstruction> allInstr, int index,
-				LocalBuilder bounds, MethodBase getInstance) {
-			int maxDepth = Math.Max(1, index - 6);
-			bool patched = false;
-			var contains = typeof(GridArea).GetMethodSafe(nameof(GridArea.Contains), false,
-				typeof(Vector3));
-			var current = allInstr[index];
-			if (contains != null) {
-				// Swap the previous GetInstance to ldloca.s
-				for (int j = index - 1; j >= maxDepth && !patched; j--) {
-					var instr = allInstr[j];
-					if (instr.Is(OpCodes.Call, getInstance)) {
-						instr.opcode = OpCodes.Ldloca_S;
-						instr.operand = (byte)bounds.LocalIndex;
-						patched = true;
+		internal static bool Prefix(bool visibleToZoom, NameDisplayScreen __instance) {
+			var inst = CameraController.Instance;
+			if (inst != null) {
+				GridArea area = inst.VisibleArea.CurrentArea;
+				var entries = __instance.entries;
+				var followTarget = inst.followTarget;
+				int n = entries.Count;
+				Vector3 pos;
+				for (int i = 0; i < n; i++) {
+					var entry = entries[i];
+					var go = entry.world_go;
+					var dg = entry.display_go;
+					var animController = entry.world_go_anim_controller;
+					if (go != null && dg != null) {
+						// Merely fetching the position appears to take almost 1 us?
+						var transform = go.transform;
+						bool active = dg.activeSelf;
+						if (visibleToZoom && area.Contains(pos = transform.position)) {
+							// Visible
+							if (followTarget == transform)
+								pos = inst.followTargetPos;
+							else if (animController != null)
+								pos = animController.GetWorldPivot();
+							entry.display_go_rect.anchoredPosition = __instance.
+								worldSpace ? pos : __instance.WorldToScreen(pos);
+							if (!active)
+								dg.SetActive(true);
+						} else if (active)
+							// Invisible
+							dg.SetActive(false);
 					}
 				}
-				if (patched) {
-					// Swap the call to Contains
-					current.opcode = OpCodes.Call;
-					current.operand = contains;
-#if DEBUG
-					PUtil.LogDebug("Patched NameDisplayScreen.LateUpdatePos");
-#endif
+			}
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to NameDisplayScreen to speed up marking name cards dirty.
+	/// </summary>
+	[HarmonyPatch(typeof(NameDisplayScreen), nameof(NameDisplayScreen.LateUpdatePart2))]
+	public static class NameDisplayScreen_LateUpdatePart2_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+
+		/// <summary>
+		/// Applied before LateUpdatePart2 runs.
+		/// </summary>
+		internal static bool Prefix(NameDisplayScreen __instance) {
+			var camera = Camera.main;
+			if (camera == null || camera.orthographicSize < __instance.HideDistance) {
+				var entries = __instance.entries;
+				int n = entries.Count;
+				for (int i = 0; i < n; i++) {
+					var go = entries[i].bars_go;
+					if (go != null) {
+						var colliders = __instance.workingList;
+						// Mark the colliders in the bars list dirty only if visible
+						go.GetComponentsInChildren(false, colliders);
+						int c = colliders.Count;
+						for (int j = 0; j < c; j++)
+							colliders[j].MarkDirty(false);
+					}
 				}
 			}
-			return patched;
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to NameDisplayScreen to destroy the thought prefabs if conversations are
+	/// turned off.
+	/// </summary>
+	[HarmonyPatch(typeof(NameDisplayScreen), nameof(NameDisplayScreen.RegisterComponent))]
+	public static class NameDisplayScreen_RegisterComponent_Patch {
+		internal static bool Prepare() {
+			var options = FastTrackOptions.Instance;
+			return options.NoConversations || options.MiscOpts;
 		}
 
 		/// <summary>
-		/// Transpiles LateUpdatePos to replace CameraController.Instance.IsVisiblePos with
-		/// a comparison that avoids recalculating the bounds again and again.
+		/// Applied before RegisterComponent runs.
 		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
-				ILGenerator generator) {
-			var curArea = typeof(GridVisibleArea).GetPropertySafe<GridArea>(nameof(
-				GridVisibleArea.CurrentArea), false)?.GetGetMethod(true);
-			var target = typeof(CameraController).GetMethodSafe(nameof(CameraController.
-				IsVisiblePos), false, typeof(Vector3));
-			var getInstance = typeof(CameraController).GetPropertySafe<CameraController>(
-				nameof(CameraController.Instance), true)?.GetGetMethod(true);
-			var areaField = typeof(CameraController).GetFieldSafe(nameof(CameraController.
-				VisibleArea), false);
-			var allInstr = new List<CodeInstruction>(instructions);
-			bool patched = false;
-			// The visible area test only really matters when zoomed in
-			if (curArea != null && target != null && getInstance != null && areaField != null)
-			{
-				var bounds = generator.DeclareLocal(typeof(GridArea));
-				int n = allInstr.Count;
-				for (int i = 0; i < n; i++) {
-					var instr = allInstr[i];
-					if (!patched && instr.Is(OpCodes.Callvirt, target))
-						patched = FixupCall(allInstr, i, bounds, getInstance);
-				}
-				if (patched)
-					// Get the area and save it
-					allInstr.InsertRange(0, new CodeInstruction[] {
-						new CodeInstruction(OpCodes.Call, getInstance),
-						new CodeInstruction(OpCodes.Ldfld, areaField),
-						new CodeInstruction(OpCodes.Call, curArea),
-						new CodeInstruction(OpCodes.Stloc_S, (byte)bounds.LocalIndex)
-					});
-			}
-			if (!patched)
-				PUtil.LogWarning("Unable to patch NameDisplayScreen.LateUpdatePos");
-			return allInstr;
+		internal static bool Prefix(object component) {
+			var options = FastTrackOptions.Instance;
+			// GameplayEventMonitor is for the unused event/dream framework :(
+			return !(component is ThoughtGraph.Instance && options.NoConversations) &&
+				!(component is GameplayEventMonitor.Instance && options.MiscOpts);
 		}
 	}
 
@@ -339,7 +321,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
 	/// Applied to TrackerTool to reduce the update rate from 50 trackers/frame to 10/frame.
 	/// </summary>
-	[HarmonyPatch(typeof(TrackerTool), "OnSpawn")]
+	[HarmonyPatch(typeof(TrackerTool), nameof(TrackerTool.OnSpawn))]
 	public static class TrackerTool_OnSpawn_Patch {
 		/// <summary>
 		/// The number of trackers to update every rendered frame (disabled while paused).
@@ -360,7 +342,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// Applied to WorldInventory to fix a bug where Update does not run properly on the first
 	/// run due to a misplaced "break".
 	/// </summary>
-	[HarmonyPatch(typeof(WorldInventory), "Update")]
+	[HarmonyPatch(typeof(WorldInventory), nameof(WorldInventory.Update))]
 	public static class WorldInventory_UpdateTweak_Patch {
 		internal static bool Prepare() {
 			var options = FastTrackOptions.Instance;
@@ -373,9 +355,10 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
 				ILGenerator generator) {
-			var markerField = typeof(WorldInventory).GetFieldSafe("accessibleUpdateIndex",
-				false);
-			var updateField = typeof(WorldInventory).GetFieldSafe("firstUpdate", false);
+			var markerField = typeof(WorldInventory).GetFieldSafe(nameof(WorldInventory.
+				accessibleUpdateIndex), false);
+			var updateField = typeof(WorldInventory).GetFieldSafe(nameof(WorldInventory.
+				firstUpdate), false);
 			var getSCS = typeof(SpeedControlScreen).GetPropertySafe<float>(nameof(
 				SpeedControlScreen.Instance), true)?.GetGetMethod(true);
 			var isPaused = typeof(SpeedControlScreen).GetMethodSafe(nameof(SpeedControlScreen.

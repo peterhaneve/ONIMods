@@ -41,11 +41,11 @@ namespace PeterHan.FastTrack.Metrics {
 	// AnimEventManager#Update is 20ms but not much can be done
 	// KBatchedAnimUpdater#UpdateRegisteredAnims is 40ms
 	// KAnimBatchManager#Render was 25ms
-	// KAnimBatchManager#UpdateDirty is 30ms+
+	// KAnimBatchManager#UpdateDirty is 90ms+
 	// ConduitFlow.Sim200ms is <10ms
 	// ChoreConsumer.FindNextChore is <10ms
 	// None of the RenderImage methods are more than 1ms
-	[HarmonyPatch(typeof(SensorPatches.FastGroupProber), "Update")]
+	[HarmonyPatch(typeof(KAnimBatchManager), "UpdateDirty")]
 	public static class TimePatch1 {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
@@ -61,8 +61,7 @@ namespace PeterHan.FastTrack.Metrics {
 		}
 	}
 
-	//[HarmonyPatch(typeof(KBatchedAnimUpdater), "UpdateRegisteredAnims")]
-	[HarmonyPatch(typeof(Klei.AI.AmountInstance), "BatchUpdate")]
+	[HarmonyPatch(typeof(KBatchedAnimUpdater), "UpdateRegisteredAnims")]
 	public static class TimePatch2 {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
@@ -82,48 +81,19 @@ namespace PeterHan.FastTrack.Metrics {
 	/// <summary>
 	/// Applied to BrainScheduler.BrainGroup to dump load balancing statistics.
 	/// </summary>
-	[HarmonyPatch]
+	[HarmonyPatch(typeof(BrainScheduler.BrainGroup), nameof(BrainScheduler.BrainGroup.
+		AdjustLoad))]
 	public static class BrainScheduler_BrainGroup_AdjustLoad_Patch {
-		/// <summary>
-		/// References the private inner type BrainScheduler.BrainGroup.
-		/// </summary>
-		private static readonly Type BRAIN_GROUP = typeof(BrainScheduler).GetNestedType(
-			"BrainGroup", BindingFlags.Instance | PPatchTools.BASE_FLAGS);
-
-		/// <summary>
-		/// Gets the number of probes to run.
-		/// </summary>
-		private static readonly MethodInfo GET_PROBE_COUNT = BRAIN_GROUP?.
-			GetPropertySafe<int>("probeCount", false)?.GetGetMethod(true);
-
-		/// <summary>
-		/// Gets the depth that probes will iterate.
-		/// </summary>
-		private static readonly MethodInfo GET_PROBE_SIZE = BRAIN_GROUP?.
-			GetPropertySafe<int>("probeSize", false)?.GetGetMethod(true);
-
-		internal static bool Prepare() => FastTrackOptions.Instance.Metrics && BRAIN_GROUP !=
-			null;
-
-		internal static MethodBase TargetMethod() {
-			return BRAIN_GROUP?.GetMethodSafe(nameof(ICPULoad.AdjustLoad), false,
-				typeof(float), typeof(float));
-		}
+		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
 		/// <summary>
 		/// Applied after AdjustLoad runs.
 		/// </summary>
 		[HarmonyPriority(Priority.High)]
 		internal static void Postfix(float currentFrameTime, float frameTimeDelta,
-				object __instance) {
-			if (GET_PROBE_COUNT == null || !(GET_PROBE_COUNT.Invoke(__instance, null) is
-					int probeCount))
-				probeCount = 0;
-			if (GET_PROBE_SIZE == null || !(GET_PROBE_SIZE.Invoke(__instance, null) is
-					int probeSize))
-				probeSize = 0;
+				BrainScheduler.BrainGroup __instance) {
 			DebugMetrics.LogBrainBalance(__instance.GetType().Name, frameTimeDelta,
-				currentFrameTime, probeCount, probeSize);
+				currentFrameTime, __instance.probeCount, __instance.probeSize);
 		}
 	}
 
@@ -152,7 +122,7 @@ namespace PeterHan.FastTrack.Metrics {
 		}
 
 		internal static IEnumerable<MethodBase> TargetMethods() {
-			return FindTargets("Update");
+			return FindTargets(nameof(Game.Update));
 		}
 
 		[HarmonyPriority(Priority.High)]
@@ -176,7 +146,7 @@ namespace PeterHan.FastTrack.Metrics {
 		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
 
 		internal static IEnumerable<MethodBase> TargetMethods() {
-			return ProfileUpdates.FindTargets("LateUpdate");
+			return ProfileUpdates.FindTargets(nameof(Game.LateUpdate));
 		}
 
 		[HarmonyPriority(Priority.High)]

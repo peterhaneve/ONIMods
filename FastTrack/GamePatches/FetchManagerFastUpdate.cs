@@ -18,10 +18,7 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
 using UnityEngine;
-
-using PickupComparer = System.Collections.Generic.IComparer<FetchManager.Pickup>;
 
 namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
@@ -30,42 +27,6 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// it stores stateful information required for chore selection and other sensors.
 	/// </summary>
 	internal static class FetchManagerFastUpdate {
-		/// <summary>
-		/// A delegate to trigger OffsetTracker updates off the main thread.
-		/// </summary>
-		private delegate void UpdateOffsets(OffsetTracker table, int current_cell);
-
-		/// <summary>
-		/// Retrieves the offset tracker from a workable (like Pickupable or Storage).
-		/// </summary>
-		private static readonly IDetouredField<Workable, OffsetTracker> OFFSET_TRACKER =
-			PDetours.DetourField<Workable, OffsetTracker>("offsetTracker");
-
-		/// <summary>
-		/// Access the priority-based comparator of FetchManager.
-		/// </summary>
-		private static readonly IDetouredField<FetchManager, PickupComparer>
-			PICKUP_COMPARER = PDetours.DetourField<FetchManager, PickupComparer>(
-			"ComparerIncludingPriority");
-
-		/// <summary>
-		/// Gets the offsets from an offset tracker, without updating them which could trigger
-		/// nasty things like scene partitioner rebuilds.
-		/// </summary>
-		private static readonly IDetouredField<OffsetTracker, CellOffset[]> RAW_OFFSETS =
-			PDetours.DetourField<OffsetTracker, CellOffset[]>("offsets");
-
-		/// <summary>
-		/// A delegate to call the UpdateOffsets method manually of OffsetTracker.
-		/// </summary>
-		private static readonly UpdateOffsets UPDATE_OFFSETS = typeof(OffsetTracker).
-			Detour<UpdateOffsets>();
-
-		static FetchManagerFastUpdate() {
-			if (OFFSET_TRACKER == null || RAW_OFFSETS == null || UPDATE_OFFSETS == null)
-				PUtil.LogWarning("Unable to patch Navigator.GetNavigationCost");
-		}
-
 		/// <summary>
 		/// Applied before UpdatePickups runs. A more optimized UpdatePickups whose aggregate
 		/// runtime on a test world dropped from ~60 ms/1000 ms to ~45 ms/1000 ms.
@@ -77,7 +38,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			var pathCosts = DictionaryPool<int, int, FetchManager>.Allocate();
 			var finalPickups = __instance.finalPickups;
 			// Will reflect the changes from Waste Not, Want Not and No Manual Delivery
-			var comparer = PICKUP_COMPARER.Get(null);
+			var comparer = FetchManager.ComparerIncludingPriority;
 			foreach (var fetchable in __instance.fetchables.GetDataList()) {
 				var target = fetchable.pickupable;
 				int cell = target.cachedCell;
@@ -129,16 +90,13 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal static int GetNavigationCost(Navigator navigator, Workable destination,
 				int cell) {
 			CellOffset[] offsets = null;
-			if (OFFSET_TRACKER != null && RAW_OFFSETS != null && UPDATE_OFFSETS != null) {
-				var offsetTracker = OFFSET_TRACKER.Get(destination);
-				if (offsetTracker != null && (offsets = RAW_OFFSETS.Get(offsetTracker)) ==
-						null) {
+			var offsetTracker = destination.offsetTracker;
+			if (offsetTracker != null && (offsets = offsetTracker.offsets) == null) {
 #if DEBUG
-					PUtil.LogWarning("Updating Pickupable offsets!");
+				PUtil.LogWarning("Updating Pickupable offsets!");
 #endif
-					UPDATE_OFFSETS.Invoke(offsetTracker, cell);
-					offsets = RAW_OFFSETS.Get(offsetTracker);
-				}
+				offsetTracker.UpdateOffsets(cell);
+				offsets = offsetTracker.offsets;
 			}
 			return (offsets == null) ? navigator.GetNavigationCost(cell) : navigator.
 				GetNavigationCost(cell, offsets);

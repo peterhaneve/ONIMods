@@ -18,9 +18,7 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 using OnNetworksRebuilt = System.Action<System.Collections.Generic.IList<UtilityNetwork>,
@@ -36,20 +34,6 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	[HarmonyPatch(typeof(SolidUtilityNetworkManager), nameof(SolidUtilityNetworkManager.
 		Update))]
 	public static class SolidUtilityNetworkUpdater {
-		/// <summary>
-		/// Retrieves the registered network rebuild listeners.
-		/// </summary>
-		private static readonly IDetouredField<SolidUtilityNetworkManager, OnNetworksRebuilt>
-			ON_NETWORKS_REBUILT = PDetours.DetourField<SolidUtilityNetworkManager,
-			OnNetworksRebuilt>("onNetworksRebuilt");
-
-		/// <summary>
-		/// Retrieves the list of physical node cell locations.
-		/// </summary>
-		private static readonly IDetouredField<SolidUtilityNetworkManager, ISet<int>>
-			PHYSICAL_NODES = PDetours.DetourField<SolidUtilityNetworkManager, ISet<int>>(
-			"physicalNodes");
-
 		internal static bool Prepare() => FastTrackOptions.Instance.ConduitOpts;
 
 		/// <summary>
@@ -57,9 +41,9 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// </summary>
 		/// <param name="manager">The conduit network manager to trigger.</param>
 		internal static void TriggerEvent(SolidUtilityNetworkManager manager) {
-			var action = ON_NETWORKS_REBUILT.Get(manager);
+			var action = manager.onNetworksRebuilt;
 			if (action != null)
-				action.Invoke(manager.GetNetworks(), PHYSICAL_NODES.Get(manager));
+				action.Invoke(manager.GetNetworks(), manager.physicalNodes);
 		}
 
 		[HarmonyReversePatch(HarmonyReversePatchType.Original)]

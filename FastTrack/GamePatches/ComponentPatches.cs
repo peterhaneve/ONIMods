@@ -55,15 +55,16 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
 	/// Applied to SmartReservoir to force update the state once on spawn.
 	/// </summary>
-	[HarmonyPatch(typeof(SmartReservoir), "OnSpawn")]
+	[HarmonyPatch(typeof(SmartReservoir), nameof(SmartReservoir.OnSpawn))]
 	public static class SmartReservoir_OnSpawn_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.LogicUpdates;
 
 		/// <summary>
 		/// Applied after OnSpawn runs.
 		/// </summary>
-		internal static void Postfix(LogicPorts ___logicPorts, bool ___activated) {
-			___logicPorts.SendSignal(SmartReservoir.PORT_ID, ___activated ? 1 : 0);
+		internal static void Postfix(SmartReservoir __instance) {
+			__instance.logicPorts.SendSignal(SmartReservoir.PORT_ID, __instance.activated ?
+				1 : 0);
 		}
 	}
 
@@ -71,7 +72,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// Applied to SmartReservoir to stop sending logic updates every 200ms even if nothing
 	/// has changed.
 	/// </summary>
-	[HarmonyPatch(typeof(SmartReservoir), "UpdateLogicCircuit")]
+	[HarmonyPatch(typeof(SmartReservoir), nameof(SmartReservoir.UpdateLogicCircuit))]
 	public static class SmartReservoir_UpdateLogicCircuit_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.LogicUpdates;
 
@@ -100,7 +101,8 @@ namespace PeterHan.FastTrack.GamePatches {
 				false, typeof(HashedString), typeof(int));
 			var replacement = typeof(SmartReservoir_UpdateLogicCircuit_Patch).GetMethodSafe(
 				nameof(SendSignalIf), true, PPatchTools.AnyArguments);
-			var activatedField = typeof(SmartReservoir).GetFieldSafe("activated", false);
+			var activatedField = typeof(SmartReservoir).GetFieldSafe(nameof(SmartReservoir.
+				activated), false);
 			if (target == null || replacement == null || activatedField == null) {
 				PUtil.LogWarning("Unable to patch SmartReservoir.UpdateLogicCircuit");
 				foreach (var instr in instructions)

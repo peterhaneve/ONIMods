@@ -73,11 +73,12 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		private readonly Mesh starsMesh;
 
-		internal TerrainMeshRenderer(int layer, Mesh starsMesh, Mesh gasMesh,
-				Material gasMaterial, Texture3D noiseVolume) {
-			this.gasMesh = gasMesh;
-			this.noiseVolume = noiseVolume;
-			this.starsMesh = starsMesh;
+		internal TerrainMeshRenderer(TerrainBG instance) {
+			int layer = instance.layer;
+			var gasMaterial = instance.gasMaterial;
+			gasMesh = instance.gasPlane;
+			noiseVolume = instance.noiseVolume;
+			starsMesh = instance.starsPlane;
 			starsRender = Create(starsMesh, "Stars", null, layer, Grid.GetLayerZ(Grid.
 				SceneLayer.Background) + 1.0f).GetComponent<MeshRenderer>();
 			gasRenderBack = Create(gasMesh, "Gas Back", gasMaterial, layer, Grid.GetLayerZ(
@@ -132,7 +133,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// <summary>
 	/// Applied to TerrainBG to create the mesh renderer object on startup.
 	/// </summary>
-	[HarmonyPatch(typeof(TerrainBG), "OnSpawn")]
+	[HarmonyPatch(typeof(TerrainBG), nameof(TerrainBG.OnSpawn))]
 	public static class TerrainBG_OnSpawn_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
 			FastTrackOptions.MeshRendererSettings.None;
@@ -140,18 +141,16 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied after OnSpawn runs.
 		/// </summary>
-		internal static void Postfix(Mesh ___starsPlane, Mesh ___gasPlane, int ___layer,
-				Material ___gasMaterial, Texture3D ___noiseVolume) {
+		internal static void Postfix(TerrainBG __instance) {
 			TerrainMeshRenderer.DestroyInstance();
-			TerrainMeshRenderer.Instance = new TerrainMeshRenderer(___layer, ___starsPlane,
-				___gasPlane, ___gasMaterial, ___noiseVolume);
+			TerrainMeshRenderer.Instance = new TerrainMeshRenderer(__instance);
 		}
 	}
 
 	/// <summary>
 	/// Applied to TerrainBG to turn off manual graphics mesh rendering.
 	/// </summary>
-	[HarmonyPatch(typeof(TerrainBG), "LateUpdate")]
+	[HarmonyPatch(typeof(TerrainBG), nameof(TerrainBG.LateUpdate))]
 	public static class TerrainBG_LateUpdate_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions !=
 			FastTrackOptions.MeshRendererSettings.None;

@@ -18,7 +18,6 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -32,29 +31,6 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// Patches for slow code in the BuildTool.
 	/// </summary>
 	public static class BuildToolPatches {
-		/// <summary>
-		/// The prototype matching BuildTool.UpdateVis.
-		/// </summary>
-		private delegate void UpdateVis(BuildTool tool, Vector3 pos);
-
-		/// <summary>
-		/// BuildTool.UpdateVis is private so compute the patch target with reflection.
-		/// </summary>
-		private static readonly MethodInfo UPDATE_VIS = typeof(BuildTool).GetMethodSafe(
-			nameof(UpdateVis), false, typeof(Vector3));
-
-		/// <summary>
-		/// A delegate that can invoke the UpdateVis method of BuildTool.
-		/// </summary>
-		private static readonly UpdateVis DO_UPDATE_VIS = PDetours.Detour<UpdateVis>(
-			UPDATE_VIS);
-
-		/// <summary>
-		/// Accesses the def field of BuildTool.
-		/// </summary>
-		private static readonly IDetouredField<BuildTool, BuildingDef> GET_DEF = PDetours.
-			DetourField<BuildTool, BuildingDef>("def");
-
 		/// <summary>
 		/// The last cell the mouse was over when the build tool was used.
 		/// </summary>
@@ -75,8 +51,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static void ShouldUpdateVis(BuildTool tool, Vector3 pos) {
 			int cell = Grid.PosToCell(pos);
 			if (cell != lastCell) {
-				if (GET_DEF == null || GET_DEF.Get(tool) != null)
-					DO_UPDATE_VIS?.Invoke(tool, pos);
+				if (tool.def != null)
+					tool.UpdateVis(pos);
 				lastCell = cell;
 			}
 		}
@@ -92,14 +68,10 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// Transpiles OnMouseMove to call through a filter method.
 			/// </summary>
 			internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-				var method = instructions;
-				if (UPDATE_VIS == null)
-					PUtil.LogWarning("Unable to patch BuildTool.OnMouseMove");
-				else
-					method = PPatchTools.ReplaceMethodCall(instructions, UPDATE_VIS, typeof(
-						BuildToolPatches).GetMethodSafe(nameof(BuildToolPatches.
-						ShouldUpdateVis), true, typeof(BuildTool), typeof(Vector3)));
-				return method;
+				return PPatchTools.ReplaceMethodCall(instructions, typeof(BuildTool).
+					GetMethodSafe(nameof(BuildTool.UpdateVis), false, typeof(Vector3)), typeof(
+					BuildToolPatches).GetMethodSafe(nameof(BuildToolPatches.ShouldUpdateVis),
+					true, typeof(BuildTool), typeof(Vector3)));
 			}
 		}
 	}
@@ -109,34 +81,10 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// </summary>
 	public static class InterfaceToolPatches {
 		/// <summary>
-		/// The minimal prototype for InterfaceTool.GetObjectUnderCursor.
-		/// </summary>
-		private delegate KSelectable GetObjectUnderCursor(InterfaceTool instance,
-			bool cycleSelection);
-
-		/// <summary>
-		/// Calls through to InterfaceTool.UpdateHoverElements which is subclassed by each
-		/// tool (like SelectToolHoverTextCard which Aze considers to be cursed).
-		/// </summary>
-		private delegate void UpdateHoverElements(InterfaceTool instance,
-			List<KSelectable> hits);
-
-		/// <summary>
 		/// Avoids allocating a new Comparison every frame.
 		/// </summary>
 		private static readonly Comparison<KSelectable> COMPARE_SELECTABLES =
 			CompareSelectables;
-
-		/// <summary>
-		/// Target the KSelectable version of the generic method InterfaceTool.
-		/// GetObjectUnderCursor.
-		/// </summary>
-		private static readonly MethodInfo GET_OBJECT_UNDER_CURSOR = typeof(InterfaceTool).
-			GetMethodSafe("GetObjectUnderCursor", false, PPatchTools.AnyArguments)?.
-			MakeGenericMethod(typeof(KSelectable));
-
-		private static readonly UpdateHoverElements UPDATE_HOVER_ELEMENTS =
-			typeof(InterfaceTool).Detour<UpdateHoverElements>();
 
 		/// <summary>
 		/// Adds the intersections of existing status items to the list by distance.
@@ -318,7 +266,9 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// Target the KSelectable version of this generic method.
 			/// </summary>
 			internal static MethodBase TargetMethod() {
-				return GET_OBJECT_UNDER_CURSOR;
+				return typeof(InterfaceTool).GetMethodSafe(nameof(InterfaceTool.
+					GetObjectUnderCursor), false, PPatchTools.AnyArguments)?.MakeGenericMethod(
+					typeof(KSelectable));
 			}
 
 			/// <summary>
@@ -363,39 +313,39 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before LateUpdate runs.
 			/// </summary>
-			internal static bool Prefix(InterfaceTool __instance, List<KSelectable> ___hits,
-					bool ___populateHitsList, bool ___isAppFocused, ref int ___hitCycleCount,
-					KSelectable ___hoverOverride, HashSet<Component> ___prevIntersectionGroup,
-					int ___layerMask, ref bool ___playedSoundThisFrame) {
+			internal static bool Prefix(InterfaceTool __instance) {
 				int cell;
-				if (!___populateHitsList)
-					UPDATE_HOVER_ELEMENTS(__instance, null);
-				else if (___isAppFocused && Grid.IsValidCell(cell = GetMousePosition(
+				if (!__instance.populateHitsList)
+					__instance.UpdateHoverElements(null);
+				else if (__instance.isAppFocused && Grid.IsValidCell(cell = GetMousePosition(
 						out Vector3 coords))) {
 					bool soundPlayed = false;
 					// The game uses different math to arrive at the same answer in two ways...
-					___hits.Clear();
-					if (___hoverOverride != null)
-						___hits.Add(___hoverOverride);
+					var hits = __instance.hits;
+					var hoverOverride = __instance.hoverOverride;
+					hits.Clear();
+					if (hoverOverride != null)
+						hits.Add(hoverOverride);
 					// If the items have changed, reset cycle count
-					if (GetAllSelectables(cell, coords, ___prevIntersectionGroup, ___hits))
-						___hitCycleCount = 0;
-					var objectUnderCursor = GetFirstSelectable(___hits, ___layerMask);
-					UPDATE_HOVER_ELEMENTS(__instance, ___hits);
-					if (!__instance.hasFocus && ___hoverOverride == null)
+					if (GetAllSelectables(cell, coords, __instance.prevIntersectionGroup,
+							hits))
+						__instance.hitCycleCount = 0;
+					var objectUnderCursor = GetFirstSelectable(hits, __instance.layerMask);
+					__instance.UpdateHoverElements(hits);
+					if (!__instance.hasFocus && hoverOverride == null)
 						ClearHover(__instance);
 					else if (objectUnderCursor != __instance.hover) {
 						SetHover(__instance, objectUnderCursor);
 						if (objectUnderCursor != null) {
 							Game.Instance.Trigger((int)GameHashes.HighlightStatusItem,
 								objectUnderCursor.gameObject);
-							objectUnderCursor.Hover(!___playedSoundThisFrame);
+							objectUnderCursor.Hover(!__instance.playedSoundThisFrame);
 							// This store was dead in the base game, but the intent is
 							// obviously to avoid playing more than one sound per frame...
 							soundPlayed = true;
 						}
 					}
-					___playedSoundThisFrame = soundPlayed;
+					__instance.playedSoundThisFrame = soundPlayed;
 				}
 				// Stop the slow original method from running
 				return false;
@@ -420,35 +370,29 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(SelectTool), nameof(SelectTool.OnLeftClickDown))]
 		internal static class OnLeftClickDown_Patch {
-			private static readonly GetObjectUnderCursor GET_OBJECT_DETOUR =
-				GET_OBJECT_UNDER_CURSOR.Detour<GetObjectUnderCursor>();
-
 			internal static bool Prepare() => FastTrackOptions.Instance.InfoCardOpts;
 
 			/// <summary>
 			/// Applied before OnLeftClickDown runs.
 			/// </summary>
-			internal static bool Prefix(Vector3 cursor_pos, ref int ___selectedCell,
-					SelectTool __instance, List<KSelectable> ___hits, int ___layerMask,
-					HashSet<Component> ___prevIntersectionGroup, ref int ___hitCycleCount,
-					KSelectable ___selected) {
+			internal static bool Prefix(Vector3 cursor_pos, SelectTool __instance) {
 				int cell = Grid.PosToCell(cursor_pos);
 				if (Grid.IsValidCell(cell)) {
-					int index = ___hitCycleCount;
-					if (GetAllSelectables(cell, cursor_pos, ___prevIntersectionGroup, ___hits))
+					var hits = __instance.hits;
+					int index = __instance.hitCycleCount;
+					if (GetAllSelectables(cell, cursor_pos, __instance.prevIntersectionGroup,
+							hits))
 						index = 0;
-					var target = GetIndexedSelectable(___hits, ref index, ___layerMask,
-						___selected);
-					___hitCycleCount = index;
+					var target = GetIndexedSelectable(hits, ref index, __instance.layerMask,
+						__instance.selected);
+					__instance.hitCycleCount = index;
 					// Try Aze's override
-					if (GET_OBJECT_DETOUR != null) {
-						var newTarget = GET_OBJECT_DETOUR.Invoke(__instance, true);
-						if (newTarget != null)
-							target = newTarget;
-					}
+					var newTarget = __instance.GetObjectUnderCursor<KSelectable>(true);
+					if (newTarget != null)
+						target = newTarget;
 					__instance.Select(target, false);
 				}
-				___selectedCell = cell;
+				__instance.selectedCell = cell;
 				return false;
 			}
 		}

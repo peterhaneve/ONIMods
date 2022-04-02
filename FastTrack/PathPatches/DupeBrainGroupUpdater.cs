@@ -17,13 +17,12 @@
  */
 
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading;
 using UnityEngine;
 
+using BrainGroup = BrainScheduler.BrainGroup;
 using FetchablesByPrefabId = FetchManager.FetchablesByPrefabId;
 using Pickup = FetchManager.Pickup;
 
@@ -42,7 +41,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// Creates the singleton instance.
 		/// </summary>
 		/// <param name="brainGroup">The Duplicant brain group.</param>
-		internal static void CreateInstance(object brainGroup) {
+		internal static void CreateInstance(BrainGroup brainGroup) {
 			Instance?.Dispose();
 			Instance = new DupeBrainGroupUpdater(brainGroup);
 		}
@@ -54,51 +53,6 @@ namespace PeterHan.FastTrack.PathPatches {
 			Instance?.Dispose();
 			Instance = null;
 		}
-
-		/// <summary>
-		/// The BrainScheduler.BrainGroup nested type is private.
-		/// </summary>
-		internal static readonly Type BRAIN_GROUP = typeof(BrainScheduler).GetNestedType(
-			"BrainGroup", PPatchTools.BASE_FLAGS | BindingFlags.Instance);
-
-		/// <summary>
-		/// Runs the multithreaded path probe (possibly async).
-		/// </summary>
-		internal static readonly MethodInfo ASYNC_PATH_PROBE = BRAIN_GROUP?.GetMethodSafe(
-			"AsyncPathProbe", false);
-
-		/// <summary>
-		/// Retrieves the comparator used to sort pickups.
-		/// </summary>
-		private static readonly IDetouredField<FetchManager, IComparer<Pickup>>
-			COMPARER_NO_PRIORITY = PDetours.DetourField<FetchManager, IComparer<Pickup>>(
-			"ComparerNoPriority");
-
-		/// <summary>
-		/// A delegate that accesses the next brain to update.
-		/// </summary>
-		private static readonly Func<object, IList<Brain>> GET_BRAIN_LIST = BRAIN_GROUP?.
-			GenerateGetter<IList<Brain>>("brains");
-
-		/// <summary>
-		/// Retrieves the list of pickups at runtime from FetchManager.
-		/// </summary>
-		private static readonly IDetouredField<FetchManager, List<Pickup>> GET_PICKUPS =
-			PDetours.DetourField<FetchManager, List<Pickup>>("pickups");
-
-		private const string NEXT_UPDATE_BRAIN = "nextUpdateBrain";
-
-		/// <summary>
-		/// A delegate that accesses the next brain to update.
-		/// </summary>
-		private static readonly Func<object, int> GET_NEXT_UPDATE_BRAIN = BRAIN_GROUP?.
-			GenerateGetter<int>(NEXT_UPDATE_BRAIN);
-
-		/// <summary>
-		/// A delegate that modifies the next brain to update.
-		/// </summary>
-		private static readonly Action<object, int> SET_NEXT_UPDATE_BRAIN = BRAIN_GROUP?.
-			GenerateSetter<int>(NEXT_UPDATE_BRAIN);
 
 		/// <summary>
 		/// A more efficient (slightly) version of GlobalChoreProber.UpdateFetches.
@@ -130,12 +84,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// The current DupeBrainGroup used for updates.
 		/// </summary>
-		internal readonly object dupeBrainGroup;
-
-		/// <summary>
-		/// Called to get the current probe count per frame.
-		/// </summary>
-		private readonly Func<int> getInitialProbeCount;
+		internal readonly BrainGroup dupeBrainGroup;
 
 		/// <summary>
 		/// Fired when it is safe to mutate the offset tables off the main thread.
@@ -143,35 +92,16 @@ namespace PeterHan.FastTrack.PathPatches {
 		private readonly EventWaitHandle onFetchComplete;
 
 		/// <summary>
-		/// Compares pickups for sorting.
-		/// </summary>
-		private readonly IComparer<Pickup> pickupComparer;
-
-		/// <summary>
-		/// Runs the "asynchronous" path probe, which is either main thread (AsyncPathProbe =
-		/// false) or background thread (AsyncPathProbe = true).
-		/// </summary>
-		private readonly System.Action runAsyncPathProbe;
-
-		/// <summary>
 		/// Contains the list of all pickup jobs that are currently running.
 		/// </summary>
 		private readonly IList<CompilePickupsWork> updatingPickups;
 
-		private DupeBrainGroupUpdater(object dupeBrainGroup) {
+		private DupeBrainGroupUpdater(BrainGroup dupeBrainGroup) {
 			byId = new List<FetchablesByPrefabId>(64);
 			this.dupeBrainGroup = dupeBrainGroup ?? throw new ArgumentNullException(nameof(
 				dupeBrainGroup));
-			getInitialProbeCount = BRAIN_GROUP.CreateDelegate<Func<int>>("InitialProbeCount",
-				dupeBrainGroup);
 			onFetchComplete = new AutoResetEvent(false);
-			pickupComparer = COMPARER_NO_PRIORITY.Get(null);
-			runAsyncPathProbe = ASYNC_PATH_PROBE.CreateDelegate<System.Action>(
-				dupeBrainGroup);
 			updatingPickups = new List<CompilePickupsWork>(8);
-			if (getInitialProbeCount == null || pickupComparer == null ||
-					runAsyncPathProbe == null)
-				PUtil.LogError("Unable to patch BrainGroup.AsyncPathProbe");
 		}
 
 		/// <summary>
@@ -204,7 +134,7 @@ namespace PeterHan.FastTrack.PathPatches {
 					PUtil.LogWarning("Fetch updates did not complete within the timeout!");
 				if (fm != null && inst != null && updated) {
 					var fetches = inst.fetches;
-					var pickups = GET_PICKUPS.Get(fm);
+					var pickups = fm.pickups;
 					foreach (var entry in updatingPickups) {
 						// Copy fetch list
 						fetches.Clear();
@@ -241,9 +171,9 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <param name="toUpdate">The location where the brains to update will be populated.</param>
 		/// <returns>The number of brains that will be updated.</returns>
 		internal int GetBrainsToUpdate(ICollection<MinionBrain> toUpdate) {
-			var brains = GET_BRAIN_LIST.Invoke(dupeBrainGroup);
-			int count = getInitialProbeCount.Invoke(), n = brains.Count, index =
-				GET_NEXT_UPDATE_BRAIN.Invoke(dupeBrainGroup);
+			var brains = dupeBrainGroup.brains;
+			int count = dupeBrainGroup.InitialProbeCount(), n = brains.Count, index =
+				dupeBrainGroup.nextUpdateBrain;
 			if (toUpdate == null)
 				throw new ArgumentNullException(nameof(toUpdate));
 			toUpdate.Clear();
@@ -256,7 +186,7 @@ namespace PeterHan.FastTrack.PathPatches {
 						toUpdate.Add(mb);
 					index = (index + 1) % n;
 				}
-				SET_NEXT_UPDATE_BRAIN.Invoke(dupeBrainGroup, index);
+				dupeBrainGroup.nextUpdateBrain = index;
 			}
 			return toUpdate.Count;
 		}
@@ -289,7 +219,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			var inst = AsyncJobManager.Instance;
 			int n = updatingPickups.Count;
 			if (asyncPathProbe)
-				runAsyncPathProbe.Invoke();
+				dupeBrainGroup.AsyncPathProbe();
 			if (n > 0) {
 				PUtil.LogWarning("{0:D} pickup collection jobs did not finish in time!".F(n));
 				Cleanup();
@@ -390,7 +320,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				pickups.Clear();
 				foreach (var pair in updater.byId)
 					pickups.AddRange(pair.finalPickups);
-				pickups.Sort(updater.pickupComparer);
+				pickups.Sort(FetchManager.ComparerNoPriority);
 				OffsetTracker.isExecutingWithinJob = false;
 			}
 
