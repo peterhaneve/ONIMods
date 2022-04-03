@@ -20,7 +20,7 @@ using HarmonyLib;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using System;
-
+using System.Collections.Generic;
 using KAnimBatchTextureCache = KAnimBatchGroup.KAnimBatchTextureCache;
 
 namespace PeterHan.FastTrack.VisualPatches {
@@ -30,7 +30,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(KAnimBatch), "ClearDirty")]
 	public static class KAnimBatch_ClearDirty_Patch {
-		internal static bool Prepare() => !FastTrackOptions.Instance.AnimOpts;
+		internal static bool Prepare() => true/*!FastTrackOptions.Instance.AnimOpts*/;
 
 		/// <summary>
 		/// Applied after ClearDirty runs.
@@ -68,13 +68,22 @@ namespace PeterHan.FastTrack.VisualPatches {
 					if (!controllersToIndex.Remove(controller))
 						PUtil.LogWarning("Deregistering " + controller.GetName() +
 							" but not found in the index table!");
-					n = controllers.Count;
+					var dirty = ListPool<int, KAnimBatch>.Allocate();
+					n = dirtySet.Count;
+					// Save every existing dirty index less than the deregistered one
+					for (int i = 0; i < n; i++) {
+						int dirtyIdx = dirtySet[i];
+						if (dirtyIdx < index)
+							dirty.Add(dirtyIdx);
+					}
 					dirtySet.Clear();
-					// Refresh the index mapping table
+					dirtySet.AddRange(dirty);
+					dirty.Recycle();
+					n = controllers.Count;
+					// Refresh the index mapping table and mark everything moved-down as dirty
 					for (int i = index; i < n; i++) {
 						controllersToIndex[controllers[i]] = i;
-						if (!dirtySet.Contains(i))
-							dirtySet.Add(i);
+						dirtySet.Add(i);
 					}
 					__instance.batchset.SetDirty();
 					__instance.needsWrite = true;
@@ -97,7 +106,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 
 	/// <summary>
 	/// Applied to KAnimBatch to tame some data structure abuse when registering kanims.
-	/// Target time is 590 us/call
 	/// </summary>
 	[HarmonyPatch(typeof(KAnimBatch), nameof(KAnimBatch.Register))]
 	public static class KAnimBatch_Register_Patch {
@@ -145,17 +153,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 	}
 
 	/// <summary>
-	/// Applied to KAnimBatch to centralize the dirty management in a proper hash set.
+	/// Applied to KAnimBatch to optimize dirty management slightly.
 	/// </summary>
 	[HarmonyPatch(typeof(KAnimBatch), nameof(KAnimBatch.UpdateDirty))]
 	public static class KAnimBatch_UpdateDirtyFull_Patch {
-		/// <summary>
-		/// Publicizer cannot find this property's setter!
-		/// </summary>
-		private static readonly IDetouredField<KAnimBatch, KAnimBatchTextureCache.Entry>
-			OVERRIDE_TEX = PDetours.DetourField<KAnimBatch, KAnimBatchTextureCache.Entry>(
-			nameof(KAnimBatch.symbolOverrideInfoTex));
-
 		internal static bool Prepare() => FastTrackOptions.Instance.AnimOpts;
 
 		/// <summary>
@@ -176,7 +177,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 					ShaderProperty_SYMBOL_OVERRIDE_INFO_TEXTURE_SIZE);
 				overrideTex.SetTextureAndSize(properties);
 				properties.SetFloat(KAnimBatch.ShaderProperty_SUPPORTS_SYMBOL_OVERRIDING, 1f);
-				OVERRIDE_TEX.Set(instance, overrideTex);
+				instance.symbolOverrideInfoTex = overrideTex;
 			}
 			return overrideTex;
 		}
@@ -186,6 +187,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		internal static bool Prefix(ref int __result, KAnimBatch __instance) {
 			int writtenLastFrame = 0;
+			Metrics.DebugMetrics.LogCondition("batchDirty", __instance.needsWrite);
 			if (__instance.needsWrite) {
 				bool symbolDirty = false, overrideDirty = false;
 				var controllers = __instance.controllers;
@@ -243,7 +245,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		internal static bool Prepare() {
 			var options = FastTrackOptions.Instance;
 			return options.MeshRendererOptions != FastTrackOptions.MeshRendererSettings.
-				None && !options.AnimOpts;
+				None /* && !options.AnimOpts */;
 		}
 
 		/// <summary>
@@ -252,6 +254,54 @@ namespace PeterHan.FastTrack.VisualPatches {
 		internal static void Postfix(int __result, KAnimBatch __instance) {
 			if (__result > 0)
 				KAnimMeshRendererPatches.UpdateMaterialProperties(__instance);
+		}
+	}
+
+	/// <summary>
+	/// Applied to KAnimControllerBase to make trivial anims stop triggering updates.
+	/// </summary>
+	[HarmonyPatch(typeof(KAnimControllerBase), nameof(KAnimControllerBase.StartQueuedAnim))]
+	public static class KAnimControllerBase_StartQueuedAnim_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.AnimOpts;
+
+		/// <summary>
+		/// Applied after StartQueuedAnim runs.
+		/// </summary>
+		internal static void Postfix(KAnimControllerBase __instance) {
+			var anim = __instance.curAnim;
+			var inst = KAnimLoopOptimizer.Instance;
+			if (anim != null && __instance.mode != KAnim.PlayMode.Paused && inst != null &&
+					inst.IsIdleAnim(anim))
+				__instance.mode = KAnim.PlayMode.Paused;
+		}
+	}
+
+	/// <summary>
+	/// Applied to KAnimControllerBase to only update the hidden flag if the visibility
+	/// actually changed (yes the Klei method has a typo, like many...)
+	/// </summary>
+	[HarmonyPatch(typeof(KAnimControllerBase), nameof(KAnimControllerBase.SetSymbolVisiblity))]
+	public static class KAnimControllerBase_SetSymbolVisiblity_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.AnimOpts;
+
+		/// <summary>
+		/// Applied before SetSymbolVisiblity runs.
+		/// </summary>
+		internal static bool Prefix(KAnimControllerBase __instance, KAnimHashedString symbol,
+				bool is_visible) {
+			bool changed = false;
+			var hidden = __instance.hiddenSymbols;
+			if (is_visible)
+				changed = hidden.Remove(symbol);
+			else if (!hidden.Contains(symbol)) {
+				hidden.Add(symbol);
+				// This is not called all that often and the hidden symbol list is usually
+				// quite small, so not worth changing to hash set
+				changed = true;
+			}
+			if (changed && __instance.curBuild != null)
+				__instance.UpdateHidden();
+			return false;
 		}
 	}
 }

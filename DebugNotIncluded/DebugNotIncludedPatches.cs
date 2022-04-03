@@ -432,35 +432,6 @@ namespace PeterHan.DebugNotIncluded {
 		}
 	}
 
-#if DEBUG
-	/// <summary>
-	/// Applied to Memory to warn about suspicious patches that target empty methods.
-	/// 
-	/// DEBUG ONLY.
-	/// </summary>
-	[HarmonyPatch(typeof(Memory), nameof(Memory.DetourMethod))]
-	public static class Memory_DetourMethod_Patch {
-		private const int MIN_METHOD_SIZE = 8;
-
-		/// <summary>
-		/// Applied before DetourMethod runs.
-		/// </summary>
-		internal static void Prefix(MethodBase original, MethodBase replacement) {
-			var body = original.GetMethodBody();
-			var il = body.GetILAsByteArray();
-			if (il.Length < MIN_METHOD_SIZE && il.Length > 0) {
-				int firstInstr = il[0] & 0xFF;
-				// Some very short virtual methods with 1 call are still patchable
-				// (empirically)
-				if (firstInstr != OpCodes.Callvirt.Value && firstInstr != OpCodes.Call.Value &&
-						firstInstr != OpCodes.Calli.Value)
-					DebugLogger.LogWarning("Patch {0} targets empty method {1}.{2}".F(
-						replacement.Name, original.DeclaringType, original.Name));
-			}
-		}
-	}
-#endif
-
 	/// <summary>
 	/// Applied to MinionConfig to add buttons for triggering stress and joy reactions.
 	/// </summary>

@@ -16,8 +16,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using HarmonyLib;
 using PeterHan.PLib.Core;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
@@ -90,12 +93,72 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
+		/// Profiles invocations of a particular method.
+		/// </summary>
+		/// <param name="instance">The Harmony instance to use for patching.</param>
+		/// <param name="type">The type containing the method to profile.</param>
+		/// <param name="name">The method name to profile.</param>
+		internal static void Profile(this Harmony instance, Type type, string name)
+		{
+#if DEBUG
+			if (FastTrackOptions.Instance.Metrics) {
+				var targetMethod = type.GetMethod(name, BindingFlags.Instance | BindingFlags.
+					Static | PPatchTools.BASE_FLAGS);
+				PUtil.LogDebug("Profiling method {0}.{1}".F(type.Name, name));
+				var existingPatches = Harmony.GetPatchInfo(targetMethod);
+				if (existingPatches != null) {
+					TellMeWhy("Prefix", existingPatches.Prefixes);
+					TellMeWhy("Postfix", existingPatches.Postfixes);
+					TellMeWhy("Transpiler", existingPatches.Transpilers);
+				}
+				instance.Patch(targetMethod, new HarmonyMethod(typeof(ExtensionMethods),
+					nameof(ProfilePrefix)), new HarmonyMethod(typeof(ExtensionMethods),
+					nameof(ProfileSuffix)));
+			}
+#endif
+		}
+
+		/// <summary>
+		/// Prefixes methods to profile to start a stopwatch.
+		/// </summary>
+		[HarmonyPriority(Priority.High)]
+		private static void ProfilePrefix(ref Stopwatch __state) {
+			__state = Stopwatch.StartNew();
+		}
+
+		/// <summary>
+		/// Postfixes methods to profile to log them.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		private static void ProfileSuffix(MethodBase __originalMethod, Stopwatch __state) {
+			if (__state != null)
+				Metrics.DebugMetrics.LogTracked(__originalMethod.DeclaringType.Name + "." +
+					__originalMethod.Name, __state.ElapsedTicks);
+		}
+
+#if DEBUG
+		/// <summary>
+		/// Describes information about existing patches.
+		/// </summary>
+		/// <param name="heading">The heading to use for the patch.</param>
+		/// <param name="patches">The patches for this category.</param>
+		private static void TellMeWhy(string heading, IReadOnlyCollection<Patch> patches) {
+			if (patches != null)
+				foreach (var patch in patches) {
+					var patchMethod = patch.PatchMethod;
+					PUtil.LogDebug(" {3} from {0} ({1}.{2})".F(patch.owner, patchMethod.
+						DeclaringType.Name, patchMethod.Name, heading));
+				}
+		}
+#endif
+
+		/// <summary>
 		/// Gets the elapsed time in microseconds.
 		/// </summary>
 		/// <param name="ticks">The time elapsed in stopwatch ticks.</param>
 		/// <returns>The elapsed time in microseconds.</returns>
 		public static long TicksToUS(this long ticks) {
-			return ticks * 1000000L / System.Diagnostics.Stopwatch.Frequency;
+			return ticks * 1000000L / Stopwatch.Frequency;
 		}
 
 		/// <summary>

@@ -193,7 +193,8 @@ namespace PeterHan.FastTrack.PathPatches {
 			// If nothing has changed since last time, it is a hit!
 			var cached = PathCacher.Lookup(___navigator.PathProber);
 			bool hit = cached.CheckAndMarkValid();
-			Metrics.DebugMetrics.LogHit(hit);
+			if (FastTrackOptions.Instance.Metrics)
+				Metrics.DebugMetrics.PATH_CACHE.Log(hit);
 			return !hit;
 		}
 	}

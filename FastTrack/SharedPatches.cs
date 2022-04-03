@@ -49,31 +49,37 @@ namespace PeterHan.FastTrack {
 	/// fast Reachability updates before the sim cycle starts.
 	/// </summary>
 	[HarmonyPatch(typeof(Game), nameof(Game.Update))]
-	[HarmonyPriority(Priority.Low)]
 	public static class Game_Update_Patch {
 		internal static bool Prepare() {
 			var options = FastTrackOptions.Instance;
 			return options.ReduceTileUpdates || options.FastReachability || options.
 				PickupOpts || options.MiscOpts || (!options.ConduitOpts &&
-				ConduitPatches.ConduitFlowVisualizerRenderer.Prepare());
+				ConduitPatches.ConduitFlowVisualizerRenderer.Prepare()) || options.
+				ParallelInventory;
 		}
 
 		/// <summary>
 		/// Applied before Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.High)]
 		internal static void Prefix(Game __instance) {
-			SensorPatches.FastGroupProber.Instance?.Update();
 			if (__instance.gasConduitSystem.IsDirty)
 				ConduitPatches.ConduitFlowVisualizerRenderer.ForceUpdate(__instance.
 					gasFlowVisualizer);
 			if (__instance.liquidConduitSystem.IsDirty)
 				ConduitPatches.ConduitFlowVisualizerRenderer.ForceUpdate(__instance.
 					liquidFlowVisualizer);
+			if (FastTrackOptions.Instance.ParallelInventory)
+				UIPatches.BackgroundInventoryUpdater.Instance?.EndUpdateAll();
+			// Updating the group prober can trigger reachability changes in the world
+			// inventory, so do not start it until after the BWI has finished
+			SensorPatches.FastGroupProber.Instance?.Update();
 		}
 
 		/// <summary>
 		/// Applied after Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static void Postfix() {
 			VisualPatches.PropertyTextureUpdater.Instance?.StartUpdate();
 			GamePatches.AsyncAmountsUpdater.Instance?.Finish();

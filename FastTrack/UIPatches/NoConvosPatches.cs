@@ -35,6 +35,21 @@ namespace PeterHan.FastTrack.UIPatches {
 	}
 
 	/// <summary>
+	/// Applied to SpeechMonitor.Instance to prevent speech from ever starting.
+	/// </summary>
+	[HarmonyPatch(typeof(SpeechMonitor.Instance), nameof(SpeechMonitor.Instance.PlaySpeech))]
+	public static class SpeechMonitor_Instance_PlaySpeech_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.NoConversations;
+
+		/// <summary>
+		/// Applied before PlaySpeech runs.
+		/// </summary>
+		internal static bool Prefix() {
+			return false;
+		}
+	}
+
+	/// <summary>
 	/// Applied to ThoughtGraph.Instance to prevent any thoughts from being added.
 	/// </summary>
 	[HarmonyPatch(typeof(ThoughtGraph.Instance), nameof(ThoughtGraph.Instance.AddThought))]

@@ -206,40 +206,13 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	[HarmonyPatch(typeof(RenderMeshTask), MethodType.Constructor, typeof(int), typeof(int))]
 	public static class ConduitFlowVisualizer_RenderMeshConstructor_Patch {
 		/// <summary>
-		/// The dynamic method to run when replacing the conduit capacity.
+		/// Resizes a list only if needed.
 		/// </summary>
-		private static MethodBase cachedDynamicMethod = null;
-
-		/// <summary>
-		/// Create a method at runtime to use for resizing lists!
-		/// </summary>
-		/// <param name="resizeBalls">The Capacity property to modify.</param>
-		private static MethodBase GenerateDynamicMethod(PropertyInfo resizeBalls) {
-			if (resizeBalls == null)
-				throw new ArgumentNullException(nameof(resizeBalls));
-			if (cachedDynamicMethod == null) {
-				var newMethod = new DynamicMethod("SetCapacityIfNeeded", null, new Type[] {
-					typeof(List<RenderMeshTask.Ball>), typeof(int)
-				});
-				var generator = newMethod.GetILGenerator();
-				var end = generator.DefineLabel();
-				// Get current capacity
-				generator.Emit(OpCodes.Ldarg_0);
-				generator.Emit(OpCodes.Callvirt, resizeBalls.GetGetMethod(true));
-				// Compare to new capacity
-				generator.Emit(OpCodes.Ldarg_1);
-				generator.Emit(OpCodes.Bge, end);
-				// Set new capacity
-				generator.Emit(OpCodes.Ldarg_0);
-				generator.Emit(OpCodes.Ldarg_1);
-				generator.Emit(OpCodes.Callvirt, resizeBalls.GetSetMethod(true));
-				// Return
-				generator.MarkLabel(end);
-				generator.Emit(OpCodes.Ret);
-				newMethod.CreateDelegate(typeof(Action<List<RenderMeshTask.Ball>, int>));
-				cachedDynamicMethod = newMethod;
-			}
-			return cachedDynamicMethod;
+		/// <param name="list">The list to resize.</param>
+		/// <param name="capacity">The new list capacity.</param>
+		private static void SetCapacity(List<ConduitFlow.Conduit> list, int capacity) {
+			if (capacity > list.Capacity)
+				list.Capacity = capacity;
 		}
 
 		/// <summary>
@@ -247,7 +220,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// </summary>
 		/// <param name="list">The list to resize.</param>
 		/// <param name="capacity">The new list capacity.</param>
-		private static void SetCapacity(List<ConduitFlow.Conduit> list, int capacity) {
+		private static void SetCapacity(List<RenderMeshTask.Ball> list, int capacity) {
 			if (capacity > list.Capacity)
 				list.Capacity = capacity;
 		}
@@ -259,22 +232,21 @@ namespace PeterHan.FastTrack.ConduitPatches {
 				ILGenerator generator) {
 			var resizeConduits = typeof(List<>).MakeGenericType(typeof(ConduitFlow.Conduit)).
 				GetPropertySafe<int>(nameof(List<int>.Capacity), false);
-			PropertyInfo resizeBalls = null;
-			bool patched = false;
-			// Calculate the target using the private Ball struct type
-			resizeBalls = typeof(List<RenderMeshTask.Ball>).GetPropertySafe<int>(
+			var resizeBalls = typeof(List<RenderMeshTask.Ball>).GetPropertySafe<int>(
 				nameof(List<int>.Capacity), false);
 			var targetConduits = typeof(ConduitFlowVisualizer_RenderMeshConstructor_Patch).
 				GetMethodSafe(nameof(SetCapacity), true, typeof(List<ConduitFlow.Conduit>),
 				typeof(int));
+			var targetBalls = typeof(ConduitFlowVisualizer_RenderMeshConstructor_Patch).
+				GetMethodSafe(nameof(SetCapacity), true, typeof(List<RenderMeshTask.Ball>),
+				typeof(int));
+			bool patched = false;
 			if (resizeBalls != null && resizeConduits != null && targetConduits != null) {
 				var setBallCap = resizeBalls.GetSetMethod(true);
 				var setConduitCap = resizeConduits.GetSetMethod(true);
-				var dynamicMethod = GenerateDynamicMethod(resizeBalls);
 				foreach (var instr in instructions) {
 					var labels = instr.labels;
 					if (instr.Is(OpCodes.Callvirt, setConduitCap)) {
-						// Easy, swap it with our method
 						instr.opcode = OpCodes.Call;
 						instr.operand = targetConduits;
 #if DEBUG
@@ -282,9 +254,8 @@ namespace PeterHan.FastTrack.ConduitPatches {
 #endif
 						patched = true;
 					} else if (instr.Is(OpCodes.Callvirt, setBallCap)) {
-						// Harder, have to use the method we generated at runtime :/
 						instr.opcode = OpCodes.Call;
-						instr.operand = dynamicMethod;
+						instr.operand = targetBalls;
 #if DEBUG
 						PUtil.LogDebug("Patched RenderMeshTask.set_Capacity 2");
 #endif

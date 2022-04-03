@@ -23,9 +23,16 @@ using System.Threading;
 
 namespace PeterHan.FastTrack.Metrics {
 	/// <summary>
+	/// Shared by all profilers to allow a quick universal reset.
+	/// </summary>
+	public interface IProfiler {
+		void Reset();
+	}
+
+	/// <summary>
 	/// Profiles calls of a particular method.
 	/// </summary>
-	public class Profiler {
+	public class Profiler : IProfiler {
 		public int MethodCalls => methodCalls;
 
 		public long TimeInMethod => timeInMethod.TicksToUS();
@@ -170,6 +177,46 @@ namespace PeterHan.FastTrack.Metrics {
 			public override string ToString() {
 				return "{0}: {1:N0}us".F(ClassName, Time);
 			}
+		}
+	}
+
+	/// <summary>
+	/// Monitors ratios, like hit rates.
+	/// </summary>
+	public class RatioProfiler : IProfiler {
+		/// <summary>
+		/// The number of times the condition was true since the last reset.
+		/// </summary>
+		private volatile int hits;
+
+		/// <summary>
+		/// The number of times the condition was checked since the last reset.
+		/// </summary>
+		private volatile int total;
+
+		public RatioProfiler() {
+			hits = 0;
+			total = 0;
+		}
+
+		/// <summary>
+		/// Logs a condition check.
+		/// </summary>
+		/// <param name="condition">Whether the condition was satisfied.</param>
+		public void Log(bool condition) {
+			Interlocked.Increment(ref total);
+			if (condition)
+				Interlocked.Increment(ref hits);
+		}
+
+		public void Reset() {
+			hits = 0;
+			total = 0;
+		}
+
+		public override string ToString() {
+			int h = hits, t = total;
+			return "[{0:D}/{1:D}]({2:F1}%)".F(h, t, h * 100.0 / Math.Max(1, total));
 		}
 	}
 }

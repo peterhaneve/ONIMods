@@ -22,7 +22,7 @@
       $(GameFolderActive)/Assembly-CSharp-firstpass.dll"/>
     <Reference Include="Assembly-CSharp_public" HintPath="../public-lib/Assembly-CSharp_public.dll" />
     <Reference Include="Assembly-CSharp-firstpass_public" HintPath="../public-lib/Assembly-CSharp-firstpass_public.dll" />
-    <PackageReference Include="Aze.Publicise.MSBuild.Task" Version="1.0.0"/>
+    <PackageReference Include="Aze.Publicise.MSBuild.Task" Version="1.1.0"/>
   </ItemGroup>
   <ItemGroup Condition=" '$(UsePublicized)' != 'true' " >
     <Reference Include="Assembly-CSharp" HintPath="$(GameFolderActive)/Assembly-CSharp.dll" />

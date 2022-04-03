@@ -47,9 +47,20 @@ namespace PeterHan.FastTrack.Metrics {
 			new ConcurrentDictionary<string, BrainStats>(2, 8);
 
 		/// <summary>
+		/// Tracks specific conditions.
+		/// </summary>
+		internal static readonly ConcurrentDictionary<string, RatioProfiler> COND =
+			new ConcurrentDictionary<string, RatioProfiler>(2, 8);
+
+		/// <summary>
 		/// Tracks Unity LateUpdate() methods.
 		/// </summary>
 		internal static readonly NameBucketProfiler LATE_UPDATE = new NameBucketProfiler();
+
+		/// <summary>
+		/// The number of times the path cache hit since the last reset.
+		/// </summary>
+		internal static readonly RatioProfiler PATH_CACHE = new RatioProfiler();
 
 		/// <summary>
 		/// Tracks calls to asychronous path probes.
@@ -57,36 +68,20 @@ namespace PeterHan.FastTrack.Metrics {
 		private static readonly Profiler PATH_PROBES = new Profiler();
 
 		/// <summary>
-		/// Tracks calls to sensor updates.
-		/// </summary>
-		internal static readonly Profiler SENSORS = new Profiler();
-
-		/// <summary>
 		/// Tracks Sim and Render buckets.
 		/// </summary>
 		internal static readonly NameBucketProfiler[] SIMANDRENDER = new NameBucketProfiler[8];
 
 		/// <summary>
-		/// Tracks a specific method.
+		/// Tracks specific methods.
 		/// </summary>
-		internal static readonly Profiler[] TRACKED = new Profiler[] {
-			new Profiler(), new Profiler()
-		};
+		internal static readonly ConcurrentDictionary<string, Profiler> TRACKED =
+			new ConcurrentDictionary<string, Profiler>(2, 8);
 
 		/// <summary>
 		/// Tracks Unity Update() methods.
 		/// </summary>
 		internal static readonly NameBucketProfiler UPDATE = new NameBucketProfiler();
-
-		/// <summary>
-		/// The number of times the path cache hit since the last reset.
-		/// </summary>
-		private static volatile int cacheHits;
-
-		/// <summary>
-		/// The number of times the path cache was queried since the last reset.
-		/// </summary>
-		private static volatile int cacheTotal;
 
 		/// <summary>
 		/// The time spent waiting for async path probes to complete (while synchronously
@@ -115,13 +110,12 @@ namespace PeterHan.FastTrack.Metrics {
 		}
 
 		/// <summary>
-		/// Logs a pathfinding cache hit or miss.
+		/// Logs a profiled condition.
 		/// </summary>
-		/// <param name="hit">true for a cache hit, or false for a miss.</param>
-		internal static void LogHit(bool hit) {
-			Interlocked.Increment(ref cacheTotal);
-			if (hit)
-				Interlocked.Increment(ref cacheHits);
+		/// <param name="name">The method name that was called.</param>
+		/// <param name="condition">Whether the condition was satisfied.</param>
+		internal static void LogCondition(string name, bool condition) {
+			COND.GetOrAdd(name, NewRatio).Log(condition);
 		}
 
 		/// <summary>
@@ -135,37 +129,37 @@ namespace PeterHan.FastTrack.Metrics {
 		}
 
 		/// <summary>
-		/// Resets the async path probing metrics.
+		/// Logs a profiled method invocation.
 		/// </summary>
-		internal static void ResetAsyncPath() {
+		/// <param name="name">The method name that was called.</param>
+		/// <param name="ticks">The time it took to run in ticks.</param>
+		internal static void LogTracked(string name, long ticks) {
+			TRACKED.GetOrAdd(name, NewProfiler).Log(ticks);
+		}
+		
+		/// <summary>
+		/// Creates a new profiler to populate the tracking dictionary.
+		/// </summary>
+		private static Profiler NewProfiler(string _) => new Profiler();
+
+		/// <summary>
+		/// Creates a new ratio profile to populate the condition dictionary.
+		/// </summary>
+		private static RatioProfiler NewRatio(string _) => new RatioProfiler();
+
+		/// <summary>
+		/// Resets all metrics.
+		/// </summary>
+		internal static void Reset() {
 			PATH_PROBES.Reset();
 			probeWaiting = 0L;
-		}
-
-		/// <summary>
-		/// Resets the method call metrics.
-		/// </summary>
-		internal static void ResetMethodHits() {
-			int n = TRACKED.Length;
 			LATE_UPDATE.Reset();
-			SENSORS.Reset();
 			UPDATE.Reset();
-			for (int i = 0; i < n; i++)
-				TRACKED[i].Reset();
-		}
-
-		/// <summary>
-		/// Resets the path cache metrics.
-		/// </summary>
-		internal static void ResetPathCache() {
-			cacheTotal = 0;
-			cacheHits = 0;
-		}
-
-		/// <summary>
-		/// Resets metrics about sim and render callbacks.
-		/// </summary>
-		internal static void ResetSimAndRenderStats() {
+			foreach (var pair in COND)
+				pair.Value.Reset();
+			foreach (var pair in TRACKED)
+				pair.Value.Reset();
+			PATH_CACHE.Reset();
 			int n = SIMANDRENDER.Length;
 			for (int i = 0; i < n; i++)
 				SIMANDRENDER[i].Reset();
@@ -173,10 +167,7 @@ namespace PeterHan.FastTrack.Metrics {
 
 		public override void OnPrefabInit() {
 			base.OnPrefabInit();
-			ResetAsyncPath();
-			ResetMethodHits();
-			ResetPathCache();
-			ResetSimAndRenderStats();
+			Reset();
 		}
 
 		public void Render1000ms(float dt) {
@@ -184,19 +175,35 @@ namespace PeterHan.FastTrack.Metrics {
 				long probeTotal = PATH_PROBES.TimeInMethod, probeSaved = Math.Max(0L,
 					probeTotal - probeWaiting.TicksToUS());
 				int probeCount = PATH_PROBES.MethodCalls;
-				var brainStats = new System.Text.StringBuilder(128);
-				PUtil.LogDebug("Methods Run: {0}(s), {1}(t), {2}(t)".F(SENSORS, TRACKED[0],
-					TRACKED[1]));
-				PUtil.LogDebug("Path Cache: {0:D}/{1:D} hits, {2:F1}%".F(cacheHits, cacheTotal,
-					cacheHits * 100.0f / Math.Max(1, cacheTotal)));
-				ResetPathCache();
-				brainStats.Append("Brain Stats:");
+				var text = new System.Text.StringBuilder(128);
+				// Methods run
+				if (TRACKED.Count > 0) {
+					text.Append("Methods Run:");
+					foreach (var pair in TRACKED)
+						text.Append(' ').Append(pair.Key).Append(pair.Value);
+					PUtil.LogDebug(text);
+				}
+				// Conditions tested
+				if (COND.Count > 0) {
+					text.Clear();
+					text.Append("Conditions:");
+					foreach (var pair in COND)
+						text.Append(' ').Append(pair.Key).Append(pair.Value);
+					PUtil.LogDebug(text);
+				}
+				// Path cache
+				PUtil.LogDebug("Path Cache: " + PATH_CACHE);
+				// Brain stats
+				text.Clear();
+				text.Append("Brain Stats:");
 				foreach (var pair in BRAIN_LOAD)
-					brainStats.Append(' ').Append(pair.Key).Append('[').Append(pair.Value).
+					text.Append(' ').Append(pair.Key).Append('[').Append(pair.Value).
 						Append(']');
-				PUtil.LogDebug(brainStats);
+				PUtil.LogDebug(text);
+				// Path probes
 				PUtil.LogDebug("Path Probes: executed {0:N0}us, saved {1:N0}us ({2:N0}/frame)".
 					F(probeTotal, probeSaved, (double)probeSaved / Math.Max(1, probeCount)));
+				// Sim, Render, and Update
 				PUtil.LogDebug("Sim/Render: *r{0}\n200r{1}\n1000r{2}\n*s{3}\n33s{4}\n200s{5}\n1000s{6}\n4000s{7}".F(
 					SIMANDRENDER[(int)UpdateRate.RENDER_EVERY_TICK],
 					SIMANDRENDER[(int)UpdateRate.RENDER_200ms],
@@ -207,10 +214,8 @@ namespace PeterHan.FastTrack.Metrics {
 					SIMANDRENDER[(int)UpdateRate.SIM_1000ms],
 					SIMANDRENDER[(int)UpdateRate.SIM_4000ms]));
 				PUtil.LogDebug("Update: {0}\nLateUpdate: {1}".F(UPDATE, LATE_UPDATE));
+				Reset();
 			}
-			ResetAsyncPath();
-			ResetMethodHits();
-			ResetSimAndRenderStats();
 		}
 
 		/// <summary>

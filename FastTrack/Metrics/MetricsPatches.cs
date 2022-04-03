@@ -28,56 +28,6 @@ using UnityEngine;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.Metrics {
-	// Global, Game, World
-#if DEBUG
-	// Replace with method to patch
-	// Game#LateUpdate is 100-150ms/1000ms
-	// Game#Update is 200-250ms
-	// Pathfinding#UpdateNavGrids is <20ms
-	// StatusItemRenderer#RenderEveryTick could use some work but is only ~10ms
-	//  (need to excise GetComponent calls which is a massive transpiler)
-	// ElectricalUtilityNetwork#Update is ~10ms
-	// KBatchedAnimUpdater#LateUpdate is ~50ms
-	// AnimEventManager#Update is 20ms but not much can be done
-	// KBatchedAnimUpdater#UpdateRegisteredAnims is 40ms
-	// KAnimBatchManager#Render was 25ms
-	// KAnimBatchManager#UpdateDirty is 90ms+
-	// ConduitFlow.Sim200ms is <10ms
-	// ChoreConsumer.FindNextChore is <10ms
-	// None of the RenderImage methods are more than 1ms
-	[HarmonyPatch(typeof(KAnimBatchManager), "UpdateDirty")]
-	public static class TimePatch1 {
-		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
-
-		[HarmonyPriority(Priority.High)]
-		internal static void Prefix(ref Stopwatch __state) {
-			__state = Stopwatch.StartNew();
-		}
-
-		[HarmonyPriority(Priority.Low)]
-		internal static void Postfix(Stopwatch __state) {
-			if (__state != null)
-				DebugMetrics.TRACKED[0].Log(__state.ElapsedTicks);
-		}
-	}
-
-	[HarmonyPatch(typeof(KBatchedAnimUpdater), "UpdateRegisteredAnims")]
-	public static class TimePatch2 {
-		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
-
-		[HarmonyPriority(Priority.High)]
-		internal static void Prefix(ref Stopwatch __state) {
-			__state = Stopwatch.StartNew();
-		}
-
-		[HarmonyPriority(Priority.Low)]
-		internal static void Postfix(Stopwatch __state) {
-			if (__state != null)
-				DebugMetrics.TRACKED[1].Log(__state.ElapsedTicks);
-		}
-	}
-#endif
-
 	/// <summary>
 	/// Applied to BrainScheduler.BrainGroup to dump load balancing statistics.
 	/// </summary>
@@ -159,30 +109,6 @@ namespace PeterHan.FastTrack.Metrics {
 			if (__state != null && __instance != null)
 				DebugMetrics.LATE_UPDATE.AddSlice(__instance.GetType().FullName, __state.
 					ElapsedTicks);
-		}
-	}
-
-	/// <summary>
-	/// Applied to Sensors to log sensor update metrics if enabled.
-	/// </summary>
-	[HarmonyPatch(typeof(Sensors), nameof(Sensors.UpdateSensors))]
-	public static class Sensors_UpdateSensors_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
-
-		/// <summary>
-		/// Applied before UpdateSensors runs.
-		/// </summary>
-		[HarmonyPriority(Priority.High)]
-		internal static void Prefix(ref Stopwatch __state) {
-			__state = Stopwatch.StartNew();
-		}
-
-		/// <summary>
-		/// Applied after UpdateSensors runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static void Postfix(Stopwatch __state) {
-			DebugMetrics.SENSORS.Log(__state.ElapsedTicks);
 		}
 	}
 

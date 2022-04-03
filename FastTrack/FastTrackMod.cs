@@ -31,6 +31,30 @@ namespace PeterHan.FastTrack {
 	/// Patches which will be applied via annotations for Fast Track.
 	/// </summary>
 	public sealed class FastTrackMod : KMod.UserMod2 {
+		// Global, Game, World
+		// Game#LateUpdate is ~50ms/1000ms
+		// Game#Update is ~300ms
+		// Global#Update is ~100ms
+		// World#LateUpdate is ~100ms
+		// Global#LateUpdate is ~30ms
+		// Pathfinding#UpdateNavGrids is <20ms
+		// StatusItemRenderer#RenderEveryTick could use some work but is only ~10ms
+		//  (need to excise GetComponent calls which is a massive transpiler)
+		// ElectricalUtilityNetwork#Update is ~10ms
+		// KBatchedAnimUpdater#LateUpdate is ~50ms
+		// AnimEventManager#Update is 20ms but not much can be done
+		// KBatchedAnimUpdater#UpdateRegisteredAnims is 40ms
+		// ConduitFlow.Sim200ms is <10ms
+		// ChoreConsumer.FindNextChore is <10ms
+		// None of the RenderImage methods are more than 1ms
+#if DEBUG
+		[PLibMethod(RunAt.AfterModsLoad)]
+		internal static void Profile(Harmony harmony) {
+			harmony.Profile(typeof(KAnimBatchManager), nameof(KAnimBatchManager.UpdateDirty));
+			harmony.Profile(typeof(KAnimBatchManager), nameof(KAnimBatchManager.UpdateActiveArea));
+		}
+#endif
+
 		/// <summary>
 		/// The maximum time that any of the blocking joins will wait, in real time ms.
 		/// </summary>
@@ -58,6 +82,8 @@ namespace PeterHan.FastTrack {
 				SensorPatches.SensorPatches.Init();
 				SensorPatches.SensorPatches.MingleCellSensor_Update.Init();
 			}
+			if (options.AnimOpts)
+				VisualPatches.KAnimLoopOptimizer.CreateInstance();
 		}
 
 		/// <summary>
@@ -214,9 +240,9 @@ namespace PeterHan.FastTrack {
 				PRegistry.PutData("Bugs.StackedLights", true);
 			PRegistry.PutData("Bugs.AnimFree", true);
 			// This patch is Windows only apparently
-			var target = typeof(Global).GetMethodSafe("TestDataLocations", false);
+			var target = typeof(Global).GetMethodSafe(nameof(Global.TestDataLocations), false);
 			if (options.MiscOpts && target != null && typeof(Global).GetFieldSafe(
-					"saveFolderTestResult", true) != null) {
+					nameof(Global.saveFolderTestResult), true) != null) {
 				harmony.Patch(target, prefix: new HarmonyMethod(typeof(FastTrackMod),
 					nameof(RemoveTestDataLocations)));
 #if DEBUG
@@ -224,6 +250,17 @@ namespace PeterHan.FastTrack {
 #endif
 			} else
 				PUtil.LogDebug("Skipping TestDataLocations patch");
+			// Another potentially Windows only patch
+			target = typeof(Game).Assembly.GetType(nameof(InitializeCheck), false)?.
+				GetMethodSafe(nameof(InitializeCheck.CheckForSavePathIssue), false);
+			if (options.MiscOpts && target != null) {
+				harmony.Patch(target, prefix: new HarmonyMethod(typeof(FastTrackMod),
+					nameof(SkipInitCheck)));
+#if DEBUG
+				PUtil.LogDebug("Patched InitializeCheck.Awake");
+#endif
+			} else
+				PUtil.LogDebug("Skipping InitializeCheck patch");
 			GameRunning = false;
 		}
 
@@ -233,6 +270,13 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		internal static bool RemoveTestDataLocations(ref string ___saveFolderTestResult) {
 			___saveFolderTestResult = "both";
+			return false;
+		}
+
+		/// <summary>
+		/// Skip a time-consuming file write test on load.
+		/// </summary>
+		internal static bool SkipInitCheck() {
 			return false;
 		}
 

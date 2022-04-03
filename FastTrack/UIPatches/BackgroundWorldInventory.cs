@@ -234,21 +234,6 @@ namespace PeterHan.FastTrack.UIPatches {
 	}
 
 	/// <summary>
-	/// Applied to Pathfinding to ensure that each world inventory is done calculating.
-	/// </summary>
-	[HarmonyPatch(typeof(Pathfinding), nameof(Pathfinding.RenderEveryTick))]
-	public static class Pathfinding_RenderEveryTick_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.ParallelInventory;
-
-		/// <summary>
-		/// Applied before RenderEveryTick runs.
-		/// </summary>
-		internal static void Prefix() {
-			BackgroundInventoryUpdater.Instance?.EndUpdateAll();
-		}
-	}
-
-	/// <summary>
 	/// Applied to WorldInventory to never keep track of pickupables for the Pickupable,
 	/// HasChores or PedestalDisplayable tags which match every chunk on the asteroid. Also
 	/// removes many wasteful GetComponent calls.
@@ -260,8 +245,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before OnAddedFetchable runs.
 		/// </summary>
-		internal static bool Prefix(WorldInventory __instance, object data,
-				InventoryDict ___Inventory) {
+		internal static bool Prefix(WorldInventory __instance, object data) {
 			var gameObject = (UnityEngine.GameObject)data;
 			var pickupable = gameObject.GetComponent<Pickupable>();
 			int cell = pickupable.cachedCell, id;
@@ -271,7 +255,8 @@ namespace PeterHan.FastTrack.UIPatches {
 					gameObject.GetComponent<Navigator>() == null) {
 				var kpid = pickupable.KPrefabID;
 				var prefabTag = kpid.PrefabTag;
-				if (!___Inventory.ContainsKey(prefabTag)) {
+				var inventory = __instance.Inventory;
+				if (!inventory.ContainsKey(prefabTag)) {
 					var category = DiscoveredResources.GetCategoryForEntity(kpid);
 					if (!category.IsValid)
 						PUtil.LogWarning(pickupable.name +
@@ -280,8 +265,8 @@ namespace PeterHan.FastTrack.UIPatches {
 				}
 				foreach (var itemTag in kpid.Tags)
 					if (BackgroundWorldInventory.IsAcceptable(itemTag)) {
-						if (!___Inventory.TryGetValue(itemTag, out HashSet<Pickupable> entry))
-							___Inventory[itemTag] = entry = new HashSet<Pickupable>();
+						if (!inventory.TryGetValue(itemTag, out HashSet<Pickupable> entry))
+							inventory[itemTag] = entry = new HashSet<Pickupable>();
 						entry.Add(pickupable);
 					}
 			}
@@ -315,11 +300,11 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before Update runs.
 		/// </summary>
-		internal static bool Prefix(WorldInventory __instance, ref bool ___hasValidCount) {
+		internal static bool Prefix(WorldInventory __instance) {
 			var bwi = __instance.GetComponent<BackgroundWorldInventory>();
 			// Only need to update the pinned resources panel
 			if (bwi != null)
-				bwi.CheckRefresh(ref ___hasValidCount);
+				bwi.CheckRefresh(ref __instance.hasValidCount);
 			return bwi == null;
 		}
 	}
