@@ -221,10 +221,12 @@ namespace PeterHan.FastTrack {
 			/// <summary>
 			/// Prints the errors that occurred during execution and clears the errors.
 			/// </summary>
-			internal void PrintExceptions() {
+			internal bool PrintExceptions() {
+				bool hasCrash = errors.Count > 0;
 				foreach (var error in errors)
-					Debug.LogException(error);
+					DebugUtil.LogException(Instance, error.Message, error);
 				errors.Clear();
+				return hasCrash;
 			}
 
 			/// <summary>

@@ -195,19 +195,12 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// Starts a Duplicant and rover brain update cycle.
 		/// </summary>
 		internal void StartBrainCollect() {
-			var fm = Game.Instance.fetchManager;
-			var inst = AsyncJobManager.Instance;
 			int n = updatingPickups.Count;
 			if (n > 0) {
 				PUtil.LogWarning("{0:D} pickup collection jobs did not finish in time!".F(n));
 				Cleanup();
 			}
 			brainsToUpdate.Clear();
-			if (fm != null && inst != null) {
-				foreach (var pair in fm.prefabIdToFetchables)
-					byId.Add(pair.Value);
-				inst.Run(new UpdateOffsetTablesWork(this));
-			}
 		}
 
 		/// <summary>
@@ -215,10 +208,14 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// kanim updates (other RenderEveryTicks apparently can update pickupables!)
 		/// </summary>
 		internal void StartBrainUpdate() {
+			var fm = Game.Instance.fetchManager;
 			var inst = AsyncJobManager.Instance;
-			if (inst != null) {
+			if (inst != null && fm != null) {
 				if (updatingPickups.Count > 0) {
 					onFetchComplete.Reset();
+					foreach (var pair in fm.prefabIdToFetchables)
+						byId.Add(pair.Value);
+					inst.Run(new UpdateOffsetTablesWork(this));
 					foreach (var task in updatingPickups)
 						inst.Run(task);
 				}
@@ -259,17 +256,11 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// </summary>
 		/// <param name="fetchables">The items whose tables need updating.</param>
 		private void UpdateOffsetTables(List<FetchManager.Fetchable> fetchables) {
-			int cell;
-			OffsetTracker tracker;
 			// Fetching the count over and over again is required here in the uncommon case
 			// of a fetchable being removed so late in the frame
 			for (int i = 0; i < fetchables.Count; i++) {
 				var pickupable = fetchables[i].pickupable;
-				if (pickupable != null && (tracker = pickupable.offsetTracker) != null &&
-						(cell = pickupable.cachedCell) != tracker.previousCell) {
-					tracker.UpdateOffsets(cell);
-					needOffsetUpdate.Enqueue(pickupable);
-				}
+				pickupable.GetOffsets(pickupable.cachedCell);
 			}
 		}
 
