@@ -139,7 +139,7 @@ namespace PeterHan.FastTrack {
 			if (options.AsyncPathProbe)
 				PathPatches.PathProbeJobManager.DestroyInstance();
 			GamePatches.AchievementPatches.DestroyInstance();
-			PathPatches.DupeBrainGroupUpdater.DestroyInstance();
+			PathPatches.AsyncBrainGroupUpdater.DestroyInstance();
 			AsyncJobManager.DestroyInstance();
 			GameRunning = false;
 		}

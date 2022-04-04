@@ -23,7 +23,7 @@ using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
 
-using BrainGroup = BrainScheduler.BrainGroup;
+using BrainPair = System.Collections.Generic.KeyValuePair<Brain, Navigator>;
 using FetchablesByPrefabId = FetchManager.FetchablesByPrefabId;
 using Pickup = FetchManager.Pickup;
 
@@ -32,19 +32,18 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// Wraps the Duplicant brain group with a singleton that allows smart and threaded updates
 	/// to pathing and sensors.
 	/// </summary>
-	public sealed class DupeBrainGroupUpdater : IDisposable {
+	public sealed class AsyncBrainGroupUpdater : IDisposable {
 		/// <summary>
 		/// The singleton (if any) instance of this class.
 		/// </summary>
-		public static DupeBrainGroupUpdater Instance { get; private set; }
+		public static AsyncBrainGroupUpdater Instance { get; private set; }
 
 		/// <summary>
 		/// Creates the singleton instance.
 		/// </summary>
-		/// <param name="brainGroup">The Duplicant brain group.</param>
-		internal static void CreateInstance(BrainGroup brainGroup) {
+		internal static void CreateInstance() {
 			Instance?.Dispose();
-			Instance = new DupeBrainGroupUpdater(brainGroup);
+			Instance = new AsyncBrainGroupUpdater();
 		}
 
 		/// <summary>
@@ -56,14 +55,14 @@ namespace PeterHan.FastTrack.PathPatches {
 		}
 
 		/// <summary>
+		/// The brains to update asynchronously.
+		/// </summary>
+		private readonly IList<BrainPair> brainsToUpdate;
+
+		/// <summary>
 		/// The list of fetchables collected by prefab ID.
 		/// </summary>
 		private readonly IList<FetchablesByPrefabId> byId;
-
-		/// <summary>
-		/// The current DupeBrainGroup used for updates.
-		/// </summary>
-		internal readonly BrainGroup dupeBrainGroup;
 
 		/// <summary>
 		/// The list of destinations (pickupables, workables, etc) that need offset table
@@ -81,13 +80,36 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// </summary>
 		private readonly IList<CompilePickupsWork> updatingPickups;
 
-		private DupeBrainGroupUpdater(BrainGroup dupeBrainGroup) {
+		private AsyncBrainGroupUpdater() {
+			brainsToUpdate = new List<BrainPair>(32);
 			byId = new List<FetchablesByPrefabId>(64);
-			this.dupeBrainGroup = dupeBrainGroup ?? throw new ArgumentNullException(nameof(
-				dupeBrainGroup));
 			needOffsetUpdate = new ConcurrentQueue<Workable>();
 			onFetchComplete = new AutoResetEvent(false);
 			updatingPickups = new List<CompilePickupsWork>(8);
+		}
+
+		/// <summary>
+		/// Adds a brain to update asynchronously.
+		/// </summary>
+		/// <param name="brain">The rover brain to update.</param>
+		internal void AddBrain(CreatureBrain brain) {
+			var nav = brain.GetComponent<Navigator>();
+			if (nav != null)
+				// What PathProberSensor did
+				nav.UpdateProbe(false);
+			brainsToUpdate.Add(new BrainPair(brain, nav));
+		}
+
+		/// <summary>
+		/// Adds a brain to update asynchronously.
+		/// </summary>
+		/// <param name="brain">The Duplicant brain to update.</param>
+		internal void AddBrain(MinionBrain brain) {
+			var nav = brain.Navigator;
+			if (nav != null)
+				// What PathProberSensor did
+				nav.UpdateProbe(false);
+			brainsToUpdate.Add(new BrainPair(brain, nav));
 		}
 
 		/// <summary>
@@ -102,13 +124,28 @@ namespace PeterHan.FastTrack.PathPatches {
 		public void Dispose() {
 			FinishFetches();
 			Cleanup();
+			brainsToUpdate.Clear();
 			onFetchComplete.Dispose();
 			byId.Clear();
 			updatingPickups.Clear();
 		}
 
 		/// <summary>
-		/// Ends a Duplicant brain update cycle.
+		/// Ends collection of Duplicant and rover brains.
+		/// </summary>
+		internal void EndBrainCollect() {
+			var fm = Game.Instance.fetchManager;
+			updatingPickups.Clear();
+			if (fm != null) {
+				int n = fm.prefabIdToFetchables.Count;
+				foreach (var brain in brainsToUpdate)
+					updatingPickups.Add(new CompilePickupsWork(this, brain.Key, brain.Value,
+						n));
+			}
+		}
+
+		/// <summary>
+		/// Ends a Duplicant and rover brain update cycle.
 		/// </summary>
 		internal void EndBrainUpdate() {
 			var fm = Game.Instance.fetchManager;
@@ -155,36 +192,29 @@ namespace PeterHan.FastTrack.PathPatches {
 		}
 
 		/// <summary>
-		/// Populates the list of Duplicant brains to be updated.
+		/// Starts a Duplicant and rover brain update cycle.
 		/// </summary>
-		/// <param name="toUpdate">The location where the brains to update will be populated.</param>
-		/// <returns>The number of brains that will be updated.</returns>
-		internal int GetBrainsToUpdate(ICollection<MinionBrain> toUpdate) {
-			var brains = dupeBrainGroup.brains;
-			int count = dupeBrainGroup.InitialProbeCount(), n = brains.Count, index =
-				dupeBrainGroup.nextUpdateBrain;
-			if (toUpdate == null)
-				throw new ArgumentNullException(nameof(toUpdate));
-			toUpdate.Clear();
+		internal void StartBrainCollect() {
+			var fm = Game.Instance.fetchManager;
+			var inst = AsyncJobManager.Instance;
+			int n = updatingPickups.Count;
 			if (n > 0) {
-				index %= n;
-				while (count-- > 0) {
-					var brain = brains[index];
-					if (brain.IsRunning() && brain is MinionBrain mb && mb != null)
-						// Always should be true, this is a dupe brain group
-						toUpdate.Add(mb);
-					index = (index + 1) % n;
-				}
-				dupeBrainGroup.nextUpdateBrain = index;
+				PUtil.LogWarning("{0:D} pickup collection jobs did not finish in time!".F(n));
+				Cleanup();
 			}
-			return toUpdate.Count;
+			brainsToUpdate.Clear();
+			if (fm != null && inst != null) {
+				foreach (var pair in fm.prefabIdToFetchables)
+					byId.Add(pair.Value);
+				inst.Run(new UpdateOffsetTablesWork(this));
+			}
 		}
 
 		/// <summary>
 		/// Releases the task to collect fetch errands, which should only be run during
 		/// kanim updates (other RenderEveryTicks apparently can update pickupables!)
 		/// </summary>
-		internal void ReleaseFetches() {
+		internal void StartBrainUpdate() {
 			var inst = AsyncJobManager.Instance;
 			if (inst != null) {
 				if (updatingPickups.Count > 0) {
@@ -195,44 +225,6 @@ namespace PeterHan.FastTrack.PathPatches {
 				// This will not start until all the updatingPickups are completed
 				inst.Run(new FinishFetchesWork(this));
 			}
-		}
-
-		/// <summary>
-		/// Starts a Duplicant brain update cycle.
-		/// </summary>
-		/// <param name="asyncPathProbe">true to start path probes asynchronously, or false
-		/// to run them "synchronously" in the sensor methods.</param>
-		internal void StartBrainUpdate(bool asyncPathProbe) {
-			var update = ListPool<MinionBrain, DupeBrainGroupUpdater>.Allocate();
-			var fm = Game.Instance.fetchManager;
-			var inst = AsyncJobManager.Instance;
-			int n = updatingPickups.Count;
-			if (asyncPathProbe)
-				dupeBrainGroup.AsyncPathProbe();
-			if (n > 0) {
-				PUtil.LogWarning("{0:D} pickup collection jobs did not finish in time!".F(n));
-				Cleanup();
-			}
-			updatingPickups.Clear();
-			if (GetBrainsToUpdate(update) > 0 && fm != null) {
-				// Brains.... Brains!!!!
-				n = fm.prefabIdToFetchables.Count;
-				foreach (var brain in update) {
-					var nav = brain.GetComponent<Navigator>();
-					if (nav != null) {
-						// What PathProberSensor did
-						nav.UpdateProbe(false);
-						if (inst != null)
-							updatingPickups.Add(new CompilePickupsWork(this, brain, nav, n));
-					}
-				}
-				if (updatingPickups.Count > 0 && inst != null) {
-					foreach (var pair in fm.prefabIdToFetchables)
-						byId.Add(pair.Value);
-					inst.Run(new UpdateOffsetTablesWork(this));
-				}
-			}
-			update.Recycle();
 		}
 
 		/// <summary>
@@ -293,7 +285,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			/// <summary>
 			/// The brain to update when this task is done.
 			/// </summary>
-			internal readonly MinionBrain brain;
+			internal readonly Brain brain;
 
 			/// <summary>
 			/// The location where the compiled fetch errands are stored.
@@ -313,14 +305,14 @@ namespace PeterHan.FastTrack.PathPatches {
 			/// <summary>
 			/// The parent object to notify when this completes.
 			/// </summary>
-			private readonly DupeBrainGroupUpdater updater;
+			private readonly AsyncBrainGroupUpdater updater;
 
 			/// <summary>
 			/// The worker that is trying to pick up items.
 			/// </summary>
 			private readonly GameObject worker;
 
-			internal CompilePickupsWork(DupeBrainGroupUpdater updater, MinionBrain brain,
+			internal CompilePickupsWork(AsyncBrainGroupUpdater updater, Brain brain,
 					Navigator navigator, int n) {
 				this.brain = brain;
 				Count = n;
@@ -375,9 +367,9 @@ namespace PeterHan.FastTrack.PathPatches {
 			/// <summary>
 			/// The parent object to notify when this completes.
 			/// </summary>
-			private readonly DupeBrainGroupUpdater updater;
+			private readonly AsyncBrainGroupUpdater updater;
 
-			internal FinishFetchesWork(DupeBrainGroupUpdater updater) {
+			internal FinishFetchesWork(AsyncBrainGroupUpdater updater) {
 				Count = updater.updatingPickups.Count;
 				this.updater = updater;
 			}
@@ -417,9 +409,9 @@ namespace PeterHan.FastTrack.PathPatches {
 			/// <summary>
 			/// The parent object to notify when this completes.
 			/// </summary>
-			private readonly DupeBrainGroupUpdater updater;
+			private readonly AsyncBrainGroupUpdater updater;
 
-			internal UpdateOffsetTablesWork(DupeBrainGroupUpdater updater) {
+			internal UpdateOffsetTablesWork(AsyncBrainGroupUpdater updater) {
 				byId = updater.byId;
 				this.updater = updater;
 			}

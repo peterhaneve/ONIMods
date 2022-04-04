@@ -73,38 +73,63 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Applied after OnPrefabInit runs.
 		/// </summary>
-		internal static void Postfix(IList<BrainScheduler.BrainGroup> ___brainGroups) {
-			DupeBrainGroupUpdater.DestroyInstance();
-			foreach (var brainGroup in ___brainGroups)
-				if (brainGroup.GetType() == typeof(BrainScheduler.DupeBrainGroup)) {
-					DupeBrainGroupUpdater.CreateInstance(brainGroup);
+		internal static void Postfix() {
+			AsyncBrainGroupUpdater.CreateInstance();
 #if DEBUG
-					PUtil.LogDebug("Created DupeBrainGroupUpdater");
+			PUtil.LogDebug("Created AsyncBrainGroupUpdater");
 #endif
-					break;
-				}
 		}
 	}
 
 	/// <summary>
-	/// Applied to BrainScheduler.BrainGroup to only start up the sensors if the pickup
-	/// optimizations are being backgrounded.
+	/// Applied to BrainScheduler to gather brains to update.
 	/// </summary>
-	[HarmonyPatch(typeof(BrainScheduler.BrainGroup), nameof(BrainScheduler.BrainGroup.
-		RenderEveryTick))]
-	internal static class RenderEveryTick_Patch {
+	[HarmonyPatch(typeof(BrainScheduler), nameof(BrainScheduler.RenderEveryTick))]
+	internal static class BrainScheduler_RenderEveryTick_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
 
-		internal static bool Prefix(BrainScheduler.BrainGroup __instance,
-				bool isAsyncPathProbeEnabled) {
-			var inst = DupeBrainGroupUpdater.Instance;
-			bool update = true;
-			if (inst != null && __instance == inst.dupeBrainGroup) {
-				update = AsyncJobManager.Instance == null;
-				if (!update)
-					inst.StartBrainUpdate(isAsyncPathProbeEnabled);
+		internal static bool Prefix(BrainScheduler __instance) {
+			bool asyncProbe = __instance.isAsyncPathProbeEnabled;
+			var inst = AsyncBrainGroupUpdater.Instance;
+			if (!Game.IsQuitting() && !KMonoBehaviour.isLoadingScene && inst != null) {
+				inst.StartBrainCollect();
+				foreach (var brainGroup in __instance.brainGroups)
+					UpdateBrainGroup(inst, asyncProbe, brainGroup);
+				inst.EndBrainCollect();
 			}
-			return update;
+			return false;
+		}
+
+		/// <summary>
+		/// Updates a brain group.
+		/// </summary>
+		/// <param name="inst">The updater for asynchronous brains like Duplicants.</param>
+		/// <param name="asyncProbe">Whether to run path probes asynchronously.</param>
+		/// <param name="brainGroup">The brain group to update.</param>
+		private static void UpdateBrainGroup(AsyncBrainGroupUpdater inst, bool asyncProbe,
+				BrainScheduler.BrainGroup brainGroup) {
+			var brains = brainGroup.brains;
+			if (asyncProbe)
+				brainGroup.AsyncPathProbe();
+			int n = brains.Count;
+			if (n > 0) {
+				int index = brainGroup.nextUpdateBrain % n;
+				for (int i = brainGroup.InitialProbeCount(); i > 0; i--) {
+					var brain = brains[index];
+					if (brain.IsRunning()) {
+						// Add minion and rover brains to the brain scheduler
+						if (brain is MinionBrain mb)
+							inst.AddBrain(mb);
+						else if (brain is CreatureBrain cb && cb.species == GameTags.Robots.
+								Models.ScoutRover)
+							inst.AddBrain(cb);
+						else
+							brain.UpdateBrain();
+					}
+					index = (index + 1) % n;
+				}
+				brainGroup.nextUpdateBrain = index;
+			}
 		}
 	}
 }

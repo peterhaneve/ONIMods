@@ -604,6 +604,60 @@ namespace PeterHan.StockBugFix {
 	}
 
 	/// <summary>
+	/// Applied to SingleEntityReceptacle to fix the chore type away from the hardcoded
+	/// farm fetch to ranching supply (incubator) or regular supply (pedestal).
+	/// </summary>
+	[HarmonyPatch(typeof(SingleEntityReceptacle), "CreateFetchChore")]
+	public static class SingleEntityReceptacle_CreateFetchChore_Patch {
+		/// <summary>
+		/// Gets the appropriate chore type for a receptacle. Uses FarmFetch for farm tiles,
+		/// RanchingFetch for incubators, and Fetch for all others.
+		/// </summary>
+		/// <param name="types">The Database location to fetch the chore type.</param>
+		/// <param name="possibleTags">The tags that can be used for deposit.</param>
+		/// <returns>The appropriate chore type.</returns>
+		private static ChoreType GetChoreType(ChoreTypes types, IList<Tag> possibleTags) {
+			bool farm = false, ranch = false;
+			int n = possibleTags.Count;
+			for (int i = 0; i < n && !farm && !ranch; i++) {
+				var tag = possibleTags[i];
+				if (tag == GameTags.Egg)
+					ranch = true;
+				else if (tag == GameTags.CropSeed)
+					farm = true;
+			}
+			return ranch ? types.RanchingFetch : (farm ? types.FarmFetch : types.Fetch);
+		}
+
+		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+			var depositTags = typeof(SingleEntityReceptacle).GetFieldSafe(
+				"possibleDepositTagsList", false);
+			var farmFetch = typeof(ChoreTypes).GetFieldSafe(nameof(ChoreTypes.FarmFetch),
+				false);
+			var injection = typeof(SingleEntityReceptacle_CreateFetchChore_Patch).
+				GetMethodSafe(nameof(GetChoreType), true, typeof(ChoreTypes),
+				typeof(IList<Tag>));
+			if (depositTags != null && farmFetch != null && injection != null)
+				foreach (var instr in method) {
+					if (instr.opcode == OpCodes.Ldfld && instr.operand is FieldInfo fi &&
+							fi == farmFetch) {
+						// Push the deposit tags list
+						yield return new CodeInstruction(OpCodes.Ldarg_0);
+						yield return new CodeInstruction(OpCodes.Ldfld, depositTags);
+						instr.opcode = OpCodes.Call;
+						instr.operand = injection;
+					}
+					yield return instr;
+				}
+			else {
+				PUtil.LogWarning("Unable to patch SingleEntityReceptacle.CreateFetchChore!");
+				foreach (var instr in method)
+					yield return instr;
+			}
+		}
+	}
+
+	/// <summary>
 	/// Applied to SolidTransferArm to prevent offgassing of materials inside its
 	/// storage during transfer.
 	/// </summary>

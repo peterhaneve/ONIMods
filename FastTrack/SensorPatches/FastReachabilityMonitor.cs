@@ -60,9 +60,8 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// Frees the scene partitioner entry for this workable.
 		/// </summary>
 		private void DestroyPartitioner() {
-			var gsp = GameScenePartitioner.Instance;
-			if (partitionerEntry.IsValid() && gsp != null)
-				gsp.Free(ref partitionerEntry);
+			if (partitionerEntry.IsValid())
+				GameScenePartitioner.Instance.Free(ref partitionerEntry);
 		}
 
 		public override void OnCleanUp() {

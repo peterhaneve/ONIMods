@@ -22,8 +22,7 @@ using UnityEngine;
 
 namespace PeterHan.FastTrack {
 	/// <summary>
-	/// Applied to Game to start property texture updates after Sim data arrives and
-	/// fast Reachability updates before the sim cycle starts.
+	/// Applied to Game to start the second phase of conduit updates.
 	/// </summary>
 	[HarmonyPatch(typeof(Game), nameof(Game.LateUpdate))]
 	[HarmonyPriority(Priority.Low)]
@@ -53,9 +52,9 @@ namespace PeterHan.FastTrack {
 		internal static bool Prepare() {
 			var options = FastTrackOptions.Instance;
 			return options.ReduceTileUpdates || options.FastReachability || options.
-				PickupOpts || options.FlattenAverages || (!options.ConduitOpts &&
-				ConduitPatches.ConduitFlowVisualizerRenderer.Prepare()) || options.
-				ParallelInventory || options.AsyncPathProbe;
+				FlattenAverages || (!options.ConduitOpts && ConduitPatches.
+				ConduitFlowVisualizerRenderer.Prepare()) || options.ParallelInventory ||
+				options.AsyncPathProbe;
 		}
 
 		/// <summary>
@@ -117,11 +116,9 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		internal static void Prefix() {
 			if (Game.Instance != null) {
-				var options = FastTrackOptions.Instance;
-				if (options.ConduitOpts)
+				if (FastTrackOptions.Instance.ConduitOpts)
 					ConduitPatches.BackgroundConduitUpdater.StartUpdateAll();
-				if (options.ParallelInventory)
-					UIPatches.BackgroundInventoryUpdater.Instance?.StartUpdateAll();
+				UIPatches.BackgroundInventoryUpdater.Instance?.StartUpdateAll();
 			}
 		}
 	}
@@ -163,14 +160,14 @@ namespace PeterHan.FastTrack {
 		/// Applied before LateUpdate runs.
 		/// </summary>
 		internal static void Prefix() {
-			PathPatches.DupeBrainGroupUpdater.Instance?.ReleaseFetches();
+			PathPatches.AsyncBrainGroupUpdater.Instance?.StartBrainUpdate();
 		}
 
 		/// <summary>
 		/// Applied after LateUpdate runs.
 		/// </summary>
 		internal static void Postfix() {
-			PathPatches.DupeBrainGroupUpdater.Instance?.EndBrainUpdate();
+			PathPatches.AsyncBrainGroupUpdater.Instance?.EndBrainUpdate();
 		}
 	}
 }

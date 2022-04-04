@@ -245,9 +245,9 @@ namespace PeterHan.FastTrack.SensorPatches {
 		private void ProcessLoop() {
 			bool d;
 			do {
-				trigger.WaitOne(FastTrackMod.MAX_TIMEOUT);
+				bool hit = trigger.WaitOne(FastTrackMod.MAX_TIMEOUT);
 				d = destroyed;
-				if (!d)
+				if (!d && hit)
 					Process();
 			} while (!d);
 			// Clean up the object for real
@@ -292,7 +292,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 			if (n > 0) {
 				if (n > MIN_PROCESS)
 					// Run at least 1/16th of the outstanding
-					n = MIN_PROCESS + (n - MIN_PROCESS + 3) >> 4;
+					n = MIN_PROCESS + ((n - MIN_PROCESS + 3) >> 4);
 				while (n-- > 0) {
 					var smi = toDo.Dequeue();
 					if (smi.master != null)
