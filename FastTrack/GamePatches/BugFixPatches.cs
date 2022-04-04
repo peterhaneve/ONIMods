@@ -27,6 +27,66 @@ using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeI
 
 namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
+	/// Applied to Accumulators to fill the first value if the average has yet to be
+	/// calculated.
+	/// </summary>
+	[HarmonyPatch(typeof(Accumulators), nameof(Accumulators.Accumulate))]
+	public static class Accumulators_Accumulate_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.FlattenAverages;
+
+		/// <summary>
+		/// Applied before Accumulate runs.
+		/// </summary>
+		internal static bool Prefix(Accumulators __instance, HandleVector<int>.Handle handle,
+				float amount) {
+			var accumulated = __instance.accumulated;
+			var average = __instance.average;
+			float data = accumulated.GetData(handle);
+			accumulated.SetData(handle, data + amount);
+			// Prime the pump
+			if (float.IsNaN(average.GetData(handle)))
+				average.SetData(handle, amount);
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to Accumulators to preload an invalid value, for notifying the averaging
+	/// system that it needs initialization.
+	/// </summary>
+	[HarmonyPatch(typeof(Accumulators), nameof(Accumulators.Add))]
+	public static class Accumulators_Add_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.FlattenAverages;
+
+		/// <summary>
+		/// Applied before Add runs.
+		/// </summary>
+		internal static bool Prefix(Accumulators __instance, ref HandleVector<int>.
+				Handle __result) {
+			__result = __instance.accumulated.Allocate(0f);
+			__instance.average.Allocate(float.NaN);
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to Accumulators to substitute zero if no samples have been accumulated at all.
+	/// </summary>
+	[HarmonyPatch(typeof(Accumulators), nameof(Accumulators.GetAverageRate))]
+	public static class Accumulators_GetAverageRate_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.FlattenAverages;
+
+		/// <summary>
+		/// Applied after GetAverageRate runs.
+		/// </summary>
+		internal static void Postfix(ref float __result) {
+			float r = __result;
+			if (float.IsNaN(r) || float.IsInfinity(r))
+				__result = 0.0f;
+		}
+	}
+
+	/// <summary>
 	/// Applied to AnimEventManager to fix a bug where the anim indirection data list grows
 	/// without bound, consuming memory, causing GC pauses, and eventually crashing when it
 	/// overflows.
@@ -75,7 +135,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	[HarmonyPatch(typeof(ClusterManager), nameof(ClusterManager.WorldContainers),
 		MethodType.Getter)]
 	public static class ClusterManager_WorldContainers_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+		internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
 
 		/// <summary>
 		/// Transpiles the WorldContainers getter to remove the AsReadOnly call.

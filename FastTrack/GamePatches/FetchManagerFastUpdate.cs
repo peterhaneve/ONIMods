@@ -44,9 +44,10 @@ namespace PeterHan.FastTrack.GamePatches {
 				int cell = target.cachedCell;
 				if (target.CouldBePickedUpByMinion(worker_go)) {
 					// Look for cell cost, share costs across multiple queries to a cell
-					if (!pathCosts.TryGetValue(cell, out int cost))
-						pathCosts.Add(cell, cost = GetNavigationCost(worker_navigator,
-							target, cell));
+					if (!pathCosts.TryGetValue(cell, out int cost)) {
+						worker_navigator.GetNavigationCostNU(target, cell, out cost);
+						pathCosts.Add(cell, cost);
+					}
 					// Exclude unreachable items
 					if (cost >= 0) {
 						int hash = fetchable.tagBitsHash;
@@ -77,29 +78,6 @@ namespace PeterHan.FastTrack.GamePatches {
 			canBePickedUp.Recycle();
 			// Prevent the original method from running
 			return false;
-		}
-
-		/// <summary>
-		/// A non-mutating version of Navigator.GetNavigationCost that can be run on
-		/// background threads.
-		/// </summary>
-		/// <param name="navigator">The navigator to calculate.</param>
-		/// <param name="destination">The destination to find the cost.</param>
-		/// <param name="cell">The workable's current cell.</param>
-		/// <returns>The navigation cost to the destination.</returns>
-		internal static int GetNavigationCost(Navigator navigator, Workable destination,
-				int cell) {
-			CellOffset[] offsets = null;
-			var offsetTracker = destination.offsetTracker;
-			if (offsetTracker != null && (offsets = offsetTracker.offsets) == null) {
-#if DEBUG
-				PUtil.LogWarning("Updating Pickupable offsets!");
-#endif
-				offsetTracker.UpdateOffsets(cell);
-				offsets = offsetTracker.offsets;
-			}
-			return (offsets == null) ? navigator.GetNavigationCost(cell) : navigator.
-				GetNavigationCost(cell, offsets);
 		}
 
 		/// <summary>

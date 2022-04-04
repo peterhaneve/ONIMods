@@ -35,6 +35,10 @@ namespace PeterHan.FastTrack {
 		private const string PERF_MEDIUM = "\n\n<b>Performance Impact: <color=#FF8827>Medium</color></b>";
 		private const string PERF_HIGH = "\n\n<b>Performance Impact: <color=#FF3300>High</color></b>";
 
+		[Option("Flatten Averages", "Optimize Amounts and average calculations." + PERF_LOW, "Buildings")]
+		[JsonProperty]
+		public bool FlattenAverages { get; set; }
+
 		[Option("Logic Optimizations", "Optimizes some buildings to not trigger logic network updates every frame." + PERF_LOW, "Buildings")]
 		[JsonProperty]
 		public bool LogicUpdates { get; set; }
@@ -115,6 +119,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool MiscOpts { get; set; }
 
+		[Option("Reduce Allocations", "Reduces memory allocations in a variety of locations." + PERF_LOW, "Interface")]
+		[JsonProperty]
+		public bool AllocOpts { get; set; }
+
 		[Option("Background Inventory", "Compiles the item quantites in the Resources panel on a non-blocking thread." + PERF_MEDIUM, "Items")]
 		[JsonProperty]
 		public bool ParallelInventory { get; set; }
@@ -151,6 +159,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool InfoCardOpts { get; set; }
 
+		[Option("Instant Place Graphics", "Disables the animation which appears when placing\nerrands like Dig or Mop." + PERF_LOW, "Visual")]
+		[JsonProperty]
+		public bool NoPlacerEasing { get; set; }
+
 		[Option("No Notification Bounce", "Disables the bounce effect when new notifications appear." + PERF_MEDIUM, "Visual")]
 		[JsonProperty]
 		public bool NoBounce { get; set; }
@@ -184,6 +196,7 @@ namespace PeterHan.FastTrack {
 		public bool Metrics { get; set; }
 
 		public FastTrackOptions() {
+			AllocOpts = true;
 			AnimOpts = true;
 			AsyncPathProbe = true;
 			CachePaths = true;
@@ -194,12 +207,13 @@ namespace PeterHan.FastTrack {
 			DisableConduitAnimation = ConduitAnimationQuality.Reduced;
 			DisableLoadPreviews = false;
 			DisableSound = false;
-			DisableTutorial = TutorialMessageDisable.All;
+			DisableTutorial = TutorialMessageDisable.WarningsOnly;
 			FastAttributesMode = true;
 			FastRaycast = true;
 			FastReachability = true;
 			FastStructureTemperature = true;
 			FastUpdatePickups = false;
+			FlattenAverages = true;
 			InfoCardOpts = true;
 			LogicUpdates = true;
 			MeshRendererOptions = MeshRendererSettings.All;
@@ -208,6 +222,7 @@ namespace PeterHan.FastTrack {
 			MiscOpts = true;
 			NoBounce = true;
 			NoConversations = false;
+			NoPlacerEasing = false;
 			NoSplash = true;
 			NoTileDecor = false;
 			OptimizeDialogs = true;

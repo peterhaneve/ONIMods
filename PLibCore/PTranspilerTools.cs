@@ -302,10 +302,11 @@ namespace PeterHan.PLib.Core {
 				// Short form: constant
 				instruction.opcode = LOAD_INT[newValue + 1];
 				instruction.operand = null;
-			} else if (newValue >= byte.MinValue && newValue <= byte.MaxValue) {
-				// Short form: 0-255
+			} else if (newValue >= sbyte.MinValue && newValue <= sbyte.MaxValue) {
+				// Short form: -128 to 127 -- looks like Harmony has issues with emitting
+				// the operand as a Byte
 				instruction.opcode = OpCodes.Ldc_I4_S;
-				instruction.operand = (byte)newValue;
+				instruction.operand = newValue;
 			} else {
 				// Long form
 				instruction.opcode = OpCodes.Ldc_I4;

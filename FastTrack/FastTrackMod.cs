@@ -51,7 +51,8 @@ namespace PeterHan.FastTrack {
 		[PLibMethod(RunAt.AfterModsLoad)]
 		internal static void Profile(Harmony harmony) {
 			harmony.Profile(typeof(KAnimBatchManager), nameof(KAnimBatchManager.UpdateDirty));
-			harmony.Profile(typeof(KAnimBatchManager), nameof(KAnimBatchManager.UpdateActiveArea));
+			harmony.Profile(typeof(KBatchedAnimUpdater), nameof(KBatchedAnimUpdater.UpdateRegisteredAnims));
+			harmony.Profile(typeof(VisualPatches.KBatchedAnimController_UpdateAnim_Patch), "UpdateActive");
 		}
 #endif
 
@@ -135,6 +136,8 @@ namespace PeterHan.FastTrack {
 				SensorPatches.FastGroupProber.Cleanup();
 			if (options.PickupOpts)
 				GamePatches.SolidTransferArmUpdater.DestroyInstance();
+			if (options.AsyncPathProbe)
+				PathPatches.PathProbeJobManager.DestroyInstance();
 			GamePatches.AchievementPatches.DestroyInstance();
 			PathPatches.DupeBrainGroupUpdater.DestroyInstance();
 			AsyncJobManager.DestroyInstance();
@@ -149,7 +152,7 @@ namespace PeterHan.FastTrack {
 			if (FastTrackOptions.Instance.OptimizeDialogs) {
 				var thread = new Thread(LoadWorldGenInBackground) {
 					Name = "Load Worldgen Async", IsBackground = true,
-					Priority = System.Threading.ThreadPriority.BelowNormal
+					Priority = ThreadPriority.BelowNormal
 				};
 				Util.ApplyInvariantCultureToThread(thread);
 				thread.Start();
@@ -175,19 +178,19 @@ namespace PeterHan.FastTrack {
 			if (options.CachePaths)
 				PathPatches.PathCacher.Init();
 			// Slices updates to Duplicant sensors
+			if (options.AsyncPathProbe)
+				PathPatches.PathProbeJobManager.CreateInstance();
 			if (inst != null) {
 				var go = inst.gameObject;
 				go.AddOrGet<AsyncJobManager>();
-				if (options.AsyncPathProbe)
-					go.AddOrGet<PathPatches.PathProbeJobManager>();
 				if (options.ReduceSoundUpdates && !options.DisableSound)
 					go.AddOrGet<SoundUpdater>();
 				if (options.ParallelInventory)
 					UIPatches.BackgroundInventoryUpdater.CreateInstance();
-				if (options.MiscOpts) {
-					go.AddOrGet<GamePatches.SlicedRadiationGridUpdater>();
+				if (options.MiscOpts)
 					go.AddOrGet<GamePatches.AchievementPatches>();
-				}
+				if (options.RadiationOpts)
+					go.AddOrGet<GamePatches.SlicedRadiationGridUpdater>();
 				// Requires the AJM to work
 				if (options.PickupOpts)
 					GamePatches.SolidTransferArmUpdater.CreateInstance();

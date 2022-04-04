@@ -53,9 +53,9 @@ namespace PeterHan.FastTrack {
 		internal static bool Prepare() {
 			var options = FastTrackOptions.Instance;
 			return options.ReduceTileUpdates || options.FastReachability || options.
-				PickupOpts || options.MiscOpts || (!options.ConduitOpts &&
+				PickupOpts || options.FlattenAverages || (!options.ConduitOpts &&
 				ConduitPatches.ConduitFlowVisualizerRenderer.Prepare()) || options.
-				ParallelInventory;
+				ParallelInventory || options.AsyncPathProbe;
 		}
 
 		/// <summary>
@@ -69,8 +69,7 @@ namespace PeterHan.FastTrack {
 			if (__instance.liquidConduitSystem.IsDirty)
 				ConduitPatches.ConduitFlowVisualizerRenderer.ForceUpdate(__instance.
 					liquidFlowVisualizer);
-			if (FastTrackOptions.Instance.ParallelInventory)
-				UIPatches.BackgroundInventoryUpdater.Instance?.EndUpdateAll();
+			UIPatches.BackgroundInventoryUpdater.Instance?.EndUpdateAll();
 			// Updating the group prober can trigger reachability changes in the world
 			// inventory, so do not start it until after the BWI has finished
 			SensorPatches.FastGroupProber.Instance?.Update();
@@ -83,6 +82,7 @@ namespace PeterHan.FastTrack {
 		internal static void Postfix() {
 			VisualPatches.PropertyTextureUpdater.Instance?.StartUpdate();
 			GamePatches.AsyncAmountsUpdater.Instance?.Finish();
+			PathPatches.PathProbeJobManager.Instance?.EndJob();
 		}
 	}
 

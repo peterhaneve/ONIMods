@@ -204,7 +204,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	[HarmonyPatch(typeof(AmountInstance), nameof(AmountInstance.BatchUpdate))]
 	public static class AmountInstance_BatchUpdate_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+		internal static bool Prepare() => FastTrackOptions.Instance.FlattenAverages;
 
 		/// <summary>
 		/// Applied before BatchUpdate runs.

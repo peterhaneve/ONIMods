@@ -18,242 +18,35 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
 using System;
-using System.Collections.Generic;
-using KAnimBatchTextureCache = KAnimBatchGroup.KAnimBatchTextureCache;
+using System.Reflection.Emit;
+using UnityEngine;
+
+using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.VisualPatches {
 	/// <summary>
-	/// Applied to KAnimBatch to... actually clear the dirty flag when it updates.
-	/// Unfortunately most anims are marked dirty every frame anyways.
+	/// Applied to AnimEventHandler to shave off a bit of time on repeated component lookups.
 	/// </summary>
-	[HarmonyPatch(typeof(KAnimBatch), "ClearDirty")]
-	public static class KAnimBatch_ClearDirty_Patch {
-		internal static bool Prepare() => true/*!FastTrackOptions.Instance.AnimOpts*/;
-
-		/// <summary>
-		/// Applied after ClearDirty runs.
-		/// </summary>
-		internal static void Postfix(ref bool ___needsWrite) {
-			___needsWrite = false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to KAnimBatch to intelligently resize the arrays and avoid just marking the
-	/// whole thing dirty when something is deregistered.
-	/// </summary>
-	[HarmonyPatch(typeof(KAnimBatch), nameof(KAnimBatch.Deregister))]
-	public static class KAnimBatch_Deregister_Patch {
+	[HarmonyPatch(typeof(AnimEventHandler), nameof(AnimEventHandler.UpdateOffset))]
+	public static class AnimEventHandler_UpdateOffset_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.AnimOpts;
 
-		/// <summary>
-		/// Applied before Deregister runs.
+		//// <summary>
+		/// Applied before UpdateOffset runs.
 		/// </summary>
-		internal static bool Prefix(KAnimConverter.IAnimConverter controller,
-				KAnimBatch __instance) {
-			const int VERTICES = KBatchedAnimInstanceData.SIZE_IN_FLOATS;
-			if (!App.IsExiting) {
-				var controllers = __instance.controllers;
-				int index = controllers.IndexOf(controller);
-				if (index >= 0) {
-					var dirtySet = __instance.dirtySet;
-					var controllersToIndex = __instance.controllersToIdx;
-					// All the other anims above it need to be marked dirty
-					float[] data = __instance.dataTex.floats;
-					int end = Math.Max(0, __instance.currentOffset - VERTICES), n;
-					controller.SetBatch(null);
-					controllers.RemoveAt(index);
-					if (!controllersToIndex.Remove(controller))
-						PUtil.LogWarning("Deregistering " + controller.GetName() +
-							" but not found in the index table!");
-					var dirty = ListPool<int, KAnimBatch>.Allocate();
-					n = dirtySet.Count;
-					// Save every existing dirty index less than the deregistered one
-					for (int i = 0; i < n; i++) {
-						int dirtyIdx = dirtySet[i];
-						if (dirtyIdx < index)
-							dirty.Add(dirtyIdx);
-					}
-					dirtySet.Clear();
-					dirtySet.AddRange(dirty);
-					dirty.Recycle();
-					n = controllers.Count;
-					// Refresh the index mapping table and mark everything moved-down as dirty
-					for (int i = index; i < n; i++) {
-						controllersToIndex[controllers[i]] = i;
-						dirtySet.Add(i);
-					}
-					__instance.batchset.SetDirty();
-					__instance.needsWrite = true;
-					// Invalidate the data beyond the end
-					for (int i = 0; i < VERTICES; i++)
-						data[end + i] = -1f;
-					__instance.currentOffset = end;
-					// If this was the last item, destroy the texture
-					if (n <= 0) {
-						__instance.batchset.RemoveBatch(__instance);
-						__instance.DestroyTex();
-					}
-				} else
-					PUtil.LogWarning("Deregistering " + controller.GetName() +
-						" but it is not in this batch!");
-			}
+		internal static bool Prefix(AnimEventHandler __instance) {
+			var navigator = __instance.navigator;
+			var pivotSymbolPosition = __instance.controller.GetPivotSymbolPosition();
+			var offset = navigator.NavGrid.GetNavTypeData(navigator.CurrentNavType).
+				animControllerOffset;
+			var baseOffset = __instance.baseOffset;
+			var pos = __instance.transform.position;
+			// Is the minus on x a typo? (Or is the plus on y the typo?)
+			__instance.animCollider.offset = new Vector2(baseOffset.x + pivotSymbolPosition.x -
+				pos.x - offset.x, baseOffset.y + pivotSymbolPosition.y - pos.y + offset.y);
+			__instance.isDirty = Mathf.Max(0, __instance.isDirty - 1);
 			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to KAnimBatch to tame some data structure abuse when registering kanims.
-	/// </summary>
-	[HarmonyPatch(typeof(KAnimBatch), nameof(KAnimBatch.Register))]
-	public static class KAnimBatch_Register_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.AnimOpts;
-
-		/// <summary>
-		/// Applied before Register runs.
-		/// </summary>
-		internal static bool Prefix(KAnimConverter.IAnimConverter controller,
-				KAnimBatch __instance, ref bool __result) {
-			var batch = controller.GetBatch();
-			if (batch != __instance) {
-				var dirtySet = __instance.dirtySet;
-				var controllers = __instance.controllers;
-				var controllersToIndex = __instance.controllersToIdx;
-				// Create the texture if it is null
-				var tex = __instance.dataTex;
-				if (tex == null || tex.floats.Length < 1)
-					__instance.Init();
-				// If already present [how is this possible?], just mark it dirty
-				if (controllersToIndex.TryGetValue(controller, out int index)) {
-					if (!dirtySet.Contains(index))
-						dirtySet.Add(index);
-				} else {
-					int n = controllers.Count;
-					controllers.Add(controller);
-					dirtySet.Add(n);
-					controllersToIndex.Add(controller, n);
-					// Allocate additional spots in the texture
-					__instance.currentOffset += KBatchedAnimInstanceData.SIZE_IN_FLOATS;
-				}
-				__instance.batchset.SetDirty();
-				__instance.needsWrite = true;
-				if (batch != null)
-					batch.Deregister(controller);
-				controller.SetBatch(__instance);
-			} else {
-#if DEBUG
-				PUtil.LogDebug("Registered a controller to its existing batch!");
-#endif
-			}
-			__result = true;
-			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to KAnimBatch to optimize dirty management slightly.
-	/// </summary>
-	[HarmonyPatch(typeof(KAnimBatch), nameof(KAnimBatch.UpdateDirty))]
-	public static class KAnimBatch_UpdateDirtyFull_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.AnimOpts;
-
-		/// <summary>
-		/// Sets up the override texture if necessary.
-		/// </summary>
-		/// <param name="instance">The batch to override.</param>
-		/// <param name="overrideTex">The current override texture.</param>
-		/// <returns>The new override texture.</returns>
-		private static KAnimBatchTextureCache.Entry SetupOverride(KAnimBatch instance,
-				KAnimBatchTextureCache.Entry overrideTex) {
-			if (overrideTex == null) {
-				var bg = instance.group;
-				var properties = instance.matProperties;
-				overrideTex = bg.CreateTexture("SymbolOverrideInfoTex", KAnimBatchGroup.
-					GetBestTextureSize(bg.data.maxSymbolFrameInstancesPerbuild * bg.
-					maxGroupSize * SymbolOverrideInfoGpuData.FLOATS_PER_SYMBOL_OVERRIDE_INFO),
-					KAnimBatch.ShaderProperty_symbolOverrideInfoTex, KAnimBatch.
-					ShaderProperty_SYMBOL_OVERRIDE_INFO_TEXTURE_SIZE);
-				overrideTex.SetTextureAndSize(properties);
-				properties.SetFloat(KAnimBatch.ShaderProperty_SUPPORTS_SYMBOL_OVERRIDING, 1f);
-				instance.symbolOverrideInfoTex = overrideTex;
-			}
-			return overrideTex;
-		}
-
-		/// <summary>
-		/// Applied before UpdateDirty runs.
-		/// </summary>
-		internal static bool Prefix(ref int __result, KAnimBatch __instance) {
-			int writtenLastFrame = 0;
-			Metrics.DebugMetrics.LogCondition("batchDirty", __instance.needsWrite);
-			if (__instance.needsWrite) {
-				bool symbolDirty = false, overrideDirty = false;
-				var controllers = __instance.controllers;
-				var dirtySet = __instance.dirtySet;
-				// Create the texture if it is null
-				var tex = __instance.dataTex;
-				if (tex == null || tex.floats.Length == 0) {
-					__instance.Init();
-					tex = __instance.dataTex;
-				}
-				var overrideTex = __instance.symbolOverrideInfoTex;
-				foreach (int index in dirtySet) {
-					var converter = controllers[index];
-					if (converter is UnityEngine.Object obj && obj != null) {
-						// Update the textures
-						__instance.WriteBatchedAnimInstanceData(index, converter);
-						symbolDirty |= __instance.WriteSymbolInstanceData(index, converter);
-						if (converter.ApplySymbolOverrides()) {
-							overrideTex = SetupOverride(__instance, overrideTex);
-							overrideDirty |= __instance.WriteSymbolOverrideInfoTex(index,
-								converter);
-						}
-						writtenLastFrame++;
-					}
-				}
-				dirtySet.Clear();
-				__instance.needsWrite = false;
-				// Write any dirty textures
-				tex.LoadRawTextureData();
-				tex.Apply();
-				if (symbolDirty) {
-					var symbolTex = __instance.symbolInstanceTex;
-					symbolTex.LoadRawTextureData();
-					symbolTex.Apply();
-				}
-				if (overrideDirty) {
-					overrideTex.LoadRawTextureData();
-					overrideTex.Apply();
-				}
-				// Update those mesh renderers too
-				if (writtenLastFrame > 0 && FastTrackOptions.Instance.MeshRendererOptions !=
-						FastTrackOptions.MeshRendererSettings.None)
-					KAnimMeshRendererPatches.UpdateMaterialProperties(__instance);
-			}
-			__result = writtenLastFrame;
-			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to KAnimBatch to update the mesh renderer properties after the anim is updated.
-	/// </summary>
-	[HarmonyPatch(typeof(KAnimBatch), nameof(KAnimBatch.UpdateDirty))]
-	public static class KAnimBatch_UpdateDirtyLite_Patch {
-		internal static bool Prepare() {
-			var options = FastTrackOptions.Instance;
-			return options.MeshRendererOptions != FastTrackOptions.MeshRendererSettings.
-				None /* && !options.AnimOpts */;
-		}
-
-		/// <summary>
-		/// Applied after UpdateDirty runs.
-		/// </summary>
-		internal static void Postfix(int __result, KAnimBatch __instance) {
-			if (__result > 0)
-				KAnimMeshRendererPatches.UpdateMaterialProperties(__instance);
 		}
 	}
 
@@ -265,14 +58,42 @@ namespace PeterHan.FastTrack.VisualPatches {
 		internal static bool Prepare() => FastTrackOptions.Instance.AnimOpts;
 
 		/// <summary>
-		/// Applied after StartQueuedAnim runs.
+		/// Adjusts the play mode if the anim is trivial.
 		/// </summary>
-		internal static void Postfix(KAnimControllerBase __instance) {
-			var anim = __instance.curAnim;
+		internal static KAnim.PlayMode UpdateMode(KAnim.PlayMode mode,
+				KAnimControllerBase controller) {
+			var anim = controller.curAnim;
 			var inst = KAnimLoopOptimizer.Instance;
-			if (anim != null && __instance.mode != KAnim.PlayMode.Paused && inst != null &&
+			if (anim != null && mode == KAnim.PlayMode.Loop && inst != null &&
 					inst.IsIdleAnim(anim))
-				__instance.mode = KAnim.PlayMode.Paused;
+				// "Paused" would be even better, but some visual artifacts occur
+				mode = KAnim.PlayMode.Once;
+			return mode;
+		}
+
+		/// <summary>
+		/// Transpiles StartQueuedAnim to update the mode to Paused on trivial anims.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+			var target = typeof(KAnimControllerBase).GetFieldSafe(nameof(KAnimControllerBase.
+				mode), false);
+			var injection = typeof(KAnimControllerBase_StartQueuedAnim_Patch).GetMethodSafe(
+				nameof(UpdateMode), true, typeof(KAnim.PlayMode), typeof(KAnimControllerBase));
+			if (target == null || injection == null) {
+				PUtil.LogWarning("Unable to patch KAnimControllerBase.StartQueuedAnim");
+				foreach (var instr in instructions)
+					yield return instr;
+			} else
+				foreach (var instr in instructions) {
+					if (instr.Is(OpCodes.Stfld, target)) {
+						yield return new CodeInstruction(OpCodes.Ldarg_0);
+						yield return new CodeInstruction(OpCodes.Call, injection);
+#if DEBUG
+						PUtil.LogDebug("Patched KAnimControllerBase.StartQueuedAnim");
+#endif
+					}
+					yield return instr;
+				}
 		}
 	}
 
@@ -302,6 +123,134 @@ namespace PeterHan.FastTrack.VisualPatches {
 			if (changed && __instance.curBuild != null)
 				__instance.UpdateHidden();
 			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to KBatchedAnimController to remove some shockingly expensive asserts.
+	/// </summary>
+	[HarmonyPatch(typeof(KBatchedAnimController), nameof(KBatchedAnimController.SetBatchGroup))]
+	public static class KBatchedAnimController_SetBatchGroup_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.AnimOpts;
+
+		/// <summary>
+		/// Applied before SetBatchGroup runs.
+		/// </summary>
+		internal static bool Prefix(KBatchedAnimController __instance, KAnimFileData kafd) {
+			var id = __instance.batchGroupID;
+			if (id.IsValid)
+				PUtil.LogWarning("Batch group should only be set once!");
+			else if (kafd == null)
+				PUtil.LogWarning("No anim data for {0}!".F(__instance.name));
+			else if (id != kafd.batchTag) {
+				var bild = kafd.build;
+				var inst = KAnimBatchManager.Instance();
+				if (bild == null)
+					PUtil.LogWarning("No build for anim {0} on {1}!".F(kafd.name, __instance.
+						name));
+				else if (!(id = bild.batchTag).IsValid || id == KAnimBatchManager.NO_BATCH)
+					PUtil.LogWarning("Batch is not ready: " + __instance.name);
+				else if (inst != null) {
+					var bgd = KAnimBatchManager.instance.GetBatchGroupData(id);
+					id = bild.batchTag;
+					__instance.curBuild = bild;
+					__instance.batchGroupID = id;
+					__instance.symbolInstanceGpuData = new SymbolInstanceGpuData(bgd.
+						maxSymbolsPerBuild);
+					__instance.symbolOverrideInfoGpuData = new SymbolOverrideInfoGpuData(bgd.
+						symbolFrameInstances.Count);
+				}
+			}
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to KBatchedAnimController to update much less in anims that are off screen.
+	/// </summary>
+	[HarmonyPatch(typeof(KBatchedAnimController), nameof(KBatchedAnimController.UpdateAnim))]
+	public static class KBatchedAnimController_UpdateAnim_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.AnimOpts;
+
+		/// <summary>
+		/// Applied before UpdateAnim runs.
+		/// </summary>
+		internal static bool Prefix(KBatchedAnimController __instance, float dt) {
+			if (__instance.IsActive())
+				UpdateActive(__instance, dt);
+			return false;
+		}
+
+		/// <summary>
+		/// Updates an active batched anim controller.
+		/// </summary>
+		/// <param name="instance">The controller to update.</param>
+		/// <param name="dt">The time since the last update.</param>
+		private static void UpdateActive(KBatchedAnimController instance, float dt) {
+			Transform transform;
+			var batch = instance.batch;
+			var visType = instance.visibilityType;
+			bool visible = instance.IsVisible();
+			// Check if moved, do this even if offscreen as it may move the anim on screen
+			if (batch != null && (transform = instance.transform).hasChanged) {
+				var lastChunk = instance.lastChunkXY;
+				Vector3 pos = transform.position, posWithOffset = pos + instance.Offset;
+				float z = pos.z;
+				Vector2I cellXY;
+				bool always = visType == KAnimControllerBase.VisibilityType.Always;
+				transform.hasChanged = false;
+				// If this is the only anim in the batch, and the Z coordinate changed,
+				// override the Z in the batch
+				if (batch != null && batch.group.maxGroupSize == 1 && instance.lastPos.z != z)
+					batch.OverrideZ(z);
+				instance.lastPos = posWithOffset;
+				// This is basically GetCellXY() with less accesses to __instance.transform
+				if (Grid.CellSizeInMeters == 0.0f)
+					// Handle out-of-game
+					cellXY = new Vector2I((int)posWithOffset.x, (int)posWithOffset.y);
+				else
+					cellXY = Grid.PosToXY(posWithOffset);
+				if (!always && lastChunk != KBatchedAnimUpdater.INVALID_CHUNK_ID &&
+						KAnimBatchManager.CellXYToChunkXY(cellXY) != lastChunk) {
+					// Re-register in a different batch
+					instance.DeRegister();
+					instance.Register();
+				} else if (visible || always)
+					// Only set dirty if it is on-screen now - changing visible sets dirty
+					// If it moved into a different chunk, Register sets dirty
+					instance.SetDirty();
+			}
+			// If it has a batch, and is active
+			if (instance.batchGroupID != KAnimBatchManager.NO_BATCH) {
+				var anim = instance.curAnim;
+				var mode = instance.mode;
+				float t = instance.elapsedTime, nt = t + dt * instance.playSpeed;
+				bool force = instance.forceRebuild, stopped = instance.stopped;
+				// Suspend updates if: not currently suspended, not force update, and one
+				// of (paused, stopped, no anim, one time and finished with no more to play)
+				if (!instance.suspendUpdates && !force && (mode == KAnim.PlayMode.Paused ||
+						stopped || anim == null || (mode == KAnim.PlayMode.Once && (t > anim.
+						totalTime || anim.totalTime <= 0f) && instance.animQueue.Count == 0)))
+					instance.SuspendUpdates(true);
+				if (visible || force) {
+					var aem = instance.aem;
+					var handle = instance.eventManagerHandle;
+					instance.curAnimFrameIdx = instance.GetFrameIdx(t, true);
+					// Trigger anim event manager if time advanced more than 0.01s
+					if (handle.IsValid() && aem != null) {
+						float elapsedTime = aem.GetElapsedTime(handle);
+						if (Math.Abs(t - elapsedTime) > 0.01f)
+							aem.SetElapsedTime(handle, t);
+					}
+					instance.UpdateFrame(t);
+					if (!stopped && mode != KAnim.PlayMode.Paused)
+						instance.SetElapsedTime(nt);
+					instance.forceRebuild = false;
+				} else if (visType == KAnimControllerBase.VisibilityType.OffscreenUpdate &&
+						!stopped && mode != KAnim.PlayMode.Paused)
+					// If invisible, only advance if offscreen update is enabled
+					instance.SetElapsedTime(nt);
+			}
 		}
 	}
 }

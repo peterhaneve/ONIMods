@@ -78,6 +78,53 @@ namespace PeterHan.FastTrack.VisualPatches {
 	}
 
 	/// <summary>
+	/// Applied to CancellableDig to instantly remove the placer.
+	/// </summary>
+	[HarmonyPatch(typeof(CancellableDig), nameof(CancellableDig.OnCancel))]
+	public static class CancellableDig_OnCancel_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.NoPlacerEasing;
+
+		/// <summary>
+		/// Applied before OnCancel runs.
+		/// </summary>
+		internal static bool Prefix(CancellableDig __instance) {
+			if (__instance != null)
+				__instance.DeleteObject();
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to EasingAnimations to disable the allocations when it spawns.
+	/// </summary>
+	[HarmonyPatch(typeof(EasingAnimations), nameof(EasingAnimations.Initialize))]
+	public static class EasingAnimations_Initialize_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.NoPlacerEasing;
+
+		/// <summary>
+		/// Applied before Initialize runs.
+		/// </summary>
+		internal static bool Prefix() {
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to EasingAnimations to prevent any animation from being played.
+	/// </summary>
+	[HarmonyPatch(typeof(EasingAnimations), nameof(EasingAnimations.PlayAnimation))]
+	public static class EasingAnimations_PlayAnimation_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.NoPlacerEasing;
+
+		/// <summary>
+		/// Applied before PlayAnimation runs.
+		/// </summary>
+		internal static bool Prefix(EasingAnimations __instance) {
+			return false;
+		}
+	}
+
+	/// <summary>
 	/// Applied to PopFXManager to hush the torrent of popups at the start of the game.
 	/// </summary>
 	[HarmonyPatch]

@@ -119,9 +119,10 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// Applied before Refresh runs.
 		/// </summary>
 		internal static void Prefix(KAnimGraphTileVisualizer __instance) {
-			if (__instance != null)
-				UpdateGraphIfEntombed.CheckVisible(__instance.
-					GetComponent<UpdateGraphIfEntombed>());
+			UpdateGraphIfEntombed updater;
+			if (__instance != null && (updater = __instance.
+					GetComponent<UpdateGraphIfEntombed>()) != null)
+				updater.CheckVisible();
 		}
 	}
 
@@ -197,29 +198,6 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	[SkipSaveFileSerialization]
 	public sealed class UpdateGraphIfEntombed : KMonoBehaviour {
 		/// <summary>
-		/// Checks if a building is in a visible tile.
-		/// </summary>
-		/// <param name="component">The component to check.</param>
-		internal static void CheckVisible(UpdateGraphIfEntombed component) {
-			if (component != null) {
-				var kbac = component.controller;
-				bool show = Grid.PosToCell(component.transform.position).IsVisibleCell() ||
-					component.overlayVisible;
-				if (kbac.enabled != show)
-					kbac.enabled = show;
-			}
-		}
-
-		/// <summary>
-		/// Fired when a solid changes.
-		/// </summary>
-		/// <param name="item">The graph that was triggered.</param>
-		private static void OnSolidChanged(object item) {
-			if (item is UpdateGraphIfEntombed component)
-				CheckVisible(component);
-		}
-
-		/// <summary>
 		/// The solid change entry to trigger when the conduit is put inside a solid tile.
 		/// </summary>
 		private HandleVector<int>.Handle partitionerEntry;
@@ -248,17 +226,33 @@ namespace PeterHan.FastTrack.ConduitPatches {
 			partitionerEntry = HandleVector<int>.InvalidHandle;
 		}
 
+		/// <summary>
+		/// Checks if this building is in a visible tile.
+		/// </summary>
+		internal void CheckVisible() {
+			bool show = overlayVisible || Grid.PosToCell(transform.position).IsVisibleCell();
+			if (controller.enabled != show)
+				controller.enabled = show;
+		}
+
 		public override void OnCleanUp() {
 			if (partitionerEntry.IsValid())
 				GameScenePartitioner.Instance.Free(ref partitionerEntry);
 			base.OnCleanUp();
 		}
 
+		/// <summary>
+		/// Fired when a solid changes.
+		/// </summary>
+		private void OnSolidChanged(object _) {
+			CheckVisible();
+		}
+
 		public override void OnSpawn() {
 			var gsp = GameScenePartitioner.Instance;
 			base.OnSpawn();
 			if (gsp != null)
-				partitionerEntry = gsp.Add(nameof(UpdateGraphIfEntombed), controller, Grid.
+				partitionerEntry = gsp.Add(nameof(UpdateGraphIfEntombed), this, Grid.
 					PosToCell(transform.position), gsp.solidChangedLayer, OnSolidChanged);
 		}
 
@@ -269,7 +263,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// overlay, or false otherwise.</param>
 		internal void UpdateOverlay(bool visible) {
 			overlayVisible = visible;
-			CheckVisible(this);
+			CheckVisible();
 		}
 	}
 

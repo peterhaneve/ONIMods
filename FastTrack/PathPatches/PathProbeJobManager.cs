@@ -25,11 +25,27 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// <summary>
 	/// Manages async path probe jobs that run while LateUpdate is processing.
 	/// </summary>
-	public sealed class PathProbeJobManager : KMonoBehaviour {
+	public sealed class PathProbeJobManager : IDisposable {
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
 		internal static PathProbeJobManager Instance { get; private set; }
+
+		/// <summary>
+		/// Creates the singleton instance of this class.
+		/// </summary>
+		internal static void CreateInstance() {
+			DestroyInstance();
+			Instance = new PathProbeJobManager();
+		}
+
+		/// <summary>
+		/// Destroys the singleton instance of this class.
+		/// </summary>
+		internal static void DestroyInstance() {
+			Instance?.Dispose();
+			Instance = null;
+		}
 
 		/// <summary>
 		/// Globally locks accesses to CPUBudget to avoid races.
@@ -86,11 +102,9 @@ namespace PeterHan.FastTrack.PathPatches {
 			totalRuntime = 0L;
 		}
 
-		public override void OnCleanUp() {
+		public void Dispose() {
 			onPathDone.Dispose();
 			budget = null;
-			Instance = null;
-			base.OnCleanUp();
 		}
 
 		/// <summary>
@@ -100,11 +114,6 @@ namespace PeterHan.FastTrack.PathPatches {
 			if (Interlocked.Decrement(ref jobCount) <= 0)
 				onPathDone.Set();
 			Interlocked.Add(ref totalRuntime, job.runtime);
-		}
-
-		public override void OnPrefabInit() {
-			base.OnPrefabInit();
-			Instance = this;
 		}
 
 		/// <summary>
@@ -124,10 +133,9 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Avoids stacking up queues by waiting for the async path probe. Game updates almost
 		/// all handlers that use pathfinding (including BrainScheduler) in a LateUpdate call,
-		/// so we let it spill over into the next frame and just hold up the next LateUpdate
-		/// with a regular Update (if necessary).
+		/// so ensure it ends by the end of World.LateUpdate.
 		/// </summary>
-		public void Update() {
+		internal void EndJob() {
 			var jobManager = AsyncJobManager.Instance;
 			if (jobManager != null && running) {
 				var now = Stopwatch.StartNew();

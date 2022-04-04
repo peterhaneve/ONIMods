@@ -81,6 +81,30 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
+		/// A non-mutating version of Navigator.GetNavigationCost that can be run on
+		/// background threads.
+		/// </summary>
+		/// <param name="navigator">The navigator to calculate.</param>
+		/// <param name="destination">The destination to find the cost.</param>
+		/// <param name="cell">The workable's current cell.</param>
+		/// <param name="cost">The location where the cost will be stored.</param>
+		/// <returns>true if the table needs to be updated, or false otherwise.</returns>
+		public static bool GetNavigationCostNU(this Navigator navigator, Workable destination,
+				int cell, out int cost) {
+			CellOffset[] offsets = null;
+			bool update = false;
+			var offsetTracker = destination.offsetTracker;
+			if (offsetTracker != null && (offsets = offsetTracker.offsets) == null) {
+				offsetTracker.UpdateOffsets(cell);
+				offsets = offsetTracker.offsets;
+				update = offsetTracker.previousCell != cell;
+			}
+			cost = (offsets == null) ? navigator.GetNavigationCost(cell) : navigator.
+				GetNavigationCost(cell, offsets);
+			return update;
+		}
+
+		/// <summary>
 		/// Checks to see if the cell allows pipe visibility; shared by conduit culling code.
 		/// </summary>
 		/// <param name="cell">The cell to test.</param>
