@@ -18,9 +18,7 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
 
@@ -74,6 +72,9 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// </summary>
 		private static double updateRate;
 
+		/// <summary>
+		/// Returns true if conduit flow throttling patches should be applied.
+		/// </summary>
 		internal static bool Prepare() => FastTrackOptions.Instance.DisableConduitAnimation !=
 			FastTrackOptions.ConduitAnimationQuality.Full;
 

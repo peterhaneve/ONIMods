@@ -32,7 +32,9 @@ namespace PeterHan.DebugNotIncluded {
 		/// Assemblies beginning with these strings will be blacklisted from checks.
 		/// </summary>
 		private static readonly string[] BLACKLIST_ASSEMBLIES = new string[] {
-			"mscorlib", "System", "Assembly-CSharp", "UnityEngine", "Harmony", "Newtonsoft"
+			"mscorlib", "System", "Assembly-CSharp", "Unity", "0Harmony", "Newtonsoft",
+			"Mono", "ArabicSupport", "I18N", "Ionic", "com.rlabrecque.steamworks.net",
+			"FMOD", "LibNoise", "Harmony", "Anonymously Hosted DynamicMethods Assembly"
 		};
 
 		/// <summary>
@@ -52,7 +54,9 @@ namespace PeterHan.DebugNotIncluded {
 		/// Checks all types currently loaded for issues.
 		/// </summary>
 		public static void Check() {
-			foreach (var type in GetAllTypes())
+			var types = GetAllTypes();
+			DebugLogger.LogDebug("Inspecting {0:D} types".F(types.Count));
+			foreach (var type in types)
 				CheckType(type);
 		}
 
@@ -126,8 +130,9 @@ namespace PeterHan.DebugNotIncluded {
 		/// Gets a list of all loaded types in the game that are not on the blacklist.
 		/// </summary>
 		/// <returns>A list of all types to inspect.</returns>
-		public static IEnumerable<Type> GetAllTypes() {
+		public static ICollection<Type> GetAllTypes() {
 			var types = new List<Type>(256);
+			var thisOne = Assembly.GetExecutingAssembly();
 			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) {
 				string name = assembly.FullName;
 				// Exclude assemblies on the blacklist
@@ -140,7 +145,15 @@ namespace PeterHan.DebugNotIncluded {
 				if (!blacklist)
 					try {
 						// This will fail when used with Ony's mod manager
-						types.AddRange(assembly.GetTypes());
+						var asmTypes = assembly.GetTypes();
+						int n = asmTypes.Length;
+						for (int i = 0; i < n; i++) {
+							var candidate = asmTypes[i];
+							// If the type is a PLib type, skip it
+							if (assembly == thisOne || !candidate.FullName.
+									StartsWith("PeterHan.PLib."))
+								types.Add(candidate);
+						}
 					} catch (ReflectionTypeLoadException e) {
 						HandleTypeLoadExceptions(e, assembly, types);
 					}

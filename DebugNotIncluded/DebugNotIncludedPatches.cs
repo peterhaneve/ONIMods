@@ -139,7 +139,8 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		/// <param name="instance">The Harmony instance to execute patches.</param>
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
-			if (DebugNotIncludedOptions.Instance?.PowerUserMode ?? false)
+			var options = DebugNotIncludedOptions.Instance;
+			if (options?.PowerUserMode == true)
 				harmony.Patch(typeof(ModsScreen), "BuildDisplay",
 					new HarmonyMethod(typeof(DebugNotIncludedPatches), nameof(HidePopups)),
 					new HarmonyMethod(typeof(DebugNotIncludedPatches), nameof(BuildDisplay)));
@@ -159,7 +160,6 @@ namespace PeterHan.DebugNotIncluded {
 
 			HarmonyPatchInspector.Check();
 #if DEBUG
-			// SaveManager.Load:: 13831 ms
 			harmony.ProfileMethod(typeof(SaveLoader).GetMethodSafe("Load", false, typeof(
 				IReader)));
 			harmony.ProfileMethod(typeof(SaveLoader).GetMethodSafe("Save", false, typeof(
@@ -168,8 +168,10 @@ namespace PeterHan.DebugNotIncluded {
 				PPatchTools.AnyArguments));
 			harmony.ProfileMethod(typeof(SaveManager).GetMethodSafe("Save", false,
 				PPatchTools.AnyArguments));
-			typeof(PLocalization).GetMethodSafe("DumpAll", false)?.Invoke(loc, null);
+			harmony.ProfileMethod(typeof(Assets).GetMethodSafe("CreatePrefabs", false));
 #endif
+			if (options?.LocalizeMods == true)
+				typeof(PLocalization).GetMethodSafe("DumpAll", false)?.Invoke(loc, null);
 		}
 
 		/// <summary>

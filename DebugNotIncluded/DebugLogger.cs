@@ -92,29 +92,13 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
-		/// Outputs information about what patched the method to the output log.
-		/// </summary>
-		/// <param name="method">The method to check.</param>
-		public static void DumpPatchInfo(MethodBase method) {
-			if (method == null)
-				throw new ArgumentNullException(nameof(method));
-			var message = new StringBuilder(256);
-			// List patches for that method
-			message.Append("Patches for ");
-			message.Append(method.ToString());
-			message.AppendLine(":");
-			DebugUtils.GetPatchInfo(DebugUtils.GetOriginalMethod(method), message);
-			LogDebug(message.ToString());
-		}
-
-		/// <summary>
 		/// Dumps the current stack trace to the log.
 		/// </summary>
 		public static void DumpStack() {
 			var message = new StringBuilder(1024);
 			message.AppendLine("Stack trace:");
 			// Better stack traces!
-			GetStackTraceLog(new StackTrace(1), new HarmonyMethodCache(), message);
+			GetStackTraceLog(new StackTrace(1), message);
 			LogWarning(message.ToString());
 			message.Clear();
 		}
@@ -123,28 +107,27 @@ namespace PeterHan.DebugNotIncluded {
 		/// Gets the log message for the specified exception.
 		/// </summary>
 		/// <param name="e">The exception, which must not be null.</param>
-		/// <param name="cache">The cache of Harmony methods.</param>
 		/// <returns>The log message for this exception.</returns>
-		private static string GetExceptionLog(Exception e, HarmonyMethodCache cache) {
+		private static string GetExceptionLog(Exception e) {
 			// Better breakdown of the stack trace
 			var message = new StringBuilder(8192);
 			if (e is ReflectionTypeLoadException loadException) {
 				message.AppendLine("Exception(s) when loading types:");
 				foreach (var cause in loadException.LoaderExceptions)
 					if (cause != null)
-						message.Append(GetExceptionLog(cause, cache));
+						message.Append(GetExceptionLog(cause));
 			} else {
 				var stackTrace = new StackTrace(e);
 				message.AppendFormat("{0}: {1}", e.GetType().Name, e.Message ??
 					"<no message>");
 				message.AppendLine();
 				ModLoadHandler.CrashingMod = DebugUtils.GetFirstModOnCallStack(stackTrace);
-				GetStackTraceLog(stackTrace, cache, message);
+				GetStackTraceLog(stackTrace, message);
 				// Log the root cause
 				var cause = e.GetBaseException();
 				if (cause != null && cause != e) {
 					message.AppendLine("Root cause exception:");
-					message.Append(GetExceptionLog(cause, cache));
+					message.Append(GetExceptionLog(cause));
 				}
 			}
 			return message.ToString();
@@ -156,8 +139,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// <param name="stackTrace">The stack trace, which must not be null.</param>
 		/// <param name="cache">The cache of Harmony methods.</param>
 		/// <param name="message">The location where the message will be stored.</param>
-		internal static void GetStackTraceLog(StackTrace stackTrace, HarmonyMethodCache cache,
-				StringBuilder message) {
+		internal static void GetStackTraceLog(StackTrace stackTrace, StringBuilder message) {
 			var registry = ModDebugRegistry.Instance;
 			ModDebugInfo mod;
 			int n = stackTrace.FrameCount;
@@ -165,9 +147,8 @@ namespace PeterHan.DebugNotIncluded {
 				var frame = stackTrace.GetFrame(i);
 				var method = frame?.GetMethod();
 				if (method == null)
-					// Try to output as much as possible
-					method = cache.ParseInternalName(frame, message);
-				else
+					method = HarmonyLib.Harmony.GetMethodFromStackframe(frame);
+				if (method != null)
 					method = DebugUtils.GetOriginalMethod(method);
 				if (method != null) {
 					// Try to give as much debug info as possible
@@ -242,7 +223,7 @@ namespace PeterHan.DebugNotIncluded {
 					}
 					message.AppendLine(":");
 				}
-				message.Append(GetExceptionLog(cause, new HarmonyMethodCache()));
+				message.Append(GetExceptionLog(cause));
 				LogError(message.ToString());
 			} catch {
 				// Ensure it gets logged at all costs
@@ -299,7 +280,7 @@ namespace PeterHan.DebugNotIncluded {
 				LogError("<null>");
 			else
 				try {
-					LogError(GetExceptionLog(e, new HarmonyMethodCache()));
+					LogError(GetExceptionLog(e));
 				} catch {
 					// Ensure it gets logged at all costs
 					BaseLogException(e, null);
@@ -316,7 +297,7 @@ namespace PeterHan.DebugNotIncluded {
 			var cause = e.InnerException ?? e;
 			try {
 				LogError((e.Message ?? "Error in KMonoBehaviour:") + Environment.NewLine +
-					GetExceptionLog(cause, new HarmonyMethodCache()));
+					GetExceptionLog(cause));
 			} catch {
 				// Ensure it gets logged at all costs
 				BaseLogException(cause, null);
@@ -351,7 +332,7 @@ namespace PeterHan.DebugNotIncluded {
 				message.AppendLine("An assert is about to fail:");
 				// Better stack traces!
 				ModLoadHandler.CrashingMod = DebugUtils.GetFirstModOnCallStack(trace);
-				GetStackTraceLog(trace, new HarmonyMethodCache(), message);
+				GetStackTraceLog(trace, message);
 				LogError(message.ToString());
 				message.Clear();
 			}

@@ -33,13 +33,13 @@ namespace PeterHan.DebugNotIncluded {
 			"Most users should <b>only use this mod if directed</b> by a mod owner to generate better logs.\n")]
 		public LocText Description => null;
 
-		[Option("Extended Features", "Enables extra features of this mod.", "Quality of Life")]
-		[JsonProperty]
-		public bool PowerUserMode { get; set; }
-
 		[Option("Disable Crash Dialog", "Crash to desktop instead of trying to show the Klei crash dialog.", "Debugging")]
 		[JsonProperty]
 		public bool DisableCrashDialog { get; set; }
+
+		[Option("Localize All Mods", "Localize all mods on the next load.", "Debugging")]
+		[JsonProperty]
+		public bool LocalizeMods { get; set; }
 
 		[Option("Log Assert Failures", "Logs a stack trace of every failing assert to the log.", "Debugging")]
 		[JsonProperty]
@@ -57,6 +57,10 @@ namespace PeterHan.DebugNotIncluded {
 		[JsonProperty]
 		public bool ShowLogSenders { get; set; }
 
+		[Option("Extended Features", "Enables extra features of this mod.", "Quality of Life")]
+		[JsonProperty]
+		public bool PowerUserMode { get; set; }
+
 		[Option("Skip First Mod Check", "Suppresses the warning dialog if Debug Not Included is not the first mod in the load order.", "Quality of Life")]
 		[JsonProperty]
 		public bool SkipFirstModCheck { get; set; }
@@ -68,6 +72,7 @@ namespace PeterHan.DebugNotIncluded {
 		public DebugNotIncludedOptions() {
 			DetailedBacktrace = true;
 			DisableCrashDialog = false;
+			LocalizeMods = false;
 			LogAsserts = true;
 			LogSounds = false;
 			PowerUserMode = false;

@@ -121,7 +121,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(MainMenu), nameof(MainMenu.OnSpawn))]
 	public static class MainMenu_OnSpawn_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+		internal static bool Prepare() => FastTrackOptions.Instance.LoadOpts;
 
 		/// <summary>
 		/// Transpiles OnSpawn to remove everything in try/catch IOException blocks.
@@ -298,7 +298,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	public static class TechItems_AddTechItem_Patch {
 		/// <summary>
 		/// Transpiles AddTechItem to remove an Add call that duplicates every item, as it was
-		/// already added to the constructor
+		/// already added to the constructor.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
 			var target = typeof(ResourceSet<TechItem>).GetMethodSafe(nameof(

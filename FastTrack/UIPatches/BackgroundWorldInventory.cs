@@ -261,7 +261,8 @@ namespace PeterHan.FastTrack.UIPatches {
 					if (!category.IsValid)
 						PUtil.LogWarning(pickupable.name +
 							" was found by WorldInventory, but has no category! Add it to the element definition.");
-					DiscoveredResources.Instance.Discover(prefabTag, category);
+					else
+						DiscoveredResources.Instance.Discover(prefabTag, category);
 				}
 				foreach (var itemTag in kpid.Tags)
 					if (BackgroundWorldInventory.IsAcceptable(itemTag)) {

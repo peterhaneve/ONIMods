@@ -62,12 +62,15 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		[HarmonyPriority(Priority.High)]
 		internal static void Prefix(Game __instance) {
-			if (__instance.gasConduitSystem.IsDirty)
-				ConduitPatches.ConduitFlowVisualizerRenderer.ForceUpdate(__instance.
-					gasFlowVisualizer);
-			if (__instance.liquidConduitSystem.IsDirty)
-				ConduitPatches.ConduitFlowVisualizerRenderer.ForceUpdate(__instance.
-					liquidFlowVisualizer);
+			if (!FastTrackOptions.Instance.ConduitOpts && ConduitPatches.
+					ConduitFlowVisualizerRenderer.Prepare()) {
+				if (__instance.gasConduitSystem.IsDirty)
+					ConduitPatches.ConduitFlowVisualizerRenderer.ForceUpdate(__instance.
+						gasFlowVisualizer);
+				if (__instance.liquidConduitSystem.IsDirty)
+					ConduitPatches.ConduitFlowVisualizerRenderer.ForceUpdate(__instance.
+						liquidFlowVisualizer);
+			}
 			UIPatches.BackgroundInventoryUpdater.Instance?.EndUpdateAll();
 			// Updating the group prober can trigger reachability changes in the world
 			// inventory, so do not start it until after the BWI has finished

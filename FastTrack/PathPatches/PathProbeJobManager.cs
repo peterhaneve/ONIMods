@@ -133,7 +133,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Avoids stacking up queues by waiting for the async path probe. Game updates almost
 		/// all handlers that use pathfinding (including BrainScheduler) in a LateUpdate call,
-		/// so ensure it ends by the end of World.LateUpdate.
+		/// so ensure it ends in time.
 		/// </summary>
 		internal void EndJob() {
 			var jobManager = AsyncJobManager.Instance;

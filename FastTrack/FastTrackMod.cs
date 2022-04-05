@@ -52,7 +52,8 @@ namespace PeterHan.FastTrack {
 		internal static void Profile(Harmony harmony) {
 			harmony.Profile(typeof(KAnimBatchManager), nameof(KAnimBatchManager.UpdateDirty));
 			harmony.Profile(typeof(KBatchedAnimUpdater), nameof(KBatchedAnimUpdater.UpdateRegisteredAnims));
-			harmony.Profile(typeof(VisualPatches.KBatchedAnimController_UpdateAnim_Patch), "UpdateActive");
+			harmony.Profile(typeof(CellChangeMonitor), nameof(CellChangeMonitor.RenderEveryTick));
+			harmony.Profile(typeof(Game), nameof(Game.UnsafeSim200ms));
 		}
 #endif
 
@@ -132,8 +133,10 @@ namespace PeterHan.FastTrack {
 			}
 			if (options.MeshRendererOptions == FastTrackOptions.MeshRendererSettings.All)
 				VisualPatches.TileMeshRenderer.DestroyInstance();
-			if (options.FastReachability)
+			if (options.FastReachability) {
 				SensorPatches.FastGroupProber.Cleanup();
+				GamePatches.FastCellChangeMonitor.FastInstance.Cleanup();
+			}
 			if (options.PickupOpts)
 				GamePatches.SolidTransferArmUpdater.DestroyInstance();
 			if (options.AsyncPathProbe)
@@ -208,10 +211,11 @@ namespace PeterHan.FastTrack {
 		}
 
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
+			var options = FastTrackOptions.Instance;
 			base.OnAllModsLoaded(harmony, mods);
 			// Manual patch in the rewritten FetchManager.UpdatePickups only if Efficient
 			// Supply is not enabled
-			if (FastTrackOptions.Instance.FastUpdatePickups) {
+			if (options.FastUpdatePickups) {
 				if (PPatchTools.GetTypeSafe("PeterHan.EfficientFetch.EfficientFetchManager") ==
 						null) {
 					harmony.Patch(typeof(FetchManager.FetchablesByPrefabId),
@@ -228,6 +232,8 @@ namespace PeterHan.FastTrack {
 				// Fix the annoying autosave bug
 				harmony.Patch(typeof(Timelapser), "SaveScreenshot", postfix: new HarmonyMethod(
 					typeof(FastTrackMod), nameof(FastTrackMod.FixTimeLapseDrag)));
+			if (options.FastReachability)
+				GamePatches.FastCellChangeMonitor.CreateInstance();
 		}
 
 		public override void OnLoad(Harmony harmony) {

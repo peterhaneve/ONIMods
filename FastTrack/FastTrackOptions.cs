@@ -111,6 +111,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool FastRaycast { get; set; }
 
+		[Option("Less Loading", "Speeds up loading times." + PERF_MEDIUM, "Interface")]
+		[JsonProperty]
+		public bool LoadOpts { get; set; }
+
 		[Option("Optimize Dialogs", "Speeds up a variety of dialog boxes." + PERF_MEDIUM, "Interface")]
 		[JsonProperty]
 		public bool OptimizeDialogs { get; set; }
@@ -215,6 +219,7 @@ namespace PeterHan.FastTrack {
 			FastUpdatePickups = false;
 			FlattenAverages = true;
 			InfoCardOpts = true;
+			LoadOpts = true;
 			LogicUpdates = true;
 			MeshRendererOptions = MeshRendererSettings.All;
 			Metrics = false;
