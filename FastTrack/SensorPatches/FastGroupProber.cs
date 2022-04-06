@@ -70,6 +70,11 @@ namespace PeterHan.FastTrack.SensorPatches {
 		private volatile bool destroyed;
 
 		/// <summary>
+		/// The cells already marked as dirty this pass (background thread use only).
+		/// </summary>
+		private readonly ISet<int> alreadyDirty;
+
+		/// <summary>
 		/// The cells which were marked dirty during path probes.
 		/// </summary>
 		private readonly ConcurrentQueue<int> dirtyCells;
@@ -106,6 +111,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 
 		private FastGroupProber(ScenePartitionerLayer mask) {
 			added = new List<int>(256);
+			alreadyDirty = new HashSet<int>();
 			cells = new int[Grid.CellCount];
 			destroyed = false;
 			dirtyCells = new ConcurrentQueue<int>();
@@ -122,6 +128,14 @@ namespace PeterHan.FastTrack.SensorPatches {
 			};
 			Util.ApplyInvariantCultureToThread(thread);
 			thread.Start();
+		}
+
+		/// <summary>
+		/// Creates an entry for the prober if it does not exist.
+		/// </summary>
+		/// <param name="prober">The prober being updated.</param>
+		internal void Allocate(object prober) {
+			probers.GetOrAdd(prober, ReachableCells.NewCells);
 		}
 
 		public void Dispose() {
@@ -175,9 +189,11 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// </summary>
 		/// <param name="prober">The prober being updated.</param>
 		/// <param name="cells">The cells which can be reached.</param>
-		internal void Occupy(object prober, IEnumerable<int> cells) {
+		/// <param name="isFullQuery">true if the query is a full update (and processes
+		/// removed cells), or false otherwise.</param>
+		internal void Occupy(object prober, IEnumerable<int> cells, bool isFullQuery) {
 			if (probers.TryGetValue(prober, out ReachableCells rc))
-				rc.Update(cells);
+				rc.Update(cells, isFullQuery);
 			trigger.Set();
 		}
 
@@ -197,12 +213,13 @@ namespace PeterHan.FastTrack.SensorPatches {
 					// Remove from every cell that it could have reached
 					for (int i = 0; i < n; i++) {
 						cell = oldCells[i];
-						if (Interlocked.Decrement(ref cells[cell]) == 0)
+						if (Interlocked.Decrement(ref cells[cell]) == 0 && alreadyDirty.Add(
+								cell))
 							dirtyCells.Enqueue(cell);
 					}
 				} else
 					while (Interlocked.Exchange(ref rc.dirty, 0) != 0) {
-						// Decrement all of the cells it had, increment afterwards
+						// Decrement cells that it can no longer occupy, increment new ones
 						n = oldCells.Count;
 						for (int i = 0; i < n; i++)
 							// For loop avoids allocations
@@ -210,29 +227,30 @@ namespace PeterHan.FastTrack.SensorPatches {
 						oldCells.Clear();
 						// Find new and removed cells
 						lock (newCells) {
-							n = newCells.Count;
-							for (int i = 0; i < n; i++) {
-								cell = newCells[i];
-								if (!removed.Remove(cell))
+							foreach (int reachableCell in newCells) {
+								if (!removed.Remove(reachableCell))
 									// If was not present, add it
-									added.Add(cell);
-								oldCells.Add(cell);
+									added.Add(reachableCell);
+								oldCells.Add(reachableCell);
 							}
 						}
 						n = added.Count;
 						for (int i = 0; i < n; i++) {
 							cell = added[i];
-							if (Interlocked.Increment(ref cells[cell]) == 1)
+							if (Interlocked.Increment(ref cells[cell]) == 1 && alreadyDirty.
+									Add(cell))
 								dirtyCells.Enqueue(cell);
 						}
 						// removed has the leftovers
 						foreach (int removedCell in removed)
-							if (Interlocked.Decrement(ref cells[removedCell]) == 0)
+							if (Interlocked.Decrement(ref cells[removedCell]) == 0 &&
+									alreadyDirty.Add(removedCell))
 								dirtyCells.Enqueue(removedCell);
 						added.Clear();
 						removed.Clear();
 					}
 			}
+			alreadyDirty.Clear();
 			// Remove all pending destroy
 			while (toDestroy.Count > 0)
 				if (probers.TryRemove(toDestroy.Dequeue(), out ReachableCells rc))
@@ -267,14 +285,6 @@ namespace PeterHan.FastTrack.SensorPatches {
 		}
 
 		/// <summary>
-		/// Sets specific serial numbers as valid.
-		/// </summary>
-		/// <param name="prober">The prober being updated.</param>
-		internal void SetSerials(object prober) {
-			probers.GetOrAdd(prober, ReachableCells.NewCells);
-		}
-
-		/// <summary>
 		/// Drains an appropriate amount of tasks that became reachable or unreachable from
 		/// the queue on the foreground thread.
 		/// </summary>
@@ -289,7 +299,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 				dirtyList.Recycle();
 			}
 			int n = toDo.Count;
-			if (n > 0) {
+			if (n > 0 && FastTrackMod.GameRunning) {
 				if (n > MIN_PROCESS)
 					// Run at least 1/16th of the outstanding
 					n = MIN_PROCESS + ((n - MIN_PROCESS + 3) >> 4);
@@ -314,7 +324,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 			/// a transient parameter that can be destroyed before the cleanup thread gets to
 			/// them.
 			/// </summary>
-			internal readonly IList<int> currentCells;
+			internal readonly ISet<int> currentCells;
 
 			/// <summary>
 			/// Set to true when the prober has been destroyed.
@@ -332,7 +342,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 			internal readonly IList<int> oldCells;
 
 			public ReachableCells() {
-				currentCells = new List<int>(64);
+				currentCells = new HashSet<int>();
 				destroy = false;
 				dirty = 0;
 				oldCells = new List<int>(64);
@@ -355,15 +365,18 @@ namespace PeterHan.FastTrack.SensorPatches {
 			/// Updates the accessible cells.
 			/// </summary>
 			/// <param name="reachableCells">The cells to update.</param>
-			public void Update(IEnumerable<int> reachableCells) {
+			/// <param name="isFullQuery">true if the query is a full update (and processes
+			/// removed cells), or false otherwise.</param>
+			public void Update(IEnumerable<int> reachableCells, bool isFullQuery) {
 				if (dirty != 0)
 					PUtil.LogWarning("Occupy cells before previous cells finished!");
 				lock (currentCells) {
-					currentCells.Clear();
-					foreach (var cell in reachableCells)
+					foreach (int cell in reachableCells)
 						currentCells.Add(cell);
 				}
-				dirty = 1;
+				// If the query is complete, send it off for processing
+				if (isFullQuery)
+					dirty = 1;
 			}
 		}
 	}

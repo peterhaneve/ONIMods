@@ -118,7 +118,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <param name="instance">The navigator to invalidate.</param>
 		private static void ForceInvalid(Navigator instance) {
 			if (instance != null)
-				PathCacher.Lookup(instance.PathProber).MarkInvalid();
+				PathCacher.SetValid(instance.PathProber, false);
 		}
 
 		/// <summary>
@@ -180,26 +180,6 @@ namespace PeterHan.FastTrack.PathPatches {
 	}
 
 	/// <summary>
-	/// Applied to Navigator.PathProbeTask to use the path cache first.
-	/// </summary>
-	[HarmonyPatch(typeof(Navigator.PathProbeTask), nameof(Navigator.PathProbeTask.Run))]
-	public static class Navigator_PathProbeTask_Run_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
-
-		/// <summary>
-		/// Applied before Run runs.
-		/// </summary>
-		internal static bool Prefix(Navigator ___navigator) {
-			// If nothing has changed since last time, it is a hit!
-			var cached = PathCacher.Lookup(___navigator.PathProber);
-			bool hit = cached.CheckAndMarkValid();
-			if (FastTrackOptions.Instance.Metrics)
-				Metrics.DebugMetrics.PATH_CACHE.Log(hit);
-			return !hit;
-		}
-	}
-
-	/// <summary>
 	/// Applied to Navigator to force update the path cache (even if "clean") every 4000ms.
 	/// </summary>
 	[HarmonyPatch(typeof(Navigator), nameof(Navigator.Sim4000ms))]
@@ -215,7 +195,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		internal static bool Prefix(Navigator __instance) {
 			var options = FastTrackOptions.Instance;
 			if (__instance != null && options.CachePaths)
-				PathCacher.Lookup(__instance.PathProber).MarkInvalid();
+				PathCacher.SetValid(__instance.PathProber, false);
 			return !options.AsyncPathProbe;
 		}
 	}
@@ -233,7 +213,126 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// </summary>
 		internal static void Postfix(Navigator __instance, bool arrived_at_destination) {
 			if (__instance != null && !arrived_at_destination)
-				PathCacher.Lookup(__instance.PathProber).MarkInvalid();
+				PathCacher.SetValid(__instance.PathProber, false);
+		}
+	}
+
+	/// <summary>
+	/// Applied to PathProber to set full path probes as the source of truth for group probing
+	/// and update the path cache when it finishes.
+	/// 
+	/// Note with FRC off, the path cache can exacerbate a vanilla bug where small pathfinder
+	/// queries can mark items unreachable, but there is nothing we can do about that if
+	/// fast reachability is off.
+	/// </summary>
+	[HarmonyPatch(typeof(PathProber), nameof(PathProber.UpdateProbe))]
+	public static class PathProber_UpdateProbe_Patch {
+		internal static bool Prepare() {
+			var options = FastTrackOptions.Instance;
+			return options.FastReachability || options.CachePaths;
+		}
+
+		/// <summary>
+		/// Checks to see if the path cache is clean.
+		/// </summary>
+		/// <param name="instance">The prober that is querying.</param>
+		/// <returns>true if the cache is clean, or false if it needs to run.</returns>
+		private static bool CheckCache(PathProber instance) {
+			// If nothing has changed since last time, it is a hit!
+			bool hit = PathCacher.IsValid(instance);
+			if (FastTrackOptions.Instance.Metrics)
+				Metrics.DebugMetrics.PATH_CACHE.Log(hit);
+			return hit;
+		}
+
+		/// <summary>
+		/// Ends a path grid update and marks the entry as authoritative in the reachability
+		/// monitor, allowing removed cells to be processed.
+		/// </summary>
+		/// <param name="grid">The path grid to update.</param>
+		/// <param name="isComplete">true if the probing is complete.</param>
+		/// <param name="prober">The path prober making the update.</param>
+		private static void EndUpdate(PathGrid grid, bool isComplete, PathProber prober) {
+			grid.isUpdating = false;
+			int sn = grid.serialNo;
+			var gp = grid.groupProber;
+			var inst = SensorPatches.FastGroupProber.Instance;
+			if (gp != null) {
+				var cells = grid.freshlyOccupiedCells;
+				if (inst != null && ReferenceEquals(gp, MinionGroupProber.Instance))
+					inst.Occupy(grid, cells, isComplete);
+				else
+					gp.Occupy(grid, sn, cells);
+			}
+			if (isComplete) {
+				// There is no need to do this on the minion group prober, but in case another
+				// one appears later
+				gp?.SetValidSerialNos(grid, grid.previousSerialNo, sn);
+				grid.previousSerialNo = sn;
+			}
+			if (isComplete && FastTrackOptions.Instance.CachePaths)
+				PathCacher.SetValid(prober, true);
+		}
+
+		/// <summary>
+		/// Transpiles UpdateProbe to use a slightly altered EndUpdate method instead.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
+				ILGenerator generator) {
+			var target = typeof(PathGrid).GetMethodSafe(nameof(PathGrid.EndUpdate), false,
+				typeof(bool));
+			var replacement = typeof(PathProber_UpdateProbe_Patch).GetMethodSafe(nameof(
+				EndUpdate), true, typeof(PathGrid), typeof(bool), typeof(PathProber));
+			var checker = typeof(PathProber_UpdateProbe_Patch).GetMethodSafe(nameof(
+				CheckCache), true, typeof(PathProber));
+			bool patched = false;
+			var end = generator.DefineLabel();
+			// Sadly streaming is not possible with the "label last RET"
+			var method = new List<CodeInstruction>(instructions);
+			if (FastTrackOptions.Instance.CachePaths) {
+				if (checker != null) {
+					method.InsertRange(0, new CodeInstruction[] {
+						new CodeInstruction(OpCodes.Ldarg_0),
+						new CodeInstruction(OpCodes.Call, checker),
+						new CodeInstruction(OpCodes.Brtrue_S, end)
+					});
+#if DEBUG
+					PUtil.LogDebug("Patched PathProber.UpdateProbe [C]");
+#endif
+				} else
+					PUtil.LogWarning("Unable to patch PathProber.UpdateProbe [C]");
+			}
+			if (target != null && replacement != null) {
+				int n = method.Count;
+				for (int i = 0; i < n && !patched; i++) {
+					var instr = method[i];
+					if (instr.Is(OpCodes.Callvirt, target)) {
+						// Push the path prober
+						method.Insert(i, new CodeInstruction(OpCodes.Ldarg_0));
+						instr.opcode = OpCodes.Call;
+						instr.operand = replacement;
+#if DEBUG
+						PUtil.LogDebug("Patched PathProber.UpdateProbe [E]");
+#endif
+						patched = true;
+					}
+				}
+			}
+			// Label the last RET
+			for (int i = method.Count - 1; i > 0; i--) {
+				var instr = method[i];
+				if (instr.opcode == OpCodes.Ret) {
+					// Add the label
+					var labels = instr.labels;
+					if (labels == null)
+						instr.labels = labels = new List<Label>(2);
+					labels.Add(end);
+					break;
+				}
+			}
+			if (!patched)
+				PUtil.LogWarning("Unable to patch PathProber.UpdateProbe [E]");
+			return method;
 		}
 	}
 

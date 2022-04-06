@@ -74,7 +74,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// </summary>
 		[HarmonyPatch(typeof(DLLLoader), nameof(DLLLoader.LoadDLLs))]
 		internal static class LoadDLLs_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.LoadOpts;
+			internal static bool Prepare() => FastTrackOptions.Instance.ModLoadOpts;
 
 			/// <summary>
 			/// Transpiles LoadDLLs to remove a slow patched_methods populate, it will be done in
@@ -120,7 +120,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// </summary>
 		[HarmonyPatch(typeof(Mod), nameof(Mod.PostLoad))]
 		internal static class PostLoad_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.LoadOpts;
+			internal static bool Prepare() => FastTrackOptions.Instance.ModLoadOpts;
 
 			/// <summary>
 			/// Applied before PostLoad runs.

@@ -25,11 +25,11 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// Caches global pathfind requests, drastically reducing work by avoiding repathing when
 	/// nothing has changed.
 	/// </summary>
-	public sealed class PathCacher {
+	public static class PathCacher {
 		/// <summary>
 		/// Map path cache IDs to path cache values.
 		/// </summary>
-		private static ConcurrentDictionary<PathProber, PathCacher> pathCache;
+		private static ConcurrentDictionary<PathProber, bool> pathCache;
 
 		/// <summary>
 		/// Avoid leaking the PathProbers when the game ends.
@@ -50,7 +50,8 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// When the game is started, reset the path prober caches.
 		/// </summary>
 		internal static void Init() {
-			pathCache = new ConcurrentDictionary<PathProber, PathCacher>(4, 128);
+			if (pathCache == null)
+				pathCache = new ConcurrentDictionary<PathProber, bool>(4, 128);
 		}
 
 		/// <summary>
@@ -58,48 +59,27 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// </summary>
 		/// <param name="prober">The path prober to look up.</param>
 		/// <returns>The path cache for this path prober's ID.</returns>
-		internal static PathCacher Lookup(PathProber prober) {
+		internal static bool IsValid(PathProber prober) {
 			if (prober == null)
 				throw new ArgumentNullException("prober");
-			return pathCache.GetOrAdd(prober, NewCacher);
+			return pathCache.ContainsKey(prober);
 		}
 
 		/// <summary>
-		/// Generates a new PathCacher.
+		/// Sets a prober as valid or invalid.
 		/// </summary>
-		private static PathCacher NewCacher(PathProber _) => new PathCacher();
-
-		/// <summary>
-		/// Set to true if the path was forced invalid.
-		/// </summary>
-		private volatile int force;
-
-		private PathCacher() {
-			// Start out dirty
-			force = 1;
-		}
-
-		/// <summary>
-		/// Checks to see if this cached path is still valid. If not, the cached parameters are
-		/// updated assuming that pathing is recalculated.
-		/// </summary>
-		/// <returns>true if cached information can be used, or false otherwise.</returns>
-		public bool CheckAndMarkValid() {
-			return Interlocked.Exchange(ref force, 0) == 0;
-		}
-
-		/// <summary>
-		/// Marks the cached path as invalid.
-		/// </summary>
-		public void MarkInvalid() {
-			force = 1;
-		}
-
-		/// <summary>
-		/// Marks the cached path as valid.
-		/// </summary>
-		public void MarkValid() {
-			force = 0;
+		/// <param name="prober">The path prober to look up.</param>
+		/// <param name="valid">true if the prober is valid, or false if it is invalid.</param>
+		/// <returns>Whether the prober was previously valid or invalid.</returns>
+		internal static bool SetValid(PathProber prober, bool valid) {
+			bool result;
+			if (prober == null)
+				throw new ArgumentNullException("prober");
+			if (valid)
+				result = !pathCache.TryAdd(prober, true);
+			else
+				result = pathCache.TryRemove(prober, out _);
+			return result;
 		}
 	}
 }

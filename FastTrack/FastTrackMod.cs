@@ -32,21 +32,6 @@ namespace PeterHan.FastTrack {
 	/// </summary>
 	public sealed class FastTrackMod : KMod.UserMod2 {
 		// Global, Game, World
-		// Game#LateUpdate is ~50ms/1000ms
-		// Game#Update is ~300ms
-		// Global#Update is ~100ms
-		// World#LateUpdate is ~100ms
-		// Global#LateUpdate is ~30ms
-		// Pathfinding#UpdateNavGrids is <20ms
-		// StatusItemRenderer#RenderEveryTick could use some work but is only ~10ms
-		//  (need to excise GetComponent calls which is a massive transpiler)
-		// ElectricalUtilityNetwork#Update is ~10ms
-		// KBatchedAnimUpdater#LateUpdate is ~50ms
-		// AnimEventManager#Update is 20ms but not much can be done
-		// KBatchedAnimUpdater#UpdateRegisteredAnims is 40ms
-		// ConduitFlow.Sim200ms is <10ms
-		// ChoreConsumer.FindNextChore is <10ms
-		// None of the RenderImage methods are more than 1ms
 #if DEBUG
 		[PLibMethod(RunAt.AfterModsLoad)]
 		internal static void Profile(Harmony harmony) {
@@ -61,6 +46,11 @@ namespace PeterHan.FastTrack {
 		/// The maximum time that any of the blocking joins will wait, in real time ms.
 		/// </summary>
 		public const int MAX_TIMEOUT = 5000;
+
+		/// <summary>
+		/// Turn off tile mesh renderers if this mod is active.
+		/// </summary>
+		private const string TRUE_TILES_ID = "TrueTiles";
 
 		/// <summary>
 		/// Set to true when the game gets off its feet, and false while it is still loading.
@@ -172,7 +162,7 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
-		/// Initializes the nav grids on game start, since Pathfinding.AddNavGrid gets inlined.
+		/// Initializes all components loaded on game start.
 		/// </summary>
 		[PLibMethod(RunAt.OnStartGame)]
 		internal static void OnStartGame() {
@@ -213,6 +203,23 @@ namespace PeterHan.FastTrack {
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
 			var options = FastTrackOptions.Instance;
 			base.OnAllModsLoaded(harmony, mods);
+			// Manual patch in the rewritten BlockTileRenderer only if True Tiles is not
+			// enabled
+			if (options.MeshRendererOptions == FastTrackOptions.MeshRendererSettings.All &&
+					mods != null) {
+				int n = mods.Count;
+				bool found = false;
+				// No Contains in read only lists...
+				for (int i = 0; i < n && !found; i++) {
+					var m = mods[i];
+					if (m.staticID == TRUE_TILES_ID && m.IsEnabledForActiveDlc()) {
+						PUtil.LogWarning("Disabling tile mesh renderers: True Tiles active");
+						found = true;
+					}
+				}
+				if (!found)
+					VisualPatches.TileMeshPatches.Apply(harmony);
+			}
 			// Manual patch in the rewritten FetchManager.UpdatePickups only if Efficient
 			// Supply is not enabled
 			if (options.FastUpdatePickups) {

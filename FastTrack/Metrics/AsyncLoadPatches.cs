@@ -34,7 +34,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Triggered when the anims are loaded.
 		/// </summary>
-		private static EventWaitHandle animsDone;
+		private static readonly EventWaitHandle animsDone = new AutoResetEvent(false);
 
 		/// <summary>
 		/// Loads the anims on a background thread.
@@ -75,7 +75,7 @@ namespace PeterHan.FastTrack.Metrics {
 				Name = "Load and Parse Anims", IsBackground = true, Priority =
 				ThreadPriority.Normal, CurrentCulture = Thread.CurrentThread.CurrentCulture
 			};
-			animsDone = new AutoResetEvent(false);
+			animsDone.Reset();
 			Thread.MemoryBarrier();
 			loadAnimsTask.Start();
 		}
@@ -224,17 +224,10 @@ namespace PeterHan.FastTrack.Metrics {
 			/// </summary>
 			[HarmonyPriority(Priority.Low)]
 			internal static void Postfix() {
-				var handle = animsDone;
-				if (handle != null)
-					try {
-						handle.WaitOne();
+				animsDone.WaitOne();
 #if DEBUG
-						PUtil.LogDebug("Anim loading complete");
+				PUtil.LogDebug("Anim loading complete");
 #endif
-					} finally {
-						handle.Dispose();
-						animsDone = null;
-					}
 			}
 		}
 	}

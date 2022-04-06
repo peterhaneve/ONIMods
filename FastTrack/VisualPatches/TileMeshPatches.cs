@@ -17,144 +17,105 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.Core;
 using Rendering;
 
 namespace PeterHan.FastTrack.VisualPatches {
 	/// <summary>
-	/// Applied to BlockTileRenderer to redirect add calls to our own.
+	/// Handles all Tile Mesh Renderer patches, as they all must be applied manually.
 	/// </summary>
-	[HarmonyPatch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.AddBlock))]
-	public static class BlockTileRenderer_AddBlock_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions ==
-			FastTrackOptions.MeshRendererSettings.All;
-
+	public static class TileMeshPatches {
 		/// <summary>
 		/// Applied before AddBlock runs.
 		/// </summary>
-		internal static bool Prefix(int renderLayer, BuildingDef def, bool isReplacement,
-				SimHashes element, int cell) {
+		private static bool AddBlock_Prefix(int renderLayer, BuildingDef def,
+				bool isReplacement, SimHashes element, int cell) {
 			TileMeshRenderer.Instance?.AddBlock(renderLayer, def, isReplacement, element,
 				cell);
 			return false;
 		}
-	}
 
-	/// <summary>
-	/// Applied to BlockTileRenderer to replace its LateUpdate method with our own.
-	/// </summary>
-	[HarmonyPatch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.LateUpdate))]
-	public static class BlockTileRenderer_LateUpdate_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions ==
-			FastTrackOptions.MeshRendererSettings.All;
+		/// <summary>
+		/// Applies all tile mesh renderer patches.
+		/// </summary>
+		/// <param name="harmony">The Harmony instance to use for patching.</param>
+		internal static void Apply(Harmony harmony) {
+			harmony.Patch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.AddBlock),
+				prefix: new HarmonyMethod(typeof(TileMeshPatches), nameof(AddBlock_Prefix)));
+			harmony.Patch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.HighlightCell),
+				prefix: new HarmonyMethod(typeof(TileMeshPatches), nameof(
+				HighlightCell_Prefix)));
+			harmony.Patch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.LateUpdate),
+				prefix: new HarmonyMethod(typeof(TileMeshPatches), nameof(LateUpdate_Prefix)));
+			harmony.Patch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.Rebuild),
+				prefix: new HarmonyMethod(typeof(TileMeshPatches), nameof(Rebuild_Prefix)));
+			harmony.Patch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.RemoveBlock),
+				prefix: new HarmonyMethod(typeof(TileMeshPatches), nameof(
+				RemoveBlock_Prefix)));
+			harmony.Patch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.SelectCell),
+				prefix: new HarmonyMethod(typeof(TileMeshPatches), nameof(
+				SelectCell_Prefix)));
+			harmony.Patch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.
+				SetInvalidPlaceCell), prefix: new HarmonyMethod(typeof(TileMeshPatches),
+				nameof(SetInvalidPlaceCell_Prefix)));
+			harmony.Patch(typeof(World), nameof(World.OnPrefabInit), postfix:
+				new HarmonyMethod(typeof(TileMeshPatches), nameof(OnPrefabInit_Postfix)));
+		}
+
+		/// <summary>
+		/// Applied before HighlightCell runs.
+		/// </summary>
+		private static bool HighlightCell_Prefix(int cell, bool enabled) {
+			TileMeshRenderer.Instance?.HighlightCell(cell, enabled);
+			return false;
+		}
 
 		/// <summary>
 		/// Applied before LateUpdate runs.
 		/// </summary>
-		internal static bool Prefix() {
+		private static bool LateUpdate_Prefix() {
 			TileMeshRenderer.Instance?.Render();
 			return false;
 		}
-	}
-
-	/// <summary>
-	/// Applied to BlockTileRenderer to redirect Rebuild calls to our own.
-	/// </summary>
-	[HarmonyPatch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.Rebuild))]
-	public static class BlockTileRenderer_Rebuild_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions ==
-			FastTrackOptions.MeshRendererSettings.All;
-
-		/// <summary>
-		/// Applied before Rebuild runs.
-		/// </summary>
-		internal static bool Prefix(ObjectLayer layer, int cell) {
-			TileMeshRenderer.Instance?.Rebuild(layer, cell);
-			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to BlockTileRenderer to redirect remove calls to our own.
-	/// </summary>
-	[HarmonyPatch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.RemoveBlock))]
-	public static class BlockTileRenderer_RemoveBlock_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions ==
-			FastTrackOptions.MeshRendererSettings.All;
-
-		/// <summary>
-		/// Applied before RemoveBlock runs.
-		/// </summary>
-		internal static bool Prefix(BuildingDef def, bool isReplacement, SimHashes element,
-				int cell) {
-			TileMeshRenderer.Instance?.RemoveBlock(def, isReplacement, element, cell);
-			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to BlockTileRenderer to highlight tiles using our version instead.
-	/// </summary>
-	[HarmonyPatch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.HighlightCell))]
-	public static class BlockTileRenderer_HighlightCell_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions ==
-			FastTrackOptions.MeshRendererSettings.All;
-
-		/// <summary>
-		/// Applied before HighlightPlaceCell runs.
-		/// </summary>
-		internal static bool Prefix(int cell, bool enabled) {
-			TileMeshRenderer.Instance?.HighlightCell(cell, enabled);
-			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to BlockTileRenderer to select tiles using our version instead.
-	/// </summary>
-	[HarmonyPatch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.SelectCell))]
-	public static class BlockTileRenderer_SelectCell_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions ==
-			FastTrackOptions.MeshRendererSettings.All;
-
-		/// <summary>
-		/// Applied before SelectCell runs.
-		/// </summary>
-		internal static bool Prefix(int cell, bool enabled) {
-			TileMeshRenderer.Instance?.SelectCell(cell, enabled);
-			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to BlockTileRenderer to redirect invalid place cells to our version.
-	/// </summary>
-	[HarmonyPatch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.SetInvalidPlaceCell))]
-	public static class BlockTileRenderer_SetInvalidPlaceCell_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions ==
-			FastTrackOptions.MeshRendererSettings.All;
-
-		/// <summary>
-		/// Applied before SetInvalidPlaceCell runs.
-		/// </summary>
-		internal static bool Prefix(int cell, bool enabled) {
-			TileMeshRenderer.Instance?.SetInvalidPlaceCell(cell, enabled);
-			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to World to create a tile mesh renderer before the Game is loaded.
-	/// </summary>
-	[HarmonyPatch(typeof(World), nameof(World.OnPrefabInit))]
-	public static class World_OnPrefabInit_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MeshRendererOptions ==
-			FastTrackOptions.MeshRendererSettings.All;
 
 		/// <summary>
 		/// Applied after OnPrefabInit runs.
 		/// </summary>
-		internal static void Postfix() {
+		private static void OnPrefabInit_Postfix() {
 			TileMeshRenderer.CreateInstance();
+		}
+
+		/// <summary>
+		/// Applied before Rebuild runs.
+		/// </summary>
+		private static bool Rebuild_Prefix(ObjectLayer layer, int cell) {
+			TileMeshRenderer.Instance?.Rebuild(layer, cell);
+			return false;
+		}
+
+		/// <summary>
+		/// Applied before RemoveBlock runs.
+		/// </summary>
+		private static bool RemoveBlock_Prefix(BuildingDef def, bool isReplacement,
+				SimHashes element, int cell) {
+			TileMeshRenderer.Instance?.RemoveBlock(def, isReplacement, element, cell);
+			return false;
+		}
+
+		/// <summary>
+		/// Applied before SelectCell runs.
+		/// </summary>
+		private static bool SelectCell_Prefix(int cell, bool enabled) {
+			TileMeshRenderer.Instance?.SelectCell(cell, enabled);
+			return false;
+		}
+
+		/// <summary>
+		/// Applied before SetInvalidPlaceCell runs.
+		/// </summary>
+		private static bool SetInvalidPlaceCell_Prefix(int cell, bool enabled) {
+			TileMeshRenderer.Instance?.SetInvalidPlaceCell(cell, enabled);
+			return false;
 		}
 	}
 }

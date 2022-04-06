@@ -124,18 +124,19 @@ namespace PeterHan.FastTrack.GamePatches {
 					var extents = payload.GetExtents();
 					int h = extents.height, w = extents.width;
 					float kjPerM2 = exhaust * dt / (w * h);
-					int gw = Grid.WidthInCells, cell = extents.y * gw;
+					int gw = Grid.WidthInCells, cell = extents.y * gw + extents.x;
 					// Going up one row is +grid width -building width from the last cell of
 					// the previous row
 					gw -= w;
 					for (int y = h; y > 0; y--) {
 						for (int x = w; x > 0; x--) {
-							float mass = Grid.Mass[cell++];
+							float mass = Grid.Mass[cell];
 							// Avoid emitting into Vacuum
 							if (mass > 0.0f)
 								SimMessages.ModifyEnergy(cell, kjPerM2 * Mathf.Min(mass,
 									MAX_PRESSURE) / MAX_PRESSURE, payload.maxTemperature,
 									SimMessages.EnergySourceID.StructureTemperature);
+							cell++;
 						}
 						cell += gw;
 					}

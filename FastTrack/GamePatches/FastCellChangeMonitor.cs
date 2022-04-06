@@ -256,8 +256,9 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// Calls the cell changed handlers for this transform.
 			/// </summary>
 			public void CallCellChangedHandlers() {
-				foreach (var handler in cellChangedHandlers)
-					handler.Invoke();
+				// Some cell changed handlers modify the list :(
+				for (int i = 0; i < cellChangedHandlers.Count; i++)
+					cellChangedHandlers[i].Invoke();
 			}
 
 			/// <summary>
@@ -265,8 +266,8 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// </summary>
 			/// <param name="newState">The new movement state.</param>
 			public void CallMovementStateChangedHandlers(bool newState) {
-				foreach (var handler in moveHandlers)
-					handler.Invoke(transform, newState);
+				for (int i = 0; i < moveHandlers.Count; i++)
+					moveHandlers[i].Invoke(transform, newState);
 			}
 
 			public override string ToString() {

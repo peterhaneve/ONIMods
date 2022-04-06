@@ -48,6 +48,30 @@ namespace PeterHan.FastTrack.Metrics {
 	}
 
 	/// <summary>
+	/// Applied to EventSystem to log event triggers.
+	/// -1582839653 (TagsChanged): 6,548us
+	/// -1061186183 (AnimQueueComplete): 5,142us
+	/// -1697596308 (OnStorageChange): 4,494us
+	/// 387220196 (DestinationReached): 3,280us
+	/// -1491270284 (RemovedFetchable): 2,187us
+	/// </summary>
+	[HarmonyPatch(typeof(EventSystem), nameof(EventSystem.Trigger))]
+	public static class EventSystem_Trigger_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
+
+		[HarmonyPriority(Priority.High)]
+		internal static void Prefix(ref Stopwatch __state) {
+			__state = Stopwatch.StartNew();
+		}
+
+		[HarmonyPriority(Priority.Low)]
+		internal static void Postfix(int hash, Stopwatch __state) {
+			if (__state != null)
+				DebugMetrics.EVENTS.AddSlice(hash.ToString(), __state.ElapsedTicks);
+		}
+	}
+
+	/// <summary>
 	/// Applied to every Update() to log update metrics.
 	/// </summary>
 	[HarmonyPatch]

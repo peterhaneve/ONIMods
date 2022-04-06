@@ -115,6 +115,9 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool LoadOpts { get; set; }
 
+		[JsonProperty]
+		public bool ModLoadOpts { get; set; }
+
 		[Option("Optimize Dialogs", "Speeds up a variety of dialog boxes." + PERF_MEDIUM, "Interface")]
 		[JsonProperty]
 		public bool OptimizeDialogs { get; set; }
@@ -225,6 +228,7 @@ namespace PeterHan.FastTrack {
 			Metrics = false;
 			MinimalKCV = false;
 			MiscOpts = true;
+			ModLoadOpts = false;
 			NoBounce = true;
 			NoConversations = false;
 			NoPlacerEasing = false;

@@ -20,6 +20,8 @@ using HarmonyLib;
 using PeterHan.PLib.Core;
 using System.Collections.Generic;
 using System.Reflection;
+
+using RMI = ReachabilityMonitor.Instance;
 using ReachabilityMonitorState = GameStateMachine<ReachabilityMonitor, ReachabilityMonitor.
 	Instance, Workable, object>.State;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
@@ -49,7 +51,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// <summary>
 		/// The existing reachability monitor used to check and trigger events.
 		/// </summary>
-		private ReachabilityMonitor.Instance smi;
+		private RMI smi;
 
 		internal FastReachabilityMonitor() {
 			lastExtents = new Extents(int.MinValue, int.MinValue, 1, 1);
@@ -78,8 +80,9 @@ namespace PeterHan.FastTrack.SensorPatches {
 
 		public override void OnSpawn() {
 			base.OnSpawn();
-			smi = gameObject.GetSMI<ReachabilityMonitor.Instance>();
+			smi = gameObject.GetSMI<RMI>();
 			UpdateOffsets();
+			FastGroupProber.Instance.Enqueue(smi);
 		}
 
 		public void Sim4000ms(float _) {
@@ -208,7 +211,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		internal static bool Prefix(object prober, IEnumerable<int> cells) {
 			var inst = FastGroupProber.Instance;
 			if (inst != null)
-				inst.Occupy(prober, cells);
+				inst.Occupy(prober, cells, false);
 			return inst == null;
 		}
 	}
@@ -232,8 +235,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 	}
 
 	/// <summary>
-	/// Applied to MinionGroupProber to obsolete invalid serial numbers when a prober
-	/// completes.
+	/// Applied to MinionGroupProber to create an entry when a prober starts.
 	/// </summary>
 	[HarmonyPatch(typeof(MinionGroupProber), nameof(MinionGroupProber.SetValidSerialNos))]
 	public static class MinionGroupProber_SetValidSerialNos_Patch {
@@ -245,7 +247,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		internal static bool Prefix(object prober) {
 			var inst = FastGroupProber.Instance;
 			if (inst != null)
-				inst.SetSerials(prober);
+				inst.Allocate(prober);
 			return inst == null;
 		}
 	}
@@ -258,28 +260,35 @@ namespace PeterHan.FastTrack.SensorPatches {
 		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
 
 		/// <summary>
-		/// Replaces State.FastUpdate with a no-op method.
+		/// Transpiles InitializeStates to remove the FastUpdate updater.
 		/// </summary>
-		private static ReachabilityMonitorState FastUpdate(ReachabilityMonitorState state,
-				string name, UpdateBucketWithUpdater<ReachabilityMonitor.Instance>.IUpdater
-				updater, UpdateRate update_rate, bool load_balance) {
-			_ = name;
-			_ = updater;
-			_ = update_rate;
-			_ = load_balance;
-			return state;
+		internal static bool Prefix(ref StateMachine.BaseState default_state,
+				ReachabilityMonitor __instance) {
+			// Existing states
+			ReachabilityMonitorState reachable = __instance.reachable, unreachable =
+				__instance.unreachable;
+			var param = __instance.isReachable;
+			// New state: avoid an extra event on startup by only transitioning after the
+			// first successful reachability update
+			var tbd = __instance.CreateState("tbd");
+			default_state = tbd;
+			__instance.serializable = StateMachine.SerializeType.Never;
+			tbd.ParamTransition(param, unreachable, ReachabilityMonitor.IsFalse).
+				ParamTransition(param, reachable, ReachabilityMonitor.IsTrue);
+			reachable.ToggleTag(GameTags.Reachable).
+				Enter("TriggerEvent", TriggerEvent).
+				ParamTransition(param, unreachable, ReachabilityMonitor.IsFalse);
+			unreachable.Enter("TriggerEvent", TriggerEvent).
+				ParamTransition(param, reachable, ReachabilityMonitor.IsTrue);
+			return false;
 		}
 
 		/// <summary>
-		/// Transpiles InitializeStates to remove the FastUpdate updater.
+		/// Triggers an event when reachability changes.
 		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			return PPatchTools.ReplaceMethodCall(instructions, typeof(ReachabilityMonitorState).
-				GetMethodSafe(nameof(ReachabilityMonitorState.FastUpdate), false,
-				typeof(string), typeof(UpdateBucketWithUpdater<ReachabilityMonitor.Instance>.
-				IUpdater), typeof(UpdateRate), typeof(bool)), typeof(
-				ReachabilityMonitor_InitializeStates_Patch).GetMethodSafe(nameof(FastUpdate),
-				true, PPatchTools.AnyArguments));
+		/// <param name="smi">The reachability monitor whose state changed.</param>
+		private static void TriggerEvent(RMI smi) {
+			smi.TriggerEvent();
 		}
 	}
 
@@ -287,17 +296,30 @@ namespace PeterHan.FastTrack.SensorPatches {
 	/// Applied to ReachabilityMonitor.Instance to add a fast reachability monitor on each
 	/// object that needs reachability checks.
 	/// </summary>
-	[HarmonyPatch(typeof(ReachabilityMonitor.Instance), MethodType.Constructor,
-		typeof(Workable))]
+	[HarmonyPatch(typeof(RMI), MethodType.Constructor, typeof(Workable))]
 	public static class ReachabilityMonitor_Instance_Constructor_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
 
 		/// <summary>
-		/// Applied after the constructor runs.
+		/// Adds a fast reachability monitor to the target workable, but does not immediately
+		/// check for reachability, instead queuing it for a check on the group prober.
 		/// </summary>
-		internal static void Postfix(Workable workable) {
+		/// <param name="smi">The existing reachability monitor state.</param>
+		private static void UpdateReachability(RMI smi) {
+			var workable = smi.master;
 			if (workable != null)
 				workable.gameObject.AddOrGet<FastReachabilityMonitor>();
+		}
+
+		/// <summary>
+		/// Transpiles the constructor to enqueue the item onto the reachability queue instead
+		/// of checking immediately (where, on load, the result would be invalid).
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+			return PPatchTools.ReplaceMethodCall(instructions, typeof(RMI).GetMethodSafe(
+				nameof(RMI.UpdateReachability), false),
+				typeof(ReachabilityMonitor_Instance_Constructor_Patch).GetMethodSafe(nameof(
+				UpdateReachability), true, typeof(RMI)));
 		}
 	}
 }

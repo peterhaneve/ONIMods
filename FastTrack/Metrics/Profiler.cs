@@ -149,12 +149,12 @@ namespace PeterHan.FastTrack.Metrics {
 			/// <summary>
 			/// The class name in this bucket.
 			/// </summary>
-			public string ClassName;
+			public readonly string ClassName;
 
 			/// <summary>
 			/// The time taken in ticks.
 			/// </summary>
-			public long Time;
+			public readonly long Time;
 
 			public SimBucketResults(long time, string className) {
 				Time = time.TicksToUS();
@@ -176,6 +176,99 @@ namespace PeterHan.FastTrack.Metrics {
 
 			public override string ToString() {
 				return "{0}: {1:N0}us".F(ClassName, Time);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Profiles the conditions that are true the most often when compared to all the others in
+	/// this group.
+	/// </summary>
+	public sealed class TopNProfiler : IProfiler {
+		/// <summary>
+		/// Stores the number of hits per item.
+		/// </summary>
+		private readonly ConcurrentDictionary<string, int> hits;
+
+		/// <summary>
+		/// The number of hits to display.
+		/// </summary>
+		private readonly int top;
+
+		public TopNProfiler(int n) {
+			hits = new ConcurrentDictionary<string, int>(2, 64);
+			top = n;
+		}
+
+		/// <summary>
+		/// Logs a hit to a particular item.
+		/// </summary>
+		/// <param name="item">The item which was just hit.</param>
+		public void AddHit(string item) {
+			hits.AddOrUpdate(item, 1, (_, oldTotal) => oldTotal + 1);
+		}
+
+		public void Reset() {
+			hits.Clear();
+		}
+
+		public override string ToString() {
+			var byHitCount = ListPool<HitResults, NameBucketProfiler>.Allocate();
+			int overall = 0;
+			foreach (var pair in hits) {
+				int byItem = pair.Value;
+				overall += byItem;
+				byHitCount.Add(new HitResults(byItem, pair.Key));
+			}
+			byHitCount.Sort();
+			int n = Math.Min(top, byHitCount.Count);
+			var header = new System.Text.StringBuilder(128);
+			if (n > 0) {
+				header.AppendFormat("Total {0:D}:", overall);
+				for (int i = 0; i < n; i++) {
+					header.AppendLine();
+					header.Append(' ');
+					header.Append(byHitCount[i].ToString());
+				}
+			}
+			byHitCount.Recycle();
+			return header.ToString();
+		}
+
+		/// <summary>
+		/// Wraps hit count results and allows sorting by number of hits.
+		/// </summary>
+		private sealed class HitResults : IComparable<HitResults> {
+			/// <summary>
+			/// The item name in this bucket.
+			/// </summary>
+			public readonly string ItemName;
+
+			/// <summary>
+			/// The number of hits.
+			/// </summary>
+			public readonly int Hits;
+
+			public HitResults(int hits, string itemName) {
+				Hits = hits;
+				ItemName = itemName;
+			}
+
+			public int CompareTo(HitResults other) {
+				return -Hits.CompareTo(other.Hits);
+			}
+
+			public override bool Equals(object obj) {
+				return obj is HitResults other && Hits == other.Hits && ItemName ==
+					other.ItemName;
+			}
+
+			public override int GetHashCode() {
+				return ItemName.GetHashCode();
+			}
+
+			public override string ToString() {
+				return "{0}: {1:N0}".F(ItemName, Hits);
 			}
 		}
 	}

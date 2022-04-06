@@ -53,6 +53,11 @@ namespace PeterHan.FastTrack.Metrics {
 			new ConcurrentDictionary<string, RatioProfiler>(2, 8);
 
 		/// <summary>
+		/// Tracks Klei event triggers.
+		/// </summary>
+		internal static readonly NameBucketProfiler EVENTS = new NameBucketProfiler();
+
+		/// <summary>
 		/// Tracks Unity LateUpdate() methods.
 		/// </summary>
 		internal static readonly NameBucketProfiler LATE_UPDATE = new NameBucketProfiler();
@@ -151,6 +156,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// Resets all metrics.
 		/// </summary>
 		internal static void Reset() {
+			EVENTS.Reset();
 			PATH_PROBES.Reset();
 			probeWaiting = 0L;
 			LATE_UPDATE.Reset();
@@ -191,6 +197,8 @@ namespace PeterHan.FastTrack.Metrics {
 						text.Append(' ').Append(pair.Key).Append(pair.Value);
 					PUtil.LogDebug(text);
 				}
+				// Events fired
+				PUtil.LogDebug("Events " + EVENTS.ToString());
 				// Path cache
 				PUtil.LogDebug("Path Cache: " + PATH_CACHE);
 				// Brain stats
