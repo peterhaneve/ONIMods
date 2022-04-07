@@ -198,6 +198,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public MeshRendererSettings MeshRendererOptions { get; set; }
 
+		[Option("Virtual Scroll", "Improves the speed of scrolling menus." + PERF_MEDIUM, "Visual")]
+		[JsonProperty]
+		public bool VirtualScroll { get; set; }
+
 		[Option("Log Debug Metrics", "Logs extra debug information to the game log.\n\n<b>Only use this option if directed to do so by a developer.</b>", "Debug")]
 		[JsonProperty]
 		public bool Metrics { get; set; }
@@ -245,6 +249,7 @@ namespace PeterHan.FastTrack {
 			SensorOpts = true;
 			ThreatOvercrowding = true;
 			UnstackLights = true;
+			VirtualScroll = true;
 		}
 
 		/// <summary>

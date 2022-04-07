@@ -193,7 +193,8 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// removed cells), or false otherwise.</param>
 		internal void Occupy(object prober, IEnumerable<int> cells, bool isFullQuery) {
 			if (probers.TryGetValue(prober, out ReachableCells rc))
-				rc.Update(cells, isFullQuery);
+				// While ugly, the alternative is yet another transpiler on SolidTransferArm...
+				rc.Update(cells, isFullQuery || prober is SolidTransferArm);
 			trigger.Set();
 		}
 

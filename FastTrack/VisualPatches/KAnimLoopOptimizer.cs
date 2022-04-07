@@ -26,6 +26,11 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// </summary>
 	public sealed class KAnimLoopOptimizer {
 		/// <summary>
+		/// Animations of this many frames or fewer are paused instead of run once.
+		/// </summary>
+		public const int SHORT_THRESHOLD = 5;
+
+		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
 		public static KAnimLoopOptimizer Instance { get; private set; }
@@ -120,10 +125,24 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// The animations that are nothing but static idle animations.
 		/// </summary>
-		private readonly HashSet<AnimWrapper> idleAnims;
+		private readonly IDictionary<HashedString, AnimWrapper> idleAnims;
 
 		private KAnimLoopOptimizer() {
-			idleAnims = new HashSet<AnimWrapper>();
+			idleAnims = new Dictionary<HashedString, AnimWrapper>(128);
+		}
+
+		/// <summary>
+		/// Optimizes the play mode used for animations.
+		/// </summary>
+		/// <param name="anim">The anim file that is playing.</param>
+		/// <param name="currentMode">The current play mode requested by the game.</param>
+		/// <returns>The play mode to use for playing it taking optimizations into account.</returns>
+		public KAnim.PlayMode GetAnimState(KAnim.Anim anim, KAnim.PlayMode currentMode) {
+			var mode = currentMode;
+			if (anim != null && idleAnims.TryGetValue(anim.id, out AnimWrapper status) &&
+					status.anim == anim)
+				mode = status.veryTrivial ? KAnim.PlayMode.Paused : KAnim.PlayMode.Once;
+			return mode;
 		}
 
 		/// <summary>
@@ -140,6 +159,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 				var anim = data.GetAnim(i);
 				int start = anim.firstFrameIdx, nf = anim.numFrames, end = start + nf;
 				bool trivial = true;
+				var id = anim.id;
 				if (nf > 1) {
 					var firstFrame = bgd.GetFrame(start++);
 					trivial = firstFrame.idx >= 0;
@@ -150,8 +170,9 @@ namespace PeterHan.FastTrack.VisualPatches {
 							ref nextFrame);
 					}
 				}
-				if (trivial)
-					idleAnims.Add(new AnimWrapper(anim));
+				if (trivial && !idleAnims.ContainsKey(id))
+					// There are a couple of collisions in ONI, but they are properly handled
+					idleAnims.Add(id, new AnimWrapper(anim, nf));
 			}
 		}
 
@@ -169,28 +190,24 @@ namespace PeterHan.FastTrack.VisualPatches {
 		}
 
 		/// <summary>
-		/// Checks to see if an animation is an idle animation.
-		/// </summary>
-		/// <param name="anim">The anim file that is playing.</param>
-		/// <returns>true if that animation is an idle animation, or false otherwise.</returns>
-		public bool IsIdleAnim(KAnim.Anim anim) {
-			bool idle = true;
-			if (anim != null)
-				idle = idleAnims.Contains(new AnimWrapper(anim));
-			return idle;
-		}
-
-		/// <summary>
-		/// Efficiently wraps an anim bank for hashing.
+		/// Stores the animation trivial state with the anim (to verify against hash
+		/// collisions).
 		/// </summary>
 		private sealed class AnimWrapper {
 			/// <summary>
-			/// The wrapped anim (which has file and bank name).
+			/// The wrapped anim (which has a file and bank name).
 			/// </summary>
 			internal readonly KAnim.Anim anim;
 
-			internal AnimWrapper(KAnim.Anim anim) {
+			/// <summary>
+			/// If the animation is 5 frames or fewer, then it is very trivial and will be
+			/// executed paused instead of once.
+			/// </summary>
+			internal readonly bool veryTrivial;
+
+			internal AnimWrapper(KAnim.Anim anim, int numFrames) {
 				this.anim = anim;
+				veryTrivial = numFrames <= SHORT_THRESHOLD;
 			}
 
 			public override bool Equals(object obj) {
@@ -198,7 +215,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			}
 
 			public override int GetHashCode() {
-				return anim.animFile.name.GetHashCode() ^ anim.name.GetHashCode();
+				return anim.id.HashValue;
 			}
 
 			public override string ToString() {

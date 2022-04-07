@@ -79,6 +79,50 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
+		/// Checks for compatibility and applies fast fetch manager updates only if Efficient
+		/// Supply is not enabled.
+		/// </summary>
+		/// <param name="harmony">The Harmony instance to use for patching.</param>
+		private static void CheckFetchCompat(Harmony harmony) {
+			if (PPatchTools.GetTypeSafe("PeterHan.EfficientFetch.EfficientFetchManager") ==
+					null) {
+				harmony.Patch(typeof(FetchManager.FetchablesByPrefabId),
+					nameof(FetchManager.FetchablesByPrefabId.UpdatePickups),
+					prefix: new HarmonyMethod(typeof(GamePatches.FetchManagerFastUpdate),
+					nameof(GamePatches.FetchManagerFastUpdate.BeforeUpdatePickups)));
+#if DEBUG
+				PUtil.LogDebug("Patched FetchManager for fast pickup updates");
+#endif
+			} else
+				PUtil.LogWarning("Disabling fast pickup updates: Efficient Supply active");
+		}
+
+		/// <summary>
+		/// Checks for compatibility and applies tile mesh renderer patches only if other tile
+		/// mods are not enabled.
+		/// </summary>
+		/// <param name="harmony">The Harmony instance to use for patching.</param>
+		/// <param name="mods">The mods list after all load.</param>
+		private static void CheckTileCompat(Harmony harmony, IReadOnlyList<Mod> mods) {
+			int n = mods.Count;
+			bool found = false;
+			// No Contains in read only lists...
+			for (int i = 0; i < n && !found; i++) {
+				var m = mods[i];
+				if (m.staticID == TRUE_TILES_ID && m.IsEnabledForActiveDlc()) {
+					PUtil.LogWarning("Disabling tile mesh renderers: True Tiles active");
+					found = true;
+				}
+			}
+			if (!found) {
+				VisualPatches.TileMeshPatches.Apply(harmony);
+#if DEBUG
+				PUtil.LogDebug("Patched BlockTileRenderer for mesh renderers");
+#endif
+			}
+		}
+
+		/// <summary>
 		/// Fixes the drag order spam bug, if Stock Bug Fix did not get to it first.
 		/// </summary>
 		internal static void FixTimeLapseDrag() {
@@ -106,8 +150,6 @@ namespace PeterHan.FastTrack {
 			ConduitPatches.ConduitFlowVisualizerRenderer.Cleanup();
 			if (options.CachePaths)
 				PathPatches.PathCacher.Cleanup();
-			// FastCellChangeMonitor did not help, because pretty much all updates were to
-			// things that actually had a listener
 			if (options.UnstackLights)
 				VisualPatches.LightBufferManager.Cleanup();
 			if (options.ReduceTileUpdates)
@@ -138,7 +180,7 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
-		/// Starts up some asynchronous tasks after everything is fully loaded.
+		/// Starts up some asynchronous tasks after mods are fully loaded.
 		/// </summary>
 		[PLibMethod(RunAt.AfterLayerableLoad)]
 		private static void OnLayerablesLoaded() {
@@ -203,38 +245,11 @@ namespace PeterHan.FastTrack {
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
 			var options = FastTrackOptions.Instance;
 			base.OnAllModsLoaded(harmony, mods);
-			// Manual patch in the rewritten BlockTileRenderer only if True Tiles is not
-			// enabled
 			if (options.MeshRendererOptions == FastTrackOptions.MeshRendererSettings.All &&
-					mods != null) {
-				int n = mods.Count;
-				bool found = false;
-				// No Contains in read only lists...
-				for (int i = 0; i < n && !found; i++) {
-					var m = mods[i];
-					if (m.staticID == TRUE_TILES_ID && m.IsEnabledForActiveDlc()) {
-						PUtil.LogWarning("Disabling tile mesh renderers: True Tiles active");
-						found = true;
-					}
-				}
-				if (!found)
-					VisualPatches.TileMeshPatches.Apply(harmony);
-			}
-			// Manual patch in the rewritten FetchManager.UpdatePickups only if Efficient
-			// Supply is not enabled
-			if (options.FastUpdatePickups) {
-				if (PPatchTools.GetTypeSafe("PeterHan.EfficientFetch.EfficientFetchManager") ==
-						null) {
-					harmony.Patch(typeof(FetchManager.FetchablesByPrefabId),
-						nameof(FetchManager.FetchablesByPrefabId.UpdatePickups),
-						prefix: new HarmonyMethod(typeof(GamePatches.FetchManagerFastUpdate),
-						nameof(GamePatches.FetchManagerFastUpdate.BeforeUpdatePickups)));
-#if DEBUG
-					PUtil.LogDebug("Patched FetchManager for fast pickup updates");
-#endif
-				} else
-					PUtil.LogWarning("Disabling fast pickup updates: Efficient Supply active");
-			}
+					mods != null)
+				CheckTileCompat(harmony, mods);
+			if (options.FastUpdatePickups)
+				CheckFetchCompat(harmony);
 			if (!PRegistry.GetData<bool>("Bugs.AutosaveDragFix"))
 				// Fix the annoying autosave bug
 				harmony.Patch(typeof(Timelapser), "SaveScreenshot", postfix: new HarmonyMethod(

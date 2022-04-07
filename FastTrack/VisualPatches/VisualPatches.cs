@@ -119,7 +119,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before PlayAnimation runs.
 		/// </summary>
-		internal static bool Prefix(EasingAnimations __instance) {
+		internal static bool Prefix() {
 			return false;
 		}
 	}

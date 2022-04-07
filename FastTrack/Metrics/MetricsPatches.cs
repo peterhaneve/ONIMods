@@ -72,7 +72,7 @@ namespace PeterHan.FastTrack.Metrics {
 	}
 
 	/// <summary>
-	/// Applied to every Update() to log update metrics.
+	/// Applied to every Update() method to log update metrics.
 	/// </summary>
 	[HarmonyPatch]
 	public static class ProfileUpdates {
@@ -113,7 +113,7 @@ namespace PeterHan.FastTrack.Metrics {
 	}
 
 	/// <summary>
-	/// Applied to every LateUpdate() to log late update metrics.
+	/// Applied to every LateUpdate() method to log late update metrics.
 	/// </summary>
 	[HarmonyPatch]
 	public static class ProfileLateUpdates {

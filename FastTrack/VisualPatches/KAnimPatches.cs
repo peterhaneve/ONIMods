@@ -64,10 +64,9 @@ namespace PeterHan.FastTrack.VisualPatches {
 				KAnimControllerBase controller) {
 			var anim = controller.curAnim;
 			var inst = KAnimLoopOptimizer.Instance;
-			if (anim != null && mode == KAnim.PlayMode.Loop && inst != null &&
-					inst.IsIdleAnim(anim))
-				// "Paused" would be even better, but some visual artifacts occur
-				mode = KAnim.PlayMode.Once;
+			if (anim != null && mode != KAnim.PlayMode.Paused && inst != null)
+				// Set paused only if the anim is so short it would be unnoticeable
+				mode = inst.GetAnimState(anim, mode);
 			return mode;
 		}
 
@@ -201,7 +200,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 				transform.hasChanged = false;
 				// If this is the only anim in the batch, and the Z coordinate changed,
 				// override the Z in the batch
-				if (batch != null && batch.group.maxGroupSize == 1 && instance.lastPos.z != z)
+				if (batch.group.maxGroupSize == 1 && instance.lastPos.z != z)
 					batch.OverrideZ(z);
 				instance.lastPos = posWithOffset;
 				// This is basically GetCellXY() with less accesses to __instance.transform
@@ -224,8 +223,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 			if (instance.batchGroupID != KAnimBatchManager.NO_BATCH) {
 				var anim = instance.curAnim;
 				var mode = instance.mode;
-				float t = instance.elapsedTime, nt = t + dt * instance.playSpeed;
 				bool force = instance.forceRebuild, stopped = instance.stopped;
+				float t = instance.elapsedTime, increment = dt * instance.playSpeed;
 				// Suspend updates if: not currently suspended, not force update, and one
 				// of (paused, stopped, no anim, one time and finished with no more to play)
 				if (!instance.suspendUpdates && !force && (mode == KAnim.PlayMode.Paused ||
@@ -243,13 +242,14 @@ namespace PeterHan.FastTrack.VisualPatches {
 							aem.SetElapsedTime(handle, t);
 					}
 					instance.UpdateFrame(t);
+					// Time can be mutated by UpdateFrame
 					if (!stopped && mode != KAnim.PlayMode.Paused)
-						instance.SetElapsedTime(nt);
+						instance.SetElapsedTime(instance.elapsedTime + increment);
 					instance.forceRebuild = false;
 				} else if (visType == KAnimControllerBase.VisibilityType.OffscreenUpdate &&
 						!stopped && mode != KAnim.PlayMode.Paused)
 					// If invisible, only advance if offscreen update is enabled
-					instance.SetElapsedTime(nt);
+					instance.SetElapsedTime(t + increment);
 			}
 		}
 	}
