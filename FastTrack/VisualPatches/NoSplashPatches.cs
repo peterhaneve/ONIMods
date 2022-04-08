@@ -48,7 +48,26 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before SpawnBreath runs.
 		/// </summary>
-		internal static bool Prefix() {
+		internal static bool Prefix(Vector3 position, float mass, float temperature) {
+			var offsets = OxygenBreather.DEFAULT_BREATHABLE_OFFSETS;
+			int gameCell = Grid.PosToCell(position), count = offsets.Length, spawnCell = -1;
+			for (int i = 0; i < count; i++) {
+				int testCell = Grid.OffsetCell(gameCell, offsets[i]);
+				if (Grid.IsValidCell(testCell)) {
+					var element = Grid.Element[testCell];
+					// Prioritize oxygen, polluted oxygen, salty oxygen (!), CO2
+					if (element.id == SimHashes.CarbonDioxide || element.HasTag(GameTags.
+							Breathable)) {
+						spawnCell = testCell;
+						break;
+					} else if (element.IsGas)
+						// Only in gases, not in vacuums, liquids, or solids
+						spawnCell = testCell;
+				}
+			}
+			if (spawnCell >= 0)
+				SimMessages.ModifyMass(spawnCell, mass, byte.MaxValue, 0, CellEventLogger.
+					Instance.CO2ManagerFixedUpdate, temperature, SimHashes.CarbonDioxide);
 			return false;
 		}
 	}

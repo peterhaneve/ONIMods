@@ -64,9 +64,14 @@ namespace PeterHan.FastTrack.VisualPatches {
 				KAnimControllerBase controller) {
 			var anim = controller.curAnim;
 			var inst = KAnimLoopOptimizer.Instance;
-			if (anim != null && mode != KAnim.PlayMode.Paused && inst != null)
-				// Set paused only if the anim is so short it would be unnoticeable
+			if (anim != null && mode != KAnim.PlayMode.Paused && inst != null && controller.
+					animQueue.Count == 0) {
+				// Will set "paused" only if the anim is so short as to be unnoticeable
 				mode = inst.GetAnimState(anim, mode);
+				if (mode == KAnim.PlayMode.Paused)
+					// Trigger an instant stop
+					controller.TriggerStop();
+			}
 			return mode;
 		}
 

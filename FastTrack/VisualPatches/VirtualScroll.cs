@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -33,6 +32,11 @@ namespace PeterHan.FastTrack.VisualPatches {
 		private readonly IList<VirtualItem> components;
 
 		/// <summary>
+		/// Whether to freeze layouts on rebuild.
+		/// </summary>
+		public bool freezeLayout;
+
+		/// <summary>
 		/// The parent of items to be shown. It is assumed that all items are the same size!
 		/// </summary>
 		private RectTransform itemList;
@@ -45,7 +49,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// The margin to render components in pixels. Should be more than one component size.
 		/// </summary>
-		private float margin;
+		private Vector2 margin;
 
 		/// <summary>
 		/// The scroll pane which will be virtually scrolled.
@@ -69,8 +73,9 @@ namespace PeterHan.FastTrack.VisualPatches {
 
 		internal VirtualScroll() {
 			components = new List<VirtualItem>(64);
+			freezeLayout = false;
 			lastPosition = Vector2.up;
-			margin = 10.0f;
+			margin = new Vector2(10.0f, 10.0f);
 		}
 
 		/// <summary>
@@ -91,15 +96,26 @@ namespace PeterHan.FastTrack.VisualPatches {
 			if (scroll != null && itemList != null) {
 				Transform ta = spacerAbove.transform, tb = spacerBelow.transform;
 				int n = itemList.childCount;
+				float marginX = 0.0f, marginY = 0.0f;
+				bool ice = freezeLayout;
 				components.Clear();
 				ta.SetAsFirstSibling();
 				tb.SetAsLastSibling();
 				for (int i = 0; i < n; i++) {
 					var transform = itemList.GetChild(i);
 					// Must not be one of the spacers
-					if (transform != null && transform != ta && transform != tb)
-						components.Add(new VirtualItem(transform, itemList));
+					if (transform != null && transform != ta && transform != tb) {
+						var vi = new VirtualItem(transform, itemList, ice);
+						float w = vi.size.x, h = vi.size.y;
+						components.Add(vi);
+						if (w > marginX)
+							marginX = w;
+						if (h > marginY)
+							marginY = h;
+					}
 				}
+				margin = new Vector2(marginX * 1.5f, marginY * 1.5f);
+				// Calculate the margin
 				UpdateScroll();
 			}
 		}
@@ -120,10 +136,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 			// Transform into itemList space
 			Vector3 bl = itemList.InverseTransformPoint(wxMin, wyMin, 0.0f), tr = itemList.
 				InverseTransformPoint(wxMin + rect.width, wyMin + rect.height, 0.0f);
-			xMin = bl.x - margin;
-			yMin = bl.y - margin;
-			xMax = tr.x + margin;
-			yMax = tr.y + margin;
+			xMin = bl.x - margin.x;
+			yMin = bl.y - margin.y;
+			xMax = tr.x + margin.x;
+			yMax = tr.y + margin.y;
 		}
 
 		/// <summary>
@@ -131,11 +147,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		/// <param name="target">The target rectangle containing the items.</param>
 		/// <param name="margin">The display margin in pixels.</param>
-		internal void Initialize(RectTransform target, float margin) {
+		internal void Initialize(RectTransform target) {
 			if (target != itemList && scroll != null) {
 				scroll.onValueChanged.AddListener(OnScroll);
 				itemList = target;
-				margin = Math.Max(0.0f, margin);
 				spacerAbove.transform.parent = itemList;
 				spacerBelow.transform.parent = itemList;
 				Rebuild();
@@ -246,7 +261,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// </summary>
 			private bool visible;
 
-			public VirtualItem(Transform transform, Transform parent) {
+			public VirtualItem(Transform transform, Transform parent, bool freezeLayout) {
 				var group = transform.GetComponent<LayoutGroup>();
 				var absOffset = RectTransformUtility.CalculateRelativeRectTransformBounds(
 					parent, transform);
@@ -256,7 +271,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 				size = new Vector2(absOffset.size.x, absOffset.size.y);
 				max = min + size;
 				// Destroy and replace layout groups with a fixed element, this helps a lot
-				if (group != null) {
+				if (group != null && freezeLayout) {
 					var sizes = entry.AddOrGet<LayoutElement>();
 					sizes.flexibleHeight = group.flexibleHeight;
 					sizes.flexibleWidth = group.flexibleWidth;

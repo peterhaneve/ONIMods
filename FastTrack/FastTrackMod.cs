@@ -37,8 +37,8 @@ namespace PeterHan.FastTrack {
 		internal static void Profile(Harmony harmony) {
 			harmony.Profile(typeof(KAnimBatchManager), nameof(KAnimBatchManager.UpdateDirty));
 			harmony.Profile(typeof(KBatchedAnimUpdater), nameof(KBatchedAnimUpdater.UpdateRegisteredAnims));
-			harmony.Profile(typeof(CellChangeMonitor), nameof(CellChangeMonitor.RenderEveryTick));
-			harmony.Profile(typeof(Game), nameof(Game.UnsafeSim200ms));
+			//harmony.Profile(typeof(Game), nameof(Game.UnsafeSim200ms));
+			harmony.Profile(typeof(KChildFitter), nameof(KChildFitter.LateUpdate));
 		}
 #endif
 
