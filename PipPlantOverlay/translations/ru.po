@@ -1,0 +1,148 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.7\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Last-Translator: \n"
+"Language: ru\n"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.INPUT_BINDINGS.ROOT.PIPPLANT
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.INPUT_BINDINGS.ROOT.PIPPLANT"
+msgid "Open Pip Planting Overlay"
+msgstr "Открыть оверлей посадок пипа"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.BUTTON
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"BUTTON"
+msgid "Pip Planting Overlay"
+msgstr "Оверлей посадок пипа"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.CANPLANT
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"CANPLANT"
+msgid "Can plant here"
+msgstr "Здесь можно посадить"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.DESCRIPTION
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"DESCRIPTION"
+msgid ""
+"Displays the locations where Pips can plant seeds.\n"
+"\n"
+"Pips will consider planting a seed in a tile under these conditions:\n"
+"1. The tile has no more than 2 other plants in a square 6 left, 6 down, 5 "
+"right, 5 up from the tile.\n"
+"2. It is either a \"natural tile\" of less than 150 hardness, a farm tile or "
+"a hydroponic farm.\n"
+"3. The pip can navigate to the seed and the tile, and there must be no "
+"buildings obstructing the plant's location.\n"
+"4. The atmospheric pressure is greater than 100g.\n"
+"5. The atmospheric temperature is around ±50C to ±100C of the requirements "
+"of the plant.\n"
+msgstr ""
+"Отображает места, где Пипы могут сажать семена.\n"
+"\n"
+"Пип рассмотрит возможность посадки семени в плитку при следующих условиях:\n"
+"1. На плитке есть не более 2 других растений в квадрате 6 слева, 6 внизу, 5 "
+"справа, 5 вверху от плитки.\n"
+"2. Это либо «натуральная плитка» с твердостью менее 150, плитка фермы или "
+"гидропонная ферма.\n"
+"3. Пип может перемещаться к семени и плитке, и не должно быть зданий, "
+"препятствующих расположению растения.\n"
+"4. Атмосферное давление превышает 100 г.\n"
+"5. Температура воздуха составляет от ±50°C до ±100°C требований завода. \n"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.HARDNESS
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"HARDNESS"
+msgid "Tile is too hard"
+msgstr "Плитка слишком твердая"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.NAME
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.NAME"
+msgid "PIP PLANTING OVERLAY"
+msgstr "ОВЕРЛЕЙ ПОСАДОК ПИПА"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.PLANTCOUNT
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"PLANTCOUNT"
+msgid "Too many plants"
+msgstr "Слишком много растений"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.PRESSURE
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"PRESSURE"
+msgid "Pressure too low"
+msgstr "Слишком низкое давление"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.TEMPERATURE
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"TEMPERATURE"
+msgid "Temperature too extreme"
+msgstr "Слишком экстремальная температура"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.TOOLTIP
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"TOOLTIP"
+msgid "Displays locations where Pips can plant seeds"
+msgstr "Отображает места, где Пипы могут сажать семена"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.TOOLTIPS.CANPLANT
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"TOOLTIPS.CANPLANT"
+msgid "Seeds can be planted here, if there is room and temperature is valid"
+msgstr "Сюда можно сажать семена, если есть место и допустимая температура"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.TOOLTIPS.HARDNESS
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"TOOLTIPS.HARDNESS"
+msgid "Natural tile hardness is above {0:D}!"
+msgstr "Естественная твердость плитки выше {0:D}!"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.TOOLTIPS.PLANTCOUNT
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"TOOLTIPS.PLANTCOUNT"
+msgid "More than {0:D} other plants are within the range of {1:D}!"
+msgstr "Более {0:D} других растений находятся в диапазоне {1:D}!"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.TOOLTIPS.PLANTCOUNT_1
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"TOOLTIPS.PLANTCOUNT_1"
+msgid "More than one other plant is within the range of {1:D}!"
+msgstr "Более одного другого растения находится в диапазоне {1:D}!"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.TOOLTIPS.PRESSURE
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"TOOLTIPS.PRESSURE"
+msgid "Atmospheric pressure is below {0} or tile is flooded!"
+msgstr "Атмосферное давление ниже {0} или плитка затоплена!"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.TOOLTIPS.TEMPERATURE
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"TOOLTIPS.TEMPERATURE"
+msgid "Temperature is below {0} or above {1}!"
+msgstr "Температура ниже {0} или выше {1}!"
