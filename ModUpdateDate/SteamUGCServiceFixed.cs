@@ -219,7 +219,7 @@ namespace PeterHan.ModUpdateDate {
 						toUpdate.Add(id);
 					else
 						toAdd.Add(id);
-					mod.clientSeen = false;
+					mod.clientSeen = true;
 					mod.state = SteamModState.Subscribed;
 					break;
 				default:
@@ -245,7 +245,7 @@ namespace PeterHan.ModUpdateDate {
 							toUpdate.Add(id);
 						else
 							toAdd.Add(id);
-						mod.clientSeen = false;
+						mod.clientSeen = true;
 						mod.state = SteamModState.Subscribed;
 					}
 				}

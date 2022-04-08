@@ -68,7 +68,11 @@ namespace PeterHan.ModUpdateDate {
 		/// Loads the settings for this mod.
 		/// </summary>
 		internal static void LoadSettings() {
-			Settings = POptions.ReadSettings<ModUpdateInfo>() ?? new ModUpdateInfo();
+			var s = POptions.ReadSettings<ModUpdateInfo>();
+			if (s == null || string.IsNullOrEmpty(s.VersionSavedOn))
+				s = new ModUpdateInfo();
+			s.VersionSavedOn = ModVersion.FILE_VERSION;
+			Settings = s;
 		}
 
 		/// <summary>
@@ -85,10 +89,18 @@ namespace PeterHan.ModUpdateDate {
 		[Option("STRINGS.UI.MODUPDATER.OPTION_MAINMENU", "STRINGS.UI.TOOLTIPS.MODUPDATER.OPTION_MAINMENU")]
 		public bool ShowMainMenuWarning { get; set; }
 
+		[JsonProperty]
+		public string VersionSavedOn { get; set; }
+
 		public ModUpdateInfo() {
 			ModUpdates = new List<ModUpdateData>(8);
 			AutoUpdate = true;
 			ShowMainMenuWarning = true;
+			VersionSavedOn = "";
+		}
+
+		public override string ToString() {
+			return "ModUpdateInfo[Version={0}]".F(VersionSavedOn);
 		}
 	}
 
