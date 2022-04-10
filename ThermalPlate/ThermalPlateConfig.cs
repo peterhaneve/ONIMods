@@ -68,6 +68,7 @@ namespace PeterHan.ThermalPlate {
 		}
 
 		public override BuildingDef CreateBuildingDef() {
+			LocString.CreateLocStringKeys(typeof(ThermalPlateStrings.BUILDINGS));
 			var def = ThermalInterfacePlate.CreateDef();
 			// Is "Drywall Hides Pipes" installed? If so, hide pipes with this too
 			if (PPatchTools.GetTypeSafe("DrywallHidesPipes.DrywallPatch") != null)

@@ -17,7 +17,6 @@
  */
 
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Buildings;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -50,14 +49,14 @@ namespace PeterHan.ThermalPlate {
 		/// <summary>
 		/// The buildings to which heat will be transferred.
 		/// </summary>
-		private readonly ICollection<GameObject> transferCache;
+		private readonly ICollection<TransferTarget> transferCache;
 
 		public ThermalInterfacePlate() {
 			backwallLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Backwall),
 				ObjectLayer.Backwall);
 			numObjectLayers = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.NumLayers),
 				ObjectLayer.NumLayers);
-			transferCache = new List<GameObject>();
+			transferCache = new HashSet<TransferTarget>();
 		}
 
 		public void Sim200ms(float dt) {
@@ -67,11 +66,9 @@ namespace PeterHan.ThermalPlate {
 				float temp = pe.Temperature;
 				// https://forums.kleientertainment.com/forums/topic/84275-decrypting-heat-transfer/
 				lock (transferCache) {
-					foreach (var gameObject in transferCache) {
-						var newBuilding = gameObject.GetComponentSafe<BuildingComplete>();
-						if (newBuilding != null)
-							temp = TransferHeatTo(pe, newBuilding, temp, dt);
-					}
+					foreach (var target in transferCache)
+						if (target.IsValid)
+							temp = TransferHeatTo(pe, target.building, temp, dt);
 				}
 				pe.Temperature = temp;
 			}
@@ -85,8 +82,10 @@ namespace PeterHan.ThermalPlate {
 				for (int i = 0; i < numObjectLayers; i++) {
 					var gameObject = Grid.Objects[cell, i];
 					var newBuilding = gameObject.GetComponentSafe<BuildingComplete>();
-					if (newBuilding != null && newBuilding != building)
-						transferCache.Add(gameObject);
+					// Ignore solid tiles
+					if (newBuilding != null && newBuilding != building && gameObject.
+							GetComponent<SimCellOccupier>() == null)
+						transferCache.Add(new TransferTarget(gameObject, newBuilding));
 				}
 				// Transfer heat to adjacent tempshift plates since those have 3x3 radii
 				for (int dx = -1; dx <= 1; dx++)
@@ -97,7 +96,7 @@ namespace PeterHan.ThermalPlate {
 							var plate = gameObject.GetComponentSafe<BuildingComplete>();
 							// Is it a tempshift plate?
 							if (plate?.Def?.PrefabID == ThermalBlockConfig.ID)
-								transferCache.Add(gameObject);
+								transferCache.Add(new TransferTarget(gameObject, plate));
 						}
 					}
 			}
@@ -137,6 +136,43 @@ namespace PeterHan.ThermalPlate {
 				thatElement.Temperature = tnew2;
 			}
 			return tnew1;
+		}
+
+		/// <summary>
+		/// A potential target for heat transfer via TIP.
+		/// </summary>
+		private struct TransferTarget {
+			/// <summary>
+			/// Reports whether this building is valid (otherwise, it was destroyed).
+			/// </summary>
+			public bool IsValid {
+				get {
+					return go != null;
+				}
+			}
+
+			/// <summary>
+			/// The building to transfer.
+			/// </summary>
+			internal readonly BuildingComplete building;
+
+			/// <summary>
+			/// The base game object which will receive the heat.
+			/// </summary>
+			private readonly GameObject go;
+
+			public TransferTarget(GameObject go, BuildingComplete building) {
+				this.building = building;
+				this.go = go;
+			}
+
+			public override bool Equals(object obj) {
+				return obj is TransferTarget other && go != null && go.Equals(other.go);
+			}
+
+			public override int GetHashCode() {
+				return go.GetHashCode();
+			}
 		}
 	}
 }

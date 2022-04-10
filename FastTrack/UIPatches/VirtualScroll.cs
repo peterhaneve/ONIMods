@@ -32,6 +32,11 @@ namespace PeterHan.FastTrack.UIPatches {
 		private readonly IList<VirtualItem> components;
 
 		/// <summary>
+		/// The game objects to always show.
+		/// </summary>
+		private readonly ISet<GameObject> forceShow;
+
+		/// <summary>
 		/// Whether to freeze layouts on rebuild.
 		/// </summary>
 		public bool freezeLayout;
@@ -78,6 +83,7 @@ namespace PeterHan.FastTrack.UIPatches {
 
 		internal VirtualScroll() {
 			components = new List<VirtualItem>(64);
+			forceShow = new HashSet<GameObject>();
 			freezeLayout = false;
 			lastPosition = Vector2.up;
 			margin = new Vector2(10.0f, 10.0f);
@@ -92,6 +98,15 @@ namespace PeterHan.FastTrack.UIPatches {
 		internal void Awake() {
 			scroll = GetComponentInParent<KScrollRect>();
 			parentRect = scroll.rectTransform();
+		}
+
+		/// <summary>
+		/// Restores a game object to be hidden if off-screen.
+		/// </summary>
+		/// <param name="allowHide">The game object to possibly hide.</param>
+		internal void ClearForceShow(GameObject allowHide) {
+			if (forceShow.Remove(allowHide))
+				UpdateScroll();
 		}
 
 		/// <summary>
@@ -190,6 +205,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		internal void OnDestroy() {
+			forceShow.Clear();
 			if (scroll != null) {
 				scroll.onValueChanged.RemoveListener(OnScroll);
 				itemList = null;
@@ -223,6 +239,15 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
+		/// Forces a game object to always be active regardless of whether it is on-screen.
+		/// </summary>
+		/// <param name="disableHide">The game object to show.</param>
+		internal void SetForceShow(GameObject disableHide) {
+			if (forceShow.Add(disableHide))
+				UpdateScroll();
+		}
+
+		/// <summary>
 		/// Updates the visibility of all items based on the ones that should be visible.
 		/// </summary>
 		private void UpdateScroll() {
@@ -235,7 +260,10 @@ namespace PeterHan.FastTrack.UIPatches {
 					var item = components[i];
 					float yMin = item.min.y, xMin = item.min.x, yMax = item.max.y, xMax =
 						item.max.x;
-					if (yMin > yt) {
+					if (forceShow.Contains(item.entry))
+						// Always visible
+						item.SetVisible(true);
+					else if (yMin > yt) {
 						// Component above
 						above.Add(yMin, yMax);
 						item.SetVisible(false);

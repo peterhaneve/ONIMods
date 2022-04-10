@@ -615,4 +615,27 @@ namespace PeterHan.DebugNotIncluded {
 			__instance.GetSchedules().Sort((a, b) => a.name.CompareTo(b.name));
 		}
 	}
+
+#if DEBUG
+	/// <summary>
+	/// Applied to TileTemperature to identify what tile is actually being set badly.
+	/// 
+	/// DEBUG ONLY.
+	/// </summary>
+	[HarmonyPatch(typeof(TileTemperature), "OnSetTemperature")]
+	public static class TileTemperature_OnSetTemperature_Patch {
+		/// <summary>
+		/// Applied before OnSetTemperature runs.
+		/// </summary>
+		internal static void Prefix(PrimaryElement primary_element, float temperature) {
+			var sco = primary_element.GetComponent<SimCellOccupier>();
+			int cell = Grid.PosToCell(primary_element);
+			if (sco != null && sco.IsReady() && Grid.IsValidCell(cell)) {
+				Grid.CellToXY(cell, out int x, out int y);
+				DebugLogger.LogWarning("Trying to set tile at ({0:D},{1:D}) to {2:F1} K: {3}".
+					F(x, y, temperature, new System.Diagnostics.StackTrace(2)));
+			}
+		}
+	}
+#endif
 }

@@ -25,6 +25,46 @@ using ITState = ImageToggleState.State;
 
 namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
+	/// Applied to DragMe to set it as always visible when dragged off screen.
+	/// </summary>
+	[HarmonyPatch(typeof(DragMe), nameof(DragMe.OnBeginDrag))]
+	public static class DragMe_OnBeginDrag_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.VirtualScroll;
+
+		/// <summary>
+		/// Applied after OnBeginDrag runs.
+		/// </summary>
+		internal static void Postfix(DragMe __instance) {
+			GameObject go;
+			if (__instance != null && (go = __instance.gameObject) != null) {
+				var vs = go.GetComponentInParent<VirtualScroll>();
+				if (vs != null)
+					vs.SetForceShow(go);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Applied to DragMe to clear it from always visible after dragging is complete.
+	/// </summary>
+	[HarmonyPatch(typeof(DragMe), nameof(DragMe.OnEndDrag))]
+	public static class DragMe_OnEndDrag_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.VirtualScroll;
+
+		/// <summary>
+		/// Applied after OnEndDrag runs.
+		/// </summary>
+		internal static void Postfix(DragMe __instance) {
+			GameObject go;
+			if (__instance != null && (go = __instance.gameObject) != null) {
+				var vs = go.GetComponentInParent<VirtualScroll>();
+				if (vs != null)
+					vs.ClearForceShow(go);
+			}
+		}
+	}
+
+	/// <summary>
 	/// Applied to ModsScreen to update the scroll pane whenever the list changes.
 	/// </summary>
 	[HarmonyPatch(typeof(ModsScreen), nameof(ModsScreen.BuildDisplay))]
