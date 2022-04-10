@@ -74,54 +74,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 			Instance = inst;
 		}
 
-#if false
-		internal static void ReRegister(KBatchedAnimController controller) {
-			var batch = controller.batch;
-			HashedString batchGroupID;
-			if (batch == null)
-				// No need for a deregister
-				controller.Register();
-			else if (!controller.IsActive()) {
-				// No need for a reregister
-				batch.Deregister(controller);
-				controller.batch = null;
-			} else if ((batchGroupID = controller.batchGroupID).IsValid && batchGroupID !=
-					KAnimBatchManager.NO_BATCH) {
-				var inst = KAnimBatchManager.Instance();
-				var key = BatchKey.Create(controller);
-				var bs = inst.batchSets;
-				// Store the last chunk coords
-				Vector2I coords = KAnimBatchManager.ControllerToChunkXY(controller);
-				if (coords != controller.lastChunkXY) {
-					batch.Deregister(controller);
-					controller.lastChunkXY = coords;
-					if (!bs.TryGetValue(key, out BatchSet batchSet)) {
-						// No batch set for this key (key includes the xy)
-						batchSet = new BatchSet(inst.GetBatchGroup(new BatchGroupKey(key.groupID)),
-							key, coords);
-						bs.Add(key, batchSet);
-						// If UI, add to UI batch sets, otherwise to regular
-						if (key.materialType == KAnimBatchGroup.MaterialType.UI)
-							inst.uiBatchSets.Add(new KAnimBatchManager.BatchSetInfo {
-								batchSet = batchSet,
-								isActive = false,
-								spatialIdx = coords
-							});
-						else
-							inst.culledBatchSetInfos.Add(new KAnimBatchManager.BatchSetInfo {
-								batchSet = batchSet,
-								isActive = false,
-								spatialIdx = coords
-							});
-					}
-					batchSet.Add(controller);
-				}
-				controller.forceRebuild = true;
-				batch.SetDirty(controller);
-			}
-		}
-#endif
-
 		/// <summary>
 		/// The animations that are nothing but static idle animations.
 		/// </summary>

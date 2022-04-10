@@ -145,7 +145,7 @@ namespace PeterHan.PLib.UI {
 					if (uiPrefab != null) {
 						// Add prefab if supplied
 						UIDetours.SS_CONTENT_CONTAINER.Set(controller, uiPrefab);
-						uiPrefab.transform.parent = rootObject.transform;
+						uiPrefab.transform.SetParent(rootObject.transform);
 					}
 					newScreen.name = name;
 					// Offset is never used

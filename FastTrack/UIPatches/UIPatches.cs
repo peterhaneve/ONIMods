@@ -18,35 +18,19 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using UnityEngine;
 using UnityEngine.UI;
 
-using DiagnosticRow = ColonyDiagnosticScreen.DiagnosticRow;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.UIPatches {
-	/// <summary>
-	/// Applied to Bouncer to turn off notification bounces.
-	/// </summary>
-	[HarmonyPatch(typeof(Bouncer), nameof(Bouncer.Bounce))]
-	public static class Bouncer_Bounce_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.NoBounce;
-
-		/// <summary>
-		/// Applied before Bounce runs.
-		/// </summary>
-		internal static bool Prefix() {
-			return false;
-		}
-	}
-
 	/// Applied to ColonyDiagnosticScreen.DiagnosticRow to suppress SparkChart updates if
 	/// not visible.
 	/// </summary>
-	[HarmonyPatch(typeof(DiagnosticRow), nameof(DiagnosticRow.Sim4000ms))]
+	[HarmonyPatch(typeof(ColonyDiagnosticScreen.DiagnosticRow), nameof(ColonyDiagnosticScreen.
+		DiagnosticRow.Sim4000ms))]
 	public static class DiagnosticRow_Sim4000ms_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
 
@@ -55,37 +39,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		internal static bool Prefix(KMonoBehaviour ___sparkLayer) {
 			return ___sparkLayer == null || ___sparkLayer.isActiveAndEnabled;
-		}
-	}
-
-	/// <summary>
-	/// Applied to ColonyDiagnosticScreen.DiagnosticRow to turn off the bouncing effect.
-	/// </summary>
-	[HarmonyPatch(typeof(DiagnosticRow), nameof(DiagnosticRow.TriggerVisualNotification))]
-	public static class DiagnosticRow_TriggerVisualNotification_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.NoBounce;
-
-		/// <summary>
-		/// A replacement coroutine that waits 3 seconds and then resolves it with no bounce.
-		/// </summary>
-		private static System.Collections.IEnumerator NoMoveRoutine(DiagnosticRow row) {
-			// Wait for 3 seconds unscaled
-			yield return new WaitForSeconds(3.0f);
-			try {
-				// Ignore exception if the notification cannot be resolved
-				row.ResolveNotificationRoutine();
-			} catch (Exception) { }
-			yield break;
-		}
-
-		/// <summary>
-		/// Transpiles TriggerVisualNotification to remove calls to the bouncy coroutine.
-		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			return PPatchTools.ReplaceMethodCall(instructions, typeof(DiagnosticRow).
-				GetMethodSafe(nameof(DiagnosticRow.VisualNotificationRoutine), false),
-				typeof(DiagnosticRow_TriggerVisualNotification_Patch).GetMethodSafe(nameof(
-				NoMoveRoutine), true, typeof(DiagnosticRow)));
 		}
 	}
 
@@ -114,6 +67,69 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 			return false;
 		}
+	}
+
+	/// <summary>
+	/// Applied to KChildFitter to add an updater to fit it only on layout changes.
+	/// </summary>
+	[HarmonyPatch(typeof(KChildFitter), nameof(KChildFitter.Awake))]
+	public static class KChildFitter_Awake_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.VirtualScroll;
+
+		/// <summary>
+		/// Applied after Awake runs.
+		/// </summary>
+		internal static void Postfix(KChildFitter __instance) {
+			__instance.gameObject.AddOrGet<KChildFitterUpdater>();
+		}
+	}
+
+	/// <summary>
+	/// Applied to KChildFitter to turn off an expensive fitter method that runs every frame!
+	/// </summary>
+	[HarmonyPatch(typeof(KChildFitter), nameof(KChildFitter.LateUpdate))]
+	public static class KChildFitter_LateUpdate_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.VirtualScroll;
+
+		/// <summary>
+		/// Applied before LateUpdate runs.
+		/// </summary>
+		internal static bool Prefix() {
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// A layout element that triggers child fitting only if layout has actually changed.
+	/// </summary>
+	internal sealed class KChildFitterUpdater : KMonoBehaviour, ILayoutElement {
+		public float minWidth => -1.0f;
+
+		public float preferredWidth => -1.0f;
+
+		public float flexibleWidth => -1.0f;
+
+		public float minHeight => -1.0f;
+
+		public float preferredHeight => -1.0f;
+
+		public float flexibleHeight => -1.0f;
+
+		public int layoutPriority => int.MinValue;
+
+#pragma warning disable IDE0044
+#pragma warning disable CS0649
+		// These fields are automatically populated by KMonoBehaviour
+		[MyCmpReq]
+		private KChildFitter fitter;
+#pragma warning restore CS0649
+#pragma warning restore IDE0044
+
+		public void CalculateLayoutInputHorizontal() {
+			fitter.FitSize();
+		}
+
+		public void CalculateLayoutInputVertical() { }
 	}
 
 	/// <summary>
@@ -267,27 +283,6 @@ namespace PeterHan.FastTrack.UIPatches {
 			// GameplayEventMonitor is for the unused event/dream framework :(
 			return !(component is ThoughtGraph.Instance && options.NoConversations) &&
 				!(component is GameplayEventMonitor.Instance && options.MiscOpts);
-		}
-	}
-
-	/// <summary>
-	/// Applied to NotificationAnimator to turn off the bouncing effect.
-	/// </summary>
-	[HarmonyPatch(typeof(NotificationAnimator), nameof(NotificationAnimator.Begin))]
-	public static class NotificationAnimator_Begin_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.NoBounce;
-
-		/// <summary>
-		/// Applied before Begin runs.
-		/// </summary>
-		internal static bool Prefix(NotificationAnimator __instance, ref bool ___animating,
-				ref LayoutElement ___layoutElement) {
-			var le = __instance.GetComponent<LayoutElement>();
-			if (le != null)
-				le.minWidth = 0.0f;
-			___layoutElement = le;
-			___animating = false;
-			return false;
 		}
 	}
 

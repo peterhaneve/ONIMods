@@ -78,9 +78,11 @@ namespace PeterHan.FastTrack {
 		public void Render200ms(float dt) {
 			if (KPlayerPrefs.GetFloat(VOLUME_MASTER, 1.0f) > 0.0f && !FastTrackOptions.
 					Instance.DisableSound) {
+#if false
 				var lsm = LoopingSoundManager.Get();
 				if (lsm != null)
 					LoopingSoundManagerUpdater.RenderEveryTick(lsm, dt);
+#endif
 				if (KPlayerPrefs.GetFloat(VOLUME_AMBIENCE, 1.0f) > 0.0f) {
 					StartCoroutine(RunAmbienceNextFrame());
 					runMix = true;
@@ -120,7 +122,7 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
-		/// Applied to LoopingSoundManager to reduce sound updates to 5 FPS.
+		/// Applied to LoopingSoundManager to reduce sound updates to every other frame.
 		/// </summary>
 		[HarmonyPatch(typeof(LoopingSoundManager), nameof(LoopingSoundManager.
 			RenderEveryTick))]
@@ -131,12 +133,20 @@ namespace PeterHan.FastTrack {
 			}
 
 			/// <summary>
+			/// Whether looping sounds should be updated this frame.
+			/// </summary>
+			private static bool runLooping;
+
+			/// <summary>
 			/// Applied before RenderEveryTick runs.
 			/// </summary>
 			internal static bool Prefix() {
-				return false;
+				bool shouldRunLooping = runLooping;
+				runLooping = !runLooping;
+				return shouldRunLooping;
 			}
 
+#if false
 			[HarmonyReversePatch(HarmonyReversePatchType.Original)]
 			[HarmonyPatch(nameof(LoopingSoundManager.RenderEveryTick))]
 			[MethodImpl(MethodImplOptions.NoInlining)]
@@ -147,6 +157,7 @@ namespace PeterHan.FastTrack {
 				while (System.DateTime.Now.Ticks > 0L)
 					throw new NotImplementedException("Reverse patch stub");
 			}
+#endif
 		}
 
 		/// <summary>

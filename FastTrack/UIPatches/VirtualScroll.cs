@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PeterHan.FastTrack.VisualPatches {
+namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
 	/// Hides components that are off screen when scrolling, instead replacing them with a
 	/// virtual component above and below them that is resized to occupy the same space.
@@ -62,28 +62,34 @@ namespace PeterHan.FastTrack.VisualPatches {
 		private RectTransform parentRect;
 
 		/// <summary>
-		/// The spacer above the elements to render.
+		/// Whether a rebuild is already pending.
 		/// </summary>
-		private Spacer spacerAbove;
+		private volatile bool pending;
 
 		/// <summary>
-		/// The spacer below the elements to render.
+		/// The component actually responsible for laying out the children.
 		/// </summary>
-		private Spacer spacerBelow;
+		private LayoutGroup realLayout;
+
+		/// <summary>
+		/// The virtual layout component that keeps the scrollable rect the same size.
+		/// </summary>
+		private LayoutElement virtualLayout;
 
 		internal VirtualScroll() {
 			components = new List<VirtualItem>(64);
 			freezeLayout = false;
 			lastPosition = Vector2.up;
 			margin = new Vector2(10.0f, 10.0f);
+			pending = false;
+			realLayout = null;
+			virtualLayout = null;
 		}
 
 		/// <summary>
 		/// Called when the component is first added.
 		/// </summary>
 		internal void Awake() {
-			spacerAbove = new Spacer(new GameObject("Top Spacer", typeof(LayoutElement)));
-			spacerBelow = new Spacer(new GameObject("Bottom Spacer", typeof(LayoutElement)));
 			scroll = GetComponentInParent<KScrollRect>();
 			parentRect = scroll.rectTransform();
 		}
@@ -92,20 +98,18 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// Rebuilds the scroll pane in a coroutine after layout.
 		/// </summary>
 		private System.Collections.IEnumerator DoRebuild() {
+			pending = true;
 			yield return null;
-			if (scroll != null && itemList != null) {
-				Transform ta = spacerAbove.transform, tb = spacerBelow.transform;
+			if (!App.IsExiting && scroll != null && itemList != null) {
 				int n = itemList.childCount;
 				float marginX = 0.0f, marginY = 0.0f;
 				bool ice = freezeLayout;
+				GameObject go;
 				components.Clear();
-				ta.SetAsFirstSibling();
-				tb.SetAsLastSibling();
 				for (int i = 0; i < n; i++) {
 					var transform = itemList.GetChild(i);
-					// Must not be one of the spacers
-					if (transform != null && transform != ta && transform != tb) {
-						var vi = new VirtualItem(transform, itemList, ice);
+					if (transform != null && (go = transform.gameObject).activeSelf) {
+						var vi = new VirtualItem(transform, go, itemList, ice);
 						float w = vi.size.x, h = vi.size.y;
 						components.Add(vi);
 						if (w > marginX)
@@ -114,10 +118,22 @@ namespace PeterHan.FastTrack.VisualPatches {
 							marginY = h;
 					}
 				}
+				if (realLayout != null) {
+					// Copy the parameters to the virtual layout
+					virtualLayout.minHeight = realLayout.minHeight;
+					virtualLayout.minWidth = realLayout.minWidth;
+					virtualLayout.preferredHeight = realLayout.preferredHeight;
+					virtualLayout.preferredWidth = realLayout.preferredWidth;
+					virtualLayout.flexibleHeight = realLayout.flexibleHeight;
+					virtualLayout.flexibleWidth = realLayout.flexibleWidth;
+					virtualLayout.enabled = true;
+					realLayout.enabled = false;
+				}
 				margin = new Vector2(marginX * 1.5f, marginY * 1.5f);
 				// Calculate the margin
 				UpdateScroll();
 			}
+			pending = false;
 		}
 
 		/// <summary>
@@ -145,25 +161,41 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Initializes the virtual scroll pane.
 		/// </summary>
-		/// <param name="target">The target rectangle containing the items.</param>
+		/// <param name="target">The target object containing the items, or null to use the
+		/// object where this component is applied.</param>
 		/// <param name="margin">The display margin in pixels.</param>
-		internal void Initialize(RectTransform target) {
-			if (target != itemList && scroll != null) {
+		internal void Initialize(RectTransform target = null) {
+			if (target == null)
+				target = GetComponent<RectTransform>();
+			if (target != null && target != itemList && scroll != null) {
 				scroll.onValueChanged.AddListener(OnScroll);
 				itemList = target;
-				spacerAbove.transform.parent = itemList;
-				spacerBelow.transform.parent = itemList;
+				realLayout = itemList.GetComponent<LayoutGroup>();
+				virtualLayout = itemList.gameObject.AddOrGet<LayoutElement>();
+				virtualLayout.enabled = false;
+				virtualLayout.layoutPriority = 100;
 				Rebuild();
+			}
+		}
+
+		/// <summary>
+		/// Switches off the virtual layout, and turns the real one back on, for when items are
+		/// about to be added or removed.
+		/// </summary>
+		internal void OnBuild() {
+			if (realLayout != null && !pending) {
+				virtualLayout.enabled = false;
+				realLayout.enabled = true;
 			}
 		}
 
 		internal void OnDestroy() {
 			if (scroll != null) {
-				spacerAbove.Dispose();
-				spacerBelow.Dispose();
 				scroll.onValueChanged.RemoveListener(OnScroll);
 				itemList = null;
+				realLayout = null;
 				scroll = null;
+				virtualLayout = null;
 			}
 		}
 
@@ -186,7 +218,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// Rebuilds the list of items next frame.
 		/// </summary>
 		internal void Rebuild() {
-			StartCoroutine(DoRebuild());
+			if (!pending && gameObject.activeSelf)
+				StartCoroutine(DoRebuild());
 		}
 
 		/// <summary>
@@ -197,7 +230,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 			if (n > 0) {
 				MinMax above = new MinMax(0.0f), below = new MinMax(0.0f), left =
 					new MinMax(0.0f), right = new MinMax(0.0f);
-				bool changed = false;
 				GetViewableRect(out float xl, out float xr, out float yb, out float yt);
 				for (int i = 0; i < n; i++) {
 					var item = components[i];
@@ -206,28 +238,21 @@ namespace PeterHan.FastTrack.VisualPatches {
 					if (yMin > yt) {
 						// Component above
 						above.Add(yMin, yMax);
-						changed |= item.SetVisible(false);
+						item.SetVisible(false);
 					} else if (yMax < yb) {
 						// Component below
 						below.Add(yMin, yMax);
-						changed |= item.SetVisible(false);
+						item.SetVisible(false);
 					} else if (xMin > xr) {
 						// Component to the right
 						right.Add(xMin, xMax);
-						changed |= item.SetVisible(false);
+						item.SetVisible(false);
 					} else if (xMax < xl) {
 						// Component to the left
 						left.Add(xMin, xMax);
-						changed |= item.SetVisible(false);
+						item.SetVisible(false);
 					} else
-						changed |= item.SetVisible(true);
-				}
-				// Calculate sizes
-				if (changed) {
-					// Resize the upper and lower spacers
-					spacerAbove.SetSize(left.Delta, above.Delta);
-					spacerBelow.SetSize(right.Delta, below.Delta);
-					LayoutRebuilder.MarkLayoutForRebuild(itemList);
+						item.SetVisible(true);
 				}
 			}
 		}
@@ -261,24 +286,19 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// </summary>
 			private bool visible;
 
-			public VirtualItem(Transform transform, Transform parent, bool freezeLayout) {
+			public VirtualItem(Transform transform, GameObject go, Transform parent,
+					bool freezeLayout) {
 				var group = transform.GetComponent<LayoutGroup>();
 				var absOffset = RectTransformUtility.CalculateRelativeRectTransformBounds(
 					parent, transform);
-				entry = transform.gameObject;
+				entry = go;
 				visible = true;
 				min = new Vector2(absOffset.min.x, absOffset.min.y);
 				size = new Vector2(absOffset.size.x, absOffset.size.y);
 				max = min + size;
 				// Destroy and replace layout groups with a fixed element, this helps a lot
 				if (group != null && freezeLayout) {
-					var sizes = entry.AddOrGet<LayoutElement>();
-					sizes.flexibleHeight = group.flexibleHeight;
-					sizes.flexibleWidth = group.flexibleWidth;
-					sizes.preferredHeight = group.preferredHeight;
-					sizes.preferredWidth = group.preferredWidth;
-					sizes.minHeight = group.minHeight;
-					sizes.minWidth = group.minWidth;
+					entry.AddOrGet<LayoutElement>().CopyFrom(group);
 					Destroy(group);
 				}
 			}

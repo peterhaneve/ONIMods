@@ -22,9 +22,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-using System.Reflection.Emit;
 using System.Text;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace PeterHan.FastTrack {
 	/// <summary>
@@ -49,6 +49,21 @@ namespace PeterHan.FastTrack {
 				break;
 			}
 			return buffer;
+		}
+
+		/// <summary>
+		/// Copies layout information to a fixed layout element. Useful for freezing a UI
+		/// object.
+		/// </summary>
+		/// <param name="dest">The fixed layout component that will replace it.</param>
+		/// <param name="src">The current layout component.</param>
+		public static void CopyFrom(this LayoutElement dest, ILayoutElement src) {
+			dest.flexibleHeight = src.flexibleHeight;
+			dest.flexibleWidth = src.flexibleWidth;
+			dest.preferredHeight = src.preferredHeight;
+			dest.preferredWidth = src.preferredWidth;
+			dest.minHeight = src.minHeight;
+			dest.minWidth = src.minWidth;
 		}
 
 		/// <summary>

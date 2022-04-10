@@ -65,12 +65,6 @@ namespace PeterHan.FastTrack.PathPatches {
 		private readonly IList<FetchablesByPrefabId> byId;
 
 		/// <summary>
-		/// The list of destinations (pickupables, workables, etc) that need offset table
-		/// updates.
-		/// </summary>
-		private readonly ConcurrentQueue<Workable> needOffsetUpdate;
-
-		/// <summary>
 		/// Fired when it is safe to mutate the offset tables off the main thread.
 		/// </summary>
 		private readonly EventWaitHandle onFetchComplete;
@@ -83,7 +77,6 @@ namespace PeterHan.FastTrack.PathPatches {
 		private AsyncBrainGroupUpdater() {
 			brainsToUpdate = new List<BrainPair>(32);
 			byId = new List<FetchablesByPrefabId>(64);
-			needOffsetUpdate = new ConcurrentQueue<Workable>();
 			onFetchComplete = new AutoResetEvent(false);
 			updatingPickups = new List<CompilePickupsWork>(8);
 		}
@@ -177,9 +170,6 @@ namespace PeterHan.FastTrack.PathPatches {
 				} else
 					Cleanup();
 				updatingPickups.Clear();
-				// Update anything that needs an offset update
-				while (needOffsetUpdate.TryDequeue(out Workable workable))
-					workable.GetOffsets();
 			}
 			byId.Clear();
 		}
@@ -234,33 +224,15 @@ namespace PeterHan.FastTrack.PathPatches {
 			fetches.Clear();
 			if (gcp != null) {
 				Storage destination;
+				int cost;
 				foreach (var fetchChore in gcp.fetchChores)
 					// Not already taken, allows manual use
 					if (fetchChore.driver == null && (fetchChore.automatable == null ||
 							!fetchChore.automatable.GetAutomationOnly()) && (destination =
-							fetchChore.destination) != null) {
-						// If storage needs offsets updated, queue it up
-						if (navigator.GetNavigationCostNU(destination, destination.GetCell(),
-								out int cost))
-							needOffsetUpdate.Enqueue(destination);
-						if (cost >= 0)
-							fetches.Add(new FetchInfo(fetchChore, cost, destination));
-					}
+							fetchChore.destination) != null && (cost = navigator.
+							GetNavigationCost(destination)) >= 0)
+						fetches.Add(new FetchInfo(fetchChore, cost, destination));
 				fetches.Sort();
-			}
-		}
-
-		/// <summary>
-		/// Updates the offset tables in a thread-safe way, enqueuing any that need to be
-		/// changed onto the queue to get their SCPs updated later.
-		/// </summary>
-		/// <param name="fetchables">The items whose tables need updating.</param>
-		private void UpdateOffsetTables(List<FetchManager.Fetchable> fetchables) {
-			// Fetching the count over and over again is required here in the uncommon case
-			// of a fetchable being removed so late in the frame
-			for (int i = 0; i < fetchables.Count; i++) {
-				var pickupable = fetchables[i].pickupable;
-				pickupable.GetOffsets(pickupable.cachedCell);
 			}
 		}
 
@@ -411,7 +383,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				// Few offset tables should be updated here, as the offset tables are already
 				// recalculated when the pickupable's cached cell is updated
 				if (index >= 0 && index < byId.Count)
-					updater.UpdateOffsetTables(byId[index].fetchables.GetDataList());
+					byId[index].UpdateOffsetTables();
 			}
 
 			public void TriggerAbort() {

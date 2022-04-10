@@ -51,6 +51,35 @@ namespace PeterHan.FastTrack.VisualPatches {
 	}
 
 	/// <summary>
+	/// Applied to KAnimControllerBase to report anims paused by TAC as still playing to
+	/// avoid breaking OnAnimQueueComplete.
+	/// </summary>
+	[HarmonyPatch(typeof(KAnimControllerBase), nameof(KAnimControllerBase.IsStopped))]
+	public static class KAnimControllerBase_IsStopped_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.AnimOpts;
+
+		/// <summary>
+		/// Applied before IsStopped runs.
+		/// </summary>
+		internal static bool Prefix(KAnimControllerBase __instance, ref bool __result) {
+			bool stopped = __instance.stopped;
+			if (stopped) {
+				var anim = __instance.GetCurrentAnim();
+				var mode = __instance.GetMode();
+				var inst = KAnimLoopOptimizer.Instance;
+				// The desalinator is the stress test for this, it does an anim queue complete
+				// wait on a trivial kanim... Clay please!
+				if (anim != null && mode == KAnim.PlayMode.Paused && anim.numFrames > 0 &&
+						__instance.currentFrame == 0 && inst != null && inst.GetAnimState(anim,
+						KAnim.PlayMode.Loop) == mode)
+					stopped = false;
+			}
+			__result = stopped;
+			return false;
+		}
+	}
+
+	/// <summary>
 	/// Applied to KAnimControllerBase to make trivial anims stop triggering updates.
 	/// </summary>
 	[HarmonyPatch(typeof(KAnimControllerBase), nameof(KAnimControllerBase.StartQueuedAnim))]
@@ -62,21 +91,28 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		internal static KAnim.PlayMode UpdateMode(KAnim.PlayMode mode,
 				KAnimControllerBase controller) {
-			var anim = controller.curAnim;
+			var anim = controller.GetCurrentAnim();
 			var inst = KAnimLoopOptimizer.Instance;
-			if (anim != null && mode != KAnim.PlayMode.Paused && inst != null && controller.
+			if (anim != null && mode == KAnim.PlayMode.Loop && inst != null && controller.
 					animQueue.Count == 0) {
 				// Will set "paused" only if the anim is so short as to be unnoticeable
 				mode = inst.GetAnimState(anim, mode);
-				if (mode == KAnim.PlayMode.Paused)
+				if (mode == KAnim.PlayMode.Paused) {
 					// Trigger an instant stop
-					controller.TriggerStop();
+					controller.Stop();
+					controller.currentFrame = 0;
+					controller.SetElapsedTime(0.0f);
+					PathPatches.DeferAnimQueueTrigger.TriggerAndQueue(controller.gameObject,
+						(int)GameHashes.AnimQueueComplete, null);
+					if (controller.destroyOnAnimComplete)
+						controller.DestroySelf();
+				}
 			}
 			return mode;
 		}
 
 		/// <summary>
-		/// Transpiles StartQueuedAnim to update the mode to Paused on trivial anims.
+		/// Transpiles StartQueuedAnim to update the mode to Once on trivial anims.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
 			var target = typeof(KAnimControllerBase).GetFieldSafe(nameof(KAnimControllerBase.
@@ -126,6 +162,38 @@ namespace PeterHan.FastTrack.VisualPatches {
 			}
 			if (changed && __instance.curBuild != null)
 				__instance.UpdateHidden();
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to KAnimSynchronizedController to not dirty rocket anims (among others)
+	/// every frame.
+	/// </summary>
+	[HarmonyPatch(typeof(KAnimSynchronizedController), nameof(KAnimSynchronizedController.
+		Dirty))]
+	public static class KAnimSynchronizedController_Dirty_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.AnimOpts;
+
+		/// <summary>
+		/// Applied before Dirty runs.
+		/// </summary>
+		internal static bool Prefix(KAnimSynchronizedController __instance) {
+			var syncController = __instance.synchronizedController;
+			var controller = __instance.controller;
+			if (syncController != null && controller != null) {
+				// These setters unconditionally dirty and deregister/register the anim
+				if (syncController.Offset != controller.Offset)
+					syncController.Offset = controller.Offset;
+				if (syncController.Pivot != controller.Pivot)
+					syncController.Pivot = controller.Pivot;
+				if (!Mathf.Approximately(syncController.Rotation, controller.Rotation))
+					syncController.Rotation = controller.Rotation;
+				if (syncController.FlipX != controller.FlipX)
+					syncController.FlipX = controller.FlipX;
+				if (syncController.FlipY != controller.FlipY)
+					syncController.FlipY = controller.FlipY;
+			}
 			return false;
 		}
 	}

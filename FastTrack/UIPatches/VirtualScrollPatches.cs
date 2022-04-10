@@ -1,0 +1,221 @@
+﻿/*
+ * Copyright 2022 Peter Han
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+ * and associated documentation files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+using HarmonyLib;
+using PeterHan.PLib.Core;
+using UnityEngine;
+using UnityEngine.UI;
+
+using ITState = ImageToggleState.State;
+
+namespace PeterHan.FastTrack.UIPatches {
+	/// <summary>
+	/// Applied to ModsScreen to update the scroll pane whenever the list changes.
+	/// </summary>
+	[HarmonyPatch(typeof(ModsScreen), nameof(ModsScreen.BuildDisplay))]
+	public static class ModsScreen_BuildDisplay_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.VirtualScroll;
+
+		/// <summary>
+		/// Applied before BuildDisplay runs.
+		/// </summary>
+		[HarmonyPriority(Priority.High)]
+		internal static void Prefix(ModsScreen __instance, ref VirtualScroll __state) {
+			var entryList = __instance.entryParent;
+			VirtualScroll vs;
+			if (entryList != null && (vs = entryList.GetComponent<VirtualScroll>()) != null) {
+				vs.OnBuild();
+				__state = vs;
+			} else
+				__state = null;
+		}
+
+		/// <summary>
+		/// Applied after BuildDisplay runs.
+		/// </summary>
+		[HarmonyPriority(Priority.VeryLow)]
+		internal static void Postfix(VirtualScroll __state) {
+			if (__state != null)
+				__state.Rebuild();
+		}
+	}
+
+	/// <summary>
+	/// Applied to ModsScreen to set up listeners and state for virtual scroll.
+	/// </summary>
+	[HarmonyPatch(typeof(ModsScreen), nameof(ModsScreen.OnActivate))]
+	public static class ModsScreen_OnActivate_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.VirtualScroll;
+
+		/// <summary>
+		/// Applied after OnActivate runs.
+		/// </summary>
+		internal static void Postfix(ModsScreen __instance) {
+			var entryList = __instance.entryParent;
+			GameObject go;
+			if (entryList != null && (go = entryList.gameObject) != null) {
+				var vs = go.AddOrGet<VirtualScroll>();
+				vs.freezeLayout = true;
+				vs.Initialize();
+			}
+		}
+	}
+
+	/// <summary>
+	/// Applied to ReceptacleSideScreen to make it virtual scroll capable.
+	/// </summary>
+	[HarmonyPatch(typeof(ReceptacleSideScreen), nameof(ReceptacleSideScreen.Initialize))]
+	public static class ReceptacleSideScreen_Initialize_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.VirtualScroll;
+
+		/// <summary>
+		/// Applied before Initialize runs.
+		/// </summary>
+		internal static void Prefix(ReceptacleSideScreen __instance,
+				ref VirtualScroll __state) {
+			var vs = __instance.requestObjectList.GetComponentSafe<VirtualScroll>();
+			if (vs != null) {
+				vs.OnBuild();
+				__state = vs;
+			} else
+				__state = null;
+		}
+
+		/// <summary>
+		/// Applied after Initialize runs.
+		/// </summary>
+		internal static void Postfix(ReceptacleSideScreen __instance, VirtualScroll __state) {
+			var entryList = __instance.requestObjectList;
+			GameObject go;
+			if (__state != null)
+				__state.Rebuild();
+			else if ((go = entryList.gameObject) != null) {
+				// Add if first load
+				var vs = go.AddComponent<VirtualScroll>();
+				vs.freezeLayout = true;
+				vs.Initialize();
+			}
+		}
+	}
+
+	/// <summary>
+	/// Applied to ReceptacleSideScreen to properly rebuild the layout if the available item
+	/// amounts change.
+	/// </summary>
+	[HarmonyPatch(typeof(ReceptacleSideScreen), nameof(ReceptacleSideScreen.
+		UpdateAvailableAmounts))]
+	public static class ReceptacleSideScreen_UpdateAvailableAmounts_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.VirtualScroll;
+
+		/// <summary>
+		/// Applied before UpdateAvailableAmounts runs.
+		/// </summary>
+		internal static bool Prefix(ReceptacleSideScreen __instance, ref bool __result) {
+			bool result = false, changed = false, hide = !DebugHandler.InstantBuildMode &&
+				__instance.hideUndiscoveredEntities;
+			var inst = DiscoveredResources.Instance;
+			var selected = __instance.selectedEntityToggle;
+			var vs = __instance.requestObjectList.GetComponentSafe<VirtualScroll>();
+			foreach (var pair in __instance.depositObjectMap) {
+				var key = pair.Key;
+				var display = pair.Value;
+				var go = key.gameObject;
+				bool active = go.activeSelf;
+				Tag tag = display.tag;
+				// Hide undiscovered entities in some screens (like pedestal)
+				if (hide && !inst.IsDiscovered(tag)) {
+					if (active) {
+						if (!changed && vs != null) {
+							vs.OnBuild();
+							changed = true;
+						}
+						go.SetActive(active = false);
+					}
+				} else if (!active) {
+					if (!changed && vs != null) {
+						vs.OnBuild();
+						changed = true;
+					}
+					go.SetActive(active = true);
+				}
+				if (active) {
+					var toggle = key.toggle;
+					// Do not update amounts of inactive items
+					float availableAmount = __instance.GetAvailableAmount(tag);
+					if (display.lastAmount != availableAmount) {
+						result = true;
+						// Update display only if it actually changed
+						display.lastAmount = availableAmount;
+						key.amount.text = availableAmount.ToString();
+					}
+					if (!__instance.ValidRotationForDeposit(display.direction) ||
+							availableAmount <= 0.0f) {
+						// Disable items which cannot fit in this orientation or are missing
+						if (selected != key)
+							SetImageToggleState(__instance, toggle, ITState.Disabled);
+						else
+							SetImageToggleState(__instance, toggle, ITState.DisabledActive);
+					} else if (selected != key)
+						SetImageToggleState(__instance, toggle, ITState.Inactive);
+					else
+						SetImageToggleState(__instance, toggle, ITState.Active);
+				}
+			}
+			// Null was already checked
+			if (changed)
+				vs.Rebuild();
+			__result = result;
+			return false;
+		}
+
+		/// <summary>
+		/// Sets the toggle state of a button only if it actually changed.
+		/// </summary>
+		/// <param name="instance">The side screen being updated.</param>
+		/// <param name="toggle">The toggle to modify.</param>
+		/// <param name="state">The state to apply.</param>
+		private static void SetImageToggleState(ReceptacleSideScreen instance, KToggle toggle,
+				ITState state) {
+			var its = toggle.GetComponent<ImageToggleState>();
+			if (state != its.currentState) {
+				// SetState provides no feedback on whether the state actually changed
+				var targetImage = toggle.gameObject.GetComponentInChildrenOnly<Image>();
+				switch (state) {
+				case ITState.Disabled:
+					its.SetDisabled();
+					targetImage.material = instance.desaturatedMaterial;
+					break;
+				case ITState.Inactive:
+					its.SetInactive();
+					targetImage.material = instance.defaultMaterial;
+					break;
+				case ITState.Active:
+					its.SetActive();
+					targetImage.material = instance.defaultMaterial;
+					break;
+				case ITState.DisabledActive:
+					its.SetDisabledActive();
+					targetImage.material = instance.desaturatedMaterial;
+					break;
+				default:
+					break;
+				}
+			}
+		}
+	}
+}

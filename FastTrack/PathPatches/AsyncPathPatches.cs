@@ -21,6 +21,8 @@ using PeterHan.PLib.Core;
 using System.Collections.Generic;
 using System.Reflection;
 
+using DirtyNode = ScenePartitioner.DirtyNode;
+using SceneEntryHash = System.Collections.Generic.HashSet<ScenePartitionerEntry>;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.PathPatches {
@@ -130,6 +132,62 @@ namespace PeterHan.FastTrack.PathPatches {
 				}
 				brainGroup.nextUpdateBrain = index;
 			}
+		}
+	}
+
+	/// <summary>
+	/// Applied to ScenePartitioner to make the Add family of methods partially thread safe.
+	/// </summary>
+	[HarmonyPatch(typeof(ScenePartitioner), nameof(ScenePartitioner.Insert))]
+	public static class ScenePartitioner_Insert_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
+
+		/// <summary>
+		/// A slightly more thread safe version of List.Add that at least avoids self
+		/// races.
+		/// </summary>
+		/// <param name="list">The list to modify.</param>
+		/// <param name="entry">The entry to add.</param>
+		private static void AddLocked(List<DirtyNode> list, DirtyNode entry) {
+			lock (list) {
+				list.Add(entry);
+			}
+		}
+
+		/// <summary>
+		/// A slightly more thread safe version of HashSet.Add that at least avoids self
+		/// races.
+		/// </summary>
+		/// <param name="set">The set to modify.</param>
+		/// <param name="entry">The entry to add.</param>
+		/// <returns>true if the set was modified, or false otherwise.</returns>
+		private static bool AddLocked(SceneEntryHash set, ScenePartitionerEntry entry) {
+			bool result;
+			lock (set) {
+				result = set.Add(entry);
+			}
+			return result;
+		}
+
+		/// <summary>
+		/// Transpiles Insert to take out a lock on the item added before adding.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+			return PPatchTools.ReplaceMethodCall(instructions, new Dictionary<MethodInfo,
+					MethodInfo>() {
+				{
+					typeof(SceneEntryHash).GetMethodSafe(nameof(SceneEntryHash.Add), false,
+						typeof(ScenePartitionerEntry)),
+					typeof(ScenePartitioner_Insert_Patch).GetMethodSafe(nameof(AddLocked),
+						true, typeof(SceneEntryHash), typeof(ScenePartitionerEntry))
+				},
+				{
+					typeof(List<DirtyNode>).GetMethodSafe(nameof(List<DirtyNode>.Add), false,
+						typeof(DirtyNode)),
+					typeof(ScenePartitioner_Insert_Patch).GetMethodSafe(nameof(AddLocked),
+						true, typeof(List<DirtyNode>), typeof(DirtyNode))
+				}
+			});
 		}
 	}
 }

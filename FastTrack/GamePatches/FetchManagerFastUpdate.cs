@@ -39,13 +39,19 @@ namespace PeterHan.FastTrack.GamePatches {
 			var finalPickups = __instance.finalPickups;
 			// Will reflect the changes from Waste Not, Want Not and No Manual Delivery
 			var comparer = FetchManager.ComparerIncludingPriority;
+			bool needThreadSafe = FastTrackOptions.Instance.PickupOpts;
 			foreach (var fetchable in __instance.fetchables.GetDataList()) {
 				var target = fetchable.pickupable;
 				int cell = target.cachedCell;
 				if (target.CouldBePickedUpByMinion(worker_go)) {
 					// Look for cell cost, share costs across multiple queries to a cell
+					// If this is being run synchronous, no issue, otherwise the GSP patch will
+					// avoid races on the scene partitioner
 					if (!pathCosts.TryGetValue(cell, out int cost)) {
-						worker_navigator.GetNavigationCostNU(target, cell, out cost);
+						if (needThreadSafe)
+							worker_navigator.GetNavigationCostNU(target, cell, out cost);
+						else
+							cost = worker_navigator.GetNavigationCost(target);
 						pathCosts.Add(cell, cost);
 					}
 					// Exclude unreachable items

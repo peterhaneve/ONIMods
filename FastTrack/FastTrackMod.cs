@@ -58,6 +58,11 @@ namespace PeterHan.FastTrack {
 		internal static bool GameRunning { get; private set; }
 
 		/// <summary>
+		/// Whether worldgen loading is complete.
+		/// </summary>
+		private static volatile bool loaded = false;
+
+		/// <summary>
 		/// The handle that is signaled when worldgen loading completes.
 		/// </summary>
 		private static readonly EventWaitHandle onWorldGenLoad = new AutoResetEvent(false);
@@ -135,6 +140,7 @@ namespace PeterHan.FastTrack {
 		private static void LoadWorldGenInBackground() {
 			try {
 				ProcGenGame.WorldGen.LoadSettings();
+				loaded = true;
 			} catch (Exception e) {
 				PUtil.LogError(e);
 			}
@@ -169,8 +175,10 @@ namespace PeterHan.FastTrack {
 				SensorPatches.FastGroupProber.Cleanup();
 				GamePatches.FastCellChangeMonitor.FastInstance.Cleanup();
 			}
-			if (options.PickupOpts)
+			if (options.PickupOpts) {
 				GamePatches.SolidTransferArmUpdater.DestroyInstance();
+				PathPatches.DeferAnimQueueTrigger.DestroyInstance();
+			}
 			if (options.AsyncPathProbe)
 				PathPatches.PathProbeJobManager.DestroyInstance();
 			GamePatches.AchievementPatches.DestroyInstance();
@@ -199,7 +207,8 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		[PLibMethod(RunAt.InMainMenu)]
 		internal static void OnMainMenu() {
-			if (FastTrackOptions.Instance.OptimizeDialogs && !onWorldGenLoad.WaitOne(3000))
+			if (FastTrackOptions.Instance.OptimizeDialogs && !loaded && !onWorldGenLoad.
+					WaitOne(3000))
 				PUtil.LogWarning("Worldgen was not loaded within the timeout!");
 		}
 
@@ -210,6 +219,8 @@ namespace PeterHan.FastTrack {
 		internal static void OnStartGame() {
 			var inst = Game.Instance;
 			var options = FastTrackOptions.Instance;
+			if (options.PickupOpts)
+				PathPatches.DeferAnimQueueTrigger.CreateInstance();
 			if (options.CachePaths)
 				PathPatches.PathCacher.Init();
 			// Slices updates to Duplicant sensors

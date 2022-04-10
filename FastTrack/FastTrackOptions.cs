@@ -215,7 +215,7 @@ namespace PeterHan.FastTrack {
 			CritterConsumers = true;
 			CullConduits = true;
 			DisableAchievements = AchievementDisable.SandboxDebug;
-			DisableConduitAnimation = ConduitAnimationQuality.Reduced;
+			DisableConduitAnimation = ConduitAnimationQuality.Full;
 			DisableLoadPreviews = false;
 			DisableSound = false;
 			DisableTutorial = TutorialMessageDisable.WarningsOnly;

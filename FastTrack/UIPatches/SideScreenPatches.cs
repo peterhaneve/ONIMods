@@ -84,7 +84,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
-		/// Applied to LogicBitSelectorSideScreen to set the initial states of LAST_VALUES
+		/// Applied to LogicBitSelectorSideScreen to set the initial states of lastValues
 		/// for each bit.
 		/// </summary>
 		[HarmonyPatch(typeof(LogicBitSelectorSideScreen), nameof(LogicBitSelectorSideScreen.
@@ -147,6 +147,60 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		internal static bool Prefix(TimerSideScreen __instance) {
 			return __instance != null && __instance.isActiveAndEnabled;
+		}
+	}
+
+	/// <summary>
+	/// Applied to TreeFilterableSideScreen to only update the All checkbox if it changes.
+	/// </summary>
+	[HarmonyPatch(typeof(TreeFilterableSideScreen), nameof(TreeFilterableSideScreen.
+		UpdateAllCheckBoxVisualState))]
+	public static class TreeFilterableSideScreen_UpdateAllCheckBoxVisualState_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+
+		/// <summary>
+		/// Applied before UpdateAllCheckBoxVisualState runs.
+		/// </summary>
+		internal static bool Prefix(TreeFilterableSideScreen __instance) {
+			var cb = __instance.allCheckBox;
+			var currentState = cb.CurrentState;
+			switch (__instance.GetAllCheckboxState()) {
+			case TreeFilterableSideScreenRow.State.Off:
+				if (currentState != 0)
+					cb.ChangeState(0);
+				break;
+			case TreeFilterableSideScreenRow.State.Mixed:
+				if (currentState != 1)
+					cb.ChangeState(1);
+				break;
+			case TreeFilterableSideScreenRow.State.On:
+				if (currentState != 2)
+					cb.ChangeState(2);
+				break;
+			}
+			__instance.visualDirty = false;
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to TreeFilterableSideScreenRow to only update the checkbox if it changes.
+	/// </summary>
+	[HarmonyPatch(typeof(TreeFilterableSideScreenRow), nameof(TreeFilterableSideScreenRow.
+		UpdateCheckBoxVisualState))]
+	public static class TreeFilterableSideScreenRow_UpdateCheckBoxVisualState_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+
+		/// <summary>
+		/// Applied before UpdateCheckBoxVisualState runs.
+		/// </summary>
+		internal static bool Prefix(TreeFilterableSideScreenRow __instance) {
+			var cb = __instance.checkBoxToggle;
+			int targetState = (int)__instance.GetState();
+			if (targetState != cb.CurrentState)
+				cb.ChangeState(targetState);
+			__instance.visualDirty = false;
+			return false;
 		}
 	}
 }
