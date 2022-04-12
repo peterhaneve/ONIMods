@@ -102,10 +102,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 					controller.Stop();
 					controller.currentFrame = 0;
 					controller.SetElapsedTime(0.0f);
-					PathPatches.DeferAnimQueueTrigger.TriggerAndQueue(controller.gameObject,
+					PathPatches.DeferAnimQueueTrigger.TriggerAndQueue(controller,
 						(int)GameHashes.AnimQueueComplete, null);
-					if (controller.destroyOnAnimComplete)
-						controller.DestroySelf();
 				}
 			}
 			return mode;

@@ -151,8 +151,11 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		[HarmonyPatch(typeof(HighEnergyParticle), nameof(HighEnergyParticle.MovingUpdate))]
 		internal static class MovingUpdate_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.DisableAchievements !=
-				FastTrackOptions.AchievementDisable.Never;
+			internal static bool Prepare() {
+				var options = FastTrackOptions.Instance;
+				return !options.RadiationOpts && options.DisableAchievements !=
+					FastTrackOptions.AchievementDisable.Never;
+			}
 
 			/// <summary>
 			/// Updates the distance traveled only if the achievements are unlocked.

@@ -447,8 +447,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// <param name="x">The tile x coordinate.</param>
 			/// <param name="y">The tile y coordinate.</param>
 			/// <param name="color">The color tint to apply.</param>
-			/// <param name="chunk">The chunk containing the vertex arrays to fill.</param>
-			private void GenerateDecorVertices(int x, int y, Color color, MeshChunk chunk) {
+			private void GenerateDecorVertices(int x, int y, Color color) {
 				var dri = decorRenderInfo.decor;
 				int n = dri.Length;
 				Bits connected = TileRendererUtils.GetDecorConnectionBits(x, y, queryLayer);
@@ -463,7 +462,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 							SIMPLEX_SCALE.x, (float)(i + y + connected) * SIMPLEX_SCALE.y);
 						if (score >= decor.probabilityCutoff)
 							TileRendererUtils.AddDecorVertexInfo(ref decor, x, y, score, color,
-								decorTriangles, chunk);
+								decorTriangles);
 					}
 				}
 			}
@@ -474,8 +473,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// <param name="x">The tile x coordinate.</param>
 			/// <param name="y">The tile y coordinate.</param>
 			/// <param name="color">The color tint to apply.</param>
-			/// <param name="chunk">The chunk containing the vertex arrays to fill.</param>
-			private void GenerateVertices(int x, int y, Color color, MeshChunk chunk) {
+			private void GenerateVertices(int x, int y, Color color) {
 				// Difficult to optimize this further as bits can have any combination
 				Bits connected = TileRendererUtils.GetConnectionBits(x, y, queryLayer);
 				int n = atlasInfo.Length;
@@ -485,7 +483,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 					// If all required bits, and no forbidden bits, render this one
 					if ((require & connected) == require && (ai.forbiddenConnections &
 							connected) == 0) {
-						TileRendererUtils.AddVertexInfo(ai, x, y, connected, color, chunk);
+						TileRendererUtils.AddVertexInfo(ai, x, y, connected, color);
 						break;
 					}
 				}
@@ -540,7 +538,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 							int cell = y * w + x;
 							if (occupiedCells.ContainsKey(cell)) {
 								var color = renderer.GetCellColor(cell, element);
-								GenerateVertices(x, y, color, chunk);
+								GenerateVertices(x, y, color);
 							}
 						}
 					if (MeshUtil.vertices.Count > 0) {
@@ -582,7 +580,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 						int cell = y * w + x;
 						if (occupiedCells.ContainsKey(cell)) {
 							var color = renderer.GetCellColor(cell, element);
-							GenerateDecorVertices(x, y, color, chunk);
+							GenerateDecorVertices(x, y, color);
 						}
 					}
 				if (MeshUtil.vertices.Count > 0) {

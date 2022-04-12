@@ -75,6 +75,8 @@ namespace PeterHan.FastTrack {
 			var options = FastTrackOptions.Instance;
 			if (options.ThreatOvercrowding)
 				CritterPatches.OvercrowdingMonitor_UpdateState_Patch.InitTagBits();
+			if (options.RadiationOpts)
+				GamePatches.FastProtonCollider.Init();
 			if (options.SensorOpts) {
 				SensorPatches.SensorPatches.Init();
 				SensorPatches.SensorPatches.MingleCellSensor_Update.Init();

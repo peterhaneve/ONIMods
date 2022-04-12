@@ -116,24 +116,6 @@ namespace PeterHan.FastTrack.SensorPatches {
 	}
 
 	/// <summary>
-	/// Applied to GameScenePartitioner to create a mask for triggering reachability updates.
-	/// </summary>
-	[HarmonyPatch(typeof(GameScenePartitioner), nameof(GameScenePartitioner.OnPrefabInit))]
-	public static class GameScenePartitioner_OnPrefabInit_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
-
-		/// <summary>
-		/// Applied after OnPrefabInit runs.
-		/// </summary>
-		internal static void Postfix(ScenePartitioner ___partitioner) {
-			if (___partitioner != null)
-				// XXX: There are only a few mask layers left
-				FastGroupProber.Init(___partitioner.CreateMask(FastReachabilityMonitor.
-					REACHABILITY));
-		}
-	}
-
-	/// <summary>
 	/// Applied to MinionGroupProber to use our check for reachability instead of its own.
 	/// </summary>
 	[HarmonyPatch]

@@ -26,6 +26,11 @@ namespace PeterHan.FastTrack.VisualPatches {
 	/// </summary>
 	public sealed class KAnimLoopOptimizer {
 		/// <summary>
+		/// Animations of this many frames or more are never affected.
+		/// </summary>
+		public const int LONG_THRESHOLD = 30;
+
+		/// <summary>
 		/// Animations of this many frames or fewer are paused instead of run once.
 		/// </summary>
 		public const int SHORT_THRESHOLD = 5;
@@ -110,9 +115,9 @@ namespace PeterHan.FastTrack.VisualPatches {
 				// Anim specifies a number of frames from the batch group's frames
 				var anim = data.GetAnim(i);
 				int start = anim.firstFrameIdx, nf = anim.numFrames, end = start + nf;
-				bool trivial = true;
+				bool trivial = nf < LONG_THRESHOLD;
 				var id = anim.id;
-				if (nf > 1) {
+				if (nf > 1 && trivial) {
 					var firstFrame = bgd.GetFrame(start++);
 					trivial = firstFrame.idx >= 0;
 					for (int j = start; j < end && trivial; j++) {

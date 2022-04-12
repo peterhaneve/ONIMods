@@ -55,14 +55,17 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Instead of immediately triggering the event, queues it for next frame.
 		/// </summary>
-		/// <param name="source">The object triggering the event.</param>
+		/// <param name="source">The controller triggering the event.</param>
 		/// <param name="hash">The event hash to trigger.</param>
 		/// <param name="data">The event parameter (if available).</param>
-		internal static void TriggerAndQueue(GameObject source, int hash, object data) {
+		internal static void TriggerAndQueue(KAnimControllerBase source, int hash,
+				object data) {
 			var inst = Instance;
-			if (inst == null)
-				source.Trigger(hash, data);
-			else
+			if (inst == null || source.overrideAnimFiles.Count > 0) {
+				source.gameObject.Trigger(hash, data);
+				if (source.destroyOnAnimComplete)
+					source.DestroySelf();
+			} else
 				inst.Queue(source, hash, data);
 		}
 
@@ -86,18 +89,22 @@ namespace PeterHan.FastTrack.PathPatches {
 			while (pending.Count > 0) {
 				var evt = pending.Dequeue();
 				var src = evt.source;
-				if (src != null)
-					src.Trigger(evt.hash, evt.data);
+				if (src != null) {
+					src.gameObject.Trigger(evt.hash, evt.data);
+					// Destroy it now
+					if (src.destroyOnAnimComplete)
+						src.DestroySelf();
+				}
 			}
 		}
 
 		/// <summary>
 		/// Queues an event.
 		/// </summary>
-		/// <param name="source">The object triggering the event.</param>
+		/// <param name="source">The controller triggering the event.</param>
 		/// <param name="hash">The event hash to trigger.</param>
 		/// <param name="data">The event parameter (if available).</param>
-		internal void Queue(GameObject source, int hash, object data) {
+		internal void Queue(KAnimControllerBase source, int hash, object data) {
 			pending.Enqueue(new TriggerEvent(source, hash, data));
 		}
 
@@ -116,11 +123,11 @@ namespace PeterHan.FastTrack.PathPatches {
 			internal readonly int hash;
 
 			/// <summary>
-			/// The object triggering the event.
+			/// The controller triggering the event.
 			/// </summary>
-			internal readonly GameObject source;
+			internal readonly KAnimControllerBase source;
 
-			public TriggerEvent(GameObject source, int hash, object data) {
+			public TriggerEvent(KAnimControllerBase source, int hash, object data) {
 				this.data = data;
 				this.hash = hash;
 				this.source = source;
@@ -137,15 +144,19 @@ namespace PeterHan.FastTrack.PathPatches {
 		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
 
 		/// <summary>
-		/// Transpiles TriggerStop to instead queue up the event until the start of the next
-		/// frame.
+		/// Applied before TriggerStop runs.
 		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			return PPatchTools.ReplaceMethodCall(instructions, typeof(EventExtensions).
-				GetMethodSafe(nameof(EventExtensions.Trigger), true, typeof(GameObject),
-				typeof(int), typeof(object)), typeof(DeferAnimQueueTrigger).GetMethodSafe(
-				nameof(DeferAnimQueueTrigger.TriggerAndQueue), true, typeof(GameObject),
-				typeof(int), typeof(object)));
+		internal static bool Prefix(KBatchedAnimController __instance) {
+			var anim = __instance.CurrentAnim;
+			if (__instance.animQueue.Count > 0) {
+				__instance.StartQueuedAnim();
+			} else if (anim != null && __instance.mode == KAnim.PlayMode.Once) {
+				__instance.currentFrame = anim.numFrames - 1;
+				__instance.Stop();
+				DeferAnimQueueTrigger.TriggerAndQueue(__instance, (int)GameHashes.
+					AnimQueueComplete, null);
+			}
+			return false;
 		}
 	}
 }

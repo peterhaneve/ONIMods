@@ -192,27 +192,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 		internal static bool Prepare() => FastTrackOptions.Instance.NoSplash;
 
 		/// <summary>
-		/// Transpiles TryAbsorb to make it think EffectPrefabs.Instance is always null.
+		/// Applied before TryAbsorb runs.
 		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			var target = typeof(EffectPrefabs).GetPropertySafe<EffectPrefabs>(nameof(
-				EffectPrefabs.Instance), true)?.GetGetMethod(true);
-			if (target != null)
-				foreach (var instr in instructions) {
-					if (instr.Is(OpCodes.Ldfld, target)) {
-						instr.opcode = OpCodes.Ldnull;
-						instr.operand = null;
-#if DEBUG
-						PUtil.LogDebug("Patched Pickupable.TryAbsorb");
-#endif
-					}
-					yield return instr;
-				}
-			else {
-				PUtil.LogWarning("Unable to patch Pickupable.TryAbsorb");
-				foreach (var instr in instructions)
-					yield return instr;
-			}
+		internal static void Prefix(ref bool hide_effects) {
+			hide_effects = true;
 		}
 	}
 }

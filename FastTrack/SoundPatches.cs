@@ -182,6 +182,40 @@ namespace PeterHan.FastTrack {
 	}
 
 	/// <summary>
+	/// Applied to CameraController to never say sounds are audible when sound is off.
+	/// </summary>
+	[HarmonyPatch(typeof(CameraController), nameof(CameraController.IsAudibleSound),
+		typeof(UnityEngine.Vector2))]
+	public static class CameraController_IsAudibleSoundV2_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.DisableSound;
+
+		/// <summary>
+		/// Applied before IsAudibleSound runs.
+		/// </summary>
+		internal static bool Prefix(ref bool __result) {
+			__result = false;
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to CameraController to never say sounds are audible when sound is off.
+	/// </summary>
+	[HarmonyPatch(typeof(CameraController), nameof(CameraController.IsAudibleSound),
+		typeof(UnityEngine.Vector3), typeof(HashedString))]
+	public static class CameraController_IsAudibleSoundV3_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.DisableSound;
+
+		/// <summary>
+		/// Applied before IsAudibleSound runs.
+		/// </summary>
+		internal static bool Prefix(ref bool __result) {
+			__result = false;
+			return false;
+		}
+	}
+
+	/// <summary>
 	/// Applied to NotificationScreen to suppress sounds queued very early in the load.
 	/// sequence.
 	/// </summary>

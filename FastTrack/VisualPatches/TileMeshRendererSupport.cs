@@ -198,11 +198,9 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <param name="y">The bottom left Y coordinate.</param>
 		/// <param name="score">The index in the variants list to use for rendering.</param>
 		/// <param name="color">The tint color to use when rendering.</param>
-		/// <param name="chunk">The chunk containing the vertex arrays to fill.</param>
 		/// <param name="triangles">The current mesh triangle buffer.</param>
 		public static void AddDecorVertexInfo(ref BlockTileDecorInfo.Decor decor, int x,
-				int y, float score, Color color, ICollection<TriangleInfo> triangles,
-				MeshChunk chunk) {
+				int y, float score, Color color, ICollection<TriangleInfo> triangles) {
 			var variants = decor.variants;
 			var vertices = MeshUtil.vertices;
 			var colors = MeshUtil.colours;
@@ -241,9 +239,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <param name="y">The bottom left Y coordinate.</param>
 		/// <param name="connected">The sides which are connected.</param>
 		/// <param name="color">The tint color to use when rendering.</param>
-		/// <param name="chunk">The chunk containing the vertex arrays to fill.</param>
 		public static void AddVertexInfo(this AtlasInfo atlasInfo, int x, int y,
-				Bits connected, Color color, MeshChunk chunk) {
+				Bits connected, Color color) {
 			float size = Grid.CellSizeInMeters;
 			Vector2 botLeft = new Vector2(x, y);
 			Vector2 topRight = new Vector2(x + size, y + size);

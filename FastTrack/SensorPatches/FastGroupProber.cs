@@ -49,6 +49,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// <summary>
 		/// Creates the singleton instance of this class.
 		/// </summary>
+		/// <param name="mask">The scene partitioner layer to use.</param>
 		internal static void Init(ScenePartitionerLayer mask) {
 			Cleanup();
 			Instance = new FastGroupProber(mask);
