@@ -264,11 +264,15 @@ namespace PeterHan.FastTrack.GamePatches {
 				} else {
 					float payload = hep.payload;
 					if (cell != newCell) {
-						DestroyPartitioner();
 						SimMessages.ModifyDiseaseOnCell(newCell, diseaseIndex,
 							DISEASE_PER_CELL);
 						payload -= HighEnergyParticleConfig.PER_CELL_FALLOFF;
-						CreatePartitioner(cell);
+						if (partitionerEntry.IsValid())
+							// GSP had to be valid for the entry to exist in the first place
+							GameScenePartitioner.Instance.UpdatePosition(partitionerEntry,
+								newCell);
+						else
+							CreatePartitioner(newCell);
 					}
 					if (payload <= 0.0f)
 						destroy = true;

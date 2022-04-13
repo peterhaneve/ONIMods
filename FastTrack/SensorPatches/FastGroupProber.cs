@@ -235,6 +235,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 									added.Add(reachableCell);
 								oldCells.Add(reachableCell);
 							}
+							newCells.Clear();
 						}
 						n = added.Count;
 						for (int i = 0; i < n; i++) {

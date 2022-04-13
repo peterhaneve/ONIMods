@@ -58,16 +58,9 @@ namespace PeterHan.FastTrack.SensorPatches {
 			partitionerEntry = HandleVector<int>.InvalidHandle;
 		}
 
-		/// <summary>
-		/// Frees the scene partitioner entry for this workable.
-		/// </summary>
-		private void DestroyPartitioner() {
+		public override void OnCleanUp() {
 			if (partitionerEntry.IsValid())
 				GameScenePartitioner.Instance.Free(ref partitionerEntry);
-		}
-
-		public override void OnCleanUp() {
-			DestroyPartitioner();
 			base.OnCleanUp();
 		}
 
@@ -100,10 +93,12 @@ namespace PeterHan.FastTrack.SensorPatches {
 				// Only if the extents actually changed
 				if (extents.x != lastExtents.x || extents.y != lastExtents.y || extents.
 						width != lastExtents.width || extents.height != lastExtents.height) {
-					DestroyPartitioner();
-					partitionerEntry = GameScenePartitioner.Instance.Add(
-						"FastReachabilityMonitor.UpdateOffsets", this, extents, inst.mask,
-						OnReachableChanged);
+					var gsp = GameScenePartitioner.Instance;
+					if (partitionerEntry.IsValid())
+						gsp.UpdatePosition(partitionerEntry, extents);
+					else
+						partitionerEntry = gsp.Add("FastReachabilityMonitor.UpdateOffsets",
+							this, extents, inst.mask, OnReachableChanged);
 					// The offsets changed, fire a manual check if not the first time
 					// (the smi constructor already updated it once)
 					if (lastExtents.x >= 0)

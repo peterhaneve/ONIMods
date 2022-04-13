@@ -297,8 +297,7 @@ namespace PeterHan.ModUpdateDate {
 			/// <summary>
 			/// Applied after IsSubscribed runs.
 			/// </summary>
-			internal static void Postfix(PublishedFileId_t item,
-					ref bool __result) {
+			internal static void Postfix(PublishedFileId_t item, ref bool __result) {
 				if (!SafeMode)
 					__result = SteamUGCServiceFixed.Instance.IsSubscribed(item);
 			}
