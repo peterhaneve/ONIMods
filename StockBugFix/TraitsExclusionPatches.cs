@@ -16,9 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.Core;
 using System.Collections.Generic;
-using System.Reflection;
 
 using TraitVal = TUNING.DUPLICANTSTATS.TraitVal;
 
@@ -48,7 +46,6 @@ namespace PeterHan.StockBugFix {
 		/// <returns>true if the trait was excluded, or false if not found.</returns>
 		private static bool ExcludeTraitFromInterest(string traitID, string interestID,
 				List<TraitVal> toSearch) {
-#if SPACEDOUT
 			int n = toSearch.Count;
 			bool found = false;
 			for (int i = 0; i < n; i++) {
@@ -67,9 +64,6 @@ namespace PeterHan.StockBugFix {
 				}
 			}
 			return found;
-#else
-			return false;
-#endif
 		}
 
 		/// <summary>

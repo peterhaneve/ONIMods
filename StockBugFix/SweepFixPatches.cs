@@ -169,5 +169,66 @@ namespace PeterHan.StockBugFix {
 				return allInstr;
 			}
 		}
+
+		/// <summary>
+		/// Applied to FetchManager.FetchablesByPrefabId to avoid trashing the priority class
+		/// when calculating fetchable priority.
+		/// </summary>
+		public static class FetchManager_FetchablesByPrefabId_Patch {
+			/// <summary>
+			/// Finds multiple methods to patch.
+			/// </summary>
+			internal static IEnumerable<MethodBase> TargetMethods() {
+				var targetType = typeof(FetchManager.FetchablesByPrefabId);
+				yield return targetType.GetMethodSafe(nameof(FetchManager.FetchablesByPrefabId.
+					AddPickupable), false, typeof(Pickupable));
+				yield return targetType.GetMethodSafe(nameof(FetchManager.FetchablesByPrefabId.
+					UpdateStorage), false, typeof(HandleVector<int>.Handle), typeof(Storage));
+			}
+
+			/// <summary>
+			/// Classifies yellow alert sweeps as 11 effective priority ahead of all others
+			/// in the 1-9 range.
+			/// </summary>
+			/// <param name="setting">The current item priority setting.</param>
+			/// <returns>The priority level to use for sorting.</returns>
+			private static int GetComputedPriority(PrioritySetting setting) {
+				int priority;
+				if (setting.priority_class == PriorityScreen.PriorityClass.topPriority)
+					priority = 11;
+				else
+					priority = setting.priority_value;
+				return priority;
+			}
+
+			/// <summary>
+			/// Transpiles these methods to replace the field access to PrioritySetting.
+			/// priority_value with a composite lookup.
+			/// </summary>
+			internal static IEnumerable<CodeInstruction> Transpiler(
+					IEnumerable<CodeInstruction> method, MethodBase __originalMethod) {
+				var target = typeof(PrioritySetting).GetFieldSafe(nameof(PrioritySetting.
+					priority_value), false);
+				var replacement = typeof(FetchManager_FetchablesByPrefabId_Patch).
+					GetMethodSafe(nameof(GetComputedPriority), true, typeof(PrioritySetting));
+				if (target != null && replacement != null)
+					foreach (var instr in method) {
+						if (instr.opcode == OpCodes.Ldfld && instr.operand is FieldInfo fi &&
+								fi == target) {
+							instr.opcode = OpCodes.Call;
+							instr.operand = replacement;
+#if DEBUG
+							PUtil.LogDebug("Patched " + __originalMethod.Name);
+#endif
+						}
+						yield return instr;
+					}
+				else {
+					PUtil.LogWarning("Unable to patch " + __originalMethod.Name);
+					foreach (var instr in method)
+						yield return instr;
+				}
+			}
+		}
 	}
 }
