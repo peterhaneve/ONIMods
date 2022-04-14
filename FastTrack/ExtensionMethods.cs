@@ -32,26 +32,6 @@ namespace PeterHan.FastTrack {
 	/// </summary>
 	public static class ExtensionMethods {
 		/// <summary>
-		/// Appends the time slice unit (like "/s") to the string buffer. Allocates less than
-		/// a string concatenation.
-		/// </summary>
-		/// <param name="buffer">The string builder to append.</param>
-		/// <param name="timeSlice">The time slice unit to use.</param>
-		/// <returns>The string builder.</returns>
-		public static StringBuilder AppendTimeSlice(this StringBuilder buffer,
-				GameUtil.TimeSlice timeSlice) {
-			switch (timeSlice) {
-			case GameUtil.TimeSlice.PerSecond:
-				buffer.Append(STRINGS.UI.UNITSUFFIXES.PERSECOND);
-				break;
-			case GameUtil.TimeSlice.PerCycle:
-				buffer.Append(STRINGS.UI.UNITSUFFIXES.PERCYCLE);
-				break;
-			}
-			return buffer;
-		}
-
-		/// <summary>
 		/// Copies layout information to a fixed layout element. Useful for freezing a UI
 		/// object.
 		/// </summary>
@@ -93,6 +73,26 @@ namespace PeterHan.FastTrack {
 			var filter = go.GetComponent<MeshFilter>();
 			filter.sharedMesh = targetMesh;
 			return go;
+		}
+
+		/// <summary>
+		/// A faster version of string.Format with one string argument.
+		/// </summary>
+		/// <param name="str">The LocString to format.</param>
+		/// <param name="value">The value to substitute for "{0}".</param>
+		/// <returns>The formatted string.</returns>
+		public static string Format(this LocString str, string value) {
+			return str.text.Replace("{0}", value);
+		}
+
+		/// <summary>
+		/// A faster version of string.Format with one string argument.
+		/// </summary>
+		/// <param name="str">The StringEntry to format.</param>
+		/// <param name="value">The value to substitute for "{0}".</param>
+		/// <returns>The formatted string.</returns>
+		public static string Format(this StringEntry str, string value) {
+			return str.String.Replace("{0}", value);
 		}
 
 		/// <summary>

@@ -35,9 +35,14 @@ namespace PeterHan.FastTrack {
 #if DEBUG
 		[PLibMethod(RunAt.AfterModsLoad)]
 		internal static void Profile(Harmony harmony) {
-			harmony.Profile(typeof(KAnimBatchManager), nameof(KAnimBatchManager.UpdateDirty));
-			harmony.Profile(typeof(KBatchedAnimUpdater), nameof(KBatchedAnimUpdater.UpdateRegisteredAnims));
-			//harmony.Profile(typeof(Game), nameof(Game.UnsafeSim200ms));
+			//harmony.Profile(typeof(KAnimBatchManager), nameof(KAnimBatchManager.UpdateDirty));
+			//harmony.Profile(typeof(KBatchedAnimUpdater), nameof(KBatchedAnimUpdater.UpdateRegisteredAnims));
+			harmony.Profile(typeof(Game), nameof(Game.UnsafeSim200ms));
+			harmony.Profile(typeof(ConduitFlow), nameof(ConduitFlow.Sim200ms));
+			harmony.Profile(typeof(PlantElementAbsorbers), nameof(PlantElementAbsorbers.Sim200ms));
+			harmony.Profile(typeof(CircuitManager), nameof(CircuitManager.Sim200msFirst));
+			harmony.Profile(typeof(EnergySim), nameof(EnergySim.EnergySim200ms));
+			harmony.Profile(typeof(CircuitManager), nameof(CircuitManager.Sim200msLast));
 		}
 #endif
 
@@ -82,6 +87,11 @@ namespace PeterHan.FastTrack {
 			}
 			if (options.AnimOpts)
 				VisualPatches.KAnimLoopOptimizer.CreateInstance();
+			// Localization related
+			if (options.InfoCardOpts)
+				UIPatches.GameUtilPatches.Init();
+			if (options.AllocOpts)
+				UIPatches.DescriptorAllocPatches.Init();
 		}
 
 		/// <summary>
@@ -184,6 +194,10 @@ namespace PeterHan.FastTrack {
 				PathPatches.PathProbeJobManager.DestroyInstance();
 			GamePatches.AchievementPatches.DestroyInstance();
 			PathPatches.AsyncBrainGroupUpdater.DestroyInstance();
+			if (options.AllocOpts) {
+				GamePatches.AdditionalDetailsPanelPatch.Cleanup();
+				UIPatches.DescriptorAllocPatches.Cleanup();
+			}
 			AsyncJobManager.DestroyInstance();
 			GameRunning = false;
 		}
@@ -220,6 +234,8 @@ namespace PeterHan.FastTrack {
 		internal static void OnStartGame() {
 			var inst = Game.Instance;
 			var options = FastTrackOptions.Instance;
+			if (options.AllocOpts)
+				GamePatches.AdditionalDetailsPanelPatch.Init();
 			if (options.PickupOpts)
 				PathPatches.DeferAnimQueueTrigger.CreateInstance();
 			if (options.CachePaths)
@@ -255,6 +271,7 @@ namespace PeterHan.FastTrack {
 		}
 
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
+			const string ASDF = "Bugs.AutosaveDragFix";
 			var options = FastTrackOptions.Instance;
 			base.OnAllModsLoaded(harmony, mods);
 			if (options.MeshRendererOptions == FastTrackOptions.MeshRendererSettings.All &&
@@ -262,10 +279,12 @@ namespace PeterHan.FastTrack {
 				CheckTileCompat(harmony, mods);
 			if (options.FastUpdatePickups)
 				CheckFetchCompat(harmony);
-			if (!PRegistry.GetData<bool>("Bugs.AutosaveDragFix"))
+			if (!PRegistry.GetData<bool>(ASDF)) {
 				// Fix the annoying autosave bug
 				harmony.Patch(typeof(Timelapser), "SaveScreenshot", postfix: new HarmonyMethod(
 					typeof(FastTrackMod), nameof(FastTrackMod.FixTimeLapseDrag)));
+				PRegistry.PutData(ASDF, true);
+			}
 			if (options.FastReachability)
 				GamePatches.FastCellChangeMonitor.CreateInstance();
 		}

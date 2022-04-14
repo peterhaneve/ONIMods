@@ -162,7 +162,7 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool AnimOpts { get; set; }
 
-		[Option("Info Card Optimization", "Optimizes the info cards shown on hover.\n<i>Values in info cards may be formatted slightly differently</i>" + PERF_MEDIUM, "Visual")]
+		[Option("Info Card Optimization", "Optimizes the info cards shown on hover." + PERF_MEDIUM, "Visual")]
 		[JsonProperty]
 		public bool InfoCardOpts { get; set; }
 

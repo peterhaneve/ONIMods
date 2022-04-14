@@ -17,11 +17,12 @@
  */
 
 using HarmonyLib;
-using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+
+using TableRowList = ListPool<TableRow, TableScreen>;
 
 namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
@@ -248,7 +249,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="rows">The current table rows, one per Duplicant.</param>
 		/// <param name="dupesByWorld">The location where the groups will be stored.</param>
 		private static void GroupDupesByWorld(IList<TableRow> rows, IDictionary<int,
-				List<TableRow>> dupesByWorld) {
+				TableRowList.PooledList> dupesByWorld) {
 			int n = rows.Count;
 			GameObject go;
 			for (int i = 0; i < n; i++) {
@@ -257,8 +258,8 @@ namespace PeterHan.FastTrack.UIPatches {
 				if (owner != null && (go = owner.GetComponent<MinionAssignablesProxy>().
 						GetTargetGameObject()) != null) {
 					int world = go.GetMyWorldId();
-					if (!dupesByWorld.TryGetValue(world, out List<TableRow> dupes))
-						dupesByWorld.Add(world, dupes = new List<TableRow>());
+					if (!dupesByWorld.TryGetValue(world, out TableRowList.PooledList dupes))
+						dupesByWorld.Add(world, dupes = TableRowList.Allocate());
 					dupes.Add(row);
 				}
 			}
@@ -277,9 +278,10 @@ namespace PeterHan.FastTrack.UIPatches {
 			// Sort the rows in the UI
 			for (int i = 0; i < n; i++)
 				rows[i].transform.SetSiblingIndex(i);
-			// Move the dividers
 			foreach (var pair in dividerIndices)
-				dividers[pair.Key].transform.SetSiblingIndex(pair.Value);
+				if (dividers.TryGetValue(pair.Key, out GameObject divider))
+					// Will not be present in vanilla
+					divider.transform.SetSiblingIndex(pair.Value);
 			// Move the default row to the beginning
 			if (instance.has_default_duplicant_row)
 				instance.default_row.transform.SetAsFirstSibling();
@@ -294,7 +296,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			bool reversed = instance.sort_is_reversed;
 			var comparison = new TableSortComparison(instance.active_sort_method, reversed);
 			var dividerIndices = DictionaryPool<int, int, TableScreen>.Allocate();
-			var dupesByWorld = DictionaryPool<int, List<TableRow>, TableScreen>.Allocate();
+			var dupesByWorld = DictionaryPool<int, TableRowList.PooledList, TableScreen>.
+				Allocate();
 			int index = 0;
 			var entryList = instance.scroll_content_transform;
 			UpdateHeaders(instance, reversed);
@@ -309,6 +312,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					list.Sort(comparison);
 				index += list.Count;
 				rows.AddRange(list);
+				list.Recycle();
 			}
 			dupesByWorld.Recycle();
 			MoveRows(instance, rows, dividerIndices);

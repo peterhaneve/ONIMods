@@ -44,7 +44,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <returns>true if it can be picked up, or false otherwise.</returns>
 		private static bool CanUse(Pickupable pickupable, GameObject go) {
 			return pickupable.CouldBePickedUpByTransferArm(go) && pickupable.KPrefabID.
-				HasAnyTags(ref SolidTransferArm.tagBits);
+				HasAnyTags_AssumeLaundered(ref SolidTransferArm.tagBits);
 		}
 
 		/// <summary>
@@ -68,7 +68,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// The cached pickupables from async fetches.
 		/// </summary>
-		private readonly ConcurrentStack<CachedPickupable> cached;
+		private readonly List<CachedPickupable> cached;
 
 		/// <summary>
 		/// The current sweeper job.
@@ -76,7 +76,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		private readonly IList<SolidTransferArmInfo> sweepers;
 
 		private SolidTransferArmUpdater() {
-			cached = new ConcurrentStack<CachedPickupable>();
+			cached = new List<CachedPickupable>(256);
 			sweepers = new List<SolidTransferArmInfo>(32);
 		}
 
@@ -188,13 +188,20 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="items">The fetchables for a prefab ID.</param>
 		internal void UpdateCache(IList<FetchManager.Fetchable> items) {
 			int n = items.Count;
+			KPrefabID prefabID;
 			for (int i = 0; i < n; i++) {
 				var pickupable = items[i].pickupable;
-				if (pickupable.KPrefabID.HasTag(GameTags.Stored))
-					cached.Push(new CachedPickupable {
-						pickupable = pickupable,
-						storage_cell = pickupable.cachedCell
-					});
+				if (pickupable != null && (prefabID = pickupable.KPrefabID).HasTag(GameTags.
+						Stored))
+					lock (cached) {
+						// While cached could be lockless, laundering the tag bits can hit a
+						// very rare race condition on ManifestTagBits anyways
+						prefabID.LaunderTagBits();
+						cached.Add(new CachedPickupable {
+							pickupable = pickupable,
+							storage_cell = pickupable.cachedCell
+						});
+					}
 			}
 		}
 
