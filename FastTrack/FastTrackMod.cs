@@ -195,7 +195,8 @@ namespace PeterHan.FastTrack {
 			GamePatches.AchievementPatches.DestroyInstance();
 			PathPatches.AsyncBrainGroupUpdater.DestroyInstance();
 			if (options.AllocOpts) {
-				GamePatches.AdditionalDetailsPanelPatch.Cleanup();
+				UIPatches.AdditionalDetailsPanelWrapper.Cleanup();
+				UIPatches.VitalsPanelWrapper.Cleanup();
 				UIPatches.DescriptorAllocPatches.Cleanup();
 			}
 			AsyncJobManager.DestroyInstance();
@@ -234,8 +235,10 @@ namespace PeterHan.FastTrack {
 		internal static void OnStartGame() {
 			var inst = Game.Instance;
 			var options = FastTrackOptions.Instance;
-			if (options.AllocOpts)
-				GamePatches.AdditionalDetailsPanelPatch.Init();
+			if (options.AllocOpts) {
+				UIPatches.AdditionalDetailsPanelWrapper.Init();
+				UIPatches.VitalsPanelWrapper.Init();
+			}
 			if (options.PickupOpts)
 				PathPatches.DeferAnimQueueTrigger.CreateInstance();
 			if (options.CachePaths)

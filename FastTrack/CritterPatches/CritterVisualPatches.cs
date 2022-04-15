@@ -27,7 +27,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 	/// head position did not change.
 	/// </summary>
 	[HarmonyPatch]
-	public static class SegmentedCreature_UpdateFreeMovement_Patch {
+	public static class SegmentedCreature_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
 
 		internal static IEnumerable<MethodBase> TargetMethods() {

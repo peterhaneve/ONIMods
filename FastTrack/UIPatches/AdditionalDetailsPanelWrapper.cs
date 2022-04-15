@@ -22,171 +22,27 @@ using UnityEngine;
 
 using ELEMENTAL = STRINGS.UI.ELEMENTAL;
 
-namespace PeterHan.FastTrack.GamePatches {
+namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
-	/// Applied to AdditionalDetailsPanel to optimize this memory hungry method that runs every
-	/// frame.
+	/// Stores state information about the additional details panel to avoid recalculating so
+	/// much every frame.
 	/// </summary>
-	[HarmonyPatch(typeof(AdditionalDetailsPanel), nameof(AdditionalDetailsPanel.
-		RefreshDetails))]
-	public static class AdditionalDetailsPanelPatch {
-		/// <summary>
-		/// The last object selected in the additional details pane.
-		/// </summary>
-		private static LastSelectionDetails lastSelection;
-
+	public sealed class AdditionalDetailsPanelWrapper {
 		/// <summary>
 		/// The number of cycles to display uptime.
 		/// </summary>
 		private const int NUM_CYCLES = Tracker.defaultCyclesTracked;
 
 		/// <summary>
-		/// The ID of the overheat temperature attribute.
+		/// The singleton instance of this class.
 		/// </summary>
-		private static string overheatID;
-
-		/// <summary>
-		/// A cached version of the uptime.
-		/// </summary>
-		private static string UPTIME_STR;
-
-		internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
+		internal static AdditionalDetailsPanelWrapper instance;
 
 		/// <summary>
 		/// Called at shutdown to avoid leaking references.
 		/// </summary>
 		internal static void Cleanup() {
-			lastSelection = default;
-		}
-
-		/// <summary>
-		/// Initializes and resets the last selected item.
-		/// </summary>
-		internal static void Init() {
-			Cleanup();
-			overheatID = Db.Get().BuildingAttributes.OverheatTemperature.Id;
-			UPTIME_STR = string.Format(ELEMENTAL.UPTIME.NAME, "    • ",
-				ELEMENTAL.UPTIME.THIS_CYCLE, "{0}", ELEMENTAL.UPTIME.LAST_CYCLE, "{1}",
-				ELEMENTAL.UPTIME.LAST_X_CYCLES.Replace("{0}", NUM_CYCLES.ToString()), "{2}");
-		}
-
-		/// <summary>
-		/// Draws the building's creation time, or nothing if the data is not available.
-		/// </summary>
-		/// <param name="drawer">The renderer for the details.</param>
-		/// <param name="changed">true if the target changed, or false otherwise.</param>
-		private static void AddCreationTime(DetailsPanelDrawer drawer, bool changed) {
-			var bc = lastSelection.buildingComplete;
-			float creationTime;
-			if (bc != null && (creationTime = bc.creationTime) > 0.0f) {
-				string time = lastSelection.creationTimeCached;
-				if (changed || time == null) {
-					time = Util.FormatTwoDecimalPlace((GameClock.Instance.GetTime() -
-						creationTime) / Constants.SECONDS_PER_CYCLE);
-					lastSelection.creationTimeCached = time;
-				}
-				drawer.NewLabel(drawer.Format(ELEMENTAL.AGE.NAME, time)).Tooltip(
-					drawer.Format(ELEMENTAL.AGE.TOOLTIP, time));
-			}
-		}
-
-		/// <summary>
-		/// Draws the thermal properties of the constituent element.
-		/// </summary>
-		/// <param name="drawer">The renderer for the details.</param>
-		private static void AddElementInfo(DetailsPanelDrawer drawer) {
-			string tempStr = GameUtil.GetFormattedTemperature(lastSelection.Temperature);
-			byte diseaseIdx = lastSelection.DiseaseIndex;
-			int diseaseCount = lastSelection.DiseaseCount;
-			drawer.NewLabel(drawer.Format(ELEMENTAL.TEMPERATURE.NAME, tempStr)).
-				Tooltip(drawer.Format(ELEMENTAL.TEMPERATURE.TOOLTIP, tempStr)).
-				NewLabel(drawer.Format(ELEMENTAL.DISEASE.NAME, GameUtil.
-					GetFormattedDisease(diseaseIdx, diseaseCount, false))).
-				Tooltip(drawer.Format(ELEMENTAL.DISEASE.TOOLTIP, GameUtil.GetFormattedDisease(
-					diseaseIdx, diseaseCount, true)));
-			lastSelection.specificHeat.AddLine(drawer);
-			lastSelection.thermalConductivity.AddLine(drawer);
-			if (lastSelection.insulator)
-				drawer.NewLabel(STRINGS.UI.GAMEOBJECTEFFECTS.INSULATED.NAME).Tooltip(
-					STRINGS.UI.GAMEOBJECTEFFECTS.INSULATED.TOOLTIP);
-		}
-
-		/// <summary>
-		/// Draws the state change and radiation (if enabled) information of an element.
-		/// </summary>
-		/// <param name="drawer">The renderer for the details.</param>
-		/// <param name="element">The element to display.</param>
-		private static void AddPhaseChangeInfo(DetailsPanelDrawer drawer, Element element) {
-			// Phase change points
-			if (element.IsSolid) {
-				var overheat = lastSelection.overheat;
-				lastSelection.boil.AddLine(drawer);
-				if (!string.IsNullOrEmpty(overheat.text))
-					overheat.AddLine(drawer);
-			} else if (element.IsLiquid) {
-				lastSelection.freeze.AddLine(drawer);
-				lastSelection.boil.AddLine(drawer);
-			} else if (element.IsGas)
-				lastSelection.freeze.AddLine(drawer);
-			// Radiation absorption
-			if (DlcManager.FeatureRadiationEnabled()) {
-				string radAbsorb = lastSelection.radiationAbsorption;
-				drawer.NewLabel(drawer.Format(STRINGS.UI.DETAILTABS.DETAILS.
-					RADIATIONABSORPTIONFACTOR.NAME, radAbsorb)).Tooltip(drawer.Format(STRINGS.
-					UI.DETAILTABS.DETAILS.RADIATIONABSORPTIONFACTOR.TOOLTIP, radAbsorb));
-			}
-		}
-
-		/// <summary>
-		/// Draws the uptime statistics of the building if available.
-		/// </summary>
-		/// <param name="drawer">The renderer for the details.</param>
-		/// <param name="changed">true if the target changed, or false otherwise.</param>
-		private static void AddUptimeStats(DetailsPanelDrawer drawer, bool changed) {
-			var operational = lastSelection.operational;
-			float thisCycle;
-			if (operational != null && lastSelection.showUptime && (thisCycle = operational.
-					GetCurrentCycleUptime()) >= 0.0f) {
-				float lastCycle = operational.GetLastCycleUptime(), prevCycles =
-					operational.GetUptimeOverCycles(NUM_CYCLES);
-				string label = lastSelection.uptimeCached;
-				if (changed || label == null) {
-					label = string.Format(UPTIME_STR, GameUtil.GetFormattedPercent(
-						thisCycle * 100.0f), GameUtil.GetFormattedPercent(lastCycle * 100.0f),
-						GameUtil.GetFormattedPercent(prevCycles * 100.0f));
-					lastSelection.uptimeCached = label;
-				}
-				drawer.NewLabel(label);
-			}
-		}
-
-		/// <summary>
-		/// Draws the extra descriptors (attributes and details) for the selected object.
-		/// </summary>
-		/// <param name="drawer">The renderer for the details.</param>
-		private static void DetailDescriptors(DetailsPanelDrawer drawer) {
-			var target = lastSelection.target;
-			var attributes = target.GetAttributes();
-			var descriptors = GameUtil.GetAllDescriptors(target);
-			int n;
-			if (attributes != null) {
-				n = attributes.Count;
-				for (int i = 0; i < n; i++) {
-					var instance = attributes.AttributeTable[i];
-					var attr = instance.Attribute;
-					if (DlcManager.IsDlcListValidForCurrentContent(attr.DLCIds) && (attr.
-							ShowInUI == Attribute.Display.Details || attr.ShowInUI ==
-							Attribute.Display.Expectation))
-						drawer.NewLabel(instance.modifier.Name + ": " + instance.
-							GetFormattedValue()).Tooltip(instance.GetAttributeValueTooltip());
-				}
-			}
-			n = descriptors.Count;
-			for (int i = 0; i < n; i++) {
-				var descriptor = descriptors[i];
-				if (descriptor.type == Descriptor.DescriptorType.Detail)
-					drawer.NewLabel(descriptor.text).Tooltip(descriptor.tooltipText);
-			}
+			instance = null;
 		}
 
 		/// <summary>
@@ -195,7 +51,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="element">The selected element.</param>
 		/// <returns>The amount that the element changes the overheat temperature, if any.</returns>
 		private static string GetOverheatModifier(Element element) {
-			string overheatStr = null;
+			string overheatID = Db.Get().BuildingAttributes.OverheatTemperature.Id,
+				overheatStr = null;
 			// Modify the overheat temperature accordingly
 			var modifiers = element.attributeModifiers;
 			int n = modifiers.Count;
@@ -215,8 +72,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="element">The selected element.</param>
 		/// <param name="tempUnits">The temperature units to use for formatting.</param>
 		/// <param name="shcInfo">The specific heat information.</returns>
-		private static void GetSHCText(Element element, string tempUnits, out InfoLine shcInfo)
-		{
+		private static void GetSHCText(Element element, string tempUnits,
+				out InfoLine shcInfo) {
 			string shcText = ELEMENTAL.SHC.NAME.Format(GameUtil.GetDisplaySHC(element.
 				specificHeatCapacity).ToString("0.000"));
 			shcInfo = new InfoLine(shcText, ELEMENTAL.SHC.TOOLTIP.Replace(
@@ -232,8 +89,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="tempUnits">The temperature units to use for formatting.</param>
 		/// <param name="tcInfo">The thermal conductivity information.</returns>
 		/// <returns>Whether the insulated tooltip should appear.</param>
-		private static bool GetTCText(Element element, Building building,
-				string tempUnits, out InfoLine tcInfo) {
+		private static bool GetTCText(Element element, Building building, string tempUnits,
+				out InfoLine tcInfo) {
 			float tc = element.thermalConductivity;
 			bool insulator = false;
 			if (building != null) {
@@ -248,6 +105,14 @@ namespace PeterHan.FastTrack.GamePatches {
 				Replace("{THERMAL_CONDUCTIVITY}", tcText + GameUtil.
 				GetThermalConductivitySuffix()).Replace("{TEMPERATURE_UNIT}", tempUnits));
 			return insulator;
+		}
+
+		/// <summary>
+		/// Initializes and resets the last selected item.
+		/// </summary>
+		internal static void Init() {
+			Cleanup();
+			instance = new AdditionalDetailsPanelWrapper();
 		}
 
 		/// <summary>
@@ -290,16 +155,152 @@ namespace PeterHan.FastTrack.GamePatches {
 		}
 
 		/// <summary>
-		/// Applied before RefreshDetails runs.
+		/// The last object selected in the additional details pane.
 		/// </summary>
-		internal static bool Prefix(AdditionalDetailsPanel __instance) {
+		private LastSelectionDetails lastSelection;
+
+		/// <summary>
+		/// A cached version of the uptime.
+		/// </summary>
+		private readonly string uptimeStr;
+
+		private AdditionalDetailsPanelWrapper() {
+			uptimeStr = string.Format(ELEMENTAL.UPTIME.NAME, "    • ",
+				ELEMENTAL.UPTIME.THIS_CYCLE, "{0}", ELEMENTAL.UPTIME.LAST_CYCLE, "{1}",
+				ELEMENTAL.UPTIME.LAST_X_CYCLES.Replace("{0}", NUM_CYCLES.ToString()), "{2}");
+		}
+
+		/// <summary>
+		/// Draws the building's creation time, or nothing if the data is not available.
+		/// </summary>
+		/// <param name="drawer">The renderer for the details.</param>
+		/// <param name="changed">true if the target changed, or false otherwise.</param>
+		private void AddCreationTime(DetailsPanelDrawer drawer, bool changed) {
+			var bc = lastSelection.buildingComplete;
+			float creationTime;
+			if (bc != null && (creationTime = bc.creationTime) > 0.0f) {
+				string time = lastSelection.creationTimeCached;
+				if (changed || time == null) {
+					time = Util.FormatTwoDecimalPlace((GameClock.Instance.GetTime() -
+						creationTime) / Constants.SECONDS_PER_CYCLE);
+					lastSelection.creationTimeCached = time;
+				}
+				drawer.NewLabel(drawer.Format(ELEMENTAL.AGE.NAME, time)).Tooltip(
+					drawer.Format(ELEMENTAL.AGE.TOOLTIP, time));
+			}
+		}
+
+		/// <summary>
+		/// Draws the thermal properties of the constituent element.
+		/// </summary>
+		/// <param name="drawer">The renderer for the details.</param>
+		private void AddElementInfo(DetailsPanelDrawer drawer) {
+			string tempStr = GameUtil.GetFormattedTemperature(lastSelection.Temperature);
+			byte diseaseIdx = lastSelection.DiseaseIndex;
+			int diseaseCount = lastSelection.DiseaseCount;
+			drawer.NewLabel(drawer.Format(ELEMENTAL.TEMPERATURE.NAME, tempStr)).
+				Tooltip(drawer.Format(ELEMENTAL.TEMPERATURE.TOOLTIP, tempStr)).
+				NewLabel(drawer.Format(ELEMENTAL.DISEASE.NAME, GameUtil.
+					GetFormattedDisease(diseaseIdx, diseaseCount, false))).
+				Tooltip(drawer.Format(ELEMENTAL.DISEASE.TOOLTIP, GameUtil.GetFormattedDisease(
+					diseaseIdx, diseaseCount, true)));
+			lastSelection.specificHeat.AddLine(drawer);
+			lastSelection.thermalConductivity.AddLine(drawer);
+			if (lastSelection.insulator)
+				drawer.NewLabel(STRINGS.UI.GAMEOBJECTEFFECTS.INSULATED.NAME).Tooltip(
+					STRINGS.UI.GAMEOBJECTEFFECTS.INSULATED.TOOLTIP);
+		}
+
+		/// <summary>
+		/// Draws the state change and radiation (if enabled) information of an element.
+		/// </summary>
+		/// <param name="drawer">The renderer for the details.</param>
+		/// <param name="element">The element to display.</param>
+		private void AddPhaseChangeInfo(DetailsPanelDrawer drawer, Element element) {
+			// Phase change points
+			if (element.IsSolid) {
+				var overheat = lastSelection.overheat;
+				lastSelection.boil.AddLine(drawer);
+				if (!string.IsNullOrEmpty(overheat.text))
+					overheat.AddLine(drawer);
+			} else if (element.IsLiquid) {
+				lastSelection.freeze.AddLine(drawer);
+				lastSelection.boil.AddLine(drawer);
+			} else if (element.IsGas)
+				lastSelection.freeze.AddLine(drawer);
+			// Radiation absorption
+			if (DlcManager.FeatureRadiationEnabled()) {
+				string radAbsorb = lastSelection.radiationAbsorption;
+				drawer.NewLabel(drawer.Format(STRINGS.UI.DETAILTABS.DETAILS.
+					RADIATIONABSORPTIONFACTOR.NAME, radAbsorb)).Tooltip(drawer.Format(STRINGS.
+					UI.DETAILTABS.DETAILS.RADIATIONABSORPTIONFACTOR.TOOLTIP, radAbsorb));
+			}
+		}
+
+		/// <summary>
+		/// Draws the uptime statistics of the building if available.
+		/// </summary>
+		/// <param name="drawer">The renderer for the details.</param>
+		/// <param name="changed">true if the target changed, or false otherwise.</param>
+		private void AddUptimeStats(DetailsPanelDrawer drawer, bool changed) {
+			var operational = lastSelection.operational;
+			float thisCycle;
+			if (operational != null && lastSelection.showUptime && (thisCycle = operational.
+					GetCurrentCycleUptime()) >= 0.0f) {
+				float lastCycle = operational.GetLastCycleUptime(), prevCycles =
+					operational.GetUptimeOverCycles(NUM_CYCLES);
+				string label = lastSelection.uptimeCached;
+				if (changed || label == null) {
+					label = string.Format(uptimeStr, GameUtil.GetFormattedPercent(
+						thisCycle * 100.0f), GameUtil.GetFormattedPercent(lastCycle * 100.0f),
+						GameUtil.GetFormattedPercent(prevCycles * 100.0f));
+					lastSelection.uptimeCached = label;
+				}
+				drawer.NewLabel(label);
+			}
+		}
+
+		/// <summary>
+		/// Draws the extra descriptors (attributes and details) for the selected object.
+		/// </summary>
+		/// <param name="drawer">The renderer for the details.</param>
+		private void DetailDescriptors(DetailsPanelDrawer drawer) {
+			var target = lastSelection.target;
+			var attributes = target.GetAttributes();
+			var descriptors = GameUtil.GetAllDescriptors(target);
+			int n;
+			if (attributes != null) {
+				n = attributes.Count;
+				for (int i = 0; i < n; i++) {
+					var instance = attributes.AttributeTable[i];
+					var attr = instance.Attribute;
+					if (DlcManager.IsDlcListValidForCurrentContent(attr.DLCIds) && (attr.
+							ShowInUI == Attribute.Display.Details || attr.ShowInUI ==
+							Attribute.Display.Expectation))
+						drawer.NewLabel(instance.modifier.Name + ": " + instance.
+							GetFormattedValue()).Tooltip(instance.GetAttributeValueTooltip());
+				}
+			}
+			n = descriptors.Count;
+			for (int i = 0; i < n; i++) {
+				var descriptor = descriptors[i];
+				if (descriptor.type == Descriptor.DescriptorType.Detail)
+					drawer.NewLabel(descriptor.text).Tooltip(descriptor.tooltipText);
+			}
+		}
+
+		/// <summary>
+		/// Updates the additional details panel.
+		/// </summary>
+		/// <param name="instance">The panel to update.</param>
+		internal void Update(AdditionalDetailsPanel instance) {
 			GameObject target;
 			Element element;
-			if ((target = __instance.selectedTarget) != null) {
-				var drawer = __instance.drawer;
+			if (instance != null && (target = instance.selectedTarget) != null) {
+				var drawer = instance.drawer;
 				bool changed = target != lastSelection.target;
 				if (changed) {
-					var detailsPanel = __instance.detailsPanel;
+					var detailsPanel = instance.detailsPanel;
 					lastSelection = new LastSelectionDetails(target);
 					detailsPanel.SetActive(true);
 					detailsPanel.GetComponent<CollapsibleDetailContentPanel>().HeaderLabel.
@@ -321,7 +322,6 @@ namespace PeterHan.FastTrack.GamePatches {
 					DetailDescriptors(drawer);
 				}
 			}
-			return false;
 		}
 
 		/// <summary>
@@ -430,7 +430,7 @@ namespace PeterHan.FastTrack.GamePatches {
 
 			internal string uptimeCached;
 
-			public LastSelectionDetails(GameObject go) {
+			internal LastSelectionDetails(GameObject go) {
 				int cell = Grid.PosToCell(go);
 				string tempUnits = GameUtil.GetTemperatureUnitSuffix();
 				var bc = go.GetComponent<BuildingComplete>();
@@ -481,37 +481,58 @@ namespace PeterHan.FastTrack.GamePatches {
 				}
 			}
 		}
+	}
+
+	/// <summary>
+	/// Stores precomputed info descriptors in the additional details panel.
+	/// </summary>
+	public struct InfoLine {
+		/// <summary>
+		/// The text to display in the panel.
+		/// </summary>
+		public readonly string text;
 
 		/// <summary>
-		/// Stores precomputed info descriptors in the additional details panel.
+		/// The text to display on mouse over.
 		/// </summary>
-		private struct InfoLine {
-			/// <summary>
-			/// The text to display in the panel.
-			/// </summary>
-			public readonly string text;
+		public readonly string tooltip;
 
-			/// <summary>
-			/// The text to display on mouse over.
-			/// </summary>
-			public readonly string tooltip;
+		public InfoLine(string text, string tooltip) {
+			this.text = text;
+			this.tooltip = tooltip;
+		}
 
-			public InfoLine(string text, string tooltip) {
-				this.text = text;
-				this.tooltip = tooltip;
-			}
+		/// <summary>
+		/// Adds this info descriptor to the details screen.
+		/// </summary>
+		/// <param name="drawer">The renderer for the details.</param>
+		public void AddLine(DetailsPanelDrawer drawer) {
+			drawer.NewLabel(text).Tooltip(tooltip);
+		}
 
-			/// <summary>
-			/// Adds this info descriptor to the details screen.
-			/// </summary>
-			/// <param name="drawer">The renderer for the details.</param>
-			public void AddLine(DetailsPanelDrawer drawer) {
-				drawer.NewLabel(text).Tooltip(tooltip);
-			}
+		public override string ToString() {
+			return text;
+		}
+	}
 
-			public override string ToString() {
-				return text;
-			}
+	/// <summary>
+	/// Applied to AdditionalDetailsPanel to optimize this memory hungry method that runs every
+	/// frame.
+	/// </summary>
+	[HarmonyPatch(typeof(AdditionalDetailsPanel), nameof(AdditionalDetailsPanel.
+		RefreshDetails))]
+	public static class AdditionalDetailsPanel_RefreshDetails_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
+
+		/// <summary>
+		/// Applied before RefreshDetails runs.
+		/// </summary>
+		internal static bool Prefix(AdditionalDetailsPanel __instance) {
+			var inst = AdditionalDetailsPanelWrapper.instance;
+			bool run = inst == null;
+			if (!run)
+				inst.Update(__instance);
+			return run;
 		}
 	}
 }

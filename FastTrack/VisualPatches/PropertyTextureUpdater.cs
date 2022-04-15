@@ -76,7 +76,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		}
 
 		/// <summary>
-		/// A type punned list of the texture properties used by PropertyTextures.
+		/// A list of the texture properties used by PropertyTextures.
 		/// </summary>
 		private readonly IList<TextureProperties> allProperties;
 
