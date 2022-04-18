@@ -139,7 +139,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			var jobManager = AsyncJobManager.Instance;
 			if (jobManager != null && running) {
 				var now = Stopwatch.StartNew();
-				if (onPathDone.WaitOne(FastTrackMod.MAX_TIMEOUT))
+				if (onPathDone.WaitAndMeasure(FastTrackMod.MAX_TIMEOUT))
 					Metrics.DebugMetrics.LogPathProbe(now.ElapsedTicks, totalRuntime);
 				else
 					PUtil.LogWarning("Path probing did not complete within the timeout!");

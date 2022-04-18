@@ -224,9 +224,11 @@ namespace PeterHan.FastTrack.Metrics {
 			/// </summary>
 			[HarmonyPriority(Priority.Low)]
 			internal static void Postfix() {
-				animsDone.WaitOne();
+				if (!animsDone.WaitOne())
+					PUtil.LogWarning("Anim loading did not complete within the timeout!");
 #if DEBUG
-				PUtil.LogDebug("Anim loading complete");
+				else
+					PUtil.LogDebug("Anim loading complete");
 #endif
 			}
 		}

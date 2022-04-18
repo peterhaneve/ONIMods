@@ -17,7 +17,6 @@
  */
 
 using HarmonyLib;
-using System;
 using System.Collections.Generic;
 
 namespace PeterHan.FastTrack.GamePatches {
@@ -30,6 +29,32 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		private static readonly IDictionary<string, bool> DLC_ENABLED =
 			new Dictionary<string, bool>(8);
+
+		/// <summary>
+		/// The highest active DLC found.
+		/// </summary>
+		private static string highestActive;
+
+		/// <summary>
+		/// Gets the highest (most recently released) active DLC ID.
+		/// </summary>
+		/// <returns>The highest active DLC ID, using the cached value if available.</returns>
+		public static string GetHighestActiveDlc() {
+			string dlc = highestActive;
+			if (highestActive == null) {
+				var order = DlcManager.RELEASE_ORDER;
+				dlc = string.Empty;
+				for (int i = order.Count - 1; i >= 0; i--) {
+					string dlcInOrder = order[i];
+					if (IsDlcEnabled(dlcInOrder)) {
+						dlc = dlcInOrder;
+						break;
+					}
+				}
+				highestActive = dlc;
+			}
+			return dlc;
+		}
 
 		/// <summary>
 		/// Checks to see if a particular DLC is active and enabled.
@@ -59,16 +84,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Applied before GetHighestActiveDlcId runs.
 		/// </summary>
 		internal static bool Prefix(ref string __result) {
-			var order = DlcManager.RELEASE_ORDER;
-			string dlc = string.Empty;
-			for (int i = order.Count - 1; i >= 0; i--) {
-				string dlcInOrder = order[i];
-				if (DLCManagerCache.IsDlcEnabled(dlcInOrder)) {
-					dlc = dlcInOrder;
-					break;
-				}
-			}
-			__result = dlc;
+			__result = DLCManagerCache.GetHighestActiveDlc();
 			return false;
 		}
 	}
@@ -102,10 +118,13 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		internal static bool Prefix(string[] dlcIds, ref bool __result) {
 			int n = dlcIds.Length;
-			bool found = false;
+			bool found = false, noDLC = string.IsNullOrEmpty(DLCManagerCache.
+				GetHighestActiveDlc());
 			for (int i = 0; i < n && !found; i++) {
 				string dlcId = dlcIds[i];
-				if (DLCManagerCache.IsDlcEnabled(dlcId))
+				bool vanillaOnly = string.IsNullOrEmpty(dlcId);
+				if ((noDLC && vanillaOnly) || (!vanillaOnly && DLCManagerCache.IsDlcEnabled(
+						dlcId)))
 					found = true;
 			}
 			__result = found;

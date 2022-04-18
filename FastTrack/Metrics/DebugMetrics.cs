@@ -223,6 +223,9 @@ namespace PeterHan.FastTrack.Metrics {
 					SIMANDRENDER[(int)UpdateRate.SIM_4000ms]));
 				PUtil.LogDebug("Update: {0}\nLateUpdate: {1}".F(UPDATE, LATE_UPDATE));
 				Reset();
+#if DEBUG
+				FastTrackProfiler.Log();
+#endif
 			}
 		}
 

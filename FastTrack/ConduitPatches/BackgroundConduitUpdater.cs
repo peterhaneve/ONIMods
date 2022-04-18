@@ -168,7 +168,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		private void WaitForCompletion() {
 			var inst = Game.Instance;
 			if (running && inst != null && inst.IsInitialized() && !inst.IsLoading()) {
-				if (!onComplete.WaitOne(FastTrackMod.MAX_TIMEOUT))
+				if (!onComplete.WaitAndMeasure(FastTrackMod.MAX_TIMEOUT))
 					PUtil.LogWarning("Conduit updates did not finish within the timeout!");
 				// They are always clean after running
 				if (updated[0])

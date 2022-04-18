@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -31,6 +32,11 @@ namespace PeterHan.FastTrack {
 	/// Extension methods make life easier!
 	/// </summary>
 	public static class ExtensionMethods {
+		/// <summary>
+		/// The shared stopwatch used to avoid allocations when timing handles.
+		/// </summary>
+		private static readonly Stopwatch WAIT_HANDLE_CLOCK = new Stopwatch();
+
 		/// <summary>
 		/// Copies layout information to a fixed layout element. Useful for freezing a UI
 		/// object.
@@ -217,6 +223,30 @@ namespace PeterHan.FastTrack {
 			else
 				result = f.ToString("N0");
 			return result;
+		}
+
+		/// <summary>
+		/// Waits for a handle to be signaled. Logs a warning if it waits for more than the
+		/// specified duration.
+		/// 
+		/// This method is not re-entrant as it uses a shared stopwatch. Only run it on the
+		/// main thread.
+		/// </summary>
+		/// <param name="handle">The handle to wait for.</param>
+		/// <param name="timeout">The maximum time to wait, or -1 to wait forever.</param>
+		/// <param name="warning">The amount of time to wait before emitting a warning.</param>
+		/// <returns>true if the handle was signaled, or false if it timed out.</returns>
+		public static bool WaitAndMeasure(this WaitHandle handle, int timeout = Timeout.
+				Infinite, int warning = 30) {
+			var now = WAIT_HANDLE_CLOCK;
+			now.Restart();
+			bool signaled = handle.WaitOne(timeout);
+			now.Stop();
+			long t = now.ElapsedMilliseconds;
+			if (signaled && t > warning)
+				PUtil.LogWarning("Waited {0:D} ms for an async join (max {1:D} ms)".F(t,
+					warning));
+			return signaled;
 		}
 	}
 }

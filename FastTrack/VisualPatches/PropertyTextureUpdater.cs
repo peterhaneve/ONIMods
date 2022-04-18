@@ -270,7 +270,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 				forceLateUpdate = false;
 			}
 			// Wait out the update
-			if (outstanding > 0 && !onComplete.WaitOne(FastTrackMod.MAX_TIMEOUT))
+			if (outstanding > 0 && !onComplete.WaitAndMeasure(FastTrackMod.MAX_TIMEOUT))
 				PUtil.LogWarning("Property textures did not update within the timeout!");
 			DisposeAll();
 			if (lerpers != null && !FullScreenDialogPatches.DialogVisible) {

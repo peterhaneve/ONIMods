@@ -40,7 +40,6 @@ namespace PeterHan.FastTrack {
 			harmony.Profile(typeof(Game), nameof(Game.UnsafeSim200ms));
 			harmony.Profile(typeof(ConduitFlow), nameof(ConduitFlow.Sim200ms));
 			harmony.Profile(typeof(PlantElementAbsorbers), nameof(PlantElementAbsorbers.Sim200ms));
-			harmony.Profile(typeof(CircuitManager), nameof(CircuitManager.Sim200msFirst));
 			harmony.Profile(typeof(EnergySim), nameof(EnergySim.EnergySim200ms));
 			harmony.Profile(typeof(CircuitManager), nameof(CircuitManager.Sim200msLast));
 		}
@@ -72,7 +71,7 @@ namespace PeterHan.FastTrack {
 		private static readonly EventWaitHandle onWorldGenLoad = new AutoResetEvent(false);
 
 		/// <summary>
-		/// Initializes several patches after Db is initialized.
+		/// Runs several one-time patches after the Db is initialized.
 		/// </summary>
 		[PLibMethod(RunAt.AfterDbInit)]
 		internal static void AfterDbInit() {
@@ -141,6 +140,7 @@ namespace PeterHan.FastTrack {
 		/// <summary>
 		/// Fixes the drag order spam bug, if Stock Bug Fix did not get to it first.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static void FixTimeLapseDrag() {
 			PlayerController.Instance?.CancelDragging();
 		}
@@ -164,6 +164,9 @@ namespace PeterHan.FastTrack {
 		[PLibMethod(RunAt.OnEndGame)]
 		internal static void OnEndGame() {
 			var options = FastTrackOptions.Instance;
+#if DEBUG
+			Metrics.FastTrackProfiler.End();
+#endif
 			ConduitPatches.ConduitFlowVisualizerRenderer.Cleanup();
 			if (options.CachePaths)
 				PathPatches.PathCacher.Cleanup();
@@ -271,6 +274,9 @@ namespace PeterHan.FastTrack {
 			if (options.UnstackLights)
 				VisualPatches.LightBufferManager.Init();
 			VisualPatches.FullScreenDialogPatches.Init();
+#if DEBUG
+			Metrics.FastTrackProfiler.Begin();
+#endif
 		}
 
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {

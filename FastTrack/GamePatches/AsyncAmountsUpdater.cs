@@ -128,7 +128,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		internal void Finish() {
 			if (dt > 0.0f && AsyncJobManager.Instance != null) {
-				if (!onComplete.WaitOne(FastTrackMod.MAX_TIMEOUT))
+				if (!onComplete.WaitAndMeasure(FastTrackMod.MAX_TIMEOUT))
 					PUtil.LogWarning("Unable to post Amounts updates within the timeout!");
 				// Make best effort even if the amounts did not post in time
 				while (results.TryDequeue(out AmountUpdated result))

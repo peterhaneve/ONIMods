@@ -136,6 +136,41 @@ namespace PeterHan.FastTrack.PathPatches {
 	}
 
 	/// <summary>
+	/// Applied to ScenePartitioner to make the GatherEntries family of methods partially
+	/// thread safe.
+	/// </summary>
+	[HarmonyPatch(typeof(ScenePartitioner), nameof(ScenePartitioner.GatherEntries),
+		typeof(int), typeof(int), typeof(int), typeof(int), typeof(ScenePartitionerLayer),
+		typeof(object), typeof(List<ScenePartitionerEntry>), typeof(int))]
+	public static class ScenePartitioner_GatherEntries_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
+
+		/// <summary>
+		/// A slightly more thread safe version of HashSet.ExceptWith that at least avoids self
+		/// races.
+		/// </summary>
+		/// <param name="set">The set to modify.</param>
+		/// <param name="other">The entries to remove.</param>
+		private static void ExceptWithLocked(SceneEntryHash set,
+				IEnumerable<ScenePartitionerEntry> other) {
+			lock (set) {
+				set.ExceptWith(other);
+			}
+		}
+
+		/// <summary>
+		/// Transpiles GatherEntries to take out a lock before subtracting.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+			return PPatchTools.ReplaceMethodCall(instructions, typeof(SceneEntryHash).
+				GetMethodSafe(nameof(SceneEntryHash.ExceptWith), false, typeof(
+				IEnumerable<ScenePartitionerEntry>)), typeof(
+				ScenePartitioner_GatherEntries_Patch).GetMethodSafe(nameof(ExceptWithLocked),
+				true, typeof(SceneEntryHash), typeof(IEnumerable<ScenePartitionerEntry>)));
+		}
+	}
+
+	/// <summary>
 	/// Applied to ScenePartitioner to make the Add family of methods partially thread safe.
 	/// </summary>
 	[HarmonyPatch(typeof(ScenePartitioner), nameof(ScenePartitioner.Insert))]
@@ -170,7 +205,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		}
 
 		/// <summary>
-		/// Transpiles Insert to take out a lock on the item added before adding.
+		/// Transpiles Insert to take out a lock before adding.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
 			return PPatchTools.ReplaceMethodCall(instructions, new Dictionary<MethodInfo,
@@ -188,6 +223,40 @@ namespace PeterHan.FastTrack.PathPatches {
 						true, typeof(List<DirtyNode>), typeof(DirtyNode))
 				}
 			});
+		}
+	}
+
+	/// <summary>
+	/// Applied to ScenePartitioner to make the Free family of methods partially thread safe.
+	/// </summary>
+	[HarmonyPatch(typeof(ScenePartitioner), nameof(ScenePartitioner.Widthdraw))]
+	public static class ScenePartitioner_Widthdraw_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
+
+		/// <summary>
+		/// A slightly more thread safe version of HashSet.Remove that at least avoids self
+		/// races.
+		/// </summary>
+		/// <param name="set">The set to modify.</param>
+		/// <param name="entry">The entry to remove.</param>
+		/// <returns>true if the set was modified, or false otherwise.</returns>
+		private static bool RemoveLocked(SceneEntryHash set, ScenePartitionerEntry entry) {
+			bool result;
+			lock (set) {
+				result = set.Remove(entry);
+			}
+			return result;
+		}
+
+		/// <summary>
+		/// Transpiles Widthdraw (Clay please spelling) to take out a lock before removing.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+			return PPatchTools.ReplaceMethodCall(instructions, typeof(SceneEntryHash).
+				GetMethodSafe(nameof(SceneEntryHash.Remove), false, typeof(
+				ScenePartitionerEntry)), typeof(ScenePartitioner_Widthdraw_Patch).
+				GetMethodSafe(nameof(RemoveLocked), true, typeof(SceneEntryHash), typeof(
+				ScenePartitionerEntry)));
 		}
 	}
 }

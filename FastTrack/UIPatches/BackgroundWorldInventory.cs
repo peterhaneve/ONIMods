@@ -32,13 +32,29 @@ namespace PeterHan.FastTrack.UIPatches {
 	[SkipSaveFileSerialization]
 	public sealed class BackgroundWorldInventory : KMonoBehaviour {
 		/// <summary>
+		/// The tags which are not stored in the world inventory. These are primarily meta
+		/// tags that are not actually requested.
+		/// </summary>
+		private static readonly ISet<Tag> BANNED_TAGS = new HashSet<Tag>();
+
+		/// <summary>
+		/// Initializes the banned tags list after the Db is loaded (for Not Enough Tags'
+		/// sake).
+		/// </summary>
+		internal static void Init() {
+			BANNED_TAGS.Add(GameTags.Pickupable);
+			BANNED_TAGS.Add(GameTags.PedestalDisplayable);
+			BANNED_TAGS.Add(GameTags.HasChores);
+			BANNED_TAGS.Add(GameTags.Stored);
+		}
+
+		/// <summary>
 		/// Checks to see if the tag is valid for addition/removal. These tags are applied to
 		/// every single chunk, but are never requested.
 		/// </summary>
 		/// <param name="tag">The category tag being used.</param>
 		internal static bool IsAcceptable(Tag tag) {
-			return tag != GameTags.Pickupable && tag != GameTags.PedestalDisplayable &&
-				tag != GameTags.HasChores;
+			return !BANNED_TAGS.Contains(tag);
 		}
 
 		/// <summary>
@@ -189,7 +205,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Ensures that all world inventories are done updating.
 		/// </summary>
 		internal void EndUpdateAll() {
-			if (toUpdate.Count > 0 && !onComplete.WaitOne(FastTrackMod.MAX_TIMEOUT))
+			if (toUpdate.Count > 0 && !onComplete.WaitAndMeasure(FastTrackMod.MAX_TIMEOUT))
 				PUtil.LogWarning("Inventory updates did not complete within the timeout!");
 			toUpdate.Clear();
 		}

@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
+using System;
 using UnityEngine;
 
 namespace PeterHan.FastTrack.GamePatches {
@@ -90,7 +91,13 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Wraps a prefab and its tag bit hash in a key structure that can be very quickly and
 		/// properly hashed and compared for a dictionary key.
 		/// </summary>
-		private sealed class PickupTagKey {
+		private struct PickupTagKey : IEquatable<PickupTagKey> {
+			/// <summary>
+			/// The precomputed tag bits mask against the disallowed tags list. This field is
+			/// actually not mutable, but cannot be readonly to pass the tag mask.
+			/// </summary>
+			private TagBits bits;
+
 			/// <summary>
 			/// The prefab ID of the tagged object.
 			/// </summary>
@@ -104,18 +111,19 @@ namespace PeterHan.FastTrack.GamePatches {
 			public PickupTagKey(int hash, KPrefabID id) {
 				this.hash = hash;
 				this.id = id;
+				bits = new TagBits(ref FetchManager.disallowedTagMask);
+				id.AndTagBits(ref bits);
 			}
 
 			public override bool Equals(object obj) {
+				return obj is PickupTagKey other && Equals(other);
+			}
+
+			// IEquatable prevents ObjectEqualityComparer from boxing the struct
+			public bool Equals(PickupTagKey other) {
 				bool ret = false;
-				if (obj is PickupTagKey other && hash == other.hash) {
-					var bits = new TagBits(ref FetchManager.disallowedTagMask);
-					// AndTagBits updates the argument!
-					id.AndTagBits(ref bits);
-					var otherBits = new TagBits(ref FetchManager.disallowedTagMask);
-					other.id.AndTagBits(ref otherBits);
-					ret = otherBits.AreEqual(ref bits);
-				}
+				if (hash == other.hash)
+					ret = other.bits.AreEqual(ref bits);
 				return ret;
 			}
 
