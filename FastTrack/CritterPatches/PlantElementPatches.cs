@@ -31,13 +31,11 @@ namespace PeterHan.FastTrack.CritterPatches {
 		internal static void GetFertilizers(Storage source, IList<KPrefabID> fertilizer) {
 			var items = source.items;
 			int n = items.Count;
-			for (int i = 0; i < n; i++) {
+			for (int i = 0; i < n; i++)
 				// No guarantee sadly that the Element of PrimaryElement has the tag for
 				// which FertilizationMonitor is looking
-				var kpid = items[i].GetComponent<KPrefabID>();
-				if (kpid != null)
+				if (items[i].TryGetComponent(out KPrefabID kpid))
 					fertilizer.Add(kpid);
-			}
 		}
 
 		/// <summary>
@@ -65,10 +63,11 @@ namespace PeterHan.FastTrack.CritterPatches {
 			bool hasInvalid = wrong;
 			for (int i = 0; i < n; i++) {
 				var item = fertilizer[i];
-				if (item.HasTag(targetTag))
+				if (item.HasTag(targetTag)) {
 					// Can theoretically double-count but this occurs in base game too
-					mass += item.GetComponent<PrimaryElement>().Mass;
-				else if (!hasInvalid && item.HasTag(wrongTag))
+					if (item.TryGetComponent(out PrimaryElement pe))
+						mass += pe.Mass;
+				} else if (!hasInvalid && item.HasTag(wrongTag))
 					wrong = hasInvalid = true;
 			}
 			return mass;

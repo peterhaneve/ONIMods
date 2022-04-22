@@ -40,12 +40,10 @@ namespace PeterHan.FastTrack.ConduitPatches {
 			var game = Game.Instance;
 			if (game == null)
 				throw new ArgumentNullException(nameof(Game.Instance));
-			var go = mesh.CreateMeshRenderer("Conduit Flow Mesh", 0);
+			var go = mesh.CreateMeshRenderer("Conduit Flow Mesh", 0, shader);
 			var t = go.transform;
 			t.SetParent(game.transform);
 			t.SetPositionAndRotation(new Vector3(0.5f, 0.5f, 0.0f), Quaternion.identity);
-			// Set up the mesh with the right material
-			go.GetComponent<MeshRenderer>().material = shader;
 			return go.AddOrGet<ConduitMeshVisualizer>();
 		}
 

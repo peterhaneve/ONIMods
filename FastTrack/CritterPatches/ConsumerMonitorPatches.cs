@@ -19,6 +19,7 @@
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
@@ -151,14 +152,8 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// <param name="diet">The critter's diet.</param>
 		/// <returns>true if the item is edible, or false otherwise.</returns>
 		private static bool CanEatItem(KPrefabID item, Diet diet) {
-			bool edible = item != null;
-			if (edible) {
-				item.UpdateTagBits();
-				if (item.HasAnyTags_AssumeLaundered(ref SolidConsumerMonitor.creatureMask) ||
-						diet.GetDietInfo(item.PrefabTag) == null)
-					edible = false;
-			}
-			return edible;
+			return !item.HasAnyTags(ref SolidConsumerMonitor.creatureMask) && diet.GetDietInfo(
+				item.PrefabTag) != null;
 		}
 
 		/// <summary>
@@ -168,13 +163,12 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// <param name="diet">The critter's diet.</param>
 		/// <returns>true if the item is edible, or false otherwise.</returns>
 		private static bool CanEatItem(KMonoBehaviour item, Diet diet) {
-			var pid = item.GetComponent<KPrefabID>();
-			bool edible = CanEatItem(pid, diet);
-			if (edible && pid.HasAnyTags_AssumeLaundered(ref SolidConsumerMonitor.plantMask)) {
-				float grown = 0f;
-				var trunk = item.GetComponent<BuddingTrunk>();
+			bool edible = false;
+			if (item.TryGetComponent(out KPrefabID pid) && (edible = CanEatItem(pid, diet)) &&
+					pid.HasAnyTags_AssumeLaundered(ref SolidConsumerMonitor.plantMask)) {
+				float grown = 0.0f;
 				// Trees are special cased in the Klei code
-				if (trunk)
+				if (item.TryGetComponent(out BuddingTrunk trunk))
 					grown = trunk.GetMaxBranchMaturity();
 				else {
 					var maturity = Db.Get().Amounts.Maturity.Lookup(item);
@@ -198,62 +192,93 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// Replaces SolidConsumerMonitor.FindFood to more efficiently find food for critters.
 		/// </summary>
 		public static void FindFood(SolidConsumerMonitor.Instance smi, float _) {
-			var navigator = smi.GetComponent<Navigator>();
-			var dm = smi.GetComponent<DrowningMonitor>();
-			var closest = new ClosestEdible();
+			var closest = new ClosestEdible(smi.GetComponent<DrowningMonitor>(),
+				smi.GetComponent<Navigator>());
 			// Check the diet type first
 			var diet = smi.def.diet;
 			Grid.PosToXY(smi.gameObject.transform.GetPosition(), out int x, out int y);
 			if (!diet.eatsPlantsDirectly) {
 				// Check Critter Feeder with priority
-				var feeders = ListPool<Storage, SolidConsumerMonitor>.Allocate();
+				var storages = ListPool<Storage, SolidConsumerMonitor>.Allocate();
 				foreach (var creatureFeeder in Components.CreatureFeeders.Items) {
 					var go = creatureFeeder.gameObject;
 					if (go != null) {
 						Grid.PosToXY(go.transform.GetPosition(), out int cx, out int cy);
 						// Only check critter feeders that are somewhat nearby
 						if (Math.Abs(x - cx) <= RADIUS && Math.Abs(y - cy) <= RADIUS) {
-							creatureFeeder.GetComponents(feeders);
-							foreach (var storage in feeders)
-								if (storage != null)
-									foreach (var item in storage.items) {
-										var prefabID = item.GetComponentSafe<KPrefabID>();
-										if (CanEatItem(prefabID, diet))
-											closest.CheckUpdate(prefabID, navigator, dm);
-									}
+							storages.Clear();
+							go.GetComponents(storages);
+							FindFood(storages, diet, ref closest);
 						}
 					}
 				}
-				feeders.Recycle();
+				storages.Recycle();
 			}
 			var gsp = GameScenePartitioner.Instance;
 			var nearby = ListPool<ScenePartitionerEntry, GameScenePartitioner>.Allocate();
 			gsp.GatherEntries(x - RADIUS, y - RADIUS, RADIUS << 1, RADIUS << 1, diet.
 				eatsPlantsDirectly ? gsp.plants : gsp.pickupablesLayer, nearby);
 			// Add plants or critters
-			foreach (var entry in nearby)
-				if (entry.obj is KMonoBehaviour item && CanEatItem(item, diet))
-					closest.CheckUpdate(item, navigator, dm);
+			int n = nearby.Count;
+			for (int i = 0; i < n; i++)
+				if (nearby[i].obj is KMonoBehaviour item && CanEatItem(item, diet))
+					closest.CheckUpdate(item);
 			nearby.Recycle();
 			smi.targetEdible = closest.target;
 		}
 
 		/// <summary>
+		/// Searches critter feeder storage for items to eat.
+		/// </summary>
+		/// <param name="storages">The storages to search for food.</param>
+		/// <param name="diet">The foods that can be eaten.</param>
+		/// <param name="closest">The location where the closest valid food will be stored.</param>
+		private static void FindFood(List<Storage> storages, Diet diet,
+				ref ClosestEdible closest) {
+			int n = storages.Count;
+			for (int i = 0; i < n; i++) {
+				var storage = storages[i];
+				if (storage != null) {
+					var items = storage.items;
+					int ni = items.Count;
+					for (int j = 0; j < ni; j++) {
+						var item = items[j];
+						if (item != null && item.TryGetComponent(out KPrefabID prefabID) &&
+								CanEatItem(prefabID, diet))
+							closest.CheckUpdate(prefabID);
+					}
+				}
+			}
+		}
+
+		/// <summary>
 		/// Stores the current closest edible food item.
 		/// </summary>
-		private sealed class ClosestEdible {
+		private struct ClosestEdible {
 			/// <summary>
 			/// The path cost to the item.
 			/// </summary>
 			public int distance;
 
 			/// <summary>
+			/// The drowning monitor to check if the tile may be submerged.
+			/// </summary>
+			private readonly DrowningMonitor drowning;
+
+			/// <summary>
+			/// The navigator which is trying to find food.
+			/// </summary>
+			private readonly Navigator navigator;
+
+			/// <summary>
 			/// The item to eat.
 			/// </summary>
 			public GameObject target;
 
-			public ClosestEdible() {
+			public ClosestEdible(DrowningMonitor drowning, Navigator navigator) {
 				distance = int.MaxValue;
+				this.drowning = drowning;
+				this.navigator = navigator;
 				target = null;
 			}
 
@@ -262,16 +287,12 @@ namespace PeterHan.FastTrack.CritterPatches {
 			/// suitable.
 			/// </summary>
 			/// <param name="item">The item to be eaten.</param>
-			/// <param name="navigator">The navigator of this critter.</param>
-			/// <param name="monitor">The drowning monitor of this critter to avoid pathing to
-			/// food under water.</param>
-			public void CheckUpdate(KMonoBehaviour item, Navigator navigator,
-					DrowningMonitor monitor) {
+			public void CheckUpdate(KMonoBehaviour item) {
 				var go = item.gameObject;
 				// Was already null checked
 				int cell = Grid.PosToCell(item.transform.position);
-				if (monitor == null || !monitor.canDrownToDeath || monitor.livesUnderWater ||
-						monitor.IsCellSafe(cell)) {
+				if (drowning == null || !drowning.canDrownToDeath || drowning.
+						livesUnderWater || drowning.IsCellSafe(cell)) {
 					// Is it closer?
 					int cost = navigator.GetNavigationCost(cell);
 					if (cost >= 0 && cost < distance) {

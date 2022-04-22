@@ -79,8 +79,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 			gasMesh = instance.gasPlane;
 			noiseVolume = instance.noiseVolume;
 			starsMesh = instance.starsPlane;
-			starsRender = Create(starsMesh, "Stars", null, layer, Grid.GetLayerZ(Grid.
-				SceneLayer.Background) + 1.0f).GetComponent<MeshRenderer>();
+			Create(starsMesh, "Stars", null, layer, Grid.GetLayerZ(Grid.SceneLayer.
+				Background) + 1.0f).TryGetComponent(out starsRender);
 			gasRenderBack = Create(gasMesh, "Gas Back", gasMaterial, layer, Grid.GetLayerZ(
 				Grid.SceneLayer.Gas));
 			gasRenderFront = Create(gasMesh, "Gas Front", gasMaterial, layer, Grid.GetLayerZ(
@@ -110,13 +110,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 			var game = Game.Instance;
 			if (game == null)
 				throw new ArgumentNullException(nameof(Game.Instance));
-			var go = targetMesh.CreateMeshRenderer(name, layer);
+			var go = targetMesh.CreateMeshRenderer(name, layer, shader);
 			var t = go.transform;
 			t.SetParent(game.transform);
 			t.SetPositionAndRotation(new Vector3(0.0f, 0.0f, z), Quaternion.identity);
-			// Set up the mesh with the right material
-			if (shader != null)
-				go.GetComponent<MeshRenderer>().material = shader;
 			go.SetActive(true);
 			return go;
 		}

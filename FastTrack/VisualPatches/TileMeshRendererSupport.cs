@@ -48,6 +48,11 @@ namespace PeterHan.FastTrack.VisualPatches {
 		internal bool dirty;
 
 		/// <summary>
+		/// The renderer that draws the mesh.
+		/// </summary>
+		private GameObject gameObject;
+
+		/// <summary>
 		/// The material to use for rendering.
 		/// </summary>
 		private readonly Material material;
@@ -81,6 +86,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			// MeshUtil was useful before for shared arrays, but Unity's mesh renderers
 			// extract the array, so it needs to be separate
 			dirty = true;
+			gameObject = null;
 			this.material = material ?? throw new ArgumentNullException(nameof(material));
 			mesh = null;
 			renderer = null;
@@ -121,14 +127,13 @@ namespace PeterHan.FastTrack.VisualPatches {
 				if (renderer == null) {
 					// Avoid creating all the renderers right away
 					var go = mesh.CreateMeshRenderer(nameof(TileMeshRenderer),
-						renderLayer);
-					var renderer = go.GetComponent<MeshRenderer>();
+						renderLayer, material);
 					go.transform.position = new Vector3(0.0f, 0.0f, z);
-					renderer.material = material;
-					this.renderer = go.GetComponent<MeshFilter>();
+					go.TryGetComponent(out renderer);
+					gameObject = go;
 				}
 				renderer.mesh = mesh;
-				renderer.gameObject.SetActive(true);
+				gameObject.SetActive(true);
 				wasActive = true;
 			}
 		}
@@ -141,7 +146,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 				// Only if the renderer was ever created
 				if (renderer != null) {
 					if (wasActive)
-						renderer.gameObject.SetActive(false);
+						gameObject.SetActive(false);
 					renderer.mesh = null;
 				}
 				UnityEngine.Object.DestroyImmediate(mesh);
@@ -163,7 +168,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <param name="active">true to set the mesh active, or false to set it inactive.</param>
 		public void SetActive(bool active) {
 			if (mesh != null && active != wasActive) {
-				renderer.gameObject.SetActive(active);
+				gameObject.SetActive(active);
 				wasActive = active;
 			}
 		}
@@ -323,8 +328,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 			int w = Grid.WidthInCells, cell = y * w + x;
 			var go = Grid.Objects[cell, queryLayer];
 			BuildingDef def = null;
-			if (go != null)
-				def = go.GetComponent<Building>().Def;
+			if (go != null && go.TryGetComponent(out Building building))
+				def = building.Def;
 			// Below
 			if (y > 0) {
 				int cellsBelow = cell - w;
@@ -456,15 +461,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <param name="target">The destination tile object.</param>
 		/// <returns></returns>
 		private static bool IsDecorConnectable(GameObject src, GameObject target) {
-			bool connect4 = false;
-			if (src != null && target != null) {
-				var srcTileInfo = src.GetComponent<IBlockTileInfo>();
-				var dstTileInfo = target.GetComponent<IBlockTileInfo>();
-				if (srcTileInfo != null && dstTileInfo != null)
-					connect4 = srcTileInfo.GetBlockTileConnectorID() == dstTileInfo.
-						GetBlockTileConnectorID();
-			}
-			return connect4;
+			return src != null && target != null && src.TryGetComponent(
+				out IBlockTileInfo srcInfo) && target.TryGetComponent(
+				out IBlockTileInfo dstInfo) && srcInfo.GetBlockTileConnectorID() ==
+				dstInfo.GetBlockTileConnectorID();
 		}
 
 		/// <summary>
@@ -475,8 +475,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <param name="def">The def it needs to have.</param>
 		/// <returns>true if the cell has a building and uses that definition, or false otherwise.</returns>
 		private static bool MatchesDef(int cell, int layer, BuildingDef def) {
-			var b = Grid.Objects[cell, layer].GetComponentSafe<Building>();
-			return b != null && b.Def == def;
+			var obj = Grid.Objects[cell, layer];
+			return obj != null && obj.TryGetComponent(out Building b) && b.Def == def;
 		}
 	}
 

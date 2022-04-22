@@ -115,7 +115,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="descComponents">The location where the descriptor components will be added.</param>
 		private static void AddStateMachineDescriptors(this StateMachineController smc,
 				ICollection<IGameObjectEffectDescriptor> descComponents) {
-			if (smc != null && smc.defHandle.IsValid()) {
+			if (smc.defHandle.IsValid()) {
 				// Avoid allocating another list
 				var defs = smc.cmpdef.defs;
 				int n = defs.Count;
@@ -137,15 +137,15 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static void GetAllDescriptors(this GameObject go, bool simpleScreen,
 				ICollection<Descriptor> descriptors) {
 			var comps = ListPool<IGameObjectEffectDescriptor, DescriptorSorter>.Allocate();
-			var prefabID = go.GetComponent<KPrefabID>();
 			go.GetComponents(comps);
-			go.GetComponent<StateMachineController>().AddStateMachineDescriptors(comps);
+			if (go.TryGetComponent(out StateMachineController smc))
+				smc.AddStateMachineDescriptors(comps);
 			comps.Sort(DescriptorSorter.Instance);
 			int n = comps.Count;
 			for (int i = 0; i < n; i++)
 				descriptors.AddDescriptors(comps[i].GetDescriptors(go), simpleScreen);
 			comps.Recycle();
-			if (prefabID != null) {
+			if (go.TryGetComponent(out KPrefabID prefabID)) {
 				descriptors.AddDescriptors(prefabID.AdditionalRequirements,
 					simpleScreen);
 				descriptors.AddDescriptors(prefabID.AdditionalEffects, simpleScreen);
@@ -317,10 +317,10 @@ namespace PeterHan.FastTrack.UIPatches {
 					ref List<Descriptor> __result) {
 				var descriptors = EFFECT_DESCRIPTORS;
 				var comps = ListPool<IGameObjectEffectDescriptor, DescriptorSorter>.Allocate();
-				var prefabID = go.GetComponent<KPrefabID>();
 				descriptors.Clear();
 				go.GetComponents(comps);
-				go.GetComponent<StateMachineController>().AddStateMachineDescriptors(comps);
+				if (go.TryGetComponent(out StateMachineController smc))
+					smc.AddStateMachineDescriptors(comps);
 				comps.Sort(DescriptorSorter.Instance);
 				int n = comps.Count;
 				for (int i = 0; i < n; i++) {
@@ -336,7 +336,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					}
 				}
 				comps.Recycle();
-				if (prefabID != null)
+				if (go.TryGetComponent(out KPrefabID prefabID))
 					descriptors.AddDescriptors(prefabID.AdditionalEffects, simpleInfoScreen);
 				__result = descriptors;
 				return false;
@@ -385,11 +385,9 @@ namespace PeterHan.FastTrack.UIPatches {
 					// If element is defined
 					element.attributeModifiers.GetMaterialDescriptors(descriptors);
 					element.GetSignificantMaterialPropertyDescriptors(descriptors);
-				} else if ((prefabGO = Assets.TryGetPrefab(tag)) != null) {
-					var prefabMods = prefabGO.GetComponent<PrefabAttributeModifiers>();
-					if (prefabMods != null)
-						prefabMods.descriptors.GetMaterialDescriptors(descriptors);
-				}
+				} else if ((prefabGO = Assets.TryGetPrefab(tag)) != null && prefabGO.
+						TryGetComponent(out PrefabAttributeModifiers prefabMods))
+					prefabMods.descriptors.GetMaterialDescriptors(descriptors);
 				__result = descriptors;
 				return false;
 			}
@@ -440,11 +438,9 @@ namespace PeterHan.FastTrack.UIPatches {
 							text.Append("    • ").Append(Util.StripTextFormatting(
 								descriptors[i].text)).AppendLine();
 					}
-				} else if ((prefabGO = Assets.TryGetPrefab(tag)) != null) {
-					var prefabMods = prefabGO.GetComponent<PrefabAttributeModifiers>();
-					if (prefabMods != null)
-						AddModifiers(prefabMods.descriptors, text);
-				}
+				} else if ((prefabGO = Assets.TryGetPrefab(tag)) != null && prefabGO.
+						TryGetComponent(out PrefabAttributeModifiers prefabMods))
+					AddModifiers(prefabMods.descriptors, text);
 				__result = text.ToString();
 				return false;
 			}
@@ -463,7 +459,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(GameObject go, ref List<Descriptor> __result) {
 				var descriptors = PLANT_DESCRIPTORS;
 				descriptors.Clear();
-				if (go.GetComponent<Growing>() != null) {
+				if (go.TryGetComponent(out Growing _)) {
 					var allDescriptors = ALL_DESCRIPTORS;
 					bool added = false;
 					allDescriptors.Clear();

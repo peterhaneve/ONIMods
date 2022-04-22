@@ -53,8 +53,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		private static void UpdateBit(MultiToggle multiToggle, bool active,
 				Color activeColor, Color inactiveColor) {
-			if (multiToggle != null) {
-				var hr = multiToggle.gameObject.GetComponentSafe<HierarchyReferences>();
+			if (multiToggle != null && multiToggle.TryGetComponent(
+					out HierarchyReferences hr)) {
 				hr.GetReference<KImage>("stateIcon").color = active ? activeColor :
 					inactiveColor;
 				hr.GetReference<LocText>("stateText").SetText(active ?

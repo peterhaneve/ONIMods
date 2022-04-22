@@ -180,13 +180,13 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// object where this component is applied.</param>
 		/// <param name="margin">The display margin in pixels.</param>
 		internal void Initialize(RectTransform target = null) {
-			if (target == null)
-				target = GetComponent<RectTransform>();
+			if (target == null && !TryGetComponent(out target))
+				target = null;
 			if (target != null && target != itemList && scroll != null) {
 				scroll.onValueChanged.AddListener(OnScroll);
 				itemList = target;
-				realLayout = itemList.GetComponent<LayoutGroup>();
-				virtualLayout = itemList.gameObject.AddOrGet<LayoutElement>();
+				target.TryGetComponent(out realLayout);
+				virtualLayout = target.gameObject.AddOrGet<LayoutElement>();
 				virtualLayout.enabled = false;
 				virtualLayout.layoutPriority = 100;
 				Rebuild();
@@ -316,7 +316,6 @@ namespace PeterHan.FastTrack.UIPatches {
 
 			public VirtualItem(Transform transform, GameObject go, Transform parent,
 					bool freezeLayout) {
-				var group = transform.GetComponent<LayoutGroup>();
 				var absOffset = RectTransformUtility.CalculateRelativeRectTransformBounds(
 					parent, transform);
 				entry = go;
@@ -325,7 +324,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				size = new Vector2(absOffset.size.x, absOffset.size.y);
 				max = min + size;
 				// Destroy and replace layout groups with a fixed element, this helps a lot
-				if (group != null && freezeLayout) {
+				if (transform.TryGetComponent(out LayoutGroup group) && freezeLayout) {
 					entry.AddOrGet<LayoutElement>().CopyFrom(group);
 					Destroy(group);
 				}
@@ -373,7 +372,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		internal Spacer(GameObject go) {
 			visible = false;
 			this.go = go;
-			layout = go.GetComponent<LayoutElement>();
+			go.TryGetComponent(out layout);
 			transform = go.transform;
 			go.SetActive(false);
 		}

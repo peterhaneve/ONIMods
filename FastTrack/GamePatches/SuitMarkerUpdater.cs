@@ -47,22 +47,19 @@ namespace PeterHan.FastTrack.GamePatches {
 					vacant = true;
 				fullyCharged = null;
 				partiallyCharged = null;
-			} else {
-				var tank = any.GetComponent<SuitTank>();
-				if (tank.PercentFull() >= minCharge) {
-					// Check for jet suit tank of petroleum
-					var petroTank = any.GetComponent<JetSuitTank>();
-					if (petroTank == null) {
-						fullyCharged = tank.IsFull() ? any : null;
-						partiallyCharged = any;
-					} else {
-						fullyCharged = (tank.IsFull() && petroTank.IsFull()) ? any : null;
-						partiallyCharged = (petroTank.PercentFull() >= minCharge) ? any : null;
-					}
+			} else if (any.TryGetComponent(out SuitTank tank) && tank.PercentFull() >=
+					minCharge) {
+				// Check for jet suit tank of petroleum
+				if (any.TryGetComponent(out JetSuitTank petroTank)) {
+					fullyCharged = (tank.IsFull() && petroTank.IsFull()) ? any : null;
+					partiallyCharged = (petroTank.PercentFull() >= minCharge) ? any : null;
 				} else {
-					fullyCharged = null;
-					partiallyCharged = null;
+					fullyCharged = tank.IsFull() ? any : null;
+					partiallyCharged = any;
 				}
+			} else {
+				fullyCharged = null;
+				partiallyCharged = null;
 			}
 			return vacant;
 		}
@@ -73,52 +70,54 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="checkpoint">The checkpoint to walk by.</param>
 		/// <param name="reactor">The Duplicant that is reacting.</param>
 		internal static void React(SuitMarker checkpoint, GameObject reactor) {
-			var equipment = reactor.GetComponent<MinionIdentity>().GetEquipment();
-			bool hasSuit = equipment.IsSlotOccupied(Db.Get().AssignableSlots.Suit);
-			var navigator = reactor.GetComponent<Navigator>();
-			bool changed = false;
-			reactor.GetComponent<KBatchedAnimController>().RemoveAnimOverrides(checkpoint.
-				interactAnim);
-			// If not wearing a suit, or the navigator can pass this checkpoint
-			if (!hasSuit || (navigator != null && (navigator.flags & checkpoint.PathFlag) >
-					PathFinder.PotentialPath.Flags.None)) {
-				var updater = checkpoint.GetComponent<SuitMarkerUpdater>();
-				foreach (var dock in updater.docks)
-					if (GetSuitStatus(dock, out KPrefabID fullyCharged, out _, out _) &&
-							hasSuit) {
-						dock.UnequipFrom(equipment);
-						changed = true;
-						break;
-					} else if (!hasSuit && fullyCharged != null) {
-						dock.EquipTo(equipment);
-						changed = true;
-						break;
-					}
-				if (!hasSuit && !changed) {
-					// Give it the best we have
-					SuitLocker bestAvailable = null;
-					float maxScore = 0f;
+			if (reactor.TryGetComponent(out MinionIdentity id) && checkpoint.TryGetComponent(
+					out SuitMarkerUpdater updater)) {
+				var equipment = id.GetEquipment();
+				bool hasSuit = equipment.IsSlotOccupied(Db.Get().AssignableSlots.Suit);
+				bool changed = false;
+				if (reactor.TryGetComponent(out KBatchedAnimController kbac))
+					kbac.RemoveAnimOverrides(checkpoint.interactAnim);
+				// If not wearing a suit, or the navigator can pass this checkpoint
+				if (!hasSuit || (reactor.TryGetComponent(out Navigator navigator) &&
+						(navigator.flags & checkpoint.PathFlag) > PathFinder.PotentialPath.
+						Flags.None)) {
 					foreach (var dock in updater.docks)
-						if (dock.GetSuitScore() > maxScore) {
-							bestAvailable = dock;
-							maxScore = dock.GetSuitScore();
+						if (GetSuitStatus(dock, out KPrefabID fullyCharged, out _, out _) &&
+								hasSuit) {
+							dock.UnequipFrom(equipment);
+							changed = true;
+							break;
+						} else if (!hasSuit && fullyCharged != null) {
+							dock.EquipTo(equipment);
+							changed = true;
+							break;
 						}
-					if (bestAvailable != null) {
-						bestAvailable.EquipTo(equipment);
-						changed = true;
+					if (!hasSuit && !changed) {
+						SuitLocker bestAvailable = null;
+						float maxScore = 0f;
+						foreach (var dock in updater.docks)
+							if (dock.GetSuitScore() > maxScore) {
+								bestAvailable = dock;
+								maxScore = dock.GetSuitScore();
+							}
+						if (bestAvailable != null) {
+							bestAvailable.EquipTo(equipment);
+							changed = true;
+						}
 					}
+					if (changed)
+						updater.UpdateSuitStatus();
 				}
-				if (changed)
-					updater.UpdateSuitStatus();
-			}
-			// Dump on floor, if they pass by with a suit and taking it off is impossible
-			if (!changed && hasSuit) {
-				var assignable = equipment.GetAssignable(Db.Get().AssignableSlots.Suit);
-				var notification = new Notification(STRINGS.MISC.NOTIFICATIONS.SUIT_DROPPED.
-					NAME, NotificationType.BadMinor, (_, data) => STRINGS.MISC.NOTIFICATIONS.
-					SUIT_DROPPED.TOOLTIP);
-				assignable.Unassign();
-				assignable.GetComponent<Notifier>().Add(notification);
+				// Dump on floor, if they pass by with a suit and taking it off is impossible
+				if (!changed && hasSuit) {
+					var assignable = equipment.GetAssignable(Db.Get().AssignableSlots.Suit);
+					var notification = new Notification(STRINGS.MISC.NOTIFICATIONS.SUIT_DROPPED.
+						NAME, NotificationType.BadMinor, (_, data) => STRINGS.MISC.NOTIFICATIONS.
+						SUIT_DROPPED.TOOLTIP);
+					assignable.Unassign();
+					if (assignable.TryGetComponent(out Notifier notifier))
+						notifier.Add(notification);
+				}
 			}
 		}
 

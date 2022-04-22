@@ -190,6 +190,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public ConduitAnimationQuality DisableConduitAnimation { get; set; }
 
+		[Option("Quick Format", "Reduces memory allocations when formatting strings." + PERF_LOW, "Visual")]
+		[JsonProperty]
+		public bool CustomStringFormat { get; set; }
+
 		[Option("Threaded Tile Updates", "Multi-threads updates to most tile textures." + PERF_HIGH, "Visual")]
 		[JsonProperty]
 		public bool ReduceTileUpdates { get; set; }
@@ -214,6 +218,7 @@ namespace PeterHan.FastTrack {
 			ConduitOpts = false;
 			CritterConsumers = true;
 			CullConduits = true;
+			CustomStringFormat = true;
 			DisableAchievements = AchievementDisable.SandboxDebug;
 			DisableConduitAnimation = ConduitAnimationQuality.Full;
 			DisableLoadPreviews = false;

@@ -163,11 +163,10 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// <param name="instance">The particle to check.</param>
 			/// <param name="dt">The time elapsed since the last check.</param>
 			private static void AchievementUpdate(HighEnergyParticle instance, float dt) {
-				if (TrackAchievements()) {
-					var inst = SaveGame.Instance?.GetComponent<ColonyAchievementTracker>();
-					if (inst != null)
-						inst.radBoltTravelDistance += instance.speed * dt;
-				}
+				var inst = SaveGame.Instance;
+				if (TrackAchievements() && inst != null && inst.TryGetComponent(
+						out ColonyAchievementTracker cat))
+					cat.radBoltTravelDistance += instance.speed * dt;
 			}
 
 			/// <summary>

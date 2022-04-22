@@ -151,8 +151,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			gsp.GatherEntries(x, y, 1, 1, gsp.collisionLayer, entries);
 			foreach (var entry in entries)
 				if (entry.obj is KCollider2D collider && collider.Intersects(xy)) {
-					var selectable = collider.GetComponent<KSelectable>();
-					if (selectable == null)
+					if (!collider.TryGetComponent(out KSelectable selectable))
 						selectable = collider.GetComponentInParent<KSelectable>();
 					if (selectable != null && selectable.IsSelectable) {
 						float distance = selectable.transform.GetPosition().z - coords.z;

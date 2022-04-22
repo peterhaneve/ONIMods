@@ -88,7 +88,7 @@ namespace PeterHan.FastTrack {
 				VisualPatches.KAnimLoopOptimizer.CreateInstance();
 			// Localization related
 			if (options.InfoCardOpts)
-				UIPatches.GameUtilPatches.Init();
+				UIPatches.FormatStringPatches.Init();
 			if (options.AllocOpts)
 				UIPatches.DescriptorAllocPatches.Init();
 		}
@@ -101,6 +101,7 @@ namespace PeterHan.FastTrack {
 		private static void CheckFetchCompat(Harmony harmony) {
 			if (PPatchTools.GetTypeSafe("PeterHan.EfficientFetch.EfficientFetchManager") ==
 					null) {
+				PathPatches.AsyncBrainGroupUpdater.AllowFastListSwap = true;
 				harmony.Patch(typeof(FetchManager.FetchablesByPrefabId),
 					nameof(FetchManager.FetchablesByPrefabId.UpdatePickups),
 					prefix: new HarmonyMethod(typeof(GamePatches.FetchManagerFastUpdate),
@@ -108,8 +109,10 @@ namespace PeterHan.FastTrack {
 #if DEBUG
 				PUtil.LogDebug("Patched FetchManager for fast pickup updates");
 #endif
-			} else
+			} else {
 				PUtil.LogWarning("Disabling fast pickup updates: Efficient Supply active");
+				PathPatches.AsyncBrainGroupUpdater.AllowFastListSwap = false;
+			}
 		}
 
 		/// <summary>
@@ -203,6 +206,8 @@ namespace PeterHan.FastTrack {
 				UIPatches.DescriptorAllocPatches.Cleanup();
 			}
 			AsyncJobManager.DestroyInstance();
+			if (options.CustomStringFormat)
+				UIPatches.FormatStringPatches.DumpStringFormatterCaches();
 			GameRunning = false;
 		}
 
@@ -296,6 +301,8 @@ namespace PeterHan.FastTrack {
 			}
 			if (options.FastReachability)
 				GamePatches.FastCellChangeMonitor.CreateInstance();
+			// Fix those world strings
+			UIPatches.FormatStringPatches.ApplyPatch(harmony);
 		}
 
 		public override void OnLoad(Harmony harmony) {
@@ -310,6 +317,7 @@ namespace PeterHan.FastTrack {
 			if (options.UnstackLights)
 				PRegistry.PutData("Bugs.StackedLights", true);
 			PRegistry.PutData("Bugs.AnimFree", true);
+			PRegistry.PutData("Bugs.MassStringsReadOnly", true);
 			// This patch is Windows only apparently
 			var target = typeof(Global).GetMethodSafe(nameof(Global.TestDataLocations), false);
 			if (options.MiscOpts && target != null && typeof(Global).GetFieldSafe(

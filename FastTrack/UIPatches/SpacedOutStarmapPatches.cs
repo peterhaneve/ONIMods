@@ -89,8 +89,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			// Close to destination?
 			if (distance < 100.0f && cells.TryGetValue(instance.selectOnMoveNISComplete,
 					out ClusterMapVisualizer visualizer)) {
-				var hex = visualizer.GetComponent<ClusterMapHex>();
-				if (instance.m_selectedHex != hex)
+				if (visualizer.TryGetComponent(out ClusterMapHex hex) && hex != instance.
+						m_selectedHex)
 					instance.SelectHex(hex);
 				// Reached destination?
 				if (distance < 10.0f)

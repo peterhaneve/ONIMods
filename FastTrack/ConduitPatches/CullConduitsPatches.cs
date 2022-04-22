@@ -119,9 +119,8 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// Applied before Refresh runs.
 		/// </summary>
 		internal static void Prefix(KAnimGraphTileVisualizer __instance) {
-			UpdateGraphIfEntombed updater;
-			if (__instance != null && (updater = __instance.
-					GetComponent<UpdateGraphIfEntombed>()) != null)
+			if (__instance != null && __instance.TryGetComponent(
+					out UpdateGraphIfEntombed updater))
 				updater.CheckVisible();
 		}
 	}
@@ -278,8 +277,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// Applied after OnSpawn runs.
 		/// </summary>
 		internal static void Postfix(KAnimGraphTileVisualizer __instance) {
-			var building = __instance.GetComponent<BuildingComplete>();
-			if (building != null)
+			if (__instance.TryGetComponent(out BuildingComplete building))
 				// Only apply to completed buildings, buildings under construction should be
 				// visible even inside any wall
 				__instance.gameObject.AddOrGet<UpdateGraphIfEntombed>().layer = building.Def.
@@ -345,11 +343,9 @@ namespace PeterHan.FastTrack.ConduitPatches {
 						if (shouldAdd == null || kmb == null || shouldAdd(kmb)) {
 							// Add to list and trigger overlay mode update
 							if (kmb != null) {
-								var kbac = kmb.GetComponent<KBatchedAnimController>();
-								if (kbac != null)
+								if (kmb.TryGetComponent(out KBatchedAnimController kbac))
 									kbac.SetLayer(layer);
-								var updateGraph = kmb.GetComponent<UpdateGraphIfEntombed>();
-								if (updateGraph != null)
+								if (kmb.TryGetComponent(out UpdateGraphIfEntombed updateGraph))
 									updateGraph.UpdateOverlay(true);
 							}
 							targets.Add(instance);
@@ -389,8 +385,8 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// Applied after ResetDisplayValues runs.
 		/// </summary>
 		internal static void Postfix(KBatchedAnimController controller) {
-			var component = controller.GetComponent<UpdateGraphIfEntombed>();
-			if (component != null)
+			if (controller != null && controller.TryGetComponent(
+					out UpdateGraphIfEntombed component))
 				component.UpdateOverlay(false);
 			// SolidConduitFlow.ApplyOverlayVisualization can be used to show the pickupables
 			// if they ever get culled behind tiles

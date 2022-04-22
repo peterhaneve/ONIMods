@@ -47,13 +47,10 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// </summary>
 		/// <param name="go">The Duplicant to check.</param>
 		internal static void RemoveBalloonArtistSensor(GameObject go) {
-			var traits = go.GetComponentSafe<Traits>();
-			if (traits != null && !traits.HasTrait("BalloonArtist")) {
-				var sensors = go.GetComponentSafe<Sensors>();
+			if (go.TryGetComponent(out Traits traits) && !traits.HasTrait("BalloonArtist") &&
+					go.TryGetComponent(out Sensors sensors))
 				// Destroy the sensor if not a balloon artist
-				if (sensors != null)
-					sensors.sensors.RemoveAll((sensor) => sensor is BalloonStandCellSensor);
-			}
+				sensors.sensors.RemoveAll((sensor) => sensor is BalloonStandCellSensor);
 		}
 
 		/// <summary>
@@ -67,15 +64,11 @@ namespace PeterHan.FastTrack.SensorPatches {
 			/// Applied before Update runs.
 			/// </summary>
 			internal static bool Prefix(MinionBrain ___brain) {
-				bool run = false;
 				// A slim bit slow, but only run 1-2 times a frame, and way faster than what
 				// the sensor does by default
-				if (___brain != null && recreation != null) {
-					var schedulable = ___brain.GetComponent<Schedulable>();
-					run = schedulable == null || ScheduleManager.Instance.IsAllowed(
-						schedulable, recreation);
-				}
-				return run;
+				return ___brain != null && recreation != null && (!___brain.TryGetComponent(
+					out Schedulable schedulable) || ScheduleManager.Instance.IsAllowed(
+					schedulable, recreation));
 			}
 		}
 
@@ -103,16 +96,13 @@ namespace PeterHan.FastTrack.SensorPatches {
 			/// Applied before Update runs.
 			/// </summary>
 			internal static bool Prefix(MinionBrain ___brain) {
-				bool run = false;
 				var inst = ScheduleManager.Instance;
-				if (___brain != null) {
-					var schedulable = ___brain.GetComponent<Schedulable>();
-					if (schedulable != null && inst != null && recreation != null) {
-						var block = schedulable.GetSchedule().GetBlock(Schedule.GetBlockIdx());
-						run = block.IsAllowed(recreation) || (finishTasks != null && block.
-							IsAllowed(finishTasks));
-					} else
-						run = true;
+				bool run = ___brain != null;
+				if (run && ___brain.TryGetComponent(out Schedulable schedulable) && inst !=
+						null && recreation != null) {
+					var block = schedulable.GetSchedule().GetBlock(Schedule.GetBlockIdx());
+					run = block.IsAllowed(recreation) || (finishTasks != null && block.
+						IsAllowed(finishTasks));
 				}
 				return run;
 			}

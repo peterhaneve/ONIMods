@@ -85,8 +85,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		internal static bool Prefix(NotificationAnimator __instance, ref bool ___animating,
 				ref LayoutElement ___layoutElement) {
-			var le = __instance.GetComponent<LayoutElement>();
-			if (le != null)
+			if (__instance.TryGetComponent(out LayoutElement le))
 				le.minWidth = 0.0f;
 			___layoutElement = le;
 			___animating = false;

@@ -39,7 +39,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		internal static void Postfix(Light2D __instance) {
 			var go = __instance.gameObject;
-			if (go.GetComponentSafe<LightSymbolTracker>() != null)
+			if (go.TryGetComponent(out LightSymbolTracker _))
 				go.AddOrGet<SlowLightSymbolTracker>();
 		}
 	}

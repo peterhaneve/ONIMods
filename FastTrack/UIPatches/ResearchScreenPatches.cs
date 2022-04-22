@@ -39,9 +39,11 @@ namespace PeterHan.FastTrack.UIPatches {
 			const float ZS = 250.0f;
 			Vector2 contentSize = rt.rect.size, deltaAnchor, target = __instance.
 				forceTargetPosition;
-			float xMin = (-contentSize.x * 0.5f - ZS) * zoom, xMax = ZS * zoom,
-				yMin = -ZS * zoom, yMax = (contentSize.y + ZS) * zoom - __instance.
-				GetComponent<RectTransform>().rect.size.y;
+			float y = 0.0f, xMin = (-contentSize.x * 0.5f - ZS) * zoom, xMax = ZS * zoom,
+				yMin = -ZS * zoom, yMax;
+			if (__instance.TryGetComponent(out RectTransform irt))
+				y = irt.rect.size.y;
+			yMax = (contentSize.y + ZS) * zoom - y;
 			target.x = Mathf.Clamp(target.x, xMin, xMax);
 			target.y = Mathf.Clamp(target.y, yMin, yMax);
 			deltaAnchor = new Vector2(Mathf.Clamp(anchorPos.x, xMin, xMax),
@@ -54,8 +56,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Applied before Update runs.
 		/// </summary>
 		internal static bool Prefix(ResearchScreen __instance) {
-			if (__instance.canvas.enabled) {
-				var rt = __instance.scrollContent.GetComponent<RectTransform>();
+			if (__instance.canvas.enabled && __instance.scrollContent.TryGetComponent(
+					out RectTransform rt)) {
 				Vector2 anchorPos = rt.anchoredPosition, startPos = anchorPos, inertia =
 					__instance.dragInteria;
 				Vector3 mousePos = KInputManager.GetMousePos();
@@ -223,13 +225,12 @@ namespace PeterHan.FastTrack.UIPatches {
 			yield return null;
 			if (components != null) {
 				int n = components.childCount;
-				LayoutGroup realLayout;
 				for (int i = 0; i < n; i++) {
 					var child = components.GetChild(i);
 					GameObject go;
 					// Only handle active children
-					if (child != null && (go = child.gameObject).activeSelf && (realLayout =
-							child.GetComponent<LayoutGroup>()) != null) {
+					if (child != null && (go = child.gameObject).activeSelf && go.
+							TryGetComponent(out LayoutGroup realLayout)) {
 						var frozenLayout = go.AddOrGet<LayoutElement>();
 						frozenLayout.CopyFrom(realLayout);
 						frozenLayout.layoutPriority = 100;
@@ -246,8 +247,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		internal static void Postfix(ResearchScreen __instance, bool show) {
 			var content = __instance.scrollContent;
 			if (show && content != null && __instance.isActiveAndEnabled) {
-				var cf = content.GetComponent<KChildFitter>();
-				if (cf != null)
+				if (content.TryGetComponent(out KChildFitter cf))
 					cf.FitSize();
 				__instance.StartCoroutine(FreezeLayouts(content.transform));
 			}

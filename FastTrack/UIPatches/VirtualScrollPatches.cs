@@ -77,8 +77,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		[HarmonyPriority(Priority.High)]
 		internal static void Prefix(ModsScreen __instance, ref VirtualScroll __state) {
 			var entryList = __instance.entryParent;
-			VirtualScroll vs;
-			if (entryList != null && (vs = entryList.GetComponent<VirtualScroll>()) != null) {
+			if (entryList != null && entryList.TryGetComponent(out VirtualScroll vs)) {
 				vs.OnBuild();
 				__state = vs;
 			} else
@@ -128,8 +127,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		internal static void Prefix(ReceptacleSideScreen __instance,
 				ref VirtualScroll __state) {
-			var vs = __instance.requestObjectList.GetComponentSafe<VirtualScroll>();
-			if (vs != null) {
+			var obj = __instance.requestObjectList;
+			if (obj != null && obj.TryGetComponent(out VirtualScroll vs)) {
 				vs.OnBuild();
 				__state = vs;
 			} else
@@ -170,7 +169,10 @@ namespace PeterHan.FastTrack.UIPatches {
 				__instance.hideUndiscoveredEntities;
 			var inst = DiscoveredResources.Instance;
 			var selected = __instance.selectedEntityToggle;
-			var vs = __instance.requestObjectList.GetComponentSafe<VirtualScroll>();
+			var obj = __instance.requestObjectList;
+			VirtualScroll vs = null;
+			if (obj != null)
+				obj.TryGetComponent(out vs);
 			foreach (var pair in __instance.depositObjectMap) {
 				var key = pair.Key;
 				var display = pair.Value;
@@ -231,8 +233,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="state">The state to apply.</param>
 		private static void SetImageToggleState(ReceptacleSideScreen instance, KToggle toggle,
 				ITState state) {
-			var its = toggle.GetComponent<ImageToggleState>();
-			if (state != its.currentState) {
+			if (toggle.TryGetComponent(out ImageToggleState its) && state != its.currentState)
+			{
 				// SetState provides no feedback on whether the state actually changed
 				var targetImage = toggle.gameObject.GetComponentInChildrenOnly<Image>();
 				switch (state) {

@@ -170,10 +170,9 @@ namespace PeterHan.FastTrack {
 		internal static void Postfix(GameObject go) {
 			if (go != null) {
 				var options = FastTrackOptions.Instance;
-				var nav = go.GetComponentSafe<Navigator>();
 				if (options.SensorOpts)
 					SensorPatches.SensorPatches.RemoveBalloonArtistSensor(go);
-				if (options.NoSplash && nav != null)
+				if (options.NoSplash && go.TryGetComponent(out Navigator nav))
 					nav.transitionDriver.overrideLayers.RemoveAll((layer) => layer is
 						SplashTransitionLayer);
 			}

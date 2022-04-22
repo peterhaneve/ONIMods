@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using Klei.AI;
+using System.Text;
 using UnityEngine;
 
 using ELEMENTAL = STRINGS.UI.ELEMENTAL;
@@ -28,6 +29,11 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// much every frame.
 	/// </summary>
 	public sealed class AdditionalDetailsPanelWrapper {
+		/// <summary>
+		/// Avoid reallocating a new StringBuilder every frame.
+		/// </summary>
+		private static readonly StringBuilder CACHED_BUILDER = new StringBuilder(64);
+
 		/// <summary>
 		/// The number of cycles to display uptime.
 		/// </summary>
@@ -42,6 +48,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Called at shutdown to avoid leaking references.
 		/// </summary>
 		internal static void Cleanup() {
+			CACHED_BUILDER.Clear();
 			instance = null;
 		}
 
@@ -74,11 +81,25 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="shcInfo">The specific heat information.</returns>
 		private static void GetSHCText(Element element, string tempUnits,
 				out InfoLine shcInfo) {
-			string shcText = ELEMENTAL.SHC.NAME.Format(GameUtil.GetDisplaySHC(element.
-				specificHeatCapacity).ToString("0.000"));
-			shcInfo = new InfoLine(shcText, ELEMENTAL.SHC.TOOLTIP.Replace(
-				"{SPECIFIC_HEAT_CAPACITY}", shcText + GameUtil.GetSHCSuffix()).Replace(
-				"{TEMPERATURE_UNIT}", tempUnits));
+			float shc = GameUtil.GetDisplaySHC(element.specificHeatCapacity);
+			var text = CACHED_BUILDER;
+			// Pass 1: float to string using Ryu
+			text.Clear();
+			shc.ToRyuHardString(text, 3);
+			string shcValue = text.ToString();
+			text.Clear();
+			// Pass 2: Format into SHC header
+			text.Append(ELEMENTAL.SHC.NAME);
+			text.Replace("{0}", shcValue);
+			text.Append("(DTU/g)/");
+			text.Append(GameUtil.GetTemperatureUnitSuffix());
+			string shcText = text.ToString();
+			text.Clear();
+			// Pass 3: Final format into tooltip
+			text.Append(ELEMENTAL.SHC.TOOLTIP);
+			text.Replace("{SPECIFIC_HEAT_CAPACITY}", shcText);
+			text.Replace("{TEMPERATURE_UNIT}", tempUnits);
+			shcInfo = new InfoLine(shcText, text.ToString());
 		}
 
 		/// <summary>
@@ -92,18 +113,30 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static bool GetTCText(Element element, Building building, string tempUnits,
 				out InfoLine tcInfo) {
 			float tc = element.thermalConductivity;
+			var text = CACHED_BUILDER;
 			bool insulator = false;
 			if (building != null) {
 				float tcModifier = building.Def.ThermalConductivity;
 				tc *= tcModifier;
 				insulator = tcModifier < 1.0f;
 			}
-			// TC
-			string tcText = ELEMENTAL.THERMALCONDUCTIVITY.NAME.Format(GameUtil.
-				GetDisplayThermalConductivity(tc).ToString("0.000"));
-			tcInfo = new InfoLine(tcText, ELEMENTAL.THERMALCONDUCTIVITY.TOOLTIP.
-				Replace("{THERMAL_CONDUCTIVITY}", tcText + GameUtil.
-				GetThermalConductivitySuffix()).Replace("{TEMPERATURE_UNIT}", tempUnits));
+			tc = GameUtil.GetDisplayThermalConductivity(tc);
+			// Pass 1: float to string using Ryu
+			text.Clear();
+			tc.ToRyuHardString(text, 3);
+			string shcValue = text.ToString();
+			text.Clear();
+			// Pass 2: Format into TC header
+			text.Append(ELEMENTAL.THERMALCONDUCTIVITY.NAME);
+			text.Replace("{0}", shcValue);
+			text.Append(GameUtil.GetThermalConductivitySuffix());
+			string tcText = text.ToString();
+			text.Clear();
+			// Pass 3: Final format into tooltip
+			text.Append(ELEMENTAL.THERMALCONDUCTIVITY.TOOLTIP);
+			text.Replace("{THERMAL_CONDUCTIVITY}", tcText);
+			text.Replace("{TEMPERATURE_UNIT}", tempUnits);
+			tcInfo = new InfoLine(tcText, text.ToString());
 			return insulator;
 		}
 
@@ -251,9 +284,12 @@ namespace PeterHan.FastTrack.UIPatches {
 					operational.GetUptimeOverCycles(NUM_CYCLES);
 				string label = lastSelection.uptimeCached;
 				if (changed || label == null) {
-					label = string.Format(uptimeStr, GameUtil.GetFormattedPercent(
-						thisCycle * 100.0f), GameUtil.GetFormattedPercent(lastCycle * 100.0f),
-						GameUtil.GetFormattedPercent(prevCycles * 100.0f));
+					var text = CACHED_BUILDER;
+					label = text.Clear().Append(uptimeStr).
+						Replace("{0}", GameUtil.GetFormattedPercent(thisCycle * 100.0f)).
+						Replace("{1}", GameUtil.GetFormattedPercent(lastCycle * 100.0f)).
+						Replace("{2}", GameUtil.GetFormattedPercent(prevCycles * 100.0f)).
+						ToString();
 					lastSelection.uptimeCached = label;
 				}
 				drawer.NewLabel(label);
@@ -303,8 +339,9 @@ namespace PeterHan.FastTrack.UIPatches {
 					var detailsPanel = instance.detailsPanel;
 					lastSelection = new LastSelectionDetails(target);
 					detailsPanel.SetActive(true);
-					detailsPanel.GetComponent<CollapsibleDetailContentPanel>().HeaderLabel.
-						text = STRINGS.UI.DETAILTABS.DETAILS.GROUPNAME_DETAILS;
+					if (detailsPanel.TryGetComponent(out CollapsibleDetailContentPanel panel))
+						panel.HeaderLabel.text = STRINGS.UI.DETAILTABS.DETAILS.
+							GROUPNAME_DETAILS;
 				}
 				element = lastSelection.element;
 				if (element != null) {
@@ -431,35 +468,26 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal string uptimeCached;
 
 			internal LastSelectionDetails(GameObject go) {
-				int cell = Grid.PosToCell(go);
 				string tempUnits = GameUtil.GetTemperatureUnitSuffix();
-				var bc = go.GetComponent<BuildingComplete>();
-				PrimaryElement pe;
-				buildingComplete = bc;
-				if (bc != null)
+				if (go.TryGetComponent(out BuildingComplete bc))
 					building = bc;
 				else
-					building = go.GetComponent<Building>();
+					go.TryGetComponent(out building);
+				buildingComplete = bc;
 				creationTimeCached = null;
-				operational = go.GetComponent<Operational>();
+				go.TryGetComponent(out operational);
 				// Use primary element by default, but allow CellSelectionObject to stand in
-				primaryElement = pe = go.GetComponent<PrimaryElement>();
-				if (pe != null) {
+				if (go.TryGetComponent(out PrimaryElement pe)) {
 					element = pe.Element;
 					cso = null;
-				} else {
-					cso = go.GetComponent<CellSelectionObject>();
-					element = (cso == null) ? null : cso.element;
-				}
-				if (DlcManager.FeatureRadiationEnabled())
-					radiationAbsorption = GameUtil.GetFormattedPercent(GameUtil.
-						GetRadiationAbsorptionPercentage(cell) * 100.0f);
+				} else if (go.TryGetComponent(out cso))
+					element = cso.element;
 				else
-					radiationAbsorption = null;
+					element = null;
+				primaryElement = pe;
 				// Why these in particular? Clay please
-				showUptime = go.GetComponent<LogicPorts>() != null ||
-					go.GetComponent<EnergyConsumer>() != null ||
-					go.GetComponent<Battery>() != null;
+				showUptime = go.TryGetComponent(out LogicPorts _) || go.TryGetComponent(
+					out EnergyConsumer _) || go.TryGetComponent(out Battery _);
 				target = go;
 				uptimeCached = null;
 				if (element != null) {
@@ -469,6 +497,12 @@ namespace PeterHan.FastTrack.UIPatches {
 					insulator = GetTCText(element, building, tempUnits,
 						out thermalConductivity);
 					GetSHCText(element, tempUnits, out specificHeat);
+					if (DlcManager.FeatureRadiationEnabled()) {
+						int cell = Grid.PosToCell(go.transform.position);
+						radiationAbsorption = GameUtil.GetFormattedPercent(GameUtil.
+							GetRadiationAbsorptionPercentage(cell) * 100.0f);
+					} else
+						radiationAbsorption = null;
 					PopulatePhase(element, out boil, out freeze, out overheat);
 				} else {
 					boil = default;
@@ -476,6 +510,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					freeze = default;
 					overheat = default;
 					insulator = false;
+					radiationAbsorption = null;
 					specificHeat = default;
 					thermalConductivity = default;
 				}

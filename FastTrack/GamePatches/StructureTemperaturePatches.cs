@@ -113,8 +113,9 @@ namespace PeterHan.FastTrack.GamePatches {
 				float exhaust = payload.ExhaustKilowatts;
 				if (!payload.isActiveStatusItemSet) {
 					// Turn on the "active" status item
-					payload.primaryElement.GetComponent<KSelectable>().SetStatusItem(
-						energyCategory, operatingEnergy, payload.simHandleCopy);
+					if (payload.primaryElement.TryGetComponent(out KSelectable selectable))
+						selectable.SetStatusItem(energyCategory, operatingEnergy,
+							payload.simHandleCopy);
 					payload.isActiveStatusItemSet = true;
 				}
 				AccumulateProducedEnergy(ref payload.energySourcesKW, payload.
@@ -146,8 +147,8 @@ namespace PeterHan.FastTrack.GamePatches {
 				dirty = true;
 			} else if (payload.isActiveStatusItemSet) {
 				// Turn off the "active" status item
-				payload.primaryElement.GetComponent<KSelectable>().SetStatusItem(
-					energyCategory, null, null);
+				if (payload.primaryElement.TryGetComponent(out KSelectable selectable))
+					selectable.SetStatusItem(energyCategory, null, null);
 				payload.isActiveStatusItemSet = false;
 				dirty = true;
 			}

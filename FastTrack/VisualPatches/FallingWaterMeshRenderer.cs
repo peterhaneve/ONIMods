@@ -48,9 +48,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 			t.SetParent(game.transform);
 			t.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
 			// Set up the mesh with the right material
-			var renderer = go.GetComponent<MeshRenderer>();
-			renderer.material = instance.material;
-			renderer.SetPropertyBlock(instance.propertyBlock);
+			if (go.TryGetComponent(out MeshRenderer renderer)) {
+				renderer.material = instance.material;
+				renderer.SetPropertyBlock(instance.propertyBlock);
+			}
 			Instance = go.AddOrGet<FallingWaterMeshRenderer>();
 		}
 

@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
+using Ryu;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -36,6 +37,20 @@ namespace PeterHan.FastTrack {
 		/// The shared stopwatch used to avoid allocations when timing handles.
 		/// </summary>
 		private static readonly Stopwatch WAIT_HANDLE_CLOCK = new Stopwatch();
+
+		/// <summary>
+		/// Appends two string builders with no intermediate ToString allocation.
+		/// </summary>
+		/// <param name="dest">The destination string.</param>
+		/// <param name="src">The source string.</param>
+		/// <returns>The modified destination string with src appended.</returns>
+		public static StringBuilder Append(this StringBuilder dest, StringBuilder src) {
+			int n = src.Length;
+			dest.EnsureCapacity(dest.Length + n);
+			for (int i = 0; i < n; i++)
+				dest.Append(src[i]);
+			return dest;
+		}
 
 		/// <summary>
 		/// Copies layout information to a fixed layout element. Useful for freezing a UI
@@ -58,9 +73,10 @@ namespace PeterHan.FastTrack {
 		/// <param name="targetMesh">The mesh to be rendered.</param>
 		/// <param name="name">The object's name.</param>
 		/// <param name="layer">The layer on which the mesh will be rendered.</param>
+		/// <param name="shader">The material to use, or null to leave unassigned.</param>
 		/// <returns>The game object to use for rendering.</returns>
 		public static GameObject CreateMeshRenderer(this Mesh targetMesh, string name,
-				int layer) {
+				int layer, Material shader = null) {
 			if (targetMesh == null)
 				throw new ArgumentNullException(nameof(targetMesh));
 			var go = new GameObject(name ?? "Mesh Renderer", typeof(MeshRenderer), typeof(
@@ -68,16 +84,19 @@ namespace PeterHan.FastTrack {
 				layer = layer
 			};
 			// Set up the mesh with the right material
-			var renderer = go.GetComponent<MeshRenderer>();
-			renderer.allowOcclusionWhenDynamic = false;
-			renderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
-			renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
-			renderer.receiveShadows = false;
-			renderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
-			renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+			if (go.TryGetComponent(out MeshRenderer renderer)) {
+				renderer.allowOcclusionWhenDynamic = false;
+				renderer.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.Off;
+				renderer.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+				renderer.receiveShadows = false;
+				renderer.reflectionProbeUsage = UnityEngine.Rendering.ReflectionProbeUsage.Off;
+				renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+				if (shader != null)
+					renderer.material = shader;
+			}
 			// Set the mesh to render
-			var filter = go.GetComponent<MeshFilter>();
-			filter.sharedMesh = targetMesh;
+			if (go.TryGetComponent(out MeshFilter filter))
+				filter.sharedMesh = targetMesh;
 			return go;
 		}
 
@@ -207,22 +226,38 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
+		/// Converts a float to a fixed decimal point format with exactly the specified number
+		/// of decimals.
+		/// </summary>
+		/// <param name="f">The value to format.</param>
+		/// <param name="result">The location where the formatted value will be stored.</param>
+		/// <param name="precision">The exact number of decimal places.</param>
+		public static void ToRyuHardString(this float f, StringBuilder result, int precision) {
+			RyuFormat.ToString(result, (double)f, precision, RyuFormatOptions.FixedMode);
+		}
+
+		/// <summary>
+		/// Converts a float to a fixed decimal point format with up to the specified number
+		/// of optional decimals.
+		/// </summary>
+		/// <param name="f">The value to format.</param>
+		/// <param name="result">The location where the formatted value will be stored.</param>
+		/// <param name="precision">The maximum number of decimal places.</param>
+		public static void ToRyuSoftString(this float f, StringBuilder result, int precision) {
+			RyuFormat.ToString(result, (double)f, precision, RyuFormatOptions.FixedMode |
+				RyuFormatOptions.SoftPrecision);
+		}
+
+		/// <summary>
 		/// Converts a float to a standard string like ONI would, but with less memory used.
 		/// </summary>
 		/// <param name="f">The value to format.</param>
-		/// <returns>The value formatted like ONI wants it for display.</returns>
-		public static string ToStandardString(this float f) {
-			string result;
+		/// <param name="result">The location where the formatted value will be stored.</param>
+		public static void ToStandardString(this float f, StringBuilder result) {
 			float absF = Mathf.Abs(f);
-			if (f == 0f)
-				result = "0";
-			else if (absF < 1f)
-				result = f.ToString("#,##0.#");
-			else if (absF < 10f)
-				result = f.ToString("#,###.#");
-			else
-				result = f.ToString("N0");
-			return result;
+			int precision = (absF < 10f) ? 1 : 0;
+			RyuFormat.ToString(result, (double)f, precision, RyuFormatOptions.FixedMode |
+				RyuFormatOptions.SoftPrecision | RyuFormatOptions.ThousandsSeparators);
 		}
 
 		/// <summary>

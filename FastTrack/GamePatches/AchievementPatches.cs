@@ -205,17 +205,16 @@ namespace PeterHan.FastTrack.GamePatches {
 				// For the toilet achievement, there need be only one
 				if (validTypes.Contains(TagManager.Create(OuthouseConfig.ID)))
 					dupeCount = 1;
-				foreach (var building in Components.BasicBuildings.Items) {
-					var id = building.transform.GetComponent<KPrefabID>();
+				foreach (var building in Components.BasicBuildings.Items)
 					// The building types list is only ever 2 elements long
-					if (id != null && validTypes.Contains(id.PrefabTag)) {
+					if (building.transform.TryGetComponent(out KPrefabID id) && validTypes.
+							Contains(id.PrefabTag)) {
 						buildingCount++;
 						if (buildingCount >= dupeCount) {
 							success = true;
 							break;
 						}
 					}
-				}
 			}
 			__result = success;
 			return false;

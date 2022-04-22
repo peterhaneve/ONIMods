@@ -73,34 +73,37 @@ namespace PeterHan.FastTrack.UIPatches {
 			var amountLines = panel.amountLines;
 			var attributeLines = panel.attributeLines;
 			var aLabel = panel.plantAdditionalLabel;
-			var rm = plant.GetComponent<ReceptacleMonitor>();
-			var growing = plant.GetComponent<Growing>();
 			int n = amountLines.Length;
-			// Update the invariant text for plants
-			if (growing != null) {
-				string wildGrowth = GameUtil.GetFormattedCycles(growing.WildGrowthTime());
-				string tameGrowth = GameUtil.GetFormattedCycles(growing.DomesticGrowthTime());
-				panel.plantNormalLabel.text = CONDITIONS_GROWING.WILD.BASE.Format(wildGrowth);
-				panel.plantNormalTooltip.SetSimpleTooltip(CONDITIONS_GROWING.WILD.TOOLTIP.
-					Format(wildGrowth));
-				aLabel.color = rm.Replanted ? Color.black : Color.grey;
-				aLabel.text = hasAdditional ? CONDITIONS_GROWING.ADDITIONAL_DOMESTIC.BASE.
-					Format(tameGrowth) : CONDITIONS_GROWING.DOMESTIC.BASE.Format(tameGrowth);
-				panel.plantAdditionalTooltip.SetSimpleTooltip(CONDITIONS_GROWING.
-					ADDITIONAL_DOMESTIC.TOOLTIP.Format(tameGrowth));
-			} else {
-				string wildGrowth = Util.FormatTwoDecimalPlace(100.0f * TUNING.CROPS.
-					WILD_GROWTH_RATE_MODIFIER);
-				string tameGrowth = Util.FormatTwoDecimalPlace(100.0f);
-				panel.plantNormalLabel.text = isDecor ? CONDITIONS_GROWING.WILD_DECOR.BASE.
-					ToString() : CONDITIONS_GROWING.WILD_INSTANT.BASE.Format(wildGrowth);
-				panel.plantNormalTooltip.SetSimpleTooltip(CONDITIONS_GROWING.WILD_INSTANT.
-					TOOLTIP);
-				aLabel.color = (rm == null || rm.Replanted) ? Color.black : Color.grey;
-				aLabel.text = CONDITIONS_GROWING.ADDITIONAL_DOMESTIC_INSTANT.BASE.
-					Format(tameGrowth);
-				panel.plantAdditionalTooltip.SetSimpleTooltip(CONDITIONS_GROWING.
-					ADDITIONAL_DOMESTIC_INSTANT.TOOLTIP);
+			if (plant.TryGetComponent(out ReceptacleMonitor rm)) {
+				// Update the invariant text for plants
+				if (plant.TryGetComponent(out Growing growing)) {
+					string wildGrowth = GameUtil.GetFormattedCycles(growing.WildGrowthTime());
+					string tameGrowth = GameUtil.GetFormattedCycles(growing.
+						DomesticGrowthTime());
+					panel.plantNormalLabel.text = CONDITIONS_GROWING.WILD.BASE.Format(
+						wildGrowth);
+					panel.plantNormalTooltip.SetSimpleTooltip(CONDITIONS_GROWING.WILD.TOOLTIP.
+						Format(wildGrowth));
+					aLabel.color = rm.Replanted ? Color.black : Color.grey;
+					aLabel.text = hasAdditional ? CONDITIONS_GROWING.ADDITIONAL_DOMESTIC.BASE.
+						Format(tameGrowth) : CONDITIONS_GROWING.DOMESTIC.BASE.
+						Format(tameGrowth);
+					panel.plantAdditionalTooltip.SetSimpleTooltip(CONDITIONS_GROWING.
+						ADDITIONAL_DOMESTIC.TOOLTIP.Format(tameGrowth));
+				} else {
+					string wildGrowth = Util.FormatTwoDecimalPlace(100.0f * TUNING.CROPS.
+						WILD_GROWTH_RATE_MODIFIER);
+					string tameGrowth = Util.FormatTwoDecimalPlace(100.0f);
+					panel.plantNormalLabel.text = isDecor ? CONDITIONS_GROWING.WILD_DECOR.BASE.
+						ToString() : CONDITIONS_GROWING.WILD_INSTANT.BASE.Format(wildGrowth);
+					panel.plantNormalTooltip.SetSimpleTooltip(CONDITIONS_GROWING.WILD_INSTANT.
+						TOOLTIP);
+					aLabel.color = (rm == null || rm.Replanted) ? Color.black : Color.grey;
+					aLabel.text = CONDITIONS_GROWING.ADDITIONAL_DOMESTIC_INSTANT.BASE.
+						Format(tameGrowth);
+					panel.plantAdditionalTooltip.SetSimpleTooltip(CONDITIONS_GROWING.
+						ADDITIONAL_DOMESTIC_INSTANT.TOOLTIP);
+				}
 			}
 			// Turn off the attributes and amounts
 			for (int i = 0; i < n; i++)
@@ -322,13 +325,12 @@ namespace PeterHan.FastTrack.UIPatches {
 
 			internal LastSelectionDetails(GameObject go, VitalsPanelWrapper parent) {
 				ref var panel = ref parent.panel;
-				bool isPlant = go.GetComponent<WiltCondition>() != null, isDecor = go.
+				bool isPlant = go.TryGetComponent(out WiltCondition _), isDecor = go.
 					HasTag(GameTags.Decoration);
 				hasWilting = isPlant;
 				isDecorPlant = isDecor;
-				modifiers = go.GetComponent<Modifiers>();
 				target = go;
-				if (modifiers != null) {
+				if (go.TryGetComponent(out modifiers)) {
 					panel.plantNormalGO.SetActive(isPlant);
 					panel.plantAdditionalGO.gameObject.SetActive(isPlant && !isDecor);
 					if (isPlant)
@@ -371,16 +373,17 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal VitalsPanelState(MinionVitalsPanel instance) {
 				var normal = instance.conditionsContainerNormal;
 				var additional = instance.conditionsContainerAdditional;
-				var nLabel = normal.GetComponent<HierarchyReferences>().
-					GetReference<LocText>("Label");
-				var aLabel = additional.GetComponent<HierarchyReferences>().
-					GetReference<LocText>("Label");
+				LocText nLabel = null, aLabel = null;
+				if (normal.TryGetComponent(out HierarchyReferences hr))
+					nLabel = hr.GetReference<LocText>("Label");
+				if (additional.TryGetComponent(out hr))
+					aLabel = hr.GetReference<LocText>("Label");
 				plantAdditionalGO = additional.gameObject;
 				plantAdditionalLabel = aLabel;
-				plantAdditionalTooltip = aLabel.GetComponent<ToolTip>();
+				aLabel.TryGetComponent(out plantAdditionalTooltip);
 				plantNormalGO = normal.gameObject;
 				plantNormalLabel = nLabel;
-				plantNormalTooltip = nLabel.GetComponent<ToolTip>();
+				nLabel.TryGetComponent(out plantNormalTooltip);
 				vitals = instance;
 				amountLines = new MinionVitalsPanel.AmountLine[0];
 				attributeLines = new MinionVitalsPanel.AttributeLine[0];
@@ -458,10 +461,14 @@ namespace PeterHan.FastTrack.UIPatches {
 				parentContainer = original.parentContainer;
 				textField = original.locText;
 				// Computed fields
-				checkGO = gameObject.GetComponent<HierarchyReferences>().GetReference("Check").
-					gameObject;
+				if (gameObject.TryGetComponent(out HierarchyReferences hr)) {
+					checkGO = hr.GetReference("Check").gameObject;
+					checkGO.transform.parent.TryGetComponent(out checkImage);
+				} else {
+					checkGO = null;
+					checkImage = null;
+				}
 				checkTransform = gameObject.transform;
-				checkImage = checkGO.transform.parent.GetComponent<Image>();
 				visible = false;
 				gameObject.SetActive(false);
 			}

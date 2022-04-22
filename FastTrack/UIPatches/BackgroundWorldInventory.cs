@@ -58,6 +58,24 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
+		/// Adds up the total mass of available items.
+		/// </summary>
+		/// <param name="items">The reachable items across all worlds.</param>
+		/// <param name="worldId">The current world ID.</param>
+		/// <returns>The total mass of items on this world.</returns>
+		private static float SumTotal(IEnumerable<Pickupable> items, int worldId) {
+			float total = 0f;
+			foreach (var pickupable in items)
+				if (pickupable != null) {
+					int cell = pickupable.cachedCell;
+					if (Grid.IsValidCell(cell) && Grid.WorldIdx[cell] == worldId &&
+							!pickupable.KPrefabID.HasTag(GameTags.StoredPrivate))
+						total += pickupable.TotalAmount;
+				}
+			return total;
+		}
+
+		/// <summary>
 		/// Whether this is the first update since load.
 		/// </summary>
 		private bool firstUpdate;
@@ -101,8 +119,8 @@ namespace PeterHan.FastTrack.UIPatches {
 				var pinned = PinnedResourcesPanel.Instance;
 				hasValidCount = true;
 				forceRefresh = false;
-				if (pinned != null && ClusterManager.Instance.activeWorldId ==
-						worldContainer.id) {
+				if (pinned != null && ClusterManager.Instance.activeWorldId == worldContainer.
+						id) {
 					pinned.ClearExcessiveNewItems();
 					pinned.Refresh();
 				}
@@ -127,25 +145,17 @@ namespace PeterHan.FastTrack.UIPatches {
 				worldId = worldContainer.id;
 			if (inventory != null && accessibleAmounts != null && worldId >= 0 && worldId !=
 					ClusterManager.INVALID_WORLD_IDX) {
-				int index = 0, n = inventory.Count;
-				foreach (var pair in inventory) {
-					if (index == updateIndex || firstUpdate) {
-						float total = 0f;
-						foreach (var pickupable in pair.Value) {
-							int cell = pickupable.cachedCell;
-							if (Grid.IsValidCell(cell) && Grid.WorldIdx[cell] == worldId &&
-									!pickupable.KPrefabID.HasTag(GameTags.StoredPrivate))
-								total += pickupable.TotalAmount;
-						}
-						if (!validCount && updateIndex + 1 >= n)
+				int index = 0, ui = updateIndex, n = inventory.Count;
+				foreach (var pair in inventory)
+					if (index++ == ui || firstUpdate) {
+						float total = SumTotal(pair.Value, worldId);
+						if (!validCount && ui + 1 >= n)
 							forceRefresh = validCount = true;
 						accessibleAmounts[pair.Key] = total;
-						updateIndex = (updateIndex + 1) % n;
+						updateIndex = ui = (ui + 1) % n;
 						if (!firstUpdate)
 							break;
 					}
-					index++;
-				}
 				firstUpdate = false;
 			}
 		}
@@ -226,11 +236,10 @@ namespace PeterHan.FastTrack.UIPatches {
 			if (!SpeedControlScreen.Instance.IsPaused && FastTrackMod.GameRunning &&
 					inst != null && jm != null) {
 				var worlds = inst.WorldContainers;
-				foreach (var container in worlds) {
-					var updater = container.GetComponent<BackgroundWorldInventory>();
-					if (updater != null && container.worldInventory != null)
+				foreach (var container in worlds)
+					if (container.TryGetComponent(out BackgroundWorldInventory updater) &&
+							container.worldInventory != null)
 						toUpdate.Add(updater);
-				}
 				if (toUpdate.Count > 0) {
 					onComplete.Reset();
 					jm.Run(this);
@@ -259,34 +268,40 @@ namespace PeterHan.FastTrack.UIPatches {
 		internal static bool Prepare() => FastTrackOptions.Instance.ParallelInventory;
 
 		/// <summary>
+		/// Adds a newly found reachable item to the world inventory.
+		/// </summary>
+		/// <param name="pickupable">The item to add.</param>
+		/// <param name="inventory">The inventory where it should be added.</param>
+		private static void AddFetchable(Pickupable pickupable, InventoryDict inventory) {
+			var kpid = pickupable.KPrefabID;
+			var prefabTag = kpid.PrefabTag;
+			if (!inventory.ContainsKey(prefabTag)) {
+				var category = DiscoveredResources.GetCategoryForEntity(kpid);
+				if (!category.IsValid)
+					PUtil.LogWarning(pickupable.name +
+						" was found by WorldInventory, but has no category! Add it to the element definition.");
+				else
+					DiscoveredResources.Instance.Discover(prefabTag, category);
+			}
+			foreach (var itemTag in kpid.Tags)
+				if (BackgroundWorldInventory.IsAcceptable(itemTag)) {
+					if (!inventory.TryGetValue(itemTag, out HashSet<Pickupable> entry))
+						inventory[itemTag] = entry = new HashSet<Pickupable>();
+					entry.Add(pickupable);
+				}
+		}
+
+		/// <summary>
 		/// Applied before OnAddedFetchable runs.
 		/// </summary>
 		internal static bool Prefix(WorldInventory __instance, object data) {
-			var gameObject = (UnityEngine.GameObject)data;
-			var pickupable = gameObject.GetComponent<Pickupable>();
-			int cell = pickupable.cachedCell, id;
-			var container = __instance.GetComponent<WorldContainer>();
-			if (container != null && Grid.IsValidCell(cell) && (id = container.id) !=
-					ClusterManager.INVALID_WORLD_IDX && Grid.WorldIdx[cell] == id &&
-					gameObject.GetComponent<Navigator>() == null) {
-				var kpid = pickupable.KPrefabID;
-				var prefabTag = kpid.PrefabTag;
-				var inventory = __instance.Inventory;
-				if (!inventory.ContainsKey(prefabTag)) {
-					var category = DiscoveredResources.GetCategoryForEntity(kpid);
-					if (!category.IsValid)
-						PUtil.LogWarning(pickupable.name +
-							" was found by WorldInventory, but has no category! Add it to the element definition.");
-					else
-						DiscoveredResources.Instance.Discover(prefabTag, category);
-				}
-				foreach (var itemTag in kpid.Tags)
-					if (BackgroundWorldInventory.IsAcceptable(itemTag)) {
-						if (!inventory.TryGetValue(itemTag, out HashSet<Pickupable> entry))
-							inventory[itemTag] = entry = new HashSet<Pickupable>();
-						entry.Add(pickupable);
-					}
-			}
+			int cell, id;
+			if (data is UnityEngine.GameObject gameObject && gameObject.TryGetComponent(
+					out Pickupable pickupable) && __instance.TryGetComponent(
+					out WorldContainer container) && Grid.IsValidCell(cell = pickupable.
+					cachedCell) && (id = container.id) != ClusterManager.INVALID_WORLD_IDX &&
+					Grid.WorldIdx[cell] == id && !gameObject.TryGetComponent(out Navigator _))
+				AddFetchable(pickupable, __instance.Inventory);
 			return false;
 		}
 	}
@@ -318,10 +333,11 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Applied before Update runs.
 		/// </summary>
 		internal static bool Prefix(WorldInventory __instance) {
-			var bwi = __instance.GetComponent<BackgroundWorldInventory>();
 			// Only need to update the pinned resources panel
-			if (bwi != null)
+			if (__instance.TryGetComponent(out BackgroundWorldInventory bwi))
 				bwi.CheckRefresh(ref __instance.hasValidCount);
+			else
+				bwi = null;
 			return bwi == null;
 		}
 	}

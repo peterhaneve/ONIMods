@@ -108,10 +108,10 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <returns>Whether this radbolt was captured by a building with a radbolt port.</returns>
 		private bool CheckBuildingCollision(int cell) {
 			// Check for collision with a building
-			var port = Grid.Objects[cell, (int)ObjectLayer.Building].
-				GetComponentSafe<HighEnergyParticlePort>();
+			var b = Grid.Objects[cell, (int)ObjectLayer.Building];
 			bool captured = false;
-			if (port != null && port.GetHighEnergyParticleInputPortPosition() == cell) {
+			if (b != null && b.TryGetComponent(out HighEnergyParticlePort port) && port.
+					GetHighEnergyParticleInputPortPosition() == cell) {
 				// Not exactly on center but good enough and WAY cheaper
 				if (port.InputActive() && port.AllowCapture(hep)) {
 					hep.Capture(port);
@@ -136,35 +136,45 @@ namespace PeterHan.FastTrack.GamePatches {
 		}
 
 		/// <summary>
+		/// Checks to see if a target item is a creature or Duplicant that is not already dead.
+		/// </summary>
+		/// <param name="item">The item to check.</param>
+		/// <returns>true if the radbolt collided with it, or false otherwise.</returns>
+		private bool CheckLivingCollision(GameObject item) {
+			// Is it a creature/Duplicant and not already dead?
+			bool collided = false;
+			if (item != null && item.TryGetComponent(out KPrefabID prefabID) && prefabID.
+					HasAnyTags(ref COLLIDE_WITH) && !prefabID.HasAnyTags_AssumeLaundered(
+					ref COLLIDE_WITHOUT) && item.TryGetComponent(out Health hp) &&
+					!hp.IsDefeated()) {
+				collided = true;
+				hp.Damage(DAMAGE_ON_HIT);
+				if (prefabID.HasTag(GameTags.Minion)) {
+					var smi = item.GetSMI<WoundMonitor.Instance>();
+					// If the hit was not a KO hit
+					if (smi != null && !hp.IsDefeated())
+						smi.PlayKnockedOverImpactAnimation();
+					// Add germs to them
+					if (item.TryGetComponent(out PrimaryElement pe))
+						pe.AddDisease(diseaseIndex, Mathf.FloorToInt(hep.payload * 50.0f),
+							"HEPImpact");
+					hep.Collide(HighEnergyParticle.CollisionType.Minion);
+				} else
+					hep.Collide(HighEnergyParticle.CollisionType.Creature);
+			}
+			return collided;
+		}
+
+		/// <summary>
 		/// Checks for radbolt collision with a creature or Duplicant.
 		/// </summary>
 		/// <param name="cell">The current cell that this radbolt occupies.</param>
 		private void CheckLivingCollision(int cell) {
-			var entries = Grid.Objects[cell, (int)ObjectLayer.Pickupables].
-				GetComponentSafe<Pickupable>()?.objectLayerListItem;
-			Health hp;
-			while (entries != null) {
-				var item = entries.gameObject;
-				var prefabID = item.GetComponentSafe<KPrefabID>();
-				// Is it a creature/Duplicant and not already dead?
-				if (prefabID != null && prefabID.HasAnyTags(ref COLLIDE_WITH) && !prefabID.
-						HasAnyTags_AssumeLaundered(ref COLLIDE_WITHOUT) && (hp = item.
-						GetComponent<Health>()) != null && !hp.IsDefeated()) {
-					hp.Damage(DAMAGE_ON_HIT);
-					if (prefabID.HasTag(GameTags.Minion)) {
-						var smi = item.GetSMI<WoundMonitor.Instance>();
-						// If the hit was not a KO hit
-						if (smi != null && !hp.IsDefeated())
-							smi.PlayKnockedOverImpactAnimation();
-						// Add germs to them
-						item.GetComponent<PrimaryElement>().AddDisease(diseaseIndex, Mathf.
-							FloorToInt(hep.payload * 50.0f), "HEPImpact");
-						hep.Collide(HighEnergyParticle.CollisionType.Minion);
-					} else
-						hep.Collide(HighEnergyParticle.CollisionType.Creature);
-					break;
-				}
-				entries = entries.nextItem;
+			var obj = Grid.Objects[cell, (int)ObjectLayer.Pickupables];
+			if (obj != null && obj.TryGetComponent(out Pickupable pickupable)) {
+				var entries = pickupable.objectLayerListItem;
+				while (entries != null && !CheckLivingCollision(entries.gameObject))
+					entries = entries.nextItem;
 			}
 		}
 
@@ -299,7 +309,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			diseaseIndex = diseases.GetIndex(diseases.RadiationPoisoning.Id);
 			if (FastTrackOptions.Instance.DisableAchievements == FastTrackOptions.
 					AchievementDisable.Always || AchievementDisablePatches.TrackAchievements())
-				tracker = SaveGame.Instance.GetComponent<ColonyAchievementTracker>();
+				SaveGame.Instance.TryGetComponent(out tracker);
 			else
 				tracker = null;
 			CreatePartitioner(Grid.PosToCell(this));
@@ -332,8 +342,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Applied before MovingUpdate runs.
 		/// </summary>
 		internal static bool Prefix(HighEnergyParticle __instance, float dt) {
-			var fpc = __instance.GetComponent<FastProtonCollider>();
-			bool cont = fpc == null;
+			bool cont = !__instance.TryGetComponent(out FastProtonCollider fpc);
 			if (!cont)
 				fpc.MovingUpdate(dt);
 			else

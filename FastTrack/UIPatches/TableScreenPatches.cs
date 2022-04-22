@@ -41,26 +41,25 @@ namespace PeterHan.FastTrack.UIPatches {
 			foreach (int worldId in ClusterManager.Instance.GetWorldIDsSorted())
 				instance.AddWorldDivider(worldId);
 			// List occupied planets
-			foreach (object obj in Components.MinionAssignablesProxy) {
-				var proxy = (MinionAssignablesProxy)obj;
-				if (proxy != null && (target = proxy.GetTargetGameObject()) != null) {
+			foreach (object obj in Components.MinionAssignablesProxy)
+				if (obj is MinionAssignablesProxy proxy && proxy != null && (target = proxy.
+						GetTargetGameObject()) != null) {
 					var world = target.GetMyWorld();
 					if (world != null && !occupiedWorlds.ContainsKey(id = world.id))
 						occupiedWorlds.Add(id, world);
 				}
-			}
-			foreach (var pair in instance.worldDividers) {
-				var dividerRow = pair.Value.GetComponent<HierarchyReferences>().
-					GetReference("NobodyRow");
-				id = pair.Key;
-				if (occupiedWorlds.TryGetValue(id, out WorldContainer world)) {
-					dividerRow.gameObject.SetActive(false);
-					pair.Value.SetActive(world.IsDiscovered);
-				} else {
-					dividerRow.gameObject.SetActive(true);
-					pair.Value.SetActive(ClusterManager.Instance.GetWorld(id).IsDiscovered);
+			foreach (var pair in instance.worldDividers)
+				if (pair.Value.TryGetComponent(out HierarchyReferences hr)) {
+					var dividerRow = hr.GetReference("NobodyRow");
+					id = pair.Key;
+					if (occupiedWorlds.TryGetValue(id, out WorldContainer world)) {
+						dividerRow.gameObject.SetActive(false);
+						pair.Value.SetActive(world.IsDiscovered);
+					} else {
+						dividerRow.gameObject.SetActive(true);
+						pair.Value.SetActive(ClusterManager.Instance.GetWorld(id).IsDiscovered);
+					}
 				}
-			}
 			occupiedWorlds.Recycle();
 		}
 
@@ -77,7 +76,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			List<TableRow> rows = instance.rows, sortableRows = instance.all_sortable_rows;
 			int n = rows.Count;
 			TableRow defaultRow = null, headerRow = null;
-			var newRows = ListPool<TableRow, TableScreen>.Allocate();
+			var newRows = TableRowList.Allocate();
 			var deadRows = HashSetPool<TableRow, TableScreen>.Allocate();
 			IAssignableIdentity minion;
 			for (int i = 0; i < n; i++) {
@@ -130,7 +129,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static void ConfigureContent(TableRow row, IAssignableIdentity minion,
 				IDictionary<string, TableColumn> columns, TableScreen screen) {
 			bool def = row.isDefault;
-			var scrollers = row.scrollers;
 			var go = row.gameObject;
 			row.minion = minion;
 			ConfigureImage(row, minion);
@@ -152,26 +150,8 @@ namespace PeterHan.FastTrack.UIPatches {
 					column.widgets_by_row.Add(row, widget);
 				}
 				// Update the scroller if needed
-				if (!string.IsNullOrEmpty(id) && column.screen.column_scrollers.Contains(id)) {
-					Transform content;
-					ScrollRect sr;
-					if (scrollers.TryGetValue(id, out GameObject scrollerGO)) {
-						content = scrollerGO.transform;
-						sr = content.parent.GetComponent<ScrollRect>();
-					} else {
-						var prefab = Util.KInstantiateUI(row.scrollerPrefab, go, true);
-						sr = prefab.GetComponent<ScrollRect>();
-						content = sr.content;
-						sr.onValueChanged.AddListener(new ScrollListener(screen, sr).OnScroll);
-						scrollers.Add(id, content.gameObject);
-						// Is it a border?
-						var border = content.parent.Find("Border");
-						if (border != null)
-							row.scrollerBorders.Add(id, border.gameObject);
-					}
-					widget.transform.SetParent(content);
-					sr.horizontalNormalizedPosition = 0.0f;
-				}
+				if (!string.IsNullOrEmpty(id) && column.screen.column_scrollers.Contains(id))
+					ConfigureScroller(row, go, id, widget, screen);
 			}
 			// Run events after the update is complete
 			foreach (var pair in columns) {
@@ -216,9 +196,44 @@ namespace PeterHan.FastTrack.UIPatches {
 				row.style_setting_minion;
 			img.ColorState = KImage.ColorSelector.Inactive;
 			// Dim out Duplicants in rockets
-			var component = row.GetComponent<CanvasGroup>();
-			if (component != null && (minion as StoredMinionIdentity) != null)
+			if (row.TryGetComponent(out CanvasGroup component) && (minion as
+					StoredMinionIdentity) != null)
 				component.alpha = 0.6f;
+		}
+
+		/// <summary>
+		/// Configures the scroll bars for each row.
+		/// </summary>
+		/// <param name="row">The row being configured.</param>
+		/// <param name="parent">The parent game object of the table row.</param>
+		/// <param name="id">The scroller ID to look up.</param>
+		/// <param name="widget">The widget to display in this row.</param>
+		/// <param name="screen">The parent table screen.</param>
+		private static void ConfigureScroller(TableRow row, GameObject parent, string id,
+				GameObject widget, TableScreen screen) {
+			Transform content;
+			ScrollRect sr;
+			var scrollers = row.scrollers;
+			if (scrollers.TryGetValue(id, out GameObject scrollerGO)) {
+				content = scrollerGO.transform;
+				if (content.parent.TryGetComponent(out sr))
+					sr.horizontalNormalizedPosition = 0.0f;
+				widget.transform.SetParent(content);
+			} else {
+				var prefab = Util.KInstantiateUI(row.scrollerPrefab, parent, true);
+				if (prefab.TryGetComponent(out sr)) {
+					content = sr.content;
+					sr.onValueChanged.AddListener(new ScrollListener(screen, sr).
+						OnScroll);
+					scrollers.Add(id, content.gameObject);
+					// Is it a border?
+					var border = content.parent.Find("Border");
+					if (border != null)
+						row.scrollerBorders.Add(id, border.gameObject);
+					sr.horizontalNormalizedPosition = 0.0f;
+					widget.transform.SetParent(content);
+				}
+			}
 		}
 
 		/// <summary>
@@ -229,11 +244,10 @@ namespace PeterHan.FastTrack.UIPatches {
 			yield return null;
 			int n = allRows.Count;
 			GameObject go;
-			LayoutGroup realLayout;
 			for (int i = 0; i < n; i++) {
 				var row = allRows[i];
-				if (row != null && (go = row.gameObject) != null && (realLayout = go.
-						GetComponent<LayoutGroup>()) != null) {
+				if (row != null && (go = row.gameObject) != null && go.TryGetComponent(
+						out LayoutGroup realLayout)) {
 					var fixedLayout = go.AddOrGet<LayoutElement>();
 					fixedLayout.layoutPriority = 100;
 					fixedLayout.CopyFrom(realLayout);
@@ -255,8 +269,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			for (int i = 0; i < n; i++) {
 				var row = rows[i];
 				var owner = row.GetIdentity().GetSoleOwner();
-				if (owner != null && (go = owner.GetComponent<MinionAssignablesProxy>().
-						GetTargetGameObject()) != null) {
+				if (owner != null && owner.TryGetComponent(out MinionAssignablesProxy proxy) &&
+						(go = proxy.GetTargetGameObject()) != null) {
 					int world = go.GetMyWorldId();
 					if (!dupesByWorld.TryGetValue(world, out TableRowList.PooledList dupes))
 						dupesByWorld.Add(world, dupes = TableRowList.Allocate());
@@ -354,11 +368,9 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="row">The game object to thaw.</param>
 		private static void ThawLayout(GameObject row) {
 			if (row != null) {
-				var fixedLayout = row.GetComponent<LayoutElement>();
-				var realLayout = row.GetComponent<LayoutGroup>();
-				if (fixedLayout != null)
+				if (row.TryGetComponent(out LayoutElement fixedLayout))
 					fixedLayout.enabled = false;
-				if (realLayout != null)
+				if (row.TryGetComponent(out LayoutGroup realLayout))
 					realLayout.enabled = true;
 			}
 		}

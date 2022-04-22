@@ -39,6 +39,11 @@ namespace PeterHan.FastTrack.PathPatches {
 		public static AsyncBrainGroupUpdater Instance { get; private set; }
 
 		/// <summary>
+		/// Whether a dangerous but very fast optimization to avoid list copies is used.
+		/// </summary>
+		internal static bool AllowFastListSwap;
+
+		/// <summary>
 		/// Creates the singleton instance.
 		/// </summary>
 		internal static void CreateInstance() {
@@ -99,8 +104,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// </summary>
 		/// <param name="brain">The rover brain to update.</param>
 		internal void AddBrain(CreatureBrain brain) {
-			var nav = brain.GetComponent<Navigator>();
-			if (nav != null)
+			if (brain.TryGetComponent(out Navigator nav))
 				// What PathProberSensor did
 				nav.UpdateProbe(false);
 			brainsToUpdate.Add(new BrainPair(brain, nav));
@@ -167,7 +171,8 @@ namespace PeterHan.FastTrack.PathPatches {
 			int n = brainsToUpdate.Count;
 			if (n > 0) {
 				// Wait out the pickups update
-				bool updated = onFetchComplete.WaitAndMeasure(FastTrackMod.MAX_TIMEOUT, 100);
+				bool updated = onFetchComplete.WaitAndMeasure(FastTrackMod.MAX_TIMEOUT, 100),
+					quickSwap = AllowFastListSwap;
 				if (!updated)
 					PUtil.LogWarning("Fetch updates did not complete within the timeout!");
 				if (fm != null && inst != null && updated) {
@@ -175,15 +180,24 @@ namespace PeterHan.FastTrack.PathPatches {
 					var pickups = fm.pickups;
 					for (int i = 0; i < n; i++) {
 						var entry = updatingPickups[i];
-						// Danger Will Robinson!
-						inst.fetches = entry.fetches;
-						fm.pickups = entry.pickups;
+						if (quickSwap) {
+							// Danger Will Robinson!
+							inst.fetches = entry.fetches;
+							fm.pickups = entry.pickups;
+						} else {
+							fetches.Clear();
+							fetches.AddRange(entry.fetches);
+							pickups.Clear();
+							pickups.AddRange(entry.pickups);
+						}
 						// Calls into Sensors, but Pickupable and PathProber were bypassed
 						entry.brain.UpdateBrain();
 						entry.Cleanup();
 					}
-					fm.pickups = pickups;
-					inst.fetches = fetches;
+					if (quickSwap) {
+						fm.pickups = pickups;
+						inst.fetches = fetches;
+					}
 				} else
 					Cleanup();
 			}

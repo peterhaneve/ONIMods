@@ -47,12 +47,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 				throw new ArgumentNullException(nameof(Game.Instance));
 			DestroyInstance();
 			var go = targetMesh.CreateMeshRenderer("Priority Overlay", LayerMask.NameToLayer(
-				"UI"));
+				"UI"), shader);
 			var t = go.transform;
 			t.SetParent(game.transform);
 			t.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
-			// Set up the mesh with the right material
-			go.GetComponent<MeshRenderer>().material = shader;
 			go.SetActive(false);
 			Instance = go.AddOrGet<PrioritizableMeshRenderer>();
 		}

@@ -38,15 +38,12 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <returns>The visualizer which can render the mesh.</returns>
 		public static KAnimMeshRenderer Create(Mesh mesh, Material shader, int layer, int id) {
 			float z = 0.01f / (1.0f + id % 256);
-			var go = mesh.CreateMeshRenderer("KAnim Mesh: " + id, layer);
+			var go = mesh.CreateMeshRenderer("KAnim Mesh: " + id, layer, shader);
 			var t = go.transform;
 			t.SetPositionAndRotation(new Vector3(0.0f, 0.0f, z), Quaternion.identity);
-			// Set up the mesh with the right material
-			var renderer = go.GetComponent<MeshRenderer>();
-			renderer.material = shader;
 			go.SetActive(false);
 			var kmr = go.AddOrGet<KAnimMeshRenderer>();
-			kmr.renderer = renderer;
+			kmr.renderer = go.GetComponent<MeshRenderer>();
 			kmr.zOffset = z;
 			return kmr;
 		}

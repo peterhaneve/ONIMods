@@ -41,8 +41,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		internal static bool Prefix(Component cmp, ref AttributeConverterInstance __result,
 				AttributeConverter __instance) {
-			FastAttributeConverters fc;
-			if (cmp != null && (fc = cmp.GetComponent<FastAttributeConverters>()) != null)
+			if (cmp != null && cmp.TryGetComponent(out FastAttributeConverters fc))
 				__result = fc.Get(__instance);
 			else
 				__result = null;
@@ -63,8 +62,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		internal static bool Prefix(GameObject go, ref AttributeConverterInstance __result,
 				AttributeConverter __instance) {
-			var fc = go.GetComponentSafe<FastAttributeConverters>();
-			if (fc != null)
+			if (go != null && go.TryGetComponent(out FastAttributeConverters fc))
 				__result = fc.Get(__instance);
 			else
 				__result = null;
@@ -132,8 +130,7 @@ namespace PeterHan.FastTrack.GamePatches {
 					circuitID) < 1.0f) || (!hasBatteries && circuitManager.HasConsumers(
 					circuitID));
 			}
-			var levels = worker.GetComponent<FastAttributeLevels>();
-			if (levels != null)
+			if (worker.TryGetComponent(out FastAttributeLevels levels))
 				levels.AddExperience(Db.Get().Attributes.Athletics.Id, dt, TUNING.
 					DUPLICANTSTATS.ATTRIBUTE_LEVELING.ALL_DAY_EXPERIENCE);
 			__result = !charged;
@@ -155,29 +152,29 @@ namespace PeterHan.FastTrack.GamePatches {
 			float mult = 1f;
 			int cell;
 			var ac = __instance.attributeConverter;
-			if (ac != null) {
+			if (ac != null && worker.TryGetComponent(out FastAttributeConverters fac)) {
 				// Use fast attribute converters where possible
-				var converter = worker.GetComponent<FastAttributeConverters>().GetConverter(
-					ac.Id);
-				mult += converter.Evaluate();
+				var converter = fac.GetConverter(ac.Id);
+				if (converter != null)
+					mult += converter.Evaluate();
 			}
 			if (__instance.lightEfficiencyBonus && Grid.IsValidCell(cell = Grid.PosToCell(
 					worker.transform.position))) {
-				Guid handle = __instance.lightEfficiencyBonusStatusItemHandle;
+				ref Guid handle = ref __instance.lightEfficiencyBonusStatusItemHandle;
 				bool lit;
 				if (Grid.LightIntensity[cell] > 0) {
 					lit = true;
 					mult += TUNING.DUPLICANTSTATS.LIGHT.LIGHT_WORK_EFFICIENCY_BONUS;
-					if (handle == Guid.Empty)
-						__instance.lightEfficiencyBonusStatusItemHandle = worker.
-							GetComponent<KSelectable>().AddStatusItem(Db.Get().
-							DuplicantStatusItems.LightWorkEfficiencyBonus, __instance);
+					if (handle == Guid.Empty && worker.TryGetComponent(out KSelectable ks))
+						handle = ks.AddStatusItem(Db.Get().DuplicantStatusItems.
+							LightWorkEfficiencyBonus, __instance);
 				} else {
+					Guid hv = handle;
 					lit = false;
-					if (handle != Guid.Empty) {
+					if (hv != Guid.Empty && worker.TryGetComponent(out KSelectable ks)) {
 						// Properly zero the Guid to avoid spamming the call later
-						worker.GetComponent<KSelectable>().RemoveStatusItem(handle, false);
-						__instance.lightEfficiencyBonusStatusItemHandle = Guid.Empty;
+						ks.RemoveStatusItem(hv, false);
+						handle = Guid.Empty;
 					}
 				}
 				__instance.currentlyLit = lit;
@@ -203,9 +200,9 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="resume">The worker's total experience resume.</param>
 		private static Workable UpdateExperience(Attribute workAttribute, Worker worker,
 				float dt, MinionResume resume) {
-			var fastLevels = worker.GetComponent<FastAttributeLevels>();
 			var workable = worker.workable;
-			if (fastLevels != null && workAttribute != null && workAttribute.IsTrainable)
+			if (worker.TryGetComponent(out FastAttributeLevels fastLevels) &&
+					workAttribute != null && workAttribute.IsTrainable)
 				// Add experience to attribute like Farming
 				fastLevels.AddExperience(workAttribute.Id, dt, workable.
 					GetAttributeExperienceMultiplier());

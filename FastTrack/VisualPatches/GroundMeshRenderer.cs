@@ -40,12 +40,11 @@ namespace PeterHan.FastTrack.VisualPatches {
 			var game = Game.Instance;
 			if (game == null)
 				throw new ArgumentNullException(nameof(Game.Instance));
-			var go = mesh.CreateMeshRenderer("Solid Tile Mesh", LayerMask.NameToLayer("World"));
+			var go = mesh.CreateMeshRenderer("Solid Tile Mesh", LayerMask.NameToLayer("World"),
+				shader);
 			var t = go.transform;
 			t.SetParent(game.transform);
 			t.SetPositionAndRotation(new Vector3(0.5f, 0.5f, 0.0f), Quaternion.identity);
-			// Set up the mesh with the right material
-			go.GetComponent<MeshRenderer>().material = shader;
 			go.SetActive(false);
 			return go.AddOrGet<GroundMeshRenderer>();
 		}
