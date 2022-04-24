@@ -293,7 +293,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// of checking immediately (where, on load, the result would be invalid).
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			return PPatchTools.ReplaceMethodCall(instructions, typeof(RMI).GetMethodSafe(
+			return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(RMI).GetMethodSafe(
 				nameof(RMI.UpdateReachability), false),
 				typeof(ReachabilityMonitor_Instance_Constructor_Patch).GetMethodSafe(nameof(
 				UpdateReachability), true, typeof(RMI)));

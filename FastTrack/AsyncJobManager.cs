@@ -99,7 +99,7 @@ namespace PeterHan.FastTrack {
 			threads = new WorkerThread[n];
 			workQueue = new Queue<IWork>();
 			for (int i = 0; i < n; i++)
-				threads[i] = new WorkerThread(this, "FastTrackWorker{0}".F(i));
+				threads[i] = new WorkerThread(this, "FastTrackWorker" + i);
 		}
 
 		/// <summary>

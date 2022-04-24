@@ -121,7 +121,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// messages.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			return PPatchTools.ReplaceMethodCall(instructions, typeof(GameScheduler).
+			return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(GameScheduler).
 				GetMethodSafe(nameof(GameScheduler.Schedule), false, typeof(string), typeof(
 				float), typeof(Action<object>), typeof(object), typeof(SchedulerGroup)),
 				typeof(DisableTutorialSchedulerPatch).GetMethodSafe(nameof(DoNotSchedule),

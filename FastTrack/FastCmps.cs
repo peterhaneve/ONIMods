@@ -22,6 +22,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+
+using OldList = System.Collections.IList;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack {
@@ -166,6 +168,115 @@ namespace PeterHan.FastTrack {
 					MethodBase originalMethod, ILGenerator generator) {
 				return TranspilerBase(instructions, originalMethod, generator, "OnAdd",
 					GenerateBody);
+			}
+		}
+
+		/// <summary>
+		/// Applied to Components.Cmps to reduce allocations in GetWorldItems.
+		/// </summary>
+		[HarmonyPatch]
+		internal static class GetWorldItems_Patch {
+			/// <summary>
+			/// The preallocate size to pass to the factory created Lists.
+			/// </summary>
+			private static readonly object[] CONSTRUCTOR_ARGS = new object[] { 32 };
+
+			/// <summary>
+			/// The signature of the constructor to call with preallocate size.
+			/// </summary>
+			private static readonly Type[] CONSTRUCTOR_SIG = new Type[] { typeof(int) };
+
+			/// <summary>
+			/// Stores pooled lists to limit allocations.
+			/// </summary>
+			private static readonly IDictionary<Type, OldList> POOL = new Dictionary<Type,
+				OldList>(64);
+
+			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
+
+			/// <summary>
+			/// Gets a shared list instance that works with the specified container type.
+			/// </summary>
+			/// <param name="container">The container requesting a list.</param>
+			/// <returns>A shared list compatible with that container type.</returns>
+			private static OldList GetList(object container) {
+				var type = container.GetType();
+				var pool = POOL;
+				if (!pool.TryGetValue(type, out OldList list)) {
+					// Due to the Harmony bug, the type that actually is being used has to be
+					// computed at runtime, as opposed to static pooled lists like ListPool
+					var types = type.GenericTypeArguments;
+					var elementType = typeof(KMonoBehaviour);
+					if (types != null && types.Length > 0)
+						elementType = types[0];
+					// Only called once per type, not worth making a delegate
+					var constructor = typeof(List<>).MakeGenericType(elementType).
+						GetConstructor(PPatchTools.BASE_FLAGS | BindingFlags.Instance, null,
+						CONSTRUCTOR_SIG, null);
+					if (constructor != null)
+						list = constructor.Invoke(CONSTRUCTOR_ARGS) as OldList;
+					else
+						list = new List<KMonoBehaviour>();
+#if DEBUG
+					PUtil.LogDebug("Created world items list for type " + type);
+#endif
+					pool.Add(type, list);
+				}
+				list.Clear();
+				return list;
+			}
+
+			/// <summary>
+			/// Target GetWorldItems() on each required type.
+			/// </summary>
+			internal static IEnumerable<MethodBase> TargetMethods() {
+				ComputeTargetTypes();
+				foreach (var type in TYPES_TO_PATCH)
+					yield return typeof(Components.Cmps<>).MakeGenericType(type).GetMethodSafe(
+						nameof(Components.Cmps<MinionIdentity>.GetWorldItems), false,
+						typeof(int), typeof(bool));
+			}
+
+			/// <summary>
+			/// Replace the new list call to get a list from the pool instead. Due to the
+			/// Harmony bug this transpiler has to pretty much always work.
+			/// </summary>
+			internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
+					MethodBase originalMethod) {
+				var containerType = originalMethod.DeclaringType;
+				var replacement = typeof(GetWorldItems_Patch).GetMethodSafe(nameof(
+					GetList), true, typeof(object));
+				ConstructorInfo targetConstructor = null;
+				bool patched = false;
+				// Find the target List<T> constructor to patch
+				if (!containerType.ContainsGenericParameters) {
+					var typeArgs = containerType.GenericTypeArguments;
+					if (typeArgs != null && typeArgs.Length > 0) {
+						var targetType = typeof(List<>).MakeGenericType(typeArgs[0]);
+						targetConstructor = targetType.GetConstructor(PPatchTools.
+							BASE_FLAGS | BindingFlags.Instance, null, Type.EmptyTypes, null);
+					}
+				}
+				if (targetConstructor != null && replacement != null)
+					foreach (var instr in instructions) {
+						if (instr.Is(OpCodes.Newobj, targetConstructor)) {
+							yield return new CodeInstruction(OpCodes.Ldarg_0);
+							instr.opcode = OpCodes.Call;
+							instr.operand = replacement;
+#if DEBUG
+							PUtil.LogDebug("Patched " + containerType + "." + originalMethod.
+								Name);
+#endif
+							patched = true;
+						}
+						yield return instr;
+					}
+				else
+					foreach (var instr in instructions)
+						yield return instr;
+				if (!patched)
+					PUtil.LogWarning("Unable to patch " + containerType + "." +
+						originalMethod.Name);
 			}
 		}
 

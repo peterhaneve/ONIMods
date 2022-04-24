@@ -31,11 +31,11 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// Stores state information about the vitals panel to avoid recalculating so much every
 	/// frame.
 	/// </summary>
-	public sealed class VitalsPanelWrapper {
+	public sealed class VitalsPanelWrapper : IDisposable {
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
-		internal static VitalsPanelWrapper instance;
+		private static VitalsPanelWrapper Instance;
 
 		/// <summary>
 		/// The color used for conditions that are not met. Could not find a const reference
@@ -48,7 +48,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Called at shutdown to avoid leaking references.
 		/// </summary>
 		internal static void Cleanup() {
-			instance = null;
+			Instance?.Dispose();
+			Instance = null;
 		}
 
 		/// <summary>
@@ -56,7 +57,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		internal static void Init() {
 			Cleanup();
-			instance = new VitalsPanelWrapper();
+			Instance = new VitalsPanelWrapper();
 		}
 
 		/// <summary>
@@ -136,6 +137,13 @@ namespace PeterHan.FastTrack.UIPatches {
 		private VitalsPanelWrapper() {
 			amountLookup = new Dictionary<string, AmountInstance>(64);
 			attributeLookup = new Dictionary<string, AttributeInstance>(64);
+			lastSelection = default;
+			panel = default;
+		}
+
+		public void Dispose() {
+			amountLookup.Clear();
+			attributeLookup.Clear();
 			lastSelection = default;
 			panel = default;
 		}
@@ -473,25 +481,25 @@ namespace PeterHan.FastTrack.UIPatches {
 				gameObject.SetActive(false);
 			}
 		}
-	}
-
-	/// <summary>
-	/// Applied to MinionVitalsPanel to rewrite the very slow and memory hungry method that is
-	/// run every frame.
-	/// </summary>
-	[HarmonyPatch(typeof(MinionVitalsPanel), nameof(MinionVitalsPanel.Refresh))]
-	public static class MinionVitalsPanel_Refresh_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
 
 		/// <summary>
-		/// Applied before Refresh runs.
+		/// Applied to MinionVitalsPanel to rewrite the very slow and memory hungry method that is
+		/// run every frame.
 		/// </summary>
-		internal static bool Prefix(MinionVitalsPanel __instance) {
-			var inst = VitalsPanelWrapper.instance;
-			bool run = inst == null;
-			if (!run)
-				inst.Update(__instance);
-			return run;
+		[HarmonyPatch(typeof(MinionVitalsPanel), nameof(MinionVitalsPanel.Refresh))]
+		internal static class Refresh_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
+
+			/// <summary>
+			/// Applied before Refresh runs.
+			/// </summary>
+			internal static bool Prefix(MinionVitalsPanel __instance) {
+				var inst = VitalsPanelWrapper.Instance;
+				bool run = inst == null;
+				if (!run)
+					inst.Update(__instance);
+				return run;
+			}
 		}
 	}
 }

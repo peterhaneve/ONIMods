@@ -183,7 +183,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 					typeof(Quaternion), typeof(Material), typeof(int));
 				var newMethod = instructions;
 				if (drawMesh != null)
-					newMethod = PPatchTools.ReplaceMethodCall(instructions, drawMesh,
+					newMethod = PPatchTools.ReplaceMethodCallSafe(instructions, drawMesh,
 						replacement);
 				else
 					PUtil.LogWarning("Unable to patch ConduitFlowMesh.End");

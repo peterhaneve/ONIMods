@@ -68,7 +68,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// Transpiles OnMouseMove to call through a filter method.
 			/// </summary>
 			internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-				return PPatchTools.ReplaceMethodCall(instructions, typeof(BuildTool).
+				return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(BuildTool).
 					GetMethodSafe(nameof(BuildTool.UpdateVis), false, typeof(Vector3)), typeof(
 					BuildToolPatches).GetMethodSafe(nameof(BuildToolPatches.ShouldUpdateVis),
 					true, typeof(BuildTool), typeof(Vector3)));

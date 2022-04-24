@@ -65,7 +65,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Transpiles TriggerVisualNotification to remove calls to the bouncy coroutine.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			return PPatchTools.ReplaceMethodCall(instructions, typeof(DiagnosticRow).
+			return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(DiagnosticRow).
 				GetMethodSafe(nameof(DiagnosticRow.VisualNotificationRoutine), false),
 				typeof(DiagnosticRow_TriggerVisualNotification_Patch).GetMethodSafe(nameof(
 				NoMoveRoutine), true, typeof(DiagnosticRow)));

@@ -49,6 +49,8 @@ namespace PeterHan.FastTrack.UIPatches {
 
 		private static readonly string[] MASS_LEGEND = new string[5];
 
+		private static string PCT;
+
 		private static string PER_CYCLE;
 
 		private static string PER_SECOND;
@@ -352,6 +354,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			legend[2] = SUFFIXES.ELECTRICAL.MEGAJOULE;
 			// All other cached strings
 			EP = STRINGS.ELEMENTS.ELEMENTPROPERTIES.Format("");
+			PCT = SUFFIXES.PERCENT;
 			PER_CYCLE = SUFFIXES.PERCYCLE;
 			PER_SECOND = SUFFIXES.PERSECOND;
 			UNIT = SUFFIXES.UNIT;

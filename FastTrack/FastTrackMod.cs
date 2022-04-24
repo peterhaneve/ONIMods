@@ -86,11 +86,13 @@ namespace PeterHan.FastTrack {
 			}
 			if (options.AnimOpts)
 				VisualPatches.KAnimLoopOptimizer.CreateInstance();
-			// Localization related
 			if (options.InfoCardOpts)
+				// Localization related
 				UIPatches.FormatStringPatches.Init();
-			if (options.AllocOpts)
+			if (options.AllocOpts) {
+				UIPatches.TrappedDuplicantDiagnostic_CheckTrapped_Patch.Init();
 				UIPatches.DescriptorAllocPatches.Init();
+			}
 		}
 
 		/// <summary>
@@ -202,9 +204,11 @@ namespace PeterHan.FastTrack {
 			PathPatches.AsyncBrainGroupUpdater.DestroyInstance();
 			if (options.AllocOpts) {
 				UIPatches.AdditionalDetailsPanelWrapper.Cleanup();
-				UIPatches.VitalsPanelWrapper.Cleanup();
 				UIPatches.DescriptorAllocPatches.Cleanup();
+				UIPatches.VitalsPanelWrapper.Cleanup();
 			}
+			if (options.MiscOpts)
+				UIPatches.DetailsPanelWrapper.Cleanup();
 			AsyncJobManager.DestroyInstance();
 			if (options.CustomStringFormat)
 				UIPatches.FormatStringPatches.DumpStringFormatterCaches();
@@ -245,15 +249,17 @@ namespace PeterHan.FastTrack {
 			var options = FastTrackOptions.Instance;
 			if (options.AllocOpts) {
 				UIPatches.AdditionalDetailsPanelWrapper.Init();
+				UIPatches.SelectedRecipeQueuePatches.Init();
 				UIPatches.VitalsPanelWrapper.Init();
 			}
-			if (options.PickupOpts)
-				PathPatches.DeferAnimQueueTrigger.CreateInstance();
-			if (options.CachePaths)
-				PathPatches.PathCacher.Init();
-			// Slices updates to Duplicant sensors
 			if (options.AsyncPathProbe)
 				PathPatches.PathProbeJobManager.CreateInstance();
+			if (options.CachePaths)
+				PathPatches.PathCacher.Init();
+			if (options.MiscOpts)
+				UIPatches.DetailsPanelWrapper.Init();
+			if (options.PickupOpts)
+				PathPatches.DeferAnimQueueTrigger.CreateInstance();
 			if (inst != null) {
 				var go = inst.gameObject;
 				go.AddOrGet<AsyncJobManager>();
@@ -318,6 +324,8 @@ namespace PeterHan.FastTrack {
 				PRegistry.PutData("Bugs.StackedLights", true);
 			PRegistry.PutData("Bugs.AnimFree", true);
 			PRegistry.PutData("Bugs.MassStringsReadOnly", true);
+			if (options.MiscOpts)
+				PRegistry.PutData("Bugs.ElementTagInDetailsScreen", true);
 			// This patch is Windows only apparently
 			var target = typeof(Global).GetMethodSafe(nameof(Global.TestDataLocations), false);
 			if (options.MiscOpts && target != null && typeof(Global).GetFieldSafe(

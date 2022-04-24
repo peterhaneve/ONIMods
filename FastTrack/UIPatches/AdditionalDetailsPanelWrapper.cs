@@ -198,7 +198,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		private readonly string uptimeStr;
 
 		private AdditionalDetailsPanelWrapper() {
-			uptimeStr = string.Format(ELEMENTAL.UPTIME.NAME, "    • ",
+			uptimeStr = string.Format(ELEMENTAL.UPTIME.NAME, Constants.TABBULLETSTRING,
 				ELEMENTAL.UPTIME.THIS_CYCLE, "{0}", ELEMENTAL.UPTIME.LAST_CYCLE, "{1}",
 				ELEMENTAL.UPTIME.LAST_X_CYCLES.Replace("{0}", NUM_CYCLES.ToString()), "{2}");
 		}

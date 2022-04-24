@@ -190,7 +190,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 			var newArea = typeof(ConduitFlowVisualizer_RenderMesh_Patch).GetMethodSafe(
 				nameof(GetVisibleArea), true);
 			if (oldArea != null && newArea != null) {
-				result = PPatchTools.ReplaceMethodCall(instructions, oldArea, newArea);
+				result = PPatchTools.ReplaceMethodCallSafe(instructions, oldArea, newArea);
 #if DEBUG
 				PUtil.LogDebug("Patched ConduitFlowVisualizer.RenderMesh");
 #endif

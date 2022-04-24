@@ -56,8 +56,8 @@ namespace PeterHan.FastTrack.ConduitPatches {
 			TranspiledMethod Transpiler(TranspiledMethod instructions) {
 				var remove = typeof(OnNetworksRebuilt).GetMethodSafe(nameof(OnNetworksRebuilt.
 					Invoke), false, PPatchTools.AnyArguments);
-				return (remove == null) ? instructions : PPatchTools.ReplaceMethodCall(
-					instructions, remove, null);
+				return (remove == null) ? instructions : PPatchTools.RemoveMethodCall(
+					instructions, remove);
 			}
 			_ = instance;
 			_ = Transpiler(null);

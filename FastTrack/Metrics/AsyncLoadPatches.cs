@@ -95,18 +95,15 @@ namespace PeterHan.FastTrack.Metrics {
 		/// Warms up the game hash cache. This is run every load for some reason...
 		/// </summary>
 		private static void LoadGameHashes() {
-			foreach (object gh in Enum.GetValues(typeof(GameHashes))) {
+			foreach (object gh in Enum.GetValues(typeof(GameHashes)))
 				if (gh is GameHashes hash)
 					HashCache.Get().Add((int)hash, hash.ToString());
-			}
-			foreach (object uh in Enum.GetValues(typeof(UtilHashes))) {
+			foreach (object uh in Enum.GetValues(typeof(UtilHashes)))
 				if (uh is UtilHashes hash)
 					HashCache.Get().Add((int)hash, hash.ToString());
-			}
-			foreach (object ih in Enum.GetValues(typeof(UIHashes))) {
+			foreach (object ih in Enum.GetValues(typeof(UIHashes)))
 				if (ih is UIHashes hash)
 					HashCache.Get().Add((int)hash, hash.ToString());
-			}
 		}
 
 		/// <summary>
@@ -155,7 +152,7 @@ namespace PeterHan.FastTrack.Metrics {
 			/// Transpiles LoadAnims to start up anim loading in the background.
 			/// </summary>
 			internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-				return PPatchTools.ReplaceMethodCall(instructions, new Dictionary<MethodInfo,
+				return PPatchTools.ReplaceMethodCallSafe(instructions, new Dictionary<MethodInfo,
 						MethodInfo>() {
 					{
 						typeof(KAnimGroupFile).GetMethodSafe(nameof(KAnimGroupFile.LoadAll),
@@ -165,7 +162,7 @@ namespace PeterHan.FastTrack.Metrics {
 					{
 						typeof(KAnimBatchManager).GetMethodSafe(nameof(KAnimBatchManager.
 							CompleteInit), false),
-						null
+						PPatchTools.RemoveCall
 					}
 				});
 			}
@@ -183,7 +180,7 @@ namespace PeterHan.FastTrack.Metrics {
 			/// Transpiles OnPrefabInit to remove slow method calls.
 			/// </summary>
 			internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-				return PPatchTools.ReplaceMethodCall(instructions, typeof(CodexCache).
+				return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(CodexCache).
 					GetMethodSafe(nameof(CodexCache.CodexCacheInit), true),
 					typeof(AsyncLoadPatches).GetMethodSafe(nameof(AsyncLoadCodex), true));
 			}

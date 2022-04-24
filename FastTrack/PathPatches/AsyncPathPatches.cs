@@ -42,7 +42,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			var workItemType = typeof(IWorkItemCollection);
 			var cpuCharge = typeof(PathProbeJobManager).GetMethodSafe(nameof(
 				PathProbeJobManager.SetCPUBudget), true, typeof(ICPULoad));
-			return PPatchTools.ReplaceMethodCall(instructions, new Dictionary<MethodInfo,
+			return PPatchTools.ReplaceMethodCallSafe(instructions, new Dictionary<MethodInfo,
 					MethodInfo> {
 				{
 					typeof(GlobalJobManager).GetMethodSafe(nameof(GlobalJobManager.Run),
@@ -162,7 +162,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// Transpiles GatherEntries to take out a lock before subtracting.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			return PPatchTools.ReplaceMethodCall(instructions, typeof(SceneEntryHash).
+			return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(SceneEntryHash).
 				GetMethodSafe(nameof(SceneEntryHash.ExceptWith), false, typeof(
 				IEnumerable<ScenePartitionerEntry>)), typeof(
 				ScenePartitioner_GatherEntries_Patch).GetMethodSafe(nameof(ExceptWithLocked),
@@ -208,7 +208,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// Transpiles Insert to take out a lock before adding.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			return PPatchTools.ReplaceMethodCall(instructions, new Dictionary<MethodInfo,
+			return PPatchTools.ReplaceMethodCallSafe(instructions, new Dictionary<MethodInfo,
 					MethodInfo>() {
 				{
 					typeof(SceneEntryHash).GetMethodSafe(nameof(SceneEntryHash.Add), false,
@@ -252,7 +252,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// Transpiles Widthdraw (Clay please spelling) to take out a lock before removing.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			return PPatchTools.ReplaceMethodCall(instructions, typeof(SceneEntryHash).
+			return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(SceneEntryHash).
 				GetMethodSafe(nameof(SceneEntryHash.Remove), false, typeof(
 				ScenePartitionerEntry)), typeof(ScenePartitioner_Widthdraw_Patch).
 				GetMethodSafe(nameof(RemoveLocked), true, typeof(SceneEntryHash), typeof(

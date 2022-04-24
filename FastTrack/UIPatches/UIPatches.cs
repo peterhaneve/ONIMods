@@ -26,22 +26,6 @@ using UnityEngine.UI;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.UIPatches {
-	/// Applied to ColonyDiagnosticScreen.DiagnosticRow to suppress SparkChart updates if
-	/// not visible.
-	/// </summary>
-	[HarmonyPatch(typeof(ColonyDiagnosticScreen.DiagnosticRow), nameof(ColonyDiagnosticScreen.
-		DiagnosticRow.Sim4000ms))]
-	public static class DiagnosticRow_Sim4000ms_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
-
-		/// <summary>
-		/// Applied before Sim4000ms runs.
-		/// </summary>
-		internal static bool Prefix(KMonoBehaviour ___sparkLayer) {
-			return ___sparkLayer == null || ___sparkLayer.isActiveAndEnabled;
-		}
-	}
-
 	/// <summary>
 	/// Applied to InterfaceTool to get rid of an expensive raycast for UI elements.
 	/// </summary>

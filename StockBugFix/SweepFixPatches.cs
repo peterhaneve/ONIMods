@@ -174,6 +174,7 @@ namespace PeterHan.StockBugFix {
 		/// Applied to FetchManager.FetchablesByPrefabId to avoid trashing the priority class
 		/// when calculating fetchable priority.
 		/// </summary>
+		[HarmonyPatch]
 		public static class FetchManager_FetchablesByPrefabId_Patch {
 			/// <summary>
 			/// Finds multiple methods to patch.

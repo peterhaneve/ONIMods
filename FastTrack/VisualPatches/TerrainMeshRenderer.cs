@@ -180,9 +180,9 @@ namespace PeterHan.FastTrack.VisualPatches {
 				SetTexture), true, typeof(Material), typeof(string), typeof(Texture));
 			var newMethod = instructions;
 			if (drawMesh != null && target != null && replacement != null)
-				newMethod = PPatchTools.ReplaceMethodCall(instructions,
+				newMethod = PPatchTools.ReplaceMethodCallSafe(instructions,
 					new Dictionary<MethodInfo, MethodInfo>() {
-						{ drawMesh, null }, { target, replacement }
+						{ drawMesh, PPatchTools.RemoveCall }, { target, replacement }
 					});
 			else
 				PUtil.LogWarning("Unable to patch TerrainBG.LateUpdate");

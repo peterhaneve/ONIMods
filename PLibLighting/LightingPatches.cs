@@ -183,7 +183,7 @@ namespace PeterHan.PLib.Lighting {
 				IEnumerable<CodeInstruction> body) {
 			var target = typeof(Light2D).GetPropertySafe<LightShape>(nameof(Light2D.shape),
 				false)?.GetGetMethod(true);
-			return (target == null) ? body : PPatchTools.ReplaceMethodCall(body, target,
+			return (target == null) ? body : PPatchTools.ReplaceMethodCallSafe(body, target,
 				typeof(PLightManager).GetMethodSafe(nameof(PLightManager.LightShapeToRayShape),
 				true, typeof(Light2D)));
 		}

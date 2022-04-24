@@ -45,6 +45,12 @@ namespace PeterHan.PLib.Core {
 		}
 
 		/// <summary>
+		/// A placeholder flag to ReplaceMethodCallSafe to remove the method call.
+		/// </summary>
+		public static readonly MethodInfo RemoveCall = typeof(PPatchTools).GetMethodSafe(
+			nameof(RemoveMethodCallPrivate), true);
+
+		/// <summary>
 		/// Creates a delegate for a private instance method. This delegate is over ten times
 		/// faster than reflection, so useful if called frequently on the same object.
 		/// </summary>
@@ -205,6 +211,60 @@ namespace PeterHan.PLib.Core {
 			if (reflectMethod != null)
 				del = Delegate.CreateDelegate(typeof(T), reflectMethod, false) as T;
 			return del;
+		}
+
+		/// <summary>
+		/// Replaces method calls in a transpiled method.
+		/// </summary>
+		/// <param name="method">The method to patch.</param>
+		/// <param name="translation">A mapping from the old method calls to replace, to the
+		/// new method calls to use instead.</param>
+		/// <returns>A transpiled version of that method that replaces or removes all calls
+		/// to the specified methods.</returns>
+		private static TranspiledMethod DoReplaceMethodCalls(TranspiledMethod method,
+				IDictionary<MethodInfo, MethodInfo> translation) {
+			var remove = RemoveCall;
+			int replaced = 0;
+			foreach (var instruction in method) {
+				var opcode = instruction.opcode;
+				if ((opcode == OpCodes.Call || opcode == OpCodes.Calli || opcode == OpCodes.
+						Callvirt) && instruction.operand is MethodInfo target && translation.
+						TryGetValue(target, out MethodInfo newMethod)) {
+					if (newMethod != null && newMethod != remove) {
+						// Replace with new method
+						instruction.opcode = newMethod.IsStatic ? OpCodes.Call :
+							OpCodes.Callvirt;
+						instruction.operand = newMethod;
+						yield return instruction;
+					} else {
+						// Pop "this" if needed
+						int n = target.GetParameters().Length;
+						if (!target.IsStatic) n++;
+						// Pop the arguments off the stack
+						instruction.opcode = (n == 0) ? OpCodes.Nop : OpCodes.Pop;
+						instruction.operand = null;
+						yield return instruction;
+						for (int i = 0; i < n - 1; i++)
+							yield return new CodeInstruction(OpCodes.Pop);
+					}
+					replaced++;
+				} else
+					yield return instruction;
+			}
+#if DEBUG
+			if (replaced == 0) {
+				if (translation.Count == 1) {
+					// Diagnose the method that could not be replaced
+					var items = new KeyValuePair<MethodInfo, MethodInfo>[1];
+					translation.CopyTo(items, 0);
+					MethodInfo from = items[0].Key, to = items[0].Value;
+					PUtil.LogWarning("No method calls replaced: {0}.{1} to {2}.{3}".F(
+						from.DeclaringType.FullName, from.Name, to.DeclaringType.FullName,
+						to.Name));
+				} else
+					PUtil.LogWarning("No method calls replaced (multiple replacements)");
+			}
+#endif
 		}
 
 		/// <summary>
@@ -701,6 +761,26 @@ namespace PeterHan.PLib.Core {
 		}
 
 		/// <summary>
+		/// Transpiles a method to remove all calls to the specified victim method.
+		/// </summary>
+		/// <param name="method">The method to patch.</param>
+		/// <param name="victim">The old method calls to remove.</param>
+		/// <returns>A transpiled version of that method that removes all calls to method.</returns>
+		/// <exception cref="ArgumentException">If the method being removed had a return value
+		/// (with what would it be replaced?).</exception>
+		public static TranspiledMethod RemoveMethodCall(TranspiledMethod method,
+				MethodInfo victim) {
+			return ReplaceMethodCallSafe(method, new Dictionary<MethodInfo, MethodInfo>() {
+				{ victim, RemoveCall }
+			});
+		}
+
+		/// <summary>
+		/// A placeholder method for signaling call removal. Not actually called.
+		/// </summary>
+		private static void RemoveMethodCallPrivate() { }
+
+		/// <summary>
 		/// Transpiles a method to replace all calls to the specified victim method with
 		/// another method, altering the call type if necessary. The argument types and return
 		/// type must match exactly, including in/out/ref parameters.
@@ -720,9 +800,35 @@ namespace PeterHan.PLib.Core {
 		/// to method.</returns>
 		/// <exception cref="ArgumentException">If the new method's argument types do not
 		/// exactly match the old method's argument types.</exception>
+		[Obsolete("This method is unsafe. Use the RemoveMethodCall or ReplaceMethodCallSafe versions instead.")]
 		public static TranspiledMethod ReplaceMethodCall(TranspiledMethod method,
 				MethodInfo victim, MethodInfo newMethod = null) {
-			return ReplaceMethodCall(method, new Dictionary<MethodInfo, MethodInfo>() {
+			if (newMethod == null)
+				newMethod = RemoveCall;
+			return ReplaceMethodCallSafe(method, new Dictionary<MethodInfo, MethodInfo>() {
+				{ victim, newMethod }
+			});
+		}
+
+		/// <summary>
+		/// Transpiles a method to replace all calls to the specified victim method with
+		/// another method, altering the call type if necessary. The argument types and return
+		/// type must match exactly, including in/out/ref parameters.
+		/// 
+		/// If replacing an instance method call with a static method, the first argument
+		/// will receive the "this" which the old method would have received.
+		/// </summary>
+		/// <param name="method">The method to patch.</param>
+		/// <param name="victim">The old method calls to remove.</param>
+		/// <param name="newMethod">The new method to replace.</param>
+		/// <returns>A transpiled version of that method that replaces all calls to method.</returns>
+		/// <exception cref="ArgumentException">If the new method's argument types do not
+		/// exactly match the old method's argument types.</exception>
+		public static TranspiledMethod ReplaceMethodCallSafe(TranspiledMethod method,
+				MethodInfo victim, MethodInfo newMethod) {
+			if (newMethod == null)
+				throw new ArgumentNullException(nameof(newMethod));
+			return ReplaceMethodCallSafe(method, new Dictionary<MethodInfo, MethodInfo>() {
 				{ victim, newMethod }
 			});
 		}
@@ -741,6 +847,7 @@ namespace PeterHan.PLib.Core {
 		/// to the specified methods.</returns>
 		/// <exception cref="ArgumentException">If any of the new methods' argument types do
 		/// not exactly match the old methods' argument types.</exception>
+		[Obsolete("This method is unsafe. Use ReplaceMethodCallSafe instead.")]
 		public static TranspiledMethod ReplaceMethodCall(TranspiledMethod method,
 				IDictionary<MethodInfo, MethodInfo> translation) {
 			if (method == null)
@@ -748,7 +855,6 @@ namespace PeterHan.PLib.Core {
 			if (translation == null)
 				throw new ArgumentNullException(nameof(translation));
 			// Sanity check arguments
-			int replaced = 0;
 			foreach (var pair in translation) {
 				var victim = pair.Key;
 				var newMethod = pair.Value;
@@ -761,46 +867,47 @@ namespace PeterHan.PLib.Core {
 					throw new ArgumentException("Cannot remove method {0} with a return value".
 						F(victim.Name));
 			}
-			foreach (var instruction in method) {
-				var opcode = instruction.opcode;
-				if ((opcode == OpCodes.Call || opcode == OpCodes.Calli || opcode == OpCodes.
-						Callvirt) && instruction.operand is MethodInfo target && translation.
-						TryGetValue(target, out MethodInfo newMethod)) {
-					if (newMethod != null) {
-						// Replace with new method
-						instruction.opcode = newMethod.IsStatic ? OpCodes.Call :
-							OpCodes.Callvirt;
-						instruction.operand = newMethod;
-						yield return instruction;
-					} else {
-						// Pop "this" if needed
-						int n = target.GetParameters().Length;
-						if (!target.IsStatic) n++;
-						// Pop the arguments off the stack
-						instruction.opcode = (n == 0) ? OpCodes.Nop : OpCodes.Pop;
-						instruction.operand = null;
-						yield return instruction;
-						for (int i = 0; i < n - 1; i++)
-							yield return new CodeInstruction(OpCodes.Pop);
-					}
-					replaced++;
+			return DoReplaceMethodCalls(method, translation);
+		}
+
+		/// <summary>
+		/// Transpiles a method to replace calls to the specified victim methods with
+		/// replacement methods, altering the call type if necessary.
+		/// 
+		/// Each key to value pair must meet the criteria defined in
+		/// ReplaceMethodCallSafe(TranspiledMethod, MethodInfo, MethodInfo).
+		/// </summary>
+		/// <param name="method">The method to patch.</param>
+		/// <param name="translation">A mapping from the old method calls to replace, to the
+		/// new method calls to use instead.</param>
+		/// <returns>A transpiled version of that method that replaces or removes all calls
+		/// to the specified methods.</returns>
+		/// <exception cref="ArgumentException">If any of the new methods' argument types do
+		/// not exactly match the old methods' argument types.</exception>
+		public static TranspiledMethod ReplaceMethodCallSafe(TranspiledMethod method,
+				IDictionary<MethodInfo, MethodInfo> translation) {
+			if (method == null)
+				throw new ArgumentNullException(nameof(method));
+			if (translation == null)
+				throw new ArgumentNullException(nameof(translation));
+			// Sanity check arguments
+			var remove = RemoveCall;
+			foreach (var pair in translation) {
+				var victim = pair.Key;
+				var newMethod = pair.Value;
+				if (victim == null)
+					throw new ArgumentNullException(nameof(victim));
+				if (newMethod == null)
+					throw new ArgumentNullException(nameof(newMethod));
+				if (newMethod == remove) {
+					if (victim.ReturnType != typeof(void))
+						throw new ArgumentException("Cannot remove method {0} with a return value".
+							F(victim.Name));
 				} else
-					yield return instruction;
+					PTranspilerTools.CompareMethodParams(victim, victim.GetParameterTypes(),
+						newMethod);
 			}
-#if DEBUG
-			if (replaced == 0) {
-				if (translation.Count == 1) {
-					// Diagnose the method that could not be replaced
-					var items = new KeyValuePair<MethodInfo, MethodInfo>[1];
-					translation.CopyTo(items, 0);
-					MethodInfo from = items[0].Key, to = items[0].Value;
-					PUtil.LogWarning("No method calls replaced: {0}.{1} to {2}.{3}".F(
-						from.DeclaringType.FullName, from.Name, to.DeclaringType.FullName,
-						to.Name));
-				} else
-					PUtil.LogWarning("No method calls replaced (multiple replacements)");
-			}
-#endif
+			return DoReplaceMethodCalls(method, translation);
 		}
 
 		/// <summary>

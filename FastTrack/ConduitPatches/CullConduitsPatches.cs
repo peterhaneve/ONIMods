@@ -364,7 +364,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// This works around a Harmony bug where the wrong generic methods were being patched.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			return PPatchTools.ReplaceMethodCall(instructions, typeof(OverlayModes.Mode).
+			return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(OverlayModes.Mode).
 				GetMethod(nameof(OverlayModes.Mode.AddTargetIfVisible), PPatchTools.
 				BASE_FLAGS | BindingFlags.Instance)?.MakeGenericMethod(typeof(SaveLoadRoot)),
 				typeof(OverlayModes_Modes_Patch).GetMethodSafe(nameof(AddTargetIfVisible),

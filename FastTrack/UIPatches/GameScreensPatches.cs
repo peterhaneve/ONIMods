@@ -153,23 +153,23 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Transpiles the target methods to remove a bunch of method calls.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			return PPatchTools.ReplaceMethodCall(instructions,
+			return PPatchTools.ReplaceMethodCallSafe(instructions,
 				new Dictionary<MethodInfo, MethodInfo>() {
 					{
 						typeof(KMod.Manager).GetMethodSafe(nameof(KMod.Manager.Load), false,
-							typeof(KMod.Content)), null
+							typeof(KMod.Content)), PPatchTools.RemoveCall
 					},
 					{
 						typeof(ProcGen.SettingsCache).GetMethodSafe(nameof(ProcGen.
-							SettingsCache.Clear), true), null
+							SettingsCache.Clear), true), PPatchTools.RemoveCall
 					},
 					{
 						typeof(ProcGenGame.WorldGen).GetMethodSafe(nameof(ProcGenGame.WorldGen.
-							LoadSettings), true), null
+							LoadSettings), true), PPatchTools.RemoveCall
 					},
 					{
 						typeof(KMod.Manager).GetMethodSafe(nameof(KMod.Manager.Report), false,
-							typeof(GameObject)), null
+							typeof(GameObject)), PPatchTools.RemoveCall
 					}
 				});
 		}

@@ -105,7 +105,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// Transpiles AddToSim to make it never spawn the sound.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			return PPatchTools.ReplaceMethodCall(instructions, MAYBE_AUDIBLE, NEVER_AUDIBLE);
+			return PPatchTools.ReplaceMethodCallSafe(instructions, MAYBE_AUDIBLE,
+				NEVER_AUDIBLE);
 		}
 	}
 

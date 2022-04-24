@@ -122,6 +122,97 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 		}
 
+		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedHeatEnergy))]
+		internal static class GetFormattedHeatEnergy_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
+
+			/// <summary>
+			/// Applied before GetFormattedHeatEnergy runs.
+			/// </summary>
+			internal static bool Prefix(float dtu, GameUtil.HeatEnergyFormatterUnit unit,
+					ref string __result) {
+				var text = CACHED_BUILDER;
+				text.Clear();
+				switch (unit) {
+				case GameUtil.HeatEnergyFormatterUnit.DTU_S:
+					dtu.ToRyuHardString(text, 0);
+					text.Append(SUFFIXES.HEAT.DTU);
+					break;
+				case GameUtil.HeatEnergyFormatterUnit.KDTU_S:
+					(dtu * 0.001f).ToRyuSoftString(text, 2);
+					text.Append(SUFFIXES.HEAT.KDTU);
+					break;
+				default:
+					if (Mathf.Abs(dtu) > 1000.0f) {
+						(dtu * 0.001f).ToRyuSoftString(text, 2);
+						text.Append(SUFFIXES.HEAT.KDTU);
+					} else {
+						dtu.ToRyuHardString(text, 0);
+						text.Append(SUFFIXES.HEAT.DTU);
+					}
+					break;
+				}
+				__result = text.ToString();
+				return false;
+			}
+		}
+
+		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedHeatEnergyRate))]
+		internal static class GetFormattedHeatEnergyRate_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
+
+			/// <summary>
+			/// Applied before GetFormattedHeatEnergyRate runs.
+			/// </summary>
+			internal static bool Prefix(float dtu_s, GameUtil.HeatEnergyFormatterUnit unit,
+					ref string __result) {
+				var text = CACHED_BUILDER;
+				string unitText;
+				text.Clear();
+				switch (unit) {
+				case GameUtil.HeatEnergyFormatterUnit.DTU_S:
+					unitText = SUFFIXES.HEAT.DTU_S;
+					break;
+				case GameUtil.HeatEnergyFormatterUnit.KDTU_S:
+					unitText = SUFFIXES.HEAT.KDTU_S;
+					break;
+				default:
+					if (Mathf.Abs(dtu_s) > 1000.0f) {
+						dtu_s *= 0.001f;
+						unitText = SUFFIXES.HEAT.KDTU_S;
+					} else
+						unitText = SUFFIXES.HEAT.DTU_S;
+					break;
+				}
+				dtu_s.ToRyuSoftString(text, 2);
+				__result = text.Append(unitText).ToString();
+				return false;
+			}
+		}
+
+		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedHighEnergyParticles))]
+		internal static class GetFormattedHighEnergyParticles_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
+
+			/// <summary>
+			/// Applied before GetFormattedHighEnergyParticles runs.
+			/// </summary>
+			internal static bool Prefix(float units, TimeSlice timeSlice, bool displayUnits,
+					ref string __result) {
+				var text = CACHED_BUILDER;
+				text.Clear();
+				if (!text.AppendIfInfinite(units))
+					GameUtil.ApplyTimeSlice(units, timeSlice).ToRyuSoftString(text, 1);
+				if (displayUnits)
+					// That is not how particle is spelled
+					text.Append(Mathf.Approximately(units, 1.0f) ? SUFFIXES.
+						HIGHENERGYPARTICLES.PARTRICLE : SUFFIXES.
+						HIGHENERGYPARTICLES.PARTRICLES);
+				__result = text.AppendTimeSlice(timeSlice).ToString();
+				return false;
+			}
+		}
+
 		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedInt))]
 		internal static class GetFormattedInt_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
@@ -132,10 +223,9 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(float num, TimeSlice timeSlice, ref string __result) {
 				var text = CACHED_BUILDER;
 				text.Clear();
-				num = GameUtil.ApplyTimeSlice(num, timeSlice);
 				if (!text.AppendIfInfinite(num))
-					RyuFormat.ToString(text, (double)num, 0, RyuFormatOptions.FixedMode |
-						RyuFormatOptions.ThousandsSeparators);
+					RyuFormat.ToString(text, (double)GameUtil.ApplyTimeSlice(num, timeSlice),
+						0, RyuFormatOptions.FixedMode | RyuFormatOptions.ThousandsSeparators);
 				__result = text.AppendTimeSlice(timeSlice).ToString();
 				return false;
 			}
@@ -156,9 +246,9 @@ namespace PeterHan.FastTrack.UIPatches {
 						Automatic, true);
 				else {
 					var legend = JOULE_LEGEND;
-					float absJ = Mathf.Abs(joules);
-					text.Clear();
 					joules = GameUtil.ApplyTimeSlice(joules, timeSlice);
+					text.Clear();
+					float absJ = Mathf.Abs(joules);
 					if (text.AppendIfInfinite(joules))
 						text.Append(legend[0]);
 					else if (absJ > 1000000.0f) {
@@ -249,20 +339,20 @@ namespace PeterHan.FastTrack.UIPatches {
 						else
 							suffix = SUFFIXES.MASS.POUND;
 					}
-					var sb = CACHED_BUILDER;
-					sb.Clear();
+					var text = CACHED_BUILDER;
+					text.Clear();
 					// Hardcodes for the most common cases in ONI
 					if (floatFormat == "{0:0.#}")
-						mass.ToRyuSoftString(sb, 1);
+						mass.ToRyuSoftString(text, 1);
 					else if (floatFormat == "{0:0.##}")
-						mass.ToRyuSoftString(sb, 2);
+						mass.ToRyuSoftString(text, 2);
 					else if (floatFormat == "{0:0.###}")
-						mass.ToRyuSoftString(sb, 3);
+						mass.ToRyuSoftString(text, 3);
 					else
-						sb.AppendFormat(floatFormat, mass);
+						text.AppendFormat(floatFormat, mass);
 					if (includeSuffix)
-						sb.Append(suffix).AppendTimeSlice(timeSlice);
-					__result = sb.ToString();
+						text.Append(suffix).AppendTimeSlice(timeSlice);
+					__result = text.ToString();
 				}
 				return false;
 			}
@@ -291,9 +381,83 @@ namespace PeterHan.FastTrack.UIPatches {
 						precision = 0;
 					percent.ToRyuSoftString(text, precision);
 				}
-				text.Append(SUFFIXES.PERCENT);
+				text.Append(PCT);
 				text.AppendTimeSlice(timeSlice);
 				__result = text.ToString();
+				return false;
+			}
+		}
+
+		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedPlantGrowth))]
+		internal static class GetFormattedPlantGrowth_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
+
+			/// <summary>
+			/// Applied before GetFormattedPlantGrowth runs.
+			/// </summary>
+			internal static bool Prefix(float percent, TimeSlice timeSlice,
+					ref string __result) {
+				float absP = Mathf.Abs(percent);
+				int precision;
+				var text = CACHED_BUILDER;
+				text.Clear();
+				if (!text.AppendIfInfinite(percent)) {
+					percent = GameUtil.ApplyTimeSlice(percent, timeSlice);
+					if (absP < 0.1f)
+						precision = 2;
+					else if (absP < 1.0f)
+						precision = 1;
+					else
+						precision = 0;
+					percent.ToRyuSoftString(text, precision);
+				}
+				__result = text.Append(PCT).Append(' ').Append(SUFFIXES.GROWTH).
+					AppendTimeSlice(timeSlice).ToString();
+				return false;
+			}
+		}
+
+		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedRocketRange))]
+		internal static class GetFormattedRocketRange_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
+
+			/// <summary>
+			/// Applied before GetFormattedRocketRange runs.
+			/// </summary>
+			internal static bool Prefix(float range, TimeSlice timeSlice, bool displaySuffix,
+					ref string __result) {
+				var text = CACHED_BUILDER;
+				text.Clear();
+				if (timeSlice == TimeSlice.PerCycle) {
+					// Range cannot be over 999 tiles right now ;)
+					range.ToRyuHardString(text, 1);
+					if (displaySuffix)
+						text.Append(' ').Append(STRINGS.UI.CLUSTERMAP.TILES_PER_CYCLE);
+					__result = text.ToString();
+				} else {
+					(range / 600.0f).ToRyuHardString(text, 0);
+					if (displaySuffix)
+						text.Append(' ').Append(STRINGS.UI.CLUSTERMAP.TILES);
+					__result = text.ToString();
+				}
+				return false;
+			}
+		}
+
+		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedRads))]
+		internal static class GetFormattedRads_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
+
+			/// <summary>
+			/// Applied before GetFormattedRads runs.
+			/// </summary>
+			internal static bool Prefix(float rads, TimeSlice timeSlice, ref string __result) {
+				var text = CACHED_BUILDER;
+				text.Clear();
+				if (!text.AppendIfInfinite(rads))
+					GameUtil.ApplyTimeSlice(rads, timeSlice).ToStandardString(text);
+				text.Append(SUFFIXES.RADIATION.RADS);
+				__result = text.AppendTimeSlice(timeSlice).ToString();
 				return false;
 			}
 		}

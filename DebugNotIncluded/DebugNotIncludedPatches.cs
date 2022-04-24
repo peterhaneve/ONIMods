@@ -429,7 +429,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// Transpiles Subscribe to remove all debug log calls.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-			return PPatchTools.ReplaceMethodCall(method, typeof(Debug).GetMethodSafe(nameof(
+			return PPatchTools.RemoveMethodCall(method, typeof(Debug).GetMethodSafe(nameof(
 				Debug.LogFormat), true, typeof(string), typeof(object[])));
 		}
 	}
@@ -456,7 +456,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// Transpiles GetMostSuitableArchive to remove all debug log calls.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-			return PPatchTools.ReplaceMethodCall(method, typeof(Mod).GetMethodSafe(nameof(
+			return PPatchTools.RemoveMethodCall(method, typeof(Mod).GetMethodSafe(nameof(
 				Mod.ModDevLog), false, typeof(string)));
 		}
 	}
@@ -580,19 +580,20 @@ namespace PeterHan.DebugNotIncluded {
 	[HarmonyPatch(typeof(SaveLoader), "OnSpawn")]
 	public static class SaveLoader_OnSpawn_Patch {
 		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-			return PPatchTools.ReplaceMethodCall(method, new Dictionary<MethodInfo,
+			return PPatchTools.ReplaceMethodCallSafe(method, new Dictionary<MethodInfo,
 				MethodInfo>() {
 				{
 					typeof(Sim).GetMethodSafe(nameof(Sim.SIM_Initialize), true,
-						PPatchTools.AnyArguments), null
+						PPatchTools.AnyArguments), PPatchTools.RemoveCall
 				},
 				{
 					typeof(SimMessages).GetMethodSafe(nameof(SimMessages.
-						CreateSimElementsTable), true, PPatchTools.AnyArguments), null
+						CreateSimElementsTable), true, PPatchTools.AnyArguments),
+					PPatchTools.RemoveCall
 				},
 				{
-					typeof(SimMessages).GetMethodSafe(nameof(SimMessages.
-						CreateDiseaseTable), true, PPatchTools.AnyArguments), null
+					typeof(SimMessages).GetMethodSafe(nameof(SimMessages.CreateDiseaseTable),
+						true, PPatchTools.AnyArguments), PPatchTools.RemoveCall
 				}
 			});
 		}

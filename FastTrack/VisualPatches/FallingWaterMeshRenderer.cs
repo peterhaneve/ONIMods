@@ -119,7 +119,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 				typeof(int), typeof(Camera), typeof(int), typeof(MaterialPropertyBlock));
 			var newMethod = instructions;
 			if (drawMesh != null)
-				newMethod = PPatchTools.ReplaceMethodCall(instructions, drawMesh, null);
+				newMethod = PPatchTools.RemoveMethodCall(instructions, drawMesh);
 			else
 				PUtil.LogWarning("Unable to patch FallingWater.Render");
 			foreach (var instr in newMethod)

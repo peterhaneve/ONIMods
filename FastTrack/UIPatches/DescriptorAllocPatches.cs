@@ -134,7 +134,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="simpleScreen">Whether the descriptors are to be shown in the
 		/// simplified info screen.</param>
 		/// <param name="descriptors">The location where the descriptors will be added.</param>
-		private static void GetAllDescriptors(this GameObject go, bool simpleScreen,
+		internal static void GetAllDescriptors(GameObject go, bool simpleScreen,
 				ICollection<Descriptor> descriptors) {
 			var comps = ListPool<IGameObjectEffectDescriptor, DescriptorSorter>.Allocate();
 			go.GetComponents(comps);
@@ -157,7 +157,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="element">The element to describe.</param>
 		/// <param name="descriptors">The location where the descriptors will be stored.</param>
-		private static void GetMaterialDescriptors(this IList<AttributeModifier> modifiers,
+		internal static void GetMaterialDescriptors(IList<AttributeModifier> modifiers,
 				IList<Descriptor> descriptors) {
 			if (modifiers != null && modifiers.Count > 0) {
 				int n = modifiers.Count;
@@ -251,7 +251,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="desc">The descriptor to show.</param>
 		/// <returns>Whether it belongs in the Effects section.</returns>
-		private static bool IsEffectDescriptor(this Descriptor desc) {
+		internal static bool IsEffectDescriptor(this Descriptor desc) {
 			var dt = desc.type;
 			return dt == Descriptor.DescriptorType.Effect || dt == Descriptor.DescriptorType.
 				DiseaseSource;
@@ -271,7 +271,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					ref List<Descriptor> __result) {
 				var descriptors = ALL_DESCRIPTORS;
 				descriptors.Clear();
-				go.GetAllDescriptors(simpleInfoScreen, descriptors);
+				GetAllDescriptors(go, simpleInfoScreen, descriptors);
 				__result = descriptors;
 				return false;
 			}
@@ -359,7 +359,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				descriptors.Clear();
 				if (element == null)
 					throw new ArgumentNullException(nameof(element));
-				element.attributeModifiers.GetMaterialDescriptors(descriptors);
+				GetMaterialDescriptors(element.attributeModifiers, descriptors);
 				element.GetSignificantMaterialPropertyDescriptors(descriptors);
 				__result = descriptors;
 				return false;
@@ -383,11 +383,11 @@ namespace PeterHan.FastTrack.UIPatches {
 				descriptors.Clear();
 				if (element != null) {
 					// If element is defined
-					element.attributeModifiers.GetMaterialDescriptors(descriptors);
+					GetMaterialDescriptors(element.attributeModifiers, descriptors);
 					element.GetSignificantMaterialPropertyDescriptors(descriptors);
 				} else if ((prefabGO = Assets.TryGetPrefab(tag)) != null && prefabGO.
 						TryGetComponent(out PrefabAttributeModifiers prefabMods))
-					prefabMods.descriptors.GetMaterialDescriptors(descriptors);
+					GetMaterialDescriptors(prefabMods.descriptors, descriptors);
 				__result = descriptors;
 				return false;
 			}
@@ -411,9 +411,9 @@ namespace PeterHan.FastTrack.UIPatches {
 				var buildAttributes = Db.Get().BuildingAttributes;
 				for (int i = 0; i < n; i++) {
 					var modifier = modifiers[i];
-					text.Append("\n    • ").AppendFormat(STRINGS.DUPLICANTS.MODIFIERS.
-						MODIFIER_FORMAT, buildAttributes.Get(modifier.AttributeId).Name,
-						modifier.GetFormattedString());
+					text.AppendLine().Append(Constants.TABBULLETSTRING).AppendFormat(
+						STRINGS.DUPLICANTS.MODIFIERS.MODIFIER_FORMAT, buildAttributes.Get(
+						modifier.AttributeId).Name, modifier.GetFormattedString());
 				}
 			}
 
@@ -435,8 +435,8 @@ namespace PeterHan.FastTrack.UIPatches {
 						int n = descriptors.Count;
 						text.AppendLine();
 						for (int i = 0; i < n; i++)
-							text.Append("    • ").Append(Util.StripTextFormatting(
-								descriptors[i].text)).AppendLine();
+							text.Append(Constants.TABBULLETSTRING).Append(Util.
+								StripTextFormatting(descriptors[i].text)).AppendLine();
 					}
 				} else if ((prefabGO = Assets.TryGetPrefab(tag)) != null && prefabGO.
 						TryGetComponent(out PrefabAttributeModifiers prefabMods))
@@ -463,7 +463,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					var allDescriptors = ALL_DESCRIPTORS;
 					bool added = false;
 					allDescriptors.Clear();
-					go.GetAllDescriptors(false, allDescriptors);
+					GetAllDescriptors(go, false, allDescriptors);
 					int n = allDescriptors.Count;
 					for (int i = 0; i < n; i++) {
 						var descriptor = allDescriptors[i];
@@ -498,7 +498,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				bool added = false;
 				descriptors.Clear();
 				allDescriptors.Clear();
-				go.GetAllDescriptors(false, allDescriptors);
+				GetAllDescriptors(go, false, allDescriptors);
 				int n = allDescriptors.Count;
 				for (int i = 0; i < n; i++) {
 					var descriptor = allDescriptors[i];
@@ -532,7 +532,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				bool added = false;
 				descriptors.Clear();
 				allDescriptors.Clear();
-				go.GetAllDescriptors(false, allDescriptors);
+				GetAllDescriptors(go, false, allDescriptors);
 				int n = allDescriptors.Count;
 				for (int i = 0; i < n; i++) {
 					var descriptor = allDescriptors[i];

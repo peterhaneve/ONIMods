@@ -62,7 +62,7 @@ namespace PeterHan.PLib.Core {
 				IEnumerable<CodeInstruction> body) {
 			var target = typeof(Debug).GetMethodSafe(nameof(Debug.LogFormat), true,
 				typeof(string), typeof(object[]));
-			return (target == null) ? body : PPatchTools.ReplaceMethodCall(body, target);
+			return (target == null) ? body : PPatchTools.RemoveMethodCall(body, target);
 		}
 
 		public override Version Version => VERSION;

@@ -154,9 +154,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 			var newMethod = instructions;
 			// Assigning triangles automatically recalculates bounds!
 			if (drawMesh != null && recalculateBounds != null)
-				newMethod = PPatchTools.ReplaceMethodCall(instructions,
+				newMethod = PPatchTools.ReplaceMethodCallSafe(instructions,
 					new Dictionary<MethodInfo, MethodInfo> {
-						{ drawMesh, null }, { recalculateBounds, null }
+						{ drawMesh, PPatchTools.RemoveCall },
+						{ recalculateBounds, PPatchTools.RemoveCall }
 					});
 			else
 				PUtil.LogWarning("Unable to patch PrioritizableRenderer.RenderEveryTick");
