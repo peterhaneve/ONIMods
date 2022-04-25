@@ -333,8 +333,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Initializes references that only change when the selected target is different.
 		/// </summary>
 		/// <param name="sis">The parent info screen.</param>
-		/// <param name="target">The selected target object.</param>
-		private void InitInstance(SimpleInfoScreen sis, GameObject target) {
+		private void InitInstance(SimpleInfoScreen sis) {
 			CollapsibleDetailContentPanel panel;
 			if (storageParent == null && sis.StoragePanel.TryGetComponent(out storageParent)) {
 				if (sis.stressPanel.TryGetComponent(out panel))
@@ -344,12 +343,6 @@ namespace PeterHan.FastTrack.UIPatches {
 			if (conditionParent == null && sis.processConditionContainer.TryGetComponent(
 					out panel))
 				conditionParent = panel.Content.gameObject;
-			storageParent.HeaderLabel.text = (lastSelection.identity != null) ? DETAILTABS.
-				DETAILS.GROUPNAME_MINION_CONTENTS : DETAILTABS.DETAILS.GROUPNAME_CONTENTS;
-			if (lastSelection.fertility == null)
-				sis.fertilityPanel.gameObject.SetActive(false);
-			SetPanels(sis, target);
-			sis.SetStamps(target);
 		}
 
 		/// <summary>
@@ -393,8 +386,16 @@ namespace PeterHan.FastTrack.UIPatches {
 			// OnSelectTarget gets called before the first Init, so the UI is not ready then
 			if (sis.lastTarget != target || force) {
 				sis.lastTarget = target;
-				if (target != null)
-					InitInstance(sis, target);
+				if (target != null) {
+					InitInstance(sis);
+					storageParent.HeaderLabel.text = (lastSelection.identity != null) ?
+						DETAILTABS.DETAILS.GROUPNAME_MINION_CONTENTS :
+						DETAILTABS.DETAILS.GROUPNAME_CONTENTS;
+					if (lastSelection.fertility == null)
+						sis.fertilityPanel.gameObject.SetActive(false);
+					SetPanels(sis, target);
+					sis.SetStamps(target);
+				}
 			}
 			if (target != null) {
 				if (now - lastUpdate > UPDATE_RATE || force) {
@@ -548,7 +549,8 @@ namespace PeterHan.FastTrack.UIPatches {
 					}
 				}
 				if (total == 0)
-					GetStorageLabel(sis, parent, CachedStorageLabel.EMPTY_ITEM);
+					storageLabels.Add(GetStorageLabel(sis, parent, CachedStorageLabel.
+						EMPTY_ITEM));
 				// Only turn off the things that are gone
 				setInactive.ExceptWith(storageLabels);
 				foreach (var inactive in setInactive)
@@ -824,7 +826,11 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// Applied before RefreshStorage runs.
 			/// </summary>
 			internal static bool Prefix(SimpleInfoScreen __instance) {
-				instance?.RefreshStorage(__instance);
+				var inst = instance;
+				if (inst != null && __instance.selectedTarget != null) {
+					inst.InitInstance(__instance);
+					inst.RefreshStorage(__instance);
+				}
 				return false;
 			}
 		}

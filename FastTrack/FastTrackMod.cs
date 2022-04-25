@@ -39,7 +39,6 @@ namespace PeterHan.FastTrack {
 			//harmony.Profile(typeof(KBatchedAnimUpdater), nameof(KBatchedAnimUpdater.UpdateRegisteredAnims));
 			harmony.Profile(typeof(Game), nameof(Game.UnsafeSim200ms));
 			harmony.Profile(typeof(ConduitFlow), nameof(ConduitFlow.Sim200ms));
-			harmony.Profile(typeof(PlantElementAbsorbers), nameof(PlantElementAbsorbers.Sim200ms));
 			harmony.Profile(typeof(EnergySim), nameof(EnergySim.EnergySim200ms));
 			harmony.Profile(typeof(CircuitManager), nameof(CircuitManager.Sim200msLast));
 		}
