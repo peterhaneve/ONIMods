@@ -213,10 +213,9 @@ namespace PeterHan.FastTrack.UIPatches {
 				bool displayUnits = true, bool roundOff = false) {
 			if (interpretation == GameUtil.TemperatureInterpretation.Absolute)
 				temperature = GameUtil.GetConvertedTemperature(temperature, roundOff);
-			else
-				temperature = GetConvertedTemperatureDelta(temperature);
+			else if (GameUtil.temperatureUnit == GameUtil.TemperatureUnit.Fahrenheit)
+				temperature *= 1.8f;
 			temperature = GameUtil.ApplyTimeSlice(temperature, timeSlice);
-			// Handle inf - rare code path, so no precaching
 			if (!text.AppendIfInfinite(temperature))
 				temperature.ToRyuSoftString(text, Mathf.Abs(temperature) < 0.1f ? 4 : 1);
 			if (displayUnits)
@@ -266,17 +265,11 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
-		/// Converts the temperature difference from Kelvin to the current display unit.
+		/// Gets a string describing the element's difficulty to dig.
 		/// </summary>
-		/// <param name="dt">The change in temperature.</param>
-		/// <returns>The change in temperature to display.</returns>
-		private static float GetConvertedTemperatureDelta(float dt) {
-			float dtConv = dt;
-			if (GameUtil.temperatureUnit == GameUtil.TemperatureUnit.Fahrenheit)
-				dtConv = dt * 1.8f;
-			return dtConv;
-		}
-
+		/// <param name="element">The element to display.</param>
+		/// <param name="addColor">Whether the color should be added to the displayed hardness.</param>
+		/// <returns>A tooltip describing the difficulty to dig.</returns>
 		private static string GetHardnessString(Element element, bool addColor) {
 			string text;
 			if (element.IsSolid) {
@@ -473,110 +466,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
-		/// Applied to Element to thoroughly reduce the memory consumption of the generated
-		/// description.
-		/// </summary>
-		[HarmonyPatch(typeof(Element), nameof(Element.FullDescription))]
-		internal static class FullDescription_Patch {
-			/// <summary>
-			/// Avoid reallocating a new StringBuilder every call.
-			/// </summary>
-			private static readonly StringBuilder OUTER_BUILDER = new StringBuilder(256);
-
-			private static readonly StringBuilder PART_BUILDER = new StringBuilder(64);
-
-			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
-
-			/// <summary>
-			/// Applied before FullDescription runs.
-			/// </summary>
-			internal static bool Prefix(Element __instance, bool addHardnessColor,
-					ref string __result) {
-				StringBuilder text = OUTER_BUILDER, part = PART_BUILDER;
-				float shc = GameUtil.GetDisplaySHC(__instance.specificHeatCapacity),
-					tc = GameUtil.GetDisplayThermalConductivity(__instance.
-					thermalConductivity);
-				bool vacuum = __instance.IsVacuum;
-				var tags = __instance.oreTags;
-				var modifiers = __instance.attributeModifiers;
-				int n = tags.Length;
-				text.Clear();
-				text.Append(__instance.Description());
-				if (!vacuum) {
-					string ht, lt;
-					text.AppendLine().AppendLine();
-					part.Clear();
-					if (__instance.IsSolid) {
-						GetFormattedTemperature(part, __instance.highTemp);
-						ht = part.ToString();
-						part.Clear().Append(STRINGS.ELEMENTS.ELEMENTDESCSOLID).Replace("{1}",
-							ht).Replace("{2}", GetHardnessString(__instance, addHardnessColor));
-					} else if (__instance.IsLiquid) {
-						GetFormattedTemperature(part, __instance.highTemp);
-						ht = part.ToString();
-						part.Clear();
-						GetFormattedTemperature(part, __instance.lowTemp);
-						lt = part.ToString();
-						part.Clear().Append(STRINGS.ELEMENTS.ELEMENTDESCLIQUID).Replace("{1}",
-							lt).Replace("{2}", ht);
-					} else {
-						GetFormattedTemperature(part, __instance.lowTemp);
-						lt = part.ToString();
-						part.Clear().Append(STRINGS.ELEMENTS.ELEMENTDESCGAS).Replace("{1}",
-							lt);
-					}
-					part.Replace("{0}", __instance.GetMaterialCategoryTag().ProperName());
-				}
-				// SHC
-				part.Clear();
-				shc.ToRyuHardString(part, 3);
-				string shcText = part.Append(" (DTU/g)/").Append(GameUtil.
-					GetTemperatureUnitSuffix()).ToString();
-				// TC
-				part.Clear();
-				tc.ToRyuHardString(part, 3);
-				string tcText = part.Append(" (DTU/(m*s))/").Append(GameUtil.
-					GetTemperatureUnitSuffix()).ToString();
-				part.Clear().Append(STRINGS.ELEMENTS.THERMALPROPERTIES).
-					Replace("{SPECIFIC_HEAT_CAPACITY}", shcText).
-					Replace("{THERMAL_CONDUCTIVITY}", tcText);
-				text.AppendLine().Append(part);
-				if (DlcManager.FeatureRadiationEnabled()) {
-					part.Clear();
-					__instance.radiationAbsorptionFactor.ToRyuSoftString(part, 4);
-					string radAbsorb = part.ToString();
-					part.Clear();
-					(__instance.radiationPer1000Mass * 1.1f).ToRyuSoftString(part, 3);
-					string radEmit = part.Append(SUFFIXES.RADIATION.RADS).Append(PER_CYCLE).
-						ToString();
-					// Could not find this constant in Klei source
-					part.Clear().Append(STRINGS.ELEMENTS.RADIATIONPROPERTIES).Replace("{0}",
-						radAbsorb).Replace("{1}", radEmit);
-					text.AppendLine().Append(part);
-				}
-				if (n > 0 && !vacuum) {
-					text.AppendLine().AppendLine().Append(EP);
-					for (int i = 0; i < n; i++) {
-						var tag = tags[i];
-						text.Append(tag.ProperName());
-						if (i < n - 1)
-							text.Append(", ");
-					}
-				}
-				n = modifiers.Count;
-				for (int i = 0; i < n; i++) {
-					var modifier = modifiers[i];
-					string name = Db.Get().BuildingAttributes.Get(modifier.AttributeId).Name;
-					text.AppendLine().Append(STRINGS.UI.PRE_KEYWORD).Append(name).Append(
-						STRINGS.UI.PST_KEYWORD).Append(": ").Append(modifier.
-						GetFormattedString());
-				}
-				__result = text.ToString();
-				return false;
-			}
-		}
-
-		/// <summary>
 		/// Applied to Util to reduce the memory allocations of this method.
 		/// </summary>
 		[HarmonyPatch(typeof(Util), nameof(Util.FormatWholeNumber))]
@@ -593,61 +482,6 @@ namespace PeterHan.FastTrack.UIPatches {
 				__result = text.ToString();
 				return false;
 			}
-		}
-	}
-
-	/// <summary>
-	/// Applied to StringFormatter to reduce wasted memory on 3-way sound event combines
-	/// where the second parameter is always a "_".
-	/// </summary>
-	[HarmonyPatch(typeof(StringFormatter), nameof(StringFormatter.Combine), typeof(string),
-		typeof(string), typeof(string))]
-	public static class StringFormatter_Combine3_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
-
-		/// <summary>
-		/// Applied before Combine runs.
-		/// </summary>
-		internal static bool Prefix(string a, string b, string c, ref string __result) {
-			bool cont = b != "_";
-			if (!cont) {
-				var cached = StringFormatter.cachedCombines;
-				if (!cached.TryGetValue(a, out Dictionary<string, string> dictionary))
-					cached[a] = dictionary = new Dictionary<string, string>(8);
-				if (!dictionary.TryGetValue(c, out string text))
-					dictionary[c] = text = a + "_" + b;
-				__result = text;
-			}
-			return cont;
-		}
-	}
-
-	/// <summary>
-	/// Applied to StringFormatter to reduce wasted memory on 4-way sound event combines
-	/// where the third parameter is always a "_" and first is always "DupVoc_".
-	/// </summary>
-	[HarmonyPatch(typeof(StringFormatter), nameof(StringFormatter.Combine), typeof(string),
-		typeof(string), typeof(string), typeof(string))]
-	public static class StringFormatter_Combine4_Patch {
-		private const string PREFIX = "DupVoc_";
-
-		internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
-
-		/// <summary>
-		/// Applied before Combine runs.
-		/// </summary>
-		internal static bool Prefix(string a, string b, string c, string d,
-				ref string __result) {
-			bool cont = c != "_" || a != PREFIX;
-			if (!cont) {
-				var cached = StringFormatter.cachedCombines;
-				if (!cached.TryGetValue(b, out Dictionary<string, string> dictionary))
-					cached[b] = dictionary = new Dictionary<string, string>(64);
-				if (!dictionary.TryGetValue(d, out string text))
-					dictionary[d] = text = PREFIX + b + "_" + d;
-				__result = text;
-			}
-			return cont;
 		}
 	}
 }

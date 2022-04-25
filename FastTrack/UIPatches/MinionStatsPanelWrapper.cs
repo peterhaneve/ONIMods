@@ -38,23 +38,23 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
-		private static MinionStatsPanelWrapper Instance;
+		private static MinionStatsPanelWrapper instance;
 
 		/// <summary>
 		/// Refreshes the Duplicant stats panel.
 		/// </summary>
-		/// <param name="instance">The Duplicant stats panel to update.</param>
-		private static void Refresh(MinionStatsPanel instance) {
-			var inst = Instance;
+		/// <param name="msp">The Duplicant stats panel to update.</param>
+		private static void Refresh(MinionStatsPanel msp) {
+			var inst = instance;
 			if (inst != null) {
-				bool changed = inst.SetTarget(instance.selectedTarget);
+				bool changed = inst.SetTarget(msp.selectedTarget);
 				var resume = inst.resume;
-				var resumePanel = instance.resumePanel;
+				var resumePanel = msp.resumePanel;
 				var target = inst.target;
 				string name = null;
 				var modifiers = inst.modifiers;
 				if (changed) {
-					var attributesPanel = instance.attributesPanel;
+					var attributesPanel = msp.attributesPanel;
 					resumePanel.SetActive(resume != null);
 					attributesPanel.SetActive(resume != null);
 					attributesPanel.GetComponent<CollapsibleDetailContentPanel>().HeaderLabel.
@@ -66,19 +66,19 @@ namespace PeterHan.FastTrack.UIPatches {
 						text = PERSONALITY.GROUPNAME_RESUME.Format(name.ToUpper());
 				}
 				if (resume != null)
-					RefreshResume(instance, resume, name);
+					RefreshResume(msp, resume, name);
 				if (modifiers != null)
-					RefreshAttributes(instance, modifiers);
+					RefreshAttributes(msp, modifiers);
 			}
 		}
 
 		/// <summary>
 		/// Refreshes the Duplicant's attributes.
 		/// </summary>
-		/// <param name="instance">The Duplicant stats panel to update.</param>
+		/// <param name="msp">The Duplicant stats panel to update.</param>
 		/// <param name="modifiers">The currently selected Duplicant's attributes.</param>
-		private static void RefreshAttributes(MinionStatsPanel instance, Modifiers modifiers) {
-			var drawer = instance.attributesDrawer;
+		private static void RefreshAttributes(MinionStatsPanel msp, Modifiers modifiers) {
+			var drawer = msp.attributesDrawer;
 			var currentAttr = modifiers.attributes.AttributeTable;
 			int n = currentAttr.Count;
 			drawer.BeginDrawing();
@@ -95,12 +95,12 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Refreshes the Duplicant's resume.
 		/// </summary>
-		/// <param name="instance">The Duplicant stats panel to update.</param>
+		/// <param name="msp">The Duplicant stats panel to update.</param>
 		/// <param name="resume">The currently selected Duplicant's resume.</param>
 		/// <param name="name">The currently selected Duplicant's name</param>
-		private static void RefreshResume(MinionStatsPanel instance, MinionResume resume,
+		private static void RefreshResume(MinionStatsPanel msp, MinionResume resume,
 				string name) {
-			var drawer = instance.resumeDrawer;
+			var drawer = msp.resumeDrawer;
 			var text = CACHED_BUILDER;
 			int skills = 0;
 			drawer.BeginDrawing();
@@ -154,13 +154,13 @@ namespace PeterHan.FastTrack.UIPatches {
 			panel = null;
 			resume = null;
 			target = null;
-			Instance = null;
+			instance = null;
 			base.OnCleanUp();
 		}
 
 		public override void OnPrefabInit() {
 			base.OnPrefabInit();
-			Instance = this;
+			instance = this;
 			target = null;
 		}
 

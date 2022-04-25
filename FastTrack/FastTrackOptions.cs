@@ -134,6 +134,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool ParallelInventory { get; set; }
 
+		[Option("Info Card Optimization", "Optimizes the info cards shown on hover." + PERF_MEDIUM, "Interface")]
+		[JsonProperty]
+		public bool InfoCardOpts { get; set; }
+
 		[Option("Optimize Debris Collection", "Speed up inefficient and memory-intensive checks for items.\n<i>Not compatible with mods: Efficient Supply</i>" + PERF_LOW, "Items")]
 		[JsonProperty]
 		public bool FastUpdatePickups { get; set; }
@@ -141,6 +145,10 @@ namespace PeterHan.FastTrack {
 		[Option("Reduce Debris Checks", "Only look for the closest items when required,\nrather than every frame for each Duplicant." + PERF_MEDIUM, "Items")]
 		[JsonProperty]
 		public bool PickupOpts { get; set; }
+
+		[Option("Side Screens", "Optimizes the informational side screens." + PERF_LOW, "Interface")]
+		[JsonProperty]
+		public bool SideScreenOpts { get; set; }
 
 		[Option("Vector Minimization", "Reduces memory allocations in most game-wide lists of items." + PERF_LOW, "Items")]
 		[JsonProperty]
@@ -161,10 +169,6 @@ namespace PeterHan.FastTrack {
 		[Option("Faster Animations", "Optimizes slow code in animation playback." + PERF_MEDIUM, "Visual")]
 		[JsonProperty]
 		public bool AnimOpts { get; set; }
-
-		[Option("Info Card Optimization", "Optimizes the info cards shown on hover." + PERF_MEDIUM, "Visual")]
-		[JsonProperty]
-		public bool InfoCardOpts { get; set; }
 
 		[Option("Instant Place Graphics", "Disables the animation which appears when placing\nerrands like Dig or Mop." + PERF_LOW, "Visual")]
 		[JsonProperty]
@@ -252,6 +256,7 @@ namespace PeterHan.FastTrack {
 			ReduceTileUpdates = true;
 			RenderTicks = true;
 			SensorOpts = true;
+			SideScreenOpts = true;
 			ThreatOvercrowding = true;
 			UnstackLights = true;
 			VirtualScroll = true;

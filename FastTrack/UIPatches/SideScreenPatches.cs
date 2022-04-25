@@ -27,7 +27,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// </summary>
 	public static class LogicBitSelectorSideScreenPatches {
 		// Side screen is a singleton so this is safe for now
-		private static readonly IList<bool> lastValues = new List<bool>(4);
+		private static readonly IList<bool> LAST_VALUES = new List<bool>(4);
 
 		/// <summary>
 		/// Updates all bits of the logic bit selector side screen.
@@ -37,13 +37,14 @@ namespace PeterHan.FastTrack.UIPatches {
 			var target = instance.target;
 			var activeColor = instance.activeColor;
 			var inactiveColor = instance.inactiveColor;
-			lastValues.Clear();
+			var lv = LAST_VALUES;
+			lv.Clear();
 			foreach (var pair in instance.toggles_by_int) {
 				int bit = pair.Key;
 				bool active = target.IsBitActive(bit);
-				while (lastValues.Count <= bit)
-					lastValues.Add(false);
-				lastValues[bit] = active;
+				while (lv.Count <= bit)
+					lv.Add(false);
+				lv[bit] = active;
 				UpdateBit(pair.Value, active, activeColor, inactiveColor);
 			}
 		}
@@ -71,7 +72,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		[HarmonyPatch(typeof(LogicBitSelectorSideScreen), nameof(LogicBitSelectorSideScreen.
 			OnSpawn))]
 		public static class OnSpawn_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 			/// <summary>
 			/// Applied after OnSpawn runs.
@@ -90,7 +91,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		[HarmonyPatch(typeof(LogicBitSelectorSideScreen), nameof(LogicBitSelectorSideScreen.
 			RefreshToggles))]
 		public static class RefreshToggles_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 			/// <summary>
 			/// Applied after RefreshToggles runs.
@@ -107,7 +108,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		[HarmonyPatch(typeof(LogicBitSelectorSideScreen), nameof(LogicBitSelectorSideScreen.
 			RenderEveryTick))]
 		public static class RenderEveryTick_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 			/// <summary>
 			/// Applied before RenderEveryTick runs.
@@ -118,13 +119,13 @@ namespace PeterHan.FastTrack.UIPatches {
 						__instance.target) != null)
 					foreach (var pair in __instance.toggles_by_int) {
 						int bit = pair.Key;
-						bool active = target.IsBitActive(bit), update = bit >= lastValues.
+						bool active = target.IsBitActive(bit), update = bit >= LAST_VALUES.
 							Count;
 						if (!update) {
 							// If in range, see if bit changed
-							update = active != lastValues[bit];
+							update = active != LAST_VALUES[bit];
 							if (update)
-								lastValues[bit] = active;
+								LAST_VALUES[bit] = active;
 						}
 						if (update)
 							UpdateBit(pair.Value, active, __instance.activeColor, __instance.
@@ -140,7 +141,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(TimerSideScreen), nameof(TimerSideScreen.RenderEveryTick))]
 	public static class TimerSideScreen_RenderEveryTick_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+		internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 		/// <summary>
 		/// Applied before RenderEveryTick runs.
@@ -156,7 +157,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	[HarmonyPatch(typeof(TreeFilterableSideScreen), nameof(TreeFilterableSideScreen.
 		UpdateAllCheckBoxVisualState))]
 	public static class TreeFilterableSideScreen_UpdateAllCheckBoxVisualState_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+		internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 		/// <summary>
 		/// Applied before UpdateAllCheckBoxVisualState runs.
@@ -189,7 +190,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	[HarmonyPatch(typeof(TreeFilterableSideScreenRow), nameof(TreeFilterableSideScreenRow.
 		UpdateCheckBoxVisualState))]
 	public static class TreeFilterableSideScreenRow_UpdateCheckBoxVisualState_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+		internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 		/// <summary>
 		/// Applied before UpdateCheckBoxVisualState runs.

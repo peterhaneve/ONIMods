@@ -348,9 +348,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			}
 
 			public void TriggerAbort() {
-#if DEBUG
 				OffsetTracker.isExecutingWithinJob = false;
-#endif
 			}
 
 			public void TriggerComplete() {
@@ -360,15 +358,11 @@ namespace PeterHan.FastTrack.PathPatches {
 				for (int i = 0; i < n; i++)
 					pickups.AddRange(byId[i].finalPickups);
 				pickups.Sort(FetchManager.ComparerNoPriority);
-#if DEBUG
 				OffsetTracker.isExecutingWithinJob = false;
-#endif
 			}
 
 			public void TriggerStart() {
-#if DEBUG
 				OffsetTracker.isExecutingWithinJob = true;
-#endif
 			}
 		}
 

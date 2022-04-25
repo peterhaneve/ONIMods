@@ -19,6 +19,7 @@
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -70,24 +71,30 @@ namespace PeterHan.FastTrack.PathPatches {
 		}
 
 		/// <summary>
+		/// The offsets which should be updated.
+		/// </summary>
+		private readonly ConcurrentQueue<UpdateOffset> offsetPending;
+
+		/// <summary>
 		/// The events which should be triggered. Only used on the foreground thread.
 		/// </summary>
-		private readonly Queue<TriggerEvent> pending;
+		private readonly Queue<TriggerEvent> animPending;
 
 		private DeferAnimQueueTrigger() {
-			pending = new Queue<TriggerEvent>();
+			offsetPending = new ConcurrentQueue<UpdateOffset>();
+			animPending = new Queue<TriggerEvent>();
 		}
 
 		public void Dispose() {
-			pending.Clear();
+			animPending.Clear();
 		}
 
 		/// <summary>
 		/// Empties the queue of all pending anim events.
 		/// </summary>
 		internal void Process() {
-			while (pending.Count > 0) {
-				var evt = pending.Dequeue();
+			while (animPending.Count > 0) {
+				var evt = animPending.Dequeue();
 				var src = evt.source;
 				if (src != null) {
 					src.gameObject.Trigger(evt.hash, evt.data);
@@ -96,6 +103,8 @@ namespace PeterHan.FastTrack.PathPatches {
 						src.DestroySelf();
 				}
 			}
+			while (offsetPending.TryDequeue(out UpdateOffset offset))
+				offset.offsets.GetOffsets(offset.newCell);
 		}
 
 		/// <summary>
@@ -105,7 +114,17 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <param name="hash">The event hash to trigger.</param>
 		/// <param name="data">The event parameter (if available).</param>
 		internal void Queue(KAnimControllerBase source, int hash, object data) {
-			pending.Enqueue(new TriggerEvent(source, hash, data));
+			animPending.Enqueue(new TriggerEvent(source, hash, data));
+		}
+
+		/// <summary>
+		/// Queues offsets to be updated synchronously. This is a fairly rare code path to
+		/// avoid an assert.
+		/// </summary>
+		/// <param name="offsets">The offsets to update.</param>
+		/// <param name="newCell">The new cell that the offsets occupy.</param>
+		internal void Queue(OffsetTracker offsets, int newCell) {
+			offsetPending.Enqueue(new UpdateOffset(offsets, newCell));
 		}
 
 		/// <summary>
@@ -133,6 +152,26 @@ namespace PeterHan.FastTrack.PathPatches {
 				this.source = source;
 			}
 		}
+
+		/// <summary>
+		/// Saves information about offsets to update later.
+		/// </summary>
+		private struct UpdateOffset {
+			/// <summary>
+			/// The new cell that the offsets will use.
+			/// </summary>
+			internal readonly int newCell;
+
+			/// <summary>
+			/// The offsets to update.
+			/// </summary>
+			internal readonly OffsetTracker offsets;
+
+			public UpdateOffset(OffsetTracker offsets, int newCell) {
+				this.newCell = newCell;
+				this.offsets = offsets;
+			}
+		}
 	}
 
 	/// <summary>
@@ -156,6 +195,39 @@ namespace PeterHan.FastTrack.PathPatches {
 				DeferAnimQueueTrigger.TriggerAndQueue(__instance, (int)GameHashes.
 					AnimQueueComplete, null);
 			}
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to OffsetTracker to make it defer offset computations if they occur during
+	/// unsafe times instead of asserting.
+	/// </summary>
+	[HarmonyPatch(typeof(OffsetTracker), nameof(OffsetTracker.GetOffsets))]
+	public static class OffsetTracker_GetOffsets_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
+
+		/// <summary>
+		/// Applied before GetOffsets runs.
+		/// </summary>
+		internal static bool Prefix(OffsetTracker __instance, int current_cell,
+				ref CellOffset[] __result) {
+			var offsets = __instance.offsets;
+			int lastCell = __instance.previousCell;
+			if (current_cell != lastCell) {
+				if (OffsetTracker.isExecutingWithinJob)
+					DeferAnimQueueTrigger.Instance.Queue(__instance, current_cell);
+				else {
+					__instance.UpdateCell(lastCell, current_cell);
+					__instance.previousCell = lastCell = current_cell;
+				}
+			}
+			if (offsets == null)
+				lock (__instance) {
+					__instance.UpdateOffsets(lastCell);
+					offsets = __instance.offsets;
+				}
+			__result = offsets;
 			return false;
 		}
 	}

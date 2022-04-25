@@ -153,6 +153,41 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
+		/// Gets the game object's effects in the shared descriptor list.
+		/// </summary>
+		/// <param name="go">The game object to describe.</param>
+		/// <param name="simpleScreen">Whether the descriptors are to be shown in the
+		/// simplified info screen.</param>
+		/// <returns>The game object's effect descriptors.</returns>
+		internal static List<Descriptor> GetGameObjectEffects(GameObject go,
+				bool simpleInfoScreen) {
+			var descriptors = EFFECT_DESCRIPTORS;
+			var comps = ListPool<IGameObjectEffectDescriptor, DescriptorSorter>.Allocate();
+			descriptors.Clear();
+			go.GetComponents(comps);
+			if (go.TryGetComponent(out StateMachineController smc))
+				smc.AddStateMachineDescriptors(comps);
+			comps.Sort(DescriptorSorter.Instance);
+			int n = comps.Count;
+			for (int i = 0; i < n; i++) {
+				var toAdd = comps[i].GetDescriptors(go);
+				if (toAdd != null) {
+					int nd = toAdd.Count;
+					for (int j = 0; j < nd; j++) {
+						var descriptor = toAdd[j];
+						if ((simpleInfoScreen || !descriptor.onlyForSimpleInfoScreen) &&
+								descriptor.IsEffectDescriptor())
+							descriptors.Add(descriptor);
+					}
+				}
+			}
+			comps.Recycle();
+			if (go.TryGetComponent(out KPrefabID prefabID))
+				descriptors.AddDescriptors(prefabID.AdditionalEffects, simpleInfoScreen);
+			return descriptors;
+		}
+
+		/// <summary>
 		/// Adds all of the element's specific attribute modifiers as descriptors to the list.
 		/// </summary>
 		/// <param name="element">The element to describe.</param>
@@ -315,30 +350,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			internal static bool Prefix(GameObject go, bool simpleInfoScreen,
 					ref List<Descriptor> __result) {
-				var descriptors = EFFECT_DESCRIPTORS;
-				var comps = ListPool<IGameObjectEffectDescriptor, DescriptorSorter>.Allocate();
-				descriptors.Clear();
-				go.GetComponents(comps);
-				if (go.TryGetComponent(out StateMachineController smc))
-					smc.AddStateMachineDescriptors(comps);
-				comps.Sort(DescriptorSorter.Instance);
-				int n = comps.Count;
-				for (int i = 0; i < n; i++) {
-					var toAdd = comps[i].GetDescriptors(go);
-					if (toAdd != null) {
-						int nd = toAdd.Count;
-						for (int j = 0; j < nd; j++) {
-							var descriptor = toAdd[j];
-							if ((simpleInfoScreen || !descriptor.onlyForSimpleInfoScreen) &&
-									descriptor.IsEffectDescriptor())
-								descriptors.Add(descriptor);
-						}
-					}
-				}
-				comps.Recycle();
-				if (go.TryGetComponent(out KPrefabID prefabID))
-					descriptors.AddDescriptors(prefabID.AdditionalEffects, simpleInfoScreen);
-				__result = descriptors;
+				__result = GetGameObjectEffects(go, simpleInfoScreen);
 				return false;
 			}
 		}

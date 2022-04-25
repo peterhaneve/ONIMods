@@ -501,7 +501,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				num = GameUtil.ApplyTimeSlice(num, timeSlice);
 				if (!text.AppendIfInfinite(num)) {
 					if (formatString != null)
-						text.AppendFormat(formatString, num);
+						AppendSimpleFormat(text, formatString, num);
 					else if (num == 0.0f)
 						text.Append('0');
 					else

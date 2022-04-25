@@ -35,7 +35,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
-		private static VitalsPanelWrapper Instance;
+		internal static VitalsPanelWrapper Instance { get; private set; }
 
 		/// <summary>
 		/// The color used for conditions that are not met. Could not find a const reference
@@ -483,18 +483,36 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
+		/// Applied to MinionVitalsPanel to update it immediately if it has a valid target.
+		/// </summary>
+		[HarmonyPatch(typeof(MinionVitalsPanel), nameof(MinionVitalsPanel.Init))]
+		internal static class Init_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
+
+			/// <summary>
+			/// Applied after Init runs.
+			/// </summary>
+			internal static void Postfix(MinionVitalsPanel __instance) {
+				var inst = Instance;
+				bool run = inst == null;
+				if (!run)
+					inst.Update(__instance);
+			}
+		}
+
+		/// <summary>
 		/// Applied to MinionVitalsPanel to rewrite the very slow and memory hungry method that is
 		/// run every frame.
 		/// </summary>
 		[HarmonyPatch(typeof(MinionVitalsPanel), nameof(MinionVitalsPanel.Refresh))]
 		internal static class Refresh_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
+			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 			/// <summary>
 			/// Applied before Refresh runs.
 			/// </summary>
 			internal static bool Prefix(MinionVitalsPanel __instance) {
-				var inst = VitalsPanelWrapper.Instance;
+				var inst = Instance;
 				bool run = inst == null;
 				if (!run)
 					inst.Update(__instance);

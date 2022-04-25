@@ -38,27 +38,27 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
-		private static DetailsPanelWrapper Instance;
+		private static DetailsPanelWrapper instance;
 
 		/// <summary>
 		/// Called at shutdown to avoid leaking references.
 		/// </summary>
 		internal static void Cleanup() {
-			Instance = null;
+			instance = null;
 		}
 
 		/// <summary>
 		/// Enables or disables side screens to match the selected object, and selects an
 		/// appropriate default tab.
 		/// </summary>
-		/// <param name="instance">The details screen being spawned.</param>
+		/// <param name="ds">The details screen being spawned.</param>
 		/// <param name="target">The selected target.</param>
 		/// <param name="screens">The side screens to show or hide.</param>
 		/// <returns>The number of tabs that are active.</returns>
-		private static int EnableScreens(DetailsScreen instance, GameObject target,
+		private static int EnableScreens(DetailsScreen ds, GameObject target,
 				DetailsScreen.Screens[] screens) {
 			int n = screens.Length, activeIndex = -1, enabledTabs = 0, lastActive =
-				instance.previouslyActiveTab;
+				ds.previouslyActiveTab;
 			// Vanilla checks the details screen itself to see if it is dead!?!? But no
 			// side screens are set to check this so the bug goes by unnoticed
 			bool isDead = target != null && target.TryGetComponent(out KPrefabID id) && id.
@@ -71,7 +71,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				ref var screen = ref screens[i];
 				bool enabled = screen.screen.IsValidForTarget(target) && !(isDead && screen.
 					hideWhenDead);
-				instance.SetTabEnabled(screen.tabIdx, enabled);
+				ds.SetTabEnabled(screen.tabIdx, enabled);
 				if (enabled) {
 					enabledTabs++;
 					if (activeIndex < 0) {
@@ -86,7 +86,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					}
 				}
 			}
-			instance.ActivateTab(Math.Max(activeIndex, 0));
+			ds.ActivateTab(Math.Max(activeIndex, 0));
 			return enabledTabs;
 		}
 
@@ -154,17 +154,17 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		internal static void Init() {
 			Cleanup();
-			Instance = new DetailsPanelWrapper();
+			instance = new DetailsPanelWrapper();
 		}
 
 		/// <summary>
 		/// Creates the built-in game side screens.
 		/// </summary>
-		/// <param name="instance">The details screen being spawned.</param>
+		/// <param name="ds">The details screen being spawned.</param>
 		/// <param name="screens">The side screens to create.</param>
-		private static void InstantiateScreens(DetailsScreen instance,
+		private static void InstantiateScreens(DetailsScreen ds,
 				DetailsScreen.Screens[] screens) {
-			var body = instance.body.gameObject;
+			var body = ds.body.gameObject;
 			int n = screens.Length;
 			// First time initialization, ref screen allows reassignment back!
 			for (int i = 0; i < n; i++) {
@@ -174,7 +174,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					gameObject, body).gameObject;
 				if (screenGO.TryGetComponent(out targetScreen)) {
 					screen.screen = targetScreen;
-					screen.tabIdx = instance.AddTab(screen.icon, Strings.Get(screen.
+					screen.tabIdx = ds.AddTab(screen.icon, Strings.Get(screen.
 						displayName), targetScreen, Strings.Get(screen.tooltip));
 				}
 			}
@@ -183,16 +183,17 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Sorts the side screens using their sort key.
 		/// </summary>
-		/// <param name="instance">The details screen to sort.</param>
+		/// <param name="ds">The details screen to sort.</param>
 		/// <param name="target">The selected target.</param>
-		private static void SortSideScreens(DetailsScreen instance, GameObject target) {
-			var sideScreens = instance.sideScreens;
-			var sortedScreens = instance.sortedSideScreens;
+		private static void SortSideScreens(DetailsScreen ds, GameObject target) {
+			var sideScreens = ds.sideScreens;
+			var sortedScreens = ds.sortedSideScreens;
 			int n;
 			sortedScreens.Clear();
 			if (sideScreens != null && sideScreens.Count > 0) {
 				int currentOrder = 0;
-				var currentScreen = instance.currentSideScreen;
+				var currentScreen = ds.currentSideScreen;
+				var dss = ds.sideScreen;
 				GameObject instGO;
 				n = sideScreens.Count;
 				if (currentScreen != null) {
@@ -208,18 +209,18 @@ namespace PeterHan.FastTrack.UIPatches {
 					if (prefab.IsValidForTarget(target)) {
 						if (inst == null) {
 							inst = Util.KInstantiateUI<SideScreenContent>(prefab.gameObject,
-								instance.sideScreenContentBody);
+								ds.sideScreenContentBody);
 							screen.screenInstance = inst;
 						}
 						int sortOrder = inst.GetSideScreenSortOrder();
-						if (!instance.sideScreen.activeInHierarchy)
-							instance.sideScreen.SetActive(true);
+						if (!dss.activeInHierarchy)
+							dss.SetActive(true);
 						inst.SetTarget(target);
 						inst.Show(true);
 						sortedScreens.Add(new SideScreenPair(inst.gameObject, sortOrder));
 						if (currentScreen == null || sortOrder > currentOrder) {
-							instance.currentSideScreen = currentScreen = inst;
-							instance.sideScreenTitle.SetText(inst.GetTitle());
+							ds.currentSideScreen = currentScreen = inst;
+							ds.sideScreenTitle.SetText(inst.GetTitle());
 						}
 					} else if (inst != null && (instGO = inst.gameObject).activeSelf) {
 						instGO.SetActive(false);
@@ -290,13 +291,13 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(DetailsScreen), nameof(DetailsScreen.DeselectAndClose))]
 		internal static class DeselectAndClose_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 			/// <summary>
 			/// Applied after DeselectAndClose runs.
 			/// </summary>
 			internal static void Postfix() {
-				var inst = Instance;
+				var inst = instance;
 				if (inst != null)
 					inst.lastSelection = default;
 			}
@@ -307,13 +308,13 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(DetailsScreen), nameof(DetailsScreen.OnNameChanged))]
 		internal static class OnNameChanged_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 			/// <summary>
 			/// Applied before OnNameChanged runs.
 			/// </summary>
 			internal static bool Prefix(DetailsScreen __instance, string newName) {
-				var inst = Instance;
+				var inst = instance;
 				__instance.isEditing = false;
 				if (!string.IsNullOrEmpty(newName) && inst != null) {
 					ref var lastSelection = ref inst.lastSelection;
@@ -337,13 +338,13 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(DetailsScreen), nameof(DetailsScreen.OpenCodexEntry))]
 		internal static class OpenCodexEntry_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 			/// <summary>
 			/// Applied before OpenCodexEntry runs.
 			/// </summary>
 			internal static bool Prefix(DetailsScreen __instance) {
-				var inst = Instance;
+				var inst = instance;
 				if (inst != null) {
 					string codexLink = inst.lastSelection.codexLink;
 					if (!string.IsNullOrEmpty(codexLink))
@@ -358,7 +359,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(DetailsScreen), nameof(DetailsScreen.Refresh))]
 		internal static class Refresh_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 			/// <summary>
 			/// Applied before Refresh runs.
@@ -366,7 +367,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(DetailsScreen __instance, GameObject go) {
 				var screens = __instance.screens;
 				var oldTarget = __instance.target;
-				var inst = Instance;
+				var inst = instance;
 				if (screens != null) {
 					__instance.target = go;
 					if (go.TryGetComponent(out CellSelectionObject cso))
@@ -392,13 +393,13 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(DetailsScreen), nameof(DetailsScreen.SetTitle), typeof(int))]
 		internal static class SetTitle_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 			/// <summary>
 			/// Applied before SetTitle runs.
 			/// </summary>
 			internal static bool Prefix(DetailsScreen __instance) {
-				var inst = Instance;
+				var inst = instance;
 				if (inst != null) {
 					ref var lastSelection = ref inst.lastSelection;
 					string codexLink = lastSelection.codexLink;
@@ -453,7 +454,9 @@ namespace PeterHan.FastTrack.UIPatches {
 			private SideScreenOrderComparer() { }
 
 			public int Compare(SideScreenPair x, SideScreenPair y) {
-				return y.Value.CompareTo(x.Value);
+				// This is a grievous violation of the Compare contract, but is necessary to
+				// preserve the base game's order...
+				return (x.Value <= y.Value) ? 1 : -1;
 			}
 		}
 	}

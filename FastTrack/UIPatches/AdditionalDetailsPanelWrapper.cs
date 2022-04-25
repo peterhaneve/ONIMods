@@ -28,7 +28,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// Stores state information about the additional details panel to avoid recalculating so
 	/// much every frame.
 	/// </summary>
-	public sealed class AdditionalDetailsPanelWrapper {
+	public sealed class AdditionalDetailsPanelWrapper : System.IDisposable {
 		/// <summary>
 		/// Avoid reallocating a new StringBuilder every frame.
 		/// </summary>
@@ -42,14 +42,15 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
-		internal static AdditionalDetailsPanelWrapper instance;
+		internal static AdditionalDetailsPanelWrapper Instance { get; private set; }
 
 		/// <summary>
 		/// Called at shutdown to avoid leaking references.
 		/// </summary>
 		internal static void Cleanup() {
 			CACHED_BUILDER.Clear();
-			instance = null;
+			Instance?.Dispose();
+			Instance = null;
 		}
 
 		/// <summary>
@@ -145,7 +146,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		internal static void Init() {
 			Cleanup();
-			instance = new AdditionalDetailsPanelWrapper();
+			Instance = new AdditionalDetailsPanelWrapper();
 		}
 
 		/// <summary>
@@ -323,6 +324,10 @@ namespace PeterHan.FastTrack.UIPatches {
 				if (descriptor.type == Descriptor.DescriptorType.Detail)
 					drawer.NewLabel(descriptor.text).Tooltip(descriptor.tooltipText);
 			}
+		}
+
+		public void Dispose() {
+			lastSelection = default;
 		}
 
 		/// <summary>
@@ -557,13 +562,13 @@ namespace PeterHan.FastTrack.UIPatches {
 	[HarmonyPatch(typeof(AdditionalDetailsPanel), nameof(AdditionalDetailsPanel.
 		RefreshDetails))]
 	public static class AdditionalDetailsPanel_RefreshDetails_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
+		internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 		/// <summary>
 		/// Applied before RefreshDetails runs.
 		/// </summary>
 		internal static bool Prefix(AdditionalDetailsPanel __instance) {
-			var inst = AdditionalDetailsPanelWrapper.instance;
+			var inst = AdditionalDetailsPanelWrapper.Instance;
 			bool run = inst == null;
 			if (!run)
 				inst.Update(__instance);

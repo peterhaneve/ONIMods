@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 
+using GeyserType = GeyserConfigurator.GeyserType;
 using IndirectionData = AnimEventManager.IndirectionData;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
@@ -152,6 +153,55 @@ namespace PeterHan.FastTrack.GamePatches {
 			} else
 				PUtil.LogWarning("Unable to patch ClusterManager.WorldContainers");
 			return method;
+		}
+	}
+
+	/// <summary>
+	/// Applied to GeyserConfigurator to cache geyser types instead of linear lookups every
+	/// frame.
+	/// </summary>
+	[HarmonyPatch(typeof(GeyserConfigurator), nameof(GeyserConfigurator.FindType))]
+	public static class GeyserConfigurator_FindType_Patch {
+		/// <summary>
+		/// Caches geyser type lookups.
+		/// </summary>
+		private static readonly IDictionary<HashedString, GeyserType> CACHE =
+			new Dictionary<HashedString, GeyserType>(32);
+
+		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+
+		/// <summary>
+		/// Clears the geyser type cache.
+		/// </summary>
+		internal static void Cleanup() {
+			CACHE.Clear();
+		}
+
+		/// <summary>
+		/// Applied before FindType runs.
+		/// </summary>
+		internal static bool Prefix(HashedString typeId, ref GeyserType __result) {
+			GeyserType geyserType;
+			if (typeId.IsValid) {
+				// Populate the cache
+				if (CACHE.Count < 1) {
+					var types = GeyserConfigurator.geyserTypes;
+					int n = types.Count;
+					for (int i = 0; i < n; i++) {
+						var type = types[i];
+						CACHE[type.id] = type;
+					}
+				}
+				if (!CACHE.TryGetValue(typeId, out geyserType)) {
+					PUtil.LogError("No such geyser ID: {0}!".F(typeId));
+					geyserType = null;
+				}
+			} else {
+				PUtil.LogError("Invalid geyser type ID specified!");
+				geyserType = null;
+			}
+			__result = geyserType;
+			return false;
 		}
 	}
 }

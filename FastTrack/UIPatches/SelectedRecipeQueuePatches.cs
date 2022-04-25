@@ -25,6 +25,10 @@ using UnityEngine.UI;
 using DescriptorWithSprite = SelectedRecipeQueueScreen.DescriptorWithSprite;
 
 namespace PeterHan.FastTrack.UIPatches {
+	/// <summary>
+	/// Groups patches to the recipe screen used for complex fabricators.
+	/// Classified as AllocOpts because it reuses several of the descriptor optimizations.
+	/// </summary>
 	internal static class SelectedRecipeQueuePatches {
 		/// <summary>
 		/// Avoids running String.Format for each ingredient every update.

@@ -194,6 +194,8 @@ namespace PeterHan.FastTrack {
 				SensorPatches.FastGroupProber.Cleanup();
 				GamePatches.FastCellChangeMonitor.FastInstance.Cleanup();
 			}
+			if (options.MiscOpts)
+				GamePatches.GeyserConfigurator_FindType_Patch.Cleanup();
 			if (options.PickupOpts) {
 				GamePatches.SolidTransferArmUpdater.DestroyInstance();
 				PathPatches.DeferAnimQueueTrigger.DestroyInstance();
@@ -202,13 +204,14 @@ namespace PeterHan.FastTrack {
 				PathPatches.PathProbeJobManager.DestroyInstance();
 			GamePatches.AchievementPatches.DestroyInstance();
 			PathPatches.AsyncBrainGroupUpdater.DestroyInstance();
-			if (options.AllocOpts) {
-				UIPatches.AdditionalDetailsPanelWrapper.Cleanup();
+			if (options.AllocOpts)
 				UIPatches.DescriptorAllocPatches.Cleanup();
+			if (options.SideScreenOpts) {
+				UIPatches.AdditionalDetailsPanelWrapper.Cleanup();
+				UIPatches.DetailsPanelWrapper.Cleanup();
+				UIPatches.SimpleInfoScreenWrapper.Cleanup();
 				UIPatches.VitalsPanelWrapper.Cleanup();
 			}
-			if (options.MiscOpts)
-				UIPatches.DetailsPanelWrapper.Cleanup();
 			AsyncJobManager.DestroyInstance();
 			if (options.CustomStringFormat)
 				UIPatches.FormatStringPatches.DumpStringFormatterCaches();
@@ -247,17 +250,18 @@ namespace PeterHan.FastTrack {
 		internal static void OnStartGame() {
 			var inst = Game.Instance;
 			var options = FastTrackOptions.Instance;
-			if (options.AllocOpts) {
-				UIPatches.AdditionalDetailsPanelWrapper.Init();
+			if (options.AllocOpts)
 				UIPatches.SelectedRecipeQueuePatches.Init();
-				UIPatches.VitalsPanelWrapper.Init();
-			}
 			if (options.AsyncPathProbe)
 				PathPatches.PathProbeJobManager.CreateInstance();
 			if (options.CachePaths)
 				PathPatches.PathCacher.Init();
-			if (options.MiscOpts)
+			if (options.SideScreenOpts) {
+				UIPatches.AdditionalDetailsPanelWrapper.Init();
 				UIPatches.DetailsPanelWrapper.Init();
+				UIPatches.SimpleInfoScreenWrapper.Init();
+				UIPatches.VitalsPanelWrapper.Init();
+			}
 			if (options.PickupOpts)
 				PathPatches.DeferAnimQueueTrigger.CreateInstance();
 			if (inst != null) {
