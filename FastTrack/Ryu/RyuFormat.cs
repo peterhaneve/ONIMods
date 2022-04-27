@@ -90,7 +90,7 @@ namespace Ryu {
 				RyuUtils.GenerateSpecial(result, ieeeSign, !mZero, info);
 			else if (mZero && ieeeExponent == 0UL)
 				RyuUtils.GenerateZero(result, ieeeSign, precision, options, info);
-			else
+			else if ((options & RyuFormatOptions.RoundtripMode) != 0)
 				new RyuFloat32(ieeeSign, ieeeMantissa, ieeeExponent).ToRoundtripString(result,
 					options, info);
 		}

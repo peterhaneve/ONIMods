@@ -18,6 +18,7 @@
 
 using Database;
 using HarmonyLib;
+using KMod;
 using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
@@ -34,7 +35,7 @@ namespace PeterHan.StockBugFix {
 	/// <summary>
 	/// Patches which will be applied via annotations for Stock Bug Fix.
 	/// </summary>
-	public sealed class StockBugsPatches : KMod.UserMod2 {
+	public sealed class StockBugsPatches : UserMod2 {
 		/// <summary>
 		/// Sets the default chore type of food storage depending on the user options. Also
 		/// fixes (DLC) the trait exclusions.
@@ -116,16 +117,20 @@ namespace PeterHan.StockBugFix {
 		/// installed.
 		/// </summary>
 		private static TranspiledMethod TranspileUpdateMods(TranspiledMethod method) {
-			return PPatchTools.ReplaceMethodCall(method, new Dictionary<MethodInfo,
+			return PPatchTools.ReplaceMethodCallSafe(method, new Dictionary<MethodInfo,
 					MethodInfo>() {
-				{ typeof(KMod.Manager).GetMethodSafe(nameof(KMod.Manager.Report), false,
-					typeof(GameObject)), typeof(QueuedReportManager).GetMethodSafe(nameof(
-					QueuedReportManager.QueueDelayedReport), true, typeof(KMod.Manager),
-					typeof(GameObject)) },
-				{ typeof(KMod.Manager).GetMethodSafe(nameof(KMod.Manager.Sanitize), false,
-					typeof(GameObject)), typeof(QueuedReportManager).GetMethodSafe(nameof(
-					QueuedReportManager.QueueDelayedSanitize), true, typeof(KMod.Manager),
-					typeof(GameObject)) }
+				{
+					typeof(Manager).GetMethodSafe(nameof(Manager.Report), false,
+						typeof(GameObject)),
+					typeof(QueuedReportManager).GetMethodSafe(nameof(QueuedReportManager.
+						QueueDelayedReport), true, typeof(Manager), typeof(GameObject))
+				},
+				{
+					typeof(Manager).GetMethodSafe(nameof(Manager.Sanitize), false,
+						typeof(GameObject)),
+					typeof(QueuedReportManager).GetMethodSafe(nameof(QueuedReportManager.
+						QueueDelayedSanitize), true, typeof(Manager), typeof(GameObject))
+				}
 			});
 		}
 
@@ -150,6 +155,11 @@ namespace PeterHan.StockBugFix {
 			}
 		}
 
+		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
+			base.OnAllModsLoaded(harmony, mods);
+			DecorProviderRefreshFix.ApplyPatch(harmony);
+		}
+
 		public override void OnLoad(Harmony instance) {
 			base.OnLoad(instance);
 			PUtil.InitLibrary();
@@ -160,6 +170,7 @@ namespace PeterHan.StockBugFix {
 			PRegistry.PutData("Bugs.FishReleaseCount", true);
 			PRegistry.PutData("Bugs.TepidizerPulse", true);
 			PRegistry.PutData("Bugs.TraitExclusionSpacedOut", true);
+			PRegistry.PutData("Bugs.TropicalPacuRooms", true);
 			PRegistry.PutData("Bugs.JoyReactionFix", true);
 			PRegistry.PutData("Bugs.AutosaveDragFix", true);
 			new POptions().RegisterOptions(this, typeof(StockBugFixOptions));
@@ -323,7 +334,7 @@ namespace PeterHan.StockBugFix {
 		/// Transpiles RefreshCreatureCount to check the right tile for creatures.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-			return PPatchTools.ReplaceMethodCall(method, typeof(Grid).GetMethodSafe(
+			return PPatchTools.ReplaceMethodCallSafe(method, typeof(Grid).GetMethodSafe(
 				nameof(Grid.PosToCell), true, typeof(KMonoBehaviour)),
 				typeof(CreatureDeliveryPoint_RefreshCreatureCount_Patch).GetMethodSafe(
 				nameof(PosToCorrectedCell), true, typeof(KMonoBehaviour)));
@@ -366,6 +377,65 @@ namespace PeterHan.StockBugFix {
 					yield return instr;
 			if (!patched)
 				PUtil.LogWarning("Unable to patch Deconstructable.SpawnItem");
+		}
+	}
+
+	/// <summary>
+	/// Applied to DecorProvider to reduce the effect of the Tropical Pacu bug by instead of
+	/// triggering a full room rebuild, just refreshing the room constraints.
+	/// 
+	/// If Decor Reimagined is installed, it will override the auto patch, the conditional one
+	/// will be used instead.
+	/// </summary>
+	public static class DecorProviderRefreshFix {
+		/// <summary>
+		/// Attempts to also patch the Decor Reimagined implementation of DecorProvider.
+		/// Refresh.
+		/// </summary>
+		/// <param name="harmony">The Harmony instance to use for patching.</param>
+		internal static void ApplyPatch(Harmony harmony) {
+			var patchMethod = new HarmonyMethod(typeof(DecorProviderRefreshFix), nameof(
+				Transpiler));
+			var targetMethod = PPatchTools.GetTypeSafe(
+				"ReimaginationTeam.DecorRework.DecorSplatNew", "DecorReimagined")?.
+				GetMethodSafe("RefreshDecor", false, PPatchTools.AnyArguments);
+			if (targetMethod != null) {
+				PUtil.LogDebug("Patching Decor Reimagined for DecorProvider.RefreshDecor");
+				harmony.Patch(targetMethod, transpiler: patchMethod);
+			}
+			PUtil.LogDebug("Patching DecorProvider.Refresh");
+			harmony.Patch(typeof(DecorProvider).GetMethodSafe(nameof(DecorProvider.Refresh),
+				false, PPatchTools.AnyArguments), transpiler: patchMethod);
+		}
+
+		/// <summary>
+		/// Instead of triggering a full solid change of the room, merely retrigger the
+		/// conditions.
+		/// </summary>
+		/// <param name="prober">The current room prober.</param>
+		/// <param name="cell">The cell of the room that will be updated.</param>
+		private static void SolidNotChangedEvent(RoomProber prober, int cell, bool _) {
+			if (prober != null) {
+				var cavity = prober.GetCavityForCell(cell);
+				if (cavity != null)
+					prober.UpdateRoom(cavity);
+				// else: If the critter is not currently in any cavity, they will be added
+				// when the cavity is created by OvercrowdingMonitor, at which point the room
+				// conditions will be evaluated again anyways
+			}
+		}
+
+		/// <summary>
+		/// Transpiles the constructor to resize the array to 26 slots by default.
+		/// Most decor providers have 1 or 2 radius which is 1 and 9 tiles respectively,
+		/// 26 handles up to 3 without a resize.
+		/// </summary>
+		[HarmonyPriority(Priority.LowerThanNormal)]
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+			return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(RoomProber).
+				GetMethodSafe(nameof(RoomProber.SolidChangedEvent), false, typeof(int),
+				typeof(bool)), typeof(DecorProviderRefreshFix).GetMethodSafe(nameof(
+				SolidNotChangedEvent), true, typeof(RoomProber), typeof(int), typeof(bool)));
 		}
 	}
 

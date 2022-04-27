@@ -323,4 +323,64 @@ namespace PeterHan.FastTrack {
 			}
 		}
 	}
+
+	/// <summary>
+	/// Applied to Workable to prevent the use of GetWorldItems in the event handler, which
+	/// could be called from a delegate in rocket landing that is really hard to patch.
+	/// </summary>
+	[HarmonyPatch(typeof(Workable), nameof(Workable.UpdateStatusItem))]
+	public static class Workable_UpdateStatusItem_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
+
+		/// <summary>
+		/// Applied before UpdateStatusItem runs.
+		/// </summary>
+		internal static bool Prefix(Workable __instance) {
+			if (__instance.TryGetComponent(out KSelectable selectable)) {
+				var working = __instance.workingStatusItem;
+				ref Guid statusHandle = ref __instance.workStatusItemHandle;
+				selectable.RemoveStatusItem(statusHandle, false);
+				if (__instance.worker == null)
+					UpdateStatusItem(__instance, selectable, ref statusHandle);
+				else if (working != null)
+					statusHandle = selectable.AddStatusItem(working, __instance);
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Updates the status item shown on each skill-required workable, when Duplicants
+		/// transfer between colonies (or new skills granted / Duplicants printed).
+		/// </summary>
+		/// <param name="instance">The workable to update.</param>
+		/// <param name="selectable">The location where the status item will be added.</param>
+		/// <param name="statusHandle">Stores a reference to the status item so it can be
+		/// destroyed later.</param>
+		private static void UpdateStatusItem(Workable instance, KSelectable selectable,
+				ref Guid statusHandle) {
+			string perk = instance.requiredSkillPerk;
+			int worldID = instance.GetMyWorldId();
+			var duplicants = Components.LiveMinionIdentities.Items;
+			var dbb = Db.Get().BuildingStatusItems;
+			int n = duplicants.Count;
+			// Manually filter to avoid GetWorldItems mutating the shared list again
+			bool noMinions = instance.requireMinionToWork;
+			for (int i = 0; i < n && noMinions; i++) {
+				var duplicant = duplicants[i];
+				noMinions = duplicant == null || duplicant.GetMyWorldId() != worldID;
+			}
+			if (noMinions)
+				statusHandle = selectable.AddStatusItem(dbb.WorkRequiresMinion);
+			else if (instance.shouldShowSkillPerkStatusItem && !string.IsNullOrEmpty(perk)) {
+				if (MinionResume.AnyMinionHasPerk(perk, worldID))
+					statusHandle = selectable.AddStatusItem(instance.
+						readyForSkillWorkStatusItem, perk);
+				else {
+					var statusItem = DlcManager.FeatureClusterSpaceEnabled() ? dbb.
+						ClusterColonyLacksRequiredSkillPerk : dbb.ColonyLacksRequiredSkillPerk;
+					statusHandle = selectable.AddStatusItem(statusItem, perk);
+				}
+			}
+		}
+	}
 }

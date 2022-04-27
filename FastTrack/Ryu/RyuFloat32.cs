@@ -211,6 +211,10 @@ namespace Ryu {
 				info = CultureInfo.CurrentCulture.NumberFormat;
 			if (sign)
 				result.Append(info.NegativeSign);
+#if DEBUG
+			if (info.NumberDecimalSeparator.Length > 1)
+				throw new ArgumentException("Requires a single character decimal point");
+#endif
 
 			// Print the decimal digits
 			uint mantissa = this.mantissa;

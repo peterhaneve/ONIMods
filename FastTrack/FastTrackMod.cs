@@ -295,11 +295,17 @@ namespace PeterHan.FastTrack {
 
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
 			const string ASDF = "Bugs.AutosaveDragFix";
+			const string PACU_SAYS_NO = "Bugs.TropicalPacuRooms";
 			var options = FastTrackOptions.Instance;
 			base.OnAllModsLoaded(harmony, mods);
 			if (options.MeshRendererOptions == FastTrackOptions.MeshRendererSettings.All &&
 					mods != null)
 				CheckTileCompat(harmony, mods);
+			// Die pacu bug die
+			if (!PRegistry.GetData<bool>(PACU_SAYS_NO)) {
+				GamePatches.DecorProviderRefreshFix.ApplyPatch(harmony);
+				PRegistry.PutData(PACU_SAYS_NO, true);
+			}
 			if (options.FastUpdatePickups)
 				CheckFetchCompat(harmony);
 			if (!PRegistry.GetData<bool>(ASDF)) {

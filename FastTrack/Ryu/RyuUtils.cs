@@ -45,6 +45,10 @@ namespace Ryu {
 			// Function precondition: v is not a 10-digit number.
 			// (f2s: 9 digits are sufficient for round-tripping.)
 			// (d2fixed: We print 9-digit blocks.)
+#if DEBUG
+			if (value >= 1000000000)
+				throw new ArgumentOutOfRangeException(nameof(value), value, "value too large");
+#endif
 			if (value >= 100000000) { return 9; }
 			if (value >= 10000000) { return 8; }
 			if (value >= 1000000) { return 7; }
@@ -99,14 +103,26 @@ namespace Ryu {
 		/// generated code for uint128_t looks slightly nicer.
 		/// </summary>
 		internal static uint MulShift(uint m, ulong factor, int shift) {
+#if DEBUG
+			if (shift <= 32)
+				throw new ArgumentOutOfRangeException(nameof(shift), shift, "shift too small");
+#endif
 			ulong bits0 = m * (factor & UINT32_BITS), bits1 = m * (factor >> 32);
 			ulong sum = (bits0 >> 32) + bits1, shiftedSum = sum >> (shift - 32);
+#if DEBUG
+			if (shiftedSum > uint.MaxValue)
+				throw new ArgumentOutOfRangeException(nameof(shiftedSum));
+#endif
 			return (uint)shiftedSum;
 		}
 
 		private static int Pow5Factor(uint value) {
 			int count = 0;
 			while (true) {
+#if DEBUG
+				if (value == 0U)
+					throw new ArgumentException("value is 0");
+#endif
 				uint q = value / 5U, r = value - 5U * q;
 				if (r != 0U)
 					break;
@@ -127,6 +143,10 @@ namespace Ryu {
 			// The average output length is 16.38 digits, so we check high-to-low.
 			// Function precondition: v is not an 18, 19, or 20-digit number.
 			// (17 digits are sufficient for round-tripping.)
+#if DEBUG
+			if (value >= 100000000000000000UL)
+				throw new ArgumentOutOfRangeException(nameof(value), value, "value too large");
+#endif
 			if (value >= 10000000000000000UL) { return 17; }
 			if (value >= 1000000000000000UL) { return 16; }
 			if (value >= 100000000000000UL) { return 15; }
@@ -171,6 +191,12 @@ namespace Ryu {
 
 		// Returns true if value is divisible by 2^p.
 		internal static bool IsMultipleOf2Power(ulong value, int p) {
+#if DEBUG
+			if (value == 0UL)
+				throw new ArgumentException("value is 0");
+			if (p >= 64)
+				throw new ArgumentOutOfRangeException(nameof(p), p, "p is too large");
+#endif
 			return (value & ((1UL << p) - 1UL)) == 0UL;
 		}
 
@@ -244,6 +270,7 @@ namespace Ryu {
 			return ShiftRight128(mid, hi, j - 65);
 		}
 
+		// = floor(mul * m / (1 << j)) mod 1E9
 		internal static uint MulShiftMod1E9(ulong m, ulong mulA, ulong mulB, ulong mulC,
 				int j) {
 			// 0 and 64
@@ -255,10 +282,18 @@ namespace Ryu {
 			// 64
 			ulong s0high = low1 + high0;
 			// 128
-			ulong s1low = low2 + high1 + ((s0high < low1) ? 1UL : 0UL);
+			ulong s1low = low2 + high1;
+			if (s0high < low1) s1low++;
 			// high1 + c1 cannot overflow, so compare against low2
 			// 192
-			ulong s1high = high2 + ((s1low < low2) ? 1UL : 0UL);
+			ulong s1high = high2;
+			if (s1low < low2) s1high++;
+#if DEBUG
+			if (j < 128)
+				throw new ArgumentOutOfRangeException(nameof(j), j, "j too low");
+			if (j > 180)
+				throw new ArgumentOutOfRangeException(nameof(j), j, "j too high");
+#endif
 			if (j < 160) {
 				ulong r1 = Mod1E9(((ulong)Mod1E9(s1high) << 32) | (s1low >> 32));
 				return Mod1E9(((r1 << 32) | (s1low & UINT32_BITS)) >> (j - 128));
@@ -266,9 +301,25 @@ namespace Ryu {
 				return Mod1E9(((Mod1E9(s1high) << 32) | (s1low >> 32)) >> (j - 160));
 		}
 
+		internal static uint MulShiftMod1E9(uint m, uint mulA, uint mulB, uint mulC, int j) {
+			ulong a0 = (ulong)m * mulA, a1 = (ulong)m * mulB, a2 = (ulong)m * mulC;
+			// s = a0 + (a1 >> 32) + (a2 >> 64)
+			// 0
+			ulong s0low = a0 + (a1 << 32), s0high = (a1 >> 32) + a2;
+			if (s0low < a0) s0high++;
+			if (j < 64)
+				return Mod1E9(((s0high << 32) | (s0low >> 32)) >> (j - 32));
+			else
+				return Mod1E9(s0high >> (j - 64));
+		}
+
 		private static int Pow5Factor(ulong value) {
 			int count = 0;
 			while (true) {
+#if DEBUG
+				if (value == 0U)
+					throw new ArgumentException("value is 0");
+#endif
 				ulong q = value / 5UL;
 				uint r = (uint)value - 5U * (uint)q;
 				if (r != 0U)
@@ -281,6 +332,10 @@ namespace Ryu {
 
 		internal static ulong ShiftRight128(ulong lo, ulong hi, int dist) {
 			// No need to handle the case dist >= 64 here (see above)
+#if DEBUG
+			if (dist <= 0U || dist >= 64U)
+				throw new ArgumentOutOfRangeException(nameof(dist), dist, "dist out of range");
+#endif
 			return (hi << (64 - dist)) | (lo >> dist);
 		}
 
@@ -304,12 +359,20 @@ namespace Ryu {
 		#endregion
 
 		#region Math
-		/// <summary>
-		/// Returns e == 0 ? 1 : ceil(log_2(5^e)); requires 0 <= e <= 3528.
-		/// </summary>
-		internal static int CeilLog2Pow5(int e) {
-			return Log2Pow5(e) + 1;
+		internal static int IndexForExponent(int e) => (e + 15) >> 4;
+
+		internal static uint LastDigit(ref uint digits, int iterations) {
+			uint lastDigit = 0U, iter = digits;
+			for (int i = iterations; i > 0; i--) {
+				uint iter10 = iter / 10U;
+				lastDigit = iter - 10U * iter10;
+				iter = iter10;
+			}
+			digits = iter;
+			return lastDigit;
 		}
+
+		internal static int LengthForIndex(int idx) => (Log10Pow2(idx << 4) + 25) / 9;
 
 		/// <summary>
 		/// Returns e == 0 ? 1 : [log_2(5^e)]; requires 0 <= e <= 3528.
@@ -318,6 +381,10 @@ namespace Ryu {
 			// This approximation works up to the point that the multiplication overflows at
 			// e = 3529. If the multiplication were done in 64 bits, it would fail at 5^4004
 			// which is just greater than 2^9297.
+#if DEBUG
+			if (e < 0 || e > 3528)
+				throw new ArgumentOutOfRangeException(nameof(e), e, "Overflow");
+#endif
 			return (int)(((uint)e * 1217359U) >> 19);
 		}
 
@@ -327,6 +394,10 @@ namespace Ryu {
 		internal static int Log10Pow2(int e) {
 			// The first value this approximation fails for is 2^1651 which is just greater
 			// than 10^297.
+#if DEBUG
+			if (e < 0 || e > 1650)
+				throw new ArgumentOutOfRangeException(nameof(e), e, "Overflow");
+#endif
 			return (e * 78913) >> 18;
 		}
 
@@ -336,6 +407,10 @@ namespace Ryu {
 		internal static int Log10Pow5(int e) {
 			// The first value this approximation fails for is 5^2621 which is just greater
 			// than 10^1832.
+#if DEBUG
+			if (e < 0 || e > 2620)
+				throw new ArgumentOutOfRangeException(nameof(e), e, "Overflow");
+#endif
 			return (e * 732923) >> 20;
 		}
 
@@ -346,6 +421,10 @@ namespace Ryu {
 			// This approximation works up to the point that the multiplication overflows at
 			// e = 3529. If the multiplication were done in 64 bits, it would fail at 5^4004
 			// which is just greater than 2^9297.
+#if DEBUG
+			if (e > 3528)
+				throw new ArgumentOutOfRangeException(nameof(e), e, "Overflow");
+#endif
 			return (int)((((uint)e * 1217359U) >> 19) + 1U);
 		}
 		#endregion
@@ -394,11 +473,99 @@ namespace Ryu {
 		}
 
 		/// <summary>
+		/// Convert `digits` to decimal and append the last 9 decimal digits to result.
+		/// If `digits` contains additional digits, then those are silently ignored.
+		/// </summary>
+		internal static void Append9Digits(StringBuilder result, uint digits) {
+			if (digits == 0U)
+				Append0(result, 9);
+			else {
+				int index = result.Length + 9;
+				result.Length = index--;
+				for (int i = 0; i < 2; i++) {
+					uint d10000 = digits / 10000U, c0 = digits - 10000 * d10000;
+					uint c1 = c0 / 100U;
+					digits = d10000;
+					index = result.WriteDigits(index, c0 - 100U * c1);
+					index = result.WriteDigits(index, c1);
+				}
+				result[index] = digits.DigitToChar();
+			}
+		}
+
+		/// <summary>
+		/// Convert `digits` to decimal and write the last `count` decimal digits to result.
+		/// If `digits` contains additional digits, then those are silently ignored.
+		/// </summary>
+		internal static int AppendCDigits(StringBuilder result, uint digits, int count) {
+			int i = 0, index = result.Length + count;
+			result.Length = index--;
+			for (; i < count - 1; i += 2) {
+				uint d100 = digits / 100U, c = digits - 100U * d100;
+				digits = d100;
+				index = result.WriteDigits(index, c);
+			}
+			// Generate the last digit if count is odd
+			if (i < count)
+				result[index--] = (digits % 10U).DigitToChar();
+			return index;
+		}
+
+		/// <summary>
+		/// Convert `digits` to a sequence of decimal digits. Print the first digit, followed
+		/// by a decimal separator followed by the remaining digits. The caller has to
+		/// guarantee that:
+		///   10^(olength-1) <= digits < 10^olength
+		/// e.g., by passing `olength` as `decimalLength9(digits)`
+		/// </summary>
+		internal static void AppendDDigits(StringBuilder result, uint digits, int count,
+				bool printDecimalPoint, NumberFormatInfo info) {
+			if (printDecimalPoint) {
+				char dp = info.NumberDecimalSeparator[0];
+				int index = result.Length + count;
+				result.Length = index--;
+				index = PrintGroups42(result, ref digits, index);
+				if (digits >= 10U) {
+					string tbl = RyuTables.DIGIT_TABLE[digits];
+					result[index--] = tbl[1];
+					result[index--] = dp;
+					result[index--] = tbl[0];
+				} else {
+					result[index--] = dp;
+					result[index--] = digits.DigitToChar();
+				}
+			} else
+				result.Append(digits.DigitToChar());
+		}
+
+		/// <summary>
+		/// Convert `digits` to a sequence of decimal digits. Appends the digits to the result.
+		/// The caller has to guarantee that:
+		///   10^(olength-1) <= digits < 10^olength
+		/// e.g., by passing `olength` as `decimalLength9(digits)`
+		/// </summary>
+		internal static int AppendNDigits(StringBuilder result, int count, uint digits) {
+			int index = result.Length + count;
+			result.Length = index--;
+			index = PrintGroups42(result, ref digits, index);
+			if (digits >= 10U)
+				index = result.WriteDigits(index, digits);
+			else
+				result[index--] = digits.DigitToChar();
+			return index;
+		}
+
+		/// <summary>
 		/// Appends the exponent for exponential and roundtrip notation.
 		/// </summary>
 		internal static void AppendExponent(StringBuilder result, int exponent,
 				RyuFormatOptions options, NumberFormatInfo info) {
 			bool compat = (options & RyuFormatOptions.CompatibleExponent) != 0;
+#if DEBUG
+			if (exponent < -9999 || exponent > 9999)
+				throw new ArgumentOutOfRangeException(nameof(exponent), exponent,
+					"4 digit exponent limit");
+#endif
 			result.Append('E');
 			if (exponent < 0) {
 				result.Append(info.NegativeSign);

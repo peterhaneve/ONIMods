@@ -126,6 +126,16 @@ namespace PeterHan.FastTrack.UIPatches {
 		private LastSelectionDetails lastSelection;
 
 		/// <summary>
+		/// Pooled headers that can be used for the process conditions.
+		/// </summary>
+		private readonly IList<HierarchyReferences> processHeaders;
+
+		/// <summary>
+		/// Pooled rows that can be used for the process conditions.
+		/// </summary>
+		private readonly IList<GameObject> processRows;
+
+		/// <summary>
 		/// The storages found in the currently selected object.
 		/// </summary>
 		private readonly List<Storage> storages;
@@ -159,6 +169,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			lastUpdate = 0.0;
 			lastSelection = default;
 			lastStressEntry = null;
+			processHeaders = new List<HierarchyReferences>(8);
+			processRows = new List<GameObject>(16);
 			storages = new List<Storage>(8);
 			storageActive = false;
 			storageLabels = new HashSet<CachedStorageLabel>();
@@ -265,6 +277,17 @@ namespace PeterHan.FastTrack.UIPatches {
 			lastReport = null;
 			lastStressEntry = null;
 			lastSelection = default;
+			// Destroy all process rows
+			foreach (var header in processHeaders) {
+				GameObject go;
+				if (header != null && (go = header.gameObject) != null)
+					Util.KDestroyGameObject(go);
+			}
+			foreach (var row in processRows)
+				if (row != null)
+					Util.KDestroyGameObject(row);
+			processHeaders.Clear();
+			processRows.Clear();
 			storages.Clear();
 			// All of these were in the label cache so they should already be disposed
 			storageLabels.Clear();
@@ -334,12 +357,10 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="sis">The parent info screen.</param>
 		private void InitInstance(SimpleInfoScreen sis) {
-			CollapsibleDetailContentPanel panel;
-			if (storageParent == null && sis.StoragePanel.TryGetComponent(out storageParent)) {
-				if (sis.stressPanel.TryGetComponent(out panel))
-					panel.HeaderLabel.text = DETAILTABS.STATS.GROUPNAME_STRESS;
-				allGeysers = UnityEngine.Object.FindObjectsOfType<Geyser>();
-			}
+			if (storageParent == null)
+				sis.StoragePanel.TryGetComponent(out storageParent);
+			if (sis.stressPanel.TryGetComponent(out CollapsibleDetailContentPanel panel))
+				panel.HeaderLabel.text = DETAILTABS.STATS.GROUPNAME_STRESS;
 			if (conditionParent == null && sis.processConditionContainer.TryGetComponent(
 					out panel))
 				conditionParent = panel.Content.gameObject;
@@ -349,9 +370,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Refreshes the parts of the info screen that are only updated when a different item
 		/// is selected.
 		/// </summary>
-		/// <param name="sis">The info screen to refresh.</param>
 		/// <param name="target">The selected target object.</param>
-		private void OnSelectTarget(SimpleInfoScreen sis, GameObject target) {
+		private void OnSelectTarget(GameObject target) {
 			lastReport = null;
 			storages.Clear();
 			if (target == null) {
@@ -369,6 +389,8 @@ namespace PeterHan.FastTrack.UIPatches {
 						storages.Add(storage);
 				}
 				found.Recycle();
+				// Geysers can be uncovered
+				allGeysers = UnityEngine.Object.FindObjectsOfType<Geyser>();
 			}
 		}
 
@@ -409,6 +431,7 @@ namespace PeterHan.FastTrack.UIPatches {
 						else
 							vi.Update(vitalsContainer);
 					}
+					sis.rocketSimpleInfoPanel.Refresh(sis.rocketStatusContainer, target);
 				}
 				int count = statusItems.Count;
 				sis.statusItemPanel.gameObject.SetActive(count > 0);
@@ -416,7 +439,6 @@ namespace PeterHan.FastTrack.UIPatches {
 					statusItems[i].Refresh();
 				if (force || !paused || !wasPaused)
 					RefreshStorage(sis);
-				sis.rocketSimpleInfoPanel.Refresh(sis.rocketStatusContainer, target);
 			}
 			wasPaused = paused;
 		}
@@ -476,18 +498,22 @@ namespace PeterHan.FastTrack.UIPatches {
 		private void RefreshProcess(SimpleInfoScreen sis) {
 			var rows = sis.processConditionRows;
 			bool rocket = lastSelection.isRocket;
-			// As it is a mix of headers and body, reusing rows is not as easy as it looks
+			int nh = 0, nr = 0;
+			// Turn off all existing rows
 			foreach (var original in rows)
-				Util.KDestroyGameObject(original);
+				original.SetActive(false);
 			rows.Clear();
 			if (rocket) {
 				if (DlcManager.FeatureClusterSpaceEnabled())
-					RefreshProcessConditionsForType(sis, ProcessConditionType.RocketFlight);
-				RefreshProcessConditionsForType(sis, ProcessConditionType.RocketPrep);
-				RefreshProcessConditionsForType(sis, ProcessConditionType.RocketStorage);
-				RefreshProcessConditionsForType(sis, ProcessConditionType.RocketBoard);
+					RefreshProcessConditions(sis, ProcessConditionType.RocketFlight, ref nh,
+						ref nr);
+				RefreshProcessConditions(sis, ProcessConditionType.RocketPrep, ref nh, ref nr);
+				RefreshProcessConditions(sis, ProcessConditionType.RocketStorage, ref nh,
+					ref nr);
+				RefreshProcessConditions(sis, ProcessConditionType.RocketBoard, ref nh,
+					ref nr);
 			} else
-				RefreshProcessConditionsForType(sis, ProcessConditionType.All);
+				RefreshProcessConditions(sis, ProcessConditionType.All, ref nh, ref nr);
 		}
 
 		/// <summary>
@@ -495,30 +521,56 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="sis">The info screen to update.</param>
 		/// <param name="conditionType">The condition type to refresh.</param>
-		private void RefreshProcessConditionsForType(SimpleInfoScreen sis,
-				ProcessConditionType conditionType) {
+		/// <param name="nh">The number of header rows allocated.</param>
+		/// <param name="nr">The number of content rows allocated.</param>
+		private void RefreshProcessConditions(SimpleInfoScreen sis, ProcessConditionType
+				conditionType, ref int nh, ref int nr) {
 			var conditions = lastSelection.conditions.GetConditionSet(conditionType);
 			int n = conditions.Count;
 			if (n > 0) {
+				int nHeaders = nh, nRows = nr;
+				var rows = sis.processConditionRows;
+				var pr = processRows;
+				var ph = processHeaders;
 				string conditionName = StringFormatter.ToUpper(conditionType.ToString());
 				var seen = HashSetPool<ProcessCondition, SimpleInfoScreen>.Allocate();
-				var hr = Util.KInstantiateUI<HierarchyReferences>(sis.processConditionHeader.
-					gameObject, conditionParent, true);
+				GameObject go;
+				HierarchyReferences hr;
+				// Grab a cached header if possible
+				if (nHeaders >= ph.Count) {
+					hr = Util.KInstantiateUI<HierarchyReferences>(sis.processConditionHeader.
+						gameObject, conditionParent, true);
+					go = hr.gameObject;
+					ph.Add(hr);
+				} else {
+					hr = ph[nHeaders];
+					go = hr.gameObject;
+					go.SetActive(true);
+				}
 				hr.GetReference<LocText>("Label").text = Strings.Get(
 					"STRINGS.UI.DETAILTABS.PROCESS_CONDITIONS." + conditionName);
 				hr.GetComponent<ToolTip>().toolTip = Strings.Get(
 					"STRINGS.UI.DETAILTABS.PROCESS_CONDITIONS." + conditionName + "_TOOLTIP");
-				sis.processConditionRows.Add(hr.gameObject);
+				rows.Add(go);
+				nh = nHeaders + 1;
 				for (int i = 0; i < n; i++) {
 					var condition = conditions[i];
 					if (condition.ShowInUI() && (condition is RequireAttachedComponent || seen.
 							Add(condition))) {
-						var go = Util.KInstantiateUI(sis.processConditionRow, conditionParent,
-							true);
-						sis.processConditionRows.Add(go);
+						if (nRows >= pr.Count) {
+							go = Util.KInstantiateUI(sis.processConditionRow, conditionParent,
+								true);
+							pr.Add(go);
+						} else {
+							go = pr[nRows];
+							go.SetActive(true);
+						}
+						rows.Add(go);
 						ConditionListSideScreen.SetRowState(go, condition);
+						nRows++;
 					}
 				}
+				nr = nRows;
 				seen.Recycle();
 			}
 		}
@@ -760,7 +812,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			internal static bool Prefix(SimpleInfoScreen __instance, GameObject target) {
 				if (__instance.lastTarget != target)
-					instance?.OnSelectTarget(__instance, target);
+					instance?.OnSelectTarget(target);
 				return true;
 			}
 		}

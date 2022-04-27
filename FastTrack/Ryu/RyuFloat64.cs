@@ -223,6 +223,10 @@ namespace Ryu {
 				info = CultureInfo.CurrentCulture.NumberFormat;
 			if (sign)
 				result.Append(info.NegativeSign);
+#if DEBUG
+			if (info.NumberDecimalSeparator.Length > 1)
+				throw new ArgumentException("Requires a single character decimal point");
+#endif
 			ulong mantissa = this.mantissa;
 			uint mantissaShort;
 			int olength = RyuUtils.DecimalLength17(mantissa), start = result.Length, index =
