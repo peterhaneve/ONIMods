@@ -302,7 +302,7 @@ namespace PeterHan.FastTrack {
 					mods != null)
 				CheckTileCompat(harmony, mods);
 			// Die pacu bug die
-			if (!PRegistry.GetData<bool>(PACU_SAYS_NO)) {
+			if (options.AllocOpts && !PRegistry.GetData<bool>(PACU_SAYS_NO)) {
 				GamePatches.DecorProviderRefreshFix.ApplyPatch(harmony);
 				PRegistry.PutData(PACU_SAYS_NO, true);
 			}

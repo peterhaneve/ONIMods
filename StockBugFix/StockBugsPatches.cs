@@ -342,45 +342,6 @@ namespace PeterHan.StockBugFix {
 	}
 
 	/// <summary>
-	/// Applied to Deconstructable to spawn items in positions that match the building's
-	/// current orientation.
-	/// </summary>
-	[HarmonyPatch(typeof(Deconstructable), nameof(Deconstructable.SpawnItem))]
-	public static class Deconstructable_SpawnItem_Patch {
-		internal static bool Prepare() {
-			return StockBugFixOptions.Instance.FixOffsetTables;
-		}
-
-		/// <summary>
-		/// Transpiles SpawnItem to rotate the offset table before dropping items.
-		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-			var target = typeof(Deconstructable).GetPropertySafe<CellOffset[]>(
-				"placementOffsets", false)?.GetGetMethod(true);
-			var modifier = typeof(StockBugsPatches).GetMethodSafe(nameof(StockBugsPatches.
-				RotateAll), true, typeof(CellOffset[]), typeof(KMonoBehaviour));
-			bool patched = false;
-			if (target != null && modifier != null)
-				foreach (var instr in method) {
-					yield return instr;
-					if (instr.Is(OpCodes.Call, target)) {
-						yield return new CodeInstruction(OpCodes.Ldarg_0);
-						yield return new CodeInstruction(OpCodes.Call, modifier);
-#if DEBUG
-						PUtil.LogDebug("Patched Deconstructable.SpawnItem");
-#endif
-						patched = true;
-					}
-				}
-			else
-				foreach (var instr in method)
-					yield return instr;
-			if (!patched)
-				PUtil.LogWarning("Unable to patch Deconstructable.SpawnItem");
-		}
-	}
-
-	/// <summary>
 	/// Applied to DecorProvider to reduce the effect of the Tropical Pacu bug by instead of
 	/// triggering a full room rebuild, just refreshing the room constraints.
 	/// 
@@ -395,7 +356,7 @@ namespace PeterHan.StockBugFix {
 		/// <param name="harmony">The Harmony instance to use for patching.</param>
 		internal static void ApplyPatch(Harmony harmony) {
 			var patchMethod = new HarmonyMethod(typeof(DecorProviderRefreshFix), nameof(
-				Transpiler));
+				TranspileRefresh));
 			var targetMethod = PPatchTools.GetTypeSafe(
 				"ReimaginationTeam.DecorRework.DecorSplatNew", "DecorReimagined")?.
 				GetMethodSafe("RefreshDecor", false, PPatchTools.AnyArguments);
@@ -431,11 +392,50 @@ namespace PeterHan.StockBugFix {
 		/// 26 handles up to 3 without a resize.
 		/// </summary>
 		[HarmonyPriority(Priority.LowerThanNormal)]
-		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+		internal static TranspiledMethod TranspileRefresh(TranspiledMethod instructions) {
 			return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(RoomProber).
 				GetMethodSafe(nameof(RoomProber.SolidChangedEvent), false, typeof(int),
 				typeof(bool)), typeof(DecorProviderRefreshFix).GetMethodSafe(nameof(
 				SolidNotChangedEvent), true, typeof(RoomProber), typeof(int), typeof(bool)));
+		}
+	}
+
+	/// <summary>
+	/// Applied to Deconstructable to spawn items in positions that match the building's
+	/// current orientation.
+	/// </summary>
+	[HarmonyPatch(typeof(Deconstructable), nameof(Deconstructable.SpawnItem))]
+	public static class Deconstructable_SpawnItem_Patch {
+		internal static bool Prepare() {
+			return StockBugFixOptions.Instance.FixOffsetTables;
+		}
+
+		/// <summary>
+		/// Transpiles SpawnItem to rotate the offset table before dropping items.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+			var target = typeof(Deconstructable).GetPropertySafe<CellOffset[]>(
+				"placementOffsets", false)?.GetGetMethod(true);
+			var modifier = typeof(StockBugsPatches).GetMethodSafe(nameof(StockBugsPatches.
+				RotateAll), true, typeof(CellOffset[]), typeof(KMonoBehaviour));
+			bool patched = false;
+			if (target != null && modifier != null)
+				foreach (var instr in method) {
+					yield return instr;
+					if (instr.Is(OpCodes.Call, target)) {
+						yield return new CodeInstruction(OpCodes.Ldarg_0);
+						yield return new CodeInstruction(OpCodes.Call, modifier);
+#if DEBUG
+						PUtil.LogDebug("Patched Deconstructable.SpawnItem");
+#endif
+						patched = true;
+					}
+				}
+			else
+				foreach (var instr in method)
+					yield return instr;
+			if (!patched)
+				PUtil.LogWarning("Unable to patch Deconstructable.SpawnItem");
 		}
 	}
 

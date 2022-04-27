@@ -51,8 +51,6 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// will be used instead.
 	/// </summary>
 	public static class DecorProviderRefreshFix {
-		internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
-
 		/// <summary>
 		/// Attempts to also patch the Decor Reimagined implementation of DecorProvider.
 		/// Refresh.
@@ -60,7 +58,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="harmony">The Harmony instance to use for patching.</param>
 		internal static void ApplyPatch(Harmony harmony) {
 			var patchMethod = new HarmonyMethod(typeof(DecorProviderRefreshFix), nameof(
-				Transpiler));
+				TranspileRefresh));
 			var targetMethod = PPatchTools.GetTypeSafe(
 				"ReimaginationTeam.DecorRework.DecorSplatNew", "DecorReimagined")?.
 				GetMethodSafe("RefreshDecor", false, PPatchTools.AnyArguments);
@@ -96,7 +94,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// 26 handles up to 3 without a resize.
 		/// </summary>
 		[HarmonyPriority(Priority.LowerThanNormal)]
-		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+		internal static TranspiledMethod TranspileRefresh(TranspiledMethod instructions) {
 			return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(RoomProber).
 				GetMethodSafe(nameof(RoomProber.SolidChangedEvent), false, typeof(int),
 				typeof(bool)), typeof(DecorProviderRefreshFix).GetMethodSafe(nameof(
