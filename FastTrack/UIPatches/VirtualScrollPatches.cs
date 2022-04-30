@@ -17,7 +17,7 @@
  */
 
 using HarmonyLib;
-using PeterHan.PLib.Core;
+using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -159,6 +159,11 @@ namespace PeterHan.FastTrack.UIPatches {
 	[HarmonyPatch(typeof(ReceptacleSideScreen), nameof(ReceptacleSideScreen.
 		UpdateAvailableAmounts))]
 	public static class ReceptacleSideScreen_UpdateAvailableAmounts_Patch {
+		/// <summary>
+		/// Avoid reallocating a new StringBuilder every frame.
+		/// </summary>
+		private static readonly StringBuilder CACHED_BUILDER = new StringBuilder(16);
+
 		internal static bool Prepare() => FastTrackOptions.Instance.VirtualScroll;
 
 		/// <summary>
@@ -170,6 +175,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			var inst = DiscoveredResources.Instance;
 			var selected = __instance.selectedEntityToggle;
 			var obj = __instance.requestObjectList;
+			var text = CACHED_BUILDER;
 			VirtualScroll vs = null;
 			if (obj != null)
 				obj.TryGetComponent(out vs);
@@ -203,7 +209,9 @@ namespace PeterHan.FastTrack.UIPatches {
 						result = true;
 						// Update display only if it actually changed
 						display.lastAmount = availableAmount;
-						key.amount.text = availableAmount.ToString();
+						text.Clear();
+						availableAmount.ToRyuSoftString(text, 2);
+						key.amount.SetText(text);
 					}
 					if (!__instance.ValidRotationForDeposit(display.direction) ||
 							availableAmount <= 0.0f) {

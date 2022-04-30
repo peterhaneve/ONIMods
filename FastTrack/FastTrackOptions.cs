@@ -43,6 +43,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool LogicUpdates { get; set; }
 
+		[Option("No Colony Reports", "Disables colony reports completely.\n<color=#FF0000>Disabling will prevent some achievements from being unlocked</color>" + PERF_MEDIUM, "Buildings")]
+		[JsonProperty]
+		public bool NoReports { get; set; }
+
 		[Option("Optimize Heat Generation", "Reduces memory allocations used when generating heat." + PERF_MEDIUM, "Buildings")]
 		[JsonProperty]
 		public bool FastStructureTemperature { get; set; }
@@ -83,7 +87,7 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool NoConversations { get; set; }
 
-		[Option("Fast Reachability Checks", "Only check items and chores for reachability when necessary." + PERF_LOW, "Duplicants")]
+		[Option("Fast Reachability Checks", "Only check items and chores for reachability when necessary." + PERF_MEDIUM, "Duplicants")]
 		[JsonProperty]
 		public bool FastReachability { get; set; }
 
@@ -122,7 +126,7 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool OptimizeDialogs { get; set; }
 
-		[Option("Other UI Optimizations", "Optimizes many event and UI handlers." + PERF_LOW, "Interface")]
+		[Option("Other UI Optimizations", "Optimizes many event and UI handlers." + PERF_MEDIUM, "Interface")]
 		[JsonProperty]
 		public bool MiscOpts { get; set; }
 
@@ -146,7 +150,7 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool PickupOpts { get; set; }
 
-		[Option("Side Screens", "Optimizes the informational side screens." + PERF_LOW, "Interface")]
+		[Option("Side Screens", "Optimizes the informational side screens." + PERF_MEDIUM, "Interface")]
 		[JsonProperty]
 		public bool SideScreenOpts { get; set; }
 
@@ -194,7 +198,7 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public ConduitAnimationQuality DisableConduitAnimation { get; set; }
 
-		[Option("Quick Format", "Reduces memory allocations when formatting strings." + PERF_LOW, "Visual")]
+		[Option("Quick Format", "Reduces memory allocations when formatting strings.\n<i>Not compatible with mods: DisplayAllTemps</i>" + PERF_MEDIUM, "Visual")]
 		[JsonProperty]
 		public bool CustomStringFormat { get; set; }
 
@@ -245,6 +249,7 @@ namespace PeterHan.FastTrack {
 			NoBounce = true;
 			NoConversations = false;
 			NoPlacerEasing = false;
+			NoReports = false;
 			NoSplash = true;
 			NoTileDecor = false;
 			OptimizeDialogs = true;

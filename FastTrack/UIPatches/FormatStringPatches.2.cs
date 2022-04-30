@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using Ryu;
+using System.Text;
 using UnityEngine;
 
 using SUFFIXES = STRINGS.UI.UNITSUFFIXES;
@@ -95,8 +96,46 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 		}
 
+		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedDisease))]
+		internal static class GameUtil_GetFormattedDisease_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
+
+			/// <summary>
+			/// Applied before GetFormattedDisease runs.
+			/// </summary>
+			internal static bool Prefix(byte idx, int units, ref string __result) {
+				var text = CACHED_BUILDER;
+				if (idx == Sim.InvalidDiseaseIdx || units <= 0)
+					__result = STRINGS.UI.OVERLAYS.DISEASE.NO_DISEASE;
+				else {
+					var disease = Db.Get().Diseases[idx];
+					// The color tag does nothing in vanilla...
+					text.Clear().Append(disease.Name).Append(" [");
+					GetFormattedDiseaseAmount(text, units);
+					__result = text.Append(']').ToString();
+				}
+				return false;
+			}
+		}
+
+		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedDiseaseAmount))]
+		internal static class GameUtil_GetFormattedDiseaseAmount_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
+
+			/// <summary>
+			/// Applied before GetFormattedDiseaseAmount runs.
+			/// </summary>
+			internal static bool Prefix(int units, TimeSlice timeSlice, ref string __result) {
+				var text = CACHED_BUILDER;
+				text.Clear();
+				GetFormattedDiseaseAmount(text, units, timeSlice);
+				__result = text.ToString();
+				return false;
+			}
+		}
+
 		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedDistance))]
-		internal class GetFormattedDistance_Patch {
+		internal static class GetFormattedDistance_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
 
 			/// <summary>
@@ -241,13 +280,13 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(float joules, string floatFormat, TimeSlice timeSlice,
 					ref string __result) {
 				var text = CACHED_BUILDER;
+				text.Clear();
 				if (timeSlice == TimeSlice.PerSecond)
-					__result = GetFormattedWattage(joules, GameUtil.WattageFormatterUnit.
+					GetFormattedWattage(text, joules, GameUtil.WattageFormatterUnit.
 						Automatic, true);
 				else {
 					var legend = JOULE_LEGEND;
 					joules = GameUtil.ApplyTimeSlice(joules, timeSlice);
-					text.Clear();
 					float absJ = Mathf.Abs(joules);
 					if (text.AppendIfInfinite(joules))
 						text.Append(legend[0]);
@@ -261,8 +300,9 @@ namespace PeterHan.FastTrack.UIPatches {
 						text.AppendSimpleFormat(floatFormat, joules);
 						text.Append(legend[0]);
 					}
-					__result = text.AppendTimeSlice(timeSlice).ToString();
+					text.AppendTimeSlice(timeSlice);
 				}
+				__result = text.ToString();
 				return false;
 			}
 		}
@@ -277,83 +317,11 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(float mass, TimeSlice timeSlice, string floatFormat,
 					GameUtil.MetricMassFormat massFormat, bool includeSuffix,
 					ref string __result) {
-				if (float.IsInfinity(mass) || float.IsNaN(mass) || mass == float.MaxValue)
-					// Handle inf and NaN
-					__result = STRINGS.UI.CALCULATING;
-				else {
-					// Divide by cycle length if /cycle
-					LocString suffix;
-					float absMass = Mathf.Abs(mass);
-					var legend = MASS_LEGEND;
-					mass = GameUtil.ApplyTimeSlice(mass, timeSlice);
-					if (GameUtil.massUnit == GameUtil.MassUnit.Kilograms) {
-						if (massFormat == GameUtil.MetricMassFormat.UseThreshold) {
-							if (absMass > 0.0f) {
-								if (absMass < 5E-06f) {
-									// ug
-									suffix = legend[4];
-									mass = Mathf.Floor(mass * 1.0E+09f);
-								} else if (absMass < 0.005f) {
-									mass *= 1000000.0f;
-									// mg
-									suffix = legend[3];
-								} else if (absMass < 5.0f) {
-									mass *= 1000.0f;
-									// g
-									suffix = legend[2];
-								} else if (absMass < 5000.0f)
-									// kg
-									suffix = legend[1];
-								else {
-									mass /= 1000.0f;
-									// t
-									suffix = legend[0];
-								}
-							} else
-								// kg
-								suffix = legend[1];
-						} else if (massFormat == GameUtil.MetricMassFormat.Kilogram)
-							// kg
-							suffix = legend[1];
-						else if (massFormat == GameUtil.MetricMassFormat.Gram) {
-							mass *= 1000f;
-							// g
-							suffix = legend[2];
-						} else if (massFormat == GameUtil.MetricMassFormat.Tonne) {
-							mass /= 1000f;
-							// t
-							suffix = legend[0];
-						} else
-							// t
-							suffix = legend[0];
-					} else {
-						mass /= 2.2f;
-						if (massFormat == GameUtil.MetricMassFormat.UseThreshold)
-							if (absMass < 5.0f && absMass > 0.001f) {
-								mass *= 256.0f;
-								suffix = SUFFIXES.MASS.DRACHMA;
-							} else {
-								mass *= 7000.0f;
-								suffix = SUFFIXES.MASS.GRAIN;
-							}
-						else
-							suffix = SUFFIXES.MASS.POUND;
-					}
-					var text = CACHED_BUILDER;
-					text.Clear();
-					// Hardcodes for the most common cases in ONI
-					if (floatFormat == "{0:0.#}")
-						mass.ToRyuSoftString(text, 1);
-					else if (floatFormat == "{0:0.##}")
-						mass.ToRyuSoftString(text, 2);
-					else if (floatFormat == "{0:0.###}")
-						mass.ToRyuSoftString(text, 3);
-					else
-						text.AppendFormat(floatFormat, mass);
-					if (includeSuffix)
-						text.Append(suffix).AppendTimeSlice(timeSlice);
-					__result = text.ToString();
-				}
+				var text = CACHED_BUILDER;
+				text.Clear();
+				GetFormattedMass(text, mass, timeSlice, massFormat, includeSuffix,
+					floatFormat);
+				__result = text.ToString();
 				return false;
 			}
 		}
@@ -428,18 +396,8 @@ namespace PeterHan.FastTrack.UIPatches {
 					ref string __result) {
 				var text = CACHED_BUILDER;
 				text.Clear();
-				if (timeSlice == TimeSlice.PerCycle) {
-					// Range cannot be over 999 tiles right now ;)
-					range.ToRyuHardString(text, 1);
-					if (displaySuffix)
-						text.Append(' ').Append(STRINGS.UI.CLUSTERMAP.TILES_PER_CYCLE);
-					__result = text.ToString();
-				} else {
-					(range / 600.0f).ToRyuHardString(text, 0);
-					if (displaySuffix)
-						text.Append(' ').Append(STRINGS.UI.CLUSTERMAP.TILES);
-					__result = text.ToString();
-				}
+				GetFormattedRocketRange(text, range, timeSlice, displaySuffix);
+				__result = text.ToString();
 				return false;
 			}
 		}
@@ -548,8 +506,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				text.Clear();
 				if (!text.AppendIfInfinite(seconds))
 					text.AppendSimpleFormat(floatFormat, seconds);
-				text.Append("s");
-				__result = text.ToString();
+				__result = text.Append("s").ToString();
 				return false;
 			}
 		}
@@ -588,7 +545,10 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			internal static bool Prefix(float watts, GameUtil.WattageFormatterUnit unit,
 					bool displayUnits, ref string __result) {
-				__result = GetFormattedWattage(watts, unit, displayUnits);
+				var text = CACHED_BUILDER;
+				text.Clear();
+				GetFormattedWattage(text, watts, unit, displayUnits);
+				__result = text.ToString();
 				return false;
 			}
 		}
@@ -651,10 +611,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					// This is technically a LocString but we hope that it is the same...
 					if (!text.AppendIfInfinite(tc))
 						tc.ToRyuSoftString(text, 7);
-					text.Append(" (");
-					text.Append(tcText);
-					text.Append(')');
-					tcText = text.ToString();
+					tcText = text.Append(" (").Append(tcText).Append(')').ToString();
 				}
 				__result = tcText;
 				return false;
@@ -672,14 +629,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(string name, float count, bool upperName,
 					ref string __result) {
 				var text = CACHED_BUILDER;
-				text.Clear();
-				if (!text.AppendIfInfinite(count))
-					count.ToRyuSoftString(text, 2);
-				string units = text.ToString();
-				text.Clear();
-				text.Append(STRINGS.UI.NAME_WITH_UNITS);
-				text.Replace("{0}", upperName ? StringFormatter.ToUpper(name) : name);
-				text.Replace("{1}", units);
+				GetUnitFormattedName(text, name, count, upperName);
 				__result = text.ToString();
 				return false;
 			}

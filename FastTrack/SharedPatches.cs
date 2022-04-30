@@ -147,9 +147,14 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		internal static void Prefix() {
 			if (Game.Instance != null) {
-				if (FastTrackOptions.Instance.ConduitOpts)
+				var options = FastTrackOptions.Instance;
+				if (options.ConduitOpts)
 					ConduitPatches.BackgroundConduitUpdater.StartUpdateAll();
 				UIPatches.BackgroundInventoryUpdater.Instance?.StartUpdateAll();
+#if DEBUG
+				if (options.Metrics)
+					Metrics.FastTrackProfiler.LogGC();
+#endif
 			}
 		}
 	}

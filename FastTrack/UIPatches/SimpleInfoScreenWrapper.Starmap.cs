@@ -24,16 +24,17 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
 	/// Updates the starmap sections of the default "simple" info screen.
 	/// </summary>
-	internal static class SimpleInfoScreenStarmap {
+	internal sealed partial class SimpleInfoScreenWrapper {
 		public const string NO_GEYSERS = "NoGeysers";
+
+		private static readonly Tag UNKNOWN_GEYSERS = new Tag(GeyserGenericConfig.ID);
 
 		/// <summary>
 		/// Displays the biomes present on the given planetoid.
 		/// </summary>
-		/// <param name="sis">The info screen to update.</param>
 		/// <param name="biomes">The biomes found on this planetoid.</param>
 		/// <param name="biomeRows">The cached list of all biomes seen so far.</param>
-		internal static void AddBiomes(SimpleInfoScreen sis, IList<string> biomes,
+		internal void AddBiomes(IList<string> biomes,
 				IDictionary<Tag, GameObject> biomeRows) {
 			var parent = sis.worldBiomesPanel.Content.gameObject;
 			int n = biomes.Count;
@@ -72,14 +73,13 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Displays a geyser present on the given planetoid.
 		/// </summary>
-		/// <param name="sis">The info screen to update.</param>
 		/// <param name="tag">The geyser tag to add.</param>
 		/// <param name="parent">The parent of new geyser objects.</param>
 		/// <param name="name">The text to display for the geyser name.</param>
 		/// <param name="geyserRows">The cached list of all geysers seen so far.</param>
-		/// <returns></returns>
-		internal static GameObject AddGeyser(SimpleInfoScreen sis, Tag tag, GameObject parent,
-				string name, IDictionary<Tag, GameObject> geyserRows) {
+		/// <returns>The label that can display that geyser.</returns>
+		internal GameObject AddGeyser(Tag tag, GameObject parent, string name,
+				IDictionary<Tag, GameObject> geyserRows) {
 			HierarchyReferences hr;
 			if (!geyserRows.TryGetValue(tag, out GameObject row)) {
 				row = Util.KInstantiateUI(sis.iconLabelRow, parent, true);
@@ -106,11 +106,63 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
+		/// Displays all geysers present on the given planetoid.
+		/// </summary>
+		/// <param name="id">The world ID to filter.</param>
+		private void AddGeysers(int id) {
+			var geyserRows = sis.geyserRows;
+			var parent = sis.worldGeysersPanel.Content.gameObject;
+			var spawnables = SaveGame.Instance.worldGenSpawner.spawnables;
+			byte worldIndex;
+			var knownGeysers = ListPool<Tag, SimpleInfoScreen>.Allocate();
+			// Add all spawned geysers
+			int n = allGeysers.Length, unknownGeysers = 0;
+			for (int i = 0; i < n; i++) {
+				var geyser = allGeysers[i];
+				var go = geyser.gameObject;
+				if (go.GetMyWorldId() == id)
+					knownGeysers.Add(go.PrefabID());
+			}
+			// All unknown geysers and oil wells
+			n = spawnables.Count;
+			for (int i = 0; i < n; i++) {
+				var candidate = spawnables[i];
+				int cell = candidate.cell;
+				if (Grid.IsValidCell(cell) && !candidate.isSpawned && (worldIndex = Grid.
+						WorldIdx[cell]) != ClusterManager.INVALID_WORLD_IDX &&
+						worldIndex == id) {
+					string prefabID = candidate.spawnInfo.id;
+					Tag prefabTag = new Tag(prefabID);
+					if (prefabID == OilWellConfig.ID)
+						knownGeysers.Add(prefabTag);
+					else if (prefabID == GeyserGenericConfig.ID)
+						unknownGeysers++;
+					else {
+						var prefab = Assets.GetPrefab(prefabTag);
+						if (prefab != null && prefab.TryGetComponent(out Geyser _))
+							knownGeysers.Add(prefabTag);
+					}
+				}
+			}
+			int totalGeysers = knownGeysers.Count;
+			foreach (var pair in geyserRows)
+				pair.Value.SetActive(false);
+			for (int i = 0; i < totalGeysers; i++)
+				AddGeyser(knownGeysers[i], parent, null, geyserRows);
+			if (unknownGeysers > 0)
+				AddGeyser(UNKNOWN_GEYSERS, parent, STRINGS.UI.DETAILTABS.SIMPLEINFO.
+					UNKNOWN_GEYSERS.Replace("{num}", unknownGeysers.ToString()), geyserRows);
+			if (totalGeysers == 0)
+				AddGeyser(new Tag(NO_GEYSERS), parent, STRINGS.UI.DETAILTABS.SIMPLEINFO.
+					NO_GEYSERS, geyserRows);
+			knownGeysers.Recycle();
+		}
+
+		/// <summary>
 		/// Displays the given planetoid's surface sunlight and radiation.
 		/// </summary>
-		/// <param name="sis">The info screen to update.</param>
 		/// <param name="world">The world to be displayed.</param>
-		internal static void AddSurfaceConditions(SimpleInfoScreen sis, WorldContainer world) {
+		internal void AddSurfaceConditions(WorldContainer world) {
 			var surfaceConditionRows = sis.surfaceConditionRows;
 			var parent = sis.worldTraitsPanel.Content.gameObject;
 			GameObject lights, rads;
@@ -151,9 +203,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Displays the given planetoid's world traits.
 		/// </summary>
-		/// <param name="sis">The info screen to update.</param>
 		/// <param name="traitIDs">The trait IDs present on the selected planetoid.</param>
-		internal static void AddWorldTraits(SimpleInfoScreen sis, IList<string> traitIDs) {
+		internal void AddWorldTraits(IList<string> traitIDs) {
 			var worldTraitRows = sis.worldTraitRows;
 			int n = traitIDs.Count, existing = worldTraitRows.Count;
 			for (int i = 0; i < n; i++) {
@@ -210,6 +261,33 @@ namespace PeterHan.FastTrack.UIPatches {
 				}
 				noTraitRow.SetActive(true);
 			}
+		}
+
+		/// <summary>
+		/// Refreshes the asteroid description side screen.
+		/// </summary>
+		private void RefreshWorld() {
+			var world = lastSelection.world;
+			bool isPlanetoid = world != null && lastSelection.isAsteroid;
+			sis.worldTraitsPanel.gameObject.SetActive(isPlanetoid);
+			sis.worldGeysersPanel.gameObject.SetActive(isPlanetoid);
+			if (isPlanetoid) {
+				var biomes = world.Biomes;
+				var biomeRows = sis.biomeRows;
+				var traitIDs = world.WorldTraitIds;
+				if (biomes == null)
+					foreach (var pair in biomeRows)
+						pair.Value.SetActive(false);
+				else
+					AddBiomes(biomes, biomeRows);
+				sis.worldBiomesPanel.gameObject.SetActive(biomes != null);
+				if (allGeysers != null)
+					AddGeysers(world.id);
+				if (traitIDs != null)
+					AddWorldTraits(traitIDs);
+				AddSurfaceConditions(world);
+			} else
+				sis.worldBiomesPanel.gameObject.SetActive(false);
 		}
 	}
 }

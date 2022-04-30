@@ -208,7 +208,6 @@ namespace PeterHan.FastTrack {
 			if (options.SideScreenOpts) {
 				UIPatches.AdditionalDetailsPanelWrapper.Cleanup();
 				UIPatches.DetailsPanelWrapper.Cleanup();
-				UIPatches.SimpleInfoScreenWrapper.Cleanup();
 				UIPatches.VitalsPanelWrapper.Cleanup();
 			}
 			AsyncJobManager.DestroyInstance();
@@ -258,7 +257,6 @@ namespace PeterHan.FastTrack {
 			if (options.SideScreenOpts) {
 				UIPatches.AdditionalDetailsPanelWrapper.Init();
 				UIPatches.DetailsPanelWrapper.Init();
-				UIPatches.SimpleInfoScreenWrapper.Init();
 				UIPatches.VitalsPanelWrapper.Init();
 			}
 			if (options.PickupOpts)

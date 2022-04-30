@@ -436,13 +436,14 @@ namespace Ryu {
 		/// 
 		/// Must be invoked before the decimal point is added.
 		/// </summary>
-		internal static void AddThousands(StringBuilder result, NumberFormatInfo info) {
+		internal static void AddThousands(StringBuilder result, int start,
+				NumberFormatInfo info) {
 			const int GROUP_SIZE = 3;
 			string ts = info.NumberGroupSeparator;
 			int len = result.Length, i, perSep = ts.Length, needed, j;
 			// Negative sign (if any) is not counted in the mantissa length
-			needed = len;
-			if (result[0] == info.NegativeSign[0])
+			needed = len - start;
+			if (result[start] == info.NegativeSign[0])
 				needed--;
 			needed = (needed - 1) / GROUP_SIZE * perSep;
 			if (needed > 0) {
@@ -450,7 +451,7 @@ namespace Ryu {
 				j = len + needed;
 				result.Length = j;
 				needed = 0;
-				for (i = len - 1; i >= 0; i--) {
+				for (i = len - 1; i >= start; i--) {
 					result[--j] = result[i];
 					// If GROUP_SIZE characters have been moved, insert a sep
 					needed++;
@@ -684,21 +685,24 @@ namespace Ryu {
 		/// Rounds the result up if necessary. Returns true if the number was rounded up one
 		/// whole unit, or false otherwise.
 		/// </summary>
-		internal static bool RoundResult(StringBuilder result, int roundFlag,
+		internal static bool RoundResult(StringBuilder result, int start, int roundFlag,
 				out int decimalIndex, NumberFormatInfo info) {
 			// '.' cannot be located at index 0
 			int index = result.Length, dIndex = 0;
 			bool roundedUnits = false;
-			char c, dp = info.NumberDecimalSeparator[0], minus = info.NegativeSign[0];
+			char c, dp = info.NumberDecimalSeparator[0];
 			while (true) {
-				if (--index < 0 || (c = result[index]) == minus) {
-					result[index + 1] = '1';
+				if (--index < start) {
 					roundedUnits = true;
 					break;
 				}
+				c = result[index];
 				if (c == dp)
 					dIndex = index;
-				else if (c == '9') {
+				else if (c < '0' || c > '9') {
+					roundedUnits = true;
+					break;
+				} else if (c == '9') {
 					result[index] = ZERO;
 					roundFlag = 1;
 				} else {
@@ -707,6 +711,8 @@ namespace Ryu {
 					break;
 				}
 			}
+			if (roundedUnits)
+				result[index + 1] = '1';
 			decimalIndex = dIndex;
 			return roundedUnits;
 		}

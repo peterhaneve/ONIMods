@@ -17,7 +17,6 @@
  */
 
 using HarmonyLib;
-using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -26,18 +25,18 @@ using DETAILTABS = STRINGS.UI.DETAILTABS;
 using NoteEntryKey = ReportManager.NoteStorage.NoteEntries.NoteEntryKey;
 using ProcessConditionType = ProcessCondition.ProcessConditionType;
 using ReportEntry = ReportManager.ReportEntry;
-using StorageTooltip = Tuple<string, TextStyleSetting>;
 
 namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
 	/// Stores state information about the simple info screen to avoid recalculating so much
 	/// every frame.
 	/// </summary>
-	internal sealed class SimpleInfoScreenWrapper : IDisposable {
+	[SkipSaveFileSerialization]
+	internal sealed partial class SimpleInfoScreenWrapper : KMonoBehaviour {
 		/// <summary>
 		/// Avoid reallocating a new StringBuilder every frame.
 		/// </summary>
-		private static readonly StringBuilder CACHED_BUILDER = new StringBuilder(64);
+		private static readonly StringBuilder CACHED_BUILDER = new StringBuilder(128);
 
 		/// <summary>
 		/// The time in seconds between status panel updates of the less-important items.
@@ -48,11 +47,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// The singleton instance of this class.
 		/// </summary>
 		private static SimpleInfoScreenWrapper instance;
-
-		internal static void Cleanup() {
-			instance?.Dispose();
-			instance = null;
-		}
 
 		/// <summary>
 		/// Collects the stress change reasons and displays them in the UI.
@@ -91,11 +85,6 @@ namespace PeterHan.FastTrack.UIPatches {
 			return total;
 		}
 
-		internal static void Init() {
-			Cleanup();
-			instance = new SimpleInfoScreenWrapper();
-		}
-
 		/// <summary>
 		/// Lists all geysers in the world.
 		/// </summary>
@@ -126,19 +115,54 @@ namespace PeterHan.FastTrack.UIPatches {
 		private LastSelectionDetails lastSelection;
 
 		/// <summary>
+		/// If non-null, allows a much faster path in getting storage item temperatures.
+		/// Not sure if every localization will allow this.
+		/// </summary>
+		private string optimizedStorageTemp;
+
+		/// <summary>
+		/// If true, the process condition rows will be mass frozen next frame.
+		/// </summary>
+		private volatile bool pendingProcessFreeze;
+
+		/// <summary>
 		/// Pooled headers that can be used for the process conditions.
 		/// </summary>
-		private readonly IList<HierarchyReferences> processHeaders;
+		private readonly IList<ProcessConditionRow> processHeaders;
 
 		/// <summary>
 		/// Pooled rows that can be used for the process conditions.
 		/// </summary>
-		private readonly IList<GameObject> processRows;
+		private readonly IList<ProcessConditionRow> processRows;
+
+		/// <summary>
+		/// The process conditions currently visible.
+		/// </summary>
+		private readonly IList<ProcessConditionRow> processVisible;
+
+		/// <summary>
+		/// The currently visible rocket labels, to avoid iterating the entire cache to set
+		/// inactive.
+		/// </summary>
+		private readonly ISet<CachedStorageLabel> rocketLabels;
+
+#pragma warning disable IDE0044
+#pragma warning disable CS0649
+		// These fields are automatically populated by KMonoBehaviour
+		[MyCmpReq]
+		private SimpleInfoScreen sis;
+#pragma warning restore CS0649
+#pragma warning restore IDE0044
 
 		/// <summary>
 		/// The storages found in the currently selected object.
 		/// </summary>
 		private readonly List<Storage> storages;
+
+		/// <summary>
+		/// A temporary set for determine which labels need to be hidden.
+		/// </summary>
+		private readonly ISet<CachedStorageLabel> setInactive;
 
 		/// <summary>
 		/// The currently visible storage labels, to avoid iterating the entire cache to set
@@ -156,11 +180,6 @@ namespace PeterHan.FastTrack.UIPatches {
 
 		private bool wasPaused;
 
-		/// <summary>
-		/// A temporary list used to compile tooltips for stored items.
-		/// </summary>
-		private readonly IList<StorageTooltip> tooltips;
-
 		internal SimpleInfoScreenWrapper() {
 			allGeysers = null;
 			conditionParent = null;
@@ -169,106 +188,23 @@ namespace PeterHan.FastTrack.UIPatches {
 			lastUpdate = 0.0;
 			lastSelection = default;
 			lastStressEntry = null;
-			processHeaders = new List<HierarchyReferences>(8);
-			processRows = new List<GameObject>(16);
+			processHeaders = new List<ProcessConditionRow>(8);
+			processRows = new List<ProcessConditionRow>(24);
+			processVisible = new List<ProcessConditionRow>(32);
+			rocketLabels = new HashSet<CachedStorageLabel>();
+			setInactive = new HashSet<CachedStorageLabel>();
 			storages = new List<Storage>(8);
 			storageActive = false;
 			storageLabels = new HashSet<CachedStorageLabel>();
 			storageParent = null;
 			stressActive = false;
-			// Basically a persistent list pool
-			tooltips = new List<StorageTooltip>(32);
 			vitalsActive = false;
 			wasPaused = false;
+			instance = this;
 		}
 
-		/// <summary>
-		/// Displays all geysers present on the given planetoid.
-		/// </summary>
-		/// <param name="sis">The info screen to update.</param>
-		/// <param name="id">The world ID to filter.</param>
-		private void AddGeysers(SimpleInfoScreen sis, int id) {
-			var geyserRows = sis.geyserRows;
-			var parent = sis.worldGeysersPanel.Content.gameObject;
-			var spawnables = SaveGame.Instance.worldGenSpawner.spawnables;
-			byte worldIndex;
-			var knownGeysers = ListPool<Tag, SimpleInfoScreen>.Allocate();
-			// Add all spawned geysers
-			int n = allGeysers.Length, unknownGeysers = 0;
-			for (int i = 0; i < n; i++) {
-				var geyser = allGeysers[i];
-				var go = geyser.gameObject;
-				if (go.GetMyWorldId() == id)
-					knownGeysers.Add(go.PrefabID());
-			}
-			// All unknown geysers and oil wells
-			n = spawnables.Count;
-			for (int i = 0; i < n; i++) {
-				var candidate = spawnables[i];
-				int cell = candidate.cell;
-				if (Grid.IsValidCell(cell) && !candidate.isSpawned && (worldIndex = Grid.
-						WorldIdx[cell]) != ClusterManager.INVALID_WORLD_IDX &&
-						worldIndex == id) {
-					string prefabID = candidate.spawnInfo.id;
-					Tag prefabTag = new Tag(prefabID);
-					if (prefabID == OilWellConfig.ID)
-						knownGeysers.Add(prefabTag);
-					else if (prefabID == GeyserGenericConfig.ID)
-						unknownGeysers++;
-					else {
-						var prefab = Assets.GetPrefab(prefabTag);
-						if (prefab != null && prefab.TryGetComponent(out Geyser _))
-							knownGeysers.Add(prefabTag);
-					}
-				}
-			}
-			int totalGeysers = knownGeysers.Count;
-			foreach (var pair in geyserRows)
-				pair.Value.SetActive(false);
-			for (int i = 0; i < totalGeysers; i++)
-				SimpleInfoScreenStarmap.AddGeyser(sis, knownGeysers[i], parent, null,
-					geyserRows);
-			if (unknownGeysers > 0)
-				SimpleInfoScreenStarmap.AddGeyser(sis, new Tag(GeyserGenericConfig.ID), parent,
-					DETAILTABS.SIMPLEINFO.UNKNOWN_GEYSERS.Replace("{num}", unknownGeysers.
-					ToString()), geyserRows);
-			// No Geysers
-			if (totalGeysers == 0)
-				SimpleInfoScreenStarmap.AddGeyser(sis, new Tag(SimpleInfoScreenStarmap.
-					NO_GEYSERS), parent, DETAILTABS.SIMPLEINFO.NO_GEYSERS, geyserRows);
-			knownGeysers.Recycle();
-		}
-
-		/// <summary>
-		/// Displays an item in storage.
-		/// </summary>
-		/// <param name="sis">The info screen to use.</param>
-		/// <param name="item">The item to be displayed.</param>
-		/// <param name="storage">The parent storage of this item.</param>
-		/// <param name="parent">The parent object for the displayed item.</param>
-		/// <param name="total">The total number of items displayed so far.</param>
-		private void AddStorageItem(SimpleInfoScreen sis, GameObject item, Storage storage,
-				GameObject parent, ref int total) {
-			bool added = !item.TryGetComponent(out PrimaryElement pe) || pe.Mass > 0.0f;
-			if (added) {
-				int t = total, n;
-				var storeLabel = GetStorageLabel(sis, parent, "storage_" + t.ToString());
-				var tooltip = storeLabel.tooltip;
-				storageLabels.Add(storeLabel);
-				storeLabel.text.text = GetItemDescription(item, pe);
-				n = tooltips.Count;
-				tooltip.ClearMultiStringTooltip();
-				for (int i = 0; i < n; i++) {
-					var itemTooltips = tooltips[i];
-					tooltip.AddMultiStringTooltip(itemTooltips.first, itemTooltips.second);
-				}
-				storeLabel.SetAllowDrop(storage.allowUIItemRemoval, storage, item);
-				tooltips.Clear();
-				total = t + 1;
-			}
-		}
-
-		public void Dispose() {
+		public override void OnCleanUp() {
+			int n = processHeaders.Count;
 			allGeysers = null;
 			foreach (var pair in labelCache)
 				pair.Value.Dispose();
@@ -278,92 +214,22 @@ namespace PeterHan.FastTrack.UIPatches {
 			lastStressEntry = null;
 			lastSelection = default;
 			// Destroy all process rows
-			foreach (var header in processHeaders) {
-				GameObject go;
-				if (header != null && (go = header.gameObject) != null)
-					Util.KDestroyGameObject(go);
-			}
-			foreach (var row in processRows)
-				if (row != null)
-					Util.KDestroyGameObject(row);
+			for (int i = 0; i < n; i++)
+				processHeaders[i].Dispose();
+			n = processRows.Count;
+			for (int i = 0; i < n; i++)
+				processRows[i].Dispose();
 			processHeaders.Clear();
 			processRows.Clear();
+			processVisible.Clear();
 			storages.Clear();
 			// All of these were in the label cache so they should already be disposed
+			rocketLabels.Clear();
 			storageLabels.Clear();
 			storageParent = null;
 			conditionParent = null;
-		}
-
-		/// <summary>
-		/// Gets the text to be displayed for a single stored item.
-		/// </summary>
-		/// <param name="item">The item to be displayed.</param>
-		/// <param name="pe">The item's primary element, or null if it has none.</param>
-		private string GetItemDescription(GameObject item, PrimaryElement pe) {
-			var defaultStyle = PluginAssets.Instance.defaultTextStyleSetting;
-			var text = CACHED_BUILDER;
-			var rottable = item.GetSMI<Rottable.Instance>();
-			text.Clear();
-			if (item.TryGetComponent(out HighEnergyParticleStorage hepStorage))
-				// Radbolts
-				text.Append(DETAILTABS.DETAILS.CONTENTS_MASS).Replace("{0}", STRINGS.ITEMS.
-					RADIATION.HIGHENERGYPARITCLE.NAME).Replace("{1}", GameUtil.
-					GetFormattedHighEnergyParticles(hepStorage.Particles));
-			else if (pe != null)
-				// Element
-				text.Append(DETAILTABS.DETAILS.CONTENTS_TEMPERATURE).Replace("{1}",
-					GameUtil.GetFormattedTemperature(pe.Temperature)).Replace("{0}",
-					DETAILTABS.DETAILS.CONTENTS_MASS).Replace("{0}", GameUtil.
-					GetUnitFormattedName(item)).Replace("{1}", GameUtil.GetFormattedMass(
-					pe.Mass));
-			if (rottable != null) {
-				string rotText = rottable.StateString();
-				if (!string.IsNullOrEmpty(rotText))
-					text.Append(DETAILTABS.DETAILS.CONTENTS_ROTTABLE).Replace("{0}",
-						rotText);
-				tooltips.Add(new StorageTooltip(rottable.GetToolTip(), defaultStyle));
-			}
-			if (pe.DiseaseIdx != Klei.SimUtil.DiseaseInfo.Invalid.idx) {
-				text.Append(DETAILTABS.DETAILS.CONTENTS_DISEASED).Replace("{0}",
-					GameUtil.GetFormattedDisease(pe.DiseaseIdx, pe.DiseaseCount, false));
-				tooltips.Add(new StorageTooltip(GameUtil.GetFormattedDisease(pe.DiseaseIdx,
-					pe.DiseaseCount, true), defaultStyle));
-			}
-			return text.ToString();
-		}
-
-		/// <summary>
-		/// Retrieves a pooled label used for displaying stored objects.
-		/// </summary>
-		/// <param name="sis">The info screen to use.</param>
-		/// <param name="parent">The parent panel to add new labels.</param>
-		/// <param name="id">The name of the label to be added or created.</param>
-		/// <returns>A label which can be used to display stored items, pooled if possible.</returns>
-		private CachedStorageLabel GetStorageLabel(SimpleInfoScreen sis, GameObject parent,
-				string id) {
-			if (labelCache.TryGetValue(id, out CachedStorageLabel result))
-				result.Reset();
-			else {
-				result = new CachedStorageLabel(sis, parent, id);
-				labelCache[id] = result;
-			}
-			result.SetActive(true);
-			return result;
-		}
-
-		/// <summary>
-		/// Initializes references that only change when the selected target is different.
-		/// </summary>
-		/// <param name="sis">The parent info screen.</param>
-		private void InitInstance(SimpleInfoScreen sis) {
-			if (storageParent == null)
-				sis.StoragePanel.TryGetComponent(out storageParent);
-			if (sis.stressPanel.TryGetComponent(out CollapsibleDetailContentPanel panel))
-				panel.HeaderLabel.text = DETAILTABS.STATS.GROUPNAME_STRESS;
-			if (conditionParent == null && sis.processConditionContainer.TryGetComponent(
-					out panel))
-				conditionParent = panel.Content.gameObject;
+			instance = null;
+			base.OnCleanUp();
 		}
 
 		/// <summary>
@@ -389,68 +255,88 @@ namespace PeterHan.FastTrack.UIPatches {
 						storages.Add(storage);
 				}
 				found.Recycle();
-				// Geysers can be uncovered
-				allGeysers = UnityEngine.Object.FindObjectsOfType<Geyser>();
+				// Geysers can be uncovered over time
+				if (lastSelection.world != null)
+					allGeysers = FindObjectsOfType<Geyser>();
+				else
+					allGeysers = null;
 			}
+		}
+
+		public override void OnSpawn() {
+			string atTemperature = DETAILTABS.DETAILS.CONTENTS_TEMPERATURE;
+			base.OnSpawn();
+			sis.StoragePanel.TryGetComponent(out storageParent);
+			if (sis.stressPanel.TryGetComponent(out CollapsibleDetailContentPanel panel))
+				panel.HeaderLabel.SetText(DETAILTABS.STATS.GROUPNAME_STRESS);
+			if (sis.processConditionContainer.TryGetComponent(out panel))
+				conditionParent = panel.Content.gameObject;
+			// CHeck for the localization fast path
+			if (atTemperature.StartsWith("{0}") && atTemperature.EndsWith("{1}"))
+				optimizedStorageTemp = atTemperature.Substring(3, atTemperature.Length - 6);
+			else
+				optimizedStorageTemp = null;
+			Refresh(true);
 		}
 
 		/// <summary>
 		/// Refreshes the entire info screen. Called every frame, make it fast!
 		/// </summary>
-		/// <param name="sis">The info screen to refresh.</param>
 		/// <param name="force">Whether the screen should be forcefully updated, even if the
 		/// target appears to be the same.</param>
-		internal void Refresh(SimpleInfoScreen sis, bool force) {
+		internal void Refresh(bool force) {
 			var target = sis.selectedTarget;
 			var statusItems = sis.statusItems;
 			double now = Time.timeAsDouble;
 			bool paused = SpeedControlScreen.Instance.IsPaused;
 			// OnSelectTarget gets called before the first Init, so the UI is not ready then
-			if (sis.lastTarget != target || force) {
-				sis.lastTarget = target;
-				if (target != null) {
-					InitInstance(sis);
-					storageParent.HeaderLabel.text = (lastSelection.identity != null) ?
-						DETAILTABS.DETAILS.GROUPNAME_MINION_CONTENTS :
-						DETAILTABS.DETAILS.GROUPNAME_CONTENTS;
-					if (lastSelection.fertility == null)
-						sis.fertilityPanel.gameObject.SetActive(false);
-					SetPanels(sis, target);
-					sis.SetStamps(target);
+			if (storageParent != null) {
+				if (pendingProcessFreeze) {
+					// Freeze the condition rows
+					int n = processVisible.Count;
+					for (int i = 0; i < n; i++)
+						processVisible[i].Freeze();
+					pendingProcessFreeze = false;
 				}
-			}
-			if (target != null) {
-				if (now - lastUpdate > UPDATE_RATE || force) {
-					var vitalsContainer = sis.vitalsContainer;
-					lastUpdate = now;
-					RefreshStress(sis);
-					if (vitalsActive) {
-						var vi = VitalsPanelWrapper.Instance;
-						if (vi == null)
-							vitalsContainer.Refresh();
-						else
-							vi.Update(vitalsContainer);
+				if (sis.lastTarget != target || force) {
+					sis.lastTarget = target;
+					if (target != null) {
+						SetPanels(target);
+						sis.SetStamps(target);
 					}
-					sis.rocketSimpleInfoPanel.Refresh(sis.rocketStatusContainer, target);
 				}
-				int count = statusItems.Count;
-				sis.statusItemPanel.gameObject.SetActive(count > 0);
-				for (int i = 0; i < count; i++)
-					statusItems[i].Refresh();
-				if (force || !paused || !wasPaused)
-					RefreshStorage(sis);
+				if (target != null) {
+					if (now - lastUpdate > UPDATE_RATE || force) {
+						var vitalsContainer = sis.vitalsContainer;
+						lastUpdate = now;
+						RefreshStress();
+						if (vitalsActive) {
+							var vi = VitalsPanelWrapper.Instance;
+							if (vi == null)
+								vitalsContainer.Refresh();
+							else
+								vi.Update(vitalsContainer);
+						}
+						RefreshRocket();
+					}
+					int count = statusItems.Count;
+					sis.statusItemPanel.gameObject.SetActive(count > 0);
+					for (int i = 0; i < count; i++)
+						statusItems[i].Refresh();
+					if (force || !paused || !wasPaused)
+						RefreshStorage(true);
+				}
+				wasPaused = paused;
 			}
-			wasPaused = paused;
 		}
 
 		/// <summary>
 		/// Refreshes the egg chances.
 		/// </summary>
-		/// <param name="sis">The info screen to update.</param>
-		private void RefreshBreedingChance(SimpleInfoScreen sis) {
+		private void RefreshBreedingChance() {
 			var smi = lastSelection.fertility;
 			var fertilityPanel = sis.fertilityPanel;
-			if (smi != null) {
+			if (smi != null && fertilityPanel != null) {
 				var chances = smi.breedingChances;
 				var fertModifiers = Db.Get().FertilityModifiers.resources;
 				var text = CACHED_BUILDER;
@@ -494,79 +380,69 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Refreshes the required conditions for processing, mostly for rockets.
 		/// </summary>
-		/// <param name="sis">The info screen to update.</param>
-		private void RefreshProcess(SimpleInfoScreen sis) {
-			var rows = sis.processConditionRows;
+		private void RefreshProcess() {
 			bool rocket = lastSelection.isRocket;
-			int nh = 0, nr = 0;
-			// Turn off all existing rows
-			foreach (var original in rows)
-				original.SetActive(false);
-			rows.Clear();
+			int nh = 0, nr = 0, n = processVisible.Count;
+			// Thaw and turn off all existing rows
+			for (int i = 0; i < n; i++)
+				processVisible[i].SetActive(false);
+			processVisible.Clear();
 			if (rocket) {
 				if (DlcManager.FeatureClusterSpaceEnabled())
-					RefreshProcessConditions(sis, ProcessConditionType.RocketFlight, ref nh,
+					RefreshProcessConditions(ProcessConditionType.RocketFlight, ref nh,
 						ref nr);
-				RefreshProcessConditions(sis, ProcessConditionType.RocketPrep, ref nh, ref nr);
-				RefreshProcessConditions(sis, ProcessConditionType.RocketStorage, ref nh,
-					ref nr);
-				RefreshProcessConditions(sis, ProcessConditionType.RocketBoard, ref nh,
-					ref nr);
+				RefreshProcessConditions(ProcessConditionType.RocketPrep, ref nh, ref nr);
+				RefreshProcessConditions(ProcessConditionType.RocketStorage, ref nh, ref nr);
+				RefreshProcessConditions(ProcessConditionType.RocketBoard, ref nh, ref nr);
 			} else
-				RefreshProcessConditions(sis, ProcessConditionType.All, ref nh, ref nr);
+				RefreshProcessConditions(ProcessConditionType.All, ref nh, ref nr);
+			pendingProcessFreeze = true;
 		}
 
 		/// <summary>
 		/// Refreshes one set of required conditions.
 		/// </summary>
-		/// <param name="sis">The info screen to update.</param>
 		/// <param name="conditionType">The condition type to refresh.</param>
 		/// <param name="nh">The number of header rows allocated.</param>
 		/// <param name="nr">The number of content rows allocated.</param>
-		private void RefreshProcessConditions(SimpleInfoScreen sis, ProcessConditionType
-				conditionType, ref int nh, ref int nr) {
+		private void RefreshProcessConditions(ProcessConditionType conditionType, ref int nh,
+				ref int nr) {
 			var conditions = lastSelection.conditions.GetConditionSet(conditionType);
 			int n = conditions.Count;
 			if (n > 0) {
 				int nHeaders = nh, nRows = nr;
-				var rows = sis.processConditionRows;
 				var pr = processRows;
 				var ph = processHeaders;
 				string conditionName = StringFormatter.ToUpper(conditionType.ToString());
 				var seen = HashSetPool<ProcessCondition, SimpleInfoScreen>.Allocate();
-				GameObject go;
-				HierarchyReferences hr;
+				ProcessConditionRow row;
 				// Grab a cached header if possible
-				if (nHeaders >= ph.Count) {
-					hr = Util.KInstantiateUI<HierarchyReferences>(sis.processConditionHeader.
-						gameObject, conditionParent, true);
-					go = hr.gameObject;
-					ph.Add(hr);
-				} else {
-					hr = ph[nHeaders];
-					go = hr.gameObject;
-					go.SetActive(true);
+				if (nHeaders >= ph.Count)
+					ph.Add(row = new ProcessConditionRow(Util.KInstantiateUI(sis.
+						processConditionHeader.gameObject, conditionParent, true), true));
+				else {
+					row = ph[nHeaders];
+					row.SetActive(true);
 				}
-				hr.GetReference<LocText>("Label").text = Strings.Get(
-					"STRINGS.UI.DETAILTABS.PROCESS_CONDITIONS." + conditionName);
-				hr.GetComponent<ToolTip>().toolTip = Strings.Get(
-					"STRINGS.UI.DETAILTABS.PROCESS_CONDITIONS." + conditionName + "_TOOLTIP");
-				rows.Add(go);
+				row.SetTitle(Strings.Get("STRINGS.UI.DETAILTABS.PROCESS_CONDITIONS." +
+					conditionName), Strings.Get("STRINGS.UI.DETAILTABS.PROCESS_CONDITIONS." +
+					conditionName + "_TOOLTIP"));
+				processVisible.Add(row);
 				nh = nHeaders + 1;
 				for (int i = 0; i < n; i++) {
 					var condition = conditions[i];
 					if (condition.ShowInUI() && (condition is RequireAttachedComponent || seen.
 							Add(condition))) {
 						if (nRows >= pr.Count) {
-							go = Util.KInstantiateUI(sis.processConditionRow, conditionParent,
-								true);
-							pr.Add(go);
+							row = new ProcessConditionRow(Util.KInstantiateUI(sis.
+								processConditionRow, conditionParent, true), false);
+							pr.Add(row);
 						} else {
-							go = pr[nRows];
-							go.SetActive(true);
+							row = pr[nRows];
+							row.SetActive(true);
 						}
-						rows.Add(go);
-						ConditionListSideScreen.SetRowState(go, condition);
+						processVisible.Add(row);
+						row.SetCondition(condition);
 						nRows++;
 					}
 				}
@@ -576,53 +452,9 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
-		/// Refreshes the storage objects on this object (and its children?)
-		/// </summary>
-		/// <param name="sis">The info screen to update.</param>
-		private void RefreshStorage(SimpleInfoScreen sis) {
-			var panel = sis.StoragePanel;
-			int n = storages.Count, total = 0, nitems;
-			if (n > 0) {
-				var setInactive = HashSetPool<CachedStorageLabel, SimpleInfoScreen>.Allocate();
-				var parent = storageParent.Content.gameObject;
-				setInactive.UnionWith(storageLabels);
-				storageLabels.Clear();
-				for (int i = 0; i < n; i++) {
-					var storage = storages[i];
-					// Storage could have been destroyed along the way
-					if (storage != null) {
-						var items = storage.GetItems();
-						nitems = items.Count;
-						for (int j = 0; j < nitems; j++) {
-							var item = items[j];
-							if (item != null)
-								AddStorageItem(sis, item, storage, parent, ref total);
-						}
-					}
-				}
-				if (total == 0)
-					storageLabels.Add(GetStorageLabel(sis, parent, CachedStorageLabel.
-						EMPTY_ITEM));
-				// Only turn off the things that are gone
-				setInactive.ExceptWith(storageLabels);
-				foreach (var inactive in setInactive)
-					inactive.SetActive(false);
-				setInactive.Recycle();
-				if (!storageActive) {
-					panel.gameObject.SetActive(true);
-					storageActive = true;
-				}
-			} else if (storageActive) {
-				panel.gameObject.SetActive(false);
-				storageActive = false;
-			}
-		}
-
-		/// <summary>
 		/// Refreshes the Stress readout of the info screen.
 		/// </summary>
-		/// <param name="sis">The info screen to update.</param>
-		private void RefreshStress(SimpleInfoScreen sis) {
+		private void RefreshStress() {
 			var stressDrawer = sis.stressDrawer;
 			var ri = ReportManager.Instance;
 			var allNoteEntries = ri.noteStorage.noteEntries;
@@ -675,39 +507,10 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
-		/// Refreshes the asteroid description side screen.
-		/// </summary>
-		/// <param name="sis">The info screen to update.</param>
-		private void RefreshWorld(SimpleInfoScreen sis) {
-			var world = lastSelection.world;
-			var gridEntity = lastSelection.asteroid;
-			bool isPlanetoid = world != null && gridEntity != null;
-			sis.worldTraitsPanel.gameObject.SetActive(isPlanetoid);
-			sis.worldGeysersPanel.gameObject.SetActive(isPlanetoid);
-			if (isPlanetoid) {
-				var biomes = world.Biomes;
-				var biomeRows = sis.biomeRows;
-				var traitIDs = world.WorldTraitIds;
-				if (biomes == null)
-					foreach (var pair in biomeRows)
-						pair.Value.SetActive(false);
-				else
-					SimpleInfoScreenStarmap.AddBiomes(sis, biomes, biomeRows);
-				sis.worldBiomesPanel.gameObject.SetActive(biomes != null);
-				AddGeysers(sis, world.id);
-				if (traitIDs != null)
-					SimpleInfoScreenStarmap.AddWorldTraits(sis, traitIDs);
-				SimpleInfoScreenStarmap.AddSurfaceConditions(sis, world);
-			} else
-				sis.worldBiomesPanel.gameObject.SetActive(false);
-		}
-
-		/// <summary>
 		/// Shows or hides panels depending on the active object.
 		/// </summary>
-		/// <param name="sis">The info screen to update.</param>
 		/// <param name="target">The selected target object.</param>
-		private void SetPanels(SimpleInfoScreen sis, GameObject target) {
+		private void SetPanels(GameObject target) {
 			var modifiers = lastSelection.modifiers;
 			var descriptionContainer = sis.descriptionContainer;
 			var id = lastSelection.identity;
@@ -720,7 +523,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				amounts.Count > 0, hasProcess = lastSelection.conditions != null,
 				hasEffects = effects.Count > 0;
 			for (int i = 0; i < n; i++)
-				UnityEngine.Object.Destroy(attributeLabels[i]);
+				Destroy(attributeLabels[i]);
 			attributeLabels.Clear();
 			if (hasAmounts) {
 				sis.vitalsContainer.selectedEntity = target;
@@ -754,12 +557,18 @@ namespace PeterHan.FastTrack.UIPatches {
 			descriptionContainer.descriptors.gameObject.SetActive(hasEffects);
 			if (hasEffects)
 				descriptionContainer.descriptors.SetDescriptors(effects);
-			descriptionContainer.description.text = descText;
-			descriptionContainer.flavour.text = flavorText;
+			descriptionContainer.description.SetText(descText);
+			descriptionContainer.flavour.SetText(flavorText);
 			sis.infoPanel.gameObject.SetActive(showInfo);
 			descriptionContainer.gameObject.SetActive(showInfo);
 			descriptionContainer.flavour.gameObject.SetActive(!string.IsNullOrWhiteSpace(
 				flavorText));
+			storageParent.HeaderLabel.SetText((id != null) ? DETAILTABS.DETAILS.
+				GROUPNAME_MINION_CONTENTS : DETAILTABS.DETAILS.GROUPNAME_CONTENTS);
+			if (lastSelection.fertility == null)
+				sis.fertilityPanel.gameObject.SetActive(false);
+			sis.rocketStatusContainer.gameObject.SetActive(lastSelection.
+				rocketInterface != null || lastSelection.rocketModule != null);
 		}
 
 		/// <summary>
@@ -768,35 +577,67 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Do I really need to repeat my spiel about big structs again?
 		/// </summary>
 		private struct LastSelectionDetails {
-			internal readonly AsteroidGridEntity asteroid;
-
 			internal readonly IProcessConditionSet conditions;
 
 			internal readonly FertilityMonitor.Instance fertility;
 
+			internal readonly ClusterGridEntity gridEntity;
+
 			internal readonly MinionIdentity identity;
+
+			internal readonly bool isAsteroid;
 
 			internal readonly bool isRocket;
 
 			internal readonly Klei.AI.Modifiers modifiers;
+
+			internal readonly CraftModuleInterface rocketInterface;
+
+			internal readonly RocketModuleCluster rocketModule;
 
 			internal readonly KSelectable selectable;
 
 			internal readonly WorldContainer world;
 
 			internal LastSelectionDetails(GameObject target) {
-				target.TryGetComponent(out asteroid);
 				target.TryGetComponent(out conditions);
 				target.TryGetComponent(out identity);
 				target.TryGetComponent(out modifiers);
+				target.TryGetComponent(out rocketModule);
 				target.TryGetComponent(out selectable);
 				target.TryGetComponent(out world);
+				if (rocketModule != null) {
+					rocketInterface = rocketModule.CraftInterface;
+					// Clustercraft can be pulled from the rocket-to-module interface
+					gridEntity = rocketInterface.m_clustercraft;
+				} else if (target.TryGetComponent(out gridEntity) && gridEntity is
+						Clustercraft craft)
+					rocketInterface = craft.ModuleInterface;
+				else
+					rocketInterface = null;
 				fertility = target.GetSMI<FertilityMonitor.Instance>();
 				if (DlcManager.FeatureClusterSpaceEnabled())
 					isRocket = target.TryGetComponent(out LaunchPad _) || target.
 						TryGetComponent(out RocketProcessConditionDisplayTarget _);
 				else
 					isRocket = target.TryGetComponent(out LaunchableRocket _);
+				isAsteroid = gridEntity != null && gridEntity is AsteroidGridEntity;
+			}
+		}
+
+		/// <summary>
+		/// Applied to SimpleInfoScreen to add our component to its game object.
+		/// </summary>
+		[HarmonyPatch(typeof(SimpleInfoScreen), nameof(SimpleInfoScreen.OnPrefabInit))]
+		internal static class OnPrefabInit_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
+
+			/// <summary>
+			/// Applied after OnPrefabInit runs.
+			/// </summary>
+			internal static void Postfix(SimpleInfoScreen __instance) {
+				if (__instance != null)
+					__instance.gameObject.AddOrGet<SimpleInfoScreenWrapper>();
 			}
 		}
 
@@ -827,8 +668,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before Refresh runs.
 			/// </summary>
-			internal static bool Prefix(SimpleInfoScreen __instance, bool force) {
-				instance?.Refresh(__instance, force);
+			internal static bool Prefix(bool force) {
+				instance?.Refresh(force);
 				return false;
 			}
 		}
@@ -844,8 +685,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before RefreshBreedingChance runs.
 			/// </summary>
-			internal static bool Prefix(SimpleInfoScreen __instance) {
-				instance?.RefreshBreedingChance(__instance);
+			internal static bool Prefix() {
+				instance?.RefreshBreedingChance();
 				return false;
 			}
 		}
@@ -861,8 +702,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before RefreshProcessConditions runs.
 			/// </summary>
-			internal static bool Prefix(SimpleInfoScreen __instance) {
-				instance?.RefreshProcess(__instance);
+			internal static bool Prefix() {
+				instance?.RefreshProcess();
 				return false;
 			}
 		}
@@ -879,10 +720,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			internal static bool Prefix(SimpleInfoScreen __instance) {
 				var inst = instance;
-				if (inst != null && __instance.selectedTarget != null) {
-					inst.InitInstance(__instance);
-					inst.RefreshStorage(__instance);
-				}
+				if (inst != null && __instance.selectedTarget != null)
+					inst.RefreshStorage(false);
 				return false;
 			}
 		}
@@ -899,7 +738,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// Applied before RefreshWorld runs.
 			/// </summary>
 			internal static bool Prefix(SimpleInfoScreen __instance) {
-				instance?.RefreshWorld(__instance);
+				instance?.RefreshWorld();
 				return false;
 			}
 		}

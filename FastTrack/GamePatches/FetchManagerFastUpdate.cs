@@ -18,8 +18,12 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using UnityEngine;
+
+using PickupTagDict = System.Collections.Generic.Dictionary<PeterHan.FastTrack.GamePatches.
+	FetchManagerFastUpdate.PickupTagKey, FetchManager.Pickup>;
 
 namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
@@ -29,19 +33,46 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	internal static class FetchManagerFastUpdate {
 		/// <summary>
+		/// The pool of available temporary dictionaries for UpdatePickups. Must be concurrent
+		/// as it is called in parallel by async path optimizations.
+		/// </summary>
+		private static readonly ConcurrentStack<PickupTagDict> POOL;
+
+		private const int PRESEED = 4;
+
+		static FetchManagerFastUpdate() {
+			POOL = new ConcurrentStack<PickupTagDict>();
+			for (int i = 0; i < PRESEED; i++)
+				POOL.Push(new PickupTagDict(256, PickupTagEqualityComparer.Instance));
+		}
+
+		/// <summary>
+		/// Gets a temporary pickup dictionary, retrieving one from the pool if available to
+		/// avoid allocating memory.
+		/// </summary>
+		/// <returns>A pooled instance (if available) with the pickup tags.</returns>
+		private static PickupTagDict Allocate() {
+			if (!POOL.TryPop(out PickupTagDict dict))
+				dict = new PickupTagDict(256, PickupTagEqualityComparer.Instance);
+			return dict;
+		}
+
+		/// <summary>
 		/// Applied before UpdatePickups runs. A more optimized UpdatePickups whose aggregate
 		/// runtime on a test world dropped from ~60 ms/1000 ms to ~45 ms/1000 ms.
 		/// </summary>
 		internal static bool BeforeUpdatePickups(FetchManager.FetchablesByPrefabId __instance,
 				Navigator worker_navigator, GameObject worker_go) {
-			var canBePickedUp = DictionaryPool<PickupTagKey, FetchManager.Pickup,
-				FetchManager>.Allocate();
+			var canBePickedUp = Allocate();
 			var pathCosts = DictionaryPool<int, int, FetchManager>.Allocate();
 			var finalPickups = __instance.finalPickups;
 			// Will reflect the changes from Waste Not, Want Not and No Manual Delivery
 			var comparer = FetchManager.ComparerIncludingPriority;
 			bool needThreadSafe = FastTrackOptions.Instance.PickupOpts;
-			foreach (var fetchable in __instance.fetchables.GetDataList()) {
+			var fetchables = __instance.fetchables.GetDataList();
+			int n = fetchables.Count;
+			for (int i = 0; i < n; i++) {
+				var fetchable = fetchables[i];
 				var target = fetchable.pickupable;
 				int cell = target.cachedCell;
 				if (target.CouldBePickedUpByMinion(worker_go)) {
@@ -79,52 +110,46 @@ namespace PeterHan.FastTrack.GamePatches {
 			// one was kept per possible tag bits (with the highest priority, best path cost,
 			// etc)
 			finalPickups.Clear();
-			foreach (var pair in canBePickedUp)
-				finalPickups.Add(pair.Value);
+			foreach (var pickup in canBePickedUp.Values)
+				finalPickups.Add(pickup);
 			pathCosts.Recycle();
-			canBePickedUp.Recycle();
+			Recycle(canBePickedUp);
 			// Prevent the original method from running
 			return false;
+		}
+
+		/// <summary>
+		/// Returns a temporary pickup dictionary to the pool.
+		/// </summary>
+		/// <param name="dict">The dictionary to clear and recycle.</param>
+		private static void Recycle(PickupTagDict dict) {
+			dict.Clear();
+			POOL.Push(dict);
 		}
 
 		/// <summary>
 		/// Wraps a prefab and its tag bit hash in a key structure that can be very quickly and
 		/// properly hashed and compared for a dictionary key.
 		/// </summary>
-		private struct PickupTagKey : IEquatable<PickupTagKey> {
-			/// <summary>
-			/// The precomputed tag bits mask against the disallowed tags list. This field is
-			/// actually not mutable, but cannot be readonly to pass the tag mask.
-			/// </summary>
-			private TagBits bits;
-
+		internal struct PickupTagKey {
 			/// <summary>
 			/// The prefab ID of the tagged object.
 			/// </summary>
-			private readonly KPrefabID id;
+			internal readonly KPrefabID id;
 
 			/// <summary>
 			/// The tag bits' hash.
 			/// </summary>
-			private readonly int hash;
+			internal readonly int hash;
 
 			public PickupTagKey(int hash, KPrefabID id) {
 				this.hash = hash;
 				this.id = id;
-				bits = new TagBits(ref FetchManager.disallowedTagMask);
-				id.AndTagBits(ref bits);
 			}
 
 			public override bool Equals(object obj) {
-				return obj is PickupTagKey other && Equals(other);
-			}
-
-			// IEquatable prevents ObjectEqualityComparer from boxing the struct
-			public bool Equals(PickupTagKey other) {
-				bool ret = false;
-				if (hash == other.hash)
-					ret = other.bits.AreEqual(ref bits);
-				return ret;
+				return obj is PickupTagKey other && PickupTagEqualityComparer.Instance.Equals(
+					this, other);
 			}
 
 			public override int GetHashCode() {
@@ -133,6 +158,35 @@ namespace PeterHan.FastTrack.GamePatches {
 
 			public override string ToString() {
 				return "PickupTagKey[Hash={0:D},Tags=[{1}]]".F(hash, id.Tags.Join());
+			}
+		}
+
+		/// <summary>
+		/// Compares and hashes PickupTagKey without any boxing.
+		/// </summary>
+		private sealed class PickupTagEqualityComparer : IEqualityComparer<PickupTagKey> {
+			/// <summary>
+			/// The singleton instance of this class.
+			/// </summary>
+			public static readonly PickupTagEqualityComparer Instance = new
+				PickupTagEqualityComparer();
+
+			private PickupTagEqualityComparer() { }
+
+			public bool Equals(PickupTagKey x, PickupTagKey y) {
+				bool ret = false;
+				if (x.hash == y.hash) {
+					var bitsA = new TagBits(ref FetchManager.disallowedTagMask);
+					var bitsB = new TagBits(ref FetchManager.disallowedTagMask);
+					x.id.AndTagBits(ref bitsA);
+					y.id.AndTagBits(ref bitsB);
+					ret = bitsA.AreEqual(ref bitsB);
+				}
+				return ret;
+			}
+
+			public int GetHashCode(PickupTagKey obj) {
+				return obj.hash;
 			}
 		}
 	}

@@ -278,7 +278,7 @@ namespace PeterHan.FastTrack {
 			bool signaled = handle.WaitOne(timeout);
 			now.Stop();
 			long t = now.ElapsedMilliseconds;
-			if (signaled && t > warning)
+			if (signaled && t > warning && FastTrackMod.GameRunning)
 				PUtil.LogWarning("Waited {0:D} ms for an async join (max {1:D} ms)".F(t,
 					warning));
 			return signaled;

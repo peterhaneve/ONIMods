@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.Core;
 using Unity.Profiling;
 
 namespace PeterHan.FastTrack.Metrics {
@@ -34,6 +35,8 @@ namespace PeterHan.FastTrack.Metrics {
 
 		private static long lastManagedUsed;
 
+		private static int gcCount;
+
 		/// <summary>
 		/// Starts the profiler.
 		/// </summary>
@@ -47,6 +50,7 @@ namespace PeterHan.FastTrack.Metrics {
 			systemUsed = ProfilerRecorder.StartNew(ProfilerCategory.Memory,
 				"System Used Memory");
 			lastManagedUsed = 0L;
+			gcCount = 0;
 		}
 
 		/// <summary>
@@ -65,16 +69,27 @@ namespace PeterHan.FastTrack.Metrics {
 		/// </summary>
 		public static void Log() {
 			if (totalUsed.Valid)
-				Debug.Log("Total Reserved KB: " + (totalUsed.LastValue >> 10));
+				PUtil.LogDebug("Total Reserved KB: " + (totalUsed.LastValue >> 10));
 			if (managedReserved.Valid && managedUsed.Valid) {
 				long used = managedUsed.LastValue;
 				long perSecond = used - lastManagedUsed;
-				Debug.LogFormat("Managed Heap KB: {0:D}/{1:D} ({2:D}/s)", used >> 10,
-					managedReserved.LastValue >> 10, perSecond >> 10);
+				PUtil.LogDebug("Managed Heap KB: {0:D}/{1:D} ({2:D}/s)".F(used >> 10,
+					managedReserved.LastValue >> 10, perSecond >> 10));
 				lastManagedUsed = used;
 			}
 			if (systemUsed.Valid)
-				Debug.Log("System Used KB: " + (systemUsed.LastValue >> 10));
+				PUtil.LogDebug("System Used KB: " + (systemUsed.LastValue >> 10));
+		}
+
+		/// <summary>
+		/// Logs if a GC has occurred.
+		/// </summary>
+		public static void LogGC() {
+			int times = System.GC.CollectionCount(0);
+			if (gcCount == 0 || gcCount != times) {
+				gcCount = times;
+				PUtil.LogDebug("Garbage collection occurred!");
+			}
 		}
 	}
 #endif

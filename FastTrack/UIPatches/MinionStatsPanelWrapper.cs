@@ -58,12 +58,15 @@ namespace PeterHan.FastTrack.UIPatches {
 					resumePanel.SetActive(resume != null);
 					attributesPanel.SetActive(resume != null);
 					attributesPanel.GetComponent<CollapsibleDetailContentPanel>().HeaderLabel.
-						text = STRINGS.UI.DETAILTABS.STATS.GROUPNAME_ATTRIBUTES;
+						SetText(STRINGS.UI.DETAILTABS.STATS.GROUPNAME_ATTRIBUTES);
 				}
 				if (target != null) {
+					var text = CACHED_BUILDER;
 					name = target.name;
+					text.Clear().Append(PERSONALITY.GROUPNAME_RESUME).Replace("{0}",
+						StringFormatter.ToUpper(name));
 					resumePanel.GetComponent<CollapsibleDetailContentPanel>().HeaderLabel.
-						text = PERSONALITY.GROUPNAME_RESUME.Format(name.ToUpper());
+						SetText(text);
 				}
 				if (resume != null)
 					RefreshResume(msp, resume, name);

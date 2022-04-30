@@ -170,8 +170,9 @@ namespace PeterHan.FastTrack.PathPatches {
 			var inst = GlobalChoreProvider.Instance;
 			int n = brainsToUpdate.Count;
 			if (n > 0) {
-				// Wait out the pickups update
-				bool updated = onFetchComplete.WaitAndMeasure(FastTrackMod.MAX_TIMEOUT, 100),
+				// Wait out the pickups update - GC pauses always seem to occur during this
+				// time?
+				bool updated = onFetchComplete.WaitAndMeasure(FastTrackMod.MAX_TIMEOUT, 1000),
 					quickSwap = AllowFastListSwap;
 				if (!updated)
 					PUtil.LogWarning("Fetch updates did not complete within the timeout!");

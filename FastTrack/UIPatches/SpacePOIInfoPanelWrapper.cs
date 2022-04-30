@@ -19,7 +19,6 @@
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -102,8 +101,8 @@ namespace PeterHan.FastTrack.UIPatches {
 				var sprite = Assets.GetSprite("icon_asteroid_type");
 				if (sprite != null)
 					hr.GetReference<Image>("Icon").sprite = sprite;
-				hr.GetReference<LocText>("NameLabel").text = STRINGS.UI.CLUSTERMAP.POI.
-					MASS_REMAINING;
+				hr.GetReference<LocText>("NameLabel").SetText(STRINGS.UI.CLUSTERMAP.POI.
+					MASS_REMAINING);
 				massLabel = hr.GetReference<LocText>("ValueLabel");
 				massLabel.alignment = TMPro.TextAlignmentOptions.MidlineRight;
 			} else
@@ -115,8 +114,8 @@ namespace PeterHan.FastTrack.UIPatches {
 				if (ar.TryGetComponent(out hr)) {
 					var icon = hr.GetReference<Image>("Icon");
 					// Triggers an Init if necessary
-					hr.GetReference<LocText>("NameLabel").text = STRINGS.UI.CLUSTERMAP.POI.
-						ARTIFACTS;
+					hr.GetReference<LocText>("NameLabel").SetText(STRINGS.UI.CLUSTERMAP.POI.
+						ARTIFACTS);
 					hr.GetReference<LocText>("ValueLabel").alignment = TMPro.
 						TextAlignmentOptions.MidlineRight;
 					icon.sprite = Assets.GetSprite("ic_artifacts");
@@ -162,8 +161,8 @@ namespace PeterHan.FastTrack.UIPatches {
 							icon.sprite = uiSprite.first;
 							icon.color = uiSprite.second;
 						}
-						hr.GetReference<LocText>("NameLabel").text = ElementLoader.
-							FindElementByHash(element).name;
+						hr.GetReference<LocText>("NameLabel").SetText(ElementLoader.
+							FindElementByHash(element).name);
 						hr.GetReference<LocText>("ValueLabel").alignment = TMPro.
 							TextAlignmentOptions.MidlineRight;
 					}
@@ -228,6 +227,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				Instance artifact) {
 			if (panel.artifactRow.TryGetComponent(out HierarchyReferences hr)) {
 				string text;
+				var label = hr.GetReference<LocText>("ValueLabel");
 				// Triggers an Init if necessary
 				artifact.configuration.GetArtifactID();
 				if (artifact.CanHarvestArtifact())
@@ -235,7 +235,8 @@ namespace PeterHan.FastTrack.UIPatches {
 				else
 					text = STRINGS.UI.CLUSTERMAP.POI.ARTIFACTS_DEPLETED.Format(GameUtil.
 						GetFormattedCycles(artifact.RechargeTimeRemaining(), "F1", true));
-				hr.GetReference<LocText>("ValueLabel").text = text;
+				if (label.text != text)
+					label.SetText(text);
 			}
 		}
 
@@ -261,9 +262,13 @@ namespace PeterHan.FastTrack.UIPatches {
 					Tag elementTag = new Tag(pair.Key.ToString());
 					// It is already visible, and in the correct order
 					if (elementRows.TryGetValue(elementTag, out GameObject row) && row.
-							TryGetComponent(out HierarchyReferences hr))
-						hr.GetReference<LocText>("ValueLabel").text = GameUtil.
-							GetFormattedPercent(pair.Value * 100.0f / total);
+							TryGetComponent(out HierarchyReferences hr)) {
+						string text = GameUtil.GetFormattedPercent(pair.Value * 100.0f /
+							total);
+						var label = hr.GetReference<LocText>("ValueLabel");
+						if (label.text != text)
+							label.SetText(text);
+					}
 				}
 			}
 		}
@@ -273,7 +278,9 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="harvestable">The POI to be harvested.</param>
 		private void RefreshMassHeader(HarvestablePOIStates.Instance harvestable) {
-			massLabel.text = GameUtil.GetFormattedMass(harvestable.poiCapacity);
+			string mass = GameUtil.GetFormattedMass(harvestable.poiCapacity);
+			if (massLabel.text != mass)
+				massLabel.SetText(mass);
 		}
 
 		/// <summary>

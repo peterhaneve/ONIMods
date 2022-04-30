@@ -68,7 +68,7 @@ namespace Ryu {
 				0;
 			uint digits = 0U;
 			int printedDigits = 0, availDigits = 0, exp = 0, exponent = Decode(ieeeMantissa,
-				ieeeExponent, out ulong mantissa);
+				ieeeExponent, out ulong mantissa), start = result.Length;
 			ulong mantShift = mantissa << MANTISSA_SHIFT;
 			++precision;
 
@@ -157,7 +157,7 @@ namespace Ryu {
 			} else
 				RyuUtils.AppendDDigits(result, digits, maxDigits + 1, printDP, info);
 
-			if (roundFlag != 0 && RyuUtils.RoundResult(result, roundFlag, out _, info))
+			if (roundFlag != 0 && RyuUtils.RoundResult(result, start, roundFlag, out _, info))
 				exp++;
 
 			if (soft)
@@ -173,7 +173,8 @@ namespace Ryu {
 				uint ieeeExponent, int precision, RyuFormatOptions options,
 				NumberFormatInfo info) {
 			bool zero = true, soft = (options & RyuFormatOptions.SoftPrecision) != 0;
-			int exponent = Decode(ieeeMantissa, ieeeExponent, out ulong mantissa);
+			int exponent = Decode(ieeeMantissa, ieeeExponent, out ulong mantissa), start =
+				result.Length;
 			ulong mShift = mantissa << MANTISSA_SHIFT;
 			uint digits;
 
@@ -198,7 +199,7 @@ namespace Ryu {
 			if (zero)
 				result.Append(RyuUtils.ZERO);
 			if ((options & RyuFormatOptions.ThousandsSeparators) != 0)
-				RyuUtils.AddThousands(result, info);
+				RyuUtils.AddThousands(result, start, info);
 			if (precision > 0 && (!soft || exponent < 0))
 				result.Append(info.NumberDecimalSeparator);
 
@@ -245,7 +246,7 @@ namespace Ryu {
 					}
 					p++;
 				}
-				if (roundFlag != 0 && RyuUtils.RoundResult(result, roundFlag,
+				if (roundFlag != 0 && RyuUtils.RoundResult(result, start, roundFlag,
 						out int decimalIndex, info)) {
 					if (decimalIndex > 0) {
 						result[decimalIndex++] = RyuUtils.ZERO;

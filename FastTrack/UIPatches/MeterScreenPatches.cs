@@ -215,13 +215,15 @@ namespace PeterHan.FastTrack.UIPatches {
 						Instance.activeWorld) != null && activeWorld.TryGetComponent(
 						out ClusterGridEntity world)) {
 					var text = CACHED_BUILDER;
+					string ids = identities.ToString();
 					text.Clear().Append(STRINGS.UI.TOOLTIPS.METERSCREEN_POPULATION_CLUSTER);
-					ttText = text.Replace("{0}", world.Name).Replace("{1}", identities.
-						ToString()).Replace("{2}", alive).ToString();
-					currentMinions.text = identities.ToString() + "/" + alive;
+					ttText = text.Replace("{0}", world.Name).Replace("{1}", ids).Replace(
+						"{2}", alive).ToString();
+					text.Clear().Append(ids).Append('/').Append(alive);
+					currentMinions.SetText(text);
 				} else {
 					ttText = STRINGS.UI.TOOLTIPS.METERSCREEN_POPULATION.Format(alive);
-					currentMinions.text = alive;
+					currentMinions.SetText(alive);
 				}
 				tt.ClearMultiStringTooltip();
 				tt.AddMultiStringTooltip(ttText, __instance.ToolTipStyle_Header);

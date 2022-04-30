@@ -201,7 +201,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					for (int j = 0; j < indent; j++)
 						text.Append(Constants.TABSTRING);
 					text.Append(descriptor.text);
-					hr.GetReference<LocText>("Label").SetText(text.ToString());
+					hr.GetReference<LocText>("Label").SetText(text);
 					if (sprite == null) {
 						icon.sprite = null;
 						icon.color = Color.white;

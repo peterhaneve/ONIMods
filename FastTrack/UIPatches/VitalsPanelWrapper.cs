@@ -81,27 +81,27 @@ namespace PeterHan.FastTrack.UIPatches {
 					string wildGrowth = GameUtil.GetFormattedCycles(growing.WildGrowthTime());
 					string tameGrowth = GameUtil.GetFormattedCycles(growing.
 						DomesticGrowthTime());
-					panel.plantNormalLabel.text = CONDITIONS_GROWING.WILD.BASE.Format(
-						wildGrowth);
+					panel.plantNormalLabel.SetText(CONDITIONS_GROWING.WILD.BASE.Format(
+						wildGrowth));
 					panel.plantNormalTooltip.SetSimpleTooltip(CONDITIONS_GROWING.WILD.TOOLTIP.
 						Format(wildGrowth));
 					aLabel.color = rm.Replanted ? Color.black : Color.grey;
-					aLabel.text = hasAdditional ? CONDITIONS_GROWING.ADDITIONAL_DOMESTIC.BASE.
+					aLabel.SetText(hasAdditional ? CONDITIONS_GROWING.ADDITIONAL_DOMESTIC.BASE.
 						Format(tameGrowth) : CONDITIONS_GROWING.DOMESTIC.BASE.
-						Format(tameGrowth);
+						Format(tameGrowth));
 					panel.plantAdditionalTooltip.SetSimpleTooltip(CONDITIONS_GROWING.
 						ADDITIONAL_DOMESTIC.TOOLTIP.Format(tameGrowth));
 				} else {
 					string wildGrowth = Util.FormatTwoDecimalPlace(100.0f * TUNING.CROPS.
 						WILD_GROWTH_RATE_MODIFIER);
 					string tameGrowth = Util.FormatTwoDecimalPlace(100.0f);
-					panel.plantNormalLabel.text = isDecor ? CONDITIONS_GROWING.WILD_DECOR.BASE.
-						ToString() : CONDITIONS_GROWING.WILD_INSTANT.BASE.Format(wildGrowth);
+					panel.plantNormalLabel.SetText(isDecor ? CONDITIONS_GROWING.WILD_DECOR.BASE.
+						ToString() : CONDITIONS_GROWING.WILD_INSTANT.BASE.Format(wildGrowth));
 					panel.plantNormalTooltip.SetSimpleTooltip(CONDITIONS_GROWING.WILD_INSTANT.
 						TOOLTIP);
 					aLabel.color = (rm == null || rm.Replanted) ? Color.black : Color.grey;
-					aLabel.text = CONDITIONS_GROWING.ADDITIONAL_DOMESTIC_INSTANT.BASE.
-						Format(tameGrowth);
+					aLabel.SetText(CONDITIONS_GROWING.ADDITIONAL_DOMESTIC_INSTANT.BASE.
+						Format(tameGrowth));
 					panel.plantAdditionalTooltip.SetSimpleTooltip(CONDITIONS_GROWING.
 						ADDITIONAL_DOMESTIC_INSTANT.TOOLTIP);
 				}
@@ -237,7 +237,10 @@ namespace PeterHan.FastTrack.UIPatches {
 				bool visible = amountLookup.TryGetValue(amount.Id, out AmountInstance ai) &&
 					!ai.hide;
 				if (visible) {
-					amountLine.locText.SetText(amount.GetDescription(ai));
+					string desc = amount.GetDescription(ai);
+					var lt = amountLine.locText;
+					if (lt.text != desc)
+						lt.SetText(desc);
 					amountLine.toolTip.toolTip = amountLine.toolTipFunc.Invoke(ai);
 					amountLine.imageToggle.SetValue(ai);
 				}
@@ -252,7 +255,10 @@ namespace PeterHan.FastTrack.UIPatches {
 				bool visible = attributeLookup.TryGetValue(attribute.Id,
 					out AttributeInstance ai) && !ai.hide;
 				if (visible) {
-					attributeLine.locText.SetText(attribute.GetDescription(ai));
+					string desc = attribute.GetDescription(ai);
+					var lt = attributeLine.locText;
+					if (lt.text != desc)
+						lt.SetText(desc);
 					attributeLine.toolTip.toolTip = attributeLine.toolTipFunc.Invoke(ai);
 				}
 				if (gameObject.activeSelf != visible)
@@ -285,7 +291,9 @@ namespace PeterHan.FastTrack.UIPatches {
 					var textField = checkboxLine.textField;
 					var img = checkboxLine.checkImage;
 					var parent = checkboxLine.parentContainer;
-					textField.SetText(checkboxLine.getLabelText(target));
+					string labelText = checkboxLine.getLabelText(target);
+					if (textField.text != labelText)
+						textField.SetText(labelText);
 					checkboxLine.checkGO.SetActive(isSatisfied);
 					// Reparent it if necessary
 					if (transform.parent != parent) {

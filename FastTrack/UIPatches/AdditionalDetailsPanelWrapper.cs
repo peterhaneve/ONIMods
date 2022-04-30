@@ -88,18 +88,12 @@ namespace PeterHan.FastTrack.UIPatches {
 			text.Clear();
 			shc.ToRyuHardString(text, 3);
 			string shcValue = text.ToString();
-			text.Clear();
 			// Pass 2: Format into SHC header
-			text.Append(ELEMENTAL.SHC.NAME);
-			text.Replace("{0}", shcValue);
-			text.Append("(DTU/g)/");
-			text.Append(GameUtil.GetTemperatureUnitSuffix());
-			string shcText = text.ToString();
-			text.Clear();
+			string shcText = text.Clear().Append(ELEMENTAL.SHC.NAME).Replace("{0}", shcValue).
+				Append(" (DTU/g)/").Append(GameUtil.GetTemperatureUnitSuffix()).ToString();
 			// Pass 3: Final format into tooltip
-			text.Append(ELEMENTAL.SHC.TOOLTIP);
-			text.Replace("{SPECIFIC_HEAT_CAPACITY}", shcText);
-			text.Replace("{TEMPERATURE_UNIT}", tempUnits);
+			text.Clear().Append(ELEMENTAL.SHC.TOOLTIP).Replace("{SPECIFIC_HEAT_CAPACITY}",
+				shcValue).Replace("{TEMPERATURE_UNIT}", tempUnits);
 			shcInfo = new InfoLine(shcText, text.ToString());
 		}
 
@@ -126,17 +120,13 @@ namespace PeterHan.FastTrack.UIPatches {
 			text.Clear();
 			tc.ToRyuHardString(text, 3);
 			string shcValue = text.ToString();
-			text.Clear();
 			// Pass 2: Format into TC header
-			text.Append(ELEMENTAL.THERMALCONDUCTIVITY.NAME);
-			text.Replace("{0}", shcValue);
-			text.Append(GameUtil.GetThermalConductivitySuffix());
-			string tcText = text.ToString();
-			text.Clear();
+			string tcText = text.Clear().Append(ELEMENTAL.THERMALCONDUCTIVITY.NAME).Replace(
+				"{0}", shcValue).Append(" (DTU/(m*s))/").Append(GameUtil.
+				GetTemperatureUnitSuffix()).ToString();
 			// Pass 3: Final format into tooltip
-			text.Append(ELEMENTAL.THERMALCONDUCTIVITY.TOOLTIP);
-			text.Replace("{THERMAL_CONDUCTIVITY}", tcText);
-			text.Replace("{TEMPERATURE_UNIT}", tempUnits);
+			text.Clear().Append(ELEMENTAL.THERMALCONDUCTIVITY.TOOLTIP).Replace(
+				"{THERMAL_CONDUCTIVITY}", shcValue).Replace("{TEMPERATURE_UNIT}", tempUnits);
 			tcInfo = new InfoLine(tcText, text.ToString());
 			return insulator;
 		}
@@ -345,8 +335,8 @@ namespace PeterHan.FastTrack.UIPatches {
 					lastSelection = new LastSelectionDetails(target);
 					detailsPanel.SetActive(true);
 					if (detailsPanel.TryGetComponent(out CollapsibleDetailContentPanel panel))
-						panel.HeaderLabel.text = STRINGS.UI.DETAILTABS.DETAILS.
-							GROUPNAME_DETAILS;
+						panel.HeaderLabel.SetText(STRINGS.UI.DETAILTABS.DETAILS.
+							GROUPNAME_DETAILS);
 				}
 				element = lastSelection.element;
 				if (element != null) {

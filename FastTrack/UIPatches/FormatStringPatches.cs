@@ -19,13 +19,13 @@
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using Ryu;
-using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
 using BreathableValues = GameUtil.BreathableValues;
 using HARDNESS = STRINGS.ELEMENTS.HARDNESS;
 using HardnessValues = GameUtil.Hardness;
+using MetricMassFormat = GameUtil.MetricMassFormat;
 using OXYGEN = STRINGS.UI.OVERLAYS.OXYGEN;
 using SUFFIXES = STRINGS.UI.UNITSUFFIXES;
 using TCADJ = STRINGS.UI.ELEMENTAL.THERMALCONDUCTIVITY.ADJECTIVES;
@@ -68,6 +68,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static readonly string[] TC_LEGEND_COLOR = new string[5];
 
 		private static string UNIT;
+
+		private static string UNIT_FORMATTED;
 
 		private static string UNITS;
 
@@ -199,15 +201,143 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
+		/// Formats the germ quantity into a string buffer to save on allocations.
+		/// </summary>
+		/// <param name="text">The location where the germs will be stored.</param>
+		/// <param name="germs">The number of germs.</param>
+		/// <param name="timeSlice">The time unit, if any.</param>
+		private static void GetFormattedDiseaseAmount(StringBuilder text, int germs,
+				TimeSlice timeSlice = TimeSlice.None) {
+			// /cycle is broken in vanilla, clay please
+			GameUtil.ApplyTimeSlice(germs, timeSlice).ToStandardString(text);
+			text.Append(SUFFIXES.DISEASE.UNITS).AppendTimeSlice(timeSlice);
+		}
+
+		/// <summary>
+		/// Formats the mass into a string buffer to save on allocations.
+		/// </summary>
+		/// <param name="text">The location where the mass will be stored.</param>
+		/// <param name="mass">The mass in kilograms.</param>
+		/// <param name="timeSlice">The time unit, if any.</param>
+		/// <param name="massFormat">The mass units to use.</param>
+		/// <param name="displaySuffix">Whether to display the units.</param>
+		/// <param name="format">The string format to use, or null for the ONI default
+		/// (1 decimal place soft).</param>
+		internal static void GetFormattedMass(StringBuilder text, float mass,
+				TimeSlice timeSlice = TimeSlice.None, MetricMassFormat massFormat =
+				MetricMassFormat.UseThreshold, bool displaySuffix = true, string format = null)
+		{
+			if (float.IsInfinity(mass) || float.IsNaN(mass) || mass == float.MaxValue)
+				// Handle inf and NaN
+				text.Append(STRINGS.UI.CALCULATING);
+			else {
+				// Divide by cycle length if /cycle
+				LocString suffix;
+				float absMass = Mathf.Abs(mass);
+				var legend = MASS_LEGEND;
+				mass = GameUtil.ApplyTimeSlice(mass, timeSlice);
+				if (GameUtil.massUnit == GameUtil.MassUnit.Kilograms) {
+					switch (massFormat) {
+					case MetricMassFormat.UseThreshold:
+						if (absMass > 0.0f) {
+							if (absMass < 5E-06f) {
+								// ug
+								suffix = legend[4];
+								mass = Mathf.Floor(mass * 1.0E+09f);
+							} else if (absMass < 0.005f) {
+								mass *= 1000000.0f;
+								// mg
+								suffix = legend[3];
+							} else if (absMass < 5.0f) {
+								mass *= 1000.0f;
+								// g
+								suffix = legend[2];
+							} else if (absMass < 5000.0f)
+								// kg
+								suffix = legend[1];
+							else {
+								mass /= 1000.0f;
+								// t
+								suffix = legend[0];
+							}
+						} else
+							// kg
+							suffix = legend[1];
+						break;
+					case MetricMassFormat.Gram:
+						mass *= 1000f;
+						// g
+						suffix = legend[2];
+						break;
+					case MetricMassFormat.Tonne:
+						mass /= 1000f;
+						// t
+						suffix = legend[0];
+						break;
+					case MetricMassFormat.Kilogram:
+					default:
+						// kg
+						suffix = legend[1];
+						break;
+					}
+				} else {
+					mass /= 2.2f;
+					if (massFormat == MetricMassFormat.UseThreshold)
+						if (absMass < 5.0f && absMass > 0.001f) {
+							mass *= 256.0f;
+							suffix = SUFFIXES.MASS.DRACHMA;
+						} else {
+							mass *= 7000.0f;
+							suffix = SUFFIXES.MASS.GRAIN;
+						}
+					else
+						suffix = SUFFIXES.MASS.POUND;
+				}
+				// Hardcodes for the most common cases in ONI
+				if (format == null || format == "{0:0.#}")
+					mass.ToRyuSoftString(text, 1);
+				else if (format == "{0:0.##}")
+					mass.ToRyuSoftString(text, 2);
+				else if (format == "{0:0.###}")
+					mass.ToRyuSoftString(text, 3);
+				else
+					text.AppendFormat(format, mass);
+				if (displaySuffix)
+					text.Append(suffix).AppendTimeSlice(timeSlice);
+			}
+		}
+
+		/// <summary>
+		/// Formats the rocket range into a string buffer to save on allocations.
+		/// </summary>
+		/// <param name="text">The location where the rocket range will be stored.</param>
+		/// <param name="range">The rocket range in tiles.</param>
+		/// <param name="timeSlice">The time unit, if any.</param>
+		/// <param name="displaySuffix">Whether to display the units.</param>
+		internal static void GetFormattedRocketRange(StringBuilder text, float range,
+				TimeSlice timeSlice, bool displaySuffix) {
+			if (timeSlice == TimeSlice.PerCycle) {
+				// Range cannot be over 999 tiles right now ;)
+				range.ToRyuHardString(text, 1);
+				if (displaySuffix)
+					text.Append(' ').Append(STRINGS.UI.CLUSTERMAP.TILES_PER_CYCLE);
+			} else {
+				(range / 600.0f).ToRyuHardString(text, 0);
+				if (displaySuffix)
+					text.Append(' ').Append(STRINGS.UI.CLUSTERMAP.TILES);
+			}
+		}
+
+		/// <summary>
 		/// Formats the temperature into a string buffer to save on allocations.
 		/// </summary>
-		/// <param name="text"></param>
+		/// <param name="text">The location where the temperature will be stored.</param>
 		/// <param name="temperature">The temperature in K.</param>
 		/// <param name="timeSlice">The time unit, if any.</param>
 		/// <param name="interpretation">Whether the temperature is a delta, or an absolute value.</param>
 		/// <param name="displayUnits">Whether to display the units.</param>
 		/// <param name="roundOff">Whether to round off the temperature to the nearest degree.</param>
-		private static void GetFormattedTemperature(StringBuilder text, float temperature,
+		internal static void GetFormattedTemperature(StringBuilder text, float temperature,
 				TimeSlice timeSlice = TimeSlice.None, GameUtil.TemperatureInterpretation
 				interpretation = GameUtil.TemperatureInterpretation.Absolute,
 				bool displayUnits = true, bool roundOff = false) {
@@ -226,16 +356,16 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Formats the wattage as a string.
 		/// </summary>
+		/// <param name="text">The location where the wattage will be stored.</param>
 		/// <param name="watts">The raw wattage in watts.</param>
 		/// <param name="unit">The unit to use.</param>
 		/// <param name="displayUnits">Whether to display the units.</param>
 		/// <returns>The resulting wattage formatted for display.</returns>
-		private static string GetFormattedWattage(float watts,
-				GameUtil.WattageFormatterUnit unit, bool displayUnits) {
+		internal static void GetFormattedWattage(StringBuilder text, float watts,
+				GameUtil.WattageFormatterUnit unit = GameUtil.WattageFormatterUnit.Automatic,
+				bool displayUnits = true) {
 			string unitStr;
 			var legend = WATT_LEGEND;
-			var text = CACHED_BUILDER;
-			text.Clear();
 			if (text.AppendIfInfinite(watts))
 				// POWER OVERWHELMING
 				text.Append(legend[0]);
@@ -261,7 +391,6 @@ namespace PeterHan.FastTrack.UIPatches {
 				if (displayUnits)
 					text.Append(unitStr);
 			}
-			return text.ToString();
 		}
 
 		/// <summary>
@@ -300,6 +429,32 @@ namespace PeterHan.FastTrack.UIPatches {
 			} else
 				text = HARDNESS.NA;
 			return text;
+		}
+
+		/// <summary>
+		/// Gets a string describing the quantity of an item.
+		/// 
+		/// Warning: This method requires starting with a clean buffer!
+		/// </summary>
+		/// <param name="text">The location where the quantity will be stored.</param>
+		/// <param name="name">The item name.</param>
+		/// <param name="count">The quantity of the item.</param>
+		/// <param name="upperName">If true, the item name is converted to uppercase.</param>
+		internal static void GetUnitFormattedName(StringBuilder text, string name, float count,
+				bool upperName = false) {
+			string uName = upperName ? StringFormatter.ToUpper(name) : name;
+			if (UNIT_FORMATTED == null) {
+				if (!text.AppendIfInfinite(count))
+					count.ToRyuSoftString(text, 2);
+				string units = text.ToString();
+				text.Clear().Append(STRINGS.UI.NAME_WITH_UNITS).Replace("{0}", uName).
+					Replace("{1}", units);
+			} else {
+				// Fast path
+				text.Append(uName).Append(UNIT_FORMATTED);
+				if (!text.AppendIfInfinite(count))
+					count.ToRyuSoftString(text, 2);
+			}
 		}
 
 		/// <summary>
@@ -346,6 +501,11 @@ namespace PeterHan.FastTrack.UIPatches {
 			legend[1] = SUFFIXES.ELECTRICAL.KILOJOULE;
 			legend[2] = SUFFIXES.ELECTRICAL.MEGAJOULE;
 			// All other cached strings
+			fmt = STRINGS.UI.NAME_WITH_UNITS;
+			if (fmt.StartsWith("{0}") && fmt.EndsWith("{1}"))
+				UNIT_FORMATTED = fmt.Substring(3, fmt.Length - 6);
+			else
+				UNIT_FORMATTED = null;
 			EP = STRINGS.ELEMENTS.ELEMENTPROPERTIES.Format("");
 			PCT = SUFFIXES.PERCENT;
 			PER_CYCLE = SUFFIXES.PERCYCLE;
