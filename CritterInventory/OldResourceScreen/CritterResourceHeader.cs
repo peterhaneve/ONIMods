@@ -74,9 +74,9 @@ namespace PeterHan.CritterInventory.OldResourceScreen {
 		internal void HighlightAllMatching(Color color) {
 			var type = CritterType;
 			int id = ClusterManager.Instance.activeWorldId;
-			CritterInventoryUtils.GetCritters(id, (creature) => {
-				if (creature.GetCritterType() == type)
-					PGameUtils.HighlightEntity(creature, color);
+			CritterInventoryUtils.GetCritters(id, (kpid) => {
+				if (kpid.GetCritterType() == type)
+					PGameUtils.HighlightEntity(kpid, color);
 			});
 		}
 

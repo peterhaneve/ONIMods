@@ -32,16 +32,11 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// every frame.
 	/// </summary>
 	[SkipSaveFileSerialization]
-	internal sealed partial class SimpleInfoScreenWrapper : KMonoBehaviour {
+	internal sealed partial class SimpleInfoScreenWrapper : KMonoBehaviour, ISim200ms {
 		/// <summary>
 		/// Avoid reallocating a new StringBuilder every frame.
 		/// </summary>
 		private static readonly StringBuilder CACHED_BUILDER = new StringBuilder(128);
-
-		/// <summary>
-		/// The time in seconds between status panel updates of the less-important items.
-		/// </summary>
-		private const double UPDATE_RATE = 0.2;
 
 		/// <summary>
 		/// The singleton instance of this class.
@@ -105,11 +100,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		private ReportEntry lastStressEntry;
 
 		/// <summary>
-		/// Update several parts of the panel only every 0.2 s instead of every frame.
-		/// </summary>
-		private double lastUpdate;
-
-		/// <summary>
 		/// The last object selected in the additional details pane.
 		/// </summary>
 		private LastSelectionDetails lastSelection;
@@ -164,6 +154,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		private readonly ISet<CachedStorageLabel> setInactive;
 
+		private bool statusActive;
+
 		/// <summary>
 		/// The currently visible storage labels, to avoid iterating the entire cache to set
 		/// inactive.
@@ -185,7 +177,6 @@ namespace PeterHan.FastTrack.UIPatches {
 			conditionParent = null;
 			labelCache = new Dictionary<string, CachedStorageLabel>(64);
 			lastReport = null;
-			lastUpdate = 0.0;
 			lastSelection = default;
 			lastStressEntry = null;
 			processHeaders = new List<ProcessConditionRow>(8);
@@ -193,6 +184,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			processVisible = new List<ProcessConditionRow>(32);
 			rocketLabels = new HashSet<CachedStorageLabel>();
 			setInactive = new HashSet<CachedStorageLabel>();
+			statusActive = false;
 			storages = new List<Storage>(8);
 			storageActive = false;
 			storageLabels = new HashSet<CachedStorageLabel>();
@@ -287,7 +279,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		internal void Refresh(bool force) {
 			var target = sis.selectedTarget;
 			var statusItems = sis.statusItems;
-			double now = Time.timeAsDouble;
 			bool paused = SpeedControlScreen.Instance.IsPaused;
 			// OnSelectTarget gets called before the first Init, so the UI is not ready then
 			if (storageParent != null) {
@@ -306,25 +297,16 @@ namespace PeterHan.FastTrack.UIPatches {
 					}
 				}
 				if (target != null) {
-					if (now - lastUpdate > UPDATE_RATE || force) {
-						var vitalsContainer = sis.vitalsContainer;
-						lastUpdate = now;
-						RefreshStress();
-						if (vitalsActive) {
-							var vi = VitalsPanelWrapper.Instance;
-							if (vi == null)
-								vitalsContainer.Refresh();
-							else
-								vi.Update(vitalsContainer);
-						}
-						RefreshRocket();
-					}
 					int count = statusItems.Count;
-					sis.statusItemPanel.gameObject.SetActive(count > 0);
+					bool showStatus = count > 0;
+					if (force)
+						Update200ms();
+					if (showStatus != statusActive) {
+						sis.statusItemPanel.gameObject.SetActive(showStatus);
+						statusActive = showStatus;
+					}
 					for (int i = 0; i < count; i++)
 						statusItems[i].Refresh();
-					if (force || !paused || !wasPaused)
-						RefreshStorage(true);
 				}
 				wasPaused = paused;
 			}
@@ -569,6 +551,30 @@ namespace PeterHan.FastTrack.UIPatches {
 				sis.fertilityPanel.gameObject.SetActive(false);
 			sis.rocketStatusContainer.gameObject.SetActive(lastSelection.
 				rocketInterface != null || lastSelection.rocketModule != null);
+		}
+
+		public void Sim200ms(float _) {
+			if (sis.lastTarget != null && storageParent != null && isActiveAndEnabled) {
+				Update200ms();
+			}
+		}
+
+		/// <summary>
+		/// Updates the panels that should be updated every 200ms or when the selected object
+		/// changes.
+		/// </summary>
+		private void Update200ms() {
+			var vitalsContainer = sis.vitalsContainer;
+			RefreshStress();
+			if (vitalsActive) {
+				var vi = VitalsPanelWrapper.Instance;
+				if (vi == null)
+					vitalsContainer.Refresh();
+				else
+					vi.Update(vitalsContainer);
+			}
+			RefreshRocket();
+			RefreshStorage(true);
 		}
 
 		/// <summary>

@@ -48,11 +48,12 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 		/// </summary>
 		internal void OnCycleThrough() {
 			int id = ClusterManager.Instance.activeWorldId;
-			var matching = ListPool<CreatureBrain, PinnedCritterEntry>.Allocate();
+			var matching = ListPool<KPrefabID, PinnedCritterEntry>.Allocate();
+			var type = CritterType;
 			// Compile a list of critters matching this species
-			CritterInventoryUtils.GetCritters(id, (creature) => {
-				if (creature.GetCritterType() == CritterType)
-					matching.Add(creature);
+			CritterInventoryUtils.GetCritters(id, (kpid) => {
+				if (kpid.GetCritterType() == type)
+					matching.Add(kpid);
 			}, Species);
 			int n = matching.Count;
 			if (selectionIndex >= n)

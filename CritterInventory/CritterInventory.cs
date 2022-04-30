@@ -29,7 +29,7 @@ namespace PeterHan.CritterInventory {
 	/// Stores the inventory of each critter type. One is created per world.
 	/// </summary>
 	[SerializationConfig(MemberSerialization.OptIn)]
-	public sealed class CritterInventory : KMonoBehaviour {
+	public sealed class CritterInventory : KMonoBehaviour, IRender200ms {
 		// EX1-452242 made these fields private
 		private static readonly IDetouredField<FactionAlignment, bool> FACTION_TARGETABLE =
 			PDetours.DetourField<FactionAlignment, bool>("targetable");
@@ -72,11 +72,9 @@ namespace PeterHan.CritterInventory {
 		/// Adds a critter in the current world to the inventory.
 		/// </summary>
 		/// <param name="creature">The creature to add.</param>
-		private void AddCritter(CreatureBrain creature) {
-			if (counts.TryGetValue(creature.GetCritterType(), out CritterInventoryPerType
-					byType)) {
-				var species = creature.PrefabID();
-				var alignment = creature.GetComponent<FactionAlignment>();
+		private void AddCritter(KPrefabID id) {
+			if (counts.TryGetValue(id.GetCritterType(), out CritterInventoryPerType byType)) {
+				var species = id.PrefabTag;
 				bool targeted = false, targetable = false;
 				// Create critter totals if not present
 				if (!byType.TryGetValue(species, out CritterTotals totals)) {
@@ -84,13 +82,14 @@ namespace PeterHan.CritterInventory {
 					discovered = true;
 				}
 				totals.Total++;
-				if (alignment != null) {
+				if (id.TryGetComponent(out FactionAlignment alignment)) {
 					targeted = FACTION_TARGETED.Get(alignment);
 					targetable = FACTION_TARGETABLE.Get(alignment);
 				}
 				// Reserve wrangled, marked for attack, and trussed/bagged creatures
-				if ((creature.GetComponent<Capturable>()?.IsMarkedForCapture ?? false) ||
-						(targeted && targetable) || creature.HasTag(GameTags.Creatures.Bagged))
+				if ((id.TryGetComponent(out Capturable capturable) && capturable.
+						IsMarkedForCapture) || (targeted && targetable) || id.HasTag(
+						GameTags.Creatures.Bagged))
 					totals.Reserved++;
 			}
 		}
@@ -164,19 +163,23 @@ namespace PeterHan.CritterInventory {
 		/// <summary>
 		/// Updates the contents of the critter inventory.
 		/// </summary>
-		public void Update() {
-			// Reset existing count to zero
-			foreach (var typePair in counts)
-				foreach (var speciesPair in typePair.Value) {
-					var species = speciesPair.Value;
-					species.Reserved = 0;
-					species.Total = 0;
-				}
-			discovered = false;
-			CritterInventoryUtils.GetCritters(GetWorldID(), AddCritter);
-			var inst = AllResourcesScreen.Instance;
-			if (discovered && inst != null)
-				inst.Populate(null);
+		public void Render200ms(float _) {
+			int id = GetWorldID();
+			var clusterManager = ClusterManager.Instance;
+			if (clusterManager != null && clusterManager.activeWorldId == id) {
+				// Reset existing count to zero
+				foreach (var typePair in counts)
+					foreach (var speciesPair in typePair.Value) {
+						var species = speciesPair.Value;
+						species.Reserved = 0;
+						species.Total = 0;
+					}
+				discovered = false;
+				CritterInventoryUtils.GetCritters(id, AddCritter);
+				var inst = AllResourcesScreen.Instance;
+				if (discovered && inst != null)
+					inst.Populate(null);
+			}
 		}
 	}
 }

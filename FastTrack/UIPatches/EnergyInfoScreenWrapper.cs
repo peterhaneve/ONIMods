@@ -112,6 +112,11 @@ namespace PeterHan.FastTrack.UIPatches {
 
 		private GameObject consumerParent;
 
+		/// <summary>
+		/// Whether energy networks were simulated since the last update.
+		/// </summary>
+		private bool dirty;
+
 #pragma warning disable IDE0044
 #pragma warning disable CS0649
 		// These fields are automatically populated by KMonoBehaviour
@@ -148,6 +153,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			cache = new Dictionary<string, EnergyInfoLabel>(64);
 			generatorLabels = new HashSet<EnergyInfoLabel>();
 			setInactive = new HashSet<EnergyInfoLabel>();
+			dirty = true;
 			wasValid = false;
 		}
 
@@ -268,49 +274,56 @@ namespace PeterHan.FastTrack.UIPatches {
 			else
 				consumerParent = null;
 			lastSelected = default;
+			dirty = true;
 		}
 
 		internal void Refresh() {
 			var manager = Game.Instance.circuitManager;
 			var target = es.selectedTarget;
+			bool update = dirty;
 			ushort circuitID = ushort.MaxValue;
 			if (target != null) {
 				int cell;
-				if (target != lastSelected.lastTarget)
+				if (target != lastSelected.lastTarget) {
 					lastSelected = new LastSelectionDetails(target);
+					update = true;
+				}
 				var conn = lastSelected.connected;
 				if (conn != null)
 					circuitID = manager.GetCircuitID(conn);
 				else if (Grid.IsValidCell(cell = lastSelected.cell))
 					circuitID = manager.GetCircuitID(cell);
 			}
-			if (circuitID != ushort.MaxValue) {
-				RefreshSummary(manager, circuitID);
-				if (!wasValid) {
-					es.generatorsPanel.SetActive(true);
-					es.consumersPanel.SetActive(true);
-					es.batteriesPanel.SetActive(true);
-					joulesAvailable.SetActive(true);
-					wattageGenerated.SetActive(true);
-					wattageConsumed.SetActive(true);
-					potentialWattageConsumed.SetActive(true);
-					maxSafeWattage.SetActive(true);
-					noCircuit.SetActive(false);
-					wasValid = true;
+			if (update) {
+				if (circuitID != ushort.MaxValue) {
+					RefreshSummary(manager, circuitID);
+					if (!wasValid) {
+						es.generatorsPanel.SetActive(true);
+						es.consumersPanel.SetActive(true);
+						es.batteriesPanel.SetActive(true);
+						joulesAvailable.SetActive(true);
+						wattageGenerated.SetActive(true);
+						wattageConsumed.SetActive(true);
+						potentialWattageConsumed.SetActive(true);
+						maxSafeWattage.SetActive(true);
+						noCircuit.SetActive(false);
+						wasValid = true;
+					}
+					RefreshGenerators(manager, circuitID);
+					RefreshConsumers(manager, circuitID);
+					RefreshBatteries(manager, circuitID);
+				} else if (wasValid) {
+					es.generatorsPanel.SetActive(false);
+					es.consumersPanel.SetActive(false);
+					es.batteriesPanel.SetActive(false);
+					joulesAvailable.SetActive(false);
+					wattageGenerated.SetActive(false);
+					wattageConsumed.SetActive(false);
+					potentialWattageConsumed.SetActive(false);
+					maxSafeWattage.SetActive(false);
+					noCircuit.SetActive(true);
 				}
-				RefreshGenerators(manager, circuitID);
-				RefreshConsumers(manager, circuitID);
-				RefreshBatteries(manager, circuitID);
-			} else if (wasValid) {
-				es.generatorsPanel.SetActive(false);
-				es.consumersPanel.SetActive(false);
-				es.batteriesPanel.SetActive(false);
-				joulesAvailable.SetActive(false);
-				wattageGenerated.SetActive(false);
-				wattageConsumed.SetActive(false);
-				potentialWattageConsumed.SetActive(false);
-				maxSafeWattage.SetActive(false);
-				noCircuit.SetActive(true);
+				dirty = false;
 			}
 		}
 
@@ -514,11 +527,6 @@ namespace PeterHan.FastTrack.UIPatches {
 				rt.localScale = Vector3.one;
 				this.id = id;
 				root.SetActive(true);
-				if (root.TryGetComponent(out UnityEngine.UI.LayoutElement element)) {
-					// Avoid querying the TMP objects for their size
-					element.layoutPriority = 42;
-					element.preferredWidth = 270;
-				}
 			}
 
 			public void Dispose() {
@@ -595,6 +603,26 @@ namespace PeterHan.FastTrack.UIPatches {
 				if (!run)
 					instance.Refresh();
 				return run;
+			}
+		}
+
+		/// <summary>
+		/// Applied to CircuitManager to flag when electrical networks are dirty.
+		/// 
+		/// TODO Turn this patch off conditionally when energy sim gets rewritten!
+		/// </summary>
+		[HarmonyPatch(typeof(CircuitManager), nameof(CircuitManager.Sim200msLast))]
+		internal static class Sim200msLast_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
+
+			/// <summary>
+			/// Applied before Sim200msLast runs.
+			/// </summary>
+			internal static void Prefix(CircuitManager __instance, float dt) {
+				float elapsedTime = __instance.elapsedTime;
+				var inst = instance;
+				if (elapsedTime + dt >= 0.2f && inst != null)
+					inst.dirty = true;
 			}
 		}
 	}

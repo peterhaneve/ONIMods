@@ -26,6 +26,8 @@ namespace PeterHan.CritterInventory {
 	/// Contains helper functions used by both CritterResourceEntry and CritterResourceHeader.
 	/// </summary>
 	internal static class CritterInventoryUtils {
+		public delegate void OnAddCritter(KPrefabID id);
+
 		/// <summary>
 		/// Creates tool tip text for the critter resource entries and headers.
 		/// </summary>
@@ -55,16 +57,15 @@ namespace PeterHan.CritterInventory {
 		/// <summary>
 		/// Gets the type of a critter.
 		/// </summary>
-		/// <param name="creature">The critter to query.</param>
+		/// <param name="id">The creature's prefab ID.</param>
 		/// <returns>The critter type.</returns>
-		public static CritterType GetCritterType(this CreatureBrain creature) {
-			var go = creature.gameObject;
+		public static CritterType GetCritterType(this KPrefabID id) {
 			var result = CritterType.Wild;
-			if (creature != null) {
-				if (go.GetDef<RobotBatteryMonitor.Def>() != null)
+			if (id != null && id.TryGetComponent(out StateMachineController smc)) {
+				if (smc.GetDef<RobotBatteryMonitor.Def>() != null)
 					result = CritterType.Artificial;
-				else if (go.GetDef<WildnessMonitor.Def>() != null && !creature.HasTag(GameTags.
-						Creatures.Wild))
+				else if (!id.HasTag(GameTags.Creatures.Wild) && smc.
+						GetDef<WildnessMonitor.Def>() != null)
 					result = CritterType.Tame;
 			}
 			return result;
@@ -133,19 +134,18 @@ namespace PeterHan.CritterInventory {
 		/// Invokes an action for all critters that match the specified species.
 		/// </summary>
 		/// <param name="id">The world ID to search.</param>
-		/// <param name="critters">The action to call for each critter.</param>
+		/// <param name="critters">The delegate to call for each critter.</param>
 		/// <param name="species">The species to filter, or omitted (default) for all species.</param>
-		internal static void GetCritters(int id, Action<CreatureBrain> critters,
-				Tag species = default) {
+		internal static void GetCritters(int id, OnAddCritter critters, Tag species = default)
+		{
 			if (critters == null)
 				throw new ArgumentNullException(nameof(critters));
-			foreach (var brain in Components.Brains) {
-				var creature = brain as CreatureBrain;
-				if (creature != null && creature.isSpawned && !creature.HasTag(GameTags.
-						Dead) && creature.GetMyWorldId() == id && (species == Tag.Invalid ||
-						species == creature.PrefabID()))
-					critters.Invoke(creature);
-			}
+			foreach (var brain in Components.Brains.Items)
+				if (brain is CreatureBrain creature && creature != null && creature.
+						isSpawned && creature.TryGetComponent(out KPrefabID kpid) &&
+						!kpid.HasTag(GameTags.Dead) && creature.GetMyWorldId() == id &&
+						(species == Tag.Invalid || species == kpid.PrefabTag))
+					critters.Invoke(kpid);
 		}
 
 		/// <summary>

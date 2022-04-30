@@ -78,34 +78,6 @@ namespace PeterHan.FastTrack.GamePatches {
 		}
 
 		/// <summary>
-		/// Applied to Generator to stop tracking power created if achievements are off.
-		/// </summary>
-		[HarmonyPatch(typeof(Generator), nameof(Generator.GenerateJoules))]
-		internal static class GenerateJoules_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.DisableAchievements !=
-				FastTrackOptions.AchievementDisable.Never;
-
-			/// <summary>
-			/// Applied before GenerateJoules runs.
-			/// </summary>
-			internal static bool Prefix(Generator __instance, float joulesAvailable,
-					bool canOverPower = false) {
-				bool run = TrackAchievements();
-				if (!run) {
-					float capacity = __instance.Capacity;
-					if (joulesAvailable < 0.0f)
-						joulesAvailable = 0.0f;
-					if (!canOverPower && joulesAvailable > capacity)
-						joulesAvailable = capacity;
-					__instance.joulesAvailable = joulesAvailable;
-					ReportManager.Instance.ReportValue(ReportManager.ReportType.EnergyCreated,
-						joulesAvailable, __instance.GetProperName());
-				}
-				return run;
-			}
-		}
-
-		/// <summary>
 		/// Applied to ColonyAchievementTracker to speed up the slow RenderEveryTick method
 		/// which linearly iterates a dictionary by index (!!)
 		/// </summary>

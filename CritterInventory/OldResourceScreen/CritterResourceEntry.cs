@@ -39,7 +39,7 @@ namespace PeterHan.CritterInventory.OldResourceScreen {
 		private static readonly IDetouredField<ResourceEntry, Color> UNAVAILABLE_COLOR =
 			PDetours.DetourField<ResourceEntry, Color>("UnavailableColor");
 
-		public IList<CreatureBrain> CachedCritters { get; private set; }
+		public IList<KPrefabID> CachedCritters { get; private set; }
 
 		/// <summary>
 		/// The critter type this ResourceEntry will show.
@@ -83,9 +83,9 @@ namespace PeterHan.CritterInventory.OldResourceScreen {
 		internal void HighlightAllMatching(Color color) {
 			var type = CritterType;
 			int id = ClusterManager.Instance.activeWorldId;
-			CritterInventoryUtils.GetCritters(id, (creature) => {
-				if (creature.GetCritterType() == type)
-					PGameUtils.HighlightEntity(creature, color);
+			CritterInventoryUtils.GetCritters(id, (kpid) => {
+				if (kpid.GetCritterType() == type)
+					PGameUtils.HighlightEntity(kpid, color);
 			}, entry.Resource);
 		}
 
@@ -94,13 +94,12 @@ namespace PeterHan.CritterInventory.OldResourceScreen {
 		/// </summary>
 		/// <returns>The tool tip text for a critter type and species.</returns>
 		private string OnEntryTooltip() {
-			CritterInventory ci;
 			var speciesTracker = CritterInventoryUtils.GetTracker<CritterTracker>(
 				ClusterManager.Instance.activeWorldId, CritterType, (tracker) => tracker.Tag ==
 				entry.Resource);
 			var world = ClusterManager.Instance.activeWorld;
 			string result = null;
-			if (world != null && (ci = world.GetComponent<CritterInventory>()) != null) {
+			if (world != null && world.TryGetComponent(out CritterInventory ci)) {
 				float trend = (speciesTracker == null) ? 0.0f : speciesTracker.GetDelta(
 					CritterInventoryUtils.TREND_INTERVAL);
 				result = CritterInventoryUtils.FormatTooltip(entry.NameLabel.text, ci.
@@ -114,16 +113,16 @@ namespace PeterHan.CritterInventory.OldResourceScreen {
 		/// </summary>
 		/// <param name="species">The critter type to populate.</param>
 		/// <returns>The list of matching critters.</returns>
-		internal IList<CreatureBrain> PopulateCache() {
+		internal IList<KPrefabID> PopulateCache() {
 			int id = ClusterManager.Instance.activeWorldId;
 			var type = CritterType;
 			if (CachedCritters != null)
 				CachedCritters.Clear();
 			else
-				CachedCritters = new List<CreatureBrain>(32);
-			CritterInventoryUtils.GetCritters(id, (creature) => {
-				if (creature.GetCritterType() == type)
-					CachedCritters.Add(creature);
+				CachedCritters = new List<KPrefabID>(32);
+			CritterInventoryUtils.GetCritters(id, (kpid) => {
+				if (kpid.GetCritterType() == type)
+					CachedCritters.Add(kpid);
 			}, entry.Resource);
 			return CachedCritters;
 		}

@@ -629,6 +629,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(string name, float count, bool upperName,
 					ref string __result) {
 				var text = CACHED_BUILDER;
+				text.Clear();
 				GetUnitFormattedName(text, name, count, upperName);
 				__result = text.ToString();
 				return false;
