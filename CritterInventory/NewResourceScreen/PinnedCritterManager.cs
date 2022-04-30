@@ -137,9 +137,12 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 					foreach (var speciesPair in pair.Value) {
 						// Only refresh active rows
 						var entry = speciesPair.Value;
-						if (entry.gameObject.activeSelf && allCounts.TryGetValue(speciesPair.
-								Key, out CritterTotals totals))
-							RefreshLine(entry, totals.Available);
+						if (entry.gameObject.activeSelf) {
+							int available = 0;
+							if (allCounts.TryGetValue(speciesPair.Key, out CritterTotals totals))
+								available = totals.Available;
+							RefreshLine(entry, available);
+						}
 					}
 				}
 				allCounts.Recycle();

@@ -70,6 +70,7 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 					pinned.Add(Species);
 				// Toggle visual checkbox
 				UpdatePinnedState(ci);
+				PinnedResourcesPanel.Instance?.Refresh();
 			}
 			// TODO Notify checkbox isn't implemented yet in stock game?
 		}
