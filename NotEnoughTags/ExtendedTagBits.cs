@@ -75,15 +75,13 @@ namespace PeterHan.NotEnoughTags {
 
 		private ExtendedTagBits() {
 			// This need not be thread safe, because TagBits itself is not thread safe
-			inverseTagBits = new Dictionary<BitSet, int>(16384);
-			tagBits = new Dictionary<int, BitSet>(16384);
+			inverseTagBits = new Dictionary<BitSet, int>(8192);
+			tagBits = new Dictionary<int, BitSet>(8192);
 			tagID = INITIAL_TAG_BITS;
 
 			// Fetch these through reflection
-			inverseTagTable = typeof(TagBits).GetFieldSafe("inverseTagTable", true)?.
-				GetValue(null) as List<Tag>;
-			tagTable = typeof(TagBits).GetFieldSafe("tagTable", true)?.GetValue(null) as
-				IDictionary<Tag, int>;
+			inverseTagTable = TagBits.inverseTagTable;
+			tagTable = TagBits.tagTable;
 			if (inverseTagTable == null || tagTable == null)
 				throw new InvalidOperationException("Tag tables are not initialized!");
 		}
@@ -99,9 +97,11 @@ namespace PeterHan.NotEnoughTags {
 				// Cleared a tag bit in the initial 1024
 				id = (id == extIndex + 1) ? 0 : id;
 			else {
-				var bits = new BitSet(GetTagBits(id));
+				var bits = BitSetPool.Allocate();
+				bits.SetTo(GetTagBits(id));
 				bits.Set(extIndex, false);
 				id = GetIDWithBits(bits);
+				BitSetPool.Recycle(bits);
 			}
 			return id;
 		}
@@ -114,9 +114,11 @@ namespace PeterHan.NotEnoughTags {
 		/// <returns>A new or reused ID with that tag bit set.</returns>
 		public int GetIDWithTagSet(int id, int extIndex) {
 			if ((extIndex >= INITIAL_TAG_BITS || id != 0) && id != extIndex + 1) {
-				var bits = new BitSet(GetTagBits(id));
+				var bits = BitSetPool.Allocate();
+				bits.SetTo(GetTagBits(id));
 				bits.Set(extIndex, true);
 				id = GetIDWithBits(bits);
+				BitSetPool.Recycle(bits);
 			} else
 				// All bits are clear, use the optimized route to avoid allocating
 				id = extIndex + 1;
@@ -184,7 +186,8 @@ namespace PeterHan.NotEnoughTags {
 					tagBits.Add(extIndex, identity);
 					if (extIndex >= INITIAL_TAG_BITS) {
 						// Wow we are really over the limit
-						var text = new StringBuilder("No more tags! Performance may be poor:");
+						var text = new StringBuilder("No more tags! Performance may be poor:",
+							128);
 						int printed = 0;
 						text.AppendLine();
 						foreach (var pair in tagTable) {

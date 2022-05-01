@@ -19,7 +19,6 @@
 using HarmonyLib;
 using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -31,11 +30,6 @@ namespace PeterHan.NotEnoughTags {
 	/// Patches which will be applied via annotations for NotEnoughTags.
 	/// </summary>
 	public sealed class NotEnoughTagsPatches : KMod.UserMod2 {
-		/// <summary>
-		/// This should always be running on Mono, but just in case...
-		/// </summary>
-		private static bool IsMono = false;
-
 		/// <summary>
 		/// The tags which should always be in the lower bits for speed.
 		/// </summary>
@@ -65,27 +59,7 @@ namespace PeterHan.NotEnoughTags {
 			GameTags.Stored, GameTags.Trapped, GameTags.Unbreathable,
 		};
 
-		/// <summary>
-		/// Tries to stop a method from being inlined.
-		/// 
-		/// This code was adapted from https://github.com/pardeike/Harmony which is available
-		/// under the MIT License.
-		/// </summary>
-		/// <param name="method">The method to modify.</param>
-		private static unsafe void NoInline(MethodBase method) {
-			if (IsMono && method != null) {
-				var iflags = (ushort*)method.MethodHandle.Value + 1;
-				*iflags |= (ushort)System.Runtime.CompilerServices.MethodImplOptions.
-					NoInlining;
-#if DEBUG
-				PUtil.LogDebug("Set no-inline flag on {0}.{1}".F(method.DeclaringType.FullName,
-					method.Name));
-#endif
-			}
-		}
-
 		public override void OnLoad(Harmony harmony) {
-			IsMono = PPatchTools.GetTypeSafe("Mono.Runtime") != null;
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 #if DEBUG
@@ -96,10 +70,8 @@ namespace PeterHan.NotEnoughTags {
 			foreach (var tag in FORCE_LOWER_BITS)
 				inst.ManifestFlagIndex(tag);
 			FetchManager.disallowedTagMask = TagBitOps.Not(FetchManager.disallowedTagBits);
-			PDetours.DetourField<FetchAreaChore.StatesInstance, TagBits>(
-				"s_transientDeliveryMask").Set(null, TagBitOps.Not(new TagBits(new Tag[] {
-					GameTags.Garbage, GameTags.Creatures.Deliverable
-				})));
+			FetchAreaChore.StatesInstance.s_transientDeliveryMask = TagBitOps.Not(new TagBits(
+				new Tag[] { GameTags.Garbage, GameTags.Creatures.Deliverable }));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
@@ -181,7 +153,7 @@ namespace PeterHan.NotEnoughTags {
 			internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
 					MethodBase original) {
 				var rtb = typeof(TagBits).MakeByRefType();
-				return PPatchTools.ReplaceMethodCall(instructions, typeof(TagBits).
+				return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(TagBits).
 					GetMethodSafe(nameof(TagBits.Or), false, rtb), typeof(TagBitOps).
 					GetMethodSafe(nameof(TagBitOps.Or), true, rtb, rtb));
 			}
@@ -197,7 +169,7 @@ namespace PeterHan.NotEnoughTags {
 			internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
 					MethodBase original) {
 				var rtb = typeof(TagBits).MakeByRefType();
-				return PPatchTools.ReplaceMethodCall(instructions, typeof(TagBits).
+				return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(TagBits).
 					GetMethodSafe(nameof(TagBits.And), false, rtb), typeof(TagBitOps).
 					GetMethodSafe(nameof(TagBitOps.And), true, rtb, rtb));
 			}
@@ -212,7 +184,7 @@ namespace PeterHan.NotEnoughTags {
 			internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
 					MethodBase original) {
 				var rtb = typeof(TagBits).MakeByRefType();
-				return PPatchTools.ReplaceMethodCall(instructions, typeof(TagBits).
+				return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(TagBits).
 					GetMethodSafe(nameof(TagBits.Or), false, rtb), typeof(TagBitOps).
 					GetMethodSafe(nameof(TagBitOps.Or), true, rtb, rtb));
 			}
@@ -239,10 +211,8 @@ namespace PeterHan.NotEnoughTags {
 		/// </summary>
 		[HarmonyPatch(typeof(TagBits), nameof(TagBits.And))]
 		public static class TagBits_And_Patch {
-			internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
-					MethodBase original) {
+			internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
 				var method = new List<CodeInstruction>(instructions);
-				NoInline(original);
 				ReplaceLastBitOp(method, OpCodes.And, typeof(TagBitOps).GetMethodSafe(
 					nameof(TagBitOps.TranspileAnd), true, typeof(ulong), typeof(ulong)));
 				return method;
@@ -274,10 +244,8 @@ namespace PeterHan.NotEnoughTags {
 		/// </summary>
 		[HarmonyPatch(typeof(TagBits), nameof(TagBits.Complement))]
 		public static class TagBits_Complement_Patch {
-			internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
-					MethodBase original) {
+			internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
 				var method = new List<CodeInstruction>(instructions);
-				NoInline(original);
 				ReplaceLastBitOp(method, OpCodes.Not, typeof(TagBitOps).GetMethodSafe(
 					nameof(TagBitOps.TranspileNot), true, typeof(ulong)));
 				return method;
@@ -326,10 +294,8 @@ namespace PeterHan.NotEnoughTags {
 		/// </summary>
 		[HarmonyPatch(typeof(TagBits), nameof(TagBits.HasAll))]
 		public static class TagBits_HasAll_Patch {
-			internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
-					MethodBase original) {
+			internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
 				var method = new List<CodeInstruction>(instructions);
-				NoInline(original);
 				ReplaceAnd(method, typeof(TagBitOps).GetMethodSafe(nameof(
 					TagBitOps.HasAll), true, typeof(ulong), typeof(ulong)));
 				return method;
@@ -341,10 +307,8 @@ namespace PeterHan.NotEnoughTags {
 		/// </summary>
 		[HarmonyPatch(typeof(TagBits), nameof(TagBits.HasAny))]
 		public static class TagBits_HasAny_Patch {
-			internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
-					MethodBase original) {
+			internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
 				var method = new List<CodeInstruction>(instructions);
-				NoInline(original);
 				ReplaceAnd(method, typeof(TagBitOps).GetMethodSafe(nameof(
 					TagBitOps.HasAny), true, typeof(ulong), typeof(ulong),
 					typeof(ulong)));
@@ -374,10 +338,8 @@ namespace PeterHan.NotEnoughTags {
 		/// </summary>
 		[HarmonyPatch(typeof(TagBits), nameof(TagBits.Or))]
 		public static class TagBits_Or_Patch {
-			internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
-					MethodBase original) {
+			internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
 				var method = new List<CodeInstruction>(instructions);
-				NoInline(original);
 				ReplaceLastBitOp(method, OpCodes.Or, typeof(TagBitOps).GetMethodSafe(
 					nameof(TagBitOps.TranspileOr), true, typeof(ulong), typeof(ulong)));
 				return method;
@@ -409,10 +371,8 @@ namespace PeterHan.NotEnoughTags {
 		/// </summary>
 		[HarmonyPatch(typeof(TagBits), nameof(TagBits.Xor))]
 		public static class TagBits_Xor_Patch {
-			internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
-					MethodBase original) {
+			internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
 				var method = new List<CodeInstruction>(instructions);
-				NoInline(original);
 				ReplaceLastBitOp(method, OpCodes.Xor, typeof(TagBitOps).GetMethodSafe(
 					nameof(TagBitOps.TranspileXor), true, typeof(ulong), typeof(ulong)));
 				return method;

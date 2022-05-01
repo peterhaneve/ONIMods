@@ -168,7 +168,6 @@ namespace PeterHan.DebugNotIncluded {
 				PPatchTools.AnyArguments));
 			harmony.ProfileMethod(typeof(SaveManager).GetMethodSafe("Save", false,
 				PPatchTools.AnyArguments));
-			harmony.ProfileMethod(typeof(Assets).GetMethodSafe("CreatePrefabs", false));
 #endif
 			if (options?.LocalizeMods == true)
 				typeof(PLocalization).GetMethodSafe("DumpAll", false)?.Invoke(loc, null);

@@ -16,7 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.Detours;
+using System.Collections.Concurrent;
 
 namespace PeterHan.NotEnoughTags {
 	/// <summary>
@@ -33,23 +33,15 @@ namespace PeterHan.NotEnoughTags {
 		/// </summary>
 		private const ulong UPPER_MASK = 0xFFFFFFFF00000000UL;
 
-		// Allows accessing the fifth/seventh bit of TagBits without an instance.
-		internal static readonly IDetouredField<object, ulong> FIFTH_BIT = typeof(TagBits).
-			DetourStructField<ulong>("bits7");
-
 		/// <summary>
 		/// Ands two sets of tag bits and replaces Tag Bits A with the result A & B.
 		/// </summary>
 		/// <param name="lhs">Tag Bits A.</param>
 		/// <param name="rhs">Tag Bits B.</param>
 		internal static void And(ref TagBits lhs, ref TagBits rhs) {
-			TagBits bits = lhs;
-			ulong hibits = FIFTH_BIT.Get(lhs);
-			bits.And(ref rhs);
-			// Box into a type to allow the fields to be changed
-			object localBits = bits;
-			FIFTH_BIT.Set(localBits, TranspileAnd(hibits, FIFTH_BIT.Get(rhs)));
-			lhs = (TagBits)localBits;
+			ulong hibits = lhs.bits7;
+			lhs.And(ref rhs);
+			lhs.bits7 = TranspileAnd(hibits, rhs.bits7);
 		}
 
 		/// <summary>
@@ -137,20 +129,21 @@ namespace PeterHan.NotEnoughTags {
 		/// <param name="bits">The bits to complement.</param>
 		/// <returns>The complement of those bits.</returns>
 		internal static TagBits Not(TagBits bits) {
+			ulong hibits = bits.bits7;
 			bits.Complement();
-			// Box into a type to allow the fields to be changed
-			object localBits = bits;
-			ulong hibits = FIFTH_BIT.Get(localBits);
-			FIFTH_BIT.Set(localBits, GetLowerBits(hibits) | NotHighBits(hibits));
-			return (TagBits)localBits;
+			bits.bits7 = GetLowerBits(bits.bits7) | NotHighBits(hibits);
+			return bits;
 		}
 
 		private static ulong NotHighBits(ulong bits) {
 			int ubA = GetUpperBits(bits);
 			var inst = ExtendedTagBits.Instance;
-			var notSet = new BitSet(inst.GetTagBits(ubA));
+			var notSet = BitSetPool.Allocate();
+			notSet.SetTo(inst.GetTagBits(ubA));
 			notSet.Not(MAX_BITS);
-			return ((ulong)inst.GetIDWithBits(notSet) << 32);
+			int id = inst.GetIDWithBits(notSet);
+			BitSetPool.Recycle(notSet);
+			return (ulong)id << 32;
 		}
 
 		/// <summary>
@@ -159,13 +152,10 @@ namespace PeterHan.NotEnoughTags {
 		/// <param name="lhs">Tag Bits A.</param>
 		/// <param name="rhs">Tag Bits B.</param>
 		internal static void Or(ref TagBits lhs, ref TagBits rhs) {
-			TagBits bits = lhs;
-			ulong hibits = FIFTH_BIT.Get(lhs);
-			bits.Or(ref rhs);
+			ulong hibits = lhs.bits7;
+			lhs.Or(ref rhs);
 			// Box into a type to allow the fields to be changed
-			object localBits = bits;
-			FIFTH_BIT.Set(localBits, TranspileOr(hibits, FIFTH_BIT.Get(rhs)));
-			lhs = (TagBits)localBits;
+			lhs.bits7 = TranspileOr(hibits, rhs.bits7);
 		}
 
 		/// <summary>
@@ -182,9 +172,11 @@ namespace PeterHan.NotEnoughTags {
 			else {
 				// Both nonzero
 				var inst = ExtendedTagBits.Instance;
-				var bitSetA = new BitSet(inst.GetTagBits(ubA));
+				var bitSetA = BitSetPool.Allocate();
+				bitSetA.SetTo(inst.GetTagBits(ubA));
 				bitSetA.And(inst.GetTagBits(ubB));
 				ubResult = inst.GetIDWithBits(bitSetA);
+				BitSetPool.Recycle(bitSetA);
 			}
 			return result | ((ulong)ubResult << 32);
 		}
@@ -214,9 +206,11 @@ namespace PeterHan.NotEnoughTags {
 			else {
 				// Both nonzero
 				var inst = ExtendedTagBits.Instance;
-				var bitSetA = new BitSet(inst.GetTagBits(ubA));
+				var bitSetA = BitSetPool.Allocate();
+				bitSetA.SetTo(inst.GetTagBits(ubA));
 				bitSetA.Or(inst.GetTagBits(ubB));
 				ubResult = inst.GetIDWithBits(bitSetA);
+				BitSetPool.Recycle(bitSetA);
 			}
 			return result | ((ulong)ubResult << 32);
 		}
@@ -237,11 +231,47 @@ namespace PeterHan.NotEnoughTags {
 			else {
 				// Both nonzero
 				var inst = ExtendedTagBits.Instance;
-				var bitSetA = new BitSet(inst.GetTagBits(ubA));
+				var bitSetA = BitSetPool.Allocate();
+				bitSetA.SetTo(inst.GetTagBits(ubA));
 				bitSetA.Xor(inst.GetTagBits(ubB));
 				ubResult = inst.GetIDWithBits(bitSetA);
+				BitSetPool.Recycle(bitSetA);
 			}
 			return result | ((ulong)ubResult << 32);
+		}
+	}
+
+	/// <summary>
+	/// A threadsafe pool that stores bit sets to avoid allocating memory.
+	/// </summary>
+	public static class BitSetPool {
+		/// <summary>
+		/// The initial size of pooled bit sets from this class.
+		/// </summary>
+		public const int PRESIZE = 512;
+
+		/// <summary>
+		/// Stores pooled instances of BitSet.
+		/// </summary>
+		private static readonly ConcurrentStack<BitSet> POOL = new ConcurrentStack<BitSet>();
+
+		/// <summary>
+		/// Retrieves a bit set from the pool, or allocates a new one if none are available.
+		/// </summary>
+		/// <returns>The pooled bit set.</returns>
+		public static BitSet Allocate() {
+			if (!POOL.TryPop(out BitSet set))
+				set = new BitSet(PRESIZE);
+			return set;
+		}
+
+		/// <summary>
+		/// Returns a bit set to the pool.
+		/// </summary>
+		/// <param name="set">The bit set to clear and recycle.</param>
+		public static void Recycle(BitSet set) {
+			set.Clear();
+			POOL.Push(set);
 		}
 	}
 }
