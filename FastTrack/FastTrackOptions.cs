@@ -35,6 +35,10 @@ namespace PeterHan.FastTrack {
 		private const string PERF_MEDIUM = "\n\n<b>Performance Impact: <color=#FF8827>Medium</color></b>";
 		private const string PERF_HIGH = "\n\n<b>Performance Impact: <color=#FF3300>High</color></b>";
 
+		[Option("Electrical Optimizations", "Speeds up calculations of electrical networks." + PERF_LOW, "Buildings")]
+		[JsonProperty]
+		public bool ENetOpts { get; set; }
+
 		[Option("Flatten Averages", "Optimize Amounts and average calculations." + PERF_LOW, "Buildings")]
 		[JsonProperty]
 		public bool FlattenAverages { get; set; }
@@ -232,6 +236,7 @@ namespace PeterHan.FastTrack {
 			DisableLoadPreviews = false;
 			DisableSound = false;
 			DisableTutorial = TutorialMessageDisable.WarningsOnly;
+			ENetOpts = true;
 			FastAttributesMode = true;
 			FastRaycast = true;
 			FastReachability = true;

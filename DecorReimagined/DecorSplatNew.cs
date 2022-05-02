@@ -30,7 +30,6 @@ namespace ReimaginationTeam.DecorRework {
 	internal sealed class DecorSplatNew : KMonoBehaviour, ISaveLoadable {
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable CS0649
-
 		/// <summary>
 		/// Monitors building breakdowns.
 		/// </summary>
@@ -108,7 +107,7 @@ namespace ReimaginationTeam.DecorRework {
 						int target = Grid.XYToCell(x, y);
 						if (Grid.IsValidCell(target) && Grid.VisibilityTest(cell, target,
 								false)) {
-							inst.AddDecorProvider(target, provider, decor);
+							inst.AddDecorProvider(target, provider, prefabID.PrefabTag, decor);
 							cells.Add(target);
 						}
 					}
@@ -222,9 +221,12 @@ namespace ReimaginationTeam.DecorRework {
 				solidChangedPartitioner = IntHandle.InvalidHandle;
 			}
 			if (inst != null) {
-				if (cacheDecor != 0.0f)
-					foreach (int cell in cells)
-						inst.RemoveDecorProvider(cell, provider, cacheDecor);
+				if (cacheDecor != 0.0f) {
+					int n = cells.Count;
+					for (int i = 0; i < n; i++)
+						inst.RemoveDecorProvider(cells[i], provider, prefabID.PrefabTag,
+							cacheDecor);
+				}
 				cacheDecor = 0.0f;
 				cells.Clear();
 			}

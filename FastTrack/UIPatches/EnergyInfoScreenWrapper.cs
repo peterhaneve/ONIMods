@@ -40,7 +40,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
-		private static EnergyInfoScreenWrapper instance;
+		internal static EnergyInfoScreenWrapper Instance { get; private set; }
 
 		/// <summary>
 		/// Gets both the current wattage generated and the potential wattage generated.
@@ -115,7 +115,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Whether energy networks were simulated since the last update.
 		/// </summary>
-		private bool dirty;
+		internal bool dirty;
 
 #pragma warning disable IDE0044
 #pragma warning disable CS0649
@@ -223,12 +223,12 @@ namespace PeterHan.FastTrack.UIPatches {
 			generatorLabels.Clear();
 			wasValid = false;
 			base.OnCleanUp();
-			instance = null;
+			Instance = null;
 		}
 
 		public override void OnPrefabInit() {
 			base.OnPrefabInit();
-			instance = this;
+			Instance = this;
 		}
 
 		/// <summary>
@@ -408,6 +408,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			var generators = manager.circuitInfo[circuitID].generators;
 			var target = lastSelected.lastTarget;
 			int n = generators.Count;
+			bool hasGenerator = false;
 			setInactive.UnionWith(generatorLabels);
 			generatorLabels.Clear();
 			for (int i = 0; i < n; i++) {
@@ -427,9 +428,10 @@ namespace PeterHan.FastTrack.UIPatches {
 					title.fontStyle = fontStyle;
 					title.SetText(text);
 					generatorLabels.Add(label);
+					hasGenerator = true;
 				}
 			}
-			if (n <= 0) {
+			if (!hasGenerator) {
 				var label = AddOrGetLabel(es.labelTemplate, generatorParent, "nogenerators");
 				label.text.SetText(ENERGYGENERATOR.NOGENERATORS);
 				generatorLabels.Add(label);
@@ -599,9 +601,10 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// Applied before Refresh runs.
 			/// </summary>
 			internal static bool Prefix() {
-				bool run = instance == null;
+				var inst = Instance;
+				bool run = inst == null;
 				if (!run)
-					instance.Refresh();
+					inst.Refresh();
 				return run;
 			}
 		}
@@ -613,15 +616,18 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(CircuitManager), nameof(CircuitManager.Sim200msLast))]
 		internal static class Sim200msLast_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
+			internal static bool Prepare() {
+				var options = FastTrackOptions.Instance;
+				return options.SideScreenOpts && !options.ENetOpts;
+			}
 
 			/// <summary>
 			/// Applied before Sim200msLast runs.
 			/// </summary>
 			internal static void Prefix(CircuitManager __instance, float dt) {
 				float elapsedTime = __instance.elapsedTime;
-				var inst = instance;
-				if (elapsedTime + dt >= 0.2f && inst != null)
+				var inst = Instance;
+				if (elapsedTime + dt >= UpdateManager.SecondsPerSimTick && inst != null)
 					inst.dirty = true;
 			}
 		}

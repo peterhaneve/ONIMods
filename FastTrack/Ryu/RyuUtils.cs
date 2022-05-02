@@ -276,7 +276,7 @@ namespace Ryu {
 			// 0 and 64
 			ulong low0 = UMul128(m, mulA, out ulong high0);
 			// 64 and 128
-			ulong low1 = UMul128(m, mulB, out ulong high1); 
+			ulong low1 = UMul128(m, mulB, out ulong high1);
 			// 128 and 192
 			ulong low2 = UMul128(m, mulC, out ulong high2);
 			// 64
@@ -451,11 +451,12 @@ namespace Ryu {
 				j = len + needed;
 				result.Length = j;
 				needed = 0;
-				for (i = len - 1; i >= start; i--) {
-					result[--j] = result[i];
+				i = len - 1;
+				while (i >= start && i < --j) {
+					result[j] = result[i--];
 					// If GROUP_SIZE characters have been moved, insert a sep
 					needed++;
-					if (needed == GROUP_SIZE && j > perSep) {
+					if (needed == GROUP_SIZE) {
 						j -= perSep;
 						for (int k = 0; k < perSep; k++)
 							result[j + k] = ts[k];

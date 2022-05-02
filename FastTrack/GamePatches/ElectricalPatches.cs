@@ -1,0 +1,530 @@
+﻿/*
+ * Copyright 2022 Peter Han
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+ * and associated documentation files (the "Software"), to deal in the Software without
+ * restriction, including without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
+ * substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+ * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+using HarmonyLib;
+using System.Collections.Generic;
+using UnityEngine;
+
+using CircuitInfo = CircuitManager.CircuitInfo;
+using ConnectionStatus = CircuitManager.ConnectionStatus;
+
+namespace PeterHan.FastTrack.GamePatches {
+	/// <summary>
+	/// Applied to CircuitManager to speed up how electrical grids are calculated.
+	/// </summary>
+	[HarmonyPatch(typeof(CircuitManager), nameof(CircuitManager.Sim200msLast))]
+	public static class FastElectricalNetworkCalculator {
+		/// <summary>
+		/// Whether colony reports are to be generated.
+		/// </summary>
+		private static bool REPORT = true;
+
+		internal static bool Prepare() {
+			var options = FastTrackOptions.Instance;
+			REPORT = !options.NoReports;
+			return options.ENetOpts;
+		}
+
+		/// <summary>
+		/// Charges as many batteries as possible with the energy from this source.
+		/// </summary>
+		/// <param name="source">The energy source for charging.</param>
+		/// <param name="sinks">The batteries to charge.</param>
+		/// <param name="first">The first valid battery index.</param>
+		/// <returns>The energy remaining in the generator after charging.</returns>
+		private static float ChargeBatteriesFrom(Generator source, IList<Battery> sinks,
+				ref int first) {
+			int firstBattery = first, n = sinks.Count;
+			float energyLeft = source.JoulesAvailable, space, energyAdded;
+			var sourceGO = source.gameObject;
+			do {
+				float energyPerBattery = energyLeft / (n - firstBattery);
+				energyAdded = 0.0f;
+				for (int i = firstBattery; i < n; i++) {
+					var battery = sinks[i];
+					// No self-charging on looped transformers
+					if (battery != null && (space = battery.Capacity - battery.
+							JoulesAvailable) > 0.0f) {
+						if (battery.gameObject != sourceGO) {
+							float energy = Mathf.Min(energyPerBattery, space);
+							battery.AddEnergy(energy);
+							energyLeft -= energy;
+							energyAdded += energy;
+						}
+					} else
+						firstBattery = i + 1;
+				}
+				if (energyAdded > 0.0f)
+					source.ApplyDeltaJoules(-energyAdded);
+			} while (energyLeft > 0.0f && energyAdded > 0.0f);
+			first = firstBattery;
+			return energyLeft;
+		}
+
+		/// <summary>
+		/// Charges all batteries with the remaining energy available from sources.
+		/// </summary>
+		/// <param name="sinks">The batteries to charge.</param>
+		/// <param name="sources">The energy sources available for charging.</param>
+		/// <param name="firstSource">The first valid source index.</param>
+		/// <param name="firstBattery">The first valid battery index.</param>
+		private static void ChargeBatteries(IList<Battery> sinks, IList<Generator> sources,
+				int firstSource, ref int firstBattery) {
+			int n = sources.Count;
+			for (int i = firstSource; i < n; i++) {
+				var source = sources[i];
+				// If energy remains in the source after all batteries charge, end loop, as all
+				// batteries must be charged
+				if (source != null && source.JoulesAvailable > 0.0f && ChargeBatteriesFrom(
+						source, sinks, ref firstBattery) > 0.0f)
+					break;
+			}
+		}
+
+		/// <summary>
+		/// Transfers energy from the circuit to transformer inputs. The sources are drained
+		/// evenly.
+		/// 
+		/// The sources must be in lowest energy first order.
+		/// </summary>
+		/// <param name="sinks">The transformer inputs to charge.</param>
+		/// <param name="sources">The sources to drain.</param>
+		/// <returns>The total energy transferred.</returns>
+		private static float ChargeDrainEvenly(IList<Battery> sinks, IList<Battery> sources) {
+			int ni = sinks.Count, ns = sources.Count, first = 0;
+			float usage = 0.0f;
+			for (int i = 0; i < ni; i++) {
+				var sink = sinks[i];
+				if (sink != null) {
+					float energyNeeded = Mathf.Min(sink.Capacity - sink.JoulesAvailable, sink.
+						ChargeCapacity), energyAdded;
+					if (energyNeeded > 0.0f && first < ns) {
+						energyAdded = energyNeeded - DrainEvenly(energyNeeded, sources,
+							ref first);
+						sink.AddEnergy(energyAdded);
+						usage += energyAdded;
+					}
+				}
+			}
+			return usage;
+		}
+
+		/// <summary>
+		/// Transfers energy from the circuit to transformer inputs. The sources are drained
+		/// in first available order.
+		/// 
+		/// The sources must be in lowest energy first order.
+		/// </summary>
+		/// <param name="sinks">The transformer inputs to charge.</param>
+		/// <param name="sources">The sources to drain.</param>
+		/// <param name="first">The first valid source index to use.</param>
+		/// <returns>The total energy transferred.</returns>
+		private static float ChargeDrainFirst(IList<Battery> sinks, IList<Generator> sources,
+				ref int first) {
+			int ni = sinks.Count, ns = sources.Count, firstSource = first;
+			float usage = 0.0f;
+			for (int i = 0; i < ni; i++) {
+				var sink = sinks[i];
+				if (sink != null) {
+					float energyNeeded = Mathf.Min(sink.Capacity - sink.JoulesAvailable, sink.
+						ChargeCapacity), energyAdded;
+					if (energyNeeded > 0.0f && firstSource < ns) {
+						energyAdded = energyNeeded - DrainFirstAvailable(energyNeeded, sources,
+							ref firstSource);
+						sink.AddEnergy(energyAdded);
+						usage += energyAdded;
+					}
+				}
+			}
+			first = firstSource;
+			return usage;
+		}
+
+		/// <summary>
+		/// Transfers energy out of sources, draining evenly where possible.
+		/// 
+		/// The sources must be in lowest energy first order.
+		/// </summary>
+		/// <param name="energyNeeded">The energy required.</param>
+		/// <param name="sources">The sources to use.</param>
+		/// <param name="first">The first valid source index to use.</param>
+		/// <returns>The number of joules remaining to supply.</returns>
+		private static float DrainEvenly(float energyNeeded, IList<Battery> sources,
+				ref int first) {
+			int firstBattery = first, n = sources.Count, numLeft = n - firstBattery;
+			do {
+				var battery = sources[firstBattery];
+				// Since the sources are sorted and drained evenly, all must have at least
+				// the charge of the first sources
+				float energyAcrossAll = Mathf.Min(numLeft * battery.JoulesAvailable,
+					energyNeeded);
+				if (energyAcrossAll > 0.0f) {
+					float energyUsedPer = energyAcrossAll / numLeft;
+					energyNeeded -= energyAcrossAll;
+					for (int i = firstBattery; i < n; i++)
+						sources[i].ConsumeEnergy(energyUsedPer);
+				} else
+					firstBattery++;
+				numLeft = n - firstBattery;
+			} while (energyNeeded > 0.0f && numLeft > 0);
+			first = firstBattery;
+			return energyNeeded;
+		}
+
+		/// <summary>
+		/// Transfers energy out of sources, draining the first available.
+		/// 
+		/// The sources must be in lowest energy first order.
+		/// </summary>
+		/// <param name="energyNeeded">The energy required.</param>
+		/// <param name="sources">The sources to use.</param>
+		/// <param name="first">The first valid source index to use.</param>
+		/// <returns>The number of joules remaining to supply.</returns>
+		private static float DrainFirstAvailable(float energyNeeded, IList<Generator> sources,
+				ref int first) {
+			int firstGenerator = first, n = sources.Count;
+			for (int i = firstGenerator; i < n && energyNeeded > 0.0f; i++) {
+				var generator = sources[i];
+				if (generator != null) {
+					float energy = Mathf.Min(generator.JoulesAvailable, energyNeeded);
+					if (energy > 0.0f) {
+						energyNeeded -= energy;
+						generator.ApplyDeltaJoules(-energy);
+					} else
+						// If generator is out of power, move to next generator
+						firstGenerator = i + 1;
+				}
+			}
+			first = firstGenerator;
+			return energyNeeded;
+		}
+
+		/// <summary>
+		/// Populates the list of generators that are generating power.
+		/// </summary>
+		/// <param name="circuit">The circuit to update.</param>
+		/// <param name="activeGenerators">The location where the active generators will be stored.</param>
+		/// <returns>true if any generator is active, or a power transformer is able to provide
+		/// power; or false otherwise.</returns>
+		private static bool GetActiveGenerators(ref CircuitInfo circuit,
+				List<Generator> activeGenerators) {
+			var generators = circuit.generators;
+			var outputTransformers = circuit.outputTransformers;
+			int n = generators.Count;
+			bool hasEnergy;
+			activeGenerators.Clear();
+			// Take from generators first
+			for (int i = 0; i < n; i++) {
+				var generator = generators[i];
+				if (generator != null && generator.JoulesAvailable > 0.0f)
+					activeGenerators.Add(generator);
+			}
+			activeGenerators.Sort(GeneratorChargeComparer.Instance);
+			hasEnergy = activeGenerators.Count > 0;
+			// Then from transformers that output onto this grid
+			n = outputTransformers.Count;
+			for (int i = 0; i < n && !hasEnergy; i++) {
+				var transformer = outputTransformers[i];
+				if (transformer != null && transformer.JoulesAvailable > 0.0f)
+					hasEnergy = true;
+			}
+			return hasEnergy;
+		}
+
+		/// <summary>
+		/// Calculates the minimum battery charge across the circuit, used for manual
+		/// generators to schedule the chore.
+		/// </summary>
+		/// <param name="circuit">The circuit to update.</param>
+		/// <returns>true if any battery has charge, or false otherwise.</returns>
+		private static bool GetMinimumBatteryCharge(ref CircuitInfo circuit) {
+			float batteryLevel = 1.0f, charge;
+			var batteries = circuit.batteries;
+			var inputTransformers = circuit.inputTransformers;
+			int n = batteries.Count;
+			bool hasCharge = false;
+			for (int i = 0; i < n; i++) {
+				var battery = batteries[i];
+				charge = battery.PercentFull;
+				if (battery.JoulesAvailable > 0.0f)
+					hasCharge = true;
+				if (batteryLevel > charge)
+					batteryLevel = charge;
+			}
+			n = inputTransformers.Count;
+			for (int i = 0; i < n; i++) {
+				charge = inputTransformers[i].PercentFull;
+				if (batteryLevel > charge)
+					batteryLevel = charge;
+			}
+			circuit.minBatteryPercentFull = batteryLevel;
+			return hasCharge;
+		}
+
+		/// <summary>
+		/// Applied before Sim200msLast runs.
+		/// </summary>
+		internal static bool Prefix(CircuitManager __instance, float dt) {
+			var infoScreen = UIPatches.EnergyInfoScreenWrapper.Instance;
+			float elapsedTime = __instance.elapsedTime + dt;
+			if (elapsedTime >= UpdateManager.SecondsPerSimTick) {
+				elapsedTime -= UpdateManager.SecondsPerSimTick;
+				Update(__instance);
+				if (infoScreen != null)
+					infoScreen.dirty = true;
+			}
+			__instance.elapsedTime = elapsedTime;
+			return false;
+		}
+
+		/// <summary>
+		/// Sets the power status of all consumers on the given circuit.
+		/// </summary>
+		/// <param name="consumers">The consumers to notify.</param>
+		/// <param name="status">The status to which to set all consumers.</param>
+		private static void SetAllConsumerStatus(IList<IEnergyConsumer> consumers,
+				ConnectionStatus status) {
+			int n = consumers.Count;
+			for (int i = 0; i < n; i++)
+				consumers[i].SetConnectionStatus(status);
+		}
+
+		/// <summary>
+		/// Supplies as many consumers on the circuit as there is energy to do so.
+		/// </summary>
+		/// <param name="circuit">The circuit to update.</param>
+		/// <param name="activeGenerators">The list of generators which are actively producing power.</param>
+		/// <returns>The total wattage used for overloading purposes.</returns>
+		private static float SupplyConsumers(ref CircuitInfo circuit,
+				IList<Generator> activeGenerators) {
+			var consumers = circuit.consumers;
+			var batteries = circuit.batteries;
+			var outputTransformers = circuit.outputTransformers;
+			int nc = consumers.Count, nb = batteries.Count, firstGenerator = 0,
+				firstTransformer = 0, firstBattery = 0;
+			float usage = 0.0f;
+			batteries.Sort(BatteryChargeComparer.Instance);
+			for (int i = 0; i < nc; i++) {
+				var consumer = consumers[i];
+				float energy = consumer.WattsUsed * UpdateManager.SecondsPerSimTick;
+				if (energy > 0.0f) {
+					float e0 = energy;
+					energy = DrainFirstAvailable(energy, activeGenerators, ref firstGenerator);
+					if (energy > 0.0f)
+						energy = DrainFirstAvailable(energy, outputTransformers,
+							ref firstTransformer);
+					if (energy > 0.0f && firstBattery < nb)
+						energy = DrainEvenly(energy, batteries, ref firstBattery);
+					if (REPORT && energy < e0)
+						ReportManager.Instance.ReportValue(ReportManager.ReportType.
+							EnergyCreated, energy - e0, consumer.Name);
+					usage += e0 - energy;
+					consumer.SetConnectionStatus(energy == 0.0f ? ConnectionStatus.Powered :
+						ConnectionStatus.Unpowered);
+				} else
+					// Base game had a condition that was always true when reached
+					consumer.SetConnectionStatus(ConnectionStatus.Powered);
+			}
+			return usage / UpdateManager.SecondsPerSimTick;
+		}
+
+		/// <summary>
+		/// Fills battery and transformer storage on the circuit.
+		/// </summary>
+		/// <param name="circuit">The circuit to update.</param>
+		/// <returns>The total wattage used for overloading purposes.</returns>
+		private static float SupplyStorage(ref CircuitInfo circuit) {
+			var batteries = circuit.batteries;
+			var generators = circuit.generators;
+			var inputTransformers = circuit.inputTransformers;
+			var outputTransformers = circuit.outputTransformers;
+			int firstGenerator = 0, firstTransformer = 0, firstBattery = 0;
+			batteries.Sort(BatterySpaceComparer.Instance);
+			inputTransformers.Sort(BatterySpaceComparer.Instance);
+			generators.Sort(GeneratorChargeComparer.Instance);
+			float usage = ChargeDrainFirst(inputTransformers, generators, ref firstGenerator);
+			usage += ChargeDrainFirst(inputTransformers, outputTransformers,
+				ref firstTransformer);
+			if (batteries.Count > 0) {
+				ChargeBatteries(batteries, generators, firstGenerator, ref firstBattery);
+				ChargeBatteries(batteries, outputTransformers, firstTransformer,
+					ref firstBattery);
+			}
+			return usage / UpdateManager.SecondsPerSimTick;
+		}
+
+		/// <summary>
+		/// Fills the transformers with battery charge if necessary, then finishes up the
+		/// update by reporting any wasted energy and checking for overloading.
+		/// </summary>
+		/// <param name="instance">The circuit manager to update.</param>
+		/// <param name="circuitID">The circuit ID to update.</param>
+		/// <param name="used">The wattage used so far by consumers.</param>
+		private static void SupplyTransformers(CircuitManager instance, int circuitID,
+				float used) {
+			var circuits = instance.circuitInfo;
+			var circuit = circuits[circuitID];
+			var batteries = circuit.batteries;
+			var generators = circuit.generators;
+			var inputTransformers = circuit.inputTransformers;
+			bool hasSources = generators.Count > 0 || circuit.outputTransformers.Count > 0,
+				isUseful = hasSources || circuit.consumers.Count > 0;
+			int nb = batteries.Count, ng = generators.Count;
+			if (nb > 0) {
+				// Batteries were in space-order, need to resort to charge-order
+				batteries.Sort(BatteryChargeComparer.Instance);
+				used += ChargeDrainEvenly(inputTransformers, batteries) / UpdateManager.
+					SecondsPerSimTick;
+				hasSources |= GetMinimumBatteryCharge(ref circuit);
+				UpdateConnectionStatus(instance, circuitID, batteries, isUseful);
+			} else
+				GetMinimumBatteryCharge(ref circuit);
+			UpdateConnectionStatus(instance, circuitID, inputTransformers, hasSources);
+			// Report wasted energy
+			for (int i = 0; i < ng; i++) {
+				var generator = generators[i];
+				if (generator != null && REPORT)
+					ReportManager.Instance.ReportValue(ReportManager.ReportType.EnergyWasted,
+						-generator.JoulesAvailable, StringFormatter.Replace(STRINGS.BUILDINGS.
+						PREFABS.GENERATOR.OVERPRODUCTION, "{Generator}", generator.
+						GetProperName()));
+			}
+			circuit.wattsUsed = used;
+			circuits[circuitID] = circuit;
+			// Check for overloading
+			var network = Game.Instance.electricalConduitSystem.GetNetworkByID(circuitID);
+			if (network != null && network is ElectricalUtilityNetwork enet)
+				enet.UpdateOverloadTime(UpdateManager.SecondsPerSimTick, used, circuit.
+					bridgeGroups);
+		}
+
+		/// <summary>
+		/// Updates the electrical circuits.
+		/// </summary>
+		/// <param name="instance">The circuits to update.</param>
+		private static void Update(CircuitManager instance) {
+			var circuits = instance.circuitInfo;
+			var active = instance.activeGenerators;
+			int n = circuits.Count;
+			var usage = ListPool<float, CircuitManager>.Allocate();
+			// Running in parallel would be really nice, but unfortunately transformers are
+			// on multiple enet grids at once and are not very threadsafe
+			for (int i = 0; i < n; i++) {
+				var circuit = circuits[i];
+				var consumers = circuit.consumers;
+				var generators = circuit.generators;
+				var batteries = circuit.batteries;
+				int nb = batteries.Count;
+				float used = 0.0f;
+				// IFF the battery with the most charge has no power, then no batteries do
+				bool hasEnergy = GetActiveGenerators(ref circuit, active) || (nb > 0 &&
+					batteries[nb - 1].JoulesAvailable > 0.0f);
+				if (hasEnergy)
+					used = SupplyConsumers(ref circuit, active);
+				else if (generators.Count > 0)
+					SetAllConsumerStatus(consumers, ConnectionStatus.Unpowered);
+				else
+					SetAllConsumerStatus(consumers, ConnectionStatus.NotConnected);
+				usage.Add(used);
+			}
+			// Second pass to charge batteries, maybe using energy from the transformers in
+			// the first pass
+			for (int i = 0; i < n; i++) {
+				var circuit = circuits[i];
+				usage[i] = usage[i] + SupplyStorage(ref circuit);
+			}
+			for (int i = 0; i < n; i++)
+				SupplyTransformers(instance, i, usage[i]);
+			usage.Recycle();
+		}
+
+		/// <summary>
+		/// Updates the plugged in status of batteries or transformers.
+		/// </summary>
+		/// <param name="instance">The circuit manager to update.</param>
+		/// <param name="batteries">The batteries or transformers to update.</param>
+		/// <param name="hasSources">Whether the batteries have a potential energy source.</param>
+		private static void UpdateConnectionStatus(CircuitManager instance, int circuitID,
+				IList<Battery> batteries, bool hasSources) {
+			int ni = batteries.Count;
+			for (int i = 0; i < ni; i++) {
+				var battery = batteries[i];
+				if (battery != null) {
+					if (battery.powerTransformer == null)
+						battery.SetConnectionStatus(hasSources ? ConnectionStatus.Powered :
+							ConnectionStatus.NotConnected);
+					else if (instance.GetCircuitID(battery) == circuitID)
+						battery.SetConnectionStatus(hasSources ? ConnectionStatus.Powered :
+							ConnectionStatus.Unpowered);
+				}
+			}
+		}
+	}
+
+	/// <summary>
+	/// Sorts batteries ascending by available power. The lowest power batteries should go
+	/// first, so they get drained quickly and then removed from the iteration order.
+	/// </summary>
+	internal sealed class BatteryChargeComparer : IComparer<Battery> {
+		/// <summary>
+		/// The singleton instance of this class.
+		/// </summary>
+		internal static readonly BatteryChargeComparer Instance = new BatteryChargeComparer();
+
+		private BatteryChargeComparer() { }
+
+		public int Compare(Battery a, Battery b) {
+			return a.JoulesAvailable.CompareTo(b.JoulesAvailable);
+		}
+	}
+
+	/// <summary>
+	/// Sorts batteries ascending by the amount of energy storage available.
+	/// </summary>
+	internal sealed class BatterySpaceComparer : IComparer<Battery> {
+		/// <summary>
+		/// The singleton instance of this class.
+		/// </summary>
+		internal static readonly BatterySpaceComparer Instance = new BatterySpaceComparer();
+
+		private BatterySpaceComparer() { }
+
+		public int Compare(Battery a, Battery b) {
+			return (a.Capacity - a.JoulesAvailable).CompareTo(b.Capacity - b.JoulesAvailable);
+		}
+	}
+
+	/// <summary>
+	/// Sorts generators ascending by available power. The lowest power generators should go
+	/// first, so that they get emptied quicker and thus kicked out of the iteration order
+	/// first.
+	/// </summary>
+	internal sealed class GeneratorChargeComparer : IComparer<Generator> {
+		/// <summary>
+		/// The singleton instance of this class.
+		/// </summary>
+		internal static readonly GeneratorChargeComparer Instance =
+			new GeneratorChargeComparer();
+
+		private GeneratorChargeComparer() { }
+
+		public int Compare(Generator a, Generator b) {
+			return a.JoulesAvailable.CompareTo(b.JoulesAvailable);
+		}
+	}
+}

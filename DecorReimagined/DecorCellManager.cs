@@ -81,8 +81,10 @@ namespace ReimaginationTeam.DecorRework {
 		/// </summary>
 		/// <param name="cell">The cell.</param>
 		/// <param name="provider">The object providing decor.</param>
+		/// <param name="id">The prefab ID of this object.</param>
 		/// <param name="decor">The quantity of decor to add or subtract.</param>
-		public void AddDecorProvider(int cell, DecorProvider provider, float decor) {
+		public void AddDecorProvider(int cell, DecorProvider provider, Tag prefabID,
+				float decor) {
 			var parent = provider.gameObject;
 			bool allowForCritter = (parent == null) ? false : (!noCritterDecor ||
 				parent.GetComponent<CreatureBrain>() == null);
@@ -90,7 +92,7 @@ namespace ReimaginationTeam.DecorRework {
 			// decor enabled
 			if (Grid.IsValidCell(cell) && cell < size && cell >= 0 && allowForCritter)
 				lock (decorGrid) {
-					AddOrGet(cell).AddDecorProvider(provider.PrefabID(), provider, decor);
+					AddOrGet(cell).AddDecorProvider(prefabID, provider, decor);
 				}
 		}
 
@@ -137,13 +139,15 @@ namespace ReimaginationTeam.DecorRework {
 		/// </summary>
 		/// <param name="cell">The cell.</param>
 		/// <param name="provider">The object providing decor.</param>
+		/// <param name="prefabID">The prefab ID of this object.</param>
 		/// <param name="decor">The quantity of decor to add or subtract.</param>
-		public void RemoveDecorProvider(int cell, DecorProvider provider, float decor) {
+		public void RemoveDecorProvider(int cell, DecorProvider provider, Tag prefabID,
+				float decor) {
 			if (Grid.IsValidCell(cell) && cell < size && cell >= 0)
 				lock (decorGrid) {
 					var dc = decorGrid[cell];
 					if (dc != null) {
-						dc.RemoveDecorProvider(provider.PrefabID(), provider, decor);
+						dc.RemoveDecorProvider(prefabID, provider, decor);
 						if (dc.Count == 0) {
 							dc.Dispose();
 							decorGrid[cell] = null;

@@ -230,10 +230,13 @@ namespace PeterHan.FastTrack.UIPatches {
 				int layerMask, KSelectable lastSelected) {
 			var filteredHits = ListPool<KSelectable, InterfaceTool>.Allocate();
 			KSelectable result = null;
-			// hits is already sorted and non-null
-			foreach (var item in hits)
-				if (((1 << item.gameObject.layer) & layerMask) != 0)
+			// hits is already sorted, but if an object is destroyed without changing the
+			// selected tile, some entries could be null
+			foreach (var item in hits) {
+				var go = item.gameObject;
+				if (go != null && ((1 << go.layer) & layerMask) != 0)
 					filteredHits.Add(item);
+			}
 			int n = filteredHits.Count;
 			if (n > 0) {
 				// Since index has to be modulo by number, have to make the full list even if

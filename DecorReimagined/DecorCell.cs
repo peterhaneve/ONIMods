@@ -51,7 +51,8 @@ namespace ReimaginationTeam.DecorRework {
 
 		internal DecorCell(int cell) {
 			this.cell = cell;
-			decorProviders = new Dictionary<Tag, BestDecorList>(24);
+			decorProviders = new Dictionary<Tag, BestDecorList>(24, TagEqualityComparer.
+				Instance);
 			if (DecorReimaginedPatches.Options?.HardMode ?? false)
 				negativeDecor = new Dictionary<DecorProvider, float>(24);
 			else
@@ -169,6 +170,23 @@ namespace ReimaginationTeam.DecorRework {
 				if (pair.Value.BestDecor > 0.0f)
 					positive++;
 			DecorCellManager.Instance?.UpdateBestPositiveDecor(positive);
+		}
+	}
+
+	/// <summary>
+	/// Compares tags for equality, and avoids boxing them for the hash code.
+	/// </summary>
+	internal sealed class TagEqualityComparer : IEqualityComparer<Tag> {
+		public static readonly TagEqualityComparer Instance = new TagEqualityComparer();
+
+		private TagEqualityComparer() { }
+
+		public bool Equals(Tag x, Tag y) {
+			return x.GetHash() == y.GetHash();
+		}
+
+		public int GetHashCode(Tag obj) {
+			return obj.GetHashCode();
 		}
 	}
 }

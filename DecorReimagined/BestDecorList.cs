@@ -38,7 +38,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// The decor provider which provided this best score.
 		/// </summary>
-		public DecorProvider BestProvider {
+		public KMonoBehaviour BestProvider {
 			get {
 				return best.Provider;
 			}
@@ -68,11 +68,11 @@ namespace ReimaginationTeam.DecorRework {
 		/// pathological setups with tons of debris etc cause that one to degrade to
 		/// unacceptable performance.
 		/// </summary>
-		private readonly SortedDictionary<DecorWrapper, bool> decorByValue;
+		private readonly SortedSet<DecorWrapper> decorByValue;
 
 		internal BestDecorList(int cell) {
 			this.cell = cell;
-			decorByValue = new SortedDictionary<DecorWrapper, bool>();
+			decorByValue = new SortedSet<DecorWrapper>();
 		}
 
 		/// <summary>
@@ -81,9 +81,8 @@ namespace ReimaginationTeam.DecorRework {
 		/// <param name="decor">The current decor of the item.</param>
 		/// <param name="provider">The decor item to add.</param>
 		/// <returns>true if the decor score changed, or false otherwise.</returns>
-		public bool AddDecorItem(float decor, DecorProvider provider) {
-			decorByValue[new DecorWrapper(decor, provider)] = true;
-			return UpdateBestDecor();
+		public bool AddDecorItem(float decor, KMonoBehaviour provider) {
+			return decorByValue.Add(new DecorWrapper(decor, provider)) && UpdateBestDecor();
 		}
 
 		public void Dispose() {
@@ -99,7 +98,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// <param name="decor">The current decor of the item.</param>
 		/// <param name="provider">The decor item to remove.</param>
 		/// <returns>true if the decor score changed, or false otherwise.</returns>
-		public bool RemoveDecorItem(float decor, DecorProvider provider) {
+		public bool RemoveDecorItem(float decor, KMonoBehaviour provider) {
 			return decorByValue.Remove(new DecorWrapper(decor, provider)) && UpdateBestDecor();
 		}
 
@@ -116,7 +115,7 @@ namespace ReimaginationTeam.DecorRework {
 			best = new DecorWrapper(0.0f, null);
 			using (var it = decorByValue.GetEnumerator()) {
 				if (it.MoveNext()) {
-					best = it.Current.Key;
+					best = it.Current;
 					decor = best.Decor;
 				}
 			}
@@ -130,7 +129,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// The key for the decor list - compares on full equality but sorts on decor value.
 		/// </summary>
-		private struct DecorWrapper : IComparable<DecorWrapper> {
+		private struct DecorWrapper : IComparable<DecorWrapper>, IEquatable<DecorWrapper> {
 			/// <summary>
 			/// The decor value of this object.
 			/// </summary>
@@ -139,9 +138,9 @@ namespace ReimaginationTeam.DecorRework {
 			/// <summary>
 			/// The provider of the decor.
 			/// </summary>
-			public DecorProvider Provider { get; }
+			public KMonoBehaviour Provider { get; }
 
-			internal DecorWrapper(float decor, DecorProvider provider) {
+			internal DecorWrapper(float decor, KMonoBehaviour provider) {
 				Decor = decor;
 				Provider = provider;
 			}
@@ -161,6 +160,10 @@ namespace ReimaginationTeam.DecorRework {
 
 			public override bool Equals(object obj) {
 				return obj is DecorWrapper other && other.Provider == Provider;
+			}
+
+			public bool Equals(DecorWrapper other) {
+				return other.Provider == Provider;
 			}
 
 			public override int GetHashCode() {
