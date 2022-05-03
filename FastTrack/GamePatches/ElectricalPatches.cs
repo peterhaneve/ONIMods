@@ -27,18 +27,11 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
 	/// Applied to CircuitManager to speed up how electrical grids are calculated.
 	/// </summary>
-	[HarmonyPatch(typeof(CircuitManager), nameof(CircuitManager.Sim200msLast))]
 	public static class FastElectricalNetworkCalculator {
 		/// <summary>
 		/// Whether colony reports are to be generated.
 		/// </summary>
 		private static bool REPORT = true;
-
-		internal static bool Prepare() {
-			var options = FastTrackOptions.Instance;
-			REPORT = !options.NoReports;
-			return options.ENetOpts;
-		}
 
 		/// <summary>
 		/// Charges as many batteries as possible with the energy from this source.
@@ -277,19 +270,89 @@ namespace PeterHan.FastTrack.GamePatches {
 		}
 
 		/// <summary>
-		/// Applied before Sim200msLast runs.
+		/// Adds electrical circuits if needed to match the number of wire networks.
 		/// </summary>
-		internal static bool Prefix(CircuitManager __instance, float dt) {
-			var infoScreen = UIPatches.EnergyInfoScreenWrapper.Instance;
-			float elapsedTime = __instance.elapsedTime + dt;
-			if (elapsedTime >= UpdateManager.SecondsPerSimTick) {
-				elapsedTime -= UpdateManager.SecondsPerSimTick;
-				Update(__instance);
-				if (infoScreen != null)
-					infoScreen.dirty = true;
+		/// <param name="instance">The circuit manager to initialize.</param>
+		/// <param name="electricalSystem">The current electrical network.</param>
+		private static void InitNetworks(CircuitManager instance,
+				UtilityNetworkManager<ElectricalUtilityNetwork, Wire> electricalSystem) {
+			var networks = electricalSystem.GetNetworks();
+			var circuits = instance.circuitInfo;
+			int nGroups = (int)Wire.WattageRating.NumRatings, nNetworks = networks.Count;
+			while (circuits.Count < nNetworks) {
+				var newInfo = new CircuitInfo {
+					generators = new List<Generator>(16),
+					consumers = new List<IEnergyConsumer>(32),
+					batteries = new List<Battery>(16),
+					inputTransformers = new List<Battery>(8),
+					outputTransformers = new List<Generator>(16)
+				};
+				var wireLinks = new List<WireUtilityNetworkLink>[nGroups];
+				for (int i = 0; i < nGroups; i++)
+					wireLinks[i] = new List<WireUtilityNetworkLink>(8);
+				newInfo.bridgeGroups = wireLinks;
+				circuits.Add(newInfo);
 			}
-			__instance.elapsedTime = elapsedTime;
-			return false;
+		}
+
+		/// <summary>
+		/// Rebuilds the electrical networks.
+		/// </summary>
+		/// <param name="instance">The networks to rebuild.</param>
+		private static void Rebuild(CircuitManager instance) {
+			var circuits = instance.circuitInfo;
+			var minBatteryFull = ListPool<float, CircuitManager>.Allocate();
+			int n = circuits.Count, circuitID;
+			for (int i = 0; i < n; i++) {
+				var circuit = circuits[i];
+				var bridges = circuit.bridgeGroups;
+				int nGroups = bridges.Length;
+				circuit.generators.Clear();
+				circuit.consumers.Clear();
+				circuit.batteries.Clear();
+				circuit.inputTransformers.Clear();
+				circuit.outputTransformers.Clear();
+				minBatteryFull.Add(1.0f);
+				for (int j = 0; j < nGroups; j++)
+					bridges[j].Clear();
+			}
+			foreach (var consumer in instance.consumers)
+				if (consumer != null && (circuitID = instance.GetCircuitID(consumer)) !=
+						ushort.MaxValue) {
+					var circuit = circuits[circuitID];
+					if (consumer is Battery battery) {
+						if (battery.powerTransformer != null)
+							circuit.inputTransformers.Add(battery);
+						else {
+							circuit.batteries.Add(battery);
+							minBatteryFull[circuitID] = Mathf.Min(minBatteryFull[circuitID],
+								battery.PercentFull);
+						}
+					} else
+						circuit.consumers.Add(consumer);
+				}
+			for (int i = 0; i < n; i++) {
+				var circuit = circuits[i];
+				circuit.consumers.Sort(ConsumerWattageComparer.Instance);
+				circuit.minBatteryPercentFull = minBatteryFull[i];
+				circuits[i] = circuit;
+			}
+			minBatteryFull.Recycle();
+			foreach (var generator in instance.generators)
+				if (generator != null && (circuitID = instance.GetCircuitID(generator)) !=
+						ushort.MaxValue) {
+					var circuit = circuits[circuitID];
+					if (generator is PowerTransformer)
+						circuit.outputTransformers.Add(generator);
+					else
+						circuit.generators.Add(generator);
+				}
+			foreach (var bridge in instance.bridges)
+				if (bridge != null && (circuitID = instance.GetCircuitID(bridge)) != ushort.
+						MaxValue)
+					circuits[circuitID].bridgeGroups[(int)bridge.GetMaxWattageRating()].Add(
+						bridge);
+			instance.dirty = false;
 		}
 
 		/// <summary>
@@ -314,9 +377,10 @@ namespace PeterHan.FastTrack.GamePatches {
 				IList<Generator> activeGenerators) {
 			var consumers = circuit.consumers;
 			var batteries = circuit.batteries;
+			var batteryStatus = new ConsumerRun(batteries);
 			var outputTransformers = circuit.outputTransformers;
 			int nc = consumers.Count, nb = batteries.Count, firstGenerator = 0,
-				firstTransformer = 0, firstBattery = 0;
+				firstTransformer = 0;
 			float usage = 0.0f;
 			batteries.Sort(BatteryChargeComparer.Instance);
 			for (int i = 0; i < nc; i++) {
@@ -328,8 +392,8 @@ namespace PeterHan.FastTrack.GamePatches {
 					if (energy > 0.0f)
 						energy = DrainFirstAvailable(energy, outputTransformers,
 							ref firstTransformer);
-					if (energy > 0.0f && firstBattery < nb)
-						energy = DrainEvenly(energy, batteries, ref firstBattery);
+					if (energy > 0.0f)
+						energy = batteryStatus.Power(energy);
 					if (REPORT && energy < e0)
 						ReportManager.Instance.ReportValue(ReportManager.ReportType.
 							EnergyCreated, energy - e0, consumer.Name);
@@ -340,6 +404,7 @@ namespace PeterHan.FastTrack.GamePatches {
 					// Base game had a condition that was always true when reached
 					consumer.SetConnectionStatus(ConnectionStatus.Powered);
 			}
+			batteryStatus.Finish();
 			return usage / UpdateManager.SecondsPerSimTick;
 		}
 
@@ -423,7 +488,8 @@ namespace PeterHan.FastTrack.GamePatches {
 			int n = circuits.Count;
 			var usage = ListPool<float, CircuitManager>.Allocate();
 			// Running in parallel would be really nice, but unfortunately transformers are
-			// on multiple enet grids at once and are not very threadsafe
+			// on multiple enet grids at once and are not very threadsafe, and setting
+			// consumer status triggers a bunch of get components and UI updates
 			for (int i = 0; i < n; i++) {
 				var circuit = circuits[i];
 				var consumers = circuit.consumers;
@@ -474,6 +540,148 @@ namespace PeterHan.FastTrack.GamePatches {
 				}
 			}
 		}
+
+		/// <summary>
+		/// Applied to CircuitManager to do a better job at refreshing networks.
+		/// </summary>
+		[HarmonyPatch(typeof(CircuitManager), nameof(CircuitManager.Refresh))]
+		internal static class Refresh_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.ENetOpts;
+
+			/// <summary>
+			/// Applied before Refresh runs.
+			/// </summary>
+			internal static bool Prefix(CircuitManager __instance) {
+				var electricalSystem = Game.Instance.electricalConduitSystem;
+				if (electricalSystem != null) {
+					bool rebuild = electricalSystem.IsDirty;
+					if (rebuild)
+						electricalSystem.Update();
+					if (rebuild || __instance.dirty) {
+						InitNetworks(__instance, electricalSystem);
+						Rebuild(__instance);
+					}
+				}
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Applied to CircuitManager to replace the Sim200msLast method with a much faster
+		/// equivalent.
+		/// </summary>
+		[HarmonyPatch(typeof(CircuitManager), nameof(CircuitManager.Sim200msLast))]
+		internal static class Sim200msLast_Patch {
+			internal static bool Prepare() {
+				var options = FastTrackOptions.Instance;
+				REPORT = !options.NoReports;
+				return options.ENetOpts;
+			}
+
+
+			/// <summary>
+			/// Applied before Sim200msLast runs.
+			/// </summary>
+			internal static bool Prefix(CircuitManager __instance, float dt) {
+				var infoScreen = UIPatches.EnergyInfoScreenWrapper.Instance;
+				float elapsedTime = __instance.elapsedTime + dt;
+				if (elapsedTime >= UpdateManager.SecondsPerSimTick) {
+					elapsedTime -= UpdateManager.SecondsPerSimTick;
+					Update(__instance);
+					if (infoScreen != null)
+						infoScreen.dirty = true;
+				}
+				__instance.elapsedTime = elapsedTime;
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Allows run-on powering many small consumers from one scan of the battery list.
+		/// </summary>
+		private struct ConsumerRun {
+			/// <summary>
+			/// The batteries to drain.
+			/// </summary>
+			private readonly IList<Battery> batteries;
+
+			/// <summary>
+			/// The first valid battery index with charge.
+			/// </summary>
+			private int firstValid;
+
+			/// <summary>
+			/// The energy that is pending consume across all batteries evenly.
+			/// </summary>
+			private float pendingWithdraw;
+
+			internal ConsumerRun(IList<Battery> batteries) {
+				Battery battery;
+				int n = batteries.Count, first = 0;
+				this.batteries = batteries;
+				firstValid = 0;
+				pendingWithdraw = 0.0f;
+				while (first < n && ((battery = batteries[first]) == null || battery.
+						JoulesAvailable <= 0.0f))
+					first++;
+				firstValid = first;
+			}
+
+			/// <summary>
+			/// If all consumers are finished, withdraws the cached energy evenly from
+			/// batteries.
+			/// </summary>
+			public void Finish() {
+				float pending = pendingWithdraw;
+				if (pending > 0.0f) {
+					int n = batteries.Count, first = firstValid;
+					float energyUsedPer = pending / (n - first);
+					for (int i = first; i < n; i++) {
+						var battery = batteries[i];
+						if (battery != null) {
+							battery.ConsumeEnergy(energyUsedPer);
+							if (battery.JoulesAvailable <= 0.0f)
+								first = i + 1;
+						}
+					}
+					firstValid = first;
+					pendingWithdraw = 0.0f;
+				}
+			}
+
+			/// <summary>
+			/// Attempts to power a consumer. If the energy required can be provably satisfied
+			/// instantly without scanning batteries, the energy is added to the pending
+			/// withdraw without removing any charge. But if the sum total of pending withdraw
+			/// exceeds the amount provably available, the list is scanned and updated.
+			/// </summary>
+			/// <param name="demand">The energy required.</param>
+			/// <returns>The energy remaining to supply.</returns>
+			public float Power(float demand) {
+				int n = batteries.Count, first;
+				// Since the batteries are sorted and drained evenly, all must have at least
+				// the charge of the first one
+				while ((first = firstValid) < n) {
+					var battery = batteries[first];
+					float energyAcrossAll = (n - first) * battery.JoulesAvailable;
+					if (demand < energyAcrossAll) {
+						pendingWithdraw += demand;
+						demand = 0.0f;
+						break;
+					} else if (energyAcrossAll > 0.0f) {
+						// Large demands end up here
+						if (pendingWithdraw == 0.0f) {
+							pendingWithdraw = energyAcrossAll;
+							demand -= energyAcrossAll;
+						}
+						Finish();
+					} else
+						// No energy left
+						break;
+				}
+				return demand;
+			}
+		}
 	}
 
 	/// <summary>
@@ -506,6 +714,23 @@ namespace PeterHan.FastTrack.GamePatches {
 
 		public int Compare(Battery a, Battery b) {
 			return (a.Capacity - a.JoulesAvailable).CompareTo(b.Capacity - b.JoulesAvailable);
+		}
+	}
+
+	/// <summary>
+	/// Sorts power consumers ascending by maximum wattage when active.
+	/// </summary>
+	internal sealed class ConsumerWattageComparer : IComparer<IEnergyConsumer> {
+		/// <summary>
+		/// The singleton instance of this class.
+		/// </summary>
+		internal static readonly ConsumerWattageComparer Instance =
+			new ConsumerWattageComparer();
+
+		private ConsumerWattageComparer() { }
+
+		public int Compare(IEnergyConsumer a, IEnergyConsumer b) {
+			return a.WattsNeededWhenActive.CompareTo(b.WattsNeededWhenActive);
 		}
 	}
 
