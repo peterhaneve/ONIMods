@@ -35,21 +35,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 		public const int CHUNK_SIZE = 16;
 
 		/// <summary>
-		/// The tint to use for highlighted tiles.
-		/// </summary>
-		private static readonly Color HIGHLIGHT_COLOR = new Color(1.25f, 1.25f, 1.25f, 1f);
-
-		/// <summary>
-		/// The tint to use for unplaceable tiles.
-		/// </summary>
-		private static readonly Color INVALID_PLACE_COLOR = Color.red;
-
-		/// <summary>
-		/// The tint to use for selected tiles.
-		/// </summary>
-		private static readonly Color SELECT_COLOR = new Color(1.5f, 1.5f, 1.5f, 1f);
-
-		/// <summary>
 		/// Scale factors used in tile decor tops.
 		/// </summary>
 		private static readonly Vector2 SIMPLEX_SCALE = new Vector2(92.41f, 87.16f);
@@ -62,9 +47,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Creates the singleton instance of this class.
 		/// </summary>
-		internal static void CreateInstance() {
+		/// <param name="colorSource">The tile renderer to use for tile colors.</param>
+		internal static void CreateInstance(BlockTileRenderer colorSource) {
 			DestroyInstance();
-			Instance = new TileMeshRenderer();
+			Instance = new TileMeshRenderer(colorSource);
 		}
 
 		/// <summary>
@@ -74,6 +60,11 @@ namespace PeterHan.FastTrack.VisualPatches {
 			Instance?.Dispose();
 			Instance = null;
 		}
+
+		/// <summary>
+		/// The tile renderer to query for the color tint of each tile.
+		/// </summary>
+		private readonly BlockTileRenderer colorSource;
 
 		/// <summary>
 		/// The coordinates that were deactivated from the previous frame.
@@ -110,7 +101,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		private int selectedCell;
 
-		internal TileMeshRenderer() {
+		internal TileMeshRenderer(BlockTileRenderer colorSource) {
+			this.colorSource = colorSource;
 			deactivated = new List<Vector2I>(16);
 			forceRebuild = false;
 			lastVisible = new Extents(0, 0, 0, 0);
@@ -164,18 +156,20 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <param name="cell">The cell to query.</param>
 		/// <param name="element">The element used to build the building, or SimHashes.Void
 		/// for preview buildings.</param>
+		/// <param name="colorSource">The tile renderer instance to use for fetching the color,
+		/// which allows material color mods to modify it.</param>
 		/// <returns>The highlight color to apply to the mesh there.</returns>
 		internal Color GetCellColor(int cell, SimHashes element) {
-			Color color;
-			if (cell == selectedCell)
-				color = SELECT_COLOR;
-			else if (cell == invalidPlaceCell && element == SimHashes.Void)
-				color = INVALID_PLACE_COLOR;
-			else if (cell == highlightCell)
-				color = HIGHLIGHT_COLOR;
-			else
-				color = Color.white;
-			return color;
+			Color result;
+			if (colorSource == null)
+				result = Color.white;
+			else {
+				colorSource.selectedCell = selectedCell;
+				colorSource.invalidPlaceCell = invalidPlaceCell;
+				colorSource.highlightCell = highlightCell;
+				result = colorSource.GetCellColour(cell, element);
+			}
+			return result;
 		}
 
 		/// <summary>

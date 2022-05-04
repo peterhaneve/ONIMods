@@ -28,197 +28,194 @@ namespace PeterHan.FastTrack {
 	[JsonObject(MemberSerialization.OptIn)]
 	[RestartRequired]
 	public sealed class FastTrackOptions : SingletonOptions<FastTrackOptions> {
-		/// <summary>
-		/// Shared performance impact descriptions used in multiple options.
-		/// </summary>
-		private const string PERF_LOW = "\n\n<b>Performance Impact: <color=#00CC00>Low</color></b>";
-		private const string PERF_MEDIUM = "\n\n<b>Performance Impact: <color=#FF8827>Medium</color></b>";
-		private const string PERF_HIGH = "\n\n<b>Performance Impact: <color=#FF3300>High</color></b>";
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.BACKGROUNDROOMREBUILD", "STRINGS.UI.TOOLTIPS.FASTTRACK.BACKGROUNDROOMREBUILD", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_BUILDINGS")]
+		[JsonProperty]
+		public bool BackgroundRoomRebuild { get; set; }
 
-		[Option("Electrical Optimizations", "Speeds up calculations of electrical networks." + PERF_LOW, "Buildings")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.ENETOPTS", "STRINGS.UI.TOOLTIPS.FASTTRACK.ENETOPTS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_BUILDINGS")]
 		[JsonProperty]
 		public bool ENetOpts { get; set; }
 
-		[Option("Flatten Averages", "Optimize Amounts and average calculations." + PERF_LOW, "Buildings")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.FLATTENAVERAGES", "STRINGS.UI.TOOLTIPS.FASTTRACK.FLATTENAVERAGES", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_BUILDINGS")]
 		[JsonProperty]
 		public bool FlattenAverages { get; set; }
 
-		[Option("Logic Optimizations", "Optimizes some buildings to not trigger logic network updates every frame." + PERF_LOW, "Buildings")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.LOGICUPDATES", "STRINGS.UI.TOOLTIPS.FASTTRACK.LOGICUPDATES", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_BUILDINGS")]
 		[JsonProperty]
 		public bool LogicUpdates { get; set; }
 
-		[Option("No Colony Reports", "Disables colony reports completely.\n<color=#FF0000>Disabling will prevent some achievements from being unlocked</color>" + PERF_MEDIUM, "Buildings")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.NOREPORTS", "STRINGS.UI.TOOLTIPS.FASTTRACK.NOREPORTS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_BUILDINGS")]
 		[JsonProperty]
 		public bool NoReports { get; set; }
 
-		[Option("Optimize Heat Generation", "Reduces memory allocations used when generating heat." + PERF_MEDIUM, "Buildings")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.FASTSTRUCTURETEMPERATURE", "STRINGS.UI.TOOLTIPS.FASTTRACK.FASTSTRUCTURETEMPERATURE", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_BUILDINGS")]
 		[JsonProperty]
 		public bool FastStructureTemperature { get; set; }
 
-		[Option("Radiation Tweaks", "Speeds up radiation calculations." + PERF_LOW, "Buildings")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.RADIATIONOPTS", "STRINGS.UI.TOOLTIPS.FASTTRACK.RADIATIONOPTS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_BUILDINGS")]
 		[JsonProperty]
 		public bool RadiationOpts { get; set; }
 
-		[Option("Threaded Conduit Updates", "Multi-threads some updates to liquid and gas conduits." + PERF_LOW, "Buildings")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.CONDUITOPTS", "STRINGS.UI.TOOLTIPS.FASTTRACK.CONDUITOPTS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_BUILDINGS")]
 		[JsonProperty]
 		public bool ConduitOpts { get; set; }
 
-		[Option("Critter Monitors", "Optimizes critter Threat and Overcrowding monitors.\n<i>May conflict with mods that add new critters</i>" + PERF_MEDIUM, "Critters")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.THREATOVERCROWDING", "STRINGS.UI.TOOLTIPS.FASTTRACK.THREATOVERCROWDING", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_CRITTERS")]
 		[JsonProperty]
 		public bool ThreatOvercrowding { get; set; }
 
-		[Option("Optimize Eating", "Optimize how Critters find objects to eat.\n<i>Some minor changes to Critter behaviour may occur</i>" + PERF_MEDIUM, "Critters")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.CRITTERCONSUMERS", "STRINGS.UI.TOOLTIPS.FASTTRACK.CRITTERCONSUMERS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_CRITTERS")]
 		[JsonProperty]
 		public bool CritterConsumers { get; set; }
 
-		[Option("Unstack Lights", "Reduces the visual effects shown when many light sources are stacked.\nIntended for ranching critters like Shine Bugs." + PERF_LOW, "Critters")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.UNSTACKLIGHTS", "STRINGS.UI.TOOLTIPS.FASTTRACK.UNSTACKLIGHTS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_CRITTERS")]
 		[JsonProperty]
 		public bool UnstackLights { get; set; }
 
-		[Option("Attribute Leveling", "Optimize attribute leveling and work efficiency calculation." + PERF_MEDIUM, "Duplicants")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.FASTATTRIBUTESMODE", "STRINGS.UI.TOOLTIPS.FASTTRACK.FASTATTRIBUTESMODE", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS")]
 		[JsonProperty]
 		public bool FastAttributesMode { get; set; }
 
-		[Option("Background Pathing", "Moves some pathfinding calculations to a non-blocking thread." + PERF_HIGH, "Duplicants")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.ASYNCPATHPROBE", "STRINGS.UI.TOOLTIPS.FASTTRACK.ASYNCPATHPROBE", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS")]
 		[JsonProperty]
 		public bool AsyncPathProbe { get; set; }
 
-		[Option("Cache Paths", "Cache frequently used paths and reuse them in future calculations." + PERF_MEDIUM, "Duplicants")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.CACHEPATHS", "STRINGS.UI.TOOLTIPS.FASTTRACK.CACHEPATHS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS")]
 		[JsonProperty]
 		public bool CachePaths { get; set; }
 
-		[Option("Disable Conversations", "Disables all Duplicant thought and speech balloons." + PERF_LOW, "Duplicants")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.NOCONVERSATIONS", "STRINGS.UI.TOOLTIPS.FASTTRACK.NOCONVERSATIONS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS")]
 		[JsonProperty]
 		public bool NoConversations { get; set; }
 
-		[Option("Fast Reachability Checks", "Only check items and chores for reachability when necessary." + PERF_MEDIUM, "Duplicants")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.FASTREACHABILITY", "STRINGS.UI.TOOLTIPS.FASTTRACK.FASTREACHABILITY", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS")]
 		[JsonProperty]
 		public bool FastReachability { get; set; }
 
-		[Option("Optimize Sensors", "Only check for locations to Idle, Mingle, or Balloon Artist when necessary." + PERF_LOW, "Duplicants")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.SENSOROPTS", "STRINGS.UI.TOOLTIPS.FASTTRACK.SENSOROPTS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS")]
 		[JsonProperty]
 		public bool SensorOpts { get; set; }
 
-		[Option("Colony Tracker Reduction", "Reduces the update rate of Colony Diagnostics.\n<i>Some notifications may take longer to trigger</i>" + PERF_LOW, "Interface")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.REDUCECOLONYTRACKING", "STRINGS.UI.TOOLTIPS.FASTTRACK.REDUCECOLONYTRACKING", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_INTERFACE")]
 		[JsonProperty]
 		public bool ReduceColonyTracking { get; set; }
 
-		[Option("Disable Achievements", "Turn off checking for Colony Initiatives.\n<color=#FF0000>Disabling will prevent unlocking any Steam achievement</color>" + PERF_LOW, "Interface")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.DISABLEACHIEVEMENTS", "STRINGS.UI.TOOLTIPS.FASTTRACK.DISABLEACHIEVEMENTS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_INTERFACE")]
 		[JsonProperty]
 		public AchievementDisable DisableAchievements { get; set; }
 
-		[Option("Disable Load Previews", "Disables loading of colony previews on the Load screen." + PERF_MEDIUM, "Interface")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.DISABLELOADPREVIEWS", "STRINGS.UI.TOOLTIPS.FASTTRACK.DISABLELOADPREVIEWS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_INTERFACE")]
 		[JsonProperty]
 		public bool DisableLoadPreviews { get; set; }
 
-		[Option("Disable Tutorials", "Disables tutorial messages." + PERF_LOW, "Interface")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.DISABLETUTORIAL", "STRINGS.UI.TOOLTIPS.FASTTRACK.DISABLETUTORIAL", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_INTERFACE")]
 		[JsonProperty]
 		public TutorialMessageDisable DisableTutorial { get; set; }
 
-		[Option("Fast Raycast", "Speeds up searching for UI elements under the cursor." + PERF_HIGH, "Interface")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.FASTRAYCAST", "STRINGS.UI.TOOLTIPS.FASTTRACK.FASTRAYCAST", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_INTERFACE")]
 		[JsonProperty]
 		public bool FastRaycast { get; set; }
 
-		[Option("Less Loading", "Speeds up loading times." + PERF_MEDIUM, "Interface")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.LOADOPTS", "STRINGS.UI.TOOLTIPS.FASTTRACK.LOADOPTS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_INTERFACE")]
 		[JsonProperty]
 		public bool LoadOpts { get; set; }
 
 		[JsonProperty]
 		public bool ModLoadOpts { get; set; }
 
-		[Option("Optimize Dialogs", "Speeds up a variety of dialog boxes." + PERF_MEDIUM, "Interface")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.OPTIMIZEDIALOGS", "STRINGS.UI.TOOLTIPS.FASTTRACK.OPTIMIZEDIALOGS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_INTERFACE")]
 		[JsonProperty]
 		public bool OptimizeDialogs { get; set; }
 
-		[Option("Other UI Optimizations", "Optimizes many event and UI handlers." + PERF_MEDIUM, "Interface")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.MISCOPTS", "STRINGS.UI.TOOLTIPS.FASTTRACK.MISCOPTS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_INTERFACE")]
 		[JsonProperty]
 		public bool MiscOpts { get; set; }
 
-		[Option("Reduce Allocations", "Reduces memory allocations in a variety of locations." + PERF_LOW, "Interface")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.ALLOCOPTS", "STRINGS.UI.TOOLTIPS.FASTTRACK.ALLOCOPTS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_INTERFACE")]
 		[JsonProperty]
 		public bool AllocOpts { get; set; }
 
-		[Option("Background Inventory", "Compiles the item quantites in the Resources panel on a non-blocking thread." + PERF_MEDIUM, "Items")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.PARALLELINVENTORY", "STRINGS.UI.TOOLTIPS.FASTTRACK.PARALLELINVENTORY", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_ITEMS")]
 		[JsonProperty]
 		public bool ParallelInventory { get; set; }
 
-		[Option("Info Card Optimization", "Optimizes the info cards shown on hover." + PERF_MEDIUM, "Interface")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.INFOCARDOPTS", "STRINGS.UI.TOOLTIPS.FASTTRACK.INFOCARDOPTS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_INTERFACE")]
 		[JsonProperty]
 		public bool InfoCardOpts { get; set; }
 
-		[Option("Optimize Debris Collection", "Speed up inefficient and memory-intensive checks for items.\n<i>Not compatible with mods: Efficient Supply</i>" + PERF_LOW, "Items")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.FASTUPDATEPICKUPS", "STRINGS.UI.TOOLTIPS.FASTTRACK.FASTUPDATEPICKUPS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_ITEMS")]
 		[JsonProperty]
 		public bool FastUpdatePickups { get; set; }
 
-		[Option("Reduce Debris Checks", "Only look for the closest items when required,\nrather than every frame for each Duplicant." + PERF_MEDIUM, "Items")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.PICKUPOPTS", "STRINGS.UI.TOOLTIPS.FASTTRACK.PICKUPOPTS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_ITEMS")]
 		[JsonProperty]
 		public bool PickupOpts { get; set; }
 
-		[Option("Side Screens", "Optimizes the informational side screens." + PERF_MEDIUM, "Interface")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.SIDESCREENOPTS", "STRINGS.UI.TOOLTIPS.FASTTRACK.SIDESCREENOPTS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_INTERFACE")]
 		[JsonProperty]
 		public bool SideScreenOpts { get; set; }
 
-		[Option("Vector Minimization", "Reduces memory allocations in most game-wide lists of items." + PERF_LOW, "Items")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.MINIMALKCV", "STRINGS.UI.TOOLTIPS.FASTTRACK.MINIMALKCV", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_ITEMS")]
 		[JsonProperty]
 		public bool MinimalKCV { get; set; }
 
-		[Option("Batch Sounds", "Reduces the frequency of sound location updates." + PERF_LOW, "Sound")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.REDUCESOUNDUPDATES", "STRINGS.UI.TOOLTIPS.FASTTRACK.REDUCESOUNDUPDATES", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_SOUND")]
 		[JsonProperty]
 		public bool ReduceSoundUpdates { get; set; }
 
-		[Option("Disable <color=#FF0000>ALL</color> Sounds", "Completely disables all sound playback." + PERF_LOW, "Sound")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.DISABLESOUND", "STRINGS.UI.TOOLTIPS.FASTTRACK.DISABLESOUND", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_SOUND")]
 		[JsonProperty]
 		public bool DisableSound { get; set; }
 
-		[Option("Cull Buildings in Tiles", "Hide conduits and wires inside solid walls." + PERF_LOW, "Visual")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.CULLCONDUITS", "STRINGS.UI.TOOLTIPS.FASTTRACK.CULLCONDUITS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_VISUAL")]
 		[JsonProperty]
 		public bool CullConduits { get; set; }
 
-		[Option("Faster Animations", "Optimizes slow code in animation playback." + PERF_MEDIUM, "Visual")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.ANIMOPTS", "STRINGS.UI.TOOLTIPS.FASTTRACK.ANIMOPTS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_VISUAL")]
 		[JsonProperty]
 		public bool AnimOpts { get; set; }
 
-		[Option("Instant Place Graphics", "Disables the animation which appears when placing\nerrands like Dig or Mop." + PERF_LOW, "Visual")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.NOPLACEREASING", "STRINGS.UI.TOOLTIPS.FASTTRACK.NOPLACEREASING", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_VISUAL")]
 		[JsonProperty]
 		public bool NoPlacerEasing { get; set; }
 
-		[Option("No Notification Bounce", "Disables the bounce effect when new notifications appear." + PERF_MEDIUM, "Visual")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.NOBOUNCE", "STRINGS.UI.TOOLTIPS.FASTTRACK.NOBOUNCE", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_VISUAL")]
 		[JsonProperty]
 		public bool NoBounce { get; set; }
 
-		[Option("No Splashes", "Disables most puff, splash, and breath animations." + PERF_LOW, "Visual")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.NOSPLASH", "STRINGS.UI.TOOLTIPS.FASTTRACK.NOSPLASH", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_VISUAL")]
 		[JsonProperty]
 		public bool NoSplash { get; set; }
 
-		[Option("No Tile Caps", "Disables all ornaments and edges on constructed tiles." + PERF_LOW, "Visual")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.NOTILEDECOR", "STRINGS.UI.TOOLTIPS.FASTTRACK.NOTILEDECOR", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_VISUAL")]
 		[JsonProperty]
 		public bool NoTileDecor { get; set; }
 
-		[Option("Optimize Renderers", "Optimizes several renderers that run every frame.\n<i>Some visual artifacts may appear with no effect on gameplay</i>" + PERF_MEDIUM, "Visual")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.RENDERTICKS", "STRINGS.UI.TOOLTIPS.FASTTRACK.RENDERTICKS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_VISUAL")]
 		[JsonProperty]
 		public bool RenderTicks { get; set; }
 
-		[Option("Pipe Animation Quality", "Controls the visual fidelity of pipe animations.\n<i>No changes to actual pipe mechanics will occur</i>" + PERF_MEDIUM, "Visual")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.DISABLECONDUITANIMATION", "STRINGS.UI.TOOLTIPS.FASTTRACK.DISABLECONDUITANIMATION", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_VISUAL")]
 		[JsonProperty]
 		public ConduitAnimationQuality DisableConduitAnimation { get; set; }
 
-		[Option("Quick Format", "Reduces memory allocations when formatting strings.\n<i>Not compatible with mods: DisplayAllTemps</i>" + PERF_MEDIUM, "Visual")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.CUSTOMSTRINGFORMAT", "STRINGS.UI.TOOLTIPS.FASTTRACK.CUSTOMSTRINGFORMAT", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_VISUAL")]
 		[JsonProperty]
 		public bool CustomStringFormat { get; set; }
 
-		[Option("Threaded Tile Updates", "Multi-threads updates to most tile textures." + PERF_HIGH, "Visual")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.REDUCETILEUPDATES", "STRINGS.UI.TOOLTIPS.FASTTRACK.REDUCETILEUPDATES", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_VISUAL")]
 		[JsonProperty]
 		public bool ReduceTileUpdates { get; set; }
 
-		[Option("Use Mesh Renderers", "Use faster mesh renderers instead of redrawing\nevery frame for these graphics." + PERF_MEDIUM, "Visual")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.MESHRENDEREROPTIONS", "STRINGS.UI.TOOLTIPS.FASTTRACK.MESHRENDEREROPTIONS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_VISUAL")]
 		[JsonProperty]
 		public MeshRendererSettings MeshRendererOptions { get; set; }
 
-		[Option("Virtual Scroll", "Improves the speed of scrolling menus." + PERF_MEDIUM, "Visual")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.VIRTUALSCROLL", "STRINGS.UI.TOOLTIPS.FASTTRACK.VIRTUALSCROLL", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_VISUAL")]
 		[JsonProperty]
 		public bool VirtualScroll { get; set; }
 
-		[Option("Log Debug Metrics", "Logs extra debug information to the game log.\n\n<b>Only use this option if directed to do so by a developer.</b>", "Debug")]
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.METRICS", "STRINGS.UI.TOOLTIPS.FASTTRACK.METRICS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DEBUG")]
 		[JsonProperty]
 		public bool Metrics { get; set; }
 
@@ -226,6 +223,7 @@ namespace PeterHan.FastTrack {
 			AllocOpts = true;
 			AnimOpts = true;
 			AsyncPathProbe = true;
+			BackgroundRoomRebuild = true;
 			CachePaths = true;
 			ConduitOpts = false;
 			CritterConsumers = true;

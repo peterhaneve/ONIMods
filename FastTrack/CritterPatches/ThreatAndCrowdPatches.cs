@@ -148,6 +148,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 				KPrefabID prefabID) {
 			CavityInfo room = smi.cavity, newRoom = Game.Instance.roomProber?.GetCavityForCell(
 				Grid.PosToCell(smi.transform.position));
+			bool background = FastTrackOptions.Instance.BackgroundRoomRebuild;
 			prefabID.UpdateTagBits();
 			if (newRoom != room) {
 				bool isEgg = prefabID.HasAnyTags_AssumeLaundered(ref EGG), light =
@@ -160,8 +161,12 @@ namespace PeterHan.FastTrack.CritterPatches {
 						room.eggs.Remove(prefabID);
 					else
 						room.creatures.Remove(prefabID);
-					if (light)
-						Game.Instance.roomProber.UpdateRoom(room);
+					if (light) {
+						if (background)
+							GamePatches.BackgroundRoomProber.Instance.UpdateRoom(room);
+						else
+							Game.Instance.roomProber.UpdateRoom(room);
+					}
 				}
 				smi.cavity = newRoom;
 				if (newRoom != null) {
@@ -169,8 +174,12 @@ namespace PeterHan.FastTrack.CritterPatches {
 						newRoom.eggs.Add(prefabID);
 					else
 						newRoom.creatures.Add(prefabID);
-					if (light)
-						Game.Instance.roomProber.UpdateRoom(newRoom);
+					if (light) {
+						if (background)
+							GamePatches.BackgroundRoomProber.Instance.UpdateRoom(newRoom);
+						else
+							Game.Instance.roomProber.UpdateRoom(newRoom);
+					}
 				}
 			}
 			return newRoom;

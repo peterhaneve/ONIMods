@@ -20,6 +20,7 @@ using HarmonyLib;
 using KMod;
 using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
 using System;
@@ -40,7 +41,6 @@ namespace PeterHan.FastTrack {
 			harmony.Profile(typeof(Game), nameof(Game.UnsafeSim200ms));
 			harmony.Profile(typeof(ConduitFlow), nameof(ConduitFlow.Sim200ms));
 			harmony.Profile(typeof(EnergySim), nameof(EnergySim.EnergySim200ms));
-			harmony.Profile(typeof(CircuitManager), nameof(CircuitManager.Sim200msLast));
 		}
 #endif
 
@@ -75,6 +75,8 @@ namespace PeterHan.FastTrack {
 		[PLibMethod(RunAt.AfterDbInit)]
 		internal static void AfterDbInit() {
 			var options = FastTrackOptions.Instance;
+			if (options.BackgroundRoomRebuild)
+				GamePatches.BackgroundRoomProber.Init();
 			if (options.ThreatOvercrowding)
 				CritterPatches.OvercrowdingMonitor_UpdateState_Patch.InitTagBits();
 			if (options.RadiationOpts)
@@ -162,6 +164,33 @@ namespace PeterHan.FastTrack {
 			onWorldGenLoad.Set();
 		}
 
+		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
+			const string ASDF = "Bugs.AutosaveDragFix";
+			const string PACU_SAYS_NO = "Bugs.TropicalPacuRooms";
+			var options = FastTrackOptions.Instance;
+			base.OnAllModsLoaded(harmony, mods);
+			if (options.MeshRendererOptions == FastTrackOptions.MeshRendererSettings.All &&
+					mods != null)
+				CheckTileCompat(harmony, mods);
+			// Die pacu bug die
+			if (options.AllocOpts && !PRegistry.GetData<bool>(PACU_SAYS_NO)) {
+				GamePatches.DecorProviderRefreshFix.ApplyPatch(harmony);
+				PRegistry.PutData(PACU_SAYS_NO, true);
+			}
+			if (options.FastUpdatePickups)
+				CheckFetchCompat(harmony);
+			if (!PRegistry.GetData<bool>(ASDF)) {
+				// Fix the annoying autosave bug
+				harmony.Patch(typeof(Timelapser), "SaveScreenshot", postfix: new HarmonyMethod(
+					typeof(FastTrackMod), nameof(FastTrackMod.FixTimeLapseDrag)));
+				PRegistry.PutData(ASDF, true);
+			}
+			if (options.FastReachability)
+				GamePatches.FastCellChangeMonitor.CreateInstance();
+			// Fix those world strings
+			UIPatches.FormatStringPatches.ApplyPatch(harmony);
+		}
+
 		/// <summary>
 		/// Cleans up the mod caches after the game ends.
 		/// </summary>
@@ -210,6 +239,8 @@ namespace PeterHan.FastTrack {
 				UIPatches.DetailsPanelWrapper.Cleanup();
 				UIPatches.VitalsPanelWrapper.Cleanup();
 			}
+			if (options.BackgroundRoomRebuild)
+				GamePatches.BackgroundRoomProber.DestroyInstance();
 			AsyncJobManager.DestroyInstance();
 			if (options.CustomStringFormat)
 				UIPatches.FormatStringPatches.DumpStringFormatterCaches();
@@ -229,6 +260,48 @@ namespace PeterHan.FastTrack {
 				Util.ApplyInvariantCultureToThread(thread);
 				thread.Start();
 			}
+		}
+
+		public override void OnLoad(Harmony harmony) {
+			base.OnLoad(harmony);
+			var options = FastTrackOptions.Instance;
+			onWorldGenLoad.Reset();
+			PUtil.InitLibrary();
+			LocString.CreateLocStringKeys(typeof(FastTrackStrings.UI));
+			new PLocalization().Register();
+			new POptions().RegisterOptions(this, typeof(FastTrackOptions));
+			new PPatchManager(harmony).RegisterPatchClass(typeof(FastTrackMod));
+			new PVersionCheck().Register(this, new SteamVersionChecker());
+			// In case this goes in stock bug fix later
+			if (options.UnstackLights)
+				PRegistry.PutData("Bugs.StackedLights", true);
+			PRegistry.PutData("Bugs.AnimFree", true);
+			PRegistry.PutData("Bugs.MassStringsReadOnly", true);
+			if (options.MiscOpts)
+				PRegistry.PutData("Bugs.ElementTagInDetailsScreen", true);
+			// This patch is Windows only apparently
+			var target = typeof(Global).GetMethodSafe(nameof(Global.TestDataLocations), false);
+			if (options.MiscOpts && target != null && typeof(Global).GetFieldSafe(
+					nameof(Global.saveFolderTestResult), true) != null) {
+				harmony.Patch(target, prefix: new HarmonyMethod(typeof(FastTrackMod),
+					nameof(RemoveTestDataLocations)));
+#if DEBUG
+				PUtil.LogDebug("Patched Global.TestDataLocations");
+#endif
+			} else
+				PUtil.LogDebug("Skipping TestDataLocations patch");
+			// Another potentially Windows only patch
+			target = typeof(Game).Assembly.GetType(nameof(InitializeCheck), false)?.
+				GetMethodSafe(nameof(InitializeCheck.CheckForSavePathIssue), false);
+			if (options.MiscOpts && target != null) {
+				harmony.Patch(target, prefix: new HarmonyMethod(typeof(FastTrackMod),
+					nameof(SkipInitCheck)));
+#if DEBUG
+				PUtil.LogDebug("Patched InitializeCheck.Awake");
+#endif
+			} else
+				PUtil.LogDebug("Skipping InitializeCheck patch");
+			GameRunning = false;
 		}
 
 		/// <summary>
@@ -264,6 +337,8 @@ namespace PeterHan.FastTrack {
 			if (inst != null) {
 				var go = inst.gameObject;
 				go.AddOrGet<AsyncJobManager>();
+				if (options.BackgroundRoomRebuild)
+					go.AddOrGet<GamePatches.BackgroundRoomProber>();
 				if (options.ReduceSoundUpdates && !options.DisableSound)
 					go.AddOrGet<SoundUpdater>();
 				if (options.ParallelInventory)
@@ -289,73 +364,6 @@ namespace PeterHan.FastTrack {
 #if DEBUG
 			Metrics.FastTrackProfiler.Begin();
 #endif
-		}
-
-		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
-			const string ASDF = "Bugs.AutosaveDragFix";
-			const string PACU_SAYS_NO = "Bugs.TropicalPacuRooms";
-			var options = FastTrackOptions.Instance;
-			base.OnAllModsLoaded(harmony, mods);
-			if (options.MeshRendererOptions == FastTrackOptions.MeshRendererSettings.All &&
-					mods != null)
-				CheckTileCompat(harmony, mods);
-			// Die pacu bug die
-			if (options.AllocOpts && !PRegistry.GetData<bool>(PACU_SAYS_NO)) {
-				GamePatches.DecorProviderRefreshFix.ApplyPatch(harmony);
-				PRegistry.PutData(PACU_SAYS_NO, true);
-			}
-			if (options.FastUpdatePickups)
-				CheckFetchCompat(harmony);
-			if (!PRegistry.GetData<bool>(ASDF)) {
-				// Fix the annoying autosave bug
-				harmony.Patch(typeof(Timelapser), "SaveScreenshot", postfix: new HarmonyMethod(
-					typeof(FastTrackMod), nameof(FastTrackMod.FixTimeLapseDrag)));
-				PRegistry.PutData(ASDF, true);
-			}
-			if (options.FastReachability)
-				GamePatches.FastCellChangeMonitor.CreateInstance();
-			// Fix those world strings
-			UIPatches.FormatStringPatches.ApplyPatch(harmony);
-		}
-
-		public override void OnLoad(Harmony harmony) {
-			base.OnLoad(harmony);
-			var options = FastTrackOptions.Instance;
-			onWorldGenLoad.Reset();
-			PUtil.InitLibrary();
-			new POptions().RegisterOptions(this, typeof(FastTrackOptions));
-			new PPatchManager(harmony).RegisterPatchClass(typeof(FastTrackMod));
-			new PVersionCheck().Register(this, new SteamVersionChecker());
-			// In case this goes in stock bug fix later
-			if (options.UnstackLights)
-				PRegistry.PutData("Bugs.StackedLights", true);
-			PRegistry.PutData("Bugs.AnimFree", true);
-			PRegistry.PutData("Bugs.MassStringsReadOnly", true);
-			if (options.MiscOpts)
-				PRegistry.PutData("Bugs.ElementTagInDetailsScreen", true);
-			// This patch is Windows only apparently
-			var target = typeof(Global).GetMethodSafe(nameof(Global.TestDataLocations), false);
-			if (options.MiscOpts && target != null && typeof(Global).GetFieldSafe(
-					nameof(Global.saveFolderTestResult), true) != null) {
-				harmony.Patch(target, prefix: new HarmonyMethod(typeof(FastTrackMod),
-					nameof(RemoveTestDataLocations)));
-#if DEBUG
-				PUtil.LogDebug("Patched Global.TestDataLocations");
-#endif
-			} else
-				PUtil.LogDebug("Skipping TestDataLocations patch");
-			// Another potentially Windows only patch
-			target = typeof(Game).Assembly.GetType(nameof(InitializeCheck), false)?.
-				GetMethodSafe(nameof(InitializeCheck.CheckForSavePathIssue), false);
-			if (options.MiscOpts && target != null) {
-				harmony.Patch(target, prefix: new HarmonyMethod(typeof(FastTrackMod),
-					nameof(SkipInitCheck)));
-#if DEBUG
-				PUtil.LogDebug("Patched InitializeCheck.Awake");
-#endif
-			} else
-				PUtil.LogDebug("Skipping InitializeCheck patch");
-			GameRunning = false;
 		}
 
 		/// <summary>

@@ -81,8 +81,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied after OnPrefabInit runs.
 		/// </summary>
-		private static void OnPrefabInit_Postfix() {
-			TileMeshRenderer.CreateInstance();
+		private static void OnPrefabInit_Postfix(World __instance) {
+			TileMeshRenderer.CreateInstance(__instance.blockTileRenderer);
 		}
 
 		/// <summary>

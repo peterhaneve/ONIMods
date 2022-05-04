@@ -78,7 +78,12 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="prober">The current room prober.</param>
 		/// <param name="cell">The cell of the room that will be updated.</param>
 		private static void SolidNotChangedEvent(RoomProber prober, int cell, bool _) {
-			if (prober != null) {
+			if (FastTrackOptions.Instance.BackgroundRoomRebuild) {
+				var inst = BackgroundRoomProber.Instance;
+				var cavity = inst.GetCavityForCell(cell);
+				if (cavity != null)
+					inst.UpdateRoom(cavity);
+			} else if (prober != null) {
 				var cavity = prober.GetCavityForCell(cell);
 				if (cavity != null)
 					prober.UpdateRoom(cavity);
