@@ -380,6 +380,11 @@ namespace PeterHan.FastTrack.GamePatches {
 			// initial init in thread
 			while (solidChanges.TryDequeue(out _)) ;
 			roomProberThread.Start();
+			// Try to remove the original room prober completely
+			var inst = SimAndRenderScheduler.instance;
+			var gi = Game.Instance;
+			if (inst != null && gi != null)
+				inst.Remove(gi.roomProber);
 		}
 
 		/// <summary>
@@ -593,10 +598,11 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// </summary>
 			internal static bool Prefix(int cell, ref CavityInfo __result) {
 				var inst = Instance;
-				bool run = inst == null;
-				if (!run)
+				if (inst != null)
 					__result = inst.GetCavityForCell(cell);
-				return run;
+				else
+					__result = null;
+				return false;
 			}
 		}
 
@@ -612,11 +618,8 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// Applied before OnBuildingsChanged runs.
 			/// </summary>
 			internal static bool Prefix(int cell) {
-				var inst = Instance;
-				bool run = inst == null;
-				if (!run)
-					inst.QueueBuildingChange(cell);
-				return run;
+				Instance?.QueueBuildingChange(cell);
+				return false;
 			}
 		}
 
@@ -631,11 +634,23 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// Applied before Refresh runs.
 			/// </summary>
 			internal static bool Prefix() {
-				var inst = Instance;
-				bool run = inst == null;
-				if (!run)
-					inst.Refresh();
-				return run;
+				Instance?.Refresh();
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Applied to RoomProber to shut off its original Sim1000ms method.
+		/// </summary>
+		[HarmonyPatch(typeof(RoomProber), nameof(RoomProber.Sim1000ms))]
+		internal static class Sim1000ms_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.BackgroundRoomRebuild;
+
+			/// <summary>
+			/// Applied before Sim1000ms runs.
+			/// </summary>
+			internal static bool Prefix() {
+				return false;
 			}
 		}
 
@@ -651,11 +666,9 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// Applied before SolidChangedEvent runs.
 			/// </summary>
 			internal static bool Prefix(int cell, bool ignoreDoors) {
-				var inst = Instance;
-				bool run = inst == null;
-				if (!run && !ignoreDoors && !Grid.HasDoor[cell])
-					inst.QueueSolidChange(cell);
-				return run;
+				if (!ignoreDoors && !Grid.HasDoor[cell])
+					Instance?.QueueSolidChange(cell);
+				return false;
 			}
 		}
 
@@ -670,11 +683,8 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// Applied before UpdateRoom runs.
 			/// </summary>
 			internal static bool Prefix(CavityInfo cavity) {
-				var inst = Instance;
-				bool run = inst == null;
-				if (!run)
-					inst.UpdateRoom(cavity);
-				return run;
+				Instance?.UpdateRoom(cavity);
+				return false;
 			}
 		}
 	}

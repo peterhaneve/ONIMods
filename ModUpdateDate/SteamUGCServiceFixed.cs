@@ -201,6 +201,7 @@ namespace PeterHan.ModUpdateDate {
 			var toUpdate = HashSetPool<PublishedFileId_t, SteamUGCServiceFixed>.Allocate();
 			var loadPreviews = ListPool<SteamUGCService.Mod, SteamUGCServiceFixed>.Allocate();
 			bool idle;
+			int n = clients.Count;
 			// Mass request the details of all mods at once
 			foreach (var pair in allMods) {
 				var mod = pair.Value;
@@ -219,7 +220,8 @@ namespace PeterHan.ModUpdateDate {
 						toUpdate.Add(id);
 					else
 						toAdd.Add(id);
-					mod.clientSeen = true;
+					if (n > 0)
+						mod.clientSeen = true;
 					mod.state = SteamModState.Subscribed;
 					break;
 				default:
@@ -245,7 +247,8 @@ namespace PeterHan.ModUpdateDate {
 							toUpdate.Add(id);
 						else
 							toAdd.Add(id);
-						mod.clientSeen = true;
+						if (n > 0)
+							mod.clientSeen = true;
 						mod.state = SteamModState.Subscribed;
 					}
 				}
@@ -253,8 +256,8 @@ namespace PeterHan.ModUpdateDate {
 					Count > 0) {
 				firstEvent = true;
 				// Event needs to be triggered
-				foreach (var client in clients)
-					client.UpdateMods(toAdd, toUpdate, toRemove, loadPreviews);
+				for (int i = 0; i < n; i++)
+					clients[i].UpdateMods(toAdd, toUpdate, toRemove, loadPreviews);
 			}
 			// Actually destroy all pending destroy mods
 			foreach (var id in toRemove)
