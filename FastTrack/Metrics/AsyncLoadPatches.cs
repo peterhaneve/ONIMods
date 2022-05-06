@@ -32,78 +32,19 @@ namespace PeterHan.FastTrack.Metrics {
 	/// </summary>
 	public static class AsyncLoadPatches {
 		/// <summary>
-		/// Triggered when the anims are loaded.
-		/// </summary>
-		private static readonly EventWaitHandle animsDone = new AutoResetEvent(false);
-
-		/// <summary>
-		/// Loads the anims on a background thread.
-		/// </summary>
-		private static void AsyncLoadAnims() {
-#if DEBUG
-			PUtil.LogDebug("Loading anims on thread " + Thread.CurrentThread.ManagedThreadId);
-#endif
-			try {
-				KAnimGroupFile.LoadAll();
-				KAnimBatchManager.Instance().CompleteInit();
-			} catch (Exception e) {
-				DebugUtil.LogException(Assets.instance, e.Message, e);
-			}
-			animsDone.Set();
-			LoadGameHashes();
-		}
-
-		/// <summary>
-		/// Loads the codex on a background thread.
-		/// </summary>
-		private static void AsyncLoadCodex() {
-			var loadCodexTask = new Thread(LoadCodex) {
-				Name = "Read and Parse Codex", IsBackground = true, Priority = ThreadPriority.
-				BelowNormal, CurrentCulture = Thread.CurrentThread.CurrentCulture
-			};
-#if DEBUG
-			PUtil.LogDebug("Async loading codex cache");
-#endif
-			loadCodexTask.Start();
-		}
-
-		/// <summary>
-		/// Loads up the anims in a thread.
-		/// </summary>
-		private static void LoadAnims() {
-			var loadAnimsTask = new Thread(AsyncLoadAnims) {
-				Name = "Load and Parse Anims", IsBackground = true, Priority =
-				ThreadPriority.Normal, CurrentCulture = Thread.CurrentThread.CurrentCulture
-			};
-			animsDone.Reset();
-			Thread.MemoryBarrier();
-			loadAnimsTask.Start();
-		}
-
-		/// <summary>
-		/// Loads the codex on a background thread, logging any errors.
-		/// </summary>
-		private static void LoadCodex() {
-			try {
-				CodexCache.CodexCacheInit();
-			} catch (Exception e) {
-				DebugUtil.LogException(Global.Instance, e.Message, e);
-			}
-		}
-
-		/// <summary>
 		/// Warms up the game hash cache. This is run every load for some reason...
 		/// </summary>
 		private static void LoadGameHashes() {
+			var cache = HashCache.Get();
 			foreach (object gh in Enum.GetValues(typeof(GameHashes)))
 				if (gh is GameHashes hash)
-					HashCache.Get().Add((int)hash, hash.ToString());
+					cache.Add((int)hash, hash.ToString());
 			foreach (object uh in Enum.GetValues(typeof(UtilHashes)))
 				if (uh is UtilHashes hash)
-					HashCache.Get().Add((int)hash, hash.ToString());
+					cache.Add((int)hash, hash.ToString());
 			foreach (object ih in Enum.GetValues(typeof(UIHashes)))
 				if (ih is UIHashes hash)
-					HashCache.Get().Add((int)hash, hash.ToString());
+					cache.Add((int)hash, hash.ToString());
 		}
 
 		/// <summary>
@@ -138,52 +79,7 @@ namespace PeterHan.FastTrack.Metrics {
 				GlobalJobManager.Run(jobs);
 			}
 			collectedLoaders.Clear();
-		}
-
-		/// <summary>
-		/// Applied to Assets to load anims on the background. This runs before the second
-		/// patch, so do not wait for the substance list hookup as that happens later.
-		/// </summary>
-		[HarmonyPatch(typeof(Assets), nameof(Assets.LoadAnims))]
-		internal static class LoadAnims_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.LoadOpts;
-
-			/// <summary>
-			/// Transpiles LoadAnims to start up anim loading in the background.
-			/// </summary>
-			internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-				return PPatchTools.ReplaceMethodCallSafe(instructions, new Dictionary<MethodInfo,
-						MethodInfo>() {
-					{
-						typeof(KAnimGroupFile).GetMethodSafe(nameof(KAnimGroupFile.LoadAll),
-							true),
-						typeof(AsyncLoadPatches).GetMethodSafe(nameof(LoadAnims), true)
-					},
-					{
-						typeof(KAnimBatchManager).GetMethodSafe(nameof(KAnimBatchManager.
-							CompleteInit), false),
-						PPatchTools.RemoveCall
-					}
-				});
-			}
-		}
-
-		/// <summary>
-		/// Applied to ManagementMenu to start loading the codex cache in the background to
-		/// speed up game loads.
-		/// </summary>
-		[HarmonyPatch(typeof(ManagementMenu), nameof(ManagementMenu.OnPrefabInit))]
-		internal static class OnPrefabInit_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.LoadOpts;
-
-			/// <summary>
-			/// Transpiles OnPrefabInit to remove slow method calls.
-			/// </summary>
-			internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-				return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(CodexCache).
-					GetMethodSafe(nameof(CodexCache.CodexCacheInit), true),
-					typeof(AsyncLoadPatches).GetMethodSafe(nameof(AsyncLoadCodex), true));
-			}
+			LoadGameHashes();
 		}
 
 		/// <summary>
@@ -192,6 +88,8 @@ namespace PeterHan.FastTrack.Metrics {
 		/// </summary>
 		[HarmonyPatch]
 		internal class Run_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.LoadOpts;
+
 			/// <summary>
 			/// Target a specific generic instance.
 			/// </summary>
@@ -206,27 +104,6 @@ namespace PeterHan.FastTrack.Metrics {
 			internal static bool Prefix() {
 				QuickAsyncLoad();
 				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to Assets to join up the anim loading task after elements load.
-		/// </summary>
-		[HarmonyPatch(typeof(Assets), nameof(Assets.SubstanceListHookup))]
-		internal static class SubstanceListHookup_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.LoadOpts;
-
-			/// <summary>
-			/// Applied after SubstanceListHookup runs.
-			/// </summary>
-			[HarmonyPriority(Priority.Low)]
-			internal static void Postfix() {
-				if (!animsDone.WaitOne())
-					PUtil.LogWarning("Anim loading did not complete within the timeout!");
-#if DEBUG
-				else
-					PUtil.LogDebug("Anim loading complete");
-#endif
 			}
 		}
 	}

@@ -254,7 +254,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <param name="prober">The path prober making the update.</param>
 		private static void EndUpdate(PathGrid grid, bool isComplete, PathProber prober) {
 			grid.isUpdating = false;
-			int sn = grid.serialNo;
+			short sn = grid.serialNo;
 			var gp = grid.groupProber;
 			var inst = SensorPatches.FastGroupProber.Instance;
 			if (gp != null) {

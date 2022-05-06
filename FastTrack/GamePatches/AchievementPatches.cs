@@ -189,6 +189,8 @@ namespace PeterHan.FastTrack.GamePatches {
 	[HarmonyPatch(typeof(AtLeastOneBuildingForEachDupe), nameof(AtLeastOneBuildingForEachDupe.
 		Success))]
 	public static class AtLeastOneBuildingForEachDupe_Success_Patch {
+		private static readonly Tag OUTHOUSE_TAG = new Tag(OuthouseConfig.ID);
+
 		internal static bool Prepare() => AchievementPatches.ShouldRun();
 
 		/// <summary>
@@ -199,15 +201,16 @@ namespace PeterHan.FastTrack.GamePatches {
 			int dupeCount = Components.LiveMinionIdentities.Items.Count;
 			bool success = false;
 			if (dupeCount > 0) {
+				var items = Components.BasicBuildings.Items;
 				// You need at least one Duplicant
-				int buildingCount = 0;
+				int buildingCount = 0, n = items.Count;
 				var validTypes = __instance.validBuildingTypes;
 				// For the toilet achievement, there need be only one
-				if (validTypes.Contains(TagManager.Create(OuthouseConfig.ID)))
+				if (validTypes.Contains(OUTHOUSE_TAG))
 					dupeCount = 1;
-				foreach (var building in Components.BasicBuildings.Items)
+				for (int i = 0; i < n; i++)
 					// The building types list is only ever 2 elements long
-					if (building.transform.TryGetComponent(out KPrefabID id) && validTypes.
+					if (items[i].transform.TryGetComponent(out KPrefabID id) && validTypes.
 							Contains(id.PrefabTag)) {
 						buildingCount++;
 						if (buildingCount >= dupeCount) {
@@ -320,9 +323,10 @@ namespace PeterHan.FastTrack.GamePatches {
 			bool cont = inst == null || types == null;
 			if (!cont) {
 				var hatched = inst.crittersHatched;
+				int n = types.Count;
 				__result = false;
-				foreach (var targetTag in types)
-					if (hatched.Contains(targetTag)) {
+				for (int i = 0; i < n; i++)
+					if (hatched.Contains(types[i])) {
 						__result = true;
 						break;
 					}
@@ -407,10 +411,12 @@ namespace PeterHan.FastTrack.GamePatches {
 				ref bool __result) {
 			float total = 0f;
 			var disallow = HashSetPool<Tag, ProduceXEngeryWithoutUsingYList>.Allocate();
+			var dbl = __instance.disallowedBuildings;
+			int n = dbl.Count;
 			// Set is faster than a List here, as the test is expected to fail most times if
 			// this achievement is still achievable
-			foreach (var tag in __instance.disallowedBuildings)
-				disallow.Add(tag);
+			for (int i = 0; i < n; i++)
+				disallow.Add(dbl[i]);
 			foreach (var pair in Game.Instance.savedInfo.powerCreatedbyGeneratorType)
 				if (!disallow.Contains(pair.Key))
 					total += pair.Value;

@@ -24,20 +24,6 @@ using KAnimBatchTextureCache = KAnimBatchGroup.KAnimBatchTextureCache;
 
 namespace PeterHan.FastTrack.VisualPatches {
 	/// <summary>
-	/// Applied to KAnimBatch to... actually clear the dirty flag when it updates.
-	/// Unfortunately most anims are marked dirty every frame anyways.
-	/// </summary>
-	[HarmonyPatch(typeof(KAnimBatch), "ClearDirty")]
-	public static class KAnimBatch_ClearDirty_Patch {
-		/// <summary>
-		/// Applied after ClearDirty runs.
-		/// </summary>
-		internal static void Postfix(ref bool ___needsWrite) {
-			___needsWrite = false;
-		}
-	}
-
-	/// <summary>
 	/// Applied to KAnimBatch to be a little smarter when deregistering anims about what to
 	/// mark dirty.
 	/// </summary>
@@ -57,8 +43,9 @@ namespace PeterHan.FastTrack.VisualPatches {
 				var controllers = __instance.controllers;
 				var dirtySet = __instance.dirtySet;
 				var bs = __instance.batchset;
+				var dataTex = __instance.dataTex;
 				// All the other anims above it need to be marked dirty
-				float[] data = __instance.dataTex.floats;
+				var data = dataTex.GetFloatDataPointer();
 				int end = Math.Max(0, __instance.currentOffset - VERTICES), n;
 				controller.SetBatch(null);
 				controllers.RemoveAt(index);
@@ -85,6 +72,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 				// Invalidate the data beyond the end
 				for (int i = 0; i < VERTICES; i++)
 					data[end + i] = -1f;
+				dataTex.Apply();
 				__instance.currentOffset = end;
 				// If this was the last item, destroy the texture
 				if (n <= 0) {
@@ -115,7 +103,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 				var controllersToIndex = __instance.controllersToIdx;
 				// Create the texture if it is null
 				var tex = __instance.dataTex;
-				if (tex == null || tex.floats.Length < 1)
+				if (tex == null || !__instance.isSetup)
 					__instance.Init();
 				// If already present [how is this possible?], just mark it dirty
 				if (controllersToIndex.TryGetValue(controller, out int index)) {
@@ -156,29 +144,32 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		internal static bool Prefix(ref int __result, KAnimBatch __instance) {
 			int updated = 0;
-			//Metrics.DebugMetrics.LogCondition("batchDirty", __instance.needsWrite);
 			if (__instance.needsWrite) {
 				bool symbolDirty = false, overrideDirty = false;
 				var controllers = __instance.controllers;
 				var dirtySet = __instance.dirtySet;
 				// Create the texture if it is null
 				var tex = __instance.dataTex;
-				if (tex == null || tex.floats.Length == 0) {
+				if (tex == null || !__instance.isSetup) {
 					__instance.Init();
 					tex = __instance.dataTex;
 				}
+				var dataTexData = tex.GetDataPointer();
 				var overrideTex = __instance.symbolOverrideInfoTex;
+				var symbolTex = __instance.symbolInstanceTex;
+				var symbolInstanceTexData = symbolTex.GetDataPointer();
 				foreach (int index in dirtySet) {
 					var converter = controllers[index];
 					if (converter is UnityEngine.Object obj && obj != null) {
 						// Update the textures; they are different over 90% of the time, so
 						// almost no gain from checking if actually dirty
-						__instance.WriteBatchedAnimInstanceData(index, converter);
-						symbolDirty |= __instance.WriteSymbolInstanceData(index, converter);
+						__instance.WriteBatchedAnimInstanceData(index, converter, dataTexData);
+						symbolDirty |= __instance.WriteSymbolInstanceData(index, converter,
+							symbolInstanceTexData);
 						if (converter.ApplySymbolOverrides()) {
 							overrideTex = SetupOverride(__instance, overrideTex);
 							overrideDirty |= __instance.WriteSymbolOverrideInfoTex(index,
-								converter);
+								converter, overrideTex.GetDataPointer());
 						}
 						updated++;
 					}
@@ -186,17 +177,11 @@ namespace PeterHan.FastTrack.VisualPatches {
 				dirtySet.Clear();
 				__instance.needsWrite = false;
 				// Write any dirty textures
-				tex.LoadRawTextureData();
 				tex.Apply();
-				if (symbolDirty) {
-					var symbolTex = __instance.symbolInstanceTex;
-					symbolTex.LoadRawTextureData();
+				if (symbolDirty)
 					symbolTex.Apply();
-				}
-				if (overrideDirty) {
-					overrideTex.LoadRawTextureData();
+				if (overrideDirty)
 					overrideTex.Apply();
-				}
 				// Update those mesh renderers too
 				if (updated > 0 && FastTrackOptions.Instance.MeshRendererOptions !=
 						FastTrackOptions.MeshRendererSettings.None)

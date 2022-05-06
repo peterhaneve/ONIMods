@@ -27,33 +27,6 @@ using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeI
 
 namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
-	/// Applied to InterfaceTool to get rid of an expensive raycast for UI elements.
-	/// </summary>
-	[HarmonyPatch(typeof(InterfaceTool), nameof(InterfaceTool.ShowHoverUI))]
-	public static class InterfaceTool_ShowHoverUI_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastRaycast;
-
-		/// <summary>
-		/// Applied before ShowHoverUI runs.
-		/// </summary>
-		internal static bool Prefix(ref bool __result) {
-			var pos = KInputManager.GetMousePos();
-			var worldPos = Camera.main.ScreenToWorldPoint(pos);
-			__result = false;
-			// Check for trivial false cases
-			if (OverlayScreen.Instance != null && worldPos.x >= 0.0f && worldPos.x <= Grid.
-					WidthInMeters && worldPos.y >= 0.0f && worldPos.y <= Grid.HeightInMeters &&
-					ClusterManager.Instance.IsPositionInActiveWorld(worldPos)) {
-				var es = UnityEngine.EventSystems.EventSystem.current;
-				if (es != null)
-					// Consult the Unity system which did this raycast already
-					__result = !es.IsPointerOverGameObject();
-			}
-			return false;
-		}
-	}
-
-	/// <summary>
 	/// Applied to KChildFitter to add an updater to fit it only on layout changes.
 	/// </summary>
 	[HarmonyPatch(typeof(KChildFitter), nameof(KChildFitter.Awake))]

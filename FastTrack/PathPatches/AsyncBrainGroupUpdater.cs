@@ -259,7 +259,7 @@ namespace PeterHan.FastTrack.PathPatches {
 					if (fetchChore.driver == null && (fetchChore.automatable == null ||
 							!fetchChore.automatable.GetAutomationOnly()) && (destination =
 							fetchChore.destination) != null && (cost = navigator.
-							GetNavigationCost(destination)) >= 0)
+							GetNavigationCostNU(destination)) >= 0)
 						fetches.Add(new Fetch {
 							category = destination.fetchCategory, chore = fetchChore,
 							cost = cost, priority = fetchChore.masterPriority, tagBitsHash =

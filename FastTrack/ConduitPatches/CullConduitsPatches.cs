@@ -108,24 +108,6 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	}
 
 	/// <summary>
-	/// Applied to KAnimGraphTileVisualizer to hide anything visualized with this component
-	/// when inside a solid tile. Currently all conduits and travel tubes use this.
-	/// </summary>
-	[HarmonyPatch(typeof(KAnimGraphTileVisualizer), nameof(KAnimGraphTileVisualizer.Refresh))]
-	public static class KAnimGraphTileVisualizer_Refresh_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.CullConduits;
-
-		/// <summary>
-		/// Applied before Refresh runs.
-		/// </summary>
-		internal static void Prefix(KAnimGraphTileVisualizer __instance) {
-			if (__instance != null && __instance.TryGetComponent(
-					out UpdateGraphIfEntombed updater))
-				updater.CheckVisible();
-		}
-	}
-
-	/// <summary>
 	/// Applied to SolidConduitFlowVisualizer to hide carts and items that are inside solid
 	/// tiles.
 	/// </summary>
@@ -282,6 +264,24 @@ namespace PeterHan.FastTrack.ConduitPatches {
 				// visible even inside any wall
 				__instance.gameObject.AddOrGet<UpdateGraphIfEntombed>().layer = building.Def.
 					TileLayer;
+		}
+	}
+
+	/// <summary>
+	/// Applied to KAnimGraphTileVisualizer to hide anything visualized with this component
+	/// when inside a solid tile. Currently all conduits and travel tubes use this.
+	/// </summary>
+	[HarmonyPatch(typeof(KAnimGraphTileVisualizer), nameof(KAnimGraphTileVisualizer.Refresh))]
+	public static class KAnimGraphTileVisualizer_Refresh_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.CullConduits;
+
+		/// <summary>
+		/// Applied before Refresh runs.
+		/// </summary>
+		internal static void Prefix(KAnimGraphTileVisualizer __instance) {
+			if (__instance != null && __instance.TryGetComponent(
+					out UpdateGraphIfEntombed updater))
+				updater.CheckVisible();
 		}
 	}
 

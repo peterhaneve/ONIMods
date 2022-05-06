@@ -88,48 +88,6 @@ namespace PeterHan.FastTrack.GamePatches {
 	}
 
 	/// <summary>
-	/// Applied to AnimEventManager to fix a bug where the anim indirection data list grows
-	/// without bound, consuming memory, causing GC pauses, and eventually crashing when it
-	/// overflows.
-	/// </summary>
-	[HarmonyPatch(typeof(AnimEventManager), nameof(AnimEventManager.StopAnim))]
-	public static class AnimEventManager_StopAnim_Patch {
-		/// <summary>
-		/// Transpiles StopAnim to throw away the event handle properly.
-		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			MethodInfo target = null, setData = null;
-			target = typeof(KCompactedVector<IndirectionData>).GetMethodSafe(nameof(
-				KCompactedVector<IndirectionData>.Free), false, typeof(HandleVector<int>.
-				Handle));
-			setData = typeof(KCompactedVector<IndirectionData>).GetMethodSafe(nameof(
-				KCompactedVector<IndirectionData>.SetData), false, typeof(HandleVector<int>.
-				Handle), typeof(IndirectionData));
-			if (target != null && setData != null)
-				foreach (var instr in instructions) {
-					if (instr.Is(OpCodes.Callvirt, setData)) {
-						// Remove "data"
-						yield return new CodeInstruction(OpCodes.Pop);
-						// Call Free
-						yield return new CodeInstruction(OpCodes.Callvirt, target);
-						// Pop the retval
-						instr.opcode = OpCodes.Pop;
-						instr.operand = null;
-#if DEBUG
-						PUtil.LogDebug("Patched AnimEventManager.StopAnim");
-#endif
-					}
-					yield return instr;
-				}
-			else {
-				PUtil.LogWarning("Unable to patch AnimEventManager.StopAnim");
-				foreach (var instr in instructions)
-					yield return instr;
-			}
-		}
-	}
-
-	/// <summary>
 	/// Applied to ClusterManager to reduce memory allocations when accessing
 	/// WorldContainers.
 	/// </summary>

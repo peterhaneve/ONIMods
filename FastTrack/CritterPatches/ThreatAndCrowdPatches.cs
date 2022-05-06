@@ -85,7 +85,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 					overcrowded = room != null && critters > 1 && room.numCells <
 						requiredSpace * critters;
 				cramped = room != null && eggs > 0 && room.numCells < (eggs + critters) *
-					requiredSpace;
+					requiredSpace && !smi.isBaby;
 			}
 			return overcrowded;
 		}
