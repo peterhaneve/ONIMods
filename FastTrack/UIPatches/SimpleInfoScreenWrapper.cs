@@ -539,10 +539,12 @@ namespace PeterHan.FastTrack.UIPatches {
 			descriptionContainer.descriptors.gameObject.SetActive(hasEffects);
 			if (hasEffects)
 				descriptionContainer.descriptors.SetDescriptors(effects);
-			descriptionContainer.description.SetText(descText);
-			descriptionContainer.flavour.SetText(flavorText);
-			sis.infoPanel.gameObject.SetActive(showInfo);
 			descriptionContainer.gameObject.SetActive(showInfo);
+			if (descText != null)
+				descriptionContainer.description.SetText(descText);
+			if (flavorText != null)
+				descriptionContainer.flavour.SetText(flavorText);
+			sis.infoPanel.gameObject.SetActive(showInfo);
 			descriptionContainer.flavour.gameObject.SetActive(!string.IsNullOrWhiteSpace(
 				flavorText));
 			storageParent.HeaderLabel.SetText((id != null) ? DETAILTABS.DETAILS.

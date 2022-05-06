@@ -29,14 +29,6 @@ namespace PeterHan.StockBugFix {
 	[RestartRequired]
 	public sealed class StockBugFixOptions : SingletonOptions<StockBugFixOptions> {
 		/// <summary>
-		/// If true, neutronium digging errands will be allowed. These will only ever complete
-		/// with the "Super Productive" trait active.
-		/// </summary>
-		[Option("Allow Neutronium Digging", "Allows Dig errands to be scheduled on Neutronium tiles.")]
-		[JsonProperty]
-		public bool AllowNeutroniumDig { get; set; }
-
-		/// <summary>
 		/// If true, tepidizer pulsing will be allowed to heat material past the intended
 		/// temperature. Some builds rely on this.
 		/// </summary>
@@ -66,7 +58,6 @@ namespace PeterHan.StockBugFix {
 		public StoreFoodCategory StoreFoodChoreType { get; set; }
 
 		public StockBugFixOptions() {
-			AllowNeutroniumDig = false;
 			AllowTepidizerPulsing = false;
 			FixOffsetTables = true;
 			FixOverheat = true;
@@ -74,8 +65,8 @@ namespace PeterHan.StockBugFix {
 		}
 
 		public override string ToString() {
-			return "StockBugFixOptions[allowNeutronium={1},allowTepidizer={2},fixOverheat={0},foodChoreType={3}]".F(
-				FixOverheat, AllowNeutroniumDig, AllowTepidizerPulsing, StoreFoodChoreType);
+			return "StockBugFixOptions[allowTepidizer={1},fixOverheat={0},foodChoreType={2},fixOffsets={3}]".F(
+				FixOverheat, AllowTepidizerPulsing, StoreFoodChoreType, FixOffsetTables);
 		}
 	}
 

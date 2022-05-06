@@ -55,21 +55,6 @@ namespace PeterHan.StockBugFix {
 			TraitsExclusionPatches.FixTraits();
 		}
 
-		[PLibMethod(RunAt.AfterModsLoad)]
-		internal static void FixDiggable(Harmony instance) {
-			const string BUG_KEY = "Bugs.DisableNeutroniumDig";
-			if (!StockBugFixOptions.Instance.AllowNeutroniumDig && !PRegistry.GetData<bool>(
-					BUG_KEY)) {
-#if DEBUG
-				PUtil.LogDebug("Disabling Neutronium digging");
-#endif
-				PRegistry.PutData(BUG_KEY, true);
-				instance.Patch(typeof(Diggable).GetMethodSafe("OnSolidChanged", false,
-					PPatchTools.AnyArguments), prefix: new HarmonyMethod(
-					typeof(StockBugsPatches), nameof(PrefixSolidChanged)));
-			}
-		}
-
 		/// <summary>
 		/// Retrieves the specified property setter.
 		/// </summary>
@@ -91,25 +76,6 @@ namespace PeterHan.StockBugFix {
 			GameObject go;
 			if (__instance != null && (go = __instance.gameObject) != null)
 				go.AddOrGet<QueuedModReporter>();
-		}
-
-		/// <summary>
-		/// Applied to Diggable to cancel the chore if neutronium digging is not allowed.
-		/// </summary>
-		internal static bool PrefixSolidChanged(Diggable __instance) {
-			GameObject go;
-			bool cont = true;
-			if (__instance != null && (go = __instance.gameObject) != null) {
-				int cell = Grid.PosToCell(go);
-				Element element;
-				// Immediately cancel dig chores placed on 255 hardness items
-				if (Grid.IsValidCell(cell) && (element = Grid.Element[cell]) != null &&
-						element.hardness > 254) {
-					go.Trigger((int)GameHashes.Cancel, null);
-					cont = false;
-				}
-			}
-			return cont;
 		}
 
 		/// <summary>
@@ -167,11 +133,9 @@ namespace PeterHan.StockBugFix {
 			pm.RegisterPatchClass(typeof(StockBugsPatches));
 			pm.RegisterPatchClass(typeof(SweepFixPatches));
 			FixModUpdateRace(instance);
-			PRegistry.PutData("Bugs.FishReleaseCount", true);
 			PRegistry.PutData("Bugs.TepidizerPulse", true);
 			PRegistry.PutData("Bugs.TraitExclusionSpacedOut", true);
 			PRegistry.PutData("Bugs.TropicalPacuRooms", true);
-			PRegistry.PutData("Bugs.JoyReactionFix", true);
 			PRegistry.PutData("Bugs.AutosaveDragFix", true);
 			new POptions().RegisterOptions(this, typeof(StockBugFixOptions));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
@@ -268,76 +232,6 @@ namespace PeterHan.StockBugFix {
 					yield return instr;
 			if (!patched)
 				PUtil.LogWarning("Unable to patch " + sig);
-		}
-	}
-
-	/// <summary>
-	/// Applied to ChoreTypes to bump the priority of overjoyed reactions.
-	/// </summary>
-	[HarmonyPatch]
-	public static class ChoreTypes_Add_Patch {
-		/// <summary>
-		/// Base divisor is 10000, so 6000/10000 = 0.6 priority.
-		/// The default -1 value means that the auto calculated priority value will be used.
-		/// </summary>
-		public const int JOY_PRIORITY_MOD = -1;
-
-		/// <summary>
-		/// Calculates the correct Add overload to patch.
-		/// </summary>
-		internal static MethodBase TargetMethod() {
-			var methods = typeof(ChoreTypes).GetMethods(BindingFlags.DeclaredOnly |
-				PPatchTools.BASE_FLAGS | BindingFlags.Instance);
-			foreach (var method in methods)
-				if (method.Name == nameof(ChoreTypes.Add))
-					return method;
-			PUtil.LogWarning("Unable to find ChoreTypes.Add method!");
-			return typeof(ChoreTypes).GetMethodSafe(nameof(ChoreTypes.Add), false,
-				PPatchTools.AnyArguments);
-		}
-
-		/// <summary>
-		/// Applied before Add runs.
-		/// </summary>
-		internal static void Prefix(string id, ref int explicit_priority) {
-			if (id == "JoyReaction") {
-				explicit_priority = JOY_PRIORITY_MOD;
-#if DEBUG
-				PUtil.LogDebug("Changed priority of {1} to {0:D}".F(JOY_PRIORITY_MOD, id));
-#endif
-			}
-		}
-	}
-
-	/// <summary>
-	/// Applied to CreatureDeliveryPoint to make the fish release critter count correct.
-	/// </summary>
-	[HarmonyPatch(typeof(CreatureDeliveryPoint), "RefreshCreatureCount")]
-	public static class CreatureDeliveryPoint_RefreshCreatureCount_Patch {
-		/// <summary>
-		/// Correctly moves the room check point of CreatureDeliveryPoint to match the place
-		/// where the critter spawns.
-		/// </summary>
-		/// <param name="deliveryPoint">The delivery point (fish release or dropoff).</param>
-		/// <returns>The location to check for critters.</returns>
-		private static int PosToCorrectedCell(KMonoBehaviour deliveryPoint) {
-			int cell = Grid.PosToCell(deliveryPoint);
-			if (deliveryPoint is CreatureDeliveryPoint cp) {
-				int fixedCell = Grid.OffsetCell(cell, cp.spawnOffset);
-				if (Grid.IsValidCell(fixedCell))
-					cell = fixedCell;
-			}
-			return cell;
-		}
-
-		/// <summary>
-		/// Transpiles RefreshCreatureCount to check the right tile for creatures.
-		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-			return PPatchTools.ReplaceMethodCallSafe(method, typeof(Grid).GetMethodSafe(
-				nameof(Grid.PosToCell), true, typeof(KMonoBehaviour)),
-				typeof(CreatureDeliveryPoint_RefreshCreatureCount_Patch).GetMethodSafe(
-				nameof(PosToCorrectedCell), true, typeof(KMonoBehaviour)));
 		}
 	}
 
@@ -469,35 +363,6 @@ namespace PeterHan.StockBugFix {
 	}
 
 	/// <summary>
-	/// Applied to FishFeeder to fix a race condition with refilling the feeder when the
-	/// Pacu eats the entire blob on the bottom of the feeder.
-	/// </summary>
-	[HarmonyPatch(typeof(FishFeeder), "OnStorageChange")]
-	public static class FishFeeder_OnStorageChange_Patch {
-		/// <summary>
-		/// A coroutine used to fix the fish feeder by waiting a frame before refilling it
-		/// after a Pacu eats.
-		/// </summary>
-		private static System.Collections.IEnumerator FishFeederFix(FishFeeder.Instance smi) {
-			yield return null;
-			if (smi != null && smi.gameObject != null) {
-				smi.fishFeederTop.RefreshStorage();
-				smi.fishFeederBot.RefreshStorage();
-			}
-		}
-
-		/// <summary>
-		/// Applied before OnStorageChange runs.
-		/// </summary>
-		internal static bool Prefix(FishFeeder.Instance smi, object data) {
-			if (data is GameObject go && go != null)
-				smi.Get<Storage>().StartCoroutine(FishFeederFix(smi));
-			// Stop the bugged original method from running at all
-			return false;
-		}
-	}
-
-	/// <summary>
 	/// Applied to FuelTank's property setter to properly update the chore when its
 	/// capacity is changed.
 	/// </summary>
@@ -536,32 +401,6 @@ namespace PeterHan.StockBugFix {
 			if (forge != null)
 				forge.outStorage.SetDefaultStoredItemModifiers(Storage.
 					StandardInsulatedStorage);
-		}
-	}
-
-	/// <summary>
-	/// Applied to GourmetCookingStationConfig to make the CO2 output in the right place.
-	/// </summary>
-	[HarmonyPatch(typeof(GourmetCookingStationConfig), nameof(GourmetCookingStationConfig.
-		ConfigureBuildingTemplate))]
-	public static class GourmetCookingStationConfig_ConfigureBuildingTemplate_Patch {
-		/// <summary>
-		/// Applied after ConfigureBuildingTemplate runs.
-		/// </summary>
-		internal static void Postfix(GameObject go) {
-			var elements = go.GetComponentSafe<ElementConverter>()?.outputElements;
-			if (elements != null) {
-				// ElementConverter.OutputElement is a struct!
-				int n = elements.Length;
-				for (int i = 0; i < n; i++) {
-					var outputElement = elements[i];
-					var offset = outputElement.outputElementOffset;
-					if (offset.y > 2.0f) {
-						outputElement.outputElementOffset = new Vector2(offset.x, 2.0f);
-						elements[i] = outputElement;
-					}
-				}
-			}
 		}
 	}
 
@@ -628,36 +467,6 @@ namespace PeterHan.StockBugFix {
 	}
 
 	/// <summary>
-	/// Applied to PacuCleanerConfig to insulate its storage and prevent instantly
-	/// entombing the critters.
-	/// </summary>
-	[HarmonyPatch(typeof(PacuCleanerConfig), "CreatePacu")]
-	public static class PacuCleanerConfig_CreatePacu_Patch {
-		/// <summary>
-		/// Applied after CreatePacu runs.
-		/// </summary>
-		internal static void Postfix(GameObject __result) {
-			var storage = __result.GetComponentSafe<Storage>();
-			if (storage != null)
-				storage.SetDefaultStoredItemModifiers(Storage.StandardInsulatedStorage);
-		}
-	}
-
-	/// <summary>
-	/// Applied to PolymerizerConfig to fix a symmetry error when emitting the plastic.
-	/// </summary>
-	[HarmonyPatch(typeof(PolymerizerConfig), nameof(PolymerizerConfig.
-		ConfigureBuildingTemplate))]
-	public static class PolymerizerConfig_ConfigureBuildingTemplate_Patch {
-		/// <summary>
-		/// Applied after ConfigureBuildingTemplate runs.
-		/// </summary>
-		internal static void Postfix(GameObject go) {
-			go.GetComponentSafe<Polymerizer>().emitOffset = new Vector3(-1.75f, 1.0f, 0.0f);
-		}
-	}
-
-	/// <summary>
 	/// Applied to RationMonitor to stop dead code from cancelling Eat chores at new day.
 	/// </summary>
 	[HarmonyPatch(typeof(RationMonitor), nameof(RationMonitor.InitializeStates))]
@@ -670,60 +479,6 @@ namespace PeterHan.StockBugFix {
 			if (root != null)
 				// outofrations is dead code
 				root.parameterTransitions?.Clear();
-		}
-	}
-
-	/// <summary>
-	/// Applied to SingleEntityReceptacle to fix the chore type away from the hardcoded
-	/// farm fetch to ranching supply (incubator) or regular supply (pedestal).
-	/// </summary>
-	[HarmonyPatch(typeof(SingleEntityReceptacle), "CreateFetchChore")]
-	public static class SingleEntityReceptacle_CreateFetchChore_Patch {
-		/// <summary>
-		/// Gets the appropriate chore type for a receptacle. Uses FarmFetch for farm tiles,
-		/// RanchingFetch for incubators, and Fetch for all others.
-		/// </summary>
-		/// <param name="types">The Database location to fetch the chore type.</param>
-		/// <param name="possibleTags">The tags that can be used for deposit.</param>
-		/// <returns>The appropriate chore type.</returns>
-		private static ChoreType GetChoreType(ChoreTypes types, IList<Tag> possibleTags) {
-			bool farm = false, ranch = false;
-			int n = possibleTags.Count;
-			for (int i = 0; i < n && !farm && !ranch; i++) {
-				var tag = possibleTags[i];
-				if (tag == GameTags.Egg)
-					ranch = true;
-				else if (tag == GameTags.CropSeed)
-					farm = true;
-			}
-			return ranch ? types.RanchingFetch : (farm ? types.FarmFetch : types.Fetch);
-		}
-
-		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-			var depositTags = typeof(SingleEntityReceptacle).GetFieldSafe(
-				"possibleDepositTagsList", false);
-			var farmFetch = typeof(ChoreTypes).GetFieldSafe(nameof(ChoreTypes.FarmFetch),
-				false);
-			var injection = typeof(SingleEntityReceptacle_CreateFetchChore_Patch).
-				GetMethodSafe(nameof(GetChoreType), true, typeof(ChoreTypes),
-				typeof(IList<Tag>));
-			if (depositTags != null && farmFetch != null && injection != null)
-				foreach (var instr in method) {
-					if (instr.opcode == OpCodes.Ldfld && instr.operand is FieldInfo fi &&
-							fi == farmFetch) {
-						// Push the deposit tags list
-						yield return new CodeInstruction(OpCodes.Ldarg_0);
-						yield return new CodeInstruction(OpCodes.Ldfld, depositTags);
-						instr.opcode = OpCodes.Call;
-						instr.operand = injection;
-					}
-					yield return instr;
-				}
-			else {
-				PUtil.LogWarning("Unable to patch SingleEntityReceptacle.CreateFetchChore!");
-				foreach (var instr in method)
-					yield return instr;
-			}
 		}
 	}
 

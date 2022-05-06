@@ -146,9 +146,13 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// <returns>The new room of the critter.</returns>
 		private static CavityInfo UpdateRoom(OvercrowdingMonitor.Instance smi,
 				KPrefabID prefabID) {
-			CavityInfo room = smi.cavity, newRoom = Game.Instance.roomProber?.GetCavityForCell(
-				Grid.PosToCell(smi.transform.position));
+			CavityInfo room = smi.cavity, newRoom;
 			bool background = FastTrackOptions.Instance.BackgroundRoomRebuild;
+			int cell = Grid.PosToCell(smi.transform.position);
+			if (background)
+				newRoom = GamePatches.BackgroundRoomProber.Instance.GetCavityForCell(cell);
+			else
+				newRoom = Game.Instance.roomProber.GetCavityForCell(cell);
 			prefabID.UpdateTagBits();
 			if (newRoom != room) {
 				bool isEgg = prefabID.HasAnyTags_AssumeLaundered(ref EGG), light =

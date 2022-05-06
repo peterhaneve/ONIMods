@@ -214,7 +214,7 @@ namespace ReimaginationTeam.DecorRework {
 			/// Applied before Update runs.
 			/// </summary>
 			internal static bool Prefix(DecorMonitor.Instance __instance, float dt,
-					Klei.AI.AmountInstance ___amount, Klei.AI.AttributeModifier ___modifier,
+					AmountInstance ___amount, AttributeModifier ___modifier,
 					ref float ___cycleTotalDecor) {
 				bool cont = true;
 				ChoreDriver driver;

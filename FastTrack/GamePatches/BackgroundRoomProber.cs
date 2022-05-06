@@ -666,7 +666,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// Applied before SolidChangedEvent runs.
 			/// </summary>
 			internal static bool Prefix(int cell, bool ignoreDoors) {
-				if (!ignoreDoors && !Grid.HasDoor[cell])
+				if (!ignoreDoors || !Grid.HasDoor[cell])
 					Instance?.QueueSolidChange(cell);
 				return false;
 			}
