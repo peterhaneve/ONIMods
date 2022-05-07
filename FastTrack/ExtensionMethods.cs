@@ -126,45 +126,20 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		/// <param name="navigator">The navigator to calculate.</param>
 		/// <param name="destination">The destination to find the cost.</param>
-		/// <returns>The navigation cost to the destination.</returns>
-		public static int GetNavigationCostNU(this Navigator navigator, Workable destination) {
-			CellOffset[] offsets = null;
-			var offsetTracker = destination.offsetTracker;
-			int cell;
-			if (offsetTracker != null) {
-				cell = offsetTracker.previousCell;
-				if ((offsets = offsetTracker.offsets) == null) {
-					offsetTracker.UpdateOffsets(cell);
-					offsets = offsetTracker.offsets;
-				}
-			} else
-				cell = destination.GetCell();
-			return (offsets == null) ? navigator.GetNavigationCost(cell) : navigator.
-				GetNavigationCost(cell, offsets);
-		}
-
-		/// <summary>
-		/// A non-mutating version of Navigator.GetNavigationCost that can be run on
-		/// background threads.
-		/// </summary>
-		/// <param name="navigator">The navigator to calculate.</param>
-		/// <param name="destination">The destination to find the cost.</param>
 		/// <param name="cell">The workable's current cell.</param>
-		/// <param name="cost">The location where the cost will be stored.</param>
-		/// <returns>true if the table needs to be updated, or false otherwise.</returns>
-		public static bool GetNavigationCostNU(this Navigator navigator, Workable destination,
-				int cell, out int cost) {
+		/// <returns>The navigation cost to the destination.</returns>
+		public static int GetNavigationCostNU(this Navigator navigator, Workable destination,
+				int cell) {
 			CellOffset[] offsets = null;
-			bool update = false;
 			var offsetTracker = destination.offsetTracker;
 			if (offsetTracker != null && (offsets = offsetTracker.offsets) == null) {
 				offsetTracker.UpdateOffsets(cell);
 				offsets = offsetTracker.offsets;
-				update = offsetTracker.previousCell != cell;
+				if (offsetTracker.previousCell != cell)
+					PathPatches.DeferAnimQueueTrigger.Instance?.Queue(offsetTracker, cell);
 			}
-			cost = (offsets == null) ? navigator.GetNavigationCost(cell) : navigator.
+			return (offsets == null) ? navigator.GetNavigationCost(cell) : navigator.
 				GetNavigationCost(cell, offsets);
-			return update;
 		}
 
 		/// <summary>

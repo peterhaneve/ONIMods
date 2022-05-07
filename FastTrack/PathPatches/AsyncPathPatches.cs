@@ -278,4 +278,19 @@ namespace PeterHan.FastTrack.PathPatches {
 				ScenePartitionerEntry)));
 		}
 	}
+
+	/// <summary>
+	/// Applied to Storage to remove it from the cache when it is destroyed.
+	/// </summary>
+	[HarmonyPatch(typeof(Storage), nameof(Storage.OnCleanUp))]
+	public static class Storage_OnCleanUp_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
+
+		/// <summary>
+		/// Applied after OnCleanUp runs.
+		/// </summary>
+		internal static void Postfix(Storage __instance) {
+			AsyncBrainGroupUpdater.Instance?.RemoveStorage(__instance);
+		}
+	}
 }
