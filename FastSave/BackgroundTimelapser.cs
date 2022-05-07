@@ -93,8 +93,8 @@ namespace PeterHan.FastSave {
 #if DEBUG
 			PUtil.LogDebug("Encoding preview image");
 #endif
-			var task = new Thread(() => DoSave(new BackgroundTimelapseData(previewPath,
-				rawData, worldID, preview)));
+			var data = new BackgroundTimelapseData(previewPath, rawData, worldID, preview);
+			var task = new Thread(() => DoSave(data));
 			Util.ApplyInvariantCultureToThread(task);
 			task.Priority = ThreadPriority.BelowNormal;
 			task.Name = "Background Timelapser";

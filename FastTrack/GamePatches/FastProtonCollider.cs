@@ -92,6 +92,11 @@ namespace PeterHan.FastTrack.GamePatches {
 		private HandleVector<int>.Handle partitionerEntry;
 
 		/// <summary>
+		/// The port that could capture this radbolt if it passes close enough.
+		/// </summary>
+		private HighEnergyParticlePort port;
+
+		/// <summary>
 		/// Tracks the radbolt's travel distance.
 		/// </summary>
 		private ColonyAchievementTracker tracker;
@@ -99,20 +104,30 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal FastProtonCollider() {
 			cachedCell = Grid.InvalidCell;
 			partitionerEntry = HandleVector<int>.InvalidHandle;
+			port = null;
 		}
 
 		/// <summary>
 		/// Checks for HEP collision with a building.
 		/// </summary>
 		/// <param name="cell">The current cell that this radbolt occupies.</param>
+		/// <param name="moved">Whether the radbolt is in a different tile than the last time.</param>
+		/// <param name="pos">The current position of the radbolt.</param>
 		/// <returns>Whether this radbolt was captured by a building with a radbolt port.</returns>
-		private bool CheckBuildingCollision(int cell) {
-			// Check for collision with a building
-			var b = Grid.Objects[cell, (int)ObjectLayer.Building];
+		private bool CheckBuildingCollision(int cell, bool moved, Vector3 pos) {
 			bool captured = false;
-			if (b != null && b.TryGetComponent(out HighEnergyParticlePort port) && port.
-					GetHighEnergyParticleInputPortPosition() == cell) {
-				// Not exactly on center but good enough and WAY cheaper
+			HighEnergyParticlePort port;
+			if (moved) {
+				// Check for collision with a building
+				var b = Grid.Objects[cell, (int)ObjectLayer.Building];
+				if (b == null || !b.TryGetComponent(out port) || port.
+						GetHighEnergyParticleInputPortPosition() != cell)
+					port = null;
+				this.port = port;
+			} else
+				port = this.port;
+			if (port != null && CollidesWith(pos, Grid.CellToPosCCC(cell, Grid.SceneLayer.
+					NoLayer))) {
 				if (port.InputActive() && port.AllowCapture(hep)) {
 					hep.Capture(port);
 					captured = true;
@@ -129,8 +144,9 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="pos">The exact position of this radbolt.</param>
 		private void CheckCollision(int cell, Vector3 pos) {
 			// If the cell is the same, do not check building or tile collision again
-			if ((cell == cachedCell || (!CheckBuildingCollision(cell) &&
-					!CheckSolidTileCollision(cell))) && !CheckRadboltCollision(cell, pos))
+			bool same = cell == cachedCell;
+			if (!CheckBuildingCollision(cell, !same, pos) && (cell == cachedCell ||
+					CheckSolidTileCollision(cell)) && !CheckRadboltCollision(cell, pos))
 				CheckLivingCollision(cell);
 			cachedCell = cell;
 		}

@@ -451,24 +451,24 @@ namespace PeterHan.FastTrack.PathPatches {
 
 			public void TriggerStart() { }
 		}
+	}
 
+	/// <summary>
+	/// Compares fetchable items by priority and path cost.
+	/// </summary>
+	internal sealed class FetchComparer : IComparer<Fetch> {
 		/// <summary>
-		/// Compares fetchable items by priority and path cost.
+		/// The singleton instance of this class.
 		/// </summary>
-		private sealed class FetchComparer : IComparer<Fetch> {
-			/// <summary>
-			/// The singleton instance of this class.
-			/// </summary>
-			internal static readonly IComparer<Fetch> Instance = new FetchComparer();
+		internal static readonly IComparer<Fetch> Instance = new FetchComparer();
 
-			private FetchComparer() { }
+		private FetchComparer() { }
 
-			public int Compare(Fetch x, Fetch y) {
-				int result = y.chore.masterPriority.CompareTo(x.chore.masterPriority);
-				if (result == 0)
-					result = x.cost.CompareTo(y.cost);
-				return result;
-			}
+		public int Compare(Fetch x, Fetch y) {
+			int result = y.chore.masterPriority.CompareTo(x.chore.masterPriority);
+			if (result == 0)
+				result = x.cost.CompareTo(y.cost);
+			return result;
 		}
 	}
 }

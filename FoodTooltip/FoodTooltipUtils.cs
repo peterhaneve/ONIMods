@@ -55,7 +55,7 @@ namespace PeterHan.FoodTooltip {
 		/// <param name="descriptors">The location where the descriptors should be placed.</param>
 		internal static void AddCritterDescriptors(GameObject critter,
 				IList<Descriptor> descriptors) {
-			var drops = critter.GetComponentSafe<Butcherable>()?.Drops;
+			var drops = critter.GetComponentSafe<Butcherable>()?.drops;
 			// Check the meat it drops
 			if (critter != null && drops != null && drops.Length > 0) {
 				var dict = DictionaryPool<string, int, FoodRecipeCache>.Allocate();
