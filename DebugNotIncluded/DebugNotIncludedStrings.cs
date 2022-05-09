@@ -127,6 +127,8 @@ namespace PeterHan.DebugNotIncluded {
 				public static LocString DNI_INSTANT_TAME = "Set wildness to 0%";
 				public static LocString DNI_OVERJOY = "Start this Duplicant's Overjoyed reaction immediately";
 				public static LocString DNI_STRESSOUT = "Start this Duplicant's Stress reaction immediately";
+
+				public static LocString DNI_CELL = "Cell: {0:D} ({1:D}, {2:D})";
 			}
 
 			// Unable to unsubscribe from mod

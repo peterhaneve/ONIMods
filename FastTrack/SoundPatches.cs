@@ -18,10 +18,8 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace PeterHan.FastTrack {
 	/// <summary>

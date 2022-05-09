@@ -618,22 +618,48 @@ namespace PeterHan.DebugNotIncluded {
 
 #if DEBUG
 	/// <summary>
-	/// Applied to TileTemperature to identify what tile is actually being set badly.
-	/// 
-	/// DEBUG ONLY.
+	/// Applied to SelectToolHoverTextCard to show the cell coordinates, number, and other
+	/// attributes in the hover card.
 	/// </summary>
-	[HarmonyPatch(typeof(TileTemperature), "OnSetTemperature")]
-	public static class TileTemperature_OnSetTemperature_Patch {
+	[HarmonyPatch(typeof(SelectToolHoverTextCard), nameof(SelectToolHoverTextCard.
+		UpdateHoverElements))]
+	public static class UpdateHoverElements_Patch {
 		/// <summary>
-		/// Applied before OnSetTemperature runs.
+		/// Adds the coordinates and cell number to the select tool.
 		/// </summary>
-		internal static void Prefix(PrimaryElement primary_element, float temperature) {
-			var sco = primary_element.GetComponent<SimCellOccupier>();
-			int cell = Grid.PosToCell(primary_element);
-			if (sco != null && sco.IsReady() && Grid.IsValidCell(cell)) {
+		private static HoverTextDrawer DrawCoordinates(HoverTextDrawer drawer,
+				HoverTextConfiguration instance) {
+			int cell = Grid.PosToCell(Camera.main.ScreenToWorldPoint(
+				KInputManager.GetMousePos()));
+			if (Grid.IsValidCell(cell)) {
 				Grid.CellToXY(cell, out int x, out int y);
-				DebugLogger.LogWarning("Trying to set tile at ({0:D},{1:D}) to {2:F1} K: {3}".
-					F(x, y, temperature, new System.Diagnostics.StackTrace(2)));
+				drawer.BeginShadowBar();
+				drawer.DrawText(string.Format(DebugNotIncludedStrings.UI.TOOLTIPS.DNI_CELL,
+					cell, x, y), instance.Styles_BodyText.Standard);
+				drawer.EndShadowBar();
+			}
+
+			return drawer;
+		}
+
+		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+			var targetMethod = typeof(HoverTextDrawer).GetMethodSafe(nameof(HoverTextDrawer.
+				EndDrawing), false);
+			var addition = typeof(UpdateHoverElements_Patch).GetMethodSafe(nameof(
+				DrawCoordinates), true, typeof(HoverTextDrawer), typeof(
+				HoverTextConfiguration));
+			if (targetMethod != null && addition != null)
+				foreach (var instr in method) {
+					if (instr.Is(OpCodes.Callvirt, targetMethod)) {
+						yield return new CodeInstruction(OpCodes.Ldarg_0);
+						yield return new CodeInstruction(OpCodes.Call, addition);
+					}
+					yield return instr;
+				}
+			else {
+				DebugLogger.LogWarning("Unable to patch UpdateHoverElements");
+				foreach (var instr in method)
+					yield return instr;
 			}
 		}
 	}

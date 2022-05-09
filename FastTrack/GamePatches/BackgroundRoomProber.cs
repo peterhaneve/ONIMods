@@ -130,7 +130,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// The cavities that have been destroyed by the background thread but not yet freed
 		/// on the foreground.
 		/// </summary>
-		private readonly ISet<HandleVector<int>.Handle> destroyed;
+		private readonly ConcurrentQueue<HandleVector<int>.Handle> destroyed;
 
 		/// <summary>
 		/// Whether the prober has been destroyed.
@@ -146,6 +146,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Triggers a single first pass on every room.
 		/// </summary>
 		private volatile bool initialized;
+		
+		private readonly ISet<HandleVector<int>.Handle> pendingDestroy;
 
 		/// <summary>
 		/// The solid changes that are currently pending.
@@ -177,10 +179,11 @@ namespace PeterHan.FastTrack.GamePatches {
 			cavityForCell = new HandleVector<int>.Handle[n];
 			cavityInfos = new KCompactedVector<CavityInfo>(2048);
 			// ConcurrentBag is leaky and slow: https://ayende.com/blog/156097/the-high-cost-of-concurrentbag-in-net-4-0
-			destroyed = new HashSet<HandleVector<int>.Handle>();
+			destroyed = new ConcurrentQueue<HandleVector<int>.Handle>();
 			disposed = false;
 			floodFilling = new Queue<int>();
 			initialized = false;
+			pendingDestroy = new HashSet<HandleVector<int>.Handle>();
 			pendingSolidChanges = new HashSet<int>();
 			roomsChanged = new AutoResetEvent(false);
 			solidChanges = new ConcurrentQueue<int>();
@@ -357,13 +360,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				lock (cavityInfos) {
 					var id = cavityForCell[cell];
 					if (id.IsValid())
-						try {
-							cavity = cavityInfos.GetData(id);
-						} catch (ArgumentException) {
-							PUtil.LogError("Handle mismatch! Cell {0:D}, current value={1:D}".
-								F(cell, id));
-							throw;
-						}
+						cavity = cavityInfos.GetData(id);
 				}
 			return cavity;
 		}
@@ -463,16 +460,13 @@ namespace PeterHan.FastTrack.GamePatches {
 							AddBuildingToRoom(cell, cavity);
 					}
 				}
-				lock (destroyed) {
-					foreach (var destroyedID in destroyed)
-						if (destroyedID.IsValid()) {
-							var cavity = cavityInfos.GetData(destroyedID);
-							if (cavity != null)
-								DestroyRoom(cavity.room);
-							cavityInfos.Free(destroyedID);
-						}
-					destroyed.Clear();
-				}
+				while (destroyed.TryDequeue(out var destroyedID))
+					if (destroyedID.IsValid()) {
+						var cavity = cavityInfos.GetData(destroyedID);
+						if (cavity != null)
+							DestroyRoom(cavity.room);
+						cavityInfos.Free(destroyedID);
+					}
 				RefreshRooms();
 			}
 			if (FastTrackMod.GameRunning && (solidChanges.Count > 0 || !initialized))
@@ -552,18 +546,19 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		/// <param name="changedCells">The cells that changed.</param>
 		private void UpdateCavities(ICollection<int> changedCells) {
-			lock (destroyed) {
-				foreach (int cell in changedCells) {
-					ref var cavityID = ref cavityForCell[cell];
-					if (cavityID.IsValid()) {
-						destroyed.Add(cavityID);
-						cavityID = HandleVector<int>.InvalidHandle;
-					}
+			foreach (int cell in changedCells) {
+				ref var cavityID = ref cavityForCell[cell];
+				if (cavityID.IsValid()) {
+					pendingDestroy.Add(cavityID);
+					cavityID = HandleVector<int>.InvalidHandle;
 				}
 			}
 			foreach (int cell in changedCells)
 				CreateCavityFrom(cell);
 			changedCells.Clear();
+			foreach (var handle in pendingDestroy)
+				destroyed.Enqueue(handle);
+			pendingDestroy.Clear();
 		}
 
 		/// <summary>
