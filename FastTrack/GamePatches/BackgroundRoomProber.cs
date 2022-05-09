@@ -169,11 +169,10 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// The cells visited by the flood fill.
 		/// </summary>
-		private readonly ISet<int> visited;
+		private readonly ISet<int> visitedCells;
 
 		internal BackgroundRoomProber() {
 			int n = Grid.CellCount;
-			var invalid = HandleVector<int>.InvalidHandle;
 			allRooms = Game.Instance.roomProber.rooms;
 			buildingChanges = new ConcurrentQueue<int>();
 			cavityForCell = new HandleVector<int>.Handle[n];
@@ -188,9 +187,9 @@ namespace PeterHan.FastTrack.GamePatches {
 			roomsChanged = new AutoResetEvent(false);
 			solidChanges = new ConcurrentQueue<int>();
 			tempIDs = new List<KPrefabID>(32);
-			visited = new HashSet<int>();
+			visitedCells = new HashSet<int>();
 			for (int i = 0; i < n; i++)
-				cavityForCell[i] = invalid;
+				cavityForCell[i].Clear();
 		}
 
 		/// <summary>
@@ -261,12 +260,12 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		/// <param name="cell">The starting cell.</param>
 		private void CreateCavityFrom(int cell) {
-			var visited = this.visited;
+			var visited = visitedCells;
 			if (!RoomProber.CavityFloodFiller.IsWall(cell) && visited.Add(cell)) {
 				int n = 0, minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue,
 					maxY = int.MinValue;
 				bool filled;
-				HandleVector<int>.Handle targetCavity, newCavity;
+				HandleVector<int>.Handle targetCavity;
 				var queue = floodFilling;
 				var cavity = new CavityInfo();
 				lock (cavityInfos) {
@@ -275,12 +274,12 @@ namespace PeterHan.FastTrack.GamePatches {
 				do {
 					if (RoomProber.CavityFloodFiller.IsWall(cell))
 						// Walls and doors have no room
-						newCavity = HandleVector<int>.InvalidHandle;
+						cavityForCell[cell].Clear();
 					else {
 						int above = Grid.CellAbove(cell), below = Grid.CellBelow(cell),
 							left = Grid.CellLeft(cell), right = Grid.CellRight(cell);
 						Grid.CellToXY(cell, out int x, out int y);
-						newCavity = targetCavity;
+						cavityForCell[cell] = targetCavity;
 						n++;
 						if (x < minX)
 							minX = x;
@@ -300,11 +299,11 @@ namespace PeterHan.FastTrack.GamePatches {
 						if (Grid.IsValidCell(right) && visited.Add(right))
 							queue.Enqueue(right);
 					}
-					cavityForCell[cell] = newCavity;
 					filled = queue.Count > 0;
 					if (filled)
 						cell = queue.Dequeue();
 				} while (filled);
+				PUtil.LogDebug("Rebuild room: {0:D} covered {1:D} cells".F(cell, n));
 				cavity.minX = minX;
 				cavity.minY = minY;
 				cavity.maxX = maxX;
@@ -422,7 +421,7 @@ namespace PeterHan.FastTrack.GamePatches {
 						CreateCavityFrom(i);
 					initialized = true;
 				}
-				visited.Clear();
+				visitedCells.Clear();
 			}
 		}
 
@@ -430,11 +429,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Triggers re-evaluation of rooms that intersect the specified cell.
 		/// </summary>
 		/// <param name="cell">The cell that changed.</param>
-		/// <param name="building">The building that was changed.</param>
 		public void QueueBuildingChange(int cell) {
-			var cavity = GetCavityForCell(cell);
-			if (cavity != null)
-				buildingChanges.Enqueue(cell);
+			buildingChanges.Enqueue(cell);
 		}
 
 		/// <summary>
@@ -453,7 +449,14 @@ namespace PeterHan.FastTrack.GamePatches {
 			lock (cavityInfos) {
 				while (buildingChanges.TryDequeue(out int cell)) {
 					ref var cavityID = ref cavityForCell[cell];
-					if (cavityID.IsValid()) {
+					bool wall = RoomProber.CavityFloodFiller.IsWall(cell);
+					bool valid = cavityID.IsValid();
+					if (valid == wall)
+						// If a wall building like a mesh door was built but did not trigger a
+						// solid change update, then the tile will have a valid room on a wall
+						// building, set up a solid change
+						solidChanges.Enqueue(cell);
+					else if (valid) {
 						var cavity = cavityInfos.GetData(cavityID);
 						int cells = cavity.numCells;
 						if (cells > 0 && cells <= maxRoomSize)
@@ -465,6 +468,9 @@ namespace PeterHan.FastTrack.GamePatches {
 						var cavity = cavityInfos.GetData(destroyedID);
 						if (cavity != null)
 							DestroyRoom(cavity.room);
+						for (int i = 0; i < Grid.CellCount; i++)
+							if (cavityForCell[i] == destroyedID)
+								PUtil.LogWarning("Destroyed {0:D} but it is still active at {1:D}".F(destroyedID._index, i));
 						cavityInfos.Free(destroyedID);
 					}
 				RefreshRooms();
@@ -550,7 +556,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				ref var cavityID = ref cavityForCell[cell];
 				if (cavityID.IsValid()) {
 					pendingDestroy.Add(cavityID);
-					cavityID = HandleVector<int>.InvalidHandle;
+					cavityID.Clear();
 				}
 			}
 			foreach (int cell in changedCells)
