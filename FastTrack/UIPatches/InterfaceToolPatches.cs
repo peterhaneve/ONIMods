@@ -232,11 +232,9 @@ namespace PeterHan.FastTrack.UIPatches {
 			KSelectable result = null;
 			// hits is already sorted, but if an object is destroyed without changing the
 			// selected tile, some entries could be null
-			foreach (var item in hits) {
-				var go = item.gameObject;
-				if (go != null && ((1 << go.layer) & layerMask) != 0)
+			foreach (var item in hits)
+				if (item != null && ((1 << item.gameObject.layer) & layerMask) != 0)
 					filteredHits.Add(item);
-			}
 			int n = filteredHits.Count;
 			if (n > 0) {
 				// Since index has to be modulo by number, have to make the full list even if
@@ -360,7 +358,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				var hover = instance.hover;
 				if (hover != null) {
 					hover.Unhover();
-					Game.Instance.Trigger((int)GameHashes.HighlightObject, null);
+					Game.Instance.Trigger((int)GameHashes.HighlightObject);
 				}
 				instance.hover = newHover;
 			}
@@ -392,7 +390,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					var newTarget = __instance.GetObjectUnderCursor<KSelectable>(true);
 					if (newTarget != null)
 						target = newTarget;
-					__instance.Select(target, false);
+					__instance.Select(target);
 				}
 				__instance.selectedCell = cell;
 				return false;

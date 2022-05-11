@@ -77,32 +77,33 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		/// <param name="prober">The current room prober.</param>
 		/// <param name="cell">The cell of the room that will be updated.</param>
-		private static void SolidNotChangedEvent(RoomProber prober, int cell, bool _) {
+		/// <param name="ignoreDoors">Whether doors should be ignored when triggering.</param>
+		private static void SolidNotChangedEvent(RoomProber prober, int cell,
+				bool ignoreDoors) {
 			if (FastTrackOptions.Instance.BackgroundRoomRebuild) {
 				var inst = BackgroundRoomProber.Instance;
 				var cavity = inst.GetCavityForCell(cell);
 				if (cavity != null)
 					inst.UpdateRoom(cavity);
+				else
+					inst.QueueSolidChange(cell);
 			} else if (prober != null) {
 				var cavity = prober.GetCavityForCell(cell);
 				if (cavity != null)
 					prober.UpdateRoom(cavity);
-				// else: If the critter is not currently in any cavity, they will be added
-				// when the cavity is created by OvercrowdingMonitor, at which point the room
-				// conditions will be evaluated again anyways
+				else
+					prober.SolidChangedEvent(cell, ignoreDoors);
 			}
 		}
 
 		/// <summary>
-		/// Transpiles the constructor to resize the array to 26 slots by default.
-		/// Most decor providers have 1 or 2 radius which is 1 and 9 tiles respectively,
-		/// 26 handles up to 3 without a resize.
+		/// Transpiles Refresh to change a solid change event into a condition retrigger.
 		/// </summary>
 		[HarmonyPriority(Priority.LowerThanNormal)]
 		internal static TranspiledMethod TranspileRefresh(TranspiledMethod instructions) {
 			return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(RoomProber).
 				GetMethodSafe(nameof(RoomProber.SolidChangedEvent), false, typeof(int),
-				typeof(bool)), typeof(DecorProviderRefreshFix).GetMethodSafe(nameof(
+					typeof(bool)), typeof(DecorProviderRefreshFix).GetMethodSafe(nameof(
 				SolidNotChangedEvent), true, typeof(RoomProber), typeof(int), typeof(bool)));
 		}
 	}

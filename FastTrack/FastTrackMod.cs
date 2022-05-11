@@ -251,7 +251,7 @@ namespace PeterHan.FastTrack {
 		/// Starts up some asynchronous tasks after mods are fully loaded.
 		/// </summary>
 		[PLibMethod(RunAt.AfterLayerableLoad)]
-		private static void OnLayerablesLoaded() {
+		internal static void OnLayerablesLoaded() {
 			if (FastTrackOptions.Instance.OptimizeDialogs) {
 				var thread = new Thread(LoadWorldGenInBackground) {
 					Name = "Load Worldgen Async", IsBackground = true,

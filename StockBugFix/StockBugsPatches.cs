@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Database;
 using HarmonyLib;
 using KMod;
 using PeterHan.PLib.AVC;
@@ -53,6 +52,27 @@ namespace PeterHan.StockBugFix {
 				storeFood.groups[0] = storeType;
 			}
 			TraitsExclusionPatches.FixTraits();
+		}
+
+		/// <summary>
+		/// Fixes the race condition in Steam.UpdateMods.
+		/// </summary>
+		/// <param name="instance">The Harmony instance to use for patching.</param>
+		private static void FixModUpdateRace(Harmony instance) {
+			var steamMod = PPatchTools.GetTypeSafe("KMod.Steam");
+			const string BUG_KEY = "Bugs.ModUpdateRace";
+			if (steamMod != null && !PRegistry.GetData<bool>(BUG_KEY)) {
+				// Transpile UpdateMods only for Steam versions (not EGS)
+#if DEBUG
+				PUtil.LogDebug("Transpiling Steam.UpdateMods()");
+#endif
+				PRegistry.PutData(BUG_KEY, true);
+				instance.Patch(steamMod.GetMethodSafe("UpdateMods", false, PPatchTools.
+					AnyArguments), transpiler: new HarmonyMethod(typeof(StockBugsPatches),
+					nameof(TranspileUpdateMods)));
+				instance.Patch(typeof(MainMenu).GetMethodSafe("OnSpawn", false), postfix:
+					new HarmonyMethod(typeof(StockBugsPatches), nameof(PostfixMenuSpawn)));
+			}
 		}
 
 		/// <summary>
@@ -100,27 +120,6 @@ namespace PeterHan.StockBugFix {
 			});
 		}
 
-		/// <summary>
-		/// Fixes the race condition in Steam.UpdateMods.
-		/// </summary>
-		/// <param name="instance">The Harmony instance to use for patching.</param>
-		private void FixModUpdateRace(Harmony instance) {
-			var steamMod = PPatchTools.GetTypeSafe("KMod.Steam");
-			const string BUG_KEY = "Bugs.ModUpdateRace";
-			if (steamMod != null && !PRegistry.GetData<bool>(BUG_KEY)) {
-				// Transpile UpdateMods only for Steam versions (not EGS)
-#if DEBUG
-				PUtil.LogDebug("Transpiling Steam.UpdateMods()");
-#endif
-				PRegistry.PutData(BUG_KEY, true);
-				instance.Patch(steamMod.GetMethodSafe("UpdateMods", false, PPatchTools.
-					AnyArguments), transpiler: new HarmonyMethod(typeof(StockBugsPatches),
-					nameof(TranspileUpdateMods)));
-				instance.Patch(typeof(MainMenu).GetMethodSafe("OnSpawn", false), postfix:
-					new HarmonyMethod(typeof(StockBugsPatches), nameof(PostfixMenuSpawn)));
-			}
-		}
-
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
 			base.OnAllModsLoaded(harmony, mods);
 			DecorProviderRefreshFix.ApplyPatch(harmony);
@@ -153,8 +152,7 @@ namespace PeterHan.StockBugFix {
 		internal static CellOffset[][] RotateAndBuild(CellOffset[] areaOffsets,
 				CellOffset[][] table, CellOffset[] filter, KMonoBehaviour building) {
 			var placementOffsets = areaOffsets;
-			Rotatable rotator;
-			if (building != null && (rotator = building.GetComponent<Rotatable>()) != null) {
+			if (building != null && building.TryGetComponent(out Rotatable rotator)) {
 				int n = areaOffsets.Length;
 				placementOffsets = new CellOffset[n];
 				for (int i = 0; i < n; i++)
@@ -172,8 +170,7 @@ namespace PeterHan.StockBugFix {
 		internal static CellOffset[] RotateAll(CellOffset[] areaOffsets,
 				KMonoBehaviour building) {
 			var placementOffsets = areaOffsets;
-			Rotatable rotator;
-			if (building != null && (rotator = building.GetComponent<Rotatable>()) != null) {
+			if (building != null && building.TryGetComponent(out Rotatable rotator)) {
 				int n = areaOffsets.Length;
 				placementOffsets = new CellOffset[n];
 				for (int i = 0; i < n; i++)
@@ -269,21 +266,20 @@ namespace PeterHan.StockBugFix {
 		/// </summary>
 		/// <param name="prober">The current room prober.</param>
 		/// <param name="cell">The cell of the room that will be updated.</param>
-		private static void SolidNotChangedEvent(RoomProber prober, int cell, bool _) {
+		/// <param name="ignoreDoors">Whether doors should be ignored when triggering.</param>
+		private static void SolidNotChangedEvent(RoomProber prober, int cell, bool ignoreDoors)
+		{
 			if (prober != null) {
 				var cavity = prober.GetCavityForCell(cell);
 				if (cavity != null)
 					prober.UpdateRoom(cavity);
-				// else: If the critter is not currently in any cavity, they will be added
-				// when the cavity is created by OvercrowdingMonitor, at which point the room
-				// conditions will be evaluated again anyways
+				else
+					prober.SolidChangedEvent(cell, ignoreDoors);
 			}
 		}
 
 		/// <summary>
-		/// Transpiles the constructor to resize the array to 26 slots by default.
-		/// Most decor providers have 1 or 2 radius which is 1 and 9 tiles respectively,
-		/// 26 handles up to 3 without a resize.
+		/// Transpiles Refresh to change a solid change event into a condition retrigger.
 		/// </summary>
 		[HarmonyPriority(Priority.LowerThanNormal)]
 		internal static TranspiledMethod TranspileRefresh(TranspiledMethod instructions) {
@@ -382,25 +378,8 @@ namespace PeterHan.StockBugFix {
 		/// </summary>
 		internal static void Postfix(FuelTank __instance) {
 			var obj = __instance.gameObject;
-			obj.GetComponentSafe<Storage>()?.Trigger((int)GameHashes.OnStorageChange, obj);
-		}
-	}
-
-	/// <summary>
-	/// Applied to GlassForgeConfig to mitigate the zero mass object race condition on
-	/// the Glass Forge by insulating its output storage.
-	/// </summary>
-	[HarmonyPatch(typeof(GlassForgeConfig), nameof(IBuildingConfig.
-		ConfigureBuildingTemplate))]
-	public static class GlassForgeConfig_ConfigureBuildingTemplate_Patch {
-		/// <summary>
-		/// Applied after ConfigureBuildingTemplate runs.
-		/// </summary>
-		internal static void Postfix(GameObject go) {
-			var forge = go.GetComponentSafe<GlassForge>();
-			if (forge != null)
-				forge.outStorage.SetDefaultStoredItemModifiers(Storage.
-					StandardInsulatedStorage);
+			if (obj != null && obj.TryGetComponent(out Storage storage))
+				storage.Trigger((int)GameHashes.OnStorageChange, obj);
 		}
 	}
 
@@ -414,11 +393,10 @@ namespace PeterHan.StockBugFix {
 		/// </summary>
 		internal static void Postfix(int cell, ref string[] __result, float ___cachedMass,
 				Element ___cachedElement) {
-			var element = ___cachedElement;
 			SimHashes id;
 			float mass = ___cachedMass;
-			if (Grid.IsValidCell(cell) && element != null && (id = element.id) !=
-					SimHashes.Vacuum && id != SimHashes.Unobtanium) {
+			if (Grid.IsValidCell(cell) && ___cachedElement != null && (id = ___cachedElement.
+					id) != SimHashes.Vacuum && id != SimHashes.Unobtanium) {
 				if (mass < 5.0f)
 					// kg => g
 					mass *= 1000.0f;
@@ -462,7 +440,8 @@ namespace PeterHan.StockBugFix {
 		/// </summary>
 		internal static void Postfix(OxidizerTank __instance) {
 			var obj = __instance.gameObject;
-			obj.GetComponentSafe<Storage>()?.Trigger((int)GameHashes.OnStorageChange, obj);
+			if (obj != null && obj.TryGetComponent(out Storage storage))
+				storage.Trigger((int)GameHashes.OnStorageChange, obj);
 		}
 	}
 
@@ -475,10 +454,8 @@ namespace PeterHan.StockBugFix {
 		/// Applied after InitializeStates runs.
 		/// </summary>
 		internal static void Postfix(RationMonitor __instance) {
-			var root = __instance.root;
-			if (root != null)
-				// outofrations is dead code
-				root.parameterTransitions?.Clear();
+			// outofrations is dead code
+			__instance.root?.parameterTransitions?.Clear();
 		}
 	}
 
@@ -492,9 +469,7 @@ namespace PeterHan.StockBugFix {
 		/// Applied after OnSpawn runs.
 		/// </summary>
 		internal static void Postfix(SolidTransferArm __instance) {
-			Storage storage;
-			if (__instance != null && (storage = __instance.GetComponent<Storage>()) !=
-					null)
+			if (__instance != null && __instance.TryGetComponent(out Storage storage))
 				storage.SetDefaultStoredItemModifiers(Storage.StandardSealedStorage);
 		}
 	}
@@ -516,26 +491,27 @@ namespace PeterHan.StockBugFix {
 		/// only uses the appropriate building cells.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-			var instructionList = new List<CodeInstruction>(method);
+			var instructions = new List<CodeInstruction>(method);
 			var targetMethod = typeof(GameUtil).GetMethodSafe("GetNonSolidCells",
 				true, typeof(int), typeof(int), typeof(List<int>));
-			int targetIndex = -1;
-			for (int i = 0; i < instructionList.Count; i++)
-				if (instructionList[i].Is(OpCodes.Call, targetMethod)) {
+			int targetIndex = -1, n = instructions.Count;
+			for (int i = 0; i < n; i++)
+				if (instructions[i].Is(OpCodes.Call, targetMethod)) {
 					targetIndex = i;
 					break;
 				}
-			if (targetIndex == -1) {
+			if (targetIndex == -1)
 				PUtil.LogWarning("Target method GetNonSolidCells not found.");
-				return method;
-			}
-			instructionList[targetIndex].operand = typeof(SpaceHeater_MonitorHeating_Patch).
-				GetMethodSafe(nameof(GetValidBuildingCells), true, PPatchTools.AnyArguments);
-			instructionList.Insert(targetIndex, new CodeInstruction(OpCodes.Ldarg_0));
+			else {
+				instructions[targetIndex].operand = typeof(SpaceHeater_MonitorHeating_Patch).
+					GetMethodSafe(nameof(GetValidBuildingCells), true, typeof(int),
+					typeof(int), typeof(List<int>), typeof(Component));
+				instructions.Insert(targetIndex, new CodeInstruction(OpCodes.Ldarg_0));
 #if DEBUG
-			PUtil.LogDebug("Patched SpaceHeater.MonitorHeating");
+				PUtil.LogDebug("Patched SpaceHeater.MonitorHeating");
 #endif
-			return instructionList;
+			}
+			return instructions;
 		}
 
 		/// <summary>
@@ -574,18 +550,14 @@ namespace PeterHan.StockBugFix {
 		/// Applied after InitializeStates runs.
 		/// </summary>
 		internal static void Postfix(SpaceHeater.States __instance) {
-			var sm = __instance;
-			var onUpdate = sm.online.updateActions;
-			if (onUpdate.Count > 0) {
-				foreach (var action in onUpdate) {
-					var updater = action.updater as UpdateBucketWithUpdater<SpaceHeater.
-						StatesInstance>.IUpdater;
-					if (updater != null)
-						// dt is not used by the handler!
-						sm.online.Enter("CheckOverheatOnStart", (smi) => updater.Update(
-							smi, 0.0f));
-				}
-			} else
+			var online = __instance.online;
+			var onUpdate = online.updateActions;
+			foreach (var action in onUpdate)
+				if (action.updater is UpdateBucketWithUpdater<SpaceHeater.StatesInstance>.
+						IUpdater updater)
+					// dt is not used by the handler!
+					online.Enter("CheckOverheatOnStart", (smi) => updater.Update(smi, 0.0f));
+			if (onUpdate.Count <= 0)
 				PUtil.LogWarning("No SpaceHeater update handler found");
 		}
 	}
@@ -603,7 +575,7 @@ namespace PeterHan.StockBugFix {
 		internal static void Postfix(BuildingDef __result) {
 			__result.Invincible = true;
 			__result.Overheatable = false;
-			__result.OverheatTemperature = 9999.0f;
+			__result.OverheatTemperature = Sim.MaxTemperature;
 		}
 	}
 

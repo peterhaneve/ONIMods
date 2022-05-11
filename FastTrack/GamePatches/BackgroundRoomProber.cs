@@ -303,7 +303,6 @@ namespace PeterHan.FastTrack.GamePatches {
 					if (filled)
 						cell = queue.Dequeue();
 				} while (filled);
-				PUtil.LogDebug("Rebuild room: {0:D} covered {1:D} cells".F(cell, n));
 				cavity.minX = minX;
 				cavity.minY = minY;
 				cavity.maxX = maxX;
@@ -468,9 +467,6 @@ namespace PeterHan.FastTrack.GamePatches {
 						var cavity = cavityInfos.GetData(destroyedID);
 						if (cavity != null)
 							DestroyRoom(cavity.room);
-						for (int i = 0; i < Grid.CellCount; i++)
-							if (cavityForCell[i] == destroyedID)
-								PUtil.LogWarning("Destroyed {0:D} but it is still active at {1:D}".F(destroyedID._index, i));
 						cavityInfos.Free(destroyedID);
 					}
 				RefreshRooms();
