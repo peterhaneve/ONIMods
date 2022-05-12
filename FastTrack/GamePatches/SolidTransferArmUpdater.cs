@@ -19,7 +19,6 @@
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -190,8 +189,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="items">The fetchables for a prefab ID.</param>
 		internal void UpdateCache(IList<FetchManager.Fetchable> items) {
 			int n = items.Count;
-			KPrefabID prefabID;
 			for (int i = 0; i < n; i++) {
+				KPrefabID prefabID;
 				var pickupable = items[i].pickupable;
 				if (pickupable != null && (prefabID = pickupable.KPrefabID).HasTag(GameTags.
 						Stored))

@@ -18,7 +18,6 @@
 
 using HarmonyLib;
 using Ryu;
-using System.Text;
 using UnityEngine;
 
 using SUFFIXES = STRINGS.UI.UNITSUFFIXES;
@@ -81,9 +80,8 @@ namespace PeterHan.FastTrack.UIPatches {
 				if (text.AppendIfInfinite(seconds))
 					text.Append("s");
 				else if (forceCycles || Mathf.Abs(seconds) > 100.0f) {
-					text.AppendSimpleFormat(formatString, seconds / Constants.
-						SECONDS_PER_CYCLE);
-					string tmp = text.ToString();
+					string tmp = text.AppendSimpleFormat(formatString, seconds / Constants.
+						SECONDS_PER_CYCLE).ToString();
 					text.Clear();
 					text.Append(STRINGS.UI.FORMATDAY);
 					text.Replace("{0}", tmp);
@@ -282,24 +280,21 @@ namespace PeterHan.FastTrack.UIPatches {
 				var text = CACHED_BUILDER;
 				text.Clear();
 				if (timeSlice == TimeSlice.PerSecond)
-					GetFormattedWattage(text, joules, GameUtil.WattageFormatterUnit.
-						Automatic, true);
+					GetFormattedWattage(text, joules);
 				else {
 					var legend = JOULE_LEGEND;
 					joules = GameUtil.ApplyTimeSlice(joules, timeSlice);
 					float absJ = Mathf.Abs(joules);
 					if (text.AppendIfInfinite(joules))
 						text.Append(legend[0]);
-					else if (absJ > 1000000.0f) {
-						text.AppendSimpleFormat(floatFormat, joules * 0.000001f);
-						text.Append(legend[2]);
-					} else if (absJ > 1000.0f) {
-						text.AppendSimpleFormat(floatFormat, joules * 0.001f);
-						text.Append(legend[1]);
-					} else {
-						text.AppendSimpleFormat(floatFormat, joules);
-						text.Append(legend[0]);
-					}
+					else if (absJ > 1000000.0f)
+						text.AppendSimpleFormat(floatFormat, joules * 0.000001f).Append(
+							legend[2]);
+					else if (absJ > 1000.0f)
+						text.AppendSimpleFormat(floatFormat, joules * 0.001f).Append(
+							legend[1]);
+					else
+						text.AppendSimpleFormat(floatFormat, joules).Append(legend[0]);
 					text.AppendTimeSlice(timeSlice);
 				}
 				__result = text.ToString();

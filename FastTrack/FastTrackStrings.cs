@@ -16,8 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
-
 namespace PeterHan.FastTrack {
 	/// <summary>
 	/// Stores the strings used for Fast Track.

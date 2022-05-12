@@ -109,14 +109,14 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static void GetResultDescriptions(ComplexRecipe recipe,
 				IList<DescriptorWithSprite> result) {
 			var results = recipe.results;
-			int n = results.Length, nd;
+			int n = results.Length;
 			string template = RECIPE_PRODUCT;
 			var text = CACHED_BUILDER;
 			if (recipe.producedHEP > 0) {
 				text.Clear().Append(HEP_TOOLTIP).Append(recipe.producedHEP.ToString());
 				string description = text.ToString();
 				result.Add(new DescriptorWithSprite(new Descriptor(description, description,
-					Descriptor.DescriptorType.Requirement, false), RADBOLT_ICON));
+					Descriptor.DescriptorType.Requirement), RADBOLT_ICON));
 			}
 			var desc = ListPool<Descriptor, SelectedRecipeQueueScreen>.Allocate();
 			for (int i = 0; i < n; i++) {
@@ -144,7 +144,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				if (element != null) {
 					DescriptorAllocPatches.GetMaterialDescriptors(element.attributeModifiers,
 						desc);
-					nd = desc.Count;
+					int nd = desc.Count;
 					for (int j = 0; j < nd; j++) {
 						var descriptor = desc[j];
 						descriptor.IncreaseIndent();
@@ -152,7 +152,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					}
 				} else {
 					DescriptorAllocPatches.GetAllDescriptors(prefab, false, desc);
-					nd = desc.Count;
+					int nd = desc.Count;
 					for (int j = 0; j < nd; j++) {
 						var descriptor = desc[j];
 						if (descriptor.IsEffectDescriptor()) {
@@ -213,10 +213,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				var effect = items[i];
 				bool isOld = i < nr;
 				GameObject go;
-				if (isOld)
-					go = oldRows[i];
-				else
-					go = Util.KInstantiateUI(prefab, parent, true);
+				go = isOld ? oldRows[i] : Util.KInstantiateUI(prefab, parent, true);
 				if (go.TryGetComponent(out HierarchyReferences hr)) {
 					var icon = hr.GetReference<Image>("Icon");
 					var descriptor = effect.descriptor;

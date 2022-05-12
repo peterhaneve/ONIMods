@@ -20,7 +20,6 @@ using HarmonyLib;
 using Klei.AI;
 using PeterHan.PLib.Core;
 using System;
-using System.Collections.Generic;
 using System.Reflection.Emit;
 using UnityEngine;
 
@@ -173,7 +172,7 @@ namespace PeterHan.FastTrack.GamePatches {
 					lit = false;
 					if (hv != Guid.Empty && worker.TryGetComponent(out KSelectable ks)) {
 						// Properly zero the Guid to avoid spamming the call later
-						ks.RemoveStatusItem(hv, false);
+						ks.RemoveStatusItem(hv);
 						handle = Guid.Empty;
 					}
 				}

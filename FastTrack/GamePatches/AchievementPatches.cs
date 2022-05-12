@@ -348,7 +348,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal static bool Prefix(ref bool __result, EatXKCalProducedByY __instance) {
 			var inst = AchievementPatches.Instance;
 			// If this is the not-raw achievement
-			bool cont = inst != null || !Db.Get().ColonyAchievements.EatCookedFood.
+			bool cont = inst == null || !Db.Get().ColonyAchievements.EatCookedFood.
 				requirementChecklist.Contains(__instance);
 			if (!cont)
 				__result = RationTracker.Get().GetCaloiresConsumedByFood(inst.targetFoods) *

@@ -117,7 +117,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		internal void AddBrain(CreatureBrain brain) {
 			if (brain.TryGetComponent(out Navigator nav))
 				// What PathProberSensor did
-				nav.UpdateProbe(false);
+				nav.UpdateProbe();
 			brainsToUpdate.Add(new BrainPair(brain, nav));
 		}
 
@@ -129,7 +129,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			var nav = brain.Navigator;
 			if (nav != null)
 				// What PathProberSensor did
-				nav.UpdateProbe(false);
+				nav.UpdateProbe();
 			brainsToUpdate.Add(new BrainPair(brain, nav));
 		}
 
@@ -378,14 +378,14 @@ namespace PeterHan.FastTrack.PathPatches {
 			/// Initializes the brain to be updated. This saves memory over reallocating new
 			/// instances every frame.
 			/// </summary>
-			/// <param name="brain">The brain to update.</param>
-			/// <param name="navigator">The navigator to compute paths for this brain.</param>
+			/// <param name="newBrain">The brain to update.</param>
+			/// <param name="newNavigator">The navigator to compute paths for this brain.</param>
 			/// <param name="n">The number of pickup prefab IDs to be updated.</param>
-			public void Begin(Brain brain, Navigator navigator, int n) {
+			public void Begin(Brain newBrain, Navigator newNavigator, int n) {
 				Count = n;
-				this.brain = brain;
-				this.navigator = navigator;
-				worker = navigator.gameObject;
+				brain = newBrain;
+				navigator = newNavigator;
+				worker = newNavigator.gameObject;
 			}
 
 			/// <summary>
@@ -400,11 +400,10 @@ namespace PeterHan.FastTrack.PathPatches {
 			public void InternalDoWorkItem(int index) {
 				if (index >= 0 && index < Count) {
 					var thisPrefab = updater.byId[index];
-					var solidArmUpdater = GamePatches.SolidTransferArmUpdater.Instance;
 					thisPrefab.UpdatePickups(navigator.PathProber, navigator, worker);
 					// Help out our poor transfer arms in need
-					if (solidArmUpdater != null)
-						solidArmUpdater.UpdateCache(thisPrefab.fetchables.GetDataList());
+					GamePatches.SolidTransferArmUpdater.Instance?.UpdateCache(thisPrefab.
+						fetchables.GetDataList());
 				}
 			}
 

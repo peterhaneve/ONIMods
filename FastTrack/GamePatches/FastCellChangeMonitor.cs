@@ -20,6 +20,7 @@ using HarmonyLib;
 using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
 namespace PeterHan.FastTrack.GamePatches {

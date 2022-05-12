@@ -189,13 +189,13 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// Marks a prober as being able to reach a set of cells.
 		/// </summary>
 		/// <param name="prober">The prober being updated.</param>
-		/// <param name="cells">The cells which can be reached.</param>
+		/// <param name="reachable">The cells which can be reached.</param>
 		/// <param name="isFullQuery">true if the query is a full update (and processes
 		/// removed cells), or false otherwise.</param>
-		internal void Occupy(object prober, IEnumerable<int> cells, bool isFullQuery) {
-			if (probers.TryGetValue(prober, out ReachableCells rc))
+		internal void Occupy(object prober, IEnumerable<int> reachable, bool isFullQuery) {
+			if (probers.TryGetValue(prober, out var rc))
 				// While ugly, the alternative is yet another transpiler on SolidTransferArm...
-				rc.Update(cells, isFullQuery || prober is SolidTransferArm);
+				rc.Update(reachable, isFullQuery || prober is SolidTransferArm);
 			trigger.Set();
 		}
 
@@ -203,8 +203,8 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// Goes through all the probers, processing the ones that are dirty.
 		/// </summary>
 		private void Process() {
-			int n, cell;
 			foreach (var pair in probers) {
+				int n, cell;
 				var rc = pair.Value;
 				bool destroy = rc.destroy;
 				var oldCells = rc.oldCells;
@@ -344,7 +344,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 			/// </summary>
 			internal readonly IList<int> oldCells;
 
-			public ReachableCells() {
+			private ReachableCells() {
 				currentCells = new HashSet<int>();
 				destroy = false;
 				dirty = 0;

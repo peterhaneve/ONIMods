@@ -31,7 +31,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Whether colony reports are to be generated.
 		/// </summary>
-		private static bool REPORT = true;
+		private static bool report = true;
 
 		/// <summary>
 		/// Charges as many batteries as possible with the energy from this source.
@@ -43,13 +43,14 @@ namespace PeterHan.FastTrack.GamePatches {
 		private static float ChargeBatteriesFrom(Generator source, IList<Battery> sinks,
 				ref int first) {
 			int firstBattery = first, n = sinks.Count;
-			float energyLeft = source.JoulesAvailable, space, energyAdded;
+			float energyLeft = source.JoulesAvailable, energyAdded;
 			var sourceGO = source.gameObject;
 			do {
 				float energyPerBattery = energyLeft / (n - firstBattery);
 				energyAdded = 0.0f;
 				for (int i = firstBattery; i < n; i++) {
 					var battery = sinks[i];
+					float space;
 					// No self-charging on looped transformers
 					if (battery != null && (space = battery.Capacity - battery.
 							JoulesAvailable) > 0.0f) {
@@ -105,9 +106,9 @@ namespace PeterHan.FastTrack.GamePatches {
 				var sink = sinks[i];
 				if (sink != null) {
 					float energyNeeded = Mathf.Min(sink.Capacity - sink.JoulesAvailable, sink.
-						ChargeCapacity), energyAdded;
+						ChargeCapacity);
 					if (energyNeeded > 0.0f && first < ns) {
-						energyAdded = energyNeeded - DrainEvenly(energyNeeded, sources,
+						float energyAdded = energyNeeded - DrainEvenly(energyNeeded, sources,
 							ref first);
 						sink.AddEnergy(energyAdded);
 						usage += energyAdded;
@@ -135,10 +136,10 @@ namespace PeterHan.FastTrack.GamePatches {
 				var sink = sinks[i];
 				if (sink != null) {
 					float energyNeeded = Mathf.Min(sink.Capacity - sink.JoulesAvailable, sink.
-						ChargeCapacity), energyAdded;
+						ChargeCapacity);
 					if (energyNeeded > 0.0f && firstSource < ns) {
-						energyAdded = energyNeeded - DrainFirstAvailable(energyNeeded, sources,
-							ref firstSource);
+						float energyAdded = energyNeeded - DrainFirstAvailable(energyNeeded,
+							sources, ref firstSource);
 						sink.AddEnergy(energyAdded);
 						usage += energyAdded;
 					}
@@ -219,7 +220,6 @@ namespace PeterHan.FastTrack.GamePatches {
 			var generators = circuit.generators;
 			var outputTransformers = circuit.outputTransformers;
 			int n = generators.Count;
-			bool hasEnergy;
 			activeGenerators.Clear();
 			// Take from generators first
 			for (int i = 0; i < n; i++) {
@@ -227,14 +227,17 @@ namespace PeterHan.FastTrack.GamePatches {
 				if (generator != null && generator.JoulesAvailable > 0.0f)
 					activeGenerators.Add(generator);
 			}
-			activeGenerators.Sort(GeneratorChargeComparer.Instance);
-			hasEnergy = activeGenerators.Count > 0;
-			// Then from transformers that output onto this grid
-			n = outputTransformers.Count;
-			for (int i = 0; i < n && !hasEnergy; i++) {
-				var transformer = outputTransformers[i];
-				if (transformer != null && transformer.JoulesAvailable > 0.0f)
-					hasEnergy = true;
+			bool hasEnergy = activeGenerators.Count > 0;
+			if (hasEnergy)
+				activeGenerators.Sort(GeneratorChargeComparer.INSTANCE);
+			else {
+				// Then from transformers that output onto this grid
+				n = outputTransformers.Count;
+				for (int i = 0; i < n && !hasEnergy; i++) {
+					var transformer = outputTransformers[i];
+					if (transformer != null && transformer.JoulesAvailable > 0.0f)
+						hasEnergy = true;
+				}
 			}
 			return hasEnergy;
 		}
@@ -333,7 +336,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				}
 			for (int i = 0; i < n; i++) {
 				var circuit = circuits[i];
-				circuit.consumers.Sort(ConsumerWattageComparer.Instance);
+				circuit.consumers.Sort(ConsumerWattageComparer.INSTANCE);
 				circuit.minBatteryPercentFull = minBatteryFull[i];
 				circuits[i] = circuit;
 			}
@@ -379,10 +382,9 @@ namespace PeterHan.FastTrack.GamePatches {
 			var batteries = circuit.batteries;
 			var batteryStatus = new ConsumerRun(batteries);
 			var outputTransformers = circuit.outputTransformers;
-			int nc = consumers.Count, nb = batteries.Count, firstGenerator = 0,
-				firstTransformer = 0;
+			int nc = consumers.Count, firstGenerator = 0, firstTransformer = 0;
 			float usage = 0.0f;
-			batteries.Sort(BatteryChargeComparer.Instance);
+			batteries.Sort(BatteryChargeComparer.INSTANCE);
 			for (int i = 0; i < nc; i++) {
 				var consumer = consumers[i];
 				float energy = consumer.WattsUsed * UpdateManager.SecondsPerSimTick;
@@ -394,7 +396,7 @@ namespace PeterHan.FastTrack.GamePatches {
 							ref firstTransformer);
 					if (energy > 0.0f)
 						energy = batteryStatus.Power(energy);
-					if (REPORT && energy < e0)
+					if (report && energy < e0)
 						ReportManager.Instance.ReportValue(ReportManager.ReportType.
 							EnergyCreated, energy - e0, consumer.Name);
 					usage += e0 - energy;
@@ -419,9 +421,9 @@ namespace PeterHan.FastTrack.GamePatches {
 			var inputTransformers = circuit.inputTransformers;
 			var outputTransformers = circuit.outputTransformers;
 			int firstGenerator = 0, firstTransformer = 0, firstBattery = 0;
-			batteries.Sort(BatterySpaceComparer.Instance);
-			inputTransformers.Sort(BatterySpaceComparer.Instance);
-			generators.Sort(GeneratorChargeComparer.Instance);
+			batteries.Sort(BatterySpaceComparer.INSTANCE);
+			inputTransformers.Sort(BatterySpaceComparer.INSTANCE);
+			generators.Sort(GeneratorChargeComparer.INSTANCE);
 			float usage = ChargeDrainFirst(inputTransformers, generators, ref firstGenerator);
 			usage += ChargeDrainFirst(inputTransformers, outputTransformers,
 				ref firstTransformer);
@@ -447,12 +449,12 @@ namespace PeterHan.FastTrack.GamePatches {
 			var batteries = circuit.batteries;
 			var generators = circuit.generators;
 			var inputTransformers = circuit.inputTransformers;
-			bool hasSources = generators.Count > 0 || circuit.outputTransformers.Count > 0,
-				isUseful = hasSources || circuit.consumers.Count > 0;
 			int nb = batteries.Count, ng = generators.Count;
+			bool hasSources = ng > 0 || circuit.outputTransformers.Count > 0, isUseful =
+				hasSources || circuit.consumers.Count > 0;
 			if (nb > 0) {
 				// Batteries were in space-order, need to resort to charge-order
-				batteries.Sort(BatteryChargeComparer.Instance);
+				batteries.Sort(BatteryChargeComparer.INSTANCE);
 				used += ChargeDrainEvenly(inputTransformers, batteries) / UpdateManager.
 					SecondsPerSimTick;
 				hasSources |= GetMinimumBatteryCharge(ref circuit);
@@ -463,7 +465,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			// Report wasted energy
 			for (int i = 0; i < ng; i++) {
 				var generator = generators[i];
-				if (generator != null && REPORT)
+				if (generator != null && report)
 					ReportManager.Instance.ReportValue(ReportManager.ReportType.EnergyWasted,
 						-generator.JoulesAvailable, StringFormatter.Replace(STRINGS.BUILDINGS.
 						PREFABS.GENERATOR.OVERPRODUCTION, "{Generator}", generator.
@@ -473,7 +475,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			circuits[circuitID] = circuit;
 			// Check for overloading
 			var network = Game.Instance.electricalConduitSystem.GetNetworkByID(circuitID);
-			if (network != null && network is ElectricalUtilityNetwork enet)
+			if (network is ElectricalUtilityNetwork enet)
 				enet.UpdateOverloadTime(UpdateManager.SecondsPerSimTick, used, circuit.
 					bridgeGroups);
 		}
@@ -493,7 +495,6 @@ namespace PeterHan.FastTrack.GamePatches {
 			for (int i = 0; i < n; i++) {
 				var circuit = circuits[i];
 				var consumers = circuit.consumers;
-				var generators = circuit.generators;
 				var batteries = circuit.batteries;
 				int nb = batteries.Count;
 				float used = 0.0f;
@@ -502,7 +503,7 @@ namespace PeterHan.FastTrack.GamePatches {
 					batteries[nb - 1].JoulesAvailable > 0.0f);
 				if (hasEnergy)
 					used = SupplyConsumers(ref circuit, active);
-				else if (generators.Count > 0)
+				else if (circuit.generators.Count > 0)
 					SetAllConsumerStatus(consumers, ConnectionStatus.Unpowered);
 				else
 					SetAllConsumerStatus(consumers, ConnectionStatus.NotConnected);
@@ -512,7 +513,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			// the first pass
 			for (int i = 0; i < n; i++) {
 				var circuit = circuits[i];
-				usage[i] = usage[i] + SupplyStorage(ref circuit);
+				usage[i] += SupplyStorage(ref circuit);
 			}
 			for (int i = 0; i < n; i++)
 				SupplyTransformers(instance, i, usage[i]);
@@ -574,7 +575,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal static class Sim200msLast_Patch {
 			internal static bool Prepare() {
 				var options = FastTrackOptions.Instance;
-				REPORT = !options.NoReports;
+				report = !options.NoReports;
 				return options.ENetOpts;
 			}
 
@@ -692,7 +693,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
-		internal static readonly BatteryChargeComparer Instance = new BatteryChargeComparer();
+		internal static readonly BatteryChargeComparer INSTANCE = new BatteryChargeComparer();
 
 		private BatteryChargeComparer() { }
 
@@ -708,7 +709,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
-		internal static readonly BatterySpaceComparer Instance = new BatterySpaceComparer();
+		internal static readonly BatterySpaceComparer INSTANCE = new BatterySpaceComparer();
 
 		private BatterySpaceComparer() { }
 
@@ -724,7 +725,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
-		internal static readonly ConsumerWattageComparer Instance =
+		internal static readonly ConsumerWattageComparer INSTANCE =
 			new ConsumerWattageComparer();
 
 		private ConsumerWattageComparer() { }
@@ -743,7 +744,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
-		internal static readonly GeneratorChargeComparer Instance =
+		internal static readonly GeneratorChargeComparer INSTANCE =
 			new GeneratorChargeComparer();
 
 		private GeneratorChargeComparer() { }

@@ -150,7 +150,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			return false;
 		}
 
-		[HarmonyReversePatch(HarmonyReversePatchType.Original)]
+		[HarmonyReversePatch]
 		[HarmonyPatch(nameof(LightSymbolTracker.RenderEveryTick))]
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		internal static void RenderEveryTick(LightSymbolTracker instance, float dt) {

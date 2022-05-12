@@ -38,15 +38,15 @@ namespace PeterHan.FastTrack.UIPatches {
 				IDictionary<Tag, GameObject> biomeRows) {
 			var parent = sis.worldBiomesPanel.Content.gameObject;
 			int n = biomes.Count;
-			var setInactive = HashSetPool<Tag, SimpleInfoScreen>.Allocate();
+			var toDisable = HashSetPool<Tag, SimpleInfoScreen>.Allocate();
 			foreach (var pair in biomeRows)
 				if (pair.Value.activeSelf)
-					setInactive.Add(pair.Key);
+					toDisable.Add(pair.Key);
 			for (int i = 0; i < n; i++) {
 				string id = biomes[i];
 				var idTag = new Tag(id);
-				if (biomeRows.TryGetValue(idTag, out GameObject row))
-					setInactive.Remove(idTag);
+				if (biomeRows.TryGetValue(idTag, out var row))
+					toDisable.Remove(idTag);
 				else {
 					row = Util.KInstantiateUI(sis.bigIconLabelRow, parent, true);
 					if (row.TryGetComponent(out HierarchyReferences hr)) {
@@ -64,43 +64,43 @@ namespace PeterHan.FastTrack.UIPatches {
 				row.SetActive(true);
 			}
 			// Only turn off that which needs to be turned off
-			foreach (var id in setInactive)
-				if (biomeRows.TryGetValue(id, out GameObject row))
+			foreach (var id in toDisable)
+				if (biomeRows.TryGetValue(id, out var row))
 					row.SetActive(false);
-			setInactive.Recycle();
+			toDisable.Recycle();
 		}
 
 		/// <summary>
 		/// Displays a geyser present on the given planetoid.
 		/// </summary>
-		/// <param name="tag">The geyser tag to add.</param>
+		/// <param name="geyserTag">The geyser tag to add.</param>
 		/// <param name="parent">The parent of new geyser objects.</param>
-		/// <param name="name">The text to display for the geyser name.</param>
+		/// <param name="geyserName">The text to display for the geyser name.</param>
 		/// <param name="geyserRows">The cached list of all geysers seen so far.</param>
 		/// <returns>The label that can display that geyser.</returns>
-		internal GameObject AddGeyser(Tag tag, GameObject parent, string name,
+		internal GameObject AddGeyser(Tag geyserTag, GameObject parent, string geyserName,
 				IDictionary<Tag, GameObject> geyserRows) {
 			HierarchyReferences hr;
-			if (!geyserRows.TryGetValue(tag, out GameObject row)) {
+			if (!geyserRows.TryGetValue(geyserTag, out var row)) {
 				row = Util.KInstantiateUI(sis.iconLabelRow, parent, true);
-				geyserRows.Add(tag, row);
+				geyserRows.Add(geyserTag, row);
 				if (row.TryGetComponent(out hr)) {
-					string tagStr = tag.name, text = name;
+					string tagStr = geyserTag.name, text = geyserName;
 					var icon = hr.GetReference<Image>("Icon");
 					hr.GetReference<LocText>("ValueLabel").gameObject.SetActive(false);
 					if (tagStr == NO_GEYSERS)
 						icon.sprite = Assets.GetSprite("icon_action_cancel");
 					else {
-						var uiSprite = Def.GetUISprite(tag, "ui", false);
+						var uiSprite = Def.GetUISprite(geyserTag);
 						icon.sprite = uiSprite.first;
 						icon.color = uiSprite.second;
 					}
-					if (string.IsNullOrEmpty(name))
-						text = Assets.GetPrefab(tag).GetProperName();
+					if (string.IsNullOrEmpty(geyserName))
+						text = Assets.GetPrefab(geyserTag).GetProperName();
 					hr.GetReference<LocText>("NameLabel").SetText(text);
 				}
-			} else if (!string.IsNullOrEmpty(name) && row.TryGetComponent(out hr))
-				hr.GetReference<LocText>("NameLabel").SetText(name);
+			} else if (!string.IsNullOrEmpty(geyserName) && row.TryGetComponent(out hr))
+				hr.GetReference<LocText>("NameLabel").SetText(geyserName);
 			row.SetActive(true);
 			return row;
 		}
@@ -165,14 +165,13 @@ namespace PeterHan.FastTrack.UIPatches {
 		internal void AddSurfaceConditions(WorldContainer world) {
 			var surfaceConditionRows = sis.surfaceConditionRows;
 			var parent = sis.worldTraitsPanel.Content.gameObject;
-			GameObject lights, rads;
 			int n = surfaceConditionRows.Count;
 			bool isNew = n < 2;
 			for (int i = n; i < 2; i++)
 				surfaceConditionRows.Add(Util.KInstantiateUI(sis.iconLabelRow, parent,
 					true));
-			lights = surfaceConditionRows[0];
-			rads = surfaceConditionRows[1];
+			var lights = surfaceConditionRows[0];
+			var rads = surfaceConditionRows[1];
 			if (lights.TryGetComponent(out HierarchyReferences hr)) {
 				var valueLabel = hr.GetReference<LocText>("ValueLabel");
 				if (isNew) {
@@ -217,24 +216,24 @@ namespace PeterHan.FastTrack.UIPatches {
 				if (traitRow.TryGetComponent(out HierarchyReferences hr)) {
 					var refIcon = hr.GetReference<Image>("Icon");
 					Sprite sprite;
-					string name, tooltip;
+					string traitName, tooltip;
 					if (cachedTrait != null) {
 						string path = cachedTrait.filePath;
 						sprite = Assets.GetSprite(path.Substring(path.LastIndexOf('/') + 1));
 						if (sprite == null)
 							sprite = Assets.GetSprite("unknown");
 						refIcon.color = Util.ColorFromHex(cachedTrait.colorHex);
-						name = Strings.Get(cachedTrait.name);
+						traitName = Strings.Get(cachedTrait.name);
 						tooltip = Strings.Get(cachedTrait.description);
 					} else {
 						sprite = Assets.GetSprite("NoTraits");
 						refIcon.color = Color.white;
-						name = STRINGS.WORLD_TRAITS.MISSING_TRAIT;
+						traitName = STRINGS.WORLD_TRAITS.MISSING_TRAIT;
 						tooltip = "";
 					}
 					refIcon.gameObject.SetActive(true);
 					traitRow.AddOrGet<ToolTip>().SetSimpleTooltip(tooltip);
-					hr.GetReference<LocText>("NameLabel").SetText(name);
+					hr.GetReference<LocText>("NameLabel").SetText(traitName);
 					refIcon.sprite = sprite;
 					traitRow.SetActive(true);
 				}
@@ -245,10 +244,9 @@ namespace PeterHan.FastTrack.UIPatches {
 			if (n == 0) {
 				// No Traits row
 				bool isNew = existing < 1;
-				GameObject noTraitRow;
 				if (isNew)
 					sis.CreateWorldTraitRow();
-				noTraitRow = worldTraitRows[0];
+				var noTraitRow = worldTraitRows[0];
 				if (isNew && noTraitRow.TryGetComponent(out HierarchyReferences hr)) {
 					var refIcon = hr.GetReference<Image>("Icon");
 					refIcon.gameObject.SetActive(true);

@@ -67,6 +67,14 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		private static bool runMix = !FastTrackOptions.Instance.DisableSound;
 
+		/// <summary>
+		/// A coroutine that waits one frame, then allows AmbienceManager to run.
+		/// </summary>
+		private static System.Collections.IEnumerator RunAmbienceNextFrame() {
+			yield return null;
+			runAmbience = true;
+		}
+
 		public override void OnSpawn() {
 			base.OnSpawn();
 			runAmbience = false;
@@ -82,15 +90,6 @@ namespace PeterHan.FastTrack {
 				} else
 					runMix = false;
 			}
-		}
-
-		/// <summary>
-		/// A coroutine that waits one frame, then allows AmbienceManager to run.
-		/// </summary>
-		private System.Collections.IEnumerator RunAmbienceNextFrame() {
-			yield return null;
-			runAmbience = true;
-			yield break;
 		}
 
 		/// <summary>

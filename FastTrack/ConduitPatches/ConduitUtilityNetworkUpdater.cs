@@ -41,18 +41,13 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// </summary>
 		/// <param name="manager">The conduit network manager to trigger.</param>
 		internal static void TriggerEvent(ConduitUtilityNetworkManager manager) {
-			var action = manager.onNetworksRebuilt;
-			if (action != null)
-				action.Invoke(manager.GetNetworks(), manager.physicalNodes);
+			manager.onNetworksRebuilt?.Invoke(manager.GetNetworks(), manager.physicalNodes);
 		}
 
-		[HarmonyReversePatch(HarmonyReversePatchType.Original)]
+		[HarmonyReversePatch]
 		[HarmonyPatch(nameof(ConduitUtilityNetworkManager.Update))]
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		internal static void Update(ConduitUtilityNetworkManager instance) {
-			/// <summary>
-			/// Transpiles Update to avoid calling onNetworksRebuilt.
-			/// </summary>
 			TranspiledMethod Transpiler(TranspiledMethod instructions) {
 				var remove = typeof(OnNetworksRebuilt).GetMethodSafe(nameof(OnNetworksRebuilt.
 					Invoke), false, PPatchTools.AnyArguments);

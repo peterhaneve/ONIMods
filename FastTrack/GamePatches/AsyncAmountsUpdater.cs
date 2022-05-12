@@ -66,7 +66,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// The time delta elapsed since the last update.
 		/// </summary>
-		private float dt;
+		private float deltaTime;
 
 		/// <summary>
 		/// Fired when the sweepers are all updated.
@@ -84,7 +84,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		private readonly RangeInt[] slices;
 
 		private AsyncAmountsUpdater() {
-			dt = 0.0f;
+			deltaTime = 0.0f;
 			onComplete = new AutoResetEvent(false);
 			Count = AsyncJobManager.Instance.ThreadCount;
 			results = new ConcurrentQueue<AmountUpdated>();
@@ -104,11 +104,11 @@ namespace PeterHan.FastTrack.GamePatches {
 			Finish();
 			allAmounts = entries;
 			if (inst != null && n > 0) {
-				int bins = Count, perBucketInt = n / bins;
-				int cutoff = n - bins * perBucketInt, index = 0;
-				this.dt = dt;
+				int perBucketInt = n / Count;
+				int cutoff = n - Count * perBucketInt, index = 0;
+				deltaTime = dt;
 				// CFQ
-				for (int i = 0; i < bins; i++) {
+				for (int i = 0; i < Count; i++) {
 					int bin = perBucketInt + ((i < cutoff) ? 1 : 0);
 					slices[i] = new RangeInt(index, bin);
 					index += bin;
@@ -116,7 +116,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				onComplete.Reset();
 				inst.Run(this);
 			} else
-				this.dt = 0.0f;
+				deltaTime = 0.0f;
 		}
 
 		public void Dispose() {
@@ -127,20 +127,20 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Waits for the job to complete, then posts the update to the main thread.
 		/// </summary>
 		internal void Finish() {
-			if (dt > 0.0f && AsyncJobManager.Instance != null) {
-				if (!onComplete.WaitAndMeasure(FastTrackMod.MAX_TIMEOUT))
+			if (deltaTime > 0.0f && AsyncJobManager.Instance != null) {
+				if (onComplete.WaitOne(FastTrackMod.MAX_TIMEOUT))
 					PUtil.LogWarning("Unable to post Amounts updates within the timeout!");
 				// Make best effort even if the amounts did not post in time
-				while (results.TryDequeue(out AmountUpdated result))
+				while (results.TryDequeue(out var result))
 					result.instance.Publish(result.delta, result.lastValue);
-				dt = 0.0f;
+				deltaTime = 0.0f;
 			}
 		}
 
 		public void InternalDoWorkItem(int index) {
 			if (index >= 0 && index < slices.Length) {
 				var range = slices[index];
-				float dt = this.dt;
+				float dt = deltaTime;
 				int n = range.length;
 				if (n > 0) {
 					int start = range.start, end = start + n;
@@ -170,7 +170,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Stores the results of amount updates.
 		/// </summary>
-		private struct AmountUpdated {
+		private readonly struct AmountUpdated {
 			/// <summary>
 			/// The total change.
 			/// </summary>
@@ -212,12 +212,9 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal static bool Prefix(List<AmountInstanceBucket> amount_instances,
 				float time_delta) {
 			var inst = AsyncAmountsUpdater.Instance;
-			bool run = true;
-			if (inst != null) {
-				if (time_delta > 0.0f)
-					inst.BatchUpdate(amount_instances, time_delta);
-				run = false;
-			}
+			bool run = inst == null;
+			if (!run && time_delta > 0.0f)
+				inst.BatchUpdate(amount_instances, time_delta);
 			return run;
 		}
 	}

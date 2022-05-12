@@ -131,7 +131,7 @@ namespace PeterHan.FastTrack.Metrics {
 				if (entry.Time < MIN_TIME) break;
 				header.AppendLine();
 				header.Append(' ');
-				header.Append(entry.ToString());
+				header.Append(entry);
 				n--;
 			}
 			byTime.Recycle();
@@ -149,7 +149,7 @@ namespace PeterHan.FastTrack.Metrics {
 			/// <summary>
 			/// The class name in this bucket.
 			/// </summary>
-			public readonly string ClassName;
+			private readonly string className;
 
 			/// <summary>
 			/// The time taken in ticks.
@@ -158,7 +158,7 @@ namespace PeterHan.FastTrack.Metrics {
 
 			public SimBucketResults(long time, string className) {
 				Time = time.TicksToUS();
-				ClassName = className;
+				this.className = className;
 			}
 
 			public int CompareTo(SimBucketResults other) {
@@ -166,16 +166,16 @@ namespace PeterHan.FastTrack.Metrics {
 			}
 
 			public override bool Equals(object obj) {
-				return obj is SimBucketResults other && Time == other.Time && ClassName ==
-					other.ClassName;
+				return obj is SimBucketResults other && Time == other.Time && className ==
+					other.className;
 			}
 
 			public override int GetHashCode() {
-				return ClassName.GetHashCode();
+				return className.GetHashCode();
 			}
 
 			public override string ToString() {
-				return "{0}: {1:N0}us".F(ClassName, Time);
+				return "{0}: {1:N0}us".F(className, Time);
 			}
 		}
 	}
@@ -228,7 +228,7 @@ namespace PeterHan.FastTrack.Metrics {
 				for (int i = 0; i < n; i++) {
 					header.AppendLine();
 					header.Append(' ');
-					header.Append(byHitCount[i].ToString());
+					header.Append(byHitCount[i]);
 				}
 			}
 			byHitCount.Recycle();
@@ -242,33 +242,33 @@ namespace PeterHan.FastTrack.Metrics {
 			/// <summary>
 			/// The item name in this bucket.
 			/// </summary>
-			public readonly string ItemName;
+			private readonly string itemName;
 
 			/// <summary>
 			/// The number of hits.
 			/// </summary>
-			public readonly int Hits;
+			private readonly int hits;
 
 			public HitResults(int hits, string itemName) {
-				Hits = hits;
-				ItemName = itemName;
+				this.hits = hits;
+				this.itemName = itemName;
 			}
 
 			public int CompareTo(HitResults other) {
-				return -Hits.CompareTo(other.Hits);
+				return -hits.CompareTo(other.hits);
 			}
 
 			public override bool Equals(object obj) {
-				return obj is HitResults other && Hits == other.Hits && ItemName ==
-					other.ItemName;
+				return obj is HitResults other && hits == other.hits && itemName ==
+					other.itemName;
 			}
 
 			public override int GetHashCode() {
-				return ItemName.GetHashCode();
+				return itemName.GetHashCode();
 			}
 
 			public override string ToString() {
-				return "{0}: {1:N0}".F(ItemName, Hits);
+				return "{0}: {1:N0}".F(itemName, hits);
 			}
 		}
 	}

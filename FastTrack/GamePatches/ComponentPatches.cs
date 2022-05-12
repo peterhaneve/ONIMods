@@ -41,7 +41,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				var prefabID = __instance.GetComponent<KPrefabID>();
 				bool hasTag = prefabID.HasTag(GameTags.Detecting);
 				if (currentDetection && !hasTag)
-					prefabID.AddTag(GameTags.Detecting, false);
+					prefabID.AddTag(GameTags.Detecting);
 				else if (!currentDetection && hasTag)
 					prefabID.RemoveTag(GameTags.Detecting);
 				if (currentDetection != hasTag)

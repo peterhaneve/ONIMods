@@ -221,14 +221,13 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <returns>true if the viewport changed since the last call, or false otherwise.</returns>
 		private bool GetVisibleCellRange(out Vector2I min, out Vector2I max) {
 			int width = Grid.WidthInCells, height = Grid.HeightInCells;
-			bool changed;
 			Grid.GetVisibleExtents(out int xMin, out int yMin, out int xMax, out int yMax);
 			min = new Vector2I(Mathf.Clamp(xMin - TEXTURE_RESOLUTION, 0, width - 1),
 				Mathf.Clamp(yMin - TEXTURE_RESOLUTION, 0, height - 1));
 			max = new Vector2I(Mathf.Clamp(xMax + TEXTURE_RESOLUTION, 0, width - 1),
 				Mathf.Clamp(yMax + TEXTURE_RESOLUTION, 0, height - 1));
-			changed = xMin != lastViewMin.x || xMax != lastViewMax.x || yMin != lastViewMin.
-				y || yMax != lastViewMax.y;
+			bool changed = xMin != lastViewMin.x || xMax != lastViewMax.x || yMin !=
+				lastViewMin.y || yMax != lastViewMax.y;
 			lastViewMin.x = xMin; lastViewMin.y = yMin;
 			lastViewMax.x = xMax; lastViewMax.y = yMax;
 			return changed;
@@ -270,7 +269,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 				forceLateUpdate = false;
 			}
 			// Wait out the update
-			if (outstanding > 0 && !onComplete.WaitAndMeasure(FastTrackMod.MAX_TIMEOUT))
+			if (outstanding > 0 && !onComplete.WaitOne(FastTrackMod.MAX_TIMEOUT))
 				PUtil.LogWarning("Property textures did not update within the timeout!");
 			DisposeAll();
 			if (lerpers != null && !FullScreenDialogPatches.DialogVisible) {
@@ -335,10 +334,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			default:
 				throw new ArgumentException("No updater for property: " + property);
 			}
-			if (updater == null)
-				throw new InvalidOperationException("Missing texture updater: " + property);
-			else
-				running.Add(new TextureWorkItemCollection(this, buffer, min, max, updater));
+			running.Add(new TextureWorkItemCollection(this, buffer, min, max, updater));
 		}
 
 		/// <summary>
@@ -459,7 +455,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// <summary>
 			/// The number of sub-jobs in this work request.
 			/// </summary>
-			public int Count { get; private set; }
+			public int Count { get; }
 
 			public IWorkItemCollection Jobs => this;
 
@@ -480,7 +476,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			}
 
 			public void Dispose() {
-				region.Unlock();
+				region.buffer.Unlock(region);
 			}
 
 			public void InternalDoWorkItem(int index) {
@@ -551,7 +547,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied after OnSpawn runs.
 		/// </summary>
-		internal static void Postfix(PropertyTextures __instance) {
+		internal static void Postfix() {
 			PropertyTextureUpdater.CreateInstance();
 		}
 	}

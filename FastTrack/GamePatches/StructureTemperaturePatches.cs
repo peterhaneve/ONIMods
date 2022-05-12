@@ -148,7 +148,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			} else if (payload.isActiveStatusItemSet) {
 				// Turn off the "active" status item
 				if (payload.primaryElement.TryGetComponent(out KSelectable selectable))
-					selectable.SetStatusItem(energyCategory, null, null);
+					selectable.SetStatusItem(energyCategory, null);
 				payload.isActiveStatusItemSet = false;
 				dirty = true;
 			}

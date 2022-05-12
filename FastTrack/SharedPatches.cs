@@ -17,7 +17,6 @@
  */
 
 using HarmonyLib;
-using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.FastTrack {

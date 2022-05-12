@@ -16,10 +16,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 
 namespace PeterHan.FastTrack {
@@ -180,7 +178,7 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		/// <param name="workItems">The work items to run in parallel.</param>
 		public void Run(IWork workItems) {
-			bool starting = false;
+			bool starting;
 			if (workItems == null)
 				throw new ArgumentNullException(nameof(workItems));
 			if (isDisposed)
@@ -221,12 +219,10 @@ namespace PeterHan.FastTrack {
 			/// <summary>
 			/// Prints the errors that occurred during execution and clears the errors.
 			/// </summary>
-			internal bool PrintExceptions() {
-				bool hasCrash = errors.Count > 0;
+			internal void PrintExceptions() {
 				foreach (var error in errors)
 					DebugUtil.LogException(Instance, error.Message, error);
 				errors.Clear();
-				return hasCrash;
 			}
 
 			/// <summary>
@@ -237,7 +233,7 @@ namespace PeterHan.FastTrack {
 				while (!disposed) {
 					parent.semaphore.WaitOne();
 					try {
-						while (!(disposed = parent.isDisposed) && parent.DoNextWorkItem());
+						while (!(disposed = parent.isDisposed) && parent.DoNextWorkItem()) { }
 					} catch (Exception e) {
 						errors.Add(e);
 					}

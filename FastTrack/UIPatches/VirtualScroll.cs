@@ -122,9 +122,9 @@ namespace PeterHan.FastTrack.UIPatches {
 				GameObject go;
 				components.Clear();
 				for (int i = 0; i < n; i++) {
-					var transform = itemList.GetChild(i);
-					if (transform != null && (go = transform.gameObject).activeSelf) {
-						var vi = new VirtualItem(transform, go, itemList, ice);
+					var child = itemList.GetChild(i);
+					if (child != null && (go = child.gameObject).activeSelf) {
+						var vi = new VirtualItem(child, go, itemList, ice);
 						float w = vi.size.x, h = vi.size.y;
 						components.Add(vi);
 						if (w > marginX)
@@ -333,14 +333,12 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Shows or hides the target object.
 			/// </summary>
-			/// <param name="visible">true to make it visible, or false to make it invisible.</param>
-			public bool SetVisible(bool visible) {
-				bool changed = visible != this.visible;
-				if (entry != null && changed) {
-					entry.SetActive(visible);
-					this.visible = visible;
+			/// <param name="isVisible">true to make it visible, or false to make it invisible.</param>
+			public void SetVisible(bool isVisible) {
+				if (entry != null && isVisible != visible) {
+					entry.SetActive(isVisible);
+					visible = isVisible;
 				}
-				return changed;
 			}
 		}
 	}
@@ -378,7 +376,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		public void Dispose() {
-			UnityEngine.Object.Destroy(go);
+			Object.Destroy(go);
 			visible = false;
 		}
 

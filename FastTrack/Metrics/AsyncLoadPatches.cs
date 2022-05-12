@@ -21,10 +21,8 @@ using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Threading;
 
 using RunLoader = AsyncLoadManager<IGlobalAsyncLoader>.RunLoader;
-using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.Metrics {
 	/// <summary>
@@ -55,14 +53,14 @@ namespace PeterHan.FastTrack.Metrics {
 			var collectedLoaders = new List<AsyncLoader>();
 			var loaderFor = AsyncLoadManager<IGlobalAsyncLoader>.loaders;
 			// Only index the game assemblies
-			var assemblies = new Assembly[] { typeof(Game).Assembly, typeof(KAnim).Assembly };
+			var assemblies = new[] { typeof(Game).Assembly, typeof(KAnim).Assembly };
 			int n = assemblies.Length;
 			loaderFor.Clear();
 			for (int i = 0; i < n; i++)
 				foreach (var type in assemblies[i].GetTypes())
-					if (!type.IsAbstract && typeof(IGlobalAsyncLoader).IsAssignableFrom(type))
-					{
-						var loadInstance = Activator.CreateInstance(type) as AsyncLoader;
+					if (!type.IsAbstract && !type.IsInterface && typeof(IGlobalAsyncLoader).
+							IsAssignableFrom(type) && Activator.CreateInstance(type) is
+							AsyncLoader loadInstance) {
 						collectedLoaders.Add(loadInstance);
 						loaderFor[type] = loadInstance;
 						loadInstance.CollectLoaders(collectedLoaders);
@@ -70,12 +68,13 @@ namespace PeterHan.FastTrack.Metrics {
 #if DEBUG
 			PUtil.LogDebug("Async loading {0:D} types".F(collectedLoaders.Count));
 #endif
+			n = collectedLoaders.Count;
 			// Run them all in parallel (base game does it too!)
-			if (loaderFor.Count > 0) {
+			if (n > 0) {
 				var jobs = new WorkItemCollection<RunLoader, object>();
 				jobs.Reset(null);
-				foreach (var loader in collectedLoaders)
-					jobs.Add(new RunLoader { loader = loader });
+				for (int i = 0; i < n; i++)
+					jobs.Add(new RunLoader { loader = collectedLoaders[i] });
 				GlobalJobManager.Run(jobs);
 			}
 			collectedLoaders.Clear();

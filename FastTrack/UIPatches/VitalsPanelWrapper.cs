@@ -207,10 +207,9 @@ namespace PeterHan.FastTrack.UIPatches {
 			if (instance != panel.vitals)
 				panel = new VitalsPanelState(instance);
 			if (entity != null && (go = entity.gameObject) != null && panel.Populate()) {
-				Modifiers modifiers;
 				if (go != lastSelection.target)
 					lastSelection = new LastSelectionDetails(go, this);
-				modifiers = lastSelection.modifiers;
+				var modifiers = lastSelection.modifiers;
 				if (modifiers != null) {
 					FillLookup(modifiers);
 					if (!lastSelection.hasWilting)
@@ -234,7 +233,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				ref var amountLine = ref amountLines[i];
 				var gameObject = amountLine.go;
 				var amount = amountLine.amount;
-				bool visible = amountLookup.TryGetValue(amount.Id, out AmountInstance ai) &&
+				bool visible = amountLookup.TryGetValue(amount.Id, out var ai) &&
 					!ai.hide;
 				if (visible) {
 					string desc = amount.GetDescription(ai);
@@ -253,7 +252,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				var gameObject = attributeLine.go;
 				var attribute = attributeLine.attribute;
 				bool visible = attributeLookup.TryGetValue(attribute.Id,
-					out AttributeInstance ai) && !ai.hide;
+					out var ai) && !ai.hide;
 				if (visible) {
 					string desc = attribute.GetDescription(ai);
 					var lt = attributeLine.locText;
@@ -271,7 +270,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="target">The currently selected object.</param>
 		private void UpdateChecks(GameObject target) {
-			var additional = panel.vitals.conditionsContainerAdditional;
 			var checkboxLines = panel.checkboxLines;
 			int n = checkboxLines.Length;
 			CheckboxLineDisplayType displayType;
@@ -330,8 +328,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		private struct LastSelectionDetails {
 			internal readonly bool hasWilting;
 
-			internal readonly bool isDecorPlant;
-
 			internal readonly Modifiers modifiers;
 
 			/// <summary>
@@ -344,7 +340,6 @@ namespace PeterHan.FastTrack.UIPatches {
 				bool isPlant = go.TryGetComponent(out WiltCondition _), isDecor = go.
 					HasTag(GameTags.Decoration);
 				hasWilting = isPlant;
-				isDecorPlant = isDecor;
 				target = go;
 				if (go.TryGetComponent(out modifiers)) {
 					panel.plantNormalGO.SetActive(isPlant);
@@ -363,6 +358,15 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// is mostly a container, and should never be copied.
 		/// </summary>
 		private struct VitalsPanelState {
+			private static readonly MinionVitalsPanel.AmountLine[] EMPTY_AMOUNT_LINES =
+				Array.Empty<MinionVitalsPanel.AmountLine>();
+
+			private static readonly MinionVitalsPanel.AttributeLine[] EMPTY_ATTRIBUTE_LINES =
+				Array.Empty<MinionVitalsPanel.AttributeLine>();
+
+			private static readonly CheckboxLineExpanded[] EMPTY_CHECKBOX_LINES =
+				Array.Empty<CheckboxLineExpanded>();
+
 			internal MinionVitalsPanel.AmountLine[] amountLines;
 
 			internal MinionVitalsPanel.AttributeLine[] attributeLines;
@@ -401,9 +405,9 @@ namespace PeterHan.FastTrack.UIPatches {
 				plantNormalLabel = nLabel;
 				nLabel.TryGetComponent(out plantNormalTooltip);
 				vitals = instance;
-				amountLines = new MinionVitalsPanel.AmountLine[0];
-				attributeLines = new MinionVitalsPanel.AttributeLine[0];
-				checkboxLines = new CheckboxLineExpanded[0];
+				amountLines = EMPTY_AMOUNT_LINES;
+				attributeLines = EMPTY_ATTRIBUTE_LINES;
+				checkboxLines = EMPTY_CHECKBOX_LINES;
 			}
 
 			/// <summary>

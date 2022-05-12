@@ -17,7 +17,6 @@
  */
 
 using HarmonyLib;
-using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -38,8 +37,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static System.Collections.IEnumerator FreezeLayouts(IList<TableRow> allRows) {
 			yield return null;
 			int n = allRows.Count;
-			GameObject go;
 			for (int i = 0; i < n; i++) {
+				GameObject go;
 				var row = allRows[i];
 				if (row != null && (go = row.gameObject) != null && go.TryGetComponent(
 						out LayoutGroup realLayout)) {
@@ -60,8 +59,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static void GroupDupesByWorld(IList<TableRow> rows, IDictionary<int,
 				TableRowList.PooledList> dupesByWorld) {
 			int n = rows.Count;
-			GameObject go;
 			for (int i = 0; i < n; i++) {
+				GameObject go;
 				var row = rows[i];
 				var owner = row.GetIdentity().GetSoleOwner();
 				if (owner != null && owner.TryGetComponent(out MinionAssignablesProxy proxy) &&
@@ -191,31 +190,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
-		/// Listens for scroll events 
-		/// </summary>
-		private sealed class ScrollListener {
-			/// <summary>
-			/// The screen to update.
-			/// </summary>
-			private readonly TableScreen screen;
-
-			/// <summary>
-			/// The scroll pane to check for the position.
-			/// </summary>
-			private readonly ScrollRect scrollRect;
-
-			public ScrollListener(TableScreen screen, ScrollRect scrollRect) {
-				this.screen = screen;
-				this.scrollRect = scrollRect;
-			}
-
-			public void OnScroll(Vector2 _) {
-				if (!screen.CheckScrollersDirty())
-					screen.SetScrollersDirty(scrollRect.horizontalNormalizedPosition);
-			}
-		}
-
-		/// <summary>
 		/// A reversible comparator used to sort table rows.
 		/// </summary>
 		private sealed class TableSortComparison : IComparer<TableRow> {
@@ -242,7 +216,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 
 			public int Compare(TableRow x, TableRow y) {
-				int result = comparator.Invoke(x.GetIdentity(), y.GetIdentity());
+				int result = comparator.Invoke(x?.GetIdentity(), y?.GetIdentity());
 				if (reverse)
 					result = -result;
 				return result;

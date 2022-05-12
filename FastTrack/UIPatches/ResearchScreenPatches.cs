@@ -37,16 +37,15 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static Vector2 ClampBack(ResearchScreen __instance, RectTransform rt,
 				float zoom, Vector2 inertia, Vector2 anchorPos) {
 			const float ZS = 250.0f;
-			Vector2 contentSize = rt.rect.size, deltaAnchor, target = __instance.
-				forceTargetPosition;
+			Vector2 contentSize = rt.rect.size, target = __instance.forceTargetPosition;
 			float y = 0.0f, xMin = (-contentSize.x * 0.5f - ZS) * zoom, xMax = ZS * zoom,
-				yMin = -ZS * zoom, yMax;
+				yMin = -ZS * zoom;
 			if (__instance.TryGetComponent(out RectTransform irt))
 				y = irt.rect.size.y;
-			yMax = (contentSize.y + ZS) * zoom - y;
+			float yMax = (contentSize.y + ZS) * zoom - y;
 			target.x = Mathf.Clamp(target.x, xMin, xMax);
 			target.y = Mathf.Clamp(target.y, yMin, yMax);
-			deltaAnchor = new Vector2(Mathf.Clamp(anchorPos.x, xMin, xMax),
+			Vector2 deltaAnchor = new Vector2(Mathf.Clamp(anchorPos.x, xMin, xMax),
 				Mathf.Clamp(anchorPos.y, yMin, yMax)) + inertia - anchorPos;
 			__instance.forceTargetPosition = target;
 			return deltaAnchor;
@@ -177,13 +176,13 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static float UpdateZoom(ResearchScreen instance, Vector3 mousePos,
 				RectTransform rt, float dt, ref Vector2 anchorPos) {
 			float zoom = instance.currentZoom, oldZoom = zoom;
-			Vector2 target = mousePos, before;
+			Vector2 target = mousePos;
 			zoom = Mathf.Lerp(zoom, instance.targetZoom, Math.Min(0.9f, instance.
 				effectiveZoomSpeed * dt));
 			instance.currentZoom = zoom;
 			if (instance.zoomCenterLock)
 				target = new Vector2(0.5f * Screen.width, 0.5f * Screen.height);
-			before = zoom * rt.InverseTransformPoint(target);
+			Vector2 before = zoom * rt.InverseTransformPoint(target);
 			if (!Mathf.Approximately(zoom, oldZoom))
 				rt.localScale = new Vector3(zoom, zoom, 1.0f);
 			anchorPos += (Vector2)rt.InverseTransformPoint(target) * zoom - before;

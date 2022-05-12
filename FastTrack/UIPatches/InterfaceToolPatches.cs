@@ -296,7 +296,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				if (hover != null) {
 					instance.hover = null;
 					hover.Unhover();
-					Game.Instance.Trigger((int)GameHashes.HighlightObject, null);
+					Game.Instance.Trigger((int)GameHashes.HighlightObject);
 				}
 			}
 

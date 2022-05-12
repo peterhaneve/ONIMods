@@ -155,7 +155,6 @@ namespace PeterHan.FastTrack.CritterPatches {
 				} else {
 					correct = false;
 					canRecover = false;
-					wrong = false;
 				}
 				sm.hasCorrectLiquid.Set(correct, __instance);
 				sm.hasIncorrectLiquid.Set(wrong, __instance);

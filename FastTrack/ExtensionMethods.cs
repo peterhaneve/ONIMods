@@ -20,7 +20,6 @@ using HarmonyLib;
 using PeterHan.PLib.Core;
 using Ryu;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
@@ -180,6 +179,7 @@ namespace PeterHan.FastTrack {
 #endif
 		}
 
+#if DEBUG
 		/// <summary>
 		/// Prefixes methods to profile to start a stopwatch.
 		/// </summary>
@@ -197,6 +197,7 @@ namespace PeterHan.FastTrack {
 				Metrics.DebugMetrics.LogTracked(__originalMethod.DeclaringType.Name + "." +
 					__originalMethod.Name, __state.ElapsedTicks);
 		}
+#endif
 
 #if DEBUG
 		/// <summary>

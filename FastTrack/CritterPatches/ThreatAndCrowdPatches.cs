@@ -18,10 +18,7 @@
 
 using HarmonyLib;
 using Klei.AI;
-using PeterHan.PLib.Core;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 using FactionID = FactionManager.FactionID;
@@ -79,8 +76,12 @@ namespace PeterHan.FastTrack.CritterPatches {
 				}
 				if (fishMonitor != null) {
 					int fishCount = fishMonitor.fishCount;
-					overcrowded = fishCount > 0 && fishMonitor.cellCount < requiredSpace *
-						fishCount;
+					if (fishCount > 0)
+						overcrowded = fishMonitor.cellCount < requiredSpace * fishCount;
+					else {
+						int cell = Grid.PosToCell(smi.transform.position);
+						overcrowded = !Grid.IsValidCell(cell) || !Grid.IsLiquid(cell);
+					}
 				} else
 					overcrowded = room != null && critters > 1 && room.numCells <
 						requiredSpace * critters;
@@ -146,13 +147,11 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// <returns>The new room of the critter.</returns>
 		private static CavityInfo UpdateRoom(OvercrowdingMonitor.Instance smi,
 				KPrefabID prefabID) {
-			CavityInfo room = smi.cavity, newRoom;
+			var room = smi.cavity;
 			bool background = FastTrackOptions.Instance.BackgroundRoomRebuild;
 			int cell = Grid.PosToCell(smi.transform.position);
-			if (background)
-				newRoom = GamePatches.BackgroundRoomProber.Instance.GetCavityForCell(cell);
-			else
-				newRoom = Game.Instance.roomProber.GetCavityForCell(cell);
+			var newRoom = background ? GamePatches.BackgroundRoomProber.Instance.
+				GetCavityForCell(cell) : Game.Instance.roomProber.GetCavityForCell(cell);
 			prefabID.UpdateTagBits();
 			if (newRoom != room) {
 				bool isEgg = prefabID.HasAnyTags_AssumeLaundered(ref EGG), light =
@@ -268,21 +267,23 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// that need checks.
 		/// </summary>
 		internal static void InitThreatList() {
-			var inst = FactionManager.Instance;
-			NEEDS_THREAT_SEARCH = new HashSet<FactionID>();
-			for (int i = (int)FactionID.Duplicant; i < MAX_FACTION; i++) {
-				var alignment = (FactionID)i;
-				// If anything is set to attack, add it to the set
-				for (int j = (int)FactionID.Duplicant; j < MAX_FACTION; j++)
-					if (inst.GetDisposition(alignment, (FactionID)j) == FactionManager.
-							Disposition.Attack) {
-						NEEDS_THREAT_SEARCH.Add(alignment);
-						break;
-					}
-			}
+			if (NEEDS_THREAT_SEARCH == null) {
+				var inst = FactionManager.Instance;
+				NEEDS_THREAT_SEARCH = new HashSet<FactionID>();
+				for (int i = (int)FactionID.Duplicant; i < MAX_FACTION; i++) {
+					var alignment = (FactionID)i;
+					// If anything is set to attack, add it to the set
+					for (int j = (int)FactionID.Duplicant; j < MAX_FACTION; j++)
+						if (inst.GetDisposition(alignment, (FactionID)j) ==
+							FactionManager.Disposition.Attack) {
+							NEEDS_THREAT_SEARCH.Add(alignment);
+							break;
+						}
+				}
 #if DEBUG
-			PUtil.LogDebug("Factions needing threat search: " + NEEDS_THREAT_SEARCH.Join());
+				PUtil.LogDebug("Factions using threat search: " + NEEDS_THREAT_SEARCH.Join());
 #endif
+			}
 		}
 
 		/// <summary>
@@ -290,26 +291,20 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// </summary>
 		internal static bool Prefix(ThreatMonitor.Instance __instance,
 				ref GameObject __result) {
-			if (__instance.isMasterNull)
+			var threats = __instance.threats;
+			if (__instance.isMasterNull || threats == null)
 				__result = null;
 			else {
-				var threats = __instance.threats;
 				var navigator = __instance.navigator;
-				if (threats == null)
-					throw new ArgumentNullException("threats");
 				threats.Clear();
-				if (NEEDS_THREAT_SEARCH == null)
-					InitThreatList();
+				InitThreatList();
 				if (__instance.IAmADuplicant)
 					FindThreatDuplicant(__instance, threats, navigator);
 				else if (NEEDS_THREAT_SEARCH.Contains(__instance.alignment.Alignment))
 					// This branch is never reachable as Duplicant, because the Duplicant
 					// faction has Attack disposition to nothing
 					FindThreatCritter(__instance, threats, navigator);
-				if (threats.Count < 1)
-					__result = null;
-				else
-					__result = __instance.PickBestTarget(threats);
+				__result = threats.Count < 1 ? null : __instance.PickBestTarget(threats);
 			}
 			return false;
 		}

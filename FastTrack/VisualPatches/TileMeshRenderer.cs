@@ -20,7 +20,6 @@ using Rendering;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 using Bits = Rendering.BlockTileRenderer.Bits;
 
@@ -477,7 +476,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 					// If all required bits, and no forbidden bits, render this one
 					if ((require & connected) == require && (ai.forbiddenConnections &
 							connected) == 0) {
-						TileRendererUtils.AddVertexInfo(ai, x, y, connected, color);
+						ai.AddVertexInfo(x, y, connected, color);
 						break;
 					}
 				}

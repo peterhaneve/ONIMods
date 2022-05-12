@@ -86,7 +86,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		private static void SolidNotChangedEvent(RoomProber prober, int cell, bool _) {
 			if (prober != null)
 				ROOMS_PENDING.Add(cell);
-		}
+			}
 
 		/// <summary>
 		/// Transpiles Refresh to change a solid change event into a condition retrigger.
@@ -95,7 +95,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal static TranspiledMethod TranspileRefresh(TranspiledMethod instructions) {
 			return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(RoomProber).
 				GetMethodSafe(nameof(RoomProber.SolidChangedEvent), false, typeof(int),
-				typeof(bool)), typeof(DecorProviderRefreshFix).GetMethodSafe(nameof(
+					typeof(bool)), typeof(DecorProviderRefreshFix).GetMethodSafe(nameof(
 				SolidNotChangedEvent), true, typeof(RoomProber), typeof(int), typeof(bool)));
 		}
 
@@ -110,7 +110,7 @@ namespace PeterHan.FastTrack.GamePatches {
 					inst.UpdateRoom(cavity);
 				else
 					inst.QueueSolidChange(cell);
-			}
+	}
 			ROOMS_PENDING.Clear();
 		}
 	}

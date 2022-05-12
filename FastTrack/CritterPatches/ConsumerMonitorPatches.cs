@@ -19,8 +19,6 @@
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using System;
-using System.Collections.Generic;
-using UnityEngine;
 
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 

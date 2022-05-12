@@ -159,8 +159,7 @@ namespace PeterHan.FastTrack.PathPatches {
 						}
 					}
 					if (state != 1) {
-						if (cache && target != null && forceInvalid != null && instr.Is(
-								OpCodes.Call, target)) {
+						if (cache && instr.Is(OpCodes.Call, target)) {
 							// Load "this"
 							yield return new CodeInstruction(OpCodes.Ldarg_0);
 							yield return new CodeInstruction(OpCodes.Call, forceInvalid);
@@ -291,7 +290,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			var method = new List<CodeInstruction>(instructions);
 			if (FastTrackOptions.Instance.CachePaths) {
 				if (checker != null) {
-					method.InsertRange(0, new CodeInstruction[] {
+					method.InsertRange(0, new[] {
 						new CodeInstruction(OpCodes.Ldarg_0),
 						new CodeInstruction(OpCodes.Call, checker),
 						new CodeInstruction(OpCodes.Brtrue_S, end)

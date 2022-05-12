@@ -106,7 +106,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <param name="active">true to set the mesh renderer active, or false to set it
 		/// inactive.</param>
 		internal void UpdatePosition(float z, bool active) {
-			if (z != lastZ) {
+			if (!Mathf.Approximately(z, lastZ)) {
 				transform.position = new Vector3(0.0f, 0.0f, z + zOffset);
 				lastZ = z;
 			}
@@ -138,13 +138,9 @@ namespace PeterHan.FastTrack.VisualPatches {
 				var inst = KAnimBatchManager.Instance();
 				if (inst != null && inst.batchSets.Remove(key)) {
 					// Destroy from the batch manager
-					IList<KAnimBatchManager.BatchSetInfo> toPurge;
-					int n;
-					if (key.materialType == MaterialType.UI)
-						toPurge = inst.uiBatchSets;
-					else
-						toPurge = inst.culledBatchSetInfos;
-					n = toPurge.Count;
+					var toPurge = key.materialType == MaterialType.UI ? inst.uiBatchSets :
+						inst.culledBatchSetInfos;
+					int n = toPurge.Count;
 					for (int i = 0; i < n; i++)
 						if (toPurge[i].batchSet == __instance) {
 							toPurge.RemoveAt(i);
@@ -162,7 +158,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Stores a mapping from the meshes to their visualizers for cleanup.
 		/// </summary>
-		private static readonly IDictionary<int, KAnimMeshRenderer> visualizers =
+		private static readonly IDictionary<int, KAnimMeshRenderer> VISUALIZERS =
 			new Dictionary<int, KAnimMeshRenderer>(256);
 
 		/// <summary>
@@ -175,7 +171,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 					for (int i = 0; i < n; i++) {
 						var batch = batchSet.GetBatch(i);
 						int id = batch.id;
-						if (visualizers.TryGetValue(id, out KAnimMeshRenderer renderer) &&
+						if (VISUALIZERS.TryGetValue(id, out KAnimMeshRenderer renderer) &&
 								renderer != null)
 							renderer.UpdatePosition(batch.position.z, batch.size > 0 &&
 								batch.active);
@@ -189,7 +185,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <param name="batch">The batch to update.</param>
 		internal static void UpdateMaterialProperties(KAnimBatch batch) {
 			int id = batch.id;
-			if (batch.materialType != MaterialType.UI && visualizers.TryGetValue(id,
+			if (batch.materialType != MaterialType.UI && VISUALIZERS.TryGetValue(id,
 					out KAnimMeshRenderer renderer) && renderer != null)
 				renderer.SetProperties(batch.matProperties);
 		}
@@ -211,10 +207,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 				if (group != null && material_type != MaterialType.UI) {
 					int id = __instance.id;
 					// Destroy the existing renderer if it exists
-					if (visualizers.TryGetValue(id, out KAnimMeshRenderer renderer) &&
+					if (VISUALIZERS.TryGetValue(id, out KAnimMeshRenderer renderer) &&
 							renderer != null)
 						renderer.DestroyRenderer();
-					visualizers[id] = KAnimMeshRenderer.Create(group.mesh, group.
+					VISUALIZERS[id] = KAnimMeshRenderer.Create(group.mesh, group.
 						GetMaterial(material_type), layer, id);
 				}
 			}
@@ -233,7 +229,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// </summary>
 			internal static void Postfix(KAnimBatch __instance) {
 				int id = __instance.id;
-				if (__instance.materialType != MaterialType.UI && visualizers.TryGetValue(
+				if (__instance.materialType != MaterialType.UI && VISUALIZERS.TryGetValue(
 						id, out KAnimMeshRenderer renderer) && renderer != null)
 					renderer.Deactivate();
 			}
@@ -252,11 +248,11 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// </summary>
 			internal static void Prefix(KAnimBatch __instance) {
 				int id = __instance.id;
-				if (__instance.materialType != MaterialType.UI && visualizers.TryGetValue(
+				if (__instance.materialType != MaterialType.UI && VISUALIZERS.TryGetValue(
 						id, out KAnimMeshRenderer renderer)) {
 					if (renderer != null)
 						renderer.DestroyRenderer();
-					visualizers.Remove(id);
+					VISUALIZERS.Remove(id);
 				}
 			}
 		}
@@ -310,7 +306,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			internal static void Postfix(KAnimBatch __instance, BatchSet newBatchSet) {
 				int id = __instance.id;
 				if (newBatchSet == null && __instance.materialType != MaterialType.UI &&
-						visualizers.TryGetValue(id, out KAnimMeshRenderer renderer) &&
+						VISUALIZERS.TryGetValue(id, out KAnimMeshRenderer renderer) &&
 						renderer != null)
 					renderer.Deactivate();
 			}

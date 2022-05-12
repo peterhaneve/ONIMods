@@ -49,7 +49,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			return run;
 		}
 
-		[HarmonyReversePatch(HarmonyReversePatchType.Original)]
+		[HarmonyReversePatch]
 		[HarmonyPatch(nameof(ArtifactModule.RenderEveryTick))]
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		internal static void RenderEveryTick(ArtifactModule instance, float dt) {
@@ -139,7 +139,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 					PPatchTools.BASE_FLAGS))
 				if (method.Name == nameof(PopFXManager.SpawnFX))
 					yield return method;
-			yield break;
 		}
 
 		/// <summary>
@@ -182,7 +181,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			return false;
 		}
 
-		[HarmonyReversePatch(HarmonyReversePatchType.Original)]
+		[HarmonyReversePatch]
 		[HarmonyPatch(nameof(PumpingStationGuide.RenderEveryTick))]
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		internal static void RenderEveryTick(PumpingStationGuide instance, float dt) {

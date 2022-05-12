@@ -136,7 +136,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		public bool Equals(CachedStorageLabel other) {
-			return other.id == id;
+			return other != null && other.id == id;
 		}
 
 		/// <summary>
@@ -184,11 +184,11 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Shows or hides the label.
 		/// </summary>
-		/// <param name="active">true to show the label, or false otherwise.</param>
-		internal void SetActive(bool active) {
-			if (active != this.active) {
-				labelObj.SetActive(active);
-				this.active = active;
+		/// <param name="isActive">true to show the label, or false otherwise.</param>
+		internal void SetActive(bool isActive) {
+			if (isActive != active) {
+				labelObj.SetActive(isActive);
+				active = isActive;
 			}
 		}
 
@@ -196,20 +196,18 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Shows or hides the drop from UI button.
 		/// </summary>
 		/// <param name="allowDrop">true to show the manual drop button, or false otherwise.</param>
-		/// <param name="storage">The storage to drop from if clicked.</param>
-		/// <param name="item">The item to drop if clicked.</param>
-		internal void SetAllowDrop(bool allowDrop, Storage storage, GameObject item) {
-			var remove = removeButton;
-			if (remove != null) {
+		/// <param name="newStorage">The storage to drop from if clicked.</param>
+		/// <param name="newItem">The item to drop if clicked.</param>
+		internal void SetAllowDrop(bool allowDrop, Storage newStorage, GameObject newItem) {
+			if (removeButton != null) {
 				// Toggle enabled if required
-				if (remove.enabled != allowDrop) {
-					remove.enabled = allowDrop;
-					remove.gameObject.SetActive(allowDrop);
+				if (removeButton.enabled != allowDrop) {
+					removeButton.enabled = allowDrop;
+					removeButton.gameObject.SetActive(allowDrop);
 				}
-				if (allowDrop)
-					this.storage = storage;
+				storage = allowDrop ? newStorage : null;
 			}
-			this.item = item;
+			item = newItem;
 		}
 	}
 
@@ -220,7 +218,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
-		internal static readonly StressNoteComparer Instance = new StressNoteComparer();
+		internal static readonly StressNoteComparer INSTANCE = new StressNoteComparer();
 
 		private StressNoteComparer() { }
 

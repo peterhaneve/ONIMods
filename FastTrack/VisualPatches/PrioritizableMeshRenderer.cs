@@ -150,8 +150,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 				typeof(bool), typeof(bool));
 			var recalculateBounds = typeof(Mesh).GetMethodSafe(nameof(Mesh.RecalculateBounds),
 				false);
+			TranspiledMethod newMethod;
 			yield return new CodeInstruction(OpCodes.Call, target);
-			var newMethod = instructions;
 			// Assigning triangles automatically recalculates bounds!
 			if (drawMesh != null && recalculateBounds != null)
 				newMethod = PPatchTools.ReplaceMethodCallSafe(instructions,
@@ -159,8 +159,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 						{ drawMesh, PPatchTools.RemoveCall },
 						{ recalculateBounds, PPatchTools.RemoveCall }
 					});
-			else
+			else {
 				PUtil.LogWarning("Unable to patch PrioritizableRenderer.RenderEveryTick");
+				newMethod = instructions;
+			}
 			foreach (var instr in newMethod)
 				yield return instr;
 		}

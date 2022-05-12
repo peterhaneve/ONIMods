@@ -645,11 +645,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// Applied before GetCavityForCell runs.
 			/// </summary>
 			internal static bool Prefix(int cell, ref CavityInfo __result) {
-				var inst = Instance;
-				if (inst != null)
-					__result = inst.GetCavityForCell(cell);
-				else
-					__result = null;
+				__result = Instance?.GetCavityForCell(cell);
 				return false;
 			}
 		}

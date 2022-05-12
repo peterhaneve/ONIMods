@@ -338,19 +338,14 @@ namespace PeterHan.FastTrack.ConduitPatches {
 						}
 						cell += w;
 					}
-					if (found) {
-						var kmb = instance as KMonoBehaviour;
-						if (shouldAdd == null || kmb == null || shouldAdd(kmb)) {
-							// Add to list and trigger overlay mode update
-							if (kmb != null) {
-								if (kmb.TryGetComponent(out KBatchedAnimController kbac))
-									kbac.SetLayer(layer);
-								if (kmb.TryGetComponent(out UpdateGraphIfEntombed updateGraph))
-									updateGraph.UpdateOverlay(true);
-							}
-							targets.Add(instance);
-							onAdded?.Invoke(instance);
-						}
+					if (found && (shouldAdd == null || shouldAdd(instance))) {
+						// Add to list and trigger overlay mode update
+						if (instance.TryGetComponent(out KBatchedAnimController kbac))
+							kbac.SetLayer(layer);
+						if (instance.TryGetComponent(out UpdateGraphIfEntombed updateGraph))
+							updateGraph.UpdateOverlay(true);
+						targets.Add(instance);
+						onAdded?.Invoke(instance);
 					}
 				}
 			}

@@ -17,13 +17,9 @@
  */
 
 using HarmonyLib;
-using PeterHan.PLib.Core;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using UnityEngine;
-
-using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.PathPatches {
 	/// <summary>
@@ -103,10 +99,8 @@ namespace PeterHan.FastTrack.PathPatches {
 						src.DestroySelf();
 				}
 			}
-			while (offsetPending.TryDequeue(out UpdateOffset offset)) {
-				int newCell = offset.newCell;
+			while (offsetPending.TryDequeue(out var offset))
 				offset.offsets.GetOffsets(offset.newCell);
-			}
 		}
 
 		/// <summary>

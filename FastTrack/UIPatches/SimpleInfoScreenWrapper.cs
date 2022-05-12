@@ -61,7 +61,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				string hash = stringTable.GetStringByHash(pair.Key.noteHash);
 				stressNotes.Add(new ReportEntry.Note(pair.Value, hash));
 			}
-			stressNotes.Sort(StressNoteComparer.Instance);
+			stressNotes.Sort(StressNoteComparer.INSTANCE);
 			for (int i = 0; i < n; i++) {
 				var note = stressNotes[i];
 				float stressDelta = note.value;

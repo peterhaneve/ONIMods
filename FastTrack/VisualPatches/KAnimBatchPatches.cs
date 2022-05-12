@@ -17,7 +17,6 @@
  */
 
 using HarmonyLib;
-using PeterHan.PLib.Core;
 using System;
 
 using KAnimBatchTextureCache = KAnimBatchGroup.KAnimBatchTextureCache;
@@ -46,12 +45,11 @@ namespace PeterHan.FastTrack.VisualPatches {
 				var dataTex = __instance.dataTex;
 				// All the other anims above it need to be marked dirty
 				var data = dataTex.GetFloatDataPointer();
-				int end = Math.Max(0, __instance.currentOffset - VERTICES), n;
+				int end = Math.Max(0, __instance.currentOffset - VERTICES), n = dirtySet.Count;
 				controller.SetBatch(null);
 				controllers.RemoveAt(index);
 				controllersToIndex.Remove(controller);
 				var dirty = ListPool<int, KAnimBatch>.Allocate();
-				n = dirtySet.Count;
 				// Save every existing dirty index less than the deregistered one
 				for (int i = 0; i < n; i++) {
 					int dirtyIdx = dirtySet[i];

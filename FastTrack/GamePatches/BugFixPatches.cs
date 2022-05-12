@@ -19,11 +19,9 @@
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Reflection.Emit;
 
 using GeyserType = GeyserConfigurator.GeyserType;
-using IndirectionData = AnimEventManager.IndirectionData;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.GamePatches {
@@ -100,7 +98,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Transpiles the WorldContainers getter to remove the AsReadOnly call.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			var targetMethod = typeof(List<>).MakeGenericType(typeof(WorldContainer))?.
+			var targetMethod = typeof(List<>).MakeGenericType(typeof(WorldContainer)).
 				GetMethodSafe(nameof(List<WorldContainer>.AsReadOnly), false);
 			var method = new List<CodeInstruction>(instructions);
 			if (targetMethod != null) {

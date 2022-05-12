@@ -131,8 +131,6 @@ namespace PeterHan.FastTrack.UIPatches {
 								isIOBlock = false;
 							}
 							break;
-						default:
-							break;
 						}
 			}
 			if (remove.start >= 0)
@@ -213,7 +211,7 @@ namespace PeterHan.FastTrack.UIPatches {
 						go.GetComponentsInChildren(false, colliders);
 						int c = colliders.Count;
 						for (int j = 0; j < c; j++)
-							colliders[j].MarkDirty(false);
+							colliders[j].MarkDirty();
 					}
 				}
 			}

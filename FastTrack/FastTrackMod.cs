@@ -25,7 +25,6 @@ using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace PeterHan.FastTrack {
 	/// <summary>
@@ -76,10 +75,8 @@ namespace PeterHan.FastTrack {
 				CritterPatches.OvercrowdingMonitor_UpdateState_Patch.InitTagBits();
 			if (options.RadiationOpts)
 				GamePatches.FastProtonCollider.Init();
-			if (options.SensorOpts) {
+			if (options.SensorOpts)
 				SensorPatches.SensorPatches.Init();
-				SensorPatches.SensorPatches.MingleCellSensor_Update.Init();
-			}
 			if (options.AnimOpts)
 				VisualPatches.KAnimLoopOptimizer.CreateInstance();
 			if (options.InfoCardOpts)
@@ -351,7 +348,6 @@ namespace PeterHan.FastTrack {
 			for (int i = 0; i < 3; i++)
 				yield return null;
 			GameRunning = true;
-			yield break;
 		}
 	}
 }
