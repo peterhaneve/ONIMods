@@ -200,7 +200,6 @@ namespace PeterHan.ModUpdateDate {
 			var toAdd = HashSetPool<PublishedFileId_t, SteamUGCServiceFixed>.Allocate();
 			var toUpdate = HashSetPool<PublishedFileId_t, SteamUGCServiceFixed>.Allocate();
 			var loadPreviews = ListPool<SteamUGCService.Mod, SteamUGCServiceFixed>.Allocate();
-			bool idle;
 			int n = clients.Count;
 			// Mass request the details of all mods at once
 			foreach (var pair in allMods) {
@@ -220,8 +219,6 @@ namespace PeterHan.ModUpdateDate {
 						toUpdate.Add(id);
 					else
 						toAdd.Add(id);
-					if (n > 0)
-						mod.clientSeen = true;
 					mod.state = SteamModState.Subscribed;
 					break;
 				default:
@@ -235,7 +232,7 @@ namespace PeterHan.ModUpdateDate {
 			if (toQuery.Count > 0 && onQueryComplete == null)
 				QueryUGCDetails(toQuery.ToArray());
 			toQuery.Recycle();
-			idle = download.Idle;
+			bool idle = download.Idle;
 			if (idle)
 				// Avoid spamming by only notifying when all outstanding mods are downloaded
 				foreach (var pair in allMods) {
@@ -247,8 +244,6 @@ namespace PeterHan.ModUpdateDate {
 							toUpdate.Add(id);
 						else
 							toAdd.Add(id);
-						if (n > 0)
-							mod.clientSeen = true;
 						mod.state = SteamModState.Subscribed;
 					}
 				}
@@ -258,6 +253,11 @@ namespace PeterHan.ModUpdateDate {
 				// Event needs to be triggered
 				for (int i = 0; i < n; i++)
 					clients[i].UpdateMods(toAdd, toUpdate, toRemove, loadPreviews);
+				if (n > 0)
+					foreach (var added in toAdd)
+						// Mods that were successfully added will be updated in the future
+						if (allMods.TryGetValue(added, out ModInfo info))
+							info.clientSeen = true;
 			}
 			// Actually destroy all pending destroy mods
 			foreach (var id in toRemove)

@@ -384,11 +384,6 @@ namespace PeterHan.FastTrack.GamePatches {
 			// initial init in thread
 			while (solidChanges.TryDequeue(out _)) ;
 			roomProberThread.Start();
-			// Try to remove the original room prober completely
-			var inst = SimAndRenderScheduler.instance;
-			var gi = Game.Instance;
-			if (inst != null && gi != null)
-				inst.Remove(gi.roomProber);
 		}
 
 		/// <summary>
@@ -540,6 +535,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Handles all necessary room updates on the foreground thread.
 		/// </summary>
 		public void Sim200ms(float _) {
+			DecorProviderRefreshFix.TriggerUpdates();
 			Refresh();
 		}
 

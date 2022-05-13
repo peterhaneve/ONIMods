@@ -19,6 +19,7 @@
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
@@ -52,6 +53,11 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	public static class DecorProviderRefreshFix {
 		/// <summary>
+		/// Stores the rooms that are pending an update.
+		/// </summary>
+		private static readonly ISet<int> ROOMS_PENDING = new HashSet<int>();
+
+		/// <summary>
 		/// Attempts to also patch the Decor Reimagined implementation of DecorProvider.
 		/// Refresh.
 		/// </summary>
@@ -69,6 +75,26 @@ namespace PeterHan.FastTrack.GamePatches {
 			PUtil.LogDebug("Patching DecorProvider.Refresh");
 			harmony.Patch(typeof(DecorProvider).GetMethodSafe(nameof(DecorProvider.Refresh),
 				false, PPatchTools.AnyArguments), transpiler: patchMethod);
+			if (!FastTrackOptions.Instance.BackgroundRoomRebuild)
+				harmony.Patch(typeof(RoomProber), nameof(RoomProber.Sim1000ms), prefix:
+					new HarmonyMethod(typeof(DecorProviderRefreshFix),
+					nameof(PrefixRoomProbe)));
+			ROOMS_PENDING.Clear();
+		}
+
+		/// <summary>
+		/// Retriggers the conditions only when rooms would be rebuilt normally.
+		/// </summary>
+		[HarmonyPriority(Priority.HigherThanNormal)]
+		private static void PrefixRoomProbe(RoomProber __instance) {
+			foreach (int cell in ROOMS_PENDING) {
+				var cavity = __instance.GetCavityForCell(cell);
+				if (cavity != null)
+					__instance.UpdateRoom(cavity);
+				else
+					__instance.SolidChangedEvent(cell, true);
+			}
+			ROOMS_PENDING.Clear();
 		}
 
 		/// <summary>
@@ -77,23 +103,9 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		/// <param name="prober">The current room prober.</param>
 		/// <param name="cell">The cell of the room that will be updated.</param>
-		/// <param name="ignoreDoors">Whether doors should be ignored when triggering.</param>
-		private static void SolidNotChangedEvent(RoomProber prober, int cell,
-				bool ignoreDoors) {
-			if (FastTrackOptions.Instance.BackgroundRoomRebuild) {
-				var inst = BackgroundRoomProber.Instance;
-				var cavity = inst.GetCavityForCell(cell);
-				if (cavity != null)
-					inst.UpdateRoom(cavity);
-				else
-					inst.QueueSolidChange(cell);
-			} else if (prober != null) {
-				var cavity = prober.GetCavityForCell(cell);
-				if (cavity != null)
-					prober.UpdateRoom(cavity);
-				else
-					prober.SolidChangedEvent(cell, ignoreDoors);
-			}
+		private static void SolidNotChangedEvent(RoomProber prober, int cell, bool _) {
+			if (prober != null)
+				ROOMS_PENDING.Add(cell);
 		}
 
 		/// <summary>
@@ -103,8 +115,23 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal static TranspiledMethod TranspileRefresh(TranspiledMethod instructions) {
 			return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(RoomProber).
 				GetMethodSafe(nameof(RoomProber.SolidChangedEvent), false, typeof(int),
-					typeof(bool)), typeof(DecorProviderRefreshFix).GetMethodSafe(nameof(
+				typeof(bool)), typeof(DecorProviderRefreshFix).GetMethodSafe(nameof(
 				SolidNotChangedEvent), true, typeof(RoomProber), typeof(int), typeof(bool)));
+		}
+
+		/// <summary>
+		/// Triggers all queued room updates caused by Decor providers.
+		/// </summary>
+		internal static void TriggerUpdates() {
+			var inst = BackgroundRoomProber.Instance;
+			foreach (int cell in ROOMS_PENDING) {
+				var cavity = inst.GetCavityForCell(cell);
+				if (cavity != null)
+					inst.UpdateRoom(cavity);
+				else
+					inst.QueueSolidChange(cell);
+			}
+			ROOMS_PENDING.Clear();
 		}
 	}
 

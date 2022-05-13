@@ -143,7 +143,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				float dt = this.dt;
 				int n = range.length;
 				if (n > 0) {
-					int start = range.start, end = start + n - 1;
+					int start = range.start, end = start + n;
 					for (int i = start; i < end; i++)
 						if (allAmounts[i].data is AmountInstance instance) {
 							float delta = instance.GetDelta() * dt;
