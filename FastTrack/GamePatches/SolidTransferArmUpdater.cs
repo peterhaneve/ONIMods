@@ -169,8 +169,8 @@ namespace PeterHan.FastTrack.GamePatches {
 						sweeper.IncrementSerialNo();
 					sweeper.Sim();
 				}
-				cached.Clear();
 			}
+			cached.Clear();
 		}
 
 		public void Dispose() {
