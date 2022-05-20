@@ -36,6 +36,17 @@ namespace PeterHan.ModUpdateDate {
 		public static SteamUGCServiceFixed Instance { get; } = new SteamUGCServiceFixed();
 
 		/// <summary>
+		/// Avoids a race condition when installing mods midgame where Steam only thinks the
+		/// mod is actually installed between the Add and Update.
+		/// </summary>
+		/// <param name="id">The mod ID to check.</param>
+		/// <returns>true if the mod can be reported to ONI, or false if it is not yet
+		/// considered "Installed".</returns>
+		private static bool CanReportMod(PublishedFileId_t id) {
+			return (SteamUGC.GetItemState(id) & (uint)EItemState.k_EItemStateInstalled) != 0U;
+		}
+
+		/// <summary>
 		/// Reports if downloading (auto update) is still in progress.
 		/// </summary>
 		public bool UpdateInProgress {
@@ -247,6 +258,7 @@ namespace PeterHan.ModUpdateDate {
 			var toUpdate = HashSetPool<PublishedFileId_t, SteamUGCServiceFixed>.Allocate();
 			var loadPreviews = ListPool<SteamUGCService.Mod, SteamUGCServiceFixed>.Allocate();
 			int n = clients.Count;
+			bool idle = download.Idle;
 			// Mass request the details of all mods at once
 			foreach (var pair in allMods) {
 				var mod = pair.Value;
@@ -261,11 +273,24 @@ namespace PeterHan.ModUpdateDate {
 				case SteamModState.DetailsDirty:
 					// Details were downloaded, send out a quick update of all the mod names
 					// in mass at the beginning even if some downloads are pending
-					if (mod.clientSeen)
-						toUpdate.Add(id);
-					else
-						toAdd.Add(id);
-					mod.state = SteamModState.Subscribed;
+					if (CanReportMod(id)) {
+						if (mod.clientSeen)
+							toUpdate.Add(id);
+						else
+							toAdd.Add(id);
+						mod.state = SteamModState.Subscribed;
+					}
+					break;
+				case SteamModState.Updated:
+					// Avoid spamming by only notifying when queue is empty
+					if (idle && CanReportMod(id)) {
+						mod.Summon();
+						if (mod.clientSeen)
+							toUpdate.Add(id);
+						else
+							toAdd.Add(id);
+						mod.state = SteamModState.Subscribed;
+					}
 					break;
 				default:
 					break;
@@ -278,21 +303,6 @@ namespace PeterHan.ModUpdateDate {
 			if (toQuery.Count > 0 && onQueryComplete == null)
 				QueryUGCDetails(toQuery.ToArray());
 			toQuery.Recycle();
-			bool idle = download.Idle;
-			if (idle)
-				// Avoid spamming by only notifying when all outstanding mods are downloaded
-				foreach (var pair in allMods) {
-					var mod = pair.Value;
-					var id = pair.Key;
-					if (mod.state == SteamModState.Updated) {
-						mod.Summon();
-						if (mod.clientSeen)
-							toUpdate.Add(id);
-						else
-							toAdd.Add(id);
-						mod.state = SteamModState.Subscribed;
-					}
-				}
 			if (toAdd.Count > 0 || toUpdate.Count > 0 || toRemove.Count > 0 || loadPreviews.
 					Count > 0) {
 				firstEvent = true;
