@@ -132,8 +132,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				text.Append('/');
 				FormatStringPatches.GetFormattedMass(text, storage.capacityKg);
 				label.text.SetText(text);
-				// Rocket labels always have 1 line
-				label.FreezeIfMatch(1, true);
+				label.FreezeIfMatch(text.Length);
 				rocketLabels.Add(label);
 			}
 		}
@@ -258,8 +257,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				var module = allModules[i].Get();
 				if (module != null) {
 					if (module.TryGetComponent(out ArtifactModule artModule)) {
-						var label = GetStorageLabel(parent, "artifactModule_" + count.
-							ToString());
+						var label = GetStorageLabel(parent, "artifactModule_" + count);
 						var occupant = artModule.Occupant;
 						count++;
 						if (moduleName == null)
@@ -270,7 +268,7 @@ namespace PeterHan.FastTrack.UIPatches {
 						else
 							text.Append(ROCKETS.ARTIFACT_MODULE.EMPTY);
 						label.text.SetText(text);
-						label.FreezeIfMatch(1, true);
+						label.FreezeIfMatch(text.Length);
 						label.SetAllowDrop(false, null, artModule.Occupant);
 						rocketLabels.Add(label);
 					} else if (module.TryGetComponent(out CargoBayCluster cargoBay))

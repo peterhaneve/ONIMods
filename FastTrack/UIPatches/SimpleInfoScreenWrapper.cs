@@ -576,7 +576,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					vi.Update(vitalsContainer);
 			}
 			RefreshRocket();
-			RefreshStorage(true);
+			RefreshStorage();
 		}
 
 		/// <summary>
@@ -729,7 +729,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(SimpleInfoScreen __instance) {
 				var inst = instance;
 				if (inst != null && __instance.selectedTarget != null)
-					inst.RefreshStorage(false);
+					inst.RefreshStorage();
 				return false;
 			}
 		}

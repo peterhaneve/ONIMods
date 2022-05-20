@@ -31,15 +31,14 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="item">The item to be displayed.</param>
 		/// <param name="storage">The parent storage of this item.</param>
 		/// <param name="parent">The parent object for the displayed item.</param>
-		/// <param name="freeze">true to freeze the labels, or false to leave as pending.</param>
 		/// <param name="total">The total number of items displayed so far.</param>
 		private void AddStorageItem(GameObject item, Storage storage, GameObject parent,
-				bool freeze, ref int total) {
+				ref int total) {
 			if (!item.TryGetComponent(out PrimaryElement pe) || pe.Mass > 0.0f) {
 				int t = total;
-				var storeLabel = GetStorageLabel(parent, "storage_" + t.ToString());
+				var storeLabel = GetStorageLabel(parent, "storage_" + t);
 				storageLabels.Add(storeLabel);
-				SetItemDescription(storeLabel, item, freeze, pe);
+				SetItemDescription(storeLabel, item, pe);
 				storeLabel.SetAllowDrop(storage.allowUIItemRemoval, storage, item);
 				total = t + 1;
 			}
@@ -49,8 +48,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Displays all items in storage.
 		/// </summary>
 		/// <param name="parent">The parent panel to add new labels.</param>
-		/// <param name="freeze">true to freeze the labels, or false to leave as pending.</param>
-		private void AddAllItems(GameObject parent, bool freeze) {
+		private void AddAllItems(GameObject parent) {
 			int n = storages.Count, total = 0;
 			for (int i = 0; i < n; i++) {
 				var storage = storages[i];
@@ -61,13 +59,13 @@ namespace PeterHan.FastTrack.UIPatches {
 					for (int j = 0; j < nitems; j++) {
 						var item = items[j];
 						if (item != null)
-							AddStorageItem(item, storage, parent, freeze, ref total);
+							AddStorageItem(item, storage, parent, ref total);
 					}
 				}
 			}
 			if (total == 0) {
 				var label = GetStorageLabel(parent, CachedStorageLabel.EMPTY_ITEM);
-				label.FreezeIfMatch(1, freeze);
+				label.FreezeIfMatch(1);
 				storageLabels.Add(label);
 			}
 		}
@@ -92,14 +90,13 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Refreshes the storage objects on this object (and its children?)
 		/// </summary>
-		/// <param name="freezeLabels">true to freeze the labels, or false to leave as pending.</param>
-		private void RefreshStorage(bool freezeLabels) {
+		private void RefreshStorage() {
 			if (storageParent != null) {
 				var panel = sis.StoragePanel;
 				if (storages.Count > 0) {
 					setInactive.UnionWith(storageLabels);
 					storageLabels.Clear();
-					AddAllItems(storageParent.Content.gameObject, freezeLabels);
+					AddAllItems(storageParent.Content.gameObject);
 					// Only turn off the things that are gone
 					setInactive.ExceptWith(storageLabels);
 					foreach (var inactive in setInactive)
@@ -121,15 +118,13 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="label">The label to be updated.</param>
 		/// <param name="item">The item to be displayed.</param>
-		/// <param name="freeze">true to freeze the labels, or false to leave as pending.</param>
 		/// <param name="pe">The item's primary element, or null if it has none.</param>
-		private void SetItemDescription(CachedStorageLabel label, GameObject item, bool freeze,
+		private void SetItemDescription(CachedStorageLabel label, GameObject item,
 				PrimaryElement pe) {
 			var defaultStyle = PluginAssets.Instance.defaultTextStyleSetting;
 			var text = CACHED_BUILDER;
 			var rottable = item.GetSMI<Rottable.Instance>();
 			var tooltip = label.tooltip;
-			int lines = 1;
 			text.Clear();
 			tooltip.ClearMultiStringTooltip();
 			if (item.TryGetComponent(out HighEnergyParticleStorage hepStorage))
@@ -159,7 +154,6 @@ namespace PeterHan.FastTrack.UIPatches {
 				string rotText = rottable.StateString();
 				if (!string.IsNullOrEmpty(rotText)) {
 					text.Append("\n " + Constants.BULLETSTRING).Append(rotText);
-					lines++;
 				}
 				tooltip.AddMultiStringTooltip(rottable.GetToolTip(), defaultStyle);
 			}
@@ -167,10 +161,9 @@ namespace PeterHan.FastTrack.UIPatches {
 				string diseased = GameUtil.GetFormattedDisease(pe.DiseaseIdx, pe.DiseaseCount);
 				text.Append("\n " + Constants.BULLETSTRING).Append(diseased);
 				tooltip.AddMultiStringTooltip(diseased, defaultStyle);
-				lines++;
 			}
-			label.FreezeIfMatch(lines, freeze);
 			label.text.SetText(text);
+			label.FreezeIfMatch(text.Length);
 		}
 	}
 }

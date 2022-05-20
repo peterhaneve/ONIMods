@@ -28,17 +28,11 @@ namespace PeterHan.FastTrack.UIPatches {
 	internal sealed class CachedStorageLabel : IDisposable, IEquatable<CachedStorageLabel> {
 		public const string EMPTY_ITEM = "empty";
 
-		private const int FREEZE_THAWED = 0;
-
-		private const int FREEZE_PENDING = 1;
-
-		private const int FREEZE_FROZEN = 2;
-
 		/// <summary>
-		/// The number of lines of text displayed, as a crude indicator of when the item can
-		/// be frozen.
+		/// The number of characters of text displayed, as a crude indicator of when the item
+		/// can be frozen.
 		/// </summary>
-		public int Lines { get; set; }
+		public int Length { get; set; }
 
 		/// <summary>
 		/// Whether the label is active.
@@ -49,8 +43,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// The element used when laying out frozen rows.
 		/// </summary>
 		private readonly LayoutElement freeze;
-
-		private int frozen;
 
 		/// <summary>
 		/// The label's unique ID.
@@ -85,6 +77,8 @@ namespace PeterHan.FastTrack.UIPatches {
 
 		internal readonly ToolTip tooltip;
 
+		private readonly RectTransform transform;
+
 		/// <summary>
 		/// Creates a new blank label.
 		/// </summary>
@@ -93,23 +87,22 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="id">The unique ID of this label.</param>
 		internal CachedStorageLabel(SimpleInfoScreen sis, GameObject parent, string id) {
 			var label = Util.KInstantiate(sis.attributesLabelButtonTemplate, parent, id);
-			var transform = label.transform;
+			transform = label.rectTransform();
 			transform.localScale = Vector3.one;
 			labelObj = label;
 			freeze = label.AddOrGet<LayoutElement>();
-			frozen = FREEZE_THAWED;
 			label.TryGetComponent(out selectButton);
 			label.TryGetComponent(out thaw);
-			Lines = 0;
+			Length = 0;
 			selectButton.onClick += Select;
 			tooltip = label.GetComponentInChildren<ToolTip>();
 			text = label.GetComponentInChildren<LocText>();
 			if (id == EMPTY_ITEM)
 				text.SetText(STRINGS.UI.DETAILTABS.DETAILS.STORAGE_EMPTY);
 			// Set up the manual drop button, but default disable
-			transform = transform.Find("removeAttributeButton");
-			if (transform != null) {
-				var remove = transform.FindComponent<KButton>();
+			var child = transform.Find("removeAttributeButton");
+			if (child != null) {
+				var remove = child.FindComponent<KButton>();
 				remove.enabled = false;
 				remove.gameObject.SetActive(false);
 				remove.onClick += Drop;
@@ -147,27 +140,24 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
-		/// Freezes the layout only if the number of lines has not changed.
+		/// Freezes the layout only if the number of characters has not changed.
 		/// </summary>
-		/// <param name="lines">The number of lines of text displayed.</param>
-		/// <param name="allowUpdate">true to allow moving into frozen states, or false to thaw only.</param>
-		internal void FreezeIfMatch(int lines, bool allowUpdate) {
-			if (lines != Lines) {
-				Lines = lines;
-				if (frozen != FREEZE_THAWED) {
-					freeze.enabled = false;
-					thaw.enabled = true;
-					frozen = FREEZE_THAWED;
-				}
-			} else if (allowUpdate) {
-				if (frozen == FREEZE_THAWED)
-					frozen = FREEZE_PENDING;
-				else if (frozen == FREEZE_PENDING) {
-					freeze.CopyFrom(thaw);
-					thaw.enabled = false;
-					freeze.enabled = true;
-					frozen = FREEZE_FROZEN;
-				}
+		/// <param name="length">The number of characters displayed.</param>
+		internal void FreezeIfMatch(int length) {
+			if (length != Length && labelObj.activeInHierarchy) {
+				Length = length;
+				freeze.enabled = false;
+				thaw.enabled = true;
+				thaw.StartCoroutine(FreezeIt());
+			}
+		}
+
+		private System.Collections.IEnumerator FreezeIt() {
+			yield return new WaitForEndOfFrame();
+			if (freeze != null && thaw != null) {
+				freeze.CopyFrom(thaw);
+				freeze.enabled = true;
+				thaw.enabled = false;
 			}
 		}
 

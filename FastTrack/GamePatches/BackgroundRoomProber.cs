@@ -96,7 +96,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			for (int i = 0; i < n; i++) {
 				var prefabID = items[i];
 				if (prefabID != null) {
-					prefabID.Trigger((int)GameHashes.UpdateRoom, null);
+					prefabID.Trigger((int)GameHashes.UpdateRoom);
 					if (prefabID.TryGetComponent(out Assignable assignable) && assignable.
 							assignee == room)
 						assignable.Unassign();
@@ -125,6 +125,11 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Stores all cavities with handles for quick access by index.
 		/// </summary>
 		private readonly KCompactedVector<CavityInfo> cavityInfos;
+		
+		/// <summary>
+		/// Queues up requests to recalculate the room type.
+		/// </summary>
+		private readonly Queue<int> cellChanges;
 
 		/// <summary>
 		/// The cavities that have been destroyed by the background thread but not yet freed
@@ -146,6 +151,11 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Triggers a single first pass on every room.
 		/// </summary>
 		private volatile bool initialized;
+
+		/// <summary>
+		/// The maximum room size, updated when necessary so changes take effect immediately.
+		/// </summary>
+		private int maxRoomSize;
 		
 		private readonly ISet<HandleVector<int>.Handle> pendingDestroy;
 
@@ -177,11 +187,13 @@ namespace PeterHan.FastTrack.GamePatches {
 			buildingChanges = new ConcurrentQueue<int>();
 			cavityForCell = new HandleVector<int>.Handle[n];
 			cavityInfos = new KCompactedVector<CavityInfo>(2048);
+			cellChanges = new Queue<int>();
 			// ConcurrentBag is leaky and slow: https://ayende.com/blog/156097/the-high-cost-of-concurrentbag-in-net-4-0
 			destroyed = new ConcurrentQueue<HandleVector<int>.Handle>();
 			disposed = false;
 			floodFilling = new Queue<int>();
 			initialized = false;
+			maxRoomSize = 128;
 			pendingDestroy = new HashSet<HandleVector<int>.Handle>();
 			pendingSolidChanges = new HashSet<int>();
 			roomsChanged = new AutoResetEvent(false);
@@ -196,62 +208,90 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Adds the building or plant in the cell to its room.
 		/// </summary>
 		/// <param name="cell">The cell to query.</param>
-		/// <param name="cavity">The cavity for that cell.</param>
-		private void AddBuildingToRoom(int cell, CavityInfo cavity) {
-			var go = Grid.Objects[cell, (int)ObjectLayer.Building];
-			bool scanPlants = false, scanBuildings = false, dirty = false, found = false;
-			if (go != null && go.TryGetComponent(out KPrefabID prefabID)) {
-				// Is this entity already in the list?
-				if (go.TryGetComponent(out Deconstructable _)) {
-					var buildings = cavity.buildings;
-					int n = buildings.Count;
-					for (int i = 0; i < n; i++) {
-						var building = buildings[i];
-						if (building != null)
-							tempIDs.Add(building);
-						else
-							dirty = true;
-						if (building == prefabID)
-							found = true;
+		/// <param name="cavityID">The cavity ID for that cell.</param>
+		private void AddBuildingToRoom(int cell, HandleVector<int>.Handle cavityID) {
+			var cavity = cavityInfos.GetData(cavityID);
+			int cells = cavity.numCells;
+			if (cells > 0 && cells <= maxRoomSize) {
+				var go = Grid.Objects[cell, (int)ObjectLayer.Building];
+				bool scanPlants = false, scanBuildings = false, dirty = false;
+				if (go != null && go.TryGetComponent(out KPrefabID prefabID)) {
+					// Is this entity already in the list?
+					if (go.TryGetComponent(out Deconstructable _)) {
+						dirty = AddBuildingToRoom(cavity, prefabID);
+						scanBuildings = true;
+					} else if (go.HasTag(GameTags.Plant) && !go.HasTag(TREE_BRANCH_TAG)) {
+						dirty = AddPlantToRoom(cavity, prefabID);
+						scanPlants = true;
 					}
-					if (dirty) {
-						buildings.Clear();
-						buildings.AddRange(tempIDs);
-					}
-					tempIDs.Clear();
-					if (!found)
-						cavity.AddBuilding(prefabID);
-					scanBuildings = true;
-				} else if (go.HasTag(GameTags.Plant) && !go.HasTag(TREE_BRANCH_TAG)) {
-					var plants = cavity.plants;
-					int n = plants.Count;
-					for (int i = 0; i < n; i++) {
-						var plant = plants[i];
-						if (plant != null)
-							tempIDs.Add(plant);
-						else
-							dirty = true;
-						if (plant == prefabID)
-							found = true;
-					}
-					if (dirty) {
-						plants.Clear();
-						plants.AddRange(tempIDs);
-					}
-					tempIDs.Clear();
-					if (!found)
-						cavity.AddPlants(prefabID);
-					scanPlants = true;
 				}
+				// Because this class no longer deletes and recreates the room, need to scan
+				// and purge dead buildings from the list
+				if (!scanBuildings)
+					dirty |= RemoveDestroyed(cavity.buildings);
+				if (!scanPlants)
+					dirty |= RemoveDestroyed(cavity.plants);
+				if (dirty)
+					cavity.dirty = true;
 			}
-			// Because this class no longer deletes and recreates the room, need to scan and
-			// purge dead buildings from the list
-			if (!scanBuildings)
-				dirty |= RemoveDestroyed(cavity.buildings);
-			if (!scanPlants)
-				dirty |= RemoveDestroyed(cavity.plants);
-			if (dirty)
-				cavity.dirty = true;
+		}
+		
+		/// <summary>
+		/// Adds a completed building to a room.
+		/// </summary>
+		/// <param name="cavity">The room where the building should be added.</param>
+		/// <param name="prefabID">The building's prefab ID.</param>
+		/// <returns>true if the room was updated, or false otherwise.</returns>
+		private bool AddBuildingToRoom(CavityInfo cavity, KPrefabID prefabID) {
+			bool dirty = false, found = false;
+			var buildings = cavity.buildings;
+			int n = buildings.Count;
+			for (int i = 0; i < n; i++) {
+				var building = buildings[i];
+				if (building != null)
+					tempIDs.Add(building);
+				else
+					dirty = true;
+				if (building == prefabID)
+					found = true;
+			}
+			if (dirty) {
+				buildings.Clear();
+				buildings.AddRange(tempIDs);
+			}
+			tempIDs.Clear();
+			if (!found)
+				cavity.AddBuilding(prefabID);
+			return dirty;
+		}
+
+		/// <summary>
+		/// Adds a plant to a room.
+		/// </summary>
+		/// <param name="cavity">The room where the plant should be added.</param>
+		/// <param name="prefabID">The plant's prefab ID.</param>
+		/// <returns>true if the room was updated, or false otherwise.</returns>
+		private bool AddPlantToRoom(CavityInfo cavity, KPrefabID prefabID) {
+			bool dirty = false, found = false;
+			var plants = cavity.plants;
+			int n = plants.Count;
+			for (int i = 0; i < n; i++) {
+				var plant = plants[i];
+				if (plant != null)
+					tempIDs.Add(plant);
+				else
+					dirty = true;
+				if (plant == prefabID)
+					found = true;
+			}
+			if (dirty) {
+				plants.Clear();
+				plants.AddRange(tempIDs);
+			}
+			tempIDs.Clear();
+			if (!found)
+				cavity.AddPlants(prefabID);
+			return dirty;
 		}
 
 		/// <summary>
@@ -342,6 +382,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		public void Dispose() {
 			if (!disposed) {
 				disposed = true;
+				cellChanges.Clear();
 				roomsChanged.Set();
 				Instance = null;
 			}
@@ -382,7 +423,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			Util.ApplyInvariantCultureToThread(roomProberThread);
 			// If any changes occurred in OnPrefabInit etc, they will be handled anyways by
 			// initial init in thread
-			while (solidChanges.TryDequeue(out _)) ;
+			while (solidChanges.TryDequeue(out _)) { }
 			roomProberThread.Start();
 		}
 
@@ -424,7 +465,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		/// <param name="cell">The cell that changed.</param>
 		public void QueueBuildingChange(int cell) {
-			buildingChanges.Enqueue(cell);
+			cellChanges.Enqueue(cell);
 		}
 
 		/// <summary>
@@ -439,23 +480,24 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Triggers a refresh of rooms. Only to be called on the foreground thread!
 		/// </summary>
 		public void Refresh() {
-			int maxRoomSize = TuningData<RoomProber.Tuning>.Get().maxRoomSize;
+			maxRoomSize = TuningData<RoomProber.Tuning>.Get().maxRoomSize;
 			lock (cavityInfos) {
-				while (buildingChanges.TryDequeue(out int cell)) {
+				while (cellChanges.Count > 0) {
+					int cell = cellChanges.Dequeue();
 					ref var cavityID = ref cavityForCell[cell];
-					bool wall = RoomProber.CavityFloodFiller.IsWall(cell);
 					bool valid = cavityID.IsValid();
-					if (valid == wall)
+					if (valid == RoomProber.CavityFloodFiller.IsWall(cell))
 						// If a wall building like a mesh door was built but did not trigger a
 						// solid change update, then the tile will have a valid room on a wall
 						// building, set up a solid change
 						solidChanges.Enqueue(cell);
-					else if (valid) {
-						var cavity = cavityInfos.GetData(cavityID);
-						int cells = cavity.numCells;
-						if (cells > 0 && cells <= maxRoomSize)
-							AddBuildingToRoom(cell, cavity);
-					}
+					else if (valid)
+						AddBuildingToRoom(cell, cavityID);
+				}
+				while (buildingChanges.TryDequeue(out int cell)) {
+					ref var cavityID = ref cavityForCell[cell];
+					if (cavityID.IsValid())
+						AddBuildingToRoom(cell, cavityID);
 				}
 				while (destroyed.TryDequeue(out var destroyedID))
 					if (destroyedID.IsValid()) {
@@ -475,8 +517,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		private void RefreshRooms() {
 			var cavities = cavityInfos.GetDataList();
-			int maxRoomSize = TuningData<RoomProber.Tuning>.Get().maxRoomSize, n = cavities.
-				Count;
+			int n = cavities.Count;
 			for (int i = 0; i < n; i++) {
 				// No root canal found ;)
 				var cavityInfo = cavities[i];

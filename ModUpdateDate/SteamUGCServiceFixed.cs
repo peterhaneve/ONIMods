@@ -190,6 +190,52 @@ namespace PeterHan.ModUpdateDate {
 			return allMods.TryGetValue(item, out _);
 		}
 
+		private void OnUGCDetailsComplete(SteamUGCQueryCompleted_t callback, bool ioError) {
+			var result = callback.m_eResult;
+			var handle = callback.m_handle;
+			PublishedFileId_t id;
+			if (!ioError && result == EResult.k_EResultOK) {
+				var allResults = ListPool<SteamUGCDetails_t, SteamUGCServiceFixed>.Allocate();
+				for (uint i = 0U; i < callback.m_unNumResultsReturned; i++) {
+					if (SteamUGC.GetQueryUGCResult(handle, i, out SteamUGCDetails_t details) &&
+							allMods.TryGetValue(id = details.m_nPublishedFileId,
+							out ModInfo mod)) {
+#if false
+						PUtil.LogDebug("Updated mod {0:D} ({1})".F(id.m_PublishedFileId,
+							details.m_rgchTitle));
+#endif
+						mod.Populate(details);
+						// Queue up the preview image
+						download.Queue(id);
+						preview.Queue(id);
+						allResults.Add(details);
+					}
+				}
+				ModUpdateDetails.OnInstalledUpdate(allResults);
+				allResults.Recycle();
+			}
+			SteamUGC.ReleaseQueryUGCRequest(handle);
+			onQueryComplete?.Dispose();
+			onQueryComplete = null;
+		}
+
+		private void OnUGCSubscribed(RemoteStoragePublishedFileSubscribed_t callback) {
+			var id = callback.m_nPublishedFileId;
+			allMods.TryAdd(id, new ModInfo(id));
+		}
+
+		private void OnUGCUnsubscribed(RemoteStoragePublishedFileUnsubscribed_t callback) {
+			var id = callback.m_nPublishedFileId;
+			if (allMods.TryGetValue(id, out ModInfo mod))
+				mod.Donate();
+		}
+
+		private void OnUGCUpdated(RemoteStoragePublishedFileUpdated_t callback) {
+			var id = callback.m_nPublishedFileId;
+			// Set needs update to true
+			allMods.GetOrAdd(id, new ModInfo(id)).Pursue();
+		}
+		
 		/// <summary>
 		/// Replace the Update function of SteamUGCService with this version that actually
 		/// waits for the return and uses the same API as Mod Updater's regular mode.
@@ -272,52 +318,6 @@ namespace PeterHan.ModUpdateDate {
 				wasIdle = idle;
 				ModUpdateDatePatches.UpdateMainMenu();
 			}
-		}
-
-		private void OnUGCDetailsComplete(SteamUGCQueryCompleted_t callback, bool ioError) {
-			var result = callback.m_eResult;
-			var handle = callback.m_handle;
-			PublishedFileId_t id;
-			if (!ioError && result == EResult.k_EResultOK) {
-				var allResults = ListPool<SteamUGCDetails_t, SteamUGCServiceFixed>.Allocate();
-				for (uint i = 0U; i < callback.m_unNumResultsReturned; i++) {
-					if (SteamUGC.GetQueryUGCResult(handle, i, out SteamUGCDetails_t details) &&
-							allMods.TryGetValue(id = details.m_nPublishedFileId,
-							out ModInfo mod)) {
-#if false
-						PUtil.LogDebug("Updated mod {0:D} ({1})".F(id.m_PublishedFileId,
-							details.m_rgchTitle));
-#endif
-						mod.Populate(details);
-						// Queue up the preview image
-						download.Queue(id);
-						preview.Queue(id);
-						allResults.Add(details);
-					}
-				}
-				ModUpdateDetails.OnInstalledUpdate(allResults);
-				allResults.Recycle();
-			}
-			SteamUGC.ReleaseQueryUGCRequest(handle);
-			onQueryComplete?.Dispose();
-			onQueryComplete = null;
-		}
-
-		private void OnUGCSubscribed(RemoteStoragePublishedFileSubscribed_t callback) {
-			var id = callback.m_nPublishedFileId;
-			allMods.TryAdd(id, new ModInfo(id));
-		}
-
-		private void OnUGCUnsubscribed(RemoteStoragePublishedFileUnsubscribed_t callback) {
-			var id = callback.m_nPublishedFileId;
-			if (allMods.TryGetValue(id, out ModInfo mod))
-				mod.Donate();
-		}
-
-		private void OnUGCUpdated(RemoteStoragePublishedFileUpdated_t callback) {
-			var id = callback.m_nPublishedFileId;
-			// Set needs update to true
-			allMods.GetOrAdd(id, new ModInfo(id)).Pursue();
 		}
 
 		/// <summary>
