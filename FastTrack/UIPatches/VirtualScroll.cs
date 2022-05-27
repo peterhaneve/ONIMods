@@ -336,7 +336,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <param name="visible">true to make it visible, or false to make it invisible.</param>
 			public bool SetVisible(bool visible) {
 				bool changed = visible != this.visible;
-				if (changed) {
+				if (entry != null && changed) {
 					entry.SetActive(visible);
 					this.visible = visible;
 				}

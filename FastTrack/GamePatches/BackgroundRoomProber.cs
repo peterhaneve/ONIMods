@@ -605,27 +605,32 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		/// <param name="cavity">The cavity to update.</param>
 		public void UpdateRoom(CavityInfo cavity) {
-			int baseCell, world;
+			int baseCell;
 			// Do not attempt to create rooms on undiscovered worlds
 			if (cavity != null && Grid.IsValidCell(baseCell = Grid.XYToCell(cavity.minX,
-					cavity.minY)) && (world = Grid.WorldIdx[baseCell]) != ClusterManager.
-					INVALID_WORLD_IDX && ClusterManager.Instance.GetWorld(world).
-					IsDiscovered) {
-				var room = cavity.room;
-				if (room == null)
-					room = CreateRoom(cavity);
-				else {
-					// Refresh room without destroying and rebuilding if type is the same
-					RoomType roomType = room.roomType, newRoomType = roomTypes.GetRoomType(
-						room);
-					if (newRoomType != roomType) {
-						DestroyRoom(room);
+					cavity.minY))) {
+				int worldIndex = Grid.WorldIdx[baseCell];
+				WorldContainer world;
+				// When freeing grid space (like deconstructing a rocket module), the world
+				// index is still valid, but GetWorld will fail on it
+				if (worldIndex != ClusterManager.INVALID_WORLD_IDX && (world = ClusterManager.
+						Instance.GetWorld(worldIndex)) != null && world.IsDiscovered) {
+					var room = cavity.room;
+					if (room == null)
 						room = CreateRoom(cavity);
+					else {
+						// Refresh room without destroying and rebuilding if type is the same
+						RoomType roomType = room.roomType, newRoomType = roomTypes.GetRoomType(
+							room);
+						if (newRoomType != roomType) {
+							DestroyRoom(room);
+							room = CreateRoom(cavity);
+						}
 					}
+					// Trigger events on plants and buildings
+					TriggerEvents(room, room.buildings);
+					TriggerEvents(room, room.plants);
 				}
-				// Trigger events on plants and buildings
-				TriggerEvents(room, room.buildings);
-				TriggerEvents(room, room.plants);
 			}
 		}
 
