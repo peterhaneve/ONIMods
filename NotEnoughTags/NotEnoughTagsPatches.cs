@@ -22,7 +22,8 @@ using PeterHan.PLib.Core;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
-
+using KMod;
+using Label = System.Reflection.Emit.Label;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.NotEnoughTags {
@@ -59,6 +60,11 @@ namespace PeterHan.NotEnoughTags {
 			GameTags.Stored, GameTags.Trapped, GameTags.Unbreathable,
 		};
 
+		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
+			base.OnAllModsLoaded(harmony, mods);
+			FetchManager.disallowedTagMask = TagBitOps.Not(FetchManager.disallowedTagBits);
+		}
+
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
@@ -69,9 +75,8 @@ namespace PeterHan.NotEnoughTags {
 			// Force these tags into the efficient lower bits
 			foreach (var tag in FORCE_LOWER_BITS)
 				inst.ManifestFlagIndex(tag);
-			FetchManager.disallowedTagMask = TagBitOps.Not(FetchManager.disallowedTagBits);
 			FetchAreaChore.StatesInstance.s_transientDeliveryMask = TagBitOps.Not(new TagBits(
-				new Tag[] { GameTags.Garbage, GameTags.Creatures.Deliverable }));
+				new[] { GameTags.Garbage, GameTags.Creatures.Deliverable }));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
@@ -130,7 +135,7 @@ namespace PeterHan.NotEnoughTags {
 		private static bool ReplaceLastBitOp(List<CodeInstruction> method, OpCode operation,
 				MethodBase replacement) {
 			int n = method.Count;
-			bool transpiled = true;
+			bool transpiled = false;
 			for (int i = n - 1; i > 0 && !transpiled; i--) {
 				var instr = method[i];
 				if (instr.opcode == operation) {
