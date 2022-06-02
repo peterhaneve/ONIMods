@@ -117,13 +117,14 @@ namespace PeterHan.FastTrack.VisualPatches {
 			var drawMesh = typeof(Graphics).GetMethodSafe(nameof(Graphics.DrawMesh),
 				true, typeof(Mesh), typeof(Vector3), typeof(Quaternion), typeof(Material),
 				typeof(int), typeof(Camera), typeof(int), typeof(MaterialPropertyBlock));
-			var newMethod = instructions;
+			TranspiledMethod newMethod;
 			if (drawMesh != null)
 				newMethod = PPatchTools.RemoveMethodCall(instructions, drawMesh);
-			else
+			else {
 				PUtil.LogWarning("Unable to patch FallingWater.Render");
-			foreach (var instr in newMethod)
-				yield return instr;
+				newMethod = instructions;
+			}
+			return newMethod;
 		}
 	}
 }

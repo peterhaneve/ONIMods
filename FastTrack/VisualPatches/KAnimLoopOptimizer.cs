@@ -62,9 +62,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 						var elementB = groupData.GetFrameElement(i + startB);
 						Color colorA = elementA.multColour, colorB = elementB.multColour;
 						equal = elementA.symbol == elementB.symbol && colorA == colorB &&
-							elementA.symbolIdx == elementB.symbolIdx && elementA.flags ==
-							elementB.flags && elementA.transform == elementB.transform &&
-							elementA.frame == elementB.frame;
+							elementA.symbolIdx == elementB.symbolIdx && elementA.transform ==
+							elementB.transform && elementA.frame == elementB.frame;
 					}
 			}
 			return equal;

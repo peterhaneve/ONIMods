@@ -19,8 +19,6 @@
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
 using UnityEngine.UI;
@@ -131,92 +129,6 @@ namespace PeterHan.FastTrack.UIPatches {
 			if (closed)
 				__instance.Deactivate();
 			return !closed;
-		}
-	}
-
-	/// <summary>
-	/// Applied to NewGameSettingsPanel and ModeSelectScreen to remove a slow and buggy
-	/// attempt to load mod world gen settings.
-	/// </summary>
-	[HarmonyPatch]
-	public static class NewGameSettingsPanel_Init_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.OptimizeDialogs;
-
-		internal static IEnumerable<MethodBase> TargetMethods() {
-			yield return typeof(NewGameSettingsPanel).GetMethodSafe(nameof(
-				NewGameSettingsPanel.Init), false);
-			yield return typeof(ModeSelectScreen).GetMethodSafe(nameof(ModeSelectScreen.
-				LoadWorldAndClusterData), false);
-		}
-
-		/// <summary>
-		/// Transpiles the target methods to remove a bunch of method calls.
-		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			return PPatchTools.ReplaceMethodCallSafe(instructions,
-				new Dictionary<MethodInfo, MethodInfo>() {
-					{
-						typeof(KMod.Manager).GetMethodSafe(nameof(KMod.Manager.Load), false,
-							typeof(KMod.Content)), PPatchTools.RemoveCall
-					},
-					{
-						typeof(ProcGen.SettingsCache).GetMethodSafe(nameof(ProcGen.
-							SettingsCache.Clear), true), PPatchTools.RemoveCall
-					},
-					{
-						typeof(ProcGenGame.WorldGen).GetMethodSafe(nameof(ProcGenGame.WorldGen.
-							LoadSettings), true), PPatchTools.RemoveCall
-					},
-					{
-						typeof(KMod.Manager).GetMethodSafe(nameof(KMod.Manager.Report), false,
-							typeof(GameObject)), PPatchTools.RemoveCall
-					}
-				});
-		}
-	}
-
-	/// <summary>
-	/// Applied to NewGameSettingsPanel to remove a slow and buggy attempt to unload mod world
-	/// gen settings.
-	/// </summary>
-	[HarmonyPatch(typeof(NewGameSettingsPanel), nameof(NewGameSettingsPanel.Cancel))]
-	public static class NewGameSettingsPanel_Cancel_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.OptimizeDialogs;
-
-		/// <summary>
-		/// Applied before Cancel runs.
-		/// </summary>
-		internal static bool Prefix() {
-			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to SaveLoader to avoid reading in the entire file when only the header is
-	/// required.
-	/// </summary>
-	[HarmonyPatch(typeof(SaveLoader), nameof(SaveLoader.LoadHeader))]
-	public static class SaveLoader_LoadHeader_Patch {
-		internal static bool Prepare() {
-			var options = FastTrackOptions.Instance;
-			return options.MiscOpts || options.OptimizeDialogs;
-		}
-
-		/// <summary>
-		/// Applied before LoadHeader runs.
-		/// </summary>
-		internal static bool Prefix(string filename, ref SaveGame.Header header,
-				ref SaveGame.GameInfo __result) {
-			// Klei does not catch the IOException at this level
-			var reader = new FileStream(filename, FileMode.Open, FileAccess.Read,
-				FileShare.Read);
-			try {
-				__result = SaveGame.GetHeader(new KBinaryReader(reader), out header, filename);
-			} finally {
-				reader.Close();
-				reader.Dispose();
-			}
-			return false;
 		}
 	}
 }

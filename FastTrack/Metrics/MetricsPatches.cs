@@ -164,14 +164,13 @@ namespace PeterHan.FastTrack.Metrics {
 				float dt, StateMachineUpdater.BucketGroup group) {
 			var genArgs = bucket.GetType().GetGenericArguments();
 			string targetType = null;
-			Stopwatch now;
-			if (genArgs != null && genArgs.Length > 0)
-				targetType = genArgs[0]?.FullName;
+			if (genArgs.Length > 0)
+				targetType = genArgs[0].FullName;
 			if (targetType == null || targetType.StartsWith("ISim") || targetType.StartsWith(
 					"IRender"))
 				bucket.Update(dt);
 			else {
-				now = Stopwatch.StartNew();
+				var now = Stopwatch.StartNew();
 				bucket.Update(dt);
 				DebugMetrics.SIMANDRENDER[(int)group.updateRate].AddSlice(targetType, now.
 					ElapsedTicks);

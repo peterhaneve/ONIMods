@@ -56,9 +56,9 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		private static readonly List<Descriptor> EL_DESCRIPTORS = new List<Descriptor>(16);
 
-		private static string HIGH_TC;
+		private static string highTC;
 
-		private static string LOW_TC;
+		private static string lowTC;
 
 		/// <summary>
 		/// The string key path to the material modifiers.
@@ -72,11 +72,11 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		private static readonly List<Descriptor> PLANT_DESCRIPTORS = new List<Descriptor>(16);
 
-		private static readonly Descriptor PLANT_EFFECTS = default;
+		private static Descriptor plantEffects;
 
-		private static readonly Descriptor PLANT_LIFECYCLE = default;
+		private static Descriptor plantLifecycle;
 
-		private static readonly Descriptor PLANT_REQUIREMENTS = default;
+		private static Descriptor plantRequirements;
 
 		/// <summary>
 		/// Clears any leftover data in the cached lists.
@@ -224,7 +224,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				Descriptor desc = default;
 				desc.SetupDescriptor(MODIFIERS.HIGH_THERMAL_CONDUCTIVITY.Format(GameUtil.
 					GetThermalConductivityString(element, false, false)), string.Format(
-					HIGH_TC, name, element.thermalConductivity));
+					highTC, name, element.thermalConductivity));
 				desc.IncreaseIndent();
 				descriptors.Add(desc);
 			}
@@ -232,7 +232,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				Descriptor desc = default;
 				desc.SetupDescriptor(MODIFIERS.LOW_THERMAL_CONDUCTIVITY.Format(GameUtil.
 					GetThermalConductivityString(element, false, false)), string.Format(
-					LOW_TC, name, element.thermalConductivity));
+					lowTC, name, element.thermalConductivity));
 				desc.IncreaseIndent();
 				descriptors.Add(desc);
 			}
@@ -267,15 +267,15 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// require a relatively expensive Strings.Get.
 		/// </summary>
 		internal static void Init() {
-			HIGH_TC = MODIFIERS.TOOLTIP.HIGH_THERMAL_CONDUCTIVITY.Replace("{1}",
+			highTC = MODIFIERS.TOOLTIP.HIGH_THERMAL_CONDUCTIVITY.Replace("{1}",
 				"{1:0.######}");
-			LOW_TC = MODIFIERS.TOOLTIP.LOW_THERMAL_CONDUCTIVITY.Replace("{1}",
+			lowTC = MODIFIERS.TOOLTIP.LOW_THERMAL_CONDUCTIVITY.Replace("{1}",
 				"{1:0.######}");
-			PLANT_EFFECTS.SetupDescriptor(PLANTERSIDESCREEN.PLANTEFFECTS, PLANTERSIDESCREEN.
+			plantEffects.SetupDescriptor(PLANTERSIDESCREEN.PLANTEFFECTS, PLANTERSIDESCREEN.
 				TOOLTIPS.PLANTEFFECTS);
-			PLANT_LIFECYCLE.SetupDescriptor(PLANTERSIDESCREEN.LIFECYCLE, PLANTERSIDESCREEN.
+			plantLifecycle.SetupDescriptor(PLANTERSIDESCREEN.LIFECYCLE, PLANTERSIDESCREEN.
 				TOOLTIPS.PLANTLIFECYCLE, Descriptor.DescriptorType.Lifecycle);
-			PLANT_REQUIREMENTS.SetupDescriptor(PLANTERSIDESCREEN.PLANTREQUIREMENTS,
+			plantRequirements.SetupDescriptor(PLANTERSIDESCREEN.PLANTREQUIREMENTS,
 				PLANTERSIDESCREEN.TOOLTIPS.PLANTREQUIREMENTS, Descriptor.DescriptorType.
 				Requirement);
 			DescriptorSorter.CreateInstance();
@@ -481,7 +481,7 @@ namespace PeterHan.FastTrack.UIPatches {
 						var descriptor = allDescriptors[i];
 						if (descriptor.IsEffectDescriptor()) {
 							if (!added) {
-								descriptors.Add(PLANT_EFFECTS);
+								descriptors.Add(plantEffects);
 								added = true;
 							}
 							descriptor.IncreaseIndent();
@@ -516,7 +516,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					var descriptor = allDescriptors[i];
 					if (descriptor.type == Descriptor.DescriptorType.Lifecycle) {
 						if (!added) {
-							descriptors.Add(PLANT_LIFECYCLE);
+							descriptors.Add(plantLifecycle);
 							added = true;
 						}
 						descriptor.IncreaseIndent();
@@ -550,7 +550,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					var descriptor = allDescriptors[i];
 					if (descriptor.type == Descriptor.DescriptorType.Requirement) {
 						if (!added) {
-							descriptors.Add(PLANT_REQUIREMENTS);
+							descriptors.Add(plantRequirements);
 							added = true;
 						}
 						descriptor.IncreaseIndent();
@@ -620,11 +620,15 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		public int Compare(IGameObjectEffectDescriptor e1, IGameObjectEffectDescriptor e2) {
-			if (!order.TryGetValue(e1.GetType(), out int o1))
-				o1 = -1;
-			if (!order.TryGetValue(e2.GetType(), out int o2))
-				o2 = -1;
-			return o1.CompareTo(o2);
+			int result = 0;
+			if (e1 != null && e2 != null) {
+				if (!order.TryGetValue(e1.GetType(), out int o1))
+					o1 = -1;
+				if (!order.TryGetValue(e2.GetType(), out int o2))
+					o2 = -1;
+				result = o1.CompareTo(o2);
+			}
+			return result;
 		}
 	}
 }

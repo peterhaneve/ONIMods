@@ -36,12 +36,12 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		internal static bool Prefix(BedDiagnostic __instance, ref string __result) {
 			int worldID = __instance.worldID, nDupes = Components.LiveMinionIdentities.
-				GetWorldItems(worldID, false).Count, numBeds = 0;
-			var sleepables = Components.Sleepables.GetWorldItems(worldID, false);
+				GetWorldItems(worldID).Count, numBeds = 0;
+			var sleepables = Components.Sleepables.GetWorldItems(worldID);
 			int n = sleepables.Count;
 			for (int i = 0; i < n; i++)
 				if (sleepables[i].TryGetComponent(out Assignable _)) numBeds++;
-			__result = numBeds.ToString() + "/" + nDupes.ToString();
+			__result = numBeds + "/" + nDupes;
 			return false;
 		}
 	}
@@ -58,8 +58,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Applied before UpdateData runs.
 		/// </summary>
 		internal static bool Prefix(BreathabilityTracker __instance) {
-			var duplicants = Components.LiveMinionIdentities.GetWorldItems(__instance.WorldID,
-				false);
+			var duplicants = Components.LiveMinionIdentities.GetWorldItems(__instance.WorldID);
 			int n = duplicants.Count, total = 0;
 			if (n == 0)
 				__instance.AddPoint(0f);
@@ -147,7 +146,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Sorts Duplicants descending by stress. Probably faster than SortedDictionary on
 		/// the average as there are probably only a few stressed Duplicants.
 		/// </summary>
-		private struct StressEntry : IComparable<StressEntry>, IEquatable<StressEntry> {
+		private readonly struct StressEntry : IComparable<StressEntry>,
+				IEquatable<StressEntry> {
 			/// <summary>
 			/// The Duplicant's current stress value.
 			/// </summary>
@@ -168,11 +168,11 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 
 			public override bool Equals(object obj) {
-				return obj is StressEntry other && stress == other.stress;
+				return obj is StressEntry other && Mathf.Approximately(stress, other.stress);
 			}
 
 			public bool Equals(StressEntry other) {
-				return stress == other.stress;
+				return Mathf.Approximately(stress, other.stress);
 			}
 
 			public override int GetHashCode() {
@@ -271,7 +271,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// The tags applied to Duplicants that are doing idle-type things (namely not work).
 		/// </summary>
-		private static TagBits BASICALLY_IDLE;
+		private static TagBits basicallyIdle;
 
 		internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
 
@@ -290,7 +290,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					var target = items[i];
 					if (target != null && (target is IApproachable ia || target.
 							TryGetComponent(out ia)))
-						canReach = target != null && navigator.CanReach(ia);
+						canReach = navigator.CanReach(ia);
 				}
 			}
 			return canReach;
@@ -300,10 +300,10 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Initializes the tag bits.
 		/// </summary>
 		internal static void Init() {
-			BASICALLY_IDLE = new TagBits();
-			BASICALLY_IDLE.SetTag(GameTags.Idle);
-			BASICALLY_IDLE.SetTag(GameTags.RecoveringBreath);
-			BASICALLY_IDLE.SetTag(GameTags.MakingMess);
+			basicallyIdle = new TagBits();
+			basicallyIdle.SetTag(GameTags.Idle);
+			basicallyIdle.SetTag(GameTags.RecoveringBreath);
+			basicallyIdle.SetTag(GameTags.MakingMess);
 		}
 
 		/// <summary>
@@ -313,7 +313,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <returns>true if they should be considered Idle for the Trapped diagnostic.</returns>
 		private static bool IsBasicallyIdle(MinionIdentity minion) {
 			return minion.TryGetComponent(out KPrefabID id) && id.HasAnyTags(
-				ref BASICALLY_IDLE);
+				ref basicallyIdle);
 		}
 
 		/// <summary>
@@ -368,11 +368,11 @@ namespace PeterHan.FastTrack.UIPatches {
 			bool isRocket = ClusterManager.Instance.GetWorld(worldID).IsModuleInterior;
 			// Diagnostic does nothing on rockets
 			if (!isRocket) {
-				var duplicants = Components.LiveMinionIdentities.GetWorldItems(worldID, false);
+				var duplicants = Components.LiveMinionIdentities.GetWorldItems(worldID);
 				int n = duplicants.Count;
-				var pods = Components.Telepads.GetWorldItems(worldID, false);
-				var teleporters = Components.WarpReceivers.GetWorldItems(worldID, false);
-				var beds = Components.Sleepables.GetWorldItems(worldID, false);
+				var pods = Components.Telepads.GetWorldItems(worldID);
+				var teleporters = Components.WarpReceivers.GetWorldItems(worldID);
+				var beds = Components.Sleepables.GetWorldItems(worldID);
 				for (int i = 0; i < n && !trapped; i++) {
 					var duplicant = duplicants[i];
 					// The criteria used by Trapped basically requires idle Duplicants who

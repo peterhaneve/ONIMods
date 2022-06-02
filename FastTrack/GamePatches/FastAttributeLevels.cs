@@ -113,7 +113,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <returns>true if the Duplicant leveled up, or false otherwise.</returns>
 		public bool AddExperience(string id, float time, float multiplier) {
 			bool result = false;
-			if (id != null && attrLevels.TryGetValue(id, out AttributeLevel attrLevel)) {
+			if (id != null && attrLevels.TryGetValue(id, out var attrLevel)) {
 				float effectiveTime = time * multiplier;
 				if (trainingSpeed != null)
 					effectiveTime += effectiveTime * trainingSpeed.Evaluate();
@@ -129,7 +129,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="id">The attribute ID to look up.</param>
 		/// <returns>The attribute's level, or 1 if the attribute was not found.</returns>
 		public AttributeLevel GetAttributeLevel(string id) {
-			if (id == null || attrLevels.TryGetValue(id, out AttributeLevel attrLevel))
+			if (id == null || !attrLevels.TryGetValue(id, out var attrLevel))
 				attrLevel = null;
 			return attrLevel;
 		}
@@ -141,8 +141,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <returns>The attribute's level, or 1 if the attribute was not found.</returns>
 		public int GetLevel(Attribute attribute) {
 			int level = 1;
-			if (attribute != null && attrLevels.TryGetValue(attribute.Id, out AttributeLevel
-					attrLevel))
+			if (attribute != null && attrLevels.TryGetValue(attribute.Id, out var attrLevel))
 				level = attrLevel.GetLevel();
 			return level;
 		}

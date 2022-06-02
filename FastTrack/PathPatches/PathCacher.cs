@@ -18,7 +18,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Threading;
 
 namespace PeterHan.FastTrack.PathPatches {
 	/// <summary>
@@ -61,7 +60,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <returns>The path cache for this path prober's ID.</returns>
 		internal static bool IsValid(PathProber prober) {
 			if (prober == null)
-				throw new ArgumentNullException("prober");
+				throw new ArgumentNullException(nameof(prober));
 			return pathCache.ContainsKey(prober);
 		}
 
@@ -74,7 +73,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		internal static bool SetValid(PathProber prober, bool valid) {
 			bool result;
 			if (prober == null)
-				throw new ArgumentNullException("prober");
+				throw new ArgumentNullException(nameof(prober));
 			if (valid)
 				result = !pathCache.TryAdd(prober, true);
 			else

@@ -252,7 +252,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="instance">The value to be displayed.</param>
 		/// <param name="master">The amount to be displayed.</param>
 		private static void GetValueString(StringBuilder text, IAttributeFormatter formatter,
-				Klei.AI.AmountInstance instance, Klei.AI.Amount master) {
+				AmountInstance instance, Amount master) {
 			string formatted = formatter.GetFormattedValue(instance.value, TimeSlice.None);
 			text.Append(formatted);
 			if (master.showMax)
@@ -490,8 +490,6 @@ namespace PeterHan.FastTrack.UIPatches {
 					if (!first) text.Append(" + ");
 					text.Append(modText[4]);
 					break;
-				default:
-					break;
 				}
 				text.Append(" + ").Append(raw);
 			}
@@ -662,7 +660,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before ParseText runs.
 			/// </summary>
-			internal static bool Prefix(LocText __instance, string input, ref string __result)
+			internal static bool Prefix(string input, ref string __result)
 			{
 				var text = CACHED_BUILDER;
 				if (input != null) {

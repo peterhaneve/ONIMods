@@ -81,7 +81,7 @@ namespace PeterHan.FastTrack.GamePatches {
 					// avoid races on the scene partitioner
 					if (!pathCosts.TryGetValue(cell, out int cost)) {
 						if (needThreadSafe)
-							worker_navigator.GetNavigationCostNU(target, cell, out cost);
+							cost = worker_navigator.GetNavigationCostNU(target, cell);
 						else
 							cost = worker_navigator.GetNavigationCost(target);
 						pathCosts.Add(cell, cost);

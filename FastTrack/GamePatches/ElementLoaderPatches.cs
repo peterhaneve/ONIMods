@@ -17,8 +17,6 @@
  */
 
 using HarmonyLib;
-using System;
-using System.Collections.Generic;
 
 namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>

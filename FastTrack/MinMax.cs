@@ -21,11 +21,7 @@ namespace PeterHan.FastTrack {
 	/// Stores the minimum and maximum values seen.
 	/// </summary>
 	public struct MinMax {
-		public float Delta {
-			get {
-				return max - min;
-			}
-		}
+		public float Delta => max - min;
 
 		/// <summary>
 		/// Whether any values have been seen at all.

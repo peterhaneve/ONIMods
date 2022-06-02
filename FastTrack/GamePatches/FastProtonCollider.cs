@@ -116,20 +116,20 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <returns>Whether this radbolt was captured by a building with a radbolt port.</returns>
 		private bool CheckBuildingCollision(int cell, bool moved, Vector3 pos) {
 			bool captured = false;
-			HighEnergyParticlePort port;
+			HighEnergyParticlePort newPort;
 			if (moved) {
 				// Check for collision with a building
 				var b = Grid.Objects[cell, (int)ObjectLayer.Building];
-				if (b == null || !b.TryGetComponent(out port) || port.
+				if (b == null || !b.TryGetComponent(out newPort) || newPort.
 						GetHighEnergyParticleInputPortPosition() != cell)
-					port = null;
-				this.port = port;
+					newPort = null;
+				port = newPort;
 			} else
-				port = this.port;
-			if (port != null && CollidesWith(pos, Grid.CellToPosCCC(cell, Grid.SceneLayer.
+				newPort = port;
+			if (newPort != null && CollidesWith(pos, Grid.CellToPosCCC(cell, Grid.SceneLayer.
 					NoLayer))) {
-				if (port.InputActive() && port.AllowCapture(hep)) {
-					hep.Capture(port);
+				if (newPort.InputActive() && newPort.AllowCapture(hep)) {
+					hep.Capture(newPort);
 					captured = true;
 				} else
 					hep.Collide(HighEnergyParticle.CollisionType.PassThrough);
@@ -186,8 +186,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		/// <param name="cell">The current cell that this radbolt occupies.</param>
 		private void CheckLivingCollision(int cell) {
-			var obj = Grid.Objects[cell, (int)ObjectLayer.Pickupables];
-			if (obj != null && obj.TryGetComponent(out Pickupable pickupable)) {
+			var go = Grid.Objects[cell, (int)ObjectLayer.Pickupables];
+			if (go != null && go.TryGetComponent(out Pickupable pickupable)) {
 				var entries = pickupable.objectLayerListItem;
 				while (entries != null && !CheckLivingCollision(entries.gameObject))
 					entries = entries.nextItem;

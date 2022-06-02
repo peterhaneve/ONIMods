@@ -19,7 +19,6 @@
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -87,7 +86,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		private void AsyncUpdate(SolidTransferArmInfo info) {
 			var sweeper = info.sweeper;
 			var reachableCells = HashSetPool<int, SolidTransferArmUpdater>.Allocate();
-			int range = sweeper.pickupRange, cell = info.cell;
+			int range = sweeper.pickupRange, cell = info.cell, n = cached.Count;
 			Grid.CellToXY(cell, out int x, out int y);
 			int maxY = Math.Min(Grid.HeightInCells, y + range), maxX = Math.Min(Grid.
 				WidthInCells, x + range), minY = Math.Max(0, y - range), minX = Math.Max(0,
@@ -110,7 +109,8 @@ namespace PeterHan.FastTrack.GamePatches {
 			// Gather stored objects not found by the partitioner
 			var pickupables = sweeper.pickupables;
 			pickupables.Clear();
-			foreach (var entry in cached) {
+			for (int i = 0; i < n; i++) {
+				var entry = cached[i];
 				var pickupable = entry.pickupable;
 				if (pickupable != null) {
 					cell = entry.storage_cell;
@@ -131,8 +131,9 @@ namespace PeterHan.FastTrack.GamePatches {
 					gsp.GatherEntries(new Extents(minX, minY, maxX - minX + 1, maxY - minY +
 						1), gsp.pickupablesLayer, found);
 				}
-				foreach (var entry in found)
-					if (entry.obj is Pickupable pickupable && pickupable != null) {
+				n = found.Count;
+				for (int i = 0; i < n; i++)
+					if (found[i].obj is Pickupable pickupable && pickupable != null) {
 						cell = pickupable.cachedCell;
 						if (reachableCells.Contains(cell) && CanUse(pickupable, go))
 							pickupables.Add(pickupable);
@@ -188,8 +189,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="items">The fetchables for a prefab ID.</param>
 		internal void UpdateCache(IList<FetchManager.Fetchable> items) {
 			int n = items.Count;
-			KPrefabID prefabID;
 			for (int i = 0; i < n; i++) {
+				KPrefabID prefabID;
 				var pickupable = items[i].pickupable;
 				if (pickupable != null && (prefabID = pickupable.KPrefabID).HasTag(GameTags.
 						Stored))

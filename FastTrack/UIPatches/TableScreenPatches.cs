@@ -31,220 +31,14 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// </summary>
 	public static class TableScreenPatches {
 		/// <summary>
-		/// Adds dividers for each planetoid in the Spaced Out DLC.
-		/// </summary>
-		/// <param name="instance">The table screen to update.</param>
-		private static void AddDividers(TableScreen instance) {
-			GameObject target;
-			int id;
-			var occupiedWorlds = DictionaryPool<int, WorldContainer, TableScreen>.Allocate();
-			foreach (int worldId in ClusterManager.Instance.GetWorldIDsSorted())
-				instance.AddWorldDivider(worldId);
-			// List occupied planets
-			foreach (object obj in Components.MinionAssignablesProxy)
-				if (obj is MinionAssignablesProxy proxy && proxy != null && (target = proxy.
-						GetTargetGameObject()) != null) {
-					var world = target.GetMyWorld();
-					if (world != null && !occupiedWorlds.ContainsKey(id = world.id))
-						occupiedWorlds.Add(id, world);
-				}
-			foreach (var pair in instance.worldDividers)
-				if (pair.Value.TryGetComponent(out HierarchyReferences hr)) {
-					var dividerRow = hr.GetReference("NobodyRow");
-					id = pair.Key;
-					if (occupiedWorlds.TryGetValue(id, out WorldContainer world)) {
-						dividerRow.gameObject.SetActive(false);
-						pair.Value.SetActive(world.IsDiscovered);
-					} else {
-						dividerRow.gameObject.SetActive(true);
-						pair.Value.SetActive(ClusterManager.Instance.GetWorld(id).IsDiscovered);
-					}
-				}
-			occupiedWorlds.Recycle();
-		}
-
-		/// <summary>
-		/// Removes and pools any existing rows. Leaves the default and header row if present,
-		/// otherwise creates and adds one when requested.
-		/// </summary>
-		/// <param name="instance">The table screen to clear.</param>
-		/// <param name="toAdd">The Duplicants to be added or updated.</param>
-		private static void ClearAndAddRows(TableScreen instance,
-				ISet<IAssignableIdentity> toAdd) {
-			var columns = instance.columns;
-			var hr = instance.header_row;
-			List<TableRow> rows = instance.rows, sortableRows = instance.all_sortable_rows;
-			int n = rows.Count;
-			TableRow defaultRow = null, headerRow = null;
-			var newRows = TableRowList.Allocate();
-			var deadRows = HashSetPool<TableRow, TableScreen>.Allocate();
-			IAssignableIdentity minion;
-			for (int i = 0; i < n; i++) {
-				var row = rows[i];
-				var go = row.gameObject;
-				// Do not destroy the default or header; pull out any rows for existing minion
-				// identities
-				if (row.rowType == TableRow.RowType.Default) {
-					ThawLayout(go);
-					defaultRow = row;
-				} else if (go == hr && hr != null) {
-					ThawLayout(go);
-					headerRow = row;
-				} else if (row.rowType != TableRow.RowType.WorldDivider && (minion = row.
-						minion) != null && toAdd.Remove(minion)) {
-					ThawLayout(go);
-					ConfigureContent(row, minion, columns, instance);
-					newRows.Add(row);
-				} else
-					deadRows.Add(row);
-			}
-			sortableRows.Clear();
-			rows.Clear();
-			// Restore cached default and header rows; header first
-			if (headerRow != null) {
-				ConfigureContent(headerRow, null, columns, instance);
-				rows.Add(headerRow);
-			} else
-				instance.AddRow(null);
-			if (defaultRow != null) {
-				ConfigureContent(defaultRow, null, columns, instance);
-				rows.Add(defaultRow);
-			} else if (instance.has_default_duplicant_row)
-				instance.AddDefaultRow();
-			// Add reused rows, delete removed rows
-			sortableRows.AddRange(newRows);
-			rows.AddRange(newRows);
-			newRows.Recycle();
-			TakeOutTrash(instance, deadRows);
-			deadRows.Recycle();
-		}
-
-		/// <summary>
-		/// Configures the row's content, only adding widgets that are new.
-		/// </summary>
-		/// <param name="row">The row being configured.</param>
-		/// <param name="minion">The Duplicant for this row.</param>
-		/// <param name="columns">The columns to display.</param>
-		/// <param name="screen">The parent table screen.</param>
-		private static void ConfigureContent(TableRow row, IAssignableIdentity minion,
-				IDictionary<string, TableColumn> columns, TableScreen screen) {
-			bool def = row.isDefault;
-			var go = row.gameObject;
-			row.minion = minion;
-			ConfigureImage(row, minion);
-			foreach (var pair in columns) {
-				var column = pair.Value;
-				var widgets = row.widgets;
-				string id = column.scrollerID;
-				// Columns cannot be deleted in vanilla
-				if (!widgets.TryGetValue(column, out GameObject widget)) {
-					// Create a new one
-					if (minion == null) {
-						if (def)
-							widget = column.GetDefaultWidget(go);
-						else
-							widget = column.GetHeaderWidget(go);
-					} else
-						widget = column.GetMinionWidget(go);
-					widgets.Add(column, widget);
-					column.widgets_by_row.Add(row, widget);
-				}
-				// Update the scroller if needed
-				if (!string.IsNullOrEmpty(id) && column.screen.column_scrollers.Contains(id))
-					ConfigureScroller(row, go, id, widget, screen);
-			}
-			// Run events after the update is complete
-			foreach (var pair in columns) {
-				var column = pair.Value;
-				if (column.widgets_by_row.TryGetValue(row, out GameObject widget)) {
-					string id = column.scrollerID;
-					column.on_load_action?.Invoke(minion, widget);
-					// Apparently the order just... works out? <shrug>
-				}
-			}
-			if (minion != null)
-				go.name = minion.GetProperName();
-			else if (def)
-				go.name = "defaultRow";
-			// "Click to go to Duplicant"
-			if (row.selectMinionButton != null)
-				row.selectMinionButton.transform.SetAsLastSibling();
-			// Update the border sizes
-			foreach (var pair in row.scrollerBorders) {
-				var border = pair.Value;
-				var rt = border.rectTransform();
-				float width = rt.rect.width;
-				border.transform.SetParent(go.transform);
-				rt.anchorMin = rt.anchorMax = Vector2.up;
-				rt.sizeDelta = new Vector2(width, 374.0f);
-				var scrollRT = row.scrollers[pair.Key].transform.parent.rectTransform();
-				Vector3 a = scrollRT.GetLocalPosition();
-				a.x -= scrollRT.sizeDelta.x * 0.5f;
-				a.y = rt.GetLocalPosition().y - rt.anchoredPosition.y;
-				rt.SetLocalPosition(a);
-			}
-		}
-
-		/// <summary>
-		/// Configures the portrait for each row.
-		/// </summary>
-		/// <param name="row">The row being configured.</param>
-		/// <param name="minion">The Duplicant for this row.</param>
-		private static void ConfigureImage(TableRow row, IAssignableIdentity minion) {
-			var img = row.GetComponentInChildren<KImage>(true);
-			img.colorStyleSetting = (minion == null) ? row.style_setting_default :
-				row.style_setting_minion;
-			img.ColorState = KImage.ColorSelector.Inactive;
-			// Dim out Duplicants in rockets
-			if (row.TryGetComponent(out CanvasGroup component) && (minion as
-					StoredMinionIdentity) != null)
-				component.alpha = 0.6f;
-		}
-
-		/// <summary>
-		/// Configures the scroll bars for each row.
-		/// </summary>
-		/// <param name="row">The row being configured.</param>
-		/// <param name="parent">The parent game object of the table row.</param>
-		/// <param name="id">The scroller ID to look up.</param>
-		/// <param name="widget">The widget to display in this row.</param>
-		/// <param name="screen">The parent table screen.</param>
-		private static void ConfigureScroller(TableRow row, GameObject parent, string id,
-				GameObject widget, TableScreen screen) {
-			Transform content;
-			ScrollRect sr;
-			var scrollers = row.scrollers;
-			if (scrollers.TryGetValue(id, out GameObject scrollerGO)) {
-				content = scrollerGO.transform;
-				if (content.parent.TryGetComponent(out sr))
-					sr.horizontalNormalizedPosition = 0.0f;
-				widget.transform.SetParent(content);
-			} else {
-				var prefab = Util.KInstantiateUI(row.scrollerPrefab, parent, true);
-				if (prefab.TryGetComponent(out sr)) {
-					content = sr.content;
-					sr.onValueChanged.AddListener(new ScrollListener(screen, sr).
-						OnScroll);
-					scrollers.Add(id, content.gameObject);
-					// Is it a border?
-					var border = content.parent.Find("Border");
-					if (border != null)
-						row.scrollerBorders.Add(id, border.gameObject);
-					sr.horizontalNormalizedPosition = 0.0f;
-					widget.transform.SetParent(content);
-				}
-			}
-		}
-
-		/// <summary>
 		/// Freezes the layouts after they are rendered.
 		/// </summary>
 		/// <param name="allRows">The list of all table rows.</param>
 		private static System.Collections.IEnumerator FreezeLayouts(IList<TableRow> allRows) {
 			yield return null;
 			int n = allRows.Count;
-			GameObject go;
 			for (int i = 0; i < n; i++) {
+				GameObject go;
 				var row = allRows[i];
 				if (row != null && (go = row.gameObject) != null && go.TryGetComponent(
 						out LayoutGroup realLayout)) {
@@ -265,8 +59,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static void GroupDupesByWorld(IList<TableRow> rows, IDictionary<int,
 				TableRowList.PooledList> dupesByWorld) {
 			int n = rows.Count;
-			GameObject go;
 			for (int i = 0; i < n; i++) {
+				GameObject go;
 				var row = rows[i];
 				var owner = row.GetIdentity().GetSoleOwner();
 				if (owner != null && owner.TryGetComponent(out MinionAssignablesProxy proxy) &&
@@ -290,8 +84,11 @@ namespace PeterHan.FastTrack.UIPatches {
 			int n = rows.Count;
 			var dividers = instance.worldDividers;
 			// Sort the rows in the UI
-			for (int i = 0; i < n; i++)
-				rows[i].transform.SetSiblingIndex(i);
+			for (int i = 0; i < n; i++) {
+				var row = rows[i];
+				row.transform.SetSiblingIndex(i);
+				ThawLayout(row.gameObject);
+			}
 			foreach (var pair in dividerIndices)
 				if (dividers.TryGetValue(pair.Key, out GameObject divider))
 					// Will not be present in vanilla
@@ -337,32 +134,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
-		/// Disposes and removes the specified rows from the table screen.
-		/// </summary>
-		/// <param name="instance">The table screen to clean up.</param>
-		/// <param name="deadRows">The rows that were removed.</param>
-		private static void TakeOutTrash(TableScreen instance, ICollection<TableRow> deadRows)
-		{
-			var ikr = instance.known_widget_rows;
-			// Avoid leaking dead rows
-			var deadWidgets = ListPool<GameObject, TableScreen>.Allocate();
-			foreach (var pair in ikr)
-				if (deadRows.Contains(pair.Value))
-					deadWidgets.Add(pair.Key);
-			int n = deadWidgets.Count;
-			for (int i = 0; i < n; i++)
-				ikr.Remove(deadWidgets[i]);
-			deadWidgets.Recycle();
-			foreach (var row in deadRows)
-				row.Clear();
-			// Dividers are fairly cheap, destroy and recreate them is easier
-			var dividers = instance.worldDividers;
-			foreach (var pair in dividers)
-				Util.KDestroyGameObject(pair.Value);
-			dividers.Clear();
-		}
-
-		/// <summary>
 		/// Thaws a reused row's layout.
 		/// </summary>
 		/// <param name="row">The game object to thaw.</param>
@@ -401,65 +172,9 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
-		/// Applied to TableRow to configure content more efficiently.
-		/// </summary>
-		[HarmonyPatch(typeof(TableRow), nameof(TableRow.ConfigureContent))]
-		internal static class ConfigureContent_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.VirtualScroll;
-
-			/// <summary>
-			/// Applied before ConfigureContent runs.
-			/// </summary>
-			internal static bool Prefix(TableRow __instance, IAssignableIdentity minion,
-					Dictionary<string, TableColumn> columns, TableScreen screen) {
-				ConfigureContent(__instance, minion, columns, screen);
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to TableScreen to pool the rows and make refreshing them much faster.
-		/// </summary>
-		[HarmonyPatch(typeof(TableScreen), nameof(TableScreen.RefreshRows))]
-		internal static class RefreshRows_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.VirtualScroll;
-
-			/// <summary>
-			/// Applied before RefreshRows runs.
-			/// </summary>
-			internal static bool Prefix(TableScreen __instance) {
-				var identities = HashSetPool<IAssignableIdentity, TableScreen>.Allocate();
-				var living = Components.LiveMinionIdentities.Items;
-				StoredMinionIdentity smi;
-				// Living Duplicants
-				for (int i = 0; i < living.Count; i++) {
-					var dupe = living[i];
-					if (dupe != null)
-						identities.Add(dupe);
-				}
-				// Duplicants in vanilla rockets and similar
-				foreach (var minionStorage in Components.MinionStorages.Items)
-					foreach (var info in minionStorage.GetStoredMinionInfo()) {
-						var dupe = info.serializedMinion;
-						if (dupe != null && (smi = dupe.Get<StoredMinionIdentity>()) != null)
-							__instance.AddRow(smi);
-					}
-				ClearAndAddRows(__instance, identities);
-				// Add the missing rows
-				foreach (var missingMinion in identities)
-					__instance.AddRow(missingMinion);
-				identities.Recycle();
-				if (DlcManager.FeatureClusterSpaceEnabled())
-					AddDividers(__instance);
-				SortRows(__instance);
-				__instance.rows_dirty = false;
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to TableScreen to make sorting rows much more efficient and freeze them after
-		/// laying them out to make scrolling better. Virtual scroll lagged a lot for some reason.
+		/// Applied to TableScreen to make sorting rows much more efficient and freeze them
+		/// after laying them out to make scrolling better. Virtual scroll lagged a lot for
+		/// some reason.
 		/// </summary>
 		[HarmonyPatch(typeof(TableScreen), nameof(TableScreen.SortRows))]
 		internal static class SortRows_Patch {
@@ -471,31 +186,6 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(TableScreen __instance) {
 				SortRows(__instance);
 				return false;
-			}
-		}
-
-		/// <summary>
-		/// Listens for scroll events 
-		/// </summary>
-		private sealed class ScrollListener {
-			/// <summary>
-			/// The screen to update.
-			/// </summary>
-			private readonly TableScreen screen;
-
-			/// <summary>
-			/// The scroll pane to check for the position.
-			/// </summary>
-			private readonly ScrollRect scrollRect;
-
-			public ScrollListener(TableScreen screen, ScrollRect scrollRect) {
-				this.screen = screen;
-				this.scrollRect = scrollRect;
-			}
-
-			public void OnScroll(Vector2 _) {
-				if (!screen.CheckScrollersDirty())
-					screen.SetScrollersDirty(scrollRect.horizontalNormalizedPosition);
 			}
 		}
 
@@ -526,7 +216,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 
 			public int Compare(TableRow x, TableRow y) {
-				int result = comparator.Invoke(x.GetIdentity(), y.GetIdentity());
+				int result = comparator.Invoke(x?.GetIdentity(), y?.GetIdentity());
 				if (reverse)
 					result = -result;
 				return result;

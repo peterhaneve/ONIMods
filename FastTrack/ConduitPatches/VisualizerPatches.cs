@@ -136,7 +136,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 			var cc = CameraController.Instance;
 			bool update = true;
 			// Calculate update rate otherwise
-			if (__instance != null && updateRate > 0.0 && cc != null) {
+			if (updateRate > 0.0 && cc != null) {
 				// Set updates to 1 Hz if zoomed way way out
 				var area = cc.VisibleArea.CurrentArea;
 				var max = area.Max;
@@ -246,7 +246,6 @@ namespace PeterHan.FastTrack.ConduitPatches {
 				var setBallCap = resizeBalls.GetSetMethod(true);
 				var setConduitCap = resizeConduits.GetSetMethod(true);
 				foreach (var instr in instructions) {
-					var labels = instr.labels;
 					if (instr.Is(OpCodes.Callvirt, setConduitCap)) {
 						instr.opcode = OpCodes.Call;
 						instr.operand = targetConduits;

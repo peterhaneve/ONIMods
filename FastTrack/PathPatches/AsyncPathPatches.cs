@@ -136,6 +136,25 @@ namespace PeterHan.FastTrack.PathPatches {
 	}
 
 	/// <summary>
+	/// Applied to CPUBudget to allow fetching the core count off the main thread.
+	/// </summary>
+	[HarmonyPatch]
+	public static class CPUBudget_GetCoreCount_Patch {
+		internal static MethodBase TargetMethod() {
+			return typeof(CPUBudget).GetPropertySafe<int>(nameof(CPUBudget.coreCount), true)?.
+				GetGetMethod(true);
+		}
+
+		/// <summary>
+		/// Applied before coreCount's getter runs.
+		/// </summary>
+		internal static bool Prefix(ref int __result) {
+			__result = FastTrackMod.CoreCount;
+			return false;
+		}
+	}
+
+	/// <summary>
 	/// Applied to ScenePartitioner to make the GatherEntries family of methods partially
 	/// thread safe.
 	/// </summary>
@@ -257,6 +276,21 @@ namespace PeterHan.FastTrack.PathPatches {
 				ScenePartitionerEntry)), typeof(ScenePartitioner_Widthdraw_Patch).
 				GetMethodSafe(nameof(RemoveLocked), true, typeof(SceneEntryHash), typeof(
 				ScenePartitionerEntry)));
+		}
+	}
+
+	/// <summary>
+	/// Applied to Storage to remove it from the cache when it is destroyed.
+	/// </summary>
+	[HarmonyPatch(typeof(Storage), nameof(Storage.OnCleanUp))]
+	public static class Storage_OnCleanUp_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
+
+		/// <summary>
+		/// Applied after OnCleanUp runs.
+		/// </summary>
+		internal static void Postfix(Storage __instance) {
+			AsyncBrainGroupUpdater.Instance?.RemoveStorage(__instance);
 		}
 	}
 }

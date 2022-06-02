@@ -76,7 +76,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// <param name="layer">The new conduit layer.</param>
 		internal void UpdateLayerAndPosition(Vector3 position, int layer) {
 			float z = position.z;
-			if (z != lastZ) {
+			if (!Mathf.Approximately(z, lastZ)) {
 				transform.position = position;
 				lastZ = z;
 			}
@@ -181,14 +181,15 @@ namespace PeterHan.FastTrack.ConduitPatches {
 				var replacement = typeof(ConduitFlowMeshPatches).GetMethodSafe(
 					nameof(PostUpdate), true, typeof(Mesh), typeof(Vector3),
 					typeof(Quaternion), typeof(Material), typeof(int));
-				var newMethod = instructions;
+				TranspiledMethod newMethod;
 				if (drawMesh != null)
 					newMethod = PPatchTools.ReplaceMethodCallSafe(instructions, drawMesh,
 						replacement);
-				else
+				else {
 					PUtil.LogWarning("Unable to patch ConduitFlowMesh.End");
-				foreach (var instr in newMethod)
-					yield return instr;
+					newMethod = instructions;
+				}
+				return newMethod;
 			}
 		}
 	}

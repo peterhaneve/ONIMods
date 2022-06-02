@@ -67,6 +67,14 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		private static bool runMix = !FastTrackOptions.Instance.DisableSound;
 
+		/// <summary>
+		/// A coroutine that waits one frame, then allows AmbienceManager to run.
+		/// </summary>
+		private static System.Collections.IEnumerator RunAmbienceNextFrame() {
+			yield return null;
+			runAmbience = true;
+		}
+
 		public override void OnSpawn() {
 			base.OnSpawn();
 			runAmbience = false;
@@ -76,26 +84,12 @@ namespace PeterHan.FastTrack {
 		public void Render200ms(float dt) {
 			if (KPlayerPrefs.GetFloat(VOLUME_MASTER, 1.0f) > 0.0f && !FastTrackOptions.
 					Instance.DisableSound) {
-#if false
-				var lsm = LoopingSoundManager.Get();
-				if (lsm != null)
-					LoopingSoundManagerUpdater.RenderEveryTick(lsm, dt);
-#endif
 				if (KPlayerPrefs.GetFloat(VOLUME_AMBIENCE, 1.0f) > 0.0f) {
 					StartCoroutine(RunAmbienceNextFrame());
 					runMix = true;
 				} else
 					runMix = false;
 			}
-		}
-
-		/// <summary>
-		/// A coroutine that waits one frame, then allows AmbienceManager to run.
-		/// </summary>
-		private System.Collections.IEnumerator RunAmbienceNextFrame() {
-			yield return null;
-			runAmbience = true;
-			yield break;
 		}
 
 		/// <summary>
@@ -143,19 +137,6 @@ namespace PeterHan.FastTrack {
 				runLooping = !runLooping;
 				return shouldRunLooping;
 			}
-
-#if false
-			[HarmonyReversePatch(HarmonyReversePatchType.Original)]
-			[HarmonyPatch(nameof(LoopingSoundManager.RenderEveryTick))]
-			[MethodImpl(MethodImplOptions.NoInlining)]
-			internal static void RenderEveryTick(LoopingSoundManager instance, float dt) {
-				_ = instance;
-				_ = dt;
-				// Dummy code to ensure no inlining
-				while (System.DateTime.Now.Ticks > 0L)
-					throw new NotImplementedException("Reverse patch stub");
-			}
-#endif
 		}
 
 		/// <summary>

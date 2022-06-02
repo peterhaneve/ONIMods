@@ -108,24 +108,6 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	}
 
 	/// <summary>
-	/// Applied to KAnimGraphTileVisualizer to hide anything visualized with this component
-	/// when inside a solid tile. Currently all conduits and travel tubes use this.
-	/// </summary>
-	[HarmonyPatch(typeof(KAnimGraphTileVisualizer), nameof(KAnimGraphTileVisualizer.Refresh))]
-	public static class KAnimGraphTileVisualizer_Refresh_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.CullConduits;
-
-		/// <summary>
-		/// Applied before Refresh runs.
-		/// </summary>
-		internal static void Prefix(KAnimGraphTileVisualizer __instance) {
-			if (__instance != null && __instance.TryGetComponent(
-					out UpdateGraphIfEntombed updater))
-				updater.CheckVisible();
-		}
-	}
-
-	/// <summary>
 	/// Applied to SolidConduitFlowVisualizer to hide carts and items that are inside solid
 	/// tiles.
 	/// </summary>
@@ -286,6 +268,24 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	}
 
 	/// <summary>
+	/// Applied to KAnimGraphTileVisualizer to hide anything visualized with this component
+	/// when inside a solid tile. Currently all conduits and travel tubes use this.
+	/// </summary>
+	[HarmonyPatch(typeof(KAnimGraphTileVisualizer), nameof(KAnimGraphTileVisualizer.Refresh))]
+	public static class KAnimGraphTileVisualizer_Refresh_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.CullConduits;
+
+		/// <summary>
+		/// Applied before Refresh runs.
+		/// </summary>
+		internal static void Prefix(KAnimGraphTileVisualizer __instance) {
+			if (__instance != null && __instance.TryGetComponent(
+					out UpdateGraphIfEntombed updater))
+				updater.CheckVisible();
+		}
+	}
+
+	/// <summary>
 	/// Applied to OverlayModes.Mode to set overlay visibility to true on targets that match
 	/// the current overlay.
 	/// </summary>
@@ -338,19 +338,14 @@ namespace PeterHan.FastTrack.ConduitPatches {
 						}
 						cell += w;
 					}
-					if (found) {
-						var kmb = instance as KMonoBehaviour;
-						if (shouldAdd == null || kmb == null || shouldAdd(kmb)) {
-							// Add to list and trigger overlay mode update
-							if (kmb != null) {
-								if (kmb.TryGetComponent(out KBatchedAnimController kbac))
-									kbac.SetLayer(layer);
-								if (kmb.TryGetComponent(out UpdateGraphIfEntombed updateGraph))
-									updateGraph.UpdateOverlay(true);
-							}
-							targets.Add(instance);
-							onAdded?.Invoke(instance);
-						}
+					if (found && (shouldAdd == null || shouldAdd(instance))) {
+						// Add to list and trigger overlay mode update
+						if (instance.TryGetComponent(out KBatchedAnimController kbac))
+							kbac.SetLayer(layer);
+						if (instance.TryGetComponent(out UpdateGraphIfEntombed updateGraph))
+							updateGraph.UpdateOverlay(true);
+						targets.Add(instance);
+						onAdded?.Invoke(instance);
 					}
 				}
 			}

@@ -100,11 +100,10 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static string FormatLinkID(string id, string find = null,
 				string replace = null) {
 			var text = CACHED_BUILDER;
-			int n;
 			text.Clear();
 			text.Append(id);
 			text.Replace("_", "");
-			n = text.Length;
+			int n = text.Length;
 			// ToUpper in place, avoid the Turkish test problem
 			for (int i = 0; i < n; i++)
 				text[i] = char.ToUpperInvariant(text[i]);
@@ -194,7 +193,6 @@ namespace PeterHan.FastTrack.UIPatches {
 				int currentOrder = 0;
 				var currentScreen = ds.currentSideScreen;
 				var dss = ds.sideScreen;
-				GameObject instGO;
 				n = sideScreens.Count;
 				if (currentScreen != null) {
 					if (!currentScreen.gameObject.activeSelf)
@@ -206,6 +204,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					var screen = sideScreens[i];
 					var inst = screen.screenInstance;
 					var prefab = screen.screenPrefab;
+					GameObject instGO;
 					if (prefab.IsValidForTarget(target)) {
 						if (inst == null) {
 							inst = Util.KInstantiateUI<SideScreenContent>(prefab.gameObject,
@@ -216,7 +215,7 @@ namespace PeterHan.FastTrack.UIPatches {
 						if (!dss.activeInHierarchy)
 							dss.SetActive(true);
 						inst.SetTarget(target);
-						inst.Show(true);
+						inst.Show();
 						sortedScreens.Add(new SideScreenPair(inst.gameObject, sortOrder));
 						if (currentScreen == null || sortOrder > currentOrder) {
 							ds.currentSideScreen = currentScreen = inst;
@@ -229,9 +228,9 @@ namespace PeterHan.FastTrack.UIPatches {
 						if (inst == currentScreen)
 							currentScreen = null;
 					}
-				};
+				}
 			}
-			sortedScreens.Sort(SideScreenOrderComparer.Instance);
+			sortedScreens.Sort(SideScreenOrderComparer.INSTANCE);
 			n = sortedScreens.Count;
 			for (int i = 0; i < n; i++)
 				sortedScreens[i].Key.transform.SetSiblingIndex(i);
@@ -250,10 +249,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Stores component references to the last selected object. DetailsScreen already
 		/// keeps a reference to its current target, so only need the components.
 		/// </summary>
-		private struct LastSelectionDetails {
+		private readonly struct LastSelectionDetails {
 			internal readonly string codexLink;
-
-			internal readonly CellSelectionObject cso;
 
 			internal readonly ToolTip editTooltip;
 
@@ -269,7 +266,6 @@ namespace PeterHan.FastTrack.UIPatches {
 					DetailsScreen instance) {
 				var title = instance.TabTitle;
 				string rawLink = GetCodexLink(go, cso);
-				this.cso = cso;
 				if (rawLink != null && (CodexCache.entries.ContainsKey(rawLink) || CodexCache.
 						FindSubEntry(rawLink) != null))
 					codexLink = rawLink;
@@ -418,13 +414,13 @@ namespace PeterHan.FastTrack.UIPatches {
 						var resume = lastSelection.resume;
 						titleText.SetTitle(name);
 						if (resume != null) {
-							titleText.SetSubText(resume.GetSkillsSubtitle(), "");
+							titleText.SetSubText(resume.GetSkillsSubtitle());
 							titleText.SetUserEditable(true);
 						} else if (lastSelection.rename != null) {
-							titleText.SetSubText("", "");
+							titleText.SetSubText("");
 							titleText.SetUserEditable(true);
 						} else {
-							titleText.SetSubText("", "");
+							titleText.SetSubText("");
 							titleText.SetUserEditable(false);
 						}
 					}
@@ -448,7 +444,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// The singleton instance of this class.
 			/// </summary>
-			internal static readonly SideScreenOrderComparer Instance =
+			internal static readonly SideScreenOrderComparer INSTANCE =
 				new SideScreenOrderComparer();
 
 			private SideScreenOrderComparer() { }
@@ -456,7 +452,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			public int Compare(SideScreenPair x, SideScreenPair y) {
 				// This is a grievous violation of the Compare contract, but is necessary to
 				// preserve the base game's order...
-				return (x.Value <= y.Value) ? 1 : -1;
+				return x.Value <= y.Value ? 1 : -1;
 			}
 		}
 	}

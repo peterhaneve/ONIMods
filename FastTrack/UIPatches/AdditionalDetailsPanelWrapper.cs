@@ -225,7 +225,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			drawer.NewLabel(drawer.Format(ELEMENTAL.TEMPERATURE.NAME, tempStr)).
 				Tooltip(drawer.Format(ELEMENTAL.TEMPERATURE.TOOLTIP, tempStr)).
 				NewLabel(drawer.Format(ELEMENTAL.DISEASE.NAME, GameUtil.
-					GetFormattedDisease(diseaseIdx, diseaseCount, false))).
+					GetFormattedDisease(diseaseIdx, diseaseCount))).
 				Tooltip(drawer.Format(ELEMENTAL.DISEASE.TOOLTIP, GameUtil.GetFormattedDisease(
 					diseaseIdx, diseaseCount, true)));
 			lastSelection.specificHeat.AddLine(drawer);
@@ -425,13 +425,11 @@ namespace PeterHan.FastTrack.UIPatches {
 
 			internal readonly InfoLine boil;
 
-			internal readonly Building building;
-
 			internal readonly BuildingComplete buildingComplete;
 
 			internal string creationTimeCached;
 
-			internal readonly CellSelectionObject cso;
+			private readonly CellSelectionObject cso;
 
 			internal readonly Element element;
 
@@ -445,7 +443,7 @@ namespace PeterHan.FastTrack.UIPatches {
 
 			internal readonly InfoLine overheat;
 
-			internal readonly PrimaryElement primaryElement;
+			private readonly PrimaryElement primaryElement;
 
 			internal readonly string radiationAbsorption;
 
@@ -463,6 +461,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal string uptimeCached;
 
 			internal LastSelectionDetails(GameObject go) {
+				Building building;
 				string tempUnits = GameUtil.GetTemperatureUnitSuffix();
 				if (go.TryGetComponent(out BuildingComplete bc))
 					building = bc;
@@ -516,7 +515,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
 	/// Stores precomputed info descriptors in the additional details panel.
 	/// </summary>
-	public struct InfoLine {
+	public readonly struct InfoLine {
 		/// <summary>
 		/// The text to display in the panel.
 		/// </summary>

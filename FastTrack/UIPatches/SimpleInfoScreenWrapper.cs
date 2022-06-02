@@ -61,7 +61,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				string hash = stringTable.GetStringByHash(pair.Key.noteHash);
 				stressNotes.Add(new ReportEntry.Note(pair.Value, hash));
 			}
-			stressNotes.Sort(StressNoteComparer.Instance);
+			stressNotes.Sort(StressNoteComparer.INSTANCE);
 			for (int i = 0; i < n; i++) {
 				var note = stressNotes[i];
 				float stressDelta = note.value;
@@ -170,8 +170,6 @@ namespace PeterHan.FastTrack.UIPatches {
 
 		private bool vitalsActive;
 
-		private bool wasPaused;
-
 		internal SimpleInfoScreenWrapper() {
 			allGeysers = null;
 			conditionParent = null;
@@ -191,7 +189,6 @@ namespace PeterHan.FastTrack.UIPatches {
 			storageParent = null;
 			stressActive = false;
 			vitalsActive = false;
-			wasPaused = false;
 			instance = this;
 		}
 
@@ -279,7 +276,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		internal void Refresh(bool force) {
 			var target = sis.selectedTarget;
 			var statusItems = sis.statusItems;
-			bool paused = SpeedControlScreen.Instance.IsPaused;
 			// OnSelectTarget gets called before the first Init, so the UI is not ready then
 			if (storageParent != null) {
 				if (pendingProcessFreeze) {
@@ -308,7 +304,6 @@ namespace PeterHan.FastTrack.UIPatches {
 					for (int i = 0; i < count; i++)
 						statusItems[i].Refresh();
 				}
-				wasPaused = paused;
 			}
 		}
 
@@ -331,7 +326,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					found = 0;
 					text.Clear();
 					for (int j = 0; j < nm; j++) {
-						var modifier = fertModifiers[i];
+						var modifier = fertModifiers[j];
 						if (modifier.TargetTag == eggTag) {
 							text.Append(Constants.BULLETSTRING).AppendLine(modifier.
 								GetTooltip());

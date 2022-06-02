@@ -33,6 +33,58 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// The singleton instance of this class.
 		/// </summary>
 		private static SpacePOIInfoPanelWrapper instance;
+		
+		/// <summary>
+		/// Initializes the available mass by element display.
+		/// </summary>
+		/// <param name="panel">The parent info panel.</param>
+		/// <param name="harvestable">The POI to be harvested.</param>
+		/// <param name="details">The panel to refresh.</param>
+		private static void InitElements(SpacePOISimpleInfoPanel panel, HarvestablePOIStates.
+				Instance harvestable, CollapsibleDetailContentPanel details) {
+			var elementRows = panel.elementRows;
+			var existingRows = DictionaryPool<Tag, GameObject, SpacePOISimpleInfoPanel>.
+				Allocate();
+			foreach (var pair in panel.elementRows)
+				existingRows[pair.Key] = pair.Value;
+			if (harvestable != null) {
+				// Shared dictionary, does not allocate
+				var sortedElements = ListPool<ElementWeight, SpacePOISimpleInfoPanel>.
+					Allocate();
+				sortedElements.AddRange(harvestable.configuration.GetElementsWithWeights());
+				sortedElements.Sort(SortElementsByMassComparer.Instance);
+				int n = sortedElements.Count;
+				for (int i = 0; i < n; i++) {
+					var pair = sortedElements[i];
+					var element = pair.Key;
+					var elementTag = new Tag(element.ToString());
+					if (!elementRows.TryGetValue(elementTag, out GameObject row)) {
+						row = Util.KInstantiateUI(panel.simpleInfoRoot.iconLabelRow, details.
+							Content.gameObject, true);
+						elementRows[elementTag] = row;
+					} else
+						row.SetActive(true);
+					if (row.TryGetComponent(out HierarchyReferences hr)) {
+						var uiSprite = Def.GetUISprite(elementTag);
+						var icon = hr.GetReference<Image>("Icon");
+						if (uiSprite != null) {
+							icon.sprite = uiSprite.first;
+							icon.color = uiSprite.second;
+						}
+						hr.GetReference<LocText>("NameLabel").SetText(ElementLoader.
+							FindElementByHash(element).name);
+						hr.GetReference<LocText>("ValueLabel").alignment = TMPro.
+							TextAlignmentOptions.MidlineRight;
+					}
+					existingRows.Remove(elementTag);
+				}
+				sortedElements.Recycle();
+			}
+			// Turn off all rows that were not turned on
+			foreach (var pair in existingRows)
+				pair.Value.SetActive(false);
+			existingRows.Recycle();
+		}
 
 		/// <summary>
 		/// The last object selected in the additional details pane.
@@ -122,58 +174,6 @@ namespace PeterHan.FastTrack.UIPatches {
 					icon.color = Color.black;
 				}
 			}
-		}
-
-		/// <summary>
-		/// Initializes the available mass by element display.
-		/// </summary>
-		/// <param name="panel">The parent info panel.</param>
-		/// <param name="harvestable">The POI to be harvested.</param>
-		/// <param name="details">The panel to refresh.</param>
-		private void InitElements(SpacePOISimpleInfoPanel panel, HarvestablePOIStates.
-				Instance harvestable, CollapsibleDetailContentPanel details) {
-			var elementRows = panel.elementRows;
-			var existingRows = DictionaryPool<Tag, GameObject, SpacePOISimpleInfoPanel>.
-				Allocate();
-			foreach (var pair in panel.elementRows)
-				existingRows[pair.Key] = pair.Value;
-			if (harvestable != null) {
-				// Shared dictionary, does not allocate
-				var sortedElements = ListPool<ElementWeight, SpacePOISimpleInfoPanel>.
-					Allocate();
-				sortedElements.AddRange(harvestable.configuration.GetElementsWithWeights());
-				sortedElements.Sort(SortElementsByMassComparer.Instance);
-				int n = sortedElements.Count;
-				for (int i = 0; i < n; i++) {
-					var pair = sortedElements[i];
-					SimHashes element = pair.Key;
-					Tag elementTag = new Tag(element.ToString());
-					if (!elementRows.TryGetValue(elementTag, out GameObject row)) {
-						row = Util.KInstantiateUI(panel.simpleInfoRoot.iconLabelRow, details.
-							Content.gameObject, true);
-						elementRows[elementTag] = row;
-					} else
-						row.SetActive(true);
-					if (row.TryGetComponent(out HierarchyReferences hr)) {
-						var uiSprite = Def.GetUISprite(elementTag, "ui", false);
-						var icon = hr.GetReference<Image>("Icon");
-						if (uiSprite != null) {
-							icon.sprite = uiSprite.first;
-							icon.color = uiSprite.second;
-						}
-						hr.GetReference<LocText>("NameLabel").SetText(ElementLoader.
-							FindElementByHash(element).name);
-						hr.GetReference<LocText>("ValueLabel").alignment = TMPro.
-							TextAlignmentOptions.MidlineRight;
-					}
-					existingRows.Remove(elementTag);
-				}
-				sortedElements.Recycle();
-			}
-			// Turn off all rows that were not turned on
-			foreach (var pair in existingRows)
-				pair.Value.SetActive(false);
-			existingRows.Recycle();
 		}
 
 		/// <summary>

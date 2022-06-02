@@ -32,7 +32,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 	public static class AnimEventHandler_UpdateOffset_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.AnimOpts;
 
-		//// <summary>
+		/// <summary>
 		/// Applied before UpdateOffset runs.
 		/// </summary>
 		internal static bool Prefix(AnimEventHandler __instance) {
@@ -266,22 +266,19 @@ namespace PeterHan.FastTrack.VisualPatches {
 				var lastChunk = instance.lastChunkXY;
 				Vector3 pos = transform.position, posWithOffset = pos + instance.Offset;
 				float z = pos.z;
-				Vector2I cellXY;
 				bool always = visType == KAnimControllerBase.VisibilityType.Always;
 				transform.hasChanged = false;
 				// If this is the only anim in the batch, and the Z coordinate changed,
 				// override the Z in the batch
-				if (batch.group.maxGroupSize == 1 && instance.lastPos.z != z)
+				if (batch.group.maxGroupSize == 1 && !Mathf.Approximately(instance.lastPos.z,
+						z))
 					batch.OverrideZ(z);
 				instance.lastPos = posWithOffset;
 				// This is basically GetCellXY() with less accesses to __instance.transform
-				if (Grid.CellSizeInMeters == 0.0f)
-					// Handle out-of-game
-					cellXY = new Vector2I((int)posWithOffset.x, (int)posWithOffset.y);
-				else
-					cellXY = Grid.PosToXY(posWithOffset);
+				var cellCoords = Grid.CellSizeInMeters == 0.0f ? new Vector2I(
+					(int)posWithOffset.x, (int)posWithOffset.y) : Grid.PosToXY(posWithOffset);
 				if (!always && lastChunk != KBatchedAnimUpdater.INVALID_CHUNK_ID &&
-						KAnimBatchManager.CellXYToChunkXY(cellXY) != lastChunk) {
+						KAnimBatchManager.CellXYToChunkXY(cellCoords) != lastChunk) {
 					// Re-register in a different batch
 					instance.DeRegister();
 					instance.Register();

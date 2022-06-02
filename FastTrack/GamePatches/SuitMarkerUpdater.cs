@@ -197,7 +197,7 @@ namespace PeterHan.FastTrack.GamePatches {
 					}
 				bool hasSuit = availableSuit != null;
 				if (hasSuit != hadAvailableSuit) {
-					anim.Play(hasSuit ? "off" : "no_suit", KAnim.PlayMode.Once, 1f, 0f);
+					anim.Play(hasSuit ? "off" : "no_suit");
 					hadAvailableSuit = hasSuit;
 				}
 				Grid.UpdateSuitMarker(cell, charged, vacancies, suitCheckpoint.gridFlags,

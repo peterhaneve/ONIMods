@@ -225,17 +225,17 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// (1 decimal place soft).</param>
 		internal static void GetFormattedMass(StringBuilder text, float mass,
 				TimeSlice timeSlice = TimeSlice.None, MetricMassFormat massFormat =
-				MetricMassFormat.UseThreshold, bool displaySuffix = true, string format = null)
-		{
-			if (float.IsInfinity(mass) || float.IsNaN(mass) || mass == float.MaxValue)
+				MetricMassFormat.UseThreshold, bool displaySuffix = true,
+				string format = null) {
+			if (float.IsInfinity(mass) || float.IsNaN(mass))
 				// Handle inf and NaN
 				text.Append(STRINGS.UI.CALCULATING);
 			else {
 				// Divide by cycle length if /cycle
 				LocString suffix;
-				float absMass = Mathf.Abs(mass);
 				var legend = MASS_LEGEND;
 				mass = GameUtil.ApplyTimeSlice(mass, timeSlice);
+				float absMass = Mathf.Abs(mass);
 				if (GameUtil.massUnit == GameUtil.MassUnit.Kilograms) {
 					switch (massFormat) {
 					case MetricMassFormat.UseThreshold:
@@ -519,29 +519,34 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		internal static void MassStringsPrefix(int cell, ref string[] __result) {
 			var strings = HoverTextHelper.massStrings;
-			if (!Grid.IsValidCell(cell))
-				__result = HoverTextHelper.invalidCellMassStrings;
-			else
+			if (Grid.IsValidCell(cell)) {
+				var element = Grid.Element[cell];
+				float mass = Grid.Mass[cell];
 				__result = strings;
-			var element = Grid.Element[cell];
-			float mass = Grid.Mass[cell];
-			// If element or mass has changed
-			if (element != HoverTextHelper.cachedElement || mass != HoverTextHelper.
-					cachedMass) {
-				HoverTextHelper.cachedElement = element;
-				HoverTextHelper.cachedMass = mass;
-				strings[3] = " " + GetBreathableString(element, mass);
-				if (element.id == SimHashes.Vacuum) {
-					strings[0] = STRINGS.UI.NA;
-					strings[1] = "";
-					strings[2] = "";
-				} else if (element.id == SimHashes.Unobtanium) {
-					strings[0] = STRINGS.UI.NEUTRONIUMMASS;
-					strings[1] = "";
-					strings[2] = "";
-				} else
-					UpdateMassStrings(mass, strings);
-			}
+				// If element or mass has changed
+				if (element != HoverTextHelper.cachedElement || !Mathf.Approximately(mass,
+						HoverTextHelper.cachedMass)) {
+					HoverTextHelper.cachedElement = element;
+					HoverTextHelper.cachedMass = mass;
+					strings[3] = " " + GetBreathableString(element, mass);
+					switch (element.id) {
+					case SimHashes.Vacuum:
+						strings[0] = STRINGS.UI.NA;
+						strings[1] = "";
+						strings[2] = "";
+						break;
+					case SimHashes.Unobtanium:
+						strings[0] = STRINGS.UI.NEUTRONIUMMASS;
+						strings[1] = "";
+						strings[2] = "";
+						break;
+					default:
+						UpdateMassStrings(mass, strings);
+						break;
+					}
+				}
+			} else
+				__result = HoverTextHelper.invalidCellMassStrings;
 		}
 
 		/// <summary>
@@ -552,7 +557,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static void UpdateMassStrings(float mass, string[] strings) {
 			var text = CACHED_BUILDER;
 			// kg
-			int index = 1, n;
+			int index = 1;
 			bool found = false;
 			if (mass < 5.0f) {
 				// kg => g
@@ -573,7 +578,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			// Base game hardcodes dots so we will too
 			RyuFormat.ToString(text, (double)mass, 1, RyuFormatOptions.FixedMode,
 				System.Globalization.CultureInfo.InvariantCulture);
-			n = text.Length;
+			int n = text.Length;
 			for (index = 0; index < n && !found; index++)
 				if (text[index] == '.') {
 					strings[0] = text.ToString(0, index);

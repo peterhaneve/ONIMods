@@ -54,11 +54,12 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static System.Collections.IEnumerator NoMoveRoutine(DiagnosticRow row) {
 			// Wait for 3 seconds unscaled
 			yield return new WaitForSeconds(3.0f);
-			try {
-				// Ignore exception if the notification cannot be resolved
-				row.ResolveNotificationRoutine();
-			} catch (Exception) { }
-			yield break;
+			if (row.gameObject != null)
+				try {
+					row.ResolveNotificationRoutine();
+				} catch (Exception) {
+					// Ignore exception if the notification cannot be resolved
+				}
 		}
 
 		/// <summary>

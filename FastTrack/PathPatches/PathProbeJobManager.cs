@@ -156,7 +156,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			/// <summary>
 			/// Allows the base game's "CPU load" balancer to work properly.
 			/// </summary>
-			internal readonly ICPULoad budget;
+			private readonly ICPULoad budget;
 
 			/// <summary>
 			/// The runtime of this job in Stopwatch ticks.

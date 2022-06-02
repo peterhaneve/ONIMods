@@ -87,7 +87,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			drawer.BeginDrawing();
 			for (int i = 0; i < n; i++) {
 				var attrInstance = currentAttr[i];
-				if (attrInstance.Attribute.ShowInUI == Klei.AI.Attribute.Display.Skill)
+				if (attrInstance.Attribute.ShowInUI == Attribute.Display.Skill)
 					drawer.NewLabel(attrInstance.Name + ": " + attrInstance.
 						GetFormattedValue()).Tooltip(attrInstance.
 						GetAttributeValueTooltip());

@@ -25,26 +25,6 @@ using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeI
 
 namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
-	/// Applied to DecorProvider to not allocate 4 KB of memory in the constructor that will
-	/// almost never be used.
-	/// 
-	/// If Decor Reimagined is installed, it ignores the array anyways.
-	/// </summary>
-	[HarmonyPatch(typeof(DecorProvider), MethodType.Constructor)]
-	public static class DecorProvider_Constructor_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
-
-		/// <summary>
-		/// Transpiles the constructor to resize the array to 26 slots by default.
-		/// Most decor providers have 1 or 2 radius which is 1 and 9 tiles respectively,
-		/// 26 handles up to 3 without a resize.
-		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			return PPatchTools.ReplaceConstant(instructions, 512, 26, true);
-		}
-	}
-
-	/// <summary>
 	/// Applied to DecorProvider to reduce the effect of the Tropical Pacu bug by instead of
 	/// triggering a full room rebuild, just refreshing the room constraints.
 	/// 
@@ -106,7 +86,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		private static void SolidNotChangedEvent(RoomProber prober, int cell, bool _) {
 			if (prober != null)
 				ROOMS_PENDING.Add(cell);
-		}
+			}
 
 		/// <summary>
 		/// Transpiles Refresh to change a solid change event into a condition retrigger.
@@ -115,7 +95,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal static TranspiledMethod TranspileRefresh(TranspiledMethod instructions) {
 			return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(RoomProber).
 				GetMethodSafe(nameof(RoomProber.SolidChangedEvent), false, typeof(int),
-				typeof(bool)), typeof(DecorProviderRefreshFix).GetMethodSafe(nameof(
+					typeof(bool)), typeof(DecorProviderRefreshFix).GetMethodSafe(nameof(
 				SolidNotChangedEvent), true, typeof(RoomProber), typeof(int), typeof(bool)));
 		}
 
@@ -130,58 +110,8 @@ namespace PeterHan.FastTrack.GamePatches {
 					inst.UpdateRoom(cavity);
 				else
 					inst.QueueSolidChange(cell);
-			}
-			ROOMS_PENDING.Clear();
-		}
 	}
-
-	/// <summary>
-	/// Applied to DecorProvider.Splat to resize the array to be bigger if necessary.
-	/// 
-	/// If Decor Reimagined is installed, it already replaced this struct with another one.
-	/// </summary>
-	[HarmonyPatch(typeof(DecorProvider.Splat), nameof(DecorProvider.Splat.AddDecor))]
-	public static class DecorProvider_Splat_AddDecor_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
-
-		/// <summary>
-		/// Applied before AddDecor runs.
-		/// </summary>
-		internal static bool Prefix(ref DecorProvider.Splat __instance) {
-			int cell = Grid.PosToCell(__instance.provider);
-			float decor = __instance.decor;
-			var extents = __instance.extents;
-			var provider = __instance.provider;
-			int[] cells = provider.cells;
-			// VisibilityTest works in absolute coords
-			int xMin = extents.x, yMin = extents.y, xMax = Math.Min(Grid.WidthInCells, xMin +
-				extents.width), yMax = Math.Min(Grid.HeightInCells, yMin + extents.height);
-			int count = provider.cellCount, worst, n = cells.Length;
-			if (xMin < 0)
-				xMin = 0;
-			if (yMin < 0)
-				yMin = 0;
-			Grid.CellToXY(cell, out int centerX, out int centerY);
-			// Resize the provider array if it is too small
-			worst = (xMax - xMin + 1) * (yMax - yMin + 1);
-			if (n < worst) {
-				provider.cells = cells = new int[worst];
-				n = worst;
-			}
-			for (int x = xMin; x < xMax; x++)
-				for (int y = yMin; y < yMax; y++) {
-					cell = Grid.XYToCell(x, y);
-					if (Grid.IsValidCell(cell) && Grid.VisibilityTest(centerX, centerY, x, y))
-					{
-						// Add to grid
-						Grid.Decor[cell] += decor;
-						// Add to cell list
-						if (count >= 0 && count < n)
-							cells[count++] = cell;
-					}
-				}
-			provider.cellCount = count;
-			return false;
+			ROOMS_PENDING.Clear();
 		}
 	}
 }

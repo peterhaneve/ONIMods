@@ -184,7 +184,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				var display = pair.Value;
 				var go = key.gameObject;
 				bool active = go.activeSelf;
-				Tag tag = display.tag;
+				var tag = display.tag;
 				// Hide undiscovered entities in some screens (like pedestal)
 				if (hide && !inst.IsDiscovered(tag)) {
 					if (active) {
@@ -205,7 +205,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					var toggle = key.toggle;
 					// Do not update amounts of inactive items
 					float availableAmount = __instance.GetAvailableAmount(tag);
-					if (display.lastAmount != availableAmount) {
+					if (!Mathf.Approximately(display.lastAmount, availableAmount)) {
 						result = true;
 						// Update display only if it actually changed
 						display.lastAmount = availableAmount;
@@ -214,13 +214,11 @@ namespace PeterHan.FastTrack.UIPatches {
 						key.amount.SetText(text);
 					}
 					if (!__instance.ValidRotationForDeposit(display.direction) ||
-							availableAmount <= 0.0f) {
+							availableAmount <= 0.0f)
 						// Disable items which cannot fit in this orientation or are missing
-						if (selected != key)
-							SetImageToggleState(__instance, toggle, ITState.Disabled);
-						else
-							SetImageToggleState(__instance, toggle, ITState.DisabledActive);
-					} else if (selected != key)
+						SetImageToggleState(__instance, toggle, selected != key ? ITState.
+							Disabled : ITState.DisabledActive);
+					else if (selected != key)
 						SetImageToggleState(__instance, toggle, ITState.Inactive);
 					else
 						SetImageToggleState(__instance, toggle, ITState.Active);
@@ -261,8 +259,6 @@ namespace PeterHan.FastTrack.UIPatches {
 				case ITState.DisabledActive:
 					its.SetDisabledActive();
 					targetImage.material = instance.desaturatedMaterial;
-					break;
-				default:
 					break;
 				}
 			}

@@ -18,7 +18,6 @@
 
 using HarmonyLib;
 using Klei.AI;
-using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.FastTrack.SensorPatches {
@@ -31,6 +30,12 @@ namespace PeterHan.FastTrack.SensorPatches {
 	/// </summary>
 	public static class SensorPatches {
 		/// <summary>
+		/// Compatibility for Rest for the Weary, allow mingle cell sensor during
+		/// Finish Tasks time.
+		/// </summary>
+		private static ScheduleBlockType finishTasks;
+
+		/// <summary>
 		/// Stores the schedule block type used for recreation chores.
 		/// </summary>
 		private static ScheduleBlockType recreation;
@@ -39,6 +44,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// Initializes after the Db is loaded.
 		/// </summary>
 		internal static void Init() {
+			finishTasks = Db.Get().ScheduleBlockTypes.TryGet("FinishTask");
 			recreation = Db.Get().ScheduleBlockTypes.Recreation;
 		}
 
@@ -77,20 +83,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(MingleCellSensor), nameof(MingleCellSensor.Update))]
 		internal static class MingleCellSensor_Update {
-			/// <summary>
-			/// Compatibility for Rest for the Weary, allow mingle cell sensor during
-			/// Finish Tasks time.
-			/// </summary>
-			private static ScheduleBlockType finishTasks = null;
-
 			internal static bool Prepare() => FastTrackOptions.Instance.SensorOpts;
-
-			/// <summary>
-			/// Looks up and caches the Finish Tasks schedule block type, if available.
-			/// </summary>
-			internal static void Init() {
-				finishTasks = Db.Get().ScheduleBlockTypes.TryGet("FinishTask");
-			}
 
 			/// <summary>
 			/// Applied before Update runs.

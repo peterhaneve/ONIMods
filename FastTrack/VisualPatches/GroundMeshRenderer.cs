@@ -17,10 +17,8 @@
  */
 
 using HarmonyLib;
-using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 
 using RenderData = GroundRenderer.ElementChunk.RenderData;
@@ -79,7 +77,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// inactive.</param>
 		internal void UpdatePosition(Vector3 position, bool active) {
 			float z = position.z;
-			if (z != lastZ) {
+			if (!Mathf.Approximately(z, lastZ)) {
 				transform.position = position;
 				lastZ = z;
 			}

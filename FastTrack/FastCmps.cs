@@ -78,9 +78,9 @@ namespace PeterHan.FastTrack {
 				GenerateBody methodBody) {
 			var cmpType = originalMethod.DeclaringType;
 			bool patched = false;
-			TranspiledMethod result = instructions;
-			if (cmpType.IsConstructedGenericType && cmpType.GetGenericTypeDefinition() ==
-					typeof(Components.Cmps<>)) {
+			var result = instructions;
+			if (cmpType != null && cmpType.IsConstructedGenericType && cmpType.
+					GetGenericTypeDefinition() == typeof(Components.Cmps<>)) {
 				// Components.Cmps<argument>
 				var t = cmpType.GenericTypeArguments[0];
 				var itemsField = cmpType.GetFieldSafe(nameof(Components.Cmps<Brain>.items),
@@ -90,7 +90,7 @@ namespace PeterHan.FastTrack {
 				// Need concrete versions of the methods in that class
 				var getDataList = kcv.GetMethodSafe(nameof(KCompactedVector<Brain>.
 					GetDataList), false);
-				var invokeAction = eventField?.FieldType?.GetMethodSafe(nameof(Action<Brain>.
+				var invokeAction = eventField?.FieldType.GetMethodSafe(nameof(Action<Brain>.
 					Invoke), false, t);
 				var newMethod = new List<CodeInstruction>(32);
 				if (itemsField != null && eventField != null && getDataList != null &&
@@ -125,7 +125,7 @@ namespace PeterHan.FastTrack {
 				result = newMethod;
 			}
 			if (!patched)
-				PUtil.LogWarning("Unable to patch " + cmpType.FullName + "." + originalMethod.
+				PUtil.LogWarning("Unable to patch " + cmpType?.FullName + "." + originalMethod.
 					Name);
 			return result;
 		}
@@ -150,7 +150,7 @@ namespace PeterHan.FastTrack {
 			/// <summary>
 			/// Generates the Cmps.Add body.
 			/// </summary>
-			private static TranspiledMethod GenerateBody(Type t, FieldInfo itemsField,
+			private static TranspiledMethod GenerateMethodBody(Type t, FieldInfo itemsField,
 					Label _) {
 				var addToList = typeof(List<>).MakeGenericType(t).GetMethodSafe(nameof(
 					List<Brain>.Add), false, t);
@@ -167,7 +167,7 @@ namespace PeterHan.FastTrack {
 			internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
 					MethodBase originalMethod, ILGenerator generator) {
 				return TranspilerBase(instructions, originalMethod, generator, "OnAdd",
-					GenerateBody);
+					GenerateMethodBody);
 			}
 		}
 
@@ -179,12 +179,12 @@ namespace PeterHan.FastTrack {
 			/// <summary>
 			/// The preallocate size to pass to the factory created Lists.
 			/// </summary>
-			private static readonly object[] CONSTRUCTOR_ARGS = new object[] { 32 };
+			private static readonly object[] CONSTRUCTOR_ARGS = { 32 };
 
 			/// <summary>
 			/// The signature of the constructor to call with preallocate size.
 			/// </summary>
-			private static readonly Type[] CONSTRUCTOR_SIG = new Type[] { typeof(int) };
+			private static readonly Type[] CONSTRUCTOR_SIG = { typeof(int) };
 
 			/// <summary>
 			/// Stores pooled lists to limit allocations.
@@ -202,7 +202,7 @@ namespace PeterHan.FastTrack {
 			private static OldList GetList(object container) {
 				var type = container.GetType();
 				var pool = POOL;
-				if (!pool.TryGetValue(type, out OldList list)) {
+				if (!pool.TryGetValue(type, out var list)) {
 					// Due to the Harmony bug, the type that actually is being used has to be
 					// computed at runtime, as opposed to static pooled lists like ListPool
 					var types = type.GenericTypeArguments;
@@ -213,10 +213,11 @@ namespace PeterHan.FastTrack {
 					var constructor = typeof(List<>).MakeGenericType(elementType).
 						GetConstructor(PPatchTools.BASE_FLAGS | BindingFlags.Instance, null,
 						CONSTRUCTOR_SIG, null);
-					if (constructor != null)
-						list = constructor.Invoke(CONSTRUCTOR_ARGS) as OldList;
-					else
-						list = new List<KMonoBehaviour>();
+					if (constructor != null && constructor.Invoke(CONSTRUCTOR_ARGS) is
+							OldList newList)
+						list = newList;
+					if (list == null)
+						list = new List<KMonoBehaviour>(32);
 #if DEBUG
 					PUtil.LogDebug("Created world items list for type " + type);
 #endif
@@ -249,7 +250,7 @@ namespace PeterHan.FastTrack {
 				ConstructorInfo targetConstructor = null;
 				bool patched = false;
 				// Find the target List<T> constructor to patch
-				if (!containerType.ContainsGenericParameters) {
+				if (containerType != null && !containerType.ContainsGenericParameters) {
 					var typeArgs = containerType.GenericTypeArguments;
 					if (typeArgs != null && typeArgs.Length > 0) {
 						var targetType = typeof(List<>).MakeGenericType(typeArgs[0]);
@@ -300,7 +301,7 @@ namespace PeterHan.FastTrack {
 			/// <summary>
 			/// Generates the Cmps.Remove body.
 			/// </summary>
-			private static TranspiledMethod GenerateBody(Type t, FieldInfo itemsField,
+			private static TranspiledMethod GenerateMethodBody(Type t, FieldInfo itemsField,
 					Label end) {
 				var removeFromList = typeof(List<>).MakeGenericType(t).GetMethodSafe(nameof(
 					List<Brain>.Remove), false, t);
@@ -319,7 +320,7 @@ namespace PeterHan.FastTrack {
 			internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
 					MethodBase originalMethod, ILGenerator generator) {
 				return TranspilerBase(instructions, originalMethod, generator, "OnRemove",
-					GenerateBody);
+					GenerateMethodBody);
 			}
 		}
 	}
@@ -339,7 +340,7 @@ namespace PeterHan.FastTrack {
 			if (__instance.TryGetComponent(out KSelectable selectable)) {
 				var working = __instance.workingStatusItem;
 				ref Guid statusHandle = ref __instance.workStatusItemHandle;
-				selectable.RemoveStatusItem(statusHandle, false);
+				selectable.RemoveStatusItem(statusHandle);
 				if (__instance.worker == null)
 					UpdateStatusItem(__instance, selectable, ref statusHandle);
 				else if (working != null)

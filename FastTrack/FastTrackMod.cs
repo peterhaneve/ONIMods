@@ -25,14 +25,13 @@ using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace PeterHan.FastTrack {
 	/// <summary>
 	/// Patches which will be applied via annotations for Fast Track.
 	/// </summary>
 	public sealed class FastTrackMod : KMod.UserMod2 {
-		// Global, Game, World
+// Global, Game, World
 #if DEBUG
 		[PLibMethod(RunAt.AfterModsLoad)]
 		internal static void Profile(Harmony harmony) {
@@ -55,19 +54,14 @@ namespace PeterHan.FastTrack {
 		private const string TRUE_TILES_ID = "TrueTiles";
 
 		/// <summary>
+		/// The number of CPUs to use for the async job manager.
+		/// </summary>
+		internal static int CoreCount { get; private set; }
+
+		/// <summary>
 		/// Set to true when the game gets off its feet, and false while it is still loading.
 		/// </summary>
 		internal static bool GameRunning { get; private set; }
-
-		/// <summary>
-		/// Whether worldgen loading is complete.
-		/// </summary>
-		private static volatile bool loaded = false;
-
-		/// <summary>
-		/// The handle that is signaled when worldgen loading completes.
-		/// </summary>
-		private static readonly EventWaitHandle onWorldGenLoad = new AutoResetEvent(false);
 
 		/// <summary>
 		/// Runs several one-time patches after the Db is initialized.
@@ -81,10 +75,8 @@ namespace PeterHan.FastTrack {
 				CritterPatches.OvercrowdingMonitor_UpdateState_Patch.InitTagBits();
 			if (options.RadiationOpts)
 				GamePatches.FastProtonCollider.Init();
-			if (options.SensorOpts) {
+			if (options.SensorOpts)
 				SensorPatches.SensorPatches.Init();
-				SensorPatches.SensorPatches.MingleCellSensor_Update.Init();
-			}
 			if (options.AnimOpts)
 				VisualPatches.KAnimLoopOptimizer.CreateInstance();
 			if (options.InfoCardOpts)
@@ -149,19 +141,6 @@ namespace PeterHan.FastTrack {
 		[HarmonyPriority(Priority.Low)]
 		internal static void FixTimeLapseDrag() {
 			PlayerController.Instance?.CancelDragging();
-		}
-
-		/// <summary>
-		/// Loads worldgen data in the background while other parts of the game load.
-		/// </summary>
-		private static void LoadWorldGenInBackground() {
-			try {
-				ProcGenGame.WorldGen.LoadSettings();
-				loaded = true;
-			} catch (Exception e) {
-				PUtil.LogError(e);
-			}
-			onWorldGenLoad.Set();
 		}
 
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
@@ -247,35 +226,24 @@ namespace PeterHan.FastTrack {
 			GameRunning = false;
 		}
 
-		/// <summary>
-		/// Starts up some asynchronous tasks after mods are fully loaded.
-		/// </summary>
-		[PLibMethod(RunAt.AfterLayerableLoad)]
-		internal static void OnLayerablesLoaded() {
-			if (FastTrackOptions.Instance.OptimizeDialogs) {
-				var thread = new Thread(LoadWorldGenInBackground) {
-					Name = "Load Worldgen Async", IsBackground = true,
-					Priority = ThreadPriority.BelowNormal
-				};
-				Util.ApplyInvariantCultureToThread(thread);
-				thread.Start();
-			}
-		}
-
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			var options = FastTrackOptions.Instance;
-			onWorldGenLoad.Reset();
+			int overrideCoreCount = TuningData<CPUBudget.Tuning>.Get().overrideCoreCount,
+				coreCount = UnityEngine.SystemInfo.processorCount;
 			PUtil.InitLibrary();
 			LocString.CreateLocStringKeys(typeof(FastTrackStrings.UI));
 			new PLocalization().Register();
 			new POptions().RegisterOptions(this, typeof(FastTrackOptions));
 			new PPatchManager(harmony).RegisterPatchClass(typeof(FastTrackMod));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
+			if (overrideCoreCount <= 0 || overrideCoreCount >= coreCount)
+				CoreCount = Math.Min(8, coreCount);
+			else
+				CoreCount = overrideCoreCount;
 			// In case this goes in stock bug fix later
 			if (options.UnstackLights)
 				PRegistry.PutData("Bugs.StackedLights", true);
-			PRegistry.PutData("Bugs.AnimFree", true);
 			PRegistry.PutData("Bugs.MassStringsReadOnly", true);
 			if (options.MiscOpts)
 				PRegistry.PutData("Bugs.ElementTagInDetailsScreen", true);
@@ -302,16 +270,6 @@ namespace PeterHan.FastTrack {
 			} else
 				PUtil.LogDebug("Skipping InitializeCheck patch");
 			GameRunning = false;
-		}
-
-		/// <summary>
-		/// Waits for worldgen loading to complete for up to 3 seconds.
-		/// </summary>
-		[PLibMethod(RunAt.InMainMenu)]
-		internal static void OnMainMenu() {
-			if (FastTrackOptions.Instance.OptimizeDialogs && !loaded && !onWorldGenLoad.
-					WaitOne(3000))
-				PUtil.LogWarning("Worldgen was not loaded within the timeout!");
 		}
 
 		/// <summary>
@@ -390,7 +348,6 @@ namespace PeterHan.FastTrack {
 			for (int i = 0; i < 3; i++)
 				yield return null;
 			GameRunning = true;
-			yield break;
 		}
 	}
 }

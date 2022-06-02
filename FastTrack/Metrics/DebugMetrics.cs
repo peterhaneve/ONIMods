@@ -198,7 +198,7 @@ namespace PeterHan.FastTrack.Metrics {
 					PUtil.LogDebug(text);
 				}
 				// Events fired
-				PUtil.LogDebug("Events " + EVENTS.ToString());
+				PUtil.LogDebug("Events " + EVENTS);
 				// Path cache
 				PUtil.LogDebug("Path Cache: " + PATH_CACHE);
 				// Brain stats
@@ -232,26 +232,26 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Stores brain update statistics.
 		/// </summary>
-		private struct BrainStats {
+		private readonly struct BrainStats {
 			/// <summary>
 			/// The elapsed frame time in milliseconds.
 			/// </summary>
-			public float frameTime;
+			private readonly float frameTime;
 
 			/// <summary>
 			/// The target frame time in milliseconds.
 			/// </summary>
-			public float targetFrameTime;
+			private readonly float targetFrameTime;
 
 			/// <summary>
 			/// The number of probes run per frame.
 			/// </summary>
-			public int probeCount;
+			private readonly int probeCount;
 
 			/// <summary>
 			/// The number of cells to probe per frame for each probe.
 			/// </summary>
-			public int probeSize;
+			private readonly int probeSize;
 
 			public BrainStats(float frameTime, float targetFrameTime, int probeCount,
 					int probeSize) {

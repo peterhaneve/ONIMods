@@ -99,7 +99,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			return wattage;
 		}
 
-		private ISet<EnergyInfoLabel> batteryLabels;
+		private readonly ISet<EnergyInfoLabel> batteryLabels;
 
 		private GameObject batteryParent;
 
@@ -108,7 +108,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		private readonly IDictionary<string, EnergyInfoLabel> cache;
 
-		private ISet<EnergyInfoLabel> consumerLabels;
+		private readonly ISet<EnergyInfoLabel> consumerLabels;
 
 		private GameObject consumerParent;
 
@@ -125,7 +125,7 @@ namespace PeterHan.FastTrack.UIPatches {
 #pragma warning restore CS0649
 #pragma warning restore IDE0044
 
-		private ISet<EnergyInfoLabel> generatorLabels;
+		private readonly ISet<EnergyInfoLabel> generatorLabels;
 
 		private GameObject generatorParent;
 
@@ -139,7 +139,7 @@ namespace PeterHan.FastTrack.UIPatches {
 
 		private EnergyInfoLabel potentialWattageConsumed;
 
-		private ISet<EnergyInfoLabel> setInactive;
+		private readonly ISet<EnergyInfoLabel> setInactive;
 
 		private EnergyInfoLabel wattageConsumed;
 
@@ -169,7 +169,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			var text = CACHED_BUILDER;
 			if (iConsumer is KMonoBehaviour consumer && consumer != null) {
 				var label = AddOrGetLabel(es.labelTemplate, consumerParent,
-					"consumer" + index.ToString());
+					"consumer" + index);
 				var go = consumer.gameObject;
 				var fontStyle = (go == selected) ? FontStyles.Bold : FontStyles.Normal;
 				var title = label.text;
@@ -261,18 +261,12 @@ namespace PeterHan.FastTrack.UIPatches {
 				noCircuit.tooltip.toolTip = ENERGYGENERATOR.DISCONNECTED;
 			} else
 				noCircuit = null;
-			if (es.generatorsPanel.TryGetComponent(out panel))
-				generatorParent = panel.Content.gameObject;
-			else
-				generatorParent = null;
-			if (es.batteriesPanel.TryGetComponent(out panel))
-				batteryParent = panel.Content.gameObject;
-			else
-				batteryParent = null;
-			if (es.consumersPanel.TryGetComponent(out panel))
-				consumerParent = panel.Content.gameObject;
-			else
-				consumerParent = null;
+			generatorParent = es.generatorsPanel.TryGetComponent(out panel) ? panel.Content.
+				gameObject : null;
+			batteryParent = es.batteriesPanel.TryGetComponent(out panel) ? panel.Content.
+				gameObject : null;
+			consumerParent = es.consumersPanel.TryGetComponent(out panel) ? panel.Content.
+				gameObject : null;
 			lastSelected = default;
 			dirty = true;
 		}
@@ -483,7 +477,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Stores component references to the last selected object.
 		/// </summary>
-		private struct LastSelectionDetails {
+		private readonly struct LastSelectionDetails {
 			internal readonly int cell;
 
 			internal readonly ICircuitConnected connected;
@@ -496,10 +490,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal LastSelectionDetails(GameObject target) {
 				lastTarget = target;
 				target.TryGetComponent(out connected);
-				if (target.TryGetComponent(out Wire _))
-					cell = Grid.PosToCell(target.transform.position);
-				else
-					cell = Grid.InvalidCell;
+				cell = target.TryGetComponent(out Wire _) ? Grid.PosToCell(target.transform.
+					position) : Grid.InvalidCell;
 			}
 		}
 
@@ -515,7 +507,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// The root game object.
 			/// </summary>
-			internal readonly GameObject root;
+			private readonly GameObject root;
 
 			internal readonly LocText text;
 
@@ -611,8 +603,6 @@ namespace PeterHan.FastTrack.UIPatches {
 
 		/// <summary>
 		/// Applied to CircuitManager to flag when electrical networks are dirty.
-		/// 
-		/// TODO Turn this patch off conditionally when energy sim gets rewritten!
 		/// </summary>
 		[HarmonyPatch(typeof(CircuitManager), nameof(CircuitManager.Sim200msLast))]
 		internal static class Sim200msLast_Patch {

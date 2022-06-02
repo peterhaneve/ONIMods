@@ -34,7 +34,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Set to 1 when the thread compiling the mod list starts.
 		/// </summary>
-		private static volatile int compilingList = 0;
+		private static volatile int compilingList;
 
 		/// <summary>
 		/// Compiles the patched method list from Harmony.
@@ -51,7 +51,7 @@ namespace PeterHan.FastTrack.Metrics {
 						// Remove anything that was loaded before us
 						data.patched_methods?.Clear();
 						data.patched_methods = new HashSet<MethodBase>();
-						if (h != null && !string.IsNullOrEmpty(h.Id))
+						if (!string.IsNullOrEmpty(h.Id))
 							methodsByID[h.Id] = data;
 					}
 				}
@@ -94,7 +94,7 @@ namespace PeterHan.FastTrack.Metrics {
 						var instr = method[i];
 						if (instr.Is(OpCodes.Stfld, end))
 							si = i;
-						else if (!patched && si > i + 1 && instr.Is(OpCodes.Ldfld, start)) {
+						else if (si > i + 1 && instr.Is(OpCodes.Ldfld, start)) {
 							var endOp = method[si];
 							// Pop off the instance that went into get_harmony, and the
 							// instance that will go into get_patched_methods

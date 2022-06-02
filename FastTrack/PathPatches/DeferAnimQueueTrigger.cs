@@ -17,13 +17,9 @@
  */
 
 using HarmonyLib;
-using PeterHan.PLib.Core;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using UnityEngine;
-
-using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.PathPatches {
 	/// <summary>
@@ -71,14 +67,14 @@ namespace PeterHan.FastTrack.PathPatches {
 		}
 
 		/// <summary>
-		/// The offsets which should be updated.
-		/// </summary>
-		private readonly ConcurrentQueue<UpdateOffset> offsetPending;
-
-		/// <summary>
 		/// The events which should be triggered. Only used on the foreground thread.
 		/// </summary>
 		private readonly Queue<TriggerEvent> animPending;
+
+		/// <summary>
+		/// The offsets which should be updated.
+		/// </summary>
+		private readonly ConcurrentQueue<UpdateOffset> offsetPending;
 
 		private DeferAnimQueueTrigger() {
 			offsetPending = new ConcurrentQueue<UpdateOffset>();
@@ -103,7 +99,7 @@ namespace PeterHan.FastTrack.PathPatches {
 						src.DestroySelf();
 				}
 			}
-			while (offsetPending.TryDequeue(out UpdateOffset offset))
+			while (offsetPending.TryDequeue(out var offset))
 				offset.offsets.GetOffsets(offset.newCell);
 		}
 

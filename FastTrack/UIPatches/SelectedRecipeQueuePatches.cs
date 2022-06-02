@@ -60,32 +60,44 @@ namespace PeterHan.FastTrack.UIPatches {
 			var ingredients = recipe.ingredients;
 			int n = ingredients.Length;
 			var inventory = target.GetMyWorld().worldInventory;
+			string template = RECIPE_REQUIREMENT;
 			var text = CACHED_BUILDER;
 			for (int i = 0; i < n; i++) {
 				var item = ingredients[i];
 				var material = item.material;
 				var prefab = Assets.GetPrefab(material);
 				float available = inventory.GetAmount(material, true);
-				text.Clear().Append(available >= item.amount ? RECIPE_REQUIREMENT :
-					RECIPE_REQUIREMENT_UNAVAILABLE).Replace("{0}", prefab.GetProperName()).
-					Replace("{1}", GameUtil.GetFormattedByTag(material, item.amount)).
-					Replace("{2}", GameUtil.GetFormattedByTag(material, available));
+				string name = prefab.GetProperName(), amountText = GameUtil.GetFormattedByTag(
+					material, item.amount), availableText = GameUtil.GetFormattedByTag(material,
+					available);
+				bool hasEnough = available >= item.amount;
+				if (template == null) {
+					text.Clear();
+					if (!hasEnough)
+						text.Append(UIConstants.ColorPrefixRed);
+					text.Append(name).Append(": ").Append(amountText).Append(" / ").Append(
+						availableText);
+					if (!hasEnough)
+						text.Append(UIConstants.ColorSuffix);
+				} else
+					text.Clear().Append(hasEnough ? RECIPE_REQUIREMENT :
+						RECIPE_REQUIREMENT_UNAVAILABLE).Replace("{0}", prefab.GetProperName()).
+						Replace("{1}", amountText).Replace("{2}", availableText);
 				string description = text.ToString();
 				result.Add(new DescriptorWithSprite(new Descriptor(description, description,
-					Descriptor.DescriptorType.Requirement), Def.GetUISprite(material,
-					"ui"), prefab.TryGetComponent(out MutantPlant _)));
+					Descriptor.DescriptorType.Requirement), Def.GetUISprite(material),
+					prefab.TryGetComponent(out MutantPlant _)));
 			}
 			if (recipe.consumedHEP > 0 && target.TryGetComponent(
 					out HighEnergyParticleStorage component)) {
 				string consumed = recipe.consumedHEP.ToString();
 				text.Clear().Append(consumed).Append(" / ");
 				component.Particles.ToRyuHardString(text, 1);
-				string requirements = text.ToString();
+				string requirements = HEP_FORMAT + text;
 				// The concatenated strings had to be created anyways, so manipulating the
 				// string builder again does not save memory
-				result.Add(new DescriptorWithSprite(new Descriptor(HEP_FORMAT + requirements,
-					HEP_FORMAT + requirements, Descriptor.DescriptorType.Requirement),
-					RADBOLT_ICON));
+				result.Add(new DescriptorWithSprite(new Descriptor(requirements,
+					requirements, Descriptor.DescriptorType.Requirement), RADBOLT_ICON));
 			}
 		}
 
@@ -97,13 +109,14 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static void GetResultDescriptions(ComplexRecipe recipe,
 				IList<DescriptorWithSprite> result) {
 			var results = recipe.results;
-			int n = results.Length, nd;
+			int n = results.Length;
+			string template = RECIPE_PRODUCT;
 			var text = CACHED_BUILDER;
 			if (recipe.producedHEP > 0) {
 				text.Clear().Append(HEP_TOOLTIP).Append(recipe.producedHEP.ToString());
 				string description = text.ToString();
 				result.Add(new DescriptorWithSprite(new Descriptor(description, description,
-					Descriptor.DescriptorType.Requirement, false), RADBOLT_ICON));
+					Descriptor.DescriptorType.Requirement), RADBOLT_ICON));
 			}
 			var desc = ListPool<Descriptor, SelectedRecipeQueueScreen>.Allocate();
 			for (int i = 0; i < n; i++) {
@@ -111,21 +124,27 @@ namespace PeterHan.FastTrack.UIPatches {
 				var material = item.material;
 				var prefab = Assets.GetPrefab(material);
 				string amountText = GameUtil.GetFormattedByTag(material, item.amount),
-					name = prefab.GetProperName();
+					name = TagManager.GetProperName(material), description, facade = item.
+					facadeID;
 				var element = ElementLoader.GetElement(material);
+				string product = string.IsNullOrWhiteSpace(facade) ? name : TagManager.
+					GetProperName(facade);
 				desc.Clear();
-				text.Clear().Append(RECIPE_PRODUCT).Replace("{0}", name).Replace("{1}",
-					amountText);
-				string description = text.ToString();
+				if (template == null)
+					description = text.Clear().Append(product).Append(": ").Append(amountText).
+						ToString();
+				else
+					description = text.Clear().Append(template).Replace("{0}", product).
+						Replace("{1}", amountText).ToString();
 				text.Clear().Append(RECIPE_TOOLTIP).Replace("{0}", name).Replace("{1}",
 					amountText);
 				result.Add(new DescriptorWithSprite(new Descriptor(description, text.
 					ToString(), Descriptor.DescriptorType.Requirement), Def.GetUISprite(
-					material, "ui")));
+					material, facade)));
 				if (element != null) {
 					DescriptorAllocPatches.GetMaterialDescriptors(element.attributeModifiers,
 						desc);
-					nd = desc.Count;
+					int nd = desc.Count;
 					for (int j = 0; j < nd; j++) {
 						var descriptor = desc[j];
 						descriptor.IncreaseIndent();
@@ -133,7 +152,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					}
 				} else {
 					DescriptorAllocPatches.GetAllDescriptors(prefab, false, desc);
-					nd = desc.Count;
+					int nd = desc.Count;
 					for (int j = 0; j < nd; j++) {
 						var descriptor = desc[j];
 						if (descriptor.IsEffectDescriptor()) {
@@ -150,19 +169,26 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Initializes static formatted strings to avoid reallocating every update.
 		/// </summary>
 		internal static void Init() {
+			string product = STRINGS.UI.UISIDESCREENS.FABRICATORSIDESCREEN.RECIPEPRODUCT;
+			string req = STRINGS.UI.UISIDESCREENS.FABRICATORSIDESCREEN.RECIPERQUIREMENT;
 			// Another typo, KLEI PLEASE
 			HEP_FORMAT = "<b>" + STRINGS.UI.FormatAsLink(STRINGS.ITEMS.RADIATION.
 				HIGHENERGYPARITCLE.NAME, "HEP") + "</b>: ";
 			HEP_TOOLTIP = "<b>" + STRINGS.ITEMS.RADIATION.HIGHENERGYPARITCLE.NAME +
 				"</b>: ";
 			RADBOLT_ICON = new Tuple<Sprite, Color>(Assets.GetSprite("radbolt"), Color.white);
-			RECIPE_PRODUCT = STRINGS.UI.UISIDESCREENS.FABRICATORSIDESCREEN.RECIPEPRODUCT;
+			RECIPE_PRODUCT = (product == "{0}: {1}") ? null : product;
 			RECIPE_TOOLTIP = STRINGS.UI.UISIDESCREENS.FABRICATORSIDESCREEN.TOOLTIPS.
 				RECIPEPRODUCT;
-			RECIPE_REQUIREMENT = STRINGS.UI.UISIDESCREENS.FABRICATORSIDESCREEN.
-				RECIPERQUIREMENT;
-			RECIPE_REQUIREMENT_UNAVAILABLE = UIConstants.ColorPrefixRed + RECIPE_REQUIREMENT +
-				UIConstants.ColorSuffix;
+			// Fast case for most languages
+			if (req == "{0}: {1} / {2}") {
+				RECIPE_REQUIREMENT = null;
+				RECIPE_REQUIREMENT_UNAVAILABLE = null;
+			} else {
+				RECIPE_REQUIREMENT = req;
+				RECIPE_REQUIREMENT_UNAVAILABLE = UIConstants.ColorPrefixRed +
+					RECIPE_REQUIREMENT + UIConstants.ColorSuffix;
+			}
 		}
 
 		/// <summary>
@@ -187,10 +213,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				var effect = items[i];
 				bool isOld = i < nr;
 				GameObject go;
-				if (isOld)
-					go = oldRows[i];
-				else
-					go = Util.KInstantiateUI(prefab, parent, true);
+				go = isOld ? oldRows[i] : Util.KInstantiateUI(prefab, parent, true);
 				if (go.TryGetComponent(out HierarchyReferences hr)) {
 					var icon = hr.GetReference<Image>("Icon");
 					var descriptor = effect.descriptor;

@@ -18,6 +18,7 @@
 
 using PeterHan.PLib.Core;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
@@ -80,6 +81,14 @@ namespace PeterHan.FastTrack.PathPatches {
 		private readonly EventWaitHandle onFetchComplete;
 
 		/// <summary>
+		/// Since workable cells can no longer be obtained in the background, store the
+		/// locations of fetchables here.
+		/// </summary>
+		private readonly ConcurrentDictionary<Workable, int> storageCells;
+
+		private readonly IList<Workable> storageTemp;
+
+		/// <summary>
 		/// A singleton instance of UpdateOffsetTablesWork to avoid allocation.
 		/// </summary>
 		private readonly UpdateOffsetTablesWork updateOffsets;
@@ -94,6 +103,8 @@ namespace PeterHan.FastTrack.PathPatches {
 			byId = new List<FetchablesByPrefabId>(64);
 			finishFetches = new FinishFetchesWork(this);
 			onFetchComplete = new AutoResetEvent(false);
+			storageCells = new ConcurrentDictionary<Workable, int>(4, 256);
+			storageTemp = new List<Workable>(256);
 			// Must be initialized after byId
 			updateOffsets = new UpdateOffsetTablesWork(this);
 			updatingPickups = new List<CompilePickupsWork>(8);
@@ -106,7 +117,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		internal void AddBrain(CreatureBrain brain) {
 			if (brain.TryGetComponent(out Navigator nav))
 				// What PathProberSensor did
-				nav.UpdateProbe(false);
+				nav.UpdateProbe();
 			brainsToUpdate.Add(new BrainPair(brain, nav));
 		}
 
@@ -118,8 +129,31 @@ namespace PeterHan.FastTrack.PathPatches {
 			var nav = brain.Navigator;
 			if (nav != null)
 				// What PathProberSensor did
-				nav.UpdateProbe(false);
+				nav.UpdateProbe();
 			brainsToUpdate.Add(new BrainPair(brain, nav));
+		}
+
+		/// <summary>
+		/// Adds a fetch errand to the list, determining the target tile from the cache if
+		/// possible.
+		/// </summary>
+		/// <param name="navigator">The navigator that is fetching items.</param>
+		/// <param name="destination">The destination of the chore.</param>
+		/// <param name="fetchChore">The chore to add.</param>
+		/// <param name="fetches">The location where the errands will be populated.</param>
+		private void AddFetch(Navigator navigator, Storage destination, FetchChore fetchChore,
+				IList<Fetch> fetches) {
+			// Get the storage cell from the cache
+			if (storageCells.TryGetValue(destination, out int cell)) {
+				int cost = navigator.GetNavigationCostNU(destination, cell);
+				if (cost > 0)
+					fetches.Add(new Fetch {
+						category = destination.fetchCategory, chore = fetchChore, cost = cost,
+						priority = fetchChore.masterPriority, tagBitsHash = fetchChore.
+						tagBitsHash
+					});
+			} else
+				storageCells.TryAdd(destination, Grid.InvalidCell);
 		}
 
 		/// <summary>
@@ -136,6 +170,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			brainsToUpdate.Clear();
 			onFetchComplete.Dispose();
 			byId.Clear();
+			storageCells.Clear();
 			updatingPickups.Clear();
 		}
 
@@ -199,6 +234,7 @@ namespace PeterHan.FastTrack.PathPatches {
 						fm.pickups = pickups;
 						inst.fetches = fetches;
 					}
+					UpdateStorageCells();
 				} else
 					Cleanup();
 			}
@@ -210,6 +246,15 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// </summary>
 		private void FinishFetches() {
 			onFetchComplete.Set();
+		}
+
+		/// <summary>
+		/// Removes a storage from the cache.
+		/// </summary>
+		/// <param name="storage">The storage to remove.</param>
+		internal void RemoveStorage(Workable storage) {
+			if (storage != null)
+				storageCells.TryRemove(storage, out _);
 		}
 
 		/// <summary>
@@ -252,22 +297,37 @@ namespace PeterHan.FastTrack.PathPatches {
 			fetches.Clear();
 			if (chores != null) {
 				Storage destination;
-				int cost, n = chores.Count;
+				int n = chores.Count;
 				for (int i = 0; i < n; i++) {
 					var fetchChore = chores[i];
 					// Not already taken, allows manual use
 					if (fetchChore.driver == null && (fetchChore.automatable == null ||
 							!fetchChore.automatable.GetAutomationOnly()) && (destination =
-							fetchChore.destination) != null && (cost = navigator.
-							GetNavigationCost(destination)) >= 0)
-						fetches.Add(new Fetch {
-							category = destination.fetchCategory, chore = fetchChore,
-							cost = cost, priority = fetchChore.masterPriority, tagBitsHash =
-							fetchChore.tagBitsHash
-						});
+							fetchChore.destination) != null)
+						AddFetch(navigator, destination, fetchChore, fetches);
 				}
 				fetches.Sort(FetchComparer.Instance);
 			}
+		}
+
+		/// <summary>
+		/// Updates the cached cells of storage destinations that have been requested for a
+		/// fetch chore at least once.
+		/// </summary>
+		private void UpdateStorageCells() {
+			foreach (var pair in storageCells) {
+				var storage = pair.Key;
+				if (storage != null)
+					storageTemp.Add(storage);
+			}
+			storageCells.Clear();
+			int n = storageTemp.Count;
+			for (int i = 0; i < n; i++) {
+				var storage = storageTemp[i];
+				storageCells.TryAdd(storage, Grid.PosToCell(storage.transform.position));
+				storage.GetOffsets();
+			}
+			storageTemp.Clear();
 		}
 
 		/// <summary>
@@ -318,14 +378,14 @@ namespace PeterHan.FastTrack.PathPatches {
 			/// Initializes the brain to be updated. This saves memory over reallocating new
 			/// instances every frame.
 			/// </summary>
-			/// <param name="brain">The brain to update.</param>
-			/// <param name="navigator">The navigator to compute paths for this brain.</param>
+			/// <param name="newBrain">The brain to update.</param>
+			/// <param name="newNavigator">The navigator to compute paths for this brain.</param>
 			/// <param name="n">The number of pickup prefab IDs to be updated.</param>
-			public void Begin(Brain brain, Navigator navigator, int n) {
+			public void Begin(Brain newBrain, Navigator newNavigator, int n) {
 				Count = n;
-				this.brain = brain;
-				this.navigator = navigator;
-				worker = navigator.gameObject;
+				brain = newBrain;
+				navigator = newNavigator;
+				worker = newNavigator.gameObject;
 			}
 
 			/// <summary>
@@ -340,11 +400,10 @@ namespace PeterHan.FastTrack.PathPatches {
 			public void InternalDoWorkItem(int index) {
 				if (index >= 0 && index < Count) {
 					var thisPrefab = updater.byId[index];
-					var solidArmUpdater = GamePatches.SolidTransferArmUpdater.Instance;
 					thisPrefab.UpdatePickups(navigator.PathProber, navigator, worker);
 					// Help out our poor transfer arms in need
-					if (solidArmUpdater != null)
-						solidArmUpdater.UpdateCache(thisPrefab.fetchables.GetDataList());
+					GamePatches.SolidTransferArmUpdater.Instance?.UpdateCache(thisPrefab.
+						fetchables.GetDataList());
 				}
 			}
 
@@ -403,13 +462,17 @@ namespace PeterHan.FastTrack.PathPatches {
 
 			public void TriggerAbort() {
 				updater.FinishFetches();
+				OffsetTracker.isExecutingWithinJob = false;
 			}
 
 			public void TriggerComplete() {
 				updater.FinishFetches();
+				OffsetTracker.isExecutingWithinJob = false;
 			}
 
-			public void TriggerStart() { }
+			public void TriggerStart() {
+				OffsetTracker.isExecutingWithinJob = true;
+			}
 		}
 
 		/// <summary>

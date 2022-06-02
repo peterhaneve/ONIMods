@@ -29,8 +29,6 @@ namespace PeterHan.FastTrack.UIPatches {
 
 		private readonly GameObject check;
 
-		private readonly GameObject dash;
-
 		/// <summary>
 		/// The element used when laying out frozen rows.
 		/// </summary>
@@ -60,17 +58,17 @@ namespace PeterHan.FastTrack.UIPatches {
 				text = hr.GetReference<LocText>("Label");
 				if (header) {
 					box = null;
-					check = dash = null;
+					check = null;
 				} else {
+					var dash = hr.GetReference<Image>("Dash").gameObject;
 					box = hr.GetReference<Image>("Box");
 					check = hr.GetReference<Image>("Check").gameObject;
-					dash = hr.GetReference<Image>("Dash").gameObject;
 					dash.SetActive(false);
 				}
 			} else {
 				box = null;
 				text = null;
-				check = dash = null;
+				check = null;
 			}
 			freeze.enabled = false;
 			thaw.enabled = true;
