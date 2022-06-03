@@ -39,9 +39,9 @@ namespace PeterHan.NotEnoughTags {
 		/// <param name="lhs">Tag Bits A.</param>
 		/// <param name="rhs">Tag Bits B.</param>
 		internal static void And(ref TagBits lhs, ref TagBits rhs) {
-			ulong hibits = lhs.bits7;
+			ulong hibits = lhs.bits8;
 			lhs.And(ref rhs);
-			lhs.bits7 = TranspileAnd(hibits, rhs.bits7);
+			lhs.bits8 = TranspileAnd(hibits, rhs.bits8);
 		}
 
 		/// <summary>
@@ -129,9 +129,9 @@ namespace PeterHan.NotEnoughTags {
 		/// <param name="bits">The bits to complement.</param>
 		/// <returns>The complement of those bits.</returns>
 		internal static TagBits Not(TagBits bits) {
-			ulong hibits = bits.bits7;
+			ulong hibits = bits.bits8;
 			bits.Complement();
-			bits.bits7 = GetLowerBits(bits.bits7) | NotHighBits(hibits);
+			bits.bits8 = GetLowerBits(bits.bits8) | NotHighBits(hibits);
 			return bits;
 		}
 
@@ -152,10 +152,10 @@ namespace PeterHan.NotEnoughTags {
 		/// <param name="lhs">Tag Bits A.</param>
 		/// <param name="rhs">Tag Bits B.</param>
 		internal static void Or(ref TagBits lhs, ref TagBits rhs) {
-			ulong hibits = lhs.bits7;
+			ulong hibits = lhs.bits8;
 			lhs.Or(ref rhs);
 			// Box into a type to allow the fields to be changed
-			lhs.bits7 = TranspileOr(hibits, rhs.bits7);
+			lhs.bits8 = TranspileOr(hibits, rhs.bits8);
 		}
 
 		/// <summary>

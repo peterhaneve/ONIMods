@@ -232,13 +232,13 @@ namespace PeterHan.NotEnoughTags {
 			/// <summary>
 			/// Applied before Clear runs.
 			/// </summary>
-			internal static bool Prefix(ref ulong ___bits7, Tag tag) {
+			internal static bool Prefix(ref ulong ___bits8, Tag tag) {
 				var inst = ExtendedTagBits.Instance;
 				int index = inst.ManifestFlagIndex(tag) - ExtendedTagBits.VANILLA_LIMIT;
-				bool vanilla = index < 0;
-				if (!vanilla && ___bits7 != 0UL) {
-					int id = inst.GetIDWithTagClear(TagBitOps.GetUpperBits(___bits7), index);
-					___bits7 = TagBitOps.GetLowerBits(___bits7) | ((ulong)id << 32);
+				bool vanilla = index <= 0;
+				if (!vanilla && ___bits8 != 0UL) {
+					int id = inst.GetIDWithTagClear(TagBitOps.GetUpperBits(___bits8), index);
+					___bits8 = TagBitOps.GetLowerBits(___bits8) | ((ulong)id << 32);
 				}
 				return vanilla;
 			}
@@ -327,7 +327,7 @@ namespace PeterHan.NotEnoughTags {
 		/// Skipping is required because the side effect of crashing when out of tags must not
 		/// execute.
 		/// </summary>
-		[HarmonyPatch(typeof(TagBits), "ManifestFlagIndex")]
+		[HarmonyPatch(typeof(TagBits), nameof(TagBits.ManifestFlagIndex))]
 		public static class TagBits_ManifestFlagIndex_Patch {
 			/// <summary>
 			/// Applied before ManifestFlagIndex runs.
@@ -359,13 +359,13 @@ namespace PeterHan.NotEnoughTags {
 			/// <summary>
 			/// Applied before SetTag runs.
 			/// </summary>
-			internal static bool Prefix(ref ulong ___bits7, Tag tag) {
+			internal static bool Prefix(ref ulong ___bits8, Tag tag) {
 				var inst = ExtendedTagBits.Instance;
 				int index = inst.ManifestFlagIndex(tag) - ExtendedTagBits.VANILLA_LIMIT;
-				bool vanilla = index < 0;
+				bool vanilla = index <= 0;
 				if (!vanilla) {
-					int id = inst.GetIDWithTagSet(TagBitOps.GetUpperBits(___bits7), index);
-					___bits7 = (___bits7 & 0xFFFFFFFFUL) | ((ulong)id << 32);
+					int id = inst.GetIDWithTagSet(TagBitOps.GetUpperBits(___bits8), index);
+					___bits8 = (___bits8 & 0xFFFFFFFFUL) | ((ulong)id << 32);
 				}
 				return vanilla;
 			}
