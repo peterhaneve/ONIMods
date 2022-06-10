@@ -153,113 +153,143 @@ namespace PeterHan.FastTrack.UIPatches {
 	}
 
 	/// <summary>
-	/// Applied to ReceptacleSideScreen to properly rebuild the layout if the available item
-	/// amounts change.
+	/// Groups patches used for the Receptacle side screen (incubator, farm tile, pedestal...)
 	/// </summary>
-	[HarmonyPatch(typeof(ReceptacleSideScreen), nameof(ReceptacleSideScreen.
-		UpdateAvailableAmounts))]
-	public static class ReceptacleSideScreen_UpdateAvailableAmounts_Patch {
+	public static class ReceptacleSideScreenPatches {
 		/// <summary>
-		/// Avoid reallocating a new StringBuilder every frame.
+		/// Since ReceptacleSideScreen is a pseudo singleton (only one will be active at a
+		/// time), static is safe here.
 		/// </summary>
-		private static readonly StringBuilder CACHED_BUILDER = new StringBuilder(16);
-
-		internal static bool Prepare() => FastTrackOptions.Instance.VirtualScroll;
+		private static bool initializing;
 
 		/// <summary>
-		/// Applied before UpdateAvailableAmounts runs.
+		/// Applied to ReceptacleSideScreen to force states to be valid on initialize (the
+		/// entries are initialized with the available material, but their state is set to
+		/// disabled).
 		/// </summary>
-		internal static bool Prefix(ReceptacleSideScreen __instance, ref bool __result) {
-			bool result = false, changed = false, hide = !DebugHandler.InstantBuildMode &&
-				__instance.hideUndiscoveredEntities;
-			var inst = DiscoveredResources.Instance;
-			var selected = __instance.selectedEntityToggle;
-			var obj = __instance.requestObjectList;
-			var text = CACHED_BUILDER;
-			VirtualScroll vs = null;
-			if (obj != null)
-				obj.TryGetComponent(out vs);
-			foreach (var pair in __instance.depositObjectMap) {
-				var key = pair.Key;
-				var display = pair.Value;
-				var go = key.gameObject;
-				bool active = go.activeSelf;
-				var tag = display.tag;
-				// Hide undiscovered entities in some screens (like pedestal)
-				if (hide && !inst.IsDiscovered(tag)) {
-					if (active) {
+		[HarmonyPatch(typeof(ReceptacleSideScreen), nameof(ReceptacleSideScreen.Initialize))]
+		internal static class Initialize_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.VirtualScroll;
+
+			/// <summary>
+			/// Applied before Initialize runs.
+			/// </summary>
+			internal static void Prefix() {
+				initializing = true;
+			}
+		}
+
+		/// <summary>
+		/// Applied to ReceptacleSideScreen to properly rebuild the layout if the available
+		/// item amounts change.
+		/// </summary>
+		[HarmonyPatch(typeof(ReceptacleSideScreen), nameof(ReceptacleSideScreen.
+			UpdateAvailableAmounts))]
+		internal static class UpdateAvailableAmounts_Patch {
+			/// <summary>
+			/// Avoid reallocating a new StringBuilder every frame.
+			/// </summary>
+			private static readonly StringBuilder CACHED_BUILDER = new StringBuilder(16);
+
+			internal static bool Prepare() => FastTrackOptions.Instance.VirtualScroll;
+
+			/// <summary>
+			/// Applied before UpdateAvailableAmounts runs.
+			/// </summary>
+			internal static bool Prefix(ReceptacleSideScreen __instance, ref bool __result) {
+				bool result = false, changed = false, hide = !DebugHandler.InstantBuildMode &&
+					__instance.hideUndiscoveredEntities;
+				var inst = DiscoveredResources.Instance;
+				var selected = __instance.selectedEntityToggle;
+				var obj = __instance.requestObjectList;
+				var text = CACHED_BUILDER;
+				VirtualScroll vs = null;
+				if (obj != null)
+					obj.TryGetComponent(out vs);
+				foreach (var pair in __instance.depositObjectMap) {
+					var key = pair.Key;
+					var display = pair.Value;
+					var go = key.gameObject;
+					bool active = go.activeSelf;
+					var tag = display.tag;
+					// Hide undiscovered entities in some screens (like pedestal)
+					if (hide && !inst.IsDiscovered(tag)) {
+						if (active) {
+							if (!changed && vs != null) {
+								vs.OnBuild();
+								changed = true;
+							}
+							go.SetActive(active = false);
+						}
+					} else if (!active) {
 						if (!changed && vs != null) {
 							vs.OnBuild();
 							changed = true;
 						}
-						go.SetActive(active = false);
+						go.SetActive(active = true);
 					}
-				} else if (!active) {
-					if (!changed && vs != null) {
-						vs.OnBuild();
-						changed = true;
+					if (active) {
+						var toggle = key.toggle;
+						// Do not update amounts of inactive items
+						float availableAmount = __instance.GetAvailableAmount(tag);
+						if (!Mathf.Approximately(display.lastAmount, availableAmount)) {
+							result = true;
+							// Update display only if it actually changed
+							display.lastAmount = availableAmount;
+							text.Clear();
+							availableAmount.ToRyuSoftString(text, 2);
+							key.amount.SetText(text);
+						}
+						if (!__instance.ValidRotationForDeposit(display.direction) ||
+								availableAmount <= 0.0f)
+							// Disable items which cannot fit in this orientation or are
+							// unavailable
+							SetImageToggleState(__instance, toggle, selected != key ? ITState.
+								Disabled : ITState.DisabledActive);
+						else if (selected != key)
+							SetImageToggleState(__instance, toggle, ITState.Inactive);
+						else
+							SetImageToggleState(__instance, toggle, ITState.Active);
 					}
-					go.SetActive(active = true);
 				}
-				if (active) {
-					var toggle = key.toggle;
-					// Do not update amounts of inactive items
-					float availableAmount = __instance.GetAvailableAmount(tag);
-					if (!Mathf.Approximately(display.lastAmount, availableAmount)) {
-						result = true;
-						// Update display only if it actually changed
-						display.lastAmount = availableAmount;
-						text.Clear();
-						availableAmount.ToRyuSoftString(text, 2);
-						key.amount.SetText(text);
-					}
-					if (!__instance.ValidRotationForDeposit(display.direction) ||
-							availableAmount <= 0.0f)
-						// Disable items which cannot fit in this orientation or are missing
-						SetImageToggleState(__instance, toggle, selected != key ? ITState.
-							Disabled : ITState.DisabledActive);
-					else if (selected != key)
-						SetImageToggleState(__instance, toggle, ITState.Inactive);
-					else
-						SetImageToggleState(__instance, toggle, ITState.Active);
-				}
+				// Null was already checked
+				if (changed)
+					vs.Rebuild();
+				__result = result;
+				initializing = false;
+				return false;
 			}
-			// Null was already checked
-			if (changed)
-				vs.Rebuild();
-			__result = result;
-			return false;
-		}
 
-		/// <summary>
-		/// Sets the toggle state of a button only if it actually changed.
-		/// </summary>
-		/// <param name="instance">The side screen being updated.</param>
-		/// <param name="toggle">The toggle to modify.</param>
-		/// <param name="state">The state to apply.</param>
-		private static void SetImageToggleState(ReceptacleSideScreen instance, KToggle toggle,
-				ITState state) {
-			if (toggle.TryGetComponent(out ImageToggleState its) && state != its.currentState)
-			{
-				// SetState provides no feedback on whether the state actually changed
-				var targetImage = toggle.gameObject.GetComponentInChildrenOnly<Image>();
-				switch (state) {
-				case ITState.Disabled:
-					its.SetDisabled();
-					targetImage.material = instance.desaturatedMaterial;
-					break;
-				case ITState.Inactive:
-					its.SetInactive();
-					targetImage.material = instance.defaultMaterial;
-					break;
-				case ITState.Active:
-					its.SetActive();
-					targetImage.material = instance.defaultMaterial;
-					break;
-				case ITState.DisabledActive:
-					its.SetDisabledActive();
-					targetImage.material = instance.desaturatedMaterial;
-					break;
+			/// <summary>
+			/// Sets the toggle state of a button only if it actually changed.
+			/// </summary>
+			/// <param name="instance">The side screen being updated.</param>
+			/// <param name="toggle">The toggle to modify.</param>
+			/// <param name="state">The state to apply.</param>
+			private static void SetImageToggleState(ReceptacleSideScreen instance,
+					KToggle toggle, ITState state) {
+				if (toggle.TryGetComponent(out ImageToggleState its) && (initializing ||
+						state != its.currentState)) {
+					// SetState provides no feedback on whether the state actually changed
+					var targetImage = toggle.gameObject.GetComponentInChildrenOnly<Image>();
+					switch (state) {
+					case ITState.Disabled:
+						its.SetDisabled();
+						targetImage.material = instance.desaturatedMaterial;
+						break;
+					case ITState.Inactive:
+						its.SetInactive();
+						targetImage.material = instance.defaultMaterial;
+						break;
+					case ITState.Active:
+						its.SetActive();
+						targetImage.material = instance.defaultMaterial;
+						break;
+					case ITState.DisabledActive:
+						its.SetDisabledActive();
+						targetImage.material = instance.desaturatedMaterial;
+						break;
+					}
 				}
 			}
 		}
