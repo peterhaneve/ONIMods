@@ -146,7 +146,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			// Get the storage cell from the cache
 			if (storageCells.TryGetValue(destination, out int cell)) {
 				int cost = navigator.GetNavigationCostNU(destination, cell);
-				if (cost > 0)
+				if (cost >= 0)
 					fetches.Add(new Fetch {
 						category = destination.fetchCategory, chore = fetchChore, cost = cost,
 						priority = fetchChore.masterPriority, tagBitsHash = fetchChore.
@@ -296,11 +296,11 @@ namespace PeterHan.FastTrack.PathPatches {
 			var chores = GlobalChoreProvider.Instance?.fetchChores;
 			fetches.Clear();
 			if (chores != null) {
-				Storage destination;
 				int n = chores.Count;
 				for (int i = 0; i < n; i++) {
 					var fetchChore = chores[i];
 					// Not already taken, allows manual use
+					Storage destination;
 					if (fetchChore.driver == null && (fetchChore.automatable == null ||
 							!fetchChore.automatable.GetAutomationOnly()) && (destination =
 							fetchChore.destination) != null)
@@ -324,8 +324,9 @@ namespace PeterHan.FastTrack.PathPatches {
 			int n = storageTemp.Count;
 			for (int i = 0; i < n; i++) {
 				var storage = storageTemp[i];
-				storageCells.TryAdd(storage, Grid.PosToCell(storage.transform.position));
-				storage.GetOffsets();
+				int cell = Grid.PosToCell(storage.transform.position);
+				storageCells.TryAdd(storage, cell);
+				storage.GetOffsets(cell);
 			}
 			storageTemp.Clear();
 		}

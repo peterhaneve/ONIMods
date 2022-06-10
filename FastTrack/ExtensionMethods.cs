@@ -137,7 +137,7 @@ namespace PeterHan.FastTrack {
 				if (offsetTracker.previousCell != cell)
 					PathPatches.DeferAnimQueueTrigger.Instance?.Queue(offsetTracker, cell);
 			}
-			return (offsets == null) ? navigator.GetNavigationCost(cell) : navigator.
+			return offsets == null ? navigator.GetNavigationCost(cell) : navigator.
 				GetNavigationCost(cell, offsets);
 		}
 

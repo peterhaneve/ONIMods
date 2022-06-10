@@ -46,6 +46,23 @@ namespace PeterHan.FastTrack.PathPatches {
 	}
 
 	/// <summary>
+	/// Applied to MoveToLocationTool to flush the path cache upon activating the tool,
+	/// which can help when players are trying to save Duplicants at the last second.
+	/// </summary>
+	[HarmonyPatch(typeof(MoveToLocationTool), nameof(MoveToLocationTool.Activate))]
+	public static class MoveToLocationTool_Activate_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
+
+		/// <summary>
+		/// Applied before Activate runs.
+		/// </summary>
+		internal static void Prefix(Navigator navigator) {
+			if (navigator != null)
+				PathCacher.SetValid(navigator.PathProber, false);
+		}
+	}
+
+	/// <summary>
 	/// Applied to NavGrid to replace unnecessary allocations with a Clear call.
 	/// </summary>
 	[HarmonyPatch(typeof(NavGrid), nameof(NavGrid.UpdateGraph), new Type[0])]

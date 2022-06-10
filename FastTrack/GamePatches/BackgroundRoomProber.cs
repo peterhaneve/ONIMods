@@ -109,6 +109,11 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// and other references.
 		/// </summary>
 		private readonly IList<Room> allRooms;
+		
+		/// <summary>
+		/// Avoid multiple destruction on the foreground thread.
+		/// </summary>
+		private readonly ISet<HandleVector<int>.Handle> alreadyDestroyed;
 
 		/// <summary>
 		/// Queues up the cells visited by the cavity filler for building updates on the
@@ -184,6 +189,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal BackgroundRoomProber() {
 			int n = Grid.CellCount;
 			allRooms = Game.Instance.roomProber.rooms;
+			alreadyDestroyed = new HashSet<HandleVector<int>.Handle>();
 			buildingChanges = new ConcurrentQueue<int>();
 			cavityForCell = new HandleVector<int>.Handle[n];
 			cavityInfos = new KCompactedVector<CavityInfo>(2048);
@@ -500,12 +506,13 @@ namespace PeterHan.FastTrack.GamePatches {
 						AddBuildingToRoom(cell, cavityID);
 				}
 				while (destroyed.TryDequeue(out var destroyedID))
-					if (destroyedID.IsValid()) {
+					if (destroyedID.IsValid() && alreadyDestroyed.Add(destroyedID)) {
 						var cavity = cavityInfos.GetData(destroyedID);
 						if (cavity != null)
 							DestroyRoom(cavity.room);
 						cavityInfos.Free(destroyedID);
 					}
+				alreadyDestroyed.Clear();
 				RefreshRooms();
 			}
 			if (FastTrackMod.GameRunning && (solidChanges.Count > 0 || !initialized))
