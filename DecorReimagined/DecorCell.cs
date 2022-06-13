@@ -29,8 +29,11 @@ namespace ReimaginationTeam.DecorRework {
 		/// </summary>
 		public int Count {
 			get {
-				return decorProviders.Count + (negativeDecor == null ? 0 : negativeDecor.
-					Count);
+				int count;
+				lock (decorProviders) {
+					count = decorProviders.Count + (negativeDecor?.Count ?? 0);
+				}
+				return count;
 			}
 		}
 
@@ -70,7 +73,7 @@ namespace ReimaginationTeam.DecorRework {
 			BestDecorList values = null;
 			bool add = false;
 			if (provider == null)
-				throw new ArgumentNullException("provider");
+				throw new ArgumentNullException(nameof(provider));
 			lock (decorProviders) {
 				if (decor < 0.0f && negativeDecor != null) {
 					// Hard mode mwahaha
@@ -116,7 +119,7 @@ namespace ReimaginationTeam.DecorRework {
 			BestDecorList values = null;
 			float decor = 0.0f;
 			if (provider == null)
-				throw new ArgumentNullException("provider");
+				throw new ArgumentNullException(nameof(provider));
 			lock (decorProviders) {
 				if (negativeDecor == null || !negativeDecor.TryGetValue(provider, out decor))
 					decorProviders.TryGetValue(provider.PrefabID(), out values);
@@ -137,11 +140,12 @@ namespace ReimaginationTeam.DecorRework {
 			BestDecorList values = null;
 			bool removed = false;
 			if (provider == null)
-				throw new ArgumentNullException("provider");
+				throw new ArgumentNullException(nameof(provider));
 			lock (decorProviders) {
 				if (decor < 0.0f && negativeDecor != null) {
-					// Remove in hard mode, single = is intentional
-					if (removed = negativeDecor.Remove(provider))
+					// Remove in hard mode
+					removed = negativeDecor.Remove(provider);
+					if (removed)
 						Grid.Decor[cell] -= decor;
 				} else
 					decorProviders.TryGetValue(prefabID, out values);

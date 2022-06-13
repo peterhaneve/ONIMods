@@ -41,5 +41,23 @@ namespace ReimaginationTeam.DecorRework {
 		public static LocString FEELSLIKEHOME_NAME = "And It Feels Like Home";
 		public static LocString FEELSLIKEHOME_DESC = "Have {0} unique positive decor items visible from the same location at once.";
 		public static LocString FEELSLIKEHOME_PROGRESS = "Positive decor items visible at one location: {0:D}";
+
+		public static class UI {
+			public static class FRONTEND {
+				public static class DECORREIMAGINED {
+					public static LocString HARDMODE = "Hard Mode";
+					public static LocString KEEPTILEDECOR = "Preserve Tile Decor";
+					public static LocString NOCRITTERDECOR = "No Critter Decor";
+				}
+			}
+
+			public static class TOOLTIPS {
+				public static class DECORREIMAGINED {
+					public static LocString HARDMODE = "Make your Duplicants more picky about decor, and your life much harder.";
+					public static LocString KEEPTILEDECOR = "Preserve the decor values other mods have set for Tiles.";
+					public static LocString NOCRITTERDECOR = "Removes decor from all critters.\r\nIncreases performance on large critter farms, but may make the game harder.";
+				}
+			}
+		}
 	}
 }

@@ -19,6 +19,7 @@
 using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace ReimaginationTeam.DecorRework {
 	/// <summary>
@@ -29,29 +30,17 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// The best decor score of this list.
 		/// </summary>
-		public float BestDecor {
-			get {
-				return best.Decor;
-			}
-		}
+		public float BestDecor => best.Decor;
 
 		/// <summary>
 		/// The decor provider which provided this best score.
 		/// </summary>
-		public KMonoBehaviour BestProvider {
-			get {
-				return best.Provider;
-			}
-		}
+		public KMonoBehaviour BestProvider => best.Provider;
 
 		/// <summary>
 		/// The number of decor items tracked.
 		/// </summary>
-		public int Count {
-			get {
-				return decorByValue.Count;
-			}
-		}
+		public int Count => decorByValue.Count;
 
 		/// <summary>
 		/// The best decor tracked in this list.
@@ -120,7 +109,7 @@ namespace ReimaginationTeam.DecorRework {
 				}
 			}
 			// Update grid if changed
-			bool changed = oldDecor != decor;
+			bool changed = !Mathf.Approximately(oldDecor, decor);
 			if (changed)
 				Grid.Decor[cell] = Grid.Decor[cell] - oldDecor + decor;
 			return changed;
@@ -129,7 +118,8 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// The key for the decor list - compares on full equality but sorts on decor value.
 		/// </summary>
-		private struct DecorWrapper : IComparable<DecorWrapper>, IEquatable<DecorWrapper> {
+		private readonly struct DecorWrapper : IComparable<DecorWrapper>,
+				IEquatable<DecorWrapper> {
 			/// <summary>
 			/// The decor value of this object.
 			/// </summary>

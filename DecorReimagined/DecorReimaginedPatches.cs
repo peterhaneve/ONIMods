@@ -72,16 +72,50 @@ namespace ReimaginationTeam.DecorRework {
 			int wildPlants = 0;
 			if (room != null)
 				foreach (var plant in room.cavity.plants)
-					if (plant != null) {
-						var planted = plant.GetComponent<BasicForagePlantPlanted>();
-						var farmTile = plant.GetComponent<ReceptacleMonitor>();
-						var wilting = plant.GetComponent<WiltCondition>();
-						// Plant must not be wilted
-						if (((farmTile != null && !farmTile.Replanted) || (planted != null)) &&
-								(wilting == null || !wilting.IsWilting()))
-							wildPlants++;
-					}
+					// Plant must not be wilted
+					if (plant != null && ((plant.TryGetComponent(out ReceptacleMonitor farm) &&
+							!farm.Replanted) || plant.TryGetComponent(
+							out BasicForagePlantPlanted _)) && (!plant.TryGetComponent(
+							out WiltCondition wilting) || !wilting.IsWilting()))
+						wildPlants++;
 			return wildPlants;
+		}
+
+		/// <summary>
+		/// Checks to see if the recreation building is actually working. Disabled buildings
+		/// are not functional.
+		/// </summary>
+		/// <param name="building">The building to check.</param>
+		/// <returns>true if it is a working rec building, or false otherwise.</returns>
+		private static bool IsWorkingRecBuilding(KPrefabID building) {
+			return building != null && building.HasTag(RoomConstraints.ConstraintTags.
+				RecBuilding) && (!building.TryGetComponent(out Operational operational) ||
+				operational.IsFunctional);
+		}
+		
+		/// <summary>
+		/// Patches the park and nature reserve to require living plants.
+		/// </summary>
+		private static void PatchParks() {
+			RoomConstraints.WILDPLANT = new RoomConstraints.Constraint(null, room =>
+				CountValidPlants(room) >= 2, 1, STRINGS.ROOMS.CRITERIA.WILDPLANT.NAME, STRINGS.
+				ROOMS.CRITERIA.WILDPLANT.DESCRIPTION);
+			RoomConstraints.WILDPLANTS = new RoomConstraints.Constraint(null, room =>
+					CountValidPlants(room) >= 4, 1, STRINGS.ROOMS.CRITERIA.WILDPLANTS.NAME,
+				STRINGS.ROOMS.CRITERIA.WILDPLANTS.DESCRIPTION);
+		}
+
+		/// <summary>
+		/// Patches the recreation buildings constraint (for great hall and rec room) to
+		/// require that the building actually be functional. It can be disabled by automation,
+		/// but that cannot be excluded without also excluding buildings that are not in use.
+		/// 
+		/// Broken, disabled, entombed, and unplugged buildings are not functional.
+		/// </summary>
+		private static void PatchRecBuildings() {
+			RoomConstraints.REC_BUILDING = new RoomConstraints.Constraint(IsWorkingRecBuilding,
+				null, 1, STRINGS.ROOMS.CRITERIA.REC_BUILDING.NAME, STRINGS.ROOMS.CRITERIA.
+				REC_BUILDING.DESCRIPTION);
 		}
 
 		/// <summary>
@@ -95,7 +129,9 @@ namespace ReimaginationTeam.DecorRework {
 
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
+			LocString.CreateLocStringKeys(typeof(DecorReimaginedStrings.UI));
 			PUtil.InitLibrary();
+			new PLocalization().Register();
 			Options = new DecorReimaginedOptions();
 			ImaginationLoader.Instance.Register(typeof(DecorReimaginedPatches));
 			new POptions().RegisterOptions(this, typeof(DecorReimaginedOptions));
@@ -103,38 +139,6 @@ namespace ReimaginationTeam.DecorRework {
 			new PVersionCheck().Register(this, new SteamVersionChecker());
 			PatchParks();
 			PatchRecBuildings();
-		}
-
-		/// <summary>
-		/// Patches the park and nature reserve to require living plants.
-		/// </summary>
-		private void PatchParks() {
-			RoomConstraints.WILDPLANT = new RoomConstraints.Constraint(null, (room) => {
-				return CountValidPlants(room) >= 2;
-			}, 1, STRINGS.ROOMS.CRITERIA.WILDPLANT.NAME, STRINGS.ROOMS.CRITERIA.WILDPLANT.
-				DESCRIPTION);
-			RoomConstraints.WILDPLANTS = new RoomConstraints.Constraint(null, (room) => {
-				return CountValidPlants(room) >= 4;
-			}, 1, STRINGS.ROOMS.CRITERIA.WILDPLANTS.NAME, STRINGS.ROOMS.CRITERIA.WILDPLANTS.
-				DESCRIPTION);
-		}
-
-		/// <summary>
-		/// Patches the recreation buildings constraint (for great hall and rec room) to
-		/// require that the building actually be functional. It can be disabled by automation,
-		/// but that cannot be excluded without also excluding buildings that are not in use.
-		/// 
-		/// Broken, disabled, entombed, and unplugged buildings are not functional.
-		/// </summary>
-		private void PatchRecBuildings() {
-			RoomConstraints.REC_BUILDING = new RoomConstraints.Constraint((building) => {
-				var operational = building.GetComponent<Operational>();
-				var enabled = building.GetComponent<BuildingEnabledButton>();
-				return building.HasTag(RoomConstraints.ConstraintTags.RecBuilding) &&
-					(operational == null || operational.IsFunctional) && (enabled == null ||
-					enabled.IsEnabled);
-			}, null, 1, STRINGS.ROOMS.CRITERIA.REC_BUILDING.NAME, STRINGS.ROOMS.CRITERIA.
-				REC_BUILDING.DESCRIPTION);
 		}
 
 		/// <summary>
@@ -148,9 +152,8 @@ namespace ReimaginationTeam.DecorRework {
 		}
 
 		/// <summary>
-		/// Updates the decor levels of the specified decor monitor.
+		/// Updates the decor levels of decor monitors to add the low tiers of decor.
 		/// </summary>
-		/// <param name="instance">The decor level monitor to modify.</param>
 		[PLibPatch(RunAt.AfterModsLoad, typeof(DecorMonitor.Instance), "", typeof(
 			IStateMachineTarget))]
 		internal static void UpdateDecorLevels_Postfix(List<KeyValuePair<float,
@@ -179,7 +182,7 @@ namespace ReimaginationTeam.DecorRework {
 				// Remove the decor bonus (SetStage adds it back)
 				var attr = __instance.GetAttributes().Get(Db.Get().BuildingAttributes.Decor);
 				if (attr != null)
-					attr.Modifiers.RemoveAll((modifier) => modifier.Description ==
+					attr.Modifiers.RemoveAll(modifier => modifier.Description ==
 						"Art Quality");
 			}
 		}
@@ -217,9 +220,9 @@ namespace ReimaginationTeam.DecorRework {
 					AmountInstance ___amount, AttributeModifier ___modifier,
 					ref float ___cycleTotalDecor) {
 				bool cont = true;
-				ChoreDriver driver;
+				var go = __instance.gameObject;
 				// If no chore driver, allow stock implementation
-				if ((driver = __instance.GetComponent<ChoreDriver>()) != null) {
+				if (go != null && go.TryGetComponent(out ChoreDriver driver)) {
 					var chore = driver.GetCurrentChore();
 					cont = false;
 					// Slew to half decor if sleeping
@@ -289,10 +292,9 @@ namespace ReimaginationTeam.DecorRework {
 			/// Applied before Refresh runs.
 			/// </summary>
 			internal static bool Prefix(DecorProvider __instance) {
-				var obj = __instance.gameObject;
-				DecorSplatNew splat;
 				bool cont = true;
-				if (obj != null && (splat = obj.GetComponent<DecorSplatNew>()) != null) {
+				if (__instance != null && __instance.TryGetComponent(out DecorSplatNew splat))
+				{
 					// Replace it
 					cont = false;
 					splat.RefreshDecor();
@@ -379,19 +381,26 @@ namespace ReimaginationTeam.DecorRework {
 		}
 
 		/// <summary>
-		/// Applied to Operational to update room stat.
+		/// Applied to Operational to update room status.
 		/// </summary>
-		[HarmonyPatch(typeof(Operational), nameof(Operational.SetFlag))]
-		public static class Operational_SetFlag_Patch {
+		[HarmonyPatch(typeof(Operational), "UpdateFunctional")]
+		public static class Operational_UpdateFunctional_Patch {
 			/// <summary>
-			/// Applied after SetFlag runs.
+			/// Applied before UpdateFunctional runs.
 			/// </summary>
-			internal static void Postfix(Operational __instance, Operational.Flag flag) {
+			internal static void Prefix(Operational __instance, ref bool __state) {
+				__state = __instance.IsFunctional;
+			}
+
+			/// <summary>
+			/// Applied after UpdateFunctional runs.
+			/// </summary>
+			internal static void Postfix(Operational __instance, bool __state) {
 				var obj = __instance.gameObject;
 				if (obj != null && obj.HasTag(RoomConstraints.ConstraintTags.RecBuilding) &&
-						(flag.FlagType == Operational.Flag.Type.Functional || flag ==
-						BuildingEnabledButton.EnabledFlag))
-					// Update rooms if rec buildings break down or get disabled
+						__instance.IsFunctional != __state)
+					// Update rooms if rec buildings break down or get disabled, but only
+					// if the status actually changed
 					Game.Instance.roomProber.SolidChangedEvent(Grid.PosToCell(obj), true);
 			}
 		}
@@ -433,7 +442,7 @@ namespace ReimaginationTeam.DecorRework {
 			/// <summary>
 			/// Applied after InitializeStates runs.
 			/// </summary>
-			internal static void Postfix(Klei.AI.Effect ___uglyCryingEffect) {
+			internal static void Postfix(Effect ___uglyCryingEffect) {
 				string decorID = Db.Get().Attributes.Decor.Id;
 				int uglyDecor = Math.Min(0, Options?.UglyCrierDecor ?? -30);
 				foreach (var modifier in ___uglyCryingEffect.SelfModifiers)

@@ -28,7 +28,8 @@ namespace ReimaginationTeam.DecorRework {
 	/// The deprecated interface must be implemented to allow previous saves with this
 	/// achievement to load.
 	/// </summary>
-	public sealed class NumDecorPositives : ColonyAchievementRequirement, AchievementRequirementSerialization_Deprecated {
+	public sealed class NumDecorPositives : ColonyAchievementRequirement,
+			AchievementRequirementSerialization_Deprecated {
 		/// <summary>
 		/// The number of decor items required.
 		/// </summary>

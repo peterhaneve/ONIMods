@@ -27,7 +27,7 @@ namespace ReimaginationTeam.DecorRework {
 	/// </summary>
 	[SerializationConfig(MemberSerialization.OptIn)]
 	[SkipSaveFileSerialization]
-	internal sealed class DecorSplatNew : KMonoBehaviour, ISaveLoadable {
+	internal sealed class DecorSplatNew : KMonoBehaviour {
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable CS0649
 		/// <summary>
@@ -59,6 +59,12 @@ namespace ReimaginationTeam.DecorRework {
 		/// </summary>
 		[MyCmpReq]
 		private DecorProvider provider;
+
+		/// <summary>
+		/// Avoid infinite loops when resolving some buildings like the sauna.
+		/// </summary>
+		[MyCmpGet]
+		private RoomTracker tracker;
 
 #pragma warning restore CS0649
 #pragma warning restore IDE0044 // Add readonly modifier
@@ -105,8 +111,7 @@ namespace ReimaginationTeam.DecorRework {
 				for (int x = extents.x; x < maxX; x++)
 					for (int y = extents.y; y < maxY; y++) {
 						int target = Grid.XYToCell(x, y);
-						if (Grid.IsValidCell(target) && Grid.VisibilityTest(cell, target,
-								false)) {
+						if (Grid.IsValidCell(target) && Grid.VisibilityTest(cell, target)) {
 							inst.AddDecorProvider(target, provider, prefabID.PrefabTag, decor);
 							cells.Add(target);
 						}
@@ -137,7 +142,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// <param name="disabled">true if the building is treated as disabled, or false otherwise.</param>
 		private void RefreshCells(bool broken, bool disabled) {
 			var obj = gameObject;
-			int cell, x, y;
+			int cell;
 			RemoveDecor();
 			if (obj != null && Grid.IsValidCell(cell = Grid.PosToCell(obj))) {
 				float decor = provider.decor?.GetTotalValue() ?? 0.0f;
@@ -159,8 +164,9 @@ namespace ReimaginationTeam.DecorRework {
 					// Calculate expanded extents
 					Extents extents, be = provider.occupyArea?.GetExtents(orientation) ??
 						Extents.OneCell(Grid.PosToCell(obj));
-					extents.x = x = Math.Max(0, be.x - radius);
-					extents.y = y = Math.Max(0, be.y - radius);
+					int x = Math.Max(0, be.x - radius), y = Math.Max(0, be.y - radius);
+					extents.x = x;
+					extents.y = y;
 					extents.width = Math.Min(Grid.WidthInCells - 1, be.x + be.width + radius) -
 						x;
 					extents.height = Math.Min(Grid.HeightInCells - 1, be.y + be.height +
@@ -194,11 +200,14 @@ namespace ReimaginationTeam.DecorRework {
 			// Handle rooms which require an item with 20 decor: has to actually be functional
 			bool hasTag = prefabID.HasTag(RoomConstraints.ConstraintTags.Decor20);
 			bool needsTag = provider.decor.GetTotalValue() >= 20f && !broken && !disabled;
-			if (hasTag != needsTag) {
+			// Do not trigger on buildings with a room tracker, as that could set up an
+			// infinite loop
+			if ((tracker == null || tracker.requirement == RoomTracker.Requirement.
+					TrackingOnly) && hasTag != needsTag) {
 				int pos = Grid.PosToCell(gameObject);
 				// Tag needs to be added/removed
 				if (needsTag)
-					prefabID.AddTag(RoomConstraints.ConstraintTags.Decor20, false);
+					prefabID.AddTag(RoomConstraints.ConstraintTags.Decor20);
 				else
 					prefabID.RemoveTag(RoomConstraints.ConstraintTags.Decor20);
 				// Force room recalculation

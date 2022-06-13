@@ -19,7 +19,6 @@
 using Klei.AI;
 using Newtonsoft.Json;
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Buildings;
 using System;
 using System.IO;
 using System.Reflection;
@@ -87,15 +86,17 @@ namespace ReimaginationTeam.DecorRework {
 		internal static void ApplyDatabase(DecorReimaginedOptions options) {
 			DecorDbEntry[] entries = null;
 			try {
+				var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(
+					"ReimaginationTeam.DecorRework.buildings.json");
 				// Read in database from the embedded config json
-				using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(
-						"ReimaginationTeam.DecorRework.buildings.json")) {
-					var jr = new JsonTextReader(new StreamReader(stream));
-					entries = new JsonSerializer {
-						MaxDepth = 2
-					}.Deserialize<DecorDbEntry[]>(jr);
-					jr.Close();
-				}
+				if (stream != null)
+					using (stream) {
+						var jr = new JsonTextReader(new StreamReader(stream));
+						entries = new JsonSerializer {
+							MaxDepth = 2
+						}.Deserialize<DecorDbEntry[]>(jr);
+						jr.Close();
+					}
 			} catch (JsonException e) {
 				// Error when loading decor
 				PUtil.LogExcWarn(e);
@@ -170,7 +171,7 @@ namespace ReimaginationTeam.DecorRework {
 						"DecorQuality"));
 				effect.SelfModifiers.Clear();
 				effect.Add(new AttributeModifier("QualityOfLife", decorLevel.MoraleBonus,
-					decorLevel.Title, false, false, true));
+					decorLevel.Title));
 			}
 		}
 
@@ -182,7 +183,7 @@ namespace ReimaginationTeam.DecorRework {
 		internal static void TuneSuits(DecorReimaginedOptions options, EquipmentDef suit) {
 			var attr = Db.Get().BuildingAttributes;
 			suit.AttributeModifiers.Add(new AttributeModifier(attr.Decor.Id, options.
-				AtmoSuitDecor, STRINGS.EQUIPMENT.PREFABS.ATMO_SUIT.NAME, false, false, true));
+				AtmoSuitDecor, STRINGS.EQUIPMENT.PREFABS.ATMO_SUIT.NAME));
 		}
 
 		/// <summary>

@@ -39,8 +39,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// Whether all critters unconditionally get 0 decor. Improves performance but makes
 		/// the game harder.
 		/// </summary>
-		[Option("No Critter Decor", "Removes decor from all critters.\r\nIncreases " +
-			"performance on large critter farms, but may make the game harder.")]
+		[Option("STRINGS.UI.FRONTEND.DECORREIMAGINED.NOCRITTERDECOR", "STRINGS.UI.TOOLTIPS.DECORREIMAGINED.NOCRITTERDECOR")]
 		[JsonProperty]
 		public bool AllCrittersZeroDecor { get; set; }
 
@@ -83,7 +82,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// Whether hard mode is enabled.
 		/// </summary>
-		[Option("Hard Mode", "Make your Duplicants more picky about decor, and your life much harder")]
+		[Option("STRINGS.UI.FRONTEND.DECORREIMAGINED.HARDMODE", "STRINGS.UI.TOOLTIPS.DECORREIMAGINED.HARDMODE")]
 		[JsonProperty]
 		public bool HardMode { get; set; }
 
@@ -96,7 +95,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// If true, tile decor will not be changed.
 		/// </summary>
-		[Option("Preserve Tile Decor", "Preserve the decor values other mods have set for Tiles")]
+		[Option("STRINGS.UI.FRONTEND.DECORREIMAGINED.KEEPTILEDECOR", "STRINGS.UI.TOOLTIPS.DECORREIMAGINED.KEEPTILEDECOR")]
 		[JsonProperty]
 		public bool PreserveTileDecor { get; set; }
 

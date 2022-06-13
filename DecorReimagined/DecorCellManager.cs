@@ -81,13 +81,13 @@ namespace ReimaginationTeam.DecorRework {
 		/// </summary>
 		/// <param name="cell">The cell.</param>
 		/// <param name="provider">The object providing decor.</param>
-		/// <param name="id">The prefab ID of this object.</param>
+		/// <param name="prefabID">The prefab ID of this object.</param>
 		/// <param name="decor">The quantity of decor to add or subtract.</param>
 		public void AddDecorProvider(int cell, DecorProvider provider, Tag prefabID,
 				float decor) {
 			var parent = provider.gameObject;
-			bool allowForCritter = (parent == null) ? false : (!noCritterDecor ||
-				parent.GetComponent<CreatureBrain>() == null);
+			bool allowForCritter = parent != null && (!noCritterDecor || !parent.
+				TryGetComponent(out CreatureBrain _));
 			// Must be a valid cell, and the object must be either not a critter or critter
 			// decor enabled
 			if (Grid.IsValidCell(cell) && cell < size && cell >= 0 && allowForCritter)
