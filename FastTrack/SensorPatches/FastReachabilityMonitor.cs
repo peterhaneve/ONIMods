@@ -39,6 +39,11 @@ namespace PeterHan.FastTrack.SensorPatches {
 		public const string REACHABILITY = nameof(FastReachabilityMonitor);
 
 		/// <summary>
+		/// Whether the cell change handler needs to be cleaned up.
+		/// </summary>
+		private bool cleanupCellChange;
+
+		/// <summary>
 		/// The last set of extents from which this item was reachable.
 		/// </summary>
 		private Extents lastExtents;
@@ -61,6 +66,8 @@ namespace PeterHan.FastTrack.SensorPatches {
 		public override void OnCleanUp() {
 			if (partitionerEntry.IsValid())
 				GameScenePartitioner.Instance.Free(ref partitionerEntry);
+			if (cleanupCellChange)
+				Unsubscribe((int)GameHashes.CellChanged);
 			base.OnCleanUp();
 		}
 
@@ -71,10 +78,22 @@ namespace PeterHan.FastTrack.SensorPatches {
 			FastGroupProber.Instance?.Enqueue(smi);
 		}
 
-		public override void OnSpawn() {
-			base.OnSpawn();
-			smi = gameObject.GetSMI<RMI>();
+		/// <summary>
+		/// Updates the reachability immediately if the object moves.
+		/// </summary>
+		private void OnMoved(object _) {
 			UpdateOffsets();
+		}
+
+		public override void OnSpawn() {
+			var go = gameObject;
+			base.OnSpawn();
+			smi = go.GetSMI<RMI>();
+			UpdateOffsets();
+			cleanupCellChange = go.TryGetComponent(out KBatchedAnimController controller) &&
+				controller.isMovable;
+			if (cleanupCellChange)
+				Subscribe((int)GameHashes.CellChanged, OnMoved);
 			FastGroupProber.Instance.Enqueue(smi);
 		}
 

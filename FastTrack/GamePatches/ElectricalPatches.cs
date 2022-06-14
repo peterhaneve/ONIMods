@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.Core;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -32,6 +33,20 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Whether colony reports are to be generated.
 		/// </summary>
 		private static bool report = true;
+
+		/// <summary>
+		/// Applies all electrical network patches.
+		/// </summary>
+		/// <param name="harmony"></param>
+		internal static void Apply(Harmony harmony) {
+			report = !FastTrackOptions.Instance.NoReports;
+			harmony.Patch(typeof(CircuitManager), nameof(CircuitManager.Refresh), prefix:
+				new HarmonyMethod(typeof(FastElectricalNetworkCalculator),
+				nameof(Refresh_Prefix)));
+			harmony.Patch(typeof(CircuitManager), nameof(CircuitManager.Sim200msLast), prefix:
+				new HarmonyMethod(typeof(FastElectricalNetworkCalculator),
+				nameof(Sim200msLast_Prefix)));
+		}
 
 		/// <summary>
 		/// Charges as many batteries as possible with the energy from this source.
@@ -359,6 +374,23 @@ namespace PeterHan.FastTrack.GamePatches {
 		}
 
 		/// <summary>
+		/// Applied before Refresh runs.
+		/// </summary>
+		internal static bool Refresh_Prefix(CircuitManager __instance) {
+			var electricalSystem = Game.Instance.electricalConduitSystem;
+			if (electricalSystem != null) {
+				bool rebuild = electricalSystem.IsDirty;
+				if (rebuild)
+					electricalSystem.Update();
+				if (rebuild || __instance.dirty) {
+					InitNetworks(__instance, electricalSystem);
+					Rebuild(__instance);
+				}
+			}
+			return false;
+		}
+
+		/// <summary>
 		/// Sets the power status of all consumers on the given circuit.
 		/// </summary>
 		/// <param name="consumers">The consumers to notify.</param>
@@ -368,6 +400,22 @@ namespace PeterHan.FastTrack.GamePatches {
 			int n = consumers.Count;
 			for (int i = 0; i < n; i++)
 				consumers[i].SetConnectionStatus(status);
+		}
+
+		/// <summary>
+		/// Applied before Sim200msLast runs.
+		/// </summary>
+		private static bool Sim200msLast_Prefix(CircuitManager __instance, float dt) {
+			var infoScreen = UIPatches.EnergyInfoScreenWrapper.Instance;
+			float elapsedTime = __instance.elapsedTime + dt;
+			if (elapsedTime >= UpdateManager.SecondsPerSimTick) {
+				elapsedTime -= UpdateManager.SecondsPerSimTick;
+				Update(__instance);
+				if (infoScreen != null)
+					infoScreen.dirty = true;
+			}
+			__instance.elapsedTime = elapsedTime;
+			return false;
 		}
 
 		/// <summary>
@@ -539,61 +587,6 @@ namespace PeterHan.FastTrack.GamePatches {
 						battery.SetConnectionStatus(hasSources ? ConnectionStatus.Powered :
 							ConnectionStatus.Unpowered);
 				}
-			}
-		}
-
-		/// <summary>
-		/// Applied to CircuitManager to do a better job at refreshing networks.
-		/// </summary>
-		[HarmonyPatch(typeof(CircuitManager), nameof(CircuitManager.Refresh))]
-		internal static class Refresh_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.ENetOpts;
-
-			/// <summary>
-			/// Applied before Refresh runs.
-			/// </summary>
-			internal static bool Prefix(CircuitManager __instance) {
-				var electricalSystem = Game.Instance.electricalConduitSystem;
-				if (electricalSystem != null) {
-					bool rebuild = electricalSystem.IsDirty;
-					if (rebuild)
-						electricalSystem.Update();
-					if (rebuild || __instance.dirty) {
-						InitNetworks(__instance, electricalSystem);
-						Rebuild(__instance);
-					}
-				}
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to CircuitManager to replace the Sim200msLast method with a much faster
-		/// equivalent.
-		/// </summary>
-		[HarmonyPatch(typeof(CircuitManager), nameof(CircuitManager.Sim200msLast))]
-		internal static class Sim200msLast_Patch {
-			internal static bool Prepare() {
-				var options = FastTrackOptions.Instance;
-				report = !options.NoReports;
-				return options.ENetOpts;
-			}
-
-
-			/// <summary>
-			/// Applied before Sim200msLast runs.
-			/// </summary>
-			internal static bool Prefix(CircuitManager __instance, float dt) {
-				var infoScreen = UIPatches.EnergyInfoScreenWrapper.Instance;
-				float elapsedTime = __instance.elapsedTime + dt;
-				if (elapsedTime >= UpdateManager.SecondsPerSimTick) {
-					elapsedTime -= UpdateManager.SecondsPerSimTick;
-					Update(__instance);
-					if (infoScreen != null)
-						infoScreen.dirty = true;
-				}
-				__instance.elapsedTime = elapsedTime;
-				return false;
 			}
 		}
 

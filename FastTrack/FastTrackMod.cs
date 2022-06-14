@@ -111,6 +111,18 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
+		/// Checks for compatibility and applies stats panel optimizations only if mods which
+		/// show or alter attributs are not enabled.
+		/// </summary>
+		/// <param name="harmony">The Harmony instance to use for patching.</param>
+		private static void CheckStatsCompat(Harmony harmony) {
+			if (PPatchTools.GetTypeSafe("OniStatsPlusSo.MyMod") == null) {
+				UIPatches.MinionStatsPanelWrapper.Apply(harmony);
+			} else
+				PUtil.LogDebug("Disabling attributes panel optimizations: Stats mod active");
+		}
+
+		/// <summary>
 		/// Checks for compatibility and applies tile mesh renderer patches only if other tile
 		/// mods are not enabled.
 		/// </summary>
@@ -161,11 +173,16 @@ namespace PeterHan.FastTrack {
 			if (!PRegistry.GetData<bool>(ASDF)) {
 				// Fix the annoying autosave bug
 				harmony.Patch(typeof(Timelapser), "SaveScreenshot", postfix: new HarmonyMethod(
-					typeof(FastTrackMod), nameof(FastTrackMod.FixTimeLapseDrag)));
+					typeof(FastTrackMod), nameof(FixTimeLapseDrag)));
 				PRegistry.PutData(ASDF, true);
 			}
 			if (options.FastReachability)
 				GamePatches.FastCellChangeMonitor.CreateInstance();
+			if (options.SideScreenOpts)
+				CheckStatsCompat(harmony);
+			// In case the grid gets rewritten by a future mod idea
+			if (options.ENetOpts && !PRegistry.GetData<bool>("OverrideElectricalNetwork"))
+				GamePatches.FastElectricalNetworkCalculator.Apply(harmony);
 			// Fix those world strings
 			UIPatches.FormatStringPatches.ApplyPatch(harmony);
 		}

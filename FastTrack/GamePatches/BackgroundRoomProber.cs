@@ -226,7 +226,8 @@ namespace PeterHan.FastTrack.GamePatches {
 					if (go.TryGetComponent(out Deconstructable _)) {
 						dirty = AddBuildingToRoom(cavity, prefabID);
 						scanBuildings = true;
-					} else if (go.HasTag(GameTags.Plant) && !go.HasTag(TREE_BRANCH_TAG)) {
+					} else if (prefabID.HasTag(GameTags.Plant) && !prefabID.HasTag(
+							TREE_BRANCH_TAG)) {
 						dirty = AddPlantToRoom(cavity, prefabID);
 						scanPlants = true;
 					}

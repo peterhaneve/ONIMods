@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using Klei.AI;
+using PeterHan.PLib.Core;
 using System.Text;
 using UnityEngine;
 
@@ -39,6 +40,31 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// The singleton instance of this class.
 		/// </summary>
 		private static MinionStatsPanelWrapper instance;
+
+		/// <summary>
+		/// Applies all minion stats panel patches.
+		/// </summary>
+		/// <param name="harmony">The Harmony instance to use for patching.</param>
+		internal static void Apply(Harmony harmony) {
+			harmony.Patch(typeof(MinionStatsPanel), nameof(MinionStatsPanel.OnSpawn),
+				prefix: new HarmonyMethod(typeof(MinionStatsPanelWrapper),
+				nameof(OnSpawn_Prefix)));
+			harmony.Patch(typeof(MinionStatsPanel), nameof(MinionStatsPanel.Refresh),
+				prefix: new HarmonyMethod(typeof(MinionStatsPanelWrapper),
+				nameof(Refresh_Prefix)));
+			harmony.Patch(typeof(MinionStatsPanel), nameof(MinionStatsPanel.ScheduleUpdate),
+				prefix: new HarmonyMethod(typeof(MinionStatsPanelWrapper),
+				nameof(ScheduleUpdate_Prefix)));
+		}
+
+		/// <summary>
+		/// Applied before OnSpawn runs.
+		/// </summary>
+		private static void OnSpawn_Prefix(MinionStatsPanel __instance) {
+			var go = __instance.gameObject;
+			if (go != null)
+				go.AddOrGet<MinionStatsPanelWrapper>().panel = __instance;
+		}
 
 		/// <summary>
 		/// Refreshes the Duplicant stats panel.
@@ -74,6 +100,15 @@ namespace PeterHan.FastTrack.UIPatches {
 					RefreshAttributes(msp, modifiers);
 			}
 		}
+		
+		/// <summary>
+		/// Applied before Refresh runs.
+		/// </summary>
+		internal static bool Refresh_Prefix(MinionStatsPanel __instance) {
+			if (__instance.gameObject.activeSelf)
+				Refresh(__instance);
+			return false;
+		}
 
 		/// <summary>
 		/// Refreshes the Duplicant's attributes.
@@ -89,8 +124,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				var attrInstance = currentAttr[i];
 				if (attrInstance.Attribute.ShowInUI == Attribute.Display.Skill)
 					drawer.NewLabel(attrInstance.Name + ": " + attrInstance.
-						GetFormattedValue()).Tooltip(attrInstance.
-						GetAttributeValueTooltip());
+						GetFormattedValue()).Tooltip(attrInstance.GetAttributeValueTooltip());
 			}
 			drawer.EndDrawing();
 		}
@@ -103,6 +137,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="name">The currently selected Duplicant's name</param>
 		private static void RefreshResume(MinionStatsPanel msp, MinionResume resume,
 				string name) {
+			const string BULLETSPACE = " " + Constants.BULLETSTRING;
 			var drawer = msp.resumeDrawer;
 			var text = CACHED_BUILDER;
 			int skills = 0;
@@ -117,16 +152,21 @@ namespace PeterHan.FastTrack.UIPatches {
 					text.Clear();
 					text.AppendLine(skill.description);
 					for (int i = 0; i < n; i++)
-						text.Append(" " + Constants.BULLETSTRING).AppendLine(perks[i].Name);
-					drawer.NewLabel((" " + Constants.BULLETSTRING) + skill.Name).Tooltip(text.
-						ToString());
+						text.Append(BULLETSPACE).AppendLine(perks[i].Name);
+					drawer.NewLabel(BULLETSPACE + skill.Name).Tooltip(text.ToString());
 					skills++;
 				}
 			if (skills == 0)
-				drawer.NewLabel((" " + Constants.BULLETSTRING) + PERSONALITY.RESUME.
-					NO_MASTERED_SKILLS.NAME).Tooltip(PERSONALITY.RESUME.NO_MASTERED_SKILLS.
-					TOOLTIP.Format(name));
+				drawer.NewLabel(BULLETSPACE + PERSONALITY.RESUME.NO_MASTERED_SKILLS.NAME).
+					Tooltip(PERSONALITY.RESUME.NO_MASTERED_SKILLS.TOOLTIP.Format(name));
 			drawer.EndDrawing();
+		}
+		
+		/// <summary>
+		/// Applied before ScheduleUpdate runs.
+		/// </summary>
+		internal static bool ScheduleUpdate_Prefix() {
+			return false;
 		}
 
 		/// <summary>
@@ -189,56 +229,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		public void Sim1000ms(float dt) {
 			if (panel != null && panel.gameObject.activeSelf)
 				Refresh(panel);
-		}
-
-		/// <summary>
-		/// Applied to MinionStatsPanel to add an updater when it spawns.
-		/// </summary>
-		[HarmonyPatch(typeof(MinionStatsPanel), nameof(MinionStatsPanel.OnSpawn))]
-		internal static class OnSpawn_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
-
-			/// <summary>
-			/// Applied before OnSpawn runs.
-			/// </summary>
-			internal static void Prefix(MinionStatsPanel __instance) {
-				var go = __instance.gameObject;
-				if (go != null)
-					go.AddOrGet<MinionStatsPanelWrapper>().panel = __instance;
-			}
-		}
-
-		/// <summary>
-		/// Applied to MinionStatsPanel to make the Refresh handler run much faster.
-		/// </summary>
-		[HarmonyPatch(typeof(MinionStatsPanel), nameof(MinionStatsPanel.Refresh))]
-		internal static class Refresh_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
-
-			/// <summary>
-			/// Applied before Refresh runs.
-			/// </summary>
-			internal static bool Prefix(MinionStatsPanel __instance) {
-				if (__instance.gameObject.activeSelf)
-					Refresh(__instance);
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to MinionStatsPanel to turn off the clunky update using the game scheduler.
-		/// Using Sim1000ms is way better.
-		/// </summary>
-		[HarmonyPatch(typeof(MinionStatsPanel), nameof(MinionStatsPanel.ScheduleUpdate))]
-		internal static class ScheduleUpdate_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
-
-			/// <summary>
-			/// Applied before ScheduleUpdate runs.
-			/// </summary>
-			internal static bool Prefix() {
-				return false;
-			}
 		}
 	}
 }
