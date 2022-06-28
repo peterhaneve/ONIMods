@@ -19,6 +19,9 @@
 using HarmonyLib;
 using Klei.AI;
 using System.Collections.Generic;
+#if DEBUG
+using PeterHan.PLib.Core;
+#endif
 using UnityEngine;
 
 using FactionID = FactionManager.FactionID;

@@ -30,7 +30,7 @@ namespace PeterHan.FastTrack {
 	/// <summary>
 	/// Patches which will be applied via annotations for Fast Track.
 	/// </summary>
-	public sealed class FastTrackMod : KMod.UserMod2 {
+	public sealed class FastTrackMod : UserMod2 {
 // Global, Game, World
 #if DEBUG
 		[PLibMethod(RunAt.AfterModsLoad)]
@@ -47,11 +47,6 @@ namespace PeterHan.FastTrack {
 		/// The maximum time that any of the blocking joins will wait, in real time ms.
 		/// </summary>
 		public const int MAX_TIMEOUT = 5000;
-
-		/// <summary>
-		/// Turn off tile mesh renderers if this mod is active.
-		/// </summary>
-		private const string TRUE_TILES_ID = "TrueTiles";
 
 		/// <summary>
 		/// The number of CPUs to use for the async job manager.
@@ -89,65 +84,6 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
-		/// Checks for compatibility and applies fast fetch manager updates only if Efficient
-		/// Supply is not enabled.
-		/// </summary>
-		/// <param name="harmony">The Harmony instance to use for patching.</param>
-		private static void CheckFetchCompat(Harmony harmony) {
-			if (PPatchTools.GetTypeSafe("PeterHan.EfficientFetch.EfficientFetchManager") ==
-					null) {
-				PathPatches.AsyncBrainGroupUpdater.AllowFastListSwap = true;
-				harmony.Patch(typeof(FetchManager.FetchablesByPrefabId),
-					nameof(FetchManager.FetchablesByPrefabId.UpdatePickups),
-					prefix: new HarmonyMethod(typeof(GamePatches.FetchManagerFastUpdate),
-					nameof(GamePatches.FetchManagerFastUpdate.BeforeUpdatePickups)));
-#if DEBUG
-				PUtil.LogDebug("Patched FetchManager for fast pickup updates");
-#endif
-			} else {
-				PUtil.LogWarning("Disabling fast pickup updates: Efficient Supply active");
-				PathPatches.AsyncBrainGroupUpdater.AllowFastListSwap = false;
-			}
-		}
-
-		/// <summary>
-		/// Checks for compatibility and applies stats panel optimizations only if mods which
-		/// show or alter attributs are not enabled.
-		/// </summary>
-		/// <param name="harmony">The Harmony instance to use for patching.</param>
-		private static void CheckStatsCompat(Harmony harmony) {
-			if (PPatchTools.GetTypeSafe("OniStatsPlusSo.MyMod") == null) {
-				UIPatches.MinionStatsPanelWrapper.Apply(harmony);
-			} else
-				PUtil.LogDebug("Disabling attributes panel optimizations: Stats mod active");
-		}
-
-		/// <summary>
-		/// Checks for compatibility and applies tile mesh renderer patches only if other tile
-		/// mods are not enabled.
-		/// </summary>
-		/// <param name="harmony">The Harmony instance to use for patching.</param>
-		/// <param name="mods">The mods list after all load.</param>
-		private static void CheckTileCompat(Harmony harmony, IReadOnlyList<Mod> mods) {
-			int n = mods.Count;
-			bool found = false;
-			// No Contains in read only lists...
-			for (int i = 0; i < n && !found; i++) {
-				var m = mods[i];
-				if (m.staticID == TRUE_TILES_ID && m.IsEnabledForActiveDlc()) {
-					PUtil.LogWarning("Disabling tile mesh renderers: True Tiles active");
-					found = true;
-				}
-			}
-			if (!found) {
-				VisualPatches.TileMeshPatches.Apply(harmony);
-#if DEBUG
-				PUtil.LogDebug("Patched BlockTileRenderer for mesh renderers");
-#endif
-			}
-		}
-
-		/// <summary>
 		/// Fixes the drag order spam bug, if Stock Bug Fix did not get to it first.
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
@@ -162,14 +98,14 @@ namespace PeterHan.FastTrack {
 			base.OnAllModsLoaded(harmony, mods);
 			if (options.MeshRendererOptions == FastTrackOptions.MeshRendererSettings.All &&
 					mods != null)
-				CheckTileCompat(harmony, mods);
+				FastTrackCompat.CheckTileCompat(harmony, mods);
 			// Die pacu bug die
 			if (options.AllocOpts && !PRegistry.GetData<bool>(PACU_SAYS_NO)) {
 				GamePatches.DecorProviderRefreshFix.ApplyPatch(harmony);
 				PRegistry.PutData(PACU_SAYS_NO, true);
 			}
 			if (options.FastUpdatePickups)
-				CheckFetchCompat(harmony);
+				FastTrackCompat.CheckFetchCompat(harmony);
 			if (!PRegistry.GetData<bool>(ASDF)) {
 				// Fix the annoying autosave bug
 				harmony.Patch(typeof(Timelapser), "SaveScreenshot", postfix: new HarmonyMethod(
@@ -179,7 +115,9 @@ namespace PeterHan.FastTrack {
 			if (options.FastReachability)
 				GamePatches.FastCellChangeMonitor.CreateInstance();
 			if (options.SideScreenOpts)
-				CheckStatsCompat(harmony);
+				FastTrackCompat.CheckStatsCompat(harmony);
+			if (options.NoDisease)
+				FastTrackCompat.CheckNoDiseaseCompat(harmony);
 			// In case the grid gets rewritten by a future mod idea
 			if (options.ENetOpts && !PRegistry.GetData<bool>("OverrideElectricalNetwork"))
 				GamePatches.FastElectricalNetworkCalculator.Apply(harmony);

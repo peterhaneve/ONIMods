@@ -37,7 +37,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applies all electrical network patches.
 		/// </summary>
-		/// <param name="harmony"></param>
+		/// <param name="harmony">The Harmony instance to use for patching.</param>
 		internal static void Apply(Harmony harmony) {
 			report = !FastTrackOptions.Instance.NoReports;
 			harmony.Patch(typeof(CircuitManager), nameof(CircuitManager.Refresh), prefix:

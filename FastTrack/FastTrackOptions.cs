@@ -87,6 +87,10 @@ namespace PeterHan.FastTrack {
 		[Option("STRINGS.UI.FRONTEND.FASTTRACK.NOCONVERSATIONS", "STRINGS.UI.TOOLTIPS.FASTTRACK.NOCONVERSATIONS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS")]
 		[JsonProperty]
 		public bool NoConversations { get; set; }
+		
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.NODISEASE", "STRINGS.UI.TOOLTIPS.FASTTRACK.NODISEASE", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS")]
+		[JsonProperty]
+		public bool NoDisease { get; set; }
 
 		[Option("STRINGS.UI.FRONTEND.FASTTRACK.FASTREACHABILITY", "STRINGS.UI.TOOLTIPS.FASTTRACK.FASTREACHABILITY", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS")]
 		[JsonProperty]
@@ -251,6 +255,7 @@ namespace PeterHan.FastTrack {
 			ModLoadOpts = false;
 			NoBounce = true;
 			NoConversations = false;
+			NoDisease = false;
 			NoPlacerEasing = false;
 			NoReports = false;
 			NoSplash = true;
@@ -274,11 +279,11 @@ namespace PeterHan.FastTrack {
 		/// Controls when achievements are checked.
 		/// </summary>
 		public enum AchievementDisable {
-			[Option("Never", "Achievements will always be checked.")]
+			[Option("STRINGS.UI.FRONTEND.FASTTRACK.ACHIEVEDISABLE.NEVER", "STRINGS.UI.TOOLTIPS.FASTTRACK.ACHIEVEDISABLE.NEVER")]
 			Never,
-			[Option("In Sandbox/Debug", "Achievements will not be checked in sandbox or debug mode.")]
+			[Option("STRINGS.UI.FRONTEND.FASTTRACK.ACHIEVEDISABLE.SANDBOXDEBUG", "STRINGS.UI.TOOLTIPS.FASTTRACK.ACHIEVEDISABLE.SANDBOXDEBUG")]
 			SandboxDebug,
-			[Option("Always Disabled", "<color=#FF0000>Achievements cannot be unlocked and\nno progress towards any achievement can be made.</color>")]
+			[Option("STRINGS.UI.FRONTEND.FASTTRACK.ACHIEVEDISABLE.DISABLED", "STRINGS.UI.TOOLTIPS.FASTTRACK.ACHIEVEDISABLE.DISABLED")]
 			Always
 		}
 
@@ -286,11 +291,11 @@ namespace PeterHan.FastTrack {
 		/// The quality to use for conduit rendering.
 		/// </summary>
 		public enum ConduitAnimationQuality {
-			[Option("Full", "Pipe animation quality is unchanged from the base game.")]
+			[Option("STRINGS.UI.FRONTEND.FASTTRACK.PIPEANIM.FULL", "STRINGS.UI.TOOLTIPS.FASTTRACK.PIPEANIM.FULL")]
 			Full,
-			[Option("Reduced", "Pipe animations update slower when outside the Liquid or Gas overlay.")]
+			[Option("STRINGS.UI.FRONTEND.FASTTRACK.PIPEANIM.REDUCED", "STRINGS.UI.TOOLTIPS.FASTTRACK.PIPEANIM.REDUCED")]
 			Reduced,
-			[Option("Minimal", "Pipe animations are disabled outside the Liquid or Gas overlay.")]
+			[Option("STRINGS.UI.FRONTEND.FASTTRACK.PIPEANIM.MINIMAL", "STRINGS.UI.TOOLTIPS.FASTTRACK.PIPEANIM.MINIMAL")]
 			Minimal
 		}
 
@@ -298,11 +303,11 @@ namespace PeterHan.FastTrack {
 		/// Where to use mesh renderers.
 		/// </summary>
 		public enum MeshRendererSettings {
-			[Option("All", "Use mesh renderers for all graphics.\r\n<i>Incompatible with mods: True Tiles</i>")]
+			[Option("STRINGS.UI.FRONTEND.FASTTRACK.MESHRENDERERS.ALL", "STRINGS.UI.TOOLTIPS.FASTTRACK.MESHRENDERERS.ALL")]
 			All,
-			[Option("All But Tiles", "Use mesh renderers for all non-tileable graphics.")]
+			[Option("STRINGS.UI.FRONTEND.FASTTRACK.MESHRENDERERS.EXCEPTTILES", "STRINGS.UI.TOOLTIPS.FASTTRACK.MESHRENDERERS.EXCEPTTILES")]
 			AllButTiles,
-			[Option("Disabled", "Do not use mesh renderers for any graphics.")]
+			[Option("STRINGS.UI.FRONTEND.FASTTRACK.MESHRENDERERS.NONE", "STRINGS.UI.TOOLTIPS.FASTTRACK.MESHRENDERERS.NONE")]
 			None
 		}
 
@@ -310,14 +315,11 @@ namespace PeterHan.FastTrack {
 		/// How many tutorial message and warnings to show.
 		/// </summary>
 		public enum TutorialMessageDisable {
-			[Option("All", "All tutorial messages are shown when they would normally appear.")]
+			[Option("STRINGS.UI.FRONTEND.FASTTRACK.TUTORIALS.ALL", "STRINGS.UI.TOOLTIPS.FASTTRACK.TUTORIALS.ALL")]
 			All,
-			[Option("Warnings", "Tutorial messages are disabled, but warnings such as\n<b>Insufficient Oxygen Generation</b> will still appear.")]
+			[Option("STRINGS.UI.FRONTEND.FASTTRACK.TUTORIALS.WARNINGS", "STRINGS.UI.TOOLTIPS.FASTTRACK.TUTORIALS.WARNINGS")]
 			WarningsOnly,
-			[Option("Off", "Tutorial messages and these warnings will be disabled:\n" +
-				"- Insufficient Oxygen Generation\n- Colony requires a food source\n- Long Commutes\n" +
-				"- No Outhouse built\n- No Wash Basin built\n- No Oxygen Generator built\n" +
-				"- Unrefrigerated Food\n- No Sick Bay built\n\n<i>Keep a careful eye on your colony...</i>")]
+			[Option("STRINGS.UI.FRONTEND.FASTTRACK.TUTORIALS.OFF", "STRINGS.UI.TOOLTIPS.FASTTRACK.TUTORIALS.OFF")]
 			None
 		}
 	}

@@ -57,6 +57,7 @@ namespace PeterHan.FastTrack {
 					public static LocString ASYNCPATHPROBE = "Background Pathing";
 					public static LocString CACHEPATHS = "Cache Paths";
 					public static LocString NOCONVERSATIONS = "Disable Conversations";
+					public static LocString NODISEASE = "Disable Disease";
 					public static LocString FASTREACHABILITY = "Fast Reachability Checks";
 					public static LocString SENSOROPTS = "Optimize Sensors";
 
@@ -94,6 +95,30 @@ namespace PeterHan.FastTrack {
 					public static LocString VIRTUALSCROLL = "Virtual Scroll";
 
 					public static LocString METRICS = "Log Debug Metrics";
+
+					public static class ACHIEVEDISABLE {
+						public static LocString NEVER = "Never";
+						public static LocString SANDBOXDEBUG = "In Sandbox/Debug";
+						public static LocString DISABLED = "Always Disabled";
+					}
+
+					public static class MESHRENDERERS {
+						public static LocString ALL = "All";
+						public static LocString EXCEPTTILES = "All but Tiles";
+						public static LocString NONE = "None";
+					}
+
+					public static class PIPEANIM {
+						public static LocString FULL = "Full";
+						public static LocString REDUCED = "Reduced";
+						public static LocString MINIMAL = "Minimal";
+					}
+
+					public static class TUTORIALS {
+						public static LocString ALL = "All";
+						public static LocString WARNINGS = "Warnings";
+						public static LocString OFF = "Off";
+					}
 				}
 			}
 
@@ -116,6 +141,12 @@ namespace PeterHan.FastTrack {
 					public static LocString ASYNCPATHPROBE = "Moves some pathfinding calculations to a non-blocking thread." + PERF_HIGH;
 					public static LocString CACHEPATHS = "Cache frequently used paths and reuse them in future calculations." + PERF_MEDIUM;
 					public static LocString NOCONVERSATIONS = "Disables all Duplicant thought and speech balloons." + PERF_LOW;
+					public static LocString NODISEASE = "Completely disable the entire disease system.\n" +
+						Constants.BULLETSTRING + "Sick Bay and Disease Clinic cannot be built or used\n" +
+						Constants.BULLETSTRING + "No new diseases can be contracted\n" +
+						Constants.BULLETSTRING + "Existing diseases will be immediately removed\n" +
+						Constants.BULLETSTRING + "All germs will be removed from pipes and buildings\n" +
+						"<i>Not compatible with mods: Diseases Restored, Diseases Expanded</i>\n" + PERF_MEDIUM;
 					public static LocString FASTREACHABILITY = "Only check items and chores for reachability when necessary." + PERF_MEDIUM;
 					public static LocString SENSOROPTS = "Only check for locations to Idle, Mingle, or Balloon Artist when necessary." + PERF_LOW;
 
@@ -153,6 +184,38 @@ namespace PeterHan.FastTrack {
 					public static LocString VIRTUALSCROLL = "Improves the speed of scrolling menus." + PERF_MEDIUM;
 
 					public static LocString METRICS = "Logs extra debug information to the game log.\n\n<b>Only use this option if directed to do so by a developer.</b>";
+
+					public static class ACHIEVEDISABLE {
+						public static LocString NEVER = "Achievements will always be checked.";
+						public static LocString SANDBOXDEBUG = "Achievements will not be checked in sandbox or debug mode.";
+						public static LocString DISABLED = "<color=#FF0000>Achievements cannot be unlocked and\nno progress towards any achievement can be made.</color>";
+					}
+
+					public static class MESHRENDERERS {
+						public static LocString ALL = "Use mesh renderers for all graphics.\r\n<i>Incompatible with mods: True Tiles</i>";
+						public static LocString EXCEPTTILES = "Use mesh renderers for all non-tileable graphics.";
+						public static LocString NONE = "Do not use mesh renderers for any graphics.";
+					}
+
+					public static class PIPEANIM {
+						public static LocString FULL = "Pipe animation quality is unchanged from the base game.";
+						public static LocString REDUCED = "Pipe animations update slower when outside the Liquid or Gas overlay.";
+						public static LocString MINIMAL = "Pipe animations are disabled outside the Liquid or Gas overlay.";
+					}
+
+					public static class TUTORIALS {
+						public static LocString ALL = "All tutorial messages are shown when they would normally appear.";
+						public static LocString WARNINGS = "Tutorial messages are disabled, but warnings such as\n<b>Insufficient Oxygen Generation</b> will still appear.";
+						public static LocString OFF = "Tutorial messages and these warnings will be disabled:\n" +
+							Constants.BULLETSTRING + "Insufficient Oxygen Generation\n" +
+							Constants.BULLETSTRING + "Colony requires a food source\n" +
+							Constants.BULLETSTRING + "Long Commutes\n" +
+							Constants.BULLETSTRING + "No Outhouse built\n" +
+							Constants.BULLETSTRING + "No Wash Basin built\n" +
+							Constants.BULLETSTRING + "No Oxygen Generator built\n" +
+							Constants.BULLETSTRING + "Unrefrigerated Food\n" +
+							Constants.BULLETSTRING + "No Sick Bay built\n\n<i>Keep a careful eye on your colony...</i>";
+					}
 				}
 			}
 		}

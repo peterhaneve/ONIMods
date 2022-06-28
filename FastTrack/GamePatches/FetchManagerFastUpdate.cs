@@ -52,7 +52,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		/// <returns>A pooled instance (if available) with the pickup tags.</returns>
 		private static PickupTagDict Allocate() {
-			if (!POOL.TryPop(out PickupTagDict dict))
+			if (!POOL.TryPop(out var dict))
 				dict = new PickupTagDict(256, PickupTagEqualityComparer.Instance);
 			return dict;
 		}
@@ -74,36 +74,25 @@ namespace PeterHan.FastTrack.GamePatches {
 			for (int i = 0; i < n; i++) {
 				var fetchable = fetchables[i];
 				var target = fetchable.pickupable;
-				int cell = target.cachedCell;
-				if (target.CouldBePickedUpByMinion(worker_go)) {
-					// Look for cell cost, share costs across multiple queries to a cell
-					// If this is being run synchronous, no issue, otherwise the GSP patch will
-					// avoid races on the scene partitioner
-					if (!pathCosts.TryGetValue(cell, out int cost)) {
-						if (needThreadSafe)
-							cost = worker_navigator.GetNavigationCostNU(target, cell);
-						else
-							cost = worker_navigator.GetNavigationCost(target);
-						pathCosts.Add(cell, cost);
-					}
-					// Exclude unreachable items
-					if (cost >= 0) {
-						int hash = fetchable.tagBitsHash;
-						var key = new PickupTagKey(hash, target.KPrefabID);
-						var candidate = new FetchManager.Pickup {
-							pickupable = target, tagBitsHash = hash, PathCost = (ushort)cost,
-							masterPriority = fetchable.masterPriority, freshness = fetchable.
-							freshness, foodQuality = fetchable.foodQuality
-						};
-						if (canBePickedUp.TryGetValue(key, out FetchManager.Pickup current)) {
-							// Is the new one better?
-							int result = comparer.Compare(candidate, current);
-							if (result < 0 || (result == 0 && candidate.pickupable.
-									UnreservedAmount > current.pickupable.UnreservedAmount))
-								canBePickedUp[key] = candidate;
-						} else
-							canBePickedUp.Add(key, candidate);
-					}
+				int cost;
+				// Exclude unreachable items
+				if (target.CouldBePickedUpByMinion(worker_go) && (cost = GetPathCost(target,
+						worker_navigator, pathCosts, needThreadSafe)) >= 0) {
+					int hash = fetchable.tagBitsHash;
+					var key = new PickupTagKey(hash, target.KPrefabID);
+					var candidate = new FetchManager.Pickup {
+						pickupable = target, tagBitsHash = hash, PathCost = (ushort)cost,
+						masterPriority = fetchable.masterPriority, freshness = fetchable.
+						freshness, foodQuality = fetchable.foodQuality
+					};
+					if (canBePickedUp.TryGetValue(key, out var current)) {
+						// Is the new one better?
+						int result = comparer.Compare(candidate, current);
+						if (result < 0 || (result == 0 && target.UnreservedAmount > current.
+								pickupable.UnreservedAmount))
+							canBePickedUp[key] = candidate;
+					} else
+						canBePickedUp.Add(key, candidate);
 				}
 			}
 			// Copy the remaining pickups to the list, there are now way fewer because only
@@ -119,6 +108,28 @@ namespace PeterHan.FastTrack.GamePatches {
 		}
 
 		/// <summary>
+		/// Gets the path cost to a target item.
+		/// </summary>
+		/// <param name="target">The item to pick up.</param>
+		/// <param name="navigator">The navigator attempting to find the item.</param>
+		/// <param name="pathCosts">The cached path costs from previous queries.</param>
+		/// <param name="needThreadSafe">Whether this method is running in a background task.</param>
+		/// <returns>The cost to navigate to the item's current cell.</returns>
+		private static int GetPathCost(Pickupable target, Navigator navigator,
+				IDictionary<int, int> pathCosts, bool needThreadSafe) {
+			int cell = target.cachedCell;
+			// Look for cell cost, share costs across multiple queries to a cell
+			// If this is being run synchronous, no issue, otherwise the GSP patch will
+			// avoid races on the scene partitioner
+			if (!pathCosts.TryGetValue(cell, out int cost)) {
+				cost = needThreadSafe ? navigator.GetNavigationCostNU(target,
+					cell) : navigator.GetNavigationCost(target);
+				pathCosts.Add(cell, cost);
+			}
+			return cost;
+		}
+
+		/// <summary>
 		/// Returns a temporary pickup dictionary to the pool.
 		/// </summary>
 		/// <param name="dict">The dictionary to clear and recycle.</param>
@@ -131,20 +142,20 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Wraps a prefab and its tag bit hash in a key structure that can be very quickly and
 		/// properly hashed and compared for a dictionary key.
 		/// </summary>
-		internal struct PickupTagKey {
+		internal readonly struct PickupTagKey {
 			/// <summary>
 			/// The prefab ID of the tagged object.
 			/// </summary>
-			internal readonly KPrefabID id;
+			internal readonly KPrefabID ID;
 
 			/// <summary>
 			/// The tag bits' hash.
 			/// </summary>
-			internal readonly int hash;
+			internal readonly int Hash;
 
 			public PickupTagKey(int hash, KPrefabID id) {
-				this.hash = hash;
-				this.id = id;
+				Hash = hash;
+				ID = id;
 			}
 
 			public override bool Equals(object obj) {
@@ -153,11 +164,11 @@ namespace PeterHan.FastTrack.GamePatches {
 			}
 
 			public override int GetHashCode() {
-				return hash;
+				return Hash;
 			}
 
 			public override string ToString() {
-				return "PickupTagKey[Hash={0:D},Tags=[{1}]]".F(hash, id.Tags.Join());
+				return "PickupTagKey[Hash={0:D},Tags=[{1}]]".F(Hash, ID.Tags.Join());
 			}
 		}
 
@@ -175,18 +186,18 @@ namespace PeterHan.FastTrack.GamePatches {
 
 			public bool Equals(PickupTagKey x, PickupTagKey y) {
 				bool ret = false;
-				if (x.hash == y.hash) {
+				if (x.Hash == y.Hash) {
 					var bitsA = new TagBits(ref FetchManager.disallowedTagMask);
 					var bitsB = new TagBits(ref FetchManager.disallowedTagMask);
-					x.id.AndTagBits(ref bitsA);
-					y.id.AndTagBits(ref bitsB);
+					x.ID.AndTagBits(ref bitsA);
+					y.ID.AndTagBits(ref bitsB);
 					ret = bitsA.AreEqual(ref bitsB);
 				}
 				return ret;
 			}
 
 			public int GetHashCode(PickupTagKey obj) {
-				return obj.hash;
+				return obj.Hash;
 			}
 		}
 	}

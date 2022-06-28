@@ -20,6 +20,9 @@ using HarmonyLib;
 using PeterHan.PLib.Core;
 using Ryu;
 using System;
+#if DEBUG
+using System.Collections.Generic;
+#endif
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
