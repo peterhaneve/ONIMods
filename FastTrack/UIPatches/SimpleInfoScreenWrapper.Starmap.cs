@@ -119,8 +119,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			int n = allGeysers.Length, unknownGeysers = 0;
 			for (int i = 0; i < n; i++) {
 				var geyser = allGeysers[i];
-				var go = geyser.gameObject;
-				if (go.GetMyWorldId() == id)
+				GameObject go;
+				if (geyser != null && (go = geyser.gameObject).GetMyWorldId() == id)
 					knownGeysers.Add(go.PrefabID());
 			}
 			// All unknown geysers and oil wells
@@ -132,15 +132,19 @@ namespace PeterHan.FastTrack.UIPatches {
 						WorldIdx[cell]) != ClusterManager.INVALID_WORLD_IDX &&
 						worldIndex == id) {
 					string prefabID = candidate.spawnInfo.id;
-					Tag prefabTag = new Tag(prefabID);
-					if (prefabID == OilWellConfig.ID)
+					var prefabTag = new Tag(prefabID);
+					switch (prefabID) {
+					case OilWellConfig.ID:
 						knownGeysers.Add(prefabTag);
-					else if (prefabID == GeyserGenericConfig.ID)
+						break;
+					case GeyserGenericConfig.ID:
 						unknownGeysers++;
-					else {
+						break;
+					default:
 						var prefab = Assets.GetPrefab(prefabTag);
 						if (prefab != null && prefab.TryGetComponent(out Geyser _))
 							knownGeysers.Add(prefabTag);
+						break;
 					}
 				}
 			}
