@@ -44,6 +44,11 @@ namespace PeterHan.BulkSettingsChange {
 		public static LocString TOOL_ENABLE_DISINFECT = "Disinfect Enabled";
 		public static LocString TOOL_ENABLE_EMPTY = "Storage Emptied";
 		public static LocString TOOL_ENABLE_REPAIR = "Auto-Repair Enabled";
+		public static LocString TOOL_FORBID_ITEMS = "Items Forbidden";
+		public static LocString TOOL_RECLAIM_ITEMS = "Items Reclaimed";
+
+		public static LocString FORBID_ITEMS = "Forbid Items";
+		public static LocString RECLAIM_ITEMS = "Reclaim Items";
 	}
 
 	/// <summary>
@@ -63,6 +68,9 @@ namespace PeterHan.BulkSettingsChange {
 		public static readonly BulkToolMode DisableEmpty = new BulkToolMode(
 			"DISABLE_EMPTY", STRINGS.UI.USERMENUACTIONS.EMPTYSTORAGE.NAME_OFF,
 			BulkChangeStrings.TOOL_DISABLE_EMPTY);
+		public static readonly BulkToolMode DisablePickup = new BulkToolMode(
+			"FORBID_ITEMS", BulkChangeStrings.FORBID_ITEMS, BulkChangeStrings.
+			TOOL_FORBID_ITEMS);
 		public static readonly BulkToolMode DisableRepair = new BulkToolMode(
 			"DISABLE_REPAIR", STRINGS.BUILDINGS.REPAIRABLE.DISABLE_AUTOREPAIR.NAME,
 			BulkChangeStrings.TOOL_DISABLE_REPAIR);
@@ -78,6 +86,9 @@ namespace PeterHan.BulkSettingsChange {
 		public static readonly BulkToolMode EnableEmpty = new BulkToolMode(
 			"ENABLE_EMPTY", STRINGS.UI.USERMENUACTIONS.EMPTYSTORAGE.NAME,
 			BulkChangeStrings.TOOL_ENABLE_EMPTY);
+		public static readonly BulkToolMode EnablePickup = new BulkToolMode(
+			"RECLAIM_ITEMS", BulkChangeStrings.RECLAIM_ITEMS, BulkChangeStrings.
+			TOOL_RECLAIM_ITEMS);
 		public static readonly BulkToolMode EnableRepair = new BulkToolMode(
 			"ENABLE_REPAIR", STRINGS.BUILDINGS.REPAIRABLE.ENABLE_AUTOREPAIR.NAME,
 			BulkChangeStrings.TOOL_ENABLE_REPAIR);

@@ -58,6 +58,10 @@ namespace PeterHan.BulkSettingsChange {
 					BulkChangeTools.EnableCompost.AddTo(MODES);
 					BulkChangeTools.DisableEmpty.AddTo(MODES);
 					BulkChangeTools.EnableEmpty.AddTo(MODES);
+					if (BulkChangePatches.DoForbidUpdate != null) {
+						BulkChangeTools.DisablePickup.AddTo(MODES);
+						BulkChangeTools.EnablePickup.AddTo(MODES);
+					}
 #if DEBUG
 					foreach (var mode in MODES)
 						PUtil.LogDebug("Tool mode: " + mode.Value);
@@ -95,16 +99,12 @@ namespace PeterHan.BulkSettingsChange {
 		/// <summary>
 		/// The title shown to the user when dragging the tool.
 		/// </summary>
-		public string Title {
-			get {
-				return Name.ToUpper();
-			}
-		}
+		public string Title => Name.ToUpper();
 
 		public BulkToolMode(string key, LocString name, LocString popup) {
-			Key = key ?? throw new ArgumentNullException("key");
-			Name = name ?? throw new ArgumentNullException("name");
-			PopupText = popup ?? throw new ArgumentNullException("popup");
+			Key = key ?? throw new ArgumentNullException(nameof(key));
+			Name = name ?? throw new ArgumentNullException(nameof(name));
+			PopupText = popup ?? throw new ArgumentNullException(nameof(popup));
 		}
 
 		/// <summary>

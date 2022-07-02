@@ -71,7 +71,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OldPipeColor", "OldPipeColo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotEnoughTags", "NotEnoughTags\NotEnoughTags.csproj", "{899F0603-8236-49E8-93E5-856FB540409C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastTrack", "FastTrack\FastTrack.csproj", "{5031ADAF-C406-4EA0-8003-6C88A2A64802}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FastTrack", "FastTrack\FastTrack.csproj", "{5031ADAF-C406-4EA0-8003-6C88A2A64802}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NoSensorLimits", "NoSensorLimits\NoSensorLimits.csproj", "{136F8525-F65C-4A92-BC9E-2F89ECAFD4E1}"
 EndProject
@@ -108,6 +108,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoWasteWant", "NoWasteWant\NoWasteWant.csproj", "{F6BC965A-0B7C-4165-B3A5-F2D60D4CEA6B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MismatchedFinder", "MismatchedFinder\MismatchedFinder.csproj", "{F76C5A4D-B2AB-4DA5-A9A9-5B30D87971E0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForbidItems", "ForbidItems\ForbidItems.csproj", "{2498660E-640B-4FC4-A8AF-313577427C25}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -532,6 +534,14 @@ Global
 		{F76C5A4D-B2AB-4DA5-A9A9-5B30D87971E0}.Release|Mergedown.Build.0 = Release|Mergedown
 		{F76C5A4D-B2AB-4DA5-A9A9-5B30D87971E0}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{F76C5A4D-B2AB-4DA5-A9A9-5B30D87971E0}.Release|Vanilla.Build.0 = Release|Vanilla
+		{2498660E-640B-4FC4-A8AF-313577427C25}.Debug|Mergedown.ActiveCfg = Debug|Mergedown
+		{2498660E-640B-4FC4-A8AF-313577427C25}.Debug|Mergedown.Build.0 = Debug|Mergedown
+		{2498660E-640B-4FC4-A8AF-313577427C25}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
+		{2498660E-640B-4FC4-A8AF-313577427C25}.Debug|Vanilla.Build.0 = Debug|Vanilla
+		{2498660E-640B-4FC4-A8AF-313577427C25}.Release|Mergedown.ActiveCfg = Release|Mergedown
+		{2498660E-640B-4FC4-A8AF-313577427C25}.Release|Mergedown.Build.0 = Release|Mergedown
+		{2498660E-640B-4FC4-A8AF-313577427C25}.Release|Vanilla.ActiveCfg = Release|Vanilla
+		{2498660E-640B-4FC4-A8AF-313577427C25}.Release|Vanilla.Build.0 = Release|Vanilla
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
