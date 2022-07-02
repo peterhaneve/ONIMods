@@ -204,6 +204,10 @@ namespace PeterHan.PLib.Core {
 					PUtil.LogWarning("Unable to find method {0} on type {1}".F(methodName,
 						type.FullName));
 			} catch (AmbiguousMatchException e) {
+#if DEBUG
+				PUtil.LogWarning("When patching candidate method {0}.{1}:".F(type.FullName,
+					methodName));
+#endif
 				PUtil.LogException(e);
 			}
 		}

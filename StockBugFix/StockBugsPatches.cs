@@ -181,6 +181,37 @@ namespace PeterHan.StockBugFix {
 	}
 
 	/// <summary>
+	/// Applied to AirConditionerConfig to insulate its storage.
+	/// </summary>
+	[HarmonyPatch(typeof(AirConditionerConfig), nameof(AirConditionerConfig.
+		ConfigureBuildingTemplate))]
+	public static class AirConditionerConfig_ConfigureBuildingTemplate_Patch {
+		/// <summary>
+		/// Matches the aquatuner item modifiers.
+		/// </summary>
+		private static readonly List<Storage.StoredItemModifier> STORED_ITEM_MODIFIERS =
+			new List<Storage.StoredItemModifier> {
+				Storage.StoredItemModifier.Hide,
+				Storage.StoredItemModifier.Insulate,
+				Storage.StoredItemModifier.Seal
+			};
+
+		internal static bool Prepare() {
+			return StockBugFixOptions.Instance.InsulateThermoRegulator;
+		}
+
+		/// <summary>
+		/// Applied after ConfigureBuildingTemplate runs.
+		/// </summary>
+		internal static void Postfix(GameObject go) {
+			var storage = BuildingTemplates.CreateDefaultStorage(go);
+			storage.showInUI = true;
+			storage.capacityKg = 2.0f;
+			storage.SetDefaultStoredItemModifiers(STORED_ITEM_MODIFIERS);
+		}
+	}
+
+	/// <summary>
 	/// Applied to Constructable, Deconstructable, and Demolishable to fix the offsets
 	/// based on building rotation.
 	/// </summary>

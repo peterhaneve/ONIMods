@@ -51,6 +51,13 @@ namespace PeterHan.StockBugFix {
 		public bool FixOverheat { get; set; }
 
 		/// <summary>
+		/// If true, will insulate the Thermo Regulator internal storage.
+		/// </summary>
+		[Option("Insulate Thermo Regulator", "Insulates the internal storage of the Thermo Regulator to make it match the Thermo Aquatuner.")]
+		[JsonProperty]
+		public bool InsulateThermoRegulator { get; set; }
+
+		/// <summary>
 		/// Allows changing food storage to a store errand. Does not affect cooking supply.
 		/// </summary>
 		[Option("Store Food Chore Type", "Selects which type of chore is used for storing food in Ration Boxes or Refrigerators.\r\nDoes not affect deliveries to the Electric Grill, Microbe Musher, or Gas Range.")]
@@ -61,12 +68,14 @@ namespace PeterHan.StockBugFix {
 			AllowTepidizerPulsing = false;
 			FixOffsetTables = true;
 			FixOverheat = true;
+			InsulateThermoRegulator = true;
 			StoreFoodChoreType = StoreFoodCategory.Store;
 		}
 
 		public override string ToString() {
-			return "StockBugFixOptions[allowTepidizer={1},fixOverheat={0},foodChoreType={2},fixOffsets={3}]".F(
-				FixOverheat, AllowTepidizerPulsing, StoreFoodChoreType, FixOffsetTables);
+			return "StockBugFixOptions[allowTepidizer={1},fixOverheat={0},foodChoreType={2},fixOffsets={3},insulateTR={4}]".F(
+				FixOverheat, AllowTepidizerPulsing, StoreFoodChoreType, FixOffsetTables,
+				InsulateThermoRegulator);
 		}
 	}
 
