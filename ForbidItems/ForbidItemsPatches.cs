@@ -42,16 +42,6 @@ namespace PeterHan.ForbidItems {
 		}
 
 		/// <summary>
-		/// API function to allow other mods which added the Forbidden tag to force the UI
-		/// to update.
-		/// </summary>
-		/// <param name="go">The object which was forbidden or reclaimed.</param>
-		public static void ForceUpdateStatus(GameObject go) {
-			if (go != null)
-				go.AddOrGet<Forbiddable>().RefreshStatus();
-		}
-
-		/// <summary>
 		/// Takes into account whether the item is forbidden when considering it for fetching.
 		/// </summary>
 		/// <param name="pickupable">The item to query.</param>
@@ -103,6 +93,20 @@ namespace PeterHan.ForbidItems {
 						KIconButtonMenu.ButtonInfo("action_building_disabled", text, handler,
 						PAction.MaxAction, null, null, null, tooltip));
 				}
+			}
+		}
+
+		/// <summary>
+		/// Applied to EntityTemplates to make dropped items forbiddable.
+		/// </summary>
+		[HarmonyPatch(typeof(EntityTemplates), nameof(EntityTemplates.
+			CreateBaseOreTemplates))]
+		public static class EntityTemplates_CreateBaseOreTemplates_Patch {
+			/// <summary>
+			/// Applied after CreateBaseOreTemplates runs.
+			/// </summary>
+			internal static void Postfix(GameObject ___baseOreTemplate) {
+				___baseOreTemplate.AddOrGet<Forbiddable>();
 			}
 		}
 

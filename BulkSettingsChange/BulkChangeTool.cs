@@ -16,11 +16,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.Actions;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace PeterHan.BulkSettingsChange {
@@ -233,18 +231,20 @@ namespace PeterHan.BulkSettingsChange {
 		private static bool ToggleForbid(GameObject item, bool enable) {
 			bool changed = false;
 			var tag = BulkChangePatches.Forbidden;
-			if (item != null && item.TryGetComponent(out Pickupable pickupable)) {
+			if (item != null && item.TryGetComponent(out Pickupable pickupable) &&
+					BulkChangePatches.CanForbidItems) {
 				var objectListNode = pickupable.objectLayerListItem;
 				while (objectListNode != null) {
 					var go = objectListNode.gameObject;
 					objectListNode = objectListNode.nextItem;
-					if (go != null && go.TryGetComponent(out KPrefabID kpid) && go.
-							TryGetComponent(out Clearable _) && enable != kpid.HasTag(tag)) {
+					if (go != null && go.TryGetComponent(out KPrefabID kpid) && !kpid.HasTag(
+							GameTags.Stored) && go.TryGetComponent(out Clearable clearable) &&
+							clearable.isClearable && !go.TryGetComponent(out Health _) &&
+							enable != kpid.HasTag(tag)) {
 						if (enable)
 							kpid.AddTag(tag);
 						else
 							kpid.RemoveTag(tag);
-						BulkChangePatches.DoForbidUpdate?.Invoke(go);
 						changed = true;
 					}
 				}
@@ -280,9 +280,26 @@ namespace PeterHan.BulkSettingsChange {
 		}
 
 		/// <summary>
-		/// The last selected tool option.
+		/// Based on the current tool mode, updates the overlay mode.
 		/// </summary>
-		private string lastSelected;
+		internal static void UpdateViewMode() {
+			var inst = BulkParameterMenu.Instance;
+			if (BulkChangeTools.EnableDisinfect.IsOn(inst) || BulkChangeTools.
+					DisableDisinfect.IsOn(inst)) {
+				// Enable/Disable Disinfect
+				ToolMenu.Instance.PriorityScreen.Show(false);
+				OverlayScreen.Instance.ToggleOverlay(OverlayModes.Disease.ID);
+			} else if (BulkChangeTools.EnableBuildings.IsOn(inst) || BulkChangeTools.
+					DisableBuildings.IsOn(inst)) {
+				// Enable/Disable Building
+				ToolMenu.Instance.PriorityScreen.Show();
+				OverlayScreen.Instance.ToggleOverlay(OverlayModes.Priorities.ID);
+			} else {
+				// Enable/Disable Auto-Repair, Compost, Empty Storage
+				ToolMenu.Instance.PriorityScreen.Show(false);
+				OverlayScreen.Instance.ToggleOverlay(OverlayModes.None.ID);
+			}
+		}
 
 		/// <summary>
 		/// The number of object layers, determined at RUNTIME.
@@ -294,11 +311,6 @@ namespace PeterHan.BulkSettingsChange {
 		/// </summary>
 		private readonly int pickupableLayer;
 
-		/// <summary>
-		/// The options available for this tool.
-		/// </summary>
-		private IDictionary<string, ToolParameterMenu.ToggleState> options;
-
 		public BulkChangeTool() {
 			numObjectLayers = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.NumLayers),
 				ObjectLayer.NumLayers);
@@ -308,107 +320,95 @@ namespace PeterHan.BulkSettingsChange {
 
 		protected override string GetConfirmSound() {
 			string sound = base.GetConfirmSound();
+			var menu = BulkParameterMenu.Instance;
 			// "Enable" use default, "Disable" uses cancel sound
-			if (BulkChangeTools.DisableBuildings.IsOn(options) || BulkChangeTools.
-					DisableDisinfect.IsOn(options) || BulkChangeTools.DisableRepair.IsOn(
-					options))
+			if (BulkChangeTools.DisableBuildings.IsOn(menu) || BulkChangeTools.
+					DisableDisinfect.IsOn(menu) || BulkChangeTools.DisableRepair.IsOn(menu))
 				sound = "Tile_Confirm_NegativeTool";
 			return sound;
 		}
 
 		protected override string GetDragSound() {
 			string sound = base.GetDragSound();
+			var menu = BulkParameterMenu.Instance;
 			// "Enable" use default, "Disable" uses cancel sound
-			if (BulkChangeTools.DisableBuildings.IsOn(options) || BulkChangeTools.
-					DisableDisinfect.IsOn(options) || BulkChangeTools.DisableRepair.IsOn(
-					options))
+			if (BulkChangeTools.DisableBuildings.IsOn(menu) || BulkChangeTools.
+					DisableDisinfect.IsOn(menu) || BulkChangeTools.DisableRepair.IsOn(menu))
 				sound = "Tile_Drag_NegativeTool";
 			return sound;
 		}
 
 		protected override void OnActivateTool() {
-			var menu = ToolMenu.Instance.toolParameterMenu;
-			var modes = ListPool<PToolMode, BulkChangeTool>.Allocate();
+			var menu = BulkParameterMenu.Instance;
 			base.OnActivateTool();
-			// Create mode list
-			foreach (var mode in BulkToolMode.AllTools()) {
-				bool select = mode.Key == lastSelected || (lastSelected == null && modes.
-					Count == 0);
-				modes.Add(mode.ToToolMode(select ? ToolParameterMenu.ToggleState.On :
-					ToolParameterMenu.ToggleState.Off));
-			}
-			options = PToolMode.PopulateMenu(menu, modes);
-			modes.Recycle();
-			// When the parameters are changed, update the view settings
-			menu.onParametersChanged += UpdateViewMode;
+			if (!menu.HasOptions)
+				menu.PopulateMenu(BulkToolMode.AllTools());
+			menu.ShowMenu();
 			SetMode(Mode.Box);
 			UpdateViewMode();
 		}
 
 		protected override void OnCleanUp() {
 			base.OnCleanUp();
-			lastSelected = null;
 			PUtil.LogDebug("Destroying BulkChangeTool");
 		}
 
 		protected override void OnDeactivateTool(InterfaceTool newTool) {
 			base.OnDeactivateTool(newTool);
-			var menu = ToolMenu.Instance.toolParameterMenu;
-			// Unregister events
-			menu.ClearMenu();
-			menu.onParametersChanged -= UpdateViewMode;
+			BulkParameterMenu.Instance.HideMenu();
 			ToolMenu.Instance.PriorityScreen.Show(false);
 		}
 
 		protected override void OnDragTool(int cell, int distFromOrigin) {
+			var menu = BulkParameterMenu.Instance;
 			// Invoked when the tool drags over a cell
 			if (Grid.IsValidCell(cell)) {
-				bool enable = BulkChangeTools.EnableBuildings.IsOn(options), changed = false,
-					disinfect = BulkChangeTools.EnableDisinfect.IsOn(options),
-					repair = BulkChangeTools.EnableRepair.IsOn(options),
-					empty = BulkChangeTools.EnableEmpty.IsOn(options),
-					compost = BulkChangeTools.EnableCompost.IsOn(options),
-					forbid = BulkChangeTools.DisablePickup.IsOn(options);
+				bool enable = BulkChangeTools.EnableBuildings.IsOn(menu), changed = false,
+					disinfect = BulkChangeTools.EnableDisinfect.IsOn(menu),
+					repair = BulkChangeTools.EnableRepair.IsOn(menu),
+					empty = BulkChangeTools.EnableEmpty.IsOn(menu),
+					compost = BulkChangeTools.EnableCompost.IsOn(menu),
+					forbid = BulkChangeTools.DisablePickup.IsOn(menu);
 #if DEBUG
 				// Log what we are about to do
 				var xy = Grid.CellToXY(cell);
 				PUtil.LogDebug("{0} at cell ({1:D},{2:D})".F(ToolMenu.Instance.
 					toolParameterMenu.GetLastEnabledFilter(), xy.X, xy.Y));
 #endif
-				if (enable || BulkChangeTools.DisableBuildings.IsOn(options)) {
+				if (enable || BulkChangeTools.DisableBuildings.IsOn(menu)) {
 					// Enable/disable buildings
 					for (int i = 0; i < numObjectLayers; i++)
 						changed |= ToggleBuilding(Grid.Objects[cell, i], enable);
 					if (changed)
 						ShowPopup(enable, BulkChangeTools.EnableBuildings, BulkChangeTools.
 							DisableBuildings, cell);
-				} else if (disinfect || BulkChangeTools.DisableDisinfect.IsOn(options)) {
+				} else if (disinfect || BulkChangeTools.DisableDisinfect.IsOn(menu)) {
 					// Enable/disable disinfect
 					for (int i = 0; i < numObjectLayers; i++)
 						changed |= ToggleDisinfect(Grid.Objects[cell, i], disinfect);
 					if (changed)
 						ShowPopup(disinfect, BulkChangeTools.EnableDisinfect, BulkChangeTools.
 							DisableDisinfect, cell);
-				} else if (repair || BulkChangeTools.DisableRepair.IsOn(options)) {
+				} else if (repair || BulkChangeTools.DisableRepair.IsOn(menu)) {
 					// Enable/disable repair
 					for (int i = 0; i < numObjectLayers; i++)
 						changed |= ToggleRepair(Grid.Objects[cell, i], repair);
 					if (changed)
 						ShowPopup(repair, BulkChangeTools.EnableRepair, BulkChangeTools.
 							DisableRepair, cell);
-				} else if (empty || BulkChangeTools.DisableEmpty.IsOn(options)) {
+				} else if (empty || BulkChangeTools.DisableEmpty.IsOn(menu)) {
 					// Enable/disable empty storage
 					for (int i = 0; i < numObjectLayers; i++)
 						changed |= ToggleEmptyStorage(Grid.Objects[cell, i], empty);
 					if (changed)
 						ShowPopup(empty, BulkChangeTools.EnableEmpty, BulkChangeTools.
 							DisableEmpty, cell);
-				} else if (compost || BulkChangeTools.DisableCompost.IsOn(options)) {
+				} else if (compost || BulkChangeTools.DisableCompost.IsOn(menu)) {
 					// Enable/disable compost
 					if (ToggleCompost(Grid.Objects[cell, pickupableLayer], compost))
 						ShowPopup(compost, BulkChangeTools.EnableCompost, BulkChangeTools.
 							DisableCompost, cell);
-				} else if (forbid || BulkChangeTools.EnablePickup.IsOn(options)) {
+				} else if (forbid || BulkChangeTools.EnablePickup.IsOn(menu)) {
 					// Enable/disable forbid (yeah the tool names are suboptimal)
 					if (ToggleForbid(Grid.Objects[cell, pickupableLayer], forbid))
 						ShowPopup(forbid, BulkChangeTools.DisablePickup, BulkChangeTools.
@@ -419,7 +419,6 @@ namespace PeterHan.BulkSettingsChange {
 
 		protected override void OnPrefabInit() {
 			Sprite sprite;
-			lastSelected = null;
 			base.OnPrefabInit();
 			gameObject.AddComponent<BulkChangeHover>();
 			// Allow priority setting for the enable/disable building chores
@@ -461,32 +460,6 @@ namespace PeterHan.BulkSettingsChange {
 				offsTransform.localScale = new Vector3(scaleWidth, scaleWidth, 1.0f);
 			}
 			visualizer.SetActive(false);
-		}
-
-		/// <summary>
-		/// Based on the current tool mode, updates the overlay mode.
-		/// </summary>
-		private void UpdateViewMode() {
-			foreach (var option in options)
-				if (option.Value == ToolParameterMenu.ToggleState.On) {
-					lastSelected = option.Key;
-					break;
-				}
-			if (BulkChangeTools.EnableDisinfect.IsOn(options) || BulkChangeTools.
-					DisableDisinfect.IsOn(options)) {
-				// Enable/Disable Disinfect
-				ToolMenu.Instance.PriorityScreen.Show(false);
-				OverlayScreen.Instance.ToggleOverlay(OverlayModes.Disease.ID);
-			} else if (BulkChangeTools.EnableBuildings.IsOn(options) || BulkChangeTools.
-					DisableBuildings.IsOn(options)) {
-				// Enable/Disable Building
-				ToolMenu.Instance.PriorityScreen.Show();
-				OverlayScreen.Instance.ToggleOverlay(OverlayModes.Priorities.ID);
-			} else {
-				// Enable/Disable Auto-Repair, Compost, Empty Storage
-				ToolMenu.Instance.PriorityScreen.Show(false);
-				OverlayScreen.Instance.ToggleOverlay(OverlayModes.None.ID);
-			}
 		}
 	}
 }

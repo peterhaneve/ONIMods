@@ -26,7 +26,7 @@ namespace PeterHan.ForbidItems {
 				public static class FORBIDDEN {
 					public static LocString NAME = "Item Forbidden";
 					public static LocString TOOLTIP = "This item cannot be picked up by Duplicants or " +
-						STRINGS.UI.PRE_KEYWORD + "Auto-Sweepers" + STRINGS.UI.PST_KEYWORD + ".";
+						STRINGS.UI.PRE_KEYWORD + "Auto-Sweepers" + STRINGS.UI.PST_KEYWORD;
 				}
 			}
 		}

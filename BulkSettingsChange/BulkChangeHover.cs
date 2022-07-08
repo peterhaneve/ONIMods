@@ -24,19 +24,21 @@ namespace PeterHan.BulkSettingsChange {
 	/// </summary>
 	internal sealed class BulkChangeHover : HoverTextConfiguration {
 		public override void UpdateHoverElements(List<KSelectable> selected) {
-			var hoverInstance = HoverTextScreen.Instance;
-			// Find the active mode
-			var drawer = hoverInstance.BeginDrawing();
-			var mode = BulkToolMode.FromKey(ToolMenu.Instance.toolParameterMenu.
-				GetLastEnabledFilter());
-			// Draw the tool title
-			drawer.BeginShadowBar(false);
-			drawer.DrawText(mode?.Title ?? BulkChangeStrings.TOOL_TITLE, ToolTitleTextStyle);
-			// Draw the instructions
-			ActionName = mode?.Name ?? BulkChangeStrings.TOOL_TITLE;
-			DrawInstructions(hoverInstance, drawer);
-			drawer.EndShadowBar();
-			drawer.EndDrawing();
+			string key = BulkParameterMenu.Instance.SelectedKey;
+			if (key != null) {
+				var mode = BulkToolMode.FromKey(key);
+				var hoverInstance = HoverTextScreen.Instance;
+				// Find the active mode
+				var drawer = hoverInstance.BeginDrawing();
+				// Draw the tool title
+				drawer.BeginShadowBar(false);
+				drawer.DrawText(mode?.Title ?? BulkChangeStrings.TOOL_TITLE, ToolTitleTextStyle);
+				// Draw the instructions
+				ActionName = mode?.Name ?? BulkChangeStrings.TOOL_TITLE;
+				DrawInstructions(hoverInstance, drawer);
+				drawer.EndShadowBar();
+				drawer.EndDrawing();
+			}
 		}
 	}
 }

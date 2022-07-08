@@ -25,7 +25,7 @@ namespace PeterHan.BulkSettingsChange {
 	/// <summary>
 	/// A mode that the bulk item change tool can use.
 	/// </summary>
-	sealed class BulkToolMode {
+	internal sealed class BulkToolMode {
 		/// <summary>
 		/// A dictionary to look tool modes up by key.
 		/// </summary>
@@ -58,7 +58,7 @@ namespace PeterHan.BulkSettingsChange {
 					BulkChangeTools.EnableCompost.AddTo(MODES);
 					BulkChangeTools.DisableEmpty.AddTo(MODES);
 					BulkChangeTools.EnableEmpty.AddTo(MODES);
-					if (BulkChangePatches.DoForbidUpdate != null) {
+					if (BulkChangePatches.CanForbidItems) {
 						BulkChangeTools.DisablePickup.AddTo(MODES);
 						BulkChangeTools.EnablePickup.AddTo(MODES);
 					}
@@ -116,22 +116,12 @@ namespace PeterHan.BulkSettingsChange {
 		}
 
 		/// <summary>
-		/// Returns true if this mode is selected.
+		/// Checks to see if the tool is selected.
 		/// </summary>
-		/// <param name="options">The current tool options.</param>
-		/// <returns>true if this mode is selected, or false otherwise.</returns>
-		public bool IsOn(IDictionary<string, ToolParameterMenu.ToggleState> options) {
-			return options[Key] == ToolParameterMenu.ToggleState.On;
-		}
-
-		/// <summary>
-		/// Creates a tool mode from PLib to add it to the options menu.
-		/// </summary>
-		/// <param name="state">The default state of this tool mode.</param>
-		/// <returns>The options entry.</returns>
-		public PToolMode ToToolMode(ToolParameterMenu.ToggleState state = ToolParameterMenu.
-				ToggleState.On) {
-			return new PToolMode(Key, Name, state);
+		/// <param name="menu">The currently active tool menu.</param>
+		/// <returns>true if the tool is enabled, or false if it is disabled.</returns>
+		public bool IsOn(BulkParameterMenu menu) {
+			return menu.GetState(Key) == ToolParameterMenu.ToggleState.On;
 		}
 
 		public override string ToString() {

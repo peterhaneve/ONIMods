@@ -40,7 +40,10 @@ namespace PeterHan.BulkSettingsChange {
 		/// </summary>
 		internal static PAction BulkChangeAction { get; private set; }
 
-		internal static UpdateForbidden DoForbidUpdate;
+		/// <summary>
+		/// Forbid Items support is easy!
+		/// </summary>
+		internal static bool CanForbidItems { get; private set; }
 
 		internal static readonly Tag Forbidden = new Tag("Forbidden");
 
@@ -52,17 +55,19 @@ namespace PeterHan.BulkSettingsChange {
 
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
 			base.OnAllModsLoaded(harmony, mods);
-			var forbidPatches = PPatchTools.GetTypeSafe(
-				"PeterHan.ForbidItems.ForbidItemsPatches", "ForbidItems");
-			if (forbidPatches != null) {
-				DoForbidUpdate = forbidPatches.CreateStaticDelegate<UpdateForbidden>(
-					"ForceUpdateStatus", typeof(GameObject));
+			CanForbidItems = PPatchTools.GetTypeSafe(
+				"PeterHan.ForbidItems.ForbidItemsPatches", "ForbidItems") != null;
+			if (CanForbidItems)
 				PUtil.LogDebug("Adding tool for Forbid Items");
-			}
+		}
+
+		[PLibMethod(RunAt.OnEndGame)]
+		internal static void OnEndGame() {
+			PUtil.LogDebug("Destroying BulkParameterMenu");
+			BulkParameterMenu.DestroyInstance();
 		}
 
 		public override void OnLoad(Harmony harmony) {
-			DoForbidUpdate = null;
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 			new PLocalization().Register();
@@ -112,6 +117,20 @@ namespace PeterHan.BulkSettingsChange {
 				__instance.basicTools.Add(ToolMenu.CreateToolCollection(BulkChangeStrings.
 					TOOL_TITLE, BulkChangeStrings.TOOL_ICON_NAME, BulkChangeAction.GetKAction(),
 					nameof(BulkChangeTool), BulkChangeStrings.TOOL_DESCRIPTION, false));
+			}
+		}
+
+		/// <summary>
+		/// Applied to ToolMenu to add the tool list, as the number of tools exceeded
+		/// the limit of the base game tool menu (Clay please!)
+		/// </summary>
+		[HarmonyPatch(typeof(ToolMenu), "OnPrefabInit")]
+		public static class ToolMenu_OnPrefabInit_Patch {
+			/// <summary>
+			/// Applied after OnPrefabInit runs.
+			/// </summary>
+			internal static void Postfix() {
+				BulkParameterMenu.CreateInstance();
 			}
 		}
 	}

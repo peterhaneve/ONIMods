@@ -50,20 +50,44 @@ namespace PeterHan.ForbidItems {
 			var go = gameObject;
 			if (go != null) {
 				prefabID.AddTag(ForbidItemsPatches.Forbidden);
-				RefreshStatus();
 				Game.Instance.userMenu.Refresh(go);
 			}
 		}
 
+		protected override void OnCleanUp() {
+			base.OnCleanUp();
+			Unsubscribe((int)GameHashes.Absorb);
+			Unsubscribe((int)GameHashes.TagsChanged);
+			if (forbiddenStatus != Guid.Empty)
+				forbiddenStatus = selectable.RemoveStatusItem(forbiddenStatus);
+		}
+
 		protected override void OnSpawn() {
 			base.OnSpawn();
+			Subscribe((int)GameHashes.TagsChanged, OnTagsChanged);
+			Subscribe((int)GameHashes.Absorb, OnAbsorb);
 			RefreshStatus();
 		}
 
-		protected override void OnCleanUp() {
-			base.OnCleanUp();
-			if (forbiddenStatus != Guid.Empty)
-				forbiddenStatus = selectable.RemoveStatusItem(forbiddenStatus);
+		/// <summary>
+		/// When an item is absorbed into this one, forbids this stack if the victim stack
+		/// was also forbidden.
+		/// </summary>
+		/// <param name="data">The item being absorbed into this one.</param>
+		private void OnAbsorb(object data) {
+			if (data is Pickupable other && other.TryGetComponent(out KPrefabID id) &&
+					id.HasTag(ForbidItemsPatches.Forbidden) && !prefabID.HasTag(
+					ForbidItemsPatches.Forbidden)) {
+				prefabID.AddTag(ForbidItemsPatches.Forbidden);
+				Game.Instance.userMenu.Refresh(gameObject);
+			}
+		}
+
+		/// <summary>
+		/// When the Forbidden tag is added or removed, updates the UI.
+		/// </summary>
+		private void OnTagsChanged(object _) {
+			RefreshStatus();
 		}
 
 		/// <summary>
@@ -73,7 +97,6 @@ namespace PeterHan.ForbidItems {
 			var go = gameObject;
 			if (go != null) {
 				prefabID.RemoveTag(ForbidItemsPatches.Forbidden);
-				RefreshStatus();
 				Game.Instance.userMenu.Refresh(go);
 			}
 		}
