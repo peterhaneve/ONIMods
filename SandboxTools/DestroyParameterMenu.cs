@@ -38,15 +38,20 @@ namespace PeterHan.SandboxTools {
 		/// </summary>
 		public static void CreateInstance() {
 			var parameterMenu = new GameObject("DestroyParams");
-			parameterMenu.transform.SetParent(ToolMenu.Instance.toolParameterMenu?.transform?.
-				parent);
+			var originalMenu = ToolMenu.Instance.toolParameterMenu;
+			if (originalMenu != null)
+				parameterMenu.transform.SetParent(originalMenu.transform.parent);
 			Instance = parameterMenu.AddComponent<DestroyParameterMenu>();
-			parameterMenu.gameObject.SetActive(true);
-			parameterMenu.gameObject.SetActive(false);
+			parameterMenu.SetActive(true);
+			parameterMenu.SetActive(false);
 		}
 
 		public static void DestroyInstance() {
-			Instance?.ClearMenu();
+			var inst = Instance;
+			if (inst != null) {
+				inst.ClearMenu();
+				Destroy(inst.gameObject);
+			}
 			Instance = null;
 		}
 
@@ -115,15 +120,15 @@ namespace PeterHan.SandboxTools {
 				var checkbox = option.Checkbox;
 				switch (option.State) {
 				case ToolParameterMenu.ToggleState.On:
-					PCheckBox.SetCheckState(checkbox, 1);
+					PCheckBox.SetCheckState(checkbox, PCheckBox.STATE_CHECKED);
 					break;
 				case ToolParameterMenu.ToggleState.Off:
-					PCheckBox.SetCheckState(checkbox, 0);
+					PCheckBox.SetCheckState(checkbox, PCheckBox.STATE_UNCHECKED);
 					all = false;
 					break;
 				case ToolParameterMenu.ToggleState.Disabled:
 				default:
-					PCheckBox.SetCheckState(checkbox, 2);
+					PCheckBox.SetCheckState(checkbox, PCheckBox.STATE_PARTIAL);
 					all = false;
 					break;
 				}
@@ -170,9 +175,10 @@ namespace PeterHan.SandboxTools {
 			var baseContent = menu.content;
 			base.OnPrefabInit();
 			content = Util.KInstantiateUI(baseContent, baseContent.GetParent(), false);
-			var transform = content.transform;
+			var transform = content.rectTransform();
 			// Add buttons to the chooser
-			choiceList = transform.GetChild(1)?.gameObject;
+			if (transform.childCount > 1)
+				choiceList = transform.GetChild(1).gameObject;
 			if (SandboxToolsPatches.AdvancedFilterEnabled) {
 				// Selects all options
 				var allButton = new PButton {
@@ -189,6 +195,8 @@ namespace PeterHan.SandboxTools {
 					noneButton, toRight: allButton).SetRightEdge(noneButton, fraction: 1.0f).
 					AddTo(content, -1);
 			}
+			// Bump up the offset max to allow more space
+			transform.offsetMax = new Vector2(0.0f, 300.0f);
 			transform.SetAsFirstSibling();
 			HideMenu();
 		}
@@ -197,7 +205,7 @@ namespace PeterHan.SandboxTools {
 		/// Populates the menu with the available destroy modes.
 		/// </summary>
 		/// <param name="parameters">The modes to show in the menu.</param>
-		internal void PopulateMenu(IList<DestroyFilter> parameters) {
+		internal void PopulateMenu(IEnumerable<DestroyFilter> parameters) {
 			int i = 0;
 			var prefab = ToolMenu.Instance.toolParameterMenu.widgetPrefab;
 			ClearMenu();
@@ -206,13 +214,13 @@ namespace PeterHan.SandboxTools {
 				var widgetPrefab = Util.KInstantiateUI(prefab, choiceList, true);
 				PUIElements.SetText(widgetPrefab, parameter.Title);
 				var toggle = widgetPrefab.GetComponentInChildren<MultiToggle>();
-				var checkbox = toggle?.gameObject;
-				if (checkbox != null) {
+				if (toggle != null) {
+					var checkbox = toggle.gameObject;
 					// Set initial state, note that ChangeState is only called by SetCheckState
 					// if it appears to be different, but since this executes before the
 					// parent is active it must be set to something different
 					var option = new DestroyMenuOption(parameter, checkbox);
-					PCheckBox.SetCheckState(checkbox, 2);
+					PCheckBox.SetCheckState(checkbox, PCheckBox.STATE_PARTIAL);
 					if (i == 0 || SandboxToolsPatches.AdvancedFilterEnabled)
 						option.State = ToolParameterMenu.ToggleState.On;
 					options.Add(parameter.ID, option);
