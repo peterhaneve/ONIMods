@@ -17,6 +17,11 @@ msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DISABLE_BUILDINGS"
 msgid "Building Disabled"
 msgstr "Edificio Inhabilitado"
 
+#. PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DISABLE_COMPOST
+msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DISABLE_COMPOST"
+msgid "Compost Disabled"
+msgstr "Se Prohíbe Compost"
+
 #. PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DISABLE_DISINFECT
 msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DISABLE_DISINFECT"
 msgid "Disinfect Disabled"
@@ -31,6 +36,11 @@ msgstr "Reparar Inhabilitado"
 msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_ENABLE_BUILDINGS"
 msgid "Building Enabled"
 msgstr "Edificio Habilitado"
+
+#. PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_ENABLE_COMPOST
+msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_ENABLE_COMPOST"
+msgid "Compost Enabled"
+msgstr "Se Puede Compost"
 
 #. PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_ENABLE_DISINFECT
 msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_ENABLE_DISINFECT"

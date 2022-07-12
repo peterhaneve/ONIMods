@@ -23,6 +23,7 @@ using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.PatchManager;
 using System.Collections.Generic;
+using KMod;
 using UnityEngine;
 
 namespace PeterHan.BulkSettingsChange {
@@ -32,10 +33,19 @@ namespace PeterHan.BulkSettingsChange {
 	/// This code took inspiration from https://github.com/0Mayall/ONIBlueprints/
 	/// </summary>
 	public sealed class BulkChangePatches : KMod.UserMod2 {
+		internal delegate void UpdateForbidden(GameObject go);
+
 		/// <summary>
 		/// The action to bring up the bulk change tool.
 		/// </summary>
 		internal static PAction BulkChangeAction { get; private set; }
+
+		/// <summary>
+		/// Forbid Items support is easy!
+		/// </summary>
+		internal static bool CanForbidItems { get; private set; }
+
+		internal static readonly Tag Forbidden = new Tag("Forbidden");
 
 		[PLibMethod(RunAt.BeforeDbInit)]
 		internal static void BeforeDbInit() {
@@ -43,9 +53,20 @@ namespace PeterHan.BulkSettingsChange {
 			Assets.Sprites.Add(icon.name, icon);
 		}
 
-		/// <summary>
-		/// Logs when the mod is loaded.
-		/// </summary>
+		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
+			base.OnAllModsLoaded(harmony, mods);
+			CanForbidItems = PPatchTools.GetTypeSafe(
+				"PeterHan.ForbidItems.ForbidItemsPatches", "ForbidItems") != null;
+			if (CanForbidItems)
+				PUtil.LogDebug("Adding tool for Forbid Items");
+		}
+
+		[PLibMethod(RunAt.OnEndGame)]
+		internal static void OnEndGame() {
+			PUtil.LogDebug("Destroying BulkParameterMenu");
+			BulkParameterMenu.DestroyInstance();
+		}
+
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
@@ -69,15 +90,15 @@ namespace PeterHan.BulkSettingsChange {
 			internal static void Postfix(PlayerController __instance) {
 				// Create list so that new tool can be appended at the end
 				var interfaceTools = new List<InterfaceTool>(__instance.tools);
-				var bulkChangeTool = new GameObject(typeof(BulkChangeTool).Name);
-				bulkChangeTool.AddComponent<BulkChangeTool>();
+				var bulkChangeTool = new GameObject(nameof(BulkChangeTool));
+				var tool = bulkChangeTool.AddComponent<BulkChangeTool>();
 				// Reparent tool to the player controller, then enable/disable to load it
 				bulkChangeTool.transform.SetParent(__instance.gameObject.transform);
 				bulkChangeTool.SetActive(true);
 				bulkChangeTool.SetActive(false);
 				PUtil.LogDebug("Created BulkChangeTool");
 				// Add tool to tool list
-				interfaceTools.Add(bulkChangeTool.GetComponent<InterfaceTool>());
+				interfaceTools.Add(tool);
 				__instance.tools = interfaceTools.ToArray();
 			}
 		}
@@ -95,7 +116,21 @@ namespace PeterHan.BulkSettingsChange {
 				PUtil.LogDebug("Adding BulkChangeTool to basic tools");
 				__instance.basicTools.Add(ToolMenu.CreateToolCollection(BulkChangeStrings.
 					TOOL_TITLE, BulkChangeStrings.TOOL_ICON_NAME, BulkChangeAction.GetKAction(),
-					typeof(BulkChangeTool).Name, BulkChangeStrings.TOOL_DESCRIPTION, false));
+					nameof(BulkChangeTool), BulkChangeStrings.TOOL_DESCRIPTION, false));
+			}
+		}
+
+		/// <summary>
+		/// Applied to ToolMenu to add the tool list, as the number of tools exceeded
+		/// the limit of the base game tool menu (Clay please!)
+		/// </summary>
+		[HarmonyPatch(typeof(ToolMenu), "OnPrefabInit")]
+		public static class ToolMenu_OnPrefabInit_Patch {
+			/// <summary>
+			/// Applied after OnPrefabInit runs.
+			/// </summary>
+			internal static void Postfix() {
+				BulkParameterMenu.CreateInstance();
 			}
 		}
 	}

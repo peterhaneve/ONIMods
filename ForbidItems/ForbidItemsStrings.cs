@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2022 Peter Han
+ * Copyright 2021 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -16,28 +16,30 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System.Collections.Generic;
-
-namespace PeterHan.BulkSettingsChange {
+namespace PeterHan.ForbidItems {
 	/// <summary>
-	/// The hover popup shown when the bulk change tool is invoked.
+	/// Strings used in Forbid Items.
 	/// </summary>
-	internal sealed class BulkChangeHover : HoverTextConfiguration {
-		public override void UpdateHoverElements(List<KSelectable> selected) {
-			string key = BulkParameterMenu.Instance.SelectedKey;
-			if (key != null) {
-				var mode = BulkToolMode.FromKey(key);
-				var hoverInstance = HoverTextScreen.Instance;
-				// Find the active mode
-				var drawer = hoverInstance.BeginDrawing();
-				// Draw the tool title
-				drawer.BeginShadowBar(false);
-				drawer.DrawText(mode?.Title ?? BulkChangeStrings.TOOL_TITLE, ToolTitleTextStyle);
-				// Draw the instructions
-				ActionName = mode?.Name ?? BulkChangeStrings.TOOL_TITLE;
-				DrawInstructions(hoverInstance, drawer);
-				drawer.EndShadowBar();
-				drawer.EndDrawing();
+	public static class ForbidItemsStrings {
+		public static class MISC {
+			public static class STATUSITEMS {
+				public static class FORBIDDEN {
+					public static LocString NAME = "Item Forbidden";
+					public static LocString TOOLTIP = "This item cannot be picked up by Duplicants or " +
+						STRINGS.UI.PRE_KEYWORD + "Auto-Sweepers" + STRINGS.UI.PST_KEYWORD;
+				}
+			}
+		}
+
+		public static class UI {
+			public static class USERMENUACTIONS {
+				public static class FORBIDITEM {
+					public static LocString NAME = "Forbid Item";
+					public static LocString NAME_OFF = "Reclaim Item";
+
+					public static LocString TOOLTIP = "Prevent this item from being picked up";
+					public static LocString TOOLTIP_OFF = "Allow this item to be picked up";
+				}
 			}
 		}
 	}
