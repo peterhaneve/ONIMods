@@ -170,6 +170,11 @@ namespace PeterHan.FastTrack.GamePatches {
 		private readonly ICollection<int> pendingSolidChanges;
 
 		/// <summary>
+		/// The critters which were occupying rooms that were destroyed.
+		/// </summary>
+		private readonly ConcurrentQueue<KPrefabID> releasedCritters;
+
+		/// <summary>
 		/// Triggered when a room needs to be updated.
 		/// </summary>
 		private readonly EventWaitHandle roomsChanged;
@@ -202,6 +207,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			maxRoomSize = 128;
 			pendingDestroy = new HashSet<HandleVector<int>.Handle>();
 			pendingSolidChanges = new HashSet<int>();
+			releasedCritters = new ConcurrentQueue<KPrefabID>();
 			roomsChanged = new AutoResetEvent(false);
 			solidChanges = new ConcurrentQueue<int>();
 			tempIDs = new List<KPrefabID>(32);
@@ -526,6 +532,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		private void RefreshRooms() {
 			var cavities = cavityInfos.GetDataList();
 			int n = cavities.Count;
+			OvercrowdingMonitor.Instance smi;
 			for (int i = 0; i < n; i++) {
 				// No root canal found ;)
 				var cavityInfo = cavities[i];
@@ -535,6 +542,11 @@ namespace PeterHan.FastTrack.GamePatches {
 					cavityInfo.dirty = false;
 				}
 			}
+			// Force a room update for each critter that was in a refreshed room
+			while (releasedCritters.TryDequeue(out var critter))
+				if (critter != null && (smi = critter.
+						GetSMI<OvercrowdingMonitor.Instance>()) != null)
+					smi.RoomRefreshUpdateCavity();
 		}
 
 		/// <summary>
@@ -596,6 +608,12 @@ namespace PeterHan.FastTrack.GamePatches {
 			foreach (int cell in changedCells) {
 				ref var cavityID = ref cavityForCell[cell];
 				if (cavityID.IsValid()) {
+					var cavity = cavityInfos.GetData(cavityID);
+					var creatures = cavity.creatures;
+					int n = creatures.Count;
+					for (int i = 0; i < n; i++)
+						// Need a room refresh on foreground thread
+						releasedCritters.Enqueue(creatures[i]);
 					pendingDestroy.Add(cavityID);
 					cavityID.Clear();
 				}

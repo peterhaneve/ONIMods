@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Fast Track</AssemblyTitle>
-    <FileVersion>0.9.3.0</FileVersion>
+    <FileVersion>0.9.4.0</FileVersion>
     <RootNamespace>PeterHan.FastTrack</RootNamespace>
     <Description>Optimizes Oxygen Not Included to improve performance.</Description>
     <AssemblyVersion>0.9.0.0</AssemblyVersion>

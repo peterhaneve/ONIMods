@@ -164,9 +164,9 @@ namespace PeterHan.FastTrack.CritterPatches {
 				// would need to actually update the rooms.
 				if (room != null) {
 					if (isEgg)
-						room.eggs.Remove(prefabID);
+						room.RemoveFromCavity(prefabID, room.eggs);
 					else
-						room.creatures.Remove(prefabID);
+						room.RemoveFromCavity(prefabID, room.creatures);
 					if (light) {
 						if (background)
 							GamePatches.BackgroundRoomProber.Instance.UpdateRoom(room);

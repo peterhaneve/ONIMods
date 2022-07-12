@@ -627,6 +627,24 @@ namespace PeterHan.StockBugFix {
 	}
 
 	/// <summary>
+	/// Applied to Substance to fix the freezing into debris temperature reset bug, by
+	/// actually using the set-temperature callback instead of modifying the internal
+	/// temperature (which is unused by sim chunks).
+	/// </summary>
+	[HarmonyPatch(typeof(Substance), nameof(Substance.SpawnResource))]
+	public static class Substance_SpawnResource_Patch {
+		/// <summary>
+		/// Transpiles SpawnResource to use the right temperature setter.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+			return PPatchTools.ReplaceMethodCallSafe(method, typeof(PrimaryElement).
+				GetPropertySafe<float>(nameof(PrimaryElement.InternalTemperature), false).
+				GetSetMethod(true), typeof(PrimaryElement).GetMethodSafe("SetTemperature",
+				false, typeof(float)));
+		}
+	}
+
+	/// <summary>
 	/// Applied to Timelapser to cancel the current tool when autosave begins.
 	/// </summary>
 	[HarmonyPatch(typeof(Timelapser), "SaveScreenshot")]
