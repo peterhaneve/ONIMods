@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29201.188
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLib", "PLib\PLib.csproj", "{B6D056B5-B658-4E93-8AE2-86069196B494}"
 EndProject
@@ -77,7 +77,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NoSensorLimits", "NoSensorL
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FinishTasks", "FinishTasks\FinishTasks.csproj", "{6E8902F8-2969-4A11-B2D2-C8644A00949D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoSplashScreen", "NoSplashScreen\NoSplashScreen.csproj", "{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NoSplashScreen", "NoSplashScreen\NoSplashScreen.csproj", "{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MooReproduction", "MooReproduction\MooReproduction.csproj", "{07BE03BD-84A8-4202-82A3-F64829B3D786}"
 EndProject
@@ -103,11 +103,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLibAVC", "PLibAVC\PLibAVC.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoEject", "AutoEject\AutoEject.csproj", "{EF8C2C5E-03B7-46F9-B8B7-D6ED11170542}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TurnBackTheClock", "TurnBackTheClock\TurnBackTheClock.csproj", "{775898D1-4014-49D4-902B-F6873BA86616}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TurnBackTheClock", "TurnBackTheClock\TurnBackTheClock.csproj", "{775898D1-4014-49D4-902B-F6873BA86616}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NoWasteWant", "NoWasteWant\NoWasteWant.csproj", "{F6BC965A-0B7C-4165-B3A5-F2D60D4CEA6B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NoWasteWant", "NoWasteWant\NoWasteWant.csproj", "{F6BC965A-0B7C-4165-B3A5-F2D60D4CEA6B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MismatchedFinder", "MismatchedFinder\MismatchedFinder.csproj", "{F76C5A4D-B2AB-4DA5-A9A9-5B30D87971E0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MismatchedFinder", "MismatchedFinder\MismatchedFinder.csproj", "{F76C5A4D-B2AB-4DA5-A9A9-5B30D87971E0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -227,8 +227,7 @@ Global
 		{5E9C5B40-C5B0-4F39-9950-4D0E350185AA}.Release|Mergedown.Build.0 = Release|Mergedown
 		{5E9C5B40-C5B0-4F39-9950-4D0E350185AA}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{5E9C5B40-C5B0-4F39-9950-4D0E350185AA}.Release|Vanilla.Build.0 = Release|Vanilla
-		{89F93E0F-394A-4914-9050-B8B278A05245}.Debug|Mergedown.ActiveCfg = Debug|Mergedown
-		{89F93E0F-394A-4914-9050-B8B278A05245}.Debug|Mergedown.Build.0 = Debug|Mergedown
+		{89F93E0F-394A-4914-9050-B8B278A05245}.Debug|Mergedown.ActiveCfg = Debug|Vanilla
 		{89F93E0F-394A-4914-9050-B8B278A05245}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
 		{89F93E0F-394A-4914-9050-B8B278A05245}.Debug|Vanilla.Build.0 = Debug|Vanilla
 		{89F93E0F-394A-4914-9050-B8B278A05245}.Release|Mergedown.ActiveCfg = Release|Mergedown
@@ -501,7 +500,7 @@ Global
 		{769785FD-B0CD-4363-9AD4-100BFF22E205}.Release|Mergedown.Build.0 = Release|Mergedown
 		{769785FD-B0CD-4363-9AD4-100BFF22E205}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{769785FD-B0CD-4363-9AD4-100BFF22E205}.Release|Vanilla.Build.0 = Release|Vanilla
-		{EF8C2C5E-03B7-46F9-B8B7-D6ED11170542}.Debug|Mergedown.ActiveCfg = Debug|Vanilla
+		{EF8C2C5E-03B7-46F9-B8B7-D6ED11170542}.Debug|Mergedown.ActiveCfg = Debug|Mergedown
 		{EF8C2C5E-03B7-46F9-B8B7-D6ED11170542}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
 		{EF8C2C5E-03B7-46F9-B8B7-D6ED11170542}.Debug|Vanilla.Build.0 = Debug|Vanilla
 		{EF8C2C5E-03B7-46F9-B8B7-D6ED11170542}.Release|Mergedown.ActiveCfg = Release|Mergedown

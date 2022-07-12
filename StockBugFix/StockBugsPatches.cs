@@ -196,8 +196,11 @@ namespace PeterHan.StockBugFix {
 				Storage.StoredItemModifier.Seal
 			};
 
+		/// <summary>
+		/// Bug will be fixed in the release after U42-512719.
+		/// </summary>
 		internal static bool Prepare() {
-			return StockBugFixOptions.Instance.InsulateThermoRegulator;
+			return PUtil.GameVersion <= 512719U;
 		}
 
 		/// <summary>
@@ -242,7 +245,7 @@ namespace PeterHan.StockBugFix {
 				RotateAndBuild), true, typeof(CellOffset[]), typeof(CellOffset[][]),
 				typeof(CellOffset[]), typeof(KMonoBehaviour));
 			bool patched = false;
-			string sig = __originalMethod.DeclaringType.FullName + "." + __originalMethod.Name;
+			string sig = __originalMethod.DeclaringType?.FullName + "." + __originalMethod.Name;
 			if (target != null && replacement != null)
 				foreach (var instr in method) {
 					if (instr.Is(OpCodes.Call, target)) {
@@ -462,6 +465,38 @@ namespace PeterHan.StockBugFix {
 				} else {
 					__result[0] = formatted;
 					__result[1] = "";
+				}
+			}
+		}
+	}
+
+	/// <summary>
+	/// Applied to MooConfig to make it actually eat Gas Grass again.
+	/// </summary>
+	[HarmonyPatch(typeof(MooConfig), nameof(MooConfig.CreateMoo))]
+	public static class MooConfig_CreateMoo_Patch {
+		/// <summary>
+		/// Bug will be fixed in the release after U42-512719.
+		/// </summary>
+		internal static bool Prepare() {
+			return PUtil.GameVersion <= 512719U;
+		}
+
+		/// <summary>
+		/// Applied after CreateMoo runs.
+		/// </summary>
+		internal static void Postfix(GameObject __result) {
+			var monitor = __result.GetDef<CreatureCalorieMonitor.Def>();
+			Diet diet;
+			if (monitor != null && (diet = monitor.diet) != null) {
+				var infos = diet.infos;
+				int n = infos.Length;
+				for (int i = 0; i < n; i++) {
+					// Make a doppelganger with the same info except eat plants directly = true
+					var info = infos[i];
+					diet.infos[i] = new Diet.Info(info.consumedTags, info.producedElement,
+						info.caloriesPerKg, info.producedConversionRate, null, 0.0f,
+						info.produceSolidTile, true);
 				}
 			}
 		}
