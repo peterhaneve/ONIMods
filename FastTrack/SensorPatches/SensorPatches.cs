@@ -63,7 +63,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// Applied to BalloonStandCellSensor to only look for a cell during recreation time.
 		/// </summary>
 		[HarmonyPatch(typeof(BalloonStandCellSensor), nameof(BalloonStandCellSensor.Update))]
-		internal static class BalloonStandCellSensor_Update {
+		internal static class BalloonStandCellSensor_Update_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.SensorOpts;
 
 			/// <summary>
@@ -82,7 +82,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// Applied to MingleCellSensor to only look for a mingle cell during recreation time.
 		/// </summary>
 		[HarmonyPatch(typeof(MingleCellSensor), nameof(MingleCellSensor.Update))]
-		internal static class MingleCellSensor_Update {
+		internal static class MingleCellSensor_Update_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.SensorOpts;
 
 			/// <summary>
@@ -136,15 +136,24 @@ namespace PeterHan.FastTrack.SensorPatches {
 
 	/// <summary>
 	/// Applied to SafeCellQuery to dramatically speed it up by cancelling the query once
-	/// a target cell has been found.
+	/// a target cell has been found with all criteria.
 	/// </summary>
 	[HarmonyPatch(typeof(SafeCellQuery), nameof(SafeCellQuery.IsMatch))]
 	public static class SafeCellQuery_IsMatch_Patch {
 		/// <summary>
+		/// SafeFlags is not declared as a [Flags] enum, so manually calculate the OR of all
+		/// the flags added together
+		/// </summary>
+		private const SafeCellQuery.SafeFlags MAX_FLAGS = (SafeCellQuery.SafeFlags)(
+			(int)SafeCellQuery.SafeFlags.IsNotLiquid * 2 - 1);
+
+		internal static bool Prepare() => FastTrackOptions.Instance.SensorOpts;
+
+		/// <summary>
 		/// Applied after IsMatch runs.
 		/// </summary>
-		internal static void Postfix(ref bool __result, int cost, int ___targetCost) {
-			if (cost >= ___targetCost)
+		internal static void Postfix(SafeCellQuery __instance, ref bool __result, int cost) {
+			if (cost >= __instance.targetCost && __instance.targetCellFlags >= MAX_FLAGS)
 				__result = true;
 		}
 	}

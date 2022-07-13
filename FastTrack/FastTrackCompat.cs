@@ -39,7 +39,7 @@ namespace PeterHan.FastTrack {
 		internal static void CheckFetchCompat(Harmony harmony) {
 			if (PPatchTools.GetTypeSafe("PeterHan.EfficientFetch.EfficientFetchManager") ==
 					null) {
-				PathPatches.AsyncBrainGroupUpdater.AllowFastListSwap = true;
+				PathPatches.AsyncBrainGroupUpdater.allowFastListSwap = true;
 				harmony.Patch(typeof(FetchManager.FetchablesByPrefabId),
 					nameof(FetchManager.FetchablesByPrefabId.UpdatePickups),
 					prefix: new HarmonyMethod(typeof(GamePatches.FetchManagerFastUpdate),
@@ -49,7 +49,7 @@ namespace PeterHan.FastTrack {
 #endif
 			} else {
 				PUtil.LogWarning("Disabling fast pickup updates: Efficient Supply active");
-				PathPatches.AsyncBrainGroupUpdater.AllowFastListSwap = false;
+				PathPatches.AsyncBrainGroupUpdater.allowFastListSwap = false;
 			}
 		}
 

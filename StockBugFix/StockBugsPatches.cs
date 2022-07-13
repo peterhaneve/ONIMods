@@ -498,6 +498,7 @@ namespace PeterHan.StockBugFix {
 						info.caloriesPerKg, info.producedConversionRate, null, 0.0f,
 						info.produceSolidTile, true);
 				}
+				diet.eatsPlantsDirectly = true;
 			}
 		}
 	}

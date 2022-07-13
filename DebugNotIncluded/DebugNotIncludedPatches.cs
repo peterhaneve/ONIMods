@@ -98,10 +98,9 @@ namespace PeterHan.DebugNotIncluded {
 		private static void LogAllFailedAsserts(Harmony harmony) {
 			var handler = new HarmonyMethod(typeof(DebugLogger), nameof(DebugLogger.
 				OnAssertFailed));
-			MethodInfo assert;
 			try {
 				// Assert(bool)
-				assert = typeof(Debug).GetMethodSafe("Assert", true, typeof(bool));
+				var assert = typeof(Debug).GetMethodSafe("Assert", true, typeof(bool));
 				if (assert != null)
 					harmony.Patch(assert, handler);
 				// Assert(bool, object)
@@ -137,7 +136,6 @@ namespace PeterHan.DebugNotIncluded {
 		/// <summary>
 		/// Runs the required postload patches after all other mods load.
 		/// </summary>
-		/// <param name="instance">The Harmony instance to execute patches.</param>
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
 			var options = DebugNotIncludedOptions.Instance;
 			if (options?.PowerUserMode == true)
@@ -183,7 +181,7 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		public override void OnLoad(Harmony harmony) {
-			var inst = ModDebugRegistry.Instance;
+			_ = ModDebugRegistry.Instance;
 
 			var method = typeof(Mod).GetMethodSafe("Crash", false);
 			if (method == null)
@@ -214,28 +212,6 @@ namespace PeterHan.DebugNotIncluded {
 			// an Assert fails later
 			DebugUtils.RegisterUIDebug();
 			new PLib.AVC.PVersionCheck().Register(this, new PLib.AVC.SteamVersionChecker());
-		}
-
-		/// <summary>
-		/// Transpiles the Spawn and InitializeComponent methods of KMonoBehaviour to better
-		/// handle debug messages.
-		/// </summary>
-		private static TranspiledMethod TranspileSpawn(
-				TranspiledMethod method) {
-			var instructions = new List<CodeInstruction>(method);
-			var target = typeof(DebugLogger).GetMethodSafe(nameof(DebugLogger.
-				LogKMonoException), true, typeof(Exception));
-			// Find last "throw"
-			for (int i = instructions.Count - 1; i > 0; i--) {
-				var instr = instructions[i];
-				if (instr.opcode == OpCodes.Throw) {
-					// Insert "dup" and call before it
-					instructions.Insert(i, new CodeInstruction(OpCodes.Call, target));
-					instructions.Insert(i, new CodeInstruction(OpCodes.Dup));
-					break;
-				}
-			}
-			return instructions;
 		}
 	}
 
@@ -310,6 +286,19 @@ namespace PeterHan.DebugNotIncluded {
 	}
 
 #if DEBUG
+	/// <summary>
+	/// Applied to EggConfig to allow eggs to be instantly hatched.
+	/// </summary>
+	[HarmonyPatch(typeof(EggConfig), nameof(EggConfig.CreateEgg))]
+	public static class EggConfig_CreateEgg_Patch {
+		/// <summary>
+		/// Applied after CreateEgg runs.
+		/// </summary>
+		internal static void Postfix(GameObject __result) {
+			__result.AddOrGet<InstantGrowable>();
+		}
+	}
+
 	/// <summary>
 	/// Applied to EntityTemplates to allow things to be instantly tamed in sandbox mode.
 	/// </summary>
@@ -612,7 +601,8 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		internal static void Postfix(ScheduleManager __instance) {
 			DebugLogger.LogDebug("Sorting schedules");
-			__instance.GetSchedules().Sort((a, b) => a.name.CompareTo(b.name));
+			__instance.GetSchedules().Sort((a, b) => string.Compare(a.name, b.name,
+				StringComparison.CurrentCultureIgnoreCase));
 		}
 	}
 

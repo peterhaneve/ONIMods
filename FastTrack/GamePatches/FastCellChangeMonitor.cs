@@ -20,7 +20,6 @@ using HarmonyLib;
 using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
 namespace PeterHan.FastTrack.GamePatches {
@@ -82,7 +81,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="transform">The transform to track.</param>
 		/// <returns>The current, or newly created entry.</returns>
 		private EventEntry AddOrGet(int id, Transform transform) {
-			if (!eventHandlers.TryGetValue(id, out EventEntry current)) {
+			if (!eventHandlers.TryGetValue(id, out var current)) {
 				current = new EventEntry(transform);
 				eventHandlers.Add(id, current);
 			}
@@ -130,7 +129,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		public void MarkDirty(Transform transform) {
 			if (Grid.WidthInCells > 0) {
 				int n = transform.childCount, id = transform.GetInstanceID();
-				if (eventHandlers.TryGetValue(id, out EventEntry entry))
+				if (eventHandlers.TryGetValue(id, out var entry))
 					pendingDirtyTransforms[id] = entry;
 				for (int i = 0; i < n; i++)
 					MarkDirty(transform.GetChild(i));
@@ -167,7 +166,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="id">The ID of the transform to untrack.</param>
 		/// <param name="callback">The event handler to unregister.</param>
 		public void UnregisterCellChangedHandler(int id, System.Action callback) {
-			if (eventHandlers.TryGetValue(id, out EventEntry entry)) {
+			if (eventHandlers.TryGetValue(id, out var entry)) {
 				entry.cellChangedHandlers.Remove(callback);
 				CleanupIfEmpty(id, entry);
 			}
@@ -180,14 +179,13 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="callback">The event handler to unregister.</param>
 		public void UnregisterMovementStateChanged(int id,
 				Action<Transform, bool> callback) {
-			if (eventHandlers.TryGetValue(id, out EventEntry entry)) {
+			if (eventHandlers.TryGetValue(id, out var entry)) {
 				entry.moveHandlers.Remove(callback);
 				CleanupIfEmpty(id, entry);
 			}
 		}
 
 		public void Update() {
-			Transform transform;
 			// Swap the buffers
 			var swap = pendingDirtyTransforms;
 			pendingDirtyTransforms = dirtyTransforms;
@@ -201,9 +199,10 @@ namespace PeterHan.FastTrack.GamePatches {
 			foreach (var pair in dirtyTransforms) {
 				int id = pair.Key;
 				var entry = pair.Value;
+				Transform transform;
 				if ((transform = entry.transform) != null) {
-					int oldCell = entry.lastKnownCell, newCell = Grid.PosToCell(
-						transform.position);
+					int oldCell = entry.lastKnownCell, newCell = Grid.PosToCell(transform.
+						position);
 					movingTransforms.Add(id, entry);
 					if (oldCell != newCell) {
 						entry.CallCellChangedHandlers();
@@ -215,8 +214,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			}
 			foreach (var pair in previouslyMovingTransforms) {
 				var entry = pair.Value;
-				if ((transform = entry.transform) != null && !movingTransforms.ContainsKey(
-						pair.Key))
+				if (entry.transform != null && !movingTransforms.ContainsKey(pair.Key))
 					entry.CallMovementStateChangedHandlers(false);
 			}
 			dirtyTransforms.Clear();

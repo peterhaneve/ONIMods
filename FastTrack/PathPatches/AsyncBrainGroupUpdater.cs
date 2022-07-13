@@ -42,7 +42,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Whether a dangerous but very fast optimization to avoid list copies is used.
 		/// </summary>
-		internal static bool AllowFastListSwap;
+		internal static bool allowFastListSwap;
 
 		/// <summary>
 		/// Creates the singleton instance.
@@ -58,6 +58,28 @@ namespace PeterHan.FastTrack.PathPatches {
 		internal static void DestroyInstance() {
 			Instance?.Dispose();
 			Instance = null;
+		}
+
+		/// <summary>
+		/// A non-mutating version of Navigator.GetNavigationCost that can be run on
+		/// background threads.
+		/// </summary>
+		/// <param name="navigator">The navigator to calculate.</param>
+		/// <param name="destination">The destination to find the cost.</param>
+		/// <param name="cell">The workable's current cell.</param>
+		/// <returns>The navigation cost to the destination.</returns>
+		private static int GetNavigationCost(Navigator navigator, Workable destination,
+				int cell) {
+			CellOffset[] offsets = null;
+			var offsetTracker = destination.offsetTracker;
+			if (offsetTracker != null && (offsets = offsetTracker.offsets) == null) {
+				offsetTracker.UpdateOffsets(cell);
+				offsets = offsetTracker.offsets;
+				if (offsetTracker.previousCell != cell)
+					DeferAnimQueueTrigger.Instance?.Queue(offsetTracker, cell);
+			}
+			return offsets == null ? navigator.GetNavigationCost(cell) : navigator.
+				GetNavigationCost(cell, offsets);
 		}
 
 		/// <summary>
@@ -145,7 +167,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				IList<Fetch> fetches) {
 			// Get the storage cell from the cache
 			if (storageCells.TryGetValue(destination, out int cell)) {
-				int cost = navigator.GetNavigationCostNU(destination, cell);
+				int cost = GetNavigationCost(navigator, destination, cell);
 				if (cost >= 0)
 					fetches.Add(new Fetch {
 						category = destination.fetchCategory, chore = fetchChore, cost = cost,
@@ -208,7 +230,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				// Wait out the pickups update - GC pauses always seem to occur during this
 				// time?
 				bool updated = onFetchComplete.WaitAndMeasure(FastTrackMod.MAX_TIMEOUT, 1000),
-					quickSwap = AllowFastListSwap;
+					quickSwap = allowFastListSwap;
 				if (!updated)
 					PUtil.LogWarning("Fetch updates did not complete within the timeout!");
 				if (fm != null && inst != null && updated) {

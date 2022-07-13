@@ -18,9 +18,8 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using System;
 using System.Collections.Generic;
-using System.Reflection;
+
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.GamePatches {
@@ -86,7 +85,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		private static void SolidNotChangedEvent(RoomProber prober, int cell, bool _) {
 			if (prober != null)
 				ROOMS_PENDING.Add(cell);
-			}
+		}
 
 		/// <summary>
 		/// Transpiles Refresh to change a solid change event into a condition retrigger.
@@ -110,7 +109,7 @@ namespace PeterHan.FastTrack.GamePatches {
 					inst.UpdateRoom(cavity);
 				else
 					inst.QueueSolidChange(cell);
-	}
+			}
 			ROOMS_PENDING.Clear();
 		}
 	}

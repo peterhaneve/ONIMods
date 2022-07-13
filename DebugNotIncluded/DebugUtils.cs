@@ -189,7 +189,7 @@ namespace PeterHan.DebugNotIncluded {
 		internal static MethodBase GetOriginalMethod(MethodBase patched) {
 			MethodBase newMethod = null;
 			if (patched == null)
-				throw new ArgumentNullException("patched");
+				throw new ArgumentNullException(nameof(patched));
 			if (patched is MethodInfo info)
 				newMethod = Harmony.GetOriginalMethod(info);
 			if (newMethod == null)
@@ -220,15 +220,15 @@ namespace PeterHan.DebugNotIncluded {
 		private static void GetPatchInfo(IEnumerable<Patch> patches, string verb,
 				StringBuilder message) {
 			var registry = ModDebugRegistry.Instance;
-			ModDebugInfo info;
 			foreach (var patch in patches) {
+				ModDebugInfo info;
 				string owner = patch.owner;
 				var method = patch.PatchMethod;
 				// Try to resolve to the friendly mod name
 				if ((info = registry.GetDebugInfo(owner)) != null)
 					owner = info.ModName;
 				message.AppendFormat("    {4} by {0}[{1:D}] from {2}.{3}", owner, patch.index,
-					method.DeclaringType.FullName, method.Name, verb);
+					method.DeclaringType?.FullName, method.Name, verb);
 				message.AppendLine();
 			}
 		}
@@ -321,40 +321,6 @@ namespace PeterHan.DebugNotIncluded {
 			UIDebugAction = new PActionManager().CreateAction("DebugNotIncluded.UIDebugAction",
 				DebugNotIncludedStrings.INPUT_BINDINGS.DEBUG.SNAPSHOT, new PKeyBinding(
 				KKeyCode.U, Modifier.Alt));
-		}
-
-		/// <summary>
-		/// Removes the backtick and subsequent numbers from type names.
-		/// </summary>
-		/// <param name="typeName">The type name.</param>
-		/// <returns>The name without the backtick suffix.</returns>
-		private static string RemoveBacktick(string typeName) {
-			int index = typeName.IndexOf('`');
-			return index > 0 ? typeName.Substring(0, index) : typeName;
-		}
-
-		/// <summary>
-		/// Removes "this" from the parameters if the first parameter is an object and
-		/// instance is true.
-		/// </summary>
-		/// <param name="paramTypes">The parameter types.</param>
-		/// <param name="instance">If true, the first parameter is removed if it is of
-		/// type System.Object.</param>
-		/// <returns>The updated parameter types.</returns>
-		private static Type[] StripThisObject(Type[] paramTypes, bool instance) {
-			if (paramTypes == null)
-				throw new ArgumentNullException("parameters");
-			Type[] types;
-			int n = paramTypes.Length;
-			if (instance && n > 0 && paramTypes[0] == typeof(object)) {
-				// Instance method, remove first
-				n--;
-				types = new Type[n];
-				for (int i = 0; i < n; i++)
-					types[i] = paramTypes[i + 1];
-			} else
-				types = paramTypes;
-			return types;
 		}
 	}
 }

@@ -68,7 +68,6 @@ namespace PeterHan.FastTrack.GamePatches {
 			var finalPickups = __instance.finalPickups;
 			// Will reflect the changes from Waste Not, Want Not and No Manual Delivery
 			var comparer = FetchManager.ComparerIncludingPriority;
-			bool needThreadSafe = FastTrackOptions.Instance.PickupOpts;
 			var fetchables = __instance.fetchables.GetDataList();
 			int n = fetchables.Count;
 			for (int i = 0; i < n; i++) {
@@ -77,7 +76,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				int cost;
 				// Exclude unreachable items
 				if (target.CouldBePickedUpByMinion(worker_go) && (cost = GetPathCost(target,
-						worker_navigator, pathCosts, needThreadSafe)) >= 0) {
+						worker_navigator, pathCosts)) >= 0) {
 					int hash = fetchable.tagBitsHash;
 					var key = new PickupTagKey(hash, target.KPrefabID);
 					var candidate = new FetchManager.Pickup {
@@ -113,17 +112,15 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="target">The item to pick up.</param>
 		/// <param name="navigator">The navigator attempting to find the item.</param>
 		/// <param name="pathCosts">The cached path costs from previous queries.</param>
-		/// <param name="needThreadSafe">Whether this method is running in a background task.</param>
 		/// <returns>The cost to navigate to the item's current cell.</returns>
 		private static int GetPathCost(Pickupable target, Navigator navigator,
-				IDictionary<int, int> pathCosts, bool needThreadSafe) {
+				IDictionary<int, int> pathCosts) {
 			int cell = target.cachedCell;
 			// Look for cell cost, share costs across multiple queries to a cell
 			// If this is being run synchronous, no issue, otherwise the GSP patch will
 			// avoid races on the scene partitioner
 			if (!pathCosts.TryGetValue(cell, out int cost)) {
-				cost = needThreadSafe ? navigator.GetNavigationCostNU(target,
-					cell) : navigator.GetNavigationCost(target);
+				cost = target.GetNavigationCost(navigator, cell);
 				pathCosts.Add(cell, cost);
 			}
 			return cost;

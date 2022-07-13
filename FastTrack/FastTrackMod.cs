@@ -158,10 +158,10 @@ namespace PeterHan.FastTrack {
 			}
 			if (options.MiscOpts)
 				GamePatches.GeyserConfigurator_FindType_Patch.Cleanup();
-			if (options.PickupOpts) {
+			if (options.PickupOpts)
 				GamePatches.SolidTransferArmUpdater.DestroyInstance();
+			if (options.PickupOpts || options.FastUpdatePickups)
 				PathPatches.DeferAnimQueueTrigger.DestroyInstance();
-			}
 			if (options.AsyncPathProbe)
 				PathPatches.PathProbeJobManager.DestroyInstance();
 			GamePatches.AchievementPatches.DestroyInstance();
@@ -245,7 +245,7 @@ namespace PeterHan.FastTrack {
 				UIPatches.DetailsPanelWrapper.Init();
 				UIPatches.VitalsPanelWrapper.Init();
 			}
-			if (options.PickupOpts)
+			if (options.PickupOpts || options.FastUpdatePickups)
 				PathPatches.DeferAnimQueueTrigger.CreateInstance();
 			if (inst != null) {
 				var go = inst.gameObject;

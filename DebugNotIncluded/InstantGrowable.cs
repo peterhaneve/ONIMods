@@ -41,6 +41,8 @@ namespace PeterHan.DebugNotIncluded {
 #pragma warning restore IDE0044
 #pragma warning restore CS0649
 
+		private IncubationMonitor.Def incubationMonitor;
+
 		private WildnessMonitor.Def wildMonitor;
 
 		protected override void OnCleanUp() {
@@ -49,9 +51,11 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		protected override void OnPrefabInit() {
+			var go = gameObject;
 			base.OnPrefabInit();
 			Subscribe((int)GameHashes.RefreshUserMenu, ON_REFRESH_MENU);
-			wildMonitor = gameObject.GetDef<WildnessMonitor.Def>();
+			incubationMonitor = go.GetDef<IncubationMonitor.Def>();
+			wildMonitor = go.GetDef<WildnessMonitor.Def>();
 		}
 
 		/// <summary>
@@ -62,6 +66,10 @@ namespace PeterHan.DebugNotIncluded {
 				var maturity = Db.Get().Amounts.Maturity.Lookup(gameObject);
 				if (maturity != null)
 					maturity.SetValue(maturity.GetMax());
+			} else if (incubationMonitor != null) {
+				var incubation = Db.Get().Amounts.Incubation.Lookup(gameObject);
+				if (incubation != null)
+					incubation.SetValue(incubation.GetMax());
 			} else if (wildMonitor != null) {
 				var wildness = Db.Get().Amounts.Wildness.Lookup(gameObject);
 				if (wildness != null) {
@@ -80,10 +88,10 @@ namespace PeterHan.DebugNotIncluded {
 		public void OnRefreshUserMenu() {
 			if (Game.Instance.SandboxModeActive) {
 				string tt = null;
-				if (wildMonitor != null)
-					tt = DebugNotIncludedStrings.UI.TOOLTIPS.DNI_INSTANT_TAME;
-				else if (growing != null)
+				if (growing != null || incubationMonitor != null)
 					tt = DebugNotIncludedStrings.UI.TOOLTIPS.DNI_INSTANT_GROW;
+				else if (wildMonitor != null)
+					tt = DebugNotIncludedStrings.UI.TOOLTIPS.DNI_INSTANT_TAME;
 				if (tt != null)
 					Game.Instance?.userMenu?.AddButton(gameObject, new KIconButtonMenu.
 						ButtonInfo("action_building_disabled", DebugNotIncludedStrings.

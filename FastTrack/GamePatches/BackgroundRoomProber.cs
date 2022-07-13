@@ -314,54 +314,52 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="cell">The starting cell.</param>
 		private void CreateCavityFrom(int cell) {
 			var visited = visitedCells;
-			if (!RoomProber.CavityFloodFiller.IsWall(cell) && visited.Add(cell)) {
-				int n = 0, minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue,
-					maxY = int.MinValue;
-				bool filled;
-				HandleVector<int>.Handle targetCavity;
-				var queue = floodFilling;
-				var cavity = new CavityInfo();
+			if (!RoomProber.CavityFloodFiller.IsWall(cell) && visited.Add(cell))
 				lock (cavityInfos) {
-					targetCavity = cavityInfos.Allocate(cavity);
+					int n = 0, minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue,
+						maxY = int.MinValue;
+					var cavity = new CavityInfo();
+					bool filled;
+					var targetCavity = cavityInfos.Allocate(cavity);
+					var queue = floodFilling;
+					do {
+						if (RoomProber.CavityFloodFiller.IsWall(cell))
+							// Walls and doors have no room
+							cavityForCell[cell].Clear();
+						else {
+							int above = Grid.CellAbove(cell), below = Grid.CellBelow(cell),
+								left = Grid.CellLeft(cell), right = Grid.CellRight(cell);
+							Grid.CellToXY(cell, out int x, out int y);
+							cavityForCell[cell] = targetCavity;
+							n++;
+							if (x < minX)
+								minX = x;
+							if (x > maxX)
+								maxX = x;
+							if (y < minY)
+								minY = y;
+							if (y > maxY)
+								maxY = y;
+							buildingChanges.Enqueue(cell);
+							if (Grid.IsValidCell(above) && visited.Add(above))
+								queue.Enqueue(above);
+							if (Grid.IsValidCell(below) && visited.Add(below))
+								queue.Enqueue(below);
+							if (Grid.IsValidCell(left) && visited.Add(left))
+								queue.Enqueue(left);
+							if (Grid.IsValidCell(right) && visited.Add(right))
+								queue.Enqueue(right);
+						}
+						filled = queue.Count > 0;
+						if (filled)
+							cell = queue.Dequeue();
+					} while (filled);
+					cavity.minX = minX;
+					cavity.minY = minY;
+					cavity.maxX = maxX;
+					cavity.maxY = maxY;
+					cavity.numCells = n;
 				}
-				do {
-					if (RoomProber.CavityFloodFiller.IsWall(cell))
-						// Walls and doors have no room
-						cavityForCell[cell].Clear();
-					else {
-						int above = Grid.CellAbove(cell), below = Grid.CellBelow(cell),
-							left = Grid.CellLeft(cell), right = Grid.CellRight(cell);
-						Grid.CellToXY(cell, out int x, out int y);
-						cavityForCell[cell] = targetCavity;
-						n++;
-						if (x < minX)
-							minX = x;
-						if (x > maxX)
-							maxX = x;
-						if (y < minY)
-							minY = y;
-						if (y > maxY)
-							maxY = y;
-						buildingChanges.Enqueue(cell);
-						if (Grid.IsValidCell(above) && visited.Add(above))
-							queue.Enqueue(above);
-						if (Grid.IsValidCell(below) && visited.Add(below))
-							queue.Enqueue(below);
-						if (Grid.IsValidCell(left) && visited.Add(left))
-							queue.Enqueue(left);
-						if (Grid.IsValidCell(right) && visited.Add(right))
-							queue.Enqueue(right);
-					}
-					filled = queue.Count > 0;
-					if (filled)
-						cell = queue.Dequeue();
-				} while (filled);
-				cavity.minX = minX;
-				cavity.minY = minY;
-				cavity.maxX = maxX;
-				cavity.maxY = maxY;
-				cavity.numCells = n;
-			}
 		}
 
 		/// <summary>
@@ -605,17 +603,19 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		/// <param name="changedCells">The cells that changed.</param>
 		private void UpdateCavities(ICollection<int> changedCells) {
-			foreach (int cell in changedCells) {
-				ref var cavityID = ref cavityForCell[cell];
-				if (cavityID.IsValid()) {
-					var cavity = cavityInfos.GetData(cavityID);
-					var creatures = cavity.creatures;
-					int n = creatures.Count;
-					for (int i = 0; i < n; i++)
-						// Need a room refresh on foreground thread
-						releasedCritters.Enqueue(creatures[i]);
-					pendingDestroy.Add(cavityID);
-					cavityID.Clear();
+			lock (cavityInfos) {
+				foreach (int cell in changedCells) {
+					ref var cavityID = ref cavityForCell[cell];
+					if (cavityID.IsValid()) {
+						var cavity = cavityInfos.GetData(cavityID);
+						var creatures = cavity.creatures;
+						int n = creatures.Count;
+						for (int i = 0; i < n; i++)
+							// These critters need a room refresh on foreground thread
+							releasedCritters.Enqueue(creatures[i]);
+						pendingDestroy.Add(cavityID);
+						cavityID.Clear();
+					}
 				}
 			}
 			foreach (int cell in changedCells)

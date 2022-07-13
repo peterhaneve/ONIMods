@@ -432,7 +432,6 @@ namespace PeterHan.FastTrack.GamePatches {
 			var outputTransformers = circuit.outputTransformers;
 			int nc = consumers.Count, firstGenerator = 0, firstTransformer = 0;
 			float usage = 0.0f;
-			batteries.Sort(BatteryChargeComparer.INSTANCE);
 			for (int i = 0; i < nc; i++) {
 				var consumer = consumers[i];
 				float energy = consumer.WattsUsed * UpdateManager.SecondsPerSimTick;
@@ -546,10 +545,10 @@ namespace PeterHan.FastTrack.GamePatches {
 				var batteries = circuit.batteries;
 				int nb = batteries.Count;
 				float used = 0.0f;
+				batteries.Sort(BatteryChargeComparer.INSTANCE);
 				// IFF the battery with the most charge has no power, then no batteries do
-				bool hasEnergy = GetActiveGenerators(ref circuit, active) || (nb > 0 &&
-					batteries[nb - 1].JoulesAvailable > 0.0f);
-				if (hasEnergy)
+				if (GetActiveGenerators(ref circuit, active) || (nb > 0 && batteries[nb - 1].
+						JoulesAvailable > 0.0f))
 					used = SupplyConsumers(ref circuit, active);
 				else if (circuit.generators.Count > 0)
 					SetAllConsumerStatus(consumers, ConnectionStatus.Unpowered);
