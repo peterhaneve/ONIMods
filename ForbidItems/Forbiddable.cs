@@ -17,8 +17,8 @@
  */
 
 using System;
-using System.Collections.Generic;
 using KSerialization;
+using PeterHan.PLib.Actions;
 using UnityEngine;
 
 namespace PeterHan.ForbidItems {
@@ -30,6 +30,9 @@ namespace PeterHan.ForbidItems {
 	public sealed class Forbiddable : KMonoBehaviour {
 #pragma warning disable CS0649
 #pragma warning disable IDE0044
+		[MyCmpGet]
+		private Clearable clearable;
+
 		[MyCmpReq]
 		private KPrefabID prefabID;
 
@@ -56,7 +59,9 @@ namespace PeterHan.ForbidItems {
 
 		protected override void OnCleanUp() {
 			base.OnCleanUp();
+			Unsubscribe((int)GameHashes.RefreshUserMenu);
 			Unsubscribe((int)GameHashes.Absorb);
+			Unsubscribe((int)GameHashes.OnStore);
 			Unsubscribe((int)GameHashes.TagsChanged);
 			if (forbiddenStatus != Guid.Empty)
 				forbiddenStatus = selectable.RemoveStatusItem(forbiddenStatus);
@@ -66,6 +71,8 @@ namespace PeterHan.ForbidItems {
 			base.OnSpawn();
 			Subscribe((int)GameHashes.TagsChanged, OnTagsChanged);
 			Subscribe((int)GameHashes.Absorb, OnAbsorb);
+			Subscribe((int)GameHashes.OnStore, OnStore);
+			Subscribe((int)GameHashes.RefreshUserMenu, OnRefreshUserMenu);
 			RefreshStatus();
 		}
 
@@ -81,6 +88,37 @@ namespace PeterHan.ForbidItems {
 				prefabID.AddTag(ForbidItemsPatches.Forbidden);
 				Game.Instance.userMenu.Refresh(gameObject);
 			}
+		}
+
+		/// <summary>
+		/// When the user menu is updated, add a button for this object.
+		/// </summary>
+		private void OnRefreshUserMenu(object _) {
+			// Only apply to things that can otherwise be swept
+			if (!prefabID.HasTag(GameTags.Stored) && clearable != null && clearable.
+					isClearable) {
+				string text, tooltip;
+				System.Action handler;
+				if (prefabID.HasTag(ForbidItemsPatches.Forbidden)) {
+					text = ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.NAME_OFF;
+					tooltip = ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.TOOLTIP_OFF;
+					handler = Reclaim;
+				} else {
+					text = ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.NAME;
+					tooltip = ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.TOOLTIP;
+					handler = Forbid;
+				}
+				Game.Instance.userMenu.AddButton(gameObject, new KIconButtonMenu.ButtonInfo(
+					"action_building_disabled", text, handler, PAction.MaxAction, null, null,
+					null, tooltip));
+			}
+		}
+
+		/// <summary>
+		/// When this object is (somehow) stored, remove the forbid tag.
+		/// </summary>
+		private void OnStore(object _) {
+			prefabID.RemoveTag(ForbidItemsPatches.Forbidden);
 		}
 
 		/// <summary>
@@ -108,6 +146,8 @@ namespace PeterHan.ForbidItems {
 			bool forbidden = prefabID.HasTag(ForbidItemsPatches.Forbidden);
 			forbiddenStatus = selectable.ToggleStatusItem(ForbidItemsPatches.ForbiddenStatus,
 				forbiddenStatus, forbidden, this);
+			if (forbidden && clearable != null && clearable.isClearable)
+				clearable.CancelClearing();
 		}
 	}
 }

@@ -19,7 +19,6 @@
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.PatchManager;
-using PeterHan.PLib.Actions;
 using PeterHan.PLib.Database;
 using UnityEngine;
 
@@ -62,41 +61,6 @@ namespace PeterHan.ForbidItems {
 		}
 
 		/// <summary>
-		/// Applied to Clearable to add a button to toggle forbid.
-		/// 
-		/// Settings Change Tool adds a drag-tool for mass forbidding.
-		/// </summary>
-		[HarmonyPatch(typeof(Clearable), "OnRefreshUserMenu")]
-		public static class Clearable_OnRefreshUserMenu_Patch {
-			/// <summary>
-			/// Applied after OnRefreshUserMenu runs.
-			/// </summary>
-			internal static void Postfix(Clearable __instance) {
-				GameObject go;
-				// Only apply to things that can otherwise be swept
-				if (__instance != null && __instance.isClearable && (go = __instance.
-						gameObject).TryGetComponent(out KPrefabID kpid) && !kpid.HasTag(
-						GameTags.Stored) && !__instance.TryGetComponent(out Health _)) {
-					var forbiddable = go.AddOrGet<Forbiddable>();
-					string text, tooltip;
-					System.Action handler;
-					if (kpid.HasTag(Forbidden)) {
-						text = ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.NAME_OFF;
-						tooltip = ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.TOOLTIP_OFF;
-						handler = forbiddable.Reclaim;
-					} else {
-						text = ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.NAME;
-						tooltip = ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.TOOLTIP;
-						handler = forbiddable.Forbid;
-					}
-					Game.Instance.userMenu.AddButton(__instance.gameObject, new
-						KIconButtonMenu.ButtonInfo("action_building_disabled", text, handler,
-						PAction.MaxAction, null, null, null, tooltip));
-				}
-			}
-		}
-
-		/// <summary>
 		/// Applied to EntityTemplates to make dropped items forbiddable.
 		/// </summary>
 		[HarmonyPatch(typeof(EntityTemplates), nameof(EntityTemplates.
@@ -107,6 +71,19 @@ namespace PeterHan.ForbidItems {
 			/// </summary>
 			internal static void Postfix(GameObject ___baseOreTemplate) {
 				___baseOreTemplate.AddOrGet<Forbiddable>();
+			}
+		}
+
+		/// <summary>
+		/// Applied to EntityTemplates to make artifacts, food, and so forth forbiddable.
+		/// </summary>
+		[HarmonyPatch(typeof(EntityTemplates), nameof(EntityTemplates.CreateLooseEntity))]
+		public static class EntityTemplates_CreateLooseEntity_Patch {
+			/// <summary>
+			/// Applied after CreateLooseEntity runs.
+			/// </summary>
+			internal static void Postfix(GameObject __result) {
+				__result.AddOrGet<Forbiddable>();
 			}
 		}
 

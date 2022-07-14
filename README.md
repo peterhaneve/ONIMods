@@ -63,6 +63,7 @@ Mods should remain in their own subfolder.
 | [AI Improvements](https://steamcommunity.com/sharedfiles/filedetails/?id=2128885110) | Improves Duplicant AI to reduce cases of stuck Duplicants | Yes | Yes |
 | [Airlock Door](https://steamcommunity.com/sharedfiles/filedetails/?id=2094698134) | A door allowing Duplicants to pass while maintaining full atmospheric isolation | Yes | Yes |
 | [Build Straight Up](https://steamcommunity.com/sharedfiles/filedetails/?id=2135682628) | Allows Rockets and Monuments to be planned out all at once | Yes | Yes |
+| [Forbid Items](https://steamcommunity.com/sharedfiles/filedetails/?id=2834936494) | Prevent specified items from being picked up by Duplicants or Auto-Sweepers | Yes | Yes |
 | [Moo Reproduction](https://steamcommunity.com/sharedfiles/filedetails/?id=2400500058) | Allows Gassy Moos to reproduce by live birth with multiple in one ranch | No | Yes |
 | [No Sensor Limits](https://steamcommunity.com/sharedfiles/filedetails/?id=2277619848) | Increases the maximum threshold limits on most Automation sensors | Yes | Yes |
 | [One Giant Leap](https://steamcommunity.com/sharedfiles/filedetails/?id=1999001228) | Adds over 30 new, challenging Colony Initiatives | Yes | Yes |
