@@ -238,13 +238,16 @@ namespace PeterHan.BulkSettingsChange {
 					var go = objectListNode.gameObject;
 					objectListNode = objectListNode.nextItem;
 					if (go != null && go.TryGetComponent(out KPrefabID kpid) && !kpid.HasTag(
-							GameTags.Stored) && go.TryGetComponent(out Clearable clearable) &&
-							clearable.isClearable && !go.TryGetComponent(out Health _) &&
+							GameTags.Stored) && go.GetComponent("Forbiddable") != null &&
 							enable != kpid.HasTag(tag)) {
 						if (enable)
-							kpid.AddTag(tag);
-						else
+							kpid.AddTag(tag, true);
+						else {
+							// Order of operations bug in KPrefabID requires 2 tag removals
+							// for serialized tags
 							kpid.RemoveTag(tag);
+							kpid.RemoveTag(tag);
+						}
 						changed = true;
 					}
 				}

@@ -52,7 +52,7 @@ namespace PeterHan.ForbidItems {
 		public void Forbid() {
 			var go = gameObject;
 			if (go != null) {
-				prefabID.AddTag(ForbidItemsPatches.Forbidden);
+				prefabID.AddTag(ForbidItemsPatches.Forbidden, true);
 				Game.Instance.userMenu.Refresh(go);
 			}
 		}
@@ -85,7 +85,7 @@ namespace PeterHan.ForbidItems {
 			if (data is Pickupable other && other.TryGetComponent(out KPrefabID id) &&
 					id.HasTag(ForbidItemsPatches.Forbidden) && !prefabID.HasTag(
 					ForbidItemsPatches.Forbidden)) {
-				prefabID.AddTag(ForbidItemsPatches.Forbidden);
+				prefabID.AddTag(ForbidItemsPatches.Forbidden, true);
 				Game.Instance.userMenu.Refresh(gameObject);
 			}
 		}
@@ -94,9 +94,8 @@ namespace PeterHan.ForbidItems {
 		/// When the user menu is updated, add a button for this object.
 		/// </summary>
 		private void OnRefreshUserMenu(object _) {
-			// Only apply to things that can otherwise be swept
-			if (!prefabID.HasTag(GameTags.Stored) && clearable != null && clearable.
-					isClearable) {
+			// Only apply to items not in storage
+			if (!prefabID.HasTag(GameTags.Stored)) {
 				string text, tooltip;
 				System.Action handler;
 				if (prefabID.HasTag(ForbidItemsPatches.Forbidden)) {
@@ -119,13 +118,17 @@ namespace PeterHan.ForbidItems {
 		/// </summary>
 		private void OnStore(object _) {
 			prefabID.RemoveTag(ForbidItemsPatches.Forbidden);
+			prefabID.RemoveTag(ForbidItemsPatches.Forbidden);
 		}
 
 		/// <summary>
 		/// When the Forbidden tag is added or removed, updates the UI.
 		/// </summary>
-		private void OnTagsChanged(object _) {
-			RefreshStatus();
+		/// <param name="data">The tag data that changed.</param>
+		private void OnTagsChanged(object data) {
+			if (!(data is TagChangedEventData tagData) || tagData.tag == ForbidItemsPatches.
+					Forbidden)
+				RefreshStatus();
 		}
 
 		/// <summary>
@@ -134,6 +137,9 @@ namespace PeterHan.ForbidItems {
 		public void Reclaim() {
 			var go = gameObject;
 			if (go != null) {
+				// Due to an order of operations bug in KPrefabID, serialized tags get added
+				// back again. Fix it by removing twice.
+				prefabID.RemoveTag(ForbidItemsPatches.Forbidden);
 				prefabID.RemoveTag(ForbidItemsPatches.Forbidden);
 				Game.Instance.userMenu.Refresh(go);
 			}
