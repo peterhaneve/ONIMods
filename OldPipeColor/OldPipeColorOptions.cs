@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
-using STRINGS;
 using UnityEngine;
 
 namespace PeterHan.OldPipeColor {
@@ -57,15 +56,15 @@ namespace PeterHan.OldPipeColor {
 		[JsonProperty]
 		public int RadiantBlue { get; set; }
 
-		[Option("Insulated Color", "")]
+		[Option("Insulated Color", "The color displayed in piping overlays for insulated pipes.")]
 		[JsonProperty]
 		public Color32 InsulatedColor { get; set; }
 
-		[Option("Normal Color", "")]
+		[Option("Normal Color", "The color displayed in piping overlays for normal pipes.")]
 		[JsonProperty]
 		public Color32 NormalColor { get; set; }
 
-		[Option("Radiant Color", "")]
+		[Option("Radiant Color", "The color displayed in piping overlays for radiant pipes.")]
 		[JsonProperty]
 		public Color32 RadiantColor { get; set; }
 

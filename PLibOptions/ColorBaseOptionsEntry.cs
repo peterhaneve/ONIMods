@@ -113,15 +113,15 @@ namespace PeterHan.PLib.Options {
 			// Add 3 rows for the H, S, and V
 			parent.AddRow(new GridRowSpec());
 			var h = new PSliderSingle("Hue") {
-				ToolTip = LookInStrings(Tooltip), MinValue = 0.0f, MaxValue = 1.0f,
+				ToolTip = PLibStrings.TOOLTIP_HUE, MinValue = 0.0f, MaxValue = 1.0f,
 				CustomTrack = true, FlexSize = Vector2.right, OnValueChanged = OnHueChanged
 			}.AddOnRealize(OnHueRealized);
 			var s = new PSliderSingle("Saturation") {
-				ToolTip = LookInStrings(Tooltip), MinValue = 0.0f, MaxValue = 1.0f,
+				ToolTip = PLibStrings.TOOLTIP_SATURATION, MinValue = 0.0f, MaxValue = 1.0f,
 				CustomTrack = true, FlexSize = Vector2.right, OnValueChanged = OnSatChanged
 			}.AddOnRealize(OnSatRealized);
 			var v = new PSliderSingle("Value") {
-				ToolTip = LookInStrings(Tooltip), MinValue = 0.0f, MaxValue = 1.0f,
+				ToolTip = PLibStrings.TOOLTIP_VALUE, MinValue = 0.0f, MaxValue = 1.0f,
 				CustomTrack = true, FlexSize = Vector2.right, OnValueChanged = OnValChanged
 			}.AddOnRealize(OnValRealized);
 			var sw = new PLabel("Swatch") {

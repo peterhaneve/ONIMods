@@ -139,11 +139,16 @@ namespace PeterHan.PLib.Core {
 		/// The tooltip on the GREEN field in color pickers.
 		/// </summary>
 		public static LocString TOOLTIP_GREEN = "Green";
-
+		
 		/// <summary>
 		/// The tooltip on the Mod Homepage button.
 		/// </summary>
 		public static LocString TOOLTIP_HOMEPAGE = "Visit the mod's website.";
+
+		/// <summary>
+		/// The tooltip on the Hue slider in color pickers.
+		/// </summary>
+		public static LocString TOOLTIP_HUE = "Hue";
 
 		/// <summary>
 		/// The tooltip on the MANUAL CONFIG button.
@@ -177,9 +182,19 @@ namespace PeterHan.PLib.Core {
 		public static LocString TOOLTIP_RESET = "Resets the mod configuration to default values.";
 
 		/// <summary>
+		/// The tooltip on the Saturation slider in color pickers.
+		/// </summary>
+		public static LocString TOOLTIP_SATURATION = "Saturation";
+
+		/// <summary>
 		/// The tooltip for each category visibility toggle.
 		/// </summary>
 		public static LocString TOOLTIP_TOGGLE = "Show or hide this options category";
+
+		/// <summary>
+		/// The tooltip on the Value slider in color pickers.
+		/// </summary>
+		public static LocString TOOLTIP_VALUE = "Value";
 
 		/// <summary>
 		/// The tooltip for the mod version.
