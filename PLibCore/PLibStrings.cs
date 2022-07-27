@@ -40,7 +40,7 @@ namespace PeterHan.PLib.Core {
 		/// The text shown on the Options button.
 		/// </summary>
 		public static LocString BUTTON_OPTIONS = STRINGS.UI.FRONTEND.MAINMENU.OPTIONS;
-
+		
 		/// <summary>
 		/// The dialog title used for options, where {0} is substituted with the mod friendly name.
 		/// </summary>
@@ -66,6 +66,21 @@ namespace PeterHan.PLib.Core {
 		/// The title used for the PLib key bind category.
 		/// </summary>
 		public static LocString KEY_CATEGORY_TITLE = "Mods";
+		
+		/// <summary>
+		/// The abbreviation text shown on the Blue field.
+		/// </summary>
+		public static LocString LABEL_B = "B";
+
+		/// <summary>
+		/// The abbreviation text shown on the Green field.
+		/// </summary>
+		public static LocString LABEL_G = "G";
+
+		/// <summary>
+		/// The abbreviation text shown on the Red field.
+		/// </summary>
+		public static LocString LABEL_R = "R";
 
 		/// <summary>
 		/// The mod version in Mod Options if retrieved from the default AssemblyVersion, where
@@ -109,11 +124,21 @@ namespace PeterHan.PLib.Core {
 		/// </summary>
 		public static LocString RESTART_REQUIRED = "Oxygen Not Included must be restarted " +
 			"for these options to take effect.";
+		
+		/// <summary>
+		/// The tooltip on the BLUE field in color pickers.
+		/// </summary>
+		public static LocString TOOLTIP_BLUE = "Blue";
 
 		/// <summary>
 		/// The tooltip on the CANCEL button.
 		/// </summary>
 		public static LocString TOOLTIP_CANCEL = "Discard changes.";
+		
+		/// <summary>
+		/// The tooltip on the GREEN field in color pickers.
+		/// </summary>
+		public static LocString TOOLTIP_GREEN = "Green";
 
 		/// <summary>
 		/// The tooltip on the Mod Homepage button.
@@ -140,6 +165,11 @@ namespace PeterHan.PLib.Core {
 		/// The tooltip for cycling to the previous item.
 		/// </summary>
 		public static LocString TOOLTIP_PREVIOUS = "Previous";
+		
+		/// <summary>
+		/// The tooltip on the RED field in color pickers.
+		/// </summary>
+		public static LocString TOOLTIP_RED = "Red";
 
 		/// <summary>
 		/// The tooltip on the RESET TO DEFAULT button.

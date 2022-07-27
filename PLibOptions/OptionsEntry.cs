@@ -128,6 +128,10 @@ namespace PeterHan.PLib.Options {
 			else if (type == typeof(string))
 				entry = new StringOptionsEntry(field, spec, info.
 					GetCustomAttribute<LimitAttribute>());
+			else if (type == typeof(Color32))
+				entry = new Color32OptionsEntry(field, spec);
+			else if (type == typeof(Color))
+				entry = new ColorOptionsEntry(field, spec);
 			else if (type == typeof(Action<object>))
 				// Should not actually be serialized to the JSON
 				entry = new ButtonOptionsEntry(field, spec);

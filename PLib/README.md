@@ -105,7 +105,7 @@ The URL can be used to specify a custom website for the mod's home page; if left
 The image, if specified, will attempt to load a preview image (best size is 192x192) with that name from the mod's data folder and display it in the settings dialog.
 
 Each option must be a property, not a member, and should be annotated with `Option(string displaytext, [string tooltip=""])` to be visible in the mod config menu.
-Currently supported types are: `int`, `int?`, `float`, `float?`, `string`, `bool`, and `Enum`.
+Currently supported types are: `int`, `int?`, `float`, `float?`, `string`, `bool`, `Color`, `Color32`, and `Enum`.
 If a property is a read-only `System.Action`, a button will be created that will execute the returned action if clicked.
 If a property is of type `LocText`, no matter what it returns, the text in `displaytext` will be displayed as a full-width label with no input field.
 If a property is of a user-defined type, PLib will check the public properties of that type -- if any of them have `Option` attributes, the property will be rendered as its own category with each of the inner options grouped inside.

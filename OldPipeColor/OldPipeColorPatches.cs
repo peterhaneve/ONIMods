@@ -46,8 +46,11 @@ namespace PeterHan.OldPipeColor {
 			// 0 is the default
 			var options = GlobalAssets.Instance.colorSetOptions[0];
 			options.conduitInsulated = colorOptions.InsulatedColor;
+			options.conduitInsulated.a = 0;
 			options.conduitNormal = colorOptions.NormalColor;
+			options.conduitNormal.a = 0;
 			options.conduitRadiant = colorOptions.RadiantColor;
+			options.conduitRadiant.a = 0;
 			options.RefreshLookup();
 		}
 	}

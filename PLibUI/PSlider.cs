@@ -39,6 +39,12 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// If true, the default Klei track and fill will be skipped; only the handle will be
+		/// shown.
+		/// </summary>
+		public bool CustomTrack { get; set; }
+
+		/// <summary>
 		/// The direction of the slider. The slider goes from minimum to maximum value in the
 		/// direction indicated, i.e. LeftToRight is minimum left, maximum right.
 		/// </summary>
@@ -116,6 +122,7 @@ namespace PeterHan.PLib.UI {
 		public PSliderSingle() : this("SliderSingle") { }
 
 		public PSliderSingle(string name) {
+			CustomTrack = false;
 			Direction = Slider.Direction.LeftToRight;
 			HandleColor = PUITuning.Colors.ButtonPinkStyle;
 			HandleSize = 16.0f;
@@ -139,7 +146,6 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public GameObject Build() {
-			float iv;
 			// Bounds must be valid
 			if (MaxValue.IsNaNOrInfinity())
 				throw new ArgumentException(nameof(MaxValue));
@@ -149,33 +155,34 @@ namespace PeterHan.PLib.UI {
 			if (MaxValue <= MinValue)
 				throw new ArgumentOutOfRangeException(nameof(MaxValue));
 			// Initial value must be in range
-			if (InitialValue.IsNaNOrInfinity())
-				iv = MinValue;
-			else
-				iv = InitialValue.InRange(MinValue, MaxValue);
 			var slider = PUIElements.CreateUI(null, Name);
 			bool isVertical = Direction == Slider.Direction.BottomToTop || Direction ==
 				Slider.Direction.TopToBottom;
 			var trueColor = HandleColor ?? PUITuning.Colors.ButtonBlueStyle;
 			slider.SetActive(false);
 			// Track (visual)
-			var trackImg = slider.AddComponent<Image>();
-			trackImg.sprite = isVertical ? PUITuning.Images.ScrollBorderVertical : PUITuning.
-				Images.ScrollBorderHorizontal;
-			trackImg.type = Image.Type.Sliced;
+			if (!CustomTrack) {
+				var trackImg = slider.AddComponent<Image>();
+				trackImg.sprite = isVertical ? PUITuning.Images.ScrollBorderVertical :
+					PUITuning.Images.ScrollBorderHorizontal;
+				trackImg.type = Image.Type.Sliced;
+			}
 			// Fill
 			var fill = PUIElements.CreateUI(slider, "Fill", true);
-			var fillImg = fill.AddComponent<Image>();
-			fillImg.sprite = isVertical ? PUITuning.Images.ScrollHandleVertical : PUITuning.
-				Images.ScrollHandleHorizontal;
-			fillImg.color = trueColor.inactiveColor;
-			fillImg.type = Image.Type.Sliced;
+			if (!CustomTrack) {
+				var fillImg = fill.AddComponent<Image>();
+				fillImg.sprite = isVertical ? PUITuning.Images.ScrollHandleVertical :
+					PUITuning.Images.ScrollHandleHorizontal;
+				fillImg.color = trueColor.inactiveColor;
+				fillImg.type = Image.Type.Sliced;
+			}
 			PUIElements.SetAnchorOffsets(fill, 1.0f, 1.0f, 1.0f, 1.0f);
 			// Slider component itself
 			var ks = slider.AddComponent<KSlider>();
 			ks.maxValue = MaxValue;
 			ks.minValue = MinValue;
-			ks.value = InitialValue;
+			ks.value = InitialValue.IsNaNOrInfinity() ? MinValue : InitialValue.InRange(
+				MinValue, MaxValue);
 			ks.wholeNumbers = IntegersOnly;
 			ks.handleRect = CreateHandle(slider).rectTransform();
 			ks.fillRect = fill.rectTransform();

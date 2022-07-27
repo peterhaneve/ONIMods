@@ -3,8 +3,8 @@
   <PropertyGroup>
     <Title>PeterHan.PLib</Title>
     <AssemblyTitle>PLib</AssemblyTitle>
-    <Version>4.8.3.0</Version>
-    <!--<PackageVersion>4.8.3-beta</PackageVersion>-->
+    <Version>4.9.0.0</Version>
+    <!--<PackageVersion>4.9.0-beta</PackageVersion>-->
     <Authors>Peter Han (https://github.com/peterhaneve)</Authors>
     <PackageProjectUrl>https://github.com/peterhaneve/ONIMods</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -15,9 +15,12 @@
     <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
     
 Contains methods aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
-    <PackageReleaseNotes>Update PLib Buildings for compatibility with U41-496912.</PackageReleaseNotes>
+    <PackageReleaseNotes>Add support in PLib Options for Color and Color32. A graphical color picker with sliders is shown.
+
+Deprecate the old, unsafe PPatchTools.ReplaceMethodCall method for the new Safe variants that will not silently remove calls if the replacement method cannot be found.
+    </PackageReleaseNotes>
     <RootNamespace>PeterHan.PLib</RootNamespace>
-    <AssemblyVersion>4.8.3.0</AssemblyVersion>
+    <AssemblyVersion>4.9.0.0</AssemblyVersion>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
     <UsesPLib>false</UsesPLib>

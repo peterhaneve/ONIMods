@@ -16,15 +16,23 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace PeterHan.PLib {
+using UnityEngine;
+
+namespace PeterHan.PLib.Options {
 	/// <summary>
-	/// Used to pass the PLib version in the ILMerged assembly since the PLib version will
-	/// not be included in the file version.
+	/// An options entry which represents Color and displays a color picker with sliders.
 	/// </summary>
-	public static class PVersion {
-		/// <summary>
-		/// The PLib version.
-		/// </summary>
-		public const string VERSION = "4.9.0.0";
+	internal class ColorOptionsEntry : ColorBaseOptionsEntry {
+		public override object Value {
+			get => value;
+			set {
+				if (value is Color newValue) {
+					this.value = newValue;
+					UpdateAll();
+				}
+			}
+		}
+		
+		public ColorOptionsEntry(string field, IOptionSpec spec) : base(field, spec) { }
 	}
 }
