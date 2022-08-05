@@ -66,10 +66,9 @@ namespace PeterHan.AirlockDoor {
 			/// </summary>
 			internal static void Postfix(Constructable __instance,
 					ref bool ___waitForFetchesBeforeDigging) {
-				var building = __instance.GetComponent<Building>();
 				// Does it have an airlock door?
-				if (building != null && building.Def.BuildingComplete.GetComponent<
-						AirlockDoor>() != null)
+				if (__instance.TryGetComponent(out Building building) && building.Def.
+						BuildingComplete.GetComponent<AirlockDoor>() != null)
 					___waitForFetchesBeforeDigging = true;
 			}
 		}
@@ -90,26 +89,41 @@ namespace PeterHan.AirlockDoor {
 					IEnumerable<CodeInstruction> method) {
 				// Default indexer (this[]) is hardcode named Item
 				// https://docs.microsoft.com/en-us/dotnet/api/system.type.getproperty?view=net-5.0
-				var indexer = typeof(Grid.BuildFlagsSolidIndexer).GetPropertyIndexedSafe<bool>(
-					"Item", false, typeof(int))?.GetGetMethod();
-				var replacement = typeof(AirlockDoorPatches).GetMethodSafe(nameof(
-					SolidAndNotAirlock), true, typeof(Grid.BuildFlagsSolidIndexer).
-					MakeByRefType(), typeof(int));
-				return PPatchTools.ReplaceMethodCall(method, indexer, replacement);
+				return PPatchTools.ReplaceMethodCallSafe(method, typeof(Grid.
+					BuildFlagsSolidIndexer).GetPropertyIndexedSafe<bool>("Item", false,
+					typeof(int))?.GetGetMethod(), typeof(AirlockDoorPatches).GetMethodSafe(
+					nameof(SolidAndNotAirlock), true, typeof(Grid.BuildFlagsSolidIndexer).
+					MakeByRefType(), typeof(int)));
 			}
 		}
 
 		/// <summary>
 		/// Applied to MinionConfig to add the navigator transition for airlocks.
 		/// </summary>
-		[HarmonyPatch(typeof(MinionConfig), "OnSpawn")]
+		[HarmonyPatch(typeof(MinionConfig), nameof(MinionConfig.OnSpawn))]
 		public static class MinionConfig_OnSpawn_Patch {
 			/// <summary>
 			/// Applied after OnSpawn runs.
 			/// </summary>
 			internal static void Postfix(GameObject go) {
-				var nav = go.GetComponent<Navigator>();
-				nav.transitionDriver.overrideLayers.Add(new AirlockDoorTransitionLayer(nav));
+				if (go.TryGetComponent(out Navigator nav))
+					nav.transitionDriver.overrideLayers.Add(
+						new AirlockDoorTransitionLayer(nav));
+			}
+		}
+
+		/// <summary>
+		/// Applied to ScoutRoverConfig to add the navigator transition for airlocks.
+		/// </summary>
+		[HarmonyPatch(typeof(ScoutRoverConfig), nameof(ScoutRoverConfig.OnSpawn))]
+		public static class ScoutRoverConfig_OnSpawn_Patch {
+			/// <summary>
+			/// Applied after OnSpawn runs.
+			/// </summary>
+			internal static void Postfix(GameObject inst) {
+				if (inst.TryGetComponent(out Navigator nav))
+					nav.transitionDriver.overrideLayers.Add(
+						new AirlockDoorTransitionLayer(nav));
 			}
 		}
 	}

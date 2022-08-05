@@ -58,6 +58,9 @@
     <DefineConstants>LEGACY</DefineConstants>
     <APIVersion>1</APIVersion>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(UsesPLib)' == 'true' ">
+    <AllowedReferenceRelatedFileExtensions>.yaml</AllowedReferenceRelatedFileExtensions>
+  </PropertyGroup>
   <PropertyGroup>
     <Product>PeterHanONIMods</Product>
     <Authors>Peter Han</Authors>
@@ -67,7 +70,6 @@
     <LastWorkingBuild>0</LastWorkingBuild>
     <DistributeMod>true</DistributeMod>
     <ArchivedVersionPath></ArchivedVersionPath>
-    <AllowedReferenceRelatedFileExtensions>.yaml</AllowedReferenceRelatedFileExtensions>
     <UsePublicized>false</UsePublicized>
   </PropertyGroup>
 </Project>

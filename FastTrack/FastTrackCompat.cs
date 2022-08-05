@@ -54,6 +54,19 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
+		/// Checks for compatibility and applies material property optimizations only if mods
+		/// which add more descriptors are not enabled.
+		/// </summary>
+		/// <param name="harmony">The Harmony instance to use for patching.</param>
+		internal static void CheckMaterialPropertiesCompat(Harmony harmony) {
+			if (PPatchTools.GetTypeSafe(
+					"MaterialSelectionProperties.MaterialSelectionProperties") == null) {
+				UIPatches.DescriptorAllocPatches.ApplyMaterialPatches(harmony);
+			} else
+				PUtil.LogDebug("Disabling material properties optimizations: Properties mod active");
+		}
+
+		/// <summary>
 		/// Checks for compatibility and applies no disease only if Diseases Restored or
 		/// Diseases Expanded is not enabled.
 		/// </summary>
@@ -73,7 +86,7 @@ namespace PeterHan.FastTrack {
 
 		/// <summary>
 		/// Checks for compatibility and applies stats panel optimizations only if mods which
-		/// show or alter attributs are not enabled.
+		/// show or alter attributes are not enabled.
 		/// </summary>
 		/// <param name="harmony">The Harmony instance to use for patching.</param>
 		internal static void CheckStatsCompat(Harmony harmony) {

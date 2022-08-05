@@ -31,7 +31,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// Groups patches to consolidate list allocations. All uses of these methods in the base
 	/// game die in the same scope they were created.
 	/// </summary>
-	public static class DescriptorAllocPatches {
+	public static partial class DescriptorAllocPatches {
 		/// <summary>
 		/// A shared instance that will be reused for all descriptors. Only used on the
 		/// foreground thread.
@@ -55,16 +55,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// you know what I mean.
 		/// </summary>
 		private static readonly List<Descriptor> EL_DESCRIPTORS = new List<Descriptor>(16);
-
-		private static string highTC;
-
-		private static string lowTC;
-
-		/// <summary>
-		/// The string key path to the material modifiers.
-		/// </summary>
-		private const string MATERIAL_MODIFIERS = nameof(STRINGS) + "." + nameof(STRINGS.
-			ELEMENTS) + "." + nameof(STRINGS.ELEMENTS.MATERIAL_MODIFIERS) + ".";
 
 		/// <summary>
 		/// A shared instance that will be reused for effect descriptors. You know where it
@@ -107,6 +97,23 @@ namespace PeterHan.FastTrack.UIPatches {
 				}
 			}
 		}
+		
+		/// <summary>
+		/// Adds the modifiers to the tooltip.
+		/// </summary>
+		/// <param name="modifiers">The modifiers to add.</param>
+		/// <param name="text">The location where the tooltip will be stored.</param>
+		private static void AddModifiers(IList<AttributeModifier> modifiers,
+			StringBuilder text) {
+			int n = modifiers.Count;
+			var buildAttributes = Db.Get().BuildingAttributes;
+			for (int i = 0; i < n; i++) {
+				var modifier = modifiers[i];
+				text.AppendLine().Append(Constants.TABBULLETSTRING).AppendFormat(
+					STRINGS.DUPLICANTS.MODIFIERS.MODIFIER_FORMAT, buildAttributes.Get(
+						modifier.AttributeId).Name, modifier.GetFormattedString());
+			}
+		}
 
 		/// <summary>
 		/// Adds components that can provide descriptors from a state machine.
@@ -126,7 +133,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				}
 			}
 		}
-
+		
 		/// <summary>
 		/// Adds all descriptors to the specified list.
 		/// </summary>
@@ -156,7 +163,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Gets the game object's effects in the shared descriptor list.
 		/// </summary>
 		/// <param name="go">The game object to describe.</param>
-		/// <param name="simpleScreen">Whether the descriptors are to be shown in the
+		/// <param name="simpleInfoScreen">Whether the descriptors are to be shown in the
 		/// simplified info screen.</param>
 		/// <returns>The game object's effect descriptors.</returns>
 		internal static List<Descriptor> GetGameObjectEffects(GameObject go,
@@ -185,81 +192,6 @@ namespace PeterHan.FastTrack.UIPatches {
 			if (go.TryGetComponent(out KPrefabID prefabID))
 				descriptors.AddDescriptors(prefabID.AdditionalEffects, simpleInfoScreen);
 			return descriptors;
-		}
-
-		/// <summary>
-		/// Adds all of the element's specific attribute modifiers as descriptors to the list.
-		/// </summary>
-		/// <param name="element">The element to describe.</param>
-		/// <param name="descriptors">The location where the descriptors will be stored.</param>
-		internal static void GetMaterialDescriptors(IList<AttributeModifier> modifiers,
-				IList<Descriptor> descriptors) {
-			if (modifiers != null && modifiers.Count > 0) {
-				int n = modifiers.Count;
-				for (int i = 0; i < n; i++) {
-					Descriptor item = default;
-					var modifier = modifiers[i];
-					string attribute = modifier.AttributeId.ToUpper(), value =
-						modifier.GetFormattedString();
-					item.SetupDescriptor(Strings.Get(MATERIAL_MODIFIERS + attribute).Format(
-						value), Strings.Get(MATERIAL_MODIFIERS + nameof(MODIFIERS.TOOLTIP) +
-						"." + attribute).Format(value));
-					item.IncreaseIndent();
-					descriptors.Add(item);
-				}
-			}
-		}
-
-		/// <summary>
-		/// Adds material property descriptors based off of particular values of the element
-		/// properties (like low TC, "slow heating"...).
-		/// </summary>
-		/// <param name="element">The element to describe.</param>
-		/// <param name="descriptors">The location where the descriptors will be stored.</param>
-		private static void GetSignificantMaterialPropertyDescriptors(this Element element,
-				IList<Descriptor> descriptors) {
-			string name = element.name;
-			// No consts for these in ONI code :uuhhhh:
-			if (element.thermalConductivity > 10f) {
-				Descriptor desc = default;
-				desc.SetupDescriptor(MODIFIERS.HIGH_THERMAL_CONDUCTIVITY.Format(GameUtil.
-					GetThermalConductivityString(element, false, false)), string.Format(
-					highTC, name, element.thermalConductivity));
-				desc.IncreaseIndent();
-				descriptors.Add(desc);
-			}
-			if (element.thermalConductivity < 1f) {
-				Descriptor desc = default;
-				desc.SetupDescriptor(MODIFIERS.LOW_THERMAL_CONDUCTIVITY.Format(GameUtil.
-					GetThermalConductivityString(element, false, false)), string.Format(
-					lowTC, name, element.thermalConductivity));
-				desc.IncreaseIndent();
-				descriptors.Add(desc);
-			}
-			if (element.specificHeatCapacity <= 0.2f) {
-				Descriptor desc = default;
-				desc.SetupDescriptor(MODIFIERS.LOW_SPECIFIC_HEAT_CAPACITY, string.Format(
-					MODIFIERS.TOOLTIP.LOW_SPECIFIC_HEAT_CAPACITY, name, element.
-					specificHeatCapacity));
-				desc.IncreaseIndent();
-				descriptors.Add(desc);
-			}
-			if (element.specificHeatCapacity >= 1f) {
-				Descriptor desc = default;
-				desc.SetupDescriptor(MODIFIERS.HIGH_SPECIFIC_HEAT_CAPACITY, string.Format(
-					MODIFIERS.TOOLTIP.HIGH_SPECIFIC_HEAT_CAPACITY, name, element.
-					specificHeatCapacity));
-				desc.IncreaseIndent();
-				descriptors.Add(desc);
-			}
-			if (Sim.IsRadiationEnabled() && element.radiationAbsorptionFactor >= 0.8f) {
-				Descriptor desc = default;
-				desc.SetupDescriptor(MODIFIERS.EXCELLENT_RADIATION_SHIELD, string.Format(
-					MODIFIERS.TOOLTIP.EXCELLENT_RADIATION_SHIELD, name, element.
-					radiationAbsorptionFactor));
-				desc.IncreaseIndent();
-				descriptors.Add(desc);
-			}
 		}
 
 		/// <summary>
@@ -351,109 +283,6 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(GameObject go, bool simpleInfoScreen,
 					ref List<Descriptor> __result) {
 				__result = GetGameObjectEffects(go, simpleInfoScreen);
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to GameUtil to reuse a list for getting element descriptors.
-		/// </summary>
-		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetMaterialDescriptors),
-			typeof(Element))]
-		internal static class GetMaterialDescriptorsElement_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
-
-			/// <summary>
-			/// Applied before GetMaterialDescriptors runs.
-			/// </summary>
-			internal static bool Prefix(Element element, ref List<Descriptor> __result) {
-				var descriptors = EL_DESCRIPTORS;
-				descriptors.Clear();
-				if (element == null)
-					throw new ArgumentNullException(nameof(element));
-				GetMaterialDescriptors(element.attributeModifiers, descriptors);
-				element.GetSignificantMaterialPropertyDescriptors(descriptors);
-				__result = descriptors;
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to GameUtil to reuse a list for getting element descriptors.
-		/// </summary>
-		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetMaterialDescriptors), typeof(Tag))]
-		internal static class GetMaterialDescriptorsTag_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
-
-			/// <summary>
-			/// Applied before GetMaterialDescriptors runs.
-			/// </summary>
-			internal static bool Prefix(Tag tag, ref List<Descriptor> __result) {
-				var descriptors = EL_DESCRIPTORS;
-				var element = ElementLoader.GetElement(tag);
-				GameObject prefabGO;
-				descriptors.Clear();
-				if (element != null) {
-					// If element is defined
-					GetMaterialDescriptors(element.attributeModifiers, descriptors);
-					element.GetSignificantMaterialPropertyDescriptors(descriptors);
-				} else if ((prefabGO = Assets.TryGetPrefab(tag)) != null && prefabGO.
-						TryGetComponent(out PrefabAttributeModifiers prefabMods))
-					GetMaterialDescriptors(prefabMods.descriptors, descriptors);
-				__result = descriptors;
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to GameUtil to use a string buffer when getting material tooltips.
-		/// </summary>
-		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetMaterialTooltips), typeof(Tag))]
-		internal static class GetMaterialTooltips_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
-
-			/// <summary>
-			/// Adds the modifiers to the tooltip.
-			/// </summary>
-			/// <param name="modifiers">The modifiers to add.</param>
-			/// <param name="text">The location where the tooltip will be stored.</param>
-			private static void AddModifiers(IList<AttributeModifier> modifiers,
-					StringBuilder text) {
-				int n = modifiers.Count;
-				var buildAttributes = Db.Get().BuildingAttributes;
-				for (int i = 0; i < n; i++) {
-					var modifier = modifiers[i];
-					text.AppendLine().Append(Constants.TABBULLETSTRING).AppendFormat(
-						STRINGS.DUPLICANTS.MODIFIERS.MODIFIER_FORMAT, buildAttributes.Get(
-						modifier.AttributeId).Name, modifier.GetFormattedString());
-				}
-			}
-
-			/// <summary>
-			/// Applied before GetMaterialTooltips runs.
-			/// </summary>
-			internal static bool Prefix(Tag tag, ref string __result) {
-				var text = BUFFER;
-				var element = ElementLoader.GetElement(tag);
-				GameObject prefabGO;
-				text.Clear();
-				text.Append(tag.ProperName());
-				if (element != null) {
-					var descriptors = EL_DESCRIPTORS;
-					descriptors.Clear();
-					AddModifiers(element.attributeModifiers, text);
-					element.GetSignificantMaterialPropertyDescriptors(EL_DESCRIPTORS);
-					if (descriptors.Count > 0) {
-						int n = descriptors.Count;
-						text.AppendLine();
-						for (int i = 0; i < n; i++)
-							text.Append(Constants.TABBULLETSTRING).Append(Util.
-								StripTextFormatting(descriptors[i].text)).AppendLine();
-					}
-				} else if ((prefabGO = Assets.TryGetPrefab(tag)) != null && prefabGO.
-						TryGetComponent(out PrefabAttributeModifiers prefabMods))
-					AddModifiers(prefabMods.descriptors, text);
-				__result = text.ToString();
 				return false;
 			}
 		}

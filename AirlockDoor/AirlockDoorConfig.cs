@@ -16,9 +16,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
 using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Core;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace PeterHan.AirlockDoor {
 	/// <summary>
@@ -38,7 +40,6 @@ namespace PeterHan.AirlockDoor {
 		/// </summary>
 		/// <returns>The building prototype.</returns>
 		internal static PBuilding CreateBuilding() {
-			// Inititialize it here to allow localization to change the strings
 			return AirlockDoorTemplate = new PBuilding(ID, AirlockDoorStrings.BUILDINGS.
 					PREFABS.PAIRLOCKDOOR.NAME) {
 				AddAfter = PressureDoorConfig.ID,
@@ -80,7 +81,9 @@ namespace PeterHan.AirlockDoor {
 		public override BuildingDef CreateBuildingDef() {
 			LocString.CreateLocStringKeys(typeof(AirlockDoorStrings.BUILDING));
 			LocString.CreateLocStringKeys(typeof(AirlockDoorStrings.BUILDINGS));
-			var def = AirlockDoorTemplate?.CreateDef();
+			if (AirlockDoorTemplate == null)
+				throw new ArgumentNullException(nameof(AirlockDoorTemplate));
+			var def = AirlockDoorTemplate.CreateDef();
 			def.ForegroundLayer = Grid.SceneLayer.TileMain;
 			def.IsFoundation = true;
 			def.PreventIdleTraversalPastBuilding = true;

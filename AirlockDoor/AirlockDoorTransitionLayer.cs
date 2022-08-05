@@ -47,9 +47,9 @@ namespace PeterHan.AirlockDoor {
 		/// <param name="navCell">The cell of the Duplicant navigating the door.</param>
 		private void AddDoor(int doorCell, int navCell) {
 			if (Grid.HasDoor[doorCell]) {
-				var door = Grid.Objects[doorCell, buildingLayer].
-					GetComponentSafe<AirlockDoor>();
-				if (door != null && door.isSpawned && !doors.ContainsKey(door))
+				var go = Grid.Objects[doorCell, buildingLayer];
+				if (go != null && go.TryGetComponent(out AirlockDoor door) && door.isSpawned &&
+						!doors.ContainsKey(door))
 					RequestOpenDoor(door, doorCell, navCell);
 			}
 		}
@@ -66,17 +66,13 @@ namespace PeterHan.AirlockDoor {
 					switch (pair.Value) {
 					case DoorRequestType.EnterLeft:
 					case DoorRequestType.ExitLeft:
-						if (!door.IsLeftOpen) {
+						if (!door.IsLeftOpen)
 							open = false;
-							break;
-						}
 						break;
 					case DoorRequestType.EnterRight:
 					case DoorRequestType.ExitRight:
-						if (!door.IsRightOpen) {
+						if (!door.IsRightOpen)
 							open = false;
-							break;
-						}
 						break;
 					}
 				}
@@ -152,11 +148,11 @@ namespace PeterHan.AirlockDoor {
 		/// <param name="doorCell">The cell where the navigator is moving.</param>
 		/// <param name="navCell">The cell where the navigator is standing now.</param>
 		private void RequestOpenDoor(AirlockDoor door, int doorCell, int navCell) {
-			int baseCell = door.GetBaseCell(), dx;
+			int baseCell = door.GetBaseCell();
 			// Based on coordinates, determine what is required of the door
 			CellOffset targetOffset = Grid.GetOffset(baseCell, doorCell), navOffset =
 				Grid.GetOffset(doorCell, navCell);
-			dx = targetOffset.x;
+			int dx = targetOffset.x;
 			if (dx > 0) {
 				// Right side door
 				if (navOffset.x > 0) {

@@ -16,12 +16,13 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
 using HarmonyLib;
 using Klei.AI;
 using PeterHan.PLib.Actions;
 using System.Collections.Generic;
 using System.Text;
-
+using PeterHan.PLib.Core;
 using TimeSlice = GameUtil.TimeSlice;
 
 namespace PeterHan.FastTrack.UIPatches {
@@ -498,7 +499,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Populates the hotkey lookup table.
 		/// </summary>
-		internal static void Init() {
+		private static void Init() {
 			var actionBuffer = ACTION_BUFFER;
 			var kb = GameInputMapping.KeyBindings;
 			var lookup = HOTKEY_LOOKUP;
@@ -564,15 +565,17 @@ namespace PeterHan.FastTrack.UIPatches {
 				if (c == '{') {
 					hotkey = false;
 					substitute = true;
-				} else if (substitute) {
-					if (c == '/') {
+				} else if (substitute)
+					switch (c) {
+					case '/':
 						// Hotkey/...
 						if (IsHotkey()) {
 							hotkey = true;
 							hkb.Clear();
 						} else
 							hkb.Append(c);
-					} else if (c == '}') {
+						break;
+					case '}':
 						// What was requested?
 						if (hotkey) {
 							if (lookup.TryGetValue(hkb.ToString(), out string formatted))
@@ -582,9 +585,12 @@ namespace PeterHan.FastTrack.UIPatches {
 							text.Append('{').Append(hkb).Append('}');
 						hkb.Clear();
 						substitute = false;
-					} else
+						break;
+					default:
 						hkb.Append(c);
-				} else
+						break;
+					}
+				else
 					text.Append(c);
 			}
 			if (substitute) {
@@ -595,11 +601,20 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
+		/// Checks for the Steam input interpreter (not present on wegame or EGS) and disables
+		/// these particular patches if not found.
+		/// </summary>
+		/// <returns>true if the strings can be optimized, or false if the option is disabled
+		/// or the input interpreter is missing.</returns>
+		private static bool CheckPatch() => FastTrackOptions.Instance.AllocOpts &&
+			PPatchTools.GetTypeSafe(nameof(SteamInputInterpreter)) != null;
+
+		/// <summary>
 		/// Applied to GameUtil to make calculating action strings much faster.
 		/// </summary>
 		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetActionString))]
 		internal static class GetActionString_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
+			internal static bool Prepare() => CheckPatch();
 
 			/// <summary>
 			/// Applied before GetActionString runs.
@@ -629,7 +644,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(LocText), nameof(LocText.FilterInput))]
 		internal static class FilterInput_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
+			internal static bool Prepare() => CheckPatch();
 
 			/// <summary>
 			/// Applied before FilterInput runs.
@@ -655,7 +670,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(LocText), nameof(LocText.ParseText))]
 		internal static class ParseText_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
+			internal static bool Prepare() => CheckPatch();
 
 			/// <summary>
 			/// Applied before ParseText runs.
@@ -677,7 +692,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(GameInputManager), nameof(GameInputManager.RebindControls))]
 		internal static class RebindControls_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
+			internal static bool Prepare() => CheckPatch();
 
 			/// <summary>
 			/// Applied after RebindControls runs.

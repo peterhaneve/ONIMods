@@ -118,6 +118,8 @@ namespace PeterHan.FastTrack {
 				FastTrackCompat.CheckStatsCompat(harmony);
 			if (options.NoDisease)
 				FastTrackCompat.CheckNoDiseaseCompat(harmony);
+			if (options.AllocOpts)
+				FastTrackCompat.CheckMaterialPropertiesCompat(harmony);
 			// In case the grid gets rewritten by a future mod idea
 			if (options.ENetOpts && !PRegistry.GetData<bool>("OverrideElectricalNetwork"))
 				GamePatches.FastElectricalNetworkCalculator.Apply(harmony);
