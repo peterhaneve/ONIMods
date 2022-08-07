@@ -15,12 +15,12 @@ the rolled back Legacy Vanilla `CS-469300`.
 
 [![Button SteamWorkshop]][SteamWorkshop]
 
-</div>
-
 <br>
 <br>
 
 ## Local Downloads
+
+<br>
 
 ### Steam Users
 
@@ -29,19 +29,23 @@ use **[Mod Updater]** to see if the mod is out of date.
 
 *Steam sometimes serves outdated mod versions.*
 
+<br>
+
 ### Epic Users
 
 **Oxygen Not Included** is also available on the Epic Store.
 
 <br>
 
-### Caution
+### ⚠  Caution  ⚠
 
 **Don't use a Steam copy and local** <br>
 **copy of a mod at the same time.**
 
 Disable the Steam version in the mods <br>
 list before activating any local copies.
+
+</div>
 
 <br>
 
