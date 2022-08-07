@@ -1,35 +1,128 @@
-# Peter Han&#39;s Mods for Oxygen Not Included
 
-Last tested on game version: **U42-512719**
+<br>
 
-**No support** for Public Testing branches, including the rolled back Legacy Vanilla (CS-469300).
+<div align = center>
 
-Steam Workshop: https://steamcommunity.com/profiles/76561198025154321/myworkshopfiles/?appid=457140
+# Peter Han's Mods for <br> Oxygen Not Included
+
+*Last tested on game version: `U42-512719`*
+
+**No support** for Public Testing branches, including <br>
+the rolled back Legacy Vanilla `CS-469300`.
+
+<br>
+<br>
+
+[![Button SteamWorkshop]][SteamWorkshop]
+
+</div>
+
+<br>
+<br>
 
 ## Local Downloads
 
-Steam users: Before trying a local download or reporting an issue, use [Mod Updater](https://steamcommunity.com/sharedfiles/filedetails/?id=2018291283) to see if the mod is out of date.
+### Steam Users
 
-Steam sometimes serves outdated mod versions, and Oxygen Not Included is also available on the Epic Games Store.
-Local copies of these mods are available in the [Releases](https://github.com/peterhaneve/ONIMods/releases/tag/ModsLatest) section.
-These mods should be installed into the `local` folder, creating it if it does not already exist.
-Mods should remain in their own subfolder.
+Before trying a local download or reporting an issue, <br>
+use **[Mod Updater]** to see if the mod is out of date.
 
-![Location where local mods should be installed](Docs/localmods.png)
+*Steam sometimes serves outdated mod versions.*
 
-* Windows: `%USERPROFILE%\Documents\Klei\OxygenNotIncluded\mods\local`
-  Replace the documents path with the path to your `Documents` folder if this folder has been redirected.
-* Mac OS: `/Users/user name/Library/Application Support/unity.Klei.Oxygen Not Included/mods/Local`
-  Replace `user name` with your user name.
-* Linux: `~/.config/unity3d/Klei/Oxygen Not Included/mods/Local`
+### Epic Users
 
-**Do not use a Steam copy and a local copy of the same mod at the same time.** Disable the Steam version in the mods list before activating any local copies.
+**Oxygen Not Included** is also available on the Epic Store.
+
+<br>
+
+### Caution
+
+**Don't use a Steam copy and local** <br>
+**copy of a mod at the same time.**
+
+Disable the Steam version in the mods <br>
+list before activating any local copies.
+
+<br>
+
+### Installation
+
+<br>
+
+-   Download a **[Release]** of your choice.
+
+    <br>
+
+-   Navigate to the `local` folder.
+
+    <br>
+
+    ![Badge Windows]
+
+    ```
+    %USERPROFILE%\Documents\Klei\OxygenNotIncluded\mods\local
+    ```
+
+    Replace the documents path with the path to your <br>
+    `Documents` folder if this folder has been redirected.
+
+    <br>
+
+    ![Badge Linux]
+
+    ```
+    ~/.config/unity3d/Klei/Oxygen Not Included/mods/Local
+    ```
+
+    <br>
+
+    ![Badge MacOS]
+
+    ```
+    /Users/<Ｕｓｅｒ Ｎａｍｅ>/Library/Application Support/unity.Klei.Oxygen Not Included/mods/Local
+    ```
+    
+    <br>
+    
+-   If the `local` folder doesn't exist yet, create it.
+
+    <br>
+
+-   Place the mod in the folder as seen here:
+
+    ![Example]
+
+<!----------------------------------------------------------------------------->
+
+[SteamWorkshop]: https://steamcommunity.com/profiles/76561198025154321/myworkshopfiles/?appid=457140
+[Mod Updater]: https://steamcommunity.com/sharedfiles/filedetails/?id=2018291283
+[Release]: https://github.com/peterhaneve/ONIMods/releases/tag/ModsLatest
+
+[Example]: Docs/localmods.png
+
+<!---------------------------------[ Badges ]---------------------------------->
+
+[Badge Windows]: https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logoColor=white&logo=Windows
+[Badge Linux]: https://img.shields.io/badge/Linux-10B981?style=for-the-badge&logoColor=white&logo=Linux
+[Badge MacOS]: https://img.shields.io/badge/MacOS-333333?style=for-the-badge&logoColor=white&logo=MacOS
+
+<!---------------------------------[ Buttons ]--------------------------------->
+
+[Button SteamWorkshop]: https://img.shields.io/badge/SteamWorkshop-1A9FFF?style=for-the-badge&logoColor=white&logo=Steam
+
+<!----------------------------------------------------------------------------->
+
+<br>
+<br>
+
+<div align = center>
 
 # Mod List
 
 ## Minor Updates - No Mechanics Changes
-|  **Name**  |  **Description**  |  **Vanilla**  |  **Spaced Out! DLC**  |
-| :--------: | :---------------: | :-----------: | :-------------------: |
+
+| Name | Description | Vanilla | Spaced Out! DLC
+|:----:|:-----------:|:-------:|:---------------:
 | [Auto-Eject](https://steamcommunity.com/sharedfiles/filedetails/?id=2551341883) | Automatically completes the Neural Vacillator and Teleport tasks | Yes | Yes |
 | [Claustrophobia](https://steamcommunity.com/sharedfiles/filedetails/?id=1836997281) | Deprecated! No longer supported. | No | No |
 | [Clean Drop](https://steamcommunity.com/sharedfiles/filedetails/?id=2047364442) | Pushes items spawned inside tiles into a location accessible to Duplicants | Yes | Yes |
@@ -56,9 +149,12 @@ Mods should remain in their own subfolder.
 | [Sweep By Type](https://steamcommunity.com/sharedfiles/filedetails/?id=1863428350) | Filters the Sweep tool to sweep only selected item types | Yes | Yes |
 | [Thermal Tooltips](https://steamcommunity.com/sharedfiles/filedetails/?id=1983504552) | Displays expanded thermal information tooltips in the Temperature Overlay | Yes | Yes |
 
+<br>
+
 ## New Features
-|  **Name**  |  **Description**  |  **Vanilla**  |  **Spaced Out! DLC**  |
-| :--------: | :---------------: | :-----------: | :-------------------: |
+
+| Name | Description | Vanilla | Spaced Out! DLC
+|:----:|:-----------:|:-------:|:---------------:
 | [100K Challenge](https://steamcommunity.com/sharedfiles/filedetails/?id=2228381429) | A frigid map with an average temperature of 100 K (-173 C) | Yes | No |
 | [AI Improvements](https://steamcommunity.com/sharedfiles/filedetails/?id=2128885110) | Improves Duplicant AI to reduce cases of stuck Duplicants | Yes | Yes |
 | [Airlock Door](https://steamcommunity.com/sharedfiles/filedetails/?id=2094698134) | A door allowing Duplicants to pass while maintaining full atmospheric isolation | Yes | Yes |
@@ -75,10 +171,16 @@ Mods should remain in their own subfolder.
 | [Turn Back the Clock](https://steamcommunity.com/sharedfiles/filedetails/?id=2553917491) | Revert gameplay changes to play mature colonies under legacy mechanics | Yes | No |
 | [Waste Not, Want Not](https://steamcommunity.com/sharedfiles/filedetails/?id=2567122431) | Make Duplicants prefer older leftovers to minimize food waste | Yes | Yes |
 
-## Reimagination Team Mods
+<br>
 
-|  **Name**  |  **Description**  |  **Vanilla**  |  **Spaced Out! DLC**  |
-| :--------: | :---------------: | :-----------: | :-------------------: |
+## Re-imagination Team Mods
+
+| Name  | Description | Vanilla | Spaced Out! DLC 
+|:-----:|:-----------:|:-------:|:---------------:
 | [Decor Reimagined](https://steamcommunity.com/sharedfiles/filedetails/?id=1892161928) | Reimagines decor, rewarding bases with consistent, unique decor items | Yes | Yes |
 | [Diseases Restored](https://steamcommunity.com/sharedfiles/filedetails/?id=1911357229) | Restores diseases making germs more dangerous again, and adds methods to deal with germ spread | Yes | No |
 | [Traits Reworked](https://steamcommunity.com/sharedfiles/filedetails/?id=1905214098) | Reworks Duplicant traits to make all traits meaningful and the most extreme traits more sensible | Yes | No |
+
+</div>
+
+<br>
