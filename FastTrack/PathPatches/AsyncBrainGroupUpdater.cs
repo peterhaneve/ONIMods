@@ -76,7 +76,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				offsetTracker.UpdateOffsets(cell);
 				offsets = offsetTracker.offsets;
 				if (offsetTracker.previousCell != cell)
-					DeferAnimQueueTrigger.Instance?.Queue(offsetTracker, cell);
+					DeferredTriggers.Instance?.Queue(offsetTracker, cell);
 			}
 			return offsets == null ? navigator.GetNavigationCost(cell) : navigator.
 				GetNavigationCost(cell, offsets);
@@ -526,7 +526,17 @@ namespace PeterHan.FastTrack.PathPatches {
 				// Few offset tables should be updated here, as the offset tables are already
 				// recalculated when the pickupable's cached cell is updated
 				if (index >= 0 && index < byId.Count)
-					byId[index].UpdateOffsetTables();
+					foreach (var item in byId[index].fetchables.GetDataList()) {
+						var pickupable = item.pickupable;
+						var tracker = pickupable.offsetTracker;
+						int cachedCell = pickupable.cachedCell;
+						if (tracker != null && tracker.previousCell != cachedCell)
+							// If an update is actually being performed here, the cached cell
+							// may need to be updated, to fix incubator related issues
+							DeferredTriggers.Instance.Queue(pickupable);
+						else
+							pickupable.GetOffsets(cachedCell);
+					}
 			}
 
 			public void TriggerAbort() {

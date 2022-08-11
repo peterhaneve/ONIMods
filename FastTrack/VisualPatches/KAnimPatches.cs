@@ -102,7 +102,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 					controller.Stop();
 					controller.currentFrame = 0;
 					controller.SetElapsedTime(0.0f);
-					PathPatches.DeferAnimQueueTrigger.TriggerAndQueue(controller,
+					PathPatches.DeferredTriggers.TriggerAndQueue(controller,
 						(int)GameHashes.AnimQueueComplete, null);
 				}
 			}

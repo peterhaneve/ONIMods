@@ -202,7 +202,7 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		internal static void Postfix() {
 			PathPatches.AsyncBrainGroupUpdater.Instance?.EndBrainUpdate();
-			PathPatches.DeferAnimQueueTrigger.Instance?.Process();
+			PathPatches.DeferredTriggers.Instance?.Process();
 		}
 	}
 }

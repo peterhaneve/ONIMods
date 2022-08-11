@@ -163,7 +163,7 @@ namespace PeterHan.FastTrack {
 			if (options.PickupOpts)
 				GamePatches.SolidTransferArmUpdater.DestroyInstance();
 			if (options.PickupOpts || options.FastUpdatePickups)
-				PathPatches.DeferAnimQueueTrigger.DestroyInstance();
+				PathPatches.DeferredTriggers.DestroyInstance();
 			if (options.AsyncPathProbe)
 				PathPatches.PathProbeJobManager.DestroyInstance();
 			GamePatches.AchievementPatches.DestroyInstance();
@@ -248,7 +248,7 @@ namespace PeterHan.FastTrack {
 				UIPatches.VitalsPanelWrapper.Init();
 			}
 			if (options.PickupOpts || options.FastUpdatePickups)
-				PathPatches.DeferAnimQueueTrigger.CreateInstance();
+				PathPatches.DeferredTriggers.CreateInstance();
 			if (inst != null) {
 				var go = inst.gameObject;
 				go.AddOrGet<AsyncJobManager>();

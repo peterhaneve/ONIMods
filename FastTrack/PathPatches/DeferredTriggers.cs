@@ -29,18 +29,18 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// location.
 	/// </summary>
 	[SkipSaveFileSerialization]
-	public sealed class DeferAnimQueueTrigger : IDisposable {
+	public sealed class DeferredTriggers : IDisposable {
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
-		public static DeferAnimQueueTrigger Instance { get; private set; }
+		public static DeferredTriggers Instance { get; private set; }
 
 		/// <summary>
 		/// Creates the singleton instance of this class.
 		/// </summary>
 		internal static void CreateInstance() {
 			DestroyInstance();
-			Instance = new DeferAnimQueueTrigger();
+			Instance = new DeferredTriggers();
 		}
 
 		/// <summary>
@@ -74,13 +74,19 @@ namespace PeterHan.FastTrack.PathPatches {
 		private readonly Queue<TriggerEvent> animPending;
 
 		/// <summary>
+		/// The items which need a cached cell updated.
+		/// </summary>
+		private readonly ConcurrentQueue<Pickupable> cacheCellPending;
+
+		/// <summary>
 		/// The offsets which should be updated.
 		/// </summary>
 		private readonly ConcurrentQueue<UpdateOffset> offsetPending;
 
-		private DeferAnimQueueTrigger() {
-			offsetPending = new ConcurrentQueue<UpdateOffset>();
+		private DeferredTriggers() {
 			animPending = new Queue<TriggerEvent>();
+			cacheCellPending = new ConcurrentQueue<Pickupable>();
+			offsetPending = new ConcurrentQueue<UpdateOffset>();
 		}
 
 		public void Dispose() {
@@ -99,6 +105,16 @@ namespace PeterHan.FastTrack.PathPatches {
 					// Destroy it now
 					if (src.destroyOnAnimComplete)
 						src.DestroySelf();
+				}
+			}
+			while (cacheCellPending.TryDequeue(out var item)) {
+				int cell = Grid.PosToCell(item.transform.position);
+				if (cell != item.cachedCell) {
+#if DEBUG
+					PUtil.LogDebug("Adjusted bugged item {0} from {1:D} to {2:D}".F(
+						item.name, item.cachedCell, cell));
+#endif
+					item.UpdateCachedCell(cell);
 				}
 			}
 			while (offsetPending.TryDequeue(out var offset))
@@ -123,6 +139,15 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <param name="newCell">The new cell that the offsets occupy.</param>
 		internal void Queue(OffsetTracker offsets, int newCell) {
 			offsetPending.Enqueue(new UpdateOffset(offsets, newCell));
+		}
+
+		/// <summary>
+		/// Queues an item to be updated synchronously. This is a fairly rare code path for
+		/// items with rounding errors on place.
+		/// </summary>
+		/// <param name="item">The item to update.</param>
+		internal void Queue(Pickupable item) {
+			cacheCellPending.Enqueue(item);
 		}
 
 		/// <summary>
@@ -190,7 +215,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			} else if (anim != null && __instance.mode == KAnim.PlayMode.Once) {
 				__instance.currentFrame = anim.numFrames - 1;
 				__instance.Stop();
-				DeferAnimQueueTrigger.TriggerAndQueue(__instance, (int)GameHashes.
+				DeferredTriggers.TriggerAndQueue(__instance, (int)GameHashes.
 					AnimQueueComplete, null);
 			}
 			return false;
@@ -214,7 +239,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			int lastCell = __instance.previousCell;
 			if (current_cell != lastCell) {
 				if (OffsetTracker.isExecutingWithinJob)
-					DeferAnimQueueTrigger.Instance.Queue(__instance, current_cell);
+					DeferredTriggers.Instance.Queue(__instance, current_cell);
 				else {
 					__instance.UpdateCell(lastCell, current_cell);
 					__instance.previousCell = lastCell = current_cell;

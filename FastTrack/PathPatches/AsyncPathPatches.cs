@@ -157,24 +157,6 @@ namespace PeterHan.FastTrack.PathPatches {
 	}
 
 	/// <summary>
-	/// Applied to EggIncubator as a workaround for unusual bugs where the contents shift and
-	/// thus get different cached cells.
-	/// </summary>
-	[HarmonyPatch(typeof(EggIncubator), nameof(EggIncubator.Sim1000ms))]
-	public static class EggIncubator_Sim1000ms_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
-
-		/// <summary>
-		/// Applied after Sim1000ms runs.
-		/// </summary>
-		internal static void Postfix(EggIncubator __instance) {
-			var occupier = __instance.occupyingObject;
-			if (occupier != null && occupier.TryGetComponent(out Pickupable pickupable))
-				pickupable.UpdateCachedCell(Grid.PosToCell(pickupable.transform.position));
-		}
-	}
-
-	/// <summary>
 	/// Applied to ScenePartitioner to make the GatherEntries family of methods partially
 	/// thread safe.
 	/// </summary>
