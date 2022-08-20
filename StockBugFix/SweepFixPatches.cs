@@ -137,7 +137,7 @@ namespace PeterHan.StockBugFix {
 					Add), false, argType);
 				if (srcMethod == null)
 					throw new InvalidOperationException("Where is List.Add???");
-				return PPatchTools.ReplaceMethodCall(method, srcMethod,
+				return PPatchTools.ReplaceMethodCallSafe(method, srcMethod,
 					typeof(SweepFixPatches).GetMethodSafe(nameof(AddAndFixPriority), true,
 					listType, argType));
 			}

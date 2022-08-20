@@ -27,20 +27,6 @@ namespace PeterHan.FastTrack.Metrics {
 	/// </summary>
 	internal sealed class DebugMetrics : KMonoBehaviour, IRender1000ms {
 		/// <summary>
-		/// In a thread safe, lockless manner, adds a value to a 64-bit accumulator.
-		/// </summary>
-		/// <param name="accumulator">The location where the total will be stored.</param>
-		/// <param name="add">The value to add.</param>
-		public static void Accumulate(ref long accumulator, long add) {
-			long oldValue, newValue;
-			do {
-				oldValue = Interlocked.Read(ref accumulator);
-				newValue = oldValue + add;
-			} while (Interlocked.CompareExchange(ref accumulator, newValue, oldValue) !=
-				oldValue);
-		}
-
-		/// <summary>
 		/// Monitors Brain load balancing.
 		/// </summary>
 		private static readonly ConcurrentDictionary<string, BrainStats> BRAIN_LOAD =
@@ -129,7 +115,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <param name="wait">How long the foreground thread was waiting for path probing.</param>
 		/// <param name="run">How long the total asynchronous path probe ran.</param>
 		internal static void LogPathProbe(long wait, long run) {
-			Accumulate(ref probeWaiting, wait);
+			Interlocked.Add(ref probeWaiting, wait);
 			PATH_PROBES.Log(run);
 		}
 
@@ -171,6 +157,15 @@ namespace PeterHan.FastTrack.Metrics {
 				SIMANDRENDER[i].Reset();
 		}
 
+		/// <summary>
+		/// Buffers text to be logged.
+		/// </summary>
+		private readonly System.Text.StringBuilder text;
+
+		internal DebugMetrics() {
+			text = new System.Text.StringBuilder(256);
+		}
+
 		public override void OnPrefabInit() {
 			base.OnPrefabInit();
 			Reset();
@@ -181,7 +176,7 @@ namespace PeterHan.FastTrack.Metrics {
 				long probeTotal = PATH_PROBES.TimeInMethod, probeSaved = Math.Max(0L,
 					probeTotal - probeWaiting.TicksToUS());
 				int probeCount = PATH_PROBES.MethodCalls;
-				var text = new System.Text.StringBuilder(128);
+				text.Clear();
 				// Methods run
 				if (TRACKED.Count > 0) {
 					text.Append("Methods Run:");

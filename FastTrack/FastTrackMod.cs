@@ -81,6 +81,8 @@ namespace PeterHan.FastTrack {
 				UIPatches.TrappedDuplicantDiagnostic_CheckTrapped_Patch.Init();
 				UIPatches.DescriptorAllocPatches.Init();
 			}
+			if (options.ChoreOpts)
+				GamePatches.ChoreComparator.Init();
 		}
 
 		/// <summary>
@@ -242,6 +244,8 @@ namespace PeterHan.FastTrack {
 				PathPatches.PathProbeJobManager.CreateInstance();
 			if (options.CachePaths)
 				PathPatches.PathCacher.Init();
+			if (options.ChoreOpts)
+				GamePatches.ChorePatches.Init();
 			if (options.SideScreenOpts) {
 				UIPatches.AdditionalDetailsPanelWrapper.Init();
 				UIPatches.DetailsPanelWrapper.Init();

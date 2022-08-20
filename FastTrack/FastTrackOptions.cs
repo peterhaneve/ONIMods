@@ -83,6 +83,10 @@ namespace PeterHan.FastTrack {
 		[Option("STRINGS.UI.FRONTEND.FASTTRACK.CACHEPATHS", "STRINGS.UI.TOOLTIPS.FASTTRACK.CACHEPATHS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS")]
 		[JsonProperty]
 		public bool CachePaths { get; set; }
+		
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.CHOREOPTS", "STRINGS.UI.TOOLTIPS.FASTTRACK.CHOREOPTS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS")]
+		[JsonProperty]
+		public bool ChoreOpts { get; set; }
 
 		[Option("STRINGS.UI.FRONTEND.FASTTRACK.NOCONVERSATIONS", "STRINGS.UI.TOOLTIPS.FASTTRACK.NOCONVERSATIONS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS")]
 		[JsonProperty]
@@ -229,6 +233,7 @@ namespace PeterHan.FastTrack {
 			AsyncPathProbe = true;
 			BackgroundRoomRebuild = true;
 			CachePaths = true;
+			ChoreOpts = true;
 			ConduitOpts = false;
 			CritterConsumers = true;
 			CullConduits = true;

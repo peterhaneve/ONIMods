@@ -56,6 +56,7 @@ namespace PeterHan.FastTrack {
 					public static LocString FASTATTRIBUTESMODE = "Attribute Leveling";
 					public static LocString ASYNCPATHPROBE = "Background Pathing";
 					public static LocString CACHEPATHS = "Cache Paths";
+					public static LocString CHOREOPTS = "Chore Optimizations";
 					public static LocString NOCONVERSATIONS = "Disable Conversations";
 					public static LocString NODISEASE = "Disable Disease";
 					public static LocString FASTREACHABILITY = "Fast Reachability Checks";
@@ -140,6 +141,7 @@ namespace PeterHan.FastTrack {
 					public static LocString FASTATTRIBUTESMODE = "Optimize attribute leveling and work efficiency calculation." + PERF_MEDIUM;
 					public static LocString ASYNCPATHPROBE = "Moves some pathfinding calculations to a non-blocking thread." + PERF_HIGH;
 					public static LocString CACHEPATHS = "Cache frequently used paths and reuse them in future calculations." + PERF_MEDIUM;
+					public static LocString CHOREOPTS = "Reduces the number of chores scanned when choosing each Duplicant's next task." + PERF_MEDIUM;
 					public static LocString NOCONVERSATIONS = "Disables all Duplicant thought and speech balloons." + PERF_LOW;
 					public static LocString NODISEASE = "Completely disable the entire disease system.\n" +
 						Constants.BULLETSTRING + "Sick Bay and Disease Clinic cannot be built or used\n" +

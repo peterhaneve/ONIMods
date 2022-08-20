@@ -285,9 +285,9 @@ namespace PeterHan.FastTrack.PathPatches {
 				// one appears later
 				gp?.SetValidSerialNos(grid, grid.previousSerialNo, sn);
 				grid.previousSerialNo = sn;
+				if (FastTrackOptions.Instance.CachePaths)
+					PathCacher.SetValid(prober, true);
 			}
-			if (isComplete && FastTrackOptions.Instance.CachePaths)
-				PathCacher.SetValid(prober, true);
 		}
 
 		/// <summary>

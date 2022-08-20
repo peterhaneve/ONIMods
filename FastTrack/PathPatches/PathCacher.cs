@@ -51,13 +51,15 @@ namespace PeterHan.FastTrack.PathPatches {
 		internal static void Init() {
 			if (pathCache == null)
 				pathCache = new ConcurrentDictionary<PathProber, bool>(4, 128);
+			else
+				pathCache.Clear();
 		}
 
 		/// <summary>
-		/// Looks up the path cache for the given prober.
+		/// Checks to see if the prober's cache is valid.
 		/// </summary>
 		/// <param name="prober">The path prober to look up.</param>
-		/// <returns>The path cache for this path prober's ID.</returns>
+		/// <returns>true if the cache is valid for this ID, or false otherwise.</returns>
 		internal static bool IsValid(PathProber prober) {
 			if (prober == null)
 				throw new ArgumentNullException(nameof(prober));

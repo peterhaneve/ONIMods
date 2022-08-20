@@ -34,6 +34,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="harmony">The Harmony instance to use for patching.</param>
 		internal static void Apply(Harmony harmony) {
 			var doNothing = new HarmonyMethod(typeof(NoDiseasePatches), nameof(DisableMethod));
+			var makeDeprecated = new HarmonyMethod(typeof(NoDiseasePatches), nameof(
+				MakeBuildingDeprecated));
 			var outFloat = typeof(float).MakeByRefType();
 			// Disable auto disinfect
 			harmony.Patch(typeof(AutoDisinfectableManager), nameof(AutoDisinfectableManager.
@@ -66,6 +68,8 @@ namespace PeterHan.FastTrack.GamePatches {
 			harmony.Patch(typeof(DiseaseContainers), nameof(DiseaseContainers.Sim200ms),
 				prefix: doNothing);
 			// Disable disease emitters
+			harmony.Patch(typeof(DiseaseDropper.Instance), nameof(DiseaseDropper.Instance.
+				DropDisease), prefix: doNothing);
 			harmony.Patch(typeof(DiseaseEmitter), nameof(DiseaseEmitter.SimRegister),
 				prefix: doNothing);
 			harmony.Patch(typeof(DiseaseEmitter), nameof(DiseaseEmitter.SimUnregister),
@@ -124,6 +128,23 @@ namespace PeterHan.FastTrack.GamePatches {
 			harmony.Patch(typeof(ProcGenGame.WorldGen), nameof(ProcGenGame.WorldGen.
 				RenderOffline), prefix: new HarmonyMethod(typeof(NoDiseasePatches),
 				nameof(RenderOffline_Prefix)));
+			// Mark doctor buildings as deprecated
+			harmony.Patch(typeof(AdvancedApothecaryConfig), nameof(AdvancedApothecaryConfig.
+				CreateBuildingDef), postfix: makeDeprecated);
+			harmony.Patch(typeof(AdvancedDoctorStationConfig), nameof(
+				AdvancedDoctorStationConfig.CreateBuildingDef), postfix: makeDeprecated);
+			harmony.Patch(typeof(ApothecaryConfig), nameof(ApothecaryConfig.CreateBuildingDef),
+				postfix: makeDeprecated);
+			harmony.Patch(typeof(DoctorStationConfig), nameof(DoctorStationConfig.
+				CreateBuildingDef), postfix: makeDeprecated);
+			harmony.Patch(typeof(GasConduitDiseaseSensorConfig), nameof(
+				GasConduitDiseaseSensorConfig.CreateBuildingDef), postfix: makeDeprecated);
+			harmony.Patch(typeof(LiquidConduitDiseaseSensorConfig), nameof(
+				LiquidConduitDiseaseSensorConfig.CreateBuildingDef), postfix: makeDeprecated);
+			harmony.Patch(typeof(LogicDiseaseSensorConfig), nameof(LogicDiseaseSensorConfig.
+				CreateBuildingDef), postfix: makeDeprecated);
+			harmony.Patch(typeof(SolidConduitDiseaseSensorConfig), nameof(
+				SolidConduitDiseaseSensorConfig.CreateBuildingDef), postfix: makeDeprecated);
 		}
 
 		/// <summary>
@@ -196,6 +217,13 @@ namespace PeterHan.FastTrack.GamePatches {
 		private static bool IsValidForTarget_Prefix(ref bool __result) {
 			__result = false;
 			return false;
+		}
+
+		/// <summary>
+		/// Makes a building deprecated.
+		/// </summary>
+		private static void MakeBuildingDeprecated(BuildingDef __result) {
+			__result.Deprecated = true;
 		}
 
 		/// <summary>

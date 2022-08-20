@@ -58,7 +58,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <param name="time">The time it took the method to run in microseconds.</param>
 		public void Log(long time) {
 			Interlocked.Increment(ref methodCalls);
-			DebugMetrics.Accumulate(ref timeInMethod, time);
+			Interlocked.Add(ref timeInMethod, time);
 		}
 
 		/// <summary>

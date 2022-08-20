@@ -94,13 +94,13 @@ namespace PeterHan.FastTrack.GamePatches {
 						canBePickedUp.Add(key, candidate);
 				}
 			}
+			pathCosts.Recycle();
 			// Copy the remaining pickups to the list, there are now way fewer because only
 			// one was kept per possible tag bits (with the highest priority, best path cost,
 			// etc)
 			finalPickups.Clear();
 			foreach (var pickup in canBePickedUp.Values)
 				finalPickups.Add(pickup);
-			pathCosts.Recycle();
 			Recycle(canBePickedUp);
 			// Prevent the original method from running
 			return false;
@@ -119,10 +119,8 @@ namespace PeterHan.FastTrack.GamePatches {
 			// Look for cell cost, share costs across multiple queries to a cell
 			// If this is being run synchronous, no issue, otherwise the GSP patch will
 			// avoid races on the scene partitioner
-			if (!pathCosts.TryGetValue(cell, out int cost)) {
-				cost = target.GetNavigationCost(navigator, cell);
-				pathCosts.Add(cell, cost);
-			}
+			if (!pathCosts.TryGetValue(cell, out int cost))
+				pathCosts.Add(cell, cost = target.GetNavigationCost(navigator, cell));
 			return cost;
 		}
 
