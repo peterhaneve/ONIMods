@@ -226,6 +226,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		private static int CompareChores(ref PreContext current, int personalPriority,
 				ref PrioritySetting userPriority, int proxPriority, int chorePriority) {
 			ref var cp = ref current.masterPriority;
+			// IsMoreSatisfyingEarly
 			int result = cp.priority_class - userPriority.priority_class;
 			if (result != 0)
 				return result;
@@ -275,7 +276,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				// still need to be run when the tasks panel is open
 				var pc = preconditions[i];
 				string id = pc.id;
-				if (id != "IsValid" && id != "IsPermitted" && id != "HasUrge" &&
+				if (id != "IsMoreSatisfyingEarly" && id != "IsPermitted" && id != "HasUrge" &&
 						id != "IsOverrideTargetNullOrMe" && id != "IsPreemptable" &&
 						id != "IsInMyParentWorld" && !pc.fn(ref context, pc.data)) {
 					context.failedPreconditionId = i;
@@ -455,35 +456,35 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="typeForPermission">The chore type to use for IsPermitted.</param>
 		/// <returns>true if the universal Chore preconditions are satisfied, or false otherwise.</returns>
 		private bool FastCheckPreconditions(Chore chore, ChoreType typeForPermission) {
+			// IsValid
+			if (!chore.IsValid())
+				return false;
 			var go = chore.gameObject;
 			var consumer = consumerState.consumer;
 			var type = chore.choreType;
 			var overrideTarget = chore.overrideTarget;
-			// IsValid
-			bool valid = chore.IsValid() && go != null &&
+			if (go == null ||
 				// Do not even consider chores that cannot interrupt the current chore
-				GetInterruptPriority(chore) >= interruptPriority && (exclusions == null ||
-					!exclusions.Overlaps(type.tags)) &&
+				GetInterruptPriority(chore) < interruptPriority ||
+				(exclusions != null && exclusions.Overlaps(type.tags)) ||
 				// IsPermitted
-				consumer.IsPermittedOrEnabled(typeForPermission, chore) &&
+				!consumer.IsPermittedOrEnabled(typeForPermission, chore) ||
 				// IsOverrideTargetNullOrMe
-				(overrideTarget == null || overrideTarget == consumer) &&
+				(overrideTarget != null && overrideTarget != consumer) ||
 				// HasUrge
-				(type.urge == null || consumer.GetUrges().Contains(type.urge));
-			if (valid) {
-				int cell = Grid.PosToCell(go.transform.position);
-				valid = Grid.IsValidCell(cell);
-				// IsInMyParentWorld
-				if (valid) {
-					int newWorld = Grid.WorldIdx[cell];
-					valid = newWorld == targetWorld;
-					if (!valid) {
-						var choreWorld = ClusterManager.Instance.GetWorld(newWorld);
-						valid = choreWorld != null && parentWorld == choreWorld.ParentWorldId;
-					}
-				}
+				(type.urge != null && !consumer.GetUrges().Contains(type.urge)))
+				return false;
+			int cell = Grid.PosToCell(go.transform.position);
+			if (!Grid.IsValidCell(cell))
+				return false;
+			// IsInMyParentWorld
+			int newWorld = Grid.WorldIdx[cell];
+			if (newWorld != targetWorld) {
+				var choreWorld = ClusterManager.Instance.GetWorld(newWorld);
+				if (choreWorld == null || parentWorld != choreWorld.ParentWorldId)
+					return false;
 			}
-			return valid;
+			return true;
 		}
 
 		/// <summary>
