@@ -457,7 +457,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <returns>true if the universal Chore preconditions are satisfied, or false otherwise.</returns>
 		private bool FastCheckPreconditions(Chore chore, ChoreType typeForPermission) {
 			// IsValid
-			if (!chore.IsValid())
+			if (!chore.IsValid() || chore.isNull)
 				return false;
 			var go = chore.gameObject;
 			var consumer = consumerState.consumer;
@@ -479,12 +479,10 @@ namespace PeterHan.FastTrack.GamePatches {
 				return false;
 			// IsInMyParentWorld
 			int newWorld = Grid.WorldIdx[cell];
-			if (newWorld != targetWorld) {
-				var choreWorld = ClusterManager.Instance.GetWorld(newWorld);
-				if (choreWorld == null || parentWorld != choreWorld.ParentWorldId)
-					return false;
-			}
-			return true;
+			if (newWorld == targetWorld)
+				return true;
+			var choreWorld = ClusterManager.Instance.GetWorld(newWorld);
+			return choreWorld != null && parentWorld == choreWorld.ParentWorldId;
 		}
 
 		/// <summary>
