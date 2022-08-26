@@ -23,8 +23,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using UnityEngine;
 
-using PickupTagDict = System.Collections.Generic.Dictionary<PeterHan.FastTrack.GamePatches.
-	FetchManagerFastUpdate.PickupTagKey, FetchManager.Pickup>;
+using FMPickup = FetchManager.Pickup;
 
 namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
@@ -44,18 +43,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		static FetchManagerFastUpdate() {
 			POOL = new ConcurrentStack<PickupTagDict>();
 			for (int i = 0; i < PRESEED; i++)
-				POOL.Push(new PickupTagDict(256, PickupTagEqualityComparer.Instance));
-		}
-
-		/// <summary>
-		/// Gets a temporary pickup dictionary, retrieving one from the pool if available to
-		/// avoid allocating memory.
-		/// </summary>
-		/// <returns>A pooled instance (if available) with the pickup tags.</returns>
-		private static PickupTagDict Allocate() {
-			if (!POOL.TryPop(out var dict))
-				dict = new PickupTagDict(256, PickupTagEqualityComparer.Instance);
-			return dict;
+				POOL.Push(new PickupTagDict());
 		}
 
 		/// <summary>
@@ -64,7 +52,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		internal static bool BeforeUpdatePickups(FetchManager.FetchablesByPrefabId __instance,
 				Navigator worker_navigator, GameObject worker_go) {
-			var canBePickedUp = Allocate();
+			if (!POOL.TryPop(out var canBePickedUp))
+				canBePickedUp = new PickupTagDict();
 			var pathCosts = __instance.cellCosts;
 			var finalPickups = __instance.finalPickups;
 			// Will reflect the changes from Waste Not, Want Not and No Manual Delivery
@@ -77,32 +66,16 @@ namespace PeterHan.FastTrack.GamePatches {
 				int cost;
 				// Exclude unreachable items
 				if (target.CouldBePickedUpByMinion(worker_go) && (cost = GetPathCost(target,
-						worker_navigator, pathCosts)) >= 0) {
-					int hash = fetchable.tagBitsHash, mp = fetchable.masterPriority;
-					var key = new PickupTagKey(hash, target.KPrefabID, mp);
-					var candidate = new FetchManager.Pickup {
-						pickupable = target, tagBitsHash = hash, PathCost = (ushort)Math.
-						Min(cost, ushort.MaxValue), masterPriority = mp,
-						freshness = fetchable.freshness, foodQuality = fetchable.foodQuality
-					};
-					if (canBePickedUp.TryGetValue(key, out var current)) {
-						// Is the new one better?
-						int result = comparer.Compare(candidate, current);
-						if (result < 0 || (result == 0 && target.UnreservedAmount > current.
-								pickupable.UnreservedAmount))
-							canBePickedUp[key] = candidate;
-					} else
-						canBePickedUp.Add(key, candidate);
-				}
+						worker_navigator, pathCosts)) >= 0)
+					canBePickedUp.AddItem(ref fetchable, cost, comparer);
 			}
 			pathCosts.Clear();
 			// Copy the remaining pickups to the list, there are now way fewer because only
-			// one was kept per possible tag bits (with the highest priority, best path cost,
-			// etc)
+			// one was kept per possible tag bits (with the best path cost etc)
 			finalPickups.Clear();
-			foreach (var pickup in canBePickedUp.Values)
-				finalPickups.Add(pickup);
-			Recycle(canBePickedUp);
+			canBePickedUp.CollectAll(finalPickups);
+			canBePickedUp.Clear();
+			POOL.Push(canBePickedUp);
 			// Prevent the original method from running
 			return false;
 		}
@@ -126,15 +99,6 @@ namespace PeterHan.FastTrack.GamePatches {
 		}
 
 		/// <summary>
-		/// Returns a temporary pickup dictionary to the pool.
-		/// </summary>
-		/// <param name="dict">The dictionary to clear and recycle.</param>
-		private static void Recycle(PickupTagDict dict) {
-			dict.Clear();
-			POOL.Push(dict);
-		}
-
-		/// <summary>
 		/// Wraps a prefab and its tag bit hash in a key structure that can be very quickly and
 		/// properly hashed and compared for a dictionary key.
 		/// </summary>
@@ -149,15 +113,9 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// </summary>
 			internal readonly int Hash;
 
-			/// <summary>
-			/// The priority of the item.
-			/// </summary>
-			internal readonly int MasterPriority;
-
-			public PickupTagKey(int hash, KPrefabID id, int priority) {
+			public PickupTagKey(int hash, KPrefabID id) {
 				Hash = hash;
 				ID = id;
-				MasterPriority = priority;
 			}
 
 			public override bool Equals(object obj) {
@@ -170,7 +128,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			}
 
 			public override int GetHashCode() {
-				return (Hash << 4) | MasterPriority;
+				return Hash;
 			}
 
 			public override string ToString() {
@@ -192,7 +150,7 @@ namespace PeterHan.FastTrack.GamePatches {
 
 			public bool Equals(PickupTagKey x, PickupTagKey y) {
 				bool ret = false;
-				if (x.Hash == y.Hash && x.MasterPriority == y.MasterPriority) {
+				if (x.Hash == y.Hash) {
 					var bitsA = new TagBits(ref FetchManager.disallowedTagMask);
 					var bitsB = new TagBits(ref FetchManager.disallowedTagMask);
 					x.ID.AndTagBits(ref bitsA);
@@ -203,8 +161,102 @@ namespace PeterHan.FastTrack.GamePatches {
 			}
 
 			public int GetHashCode(PickupTagKey obj) {
-				// Master priority is from 0 to 10
-				return (obj.Hash << 4) | obj.MasterPriority;
+				return obj.Hash;
+			}
+		}
+
+		/// <summary>
+		/// Maps pickup tags to a list (by priority) of items.
+		/// </summary>
+		private sealed class PickupTagDict {
+			/// <summary>
+			/// Priority is usually from 1-9, Priority Zero adds p0, Stock Bug Fix can add p10
+			/// </summary>
+			private const int MAX_PRIORITY = 10;
+
+			/// <summary>
+			/// Pools items list to reduce memory allocations. As each UpdatePickups runs on
+			/// its own thread in the worst case and this class is already pooled, no
+			/// contention can occur here.
+			/// </summary>
+			private readonly Queue<FMPickup[]> itemPool;
+
+			/// <summary>
+			/// Maps pickup tags to a list by priority.
+			/// </summary>
+			private readonly IDictionary<PickupTagKey, FMPickup[]> pickups;
+
+			internal PickupTagDict() {
+				itemPool = new Queue<FMPickup[]>(64);
+				pickups = new Dictionary<PickupTagKey, FMPickup[]>(256,
+					PickupTagEqualityComparer.Instance);
+			}
+
+			/// <summary>
+			/// Adds an item to the list of fetchable items.
+			/// </summary>
+			/// <param name="fetchable">The item that can be fetched.</param>
+			/// <param name="cost">The path cost to the item.</param>
+			/// <param name="comparer">Determines whether the item is better than existing items in the list.</param>
+			public void AddItem(ref FetchManager.Fetchable fetchable, int cost,
+					IComparer<FMPickup> comparer) {
+				int hash = fetchable.tagBitsHash, mp = fetchable.masterPriority, result;
+				var target = fetchable.pickupable;
+				var key = new PickupTagKey(hash, target.KPrefabID);
+				var candidate = new FMPickup {
+					pickupable = target, tagBitsHash = hash, PathCost = (ushort)Math.Min(cost,
+					ushort.MaxValue), masterPriority = mp, freshness = fetchable.freshness,
+					foodQuality = fetchable.foodQuality
+				};
+				if (!pickups.TryGetValue(key, out var slots)) {
+					slots = itemPool.Count > 0 ? itemPool.Dequeue() : new FMPickup[1 +
+						MAX_PRIORITY];
+					pickups.Add(key, slots);
+				}
+				if (mp < 0 || mp >= slots.Length) {
+#if DEBUG
+					PUtil.LogDebug("Item priority is outside bounds: " + mp);
+#endif
+					slots = new FMPickup[mp + 1];
+					pickups[key] = slots;
+				}
+				ref var current = ref slots[mp];
+				var pu = current.pickupable;
+				// Is the new one better?
+				if (pu == null || (result = comparer.Compare(candidate, current)) < 0 ||
+						(result == 0 && target.UnreservedAmount > pu.UnreservedAmount))
+					current = candidate;
+			}
+
+			/// <summary>
+			/// Removes and recycles all items from the dictionary.
+			/// </summary>
+			public void Clear() {
+				foreach (var pair in pickups) {
+					var items = pair.Value;
+					int n = items.Length;
+					// Avoid leaking a ref to a pickupable
+					for (int i = 0; i < n; i++)
+						items[i].pickupable = null;
+					itemPool.Enqueue(items);
+				}
+				pickups.Clear();
+			}
+			
+			/// <summary>
+			/// Adds all items to the final item list.
+			/// </summary>
+			/// <param name="finalPickups">The location where items will be stored.</param>
+			public void CollectAll(ICollection<FMPickup> finalPickups) {
+				foreach (var pair in pickups) {
+					var priList = pair.Value;
+					// Reverse order = higher priority first
+					for (int i = priList.Length - 1; i >= 0; i--) {
+						ref var item = ref priList[i];
+						if (item.pickupable != null)
+							finalPickups.Add(item);
+					}
+				}
 			}
 		}
 	}
