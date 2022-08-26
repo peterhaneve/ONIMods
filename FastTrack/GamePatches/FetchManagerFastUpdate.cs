@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using System.Collections.Concurrent;
@@ -64,7 +65,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal static bool BeforeUpdatePickups(FetchManager.FetchablesByPrefabId __instance,
 				Navigator worker_navigator, GameObject worker_go) {
 			var canBePickedUp = Allocate();
-			var pathCosts = DictionaryPool<int, int, FetchManager>.Allocate();
+			var pathCosts = __instance.cellCosts;
 			var finalPickups = __instance.finalPickups;
 			// Will reflect the changes from Waste Not, Want Not and No Manual Delivery
 			var comparer = FetchManager.ComparerIncludingPriority;
@@ -77,12 +78,12 @@ namespace PeterHan.FastTrack.GamePatches {
 				// Exclude unreachable items
 				if (target.CouldBePickedUpByMinion(worker_go) && (cost = GetPathCost(target,
 						worker_navigator, pathCosts)) >= 0) {
-					int hash = fetchable.tagBitsHash;
-					var key = new PickupTagKey(hash, target.KPrefabID);
+					int hash = fetchable.tagBitsHash, mp = fetchable.masterPriority;
+					var key = new PickupTagKey(hash, target.KPrefabID, mp);
 					var candidate = new FetchManager.Pickup {
-						pickupable = target, tagBitsHash = hash, PathCost = (ushort)cost,
-						masterPriority = fetchable.masterPriority, freshness = fetchable.
-						freshness, foodQuality = fetchable.foodQuality
+						pickupable = target, tagBitsHash = hash, PathCost = (ushort)Math.
+						Min(cost, ushort.MaxValue), masterPriority = mp,
+						freshness = fetchable.freshness, foodQuality = fetchable.foodQuality
 					};
 					if (canBePickedUp.TryGetValue(key, out var current)) {
 						// Is the new one better?
@@ -94,7 +95,7 @@ namespace PeterHan.FastTrack.GamePatches {
 						canBePickedUp.Add(key, candidate);
 				}
 			}
-			pathCosts.Recycle();
+			pathCosts.Clear();
 			// Copy the remaining pickups to the list, there are now way fewer because only
 			// one was kept per possible tag bits (with the highest priority, best path cost,
 			// etc)
@@ -137,7 +138,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Wraps a prefab and its tag bit hash in a key structure that can be very quickly and
 		/// properly hashed and compared for a dictionary key.
 		/// </summary>
-		internal readonly struct PickupTagKey {
+		internal readonly struct PickupTagKey : IEquatable<PickupTagKey> {
 			/// <summary>
 			/// The prefab ID of the tagged object.
 			/// </summary>
@@ -148,9 +149,15 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// </summary>
 			internal readonly int Hash;
 
-			public PickupTagKey(int hash, KPrefabID id) {
+			/// <summary>
+			/// The priority of the item.
+			/// </summary>
+			internal readonly int MasterPriority;
+
+			public PickupTagKey(int hash, KPrefabID id, int priority) {
 				Hash = hash;
 				ID = id;
+				MasterPriority = priority;
 			}
 
 			public override bool Equals(object obj) {
@@ -158,8 +165,12 @@ namespace PeterHan.FastTrack.GamePatches {
 					this, other);
 			}
 
+			public bool Equals(PickupTagKey other) {
+				return PickupTagEqualityComparer.Instance.Equals(this, other);
+			}
+
 			public override int GetHashCode() {
-				return Hash;
+				return (Hash << 4) | MasterPriority;
 			}
 
 			public override string ToString() {
@@ -181,7 +192,7 @@ namespace PeterHan.FastTrack.GamePatches {
 
 			public bool Equals(PickupTagKey x, PickupTagKey y) {
 				bool ret = false;
-				if (x.Hash == y.Hash) {
+				if (x.Hash == y.Hash && x.MasterPriority == y.MasterPriority) {
 					var bitsA = new TagBits(ref FetchManager.disallowedTagMask);
 					var bitsB = new TagBits(ref FetchManager.disallowedTagMask);
 					x.ID.AndTagBits(ref bitsA);
@@ -192,7 +203,8 @@ namespace PeterHan.FastTrack.GamePatches {
 			}
 
 			public int GetHashCode(PickupTagKey obj) {
-				return obj.Hash;
+				// Master priority is from 0 to 10
+				return (obj.Hash << 4) | obj.MasterPriority;
 			}
 		}
 	}

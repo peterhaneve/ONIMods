@@ -29,12 +29,6 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	internal static class ChorePatches {
 		/// <summary>
-		/// Set to true if full chore precondition evaluation is required (building chore list
-		/// side screen is open).
-		/// </summary>
-		private static bool needBuildingTodo;
-
-		/// <summary>
 		/// Set to true if full chore precondition evaluation is required (Duplicant chore list
 		/// side screen is open).
 		/// </summary>
@@ -44,47 +38,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Called when the game starts.
 		/// </summary>
 		internal static void Init() {
-			needBuildingTodo = false;
 			needDuplicantTodo = false;
-		}
-
-		/// <summary>
-		/// Applied to BuildingChoresPanel to enable the priority optimizations when the
-		/// building errand list becomes inactive.
-		/// </summary>
-		[HarmonyPatch(typeof(BuildingChoresPanel), nameof(BuildingChoresPanel.
-			OnDeselectTarget))]
-		internal static class BuildingChoresPanel_OnDeselectTarget_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.ChoreOpts;
-
-			/// <summary>
-			/// Applied after OnSelectTarget runs.
-			/// </summary>
-			internal static void Postfix() {
-				needBuildingTodo = false;
-#if DEBUG
-				PUtil.LogDebug("Enable chore optimizations: Building todo closed");
-#endif
-			}
-		}
-
-		/// <summary>
-		/// Applied to BuildingChoresPanel to disable the priority optimizations when the
-		/// building errand list is active.
-		/// </summary>
-		[HarmonyPatch(typeof(BuildingChoresPanel), nameof(BuildingChoresPanel.OnSelectTarget))]
-		internal static class BuildingChoresPanel_OnSelectTarget_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.ChoreOpts;
-
-			/// <summary>
-			/// Applied before OnSelectTarget runs.
-			/// </summary>
-			internal static void Prefix() {
-				needBuildingTodo = true;
-#if DEBUG
-				PUtil.LogDebug("Disable chore optimizations: Building todo opened");
-#endif
-			}
 		}
 
 		/// <summary>
@@ -99,17 +53,19 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// </summary>
 			internal static bool Prefix(ChoreConsumerState consumer_state,
 					List<PreContext> succeeded, IList<Chore> ___chores) {
-				bool run = false;
+				var inst = RootMenu.Instance;
+				bool run = false, needBuildingTodo = inst != null && inst.
+					IsBuildingChorePanelActive();
 				if (!needBuildingTodo && !needDuplicantTodo) {
 					var ci = ChoreComparator.Instance;
-					run = ci.Setup(consumer_state);
+					run = ci.Setup(consumer_state, succeeded);
 					if (run) {
 						int n = ___chores.Count;
 						for (int i = 0; i < n; i++) {
 							var chore = ___chores[i];
 							// FetchChore.CollectChores is overridden to blank
 							if (!(chore is FetchChore))
-								ci.Collect(chore, succeeded);
+								ci.Collect(chore);
 						}
 						ci.Cleanup();
 					}
@@ -130,10 +86,12 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// </summary>
 			internal static bool Prefix(ChoreConsumerState consumer_state,
 					List<PreContext> succeeded, GlobalChoreProvider __instance) {
-				bool run = false;
+				var inst = RootMenu.Instance;
+				bool run = false, needBuildingTodo = inst != null && inst.
+					IsBuildingChorePanelActive();
 				if (!needBuildingTodo && !needDuplicantTodo) {
 					var ci = ChoreComparator.Instance;
-					run = ci.Setup(consumer_state);
+					run = ci.Setup(consumer_state, succeeded);
 					if (run) {
 						var chores = __instance.chores;
 						var fetches = __instance.fetches;
@@ -141,12 +99,12 @@ namespace PeterHan.FastTrack.GamePatches {
 						for (int i = 0; i < n; i++) {
 							var chore = chores[i];
 							if (!(chore is FetchChore))
-								ci.Collect(chore, succeeded);
+								ci.Collect(chore);
 						}
-						ci.CollectSweep(__instance.clearableManager, succeeded);
+						ci.CollectSweep(__instance.clearableManager);
 						n = fetches.Count;
 						for (int i = 0; i < n; i++)
-							ci.Collect(fetches[i].chore, succeeded);
+							ci.Collect(fetches[i].chore);
 						ci.Cleanup();
 					}
 				}
@@ -343,6 +301,11 @@ namespace PeterHan.FastTrack.GamePatches {
 		private int parentWorld;
 
 		/// <summary>
+		/// The location where successful chores will be stored.
+		/// </summary>
+		private ICollection<PreContext> succeeded;
+
+		/// <summary>
 		/// The world index where the chore consumer is located.
 		/// </summary>
 		private int targetWorld;
@@ -351,8 +314,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Adds a new chore to the appropriate list.
 		/// </summary>
 		/// <param name="newContext">The candidate chore.</param>
-		/// <param name="succeeded">The location where possible chores will be stored.</param>
-		private void AddChore(ref PreContext newContext, ICollection<PreContext> succeeded) {
+		private void AddChore(ref PreContext newContext) {
 			int diff = best.chore == null ? -1 : CompareChores(ref best, ref newContext);
 			if (diff <= 0) {
 				RunSomePreconditions(ref newContext);
@@ -370,10 +332,9 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="precondition">The preconditions of the sweep chore.</param>
 		/// <param name="chore">The fetch chore to satisfy with the sweep.</param>
 		/// <param name="sortedClearable">The candidate item to sweep.</param>
-		/// <param name="succeeded">The location where possible chores will be stored.</param>
 		/// <returns>true if the sweep chore can satisfy this fetch errand, or false otherwise.</returns>
 		private bool CheckFetchChore(ref PreContext precondition, FetchChore chore,
-				ref SortedClearable sortedClearable, ICollection<PreContext> succeeded) {
+				ref SortedClearable sortedClearable) {
 			var masterPriority = sortedClearable.masterPriority;
 			var pickupable = sortedClearable.pickupable;
 			bool found = false;
@@ -408,19 +369,19 @@ namespace PeterHan.FastTrack.GamePatches {
 			best = default;
 			consumerState = null;
 			exclusions = null;
+			succeeded = null;
 		}
 
 		/// <summary>
 		/// Collects available chores when the Duplicant is currently doing something else.
 		/// </summary>
 		/// <param name="chore">The chore which could be chosen.</param>
-		/// <param name="succeeded">The location where possible chores will be stored.</param>
-		internal void Collect(Chore chore, ICollection<PreContext> succeeded) {
+		internal void Collect(Chore chore) {
 			// Fetch chores are handled separately
 			if (FastCheckPreconditions(chore, chore.choreType)) {
 				var newContext = new PreContext(chore, consumerState, false);
 				if (chore.driver == null || chore.CanPreempt(newContext))
-					AddChore(ref newContext, succeeded);
+					AddChore(ref newContext);
 			}
 		}
 
@@ -429,8 +390,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// destination that is a valid Fetch errand.
 		/// </summary>
 		/// <param name="manager">The current sweep manager.</param>
-		/// <param name="succeeded">The location where possible chores will be stored.</param>
-		internal void CollectSweep(ClearableManager manager, ICollection<PreContext> succeeded) {
+		internal void CollectSweep(ClearableManager manager) {
 			int personalPriority = consumerState.consumer.GetPersonalPriority(transport);
 			bool found = false;
 			var fetches = GlobalChoreProvider.Instance.fetches;
@@ -445,7 +405,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				sortedClearable.pickupable.KPrefabID.UpdateTagBits();
 				for (int j = 0; j < fn && !found; j++)
 					found = CheckFetchChore(ref precondition, fetches[j].chore,
-						ref sortedClearable, succeeded);
+						ref sortedClearable);
 			}
 		}
 		
@@ -489,8 +449,10 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Sets up the initial state for chore comparison.
 		/// </summary>
 		/// <param name="state">The consumer of this chore.</param>
+		/// <param name="successfulContexts">The location where successful chores will be stored.</param>
 		/// <returns>true if some chores could match, or false if all chores will fail.</returns>
-		internal bool Setup(ChoreConsumerState state) {
+		internal bool Setup(ChoreConsumerState state,
+				ICollection<PreContext> successfulContexts) {
 			var go = state.gameObject;
 			bool valid = go != null;
 			if (valid) {
@@ -513,6 +475,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				advancedPersonal = Game.Instance.advancedPersonalPriorities;
 				best = default;
 				consumerState = state;
+				succeeded = successfulContexts;
 			}
 			return valid;
 		}

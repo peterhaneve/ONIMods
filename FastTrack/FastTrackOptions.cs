@@ -248,7 +248,7 @@ namespace PeterHan.FastTrack {
 			FastRaycast = true;
 			FastReachability = true;
 			FastStructureTemperature = true;
-			FastUpdatePickups = false;
+			FastUpdatePickups = true;
 			FlattenAverages = true;
 			InfoCardOpts = true;
 			LoadOpts = true;

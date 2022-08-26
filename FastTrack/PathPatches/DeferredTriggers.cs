@@ -153,7 +153,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Saves information about events to trigger later.
 		/// </summary>
-		private struct TriggerEvent {
+		private readonly struct TriggerEvent : IEquatable<TriggerEvent> {
 			/// <summary>
 			/// The event parameter (if available).
 			/// </summary>
@@ -174,12 +174,24 @@ namespace PeterHan.FastTrack.PathPatches {
 				this.hash = hash;
 				this.source = source;
 			}
+
+			public bool Equals(TriggerEvent other) {
+				return data == other.data && hash == other.hash && source == other.source;
+			}
+
+			public override bool Equals(object obj) {
+				return obj is TriggerEvent other && Equals(other);
+			}
+
+			public override int GetHashCode() {
+				return (source == null ? 0 : source.GetHashCode()) ^ hash;
+			}
 		}
 
 		/// <summary>
 		/// Saves information about offsets to update later.
 		/// </summary>
-		private struct UpdateOffset {
+		private readonly struct UpdateOffset : IEquatable<UpdateOffset> {
 			/// <summary>
 			/// The new cell that the offsets will use.
 			/// </summary>
@@ -193,6 +205,18 @@ namespace PeterHan.FastTrack.PathPatches {
 			public UpdateOffset(OffsetTracker offsets, int newCell) {
 				this.newCell = newCell;
 				this.offsets = offsets;
+			}
+
+			public bool Equals(UpdateOffset other) {
+				return newCell == other.newCell && offsets == other.offsets;
+			}
+
+			public override bool Equals(object obj) {
+				return obj is UpdateOffset other && Equals(other);
+			}
+
+			public override int GetHashCode() {
+				return newCell;
 			}
 		}
 	}
