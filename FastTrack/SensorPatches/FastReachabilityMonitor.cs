@@ -20,7 +20,7 @@ using HarmonyLib;
 using PeterHan.PLib.Core;
 using System.Collections.Generic;
 using System.Reflection;
-
+using UnityEngine;
 using RMI = ReachabilityMonitor.Instance;
 using ReachabilityMonitorState = GameStateMachine<ReachabilityMonitor, ReachabilityMonitor.
 	Instance, Workable, object>.State;
@@ -37,6 +37,11 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// The name of the layer used for the reachability scene partitioner.
 		/// </summary>
 		public const string REACHABILITY = nameof(FastReachabilityMonitor);
+
+		/// <summary>
+		/// Whether the offsets have been updated before.
+		/// </summary>
+		private bool firstTime;
 
 		/// <summary>
 		/// Whether the cell change handler needs to be cleaned up.
@@ -59,6 +64,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		private RMI smi;
 
 		internal FastReachabilityMonitor() {
+			firstTime = true;
 			lastExtents = new Extents(int.MinValue, int.MinValue, 1, 1);
 			partitionerEntry = HandleVector<int>.InvalidHandle;
 		}
@@ -68,6 +74,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 				GameScenePartitioner.Instance.Free(ref partitionerEntry);
 			if (cleanupCellChange)
 				Unsubscribe((int)GameHashes.CellChanged);
+			Unsubscribe((int)GameHashes.Landed);
 			base.OnCleanUp();
 		}
 
@@ -94,7 +101,9 @@ namespace PeterHan.FastTrack.SensorPatches {
 				controller.isMovable;
 			if (cleanupCellChange)
 				Subscribe((int)GameHashes.CellChanged, OnMoved);
-			FastGroupProber.Instance.Enqueue(smi);
+			Subscribe((int)GameHashes.Landed, OnMoved);
+			firstTime = true;
+			FastGroupProber.Instance?.Enqueue(smi);
 		}
 
 		public void Sim4000ms(float _) {
@@ -106,26 +115,39 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// </summary>
 		public void UpdateOffsets() {
 			var inst = FastGroupProber.Instance;
-			if (inst != null && smi != null) {
-				var offsets = smi.master.GetOffsets();
-				var extents = new Extents(Grid.PosToCell(transform.position), offsets);
-				// Only if the extents actually changed
-				if (extents.x != lastExtents.x || extents.y != lastExtents.y || extents.
-						width != lastExtents.width || extents.height != lastExtents.height) {
-					var gsp = GameScenePartitioner.Instance;
+			Workable master;
+			if (inst != null && smi != null && (master = smi.master) != null) {
+				int cell = Grid.PosToCell(master.transform.position);
+				var gsp = GameScenePartitioner.Instance;
+				if (Grid.IsValidCell(cell) && cell > 0) {
+					var extents = new Extents(cell, smi.master.GetOffsets(cell));
+					// Only if the extents actually changed
+					if (extents.x != lastExtents.x || extents.y != lastExtents.y || extents.
+							width != lastExtents.width || extents.height != lastExtents.
+							height) {
+						if (partitionerEntry.IsValid())
+							gsp.UpdatePosition(partitionerEntry, extents);
+						else
+							partitionerEntry = gsp.Add("FastReachabilityMonitor.UpdateOffsets",
+								this, extents, inst.mask, OnReachableChanged);
+						// The offsets changed, fire a manual check if not the first time
+						// (the smi constructor already updated it once)
+						if (!firstTime)
+							inst.Enqueue(smi);
+						lastExtents = extents;
+					}
+				} else if (lastExtents.x >= 0 || lastExtents.y >= 0) {
+					// Payloads and worn items are sometimes moved to (0, 0) or cell -1
 					if (partitionerEntry.IsValid())
-						gsp.UpdatePosition(partitionerEntry, extents);
-					else
-						partitionerEntry = gsp.Add("FastReachabilityMonitor.UpdateOffsets",
-							this, extents, inst.mask, OnReachableChanged);
-					// The offsets changed, fire a manual check if not the first time
-					// (the smi constructor already updated it once)
-					if (lastExtents.x >= 0)
-						smi.UpdateReachability();
-					lastExtents = extents;
+						gsp.Free(ref partitionerEntry);
+					smi.sm.isReachable.Set(false, smi);
+					lastExtents.x = int.MinValue;
+					lastExtents.y = int.MinValue;
+					lastExtents.width = 1;
+					lastExtents.height = 1;
 				}
-			} else
-				PUtil.LogWarning("FastReachabilityMonitor scene partitioner is unavailable");
+				firstTime = false;
+			}
 		}
 	}
 
@@ -206,8 +228,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// </summary>
 		internal static bool Prefix(object prober, IEnumerable<int> cells) {
 			var inst = FastGroupProber.Instance;
-			if (inst != null)
-				inst.Occupy(prober, cells, false);
+			inst?.Occupy(prober, cells, false);
 			return inst == null;
 		}
 	}
@@ -224,8 +245,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// </summary>
 		internal static bool Prefix(object prober) {
 			var inst = FastGroupProber.Instance;
-			if (inst != null)
-				inst.Remove(prober);
+			inst?.Remove(prober);
 			return inst == null;
 		}
 	}
@@ -242,8 +262,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// </summary>
 		internal static bool Prefix(object prober) {
 			var inst = FastGroupProber.Instance;
-			if (inst != null)
-				inst.Allocate(prober);
+			inst?.Allocate(prober);
 			return inst == null;
 		}
 	}

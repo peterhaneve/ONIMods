@@ -52,21 +52,23 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		internal static bool BeforeUpdatePickups(FetchManager.FetchablesByPrefabId __instance,
 				Navigator worker_navigator, GameObject worker_go) {
-			if (!POOL.TryPop(out var canBePickedUp))
-				canBePickedUp = new PickupTagDict();
 			var pathCosts = __instance.cellCosts;
 			var finalPickups = __instance.finalPickups;
 			// Will reflect the changes from Waste Not, Want Not and No Manual Delivery
 			var comparer = FetchManager.ComparerIncludingPriority;
 			var fetchables = __instance.fetchables.GetDataList();
 			int n = fetchables.Count;
+			if (!POOL.TryPop(out var canBePickedUp))
+				canBePickedUp = new PickupTagDict();
 			for (int i = 0; i < n; i++) {
 				var fetchable = fetchables[i];
 				var target = fetchable.pickupable;
-				int cost;
+				int cell = target.cachedCell;
+				if (!pathCosts.TryGetValue(cell, out int cost))
+					pathCosts.Add(cell, cost = target.GetNavigationCost(worker_navigator,
+						cell));
 				// Exclude unreachable items
-				if (target.CouldBePickedUpByMinion(worker_go) && (cost = GetPathCost(target,
-						worker_navigator, pathCosts)) >= 0)
+				if (target.CouldBePickedUpByMinion(worker_go) && cost >= 0)
 					canBePickedUp.AddItem(ref fetchable, cost, comparer);
 			}
 			pathCosts.Clear();
@@ -78,24 +80,6 @@ namespace PeterHan.FastTrack.GamePatches {
 			POOL.Push(canBePickedUp);
 			// Prevent the original method from running
 			return false;
-		}
-
-		/// <summary>
-		/// Gets the path cost to a target item.
-		/// </summary>
-		/// <param name="target">The item to pick up.</param>
-		/// <param name="navigator">The navigator attempting to find the item.</param>
-		/// <param name="pathCosts">The cached path costs from previous queries.</param>
-		/// <returns>The cost to navigate to the item's current cell.</returns>
-		private static int GetPathCost(Pickupable target, Navigator navigator,
-				IDictionary<int, int> pathCosts) {
-			int cell = target.cachedCell;
-			// Look for cell cost, share costs across multiple queries to a cell
-			// If this is being run synchronous, no issue, otherwise the GSP patch will
-			// avoid races on the scene partitioner
-			if (!pathCosts.TryGetValue(cell, out int cost))
-				pathCosts.Add(cell, cost = target.GetNavigationCost(navigator, cell));
-			return cost;
 		}
 
 		/// <summary>
@@ -213,7 +197,9 @@ namespace PeterHan.FastTrack.GamePatches {
 						MAX_PRIORITY];
 					pickups.Add(key, slots);
 				}
-				if (mp < 0 || mp >= slots.Length) {
+				if (mp < 0)
+					throw new IndexOutOfRangeException("Item priority out of bounds: " + mp);
+				else if (mp >= slots.Length) {
 #if DEBUG
 					PUtil.LogDebug("Item priority is outside bounds: " + mp);
 #endif

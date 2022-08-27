@@ -29,19 +29,6 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	internal static class ChorePatches {
 		/// <summary>
-		/// Set to true if full chore precondition evaluation is required (Duplicant chore list
-		/// side screen is open).
-		/// </summary>
-		private static bool needDuplicantTodo;
-
-		/// <summary>
-		/// Called when the game starts.
-		/// </summary>
-		internal static void Init() {
-			needDuplicantTodo = false;
-		}
-
-		/// <summary>
 		/// Applied to ChoreProvider to more efficiently check for chores.
 		/// </summary>
 		[HarmonyPatch(typeof(ChoreProvider), nameof(ChoreProvider.CollectChores))]
@@ -54,9 +41,9 @@ namespace PeterHan.FastTrack.GamePatches {
 			internal static bool Prefix(ChoreConsumerState consumer_state,
 					List<PreContext> succeeded, IList<Chore> ___chores) {
 				var inst = RootMenu.Instance;
-				bool run = false, needBuildingTodo = inst != null && inst.
-					IsBuildingChorePanelActive();
-				if (!needBuildingTodo && !needDuplicantTodo) {
+				bool run = false;
+				if ((inst == null || !inst.IsBuildingChorePanelActive()) && !consumer_state.
+						selectable.IsSelected) {
 					var ci = ChoreComparator.Instance;
 					run = ci.Setup(consumer_state, succeeded);
 					if (run) {
@@ -87,9 +74,9 @@ namespace PeterHan.FastTrack.GamePatches {
 			internal static bool Prefix(ChoreConsumerState consumer_state,
 					List<PreContext> succeeded, GlobalChoreProvider __instance) {
 				var inst = RootMenu.Instance;
-				bool run = false, needBuildingTodo = inst != null && inst.
-					IsBuildingChorePanelActive();
-				if (!needBuildingTodo && !needDuplicantTodo) {
+				bool run = false;
+				if ((inst == null || !inst.IsBuildingChorePanelActive()) && !consumer_state.
+						selectable.IsSelected) {
 					var ci = ChoreComparator.Instance;
 					run = ci.Setup(consumer_state, succeeded);
 					if (run) {
@@ -109,26 +96,6 @@ namespace PeterHan.FastTrack.GamePatches {
 					}
 				}
 				return !run;
-			}
-		}
-		
-		/// <summary>
-		/// Applied to MinionTodoSideScreen to disable the priority optimizations when the
-		/// Duplicant chore list is active.
-		/// </summary>
-		[HarmonyPatch(typeof(MinionTodoSideScreen), nameof(MinionTodoSideScreen.OnShow))]
-		internal static class MinionTodoSideScreen_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.ChoreOpts;
-
-			/// <summary>
-			/// Applied before OnShow runs.
-			/// </summary>
-			internal static void Prefix(bool show) {
-				needDuplicantTodo = show;
-#if DEBUG
-				PUtil.LogDebug(show ? "Disable chore optimizations: Duplicant todo opened" :
-					"Enable chore optimizations: Duplicant todo closed");
-#endif
 			}
 		}
 	}
@@ -286,6 +253,11 @@ namespace PeterHan.FastTrack.GamePatches {
 		private ChoreConsumerState consumerState;
 
 		/// <summary>
+		/// The currently active chore; make sure it is always allowed.
+		/// </summary>
+		private Chore currentChore;
+
+		/// <summary>
 		/// The chore tags which cannot interrupt the current chore.
 		/// </summary>
 		private ISet<Tag> exclusions;
@@ -368,6 +340,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal void Cleanup() {
 			best = default;
 			consumerState = null;
+			currentChore = null;
 			exclusions = null;
 			succeeded = null;
 		}
@@ -423,10 +396,12 @@ namespace PeterHan.FastTrack.GamePatches {
 			var consumer = consumerState.consumer;
 			var type = chore.choreType;
 			var overrideTarget = chore.overrideTarget;
+			// Do not even consider chores that cannot interrupt the current chore, but always
+			// allow the current chore
+			if (chore != currentChore && (GetInterruptPriority(chore) < interruptPriority ||
+					(exclusions != null && exclusions.Overlaps(type.tags))))
+				return false;
 			if (go == null ||
-				// Do not even consider chores that cannot interrupt the current chore
-				GetInterruptPriority(chore) < interruptPriority ||
-				(exclusions != null && exclusions.Overlaps(type.tags)) ||
 				// IsPermitted
 				!consumer.IsPermittedOrEnabled(typeForPermission, chore) ||
 				// IsOverrideTargetNullOrMe
@@ -460,7 +435,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				valid = Grid.IsValidCell(cell);
 				// If false, all vanilla chores would fail precondition IsInMyParentWorld
 				if (valid) {
-					var currentChore = state.choreDriver.GetCurrentChore();
+					currentChore = state.choreDriver.GetCurrentChore();
 					targetWorld = Grid.WorldIdx[cell];
 					var currentWorld = ClusterManager.Instance.GetWorld(targetWorld);
 					parentWorld = currentWorld == null ? -1 : currentWorld.ParentWorldId;
@@ -471,7 +446,8 @@ namespace PeterHan.FastTrack.GamePatches {
 						exclusions = null;
 						interruptPriority = int.MinValue;
 					}
-				}
+				} else
+					currentChore = null;
 				advancedPersonal = Game.Instance.advancedPersonalPriorities;
 				best = default;
 				consumerState = state;

@@ -55,6 +55,10 @@ namespace PeterHan.FastTrack.SensorPatches {
 			Instance = new FastGroupProber(mask);
 		}
 
+		#if DEBUG
+		internal int[] Cells => cells;
+		#endif
+
 		/// <summary>
 		/// The cells which were added (background thread use only).
 		/// </summary>
@@ -256,7 +260,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 			alreadyDirty.Clear();
 			// Remove all pending destroy
 			while (toDestroy.Count > 0)
-				if (probers.TryRemove(toDestroy.Dequeue(), out ReachableCells rc))
+				if (probers.TryRemove(toDestroy.Dequeue(), out var rc))
 					rc.Dispose();
 		}
 
@@ -281,7 +285,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// </summary>
 		/// <param name="prober">The prober that was destroyed.</param>
 		internal void Remove(object prober) {
-			if (probers.TryGetValue(prober, out ReachableCells rc)) {
+			if (probers.TryGetValue(prober, out var rc)) {
 				rc.Destroy();
 				trigger.Set();
 			}
@@ -305,11 +309,15 @@ namespace PeterHan.FastTrack.SensorPatches {
 			if (n > 0 && FastTrackMod.GameRunning) {
 				if (n > MIN_PROCESS)
 					// Run at least 1/16th of the outstanding
-					n = MIN_PROCESS + ((n - MIN_PROCESS + 3) >> 4);
+					n = MIN_PROCESS + ((n - MIN_PROCESS + 15) >> 4);
 				while (n-- > 0) {
 					var smi = toDo.Dequeue();
-					if (smi.master != null)
-						smi.UpdateReachability();
+					var master = smi.master;
+					int cell;
+					if (master != null && Grid.IsValidCell(cell = Grid.PosToCell(master.
+							transform.position)))
+						smi.sm.isReachable.Set(IsReachable(cell, master.GetOffsets(cell)),
+							smi);
 				}
 			}
 		}

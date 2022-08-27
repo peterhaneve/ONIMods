@@ -20,7 +20,6 @@ using HarmonyLib;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 using PeterHan.PLib.Core;
 
 namespace PeterHan.FastTrack.PathPatches {
