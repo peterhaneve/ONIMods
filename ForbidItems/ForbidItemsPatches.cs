@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System.Collections.Generic;
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.PatchManager;
@@ -61,6 +62,22 @@ namespace PeterHan.ForbidItems {
 		}
 
 		/// <summary>
+		/// Applied to ChoreConsumer to properly ban sweepers from multi-fetching partially
+		/// forbidden item stacks, and to deny forbidden items from Take Medicine and Equip
+		/// chores.
+		/// </summary>
+		[HarmonyPatch(typeof(ChoreConsumer), nameof(ChoreConsumer.CanReach))]
+		public static class ChoreConsumer_CanReach_Patch {
+			/// <summary>
+			/// Applied after CanReach runs.
+			/// </summary>
+			internal static void Postfix(IApproachable approachable, ref bool __result) {
+				if (__result && approachable is Pickupable pickupable && pickupable != null)
+					__result = !pickupable.KPrefabID.HasTag(Forbidden);
+			}
+		}
+
+		/// <summary>
 		/// Applied to EntityTemplates to make dropped items forbiddable.
 		/// </summary>
 		[HarmonyPatch(typeof(EntityTemplates), nameof(EntityTemplates.
@@ -103,6 +120,21 @@ namespace PeterHan.ForbidItems {
 					true, typeof(Component), typeof(Tag)), typeof(ForbidItemsPatches).
 					GetMethodSafe(nameof(IsSuitableTags), true, typeof(Component),
 					typeof(Tag)));
+			}
+		}
+
+		/// <summary>
+		/// Applied to Pickupable to ban collection of forbidden items by Auto-Sweepers.
+		/// Auto-Sweepers do not check if the item is actually fetchable.
+		/// </summary>
+		[HarmonyPatch(typeof(Pickupable), "CouldBePickedUpCommon")]
+		public static class Pickupable_CouldBePickedUpCommon_Patch {
+			/// <summary>
+			/// Applied after CouldBePickedUpCommon runs.
+			/// </summary>
+			internal static void Postfix(Pickupable __instance, ref bool __result) {
+				if (__result)
+					__result = !__instance.KPrefabID.HasTag(Forbidden);
 			}
 		}
 	}
