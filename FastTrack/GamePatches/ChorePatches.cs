@@ -202,8 +202,8 @@ namespace PeterHan.FastTrack.GamePatches {
 				var pc = preconditions[i];
 				string id = pc.id;
 				if (id != "IsMoreSatisfyingEarly" && id != "IsPermitted" && id != "HasUrge" &&
-						id != "IsOverrideTargetNullOrMe" && id != "IsPreemptable" &&
-						id != "IsInMyParentWorld" && !pc.fn(ref context, pc.data)) {
+						id != "IsOverrideTargetNullOrMe" && id != "IsInMyParentWorld" &&
+						!pc.fn(ref context, pc.data)) {
 					context.failedPreconditionId = i;
 					break;
 				}
@@ -281,23 +281,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// The world index where the chore consumer is located.
 		/// </summary>
 		private int targetWorld;
-
-		/// <summary>
-		/// Adds a new chore to the appropriate list.
-		/// </summary>
-		/// <param name="newContext">The candidate chore.</param>
-		private void AddChore(ref PreContext newContext) {
-			int diff = best.chore == null ? -1 : CompareChores(ref best, ref newContext);
-			if (diff <= 0) {
-				RunSomePreconditions(ref newContext);
-				if (newContext.IsSuccess()) {
-					succeeded.Add(newContext);
-					if (diff < 0)
-						best = newContext;
-				}
-			}
-		}
-
+		
 		/// <summary>
 		/// Attempts to match up a Sweep errand with a Fetch destination.
 		/// </summary>
@@ -314,8 +298,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			int diff = best.chore == null ? -1 : CompareChores(ref best, precondition.
 				personalPriority, ref masterPriority, priority, chore.priorityMod);
 			if (diff <= 0 && pickupable.KPrefabID.HasAnyTags_AssumeLaundered(ref chore.
-					tagBits) && FastCheckPreconditions(chore, transport) && (chore.driver ==
-					null || chore.CanPreempt(precondition))) {
+					tagBits) && FastCheckPreconditions(chore, transport)) {
 				precondition.Set(chore, consumerState, false, pickupable);
 				RunSomePreconditions(ref precondition);
 				found = precondition.IsSuccess();
@@ -353,8 +336,15 @@ namespace PeterHan.FastTrack.GamePatches {
 			// Fetch chores are handled separately
 			if (FastCheckPreconditions(chore, chore.choreType)) {
 				var newContext = new PreContext(chore, consumerState, false);
-				if (chore.driver == null || chore.CanPreempt(newContext))
-					AddChore(ref newContext);
+				int diff = best.chore == null ? -1 : CompareChores(ref best, ref newContext);
+				if (diff <= 0) {
+					RunSomePreconditions(ref newContext);
+					if (newContext.IsSuccess()) {
+						succeeded.Add(newContext);
+						if (diff < 0)
+							best = newContext;
+					}
+				}
 			}
 		}
 

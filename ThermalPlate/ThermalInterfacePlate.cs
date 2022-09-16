@@ -56,7 +56,7 @@ namespace PeterHan.ThermalPlate {
 				ObjectLayer.Backwall);
 			numObjectLayers = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.NumLayers),
 				ObjectLayer.NumLayers);
-			transferCache = new HashSet<TransferTarget>();
+			transferCache = new HashSet<TransferTarget>(TransferTargetComparer.INSTANCE);
 		}
 
 		public void Sim200ms(float dt) {
@@ -80,23 +80,23 @@ namespace PeterHan.ThermalPlate {
 				// Update the buildings to which heat should be transferred
 				int cell = Grid.PosToCell(this);
 				for (int i = 0; i < numObjectLayers; i++) {
-					var gameObject = Grid.Objects[cell, i];
-					var newBuilding = gameObject.GetComponentSafe<BuildingComplete>();
+					var go = Grid.Objects[cell, i];
 					// Ignore solid tiles
-					if (newBuilding != null && newBuilding != building && gameObject.
-							GetComponent<SimCellOccupier>() == null)
-						transferCache.Add(new TransferTarget(gameObject, newBuilding));
+					if (go != null && go.TryGetComponent(out BuildingComplete newBuilding) &&
+							newBuilding != building && !go.TryGetComponent(
+							out SimCellOccupier _))
+						transferCache.Add(new TransferTarget(go, newBuilding));
 				}
 				// Transfer heat to adjacent tempshift plates since those have 3x3 radii
 				for (int dx = -1; dx <= 1; dx++)
 					for (int dy = -1; dy <= 1; dy++) {
 						int newCell = Grid.OffsetCell(cell, new CellOffset(dx, dy));
 						if (newCell != cell && Grid.IsValidBuildingCell(newCell)) {
-							var gameObject = Grid.Objects[newCell, backwallLayer];
-							var plate = gameObject.GetComponentSafe<BuildingComplete>();
-							// Is it a tempshift plate?
-							if (plate?.Def?.PrefabID == ThermalBlockConfig.ID)
-								transferCache.Add(new TransferTarget(gameObject, plate));
+							var go = Grid.Objects[newCell, backwallLayer];
+							if (go != null && go.TryGetComponent(out BuildingComplete plate) &&
+									plate.Def?.PrefabID == ThermalBlockConfig.ID)
+								// Is it a completed tempshift plate?
+								transferCache.Add(new TransferTarget(go, plate));
 						}
 					}
 			}
@@ -141,15 +141,11 @@ namespace PeterHan.ThermalPlate {
 		/// <summary>
 		/// A potential target for heat transfer via TIP.
 		/// </summary>
-		private struct TransferTarget {
+		private readonly struct TransferTarget : IEquatable<TransferTarget> {
 			/// <summary>
 			/// Reports whether this building is valid (otherwise, it was destroyed).
 			/// </summary>
-			public bool IsValid {
-				get {
-					return go != null;
-				}
-			}
+			public bool IsValid => go != null;
 
 			/// <summary>
 			/// The building to transfer.
@@ -170,8 +166,30 @@ namespace PeterHan.ThermalPlate {
 				return obj is TransferTarget other && go != null && go.Equals(other.go);
 			}
 
+			public bool Equals(TransferTarget other) {
+				return go != null && go.Equals(other.go);
+			}
+
 			public override int GetHashCode() {
 				return go.GetHashCode();
+			}
+		}
+
+		/// <summary>
+		/// Compares two transfer targets without any boxing or memory allocations.
+		/// </summary>
+		private sealed class TransferTargetComparer : IEqualityComparer<TransferTarget> {
+			internal static readonly IEqualityComparer<TransferTarget> INSTANCE =
+				new TransferTargetComparer();
+
+			private TransferTargetComparer() { }
+
+			public bool Equals(TransferTarget x, TransferTarget y) {
+				return x.building != null && x.building.Equals(y.building);
+			}
+
+			public int GetHashCode(TransferTarget obj) {
+				return obj.GetHashCode();
 			}
 		}
 	}
