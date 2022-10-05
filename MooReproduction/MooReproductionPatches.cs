@@ -72,7 +72,8 @@ namespace PeterHan.MooReproduction {
 		/// chores are required.
 		/// </summary>
 		/// <param name="prefab">The prefab to add chores.</param>
-		internal static void UpdateMooChores(GameObject prefab) {
+		/// <param name="baby">true for babies (which cannot be ranched) or false for adults.</param>
+		internal static void UpdateMooChores(GameObject prefab, bool baby) {
 			var cc = prefab.GetComponent<ChoreConsumer>();
 			var newChoreTable = new ChoreTable.Builder().
 				Add(new DeathStates.Def()).
@@ -84,9 +85,10 @@ namespace PeterHan.MooReproduction {
 				Add(new MooGrowUpStates.Def()).
 				PushInterruptGroup().
 				Add(new CreatureSleepStates.Def()).
-				Add(new FixedCaptureStates.Def()).
-				Add(new RanchedStates.Def()).
-				Add(new GiveBirthStates.Def()).
+				Add(new FixedCaptureStates.Def());
+			if (!baby)
+				newChoreTable.Add(new RanchedStates.Def());
+			newChoreTable.Add(new GiveBirthStates.Def()).
 				Add(new EatStates.Def()).
 				Add(new PlayAnimsStates.Def(GameTags.Creatures.Poop, false, "poop", STRINGS.CREATURES.STATUSITEMS.EXPELLING_GAS.NAME, STRINGS.CREATURES.STATUSITEMS.EXPELLING_GAS.TOOLTIP)).
 				Add(new MoveToLureStates.Def()).
@@ -190,7 +192,7 @@ namespace PeterHan.MooReproduction {
 					DiscoveredResources.Instance.Discover(BabyMooConfig.ID_TAG,
 						DiscoveredResources.GetCategoryForTags(prefabID.Tags));
 				};
-				UpdateMooChores(__result);
+				UpdateMooChores(__result, false);
 			}
 		}
 	}

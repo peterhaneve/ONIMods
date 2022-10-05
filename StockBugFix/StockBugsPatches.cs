@@ -44,14 +44,16 @@ namespace PeterHan.StockBugFix {
 			var db = Db.Get();
 			var storeType = db.ChoreGroups?.Storage;
 			var storeFood = db.ChoreTypes?.FoodFetch;
-			if (StockBugFixOptions.Instance.StoreFoodChoreType == StoreFoodCategory.Store &&
+			var options = StockBugFixOptions.Instance;
+			if (options.StoreFoodChoreType == StoreFoodCategory.Store &&
 					storeType != null && storeFood != null) {
 				// Default is "supply"
 				db.ChoreGroups.Hauling?.choreTypes?.Remove(storeFood);
 				storeType.choreTypes.Add(storeFood);
 				storeFood.groups[0] = storeType;
 			}
-			TraitsExclusionPatches.FixTraits();
+			if (options.FixTraits)
+				TraitsExclusionPatches.FixTraits();
 		}
 
 		/// <summary>
@@ -197,13 +199,6 @@ namespace PeterHan.StockBugFix {
 			};
 
 		/// <summary>
-		/// Bug will be fixed in the release after U42-512719.
-		/// </summary>
-		internal static bool Prepare() {
-			return PUtil.GameVersion <= 512719U;
-		}
-
-		/// <summary>
 		/// Applied after ConfigureBuildingTemplate runs.
 		/// </summary>
 		internal static void Postfix(GameObject go) {
@@ -220,8 +215,11 @@ namespace PeterHan.StockBugFix {
 	/// </summary>
 	[HarmonyPatch]
 	public static class Buildable_OnPrefabInit_Patch {
+		/// <summary>
+		/// The bug was fixed in U43-525812.
+		/// </summary>
 		internal static bool Prepare() {
-			return StockBugFixOptions.Instance.FixOffsetTables;
+			return StockBugFixOptions.Instance.FixOffsetTables && PUtil.GameVersion < 525812U;
 		}
 
 		/// <summary>
@@ -476,13 +474,6 @@ namespace PeterHan.StockBugFix {
 	[HarmonyPatch(typeof(MooConfig), nameof(MooConfig.CreateMoo))]
 	public static class MooConfig_CreateMoo_Patch {
 		/// <summary>
-		/// Bug will be fixed in the release after U42-512719.
-		/// </summary>
-		internal static bool Prepare() {
-			return PUtil.GameVersion <= 512719U;
-		}
-
-		/// <summary>
 		/// Applied after CreateMoo runs.
 		/// </summary>
 		internal static void Postfix(GameObject __result) {
@@ -538,7 +529,16 @@ namespace PeterHan.StockBugFix {
 		/// </summary>
 		internal static void Postfix(RationMonitor __instance) {
 			// outofrations is dead code
-			__instance.root?.parameterTransitions?.Clear();
+			var transitions = __instance.root?.transitions;
+			if (transitions != null) {
+				int n = transitions.Count, i = 0;
+				while (i < n)
+					if (transitions[i] is StateMachine.ParameterTransition) {
+						transitions.RemoveAt(i);
+						n--;
+					} else
+						i++;
+			}
 		}
 	}
 

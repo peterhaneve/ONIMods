@@ -39,9 +39,9 @@ namespace PeterHan.NotEnoughTags {
 		/// <param name="lhs">Tag Bits A.</param>
 		/// <param name="rhs">Tag Bits B.</param>
 		internal static void And(ref TagBits lhs, ref TagBits rhs) {
-			ulong hibits = lhs.bits8;
+			ulong hibits = lhs.bits3;
 			lhs.And(ref rhs);
-			lhs.bits8 = TranspileAnd(hibits, rhs.bits8);
+			lhs.bits3 = TranspileAnd(hibits, rhs.bits3);
 		}
 
 		/// <summary>
@@ -129,9 +129,9 @@ namespace PeterHan.NotEnoughTags {
 		/// <param name="bits">The bits to complement.</param>
 		/// <returns>The complement of those bits.</returns>
 		internal static TagBits Not(TagBits bits) {
-			ulong hibits = bits.bits8;
+			ulong hibits = bits.bits3;
 			bits.Complement();
-			bits.bits8 = GetLowerBits(bits.bits8) | NotHighBits(hibits);
+			bits.bits3 = GetLowerBits(bits.bits3) | NotHighBits(hibits);
 			return bits;
 		}
 
@@ -152,10 +152,9 @@ namespace PeterHan.NotEnoughTags {
 		/// <param name="lhs">Tag Bits A.</param>
 		/// <param name="rhs">Tag Bits B.</param>
 		internal static void Or(ref TagBits lhs, ref TagBits rhs) {
-			ulong hibits = lhs.bits8;
+			ulong hibits = lhs.bits3;
 			lhs.Or(ref rhs);
-			// Box into a type to allow the fields to be changed
-			lhs.bits8 = TranspileOr(hibits, rhs.bits8);
+			lhs.bits3 = TranspileOr(hibits, rhs.bits3);
 		}
 
 		/// <summary>
@@ -248,7 +247,7 @@ namespace PeterHan.NotEnoughTags {
 		/// <summary>
 		/// The initial size of pooled bit sets from this class.
 		/// </summary>
-		public const int PRESIZE = 512;
+		public const int PRESIZE = 256;
 
 		/// <summary>
 		/// Stores pooled instances of BitSet.

@@ -34,7 +34,7 @@ namespace PeterHan.NotEnoughTags {
 		/// <summary>
 		/// The tags which should always be in the lower bits for speed.
 		/// </summary>
-		private static readonly Tag[] FORCE_LOWER_BITS = new Tag[] {
+		private static readonly Tag[] FORCE_LOWER_BITS = {
 			GameTags.Alloy, GameTags.Agriculture, GameTags.Breathable, GameTags.BuildableAny,
 			GameTags.BuildableProcessed, GameTags.BuildableRaw, GameTags.Clothes,
 			GameTags.Compostable, GameTags.ConsumableOre, GameTags.CookingIngredient,
@@ -75,8 +75,6 @@ namespace PeterHan.NotEnoughTags {
 			// Force these tags into the efficient lower bits
 			foreach (var tag in FORCE_LOWER_BITS)
 				inst.ManifestFlagIndex(tag);
-			FetchAreaChore.StatesInstance.s_transientDeliveryMask = TagBitOps.Not(new TagBits(
-				new[] { GameTags.Garbage, GameTags.Creatures.Deliverable }));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
@@ -232,13 +230,13 @@ namespace PeterHan.NotEnoughTags {
 			/// <summary>
 			/// Applied before Clear runs.
 			/// </summary>
-			internal static bool Prefix(ref ulong ___bits8, Tag tag) {
+			internal static bool Prefix(ref ulong ___bits3, Tag tag) {
 				var inst = ExtendedTagBits.Instance;
 				int index = inst.ManifestFlagIndex(tag) - ExtendedTagBits.VANILLA_LIMIT;
 				bool vanilla = index <= 0;
-				if (!vanilla && ___bits8 != 0UL) {
-					int id = inst.GetIDWithTagClear(TagBitOps.GetUpperBits(___bits8), index);
-					___bits8 = TagBitOps.GetLowerBits(___bits8) | ((ulong)id << 32);
+				if (!vanilla && ___bits3 != 0UL) {
+					int id = inst.GetIDWithTagClear(TagBitOps.GetUpperBits(___bits3), index);
+					___bits3 = TagBitOps.GetLowerBits(___bits3) | ((ulong)id << 32);
 				}
 				return vanilla;
 			}
@@ -359,13 +357,13 @@ namespace PeterHan.NotEnoughTags {
 			/// <summary>
 			/// Applied before SetTag runs.
 			/// </summary>
-			internal static bool Prefix(ref ulong ___bits8, Tag tag) {
+			internal static bool Prefix(ref ulong ___bits3, Tag tag) {
 				var inst = ExtendedTagBits.Instance;
 				int index = inst.ManifestFlagIndex(tag) - ExtendedTagBits.VANILLA_LIMIT;
 				bool vanilla = index <= 0;
 				if (!vanilla) {
-					int id = inst.GetIDWithTagSet(TagBitOps.GetUpperBits(___bits8), index);
-					___bits8 = (___bits8 & 0xFFFFFFFFUL) | ((ulong)id << 32);
+					int id = inst.GetIDWithTagSet(TagBitOps.GetUpperBits(___bits3), index);
+					___bits3 = (___bits3 & 0xFFFFFFFFUL) | ((ulong)id << 32);
 				}
 				return vanilla;
 			}

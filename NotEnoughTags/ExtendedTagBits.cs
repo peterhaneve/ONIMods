@@ -46,7 +46,7 @@ namespace PeterHan.NotEnoughTags {
 		/// <summary>
 		/// The number of indexes which can be efficiently still used by the base game.
 		/// </summary>
-		public const int VANILLA_LIMIT = 544;
+		public const int VANILLA_LIMIT = 224;
 
 		/// <summary>
 		/// Maps indexes to their tag.
@@ -75,8 +75,8 @@ namespace PeterHan.NotEnoughTags {
 
 		private ExtendedTagBits() {
 			// This need not be thread safe, because TagBits itself is not thread safe
-			inverseTagBits = new Dictionary<BitSet, int>(8192);
-			tagBits = new Dictionary<int, BitSet>(8192);
+			inverseTagBits = new Dictionary<BitSet, int>(4096);
+			tagBits = new Dictionary<int, BitSet>(4096);
 			tagID = INITIAL_TAG_BITS;
 
 			// Fetch these through reflection

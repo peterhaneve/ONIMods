@@ -133,7 +133,8 @@ namespace PeterHan.ModUpdateDate {
 					if (string.IsNullOrEmpty(langCode))
 						cultureInfo = CultureInfo.CurrentCulture;
 					else
-						cultureInfo = new CultureInfo(langCode);
+						// Klei uses _ instead of - for some reason
+						cultureInfo = new CultureInfo(langCode.Replace('_', '-'));
 				}
 				if (mod.label.distribution_platform == Label.DistributionPlatform.Steam) {
 					var modUpdate = new ModToUpdate(mod);

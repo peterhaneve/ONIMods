@@ -23,7 +23,7 @@ namespace PeterHan.AirlockDoor {
 	/// <summary>
 	/// Handles Duplicant navigation through an airlock door.
 	/// </summary>
-	public sealed class AirlockDoorTransitionLayer : TransitionDriver.OverrideLayer {
+	public sealed class AirlockDoorTransitionLayer : TransitionDriver.InterruptOverrideLayer {
 		/// <summary>
 		/// The layer to check for airlock doors.
 		/// </summary>
@@ -81,27 +81,27 @@ namespace PeterHan.AirlockDoor {
 
 		public override void BeginTransition(Navigator navigator, Navigator.
 				ActiveTransition transition) {
-			base.BeginTransition(navigator, transition);
-			int cell = Grid.PosToCell(navigator);
-			int targetCell = Grid.OffsetCell(cell, transition.x, transition.y);
-			ClearTransitions();
-			AddDoor(targetCell, cell);
-			// If duplicant is inside a tube they are only 1 cell tall
-			if (navigator.CurrentNavType != NavType.Tube)
-				AddDoor(Grid.CellAbove(targetCell), cell);
-			// Include any other offsets
-			foreach (var offset in transition.navGridTransition.voidOffsets)
-				AddDoor(Grid.OffsetCell(cell, offset), cell);
-			// If not open, start a transition with the dupe waiting for the door
-			if (doors.Count > 0 && !AreAllDoorsOpen()) {
-				transition.anim = navigator.NavGrid.GetIdleAnim(navigator.CurrentNavType);
-				transition.isLooping = false;
-				transition.end = transition.start;
-				transition.speed = 1.0f;
-				transition.animSpeed = 1.0f;
-				transition.x = 0;
-				transition.y = 0;
-				transition.isCompleteCB = AreAllDoorsOpen;
+			if (doors.Count == 0) {
+				int cell = Grid.PosToCell(navigator);
+				int targetCell = Grid.OffsetCell(cell, transition.x, transition.y);
+				AddDoor(targetCell, cell);
+				// If duplicant is inside a tube they are only 1 cell tall
+				if (navigator.CurrentNavType != NavType.Tube)
+					AddDoor(Grid.CellAbove(targetCell), cell);
+				// Include any other offsets
+				var offsets = transition.navGridTransition.voidOffsets;
+				if (offsets != null) {
+					int n = offsets.Length;
+					for (int i = 0; i < n; i++)
+						AddDoor(Grid.OffsetCell(cell, offsets[i]), cell);
+				}
+				// If not open, start a transition with the dupe waiting for the door
+				if (doors.Count > 0 && !AreAllDoorsOpen()) {
+					base.BeginTransition(navigator, transition);
+					transition.anim = navigator.NavGrid.GetIdleAnim(navigator.CurrentNavType);
+					transition.start = originalTransition.start;
+					transition.end = originalTransition.start;
+				}
 			}
 		}
 
@@ -139,6 +139,10 @@ namespace PeterHan.AirlockDoor {
 				ActiveTransition transition) {
 			base.EndTransition(navigator, transition);
 			ClearTransitions();
+		}
+
+		protected override bool IsOverrideComplete() {
+			return base.IsOverrideComplete() && AreAllDoorsOpen();
 		}
 
 		/// <summary>

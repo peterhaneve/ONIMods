@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.MooReproduction {
@@ -46,12 +47,12 @@ namespace PeterHan.MooReproduction {
 			kbac.animScale *= 0.5f;
 			var occupyArea = prefab.AddOrGet<OccupyArea>();
 			occupyArea.OccupiedCellsOffsets = EntityTemplates.GenerateOffsets(WIDTH, HEIGHT);
-			EntityTemplates.ExtendEntityToBeingABaby(prefab, MooConfig.ID, null, false, 5.0f);
+			EntityTemplates.ExtendEntityToBeingABaby(prefab, MooConfig.ID);
 			// Reduce to 1kg meat for baby
 			var butcherable = prefab.GetComponent<Butcherable>();
 			if (butcherable != null)
-				butcherable.SetDrops(new string[] { MeatConfig.ID });
-			MooReproductionPatches.UpdateMooChores(prefab);
+				butcherable.SetDrops(new[] { MeatConfig.ID });
+			MooReproductionPatches.UpdateMooChores(prefab, true);
 			// Babies should not be ranchable or auto wrangled, but there is no RemoveDef
 			// function...
 			var smc = prefab.GetComponent<StateMachineController>();

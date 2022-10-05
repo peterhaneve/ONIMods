@@ -23,6 +23,9 @@ using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
 using System.Collections.Generic;
+using System.Reflection;
+
+using NewTagHandler = System.Action<System.Collections.Generic.HashSet<Tag>>;
 
 namespace PeterHan.DeselectNewMaterials {
 	/// <summary>
@@ -61,20 +64,40 @@ namespace PeterHan.DeselectNewMaterials {
 		/// </summary>
 		[HarmonyPatch(typeof(TreeFilterable), "OnDiscover")]
 		public static class TreeFilterable_OnDiscover_Patch {
+			private static readonly FieldInfo ACCEPTED_TAG_SET = typeof(TreeFilterable).
+				GetFieldSafe("acceptedTagSet", false);
+
+			internal static bool Prepare() => PUtil.GameVersion < 525812U;
+
 			/// <summary>
 			/// Applied after OnDiscover runs.
 			/// </summary>
 			internal static void Postfix(TreeFilterable __instance, Storage ___storage,
-					Tag category_tag, Tag tag, List<Tag> ___acceptedTags) {
+					Tag category_tag, Tag tag, List<Tag> ___acceptedTags,
+					object ___OnFilterChanged) {
 				// Check the value of the storage-specific accepts/rejects new materials
 				bool accept = ___storage.gameObject.GetComponentSafe<NewMaterialsSettings>()?.
 					AcceptsNewMaterials ?? false;
 				if (!accept && ___storage.storageFilters.Contains(category_tag)) {
 					// There should not be anything in the storage matching types that were
 					// just found, but there were racy crashes on load of legacy saves
-					// Update filter without dropping any items
-					___acceptedTags.Remove(tag);
-					__instance.OnFilterChanged?.Invoke(___acceptedTags.ToArray());
+					// Update filter without dropping any items, not enough uses to warrant a
+					// detour
+					if (ACCEPTED_TAG_SET != null && ACCEPTED_TAG_SET.GetValue(__instance) is
+							HashSet<Tag> acceptedTagSet) {
+						// U43-525812+
+						acceptedTagSet.Remove(tag);
+						if (___OnFilterChanged is NewTagHandler handler)
+							handler.Invoke(acceptedTagSet);
+						else
+							PUtil.LogWarning("Unable to trigger storage changed events: New");
+					} else {
+						___acceptedTags.Remove(tag);
+						if (___OnFilterChanged is System.Action<Tag[]> handler)
+							handler.Invoke(___acceptedTags.ToArray());
+						else
+							PUtil.LogWarning("Unable to trigger storage changed events: Old");
+					}
 				}
 			}
 		}

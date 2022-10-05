@@ -147,9 +147,8 @@ namespace ReimaginationTeam.DecorRework {
 		/// </summary>
 		/// <param name="obj">The sculpture to modify.</param>
 		public void ApplyToSculpture(GameObject obj) {
-			var sculpture = obj?.GetComponent<Sculpture>();
-			if (sculpture != null)
-				foreach (var stage in sculpture.stages) {
+			if (obj.TryGetComponent(out Artable _))
+				foreach (var stage in Db.GetArtableStages().GetPrefabStages(obj.PrefabID())) {
 					string artLevel = stage.id;
 					switch (artLevel) {
 					// Default levels

@@ -34,7 +34,7 @@ namespace PeterHan.NoWasteWant {
 	/// Patches which will be applied via annotations for Waste Not, Want Not.
 	/// </summary>
 	public sealed class NoWasteWantPatches : KMod.UserMod2 {
-		private static TagBits EDIBLE_BITS = new TagBits();
+		private static TagBits EDIBLE_BITS;
 
 		/// <summary>
 		/// The maximum mass of food in kilograms that will rot.
@@ -137,7 +137,10 @@ namespace PeterHan.NoWasteWant {
 			// Why can we not use byref types in attributes...
 			internal static MethodBase TargetMethod() {
 				var refTagBits = typeof(TagBits).MakeByRefType();
-				return typeof(FetchManager).GetMethodSafe(nameof(FetchManager.
+				var newMethod = typeof(FetchManager).GetMethodSafe("IsFetchablePickup_Exclude",
+					true, typeof(KPrefabID), typeof(Storage), typeof(float),
+					typeof(HashSet<Tag>), typeof(Tag), typeof(Storage));
+				return newMethod ?? typeof(FetchManager).GetMethodSafe(nameof(FetchManager.
 					IsFetchablePickup), true, typeof(KPrefabID), typeof(Storage),
 					typeof(float), refTagBits, refTagBits, refTagBits, typeof(Storage));
 			}
@@ -148,7 +151,7 @@ namespace PeterHan.NoWasteWant {
 			internal static void Postfix(KPrefabID pickup_id, Storage destination,
 					ref bool __result) {
 				if (__result && pickup_id != null && destination != null && pickup_id.
-						HasAnyTags_AssumeLaundered(ref EDIBLE_BITS)) {
+						HasAnyTags(ref EDIBLE_BITS)) {
 					var freshness = destination.gameObject.GetComponentSafe<FreshnessControl>();
 					if (freshness != null)
 						__result = freshness.IsAcceptable(pickup_id.gameObject);

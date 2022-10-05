@@ -77,8 +77,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NoSensorLimits", "NoSensorL
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FinishTasks", "FinishTasks\FinishTasks.csproj", "{6E8902F8-2969-4A11-B2D2-C8644A00949D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NoSplashScreen", "NoSplashScreen\NoSplashScreen.csproj", "{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MooReproduction", "MooReproduction\MooReproduction.csproj", "{07BE03BD-84A8-4202-82A3-F64829B3D786}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WorkshopProfiles", "WorkshopProfiles\WorkshopProfiles.csproj", "{E327F5BD-CBF2-47D0-90C6-AE9C56E99B2F}"
@@ -410,12 +408,6 @@ Global
 		{6E8902F8-2969-4A11-B2D2-C8644A00949D}.Release|Mergedown.Build.0 = Release|Mergedown
 		{6E8902F8-2969-4A11-B2D2-C8644A00949D}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{6E8902F8-2969-4A11-B2D2-C8644A00949D}.Release|Vanilla.Build.0 = Release|Vanilla
-		{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}.Debug|Mergedown.ActiveCfg = Debug|Mergedown
-		{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}.Debug|Mergedown.Build.0 = Debug|Mergedown
-		{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
-		{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}.Release|Mergedown.ActiveCfg = Release|Mergedown
-		{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}.Release|Mergedown.Build.0 = Release|Mergedown
-		{3052F9D5-C7C9-471A-96BA-8E14378CA3DF}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{07BE03BD-84A8-4202-82A3-F64829B3D786}.Debug|Mergedown.ActiveCfg = Debug|Mergedown
 		{07BE03BD-84A8-4202-82A3-F64829B3D786}.Debug|Mergedown.Build.0 = Debug|Mergedown
 		{07BE03BD-84A8-4202-82A3-F64829B3D786}.Debug|Vanilla.ActiveCfg = Debug|Vanilla

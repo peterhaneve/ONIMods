@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
 using UnityEngine;
 
 namespace PeterHan.QueueForSinks {
@@ -24,8 +23,7 @@ namespace PeterHan.QueueForSinks {
 	/// A checkpoint component which prevents Duplicants from passing if a workable is in use
 	/// and they could use it.
 	/// </summary>
-	public abstract class WorkCheckpoint<T> : KMonoBehaviour, ISaveLoadable where T : Workable
-	{
+	public abstract class WorkCheckpoint<T> : KMonoBehaviour where T : Workable {
 		// These fields are filled in automatically by KMonoBehaviour
 #pragma warning disable CS0649
 		[MyCmpReq]
@@ -68,7 +66,7 @@ namespace PeterHan.QueueForSinks {
 		/// Handles work events to keep the status of this workable.
 		/// </summary>
 		/// <param name="evt">The type of work event which occurred.</param>
-		private void HandleWorkableAction(Workable.WorkableEvent evt) {
+		private void HandleWorkableAction(Workable _, Workable.WorkableEvent evt) {
 			switch (evt) {
 			case Workable.WorkableEvent.WorkStarted:
 				inUse = true;
@@ -127,7 +125,7 @@ namespace PeterHan.QueueForSinks {
 			internal WorkCheckpointReactable(WorkCheckpoint<T> checkpoint) : base(checkpoint.
 					gameObject, "WorkCheckpointReactable", Db.Get().ChoreTypes.Checkpoint,
 					1, 1) {
-				this.checkpoint = checkpoint ?? throw new ArgumentNullException("checkpoint");
+				this.checkpoint = checkpoint;
 				distractedAnim = Assets.GetAnim("anim_idle_distracted_kanim");
 				preventChoreInterruption = false;
 			}
@@ -137,8 +135,8 @@ namespace PeterHan.QueueForSinks {
 				// Animation to make them stand impatiently in line
 				var controller = reactor.GetComponent<KBatchedAnimController>();
 				controller.AddAnimOverrides(distractedAnim, 1f);
-				controller.Play("idle_pre", KAnim.PlayMode.Once, 1f, 0f);
-				controller.Queue("idle_default", KAnim.PlayMode.Loop, 1f, 0f);
+				controller.Play("idle_pre");
+				controller.Queue("idle_default", KAnim.PlayMode.Loop);
 				checkpoint.CreateNewReactable();
 			}
 
@@ -180,12 +178,13 @@ namespace PeterHan.QueueForSinks {
 			}
 
 			public override void Update(float dt) {
-				if (checkpoint?.workable == null || reactorNavigator == null)
+				if (checkpoint == null || checkpoint.workable == null || reactorNavigator ==
+						null)
 					Cleanup();
 				else {
-					var transition = reactorNavigator.GetNextTransition();
 					reactorNavigator.AdvancePath(false);
-					if (!reactorNavigator.path.IsValid() || !MustStop(reactor, transition.x))
+					if (!reactorNavigator.path.IsValid() || !MustStop(reactor,
+							reactorNavigator.GetNextTransition().x))
 						Cleanup();
 				}
 			}

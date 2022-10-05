@@ -22,6 +22,7 @@ using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -145,7 +146,6 @@ namespace PeterHan.FastSave {
 						BackgroundAutosave.EnableSaving();
 						inst.AllowDragging(true);
 					}
-					yield break;
 				} else
 					// Original method
 					while (result.MoveNext())
@@ -224,7 +224,8 @@ namespace PeterHan.FastSave {
 				var reports = ReportManager.Instance?.reports;
 				if (___activeColonyWidgets.TryGetValue(statistic.name, out GameObject obj)) {
 					// Find first remaining report's cycle index
-					int minReport = ((reports?.Count ?? 0) < 1) ? 0 : reports[0].day;
+					int minReport = (reports == null || reports.Count < 1) ? 0 : reports[0].
+						day;
 					var graph = obj.GetComponentInChildren<GraphBase>();
 					var lineLayer = obj.GetComponentInChildren<LineLayer>();
 					if (graph != null && lineLayer != null) {
@@ -251,6 +252,13 @@ namespace PeterHan.FastSave {
 		/// </summary>
 		[HarmonyPatch(typeof(Timelapser), "RenderAndPrint")]
 		public static class Timelapser_RenderAndPrint_Patch {
+			private static readonly PropertyInfo ORTHOGRAPHIC_SIZE_NEW =
+				typeof(CameraController).GetPropertySafe<float>("OrthographicSize", false);
+
+			private static readonly MethodInfo ORTHOGRAPHIC_SIZE_OLD =
+				typeof(CameraController).GetMethodSafe("SetOrthographicsSize", false,
+				typeof(float));
+
 			internal static bool Prepare() {
 				// Only enable if background save is on
 				return FastSaveOptions.Instance.BackgroundSave;
@@ -285,7 +293,10 @@ namespace PeterHan.FastSave {
 					inst.RenderForTimelapser(ref rt);
 					inst.StartCoroutine(TimelapseCoroutine(rt, ___previewSaveGamePath,
 						world_id, ___previewScreenshot));
-					inst.SetOrthographicsSize(___camSize);
+					if (ORTHOGRAPHIC_SIZE_NEW != null)
+						ORTHOGRAPHIC_SIZE_NEW.SetValue(inst, ___camSize);
+					else if (ORTHOGRAPHIC_SIZE_OLD != null)
+						ORTHOGRAPHIC_SIZE_OLD.Invoke(inst, new object[] { ___camSize });
 					inst.SetPosition(___camPosition);
 					RenderTexture.active = oldRT;
 				}

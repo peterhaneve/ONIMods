@@ -17,6 +17,7 @@
  */
 
 using Database;
+using FMODUnity;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using System;
@@ -36,8 +37,7 @@ namespace PeterHan.PLib.Database {
 			string platformAchievementId, string Name, string description,
 			bool isVictoryCondition, List<ColonyAchievementRequirement> requirementChecklist,
 			string messageTitle, string messageBody, string videoDataName,
-			string victoryLoopVideo, Action<KMonoBehaviour> VictorySequence,
-			string victorySnapshot, string icon);
+			string victoryLoopVideo, Action<KMonoBehaviour> VictorySequence);
 
 		/// <summary>
 		/// Creates a new colony achievement.
@@ -85,11 +85,10 @@ namespace PeterHan.PLib.Database {
 		public List<ColonyAchievementRequirement> Requirements { get; set; }
 
 		/// <summary>
-		/// The audio file to play when this achievement triggers.
-		/// 
-		/// The game does not use this field by default, but it is available for victory
-		/// callbacks.
+		/// This member is obsolete since the Sweet Dreams update. Use VictoryAudioSnapshoRef
+		/// instead.
 		/// </summary>
+		[Obsolete("Set victory audio snapshot directly due to Klei changes in the Sweet Dreams update")]
 		public string VictoryAudioSnapshot { get; set; }
 
 		/// <summary>
@@ -138,7 +137,6 @@ namespace PeterHan.PLib.Database {
 			Name = "";
 			OnVictory = null;
 			Requirements = null;
-			VictoryAudioSnapshot = "";
 			VictoryMessage = "";
 			VictoryTitle = "";
 			VictoryVideoData = "";
@@ -152,9 +150,11 @@ namespace PeterHan.PLib.Database {
 		public void AddAchievement() {
 			if (Requirements == null)
 				throw new ArgumentNullException("No colony achievement requirements specified");
-			PDatabaseUtils.AddColonyAchievement(NEW_COLONY_ACHIEVEMENT.Invoke(ID, "", Name,
-				Description, IsVictory, Requirements, VictoryTitle, VictoryMessage,
-				VictoryVideoData, VictoryVideoLoop, OnVictory, VictoryAudioSnapshot, Icon));
+			var achieve = NEW_COLONY_ACHIEVEMENT.Invoke(ID, "", Name, Description, IsVictory,
+				Requirements, VictoryTitle, VictoryMessage, VictoryVideoData, VictoryVideoLoop,
+				OnVictory);
+			achieve.icon = Icon;
+			PDatabaseUtils.AddColonyAchievement(achieve);
 		}
 
 		public override bool Equals(object obj) {

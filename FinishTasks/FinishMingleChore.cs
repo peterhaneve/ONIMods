@@ -30,12 +30,6 @@ namespace PeterHan.FinishTasks {
 	/// </summary>
 	public sealed class FinishMingleChore : Chore<FinishMingleChore.StatesInstance>,
 			IWorkerPrioritizable {
-		private delegate MingleState ToggleSMAnims(MingleState instance, string anim,
-			float time);
-
-		private static readonly ToggleSMAnims TOGGLE_ANIMS = typeof(MingleState).
-			Detour<ToggleSMAnims>(nameof(MingleState.ToggleAnims));
-
 		/// <summary>
 		/// A precondition that checks for a valid mingling cell.
 		/// </summary>
@@ -69,7 +63,7 @@ namespace PeterHan.FinishTasks {
 			showAvailabilityInHoverText = false;
 			smi = new StatesInstance(this, target.gameObject);
 			AddPrecondition(HAS_MINGLE_CELL, this);
-			AddPrecondition(ChorePreconditions.instance.IsNotRedAlert, null);
+			AddPrecondition(ChorePreconditions.instance.IsNotRedAlert);
 			AddPrecondition(ChorePreconditions.instance.IsScheduledTime, FinishTasksPatches.
 				FinishBlock);
 			AddPrecondition(ChorePreconditions.instance.CanDoWorkerPrioritizable, this);
@@ -107,12 +101,11 @@ namespace PeterHan.FinishTasks {
 			public override void InitializeStates(out BaseState default_state) {
 				default_state = move;
 				Target(mingler);
-				root.EventTransition(GameHashes.ScheduleBlocksChanged, null, (smi) => !smi.IsFinishTasksTime()).
-					Transition(null, (smi) => !Grid.IsValidCell(smi.GetMingleCell()), UpdateRate.SIM_200ms);
-				move.MoveTo((smi) => smi.GetMingleCell(), mingle, null, false);
+				root.EventTransition(GameHashes.ScheduleBlocksChanged, null, smi => !smi.IsFinishTasksTime()).
+					Transition(null, smi => !Grid.IsValidCell(smi.GetMingleCell()));
+				move.MoveTo(smi => smi.GetMingleCell(), mingle);
 				// Will be cancelled when schedule blocks change or the mingle cell is invalid
-				// Gained an optional parameter in EX1-456658
-				TOGGLE_ANIMS.Invoke(mingle, "anim_generic_convo_kanim", 0.0f);
+				mingle.ToggleAnims("anim_generic_convo_kanim");
 				mingle.PlayAnim("idle", KAnim.PlayMode.Loop).
 					ToggleTag(GameTags.AlwaysConverse);
 			}
@@ -122,7 +115,17 @@ namespace PeterHan.FinishTasks {
 		/// A variation of MingleChore.StatesInstance to track the destination for each
 		/// Duplicant after the day ends.
 		/// </summary>
-		public class StatesInstance : GameStateMachine<States, StatesInstance, FinishMingleChore, object>.GameInstance {
+		public class StatesInstance : GameStateMachine<States, StatesInstance,
+				FinishMingleChore, object>.GameInstance {
+			private delegate GameObject SetParamValue(States.TargetParameter target,
+				GameObject value, StatesInstance smi);
+
+			/// <summary>
+			/// Gained an optional parameter in the Sweet Dreams update.
+			/// </summary>
+			private static readonly SetParamValue SET_MINGLER = typeof(States.TargetParameter).
+				Detour<SetParamValue>(nameof(States.TargetParameter.Set));
+
 			/// <summary>
 			/// The sensor which detects a location to mingle.
 			/// </summary>
@@ -135,7 +138,7 @@ namespace PeterHan.FinishTasks {
 
 			public StatesInstance(FinishMingleChore master, GameObject mingler) : base(master) {
 				schedule = master.GetComponent<Schedulable>();
-				sm.mingler.Set(mingler, smi);
+				SET_MINGLER.Invoke(sm.mingler, mingler, smi);
 				mingleCellSensor = GetComponent<Sensors>().GetSensor<MingleCellSensor>();
 			}
 

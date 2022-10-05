@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Moo Reproduction</AssemblyTitle>
-    <FileVersion>2.3.0.0</FileVersion>
+    <FileVersion>2.4.0.0</FileVersion>
     <RootNamespace>PeterHan.MooReproduction</RootNamespace>
     <Description>Allows Gassy Moos to reproduce, giving live birth like mammals should.</Description>
     <AssemblyVersion>2.1.0.0</AssemblyVersion>

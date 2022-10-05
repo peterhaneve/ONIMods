@@ -17,9 +17,9 @@
  */
 
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Buildings;
 using System;
 using UnityEngine;
+using PeterHan.PLib.Detours;
 
 namespace PeterHan.AirlockDoor {
 	/// <summary>
@@ -79,7 +79,7 @@ namespace PeterHan.AirlockDoor {
 							smi.master.loopingSounds.UpdateSecondParameter(sound,
 								SOUND_PROGRESS_PARAMETER, smi.Get<KBatchedAnimController>().
 								GetPositionPercent());
-					}, UpdateRate.SIM_33ms, false).
+					}, UpdateRate.SIM_33ms).
 					PlayAnim("close" + suffix);
 			}
 
@@ -99,7 +99,7 @@ namespace PeterHan.AirlockDoor {
 							smi.master.loopingSounds.UpdateSecondParameter(sound,
 								SOUND_PROGRESS_PARAMETER, smi.Get<KBatchedAnimController>().
 								GetPositionPercent());
-					}, UpdateRate.SIM_33ms, false).
+					}, UpdateRate.SIM_33ms).
 					PlayAnim("open" + suffix);
 			}
 
@@ -112,17 +112,12 @@ namespace PeterHan.AirlockDoor {
 			}
 
 			public override void InitializeStates(out BaseState default_state) {
-				// TODO Vanilla/DLC code
-#if VANILLA
-				serializable = true;
-#else
 				serializable = SerializeType.ParamsOnly;
-#endif
 				default_state = notFunctional;
 				notFunctional.PlayAnim("off").
 					Enter("UpdateWorldState", UpdateWorldState).
 					ParamTransition(isLocked, locking, IsTrue).
-					Transition(closed, (smi) => smi.master.IsUsable(), UpdateRate.SIM_200ms);
+					Transition(closed, (smi) => smi.master.IsUsable());
 				// Start opening if waiting, lock if requested
 				closed.PlayAnim("idle").
 					EventTransition(GameHashes.FunctionalChanged, notFunctional, (smi) => !smi.master.IsUsable()).
@@ -153,7 +148,7 @@ namespace PeterHan.AirlockDoor {
 					});
 				vacuum_check.ParamTransition(waitExitLeft, left.exit, IsTrue).
 					ParamTransition(waitExitRight, right.exit, IsTrue).
-					Transition(closed, (smi) => !waitExitLeft.Get(smi) && !waitExitRight.Get(smi), UpdateRate.SIM_200ms);
+					Transition(closed, (smi) => !waitExitLeft.Get(smi) && !waitExitRight.Get(smi));
 			}
 
 			/// <summary>
@@ -309,16 +304,16 @@ namespace PeterHan.AirlockDoor {
 							smi.master.UpdateWorldState();
 							smi.CheckDuplicantStatus();
 						}).
-						Update("CheckIsBlocked", (smi, _) => smi.CheckAndAverage(offset), UpdateRate.SIM_200ms).
+						Update("CheckIsBlocked", (smi, _) => smi.CheckAndAverage(offset)).
 						ParamTransition(isTraversing, waitEnterClose, IsFalse);
 					waitEnterClose.PlayAnim(open).
-						Update("CheckIsBlocked", (smi, _) => smi.CheckAndAverage(offset), UpdateRate.SIM_200ms).
+						Update("CheckIsBlocked", (smi, _) => smi.CheckAndAverage(offset)).
 						ScheduleGoTo(EXIT_DELAY, closing).
 						ParamTransition(isTraversing, waitEnter, IsTrue);
 					ConfigureClosingState(suffix, closing).
 						Enter("UpdateWorldState", UpdateWorldState).
 						ParamTransition(isTraversing, waitEnter, IsTrue).
-						Update("CheckIsBlocked", (smi, _) => smi.CheckAndAverage(offset), UpdateRate.SIM_200ms).
+						Update("CheckIsBlocked", (smi, _) => smi.CheckAndAverage(offset)).
 						OnAnimQueueComplete(vacuum);
 					ConfigureOpeningState(suffix, exit).
 						Exit((smi) => smi.ResetPressure()).
@@ -328,16 +323,16 @@ namespace PeterHan.AirlockDoor {
 							smi.master.UpdateWorldState();
 							smi.CheckDuplicantStatus();
 						}).
-						Update("CheckIsBlocked", (smi, _) => smi.CheckAndAverage(offset), UpdateRate.SIM_200ms).
+						Update("CheckIsBlocked", (smi, _) => smi.CheckAndAverage(offset)).
 						ParamTransition(isTraversing, waitExitClose, IsFalse);
 					waitExitClose.PlayAnim(open).
-						Update("CheckIsBlocked", (smi, _) => smi.CheckAndAverage(offset), UpdateRate.SIM_200ms).
+						Update("CheckIsBlocked", (smi, _) => smi.CheckAndAverage(offset)).
 						ScheduleGoTo(EXIT_DELAY, closing).
 						ParamTransition(isTraversing, waitExit, IsTrue);
 					ConfigureClosingState(suffix, clearing).
 						Enter("UpdateWorldState", UpdateWorldState).
 						ParamTransition(isTraversing, waitExit, IsTrue).
-						Update("CheckIsBlocked", (smi, _) => smi.CheckAndAverage(offset), UpdateRate.SIM_200ms).
+						Update("CheckIsBlocked", (smi, _) => smi.CheckAndAverage(offset)).
 						OnAnimQueueComplete(vacuum);
 				}
 			}
@@ -371,11 +366,8 @@ namespace PeterHan.AirlockDoor {
 			/// <summary>
 			/// Gets the average pressure sampled while the airlock was open.
 			/// </summary>
-			public float AveragePressure {
-				get {
-					return (pressureSamples <= 0) ? 0.0f : totalPressure / pressureSamples;
-				}
-			}
+			public float AveragePressure => (pressureSamples <= 0) ? 0.0f : totalPressure /
+				pressureSamples;
 
 			public Instance(AirlockDoor door) : base(door) {
 				minionLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Minion),
@@ -402,10 +394,10 @@ namespace PeterHan.AirlockDoor {
 			/// </summary>
 			public void CheckDuplicantStatus() {
 				int baseCell = master.building.GetCell();
-				sm.isTraversingLeft.Set(HasMinion(Grid.CellLeft(baseCell)) || HasMinion(Grid.
-					CellUpLeft(baseCell)), smi);
-				sm.isTraversingRight.Set(HasMinion(Grid.CellRight(baseCell)) || HasMinion(Grid.
-					CellUpRight(baseCell)), smi);
+				sm.isTraversingLeft.Set(HasMinion(Grid.CellLeft(baseCell)) ||
+					HasMinion(Grid.CellUpLeft(baseCell)), smi);
+				sm.isTraversingRight.Set(HasMinion(Grid.CellRight(baseCell)) ||
+					HasMinion(Grid.CellUpRight(baseCell)), smi);
 			}
 
 			/// <summary>

@@ -19,6 +19,7 @@
 using Newtonsoft.Json;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
+using TUNING;
 
 namespace PeterHan.StockBugFix {
 	/// <summary>
@@ -49,6 +50,13 @@ namespace PeterHan.StockBugFix {
 		[Option("Fix Overheat Temperatures", "Adds missing overheat temperatures to some buildings, and\r\nremoves it from other buildings where it does not make sense.")]
 		[JsonProperty]
 		public bool FixOverheat { get; set; }
+		
+		/// <summary>
+		/// If true, trait conflict patches will be applied.
+		/// </summary>
+		[Option("Fix Trait Conflicts", "Prevents nonsensical combinations of traits and interests that contradict each other from appearing.")]
+		[JsonProperty]
+		public bool FixTraits { get; set; }
 
 		/// <summary>
 		/// Allows changing food storage to a store errand. Does not affect cooking supply.
@@ -61,6 +69,7 @@ namespace PeterHan.StockBugFix {
 			AllowTepidizerPulsing = false;
 			FixOffsetTables = true;
 			FixOverheat = true;
+			FixTraits = true;
 			StoreFoodChoreType = StoreFoodCategory.Store;
 		}
 

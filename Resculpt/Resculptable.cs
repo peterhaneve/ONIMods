@@ -28,6 +28,11 @@ namespace PeterHan.Resculpt {
 	[SkipSaveFileSerialization]
 	public sealed class Resculptable : KMonoBehaviour {
 		/// <summary>
+		/// Private string declared in Artable that is never changed
+		/// </summary>
+		private const string DEFAULT_ARTWORK_ID = "Default";
+
+		/// <summary>
 		/// The icon sprite shown on the repaint or resculpt button.
 		/// </summary>
 		[SerializeField]
@@ -40,10 +45,13 @@ namespace PeterHan.Resculpt {
 		[SerializeField]
 		public string ButtonText;
 
-		[MyCmpReq]
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable CS0649
+		[MyCmpReq]
 		private Artable artable;
+
+		[MyCmpReq]
+		private KPrefabID prefabID;
 #pragma warning restore CS0649
 #pragma warning restore IDE0044 // Add readonly modifier
 
@@ -61,29 +69,33 @@ namespace PeterHan.Resculpt {
 		/// Triggered when the user requests a resculpt of the decor item.
 		/// </summary>
 		private void OnResculpt() {
-			Artable.Status currentStatus;
-			if (artable != null && (currentStatus = artable.CurrentStatus) != Artable.Status.
-					Ready) {
-				var eligible = ListPool<Artable.Stage, Resculptable>.Allocate();
+			var stages = Db.Get().ArtableStages;
+			string currentStatus;
+			Database.ArtableStage currentStage;
+			if (artable != null && (currentStatus = artable.CurrentStage) !=
+					DEFAULT_ARTWORK_ID && (currentStage = stages.TryGet(currentStatus)) !=
+					null) {
+				var eligible = ListPool<string, Resculptable>.Allocate();
+				var possible = stages.GetPrefabStages(prefabID.PrefabTag);
 				int currentIndex = 0;
-				string stageID = artable.CurrentStage;
 				try {
+					var allowedSkill = currentStage.statusItem;
 					// Populate with valid stages
-					foreach (var stage in artable.stages)
-						if (stage.statusItem == currentStatus) {
+					foreach (var stage in possible)
+						if (stage.statusItem == allowedSkill) {
 							// Search for the current one if possible
-							if (stage.id == stageID)
+							if (stage.id == currentStatus)
 								currentIndex = eligible.Count;
-							eligible.Add(stage);
+							eligible.Add(stage.id);
 						}
 					int n = eligible.Count;
 					if (n > 1) {
 						var attrs = this.GetAttributes().Get(Db.Get().BuildingAttributes.Decor);
 						// Remove the decor bonus (SetStage adds it back)
-						attrs.Modifiers.RemoveAll((modifier) => modifier.Description ==
+						attrs.Modifiers.RemoveAll(modifier => modifier.Description ==
 							"Art Quality");
 						// Next entry
-						artable.SetStage(eligible[(currentIndex + 1) % n].id, true);
+						artable.SetStage(eligible[(currentIndex + 1) % n], true);
 					}
 				} finally {
 					eligible.Recycle();
@@ -94,11 +106,9 @@ namespace PeterHan.Resculpt {
 		/// <summary>
 		/// Triggered when the user requests a rotate of the decor item.
 		/// </summary>
-		private void OnRotateClicked()
-		{
+		private void OnRotateClicked() {
 			var rotatable = gameObject.GetComponent<Rotatable>();
-			if (rotatable != null)
-			{
+			if (rotatable != null) {
 				rotatable.Rotate();
 
 				// Buildings with even width values jump one tile when rotating and must be moved back
@@ -114,8 +124,7 @@ namespace PeterHan.Resculpt {
 		/// </summary>
 		private void OnRefreshUserMenu(object _) {
 			var um = Game.Instance?.userMenu;
-			if (artable != null && artable.CurrentStatus != Artable.Status.Ready && um != null)
-			{
+			if (artable != null && artable.CurrentStage != DEFAULT_ARTWORK_ID && um != null) {
 				string text = ButtonText, icon = ButtonIcon;
 				// Set default name if not set
 				if (string.IsNullOrEmpty(text))
@@ -126,8 +135,7 @@ namespace PeterHan.Resculpt {
 					PAction.MaxAction, null, null, null, ResculptStrings.RESCULPT_TOOLTIP);
 				um.AddButton(gameObject, button);
 
-				if (gameObject.GetComponent<Rotatable>() != null)
-				{
+				if (gameObject.GetComponent<Rotatable>() != null) {
 					var rotationButton = new KIconButtonMenu.ButtonInfo(ResculptStrings.
 						ROTATE_SPRITE, ResculptStrings.ROTATE_BUTTON, OnRotateClicked,
 						Action.BuildMenuKeyO, tooltipText: ResculptStrings.ROTATE_TOOLTIP);

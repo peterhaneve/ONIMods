@@ -174,8 +174,7 @@ namespace PeterHan.EfficientFetch {
 			foreach (var pickup in fmPickups) {
 				var pickupable = pickup.pickupable;
 				// Is this item accessible?
-				if (FetchManager.IsFetchablePickup(pickupable, ref chore.tagBits, ref chore.
-						requiredTagBits, ref chore.forbiddenTagBits, destination)) {
+				if (FetchManager.IsFetchablePickup(pickupable, chore, destination)) {
 					float amount = pickupable.UnreservedAmount;
 					if (bestMatch == null) {
 						// Indicate if anything can be found at all
