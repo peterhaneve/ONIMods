@@ -1,6 +1,6 @@
 # Peter Han&#39;s Mods for Oxygen Not Included
 
-Last tested on game version: **U43-525812**
+Last tested on game version: **U43-526233**
 
 **No support** for Public Testing branches, including the rolled back Legacy Vanilla (CS-469300).
 
@@ -82,3 +82,9 @@ Mods should remain in their own subfolder.
 | [Decor Reimagined](https://steamcommunity.com/sharedfiles/filedetails/?id=1892161928) | Reimagines decor, rewarding bases with consistent, unique decor items | Yes | Yes |
 | [Diseases Restored](https://steamcommunity.com/sharedfiles/filedetails/?id=1911357229) | Restores diseases making germs more dangerous again, and adds methods to deal with germ spread | Yes | No |
 | [Traits Reworked](https://steamcommunity.com/sharedfiles/filedetails/?id=1905214098) | Reworks Duplicant traits to make all traits meaningful and the most extreme traits more sensible | Yes | No |
+
+# Compiling this repository
+
+After cloning the repository, if Oxygen Not Included is stored in a different directory than the default (`C:\Program Files (x86)\Steam\steamapps\common`), create a copy of `Directory.Build.props.default` named `Directory.Build.props.user`. Modify the values in it to match the correct folder locations. The "legacy" game folder is only used for pre-Mergedown versions of the game and can usually be safely ignored.
+
+The project is currently built against Visual Studio 2022 and the .NET Framework 4.7.1 (as required by the game). Make sure that the correct targeting packs, as well as MSBuild support, are installed in the Visual Studio Installer.

@@ -147,28 +147,21 @@ namespace ReimaginationTeam.DecorRework {
 		/// </summary>
 		/// <param name="obj">The sculpture to modify.</param>
 		public void ApplyToSculpture(GameObject obj) {
-			if (obj.TryGetComponent(out Artable _))
+			if (obj.TryGetComponent(out Artable _)) {
+				var statuses = Db.Get().ArtableStatuses;
 				foreach (var stage in Db.GetArtableStages().GetPrefabStages(obj.PrefabID())) {
-					string artLevel = stage.id;
-					switch (artLevel) {
-					// Default levels
-					case ART_CRUDE:
+					var artLevel = stage.statusItem;
+					if (artLevel == statuses.Ugly)
 						stage.decor = CrudeArtDecor;
-						break;
-					case ART_QUAINT:
+					else if (artLevel == statuses.Okay)
 						stage.decor = QuaintArtDecor;
-						break;
-					case ART_DEFAULT:
-						stage.decor = DefaultArtDecor;
-						break;
-					default:
+					else if (artLevel == statuses.Great)
 						// Good1, Good2, Good3
-						if (artLevel.StartsWith(ART_MASTERPIECE))
-							stage.decor = MasterpieceArtDecor;
-						// Charitably no change
-						break;
-					}
+						stage.decor = MasterpieceArtDecor;
+					else if (artLevel == statuses.Ready)
+						stage.decor = DefaultArtDecor;
 				}
+			}
 		}
 
 		public override string ToString() {

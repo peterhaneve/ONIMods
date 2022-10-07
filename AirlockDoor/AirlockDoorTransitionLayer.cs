@@ -37,7 +37,7 @@ namespace PeterHan.AirlockDoor {
 		public AirlockDoorTransitionLayer(Navigator navigator) : base(navigator) {
 			buildingLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Building),
 				ObjectLayer.Building);
-			doors = new Dictionary<AirlockDoor, DoorRequestType>(4);
+			doors = new Dictionary<AirlockDoor, DoorRequestType>(8);
 		}
 
 		/// <summary>
@@ -81,7 +81,7 @@ namespace PeterHan.AirlockDoor {
 
 		public override void BeginTransition(Navigator navigator, Navigator.
 				ActiveTransition transition) {
-			if (doors.Count == 0) {
+			if (doors.Count == 0 && navigator != null && transition != null) {
 				int cell = Grid.PosToCell(navigator);
 				int targetCell = Grid.OffsetCell(cell, transition.x, transition.y);
 				AddDoor(targetCell, cell);

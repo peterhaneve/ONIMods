@@ -2,11 +2,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Resculpt</AssemblyTitle>
-    <FileVersion>3.3.0.0</FileVersion>
+    <FileVersion>3.4.0.0</FileVersion>
     <RootNamespace>PeterHan.Resculpt</RootNamespace>
     <Description>Allows the design of sculpting blocks and paintings to be changed without reconstructing them.</Description>
     <AssemblyVersion>3.1.0.0</AssemblyVersion>
-    <LastWorkingBuild>525812</LastWorkingBuild>
+    <LastWorkingBuild>526233</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
   <ItemGroup>

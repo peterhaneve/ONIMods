@@ -2,11 +2,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Debug Not Included</AssemblyTitle>
-    <FileVersion>2.4.0.0</FileVersion>
+    <FileVersion>2.5.0.0</FileVersion>
     <RootNamespace>PeterHan.DebugNotIncluded</RootNamespace>
     <Description>Aids with mod debugging and management. Not intended to be a production mod manager.</Description>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <LastWorkingBuild>479045</LastWorkingBuild>
+    <LastWorkingBuild>526233</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
   <ItemGroup>

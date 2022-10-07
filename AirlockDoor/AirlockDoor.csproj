@@ -2,11 +2,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Airlock Door</AssemblyTitle>
-    <FileVersion>3.7.0.0</FileVersion>
+    <FileVersion>3.8.0.0</FileVersion>
     <RootNamespace>PeterHan.AirlockDoor</RootNamespace>
     <Description>A powered airlock door that allows passage without ever exchanging liquid or gas.</Description>
     <AssemblyVersion>3.1.0.0</AssemblyVersion>
-    <LastWorkingBuild>525812</LastWorkingBuild>
+    <LastWorkingBuild>526233</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
 </Project>
