@@ -317,13 +317,13 @@ namespace PeterHan.FastTrack.UIPatches {
 				var chances = smi.breedingChances;
 				var fertModifiers = Db.Get().FertilityModifiers.resources;
 				var text = CACHED_BUILDER;
-				int total = 0, n = chances.Count, found, nm = fertModifiers.Count;
+				int total = 0, n = chances.Count, nm = fertModifiers.Count;
 				for (int i = 0; i < n; i++) {
 					var chance = chances[i];
 					var eggTag = chance.egg;
 					string tooltip, eggName = TagManager.GetProperName(eggTag), weight =
 						GameUtil.GetFormattedPercent(chance.weight * 100.0f);
-					found = 0;
+					int found = 0;
 					text.Clear();
 					for (int j = 0; j < nm; j++) {
 						var modifier = fertModifiers[j];
@@ -445,7 +445,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					lastStressEntry = stressEntry = report.GetEntry(ReportManager.ReportType.
 						StressDelta);
 				}
-				string name = lastSelection.selectable.GetProperName();
+				string properName = lastSelection.selectable.GetProperName();
 				var stressEntries = stressEntry.contextEntries;
 				int n = stressEntries.Count;
 				stressDrawer.BeginDrawing();
@@ -454,8 +454,8 @@ namespace PeterHan.FastTrack.UIPatches {
 					var reportEntry = stressEntries[i];
 					int nodeID = reportEntry.noteStorageId;
 					// The IterateNotes callback allocates a delegate on the heap :/
-					if (reportEntry.context == name && allNoteEntries.entries.TryGetValue(
-							nodeID, out Dictionary<NoteEntryKey, float> nodeEntries)) {
+					if (reportEntry.context == properName && allNoteEntries.entries.
+							TryGetValue(nodeID, out var nodeEntries)) {
 						var text = CACHED_BUILDER;
 						float total = CompileNotes(nodeEntries, stressDrawer);
 						// Ryu to the rescue again!
@@ -584,8 +584,6 @@ namespace PeterHan.FastTrack.UIPatches {
 
 			internal readonly FertilityMonitor.Instance fertility;
 
-			internal readonly ClusterGridEntity gridEntity;
-
 			internal readonly MinionIdentity identity;
 
 			internal readonly bool isAsteroid;
@@ -603,6 +601,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal readonly WorldContainer world;
 
 			internal LastSelectionDetails(GameObject target) {
+				ClusterGridEntity gridEntity;
 				target.TryGetComponent(out conditions);
 				target.TryGetComponent(out identity);
 				target.TryGetComponent(out modifiers);

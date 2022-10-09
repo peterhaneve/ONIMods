@@ -22,9 +22,9 @@ using Ryu;
 using System;
 #if DEBUG
 using System.Collections.Generic;
+using System.Reflection;
 #endif
 using System.Diagnostics;
-using System.Reflection;
 using System.Text;
 using System.Threading;
 using UnityEngine;
@@ -175,7 +175,7 @@ namespace PeterHan.FastTrack {
 		[HarmonyPriority(Priority.Low)]
 		private static void ProfileSuffix(MethodBase __originalMethod, Stopwatch __state) {
 			if (__state != null)
-				Metrics.DebugMetrics.LogTracked(__originalMethod.DeclaringType.Name + "." +
+				Metrics.DebugMetrics.LogTracked(__originalMethod.DeclaringType?.Name + "." +
 					__originalMethod.Name, __state.ElapsedTicks);
 		}
 #endif
@@ -191,7 +191,7 @@ namespace PeterHan.FastTrack {
 				foreach (var patch in patches) {
 					var patchMethod = patch.PatchMethod;
 					PUtil.LogDebug(" {3} from {0} ({1}.{2})".F(patch.owner, patchMethod.
-						DeclaringType.Name, patchMethod.Name, heading));
+						DeclaringType?.Name, patchMethod.Name, heading));
 				}
 		}
 #endif

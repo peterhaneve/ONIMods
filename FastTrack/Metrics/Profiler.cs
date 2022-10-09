@@ -145,7 +145,8 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Wraps sim bucket results and allows sorting by time.
 		/// </summary>
-		private sealed class SimBucketResults : IComparable<SimBucketResults> {
+		private readonly struct SimBucketResults : IComparable<SimBucketResults>,
+				IEquatable<SimBucketResults> {
 			/// <summary>
 			/// The class name in this bucket.
 			/// </summary>
@@ -168,6 +169,10 @@ namespace PeterHan.FastTrack.Metrics {
 			public override bool Equals(object obj) {
 				return obj is SimBucketResults other && Time == other.Time && className ==
 					other.className;
+			}
+
+			public bool Equals(SimBucketResults other) {
+				return Time == other.Time && className == other.className;
 			}
 
 			public override int GetHashCode() {

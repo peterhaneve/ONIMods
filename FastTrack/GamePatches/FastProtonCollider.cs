@@ -27,14 +27,14 @@ namespace PeterHan.FastTrack.GamePatches {
 	[SkipSaveFileSerialization]
 	public sealed class FastProtonCollider : KMonoBehaviour {
 		/// <summary>
+		/// The tag bits that will prevent collision.
+		/// </summary>
+		private static TagBits COLLIDE_IGNORE;
+
+		/// <summary>
 		/// The tag bits with which to collide.
 		/// </summary>
 		private static TagBits COLLIDE_WITH;
-
-		/// <summary>
-		/// The tag bits that will prevent collision.
-		/// </summary>
-		private static TagBits COLLIDE_WITHOUT;
 
 		/// <summary>
 		/// Could not find a const for this in game...
@@ -60,12 +60,10 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Initializes the tag masks used for collision.
 		/// </summary>
 		internal static void Init() {
-			COLLIDE_WITH = new TagBits();
 			COLLIDE_WITH.SetTag(GameTags.Creature);
 			COLLIDE_WITH.SetTag(GameTags.Minion);
-			COLLIDE_WITHOUT = new TagBits();
-			COLLIDE_WITHOUT.SetTag(GameTags.Dead);
-			COLLIDE_WITHOUT.SetTag(GameTags.Dying);
+			COLLIDE_IGNORE.SetTag(GameTags.Dead);
+			COLLIDE_IGNORE.SetTag(GameTags.Dying);
 		}
 
 #pragma warning disable IDE0044
@@ -160,9 +158,8 @@ namespace PeterHan.FastTrack.GamePatches {
 			// Is it a creature/Duplicant and not already dead?
 			bool collided = false;
 			if (item != null && item.TryGetComponent(out KPrefabID prefabID) && prefabID.
-					HasAnyTags(ref COLLIDE_WITH) && !prefabID.HasAnyTags_AssumeLaundered(
-					ref COLLIDE_WITHOUT) && item.TryGetComponent(out Health hp) &&
-					!hp.IsDefeated()) {
+					HasAnyTags(ref COLLIDE_WITH) && !prefabID.HasAnyTags(ref COLLIDE_IGNORE) &&
+					item.TryGetComponent(out Health hp) && !hp.IsDefeated()) {
 				collided = true;
 				hp.Damage(DAMAGE_ON_HIT);
 				if (prefabID.HasTag(GameTags.Minion)) {

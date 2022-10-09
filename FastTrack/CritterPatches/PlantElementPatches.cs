@@ -22,6 +22,9 @@ using System;
 using System.Collections.Generic;
 
 namespace PeterHan.FastTrack.CritterPatches {
+	/// <summary>
+	/// Groups patches used to optimize plant fertilization.
+	/// </summary>
 	public static class FertilizerMonitorPatches {
 		/// <summary>
 		/// Gets the available fertilizers or irrigants.

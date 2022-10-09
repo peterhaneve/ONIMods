@@ -120,10 +120,6 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public TutorialMessageDisable DisableTutorial { get; set; }
 
-		[Option("STRINGS.UI.FRONTEND.FASTTRACK.FASTRAYCAST", "STRINGS.UI.TOOLTIPS.FASTTRACK.FASTRAYCAST", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_INTERFACE")]
-		[JsonProperty]
-		public bool FastRaycast { get; set; }
-
 		[Option("STRINGS.UI.FRONTEND.FASTTRACK.LOADOPTS", "STRINGS.UI.TOOLTIPS.FASTTRACK.LOADOPTS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_INTERFACE")]
 		[JsonProperty]
 		public bool LoadOpts { get; set; }
@@ -245,7 +241,6 @@ namespace PeterHan.FastTrack {
 			DisableTutorial = TutorialMessageDisable.WarningsOnly;
 			ENetOpts = true;
 			FastAttributesMode = true;
-			FastRaycast = true;
 			FastReachability = true;
 			FastStructureTemperature = true;
 			FastUpdatePickups = false;

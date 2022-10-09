@@ -181,6 +181,7 @@ namespace PeterHan.FastTrack.Metrics {
 	/// <summary>
 	/// Applied to SimAndRenderScheduler.RenderEveryTickUpdater to log sim/render update
 	/// metrics if enabled.
+	/// </summary>
 	[HarmonyPatch(typeof(SimAndRenderScheduler.RenderEveryTickUpdater),
 		nameof(SimAndRenderScheduler.RenderEveryTickUpdater.Update))]
 	public static class SimAndRenderScheduler_RenderEveryTickUpdater_Update_Patch {

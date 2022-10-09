@@ -56,7 +56,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="target">The fabricator requesting the recipe.</param>
 		/// <param name="result">The location where the ingredients will be stored.</param>
 		private static void GetIngredientDescriptions(ComplexRecipe recipe,
-				KMonoBehaviour target, IList<DescriptorWithSprite> result) {
+				KMonoBehaviour target, ICollection<DescriptorWithSprite> result) {
 			var ingredients = recipe.ingredients;
 			int n = ingredients.Length;
 			var inventory = target.GetMyWorld().worldInventory;
@@ -107,7 +107,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="recipe">The recipe to describe.</param>
 		/// <param name="result">The location where the products will be stored.</param>
 		private static void GetResultDescriptions(ComplexRecipe recipe,
-				IList<DescriptorWithSprite> result) {
+				ICollection<DescriptorWithSprite> result) {
 			var results = recipe.results;
 			int n = results.Length;
 			string template = RECIPE_PRODUCT;

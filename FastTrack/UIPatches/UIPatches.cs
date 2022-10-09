@@ -154,17 +154,17 @@ namespace PeterHan.FastTrack.UIPatches {
 		internal static bool Prefix(bool visibleToZoom, NameDisplayScreen __instance) {
 			var inst = CameraController.Instance;
 			if (inst != null) {
-				GridArea area = inst.VisibleArea.CurrentArea;
+				var area = inst.VisibleArea.CurrentArea;
 				var entries = __instance.entries;
 				var followTarget = inst.followTarget;
 				int n = entries.Count;
-				Vector3 pos;
 				for (int i = 0; i < n; i++) {
 					var entry = entries[i];
 					var go = entry.world_go;
 					var dg = entry.display_go;
 					var animController = entry.world_go_anim_controller;
 					if (go != null && dg != null) {
+						Vector3 pos;
 						// Merely fetching the position appears to take almost 1 us?
 						var transform = go.transform;
 						bool active = dg.activeSelf;

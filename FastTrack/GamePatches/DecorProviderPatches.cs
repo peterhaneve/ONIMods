@@ -94,7 +94,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal static TranspiledMethod TranspileRefresh(TranspiledMethod instructions) {
 			return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(RoomProber).
 				GetMethodSafe(nameof(RoomProber.SolidChangedEvent), false, typeof(int),
-					typeof(bool)), typeof(DecorProviderRefreshFix).GetMethodSafe(nameof(
+				typeof(bool)), typeof(DecorProviderRefreshFix).GetMethodSafe(nameof(
 				SolidNotChangedEvent), true, typeof(RoomProber), typeof(int), typeof(bool)));
 		}
 

@@ -77,8 +77,6 @@ namespace PeterHan.FastTrack.UIPatches {
 
 		internal readonly ToolTip tooltip;
 
-		private readonly RectTransform transform;
-
 		/// <summary>
 		/// Creates a new blank label.
 		/// </summary>
@@ -87,7 +85,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="id">The unique ID of this label.</param>
 		internal CachedStorageLabel(SimpleInfoScreen sis, GameObject parent, string id) {
 			var label = Util.KInstantiate(sis.attributesLabelButtonTemplate, parent, id);
-			transform = label.rectTransform();
+			var transform = label.rectTransform();
 			transform.localScale = Vector3.one;
 			labelObj = label;
 			freeze = label.AddOrGet<LayoutElement>();

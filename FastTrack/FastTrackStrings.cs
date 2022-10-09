@@ -66,7 +66,6 @@ namespace PeterHan.FastTrack {
 					public static LocString DISABLEACHIEVEMENTS = "Disable Achievements";
 					public static LocString DISABLELOADPREVIEWS = "Disable Load Previews";
 					public static LocString DISABLETUTORIAL = "Disable Tutorials";
-					public static LocString FASTRAYCAST = "Fast Raycast";
 					public static LocString LOADOPTS = "Less Loading";
 					public static LocString OPTIMIZEDIALOGS = "Optimize Dialogs";
 					public static LocString MISCOPTS = "Other UI Optimizations";
@@ -135,7 +134,7 @@ namespace PeterHan.FastTrack {
 					public static LocString CONDUITOPTS = "Multi-threads some updates to liquid and gas conduits." + PERF_LOW;
 
 					public static LocString THREATOVERCROWDING = "Optimizes critter Threat and Overcrowding monitors.\n<i>May conflict with mods that add new critters</i>" + PERF_MEDIUM;
-					public static LocString CRITTERCONSUMERS = "Optimize how Critters find objects to eat.\n<i>Partially implemented by the base game since U43-506365.</i>" + PERF_MEDIUM;
+					public static LocString CRITTERCONSUMERS = "Optimize how Critters find objects to eat." + PERF_LOW;
 					public static LocString UNSTACKLIGHTS = "Reduces the visual effects shown when many light sources are stacked.\nIntended for ranching critters like Shine Bugs." + PERF_LOW;
 
 					public static LocString FASTATTRIBUTESMODE = "Optimize attribute leveling and work efficiency calculation." + PERF_MEDIUM;
@@ -156,9 +155,8 @@ namespace PeterHan.FastTrack {
 					public static LocString DISABLEACHIEVEMENTS = "Turn off checking for Colony Initiatives.\n<color=#FF0000>Disabling will prevent unlocking any Steam achievement</color>" + PERF_LOW;
 					public static LocString DISABLELOADPREVIEWS = "Disables loading of colony previews on the Load screen." + PERF_MEDIUM;
 					public static LocString DISABLETUTORIAL = "Disables tutorial messages." + PERF_LOW;
-					public static LocString FASTRAYCAST = "Speeds up searching for UI elements under the cursor.\n<i>Implemented by the base game since U43-506365.</i>" + PERF_HIGH;
-					public static LocString LOADOPTS = "Speeds up loading times.\n<i>Implemented by the base game since U43-506365.</i>" + PERF_MEDIUM;
-					public static LocString OPTIMIZEDIALOGS = "Speeds up a variety of dialog boxes.\n<i>Implemented by the base game since U43-506365.</i>" + PERF_MEDIUM;
+					public static LocString LOADOPTS = "Speeds up loading times." + PERF_LOW;
+					public static LocString OPTIMIZEDIALOGS = "Speeds up a variety of dialog boxes." + PERF_LOW;
 					public static LocString MISCOPTS = "Optimizes many event and UI handlers." + PERF_MEDIUM;
 					public static LocString ALLOCOPTS = "Reduces memory allocations in a variety of locations." + PERF_LOW;
 

@@ -140,7 +140,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			idleAnims.Clear();
 			foreach (var file in Assets.Anims) {
 				var data = file?.GetData();
-				if (data != null && data.build != null)
+				if (data?.build != null)
 					IndexAnim(manager, data);
 			}
 		}

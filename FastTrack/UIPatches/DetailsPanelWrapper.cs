@@ -55,7 +55,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="target">The selected target.</param>
 		/// <param name="screens">The side screens to show or hide.</param>
 		/// <returns>The number of tabs that are active.</returns>
-		private static int EnableScreens(DetailsScreen ds, GameObject target,
+		private static int EnableScreens(KTabMenu ds, GameObject target,
 				DetailsScreen.Screens[] screens) {
 			int n = screens.Length, activeIndex = -1, enabledTabs = 0, lastActive =
 				ds.previouslyActiveTab;
@@ -161,8 +161,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="ds">The details screen being spawned.</param>
 		/// <param name="screens">The side screens to create.</param>
-		private static void InstantiateScreens(DetailsScreen ds,
-				DetailsScreen.Screens[] screens) {
+		private static void InstantiateScreens(KTabMenu ds, DetailsScreen.Screens[] screens) {
 			var body = ds.body.gameObject;
 			int n = screens.Length;
 			// First time initialization, ref screen allows reassignment back!

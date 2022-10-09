@@ -18,8 +18,7 @@
 
 using HarmonyLib;
 using System.Collections.Generic;
-using PeterHan.PLib.Core;
-using MarkedClearable = ClearableManager.MarkedClearable;
+
 using PreContext = Chore.Precondition.Context;
 using SortedClearable = ClearableManager.SortedClearable;
 
@@ -39,17 +38,19 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// Applied before CollectChores runs.
 			/// </summary>
 			internal static bool Prefix(ChoreConsumerState consumer_state,
-					List<PreContext> succeeded, IList<Chore> ___chores) {
+					List<PreContext> succeeded, ChoreProvider __instance) {
 				var inst = RootMenu.Instance;
 				bool run = false;
+				var map = __instance.choreWorldMap;
 				if ((inst == null || !inst.IsBuildingChorePanelActive()) && !consumer_state.
 						selectable.IsSelected) {
 					var ci = ChoreComparator.Instance;
+					int worldID = consumer_state.gameObject.GetMyParentWorldId();
 					run = ci.Setup(consumer_state, succeeded);
-					if (run) {
-						int n = ___chores.Count;
+					if (run && map.TryGetValue(worldID, out var chores) && chores != null) {
+						int n = chores.Count;
 						for (int i = 0; i < n; i++) {
-							var chore = ___chores[i];
+							var chore = chores[i];
 							// FetchChore.CollectChores is overridden to blank
 							if (!(chore is FetchChore))
 								ci.Collect(chore);
@@ -78,18 +79,20 @@ namespace PeterHan.FastTrack.GamePatches {
 				if ((inst == null || !inst.IsBuildingChorePanelActive()) && !consumer_state.
 						selectable.IsSelected) {
 					var ci = ChoreComparator.Instance;
+					int worldID = consumer_state.gameObject.GetMyParentWorldId();
 					run = ci.Setup(consumer_state, succeeded);
 					if (run) {
-						var chores = __instance.chores;
 						var fetches = __instance.fetches;
-						int n = chores.Count;
-						for (int i = 0; i < n; i++) {
-							var chore = chores[i];
-							if (!(chore is FetchChore))
-								ci.Collect(chore);
+						if (__instance.choreWorldMap.TryGetValue(worldID, out var chores)) {
+							int nc = chores.Count;
+							for (int i = 0; i < nc; i++) {
+								var chore = chores[i];
+								if (!(chore is FetchChore))
+									ci.Collect(chore);
+							}
 						}
 						ci.CollectSweep(__instance.clearableManager);
-						n = fetches.Count;
+						int n = fetches.Count;
 						for (int i = 0; i < n; i++)
 							ci.Collect(fetches[i].chore);
 						ci.Cleanup();
@@ -211,38 +214,6 @@ namespace PeterHan.FastTrack.GamePatches {
 		}
 
 		/// <summary>
-		/// Sorts the available Sweep errands.
-		/// </summary>
-		/// <param name="navigator">The consumer of the sweep chore.</param>
-		/// <param name="markedClearables">The items currently marked for sweep.</param>
-		/// <param name="sortedClearables">The location where the valid sweep errands will be stored.</param>
-		private static void SortClearables(Navigator navigator,
-				KCompactedVector<MarkedClearable> markedClearables,
-				List<SortedClearable> sortedClearables) {
-			var clearables = markedClearables.GetDataList();
-			int n = clearables.Count;
-			sortedClearables.Clear();
-			for (int i = 0; i < n; i++) {
-				var markedClearable = clearables[i];
-				var pickupable = markedClearable.pickupable;
-				int cost = pickupable.GetNavigationCost(navigator, pickupable.cachedCell);
-				if (cost >= 0)
-					sortedClearables.Add(new SortedClearable {
-						pickupable = pickupable,
-						masterPriority = markedClearable.prioritizable.GetMasterPriority(),
-						cost = cost
-					});
-			}
-			// Reuses Stock Bug Fix's transpile
-			sortedClearables.Sort(SortedClearable.comparer);
-		}
-
-		/// <summary>
-		/// Whether proximity priority is in use.
-		/// </summary>
-		private bool advancedPersonal;
-
-		/// <summary>
 		/// The best chore precondition so far.
 		/// </summary>
 		private PreContext best;
@@ -268,19 +239,14 @@ namespace PeterHan.FastTrack.GamePatches {
 		private int interruptPriority;
 		
 		/// <summary>
-		/// The parent world of the chore consumer's current world.
-		/// </summary>
-		private int parentWorld;
-
-		/// <summary>
 		/// The location where successful chores will be stored.
 		/// </summary>
 		private ICollection<PreContext> succeeded;
 
 		/// <summary>
-		/// The world index where the chore consumer is located.
+		/// The priority to use for sweep chores.
 		/// </summary>
-		private int targetWorld;
+		private int transportPriority;
 		
 		/// <summary>
 		/// Attempts to match up a Sweep errand with a Fetch destination.
@@ -293,18 +259,20 @@ namespace PeterHan.FastTrack.GamePatches {
 				ref SortedClearable sortedClearable) {
 			var masterPriority = sortedClearable.masterPriority;
 			var pickupable = sortedClearable.pickupable;
+			var prefabID = pickupable.KPrefabID;
 			bool found = false;
-			int priority = advancedPersonal ? transport.explicitPriority : transport.priority;
 			int diff = best.chore == null ? -1 : CompareChores(ref best, precondition.
-				personalPriority, ref masterPriority, priority, chore.priorityMod);
-			if (diff <= 0 && pickupable.KPrefabID.HasAnyTags_AssumeLaundered(ref chore.
-					tagBits) && FastCheckPreconditions(chore, transport)) {
+				personalPriority, ref masterPriority, transportPriority, chore.priorityMod);
+			if (diff <= 0 && ((chore.criteria == FetchChore.MatchCriteria.MatchID && chore.
+					tags.Contains(prefabID.PrefabTag)) || (chore.criteria == FetchChore.
+					MatchCriteria.MatchTags && prefabID.HasTag(chore.tagsFirst))) &&
+					FastCheckPreconditions(chore, transport)) {
 				precondition.Set(chore, consumerState, false, pickupable);
 				RunSomePreconditions(ref precondition);
 				found = precondition.IsSuccess();
 				if (found) {
 					precondition.masterPriority = masterPriority;
-					precondition.priority = priority;
+					precondition.priority = transportPriority;
 					// Implement Stock Bug Fix's priority inheritance here
 					precondition.interruptPriority = masterPriority.priority_class ==
 						PriorityScreen.PriorityClass.topPriority ? yellowPriority :
@@ -357,15 +325,12 @@ namespace PeterHan.FastTrack.GamePatches {
 			int personalPriority = consumerState.consumer.GetPersonalPriority(transport);
 			bool found = false;
 			var fetches = GlobalChoreProvider.Instance.fetches;
-			var markedClearables = manager.markedClearables;
 			var sortedClearables = manager.sortedClearables;
-			SortClearables(consumerState.navigator, markedClearables, sortedClearables);
 			int n = sortedClearables.Count, fn = fetches.Count;
 			var precondition = default(PreContext);
 			precondition.personalPriority = personalPriority;
 			for (int i = 0; i < n && !found; i++) {
 				var sortedClearable = sortedClearables[i];
-				sortedClearable.pickupable.KPrefabID.UpdateTagBits();
 				for (int j = 0; j < fn && !found; j++)
 					found = CheckFetchChore(ref precondition, fetches[j].chore,
 						ref sortedClearable);
@@ -391,23 +356,14 @@ namespace PeterHan.FastTrack.GamePatches {
 			if (chore != currentChore && (GetInterruptPriority(chore) < interruptPriority ||
 					(exclusions != null && exclusions.Overlaps(type.tags))))
 				return false;
-			if (go == null ||
+			return go != null &&
 				// IsPermitted
-				!consumer.IsPermittedOrEnabled(typeForPermission, chore) ||
+				consumer.IsPermittedOrEnabled(typeForPermission, chore) &&
 				// IsOverrideTargetNullOrMe
-				(overrideTarget != null && overrideTarget != consumer) ||
+				(overrideTarget == null || overrideTarget == consumer) &&
 				// HasUrge
-				(type.urge != null && !consumer.GetUrges().Contains(type.urge)))
-				return false;
-			int cell = Grid.PosToCell(go.transform.position);
-			if (!Grid.IsValidCell(cell))
-				return false;
-			// IsInMyParentWorld
-			int newWorld = Grid.WorldIdx[cell];
-			if (newWorld == targetWorld)
-				return true;
-			var choreWorld = ClusterManager.Instance.GetWorld(newWorld);
-			return choreWorld != null && parentWorld == choreWorld.ParentWorldId;
+				(type.urge == null || consumer.GetUrges().Contains(type.urge));
+			// IsInMyParentWorld is no longer used!
 		}
 
 		/// <summary>
@@ -426,9 +382,6 @@ namespace PeterHan.FastTrack.GamePatches {
 				// If false, all vanilla chores would fail precondition IsInMyParentWorld
 				if (valid) {
 					currentChore = state.choreDriver.GetCurrentChore();
-					targetWorld = Grid.WorldIdx[cell];
-					var currentWorld = ClusterManager.Instance.GetWorld(targetWorld);
-					parentWorld = currentWorld == null ? -1 : currentWorld.ParentWorldId;
 					if (currentChore != null) {
 						exclusions = currentChore.choreType.interruptExclusion;
 						interruptPriority = GetInterruptPriority(currentChore);
@@ -438,7 +391,8 @@ namespace PeterHan.FastTrack.GamePatches {
 					}
 				} else
 					currentChore = null;
-				advancedPersonal = Game.Instance.advancedPersonalPriorities;
+				transportPriority = Game.Instance.advancedPersonalPriorities ? transport.
+					explicitPriority : transport.priority;
 				best = default;
 				consumerState = state;
 				succeeded = successfulContexts;

@@ -31,7 +31,8 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// Applied to FetchListStatusItemUpdater to avoid leaking memory and vastly speed up
 	/// updates for fetchable status items tooltips and warnings.
 	/// </summary>
-	[HarmonyPatch(typeof(FetchListStatusItemUpdater), nameof(FetchListStatusItemUpdater.Render200ms))]
+	[HarmonyPatch(typeof(FetchListStatusItemUpdater), nameof(FetchListStatusItemUpdater.
+		Render200ms))]
 	public static class FetchListStatusItemUpdater_Render200ms_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.FastUpdatePickups;
 

@@ -85,7 +85,61 @@ namespace PeterHan.FastTrack.UIPatches {
 				pair.Value.SetActive(false);
 			existingRows.Recycle();
 		}
+		
+		/// <summary>
+		/// Refreshes the available artifact.
+		/// </summary>
+		/// <param name="panel">The parent info panel.</param>
+		/// <param name="artifact">The artifact to be harvested.</param>
+		private static void RefreshArtifacts(SpacePOISimpleInfoPanel panel, ArtifactPOIStates.
+				Instance artifact) {
+			if (panel.artifactRow.TryGetComponent(out HierarchyReferences hr)) {
+				string text;
+				var label = hr.GetReference<LocText>("ValueLabel");
+				// Triggers an Init if necessary
+				artifact.configuration.GetArtifactID();
+				if (artifact.CanHarvestArtifact())
+					text = STRINGS.UI.CLUSTERMAP.POI.ARTIFACTS_AVAILABLE;
+				else
+					text = STRINGS.UI.CLUSTERMAP.POI.ARTIFACTS_DEPLETED.Format(GameUtil.
+						GetFormattedCycles(artifact.RechargeTimeRemaining(), "F1", true));
+				if (label.text != text)
+					label.SetText(text);
+			}
+		}
 
+		/// <summary>
+		/// Refreshes the available mass of each element in the POI.
+		/// </summary>
+		/// <param name="panel">The parent info panel.</param>
+		/// <param name="harvestable">The POI to be harvested.</param>
+		private static void RefreshElements(SpacePOISimpleInfoPanel panel, HarvestablePOIStates.
+				Instance harvestable) {
+			var elementRows = panel.elementRows;
+			if (harvestable != null) {
+				// Shared dictionary, does not allocate
+				var weightedElements = harvestable.configuration.GetElementsWithWeights();
+				float total = 0.0f;
+				foreach (var pair in weightedElements) {
+					float mass = pair.Value;
+					total += mass;
+				}
+				// Avoid NaN
+				total = Math.Max(total, 0.01f);
+				foreach (var pair in weightedElements) {
+					var elementTag = new Tag(pair.Key.ToString());
+					// It is already visible, and in the correct order
+					if (elementRows.TryGetValue(elementTag, out GameObject row) && row.
+							TryGetComponent(out HierarchyReferences hr)) {
+						string text = GameUtil.GetFormattedPercent(pair.Value * 100.0f /
+							total);
+						var label = hr.GetReference<LocText>("ValueLabel");
+						if (label.text != text)
+							label.SetText(text);
+					}
+				}
+			}
+		}
 		/// <summary>
 		/// The last object selected in the additional details pane.
 		/// </summary>
@@ -218,60 +272,6 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 		}
 
-		/// <summary>
-		/// Refreshes the available artifact.
-		/// </summary>
-		/// <param name="panel">The parent info panel.</param>
-		/// <param name="harvestable">The artifact to be harvested.</param>
-		private void RefreshArtifacts(SpacePOISimpleInfoPanel panel, ArtifactPOIStates.
-				Instance artifact) {
-			if (panel.artifactRow.TryGetComponent(out HierarchyReferences hr)) {
-				string text;
-				var label = hr.GetReference<LocText>("ValueLabel");
-				// Triggers an Init if necessary
-				artifact.configuration.GetArtifactID();
-				if (artifact.CanHarvestArtifact())
-					text = STRINGS.UI.CLUSTERMAP.POI.ARTIFACTS_AVAILABLE;
-				else
-					text = STRINGS.UI.CLUSTERMAP.POI.ARTIFACTS_DEPLETED.Format(GameUtil.
-						GetFormattedCycles(artifact.RechargeTimeRemaining(), "F1", true));
-				if (label.text != text)
-					label.SetText(text);
-			}
-		}
-
-		/// <summary>
-		/// Refreshes the available mass of each element in the POI.
-		/// </summary>
-		/// <param name="panel">The parent info panel.</param>
-		/// <param name="harvestable">The POI to be harvested.</param>
-		private void RefreshElements(SpacePOISimpleInfoPanel panel, HarvestablePOIStates.
-				Instance harvestable) {
-			var elementRows = panel.elementRows;
-			if (harvestable != null) {
-				// Shared dictionary, does not allocate
-				var weightedElements = harvestable.configuration.GetElementsWithWeights();
-				float total = 0.0f;
-				foreach (var pair in weightedElements) {
-					float mass = pair.Value;
-					total += mass;
-				}
-				// Avoid NaN
-				total = Math.Max(total, 0.01f);
-				foreach (var pair in weightedElements) {
-					Tag elementTag = new Tag(pair.Key.ToString());
-					// It is already visible, and in the correct order
-					if (elementRows.TryGetValue(elementTag, out GameObject row) && row.
-							TryGetComponent(out HierarchyReferences hr)) {
-						string text = GameUtil.GetFormattedPercent(pair.Value * 100.0f /
-							total);
-						var label = hr.GetReference<LocText>("ValueLabel");
-						if (label.text != text)
-							label.SetText(text);
-					}
-				}
-			}
-		}
 
 		/// <summary>
 		/// Refreshes the maximum available mass heading.

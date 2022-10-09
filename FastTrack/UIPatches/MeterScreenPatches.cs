@@ -83,6 +83,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 	}
 
+	/// <summary>
 	/// Applied to ColonyDiagnosticScreen.DiagnosticRow to suppress SparkChart updates if
 	/// not visible.
 	/// </summary>

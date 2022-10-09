@@ -66,7 +66,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="panel">The vitals panel wrapper to update.</param>
 		/// <param name="plant">The plant to display.</param>
-		/// <param name="instance">The vitals panel to update.</param>
 		/// <param name="isDecor">Whether the plant is a decor plant.</param>
 		/// <param name="hasAdditional">Whether the plant has additional requirements.</param>
 		private static void UpdatePlantGrowth(ref VitalsPanelState panel, GameObject plant,
@@ -272,8 +271,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		private void UpdateChecks(GameObject target) {
 			var checkboxLines = panel.checkboxLines;
 			int n = checkboxLines.Length;
-			CheckboxLineDisplayType displayType;
 			for (int i = 0; i < n; i++) {
+				CheckboxLineDisplayType displayType;
 				ref var checkboxLine = ref checkboxLines[i];
 				var checkboxGO = checkboxLine.gameObject;
 				string amountID = checkboxLine.amountID;
@@ -400,10 +399,16 @@ namespace PeterHan.FastTrack.UIPatches {
 					aLabel = hr.GetReference<LocText>("Label");
 				plantAdditionalGO = additional.gameObject;
 				plantAdditionalLabel = aLabel;
-				aLabel.TryGetComponent(out plantAdditionalTooltip);
+				if (aLabel != null)
+					aLabel.TryGetComponent(out plantAdditionalTooltip);
+				else
+					plantAdditionalTooltip = null;
 				plantNormalGO = normal.gameObject;
 				plantNormalLabel = nLabel;
-				nLabel.TryGetComponent(out plantNormalTooltip);
+				if (nLabel != null)
+					nLabel.TryGetComponent(out plantNormalTooltip);
+				else
+					plantNormalTooltip = null;
 				vitals = instance;
 				amountLines = EMPTY_AMOUNT_LINES;
 				attributeLines = EMPTY_ATTRIBUTE_LINES;
@@ -461,8 +466,6 @@ namespace PeterHan.FastTrack.UIPatches {
 
 			internal readonly Func<GameObject, string> getLabelText;
 
-			internal readonly Func<GameObject, string> getTooltip;
-
 			internal readonly Func<GameObject, bool> getValue;
 
 			internal readonly Transform parentContainer;
@@ -476,7 +479,6 @@ namespace PeterHan.FastTrack.UIPatches {
 				displayCondition = original.display_condition;
 				gameObject = original.go;
 				getLabelText = original.label_text_func;
-				getTooltip = original.tooltip;
 				getValue = original.get_value;
 				parentContainer = original.parentContainer;
 				textField = original.locText;

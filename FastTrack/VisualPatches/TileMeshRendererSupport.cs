@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+
 using Bits = Rendering.BlockTileRenderer.Bits;
 
 namespace PeterHan.FastTrack.VisualPatches {
@@ -247,10 +248,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 		public static void AddVertexInfo(this AtlasInfo atlasInfo, int x, int y,
 				Bits connected, Color color) {
 			float size = Grid.CellSizeInMeters;
-			Vector2 botLeft = new Vector2(x, y);
-			Vector2 topRight = new Vector2(x + size, y + size);
-			Vector2 uvWX = new Vector2(atlasInfo.uvBox.x, atlasInfo.uvBox.w);
-			Vector2 uvYZ = new Vector2(atlasInfo.uvBox.z, atlasInfo.uvBox.y);
+			var botLeft = new Vector2(x, y);
+			var topRight = new Vector2(x + size, y + size);
+			var uvWX = new Vector2(atlasInfo.uvBox.x, atlasInfo.uvBox.w);
+			var uvYZ = new Vector2(atlasInfo.uvBox.z, atlasInfo.uvBox.y);
 			var vertices = MeshUtil.vertices;
 			var uvs = MeshUtil.uvs;
 			var indices = MeshUtil.indices;

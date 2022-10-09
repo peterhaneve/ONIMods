@@ -88,14 +88,14 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		internal readonly struct PickupTagKey : IEquatable<PickupTagKey> {
 			/// <summary>
-			/// The prefab ID of the tagged object.
-			/// </summary>
-			internal readonly KPrefabID ID;
-
-			/// <summary>
 			/// The tag bits' hash.
 			/// </summary>
 			internal readonly int Hash;
+
+			/// <summary>
+			/// The prefab ID of the tagged object.
+			/// </summary>
+			internal readonly KPrefabID ID;
 
 			public PickupTagKey(int hash, KPrefabID id) {
 				Hash = hash;

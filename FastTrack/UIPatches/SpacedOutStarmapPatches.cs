@@ -33,7 +33,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		internal static bool Prepare() => FastTrackOptions.Instance.RenderTicks;
 
 		/// <summary>
-		/// Transpiles GetHashCode to replace (x ^ y) with (x ^ (y << 16)).
+		/// Transpiles GetHashCode to replace (x ^ y) with (x ^ (y &lt;&lt; 16)).
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
 			var r = typeof(AxialI).GetFieldSafe(nameof(AxialI.r), false);
@@ -71,13 +71,11 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="scale">The current scale of the starmap.</param>
 		/// <param name="targetScale">The scale that the starmap is moving towards.</param>
 		/// <param name="position">The current and new position of the starmap</param>
-		/// <param name="selectWhenComplete">The hex to select when complete.</param>
-		/// <param name="selected">The currently selected hex.</param>
 		private static void NISMoveCore(ClusterMapScreen instance,
 				float scale, ref float targetScale, ref Vector3 position) {
-			float dt = Time.unscaledDeltaTime, distance;
+			float dt = Time.unscaledDeltaTime;
 			bool move = true;
-			Vector3 pos = position;
+			var pos = position;
 			var targetPosition = instance.targetNISPosition;
 			var destination = new Vector3(-targetPosition.x * scale, -targetPosition.y *
 				scale, targetPosition.z);
@@ -85,10 +83,10 @@ namespace PeterHan.FastTrack.UIPatches {
 			// Always 150.0 when reached
 			targetScale = Mathf.Lerp(targetScale, 150.0f, dt * 2.0f);
 			position = pos = Vector3.Lerp(pos, destination, dt * 2.5f);
-			distance = Vector3.Distance(pos, destination);
+			float distance = Vector3.Distance(pos, destination);
 			// Close to destination?
 			if (distance < 100.0f && cells.TryGetValue(instance.selectOnMoveNISComplete,
-					out ClusterMapVisualizer visualizer)) {
+					out var visualizer)) {
 				if (visualizer.TryGetComponent(out ClusterMapHex hex) && hex != instance.
 						m_selectedHex)
 					instance.SelectHex(hex);

@@ -102,7 +102,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Updates the mesh Z coordinate to match the current animation settings.
 		/// </summary>
-		/// <param name="position">The new Z coordinate.</param>
+		/// <param name="z">The new Z coordinate.</param>
 		/// <param name="active">true to set the mesh renderer active, or false to set it
 		/// inactive.</param>
 		internal void UpdatePosition(float z, bool active) {

@@ -30,86 +30,9 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Applied before FindElementByName runs.
 		/// </summary>
 		internal static bool Prefix(string name, ref Element __result) {
-			if (!ElementLoader.elementTable.TryGetValue(Hash.SDBMLower(name), out Element e))
+			if (!ElementLoader.elementTable.TryGetValue(Hash.SDBMLower(name), out var e))
 				e = null;
 			__result = e;
-			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to ElementLoader to speed up a linear search into a hashtable lookup.
-	/// </summary>
-	[HarmonyPatch(typeof(ElementLoader), nameof(ElementLoader.GetElement))]
-	public static class ElementLoader_GetElement_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
-
-		/// <summary>
-		/// Applied before GetElement runs.
-		/// </summary>
-		internal static bool Prefix(Tag tag, ref Element __result) {
-			if (!ElementLoader.elementTable.TryGetValue(tag.GetHash(), out Element element))
-				element = null;
-			__result = element;
-			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to ElementLoader to speed up a linear search into a hashtable lookup.
-	/// </summary>
-	[HarmonyPatch(typeof(ElementLoader), nameof(ElementLoader.GetElementID))]
-	public static class ElementLoader_GetElementID_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
-
-		/// <summary>
-		/// Applied before GetElementID runs.
-		/// </summary>
-		internal static bool Prefix(Tag tag, ref SimHashes __result) {
-			int hash = tag.GetHash();
-			if (ElementLoader.elementTable.ContainsKey(hash))
-				__result = (SimHashes)hash;
-			else
-				__result = SimHashes.Vacuum;
-			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to ElementLoader to speed up another linear search into a hashtable lookup.
-	/// </summary>
-	[HarmonyPatch(typeof(ElementLoader), nameof(ElementLoader.GetElementIndex), typeof(
-		SimHashes))]
-	public static class ElementLoader_GetElementIndexHash_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
-
-		/// <summary>
-		/// Applied before GetElementIndex runs.
-		/// </summary>
-		internal static bool Prefix(SimHashes hash, ref int __result) {
-			int index = -1;
-			if (ElementLoader.elementTable.TryGetValue((int)hash, out Element e))
-				index = e.idx;
-			__result = index;
-			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to ElementLoader to speed up yet another linear search into a hashtable lookup.
-	/// </summary>
-	[HarmonyPatch(typeof(ElementLoader), nameof(ElementLoader.GetElementIndex), typeof(Tag))]
-	public static class ElementLoader_GetElementIndexTag_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
-
-		/// <summary>
-		/// Applied before GetElementIndex runs.
-		/// </summary>
-		internal static bool Prefix(Tag element_tag, ref byte __result) {
-			byte index = byte.MaxValue;
-			if (ElementLoader.elementTable.TryGetValue(element_tag.GetHash(), out Element e))
-				index = e.idx;
-			__result = index;
 			return false;
 		}
 	}

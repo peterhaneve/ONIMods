@@ -102,8 +102,8 @@ namespace PeterHan.FastTrack.GamePatches {
 					string key = allAchievements[index].Id;
 					__instance.updatingAchievement = index + 1;
 					// If achievement has not already failed or succeeded
-					if (achievements.TryGetValue(key, out ColonyAchievementStatus status) &&
-							!status.success && !status.failed) {
+					if (achievements.TryGetValue(key, out var status) && !status.success &&
+							!status.failed) {
 						status.UpdateAchievement();
 						if (status.success && !status.failed) {
 							ColonyAchievementTracker.UnlockPlatformAchievement(key);

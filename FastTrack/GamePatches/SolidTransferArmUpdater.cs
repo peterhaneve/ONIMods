@@ -43,7 +43,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <returns>true if it can be picked up, or false otherwise.</returns>
 		private static bool CanUse(Pickupable pickupable, GameObject go) {
 			return pickupable.CouldBePickedUpByTransferArm(go) && pickupable.KPrefabID.
-				HasAnyTags_AssumeLaundered(ref SolidTransferArm.tagBits);
+				HasAnyTags(ref SolidTransferArm.tagBits);
 		}
 
 		/// <summary>

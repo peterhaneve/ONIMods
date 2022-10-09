@@ -27,6 +27,7 @@ using BrainPair = System.Collections.Generic.KeyValuePair<Brain, Navigator>;
 using Fetch = GlobalChoreProvider.Fetch;
 using FetchablesByPrefabId = FetchManager.FetchablesByPrefabId;
 using Pickup = FetchManager.Pickup;
+using SortedClearable = ClearableManager.SortedClearable;
 
 namespace PeterHan.FastTrack.PathPatches {
 	/// <summary>
@@ -80,6 +81,32 @@ namespace PeterHan.FastTrack.PathPatches {
 			}
 			return offsets == null ? navigator.GetNavigationCost(cell) : navigator.
 				GetNavigationCost(cell, offsets);
+		}
+		
+		/// <summary>
+		/// Sorts the available Sweep errands.
+		/// </summary>
+		/// <param name="navigator">The consumer of the sweep chore.</param>
+		/// <param name="clearableManager">The swept item manager to sort.</param>
+		private static void SortClearables(Navigator navigator,
+				ClearableManager clearableManager) {
+			var sortedClearables = clearableManager.sortedClearables;
+			var clearables = clearableManager.markedClearables.GetDataList();
+			int n = clearables.Count;
+			sortedClearables.Clear();
+			for (int i = 0; i < n; i++) {
+				var markedClearable = clearables[i];
+				var pickupable = markedClearable.pickupable;
+				int cost = pickupable.GetNavigationCost(navigator, pickupable.cachedCell);
+				if (cost >= 0)
+					sortedClearables.Add(new SortedClearable {
+						pickupable = pickupable,
+						masterPriority = markedClearable.prioritizable.GetMasterPriority(),
+						cost = cost
+					});
+			}
+			// Reuses Stock Bug Fix's transpile
+			sortedClearables.Sort(SortedClearable.comparer);
 		}
 
 		/// <summary>
@@ -164,15 +191,15 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <param name="fetchChore">The chore to add.</param>
 		/// <param name="fetches">The location where the errands will be populated.</param>
 		private void AddFetch(Navigator navigator, Storage destination, FetchChore fetchChore,
-				IList<Fetch> fetches) {
+				ICollection<Fetch> fetches) {
 			// Get the storage cell from the cache
 			if (storageCells.TryGetValue(destination, out int cell)) {
 				int cost = GetNavigationCost(navigator, destination, cell);
 				if (cost >= 0)
 					fetches.Add(new Fetch {
 						category = destination.fetchCategory, chore = fetchChore, cost = cost,
-						priority = fetchChore.masterPriority, tagBitsHash = fetchChore.
-						tagBitsHash
+						priority = fetchChore.masterPriority, idsHash = fetchChore.
+						tagsHash
 					});
 			} else
 				storageCells.TryAdd(destination, Grid.InvalidCell);
@@ -234,6 +261,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				if (!updated)
 					PUtil.LogWarning("Fetch updates did not complete within the timeout!");
 				if (fm != null && inst != null && updated) {
+					var cm = inst.clearableManager;
 					var fetches = inst.fetches;
 					var pickups = fm.pickups;
 					for (int i = 0; i < n; i++) {
@@ -248,6 +276,8 @@ namespace PeterHan.FastTrack.PathPatches {
 							pickups.Clear();
 							pickups.AddRange(entry.pickups);
 						}
+						if (cm != null)
+							SortClearables(entry.navigator, cm);
 						// Calls into Sensors, but Pickupable and PathProber were bypassed
 						entry.brain.UpdateBrain();
 						entry.Cleanup();
@@ -313,9 +343,10 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// A more efficient (slightly) version of GlobalChoreProber.UpdateFetches.
 		/// </summary>
 		/// <param name="navigator">The navigator that is fetching items.</param>
+		/// <param name="chores">The eligible fetch chores.</param>
 		/// <param name="fetches">The location where the errands will be populated.</param>
-		private void UpdateFetches(Navigator navigator, List<Fetch> fetches) {
-			var chores = GlobalChoreProvider.Instance?.fetchChores;
+		private void UpdateFetches(Navigator navigator, IList<FetchChore> chores,
+				List<Fetch> fetches) {
 			fetches.Clear();
 			if (chores != null) {
 				int n = chores.Count;
@@ -367,6 +398,11 @@ namespace PeterHan.FastTrack.PathPatches {
 			internal Brain brain;
 
 			/// <summary>
+			/// The eligible fetch chores for this navigator.
+			/// </summary>
+			internal IList<FetchChore> fetchChores;
+
+			/// <summary>
 			/// The location where the compiled fetch errands are stored.
 			/// </summary>
 			internal readonly List<Fetch> fetches;
@@ -405,8 +441,14 @@ namespace PeterHan.FastTrack.PathPatches {
 			/// <param name="newNavigator">The navigator to compute paths for this brain.</param>
 			/// <param name="n">The number of pickup prefab IDs to be updated.</param>
 			public void Begin(Brain newBrain, Navigator newNavigator, int n) {
+				var gcp = GlobalChoreProvider.Instance;
 				Count = n;
 				brain = newBrain;
+				int worldID = newNavigator.GetMyParentWorldId();
+				if (gcp != null && gcp.fetchMap.TryGetValue(worldID, out var chores))
+					fetchChores = chores;
+				else
+					fetchChores = null;
 				navigator = newNavigator;
 				worker = newNavigator.gameObject;
 			}
@@ -416,6 +458,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			/// frame.
 			/// </summary>
 			public void Cleanup() {
+				fetchChores = null;
 				fetches.Clear();
 				pickups.Clear();
 			}
@@ -479,7 +522,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			public void InternalDoWorkItem(int index) {
 				if (index >= 0 && index < Count) {
 					var task = updater.updatingPickups[index];
-					updater.UpdateFetches(task.navigator, task.fetches);
+					updater.UpdateFetches(task.navigator, task.fetchChores, task.fetches);
 				}
 			}
 

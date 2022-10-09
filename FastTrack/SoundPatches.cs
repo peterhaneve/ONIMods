@@ -254,11 +254,12 @@ namespace PeterHan.FastTrack {
 			yield return typeof(AnimEventManager).GetMethodSafe(nameof(AnimEventManager.
 				StopEvents), false, PPatchTools.AnyArguments);
 			yield return typeof(AudioMixer).GetMethodSafe(nameof(AudioMixer.
-				SetSnapshotParameter), false, PPatchTools.AnyArguments);
+				SetSnapshotParameter), false, typeof(string), typeof(string), typeof(float),
+				typeof(bool));
 			yield return typeof(AudioMixer).GetMethodSafe(nameof(AudioMixer.Start), false,
-				PPatchTools.AnyArguments);
+				typeof(string));
 			yield return typeof(AudioMixer).GetMethodSafe(nameof(AudioMixer.Stop), false,
-				PPatchTools.AnyArguments);
+				typeof(HashedString), typeof(FMOD.Studio.STOP_MODE));
 			yield return typeof(ConduitFlowVisualizer).GetMethodSafe(nameof(
 				ConduitFlowVisualizer.AddAudioSource), false, PPatchTools.AnyArguments);
 			yield return typeof(ConduitFlowVisualizer).GetMethodSafe(nameof(
@@ -266,7 +267,7 @@ namespace PeterHan.FastTrack {
 			yield return typeof(MusicManager).GetMethodSafe(nameof(MusicManager.StopSong),
 				false, PPatchTools.AnyArguments);
 			yield return typeof(KFMOD).GetMethodSafe(nameof(KFMOD.CreateInstance), true,
-				PPatchTools.AnyArguments);
+				typeof(string));
 			yield return typeof(KFMOD).GetMethodSafe(nameof(KFMOD.Initialize), true,
 				PPatchTools.AnyArguments);
 			yield return typeof(KFMOD).GetMethodSafe(nameof(KFMOD.RenderEveryTick), true,

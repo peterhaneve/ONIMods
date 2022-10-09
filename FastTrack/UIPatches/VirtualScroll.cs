@@ -16,9 +16,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
@@ -253,8 +255,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		private void UpdateScroll() {
 			int n = components.Count;
 			if (n > 0) {
-				MinMax above = new MinMax(0.0f), below = new MinMax(0.0f), left =
-					new MinMax(0.0f), right = new MinMax(0.0f);
 				GetViewableRect(out float xl, out float xr, out float yb, out float yt);
 				for (int i = 0; i < n; i++) {
 					var item = components[i];
@@ -263,23 +263,19 @@ namespace PeterHan.FastTrack.UIPatches {
 					if (forceShow.Contains(item.entry))
 						// Always visible
 						item.SetVisible(true);
-					else if (yMin > yt) {
+					else if (yMin > yt)
 						// Component above
-						above.Add(yMin, yMax);
 						item.SetVisible(false);
-					} else if (yMax < yb) {
+					else if (yMax < yb)
 						// Component below
-						below.Add(yMin, yMax);
 						item.SetVisible(false);
-					} else if (xMin > xr) {
+					else if (xMin > xr)
 						// Component to the right
-						right.Add(xMin, xMax);
 						item.SetVisible(false);
-					} else if (xMax < xl) {
+					else if (xMax < xl)
 						// Component to the left
-						left.Add(xMin, xMax);
 						item.SetVisible(false);
-					} else
+					else
 						item.SetVisible(true);
 				}
 			}
@@ -339,62 +335,6 @@ namespace PeterHan.FastTrack.UIPatches {
 					entry.SetActive(isVisible);
 					visible = isVisible;
 				}
-			}
-		}
-	}
-
-	/// <summary>
-	/// Stores information about the spacers above and below.
-	/// </summary>
-	public struct Spacer {
-		/// <summary>
-		/// The layout element to resize the spacer.
-		/// </summary>
-		internal readonly LayoutElement layout;
-
-		/// <summary>
-		/// The game object to destroy the spacer.
-		/// </summary>
-		internal readonly GameObject go;
-
-		/// <summary>
-		/// The transform to reparent the spacer.
-		/// </summary>
-		internal readonly Transform transform;
-
-		/// <summary>
-		/// Whether the spacer was visible last time.
-		/// </summary>
-		private bool visible;
-
-		internal Spacer(GameObject go) {
-			visible = false;
-			this.go = go;
-			go.TryGetComponent(out layout);
-			transform = go.transform;
-			go.SetActive(false);
-		}
-
-		public void Dispose() {
-			Object.Destroy(go);
-			visible = false;
-		}
-
-		/// <summary>
-		/// Sets the size of this spacer.
-		/// </summary>
-		/// <param name="width">The spacer width.</param>
-		/// <param name="height">The spacer height.</param>
-		public void SetSize(float width, float height) {
-			var element = layout;
-			element.minHeight = height;
-			element.preferredHeight = height;
-			element.minWidth = width;
-			element.preferredWidth = width;
-			bool active = width > 0.0f || height > 0.0f;
-			if (active != visible) {
-				visible = active;
-				go.SetActive(active);
 			}
 		}
 	}

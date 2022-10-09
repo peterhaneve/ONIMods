@@ -571,6 +571,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Updates the plugged in status of batteries or transformers.
 		/// </summary>
 		/// <param name="instance">The circuit manager to update.</param>
+		/// <param name="circuitID">The circuit index to update.</param>
 		/// <param name="batteries">The batteries or transformers to update.</param>
 		/// <param name="hasSources">Whether the batteries have a potential energy source.</param>
 		private static void UpdateConnectionStatus(CircuitManager instance, int circuitID,

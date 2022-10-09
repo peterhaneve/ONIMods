@@ -109,8 +109,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="condition">The condition to evaluate and display.</param>
 		internal void SetCondition(ProcessCondition condition) {
 			var status = condition.EvaluateCondition();
-			Color itemColor;
 			if (status != lastStatus) {
+				Color itemColor;
 				switch (status) {
 				case ProcessCondition.Status.Warning:
 					itemColor = ConditionListSideScreen.warningColor;

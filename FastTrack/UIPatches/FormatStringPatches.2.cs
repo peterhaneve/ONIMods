@@ -331,10 +331,10 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(float percent, TimeSlice timeSlice,
 					ref string __result) {
 				float absP = Mathf.Abs(percent);
-				int precision;
 				var text = CACHED_BUILDER;
 				text.Clear();
 				if (!text.AppendIfInfinite(percent)) {
+					int precision;
 					percent = GameUtil.ApplyTimeSlice(percent, timeSlice);
 					if (absP < 0.1f)
 						precision = 2;
@@ -361,10 +361,10 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(float percent, TimeSlice timeSlice,
 					ref string __result) {
 				float absP = Mathf.Abs(percent);
-				int precision;
 				var text = CACHED_BUILDER;
 				text.Clear();
 				if (!text.AppendIfInfinite(percent)) {
+					int precision;
 					percent = GameUtil.ApplyTimeSlice(percent, timeSlice);
 					if (absP < 0.1f)
 						precision = 2;

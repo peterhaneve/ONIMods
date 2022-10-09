@@ -77,21 +77,20 @@ namespace PeterHan.FastTrack.CritterPatches {
 	/// more sensible version that is faster.
 	/// </summary>
 	[HarmonyPatch(typeof(GasAndLiquidConsumerMonitor.Instance),
-		nameof(GasAndLiquidConsumerMonitor.Instance.FindFood))]
-	public static class GasAndLiquidConsumerMonitor_Instance_FindFood_Patch {
+		nameof(GasAndLiquidConsumerMonitor.Instance.FindTargetCell))]
+	public static class GasAndLiquidConsumerMonitor_Instance_FindTargetCell_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.CritterConsumers;
 
 		/// <summary>
-		/// Applied before FindFood runs.
+		/// Applied before FindTargetCell runs.
 		/// </summary>
 		internal static bool Prefix(GasAndLiquidConsumerMonitor.Instance __instance) {
-			int targetCell;
 			// The original query limited to 25 results, pufts have a typical path cost of 2
 			// for a move and slicksters 1, but pufts can go 4 directions while slicksters only
 			// 2. Go with a 15 cost limit which is 7 tiles (pufts) or 15 tiles (slicksters).
 			var query = new ConsumableCellQuery(__instance, 15);
 			__instance.navigator.RunQuery(query);
-			targetCell = query.TargetCell;
+			int targetCell = query.TargetCell;
 			if (Grid.IsValidCell(targetCell)) {
 				__instance.targetCell = targetCell;
 				__instance.targetElement = query.TargetElement;
@@ -115,10 +114,10 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// Applied after InitializeStates runs.
 		/// </summary>
 		internal static void Postfix(GasAndLiquidConsumerMonitor __instance) {
-			var lookingForFood = __instance.lookingforfood;
+			var lookingForFood = __instance.looking;
 			var actions = lookingForFood?.updateActions;
 			if (actions != null)
-				lookingForFood.Enter((smi) => smi.FindFood());
+				lookingForFood.Enter(smi => smi.FindTargetCell());
 		}
 
 		/// <summary>

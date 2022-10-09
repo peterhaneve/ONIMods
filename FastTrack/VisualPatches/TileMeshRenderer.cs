@@ -155,8 +155,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <param name="cell">The cell to query.</param>
 		/// <param name="element">The element used to build the building, or SimHashes.Void
 		/// for preview buildings.</param>
-		/// <param name="colorSource">The tile renderer instance to use for fetching the color,
-		/// which allows material color mods to modify it.</param>
 		/// <returns>The highlight color to apply to the mesh there.</returns>
 		internal Color GetCellColor(int cell, SimHashes element) {
 			Color result;
@@ -364,7 +362,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 					SimHashes element) {
 				int width = Grid.WidthInCells / CHUNK_SIZE + 1;
 				int height = Grid.HeightInCells / CHUNK_SIZE + 1;
-				float z = Grid.GetLayerZ(def.SceneLayer), decorZOffset;
+				float z = Grid.GetLayerZ(def.SceneLayer);
 				this.queryLayer = queryLayer;
 				this.element = element;
 				occupiedCells = new Dictionary<int, int>(CHUNK_SIZE * CHUNK_SIZE / 4);
@@ -381,6 +379,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 					decorTriangles = null;
 					decorChunks = null;
 				} else {
+					float decorZOffset;
 					// Decor has to appear in front to avoid z-fighting
 					if (def.BlockTileIsTransparent)
 						decorZOffset = Grid.GetLayerZ(Grid.SceneLayer.TileFront) - Grid.

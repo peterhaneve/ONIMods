@@ -88,22 +88,20 @@ namespace PeterHan.FastTrack.GamePatches {
 						0.5f);
 					var unitVector = new Vector2(Mathf.Cos(netAngle), Mathf.Sin(netAngle));
 					float rads = intensity;
-					Vector2 a2 = unitVector;
 					float dist = 0f;
 					while (rads > 0.01f && dist < RadiationGridEmitter.MAX_EMIT_DISTANCE) {
-						int cell = Grid.PosToCell(startPos + a2 * dist);
+						int cell = Grid.PosToCell(startPos + unitVector * dist);
 						// 1 / 3
 						dist += 0.333333f;
-						if (!Grid.IsValidCell(cell)) {
+						if (!Grid.IsValidCell(cell))
 							break;
-						}
 						if (!scanCells.Contains(cell)) {
 							SimMessages.ModifyRadiationOnCell(cell, Mathf.RoundToInt(rads));
 							scanCells.Add(cell);
 						}
 						float mass = Grid.Mass[cell];
 						// Attenuate over distance, with a slight random factor
-						rads *= ((mass > 0.0f) ? Mathf.Max(0f, 1f - Mathf.Pow(mass, 1.25f) *
+						rads *= (mass > 0.0f ? Mathf.Max(0f, 1f - Mathf.Pow(mass, 1.25f) *
 							Grid.Element[cell].molarMass / 1000000.0f) : 1.0f) *
 							Random.Range(0.96f, 0.98f);
 					}

@@ -55,7 +55,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <returns>The instance of that converter for this Duplicant.</returns>
 		public AttributeConverterInstance Get(AttributeConverter converter) {
 			if (converter == null || !attrConverters.TryGetValue(converter.Id,
-					out AttributeConverterInstance instance))
+					out var instance))
 				instance = null;
 			return instance;
 		}
@@ -66,8 +66,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="id">The attribute converter's ID.</param>
 		/// <returns>The instance of that converter ID for this Duplicant.</returns>
 		public AttributeConverterInstance GetConverter(string id) {
-			if (id == null || !attrConverters.TryGetValue(id, out AttributeConverterInstance
-					instance))
+			if (id == null || !attrConverters.TryGetValue(id, out var instance))
 				instance = null;
 			return instance;
 		}
@@ -160,9 +159,9 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Sets the Duplicant's current attribute experience. Only used in OnDeserialized.
 		/// </summary>
 		/// <param name="id">The attribute ID to look up.</param>
-		/// <param name="level">The attribute experience points to set.</param>
+		/// <param name="experience">The attribute experience points to set.</param>
 		public void SetExperience(string id, float experience) {
-			if (id != null && attrLevels.TryGetValue(id, out AttributeLevel attrLevel)) {
+			if (id != null && attrLevels.TryGetValue(id, out var attrLevel)) {
 				attrLevel.SetExperience(experience);
 				attrLevel.Apply(levels);
 			}
@@ -175,7 +174,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="id">The attribute ID to look up.</param>
 		/// <param name="level">The new attribute level.</param>
 		public void SetLevel(string id, int level) {
-			if (id != null && attrLevels.TryGetValue(id, out AttributeLevel attrLevel)) {
+			if (id != null && attrLevels.TryGetValue(id, out var attrLevel)) {
 				attrLevel.SetLevel(level);
 				attrLevel.Apply(levels);
 			}

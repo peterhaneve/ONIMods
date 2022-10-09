@@ -153,8 +153,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="reverse">Whether the sorting order is reversed.</param>
 		private static void UpdateHeaders(TableScreen instance, bool reverse) {
 			var sortColumn = instance.active_sort_column;
-			MultiToggle sortToggle;
 			foreach (var pair in instance.columns) {
+				MultiToggle sortToggle;
 				var tableColumn = pair.Value;
 				if (tableColumn != null && (sortToggle = tableColumn.column_sort_toggle) !=
 						null) {

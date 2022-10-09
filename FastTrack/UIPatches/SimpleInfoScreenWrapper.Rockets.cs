@@ -145,7 +145,6 @@ namespace PeterHan.FastTrack.UIPatches {
 			var rocketModule = lastSelection.rocketModule;
 			var rocketStatus = sis.rocketStatusContainer;
 			var text = CACHED_BUILDER;
-			string tooltip;
 			if (rocketInterface != null) {
 				RefreshRocketStats(rocketStatus, rocketInterface);
 				rocketStatus.SetLabel("RocketSpacer2", "", "");
@@ -154,6 +153,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			if (rocketModule != null) {
 				float burden = rocketModule.performanceStats.Burden;
 				float enginePower = rocketModule.performanceStats.EnginePower;
+				string tooltip;
 				// 1 string concat is no worse than the builder
 				rocketStatus.SetLabel("ModuleStats", ROCKETS.MODULE_STATS.NAME + lastSelection.
 					selectable.GetProperName(), ROCKETS.MODULE_STATS.TOOLTIP);

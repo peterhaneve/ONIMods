@@ -81,25 +81,32 @@ namespace PeterHan.FastTrack.GamePatches {
 				if (!hasSuit || (reactor.TryGetComponent(out Navigator navigator) &&
 						(navigator.flags & checkpoint.PathFlag) > PathFinder.PotentialPath.
 						Flags.None)) {
-					foreach (var dock in updater.docks)
-						if (GetSuitStatus(dock, out KPrefabID fullyCharged, out _, out _) &&
-								hasSuit) {
+					var docks = updater.docks;
+					int n = docks.Count;
+					for (int i = 0; i < n; i++) {
+						var dock = docks[i];
+						if (GetSuitStatus(dock, out var fullyCharged, out _, out _) && hasSuit)
+						{
 							dock.UnequipFrom(equipment);
 							changed = true;
 							break;
-						} else if (!hasSuit && fullyCharged != null) {
+						}
+						if (!hasSuit && fullyCharged != null) {
 							dock.EquipTo(equipment);
 							changed = true;
 							break;
 						}
+					}
 					if (!hasSuit && !changed) {
 						SuitLocker bestAvailable = null;
 						float maxScore = 0f;
-						foreach (var dock in updater.docks)
+						for (int i = 0; i < n; i++) {
+							var dock = docks[i];
 							if (dock.GetSuitScore() > maxScore) {
 								bestAvailable = dock;
 								maxScore = dock.GetSuitScore();
 							}
+						}
 						if (bestAvailable != null) {
 							bestAvailable.EquipTo(equipment);
 							changed = true;
@@ -111,9 +118,9 @@ namespace PeterHan.FastTrack.GamePatches {
 				// Dump on floor, if they pass by with a suit and taking it off is impossible
 				if (!changed && hasSuit) {
 					var assignable = equipment.GetAssignable(Db.Get().AssignableSlots.Suit);
-					var notification = new Notification(STRINGS.MISC.NOTIFICATIONS.SUIT_DROPPED.
-						NAME, NotificationType.BadMinor, (_, data) => STRINGS.MISC.NOTIFICATIONS.
-						SUIT_DROPPED.TOOLTIP);
+					var notification = new Notification(STRINGS.MISC.NOTIFICATIONS.
+						SUIT_DROPPED.NAME, NotificationType.BadMinor, (_, data) => STRINGS.
+						MISC.NOTIFICATIONS.SUIT_DROPPED.TOOLTIP);
 					assignable.Unassign();
 					if (assignable.TryGetComponent(out Notifier notifier))
 						notifier.Add(notification);

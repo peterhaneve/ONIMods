@@ -18,21 +18,25 @@
 
 using HarmonyLib;
 using System;
+using PeterHan.PLib.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
-	/// Applied to ResearchScreen to make its dreadfully slow Update method way faster.
+	/// Manages movement of the Research screen.
 	/// </summary>
-	[HarmonyPatch(typeof(ResearchScreen), nameof(ResearchScreen.Update))]
-	public static class ResearchScreen_Update_Patch {
+	internal static class ResearchScreenMovementUpdater {
+		/// <summary>
+		/// The Steam Controller fields are not available on the WeGame or EGS versions.
+		/// </summary>
+		private static readonly bool HAS_STEAM = PPatchTools.GetTypeSafe(nameof(
+			SteamInputInterpreter)) != null;
+
 		/// <summary>
 		/// The squared threshold in pixels where movement ends.
 		/// </summary>
 		private const float THRESHOLD_SQ = 4.0f;
-
-		internal static bool Prepare() => FastTrackOptions.Instance.VirtualScroll;
 
 		private static Vector2 ClampBack(ResearchScreen __instance, RectTransform rt,
 				float zoom, Vector2 inertia, Vector2 anchorPos) {
@@ -45,38 +49,51 @@ namespace PeterHan.FastTrack.UIPatches {
 			float yMax = (contentSize.y + ZS) * zoom - y;
 			target.x = Mathf.Clamp(target.x, xMin, xMax);
 			target.y = Mathf.Clamp(target.y, yMin, yMax);
-			Vector2 deltaAnchor = new Vector2(Mathf.Clamp(anchorPos.x, xMin, xMax),
+			var deltaAnchor = new Vector2(Mathf.Clamp(anchorPos.x, xMin, xMax),
 				Mathf.Clamp(anchorPos.y, yMin, yMax)) + inertia - anchorPos;
 			__instance.forceTargetPosition = target;
 			return deltaAnchor;
 		}
 
 		/// <summary>
+		/// Handles the Steam Controller. Has its own method to reduce crashes.
+		/// </summary>
+		/// <param name="rate">The rate to move the camera.</param>
+		/// <param name="panDelta">The location where the delta will be stored.</param>
+		/// <returns>true if the game pad is the current controller, or false otherwise.</returns>
+		private static bool SteamInputSupport(float rate, ref Vector2 panDelta) {
+			bool anyDown = KInputManager.currentControllerIsGamepad;
+			if (anyDown)
+				panDelta = KInputManager.steamInputInterpreter.GetSteamCameraMovement() * rate;
+			return anyDown;
+		}
+
+		/// <summary>
 		/// Applied before Update runs.
 		/// </summary>
-		internal static bool Prefix(ResearchScreen __instance) {
-			if (__instance.canvas.enabled && __instance.scrollContent.TryGetComponent(
+		internal static bool Update(ResearchScreen instance) {
+			if (instance.canvas.enabled && instance.scrollContent.TryGetComponent(
 					out RectTransform rt)) {
 				Vector2 anchorPos = rt.anchoredPosition, startPos = anchorPos, inertia =
-					__instance.dragInteria;
-				Vector3 mousePos = KInputManager.GetMousePos();
-				bool dragging = UpdateDrag(__instance, mousePos);
+					instance.dragInteria;
+				var mousePos = KInputManager.GetMousePos();
+				bool dragging = UpdateDrag(instance);
 				float dt = Time.unscaledDeltaTime;
 				// Update from user input
-				float zoom = UpdateZoom(__instance, mousePos, rt, dt, ref anchorPos);
-				bool anyDown = UpdateKeyboard(__instance, dt, ref anchorPos,
-					out Vector2 keyDelta);
+				float zoom = UpdateZoom(instance, mousePos, rt, dt, ref anchorPos);
+				bool anyDown = UpdateKeyboard(instance, dt, ref anchorPos,
+					out var keyDelta);
 				if (dragging) {
-					Vector2 inerDelta = mousePos - __instance.dragLastPosition;
-					anchorPos += inerDelta;
-					__instance.dragLastPosition = mousePos;
-					inertia = Vector2.ClampMagnitude(inertia + inerDelta, 400.0f);
+					var inertiaDelta = (Vector2)(mousePos - instance.dragLastPosition);
+					anchorPos += inertiaDelta;
+					instance.dragLastPosition = mousePos;
+					inertia = Vector2.ClampMagnitude(inertia + inertiaDelta, 400.0f);
 				}
 				inertia *= Math.Max(0.0f, 1.0f - dt * 4.0f);
-				__instance.dragInteria = inertia;
+				instance.dragInteria = inertia;
 				// Slide view back in bounds if not dragging
 				if (!dragging) {
-					Vector2 deltaAnchor = ClampBack(__instance, rt, zoom, inertia, anchorPos);
+					var deltaAnchor = ClampBack(instance, rt, zoom, inertia, anchorPos);
 					if (anyDown) {
 						// Zero out keyboard input vectors at edge
 						anchorPos += deltaAnchor;
@@ -89,10 +106,10 @@ namespace PeterHan.FastTrack.UIPatches {
 						if (deltaAnchor.y > 0f)
 							keyDelta.y = Math.Max(0f, keyDelta.y);
 					} else
-						anchorPos += deltaAnchor * __instance.edgeClampFactor * dt;
+						anchorPos += deltaAnchor * instance.edgeClampFactor * dt;
 				}
-				__instance.keyPanDelta = keyDelta;
-				ZoomToTarget(__instance, dt, anyDown || dragging, ref anchorPos);
+				instance.keyPanDelta = keyDelta;
+				ZoomToTarget(instance, dt, anyDown || dragging, ref anchorPos);
 				if (!Mathf.Approximately(anchorPos.x, startPos.x) || !Mathf.Approximately(
 						anchorPos.y, startPos.y))
 					rt.anchoredPosition = anchorPos;
@@ -104,21 +121,14 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Updates the drag state of the research screen.
 		/// </summary>
 		/// <param name="instance">The research screen instance to update.</param>
-		/// <param name="mousePos">The current mouse position.</param>
 		/// <returns>true if the user is dragging the screen, or false otherwise.</returns>
-		private static bool UpdateDrag(ResearchScreen instance, Vector3 mousePos) {
-			bool dragging = instance.isDragging, buttonDown = instance.leftMouseDown ||
-				instance.rightMouseDown;
-			// No square root for you, sqrt(1) = 1
-			if (!dragging && buttonDown && (instance.dragStartPosition - mousePos).
-					sqrMagnitude > THRESHOLD_SQ)
-				dragging = true;
-			else if (dragging && !buttonDown) {
-				instance.leftMouseDown = false;
-				instance.rightMouseDown = false;
+		private static bool UpdateDrag(ResearchScreen instance) {
+			bool dragging = instance.isDragging;
+			if (dragging && !KInputManager.isFocused) {
 				dragging = false;
+				instance.isDragging = false;
+				instance.draggingJustEnded = true;
 			}
-			instance.isDragging = dragging;
 			return dragging;
 		}
 
@@ -133,7 +143,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static bool UpdateKeyboard(ResearchScreen instance, float dt,
 				ref Vector2 anchorPos, out Vector2 delta) {
 			float speed = instance.keyboardScrollSpeed, easing = instance.keyPanEasing;
-			Vector2 panDelta = instance.keyPanDelta;
+			var panDelta = instance.keyPanDelta;
 			bool anyDown = false;
 			if (instance.panUp) {
 				panDelta.y -= dt * speed;
@@ -150,11 +160,8 @@ namespace PeterHan.FastTrack.UIPatches {
 				anyDown = true;
 			}
 			// Steam Controller/Deck support
-			if (KInputManager.currentControllerIsGamepad) {
-				panDelta = KInputManager.steamInputInterpreter.GetSteamCameraMovement() *
-					dt * speed * -5.0f;
-				anyDown = true;
-			}
+			if (HAS_STEAM)
+				anyDown |= SteamInputSupport(dt * speed * -2.0f, ref panDelta);
 			// Deceleration
 			panDelta.x -= Mathf.Lerp(0f, panDelta.x, dt * easing);
 			panDelta.y -= Mathf.Lerp(0f, panDelta.y, dt * easing);
@@ -206,6 +213,21 @@ namespace PeterHan.FastTrack.UIPatches {
 					instance.zoomingToTarget = false;
 				anchorPos = pos;
 			}
+		}
+	}
+
+	/// <summary>
+	/// Applied to ResearchScreen to make its dreadfully slow Update method way faster.
+	/// </summary>
+	[HarmonyPatch(typeof(ResearchScreen), nameof(ResearchScreen.Update))]
+	public static class ResearchScreen_Update_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.VirtualScroll;
+
+		/// <summary>
+		/// Applied before Update runs.
+		/// </summary>
+		internal static bool Prefix(ResearchScreen __instance) {
+			return ResearchScreenMovementUpdater.Update(__instance);
 		}
 	}
 

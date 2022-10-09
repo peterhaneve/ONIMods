@@ -339,7 +339,7 @@ namespace PeterHan.FastTrack {
 		internal static bool Prefix(Workable __instance) {
 			if (__instance.TryGetComponent(out KSelectable selectable)) {
 				var working = __instance.workingStatusItem;
-				ref Guid statusHandle = ref __instance.workStatusItemHandle;
+				ref var statusHandle = ref __instance.workStatusItemHandle;
 				selectable.RemoveStatusItem(statusHandle);
 				if (__instance.worker == null)
 					UpdateStatusItem(__instance, selectable, ref statusHandle);

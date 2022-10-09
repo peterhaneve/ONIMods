@@ -364,12 +364,12 @@ namespace PeterHan.FastTrack.UIPatches {
 		internal static void GetFormattedWattage(StringBuilder text, float watts,
 				GameUtil.WattageFormatterUnit unit = GameUtil.WattageFormatterUnit.Automatic,
 				bool displayUnits = true) {
-			string unitStr;
 			var legend = WATT_LEGEND;
 			if (text.AppendIfInfinite(watts))
 				// POWER OVERWHELMING
 				text.Append(legend[0]);
 			else {
+				string unitStr;
 				switch (unit) {
 				case GameUtil.WattageFormatterUnit.Watts:
 					unitStr = legend[0];

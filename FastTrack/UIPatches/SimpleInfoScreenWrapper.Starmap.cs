@@ -113,7 +113,6 @@ namespace PeterHan.FastTrack.UIPatches {
 			var geyserRows = sis.geyserRows;
 			var parent = sis.worldGeysersPanel.Content.gameObject;
 			var spawnables = SaveGame.Instance.worldGenSpawner.spawnables;
-			byte worldIndex;
 			var knownGeysers = ListPool<Tag, SimpleInfoScreen>.Allocate();
 			// Add all spawned geysers
 			int n = allGeysers.Length, unknownGeysers = 0;
@@ -128,6 +127,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			for (int i = 0; i < n; i++) {
 				var candidate = spawnables[i];
 				int cell = candidate.cell;
+				byte worldIndex;
 				if (Grid.IsValidCell(cell) && !candidate.isSpawned && (worldIndex = Grid.
 						WorldIdx[cell]) != ClusterManager.INVALID_WORLD_IDX &&
 						worldIndex == id) {
@@ -213,7 +213,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			for (int i = 0; i < n; i++) {
 				string id = traitIDs[i];
 				bool isNew = i >= existing;
-				var cachedTrait = ProcGen.SettingsCache.GetCachedTrait(id, false);
+				var cachedTrait = ProcGen.SettingsCache.GetCachedWorldTrait(id, false);
 				if (isNew)
 					sis.CreateWorldTraitRow();
 				var traitRow = worldTraitRows[i];

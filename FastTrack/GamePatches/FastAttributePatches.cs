@@ -159,16 +159,16 @@ namespace PeterHan.FastTrack.GamePatches {
 			}
 			if (__instance.lightEfficiencyBonus && Grid.IsValidCell(cell = Grid.PosToCell(
 					worker.transform.position))) {
-				ref Guid handle = ref __instance.lightEfficiencyBonusStatusItemHandle;
+				ref var handle = ref __instance.lightEfficiencyBonusStatusItemHandle;
+				var hv = handle;
 				bool lit;
 				if (Grid.LightIntensity[cell] > 0) {
 					lit = true;
 					mult += TUNING.DUPLICANTSTATS.LIGHT.LIGHT_WORK_EFFICIENCY_BONUS;
-					if (handle == Guid.Empty && worker.TryGetComponent(out KSelectable ks))
+					if (hv == Guid.Empty && worker.TryGetComponent(out KSelectable ks))
 						handle = ks.AddStatusItem(Db.Get().DuplicantStatusItems.
 							LightWorkEfficiencyBonus, __instance);
 				} else {
-					Guid hv = handle;
 					lit = false;
 					if (hv != Guid.Empty && worker.TryGetComponent(out KSelectable ks)) {
 						// Properly zero the Guid to avoid spamming the call later

@@ -79,7 +79,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="element">The selected element.</param>
 		/// <param name="tempUnits">The temperature units to use for formatting.</param>
-		/// <param name="shcInfo">The specific heat information.</returns>
+		/// <param name="shcInfo">The specific heat information.</param>
 		private static void GetSHCText(Element element, string tempUnits,
 				out InfoLine shcInfo) {
 			float shc = GameUtil.GetDisplaySHC(element.specificHeatCapacity);
@@ -103,8 +103,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="element">The selected element.</param>
 		/// <param name="building">The building use to build this element, if any.</param>
 		/// <param name="tempUnits">The temperature units to use for formatting.</param>
-		/// <param name="tcInfo">The thermal conductivity information.</returns>
-		/// <returns>Whether the insulated tooltip should appear.</param>
+		/// <param name="tcInfo">The thermal conductivity information.</param>
+		/// <returns>Whether the insulated tooltip should appear.</returns>
 		private static bool GetTCText(Element element, Building building, string tempUnits,
 				out InfoLine tcInfo) {
 			float tc = element.thermalConductivity;
@@ -326,7 +326,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="instance">The panel to update.</param>
 		internal void Update(AdditionalDetailsPanel instance) {
 			GameObject target;
-			Element element;
 			if (instance != null && (target = instance.selectedTarget) != null) {
 				var drawer = instance.drawer;
 				bool changed = target != lastSelection.target;
@@ -338,7 +337,7 @@ namespace PeterHan.FastTrack.UIPatches {
 						panel.HeaderLabel.SetText(STRINGS.UI.DETAILTABS.DETAILS.
 							GROUPNAME_DETAILS);
 				}
-				element = lastSelection.element;
+				var element = lastSelection.element;
 				if (element != null) {
 					string massStr = GameUtil.GetFormattedMass(lastSelection.Mass);
 					var id = element.id;
@@ -368,13 +367,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			internal int DiseaseCount {
 				get {
-					int dc;
 					var pe = primaryElement;
-					if (pe != null)
-						dc = pe.DiseaseCount;
-					else
-						dc = cso.diseaseCount;
-					return dc;
+					return pe != null ? pe.DiseaseCount : cso.diseaseCount;
 				}
 			}
 			
@@ -383,13 +377,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			internal byte DiseaseIndex {
 				get {
-					byte di;
 					var pe = primaryElement;
-					if (pe != null)
-						di = pe.DiseaseIdx;
-					else
-						di = cso.diseaseIdx;
-					return di;
+					return pe != null ? pe.DiseaseIdx : cso.diseaseIdx;
 				}
 			}
 
@@ -398,13 +387,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			internal float Mass {
 				get {
-					float mass;
 					var pe = primaryElement;
-					if (pe != null)
-						mass = pe.Mass;
-					else
-						mass = cso.Mass;
-					return mass;
+					return pe != null ? pe.Mass : cso.Mass;
 				}
 			}
 
@@ -413,13 +397,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			internal float Temperature {
 				get {
-					float tmp;
 					var pe = primaryElement;
-					if (pe != null)
-						tmp = pe.Temperature;
-					else
-						tmp = cso.temperature;
-					return tmp;
+					return pe != null ? pe.Temperature : cso.temperature;
 				}
 			}
 
