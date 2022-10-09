@@ -272,6 +272,21 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="pickupable">The item to add.</param>
 		/// <param name="inventory">The inventory where it should be added.</param>
+		/// <param name="itemTag">The tag under which it will be classified.</param>
+		private static void AddFetchable(Pickupable pickupable, InventoryDict inventory,
+				Tag itemTag) {
+			if (BackgroundWorldInventory.IsAcceptable(itemTag)) {
+				if (!inventory.TryGetValue(itemTag, out var entry))
+					inventory[itemTag] = entry = new HashSet<Pickupable>();
+				entry.Add(pickupable);
+			}
+		}
+
+		/// <summary>
+		/// Adds a newly found reachable item to the world inventory.
+		/// </summary>
+		/// <param name="pickupable">The item to add.</param>
+		/// <param name="inventory">The inventory where it should be added.</param>
 		private static void AddFetchable(Pickupable pickupable, InventoryDict inventory) {
 			var kpid = pickupable.KPrefabID;
 			var prefabTag = kpid.PrefabTag;
@@ -284,11 +299,9 @@ namespace PeterHan.FastTrack.UIPatches {
 					DiscoveredResources.Instance.Discover(prefabTag, category);
 			}
 			foreach (var itemTag in kpid.Tags)
-				if (BackgroundWorldInventory.IsAcceptable(itemTag)) {
-					if (!inventory.TryGetValue(itemTag, out HashSet<Pickupable> entry))
-						inventory[itemTag] = entry = new HashSet<Pickupable>();
-					entry.Add(pickupable);
-				}
+				AddFetchable(pickupable, inventory, itemTag);
+			// Prefab tag is no longer in the Tags list
+			AddFetchable(pickupable, inventory, prefabTag);
 		}
 
 		/// <summary>

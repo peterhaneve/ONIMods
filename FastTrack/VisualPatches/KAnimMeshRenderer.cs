@@ -171,7 +171,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 					for (int i = 0; i < n; i++) {
 						var batch = batchSet.GetBatch(i);
 						int id = batch.id;
-						if (VISUALIZERS.TryGetValue(id, out KAnimMeshRenderer renderer) &&
+						if (VISUALIZERS.TryGetValue(id, out var renderer) &&
 								renderer != null)
 							renderer.UpdatePosition(batch.position.z, batch.size > 0 &&
 								batch.active);
@@ -186,7 +186,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		internal static void UpdateMaterialProperties(KAnimBatch batch) {
 			int id = batch.id;
 			if (batch.materialType != MaterialType.UI && VISUALIZERS.TryGetValue(id,
-					out KAnimMeshRenderer renderer) && renderer != null)
+					out var renderer) && renderer != null)
 				renderer.SetProperties(batch.matProperties);
 		}
 
@@ -207,7 +207,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 				if (group != null && material_type != MaterialType.UI) {
 					int id = __instance.id;
 					// Destroy the existing renderer if it exists
-					if (VISUALIZERS.TryGetValue(id, out KAnimMeshRenderer renderer) &&
+					if (VISUALIZERS.TryGetValue(id, out var renderer) &&
 							renderer != null)
 						renderer.DestroyRenderer();
 					VISUALIZERS[id] = KAnimMeshRenderer.Create(group.mesh, group.
@@ -230,7 +230,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			internal static void Postfix(KAnimBatch __instance) {
 				int id = __instance.id;
 				if (__instance.materialType != MaterialType.UI && VISUALIZERS.TryGetValue(
-						id, out KAnimMeshRenderer renderer) && renderer != null)
+						id, out var renderer) && renderer != null)
 					renderer.Deactivate();
 			}
 		}
@@ -249,7 +249,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			internal static void Prefix(KAnimBatch __instance) {
 				int id = __instance.id;
 				if (__instance.materialType != MaterialType.UI && VISUALIZERS.TryGetValue(
-						id, out KAnimMeshRenderer renderer)) {
+						id, out var renderer)) {
 					if (renderer != null)
 						renderer.DestroyRenderer();
 					VISUALIZERS.Remove(id);

@@ -120,8 +120,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 				}
 				__instance.batchset.SetDirty();
 				__instance.needsWrite = true;
-				if (batch != null)
-					batch.Deregister(controller);
+				batch?.Deregister(controller);
 				controller.SetBatch(__instance);
 			} else {
 #if DEBUG

@@ -721,10 +721,10 @@ namespace PeterHan.FastTrack.UIPatches {
 			bool cont = b != "_";
 			if (!cont) {
 				var cached = StringFormatter.cachedCombines;
-				if (!cached.TryGetValue(a, out Dictionary<string, string> dictionary))
+				if (!cached.TryGetValue(a, out var dictionary))
 					cached[a] = dictionary = new Dictionary<string, string>(8);
 				if (!dictionary.TryGetValue(c, out string text))
-					dictionary[c] = text = a + "_" + b;
+					dictionary[c] = text = a + "_" + c;
 				__result = text;
 			}
 			return cont;
@@ -750,7 +750,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			bool cont = c != "_" || a != PREFIX;
 			if (!cont) {
 				var cached = StringFormatter.cachedCombines;
-				if (!cached.TryGetValue(b, out Dictionary<string, string> dictionary))
+				if (!cached.TryGetValue(b, out var dictionary))
 					cached[b] = dictionary = new Dictionary<string, string>(64);
 				if (!dictionary.TryGetValue(d, out string text))
 					dictionary[d] = text = PREFIX + b + "_" + d;

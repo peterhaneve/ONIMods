@@ -71,7 +71,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 				// wait on a trivial kanim... Clay please!
 				if (anim != null && mode == KAnim.PlayMode.Paused && anim.numFrames > 0 &&
 						__instance.currentFrame == 0 && inst != null && inst.GetAnimState(anim,
-						KAnim.PlayMode.Loop) == mode)
+						KAnim.PlayMode.Loop) == KAnim.PlayMode.Paused)
 					stopped = false;
 			}
 			__result = stopped;
@@ -191,45 +191,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 					syncController.FlipX = controller.FlipX;
 				if (syncController.FlipY != controller.FlipY)
 					syncController.FlipY = controller.FlipY;
-			}
-			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to KBatchedAnimController to remove some shockingly expensive asserts.
-	/// </summary>
-	[HarmonyPatch(typeof(KBatchedAnimController), nameof(KBatchedAnimController.SetBatchGroup))]
-	public static class KBatchedAnimController_SetBatchGroup_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.AnimOpts;
-
-		/// <summary>
-		/// Applied before SetBatchGroup runs.
-		/// </summary>
-		internal static bool Prefix(KBatchedAnimController __instance, KAnimFileData kafd) {
-			var id = __instance.batchGroupID;
-			if (id.IsValid)
-				PUtil.LogWarning("Batch group should only be set once!");
-			else if (kafd == null)
-				PUtil.LogWarning("No anim data for {0}!".F(__instance.name));
-			else if (id != kafd.batchTag) {
-				var bild = kafd.build;
-				var inst = KAnimBatchManager.Instance();
-				if (bild == null)
-					PUtil.LogWarning("No build for anim {0} on {1}!".F(kafd.name, __instance.
-						name));
-				else if (!(id = bild.batchTag).IsValid || id == KAnimBatchManager.NO_BATCH)
-					PUtil.LogWarning("Batch is not ready: " + __instance.name);
-				else if (inst != null) {
-					var bgd = KAnimBatchManager.instance.GetBatchGroupData(id);
-					id = bild.batchTag;
-					__instance.curBuild = bild;
-					__instance.batchGroupID = id;
-					__instance.symbolInstanceGpuData = new SymbolInstanceGpuData(bgd.
-						maxSymbolsPerBuild);
-					__instance.symbolOverrideInfoGpuData = new SymbolOverrideInfoGpuData(bgd.
-						symbolFrameInstances.Count);
-				}
 			}
 			return false;
 		}
