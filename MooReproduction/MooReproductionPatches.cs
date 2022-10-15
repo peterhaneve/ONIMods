@@ -85,10 +85,9 @@ namespace PeterHan.MooReproduction {
 				Add(new MooGrowUpStates.Def()).
 				PushInterruptGroup().
 				Add(new CreatureSleepStates.Def()).
-				Add(new FixedCaptureStates.Def());
-			if (!baby)
-				newChoreTable.Add(new RanchedStates.Def());
-			newChoreTable.Add(new GiveBirthStates.Def()).
+				Add(new FixedCaptureStates.Def()).
+				Add(new RanchedStates.Def(), !baby).
+				Add(new GiveBirthStates.Def()).
 				Add(new EatStates.Def()).
 				Add(new PlayAnimsStates.Def(GameTags.Creatures.Poop, false, "poop", STRINGS.CREATURES.STATUSITEMS.EXPELLING_GAS.NAME, STRINGS.CREATURES.STATUSITEMS.EXPELLING_GAS.TOOLTIP)).
 				Add(new MoveToLureStates.Def()).

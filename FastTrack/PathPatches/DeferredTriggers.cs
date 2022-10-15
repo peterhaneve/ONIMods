@@ -96,6 +96,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// Empties the queue of all pending anim events.
 		/// </summary>
 		internal void Process() {
+			var gsp = GameScenePartitioner.Instance;
 			while (animPending.Count > 0) {
 				var evt = animPending.Dequeue();
 				var src = evt.source;
@@ -114,6 +115,9 @@ namespace PeterHan.FastTrack.PathPatches {
 						item.name, item.cachedCell, cell));
 #endif
 					item.UpdateCachedCell(cell);
+					gsp.UpdatePosition(item.solidPartitionerEntry, cell);
+					gsp.UpdatePosition(item.partitionerEntry, cell);
+					item.NotifyChanged(cell);
 				}
 			}
 			while (offsetPending.TryDequeue(out var offset))

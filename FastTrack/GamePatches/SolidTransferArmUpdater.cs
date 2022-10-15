@@ -19,6 +19,7 @@
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -42,8 +43,12 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="go">The sweeper trying to pick it up.</param>
 		/// <returns>true if it can be picked up, or false otherwise.</returns>
 		private static bool CanUse(Pickupable pickupable, GameObject go) {
-			return pickupable.CouldBePickedUpByTransferArm(go) && pickupable.KPrefabID.
-				HasAnyTags(ref SolidTransferArm.tagBits);
+			var prefabID = pickupable.KPrefabID;
+			lock (TagBits.tagTable) {
+				prefabID.LaunderTagBits();
+			}
+			return pickupable.CouldBePickedUpByTransferArm(go) && prefabID.HasAnyTags(
+				ref SolidTransferArm.tagBits);
 		}
 
 		/// <summary>
@@ -67,7 +72,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// The cached pickupables from async fetches.
 		/// </summary>
-		private readonly List<CachedPickupable> cached;
+		private readonly ConcurrentStack<CachedPickupable> cached;
 
 		/// <summary>
 		/// The current sweeper job.
@@ -75,7 +80,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		private readonly IList<SolidTransferArmInfo> sweepers;
 
 		private SolidTransferArmUpdater() {
-			cached = new List<CachedPickupable>(256);
+			cached = new ConcurrentStack<CachedPickupable>();
 			sweepers = new List<SolidTransferArmInfo>(32);
 		}
 
@@ -86,7 +91,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		private void AsyncUpdate(SolidTransferArmInfo info) {
 			var sweeper = info.sweeper;
 			var reachableCells = HashSetPool<int, SolidTransferArmUpdater>.Allocate();
-			int range = sweeper.pickupRange, cell = info.cell, n = cached.Count;
+			int range = sweeper.pickupRange, cell = info.cell;
 			Grid.CellToXY(cell, out int x, out int y);
 			int maxY = Math.Min(Grid.HeightInCells, y + range), maxX = Math.Min(Grid.
 				WidthInCells, x + range), minY = Math.Max(0, y - range), minX = Math.Max(0,
@@ -109,8 +114,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			// Gather stored objects not found by the partitioner
 			var pickupables = sweeper.pickupables;
 			pickupables.Clear();
-			for (int i = 0; i < n; i++) {
-				var entry = cached[i];
+			foreach (var entry in cached) {
 				var pickupable = entry.pickupable;
 				if (pickupable != null) {
 					cell = entry.storage_cell;
@@ -126,12 +130,11 @@ namespace PeterHan.FastTrack.GamePatches {
 			if (gsp != null) {
 				var found = ListPool<ScenePartitionerEntry, SolidTransferArmUpdater>.
 					Allocate();
-				// Avoid contention, as unfortunately GSP is not very thread safe
-				lock (sweepers) {
+				lock (cached) {
 					gsp.GatherEntries(new Extents(minX, minY, maxX - minX + 1, maxY - minY +
 						1), gsp.pickupablesLayer, found);
 				}
-				n = found.Count;
+				int n = found.Count;
 				for (int i = 0; i < n; i++)
 					if (found[i].obj is Pickupable pickupable && pickupable != null) {
 						cell = pickupable.cachedCell;
@@ -193,16 +196,17 @@ namespace PeterHan.FastTrack.GamePatches {
 				KPrefabID prefabID;
 				var pickupable = items[i].pickupable;
 				if (pickupable != null && (prefabID = pickupable.KPrefabID).HasTag(GameTags.
-						Stored))
-					lock (cached) {
-						// While cached could be lockless, laundering the tag bits can hit a
-						// very rare race condition on ManifestTagBits anyways
+						Stored)) {
+					// Making this lock-free is possible, but then we conflict with
+					// Not Enough Tags
+					lock (TagBits.tagTable) {
 						prefabID.LaunderTagBits();
-						cached.Add(new CachedPickupable {
-							pickupable = pickupable,
-							storage_cell = pickupable.cachedCell
-						});
 					}
+					cached.Push(new CachedPickupable {
+						pickupable = pickupable,
+						storage_cell = pickupable.cachedCell
+					});
+				}
 			}
 		}
 
