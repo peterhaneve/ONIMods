@@ -72,7 +72,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// The cached pickupables from async fetches.
 		/// </summary>
-		private readonly ConcurrentStack<CachedPickupable> cached;
+		private readonly ConcurrentQueue<CachedPickupable> cached;
 
 		/// <summary>
 		/// The current sweeper job.
@@ -80,7 +80,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		private readonly IList<SolidTransferArmInfo> sweepers;
 
 		private SolidTransferArmUpdater() {
-			cached = new ConcurrentStack<CachedPickupable>();
+			cached = new ConcurrentQueue<CachedPickupable>();
 			sweepers = new List<SolidTransferArmInfo>(32);
 		}
 
@@ -174,7 +174,7 @@ namespace PeterHan.FastTrack.GamePatches {
 					sweeper.Sim();
 				}
 			}
-			cached.Clear();
+			while (cached.TryDequeue(out _)) { }
 		}
 
 		public void Dispose() {
@@ -202,7 +202,7 @@ namespace PeterHan.FastTrack.GamePatches {
 					lock (TagBits.tagTable) {
 						prefabID.LaunderTagBits();
 					}
-					cached.Push(new CachedPickupable {
+					cached.Enqueue(new CachedPickupable {
 						pickupable = pickupable,
 						storage_cell = pickupable.cachedCell
 					});

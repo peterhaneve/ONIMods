@@ -19,7 +19,6 @@
 using Newtonsoft.Json;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
-using TUNING;
 
 namespace PeterHan.StockBugFix {
 	/// <summary>
@@ -36,13 +35,14 @@ namespace PeterHan.StockBugFix {
 		[Option("Allow Tepidizer Pulsing", "Allow the Liquid Tepidizer to be pulsed rapidly to increase its temperature beyond its usual limits.")]
 		[JsonProperty]
 		public bool AllowTepidizerPulsing { get; set; }
-
+		
 		/// <summary>
-		/// If true, constructable and deconstructable items will have their build locations fixed.
+		/// If true, duplicate attributes in minion selection screens that do not actually add
+		/// the listed value to the Duplicant's final attributes will be hidden.
 		/// </summary>
-		[Option("Fix Build Locations", "Fixes the locations where rotated buildings can be built or deconstructed.")]
+		[Option("Clarify Attributes", "Hide duplicate skill-granted attributes in Duplicant selection that do not actually add to the final attributes.")]
 		[JsonProperty]
-		public bool FixOffsetTables { get; set; }
+		public bool FixMultipleAttributes { get; set; }
 
 		/// <summary>
 		/// If true, overheat temperature patches will be applied.
@@ -67,15 +67,15 @@ namespace PeterHan.StockBugFix {
 
 		public StockBugFixOptions() {
 			AllowTepidizerPulsing = false;
-			FixOffsetTables = true;
+			FixMultipleAttributes = true;
 			FixOverheat = true;
 			FixTraits = true;
 			StoreFoodChoreType = StoreFoodCategory.Store;
 		}
 
 		public override string ToString() {
-			return "StockBugFixOptions[allowTepidizer={1},fixOverheat={0},foodChoreType={2},fixOffsets={3}]".F(
-				FixOverheat, AllowTepidizerPulsing, StoreFoodChoreType, FixOffsetTables);
+			return "StockBugFixOptions[allowTepidizer={1},fixOverheat={0},foodChoreType={2},fixAttributes={3}]".F(
+				FixOverheat, AllowTepidizerPulsing, StoreFoodChoreType, FixMultipleAttributes);
 		}
 	}
 

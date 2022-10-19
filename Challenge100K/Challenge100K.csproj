@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>One Hundred K Challenge</AssemblyTitle>
-    <FileVersion>3.2.0.0</FileVersion>
+    <FileVersion>3.3.0.0</FileVersion>
     <RootNamespace>PeterHan.Challenge100K</RootNamespace>
     <Description>Can you survive a world with a temperature of 100 K?</Description>
     <AssemblyVersion>3.1.0.0</AssemblyVersion>

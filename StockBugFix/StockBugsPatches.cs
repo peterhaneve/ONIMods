@@ -36,6 +36,17 @@ namespace PeterHan.StockBugFix {
 	/// </summary>
 	public sealed class StockBugsPatches : UserMod2 {
 		/// <summary>
+		/// The statistic IDs that already were displayed -- do not display these again.
+		/// </summary>
+		internal static readonly ISet<string> ALREADY_DISPLAYED = new HashSet<string>();
+
+		/// <summary>
+		/// The last fetched statistic value, used as a quick and dirty way to hide unwanted
+		/// stats.
+		/// </summary>
+		internal static int lastValue = int.MaxValue;
+
+		/// <summary>
 		/// Sets the default chore type of food storage depending on the user options. Also
 		/// fixes (DLC) the trait exclusions.
 		/// </summary>
@@ -92,12 +103,36 @@ namespace PeterHan.StockBugFix {
 		}
 
 		/// <summary>
+		/// Gets the starting level of the Duplicant for the given statistic, or +0 if the
+		/// stat was already displayed.
+		/// </summary>
+		/// <param name="startingLevels">The map of all starting attribute values for this Duplicant.</param>
+		/// <param name="key">The starting attribtue ID to display.</param>
+		/// <returns>The starting attribute level, or 0 if the attribute was not found or was
+		/// already displayed on this iteration.</returns>
+		internal static int GetStartingLevels(IDictionary<string, int> startingLevels,
+				string key) {
+			return (lastValue = ALREADY_DISPLAYED.Add(key) ? startingLevels[key] : 0);
+		}
+
+		/// <summary>
 		/// Applied to MainMenu to display a queued Steam mod status report if pending.
 		/// </summary>
 		private static void PostfixMenuSpawn(MainMenu __instance) {
 			GameObject go;
 			if (__instance != null && (go = __instance.gameObject) != null)
 				go.AddOrGet<QueuedModReporter>();
+		}
+
+		/// <summary>
+		/// Sets the active flag of the attribute field only if the last value was nonzero
+		/// (namely, the stat actually matters). Else, leaves it inactive.
+		/// </summary>
+		/// <param name="target">The target object to activate.</param>
+		/// <param name="active">Always true, from the base game.</param>
+		internal static void SetActiveIfNonzero(GameObject target, bool active) {
+			if (lastValue != 0)
+				target.SetActive(active);
 		}
 
 		/// <summary>
@@ -140,6 +175,7 @@ namespace PeterHan.StockBugFix {
 			PRegistry.PutData("Bugs.AutosaveDragFix", true);
 			new POptions().RegisterOptions(this, typeof(StockBugFixOptions));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
+			ALREADY_DISPLAYED.Clear();
 		}
 
 		/// <summary>
@@ -210,57 +246,50 @@ namespace PeterHan.StockBugFix {
 	}
 
 	/// <summary>
-	/// Applied to Constructable, Deconstructable, and Demolishable to fix the offsets
-	/// based on building rotation.
+	/// Applied to CharacterContainer to fix duplicate displays of Duplicant attributes.
 	/// </summary>
-	[HarmonyPatch]
-	public static class Buildable_OnPrefabInit_Patch {
-		/// <summary>
-		/// The bug was fixed in U43-525812.
-		/// </summary>
+	[HarmonyPatch(typeof(CharacterContainer), "SetInfoText")]
+	public static class CharacterContainer_SetInfoText_Patch {
 		internal static bool Prepare() {
-			return StockBugFixOptions.Instance.FixOffsetTables && PUtil.GameVersion < 525812U;
+			return StockBugFixOptions.Instance.FixMultipleAttributes;
 		}
 
 		/// <summary>
-		/// Calculates multiple target methods for one patch.
+		/// Applied before SetInfoText runs.
 		/// </summary>
-		internal static IEnumerable<MethodBase> TargetMethods() {
-			yield return typeof(Constructable).GetMethodSafe("OnPrefabInit", false);
-			yield return typeof(Deconstructable).GetMethodSafe("OnPrefabInit", false);
-			yield return typeof(Demolishable).GetMethodSafe("OnPrefabInit", false);
+		internal static void Prefix() {
+			StockBugsPatches.ALREADY_DISPLAYED.Clear();
+			StockBugsPatches.lastValue = int.MaxValue;
 		}
 
 		/// <summary>
 		/// Transpiles OnPrefabInit to rotate the offset table before building it.
 		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod method,
-				MethodBase __originalMethod) {
-			var target = typeof(OffsetGroups).GetMethodSafe(nameof(OffsetGroups.
-				BuildReachabilityTable), true, typeof(CellOffset[]),
-				typeof(CellOffset[][]), typeof(CellOffset[]));
-			var replacement = typeof(StockBugsPatches).GetMethodSafe(nameof(StockBugsPatches.
-				RotateAndBuild), true, typeof(CellOffset[]), typeof(CellOffset[][]),
-				typeof(CellOffset[]), typeof(KMonoBehaviour));
-			bool patched = false;
-			string sig = __originalMethod.DeclaringType?.FullName + "." + __originalMethod.Name;
-			if (target != null && replacement != null)
-				foreach (var instr in method) {
-					if (instr.Is(OpCodes.Call, target)) {
-						yield return new CodeInstruction(OpCodes.Ldarg_0);
-						instr.operand = replacement;
+		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+			var getStats = typeof(Dictionary<string, int>).GetProperty("Item", PPatchTools.
+				BASE_FLAGS | BindingFlags.Instance)?.GetGetMethod();
+			var replaceStats = typeof(StockBugsPatches).GetMethodSafe(nameof(StockBugsPatches.
+				GetStartingLevels), true, typeof(IDictionary<string, int>), typeof(string));
+			var setActive = typeof(GameObject).GetMethodSafe(nameof(GameObject.SetActive),
+				false, typeof(bool));
+			var replaceActive = typeof(StockBugsPatches).GetMethodSafe(nameof(
+				StockBugsPatches.SetActiveIfNonzero), true, typeof(GameObject), typeof(bool));
+			int patched = 0;
+			foreach (var instr in method) {
+				if (instr.Is(OpCodes.Callvirt, getStats)) {
+					instr.operand = replaceStats;
+					patched = 1;
+				} else if (instr.Is(OpCodes.Callvirt, setActive) && patched == 1) {
+					instr.operand = replaceActive;
 #if DEBUG
-						PUtil.LogDebug("Patched " + sig);
+					PUtil.LogDebug("Patched CharacterContainer.SetInfoText");
 #endif
-						patched = true;
-					}
-					yield return instr;
+					patched = 2;
 				}
-			else
-				foreach (var instr in method)
-					yield return instr;
-			if (!patched)
-				PUtil.LogWarning("Unable to patch " + sig);
+				yield return instr;
+			}
+			if (patched < 2)
+				PUtil.LogWarning("Unable to patch CharacterContainer.SetInfoText");
 		}
 	}
 
@@ -337,46 +366,7 @@ namespace PeterHan.StockBugFix {
 				SolidNotChangedEvent), true, typeof(RoomProber), typeof(int), typeof(bool)));
 		}
 	}
-
-	/// <summary>
-	/// Applied to Deconstructable to spawn items in positions that match the building's
-	/// current orientation.
-	/// </summary>
-	[HarmonyPatch(typeof(Deconstructable), nameof(Deconstructable.SpawnItem))]
-	public static class Deconstructable_SpawnItem_Patch {
-		internal static bool Prepare() {
-			return StockBugFixOptions.Instance.FixOffsetTables;
-		}
-
-		/// <summary>
-		/// Transpiles SpawnItem to rotate the offset table before dropping items.
-		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-			var target = typeof(Deconstructable).GetPropertySafe<CellOffset[]>(
-				"placementOffsets", false)?.GetGetMethod(true);
-			var modifier = typeof(StockBugsPatches).GetMethodSafe(nameof(StockBugsPatches.
-				RotateAll), true, typeof(CellOffset[]), typeof(KMonoBehaviour));
-			bool patched = false;
-			if (target != null && modifier != null)
-				foreach (var instr in method) {
-					yield return instr;
-					if (instr.Is(OpCodes.Call, target)) {
-						yield return new CodeInstruction(OpCodes.Ldarg_0);
-						yield return new CodeInstruction(OpCodes.Call, modifier);
-#if DEBUG
-						PUtil.LogDebug("Patched Deconstructable.SpawnItem");
-#endif
-						patched = true;
-					}
-				}
-			else
-				foreach (var instr in method)
-					yield return instr;
-			if (!patched)
-				PUtil.LogWarning("Unable to patch Deconstructable.SpawnItem");
-		}
-	}
-
+	
 	/// <summary>
 	/// Applied to Diggable to prevent maximum experience overflow if Super Productive
 	/// manages to complete on Neutronium.

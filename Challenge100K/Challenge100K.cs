@@ -118,7 +118,7 @@ namespace PeterHan.Challenge100K {
 		/// Applied to MutatedWorldData() to remove all geysers on hard mode on 100 K.
 		/// </summary>
 		[HarmonyPatch(typeof(MutatedWorldData), MethodType.Constructor, typeof(ProcGen.World),
-			typeof(List<WorldTrait>))]
+			typeof(List<WorldTrait>), typeof(List<WorldTrait>))]
 		public static class MutatedWorldData_Constructor_Patch {
 			/// <summary>
 			/// Applied after the constructor runs.

@@ -21,157 +21,157 @@ namespace PeterHan.TurnBackTheClock {
 	/// The offset tables used for diagonal access prior to MD-471618.
 	/// </summary>
 	internal static class LegacyVanillaOffsetTables {
-		public static readonly CellOffset[][] InvertedStandardTable = OffsetTable.Mirror(new CellOffset[][] {
-			new CellOffset[]
+		public static readonly CellOffset[][] InvertedStandardTable = OffsetTable.Mirror(new[] {
+			new[]
 			{
 				new CellOffset(0, 0)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(0, 1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(0, 2),
 				new CellOffset(0, 1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(0, 3),
 				new CellOffset(0, 1),
 				new CellOffset(0, 2)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(0, -1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(0, -2)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(0, -3),
 				new CellOffset(0, -2),
 				new CellOffset(0, -1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, 0)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, 1),
 				new CellOffset(0, 1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, 1),
 				new CellOffset(1, 0)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, 2),
 				new CellOffset(1, 0),
 				new CellOffset(1, 1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, 2),
 				new CellOffset(0, 1),
 				new CellOffset(0, 2)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, 3),
 				new CellOffset(1, 2),
 				new CellOffset(1, 1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, 3),
 				new CellOffset(0, 1),
 				new CellOffset(0, 2),
 				new CellOffset(0, 3)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, -1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, -2),
 				new CellOffset(1, 0),
 				new CellOffset(1, -1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, -2),
 				new CellOffset(1, -1),
 				new CellOffset(0, -1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, -3),
 				new CellOffset(1, 0),
 				new CellOffset(1, -1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, -3),
 				new CellOffset(0, -1),
 				new CellOffset(0, -2)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, -3),
 				new CellOffset(0, -1),
 				new CellOffset(-1, -1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(2, 0),
 				new CellOffset(1, 0)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(2, 1),
 				new CellOffset(1, 1),
 				new CellOffset(0, 1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(2, 1),
 				new CellOffset(1, 1),
 				new CellOffset(1, 0)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(2, 2),
 				new CellOffset(1, 2),
 				new CellOffset(1, 1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(2, 3),
 				new CellOffset(1, 1),
 				new CellOffset(1, 2),
 				new CellOffset(1, 3)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(2, -1),
 				new CellOffset(2, 0),
 				new CellOffset(1, 0)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(2, -2),
 				new CellOffset(1, 0),
 				new CellOffset(1, -1),
 				new CellOffset(2, -1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(2, -3),
 				new CellOffset(1, 0),
@@ -180,143 +180,143 @@ namespace PeterHan.TurnBackTheClock {
 			}
 		});
 
-		public static readonly CellOffset[][] InvertedStandardTableWithCorners = OffsetTable.Mirror(new CellOffset[][] {
-			new CellOffset[]
+		public static readonly CellOffset[][] InvertedStandardTableWithCorners = OffsetTable.Mirror(new[] {
+			new[]
 			{
 				new CellOffset(0, 0)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(0, 1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(0, 2),
 				new CellOffset(0, 1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(0, 3),
 				new CellOffset(0, 1),
 				new CellOffset(0, 2)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(0, -1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(0, -2)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(0, -3),
 				new CellOffset(0, -2),
 				new CellOffset(0, -1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, 0)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, 1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, 1),
 				new CellOffset(1, 0)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, 2),
 				new CellOffset(1, 0),
 				new CellOffset(1, 1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, 2),
 				new CellOffset(0, 1),
 				new CellOffset(0, 2)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, 3),
 				new CellOffset(1, 2),
 				new CellOffset(1, 1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, 3),
 				new CellOffset(0, 1),
 				new CellOffset(0, 2),
 				new CellOffset(0, 3)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, -1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, -2),
 				new CellOffset(1, 0),
 				new CellOffset(1, -1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, -2),
 				new CellOffset(1, -1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, -3),
 				new CellOffset(1, 0),
 				new CellOffset(1, -1),
 				new CellOffset(1, -2)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(1, -3),
 				new CellOffset(1, -2),
 				new CellOffset(1, -1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(2, 0),
 				new CellOffset(1, 0)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(2, 1),
 				new CellOffset(1, 1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(2, 2),
 				new CellOffset(1, 2),
 				new CellOffset(1, 1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(2, 3),
 				new CellOffset(1, 1),
 				new CellOffset(1, 2),
 				new CellOffset(1, 3)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(2, -1),
 				new CellOffset(2, 0),
 				new CellOffset(1, 0)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(2, -2),
 				new CellOffset(1, 0),
 				new CellOffset(1, -1),
 				new CellOffset(2, -1)
 			},
-			new CellOffset[]
+			new[]
 			{
 				new CellOffset(2, -3),
 				new CellOffset(1, 0),

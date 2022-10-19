@@ -19,6 +19,8 @@
 using HarmonyLib;
 using Klei.AI;
 using System.Collections.Generic;
+using System.Reflection;
+using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.TurnBackTheClock {
@@ -204,6 +206,19 @@ namespace PeterHan.TurnBackTheClock {
 			ConfigureBuildingTemplate))]
 		public static class DesalinatorConfig_ConfigureBuildingTemplate_Patch {
 			private static readonly Tag BRINE = new Tag(nameof(SimHashes.Brine));
+
+			/// <summary>
+			/// Clay please, why did you just have to rename the field!?
+			///
+			/// TODO
+			/// </summary>
+			private static readonly FieldInfo TAG_OLD = typeof(ElementConverter.
+				ConsumedElement).GetFieldSafe("tag", false);
+
+			private static readonly FieldInfo TAG_NEW = typeof(ElementConverter.
+				ConsumedElement).GetFieldSafe(nameof(ElementConverter.ConsumedElement.
+				Tag), false);
+
 			private const float TEMPERATURE = Constants.CELSIUS2KELVIN + 40.0f;
 
 			internal static bool Prepare() => TurnBackTheClockOptions.Instance.
@@ -215,10 +230,20 @@ namespace PeterHan.TurnBackTheClock {
 					foreach (var converter in ec) {
 						var inputs = converter.consumedElements;
 						// Brine recipe
-						if (inputs.Length == 1 && inputs[0].tag == BRINE) {
-							converter.outputElements[0].minOutputTemperature = TEMPERATURE;
-							converter.outputElements[1].minOutputTemperature = TEMPERATURE;
-						};
+						if (inputs.Length == 1) {
+							var firstInput = inputs[0];
+							var tag = Tag.Invalid;
+							if (TAG_OLD != null && TAG_OLD.GetValue(firstInput) is Tag
+									fieldTag)
+								tag = fieldTag;
+							else if (TAG_NEW != null && TAG_NEW.GetValue(
+									firstInput) is Tag propertyTag)
+								tag = propertyTag;
+							if (tag == BRINE) {
+								converter.outputElements[0].minOutputTemperature = TEMPERATURE;
+								converter.outputElements[1].minOutputTemperature = TEMPERATURE;
+							}
+						}
 					}
 			}
 		}

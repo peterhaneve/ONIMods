@@ -251,6 +251,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		private readonly struct LastSelectionDetails {
 			internal readonly string codexLink;
 
+			internal readonly LaunchConditionManager conditions;
+
 			internal readonly ToolTip editTooltip;
 
 			internal readonly MinionIdentity id;
@@ -258,6 +260,10 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal readonly MinionResume resume;
 
 			internal readonly UserNameable rename;
+
+			internal readonly CommandModule rocketCommand;
+
+			internal readonly ClustercraftExteriorDoor rocketDoor;
 
 			internal readonly KSelectable selectable;
 
@@ -274,6 +280,9 @@ namespace PeterHan.FastTrack.UIPatches {
 				go.TryGetComponent(out id);
 				go.TryGetComponent(out rename);
 				go.TryGetComponent(out resume);
+				go.TryGetComponent(out rocketCommand);
+				go.TryGetComponent(out conditions);
+				go.TryGetComponent(out rocketDoor);
 				if (title != null)
 					title.editNameButton.TryGetComponent(out editTooltip);
 				else
@@ -314,10 +323,19 @@ namespace PeterHan.FastTrack.UIPatches {
 				if (!string.IsNullOrEmpty(newName) && inst != null) {
 					ref var lastSelection = ref inst.lastSelection;
 					var editTooltip = lastSelection.editTooltip;
+					var commandModule = lastSelection.rocketCommand;
+					var rocketDoor = lastSelection.rocketDoor;
 					var id = lastSelection.id;
 					var rename = lastSelection.rename;
+					var sm = SpacecraftManager.instance;
 					if (id != null)
 						id.SetName(newName);
+					else if (commandModule != null && sm != null)
+						sm.GetSpacecraftFromLaunchConditionManager(lastSelection.conditions).
+							SetRocketName(newName);
+					else if (rocketDoor != null)
+						rocketDoor.GetTargetWorld().GetComponent<UserNameable>().SetName(
+							newName);
 					else if (rename != null)
 						rename.SetName(newName);
 					if (editTooltip != null && id == null)
@@ -399,6 +417,8 @@ namespace PeterHan.FastTrack.UIPatches {
 					ref var lastSelection = ref inst.lastSelection;
 					string codexLink = lastSelection.codexLink;
 					bool valid = !string.IsNullOrEmpty(codexLink);
+					var commandModule = lastSelection.rocketCommand;
+					var rocketDoor = lastSelection.rocketDoor;
 					var editTooltip = lastSelection.editTooltip;
 					var titleText = __instance.TabTitle;
 					string name = lastSelection.selectable.GetProperName();
@@ -418,7 +438,18 @@ namespace PeterHan.FastTrack.UIPatches {
 						} else if (lastSelection.rename != null) {
 							titleText.SetSubText("");
 							titleText.SetUserEditable(true);
-						} else {
+						} else if (commandModule != null) {
+							var sm = SpacecraftManager.instance;
+							if (sm != null)
+								titleText.SetTitle(sm.GetSpacecraftFromLaunchConditionManager(
+									lastSelection.conditions).GetRocketName());
+							else
+								titleText.SetTitle("");
+							titleText.SetSubText(name);
+							titleText.SetUserEditable(true);
+						} else if (rocketDoor != null)
+							__instance.TrySetRocketTitle(rocketDoor);
+						else {
 							titleText.SetSubText("");
 							titleText.SetUserEditable(false);
 						}
@@ -427,6 +458,8 @@ namespace PeterHan.FastTrack.UIPatches {
 						string text;
 						if (lastSelection.id != null)
 							text = STRINGS.UI.TOOLTIPS.EDITNAME;
+						else if (commandModule != null || rocketDoor != null)
+							text = STRINGS.UI.TOOLTIPS.EDITNAMEROCKET;
 						else
 							text = STRINGS.UI.TOOLTIPS.EDITNAMEGENERIC.Format(name);
 						editTooltip.toolTip = text;
