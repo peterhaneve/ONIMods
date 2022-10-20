@@ -27,7 +27,35 @@ namespace PeterHan.FastTrack {
 	[ConfigFile(SharedConfigLocation: true)]
 	[JsonObject(MemberSerialization.OptIn)]
 	[RestartRequired]
-	public sealed class FastTrackOptions : SingletonOptions<FastTrackOptions> {
+	public sealed class FastTrackOptions {
+		public const int CURRENT_CONFIG_VERSION = 1;
+
+		/// <summary>
+		/// The only instance of the Fast Track options.
+		/// </summary>
+		private static FastTrackOptions instance;
+
+		/// <summary>
+		/// Retrieves the Fast Track options, or lazily initializes them if not yet loaded.
+		/// </summary>
+		public static FastTrackOptions Instance {
+			get {
+				var opts = instance;
+				if (opts == null) {
+					opts = POptions.ReadSettings<FastTrackOptions>();
+					if (opts == null || opts.ConfigVersion < CURRENT_CONFIG_VERSION) {
+						opts = new FastTrackOptions();
+						POptions.WriteSettings(opts);
+					}
+					instance = opts;
+				}
+				return opts;
+			}
+		}
+
+		[JsonProperty]
+		public int ConfigVersion { get; set; }
+
 		[Option("STRINGS.UI.FRONTEND.FASTTRACK.BACKGROUNDROOMREBUILD", "STRINGS.UI.TOOLTIPS.FASTTRACK.BACKGROUNDROOMREBUILD", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_BUILDINGS")]
 		[JsonProperty]
 		public bool BackgroundRoomRebuild { get; set; }
@@ -231,6 +259,7 @@ namespace PeterHan.FastTrack {
 			CachePaths = true;
 			ChoreOpts = true;
 			ConduitOpts = false;
+			ConfigVersion = CURRENT_CONFIG_VERSION;
 			CritterConsumers = true;
 			CullConduits = true;
 			CustomStringFormat = true;

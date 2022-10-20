@@ -137,14 +137,17 @@ namespace PeterHan.FastTrack.GamePatches {
 				postfix: makeDeprecated);
 			harmony.Patch(typeof(DoctorStationConfig), nameof(DoctorStationConfig.
 				CreateBuildingDef), postfix: makeDeprecated);
-			harmony.Patch(typeof(GasConduitDiseaseSensorConfig), nameof(
-				GasConduitDiseaseSensorConfig.CreateBuildingDef), postfix: makeDeprecated);
-			harmony.Patch(typeof(LiquidConduitDiseaseSensorConfig), nameof(
-				LiquidConduitDiseaseSensorConfig.CreateBuildingDef), postfix: makeDeprecated);
+			harmony.Patch(typeof(GasConduitDiseaseSensorConfig).GetMethodSafe(nameof(
+				SolidConduitDiseaseSensorConfig.CreateBuildingDef), false, Type.EmptyTypes),
+				postfix: makeDeprecated);
+			harmony.Patch(typeof(LiquidConduitDiseaseSensorConfig).GetMethodSafe(nameof(
+				LiquidConduitDiseaseSensorConfig.CreateBuildingDef), false, Type.EmptyTypes),
+				postfix: makeDeprecated);
 			harmony.Patch(typeof(LogicDiseaseSensorConfig), nameof(LogicDiseaseSensorConfig.
 				CreateBuildingDef), postfix: makeDeprecated);
-			harmony.Patch(typeof(SolidConduitDiseaseSensorConfig), nameof(
-				SolidConduitDiseaseSensorConfig.CreateBuildingDef), postfix: makeDeprecated);
+			harmony.Patch(typeof(SolidConduitDiseaseSensorConfig).GetMethodSafe(nameof(
+				SolidConduitDiseaseSensorConfig.CreateBuildingDef), false, Type.EmptyTypes),
+				postfix: makeDeprecated);
 		}
 
 		/// <summary>
