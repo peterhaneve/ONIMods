@@ -199,14 +199,14 @@ namespace PeterHan.FastTrack.GamePatches {
 				preconditions.Sort(ChorePreconditionComparer.Instance);
 				chore.arePreconditionsDirty = false;
 			}
-			for (int i = 0; i < n; i++) {
+			// i = 0 is "IsValid"
+			for (int i = 1; i < n; i++) {
 				// It would be faster to just pull the preconditions completely, but they
 				// still need to be run when the tasks panel is open
 				var pc = preconditions[i];
 				string id = pc.id;
 				if (id != "IsMoreSatisfyingEarly" && id != "IsPermitted" && id != "HasUrge" &&
-						id != "IsOverrideTargetNullOrMe" && id != "IsInMyParentWorld" &&
-						!pc.fn(ref context, pc.data)) {
+						id != "IsOverrideTargetNullOrMe" && !pc.fn(ref context, pc.data)) {
 					context.failedPreconditionId = i;
 					break;
 				}
@@ -351,12 +351,12 @@ namespace PeterHan.FastTrack.GamePatches {
 			var consumer = consumerState.consumer;
 			var type = chore.choreType;
 			var overrideTarget = chore.overrideTarget;
-			// Do not even consider chores that cannot interrupt the current chore, but always
-			// allow the current chore
-			if (chore != currentChore && (GetInterruptPriority(chore) < interruptPriority ||
-					(exclusions != null && exclusions.Overlaps(type.tags))))
-				return false;
 			return go != null &&
+				// Do not even consider chores that cannot interrupt the current chore
+				// The current chore should *not* be returned as a potential candidate as this
+				// causes a chore-to-chore switch
+				(currentChore == null || (GetInterruptPriority(chore) > interruptPriority &&
+					(exclusions == null || !exclusions.Overlaps(type.tags)))) &&
 				// IsPermitted
 				consumer.IsPermittedOrEnabled(typeForPermission, chore) &&
 				// IsOverrideTargetNullOrMe
@@ -379,7 +379,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			if (valid) {
 				int cell = Grid.PosToCell(go.transform.position);
 				valid = Grid.IsValidCell(cell);
-				// If false, all vanilla chores would fail precondition IsInMyParentWorld
+				// If false, all vanilla chores would fail preconditions
 				if (valid) {
 					currentChore = state.choreDriver.GetCurrentChore();
 					if (currentChore != null) {
