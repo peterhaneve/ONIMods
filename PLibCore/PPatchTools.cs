@@ -275,7 +275,7 @@ namespace PeterHan.PLib.Core {
 		/// <param name="opcodes">The IL instructions to log.</param>
 		public static void DumpMethodBody(TranspiledMethod opcodes) {
 			var result = new StringBuilder(1024);
-			result.Append("METHOD BODY:");
+			result.AppendLine("METHOD BODY:");
 			foreach (var instr in opcodes) {
 				foreach (var block in instr.blocks) {
 					var type = block.blockType;
@@ -411,6 +411,8 @@ namespace PeterHan.PLib.Core {
 			var opcode = load.opcode;
 			if (opcode == OpCodes.Ldloc)
 				instr = new CodeInstruction(OpCodes.Stloc, load.operand);
+			else if (opcode == OpCodes.Ldloc_S)
+				instr = new CodeInstruction(OpCodes.Stloc_S, load.operand);
 			else if (opcode == OpCodes.Ldloc_0)
 				instr = new CodeInstruction(OpCodes.Stloc_0);
 			else if (opcode == OpCodes.Ldloc_1)

@@ -73,14 +73,29 @@ msgctxt "PeterHan.PLib.Core.PLibStrings.RESTART_REQUIRED"
 msgid "Oxygen Not Included must be restarted for these options to take effect."
 msgstr ""
 
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_BLUE
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_BLUE"
+msgid "Blue"
+msgstr ""
+
 #. PeterHan.PLib.Core.PLibStrings.TOOLTIP_CANCEL
 msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_CANCEL"
 msgid "Discard changes."
 msgstr ""
 
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_GREEN
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_GREEN"
+msgid "Green"
+msgstr ""
+
 #. PeterHan.PLib.Core.PLibStrings.TOOLTIP_HOMEPAGE
 msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_HOMEPAGE"
 msgid "Visit the mod's website."
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_HUE
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_HUE"
+msgid "Hue"
 msgstr ""
 
 #. PeterHan.PLib.Core.PLibStrings.TOOLTIP_MANUAL
@@ -103,14 +118,29 @@ msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_PREVIOUS"
 msgid "Previous"
 msgstr ""
 
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_RED
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_RED"
+msgid "Red"
+msgstr ""
+
 #. PeterHan.PLib.Core.PLibStrings.TOOLTIP_RESET
 msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_RESET"
 msgid "Resets the mod configuration to default values."
 msgstr ""
 
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_SATURATION
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_SATURATION"
+msgid "Saturation"
+msgstr ""
+
 #. PeterHan.PLib.Core.PLibStrings.TOOLTIP_TOGGLE
 msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_TOGGLE"
 msgid "Show or hide this options category"
+msgstr ""
+
+#. PeterHan.PLib.Core.PLibStrings.TOOLTIP_VALUE
+msgctxt "PeterHan.PLib.Core.PLibStrings.TOOLTIP_VALUE"
+msgid "Value"
 msgstr ""
 
 #. PeterHan.PLib.Core.PLibStrings.TOOLTIP_VERSION
