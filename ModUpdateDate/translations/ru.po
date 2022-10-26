@@ -55,6 +55,21 @@ msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_UPDA
 msgid "\n\n<color=#FFCC00>1 mod may be out of date</color>"
 msgstr "\n\n<color=#FFCC00>1 мод может быть устаревшим</color>"
 
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_UPDATING
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_UPDATING"
+msgid "\n\n<color=#00CC00>Auto-Update in progress</color>"
+msgstr "\n\n<color=#00CC00>Выполняется авто-обновление</color>"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_AUTO_UPDATE
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_AUTO_UPDATE"
+msgid "<b>Automatic updates are enabled.</b>\n"
+msgstr "<b>Автоматическое обновление включено.</b>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_ERR_UPDATE
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_ERR_UPDATE"
+msgid "Unable to automatically update this mod!\nA manual update may be required."
+msgstr "Невозможно автоматически обновить этот мод!\nМожет потребоваться обновление вручную."
+
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_OUTDATED
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_OUTDATED"
 msgid "This mod appears to be out of date!"
@@ -84,6 +99,21 @@ msgstr "Этот мод был локально обновлен Mod Updater-о�
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.OPTION_MAINMENU"
 msgid "Show Updates in Main Menu"
 msgstr "Показывать обновления в Главном меню"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.OPTION_PASSIVE
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.OPTION_PASSIVE"
+msgid "Auto-Update"
+msgstr "Автоматическое обновление"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.SAFE_MODE
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.SAFE_MODE"
+msgid "<b>Mod Updater did not start correctly.</b>\n\nDue to a recent Klei update, Mod Updater was unable to start.\nSteam may automatically update Mod Updater to the latest version.\nIf not, install the latest version manually from the mod website.\n\n<b>Mod Updater version:</b> {0}\n<b>Compiled for game version:</b> {1}"
+msgstr "<b>Mod Updater запустился некорректно.</b>\n\nИз-за недавнего обновления Klei не удалось запустить Mod Updater.\nSteam может автоматически обновить Mod Updater до последней версии.\nЕсли нет, установите последнюю версию вручную с веб-сайта мода.\n\n<b>Версия Mod Updater:</b> {0}\n<b>Скомпилирован для версии игры:</b> {1}"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.SAFE_MODE_GITHUB
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.SAFE_MODE_GITHUB"
+msgid "VISIT WEBSITE"
+msgstr "ПОСЕТИТЬ ВЕБ-САЙТ"
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.STEAM_UPDATE
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.STEAM_UPDATE"
@@ -189,3 +219,9 @@ msgstr "<b>{0}</b>: <color=#00CC00>Обновлено</color>\n"
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.TOOLTIPS.MODUPDATER.OPTION_MAINMENU"
 msgid "If selected, a warning with the number of potentially\noutdated mods is shown in the main menu."
 msgstr "Если включено, в главном меню отображается предупреждение\nс количеством потенциально устаревших модов."
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.TOOLTIPS.MODUPDATER.OPTION_PASSIVE
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.TOOLTIPS.MODUPDATER.OPTION_PASSIVE"
+msgid "Automatically keeps all mods up to date in the background\nby downloading the correct version in the first place."
+msgstr "Автоматически обновляет все моды в фоновом режиме\nзагружая правильную версию в первую очередь."
+
