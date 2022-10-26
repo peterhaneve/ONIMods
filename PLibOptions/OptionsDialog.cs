@@ -167,10 +167,7 @@ namespace PeterHan.PLib.Options {
 			options = null;
 			// Determine config location
 			var infoAttr = optionsType.GetCustomAttribute<ModInfoAttribute>();
-			if (infoAttr != null)
-				collapseCategories = infoAttr.ForceCollapseCategories;
-			else
-				collapseCategories = false;
+			collapseCategories = infoAttr != null && infoAttr.ForceCollapseCategories;
 			configAttr = optionsType.GetCustomAttribute<ConfigFileAttribute>();
 			displayInfo = new ModDialogInfo(optionsType, infoAttr?.URL, infoAttr?.Image);
 		}
@@ -200,8 +197,7 @@ namespace PeterHan.PLib.Options {
 					ToolTip = PLibStrings.TOOLTIP_TOGGLE, Size = TOGGLE_SIZE,
 					OnStateChanged = handler.OnExpandContract
 				}.AddOnRealize(handler.OnRealizeToggle), new GridComponentSpec(0, 0));
-				if (contents != null)
-					contents.OnRealize += handler.OnRealizePanel;
+				contents.OnRealize += handler.OnRealizePanel;
 				container.AddChild(contents, new GridComponentSpec(1, 0) { ColumnSpan = 2 });
 			} else
 				// Default of unconstrained fills the whole panel
@@ -212,10 +208,10 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// Fills in the mod info screen, assuming that infoAttr is non-null.
 		/// </summary>
-		/// <param name="dialog">The dialog to populate.</param>
-		private void AddModInfoScreen(PDialog dialog) {
+		/// <param name="optionsDialog">The dialog to populate.</param>
+		private void AddModInfoScreen(PDialog optionsDialog) {
 			string image = displayInfo.Image;
-			var body = dialog.Body;
+			var body = optionsDialog.Body;
 			// Try to load the mod image sprite if possible
 			if (modImage == null && !string.IsNullOrEmpty(image)) {
 				string rootDir = PUtil.GetModPath(optionsType.Assembly);
@@ -260,8 +256,8 @@ namespace PeterHan.PLib.Options {
 		/// restart dialog if necessary.
 		/// </summary>
 		private void CheckForRestart() {
-			if (options != null && options.GetType().
-					GetCustomAttribute<RestartRequiredAttribute>() != null)
+			if (options != null && options.GetType().GetCustomAttribute(typeof(
+					RestartRequiredAttribute)) != null)
 				// Prompt user to restart
 				PUIElements.ShowConfirmDialog(null, PLibStrings.RESTART_REQUIRED,
 					SaveAndRestart, null, PLibStrings.RESTART_OK, PLibStrings.RESTART_CANCEL);
@@ -285,10 +281,10 @@ namespace PeterHan.PLib.Options {
 		/// <summary>
 		/// Fills in the actual mod option fields.
 		/// </summary>
-		/// <param name="dialog">The dialog to populate.</param>
-		private void FillModOptions(PDialog dialog) {
+		/// <param name="optionsDialog">The dialog to populate.</param>
+		private void FillModOptions(PDialog optionsDialog) {
 			IEnumerable<IOptionsEntry> dynamicOptions;
-			var body = dialog.Body;
+			var body = optionsDialog.Body;
 			var margin = new RectOffset(CATEGORY_MARGIN, CATEGORY_MARGIN, CATEGORY_MARGIN,
 				CATEGORY_MARGIN);
 			// For each option, add its UI component to panel
@@ -308,7 +304,8 @@ namespace PeterHan.PLib.Options {
 			// Display all categories
 			foreach (var catEntries in allOptions) {
 				string category = catEntries.Key;
-				if (catEntries.Value.Count > 0) {
+				var optionsList = catEntries.Value;
+				if (optionsList.Count > 0) {
 					string name = string.IsNullOrEmpty(category) ? "Default" : category;
 					int i = 0;
 					// Not optimal for layout performance, but the panel is needed to have a
@@ -320,7 +317,7 @@ namespace PeterHan.PLib.Options {
 					// Needs to be a separate panel so that it can be collapsed
 					var contents = new PGridPanel("Entries") { FlexSize = Vector2.right };
 					AddCategoryHeader(container, catEntries.Key, contents);
-					foreach (var entry in catEntries.Value) {
+					foreach (var entry in optionsList) {
 						contents.AddRow(new GridRowSpec());
 						entry.CreateUIEntry(contents, ref i);
 						i++;
@@ -354,7 +351,7 @@ namespace PeterHan.PLib.Options {
 		private void OnManualConfig(GameObject _) {
 			string uri = null, path = POptions.GetConfigFilePath(optionsType);
 			try {
-				uri = new Uri(Path.GetDirectoryName(path)).AbsoluteUri;
+				uri = new Uri(Path.GetDirectoryName(path) ?? path).AbsoluteUri;
 			} catch (UriFormatException e) {
 				PUtil.LogWarning("Unable to convert parent of " + path + " to a URI:");
 				PUtil.LogExcWarn(e);
@@ -375,12 +372,16 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		/// <param name="action">The action key taken.</param>
 		private void OnOptionsSelected(string action) {
-			if (action == "ok") {
+			switch (action) {
+			case "ok":
 				// Save changes to mod options
 				WriteOptions();
 				CheckForRestart();
-			} else if (action == PDialog.DIALOG_KEY_CLOSE)
+				break;
+			case PDialog.DIALOG_KEY_CLOSE:
 				OnClose?.Invoke(options);
+				break;
+			}
 		}
 
 		/// <summary>
@@ -414,9 +415,7 @@ namespace PeterHan.PLib.Options {
 				STRINGS.UI.CONFIRMDIALOG.CANCEL, PLibStrings.TOOLTIP_CANCEL,
 				PUITuning.Colors.ButtonBlueStyle);
 			options = POptions.ReadSettings(POptions.GetConfigFilePath(optionsType),
-				optionsType);
-			if (options == null)
-				options = CreateOptions(optionsType);
+				optionsType) ?? CreateOptions(optionsType);
 			AddModInfoScreen(pDialog);
 			FillModOptions(pDialog);
 			// Manually build the dialog so the options can be updated after realization

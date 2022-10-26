@@ -27,35 +27,49 @@ namespace PeterHan.FastTrack.GamePatches {
 	[SkipSaveFileSerialization]
 	public sealed class SuitMarkerUpdater : KMonoBehaviour, ISim1000ms, ISim200ms {
 		/// <summary>
+		/// Drops the currently worn suit on the floor and emits a notification that a suit
+		/// was dropped due to lack of space.
+		/// </summary>
+		/// <param name="equipment">The assignables containing the suit to drop.</param>
+		private static void DropSuit(Assignables equipment) {
+			var assignable = equipment.GetAssignable(Db.Get().AssignableSlots.Suit);
+			var notification = new Notification(STRINGS.MISC.NOTIFICATIONS.SUIT_DROPPED.NAME,
+				NotificationType.BadMinor, (_, data) => STRINGS. MISC.NOTIFICATIONS.
+				SUIT_DROPPED.TOOLTIP);
+			assignable.Unassign();
+			if (assignable.TryGetComponent(out Notifier notifier))
+				notifier.Add(notification);
+		}
+
+		/// <summary>
 		/// Checks the status of a suit locker to see if the suit can be used.
 		/// </summary>
 		/// <param name="locker">The suit dock to check.</param>
 		/// <param name="fullyCharged">Will contain with the suit if fully charged.</param>
 		/// <param name="partiallyCharged">Will contain the suit if partially charged.</param>
-		/// <param name="any">Will contain any suit inside.</param>
+		/// <param name="suit">Will contain any suit inside.</param>
 		/// <returns>true if the locker is vacant, or false if it is occupied.</returns>
 		internal static bool GetSuitStatus(SuitLocker locker, out KPrefabID fullyCharged,
-				out KPrefabID partiallyCharged, out KPrefabID any) {
+				out KPrefabID partiallyCharged, out KPrefabID suit) {
 			var smi = locker.smi;
 			bool vacant = false;
 			float minCharge = TUNING.EQUIPMENT.SUITS.MINIMUM_USABLE_SUIT_CHARGE;
-			any = locker.GetStoredOutfit();
+			suit = locker.GetStoredOutfit();
 			// CanDropOffSuit calls GetStoredOutfit again, avoid!
-			if (any == null) {
-				if (smi.sm.isConfigured.Get(locker.smi) && !smi.sm.isWaitingForSuit.Get(
-						locker.smi))
+			if (suit == null) {
+				if (smi.sm.isConfigured.Get(smi) && !smi.sm.isWaitingForSuit.Get(smi))
 					vacant = true;
 				fullyCharged = null;
 				partiallyCharged = null;
-			} else if (any.TryGetComponent(out SuitTank tank) && tank.PercentFull() >=
+			} else if (suit.TryGetComponent(out SuitTank tank) && tank.PercentFull() >=
 					minCharge) {
 				// Check for jet suit tank of petroleum
-				if (any.TryGetComponent(out JetSuitTank petroTank)) {
-					fullyCharged = (tank.IsFull() && petroTank.IsFull()) ? any : null;
-					partiallyCharged = (petroTank.PercentFull() >= minCharge) ? any : null;
+				if (suit.TryGetComponent(out JetSuitTank petroTank)) {
+					fullyCharged = tank.IsFull() && petroTank.IsFull() ? suit : null;
+					partiallyCharged = petroTank.PercentFull() >= minCharge ? suit : null;
 				} else {
-					fullyCharged = tank.IsFull() ? any : null;
-					partiallyCharged = any;
+					fullyCharged = tank.IsFull() ? suit : null;
+					partiallyCharged = suit;
 				}
 			} else {
 				fullyCharged = null;
@@ -69,63 +83,25 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		/// <param name="checkpoint">The checkpoint to walk by.</param>
 		/// <param name="reactor">The Duplicant that is reacting.</param>
-		internal static void React(SuitMarker checkpoint, GameObject reactor) {
+		/// <returns>true if the reaction was processed, or false otherwise.</returns>
+		internal static bool React(SuitMarker checkpoint, GameObject reactor) {
+			bool react = false;
 			if (reactor.TryGetComponent(out MinionIdentity id) && checkpoint.TryGetComponent(
 					out SuitMarkerUpdater updater)) {
 				var equipment = id.GetEquipment();
 				bool hasSuit = equipment.IsSlotOccupied(Db.Get().AssignableSlots.Suit);
-				bool changed = false;
 				if (reactor.TryGetComponent(out KBatchedAnimController kbac))
 					kbac.RemoveAnimOverrides(checkpoint.interactAnim);
 				// If not wearing a suit, or the navigator can pass this checkpoint
-				if (!hasSuit || (reactor.TryGetComponent(out Navigator navigator) &&
-						(navigator.flags & checkpoint.PathFlag) > PathFinder.PotentialPath.
-						Flags.None)) {
-					var docks = updater.docks;
-					int n = docks.Count;
-					for (int i = 0; i < n; i++) {
-						var dock = docks[i];
-						if (GetSuitStatus(dock, out var fullyCharged, out _, out _) && hasSuit)
-						{
-							dock.UnequipFrom(equipment);
-							changed = true;
-							break;
-						}
-						if (!hasSuit && fullyCharged != null) {
-							dock.EquipTo(equipment);
-							changed = true;
-							break;
-						}
-					}
-					if (!hasSuit && !changed) {
-						SuitLocker bestAvailable = null;
-						float maxScore = 0f;
-						for (int i = 0; i < n; i++) {
-							var dock = docks[i];
-							if (dock.GetSuitScore() > maxScore) {
-								bestAvailable = dock;
-								maxScore = dock.GetSuitScore();
-							}
-						}
-						if (bestAvailable != null) {
-							bestAvailable.EquipTo(equipment);
-							changed = true;
-						}
-					}
-					if (changed)
-						updater.UpdateSuitStatus();
-				}
+				bool changed = (!hasSuit || (reactor.TryGetComponent(out Navigator nav) &&
+					(nav.flags & checkpoint.PathFlag) > PathFinder.PotentialPath.Flags.
+					None)) && updater.TryEquipSuit(equipment, hasSuit);
 				// Dump on floor, if they pass by with a suit and taking it off is impossible
-				if (!changed && hasSuit) {
-					var assignable = equipment.GetAssignable(Db.Get().AssignableSlots.Suit);
-					var notification = new Notification(STRINGS.MISC.NOTIFICATIONS.
-						SUIT_DROPPED.NAME, NotificationType.BadMinor, (_, data) => STRINGS.
-						MISC.NOTIFICATIONS.SUIT_DROPPED.TOOLTIP);
-					assignable.Unassign();
-					if (assignable.TryGetComponent(out Notifier notifier))
-						notifier.Add(notification);
-				}
+				if (!changed && hasSuit)
+					DropSuit(equipment);
+				react = true;
 			}
+			return react;
 		}
 
 		/// <summary>
@@ -183,6 +159,50 @@ namespace PeterHan.FastTrack.GamePatches {
 				suitCheckpoint.GetAttachedLockers(docks);
 			}
 		}
+		
+		/// <summary>
+		/// Attempts to equip or uneqip a suit to a passing Duplicant.
+		/// </summary>
+		/// <param name="equipment">The Duplicant to be equipped or uneqipped.</param>
+		/// <param name="hasSuit">Whether they already have a suit.</param>
+		/// <returns>true if a suit was added or removed, or false otherwise.</returns>
+		private bool TryEquipSuit(Equipment equipment, bool hasSuit) {
+			bool changed = false;
+			int n = docks.Count;
+			for (int i = 0; i < n; i++) {
+				var dock = docks[i];
+				if (dock != null) {
+					if (GetSuitStatus(dock, out var fullyCharged, out _, out _) && hasSuit) {
+						dock.UnequipFrom(equipment);
+						changed = true;
+						break;
+					}
+					if (!hasSuit && fullyCharged != null) {
+						dock.EquipTo(equipment);
+						changed = true;
+						break;
+					}
+				}
+			}
+			if (!hasSuit && !changed) {
+				SuitLocker bestAvailable = null;
+				float maxScore = 0f;
+				for (int i = 0; i < n; i++) {
+					var dock = docks[i];
+					if (dock != null && dock.GetSuitScore() > maxScore) {
+						bestAvailable = dock;
+						maxScore = dock.GetSuitScore();
+					}
+				}
+				if (bestAvailable != null) {
+					bestAvailable.EquipTo(equipment);
+					changed = true;
+				}
+			}
+			if (changed)
+				UpdateSuitStatus();
+			return changed;
+		}
 
 		/// <summary>
 		/// Updates the status of the suits in nearby suit docks for pathfinding and
@@ -194,8 +214,8 @@ namespace PeterHan.FastTrack.GamePatches {
 				int charged = 0, vacancies = 0;
 				foreach (var dock in docks)
 					if (dock != null) {
-						if (GetSuitStatus(dock, out _, out KPrefabID partiallyCharged,
-								out KPrefabID outfit))
+						if (GetSuitStatus(dock, out _, out var partiallyCharged,
+								out var outfit))
 							vacancies++;
 						else if (partiallyCharged != null)
 							charged++;
@@ -243,9 +263,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Applied before Run runs.
 		/// </summary>
 		internal static bool Prefix(GameObject ___reactor, SuitMarker ___suitMarker) {
-			if (___reactor != null && ___suitMarker != null)
-				SuitMarkerUpdater.React(___suitMarker, ___reactor);
-			return false;
+			return ___reactor != null && ___suitMarker != null && SuitMarkerUpdater.React(
+				___suitMarker, ___reactor);
 		}
 	}
 

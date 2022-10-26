@@ -156,12 +156,14 @@ namespace PeterHan.PLib.Detours {
 				throw new ArgumentException("Generic types must have all parameters defined");
 			var expected = DelegateInfo.Create(typeof(D));
 			var parentType = target.DeclaringType;
-			var expectedParamTypes = expected.ParameterTypes;
+			var expectedParamTypes = expected.parameterTypes;
 			var actualParams = ValidateDelegate(expected, target, target.ReturnType);
 			int offset = target.IsStatic ? 0 : 1;
+			if (parentType == null)
+				throw new ArgumentException("Method is not declared by an actual type");
 			// Method will be "declared" in the type of the target, as we are detouring around
 			// a method of that type
-			var caller = new DynamicMethod(target.Name + "_Detour", expected.ReturnType,
+			var caller = new DynamicMethod(target.Name + "_Detour", expected.returnType,
 				expectedParamTypes, parentType, true);
 			var generator = caller.GetILGenerator();
 			LoadParameters(generator, actualParams, expectedParamTypes, offset);
@@ -196,11 +198,13 @@ namespace PeterHan.PLib.Detours {
 				throw new ArgumentException("Static constructors cannot be called manually");
 			var expected = DelegateInfo.Create(typeof(D));
 			var parentType = target.DeclaringType;
-			var expectedParamTypes = expected.ParameterTypes;
+			var expectedParamTypes = expected.parameterTypes;
 			var actualParams = ValidateDelegate(expected, target, parentType);
+			if (parentType == null)
+				throw new ArgumentException("Method is not declared by an actual type");
 			// Method will be "declared" in the type of the target, as we are detouring around
 			// a constructor of that type
-			var caller = new DynamicMethod("Constructor_Detour", expected.ReturnType,
+			var caller = new DynamicMethod("Constructor_Detour", expected.returnType,
 				expectedParamTypes, parentType, true);
 			var generator = caller.GetILGenerator();
 			LoadParameters(generator, actualParams, expectedParamTypes, 0);
@@ -244,7 +248,8 @@ namespace PeterHan.PLib.Detours {
 						F(name, typeof(P).FullName));
 				}
 			} else {
-				if (pt.IsValueType || (pt.IsByRef && pt.GetElementType().IsValueType))
+				if (pt.IsValueType || (pt.IsByRef && (pt.GetElementType()?.IsValueType ??
+						false)))
 					throw new ArgumentException("For accessing struct fields, use DetourStructField");
 				d = DetourField<P, T>(field);
 			}
@@ -285,7 +290,7 @@ namespace PeterHan.PLib.Detours {
 			string name = target.Name;
 			if (parentType != typeof(P))
 				throw new ArgumentException("Parent type does not match delegate to be created");
-			var getter = new DynamicMethod(name + "_Detour_Get", typeof(T), new Type[] {
+			var getter = new DynamicMethod(name + "_Detour_Get", typeof(T), new[] {
 				typeof(P)
 			}, true);
 			var generator = getter.GetILGenerator();
@@ -302,7 +307,7 @@ namespace PeterHan.PLib.Detours {
 				// Handle readonly fields
 				setter = null;
 			else {
-				setter = new DynamicMethod(name + "_Detour_Set", null, new Type[] {
+				setter = new DynamicMethod(name + "_Detour_Set", null, new[] {
 					typeof(P), typeof(T)
 				}, true);
 				generator = setter.GetILGenerator();
@@ -348,7 +353,7 @@ namespace PeterHan.PLib.Detours {
 			DynamicMethod getter, setter;
 			var getMethod = target.GetGetMethod(true);
 			if (target.CanRead && getMethod != null) {
-				getter = new DynamicMethod(name + "_Detour_Get", typeof(T), new Type[] {
+				getter = new DynamicMethod(name + "_Detour_Get", typeof(T), new[] {
 					typeof(P)
 				}, true);
 				var generator = getter.GetILGenerator();
@@ -361,7 +366,7 @@ namespace PeterHan.PLib.Detours {
 				getter = null;
 			var setMethod = target.GetSetMethod(true);
 			if (target.CanWrite && setMethod != null) {
-				setter = new DynamicMethod(name + "_Detour_Set", null, new Type[] {
+				setter = new DynamicMethod(name + "_Detour_Set", null, new[] {
 					typeof(P), typeof(T)
 				}, true);
 				var generator = setter.GetILGenerator();
@@ -402,7 +407,7 @@ namespace PeterHan.PLib.Detours {
 			if (target == null)
 				throw new DetourException("Unable to find {0} on type {1}".F(name, parentType.
 					FullName));
-			var getter = new DynamicMethod(name + "_Detour_Get", typeof(T), new Type[] {
+			var getter = new DynamicMethod(name + "_Detour_Get", typeof(T), new[] {
 				typeof(object)
 			}, true);
 			var generator = getter.GetILGenerator();
@@ -416,7 +421,7 @@ namespace PeterHan.PLib.Detours {
 				// Handle readonly fields
 				setter = null;
 			else {
-				setter = new DynamicMethod(name + "_Detour_Set", null, new Type[] {
+				setter = new DynamicMethod(name + "_Detour_Set", null, new[] {
 					typeof(object), typeof(T)
 				}, true);
 				generator = setter.GetILGenerator();
@@ -496,14 +501,16 @@ namespace PeterHan.PLib.Detours {
 		/// <exception cref="DetourException">If the delegate does not match the target.</exception>
 		private static ParameterInfo[] ValidateDelegate(DelegateInfo expected,
 				MethodBase actual, Type actualReturn) {
-			var parameterTypes = expected.ParameterTypes;
-			var returnType = expected.ReturnType;
+			var parameterTypes = expected.parameterTypes;
+			var returnType = expected.returnType;
 			// Validate return types
 			if (!returnType.IsAssignableFrom(actualReturn))
 				throw new DetourException("Return type {0} cannot be converted to type {1}".
 					F(actualReturn.FullName, returnType.FullName));
 			// Do not allow methods declared in not yet closed generic types
 			var baseType = actual.DeclaringType;
+			if (baseType == null)
+				throw new ArgumentException("Method is not declared by an actual type");
 			if (baseType.ContainsGenericParameters)
 				throw new DetourException(("Method parent type {0} must have all " +
 					"generic parameters defined").F(baseType.FullName));
@@ -566,27 +573,27 @@ namespace PeterHan.PLib.Detours {
 			/// <summary>
 			/// The delegate's type.
 			/// </summary>
-			public readonly Type DelegateType;
+			private readonly Type delegateType;
 
 			/// <summary>
 			/// The delegate's parameter types.
 			/// </summary>
-			public readonly Type[] ParameterTypes;
+			public readonly Type[] parameterTypes;
 
 			/// <summary>
 			/// The delegate's return types.
 			/// </summary>
-			public readonly Type ReturnType;
+			public readonly Type returnType;
 
 			private DelegateInfo(Type delegateType, Type[] parameterTypes, Type returnType) {
-				DelegateType = delegateType;
-				ParameterTypes = parameterTypes;
-				ReturnType = returnType;
+				this.delegateType = delegateType;
+				this.parameterTypes = parameterTypes;
+				this.returnType = returnType;
 			}
 
 			public override string ToString() {
-				return "DelegateInfo[delegate={0},return={1},parameters={2}]".F(DelegateType,
-					ReturnType, ParameterTypes.Join(","));
+				return "DelegateInfo[delegate={0},return={1},parameters={2}]".F(delegateType,
+					returnType, parameterTypes.Join());
 			}
 		}
 	}

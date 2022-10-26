@@ -20,6 +20,7 @@ using PeterHan.PLib.UI;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using ClipperLib;
 using UnityEngine;
 
 using OptionsList = System.Collections.Generic.ICollection<PeterHan.PLib.Options.IOptionsEntry>;
@@ -67,6 +68,7 @@ namespace PeterHan.PLib.Options {
 		/// <returns>A list of all public properties annotated for options dialogs.</returns>
 		internal static AllOptions BuildOptions(Type forType) {
 			var entries = new SortedList<string, OptionsList>(8);
+			OptionsHandlers.InitPredefinedOptions();
 			foreach (var prop in forType.GetProperties(INSTANCE_PUBLIC)) {
 				// Must have the annotation
 				var entry = TryCreateEntry(prop, 0);
@@ -99,48 +101,6 @@ namespace PeterHan.PLib.Options {
 		}
 
 		/// <summary>
-		/// Creates an options entry wrapper for the specified property.
-		/// </summary>
-		/// <param name="info">The property to wrap.</param>
-		/// <param name="spec">The option title and tool tip.</param>
-		/// <returns>An options wrapper, or null if none can handle this type.</returns>
-		private static OptionsEntry FindOptionClass(IOptionSpec spec, PropertyInfo info) {
-			OptionsEntry entry = null;
-			Type type = info.PropertyType;
-			string field = info.Name;
-			// Enumeration type
-			if (type.IsEnum)
-				entry = new SelectOneOptionsEntry(field, spec, type);
-			else if (type == typeof(bool))
-				entry = new CheckboxOptionsEntry(field, spec);
-			else if (type == typeof(int))
-				entry = new IntOptionsEntry(field, spec, info.
-					GetCustomAttribute<LimitAttribute>());
-			else if (type == typeof(int?))
-				entry = new NullableIntOptionsEntry(field, spec, info.
-					GetCustomAttribute<LimitAttribute>());
-			else if (type == typeof(float))
-				entry = new FloatOptionsEntry(field, spec, info.
-					GetCustomAttribute<LimitAttribute>());
-			else if (type == typeof(float?))
-				entry = new NullableFloatOptionsEntry(field, spec, info.
-					GetCustomAttribute<LimitAttribute>());
-			else if (type == typeof(string))
-				entry = new StringOptionsEntry(field, spec, info.
-					GetCustomAttribute<LimitAttribute>());
-			else if (type == typeof(Color32))
-				entry = new Color32OptionsEntry(field, spec);
-			else if (type == typeof(Color))
-				entry = new ColorOptionsEntry(field, spec);
-			else if (type == typeof(Action<object>))
-				// Should not actually be serialized to the JSON
-				entry = new ButtonOptionsEntry(field, spec);
-			else if (type == typeof(LocText))
-				entry = new TextBlockOptionsEntry(field, spec);
-			return entry;
-		}
-
-		/// <summary>
 		/// Substitutes default strings for an options entry with an empty title.
 		/// </summary>
 		/// <param name="spec">The option attribute supplied (Format is still accepted!)</param>
@@ -149,9 +109,9 @@ namespace PeterHan.PLib.Options {
 		internal static IOptionSpec HandleDefaults(IOptionSpec spec, MemberInfo member) {
 			// Replace with entries takem from the strings
 			string prefix = "STRINGS.{0}.OPTIONS.{1}.".F(member.DeclaringType?.
-				Namespace?.ToUpperInvariant(), member.Name?.ToUpperInvariant());
+				Namespace?.ToUpperInvariant(), member.Name.ToUpperInvariant());
 			string category = "";
-			if (Strings.TryGet(prefix + "CATEGORY", out StringEntry entry))
+			if (Strings.TryGet(prefix + "CATEGORY", out var entry))
 				category = entry.String;
 			return new OptionAttribute(prefix + "NAME", prefix + "TOOLTIP", category) {
 				Format = spec.Format
@@ -169,7 +129,7 @@ namespace PeterHan.PLib.Options {
 		/// string value.</returns>
 		public static string LookInStrings(string keyOrValue) {
 			string result = keyOrValue;
-			if (!string.IsNullOrEmpty(keyOrValue) && Strings.TryGet(keyOrValue, out StringEntry
+			if (!string.IsNullOrEmpty(keyOrValue) && Strings.TryGet(keyOrValue, out var
 					entry))
 				result = entry.String;
 			return result;
@@ -186,12 +146,26 @@ namespace PeterHan.PLib.Options {
 			IOptionsEntry result = null;
 			// Must have the annotation, cannot be indexed
 			var indexes = prop.GetIndexParameters();
-			if (indexes == null || indexes.Length < 1)
-				foreach (var attribute in prop.GetCustomAttributes()) {
-					result = TryCreateEntry(attribute, prop, depth);
-					if (result != null)
+			if (indexes.Length < 1) {
+				var attributes = ListPool<Attribute, OptionsEntry>.Allocate();
+				bool dlcMatch = true;
+				attributes.AddRange(prop.GetCustomAttributes());
+				int n = attributes.Count;
+				for (int i = 0; i < n; i++)
+					// Do not create an entry if the DLC does not match
+					if (attributes[i] is RequireDLCAttribute requireDLC && DlcManager.
+							IsContentActive(requireDLC.DlcID) != requireDLC.Required) {
+						dlcMatch = false;
 						break;
-				}
+					}
+				if (dlcMatch)
+					for (int i = 0; i < n; i++) {
+						result = TryCreateEntry(attributes[i], prop, depth);
+						if (result != null)
+							break;
+					}
+				attributes.Recycle();
+			}
 			return result;
 		}
 
@@ -213,7 +187,7 @@ namespace PeterHan.PLib.Options {
 					spec = HandleDefaults(spec, prop);
 				// Attempt to find a class that will represent it
 				var type = prop.PropertyType;
-				result = FindOptionClass(spec, prop);
+				result = OptionsHandlers.FindOptionClass(spec, prop);
 				// See if it has entries that can themselves be added, ignore
 				// value types and avoid infinite recursion
 				if (result == null && !type.IsValueType && depth < 16 && type !=
@@ -269,8 +243,7 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		public abstract object Value { get; set; }
 
-		protected OptionsEntry(string field, IOptionSpec attr)
-		{
+		protected OptionsEntry(string field, IOptionSpec attr) {
 			if (attr == null)
 				throw new ArgumentNullException(nameof(attr));
 			Field = field;
