@@ -117,7 +117,6 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// Updates the distance traveled only if the achievements are unlocked.
 		/// </summary>
 		/// <param name="instance">The particle to check.</param>
-		/// <param name="dt">The time elapsed since the last check.</param>
 		private static void AchievementUpdate(Navigator instance) {
 			if (GamePatches.AchievementDisablePatches.TrackAchievements()) {
 				var distanceByType = instance.distanceTravelledByNavType;

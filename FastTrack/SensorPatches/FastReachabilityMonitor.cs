@@ -20,6 +20,7 @@ using HarmonyLib;
 using PeterHan.PLib.Core;
 using System.Collections.Generic;
 using System.Reflection;
+using UnityEngine;
 
 using RMI = ReachabilityMonitor.Instance;
 using ReachabilityMonitorState = GameStateMachine<ReachabilityMonitor, ReachabilityMonitor.
@@ -39,19 +40,14 @@ namespace PeterHan.FastTrack.SensorPatches {
 		public const string REACHABILITY = nameof(FastReachabilityMonitor);
 
 		/// <summary>
-		/// Whether the offsets have been updated before.
-		/// </summary>
-		private bool firstTime;
-
-		/// <summary>
-		/// Whether the cell change handler needs to be cleaned up.
-		/// </summary>
-		private bool cleanupCellChange;
-
-		/// <summary>
 		/// The last set of extents from which this item was reachable.
 		/// </summary>
 		private Extents lastExtents;
+
+		/// <summary>
+		/// The target game object to monitor.
+		/// </summary>
+		private GameObject master;
 
 		/// <summary>
 		/// Registers a scene partitioner entry for nav cells changing.
@@ -64,17 +60,18 @@ namespace PeterHan.FastTrack.SensorPatches {
 		private RMI smi;
 
 		internal FastReachabilityMonitor() {
-			firstTime = true;
 			lastExtents = new Extents(int.MinValue, int.MinValue, 1, 1);
+			master = null;
 			partitionerEntry = HandleVector<int>.InvalidHandle;
 		}
 
 		public override void OnCleanUp() {
 			if (partitionerEntry.IsValid())
 				GameScenePartitioner.Instance.Free(ref partitionerEntry);
-			if (cleanupCellChange)
-				Unsubscribe((int)GameHashes.CellChanged);
-			Unsubscribe((int)GameHashes.Landed);
+			if (master != null) {
+				master.Unsubscribe((int)GameHashes.Landed);
+				master.Unsubscribe((int)GameHashes.CellChanged);
+			}
 			base.OnCleanUp();
 		}
 
@@ -93,17 +90,20 @@ namespace PeterHan.FastTrack.SensorPatches {
 		}
 
 		public override void OnSpawn() {
-			var go = gameObject;
+			Workable workable;
 			base.OnSpawn();
-			smi = go.GetSMI<RMI>();
-			UpdateOffsets();
-			cleanupCellChange = go.TryGetComponent(out KBatchedAnimController controller) &&
-				controller.isMovable;
-			if (cleanupCellChange)
-				Subscribe((int)GameHashes.CellChanged, OnMoved);
-			Subscribe((int)GameHashes.Landed, OnMoved);
-			firstTime = true;
-			FastGroupProber.Instance?.Enqueue(smi);
+			if (TryGetComponent(out StateMachineController smc) && (smi = smc.GetSMI<RMI>()) !=
+					null && (workable = smi.master) != null) {
+				master = workable.gameObject;
+				// It looks like Klei frequently forgets to set the isMovable flag on anims
+				// that can move anyways. Please!
+				master.Subscribe((int)GameHashes.CellChanged, OnMoved);
+				master.Subscribe((int)GameHashes.Landed, OnMoved);
+				UpdateOffsets();
+				FastGroupProber.Instance?.Enqueue(smi);
+			} else {
+				master = null;
+			}
 		}
 
 		public void Sim4000ms(float _) {
@@ -115,8 +115,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// </summary>
 		public void UpdateOffsets() {
 			var inst = FastGroupProber.Instance;
-			Workable master;
-			if (inst != null && smi != null && (master = smi.master) != null) {
+			if (inst != null && master != null) {
 				int cell = Grid.PosToCell(master.transform.position);
 				var gsp = GameScenePartitioner.Instance;
 				if (Grid.IsValidCell(cell) && cell > 0) {
@@ -130,10 +129,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 						else
 							partitionerEntry = gsp.Add("FastReachabilityMonitor.UpdateOffsets",
 								this, extents, inst.mask, OnReachableChanged);
-						// The offsets changed, fire a manual check if not the first time
-						// (the smi constructor already updated it once)
-						if (!firstTime)
-							inst.Enqueue(smi);
+						inst.Enqueue(smi);
 						lastExtents = extents;
 					}
 				} else if (lastExtents.x >= 0 || lastExtents.y >= 0) {
@@ -146,7 +142,6 @@ namespace PeterHan.FastTrack.SensorPatches {
 					lastExtents.width = 1;
 					lastExtents.height = 1;
 				}
-				firstTime = false;
 			}
 		}
 	}
@@ -266,7 +261,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 			return inst == null;
 		}
 	}
-
+	
 	/// <summary>
 	/// Applied to ReachabilityMonitor to turn off periodic checks for reachability.
 	/// </summary>

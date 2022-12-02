@@ -18,7 +18,6 @@
 
 using KMod;
 using PeterHan.PLib.Core;
-using Steamworks;
 using System;
 
 namespace PeterHan.ModUpdateDate {
@@ -49,21 +48,15 @@ namespace PeterHan.ModUpdateDate {
 		/// <summary>
 		/// The title of the updated mod.
 		/// </summary>
-		public string Title {
-			get {
-				return Mod.label.title;
-			}
-		}
-
-		private PublishedFileId_t steamFileID;
+		public string Title => Mod.label.title;
 
 		public ModToUpdate(Mod mod) {
-			Mod = mod ?? throw new ArgumentNullException("mod");
+			Mod = mod ?? throw new ArgumentNullException(nameof(mod));
 			if (mod.label.distribution_platform != Label.DistributionPlatform.Steam)
 				throw new ArgumentException("Only Steam mods can be updated by this class");
-			steamFileID = mod.GetSteamModID();
+			var steamFileID = mod.GetSteamModID();
 			SteamID = steamFileID.m_PublishedFileId;
-			if (!steamFileID.GetGlobalLastModified(out System.DateTime steamLastUpdate))
+			if (!steamFileID.GetGlobalLastModified(out var steamLastUpdate))
 				steamLastUpdate = System.DateTime.MinValue;
 			LastSteamUpdate = steamLastUpdate;
 			DownloadPath = ModUpdateHandler.GetDownloadPath(SteamID);

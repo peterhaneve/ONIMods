@@ -21,6 +21,7 @@ using PeterHan.PLib.AVC;
 using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
+using PeterHan.PLib.PatchManager;
 
 namespace PeterHan.ThermalPlate {
 	/// <summary>
@@ -34,6 +35,17 @@ namespace PeterHan.ThermalPlate {
 			new PLocalization().Register();
 			new PBuildingManager().Register(ThermalPlateConfig.CreateBuilding());
 			new PVersionCheck().Register(this, new SteamVersionChecker());
+			new PPatchManager(harmony).RegisterPatchClass(typeof(ThermalPlatePatches));
+		}
+
+		[PLibMethod(RunAt.OnEndGame)]
+		internal static void OnEndGame() {
+			ThermalInterfaceManager.DestroyInstance();
+		}
+
+		[PLibMethod(RunAt.OnStartGame)]
+		internal static void OnStartGame() {
+			Game.Instance.gameObject.AddOrGet<ThermalInterfaceManager>();
 		}
 	}
 }

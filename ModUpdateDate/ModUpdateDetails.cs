@@ -196,12 +196,22 @@ namespace PeterHan.ModUpdateDate {
 			current.CopyPersistentDataTo(replacement);
 			if (WeOwnUpdatesTo(current)) {
 				var newContent = MOD_AVAILABLE_CONTENT.Get(current);
-				var currentContent = MOD_AVAILABLE_CONTENT.Get(replacement);
 #if DEBUG
+				var currentContent = MOD_AVAILABLE_CONTENT.Get(replacement);
 				PUtil.LogDebug("Force updating content of {0}: {1} to {2}".F(current.label.
 					title, currentContent, newContent));
 #endif
 				MOD_AVAILABLE_CONTENT.Set(replacement, newContent);
+			}
+			// Do the versions mismatch? Then the content must be different
+			if (replacement.label.distribution_platform == Label.DistributionPlatform.Steam) {
+				var activeInfo = current.packagedModInfo;
+				var steamInfo = replacement.packagedModInfo;
+				if (activeInfo != null && steamInfo != null && activeInfo.version != steamInfo.
+						version) {
+					PUtil.LogWarning("Mod {0} version does not match: Active {1}, Steam {2}".
+						F(current.label.title, activeInfo.version, steamInfo.version));
+				}
 			}
 		}
 

@@ -100,6 +100,15 @@ namespace PeterHan.FastTrack.GamePatches {
 		}
 
 		/// <summary>
+		/// Clears the last known cell of a transform.
+		/// </summary>
+		/// <param name="transform">The transform to reset.</param>
+		public void ClearLastKnownCell(Transform transform) {
+			if (transform != null)
+				AddOrGet(transform.GetInstanceID(), transform).ClearLastKnownCell();
+		}
+
+		/// <summary>
 		/// Cleans up the tracking entry if it has no listeners. Trees that fall in the forest
 		/// with no one to hear them...
 		/// </summary>
@@ -127,7 +136,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		/// <param name="transform">The transform to mark dirty.</param>
 		public void MarkDirty(Transform transform) {
-			if (Grid.WidthInCells > 0) {
+			if (Grid.WidthInCells > 0 && transform != null) {
 				int n = transform.childCount, id = transform.GetInstanceID();
 				if (eventHandlers.TryGetValue(id, out var entry))
 					pendingDirtyTransforms[id] = entry;
@@ -187,23 +196,23 @@ namespace PeterHan.FastTrack.GamePatches {
 
 		public void Update() {
 			// Swap the buffers
-			var swap = pendingDirtyTransforms;
+			var dirty = pendingDirtyTransforms;
 			pendingDirtyTransforms = dirtyTransforms;
-			dirtyTransforms = swap;
+			dirtyTransforms = dirty;
 			pendingDirtyTransforms.Clear();
-			swap = previouslyMovingTransforms;
+			var moving = previouslyMovingTransforms;
 			previouslyMovingTransforms = movingTransforms;
-			movingTransforms = swap;
-			movingTransforms.Clear();
+			movingTransforms = moving;
+			moving.Clear();
 			// Go through moved transforms and proc cell changed
-			foreach (var pair in dirtyTransforms) {
+			foreach (var pair in dirty) {
 				int id = pair.Key;
 				var entry = pair.Value;
 				Transform transform;
 				if ((transform = entry.transform) != null) {
 					int oldCell = entry.lastKnownCell, newCell = Grid.PosToCell(transform.
 						position);
-					movingTransforms.Add(id, entry);
+					moving.Add(id, entry);
 					if (oldCell != newCell) {
 						entry.CallCellChangedHandlers();
 						entry.lastKnownCell = newCell;
@@ -214,10 +223,10 @@ namespace PeterHan.FastTrack.GamePatches {
 			}
 			foreach (var pair in previouslyMovingTransforms) {
 				var entry = pair.Value;
-				if (entry.transform != null && !movingTransforms.ContainsKey(pair.Key))
+				if (entry.transform != null && !moving.ContainsKey(pair.Key))
 					entry.CallMovementStateChangedHandlers(false);
 			}
-			dirtyTransforms.Clear();
+			dirty.Clear();
 		}
 
 		/// <summary>
@@ -269,10 +278,34 @@ namespace PeterHan.FastTrack.GamePatches {
 					moveHandlers[i].Invoke(transform, newState);
 			}
 
+			/// <summary>
+			/// Resets the last known cell.
+			/// </summary>
+			public void ClearLastKnownCell() {
+				lastKnownCell = Grid.InvalidCell;
+			}
+
 			public override string ToString() {
 				return "Event Handlers for {0}: {1:D} on change, {2:D} on move".F(transform.
 					name, cellChangedHandlers.Count, moveHandlers.Count);
 			}
+		}
+	}
+
+	/// <summary>
+	/// Applied to CellChangeMonitor to take ClearLastKnownCell hints to clear the transform's
+	/// last known location.
+	/// </summary>
+	[HarmonyPatch(typeof(CellChangeMonitor), nameof(CellChangeMonitor.ClearLastKnownCell))]
+	public static class CellChangeMonitor_ClearLastKnownCell_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
+
+		/// <summary>
+		/// Applied before ClearLastKnownCell runs.
+		/// </summary>
+		internal static bool Prefix(Transform transform) {
+			FastCellChangeMonitor.FastInstance.ClearLastKnownCell(transform);
+			return false;
 		}
 	}
 

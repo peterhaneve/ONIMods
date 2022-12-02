@@ -111,10 +111,10 @@ namespace PeterHan.ModUpdateDate {
 				modEntry) as RectTransform)?.gameObject;
 			var mods = Global.Instance.modManager?.mods;
 			var settings = ModUpdateInfo.Settings;
-			ColorStyleSetting color;
 			if (settings != null)
 				autoUpdate = settings.AutoUpdate;
 			if (rowInstance != null && mods != null && index >= 0 && index < mods.Count) {
+				ColorStyleSetting color;
 				var mod = mods[index];
 				var tooltip = new StringBuilder(128);
 				var localDate = mod.GetLocalLastModified();
@@ -130,11 +130,9 @@ namespace PeterHan.ModUpdateDate {
 					var langCode = Localization.GetLocale()?.Code;
 					if (string.IsNullOrEmpty(langCode))
 						langCode = Localization.GetCurrentLanguageCode();
-					if (string.IsNullOrEmpty(langCode))
-						cultureInfo = CultureInfo.CurrentCulture;
-					else
+					cultureInfo = string.IsNullOrEmpty(langCode) ? CultureInfo.CurrentCulture :
 						// Klei uses _ instead of - for some reason
-						cultureInfo = new CultureInfo(langCode.Replace('_', '-'));
+						new CultureInfo(langCode.Replace('_', '-'));
 				}
 				if (mod.label.distribution_platform == Label.DistributionPlatform.Steam) {
 					var modUpdate = new ModToUpdate(mod);
@@ -187,8 +185,6 @@ namespace PeterHan.ModUpdateDate {
 			case ModStatus.Outdated:
 				tooltip.Append(autoUpdate ? UISTRINGS.MOD_ERR_UPDATE : UISTRINGS.MOD_OUTDATED);
 				break;
-			default:
-				break;
 			}
 			// AppendLine appends platform specific separator
 			tooltip.Append("\n");
@@ -236,7 +232,7 @@ namespace PeterHan.ModUpdateDate {
 				foreach (var mod in mods)
 					// Steam mods only, count outdated
 					if (mod.label.distribution_platform == Label.DistributionPlatform.Steam) {
-						System.DateTime localDate = mod.GetLocalLastModified();
+						var localDate = mod.GetLocalLastModified();
 						if (GetModStatus(new ModToUpdate(mod), ref localDate) == ModStatus.
 								Outdated)
 							outdated++;
@@ -287,11 +283,7 @@ namespace PeterHan.ModUpdateDate {
 		/// <summary>
 		/// True if an update is already in progress.
 		/// </summary>
-		public bool IsUpdating {
-			get {
-				return task != null;
-			}
-		}
+		public bool IsUpdating => task != null;
 
 		/// <summary>
 		/// The active mod to be updated.
@@ -388,10 +380,10 @@ namespace PeterHan.ModUpdateDate {
 		/// <summary>
 		/// Starts a mod update.
 		/// </summary>
-		/// <param name="task">The mod(s) to be updated.</param>
-		internal void StartModUpdate(ModUpdateTask task) {
-			if (!IsUpdating && task.Mods.Count > 0) {
-				this.task = task;
+		/// <param name="target">The mod(s) to be updated.</param>
+		internal void StartModUpdate(ModUpdateTask target) {
+			if (!IsUpdating && target.Mods.Count > 0) {
+				task = target;
 				active = null;
 				UpdateNext();
 			}
@@ -400,22 +392,20 @@ namespace PeterHan.ModUpdateDate {
 		/// <summary>
 		/// Attempts to start a mod force update.
 		/// </summary>
-		/// <param name="mod">The mod to update.</param>
-		/// <param name="details">The mod details to force update.</param>
+		/// <param name="target">The mod to update.</param>
 		/// <returns>true if the update began, or false if it failed.</returns>
-		private bool StartSteamUpdate(ModToUpdate task) {
-			var mod = task.Mod;
-			var globalDate = task.LastSteamUpdate;
+		private bool StartSteamUpdate(ModToUpdate target) {
+			var mod = target.Mod;
 			ModUpdateResult status = null;
 			UGCHandle_t content;
-			if (!ModUpdateDetails.TryGetDetails(task.SteamID, out SteamUGCDetails_t details))
+			if (!ModUpdateDetails.TryGetDetails(target.SteamID, out var details))
 				status = new ModUpdateResult(ModDownloadStatus.ModUninstalled, mod,
 					EResult.k_EResultFileNotFound);
 			else if ((content = details.m_hFile).Equals(UGCHandle_t.Invalid))
 				status = new ModUpdateResult(ModDownloadStatus.NoSteamFile, mod, EResult.
 					k_EResultUnexpectedError);
 			else {
-				string downloadPath = task.DownloadPath;
+				string downloadPath = target.DownloadPath;
 				ExtensionMethods.RemoveOldDownload(downloadPath);
 				// The game should already raise an error if insufficient space / access
 				// errors on the saves and mods folder
@@ -424,9 +414,8 @@ namespace PeterHan.ModUpdateDate {
 					status = new ModUpdateResult(ModDownloadStatus.SteamError, mod,
 						EResult.k_EResultServiceUnavailable);
 				else {
-					active = task;
-					if (caller != null)
-						caller.Dispose();
+					active = target;
+					caller?.Dispose();
 					caller = new CallResult<RemoteStorageDownloadUGCResult_t>(
 						OnDownloadComplete);
 					caller.Set(res);
@@ -435,7 +424,7 @@ namespace PeterHan.ModUpdateDate {
 				}
 			}
 			if (status != null)
-				this.task.Results.Add(status);
+				task.Results.Add(status);
 			return status == null;
 		}
 
@@ -444,7 +433,7 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		private void UpdateNext() {
 			int n;
-			while ((n = task.Mods.Count) > 0 && !StartSteamUpdate(task.Mods.Dequeue()));
+			while ((n = task.Mods.Count) > 0 && !StartSteamUpdate(task.Mods.Dequeue())) { }
 			if (n <= 0 && active == null) {
 				// All done
 				task.OnComplete();

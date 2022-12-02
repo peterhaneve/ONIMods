@@ -177,72 +177,6 @@ namespace PeterHan.StockBugFix {
 			new PVersionCheck().Register(this, new SteamVersionChecker());
 			ALREADY_DISPLAYED.Clear();
 		}
-
-		/// <summary>
-		/// Rotates the building placement offsets before building the offset table for
-		/// construction or deconstruction.
-		/// </summary>
-		/// <param name="areaOffsets">The current building placement offsets.</param>
-		/// <param name="table">The offset table to use for calculations.</param>
-		/// <param name="filter">The filter to apply.</param>
-		/// <param name="building">The building which would be built or demolished.</param>
-		/// <returns>The adjusted offset table.</returns>
-		internal static CellOffset[][] RotateAndBuild(CellOffset[] areaOffsets,
-				CellOffset[][] table, CellOffset[] filter, KMonoBehaviour building) {
-			var placementOffsets = areaOffsets;
-			if (building != null && building.TryGetComponent(out Rotatable rotator)) {
-				int n = areaOffsets.Length;
-				placementOffsets = new CellOffset[n];
-				for (int i = 0; i < n; i++)
-					placementOffsets[i] = rotator.GetRotatedCellOffset(areaOffsets[i]);
-			}
-			return OffsetGroups.BuildReachabilityTable(placementOffsets, table, filter);
-		}
-
-		/// <summary>
-		/// Rotates the building placement offsets.
-		/// </summary>
-		/// <param name="areaOffsets">The current building placement offsets.</param>
-		/// <param name="building">The building which would be built or demolished.</param>
-		/// <returns>The adjusted placement offsets.</returns>
-		internal static CellOffset[] RotateAll(CellOffset[] areaOffsets,
-				KMonoBehaviour building) {
-			var placementOffsets = areaOffsets;
-			if (building != null && building.TryGetComponent(out Rotatable rotator)) {
-				int n = areaOffsets.Length;
-				placementOffsets = new CellOffset[n];
-				for (int i = 0; i < n; i++)
-					placementOffsets[i] = rotator.GetRotatedCellOffset(areaOffsets[i]);
-			}
-			return placementOffsets;
-		}
-	}
-
-	/// <summary>
-	/// Applied to AirConditionerConfig to insulate its storage.
-	/// </summary>
-	[HarmonyPatch(typeof(AirConditionerConfig), nameof(AirConditionerConfig.
-		ConfigureBuildingTemplate))]
-	public static class AirConditionerConfig_ConfigureBuildingTemplate_Patch {
-		/// <summary>
-		/// Matches the aquatuner item modifiers.
-		/// </summary>
-		private static readonly List<Storage.StoredItemModifier> STORED_ITEM_MODIFIERS =
-			new List<Storage.StoredItemModifier> {
-				Storage.StoredItemModifier.Hide,
-				Storage.StoredItemModifier.Insulate,
-				Storage.StoredItemModifier.Seal
-			};
-
-		/// <summary>
-		/// Applied after ConfigureBuildingTemplate runs.
-		/// </summary>
-		internal static void Postfix(GameObject go) {
-			var storage = BuildingTemplates.CreateDefaultStorage(go);
-			storage.showInUI = true;
-			storage.capacityKg = 2.0f;
-			storage.SetDefaultStoredItemModifiers(STORED_ITEM_MODIFIERS);
-		}
 	}
 
 	/// <summary>
@@ -263,7 +197,7 @@ namespace PeterHan.StockBugFix {
 		}
 
 		/// <summary>
-		/// Transpiles OnPrefabInit to rotate the offset table before building it.
+		/// Transpiles SetInfoText to hide the text box for duplicated attributes.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
 			var getStats = typeof(Dictionary<string, int>).GetProperty("Item", PPatchTools.
@@ -393,6 +327,34 @@ namespace PeterHan.StockBugFix {
 				}
 			}
 			return cont;
+		}
+	}
+
+	/// <summary>
+	/// Applied to Edible to only display the yuck emote if there are actually no germs on the
+	/// food. If the disease type is invalid, the germ count is an uninitialized variable and
+	/// can be anything...
+	/// </summary>
+	[HarmonyPatch(typeof(Edible), "StopConsuming")]
+	public static class Edible_StopConsuming_Patch {
+		/// <summary>
+		/// Returns the corrected disease count, account for if the disease is invalid.
+		/// </summary>
+		/// <param name="element">The potentially diseased item.</param>
+		/// <returns>The number of active germs on the item.</returns>
+		private static int GetRealDiseaseCount(PrimaryElement element) {
+			return element.DiseaseIdx == Klei.SimUtil.DiseaseInfo.Invalid.idx ? 0 : element.
+				DiseaseCount;
+		}
+
+		/// <summary>
+		/// Transpiles StopConsuming to ignore disease if the handle is invalid.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+			return PPatchTools.ReplaceMethodCallSafe(method, typeof(PrimaryElement).
+				GetPropertySafe<int>(nameof(PrimaryElement.DiseaseCount), false)?.
+				GetGetMethod(true), typeof(Edible_StopConsuming_Patch).GetMethodSafe(
+				nameof(GetRealDiseaseCount), true, typeof(PrimaryElement)));
 		}
 	}
 
