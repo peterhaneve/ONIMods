@@ -37,7 +37,8 @@ namespace PeterHan.PLib.Database {
 			string platformAchievementId, string Name, string description,
 			bool isVictoryCondition, List<ColonyAchievementRequirement> requirementChecklist,
 			string messageTitle, string messageBody, string videoDataName,
-			string victoryLoopVideo, Action<KMonoBehaviour> VictorySequence);
+			string victoryLoopVideo, Action<KMonoBehaviour> VictorySequence,
+			EventReference victorySnapshot, string icon, string[] dlcIds);
 
 		/// <summary>
 		/// Creates a new colony achievement.
@@ -123,6 +124,10 @@ namespace PeterHan.PLib.Database {
 		/// </summary>
 		public string VictoryVideoLoop { get; set; }
 
+		public EventReference VictorySnapshot { get; set; }
+
+		public string[] DlcIds { get; set; }
+
 		/// <summary>
 		/// Creates a new colony achievement wrapper.
 		/// </summary>
@@ -141,6 +146,8 @@ namespace PeterHan.PLib.Database {
 			VictoryTitle = "";
 			VictoryVideoData = "";
 			VictoryVideoLoop = "";
+			VictorySnapshot = default(EventReference);
+			DlcIds = null;
 		}
 
 		/// <summary>
@@ -152,7 +159,7 @@ namespace PeterHan.PLib.Database {
 				throw new ArgumentNullException("No colony achievement requirements specified");
 			var achieve = NEW_COLONY_ACHIEVEMENT.Invoke(ID, "", Name, Description, IsVictory,
 				Requirements, VictoryTitle, VictoryMessage, VictoryVideoData, VictoryVideoLoop,
-				OnVictory);
+				OnVictory, VictorySnapshot, Icon, DlcIds);
 			achieve.icon = Icon;
 			PDatabaseUtils.AddColonyAchievement(achieve);
 		}
