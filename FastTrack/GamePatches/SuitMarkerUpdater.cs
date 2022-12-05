@@ -263,7 +263,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Applied before Run runs.
 		/// </summary>
 		internal static bool Prefix(GameObject ___reactor, SuitMarker ___suitMarker) {
-			return ___reactor != null && ___suitMarker != null && SuitMarkerUpdater.React(
+			return ___reactor != null && ___suitMarker != null && !SuitMarkerUpdater.React(
 				___suitMarker, ___reactor);
 		}
 	}

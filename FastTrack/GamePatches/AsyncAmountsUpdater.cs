@@ -99,11 +99,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal void BatchUpdate(IList<AmountInstanceBucket> entries, float dt) {
 			var inst = AsyncJobManager.Instance;
 			int n = entries.Count;
-			// In case multiple updates get run in one frame, finish the previous one before
-			// starting a new one
-			Finish();
-			allAmounts = entries;
-			if (inst != null && n > 0) {
+			if (inst != null && n > 0 && dt > 0.0f) {
+				allAmounts = entries;
 				int perBucketInt = n / Count;
 				int cutoff = n - Count * perBucketInt, index = 0;
 				deltaTime = dt;
@@ -115,8 +112,11 @@ namespace PeterHan.FastTrack.GamePatches {
 				}
 				onComplete.Reset();
 				inst.Run(this);
-			} else
+				Finish();
+			} else {
+				allAmounts = null;
 				deltaTime = 0.0f;
+			}
 		}
 
 		public void Dispose() {
@@ -134,24 +134,24 @@ namespace PeterHan.FastTrack.GamePatches {
 				while (results.TryDequeue(out var result))
 					result.instance.Publish(result.delta, result.lastValue);
 				deltaTime = 0.0f;
+				allAmounts = null;
 			}
 		}
 
 		public void InternalDoWorkItem(int index) {
-			if (index >= 0 && index < slices.Length) {
+			float dt = deltaTime;
+			if (index >= 0 && index < slices.Length && allAmounts != null && dt > 0.0f) {
 				var range = slices[index];
-				float dt = deltaTime;
 				int n = range.length;
 				if (n > 0) {
 					int start = range.start, end = start + n;
+					float delta;
 					for (int i = start; i < end; i++)
-						if (allAmounts[i].data is AmountInstance instance) {
-							float delta = instance.GetDelta() * dt;
-							if (delta != 0.0f) {
-								float lastValue = instance.value;
-								instance.SetValue(lastValue + delta);
-								results.Enqueue(new AmountUpdated(instance, delta, lastValue));
-							}
+						if (allAmounts[i].data is AmountInstance instance && (delta = instance.
+								GetDelta() * dt) != 0.0f) {
+							float lastValue = instance.value;
+							instance.SetValue(lastValue + delta);
+							results.Enqueue(new AmountUpdated(instance, delta, lastValue));
 						}
 				}
 			}
@@ -213,7 +213,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				float time_delta) {
 			var inst = AsyncAmountsUpdater.Instance;
 			bool run = inst == null;
-			if (!run && time_delta > 0.0f)
+			if (!run)
 				inst.BatchUpdate(amount_instances, time_delta);
 			return run;
 		}
