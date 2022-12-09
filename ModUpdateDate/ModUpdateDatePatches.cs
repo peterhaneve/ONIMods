@@ -130,15 +130,14 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		[HarmonyPatch(typeof(Manager), nameof(Manager.Subscribe))]
 		public static class Manager_Subscribe_Patch {
-			internal static bool Prepare() => ModUpdateInfo.Settings?.AutoUpdate != true;
-
 			/// <summary>
 			/// Transpiles Subscribe to insert a call to SuppressContentChanged after the
 			/// comparison, and a call to UpdateContentChanged instead of CopyPersistentDataTo.
 			/// </summary>
 			internal static IEnumerable<CodeInstruction> Transpiler(
 					IEnumerable<CodeInstruction> method) {
-				bool gac = false, notCheck = false;
+				bool gac = false, notCheck = false, autoUpdate = ModUpdateInfo.Settings?.
+					AutoUpdate != true;
 				// get_available_content
 				var targetMethod = typeof(Mod).GetPropertySafe<Content>(nameof(Mod.
 					available_content), false)?.GetGetMethod();
@@ -155,8 +154,10 @@ namespace PeterHan.ModUpdateDate {
 							null && (operand as MethodBase) == copyPersistent)
 						instr.operand = updateCC;
 					yield return instr;
-					if (opcode == OpCodes.Callvirt && targetMethod != null && (operand as
-							MethodBase) == targetMethod) {
+					if (autoUpdate) {
+						// Only apply the UpdateContentChanged patch in auto-update mode
+					} else if (opcode == OpCodes.Callvirt && targetMethod != null &&
+							(operand as MethodBase) == targetMethod) {
 						// Only the one after calling get_available_content
 						gac = true;
 						notCheck = false;

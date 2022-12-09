@@ -33,7 +33,7 @@ namespace PeterHan.BuildStraightUp {
 		/// <summary>
 		/// The last building checked.
 		/// </summary>
-		private static LastBuilding lastChecked = new LastBuilding();
+		private static LastBuilding lastChecked;
 
 		/// <summary>
 		/// The number of object layers to check.
@@ -59,9 +59,9 @@ namespace PeterHan.BuildStraightUp {
 		/// <param name="attachCell">The location of the attaching building.</param>
 		/// <returns>true if an attachment point was found, or false otherwise.</returns>
 		private static bool CheckBuilding(Building underCons, Tag attachTag, int attachCell) {
-			var attach = underCons.Def?.BuildingComplete?.GetComponent<BuildingAttachPoint>();
+			var complete = underCons.Def?.BuildingComplete;
 			bool found = false;
-			if (attach != null) {
+			if (complete != null && complete.TryGetComponent(out BuildingAttachPoint attach)) {
 				int origin = Grid.PosToCell(underCons);
 				foreach (var point in attach.points)
 					// Cannot use BuildingAttachPoint.AcceptsAttachment as that uses the
@@ -84,12 +84,11 @@ namespace PeterHan.BuildStraightUp {
 		/// <returns>true if an attachment point was found, or false otherwise.</returns>
 		private static bool CheckForBuildings(Tag attachTag, int attachCell, int target) {
 			// Search all buildings in the cell
-			BuildingUnderConstruction underCons;
 			bool found = false;
 			for (int layer = 0; layer < numObjectLayers && !found; layer++) {
 				var building = Grid.Objects[target, layer];
-				if (building != null && (underCons = building.GetComponent<
-						BuildingUnderConstruction>()) != null) {
+				if (building != null && building.TryGetComponent(out 
+						BuildingUnderConstruction underCons)) {
 #if DEBUG
 					PUtil.LogDebug("Checking cell {0:D}: found {1}".F(target, underCons.
 						name));
@@ -244,9 +243,24 @@ namespace PeterHan.BuildStraightUp {
 			/// To target "out string" we need MakeByRefType.
 			/// </summary>
 			internal static MethodBase TargetMethod() {
-				return typeof(BuildingDef).GetMethodSafe(nameof(BuildingDef.
+				var refStr = typeof(string).MakeByRefType();
+				MethodBase target = typeof(BuildingDef).GetMethodSafe(nameof(BuildingDef.
 					IsValidBuildLocation), false, typeof(GameObject), typeof(int),
-					typeof(Orientation), typeof(string).MakeByRefType());
+					typeof(Orientation), refStr);
+				foreach (var method in typeof(BuildingDef).GetMethods(PPatchTools.BASE_FLAGS |
+						BindingFlags.Instance)) {
+					var parameters = method.GetParameters();
+					if (method.Name == nameof(BuildingDef.IsValidBuildLocation) && parameters.
+							Length > 3 && parameters[0].ParameterType == typeof(GameObject) &&
+							parameters[1].ParameterType == typeof(int) && parameters[2].
+							ParameterType == typeof(Orientation)) {
+						target = method;
+						break;
+					}
+				}
+				if (target == null)
+					PUtil.LogWarning("Unable to patch BuildingDef.IsValidBuildLocation");
+				return target;
 			}
 
 			/// <summary>

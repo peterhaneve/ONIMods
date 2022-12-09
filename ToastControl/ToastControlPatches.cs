@@ -67,7 +67,8 @@ namespace PeterHan.ToastControl {
 		/// </summary>
 		private static ICollection<string> TargetsLong => new List<string>() {
 			"BaseUtilityBuildTool:BuildPath", // 2 hits
-			"BuildTool:TryBuild",
+			"BuildTool:PostProcessBuild", // >= 534889
+			"BuildTool:TryBuild", // < 534889
 			"CaptureTool:MarkForCapture",
 			"CopyBuildingSettings:ApplyCopy",
 			"DebugHandler:SpawnMinion",
@@ -160,7 +161,7 @@ namespace PeterHan.ToastControl {
 		private static TranspiledMethod ExecuteChoreTranspiler(TranspiledMethod method,
 				IList<CodeInstruction> newInstructions) {
 			var instructions = new List<CodeInstruction>(method);
-			int n = instructions.Count, toAdd = newInstructions.Count, previousCall = 0;
+			int n = instructions.Count, previousCall = 0;
 			bool patched = false;
 			// Streaming this transpiler will be difficult since instructions before the call
 			// to Store need to be changed
@@ -197,7 +198,7 @@ namespace PeterHan.ToastControl {
 				MethodBase find, MethodBase replace, MethodBase original) {
 			bool replaced = false;
 			if (replace == null)
-				throw new ArgumentNullException("replace");
+				throw new ArgumentNullException(nameof(replace));
 			foreach (var instr in method) {
 				if (instr.opcode == OpCodes.Callvirt && find != null && (instr.operand as
 						MethodInfo) == find) {
@@ -216,8 +217,8 @@ namespace PeterHan.ToastControl {
 				yield return instr;
 			}
 			if (!replaced)
-				PUtil.LogWarning("No calls to SpawnFX found: {0}.{1}".F(original.DeclaringType.
-					FullName, original.Name));
+				PUtil.LogWarning("No calls to SpawnFX found: {0}.{1}".F(original.
+					DeclaringType?.FullName, original.Name));
 		}
 
 		/// <summary>
@@ -233,7 +234,7 @@ namespace PeterHan.ToastControl {
 					// No way to specify which one
 					var cons = type.GetConstructors(PPatchTools.BASE_FLAGS | BindingFlags.
 						Instance);
-					if (cons == null || cons.Length != 1)
+					if (cons.Length != 1)
 						PUtil.LogWarning("No single constructor found for " + type);
 					else
 						result = cons[0];
@@ -260,7 +261,7 @@ namespace PeterHan.ToastControl {
 #pragma warning disable IDE0031 // Use null propagation
 			var brain = (worker == null) ? null : worker.GetComponent<MinionBrain>();
 #pragma warning restore IDE0031
-			return (pickupDupe != opts.PickedUpMachine) ? (pickupDupe != (brain != null)) :
+			return pickupDupe != opts.PickedUpMachine ? (pickupDupe != (brain != null)) :
 				!pickupDupe;
 		}
 
@@ -377,11 +378,12 @@ namespace PeterHan.ToastControl {
 					chore), false)?.GetGetMethod(true);
 				var target = typeof(Delivery_Complete_Patch).GetMethodSafe(
 					nameof(ShouldHidePopups), true, typeof(FetchChore));
-				var result = method;
-				if (getChore == null)
+				TranspiledMethod result;
+				if (getChore == null) {
 					// Unable to retrieve the chore, avoid crashing and just do not transpile
 					PUtil.LogWarning("Unable to retrieve Delivery.chore property");
-				else
+					result = method;
+				} else
 					result = ExecuteChoreTranspiler(method, new List<CodeInstruction>(3) {
 						new CodeInstruction(OpCodes.Ldarg_0),
 						// Would have to call `Ldobj` on the struct to pass it directly to the
@@ -556,7 +558,7 @@ namespace PeterHan.ToastControl {
 			internal static void Postfix(KButtonEvent e) {
 				if (inGameSettings != null && !e.Consumed && e.TryConsume(inGameSettings.
 						GetKAction()))
-					POptions.ShowDialog(typeof(ToastControlOptions), onClose: (_) =>
+					POptions.ShowDialog(typeof(ToastControlOptions), onClose: _ =>
 						ToastControlPopups.ReloadOptions());
 			}
 		}

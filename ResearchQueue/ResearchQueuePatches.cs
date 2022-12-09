@@ -32,8 +32,16 @@ namespace PeterHan.ResearchQueue {
 		/// <summary>
 		/// Caches a reference to the mActiveModifiers field of KInputController.
 		/// </summary>
-		private static IDetouredField<KInputController, Modifier> ACTIVE_MODIFIERS = PDetours.
-			DetourField<KInputController, Modifier>("mActiveModifiers");
+		private static readonly IDetouredField<KInputController, Modifier> ACTIVE_MODIFIERS =
+			PDetours.DetourField<KInputController, Modifier>("mActiveModifiers");
+
+		/// <summary>
+		/// Used to retrieve the global input manager, static or not.
+		/// TODO Remove when versions prior to U44-535211 no longer need to be supported
+		/// </summary>
+		private static readonly MethodInfo GET_INPUT_MANAGER = typeof(Global).GetMethod(nameof(
+			Global.GetInputManager), BindingFlags.Instance | BindingFlags.Static |
+			PPatchTools.BASE_FLAGS);
 
 		/// <summary>
 		/// Adds a tech to the research queue.
@@ -50,8 +58,8 @@ namespace PeterHan.ResearchQueue {
 		/// <summary>
 		/// Adds techs to the queue... in the proper order!
 		/// </summary>
-		/// <param name="research">The currnet research status.</param>
-		/// <param name="queuedTech">The research queue</param>
+		/// <param name="queuedTech">The current research queue.</param>
+		/// <param name="techsToAdd">The location where the added techs will be placed.</param>
 		/// <param name="tech">The tech to queue.</param>
 		private static void AddTechToQueue(IList<TechInstance> queuedTech,
 				IDictionary<string, TechInstance> techsToAdd, Tech tech) {
@@ -76,19 +84,27 @@ namespace PeterHan.ResearchQueue {
 		}
 
 		/// <summary>
+		/// Gets the current input controller.
+		/// </summary>
+		/// <returns>The current input controller.</returns>
+		private static KInputController GetInputController() {
+			var getInput = GET_INPUT_MANAGER;
+			return (getInput.IsStatic ? getInput.Invoke(null, null) : getInput.Invoke(Global.
+				Instance, null)) is GameInputManager im ? im.GetDefaultController() : null;
+		}
+
+		/// <summary>
 		/// When a research is cancelled, removes from the queue if SHIFT clicked.
 		/// </summary>
 		/// <param name="targetTech">The technology to queue.</param>
 		/// <returns>true to remove the technology normally, or false if this method already
 		/// removed the technology.</returns>
 		private static bool OnResearchCanceled(Tech targetTech) {
-			var controller = Global.Instance.GetInputManager()?.GetDefaultController();
 			var inst = ManagementMenu.Instance;
 			var screen = (inst == null) ? null : RESEARCH_SCREEN.Get(inst);
 			var research = Research.Instance;
 			// If SHIFT is down (have to use reflection!)
-			bool shiftDown = (ACTIVE_MODIFIERS.Get(controller) & Modifier.Shift) != 0, cont =
-				true;
+			bool cont = true;
 			if (research != null && screen != null && !targetTech.IsComplete()) {
 #if DEBUG
 				PUtil.LogDebug("Dequeue tech: " + targetTech.Name);
@@ -99,7 +115,7 @@ namespace PeterHan.ResearchQueue {
 				var queue = research.GetResearchQueue();
 				// Restack research
 				int n = queue.Count;
-				research.SetActiveResearch((n > 0) ? queue[n - 1].tech : null, false);
+				research.SetActiveResearch((n > 0) ? queue[n - 1].tech : null);
 				// The original method would immediately deselect this item, avoid that
 				cont = false;
 			}
@@ -113,15 +129,16 @@ namespace PeterHan.ResearchQueue {
 		/// <returns>true to add the technology normally, or false if this method already
 		/// added the technology.</returns>
 		private static bool OnResearchClicked(Tech targetTech) {
-			var controller = Global.Instance.GetInputManager()?.GetDefaultController();
+			var controller = GetInputController();
 			var inst = ManagementMenu.Instance;
 			var screen = (inst == null) ? null : RESEARCH_SCREEN.Get(inst);
 			var research = Research.Instance;
 			string id = targetTech.Id;
 			// If SHIFT is down (have to use reflection!)
-			bool cont = true, shiftDown = (ACTIVE_MODIFIERS.Get(controller) & Modifier.
-				Shift) != 0;
-			if (controller != null && research != null && !DebugHandler.InstantBuildMode) {
+			bool cont = true, shiftDown = controller != null && (ACTIVE_MODIFIERS.Get(
+				controller) & Modifier.Shift) != 0;
+			if (controller != null && research != null && !DebugHandler.InstantBuildMode &&
+					screen != null) {
 #if DEBUG
 				PUtil.LogDebug("Queue tech: " + targetTech.Name);
 #endif
@@ -137,9 +154,9 @@ namespace PeterHan.ResearchQueue {
 					research.CancelResearch(targetTech);
 					queue = research.GetResearchQueue();
 					n = queue.Count;
-					research.SetActiveResearch((n > 0) ? queue[n - 1].tech : null, false);
+					research.SetActiveResearch((n > 0) ? queue[n - 1].tech : null);
 					cont = false;
-				} else if (screen != null) {
+				} else {
 					if (shiftDown)
 						// If not in the queue already and shift clicked, queue it on the end
 						ADD_TECH(research, targetTech);
@@ -158,16 +175,16 @@ namespace PeterHan.ResearchQueue {
 			var inst = ManagementMenu.Instance;
 			var screen = (inst == null) ? null : RESEARCH_SCREEN.Get(inst);
 			if (queuedTech == null)
-				throw new ArgumentNullException("queuedTech");
+				throw new ArgumentNullException(nameof(queuedTech));
 			int n = queuedTech.Count;
 			if (screen != null && RESEARCH_NAME != null) {
 				// O(N^2) sucks
 				var techIndex = DictionaryPool<string, int, ResearchScreen>.Allocate();
 				for (int i = 0; i < n; i++)
 					techIndex.Add(queuedTech[i].tech.Id, i + 1);
-				LocText lt;
 				foreach (var tech in Db.Get().Techs.resources) {
 					var entry = screen.GetEntry(tech);
+					LocText lt;
 					// Update all techs with the order count
 					if (entry != null && (lt = RESEARCH_NAME.Get(entry)) != null) {
 						if (techIndex.TryGetValue(tech.Id, out int order))
@@ -185,6 +202,9 @@ namespace PeterHan.ResearchQueue {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 			new PVersionCheck().Register(this, new SteamVersionChecker());
+			if (GET_INPUT_MANAGER == null || GET_INPUT_MANAGER.ReturnType != typeof(
+					GameInputManager))
+				PUtil.LogWarning("Unable to find current input controller");
 		}
 
 		/// <summary>
@@ -243,10 +263,8 @@ namespace PeterHan.ResearchQueue {
 			/// </summary>
 			internal static IEnumerable<CodeInstruction> Transpiler(
 					IEnumerable<CodeInstruction> method) {
-				return PPatchTools.ReplaceMethodCall(method, typeof(List<TechInstance>).
-					GetMethodSafe("Sort", false, new Type[] {
-						typeof(Comparison<TechInstance>)
-					}));
+				return PPatchTools.RemoveMethodCall(method, typeof(List<TechInstance>).
+					GetMethodSafe("Sort", false, typeof(Comparison<TechInstance>)));
 			}
 		}
 
@@ -285,16 +303,14 @@ namespace PeterHan.ResearchQueue {
 			/// Applied after SetTech runs.
 			/// </summary>
 			internal static void Postfix(LocText ___researchName, Tech newTech) {
-				if (newTech != null && ___researchName != null) {
-					var tooltip = ___researchName.GetComponent<ToolTip>();
-					if (tooltip != null) {
-						// Append to existing tooltip
-						string text = tooltip.GetMultiString(0);
-						string keyCode = GameUtil.GetKeycodeLocalized(KKeyCode.LeftShift) ??
-							"SHIFT";
-						tooltip.SetSimpleTooltip(text + "\r\n\r\n" + ResearchQueueStrings.
-							QueueTooltip.text.F(keyCode));
-					}
+				if (newTech != null && ___researchName != null && ___researchName.
+						TryGetComponent(out ToolTip tooltip)) {
+					// Append to existing tooltip
+					string text = tooltip.GetMultiString(0);
+					string keyCode = GameUtil.GetKeycodeLocalized(KKeyCode.LeftShift) ??
+						"SHIFT";
+					tooltip.SetSimpleTooltip(text + "\r\n\r\n" + ResearchQueueStrings.
+						QueueTooltip.text.F(keyCode));
 				}
 			}
 		}
@@ -315,7 +331,7 @@ namespace PeterHan.ResearchQueue {
 					int n = queue.Count;
 					if (n > 0)
 						// If there are techs in the queue, do this no-op to update labels
-						inst.SetActiveResearch(queue[n - 1]?.tech, false);
+						inst.SetActiveResearch(queue[n - 1]?.tech);
 				}
 			}
 		}

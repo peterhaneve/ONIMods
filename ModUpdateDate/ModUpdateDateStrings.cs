@@ -52,6 +52,7 @@ namespace PeterHan.ModUpdateDate {
 				public static LocString MOD_UPDATE_ALL = "Update {0:D} mods which appear to be out of date";
 				public static LocString MOD_UPDATE_1 = "Update one mod which appears to be out of date";
 				public static LocString MOD_ERR_UPDATE = "Unable to automatically update this mod!\nA manual update may be required.";
+				public static LocString MOD_ERR_UNPACK = "Installed mod version {0} does not match the cached version.\nA manual update may be required.";
 
 				// Passive mode
 				public static LocString OPTION_PASSIVE = "Auto-Update";

@@ -117,7 +117,7 @@ namespace PeterHan.ModUpdateDate {
 				ColorStyleSetting color;
 				var mod = mods[index];
 				var tooltip = new StringBuilder(128);
-				var localDate = mod.GetLocalLastModified();
+				var localInfo = ModUpdateInfo.GetLocalInfo(mod);
 				var updated = ModStatus.Disabled;
 				// A nice colorful button with a warning or checkmark icon
 				var updButton = new PButton("UpdateMod") {
@@ -138,18 +138,18 @@ namespace PeterHan.ModUpdateDate {
 					var modUpdate = new ModToUpdate(mod);
 					if (autoUpdate)
 						tooltip.Append(UISTRINGS.MOD_AUTO_UPDATE);
-					updated = AddSteamUpdate(tooltip, modUpdate, localDate, updButton,
+					updated = AddSteamUpdate(tooltip, modUpdate, localInfo, updButton,
 						autoUpdate);
-					if (updated == ModStatus.Outdated)
+					if (updated == ModStatus.Outdated || updated == ModStatus.UnpackFailed)
 						outdated.Add(modUpdate);
 				} else
-					tooltip.AppendFormat(cultureInfo, UISTRINGS.LOCAL_UPDATE, localDate.
-						ToLocalTime());
+					tooltip.AppendFormat(cultureInfo, UISTRINGS.LOCAL_UPDATE, localInfo.
+						LocalLastModified.ToLocalTime());
 				// Icon, color, and tooltip
 				updButton.Sprite = (updated == ModStatus.UpToDate || updated == ModStatus.
 					Disabled) ? PUITuning.Images.Checked : PUITuning.Images.GetSpriteByName(
 					"iconWarning");
-				if (updated == ModStatus.Outdated)
+				if (updated == ModStatus.Outdated || updated == ModStatus.UnpackFailed)
 					color = COLOR_OUTDATED;
 				else
 					color = autoUpdate ? COLOR_AUTO : COLOR_UPDATED;
@@ -166,14 +166,14 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		/// <param name="tooltip">The tooltip under construction.</param>
 		/// <param name="modUpdate">The mod update executor which can update this mod.</param>
-		/// <param name="localDate">The local last update date.</param>
+		/// <param name="localInfo">The local update information.</param>
 		/// <param name="updButton">The button to be used for updating this mod.</param>
 		/// <param name="autoUpdate">Whether automatic updates are enabled.</param>
 		/// <returns>The status of the Steam mod.</returns>
 		private static ModStatus AddSteamUpdate(StringBuilder tooltip, ModToUpdate modUpdate,
-				System.DateTime localDate, PButton updButton, bool autoUpdate) {
+				ModTransientInfo localInfo, PButton updButton, bool autoUpdate) {
 			var steamDate = modUpdate.LastSteamUpdate;
-			var updated = GetModStatus(modUpdate, ref localDate);
+			var updated = GetModStatus(modUpdate, localInfo, out var localDate);
 			// Generate tooltip for mod's current date and last Steam update
 			switch (updated) {
 			case ModStatus.UpToDate:
@@ -181,6 +181,10 @@ namespace PeterHan.ModUpdateDate {
 				break;
 			case ModStatus.UpToDateLocal:
 				tooltip.Append(UISTRINGS.MOD_UPDATED_BYUS);
+				break;
+			case ModStatus.UnpackFailed:
+				tooltip.AppendFormat(cultureInfo, UISTRINGS.MOD_ERR_UNPACK, localInfo.
+					FilesystemVersion);
 				break;
 			case ModStatus.Outdated:
 				tooltip.Append(autoUpdate ? UISTRINGS.MOD_ERR_UPDATE : UISTRINGS.MOD_OUTDATED);
@@ -232,9 +236,9 @@ namespace PeterHan.ModUpdateDate {
 				foreach (var mod in mods)
 					// Steam mods only, count outdated
 					if (mod.label.distribution_platform == Label.DistributionPlatform.Steam) {
-						var localDate = mod.GetLocalLastModified();
-						if (GetModStatus(new ModToUpdate(mod), ref localDate) == ModStatus.
-								Outdated)
+						var localInfo = ModUpdateInfo.GetLocalInfo(mod);
+						var status = GetModStatus(new ModToUpdate(mod), localInfo, out _);
+						if (status == ModStatus.Outdated || status == ModStatus.UnpackFailed)
 							outdated++;
 					}
 			return outdated;
@@ -254,29 +258,39 @@ namespace PeterHan.ModUpdateDate {
 		/// Finds the update status of a mod.
 		/// </summary>
 		/// <param name="modUpdate">The mod to query.</param>
-		/// <param name="localDate">The date it was last updated locally, from Mod.
-		/// GetLocalLastModified()</param>
+		/// <param name="status">The local mod status.</param>
+		/// <param name="localDate">Returns the date it was last updated locally, from
+		/// ModTransientInfo.LocalLastModified.</param>
 		/// <returns>The status of that mod.</returns>
-		private static ModStatus GetModStatus(ModToUpdate modUpdate, ref System.DateTime
-				localDate) {
+		private static ModStatus GetModStatus(ModToUpdate modUpdate, ModTransientInfo status,
+				out System.DateTime localDate) {
 			ModStatus updated;
+			if (status == null)
+				throw new ArgumentNullException(nameof(status));
 			if (modUpdate.LastSteamUpdate > System.DateTime.MinValue) {
 				var ours = ModUpdateInfo.FindModInConfig(modUpdate.SteamID);
 				var ourDate = System.DateTime.MinValue;
 				var steamDate = modUpdate.LastSteamUpdate;
+				var reportedDate = status.LocalLastModified;
+				localDate = reportedDate;
 				// Do we have a better estimate?
 				if (ours != null)
 					ourDate = new System.DateTime(ours.LastUpdated, DateTimeKind.Utc);
 				// Allow some time for download delays etc
-				if (localDate.AddMinutes(SteamVersionChecker.UPDATE_JITTER) >= steamDate)
+				if (!string.IsNullOrEmpty(status.FilesystemVersion))
+					updated = ModStatus.UnpackFailed;
+				else if (reportedDate.AddMinutes(SteamVersionChecker.UPDATE_JITTER) >=
+						steamDate)
 					updated = ModStatus.UpToDate;
 				else if (ourDate.AddMinutes(SteamVersionChecker.UPDATE_JITTER) >= steamDate) {
 					localDate = ourDate;
 					updated = ModStatus.UpToDateLocal;
 				} else
 					updated = ModStatus.Outdated;
-			} else
+			} else {
 				updated = ModStatus.Disabled;
+				localDate = System.DateTime.UtcNow;
+			}
 			return updated;
 		}
 
@@ -352,7 +366,8 @@ namespace PeterHan.ModUpdateDate {
 						steamStatus != EResult.k_EResultOK)) {
 					// Clean the trash
 					ExtensionMethods.RemoveOldDownload(active.DownloadPath);
-					status = new ModUpdateResult(ModDownloadStatus.SteamError, mod, steamStatus);
+					status = new ModUpdateResult(ModDownloadStatus.SteamError, mod,
+						steamStatus);
 				} else {
 					// Try to copy the configs
 					if (BackupConfigs(out int copied))
@@ -365,6 +380,7 @@ namespace PeterHan.ModUpdateDate {
 					// Mod has been updated
 					mod.status = Mod.Status.ReinstallPending;
 					mod.reinstall_path = active.DownloadPath;
+					ModUpdateInfo.GetLocalInfo(mod).RefreshLastModified();
 					PGameUtils.SaveMods();
 					// Update the config
 					var when = active.LastSteamUpdate;
@@ -445,7 +461,7 @@ namespace PeterHan.ModUpdateDate {
 		/// Potential statuses in the mods menu.
 		/// </summary>
 		private enum ModStatus {
-			Disabled, UpToDate, UpToDateLocal, Outdated
+			Disabled, UpToDate, UpToDateLocal, Outdated, UnpackFailed
 		}
 	}
 }

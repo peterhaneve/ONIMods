@@ -22,6 +22,7 @@ using PeterHan.PLib.UI;
 using Steamworks;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using UnityEngine;
 
@@ -37,6 +38,24 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		private static readonly IDetouredField<KInputController, Modifier> ACTIVE_MODIFIERS =
 			PDetours.DetourFieldLazy<KInputController, Modifier>("mActiveModifiers");
+
+		/// <summary>
+		/// Used to retrieve the global input manager, static or not.
+		/// TODO Remove when versions prior to U44-535211 no longer need to be supported
+		/// </summary>
+		private static readonly MethodInfo GET_INPUT_MANAGER = typeof(Global).GetMethod(nameof(
+				Global.GetInputManager), BindingFlags.Instance | BindingFlags.Static |
+			PPatchTools.BASE_FLAGS);
+		
+		/// <summary>
+		/// Gets the current input controller.
+		/// </summary>
+		/// <returns>The current input controller.</returns>
+		private static KInputController GetInputController() {
+			var getInput = GET_INPUT_MANAGER;
+			return (getInput.IsStatic ? getInput.Invoke(null, null) : getInput.Invoke(Global.
+				Instance, null)) is GameInputManager im ? im.GetDefaultController() : null;
+		}
 
 		/// <summary>
 		/// Saves the mod enabled settings and restarts the game.
@@ -58,7 +77,7 @@ namespace PeterHan.ModUpdateDate {
 
 		internal ModUpdateTask(ModToUpdate toUpdate) {
 			if (toUpdate == null)
-				throw new ArgumentNullException("toUpdate");
+				throw new ArgumentNullException(nameof(toUpdate));
 			Mods = new Queue<ModToUpdate>(1);
 			Mods.Enqueue(toUpdate);
 			Results = new List<ModUpdateResult>(1);
@@ -66,7 +85,7 @@ namespace PeterHan.ModUpdateDate {
 
 		internal ModUpdateTask(IEnumerable<ModToUpdate> updateAll) {
 			if (updateAll == null)
-				throw new ArgumentNullException("toUpdate");
+				throw new ArgumentNullException(nameof(updateAll));
 			Mods = new Queue<ModToUpdate>(updateAll);
 			Results = new List<ModUpdateResult>(Mods.Count);
 		}
@@ -76,7 +95,6 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		/// <param name="resultText">The location where the result text will be stored.</param>
 		/// <param name="result">The result from the mod update.</param>
-		/// <param name="updated">The number of mods successfully updated so far.</param>
 		private void AddText(StringBuilder resultText, ModUpdateResult result) {
 			string title = result.Title;
 			switch (result.Status) {
@@ -124,11 +142,12 @@ namespace PeterHan.ModUpdateDate {
 		/// Shows a confirmation dialog to force update the specified mod(s).
 		/// </summary>
 		internal void TryUpdateMods(GameObject _) {
-			var controller = Global.Instance.GetInputManager()?.GetDefaultController();
+			var controller = GetInputController();
 			var modifier = Modifier.None;
-			try {
-				modifier = ACTIVE_MODIFIERS.Get(controller);
-			} catch (DetourException) { }
+			if (controller != null)
+				try {
+					modifier = ACTIVE_MODIFIERS.Get(controller);
+				} catch (DetourException) { }
 			// Check for SHIFT - bypass dialog
 			if (modifier == Modifier.Shift)
 				UpdateMods();
@@ -146,7 +165,7 @@ namespace PeterHan.ModUpdateDate {
 					}
 				}
 				PUIElements.ShowConfirmDialog(null, string.Format(UISTRINGS.CONFIRM_UPDATE,
-					modList.ToString()), UpdateMods, null, UISTRINGS.CONFIRM_OK, UISTRINGS.
+					modList), UpdateMods, null, UISTRINGS.CONFIRM_OK, UISTRINGS.
 					CONFIRM_CANCEL);
 			}
 		}

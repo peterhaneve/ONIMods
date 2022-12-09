@@ -56,10 +56,12 @@ namespace PeterHan.ModUpdateDate {
 			bool remove = false;
 			Mod mod;
 			if (DETAILS.ContainsKey(id) && (mod = manager.FindSteamMod(id)) != null) {
-				var target = mod.GetLocalLastModified();
+				var target = ModUpdateInfo.GetLocalInfo(mod);
+				target.RefreshLastModified();
 				// Compare date just like the button does
-				if (mod.GetSteamModID().GetGlobalLastModified(out System.DateTime steamTime) &&
-						target.AddMinutes(SteamVersionChecker.UPDATE_JITTER) >= steamTime) {
+				if (mod.GetSteamModID().GetGlobalLastModified(out var steamTime) &&
+						target.LocalLastModified.AddMinutes(SteamVersionChecker.
+						UPDATE_JITTER) >= steamTime) {
 					PUtil.LogDebug("Mod {0} has been updated by Steam".F(mod.label.title));
 					// Steam fixed up its act
 					remove = true;
@@ -207,11 +209,14 @@ namespace PeterHan.ModUpdateDate {
 			if (replacement.label.distribution_platform == Label.DistributionPlatform.Steam) {
 				var activeInfo = current.packagedModInfo;
 				var steamInfo = replacement.packagedModInfo;
+				var localInfo = ModUpdateInfo.GetLocalInfo(replacement);
 				if (activeInfo != null && steamInfo != null && activeInfo.version != steamInfo.
 						version) {
+					localInfo.FilesystemVersion = activeInfo.version;
 					PUtil.LogWarning("Mod {0} version does not match: Active {1}, Steam {2}".
 						F(current.label.title, activeInfo.version, steamInfo.version));
-				}
+				} else
+					localInfo.FilesystemVersion = "";
 			}
 		}
 
@@ -229,8 +234,7 @@ namespace PeterHan.ModUpdateDate {
 				string idString = target.label.id;
 				foreach (var info in existing)
 					if (idString == info.ID.ToString() && (info.Status == ModUpdateStatus.
-							PendingUpdate || info.Status == ModUpdateStatus.UpdatedByThisMod))
-					{
+						PendingUpdate || info.Status == ModUpdateStatus.UpdatedByThisMod)) {
 						found = true;
 						break;
 					}

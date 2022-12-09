@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Sandbox Tools</AssemblyTitle>
-    <FileVersion>3.5.0.0</FileVersion>
+    <FileVersion>3.6.0.0</FileVersion>
     <RootNamespace>PeterHan.SandboxTools</RootNamespace>
     <Description>Improves the Sandbox Mode tools with numerous small tweaks.</Description>
     <AssemblyVersion>3.1.0.0</AssemblyVersion>

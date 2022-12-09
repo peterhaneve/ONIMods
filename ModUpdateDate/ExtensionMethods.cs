@@ -74,36 +74,6 @@ namespace PeterHan.ModUpdateDate {
 		}
 
 		/// <summary>
-		/// Gets the last modified date of a mod's local files. The time is returned in UTC.
-		/// </summary>
-		/// <param name="mod">The mod to check.</param>
-		/// <returns>The date and time of its last modification.</returns>
-		internal static System.DateTime GetLocalLastModified(this Mod mod) {
-			if (mod == null)
-				throw new ArgumentNullException("mod");
-			var label = mod.label;
-			var result = System.DateTime.UtcNow;
-			if (label.distribution_platform == Label.DistributionPlatform.Steam) {
-				// 260 = MAX_PATH
-				if (SteamUGC.GetItemInstallInfo(mod.GetSteamModID(), out _,
-						out string _, 260U, out uint timestamp) && timestamp > 0U)
-					result = SteamVersionChecker.UnixEpochToDateTime(timestamp);
-				else
-					PUtil.LogWarning("Unable to get Steam install information for " +
-						label.title);
-			} else
-				try {
-					// Get the last modified date of its install path :/
-					result = File.GetLastWriteTimeUtc(Path.GetFullPath(label.install_path));
-				} catch (IOException) {
-					// Unable to determine the date, so use UtcNow...
-					PUtil.LogWarning("I/O error when determining last modified date for " +
-						label.title);
-				}
-			return result;
-		}
-
-		/// <summary>
 		/// Retrieves the Steam ID for a Steam mod. Only works on Steam mods!
 		/// </summary>
 		/// <param name="mod">The mod to check.</param>

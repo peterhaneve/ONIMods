@@ -16,10 +16,16 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using KMod;
 using Newtonsoft.Json;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using PeterHan.PLib.AVC;
+using Steamworks;
+using System;
+using System.IO;
 
 namespace PeterHan.ModUpdateDate {
 	/// <summary>
@@ -46,6 +52,12 @@ namespace PeterHan.ModUpdateDate {
 		internal static ModUpdateInfo Settings { get; private set; }
 
 		/// <summary>
+		/// Stores information that is not serialized such as version mismatches.
+		/// </summary>
+		private static readonly ConcurrentDictionary<string, ModTransientInfo> VERSION_INFO = 
+			new ConcurrentDictionary<string, ModTransientInfo>(2, 128);
+
+		/// <summary>
 		/// Looks for a mod in the known updates config.
 		/// </summary>
 		/// <param name="id">The Steam mod ID.</param>
@@ -62,6 +74,18 @@ namespace PeterHan.ModUpdateDate {
 						break;
 					}
 			return info;
+		}
+
+		/// <summary>
+		/// Gets or creats the transient data for the specified mod which caches its local
+		/// last modified date and version.
+		/// </summary>
+		/// <param name="mod">The mod to look up.</param>
+		/// <returns>The cached information about that mod.</returns>
+		internal static ModTransientInfo GetLocalInfo(Mod mod) {
+			if (mod == null)
+				throw new ArgumentNullException(nameof(mod));
+			return VERSION_INFO.GetOrAdd(mod.label.id, _ => new ModTransientInfo(mod));
 		}
 
 		/// <summary>
@@ -149,6 +173,66 @@ namespace PeterHan.ModUpdateDate {
 
 		public override string ToString() {
 			return "ModUpdateData[id={0:D},status={1}]".F(ID, Status);
+		}
+	}
+
+	/// <summary>
+	/// Transient information about the mod that should not survive serialization.
+	/// </summary>
+	public sealed class ModTransientInfo {
+		/// <summary>
+		/// The version in the file system  (Steam's cached version replaces this once the
+		/// mod is loaded).
+		/// </summary>
+		public string FilesystemVersion { get; set; }
+		
+		/// <summary>
+		/// The time when this mod was last modified locally.
+		/// </summary>
+		public System.DateTime LocalLastModified { get; set; }
+
+		/// <summary>
+		/// The mod label.
+		/// </summary>
+		private readonly Label label;
+
+		public ModTransientInfo(Mod mod) {
+			if (mod == null)
+				throw new ArgumentNullException(nameof(mod));
+			label = mod.label;
+			FilesystemVersion = "";
+			RefreshLastModified();
+		}
+
+		/// <summary>
+		/// Refreshes the local last modified date.
+		/// </summary>
+		public void RefreshLastModified() {
+			var lastMod = System.DateTime.UtcNow;
+			if (label.distribution_platform == Label.DistributionPlatform.Steam && ulong.
+					TryParse(label.id, out ulong idLong)) {
+				// 260 = MAX_PATH
+				if (SteamUGC.GetItemInstallInfo(new PublishedFileId_t(idLong), out _,
+						out string _, 260U, out uint timestamp) && timestamp > 0U)
+					lastMod = SteamVersionChecker.UnixEpochToDateTime(timestamp);
+				else
+					PUtil.LogWarning("Unable to get Steam install information for " +
+						label.title);
+			} else
+				try {
+					// Get the last modified date of its install path :/
+					lastMod = File.GetLastWriteTimeUtc(Path.GetFullPath(label.install_path));
+				} catch (IOException) {
+					// Unable to determine the date, so use UtcNow...
+					PUtil.LogWarning("I/O error when determining last modified date for " +
+						label.title);
+				}
+			LocalLastModified = lastMod;
+		}
+
+		public override string ToString() {
+			return "ModTransientInfo[fsVersion={0},lastModified={1:R}]".F(FilesystemVersion,
+				LocalLastModified);
 		}
 	}
 

@@ -24,7 +24,6 @@ using PeterHan.PLib.Database;
 using PeterHan.PLib.PatchManager;
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 using SearchFilter = SandboxToolParameterMenu.SelectorValue.SearchFilter;
 
@@ -95,37 +94,6 @@ namespace PeterHan.SandboxTools {
 			filters.Recycle();
 		}
 
-		/// <summary>
-		/// A wrapper method used on BuildingDef.Build to use the right material for some
-		/// POI buildings.
-		/// </summary>
-		private static GameObject BuildFixedMaterials(BuildingDef def, int cell,
-				Orientation orient, Storage storage, IList<Tag> elements, float temperature,
-				bool sound, float timeBuilt) {
-			if (def != null && def.PrefabID == MassiveHeatSinkConfig.ID && elements != null) {
-				// Special case the AETN to iron (it uses niobium otherwise)
-				elements.Clear();
-				elements.Add(ElementLoader.FindElementByHash(SimHashes.Iron).tag);
-			}
-			return def.Build(cell, orient, storage, elements, temperature, sound, timeBuilt);
-		}
-
-		/// <summary>
-		/// A wrapper method used on BuildingDef.Build to avoid melting buildings built at cold
-		/// temperatures.
-		/// </summary>
-		private static GameObject BuildAtTemp(BuildingDef def, int cell, Orientation orient,
-				Storage storage, IList<Tag> elements, float temperature, bool sound,
-				float timeBuilt) {
-			if (elements != null && elements.Count > 0) {
-				// Lower temperature to at least the element's melt point - 1 K
-				var pe = ElementLoader.GetElement(elements[0]);
-				if (pe != null)
-					temperature = Math.Min(temperature, Math.Max(1.0f, pe.highTemp - 1.0f));
-			}
-			return def.Build(cell, orient, storage, elements, temperature, sound, timeBuilt);
-		}
-
 		[PLibMethod(RunAt.BeforeDbInit)]
 		internal static void LoadImages() {
 			var icon = SpriteRegistry.GetToolIcon();
@@ -155,17 +123,33 @@ namespace PeterHan.SandboxTools {
 		/// <summary>
 		/// Applied to BuildTool to build items at the correct temperature.
 		/// </summary>
-		[HarmonyPatch(typeof(BuildTool), "TryBuild")]
-		public static class BuildTool_TryBuild_Patch {
+		[HarmonyPatch(typeof(BuildingDef), nameof(BuildingDef.Build), typeof(int),
+			typeof(Orientation), typeof(Storage), typeof(IList<Tag>), typeof(float),
+			typeof(bool), typeof(float))]
+		public static class BuildingDef_Build_Patch {
 			/// <summary>
-			/// Transpiles TryBuild to place buildings at the right temperature in sandbox.
+			/// If in sandbox or debug mode (building would be built instantly), fix the
+			/// temperature and materials.
 			/// </summary>
-			internal static IEnumerable<CodeInstruction> Transpiler(
-					IEnumerable<CodeInstruction> method) {
-				return PPatchTools.ReplaceMethodCall(method, typeof(BuildingDef).GetMethodSafe(
-					nameof(BuildingDef.Build), false, PPatchTools.AnyArguments),
-					typeof(SandboxToolsPatches).GetMethodSafe(nameof(BuildAtTemp), true,
-					PPatchTools.AnyArguments));
+			internal static void Prefix(BuildingDef __instance, IList<Tag> selected_elements,
+					ref float temperature) {
+				// Instant build mode?
+				if (selected_elements != null && (DebugHandler.InstantBuildMode || (Game.
+						Instance.SandboxModeActive && SandboxToolParameterMenu.instance.
+						settings.InstantBuild))) {
+					if (__instance.PrefabID == MassiveHeatSinkConfig.ID) {
+						// Special case the AETN to iron (it uses niobium otherwise)
+						selected_elements.Clear();
+						selected_elements.Add(ElementLoader.FindElementByHash(SimHashes.Iron).
+							tag);
+					} else if (selected_elements.Count > 0) {
+						// Lower temperature to at least the element's melt point - 1 K
+						var pe = ElementLoader.GetElement(selected_elements[0]);
+						if (pe != null)
+							temperature = Math.Min(temperature, Math.Max(1.0f, pe.highTemp -
+								1.0f));
+					}
+				}
 			}
 		}
 
@@ -183,25 +167,7 @@ namespace PeterHan.SandboxTools {
 				PUtil.LogDebug("Created FilteredDestroyTool");
 			}
 		}
-
-		/// <summary>
-		/// Applied to SandboxSpawnerTool to place buildings with the right material in some
-		/// special cases.
-		/// </summary>
-		[HarmonyPatch(typeof(SandboxSpawnerTool), "Place")]
-		public static class SandboxSpawnerTool_Place_Patch {
-			/// <summary>
-			/// Transpiles Place to properly place special buildings.
-			/// </summary>
-			internal static IEnumerable<CodeInstruction> Transpiler(
-					IEnumerable<CodeInstruction> method) {
-				return PPatchTools.ReplaceMethodCall(method, typeof(BuildingDef).GetMethodSafe(
-					nameof(BuildingDef.Build), false, PPatchTools.AnyArguments),
-					typeof(SandboxToolsPatches).GetMethodSafe(nameof(BuildFixedMaterials),
-					true, PPatchTools.AnyArguments));
-			}
-		}
-
+		
 		/// <summary>
 		/// Applied to SandboxToolParameterMenu to add more items to the spawnable menu.
 		/// </summary>
