@@ -296,7 +296,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					int count = statusItems.Count;
 					bool showStatus = count > 0;
 					if (force)
-						Update200ms();
+						UpdatePanels();
 					if (showStatus != statusActive) {
 						sis.statusItemPanel.gameObject.SetActive(showStatus);
 						statusActive = showStatus;
@@ -551,16 +551,15 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		public void Sim200ms(float _) {
-			if (sis.lastTarget != null && storageParent != null && isActiveAndEnabled) {
-				Update200ms();
-			}
+			if (sis.lastTarget != null && storageParent != null && isActiveAndEnabled)
+				UpdatePanels();
 		}
 
 		/// <summary>
 		/// Updates the panels that should be updated every 200ms or when the selected object
 		/// changes.
 		/// </summary>
-		private void Update200ms() {
+		private void UpdatePanels() {
 			var vitalsContainer = sis.vitalsContainer;
 			RefreshStress();
 			if (vitalsActive) {

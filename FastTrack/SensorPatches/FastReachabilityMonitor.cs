@@ -35,11 +35,6 @@ namespace PeterHan.FastTrack.SensorPatches {
 	[SkipSaveFileSerialization]
 	public sealed class FastReachabilityMonitor : KMonoBehaviour, ISim4000ms {
 		/// <summary>
-		/// The name of the layer used for the reachability scene partitioner.
-		/// </summary>
-		public const string REACHABILITY = nameof(FastReachabilityMonitor);
-
-		/// <summary>
 		/// The last set of extents from which this item was reachable.
 		/// </summary>
 		private Extents lastExtents;
@@ -52,7 +47,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// <summary>
 		/// Registers a scene partitioner entry for nav cells changing.
 		/// </summary>
-		private HandleVector<int>.Handle partitionerEntry;
+		private ThreadsafePartitionerEntry partitionerEntry;
 
 		/// <summary>
 		/// The existing reachability monitor used to check and trigger events.
@@ -62,12 +57,14 @@ namespace PeterHan.FastTrack.SensorPatches {
 		internal FastReachabilityMonitor() {
 			lastExtents = new Extents(int.MinValue, int.MinValue, 1, 1);
 			master = null;
-			partitionerEntry = HandleVector<int>.InvalidHandle;
+			partitionerEntry = null;
 		}
 
 		public override void OnCleanUp() {
-			if (partitionerEntry.IsValid())
-				GameScenePartitioner.Instance.Free(ref partitionerEntry);
+			if (partitionerEntry != null) {
+				partitionerEntry.Dispose();
+				partitionerEntry = null;
+			}
 			if (master != null) {
 				master.Unsubscribe((int)GameHashes.Landed);
 				master.Unsubscribe((int)GameHashes.CellChanged);
@@ -117,25 +114,26 @@ namespace PeterHan.FastTrack.SensorPatches {
 			var inst = FastGroupProber.Instance;
 			if (inst != null && master != null) {
 				int cell = Grid.PosToCell(master.transform.position);
-				var gsp = GameScenePartitioner.Instance;
 				if (Grid.IsValidCell(cell) && cell > 0) {
 					var extents = new Extents(cell, smi.master.GetOffsets(cell));
 					// Only if the extents actually changed
 					if (extents.x != lastExtents.x || extents.y != lastExtents.y || extents.
 							width != lastExtents.width || extents.height != lastExtents.
 							height) {
-						if (partitionerEntry.IsValid())
-							gsp.UpdatePosition(partitionerEntry, extents);
+						if (partitionerEntry != null)
+							partitionerEntry.UpdatePosition(extents);
 						else
-							partitionerEntry = gsp.Add("FastReachabilityMonitor.UpdateOffsets",
-								this, extents, inst.mask, OnReachableChanged);
+							partitionerEntry = inst.Mask.Add(extents, this,
+								OnReachableChanged);
 						inst.Enqueue(smi);
 						lastExtents = extents;
 					}
 				} else if (lastExtents.x >= 0 || lastExtents.y >= 0) {
 					// Payloads and worn items are sometimes moved to (0, 0) or cell -1
-					if (partitionerEntry.IsValid())
-						gsp.Free(ref partitionerEntry);
+					if (partitionerEntry != null) {
+						partitionerEntry.Dispose();
+						partitionerEntry = null;
+					}
 					smi.sm.isReachable.Set(false, smi);
 					lastExtents.x = int.MinValue;
 					lastExtents.y = int.MinValue;

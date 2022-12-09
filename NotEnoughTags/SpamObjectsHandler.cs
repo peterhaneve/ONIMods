@@ -34,7 +34,7 @@ namespace PeterHan.NotEnoughTags {
 
 		[PLibMethod(RunAt.AfterLayerableLoad)]
 		internal static void AddSpamHandler() {
-			KInputHandler.Add(Global.Instance.GetInputManager().GetDefaultController(),
+			KInputHandler.Add(Global.GetInputManager().GetDefaultController(),
 				new SpamObjectsHandler(), 512);
 		}
 

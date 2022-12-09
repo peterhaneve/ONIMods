@@ -313,7 +313,12 @@ namespace ReimaginationTeam.DecorRework {
 			/// Applied after DoPostConfigureComplete runs.
 			/// </summary>
 			internal static void Postfix(GameObject go) {
-				Options?.ApplyToSculpture(go);
+				try {
+					Options?.ApplyToSculpture(go);
+				} catch (MemberAccessException e) {
+					PUtil.LogWarning("Unable to patch Ice Sculptures:");
+					PUtil.LogExcWarn(e);
+				}
 			}
 		}
 
@@ -362,7 +367,12 @@ namespace ReimaginationTeam.DecorRework {
 			/// Applied after DoPostConfigureComplete runs.
 			/// </summary>
 			internal static void Postfix(GameObject go) {
-				Options?.ApplyToSculpture(go);
+				try {
+					Options?.ApplyToSculpture(go);
+				} catch (MemberAccessException e) {
+					PUtil.LogWarning("Unable to patch Marble Sculptures:");
+					PUtil.LogExcWarn(e);
+				}
 			}
 		}
 
@@ -376,7 +386,12 @@ namespace ReimaginationTeam.DecorRework {
 			/// Applied after DoPostConfigureComplete runs.
 			/// </summary>
 			internal static void Postfix(GameObject go) {
-				Options?.ApplyToSculpture(go);
+				try {
+					Options?.ApplyToSculpture(go);
+				} catch (MemberAccessException e) {
+					PUtil.LogWarning("Unable to patch Metal Sculptures:");
+					PUtil.LogExcWarn(e);
+				}
 			}
 		}
 
@@ -415,7 +430,12 @@ namespace ReimaginationTeam.DecorRework {
 			/// Applied after DoPostConfigureComplete runs.
 			/// </summary>
 			internal static void Postfix(GameObject go) {
-				Options?.ApplyToSculpture(go);
+				try {
+					Options?.ApplyToSculpture(go);
+				} catch (MemberAccessException e) {
+					PUtil.LogWarning("Unable to patch Large Sculptures:");
+					PUtil.LogExcWarn(e);
+				}
 			}
 		}
 
@@ -429,7 +449,12 @@ namespace ReimaginationTeam.DecorRework {
 			/// Applied after DoPostConfigureComplete runs.
 			/// </summary>
 			internal static void Postfix(GameObject go) {
-				Options?.ApplyToSculpture(go);
+				try {
+					Options?.ApplyToSculpture(go);
+				} catch (MemberAccessException e) {
+					PUtil.LogWarning("Unable to patch Small Sculptures:");
+					PUtil.LogExcWarn(e);
+				}
 			}
 		}
 

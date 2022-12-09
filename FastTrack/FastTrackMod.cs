@@ -68,8 +68,6 @@ namespace PeterHan.FastTrack {
 				GamePatches.BackgroundRoomProber.Init();
 			if (options.ThreatOvercrowding)
 				CritterPatches.OvercrowdingMonitor_UpdateState_Patch.InitTagBits();
-			if (options.RadiationOpts)
-				GamePatches.FastProtonCollider.Init();
 			if (options.SensorOpts)
 				SensorPatches.SensorPatches.Init();
 			if (options.AnimOpts)
@@ -166,6 +164,8 @@ namespace PeterHan.FastTrack {
 				GamePatches.SolidTransferArmUpdater.DestroyInstance();
 			if (options.PickupOpts || options.FastUpdatePickups)
 				PathPatches.DeferredTriggers.DestroyInstance();
+			if (options.RadiationOpts)
+				GamePatches.FastProtonCollider.Cleanup();
 			if (options.AsyncPathProbe)
 				PathPatches.PathProbeJobManager.DestroyInstance();
 			GamePatches.AchievementPatches.DestroyInstance();
@@ -244,6 +244,8 @@ namespace PeterHan.FastTrack {
 				PathPatches.PathProbeJobManager.CreateInstance();
 			if (options.CachePaths)
 				PathPatches.PathCacher.Init();
+			if (options.FastReachability)
+				SensorPatches.FastGroupProber.Init();
 			if (options.SideScreenOpts) {
 				UIPatches.AdditionalDetailsPanelWrapper.Init();
 				UIPatches.DetailsPanelWrapper.Init();
@@ -251,6 +253,8 @@ namespace PeterHan.FastTrack {
 			}
 			if (options.PickupOpts || options.FastUpdatePickups)
 				PathPatches.DeferredTriggers.CreateInstance();
+			if (options.RadiationOpts)
+				GamePatches.FastProtonCollider.Init();
 			if (inst != null) {
 				var go = inst.gameObject;
 				go.AddOrGet<AsyncJobManager>();

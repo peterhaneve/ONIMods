@@ -28,9 +28,12 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// A faster and thread safe version of KCompactedVector.
 	/// </summary>
 	public sealed class ConcurrentHandleVector<T> : ICollection<T> {
-		public int Count => lookup.Count;
-
+		/// <summary>
+		/// Allows modification of the base collection.
+		/// </summary>
 		public IDictionary<int, T> BackingDictionary => lookup;
+
+		public int Count => lookup.Count;
 
 		public bool IsReadOnly => false;
 
@@ -147,7 +150,21 @@ namespace PeterHan.FastTrack.GamePatches {
 		}
 
 		public bool Remove(T item) {
-			throw new NotImplementedException();
+			bool removed = false;
+			// This is a best effort method, it may go very poorly
+			if (item == null) {
+				// Look for null
+				foreach (var pair in lookup)
+					if (pair.Value == null && (removed = lookup.TryRemove(pair.Key, out _)))
+						break;
+			} else {
+				var ec = EqualityComparer<T>.Default;
+				foreach (var pair in lookup)
+					if (ec.Equals(item, pair.Value) && (removed = lookup.TryRemove(pair.Key,
+							out _)))
+						break;
+			}
+			return removed;
 		}
 
 		/// <summary>

@@ -49,15 +49,19 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// <summary>
 		/// Creates the singleton instance of this class.
 		/// </summary>
-		/// <param name="mask">The scene partitioner layer to use.</param>
-		internal static void Init(ScenePartitionerLayer mask) {
+		internal static void Init() {
 			Cleanup();
-			Instance = new FastGroupProber(mask);
+			Instance = new FastGroupProber();
 		}
 
 		#if DEBUG
 		internal int[] Cells => cells;
 		#endif
+
+		/// <summary>
+		/// The partitioner layer used to handle updates.
+		/// </summary>
+		public ThreadsafePartitionerLayer Mask { get; }
 
 		/// <summary>
 		/// The cells which were added (background thread use only).
@@ -83,12 +87,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// The cells which were marked dirty during path probes.
 		/// </summary>
 		private readonly ConcurrentQueue<int> dirtyCells;
-
-		/// <summary>
-		/// The mask used to trigger changes to the reachable objects layer.
-		/// </summary>
-		internal readonly ScenePartitionerLayer mask;
-
+		
 		/// <summary>
 		/// The cells which were marked dirty during path probes.
 		/// </summary>
@@ -114,13 +113,14 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// </summary>
 		private readonly EventWaitHandle trigger;
 
-		private FastGroupProber(ScenePartitionerLayer mask) {
+		private FastGroupProber() {
 			added = new List<int>(256);
 			alreadyDirty = new HashSet<int>();
 			cells = new int[Grid.CellCount];
 			destroyed = false;
 			dirtyCells = new ConcurrentQueue<int>();
-			this.mask = mask;
+			Mask = new ThreadsafePartitionerLayer("Path Updates", Grid.WidthInCells, Grid.
+				HeightInCells);
 			probers = new ConcurrentDictionary<object, ReachableCells>(2, 64);
 			removed = new HashSet<int>();
 			toDestroy = new Queue<object>(8);
@@ -144,7 +144,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		}
 
 		public void Dispose() {
-			// mask is destroyed by the GameScenePartitioner OnCleanUp
+			Mask.Dispose();
 			toDo.Clear();
 			destroyed = true;
 			trigger.Set();
@@ -296,15 +296,12 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// the queue on the foreground thread.
 		/// </summary>
 		internal void Update() {
-			var gsp = GameScenePartitioner.Instance;
-			if (gsp != null) {
-				// Must trigger scene partitioner updates on the foreground thread
-				var dirtyList = ListPool<int, FastGroupProber>.Allocate();
-				while (dirtyCells.TryDequeue(out int cell))
-					dirtyList.Add(cell);
-				gsp.TriggerEvent(dirtyList, mask, this);
-				dirtyList.Recycle();
-			}
+			// Trigger partitioner updates on the foreground thread
+			var dirtyList = ListPool<int, FastGroupProber>.Allocate();
+			while (dirtyCells.TryDequeue(out int cell))
+				dirtyList.Add(cell);
+			Mask.Trigger(dirtyList, this);
+			dirtyList.Recycle();
 			int n = toDo.Count;
 			if (n > 0 && FastTrackMod.GameRunning) {
 				if (n > MIN_PROCESS)

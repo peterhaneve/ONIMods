@@ -202,9 +202,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 			if (overrideTex == null) {
 				var bg = instance.group;
 				var properties = instance.matProperties;
-				overrideTex = bg.CreateTexture("SymbolOverrideInfoTex", KAnimBatchGroup.
-					GetBestTextureSize(bg.data.maxSymbolFrameInstancesPerbuild * bg.
-					maxGroupSize * SymbolOverrideInfoGpuData.FLOATS_PER_SYMBOL_OVERRIDE_INFO),
+				var size = KAnimBatchGroup.GetBestTextureSize(bg.data.
+					maxSymbolFrameInstancesPerbuild * bg.maxGroupSize *
+					SymbolOverrideInfoGpuData.FLOATS_PER_SYMBOL_OVERRIDE_INFO);
+				overrideTex = bg.CreateTexture("SymbolOverrideInfoTex", size.x, size.y,
 					KAnimBatch.ShaderProperty_symbolOverrideInfoTex, KAnimBatch.
 					ShaderProperty_SYMBOL_OVERRIDE_INFO_TEXTURE_SIZE);
 				overrideTex.SetTextureAndSize(properties);

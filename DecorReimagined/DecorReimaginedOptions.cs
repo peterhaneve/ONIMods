@@ -151,14 +151,14 @@ namespace ReimaginationTeam.DecorRework {
 				var statuses = Db.Get().ArtableStatuses;
 				foreach (var stage in Db.GetArtableStages().GetPrefabStages(obj.PrefabID())) {
 					var artLevel = stage.statusItem;
-					if (artLevel == statuses.Ugly)
+					if (artLevel == statuses.LookingUgly)
 						stage.decor = CrudeArtDecor;
-					else if (artLevel == statuses.Okay)
+					else if (artLevel == statuses.LookingOkay)
 						stage.decor = QuaintArtDecor;
-					else if (artLevel == statuses.Great)
+					else if (artLevel == statuses.LookingGreat)
 						// Good1, Good2, Good3
 						stage.decor = MasterpieceArtDecor;
-					else if (artLevel == statuses.Ready)
+					else if (artLevel == statuses.AwaitingArting)
 						stage.decor = DefaultArtDecor;
 				}
 			}

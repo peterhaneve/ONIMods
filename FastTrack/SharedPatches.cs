@@ -88,34 +88,6 @@ namespace PeterHan.FastTrack {
 	}
 
 	/// <summary>
-	/// Applied to GameScenePartitioner to create a mask for triggering updates.
-	/// 
-	/// XXX: There are only a few mask layers left!
-	/// </summary>
-	[HarmonyPatch(typeof(GameScenePartitioner), nameof(GameScenePartitioner.OnPrefabInit))]
-	public static class GameScenePartitioner_OnPrefabInit_Patch {
-		internal static bool Prepare() {
-			var options = FastTrackOptions.Instance;
-			return options.FastReachability || options.RadiationOpts;
-		}
-
-		/// <summary>
-		/// Applied after OnPrefabInit runs.
-		/// </summary>
-		internal static void Postfix(ScenePartitioner ___partitioner) {
-			var options = FastTrackOptions.Instance;
-			if (___partitioner != null) {
-				if (options.FastReachability)
-					SensorPatches.FastGroupProber.Init(___partitioner.CreateMask(SensorPatches.
-						FastReachabilityMonitor.REACHABILITY));
-				if (options.RadiationOpts)
-					GamePatches.FastProtonCollider.hepLayer = ___partitioner.CreateMask(
-						GamePatches.FastProtonCollider.RADBOLTS);
-			}
-		}
-	}
-
-	/// <summary>
 	/// Applied to Global to start up some expensive things before Game.LateUpdate runs.
 	/// </summary>
 	[HarmonyPatch(typeof(Global), nameof(Global.LateUpdate))]

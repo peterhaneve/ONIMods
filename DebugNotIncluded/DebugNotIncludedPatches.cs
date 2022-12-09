@@ -66,7 +66,7 @@ namespace PeterHan.DebugNotIncluded {
 		[PLibMethod(RunAt.AfterLayerableLoad)]
 		internal static void AfterModsLoad() {
 			// Input manager is not set up until this time
-			KInputHandler.Add(Global.Instance.GetInputManager().GetDefaultController(),
+			KInputHandler.Add(Global.GetInputManager().GetDefaultController(),
 				new UISnapshotHandler(), 1024);
 		}
 
