@@ -277,11 +277,10 @@ namespace PeterHan.ModUpdateDate {
 				if (ours != null)
 					ourDate = new System.DateTime(ours.LastUpdated, DateTimeKind.Utc);
 				// Allow some time for download delays etc
-				if (!string.IsNullOrEmpty(status.FilesystemVersion))
-					updated = ModStatus.UnpackFailed;
-				else if (reportedDate.AddMinutes(SteamVersionChecker.UPDATE_JITTER) >=
+				if (reportedDate.AddMinutes(SteamVersionChecker.UPDATE_JITTER) >=
 						steamDate)
-					updated = ModStatus.UpToDate;
+					updated = string.IsNullOrEmpty(status.FilesystemVersion) ? ModStatus.
+						UpToDate : ModStatus.UnpackFailed;
 				else if (ourDate.AddMinutes(SteamVersionChecker.UPDATE_JITTER) >= steamDate) {
 					localDate = ourDate;
 					updated = ModStatus.UpToDateLocal;

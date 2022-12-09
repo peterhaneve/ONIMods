@@ -68,7 +68,7 @@ namespace PeterHan.ToastControl {
 		private static ICollection<string> TargetsLong => new List<string>() {
 			"BaseUtilityBuildTool:BuildPath", // 2 hits
 			"BuildTool:PostProcessBuild", // >= 534889
-			"BuildTool:TryBuild", // < 534889
+			"BuildTool:TryBuild", // TODO < 534889
 			"CaptureTool:MarkForCapture",
 			"CopyBuildingSettings:ApplyCopy",
 			"DebugHandler:SpawnMinion",
