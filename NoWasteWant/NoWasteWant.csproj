@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Waste Not, Want Not</AssemblyTitle>
-    <FileVersion>1.3.0.0</FileVersion>
+    <FileVersion>1.4.0.0</FileVersion>
     <RootNamespace>PeterHan.NoWasteWant</RootNamespace>
     <Description>Encourages Duplicants to eat older food and adds other tools for managing food storage.</Description>
     <AssemblyVersion>1.1.0.0</AssemblyVersion>

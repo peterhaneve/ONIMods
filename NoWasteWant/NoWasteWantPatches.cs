@@ -34,7 +34,9 @@ namespace PeterHan.NoWasteWant {
 	/// Patches which will be applied via annotations for Waste Not, Want Not.
 	/// </summary>
 	public sealed class NoWasteWantPatches : KMod.UserMod2 {
-		private static TagBits EDIBLE_BITS;
+		private static readonly Tag[] EDIBLE_BITS = {
+			GameTags.CookingIngredient, GameTags.Edible
+		};
 
 		/// <summary>
 		/// The maximum mass of food in kilograms that will rot.
@@ -63,14 +65,7 @@ namespace PeterHan.NoWasteWant {
 		public static void AddFreshnessControl(GameObject go) {
 			go.AddOrGet<FreshnessControl>();
 		}
-
-		[PLibMethod(RunAt.AfterDbInit)]
-		internal static void AfterDbInit() {
-			// For compatibility with Not Enough Tags
-			EDIBLE_BITS.SetTag(GameTags.CookingIngredient);
-			EDIBLE_BITS.SetTag(GameTags.Edible);
-		}
-
+		
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
@@ -133,16 +128,22 @@ namespace PeterHan.NoWasteWant {
 		/// Applied to FetchManager to ban fetching stale items to refrigerators.
 		/// </summary>
 		[HarmonyPatch]
-		public static class FetchManager_IsFetchablePickup_Patch {
+		public static class FetchManager_IsFetchablePickupExclude_Patch {
 			// Why can we not use byref types in attributes...
-			internal static MethodBase TargetMethod() {
+			internal static IEnumerable<MethodBase> TargetMethods() {
 				var refTagBits = typeof(TagBits).MakeByRefType();
-				var newMethod = typeof(FetchManager).GetMethodSafe("IsFetchablePickup_Exclude",
+				var excMethod = typeof(FetchManager).GetMethodSafe("IsFetchablePickup_Exclude",
 					true, typeof(KPrefabID), typeof(Storage), typeof(float),
 					typeof(HashSet<Tag>), typeof(Tag), typeof(Storage));
-				return newMethod ?? typeof(FetchManager).GetMethodSafe(nameof(FetchManager.
+				if (excMethod != null)
+					yield return excMethod;
+				// TODO Remove when versions prior to U44-535211 no longer need to be supported
+				// and convert the other one to an attribute patch
+				var oldMethod = typeof(FetchManager).GetMethodSafe(nameof(FetchManager.
 					IsFetchablePickup), true, typeof(KPrefabID), typeof(Storage),
 					typeof(float), refTagBits, refTagBits, refTagBits, typeof(Storage));
+				if (oldMethod != null)
+					yield return oldMethod;
 			}
 
 			/// <summary>
@@ -151,11 +152,41 @@ namespace PeterHan.NoWasteWant {
 			internal static void Postfix(KPrefabID pickup_id, Storage destination,
 					ref bool __result) {
 				if (__result && pickup_id != null && destination != null && pickup_id.
-						HasAnyTags(ref EDIBLE_BITS)) {
-					var freshness = destination.gameObject.GetComponentSafe<FreshnessControl>();
-					if (freshness != null)
-						__result = freshness.IsAcceptable(pickup_id.gameObject);
-				}
+						HasAnyTags(EDIBLE_BITS) && destination.TryGetComponent(
+						out FreshnessControl freshness))
+					__result = freshness.IsAcceptable(pickup_id.gameObject);
+			}
+		}
+
+		/// <summary>
+		/// Applied to FetchManager to ban fetching stale items to refrigerators.
+		/// </summary>
+		[HarmonyPatch]
+		public static class FetchManager_IsFetchablePickup_Patch {
+			/// <summary>
+			/// The target method to patch.
+			/// </summary>
+			private static readonly MethodBase TARGET = typeof(FetchManager).GetMethodSafe(
+				nameof(FetchManager.IsFetchablePickup), true, typeof(Pickupable),
+				typeof(FetchChore), typeof(Storage));
+
+			internal static bool Prepare() {
+				return TARGET != null;
+			}
+
+			internal static MethodBase TargetMethod() {
+				return TARGET;
+			}
+
+			/// <summary>
+			/// Applied after IsFetchablePickup runs.
+			/// </summary>
+			internal static void Postfix(Pickupable pickup, Storage destination,
+					ref bool __result) {
+				if (__result && pickup != null && destination != null && pickup.
+						KPrefabID.HasAnyTags(EDIBLE_BITS) && destination.TryGetComponent(
+						out FreshnessControl freshness))
+					__result = freshness.IsAcceptable(pickup.gameObject);
 			}
 		}
 

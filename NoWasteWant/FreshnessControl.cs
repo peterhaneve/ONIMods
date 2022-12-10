@@ -27,9 +27,7 @@ namespace PeterHan.NoWasteWant {
 	[SerializationConfig(MemberSerialization.OptIn)]
 	public class FreshnessControl : KMonoBehaviour, ISim4000ms, ISingleSliderControl {
 		public float MinFreshness {
-			get {
-				return minFreshness;
-			}
+			get => minFreshness;
 			set {
 				minFreshness = value;
 				DropStaleItems();
@@ -61,15 +59,12 @@ namespace PeterHan.NoWasteWant {
 		public void DropStaleItems() {
 			if (storage != null && minFreshness > 0.0f) {
 				var toDrop = ListPool<GameObject, FreshnessControl>.Allocate();
-				try {
-					foreach (var item in storage.items)
-						if (item != null && !IsAcceptable(item))
-							toDrop.Add(item);
-					foreach (var item in toDrop)
-						storage.Drop(item, false);
-				} finally {
-					toDrop.Recycle();
-				}
+				foreach (var item in storage.items)
+					if (item != null && !IsAcceptable(item))
+						toDrop.Add(item);
+				foreach (var item in toDrop)
+					storage.Drop(item, false);
+				toDrop.Recycle();
 			}
 		}
 

@@ -139,9 +139,12 @@ namespace PeterHan.SandboxTools {
 						settings.InstantBuild))) {
 					if (__instance.PrefabID == MassiveHeatSinkConfig.ID) {
 						// Special case the AETN to iron (it uses niobium otherwise)
-						selected_elements.Clear();
-						selected_elements.Add(ElementLoader.FindElementByHash(SimHashes.Iron).
-							tag);
+						var iron = ElementLoader.FindElementByHash(SimHashes.Iron).tag;
+						if (selected_elements.Count == 1 && selected_elements[0] != iron &&
+								!selected_elements.IsReadOnly) {
+							selected_elements.Clear();
+							selected_elements.Add(iron);
+						}
 					} else if (selected_elements.Count > 0) {
 						// Lower temperature to at least the element's melt point - 1 K
 						var pe = ElementLoader.GetElement(selected_elements[0]);
