@@ -503,29 +503,31 @@ namespace PeterHan.FastTrack.UIPatches {
 			var kb = GameInputMapping.KeyBindings;
 			var lookup = HOTKEY_LOOKUP;
 			var steamGamepad = KInputManager.steamInputInterpreter;
-			int n = kb.Length;
-			bool isGamepad = KInputManager.currentControllerIsGamepad;
-			// Precompute the modifier strings
-			var modText = MODIFERS;
-			modText[0] = GameUtil.GetKeycodeLocalized(KKeyCode.LeftAlt).ToUpper();
-			modText[1] = GameUtil.GetKeycodeLocalized(KKeyCode.LeftControl).ToUpper();
-			modText[2] = GameUtil.GetKeycodeLocalized(KKeyCode.LeftShift).ToUpper();
-			modText[3] = GameUtil.GetKeycodeLocalized(KKeyCode.CapsLock).ToUpper();
-			modText[4] = GameUtil.GetKeycodeLocalized(KKeyCode.BackQuote).ToUpper();
-			for (int i = 0; i < n; i++) {
-				ref var binding = ref kb[i];
-				var action = binding.mAction;
-				// Only perform on entries with a matching key binding
-				actionBuffer.Clear().Append("<b><color=#F44A4A>");
-				if (isGamepad)
-					actionBuffer.Append(steamGamepad.GetActionGlyph(action));
-				else {
-					actionBuffer.Append('[');
-					GetActionString(ref binding, actionBuffer);
-					actionBuffer.Append(']');
+			if (kb != null) {
+				int n = kb.Length;
+				bool isGamepad = KInputManager.currentControllerIsGamepad;
+				// Precompute the modifier strings
+				var modText = MODIFERS;
+				modText[0] = GameUtil.GetKeycodeLocalized(KKeyCode.LeftAlt).ToUpper();
+				modText[1] = GameUtil.GetKeycodeLocalized(KKeyCode.LeftControl).ToUpper();
+				modText[2] = GameUtil.GetKeycodeLocalized(KKeyCode.LeftShift).ToUpper();
+				modText[3] = GameUtil.GetKeycodeLocalized(KKeyCode.CapsLock).ToUpper();
+				modText[4] = GameUtil.GetKeycodeLocalized(KKeyCode.BackQuote).ToUpper();
+				for (int i = 0; i < n; i++) {
+					ref var binding = ref kb[i];
+					var action = binding.mAction;
+					// Only perform on entries with a matching key binding
+					actionBuffer.Clear().Append("<b><color=#F44A4A>");
+					if (isGamepad)
+						actionBuffer.Append(steamGamepad.GetActionGlyph(action));
+					else {
+						actionBuffer.Append('[');
+						GetActionString(ref binding, actionBuffer);
+						actionBuffer.Append(']');
+					}
+					lookup[action.ToString()] = actionBuffer.Append("</b></color>").
+						ToString();
 				}
-				lookup[action.ToString()] = actionBuffer.Append("</b></color>").
-					ToString();
 			}
 		}
 

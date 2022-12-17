@@ -107,6 +107,69 @@ namespace PeterHan.TurnBackTheClock {
 		public bool MD471618_Traits { get; set; } = false;
 		#endregion
 
+		#region MD509629
+		/// <summary>
+		/// Disables buildings introduced in Fast Friends.
+		/// </summary>
+		[Option("Disable Buildings", "Disables these buildings: Clothing Refashionator.\nRemoves Primo Garb from Care Packages.", "MD-509629: Fast Friends")]
+		[JsonProperty]
+		public bool MD509629_DisableBuildings { get; set; } = false;
+
+		/// <summary>
+		/// Disables critter morphs introduced in Fast Friends.
+		/// </summary>
+		[Option("Disable Critter Morphs", "Disables these critters: Cuddle Pip, Delecta Vole, Sanishell, Oakshell.", "MD-509629: Fast Friends")]
+		[JsonProperty]
+		public bool MD509629_DisableCreatures { get; set; } = false;
+
+		/// <summary>
+		/// Disables Duplicants introduced in Fast Friends (and their stress/joy reactions).
+		/// </summary>
+		[Option("Disable Duplicants", "Disables these Duplicants: Amari, Pei, Quinn, Steve.", "MD-509629: Fast Friends")]
+		[JsonProperty]
+		public bool MD509629_DisableDuplicants { get; set; } = false;
+		
+		/// <summary>
+		/// Disables the recipe for Curried Beans.
+		/// </summary>
+		[Option("Disable Food", "Disables these items: Curried Beans.", "MD-509629: Fast Friends")]
+		[JsonProperty]
+		public bool MD509629_DisableFood { get; set; } = false;
+		#endregion
+
+		#region MD525812
+		/// <summary>
+		/// Disables buildings introduced in Sweet Dreams.
+		/// </summary>
+		[Option("Disable Buildings", "Disables these buildings: Spice Grinder, Somnium Synthesizer, Critter Flux-O-Matic.\nDisables the Kitchen room as it can no longer be created.", "MD-525812: Sweet Dreams")]
+		[JsonProperty]
+		public bool MD525812_DisableBuildings { get; set; } = false;
+
+		/// <summary>
+		/// Disables all story traits, both from this update and later ones.
+		/// </summary>
+		[Option("Disable Story Traits", "Disables ALL story traits.", "MD-525812: Sweet Dreams")]
+		[JsonProperty]
+		public bool MD525812_DisableStoryTraits { get; set; } = false;
+
+		#if false
+		/// <summary>
+		/// Removes refined metals from Plug Slug diets.
+		/// </summary>
+		[Option("Plug Slug Diet", "Plug Slugs will no longer be able to eat Refined Metals.", "MD-525812: Sweet Dreams")]
+		[JsonProperty]
+		public bool MD525812_SlugDiet { get; set; } = false;
+
+		/// <summary>
+		/// Makes plug slugs drown again and prevent new sponge or smog slugs from morphing
+		/// (Existing ones will function normally).
+		/// </summary>
+		[Option("Plug Slugs Drown", "Disable Smog Slugs and Sponge Slugs from morphing, and allow Plug Slugs to drown.", "MD-525812: Sweet Dreams")]
+		[JsonProperty]
+		public bool MD525812_SlugsDrown { get; set; } = false;
+		#endif
+		#endregion
+
 		public TurnBackTheClockOptions() { }
 	}
 }
