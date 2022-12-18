@@ -18,6 +18,7 @@
 
 using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Core;
+using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -27,6 +28,12 @@ namespace PeterHan.ShowRange {
 	/// Shows the range which must be clear for the Space Scanner.
 	/// </summary>
 	internal sealed class SpaceScannerVisualizer : ColoredRangeVisualizer {
+		/// <summary>
+		/// Pattern was changed from asymmetrical and 253 light to symmetrical and 1 light in
+		/// this version.
+		/// </summary>
+		public const uint PATTERN_CHANGED_VERSION = 534889U;
+
 		/// <summary>
 		/// The color used on tiles when the scanner is blocked.
 		/// </summary>
@@ -38,23 +45,32 @@ namespace PeterHan.ShowRange {
 		private static readonly Color INTERFERE_TINT = Color.red;
 
 		/// <summary>
+		/// Reflects the private field for detector radius on space scanners.
+		/// </summary>
+		private static readonly IDetouredField<CometDetector.Instance, int> RADIUS_FIELD =
+			PDetours.DetourFieldLazy<CometDetector.Instance, int>("INTERFERENCE_RADIUS");
+
+		/// <summary>
 		/// Creates a new space scanner visualizer.
 		/// </summary>
 		/// <param name="template">The parent game object.</param>
 		public static void Create(GameObject template) {
-			var prefabID = template.GetComponentSafe<KPrefabID>();
-			if (prefabID != null)
-				prefabID.instantiateFn += (obj) => obj.AddComponent<SpaceScannerVisualizer>();
+			if (template.TryGetComponent(out KPrefabID prefabID))
+				prefabID.instantiateFn += (obj) => obj.AddOrGet<SpaceScannerVisualizer>();
 		}
 
 		/// <summary>
 		/// Reports whether sunlight is blocked from the given cell.
 		/// </summary>
 		/// <param name="cell">The cell to check.</param>
-		/// <returns>true if sunlight cannot shine fully on that cell, or false otherwise.</returns>
+		/// <returns>true if sunlight cannot shine on that cell, or false otherwise.</returns>
 		internal static bool IsSunBlocked(int cell) {
-			return Grid.ExposedToSunlight[cell] < Sim.ClearSkyGridValue || Grid.Element[cell]?.
-				IsSolid != false;
+			Element element;
+			int exposed = Grid.ExposedToSunlight[cell];
+			// TODO Remove when versions less than 534889 no longer need to be supported
+			return (PUtil.GameVersion < PATTERN_CHANGED_VERSION ? exposed < Sim.
+				ClearSkyGridValue || (element = Grid.Element[cell]) == null || element.
+				IsSolid : exposed < 1);
 		}
 
 		/// <summary>
@@ -70,20 +86,24 @@ namespace PeterHan.ShowRange {
 			base.OnSpawn();
 			// Update the radius from CometDetector, but it is private :(
 			try {
-				interferenceRadius = (int)PPatchTools.GetFieldSafe(typeof(CometDetector.
-					Instance), "INTERFERENCE_RADIUS", true).GetValue(null);
+				interferenceRadius = RADIUS_FIELD.Get(null);
 			} catch (Exception) {
 				PUtil.LogWarning("Unable to determine space scanner radius, using default");
 			}
 		}
 
 		protected override void VisualizeCells(ICollection<VisCellData> newCells) {
-			var basePos = gameObject.transform.GetPosition();
+			var go = gameObject;
+			var basePos = go.transform.GetPosition();
 			int baseCell = Grid.PosToCell(basePos);
 			if (Grid.IsValidCell(baseCell)) {
+				// TODO Remove when versions less than 534889 no longer need to be supported
+				int min = -interferenceRadius, max = interferenceRadius - 1;
+				if (PUtil.GameVersion >= PATTERN_CHANGED_VERSION)
+					max += 2;
 				// Currently scanners cannot be rotated in game, but maybe rotate everything
 				// will allow it?
-				for (int x = -interferenceRadius; x < interferenceRadius - 1; x++)
+				for (int x = min; x < max; x++)
 					for (int y = Math.Abs(x); y <= interferenceRadius; y++) {
 						int cell = RotateOffsetCell(baseCell, new CellOffset(x, y + 1));
 						if (Grid.IsValidCell(cell))
@@ -94,29 +114,24 @@ namespace PeterHan.ShowRange {
 				var extents = new Extents(baseCell, interferenceRadius);
 				var machinery = ListPool<ScenePartitionerEntry, SpaceScannerVisualizer>.
 					Allocate();
-				try {
-					Vector2 delta2 = default;
-					// Use the partitioner instead of iterating each cell, more efficient
-					GameScenePartitioner.Instance.GatherEntries(extents, GameScenePartitioner.
-						Instance.industrialBuildings, machinery);
-					foreach (var entry in machinery) {
-						var machineObj = (GameObject)entry.obj;
-						if (machineObj != null && machineObj != gameObject) {
-							// Machinery factor is actually based on true distance
-							var delta3 = machineObj.transform.GetPosition() - basePos;
-							delta2.x = delta3.x;
-							delta2.y = delta3.y;
-							if (delta2.magnitude < interferenceRadius)
-								// Highlight the offending heavy machinery - when placing, the
-								// interference preview is white since overlay mode dims the
-								// screen and makes red hard to see
-								newCells.Add(new VisCellData(Grid.PosToCell(machineObj),
-									preview == null ? INTERFERE_TINT : Color.white));
-						}
+				float radSq = interferenceRadius * interferenceRadius;
+				// Use the partitioner instead of iterating each cell, more efficient
+				GameScenePartitioner.Instance.GatherEntries(extents, GameScenePartitioner.
+					Instance.industrialBuildings, machinery);
+				foreach (var entry in machinery)
+					if (entry.obj is GameObject machineObj && machineObj != null &&
+							machineObj != go) {
+						// Machinery factor is actually based on true distance
+						var delta3 = machineObj.transform.GetPosition() - basePos;
+						float x = delta3.x, y = delta3.y;
+						if ((x * x + y * y) < radSq)
+							// Highlight the offending heavy machinery - when placing, the
+							// interference preview is white since overlay mode dims the
+							// screen and makes red hard to see
+							newCells.Add(new VisCellData(Grid.PosToCell(machineObj),
+								preview == null ? INTERFERE_TINT : Color.white));
 					}
-				} finally {
-					machinery.Recycle();
-				}
+				machinery.Recycle();
 			}
 		}
 	}

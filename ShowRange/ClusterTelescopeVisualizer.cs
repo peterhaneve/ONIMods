@@ -36,9 +36,8 @@ namespace PeterHan.ShowRange {
 		/// </summary>
 		/// <param name="template">The parent game object.</param>
 		public static void Create(GameObject template) {
-			var prefabID = template.GetComponentSafe<KPrefabID>();
-			if (prefabID != null)
-				prefabID.instantiateFn += (obj) => obj.AddComponent<ClusterTelescopeVisualizer>();
+			if (template.TryGetComponent(out KPrefabID prefabID))
+				prefabID.instantiateFn += (obj) => obj.AddOrGet<ClusterTelescopeVisualizer>();
 		}
 
 		/// <summary>

@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
 
@@ -88,8 +89,38 @@ namespace PeterHan.TurnBackTheClock {
 
 			internal static void Postfix() {
 				var recipes = ComplexRecipeManager.Get().recipes;
-				recipes.RemoveAll((recipe) => recipe.id.Contains(GourmetCookingStationConfig.ID) &&
-					recipe.id.EndsWith(CurryConfig.ID));
+				recipes.RemoveAll((recipe) => recipe.id.Contains(GourmetCookingStationConfig.
+					ID) && recipe.id.EndsWith(CurryConfig.ID));
+			}
+		}
+		
+		/// <summary>
+		/// Applied to Immigration to remove care packages of Primo Garb.
+		/// </summary>
+		[HarmonyPatch]
+		public static class Immigration_ConfigureCarePackages_Patch {
+			internal static bool Prepare() => TurnBackTheClockOptions.Instance.
+				MD509629_DisableBuildings;
+
+			internal static IEnumerable<System.Reflection.MethodBase> TargetMethods() {
+				yield return typeof(Immigration).GetMethodSafe("ConfigureBaseGameCarePackages",
+					false, PPatchTools.AnyArguments);
+				yield return typeof(Immigration).GetMethodSafe(
+					"ConfigureMultiWorldCarePackages", false, PPatchTools.AnyArguments);
+			}
+
+			internal static void Postfix(ref CarePackageInfo[] ___carePackages) {
+				var packages = ___carePackages;
+				if (packages != null) {
+					int n = packages.Length;
+					var newPackages = new List<CarePackageInfo>(n);
+					for (int i = 0; i < n; i++) {
+						var package = packages[i];
+						if (package != null && package.id != CustomClothingConfig.ID)
+							newPackages.Add(package);
+					}
+					___carePackages = newPackages.ToArray();
+				}
 			}
 		}
 

@@ -39,8 +39,9 @@ namespace PeterHan.TurnBackTheClock {
 		}
 
 		[PLibMethod(RunAt.AfterDbInit)]
-		internal static void AfterDbInit() {
+		internal static void AfterDbInit(Harmony harmony) {
 			MD471618.AfterDbInit();
+			MD525812.AfterDbInit(harmony);
 		}
 
 		public override void OnLoad(Harmony harmony) {

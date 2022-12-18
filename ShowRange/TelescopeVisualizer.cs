@@ -36,9 +36,8 @@ namespace PeterHan.ShowRange {
 		/// </summary>
 		/// <param name="template">The parent game object.</param>
 		public static void Create(GameObject template) {
-			var prefabID = template.GetComponentSafe<KPrefabID>();
-			if (prefabID != null)
-				prefabID.instantiateFn += (obj) => obj.AddComponent<TelescopeVisualizer>();
+			if (template.TryGetComponent(out KPrefabID prefabID))
+				prefabID.instantiateFn += (obj) => obj.AddOrGet<TelescopeVisualizer>();
 		}
 
 		// These components are automatically populated by KMonoBehaviour
@@ -71,10 +70,12 @@ namespace PeterHan.ShowRange {
 			int baseCell = Grid.PosToCell(gameObject), width = Grid.WidthInCells;
 			if (Grid.IsValidCell(baseCell)) {
 				Grid.CellToXY(baseCell, out int startX, out int startY);
+				if (PUtil.GameVersion < SpaceScannerVisualizer.PATTERN_CHANGED_VERSION)
+					startY += 4;
 				// Currently telescopes cannot be rotated in game
 				for (int x = -scanRadius; x <= scanRadius; x++)
 					// Up to height limit
-					for (int y = startY + 4; y < Grid.HeightInCells; y++) {
+					for (int y = startY; y < Grid.HeightInCells; y++) {
 						int newX = startX + x - 1, cell = Grid.XYToCell(newX, y);
 						if (Grid.IsValidCell(cell) && newX >= 0 && newX <= width)
 							newCells.Add(new VisCellData(cell, SpaceScannerVisualizer.

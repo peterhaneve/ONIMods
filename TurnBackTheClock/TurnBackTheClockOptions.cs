@@ -125,7 +125,7 @@ namespace PeterHan.TurnBackTheClock {
 		/// <summary>
 		/// Disables Duplicants introduced in Fast Friends (and their stress/joy reactions).
 		/// </summary>
-		[Option("Disable Duplicants", "Disables these Duplicants: Amari, Pei, Quinn, Steve.", "MD-509629: Fast Friends")]
+		[Option("Disable Duplicants", "Disables these Duplicants: Amari, Pei, Quinn, Steve.\n<b>WARNING: Saves with these Duplicants in them will fail to load!</b>", "MD-509629: Fast Friends")]
 		[JsonProperty]
 		public bool MD509629_DisableDuplicants { get; set; } = false;
 		
@@ -152,7 +152,7 @@ namespace PeterHan.TurnBackTheClock {
 		[JsonProperty]
 		public bool MD525812_DisableStoryTraits { get; set; } = false;
 
-		#if false
+#if false
 		/// <summary>
 		/// Removes refined metals from Plug Slug diets.
 		/// </summary>
@@ -167,7 +167,30 @@ namespace PeterHan.TurnBackTheClock {
 		[Option("Plug Slugs Drown", "Disable Smog Slugs and Sponge Slugs from morphing, and allow Plug Slugs to drown.", "MD-525812: Sweet Dreams")]
 		[JsonProperty]
 		public bool MD525812_SlugsDrown { get; set; } = false;
-		#endif
+#endif
+		#endregion
+
+		#region MD535720
+		/// <summary>
+		/// Disables buildings introduced in Hot Shots.
+		/// </summary>
+		[Option("Disable Buildings", "Disables these buildings: Conduction Panel, Geotuner, Mission Control Station.", "MD-535720: Hot Shots")]
+		[JsonProperty]
+		public bool MD535720_DisableBuildings { get; set; } = false;
+
+		/// <summary>
+		/// Disables rooms introduced in Hot Shots.
+		/// </summary>
+		[Option("Disable Rooms", "Disables the Laboratory and Private Bedroom.", "MD-535720: Hot Shots")]
+		[JsonProperty]
+		public bool MD535720_DisableRooms { get; set; } = false;
+		
+		/// <summary>
+		/// Reverts Drywall to its old values.
+		/// </summary>
+		[Option("Drywall Building", "Restores the old mass and build time of Drywall.", "MD-535720: Hot Shots")]
+		[JsonProperty]
+		public bool MD535720_Drywall { get; set; } = false;
 		#endregion
 
 		public TurnBackTheClockOptions() { }

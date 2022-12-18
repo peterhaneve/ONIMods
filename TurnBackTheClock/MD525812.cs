@@ -20,7 +20,7 @@ using HarmonyLib;
 using Klei.CustomSettings;
 using PeterHan.PLib.Core;
 using System.Collections.Generic;
-
+using UnityEngine;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.TurnBackTheClock {
@@ -28,6 +28,37 @@ namespace PeterHan.TurnBackTheClock {
 	/// Patches for MD-525812: Sweet Dreams.
 	/// </summary>
 	internal static class MD525812 {
+		/// <summary>
+		/// Runs after the Db is initialized.
+		/// </summary>
+		/// <param name="harmony">The Harmony instance to patch.</param>
+		internal static void AfterDbInit(Harmony harmony) {
+			if (TurnBackTheClockOptions.Instance.MD525812_DisableBuildings) {
+				harmony.Patch(typeof(SpiceGrinderConfig), nameof(IBuildingConfig.
+					CreateBuildingDef), postfix: new HarmonyMethod(typeof(MD525812),
+					nameof(DisableSpiceGrinder)));
+				harmony.Patch(typeof(SpiceGrinderConfig), nameof(IBuildingConfig.
+					DoPostConfigureComplete), postfix: new HarmonyMethod(typeof(MD525812),
+					nameof(FixSpiceGrinderRoom)));
+			}
+		}
+
+		/// <summary>
+		/// Applied to SpiceGrinderConfig to disable it when MD-525812 buildings are turned
+		/// off.
+		/// </summary>
+		private static void DisableSpiceGrinder(BuildingDef __result) {
+			__result.Deprecated = true;
+		}
+
+		/// <summary>
+		/// Applied to SpiceGrinderConfig to remove references to the kitchen room.
+		/// </summary>
+		private static void FixSpiceGrinderRoom(GameObject go) {
+			if (go.TryGetComponent(out RoomTracker tracker))
+				Object.Destroy(tracker);
+		}
+
 		// No plug slugs in vanilla, duh
 		#if false
 		/// <summary>
@@ -107,34 +138,6 @@ namespace PeterHan.TurnBackTheClock {
 			}
 		}
 
-		/// <summary>
-		/// Applied to GravitasCreatureManipulatorConfig to disable it when MD-525812 buildings are
-		/// turned off.
-		/// </summary>
-		[HarmonyPatch(typeof(GravitasCreatureManipulatorConfig), nameof(IBuildingConfig.
-			CreateBuildingDef))]
-		public static class GravitasCreatureManipulatorConfig_CreateBuildingDef_Patch {
-			internal static bool Prepare() => TurnBackTheClockOptions.Instance.
-				MD525812_DisableBuildings;
-
-			internal static void Postfix(BuildingDef __result) {
-				__result.Deprecated = true;
-			}
-		}
-
-		/// <summary>
-		/// Applied to MegaBrainTankConfig to disable it when MD-525812 buildings are turned off.
-		/// </summary>
-		[HarmonyPatch(typeof(MegaBrainTankConfig), nameof(IBuildingConfig.CreateBuildingDef))]
-		public static class MegaBrainTankConfig_CreateBuildingDef_Patch {
-			internal static bool Prepare() => TurnBackTheClockOptions.Instance.
-				MD525812_DisableBuildings;
-
-			internal static void Postfix(BuildingDef __result) {
-				__result.Deprecated = true;
-			}
-		}
-
 		#if false
 		/// <summary>
 		/// Applied to ModifierSet to make Plug Slugs unable to morph (thus disabling
@@ -165,20 +168,6 @@ namespace PeterHan.TurnBackTheClock {
 
 			internal static void Postfix(Database.RoomTypes __instance) {
 				__instance.Remove(__instance.Kitchen);
-			}
-		}
-
-		/// <summary>
-		/// Applied to SpiceGrinderConfig to disable it when MD-525812 buildings are turned
-		/// off.
-		/// </summary>
-		[HarmonyPatch(typeof(SpiceGrinderConfig), nameof(IBuildingConfig.CreateBuildingDef))]
-		public static class SpiceGrinderConfig_CreateBuildingDef_Patch {
-			internal static bool Prepare() => TurnBackTheClockOptions.Instance.
-				MD525812_DisableBuildings;
-
-			internal static void Postfix(BuildingDef __result) {
-				__result.Deprecated = true;
 			}
 		}
 
