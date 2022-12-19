@@ -44,24 +44,21 @@ namespace PeterHan.QueueForSinks {
 		private bool CheckForOtherScrubber(bool dir) {
 			GameObject scrubber = gameObject, nScrub;
 			bool stop = true;
-			int cell, offset = 3;
-			var def = scrubber.GetComponentSafe<Building>()?.Def;
-			if (def != null)
-				offset = def.WidthInCells;
+			int cell;
 			if (scrubber != null && Grid.IsValidCell(cell = Grid.PosToCell(scrubber))) {
+				int offset = 3;
+				if (scrubber.TryGetComponent(out Building building))
+					offset = building.Def.WidthInCells;
 				cell = Grid.OffsetCell(cell, new CellOffset(dir ? offset : -offset, 0));
-				// Is cell valid?
 				if (Grid.IsValidBuildingCell(cell) && (nScrub = Grid.Objects[cell,
 						buildingLayer]) != null) {
-					var nextScrubber = nScrub.GetComponent<ScrubberCheckpoint>();
-					var op = nScrub.GetComponent<Operational>();
-					var dc = nScrub.GetComponent<DirectionControl>();
 					// Must be immediately next to this one, same type, and working
-					stop = scrubber.PrefabID() != nScrub.PrefabID() || op == null || !op.
-						IsOperational || dc == null || dc.allowedDirection != direction.
+					stop = scrubber.PrefabID() != nScrub.PrefabID() || !nScrub.TryGetComponent(
+						out Operational op) || !op.IsOperational || !nScrub.TryGetComponent(
+						out DirectionControl dc) || dc.allowedDirection != direction.
 						allowedDirection;
-					if (!stop && nextScrubber != null && nextScrubber.inUse && nScrub !=
-							scrubber)
+					if (!stop && nScrub.TryGetComponent(out ScrubberCheckpoint nextScrubber) &&
+							nextScrubber.inUse && nScrub != scrubber)
 						// Check that scrubber for a suitable destination
 						stop = nextScrubber.CheckForOtherScrubber(dir);
 				}
@@ -70,18 +67,16 @@ namespace PeterHan.QueueForSinks {
 		}
 
 		protected override bool MustStop(GameObject reactor, float direction) {
-			var storage = reactor.GetComponent<Storage>();
 			bool stop = false;
-			if (storage != null)
+			if (reactor.TryGetComponent(out Storage storage))
 				// Search all items, blacklist food, require a disease
-				foreach (var item in storage.items) {
-					var element = item.GetComponentSafe<PrimaryElement>();
-					if (element != null && element.DiseaseIdx != Klei.SimUtil.DiseaseInfo.
-							Invalid.idx && !item.HasTag(GameTags.Edible)) {
+				foreach (var item in storage.items)
+					if (item.TryGetComponent(out PrimaryElement element) && element.
+							DiseaseIdx != Klei.SimUtil.DiseaseInfo.Invalid.idx && !item.
+							HasTag(GameTags.Edible)) {
 						stop = true;
 						break;
 					}
-				}
 			return stop && CheckForOtherScrubber(direction > 0.0f); 
 		}
 	}

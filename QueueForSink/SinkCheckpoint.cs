@@ -33,9 +33,6 @@ namespace PeterHan.QueueForSinks {
 #pragma warning disable IDE0044 // Add readonly modifier
 		[MyCmpReq]
 		private HandSanitizer handSanitizer;
-
-		[MyCmpGet]
-		private Operational operational;
 #pragma warning restore IDE0044
 #pragma warning restore CS0649
 
@@ -54,23 +51,21 @@ namespace PeterHan.QueueForSinks {
 		private bool CheckForOtherSink(bool dir) {
 			GameObject sink = gameObject, nSink;
 			bool stop = true;
-			int cell, offset = 2;
-			var def = sink.GetComponentSafe<Building>()?.Def;
-			if (def != null)
-				offset = def.WidthInCells;
+			int cell;
 			if (sink != null && Grid.IsValidCell(cell = Grid.PosToCell(sink))) {
+				int offset = 2;
+				if (sink.TryGetComponent(out Building building))
+					offset = building.Def.WidthInCells;
 				cell = Grid.OffsetCell(cell, new CellOffset(dir ? offset : -offset, 0));
-				// Is cell valid?
 				if (Grid.IsValidBuildingCell(cell) && (nSink = Grid.Objects[cell,
 						buildingLayer]) != null) {
-					var nextSink = nSink.GetComponent<SinkCheckpoint>();
-					var op = nSink.GetComponent<Operational>();
-					var dc = nSink.GetComponent<DirectionControl>();
 					// Must be immediately next to this one, same type, and working
-					stop = sink.PrefabID() != nSink.PrefabID() || op == null || !op.
-						IsOperational || dc == null || dc.allowedDirection != direction.
+					stop = sink.PrefabID() != nSink.PrefabID() || !nSink.TryGetComponent(
+						out Operational op) || !op.IsOperational || !nSink.TryGetComponent(
+						out DirectionControl dc) || dc.allowedDirection != direction.
 						allowedDirection;
-					if (!stop && nextSink != null && nextSink.inUse && nSink != sink)
+					if (!stop && nSink.TryGetComponent(out SinkCheckpoint nextSink) &&
+							nextSink.inUse && nSink != sink)
 						// Check that sink for a suitable destination
 						stop = nextSink.CheckForOtherSink(dir);
 				}
@@ -84,12 +79,11 @@ namespace PeterHan.QueueForSinks {
 		/// <param name="dupe">The Duplicant which is passing by.</param>
 		/// <returns>true if they should use the sink, or false otherwise.</returns>
 		private bool NeedsToUse(GameObject dupe) {
-			var element = dupe.GetComponent<PrimaryElement>();
 			// CanSanitizeSuit still exists, but is unused!!!
 			// If always use, can use
 			// Otherwise, use if primary element has a disease
-			return handSanitizer.alwaysUse || (element != null && element.DiseaseIdx !=
-				Klei.SimUtil.DiseaseInfo.Invalid.idx);
+			return handSanitizer.alwaysUse || (dupe.TryGetComponent(out PrimaryElement
+				element) && element.DiseaseIdx != Klei.SimUtil.DiseaseInfo.Invalid.idx);
 		}
 
 		protected override bool MustStop(GameObject reactor, float direction) {

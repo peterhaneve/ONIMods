@@ -96,8 +96,7 @@ namespace PeterHan.QueueForSinks {
 		protected override void OnSpawn() {
 			base.OnSpawn();
 			// Using MyCmpReq on generics was crashing
-			workable = gameObject.GetComponent<T>();
-			if (workable != null)
+			if (gameObject.TryGetComponent(out workable))
 				workable.OnWorkableEventCB += HandleWorkableAction;
 			CreateNewReactable();
 		}
@@ -133,16 +132,17 @@ namespace PeterHan.QueueForSinks {
 			protected override void InternalBegin() {
 				reactorNavigator = reactor.GetComponent<Navigator>();
 				// Animation to make them stand impatiently in line
-				var controller = reactor.GetComponent<KBatchedAnimController>();
-				controller.AddAnimOverrides(distractedAnim, 1f);
-				controller.Play("idle_pre");
-				controller.Queue("idle_default", KAnim.PlayMode.Loop);
+				if (reactor.TryGetComponent(out KBatchedAnimController controller)) {
+					controller.AddAnimOverrides(distractedAnim, 1f);
+					controller.Play("idle_pre");
+					controller.Queue("idle_default", KAnim.PlayMode.Loop);
+				}
 				checkpoint.CreateNewReactable();
 			}
 
 			public override bool InternalCanBegin(GameObject newReactor, Navigator.
 					ActiveTransition transition) {
-				bool disposed = checkpoint?.workable == null;
+				bool disposed = checkpoint == null || checkpoint.workable == null;
 				if (disposed)
 					Cleanup();
 				bool canBegin = !disposed && reactor == null;
@@ -156,8 +156,9 @@ namespace PeterHan.QueueForSinks {
 			}
 
 			protected override void InternalEnd() {
-				reactor?.GetComponent<KBatchedAnimController>().RemoveAnimOverrides(
-					distractedAnim);
+				if (reactor != null && reactor.TryGetComponent(out KBatchedAnimController
+						controller))
+					controller.RemoveAnimOverrides(distractedAnim);
 			}
 
 			/// <summary>
@@ -168,13 +169,13 @@ namespace PeterHan.QueueForSinks {
 			/// <returns>true if they must wait, or false if they may pass.</returns>
 			private bool MustStop(GameObject dupe, float x) {
 				var dir = checkpoint.direction.allowedDirection;
-				// Allow suffocating Duplicants to pass
-				var suff = (dupe == null) ? null : dupe.GetSMI<SuffocationMonitor.Instance>();
+				SuffocationMonitor.Instance suff;
 				// Left is decreasing X, must be facing the correct direction
-				return (dir == WorkableReactable.AllowedDirection.Any ||
-					(dir == WorkableReactable.AllowedDirection.Left) == (x < 0.0f)) &&
-					checkpoint.workable.GetWorker() != null && dupe != null && checkpoint.
-					MustStop(dupe, x) && (suff == null || !suff.IsSuffocating());
+				return (dir == WorkableReactable.AllowedDirection.Any || (dir ==
+					WorkableReactable.AllowedDirection.Left) == (x < 0.0f)) && checkpoint.
+					workable.GetWorker() != null && dupe != null && checkpoint.MustStop(dupe,
+					x) && ((suff = dupe.GetSMI<SuffocationMonitor.Instance>()) == null ||
+					!suff.IsSuffocating());
 			}
 
 			public override void Update(float dt) {
@@ -184,8 +185,12 @@ namespace PeterHan.QueueForSinks {
 				else {
 					reactorNavigator.AdvancePath(false);
 					if (!reactorNavigator.path.IsValid() || !MustStop(reactor,
-							reactorNavigator.GetNextTransition().x))
+							reactorNavigator.GetNextTransition().x)) {
+						var smi = reactor.GetSMI<ReactionMonitor.Instance>();
+						if (smi != null)
+							smi.ClearLastReaction();
 						Cleanup();
+					}
 				}
 			}
 		}
