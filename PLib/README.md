@@ -111,6 +111,8 @@ If a property is of type `LocText`, no matter what it returns, the text in `disp
 If a property is of a user-defined type, PLib will check the public properties of that type -- if any of them have `Option` attributes, the property will be rendered as its own category with each of the inner options grouped inside.
 If a valid localization string key name is used for `displaytext` (such as `STRINGS.YOURMOD.OPTIONS.YOUROPTION`), the localized value of that string from the strings database is used as the display text.
 
+To support types not in the predefined list, the `[DynamicOption(Type)]` attribute can be added to specify the type of an `IOptionsEntry` handler class that can display the specified type.
+
 #### Categories
 
 The optional third parameter of `Option` allows setting a custom category for the option to group related options together.
