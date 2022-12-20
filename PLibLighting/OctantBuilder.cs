@@ -17,6 +17,7 @@
  */
 
 using PeterHan.PLib.Core;
+using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 
@@ -41,9 +42,7 @@ namespace PeterHan.PLib.Lighting {
 
 		static OctantBuilder() {
 			// Cache the method for faster execution
-			OCTANT_SCAN = typeof(DiscreteShadowCaster).CreateStaticDelegate<ScanOctantFunc>(
-				"ScanOctant", typeof(Vector2I), typeof(int), typeof(int), typeof(Octant),
-				typeof(double), typeof(double), typeof(List<int>));
+			OCTANT_SCAN = typeof(DiscreteShadowCaster).Detour<ScanOctantFunc>("ScanOctant");
 			if (OCTANT_SCAN == null)
 				PLightManager.LogLightingWarning("OctantBuilder cannot find default octant scanner!");
 		}

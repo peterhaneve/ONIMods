@@ -82,10 +82,10 @@ namespace PeterHan.PLib.Lighting {
 				ref IntHandle liquidPart) {
 			bool handled = false;
 			var shape = instance.shape;
-			int rad = Mathf.CeilToInt(instance.Range);
+			int rad = Mathf.CeilToInt(instance.Range), cell;
 			// Avoid interfering with vanilla lights
-			if (shape != LightShape.Cone && shape != LightShape.Circle && ORIGIN.Get(instance)
-					is int cell && rad > 0 && Grid.IsValidCell(cell)) {
+			if (shape != LightShape.Cone && shape != LightShape.Circle && rad > 0 &&
+					Grid.IsValidCell(cell = ORIGIN.Get(instance))) {
 				var origin = Grid.CellToXY(cell);
 				var extents = new Extents(origin.x - rad, origin.y - rad, 2 * rad, 2 * rad);
 				// Better safe than sorry, check whole possible radius

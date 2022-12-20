@@ -62,7 +62,7 @@ namespace PeterHan.PLib.Lighting {
 			KleiLightShape = ls;
 			if (!PPatchTools.TryGetPropertyValue(other, nameof(ILightShape.Identifier),
 					out string id) || id == null)
-				throw new ArgumentException("Light shape is missing KleiLightShape");
+				throw new ArgumentException("Light shape is missing Identifier");
 			Identifier = id;
 			if (!PPatchTools.TryGetPropertyValue(other, nameof(ILightShape.RayMode),
 					out LightShape rm))

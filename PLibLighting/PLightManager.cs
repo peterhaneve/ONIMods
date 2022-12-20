@@ -134,7 +134,7 @@ namespace PeterHan.PLib.Lighting {
 		/// </summary>
 		public PLightManager() {
 			// Needs to be thread safe!
-			brightCache = new ConcurrentDictionary<LightGridEmitter, CacheEntry>(128, 2);
+			brightCache = new ConcurrentDictionary<LightGridEmitter, CacheEntry>(2, 128);
 			CallingObject = null;
 			shapes = new List<ILightShape>(16);
 		}
