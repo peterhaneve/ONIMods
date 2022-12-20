@@ -39,9 +39,9 @@ namespace PeterHan.PLib.UI {
 		/// <param name="fireListener">true to fire the on select listener, or false otherwise.</param>
 		public static void SetSelectedItem(GameObject realized, IListableOption option,
 				bool fireListener = false) {
-			if (option != null && realized != null)
-				realized.GetComponent<PComboBoxComponent>()?.SetSelectedItem(option,
-					fireListener);
+			if (option != null && realized != null && realized.TryGetComponent(
+					out PComboBoxComponent component))
+				component.SetSelectedItem(option, fireListener);
 		}
 
 		/// <summary>

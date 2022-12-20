@@ -458,18 +458,17 @@ namespace PeterHan.PLib.Buildings {
 					conduitDispenser.elementFilter = null;
 				}
 			}
-			if (IndustrialMachine)
-				go.GetComponent<KPrefabID>()?.AddTag(RoomConstraints.ConstraintTags.
-					IndustrialMachinery, false);
+			if (IndustrialMachine && go.TryGetComponent(out KPrefabID id))
+				id.AddTag(RoomConstraints.ConstraintTags.IndustrialMachinery, false);
 			if (PowerInput != null)
 				go.AddOrGet<EnergyConsumer>();
 			if (PowerOutput != null)
 				go.AddOrGet<EnergyGenerator>();
 			// Set a default priority
-			if (DefaultPriority != null) {
+			if (DefaultPriority != null && go.TryGetComponent(out Prioritizable pr)) {
 				Prioritizable.AddRef(go);
-				go.GetComponent<Prioritizable>().SetMasterPriority(new PrioritySetting(
-					PriorityScreen.PriorityClass.basic, DefaultPriority ?? 5));
+				pr.SetMasterPriority(new PrioritySetting(PriorityScreen.PriorityClass.basic,
+					DefaultPriority ?? 5));
 			}
 		}
 

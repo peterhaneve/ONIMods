@@ -510,22 +510,25 @@ namespace PeterHan.PLib.UI {
 				bool found = false;
 				for (int i = 0; i < n; i++) {
 					var screen = screens[i];
-					var contents = UIDetours.SS_PREFAB.Get(screen)?.GetComponentsInChildren<
-						SideScreenContent>();
-					if (contents == null || contents.Length < 1)
-						// Some naughty mod added a prefab with no side screen content!
-						LogUIWarning("Could not find SideScreenContent on side screen: " +
-							screen.name);
-					else if (contents[0].GetType().FullName == targetClassName) {
-						// Once the first matching screen is found, perform insertion
-						if (insertBefore)
-							screens.Insert(i, newScreen);
-						else if (i >= n - 1)
-							screens.Add(newScreen);
-						else
-							screens.Insert(i + 1, newScreen);
-						found = true;
-						break;
+					var sideScreenPrefab = UIDetours.SS_PREFAB.Get(screen);
+					if (sideScreenPrefab != null) {
+						var contents = sideScreenPrefab.
+							GetComponentsInChildren<SideScreenContent>();
+						if (contents == null || contents.Length < 1)
+							// Some naughty mod added a prefab with no side screen content!
+							LogUIWarning("Could not find SideScreenContent on side screen: " +
+								screen.name);
+						else if (contents[0].GetType().FullName == targetClassName) {
+							// Once the first matching screen is found, perform insertion
+							if (insertBefore)
+								screens.Insert(i, newScreen);
+							else if (i >= n - 1)
+								screens.Add(newScreen);
+							else
+								screens.Insert(i + 1, newScreen);
+							found = true;
+							break;
+						}
 					}
 				}
 				// Warn if no match found
@@ -723,15 +726,14 @@ namespace PeterHan.PLib.UI {
 		public static GameObject SetFlexUISize(this GameObject uiElement, Vector2 flexSize) {
 			if (uiElement == null)
 				throw new ArgumentNullException(nameof(uiElement));
-			var fs = uiElement.GetComponent<ISettableFlexSize>();
-			if (fs == null) {
-				var le = uiElement.AddOrGet<LayoutElement>();
-				le.flexibleWidth = flexSize.x;
-				le.flexibleHeight = flexSize.y;
-			} else {
+			if (uiElement.TryGetComponent(out ISettableFlexSize fs)) {
 				// Avoid duplicate LayoutElement on layouts
 				fs.flexibleWidth = flexSize.x;
 				fs.flexibleHeight = flexSize.y;
+			} else {
+				var le = uiElement.AddOrGet<LayoutElement>();
+				le.flexibleWidth = flexSize.x;
+				le.flexibleHeight = flexSize.y;
 			}
 			return uiElement;
 		}

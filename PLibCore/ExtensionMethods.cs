@@ -126,10 +126,9 @@ namespace PeterHan.PLib.Core {
 		/// <param name="obj">The object to check.</param>
 		/// <returns>true if it is falling, or false otherwise.</returns>
 		public static bool IsFalling(this GameObject obj) {
-			var navigator = obj.GetComponent<Navigator>();
 			int cell = Grid.PosToCell(obj);
-			return navigator != null && !navigator.IsMoving() && Grid.
-				IsValidCell(cell) && Grid.IsValidCell(Grid.CellBelow(cell)) &&
+			return obj.TryGetComponent(out Navigator navigator) && !navigator.IsMoving() &&
+				Grid.IsValidCell(cell) && Grid.IsValidCell(Grid.CellBelow(cell)) &&
 				!navigator.NavGrid.NavTable.IsValid(cell, navigator.CurrentNavType);
 		}
 
@@ -157,7 +156,7 @@ namespace PeterHan.PLib.Core {
 		/// <param name="building">The building component to check.</param>
 		/// <returns>true if it is usable (enabled, not broken, not overheated), or false otherwise.</returns>
 		public static bool IsUsable(this GameObject building) {
-			return building.GetComponent<Operational>()?.IsFunctional ?? false;
+			return building.TryGetComponent(out Operational op) && op.IsFunctional;
 		}
 
 		/// <summary>

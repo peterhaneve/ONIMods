@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.Core;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -44,8 +43,8 @@ namespace PeterHan.PLib.UI.Layouts {
 		/// </summary>
 		/// <param name="component">The component to cleanse.</param>
 		internal static void DestroyAndReplaceLayout(GameObject component) {
-			var layoutGroup = component.GetComponentSafe<AbstractLayoutGroup>();
-			if (layoutGroup != null) {
+			if (component != null && component.TryGetComponent(out AbstractLayoutGroup
+					layoutGroup)) {
 				var replacement = component.AddOrGet<LayoutElement>();
 				replacement.flexibleHeight = layoutGroup.flexibleHeight;
 				replacement.flexibleWidth = layoutGroup.flexibleWidth;

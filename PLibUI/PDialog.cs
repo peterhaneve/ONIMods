@@ -325,8 +325,7 @@ namespace PeterHan.PLib.UI {
 		/// Builds and shows this dialog.
 		/// </summary>
 		public void Show() {
-			var screen = Build().GetComponent<KScreen>();
-			if (screen != null)
+			if (Build().TryGetComponent(out KScreen screen))
 				UIDetours.ACTIVATE_KSCREEN.Invoke(screen);
 		}
 

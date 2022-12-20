@@ -85,8 +85,9 @@ namespace PeterHan.PLib.Options {
 		/// Updates the displayed value.
 		/// </summary>
 		private void Update() {
-			var field = textField?.GetComponentInChildren<TMP_InputField>();
-			if (field != null)
+			TMP_InputField field;
+			if (textField != null && (field = textField.
+					GetComponentInChildren<TMP_InputField>()) != null)
 				field.text = value;
 		}
 	}

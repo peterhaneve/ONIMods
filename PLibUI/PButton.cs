@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -57,8 +56,7 @@ namespace PeterHan.PLib.UI {
 		/// <param name="obj">The realized button object.</param>
 		/// <param name="enabled">true to make it enabled, or false to make it disabled (greyed out).</param>
 		public static void SetButtonEnabled(GameObject obj, bool enabled) {
-			var button = obj.GetComponentSafe<KButton>();
-			if (button != null)
+			if (obj != null && obj.TryGetComponent(out KButton button))
 				UIDetours.IS_INTERACTABLE.Set(button, enabled);
 		}
 

@@ -54,7 +54,7 @@ namespace PeterHan.PLib.UI {
 		public static string GetText(GameObject textField) {
 			if (textField == null)
 				throw new ArgumentNullException(nameof(textField));
-			return textField.GetComponent<TMP_InputField>()?.text;
+			return textField.TryGetComponent(out TMP_InputField field) ? field.text : "";
 		}
 
 		/// <summary>

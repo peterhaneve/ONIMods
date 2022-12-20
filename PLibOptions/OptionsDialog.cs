@@ -421,8 +421,8 @@ namespace PeterHan.PLib.Options {
 			// Manually build the dialog so the options can be updated after realization
 			var obj = pDialog.Build();
 			UpdateOptions();
-			dialog = obj.GetComponent<KScreen>();
-			dialog.Activate();
+			if (obj.TryGetComponent(out dialog))
+				dialog.Activate();
 		}
 
 		/// <summary>

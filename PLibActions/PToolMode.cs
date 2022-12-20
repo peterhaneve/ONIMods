@@ -62,13 +62,12 @@ namespace PeterHan.PLib.Actions {
 			var interfaceTools = ListPool<InterfaceTool, PlayerController>.Allocate();
 			interfaceTools.AddRange(controller.tools);
 			var newTool = new UnityEngine.GameObject(typeof(T).Name);
-			newTool.AddComponent<T>();
+			var tool = newTool.AddComponent<T>();
 			// Reparent tool to the player controller, then enable/disable to load it
 			newTool.transform.SetParent(controller.gameObject.transform);
 			newTool.gameObject.SetActive(true);
 			newTool.gameObject.SetActive(false);
-			// Add tool to tool list
-			interfaceTools.Add(newTool.GetComponent<InterfaceTool>());
+			interfaceTools.Add(tool);
 			controller.tools = interfaceTools.ToArray();
 			interfaceTools.Recycle();
 		}

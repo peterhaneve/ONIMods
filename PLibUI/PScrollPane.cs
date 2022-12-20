@@ -351,8 +351,7 @@ namespace PeterHan.PLib.UI {
 			/// </summary>
 			private void UpdateComponents() {
 				var obj = gameObject;
-				ScrollRect sr;
-				if (obj != null && (sr = obj.GetComponent<ScrollRect>()) != null) {
+				if (obj != null && obj.TryGetComponent(out ScrollRect sr)) {
 					child = sr.content?.gameObject;
 					viewport = sr.viewport?.gameObject;
 				} else

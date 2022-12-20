@@ -20,7 +20,6 @@ using PeterHan.PLib.UI;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using ClipperLib;
 using UnityEngine;
 
 using OptionsList = System.Collections.Generic.ICollection<PeterHan.PLib.Options.IOptionsEntry>;
@@ -98,6 +97,73 @@ namespace PeterHan.PLib.Options {
 			parent.AddChild(presenter, new GridComponentSpec(row, 1) {
 				Alignment = TextAnchor.MiddleRight, Margin = CONTROL_MARGIN
 			});
+		}
+
+		/// <summary>
+		/// Creates a dynamic options entry.
+		/// </summary>
+		/// <param name="prop">The property to be created.</param>
+		/// <param name="handler">The type which can handle the property.</param>
+		/// <returns>The created entry, or null if no entry could be created.</returns>
+		private static IOptionsEntry CreateDynamicOption(PropertyInfo prop, Type handler) {
+			IOptionsEntry result = null;
+			var constructors = handler.GetConstructors(BindingFlags.Public | BindingFlags.
+				Instance);
+			string name = prop.Name;
+			int n = constructors.Length;
+			for (int i = 0; i < n && result == null; i++)
+				try {
+					if (ExecuteConstructor(prop, constructors[i]) is IOptionsEntry entry)
+						result = entry;
+				} catch (TargetInvocationException e) {
+					PUtil.LogError("Unable to create option handler for property " +
+						name + ":");
+					PUtil.LogException(e.GetBaseException());
+				} catch (MemberAccessException) {
+					// Should never happen, filtered to public and instance
+				} catch (AmbiguousMatchException) {
+				} catch (TypeLoadException e) {
+					PUtil.LogError("Unable to instantiate option handler for property " +
+						name + ":");
+					PUtil.LogException(e.GetBaseException());
+				}
+			if (result == null)
+				PUtil.LogWarning("Unable to create option handler for property " +
+					name + ", it must have a public constructor");
+			return result;
+		}
+
+		/// <summary>
+		/// Runs a dynamic option constructor.
+		/// </summary>
+		/// <param name="prop">The property to be created.</param>
+		/// <param name="cons">The constructor to run.</param>
+		/// <returns>The constructed dynamic option.</returns>
+		private static object ExecuteConstructor(PropertyInfo prop, ConstructorInfo cons) {
+			object result;
+			var parameters = cons.GetParameters();
+			int p = parameters.Length;
+			if (p == 0)
+				// Public default
+				result = cons.Invoke(null);
+			else {
+				var values = new object[p];
+				for (int j = 0; j < p; j++) {
+					var targetType = parameters[j].ParameterType;
+					// Custom attribute
+					if (typeof(Attribute).IsAssignableFrom(targetType))
+						values[j] = prop.GetCustomAttribute(targetType);
+					else if (targetType == typeof(IOptionSpec))
+						values[j] = prop.GetCustomAttribute<OptionAttribute>();
+					else if (targetType == typeof(string))
+						values[j] = prop.Name;
+					else
+						PUtil.LogWarning("DynamicOption cannot handle constructor parameter of type " +
+							targetType.FullName);
+				}
+				result = cons.Invoke(values);
+			}
+			return result;
 		}
 
 		/// <summary>
@@ -194,18 +260,8 @@ namespace PeterHan.PLib.Options {
 						prop.DeclaringType)
 					result = CompositeOptionsEntry.Create(spec, prop, depth);
 			} else if (attribute is DynamicOptionAttribute doa &&
-					typeof(IOptionsEntry).IsAssignableFrom(doa.Handler)) {
-				try {
-					result = Activator.CreateInstance(doa.Handler) as IOptionsEntry;
-				} catch (TargetInvocationException e) {
-					PUtil.LogError("Unable to create option handler for property " +
-						prop.Name + ":");
-					PUtil.LogException(e.GetBaseException() ?? e);
-				} catch (MissingMethodException) {
-					PUtil.LogWarning("Unable to create option handler for property " +
-						prop.Name + ", it must have a public default constructor");
-				}
-			}
+					typeof(IOptionsEntry).IsAssignableFrom(doa.Handler))
+				result = CreateDynamicOption(prop, doa.Handler);
 			return result;
 		}
 

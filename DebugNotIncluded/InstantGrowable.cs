@@ -35,6 +35,9 @@ namespace PeterHan.DebugNotIncluded {
 
 #pragma warning disable CS0649
 #pragma warning disable IDE0044
+		[MyCmpGet]
+		private Effects effects;
+
 		// This field is automatically populated by KMonoBehaviour
 		[MyCmpGet]
 		private Growing growing;
@@ -73,7 +76,6 @@ namespace PeterHan.DebugNotIncluded {
 			} else if (wildMonitor != null) {
 				var wildness = Db.Get().Amounts.Wildness.Lookup(gameObject);
 				if (wildness != null) {
-					var effects = GetComponent<Effects>();
 					wildness.SetValue(wildness.GetMin());
 					// Remove "wild" effect which slowly increases wildness
 					if (effects != null && effects.HasEffect(wildMonitor.wildEffect))

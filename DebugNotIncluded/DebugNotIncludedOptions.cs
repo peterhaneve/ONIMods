@@ -17,8 +17,10 @@
  */
 
 using Newtonsoft.Json;
+using PeterHan.PLib;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
+using System.Collections.Generic;
 
 namespace PeterHan.DebugNotIncluded {
 	/// <summary>

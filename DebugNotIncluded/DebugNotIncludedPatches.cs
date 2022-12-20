@@ -78,7 +78,8 @@ namespace PeterHan.DebugNotIncluded {
 			foreach (var displayedMod in (System.Collections.IEnumerable)___displayedMods)
 				ModDialogs.ConfigureRowInstance(displayedMod, __instance);
 #if ALL_MODS_CHECKBOX
-			__instance.GetComponent<AllModsHandler>()?.UpdateCheckedState();
+			if (__instance.TryGetComponent(out AllModsHandler handler))
+				handler.UpdateCheckedState();
 #endif
 		}
 
@@ -160,7 +161,7 @@ namespace PeterHan.DebugNotIncluded {
 			harmony.ProfileMethod(typeof(SaveLoader).GetMethodSafe("Load", false, typeof(
 				IReader)));
 			harmony.ProfileMethod(typeof(SaveLoader).GetMethodSafe("Save", false, typeof(
-				BinaryWriter)));
+				System.IO.BinaryWriter)));
 			harmony.ProfileMethod(typeof(SaveManager).GetMethodSafe("Load", false,
 				PPatchTools.AnyArguments));
 			harmony.ProfileMethod(typeof(SaveManager).GetMethodSafe("Save", false,
@@ -556,7 +557,8 @@ namespace PeterHan.DebugNotIncluded {
 		/// Applied after OnToggleClicked runs.
 		/// </summary>
 		internal static void Postfix(ModsScreen __instance) {
-			__instance?.GetComponent<AllModsHandler>()?.UpdateCheckedState();
+			if (__instance != null && __instance.TryGetComponent(out AllModsHandler handler))
+				handler.UpdateCheckedState();
 		}
 	}
 #endif

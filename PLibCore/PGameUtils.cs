@@ -29,11 +29,9 @@ namespace PeterHan.PLib.Core {
 		/// </summary>
 		/// <param name="entity">The entity to center and focus.</param>
 		public static void CenterAndSelect(KMonoBehaviour entity) {
-			if (entity != null) {
-				Transform transform = entity.transform;
-				SelectTool.Instance.SelectAndFocus(transform.transform.GetPosition(),
-					transform.GetComponent<KSelectable>(), Vector3.zero);
-			}
+			if (entity != null && entity.TryGetComponent(out KSelectable select))
+				SelectTool.Instance.SelectAndFocus(entity.transform.position, select, Vector3.
+					zero);
 		}
 
 		/// <summary>
@@ -122,9 +120,8 @@ namespace PeterHan.PLib.Core {
 		/// <param name="entity">The entity to highlight.</param>
 		/// <param name="highlightColor">The color to highlight it.</param>
 		public static void HighlightEntity(Component entity, Color highlightColor) {
-			var component = entity?.GetComponent<KAnimControllerBase>();
-			if (component != null)
-				component.HighlightColour = highlightColor;
+			if (entity != null && entity.TryGetComponent(out KAnimControllerBase kbac))
+				kbac.HighlightColour = highlightColor;
 		}
 
 		/// <summary>

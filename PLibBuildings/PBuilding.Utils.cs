@@ -18,7 +18,6 @@
 
 using PeterHan.PLib.Core;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 
 namespace PeterHan.PLib.Buildings {
@@ -36,17 +35,13 @@ namespace PeterHan.PLib.Buildings {
 		/// </summary>
 		/// <param name="go">The game object to configure.</param>
 		private static void ApplyAlwaysOperational(GameObject go) {
-			Component comp;
 			// Remove default components that could make a building non-operational
-			comp = go.GetComponent<BuildingEnabledButton>();
-			if (comp != null)
-				UnityEngine.Object.DestroyImmediate(comp);
-			comp = go.GetComponent<Operational>();
-			if (comp != null)
-				UnityEngine.Object.DestroyImmediate(comp);
-			comp = go.GetComponent<LogicPorts>();
-			if (comp != null)
-				UnityEngine.Object.DestroyImmediate(comp);
+			if (go.TryGetComponent(out BuildingEnabledButton enabled))
+				Object.DestroyImmediate(enabled);
+			if (go.TryGetComponent(out Operational op))
+				Object.DestroyImmediate(op);
+			if (go.TryGetComponent(out LogicPorts lp))
+				Object.DestroyImmediate(lp);
 		}
 
 		/// <summary>

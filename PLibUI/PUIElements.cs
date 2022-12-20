@@ -316,10 +316,12 @@ namespace PeterHan.PLib.UI {
 				parent = PDialog.GetParentObject();
 			var obj = Util.KInstantiateUI(ScreenPrefabs.Instance.ConfirmDialogScreen.
 				gameObject, parent, false);
-			var confirmDialog = obj.GetComponent<ConfirmDialogScreen>();
-			UIDetours.POPUP_CONFIRM.Invoke(confirmDialog, message, onConfirm, onCancel ??
-				DoNothing, null, null, null, confirmText, cancelText);
-			obj.SetActive(true);
+			if (obj.TryGetComponent(out ConfirmDialogScreen confirmDialog)) {
+				UIDetours.POPUP_CONFIRM.Invoke(confirmDialog, message, onConfirm, onCancel ??
+					DoNothing, null, null, null, confirmText, cancelText);
+				obj.SetActive(true);
+			} else
+				confirmDialog = null;
 			return confirmDialog;
 		}
 

@@ -33,8 +33,8 @@ namespace PeterHan.PLib.UI {
 		/// <param name="realized">The realized slider.</param>
 		/// <param name="value">The value to set.</param>
 		public static void SetCurrentValue(GameObject realized, float value) {
-			var slider = realized.GetComponentSafe<KSlider>();
-			if (slider != null && !value.IsNaNOrInfinity())
+			if (realized != null && realized.TryGetComponent(out KSlider slider) && !value.
+					IsNaNOrInfinity())
 				slider.value = value.InRange(slider.minValue, slider.maxValue);
 		}
 

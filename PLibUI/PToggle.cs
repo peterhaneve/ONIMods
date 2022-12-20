@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -36,8 +35,8 @@ namespace PeterHan.PLib.UI {
 		/// <param name="realized">The realized toggle button.</param>
 		/// <returns>The toggle button state.</returns>
 		public static bool GetToggleState(GameObject realized) {
-			var toggle = realized.GetComponentSafe<KToggle>();
-			return toggle != null && UIDetours.IS_ON.Get(toggle);
+			return realized != null && realized.TryGetComponent(out KToggle toggle) &&
+				UIDetours.IS_ON.Get(toggle);
 		}
 
 		/// <summary>
@@ -46,8 +45,7 @@ namespace PeterHan.PLib.UI {
 		/// <param name="realized">The realized toggle button.</param>
 		/// <param name="on">Whether the button should be on or off.</param>
 		public static void SetToggleState(GameObject realized, bool on) {
-			var toggle = realized.GetComponentSafe<KToggle>();
-			if (toggle != null)
+			if (realized != null && realized.TryGetComponent(out KToggle toggle))
 				UIDetours.IS_ON.Set(toggle, on);
 		}
 

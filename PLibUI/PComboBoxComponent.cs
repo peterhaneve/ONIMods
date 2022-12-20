@@ -118,7 +118,6 @@ namespace PeterHan.PLib.UI {
 				float rowHeight = 0.0f;
 				int itemCount = currentItems.Count, rows = Math.Min(MaxRowsShown, itemCount);
 				var canvas = pdn.AddOrGet<Canvas>();
-				var sp = pdn.GetComponent<ScrollRect>();
 				pdn.SetActive(true);
 				// Calculate desired height of scroll pane
 				if (itemCount > 0) {
@@ -129,7 +128,7 @@ namespace PeterHan.PLib.UI {
 				// Update size and enable/disable scrolling if not needed
 				pdn.rectTransform().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,
 					rows * rowHeight);
-				if (sp != null)
+				if (pdn.TryGetComponent(out ScrollRect sp))
 					sp.vertical = itemCount >= MaxRowsShown;
 				// Move above normal UI elements but below the tooltips
 				if (canvas != null) {
@@ -173,11 +172,12 @@ namespace PeterHan.PLib.UI {
 					// Assign the tooltip if possible
 					if (item is ITooltipListableOption extended)
 						tooltip = extended.GetToolTipText();
-					var tt = rowInstance.GetComponent<ToolTip>();
-					if (string.IsNullOrEmpty(tooltip))
-						tt.ClearMultiStringTooltip();
-					else
-						tt.SetSimpleTooltip(tooltip);
+					if (rowInstance.TryGetComponent(out ToolTip tt)) {
+						if (string.IsNullOrEmpty(tooltip))
+							tt.ClearMultiStringTooltip();
+						else
+							tt.SetSimpleTooltip(tooltip);
+					}
 					rowInstance.SetActive(true);
 					currentItems.Add(new ComboBoxItem(item, rowInstance));
 				}

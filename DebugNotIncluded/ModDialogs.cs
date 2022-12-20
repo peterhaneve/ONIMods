@@ -170,15 +170,15 @@ namespace PeterHan.DebugNotIncluded {
 			if (displayedMod == null)
 				throw new ArgumentNullException(nameof(displayedMod));
 			var type = displayedMod.GetType();
+			KButton button;
 			if (!PPatchTools.TryGetFieldValue(displayedMod, "mod_index", out int index))
 				throw new ArgumentException("Unable to get mod index");
 			if (!PPatchTools.TryGetFieldValue(displayedMod, "rect_transform",
 					out Transform transform))
 				throw new ArgumentException("Unable to get rect transform");
-			var refs = transform.gameObject.GetComponentSafe<HierarchyReferences>();
-			KButton button;
 			// "More mod actions"
-			if (refs != null && (button = refs.GetReference<KButton>(REF_MORE)) != null) {
+			if (transform != null && transform.TryGetComponent(out HierarchyReferences refs) &&
+					(button = refs.GetReference<KButton>(REF_MORE)) != null) {
 				var onAction = new ModActionDelegates(button, index, instance.gameObject);
 				button.onClick += onAction.TogglePopup;
 				button.gameObject.AddOrGet<ToolTip>().OnToolTip = onAction.GetDescription;
@@ -396,7 +396,8 @@ namespace PeterHan.DebugNotIncluded {
 			/// Shows or hides the More Mod Actions popup.
 			/// </summary>
 			internal void TogglePopup() {
-				parent.GetComponentSafe<MoreModActions>()?.TogglePopup(button, modIndex);
+				if (parent != null && parent.TryGetComponent(out MoreModActions actions))
+					actions.TogglePopup(button, modIndex);
 			}
 		}
 	}

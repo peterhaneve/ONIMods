@@ -25,6 +25,7 @@ using UnityEngine;
 
 using IntHandle = HandleVector<int>.Handle;
 using LightGridEmitter = LightGridManager.LightGridEmitter;
+using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.PLib.Lighting {
 	/// <summary>
@@ -44,70 +45,22 @@ namespace PeterHan.PLib.Lighting {
 		private static readonly IDetouredField<LightShapePreview, int> PREVIOUS_CELL =
 			PDetours.DetourFieldLazy<LightShapePreview, int>("previousCell");
 
-		/// <summary>
-		/// Applied to LightGridEmitter to unattribute lighting sources.
-		/// </summary>
-		private static void AddToGrid_Postfix() {
-			var lm = PLightManager.Instance;
-			if (lm != null)
-				lm.CallingObject = null;
-		}
-
-		/// <summary>
-		/// Applied to Light2D to properly attribute lighting sources.
-		/// </summary>
-		private static bool AddToScenePartitioner_Prefix(Light2D __instance,
-				ref IntHandle ___solidPartitionerEntry,
-				ref IntHandle ___liquidPartitionerEntry) {
+		private static bool ComputeExtents_Prefix(Light2D __instance, ref Extents __result) {
 			var lm = PLightManager.Instance;
 			bool cont = true;
-			if (lm != null) {
-				// Replace the whole method since the radius could use different algorithms
-				lm.CallingObject = __instance.gameObject;
-				cont = !AddScenePartitioner(__instance, ref ___solidPartitionerEntry,
-					ref ___liquidPartitionerEntry);
+			if (lm != null && __instance != null) {
+				var shape = __instance.shape;
+				int rad = Mathf.CeilToInt(__instance.Range), cell;
+				lm.AddLight(__instance.emitter, __instance.gameObject);
+				if (shape > LightShape.Cone && rad > 0 && Grid.IsValidCell(cell = ORIGIN.Get(
+						__instance))) {
+					Grid.CellToXY(cell, out int x, out int y);
+					// Better safe than sorry, check whole possible radius
+					__result = new Extents(x - rad, y - rad, 2 * rad, 2 * rad);
+					cont = false;
+				}
 			}
 			return cont;
-		}
-
-		/// <summary>
-		/// Replaces the scene partitioner method to register lights for tile changes in
-		/// their active radius.
-		/// </summary>
-		/// <param name="instance">The light to register.</param>
-		/// <param name="solidPart">The solid partitioner registered.</param>
-		/// <param name="liquidPart">The liquid partitioner registered.</param>
-		/// <returns>true if registered, or false if not.</returns>
-		internal static bool AddScenePartitioner(Light2D instance, ref IntHandle solidPart,
-				ref IntHandle liquidPart) {
-			bool handled = false;
-			var shape = instance.shape;
-			int rad = Mathf.CeilToInt(instance.Range), cell;
-			// Avoid interfering with vanilla lights
-			if (shape != LightShape.Cone && shape != LightShape.Circle && rad > 0 &&
-					Grid.IsValidCell(cell = ORIGIN.Get(instance))) {
-				var origin = Grid.CellToXY(cell);
-				var extents = new Extents(origin.x - rad, origin.y - rad, 2 * rad, 2 * rad);
-				// Better safe than sorry, check whole possible radius
-				var gsp = GameScenePartitioner.Instance;
-				solidPart = AddToLayer(instance, extents, gsp.solidChangedLayer);
-				liquidPart = AddToLayer(instance, extents, gsp.liquidChangedLayer);
-				handled = true;
-			}
-			return handled;
-		}
-
-		/// <summary>
-		/// Adds a light's scene change partitioner to a layer.
-		/// </summary>
-		/// <param name="instance">The light to add.</param>
-		/// <param name="extents">The extents that this light occupies.</param>
-		/// <param name="layer">The layer to add it on.</param>
-		/// <returns>A handle to the change partitioner, or InvalidHandle if it could not be
-		/// added.</returns>
-		private static IntHandle AddToLayer(Light2D instance, Extents extents,
-				ScenePartitionerLayer layer) {
-			return ADD_TO_LAYER.Invoke(instance, extents, layer);
 		}
 
 		/// <summary>
@@ -115,15 +68,13 @@ namespace PeterHan.PLib.Lighting {
 		/// </summary>
 		/// <param name="plibInstance">The Harmony instance to use for patching.</param>
 		public static void ApplyPatches(Harmony plibInstance) {
-			// DiscreteShadowCaster
-			plibInstance.Patch(typeof(DiscreteShadowCaster), nameof(DiscreteShadowCaster.
-				GetVisibleCells), prefix: PatchMethod(nameof(GetVisibleCells_Prefix)));
-
 			// Light2D
-			plibInstance.Patch(typeof(Light2D), "AddToScenePartitioner",
-				prefix: PatchMethod(nameof(AddToScenePartitioner_Prefix)));
+			plibInstance.Patch(typeof(Light2D), "ComputeExtents",
+				prefix: PatchMethod(nameof(ComputeExtents_Prefix)));
+			plibInstance.Patch(typeof(Light2D), nameof(Light2D.FullRemove), postfix:
+				PatchMethod(nameof(Light2D_FullRemove_Postfix)));
 			plibInstance.Patch(typeof(Light2D), nameof(Light2D.RefreshShapeAndPosition),
-				postfix: PatchMethod(nameof(RefreshShapeAndPosition_Postfix)));
+				postfix: PatchMethod(nameof(Light2D_RefreshShapeAndPosition_Postfix)));
 
 			// LightBuffer
 			try {
@@ -135,12 +86,8 @@ namespace PeterHan.PLib.Lighting {
 			}
 
 			// LightGridEmitter
-			plibInstance.Patch(typeof(LightGridEmitter), nameof(LightGridEmitter.AddToGrid),
-				postfix: PatchMethod(nameof(AddToGrid_Postfix)));
 			plibInstance.Patch(typeof(LightGridEmitter), "ComputeLux", prefix:
 				PatchMethod(nameof(ComputeLux_Prefix)));
-			plibInstance.Patch(typeof(LightGridEmitter), nameof(LightGridEmitter.
-				RemoveFromGrid), postfix: PatchMethod(nameof(RemoveFromGrid_Postfix)));
 			plibInstance.Patch(typeof(LightGridEmitter), nameof(LightGridEmitter.
 				UpdateLitCells), prefix: PatchMethod(nameof(UpdateLitCells_Prefix)));
 
@@ -169,18 +116,21 @@ namespace PeterHan.PLib.Lighting {
 			return lm == null || !lm.PreviewLight(origin_cell, radius, shape, lux);
 		}
 
-		private static bool GetVisibleCells_Prefix(int cell, List<int> visiblePoints,
-				int range, LightShape shape) {
-			bool exec = true;
+		private static void Light2D_FullRemove_Postfix(Light2D __instance) {
 			var lm = PLightManager.Instance;
-			if (shape != LightShape.Circle && shape != LightShape.Cone && lm != null)
-				// This is not a customer scenario
-				exec = !lm.GetVisibleCells(cell, visiblePoints, range, shape);
-			return exec;
+			if (lm != null && __instance != null)
+				lm.DestroyLight(__instance.emitter);
 		}
 
-		private static IEnumerable<CodeInstruction> LightBuffer_LateUpdate_Transpile(
-				IEnumerable<CodeInstruction> body) {
+		private static void Light2D_RefreshShapeAndPosition_Postfix(Light2D __instance,
+				Light2D.RefreshResult __result) {
+			var lm = PLightManager.Instance;
+			if (lm != null && __instance != null && __result == Light2D.RefreshResult.Updated)
+				lm.AddLight(__instance.emitter, __instance.gameObject);
+		}
+
+		private static TranspiledMethod LightBuffer_LateUpdate_Transpile(
+				TranspiledMethod body) {
 			var target = typeof(Light2D).GetPropertySafe<LightShape>(nameof(Light2D.shape),
 				false)?.GetGetMethod(true);
 			return (target == null) ? body : PPatchTools.ReplaceMethodCallSafe(body, target,
@@ -190,14 +140,15 @@ namespace PeterHan.PLib.Lighting {
 
 		private static void LightShapePreview_Update_Prefix(LightShapePreview __instance) {
 			var lm = PLightManager.Instance;
-			if (lm != null)
-				lm.CallingObject = __instance.gameObject;
+			// Pass the preview object into LightGridManager
+			if (lm != null && __instance != null)
+				lm.PreviewObject = __instance.gameObject;
 		}
 
 		private static void OrientVisualizer_Postfix(Rotatable __instance) {
-			var preview = __instance.gameObject.GetComponentSafe<LightShapePreview>();
 			// Force regeneration on next Update()
-			if (preview != null)
+			if (__instance != null && __instance.TryGetComponent(out LightShapePreview
+					preview))
 				PREVIOUS_CELL.Set(preview, -1);
 		}
 
@@ -208,16 +159,6 @@ namespace PeterHan.PLib.Lighting {
 		/// <returns>A reference to that method as a HarmonyMethod for patching.</returns>
 		private static HarmonyMethod PatchMethod(string name) {
 			return new HarmonyMethod(typeof(LightingPatches), name);
-		}
-
-		private static void RefreshShapeAndPosition_Postfix(Light2D __instance) {
-			var lm = PLightManager.Instance;
-			if (lm != null)
-				lm.CallingObject = __instance.gameObject;
-		}
-
-		private static void RemoveFromGrid_Postfix(LightGridEmitter __instance) {
-			PLightManager.Instance?.DestroyLight(__instance);
 		}
 
 		private static bool UpdateLitCells_Prefix(LightGridEmitter __instance,

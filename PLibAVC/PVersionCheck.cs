@@ -146,14 +146,13 @@ namespace PeterHan.PLib.AVC {
 			var rowInstance = type.GetFieldSafe("rect_transform", false)?.GetValue(
 				modEntry) as RectTransform;
 			var mods = Global.Instance.modManager?.mods;
-			if (rowInstance != null && mods != null && index >= 0 && index < mods.Count) {
+			string id;
+			if (rowInstance != null && mods != null && index >= 0 && index < mods.Count &&
+					!string.IsNullOrEmpty(id = mods[index]?.staticID) && rowInstance.
+					TryGetComponent(out HierarchyReferences hr) && results.TryGetValue(id,
+					out ModVersionCheckResults data) && data != null)
 				// Version text is thankfully known, even if other mods have added buttons
-				var hr = rowInstance.gameObject.GetComponentSafe<HierarchyReferences>();
-				string id = mods[index]?.staticID;
-				if (!string.IsNullOrEmpty(id) && hr != null && results.TryGetValue(id, out
-						ModVersionCheckResults data) && data != null)
-					AddWarningIfOutdated(data, hr.GetReference<LocText>("Version"));
-			}
+				AddWarningIfOutdated(data, hr.GetReference<LocText>("Version"));
 		}
 
 		/// <summary>

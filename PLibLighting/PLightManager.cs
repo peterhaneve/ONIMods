@@ -112,17 +112,18 @@ namespace PeterHan.PLib.Lighting {
 			Debug.LogWarningFormat("[PLibLighting] {0}", message);
 		}
 
-		/// <summary>
-		/// The game object which last requested lighting calculations.
-		/// </summary>
-		internal GameObject CallingObject { get; set; }
-
 		public override Version Version => VERSION;
 
 		/// <summary>
 		/// The light brightness set by the last lighting brightness request.
 		/// </summary>
 		private readonly ConcurrentDictionary<LightGridEmitter, CacheEntry> brightCache;
+
+		/// <summary>
+		/// The last object that requested a preview. Only one preview can be requested at a
+		/// time, so no need for thread safety.
+		/// </summary>
+		internal GameObject PreviewObject { get; set; }
 
 		/// <summary>
 		/// The lighting shapes available, all in this mod's namespace.
@@ -135,8 +136,23 @@ namespace PeterHan.PLib.Lighting {
 		public PLightManager() {
 			// Needs to be thread safe!
 			brightCache = new ConcurrentDictionary<LightGridEmitter, CacheEntry>(2, 128);
-			CallingObject = null;
+			PreviewObject = null;
 			shapes = new List<ILightShape>(16);
+		}
+
+		/// <summary>
+		/// Adds a light to the lookup table.
+		/// </summary>
+		/// <param name="source">The source of the light.</param>
+		/// <param name="owner">The light's owning game object.</param>
+		internal void AddLight(LightGridEmitter source, GameObject owner) {
+			if (owner == null)
+				throw new ArgumentNullException(nameof(owner));
+			if (source == null)
+				throw new ArgumentNullException(nameof(source));
+			// The default equality comparer will be used; since each Light2D is supposed
+			// to have exactly one LightGridEmitter, this should be fine
+			brightCache.TryAdd(source, new CacheEntry(owner));
 		}
 
 		public override void Bootstrap(Harmony plibInstance) {
@@ -213,37 +229,6 @@ namespace PeterHan.PLib.Lighting {
 			return shape;
 		}
 
-		/// <summary>
-		/// Handles a lighting system call for visible cells. Not used by the normal game as
-		/// all methods that could reach this call should be patched - exists as a fallback.
-		/// </summary>
-		/// <param name="cell">The origin cell.</param>
-		/// <param name="visiblePoints">The location where lit points will be stored.</param>
-		/// <param name="range">The light radius.</param>
-		/// <param name="shape">The light shape.</param>
-		/// <returns>true if the lighting was handled, or false otherwise.</returns>
-		internal bool GetVisibleCells(int cell, IList<int> visiblePoints, int range,
-				LightShape shape) {
-			int index = shape - LightShape.Cone - 1;
-			ILightShape ps;
-			bool handled = false;
-			if (index >= 0 && index < shapes.Count && (ps = shapes[index]) != null) {
-				// Do what we can, this only is reachable through methods we have patched
-				var lux = DictionaryPool<int, float, PLightManager>.Allocate();
-#if DEBUG
-				LogLightingWarning("Unpatched call to GetVisibleCells; use LightGridEmitter." +
-					"UpdateLitCells instead.");
-#endif
-				ps.FillLight(new LightingArgs(CallingObject, cell, range, lux));
-				// Intensity does not matter
-				foreach (var point in lux)
-					visiblePoints.Add(point.Key);
-				lux.Recycle();
-				handled = true;
-			}
-			return handled;
-		}
-
 		public override void Initialize(Harmony plibInstance) {
 			Instance = this;
 
@@ -269,27 +254,25 @@ namespace PeterHan.PLib.Lighting {
 		/// <returns>true if the lighting was handled, or false otherwise.</returns>
 		internal bool PreviewLight(int origin, float radius, LightShape shape, int lux) {
 			bool handled = false;
-			if (shape != LightShape.Circle && shape != LightShape.Cone) {
+			var owner = PreviewObject;
+			int index = shape - LightShape.Cone - 1;
+			if (index >= 0 && index < shapes.Count && owner != null) {
 				var cells = DictionaryPool<int, float, PLightManager>.Allocate();
-				// Replicate the logic of the original one...
-				int index = shape - LightShape.Cone - 1;
-				if (index < shapes.Count) {
-					// Found handler!
-					shapes[index]?.FillLight(new LightingArgs(CallingObject, origin,
-						(int)radius, cells));
-					foreach (var pair in cells) {
-						int cell = pair.Key;
-						if (Grid.IsValidCell(cell)) {
-							// Allow any fraction, not just linear falloff
-							int lightValue = Mathf.RoundToInt(lux * pair.Value);
-							LightGridManager.previewLightCells.Add(new Tuple<int, int>(cell,
-								lightValue));
-							LightGridManager.previewLux[cell] = lightValue;
-						}
+				// Found handler!
+				shapes[index]?.FillLight(new LightingArgs(owner, origin,
+					(int)radius, cells));
+				foreach (var pair in cells) {
+					int cell = pair.Key;
+					if (Grid.IsValidCell(cell)) {
+						// Allow any fraction, not just linear falloff
+						int lightValue = Mathf.RoundToInt(lux * pair.Value);
+						LightGridManager.previewLightCells.Add(new Tuple<int, int>(cell,
+							lightValue));
+						LightGridManager.previewLux[cell] = lightValue;
 					}
-					CallingObject = null;
-					handled = true;
 				}
+				PreviewObject = null;
+				handled = true;
 				cells.Recycle();
 			}
 			return handled;
@@ -343,20 +326,19 @@ namespace PeterHan.PLib.Lighting {
 		internal bool UpdateLitCells(LightGridEmitter source, LightGridEmitter.State state,
 				IList<int> litCells) {
 			bool handled = false;
-			int index;
+			int index = state.shape - LightShape.Cone - 1;
 			if (source == null)
 				throw new ArgumentNullException(nameof(source));
-			if ((index = state.shape - LightShape.Cone - 1) >= 0 && index < shapes.Count &&
-					litCells != null) {
+			if (index >= 0 && index < shapes.Count && litCells != null && brightCache.
+					TryGetValue(source, out CacheEntry entry)) {
 				var ps = shapes[index];
-				var cacheEntry = brightCache.GetOrAdd(source, (_) => new CacheEntry(
-					CallingObject, state.intensity));
-				var brightness = cacheEntry.Intensity;
+				var brightness = entry.Intensity;
 				// Proper owner found
 				brightness.Clear();
-				ps.FillLight(new LightingArgs(cacheEntry.Owner, state.origin, (int)state.
+				entry.BaseLux = state.intensity;
+				ps.FillLight(new LightingArgs(entry.Owner, state.origin, (int)state.
 					radius, brightness));
-				foreach (var point in cacheEntry.Intensity)
+				foreach (var point in brightness)
 					litCells.Add(point.Key);
 				handled = true;
 			}
@@ -370,7 +352,7 @@ namespace PeterHan.PLib.Lighting {
 			/// <summary>
 			/// The base intensity in lux.
 			/// </summary>
-			internal int BaseLux { get; }
+			internal int BaseLux { get; set; }
 
 			/// <summary>
 			/// The relative brightness per cell.
@@ -382,15 +364,14 @@ namespace PeterHan.PLib.Lighting {
 			/// </summary>
 			internal GameObject Owner { get; }
 
-			internal CacheEntry(GameObject owner, int baseLux) {
-				BaseLux = baseLux;
+			internal CacheEntry(GameObject owner) {
 				// Do not use the pool because these might last a long time and be numerous
 				Intensity = new Dictionary<int, float>(64);
 				Owner = owner;
 			}
 
 			public override string ToString() {
-				return "Lighting Cache Entry for " + Owner?.name;
+				return "Lighting Cache Entry for " + (Owner == null ? "" : Owner.name);
 			}
 		}
 	}
