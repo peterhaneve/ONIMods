@@ -180,6 +180,43 @@ namespace PeterHan.StockBugFix {
 	}
 
 	/// <summary>
+	/// Applied to ArtableSelectionSideScreen to fix a crash due to a missing null check.
+	/// </summary>
+	[HarmonyPatch]
+	public static class ArtableSelectionSideScreen_Patch {
+		/// <summary>
+		/// The target method to patch.
+		/// </summary>
+		private static readonly MethodBase GENERATE_STATES = typeof(
+			ArtableSelectionSideScreen).GetMethodSafe(nameof(ArtableSelectionSideScreen.
+			GenerateStateButtons), false, PPatchTools.AnyArguments);
+
+		internal static bool Prepare() {
+			return GENERATE_STATES != null;
+		}
+
+		/// <summary>
+		/// Determines the target methods to patch.
+		/// </summary>
+		/// <returns>The method which should be affected by this patch.</returns>
+		internal static IEnumerable<MethodBase> TargetMethods() {
+			yield return GENERATE_STATES;
+			PUtil.LogDebug("Patched ArtableSelectionSideScreen.GenerateStateButtons");
+			var m = typeof(ArtableSelectionSideScreen).GetMethodSafe("RefreshButtons", false,
+				PPatchTools.AnyArguments);
+			if (m != null)
+				yield return m;
+		}
+
+		/// <summary>
+		/// Applied before GenerateStateButtons runs.
+		/// </summary>
+		internal static bool Prefix(Artable ___target) {
+			return ___target != null && ___target.TryGetComponent(out KPrefabID _);
+		}
+	}
+
+	/// <summary>
 	/// Applied to CharacterContainer to fix duplicate displays of Duplicant attributes.
 	/// </summary>
 	[HarmonyPatch(typeof(CharacterContainer), "SetInfoText")]
