@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2022 Peter Han
+ * Copyright 2023 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -17,89 +17,72 @@
  */
 
 using Klei.AI;
+using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
-	/// Speeds up a bunch of silly linear searches in AttributeConverters.
+	/// A hacked extension of Klei.AI.AttributeLevel to quickly look up other attributes.
 	/// </summary>
 	[SkipSaveFileSerialization]
-	public sealed class FastAttributeConverters : KMonoBehaviour {
-#pragma warning disable IDE0044
-#pragma warning disable CS0649
-		// These fields are automatically populated by KMonoBehaviour
-		[MyCmpReq]
-		private AttributeConverters converters;
-#pragma warning restore CS0649
-#pragma warning restore IDE0044
+	internal sealed class LookupAttributeLevel : AttributeLevel {
+		/// <summary>
+		/// Should not be serialized, has a placeholder name
+		/// </summary>
+		public const string ID = "__LOOKUP";
 
 		/// <summary>
-		/// A cached lookup of attribute converter names to converters.
+		/// Why did you have to duplicate a system class name, Clay please!!!
 		/// </summary>
-		private readonly IDictionary<string, AttributeConverterInstance> attrConverters;
-
-		internal FastAttributeConverters() {
-			attrConverters = new Dictionary<string, AttributeConverterInstance>(32);
-		}
-
-		public override void OnPrefabInit() {
-			base.OnPrefabInit();
-			foreach (var instance in converters.converters)
-				attrConverters.Add(instance.converter.Id, instance);
-		}
+		internal static readonly Klei.AI.Attribute LOOKUP_ATTR = new Klei.AI.Attribute(ID,
+			false, Klei.AI.Attribute.Display.Never, false);
 
 		/// <summary>
-		/// Gets an attribute converter instance.
+		/// Gets the fast attribute level lookup, or creates them if they do not exist.
 		/// </summary>
-		/// <param name="converter">The attribute converter to look up.</param>
-		/// <returns>The instance of that converter for this Duplicant.</returns>
-		public AttributeConverterInstance Get(AttributeConverter converter) {
-			if (converter == null || !attrConverters.TryGetValue(converter.Id,
-					out var instance))
-				instance = null;
-			return instance;
+		/// <param name="levels">The attribute levels to query.</param>
+		/// <returns>The fake level to use for looking them up.</returns>
+		public static LookupAttributeLevel GetAttributeLookup(AttributeLevels levels) {
+			LookupAttributeLevel lookup = null;
+			if (levels != null) {
+				var levelList = levels.levels;
+				if (!(levelList[0] is LookupAttributeLevel lol)) {
+					lol = new LookupAttributeLevel(levels.gameObject, levels);
+					levelList.Insert(0, lol);
+				}
+				lookup = lol;
+			}
+			return lookup;
 		}
-
-		/// <summary>
-		/// Gets an attribute converter instance by its ID.
-		/// </summary>
-		/// <param name="id">The attribute converter's ID.</param>
-		/// <returns>The instance of that converter ID for this Duplicant.</returns>
-		public AttributeConverterInstance GetConverter(string id) {
-			if (id == null || !attrConverters.TryGetValue(id, out var instance))
-				instance = null;
-			return instance;
-		}
-	}
-
-	/// <summary>
-	/// Speeds up a bunch of silly linear searches in AttributeLevels.
-	/// </summary>
-	[SkipSaveFileSerialization]
-	public sealed class FastAttributeLevels : KMonoBehaviour {
-#pragma warning disable IDE0044
-#pragma warning disable CS0649
-		// These fields are automatically populated by KMonoBehaviour
-		[MyCmpReq]
-		private AttributeConverters converters;
-
-		[MyCmpReq]
-		private AttributeLevels levels;
-#pragma warning restore CS0649
-#pragma warning restore IDE0044
 
 		/// <summary>
 		/// A cached lookup of attribute names to levels.
 		/// </summary>
 		private readonly IDictionary<string, AttributeLevel> attrLevels;
 
+		private readonly AttributeLevels levels;
+		
 		/// <summary>
 		/// The current training speed multiplier.
 		/// </summary>
 		private AttributeConverterInstance trainingSpeed;
 
-		internal FastAttributeLevels() {
-			attrLevels = new Dictionary<string, AttributeLevel>(32);
+		internal LookupAttributeLevel(GameObject go, AttributeLevels levels) : base(
+				new AttributeInstance(go, LOOKUP_ATTR)) {
+			if (go == null)
+				throw new ArgumentNullException(nameof(go));
+			if (levels == null)
+				throw new ArgumentNullException(nameof(levels));
+			this.levels = levels;
+			// Levels cannot be added after prefab init in current Klei flow
+			var existing = levels.levels;
+			int n = existing.Count;
+			attrLevels = new Dictionary<string, AttributeLevel>(n);
+			for (int i = 0; i < n; i++) {
+				var level = existing[i];
+				attrLevels.Add(level.attribute.Id, level);
+			}
 			trainingSpeed = null;
 		}
 
@@ -114,8 +97,12 @@ namespace PeterHan.FastTrack.GamePatches {
 			bool result = false;
 			if (id != null && attrLevels.TryGetValue(id, out var attrLevel)) {
 				float effectiveTime = time * multiplier;
-				if (trainingSpeed != null)
-					effectiveTime += effectiveTime * trainingSpeed.Evaluate();
+				var ts = trainingSpeed;
+				if (ts == null && levels.TryGetComponent(out AttributeConverters converters))
+					trainingSpeed = ts = converters.Get(Db.Get().AttributeConverters.
+						TrainingSpeed);
+				if (ts != null)
+					effectiveTime += effectiveTime * ts.Evaluate();
 				result = attrLevel.AddExperience(levels, effectiveTime);
 				attrLevel.Apply(levels);
 			}
@@ -138,21 +125,11 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		/// <param name="attribute">The attribute to look up.</param>
 		/// <returns>The attribute's level, or 1 if the attribute was not found.</returns>
-		public int GetLevel(Attribute attribute) {
+		public int GetLevel(Klei.AI.Attribute attribute) {
 			int level = 1;
 			if (attribute != null && attrLevels.TryGetValue(attribute.Id, out var attrLevel))
 				level = attrLevel.GetLevel();
 			return level;
-		}
-
-		/// <summary>
-		/// Initializes the level lookup table.
-		/// </summary>
-		/// <param name="rawLevels">The levels taken from the stock AttributeLevels object.</param>
-		internal void Initialize(IList<AttributeLevel> rawLevels) {
-			foreach (var level in rawLevels)
-				attrLevels.Add(level.attribute.Id, level);
-			trainingSpeed = converters.Get(Db.Get().AttributeConverters.TrainingSpeed);
 		}
 
 		/// <summary>

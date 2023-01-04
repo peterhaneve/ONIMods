@@ -236,6 +236,71 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
+		/// Updates the title and codex buttons.
+		/// </summary>
+		/// <param name="screen">The details screen to be updated.</param>
+		private static void UpdateTitle(DetailsScreen screen) {
+			var inst = instance;
+			if (inst != null) {
+				ref var lastSelection = ref inst.lastSelection;
+				string codexLink = lastSelection.codexLink;
+				bool valid = !string.IsNullOrEmpty(codexLink);
+				var commandModule = lastSelection.rocketCommand;
+				var rocketDoor = lastSelection.rocketDoor;
+				var editTooltip = lastSelection.editTooltip;
+				var titleText = screen.TabTitle;
+				string name = lastSelection.selectable.GetProperName();
+				var changeOutfit = screen.ChangeOutfitButton;
+				// The codex button is surprisingly expensive to calculate?
+				var button = screen.CodexEntryButton;
+				if (button.isInteractable != valid) {
+					button.isInteractable = valid;
+					if (button.TryGetComponent(out ToolTip tooltip))
+						tooltip.SetSimpleTooltip(valid ? STRINGS.UI.TOOLTIPS.OPEN_CODEX_ENTRY :
+							STRINGS.UI.TOOLTIPS.NO_CODEX_ENTRY);
+				}
+				// Show or hide the change outfit (~~Barbie~~) button
+				if (changeOutfit != null)
+					changeOutfit.gameObject.SetActive(lastSelection.id != null);
+				if (titleText != null) {
+					var resume = lastSelection.resume;
+					titleText.SetTitle(name);
+					if (resume != null) {
+						titleText.SetSubText(resume.GetSkillsSubtitle());
+						titleText.SetUserEditable(true);
+					} else if (lastSelection.rename != null) {
+						titleText.SetSubText("");
+						titleText.SetUserEditable(true);
+					} else if (commandModule != null) {
+						var sm = SpacecraftManager.instance;
+						if (sm != null)
+							titleText.SetTitle(sm.GetSpacecraftFromLaunchConditionManager(
+								lastSelection.conditions).GetRocketName());
+						else
+							titleText.SetTitle("");
+						titleText.SetSubText(name);
+						titleText.SetUserEditable(true);
+					} else if (rocketDoor != null)
+						screen.TrySetRocketTitle(rocketDoor);
+					else {
+						titleText.SetSubText("");
+						titleText.SetUserEditable(false);
+					}
+				}
+				if (editTooltip != null) {
+					string text;
+					if (lastSelection.id != null)
+						text = STRINGS.UI.TOOLTIPS.EDITNAME;
+					else if (commandModule != null || rocketDoor != null)
+						text = STRINGS.UI.TOOLTIPS.EDITNAMEROCKET;
+					else
+						text = STRINGS.UI.TOOLTIPS.EDITNAMEGENERIC.Format(name);
+					editTooltip.toolTip = text;
+				}
+			}
+		}
+
+		/// <summary>
 		/// The last object selected in the additional details pane.
 		/// </summary>
 		private LastSelectionDetails lastSelection;
@@ -333,9 +398,9 @@ namespace PeterHan.FastTrack.UIPatches {
 					else if (commandModule != null && sm != null)
 						sm.GetSpacecraftFromLaunchConditionManager(lastSelection.conditions).
 							SetRocketName(newName);
-					else if (rocketDoor != null)
-						rocketDoor.GetTargetWorld().GetComponent<UserNameable>().SetName(
-							newName);
+					else if (rocketDoor != null && rocketDoor.GetTargetWorld().TryGetComponent(
+							out UserNameable worldName))
+						worldName.SetName(newName);
 					else if (rename != null)
 						rename.SetName(newName);
 					if (editTooltip != null && id == null)
@@ -356,7 +421,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before OpenCodexEntry runs.
 			/// </summary>
-			internal static bool Prefix(DetailsScreen __instance) {
+			internal static bool Prefix() {
 				var inst = instance;
 				if (inst != null) {
 					string codexLink = inst.lastSelection.codexLink;
@@ -412,59 +477,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// Applied before SetTitle runs.
 			/// </summary>
 			internal static bool Prefix(DetailsScreen __instance) {
-				var inst = instance;
-				if (inst != null) {
-					ref var lastSelection = ref inst.lastSelection;
-					string codexLink = lastSelection.codexLink;
-					bool valid = !string.IsNullOrEmpty(codexLink);
-					var commandModule = lastSelection.rocketCommand;
-					var rocketDoor = lastSelection.rocketDoor;
-					var editTooltip = lastSelection.editTooltip;
-					var titleText = __instance.TabTitle;
-					string name = lastSelection.selectable.GetProperName();
-					// The codex button is surprisingly expensive to calculate?
-					var button = __instance.CodexEntryButton;
-					if (button.isInteractable != valid) {
-						button.isInteractable = valid;
-						button.GetComponent<ToolTip>().SetSimpleTooltip(valid ? STRINGS.UI.
-							TOOLTIPS.OPEN_CODEX_ENTRY : STRINGS.UI.TOOLTIPS.NO_CODEX_ENTRY);
-					}
-					if (titleText != null) {
-						var resume = lastSelection.resume;
-						titleText.SetTitle(name);
-						if (resume != null) {
-							titleText.SetSubText(resume.GetSkillsSubtitle());
-							titleText.SetUserEditable(true);
-						} else if (lastSelection.rename != null) {
-							titleText.SetSubText("");
-							titleText.SetUserEditable(true);
-						} else if (commandModule != null) {
-							var sm = SpacecraftManager.instance;
-							if (sm != null)
-								titleText.SetTitle(sm.GetSpacecraftFromLaunchConditionManager(
-									lastSelection.conditions).GetRocketName());
-							else
-								titleText.SetTitle("");
-							titleText.SetSubText(name);
-							titleText.SetUserEditable(true);
-						} else if (rocketDoor != null)
-							__instance.TrySetRocketTitle(rocketDoor);
-						else {
-							titleText.SetSubText("");
-							titleText.SetUserEditable(false);
-						}
-					}
-					if (editTooltip != null) {
-						string text;
-						if (lastSelection.id != null)
-							text = STRINGS.UI.TOOLTIPS.EDITNAME;
-						else if (commandModule != null || rocketDoor != null)
-							text = STRINGS.UI.TOOLTIPS.EDITNAMEROCKET;
-						else
-							text = STRINGS.UI.TOOLTIPS.EDITNAMEGENERIC.Format(name);
-						editTooltip.toolTip = text;
-					}
-				}
+				UpdateTitle(__instance);
 				return false;
 			}
 		}

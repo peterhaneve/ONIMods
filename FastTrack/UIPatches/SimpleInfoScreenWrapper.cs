@@ -260,7 +260,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				panel.HeaderLabel.SetText(DETAILTABS.STATS.GROUPNAME_STRESS);
 			if (sis.processConditionContainer.TryGetComponent(out panel))
 				conditionParent = panel.Content.gameObject;
-			// CHeck for the localization fast path
+			// Check for the localization fast path
 			if (atTemperature.StartsWith("{0}") && atTemperature.EndsWith("{1}"))
 				optimizedStorageTemp = atTemperature.Substring(3, atTemperature.Length - 6);
 			else

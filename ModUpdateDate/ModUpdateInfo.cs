@@ -209,24 +209,23 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		public void RefreshLastModified() {
 			var lastMod = System.DateTime.UtcNow;
+			bool updated = false;
 			if (label.distribution_platform == Label.DistributionPlatform.Steam && ulong.
 					TryParse(label.id, out ulong idLong)) {
 				// 260 = MAX_PATH
 				if (SteamUGC.GetItemInstallInfo(new PublishedFileId_t(idLong), out _,
-						out string _, 260U, out uint timestamp) && timestamp > 0U)
+						out string _, 260U, out uint timestamp) && timestamp > 0U) {
 					lastMod = SteamVersionChecker.UnixEpochToDateTime(timestamp);
-				else
+					updated = true;
+				} else
 					PUtil.LogWarning("Unable to get Steam install information for " +
 						label.title);
-			} else
+			}
+			if (!updated)
 				try {
 					// Get the last modified date of its install path :/
 					lastMod = File.GetLastWriteTimeUtc(Path.GetFullPath(label.install_path));
-				} catch (IOException) {
-					// Unable to determine the date, so use UtcNow...
-					PUtil.LogWarning("I/O error when determining last modified date for " +
-						label.title);
-				}
+				} catch (IOException) { }
 			LocalLastModified = lastMod;
 		}
 

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2022 Peter Han
+ * Copyright 2023 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -40,9 +40,13 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		internal static bool Prefix(Component cmp, ref AttributeConverterInstance __result,
 				AttributeConverter __instance) {
-			if (cmp != null && cmp.TryGetComponent(out FastAttributeConverters fc))
-				__result = fc.Get(__instance);
-			else
+			if (cmp != null && cmp.TryGetComponent(out AttributeConverters converters)) {
+				var lookup = LookupAttributeConverter.GetConverterLookup(converters);
+				if (lookup != null)
+					__result = lookup.Get(__instance);
+				else
+					__result = converters.Get(__instance);
+			} else
 				__result = null;
 			return false;
 		}
@@ -61,17 +65,21 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		internal static bool Prefix(GameObject go, ref AttributeConverterInstance __result,
 				AttributeConverter __instance) {
-			if (go != null && go.TryGetComponent(out FastAttributeConverters fc))
-				__result = fc.Get(__instance);
-			else
+			if (go != null && go.TryGetComponent(out AttributeConverters converters)) {
+				var lookup = LookupAttributeConverter.GetConverterLookup(converters);
+				if (lookup != null)
+					__result = lookup.Get(__instance);
+				else
+					__result = converters.Get(__instance);
+			} else
 				__result = null;
 			return false;
 		}
 	}
 
 	/// <summary>
-	/// Applied to AttributeConverters to add a copy of our fast component alongside each
-	/// instance.
+	/// Applied to AttributeConverters to initialize the fake attribute converter with quick
+	/// lookup.
 	/// </summary>
 	[HarmonyPatch(typeof(AttributeConverters), nameof(AttributeConverters.OnPrefabInit))]
 	public static class AttributeConverters_OnPrefabInit_Patch {
@@ -82,14 +90,52 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		internal static void Postfix(AttributeConverters __instance) {
 			if (__instance != null)
-				__instance.gameObject.AddOrGet<FastAttributeConverters>();
+				LookupAttributeConverter.GetConverterLookup(__instance);
 			else
 				PUtil.LogWarning("Tried to add fast converters, but no attributes found!");
 		}
 	}
-
+	
 	/// <summary>
-	/// Applied to AttributeLevels to add a copy of our fast component alongside each instance.
+	/// Applied to AttributeLevels to use fast lookup when GetAttributeLevel is called.
+	/// </summary>
+	[HarmonyPatch(typeof(AttributeLevels), nameof(AttributeLevels.GetAttributeLevel))]
+	public static class AttributeLevels_GetAttributeLevel_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.FastAttributesMode;
+
+		/// <summary>
+		/// Applied before GetAttributeLevel runs.
+		/// </summary>
+		internal static bool Prefix(AttributeLevels __instance, string attribute_id,
+				ref AttributeLevel __result) {
+			var lookup = LookupAttributeLevel.GetAttributeLookup(__instance);
+			if (lookup != null)
+				__result = lookup.GetAttributeLevel(attribute_id);
+			return lookup != null;
+		}
+	}
+	
+	/// <summary>
+	/// Applied to AttributeLevels to use fast lookup when GetLevel is called.
+	/// </summary>
+	[HarmonyPatch(typeof(AttributeLevels), nameof(AttributeLevels.GetLevel))]
+	public static class AttributeLevels_GetLevel_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.FastAttributesMode;
+
+		/// <summary>
+		/// Applied before GetLevel runs.
+		/// </summary>
+		internal static bool Prefix(AttributeLevels __instance, Attribute attribute,
+				ref int __result) {
+			var lookup = LookupAttributeLevel.GetAttributeLookup(__instance);
+			if (lookup != null)
+				__result = lookup.GetLevel(attribute);
+			return lookup != null;
+		}
+	}
+	
+	/// <summary>
+	/// Applied to AttributeLevels to initialize the fake attribute level with quick lookup.
 	/// </summary>
 	[HarmonyPatch(typeof(AttributeLevels), nameof(AttributeLevels.OnPrefabInit))]
 	public static class AttributeLevels_OnPrefabInit_Patch {
@@ -99,12 +145,70 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Applied after OnPrefabInit runs.
 		/// </summary>
 		internal static void Postfix(AttributeLevels __instance) {
-			var levels = __instance.levels;
-			if (levels != null) {
-				var fl = __instance.gameObject.AddOrGet<FastAttributeLevels>();
-				fl.Initialize(levels);
-			} else
+			if (__instance != null)
+				LookupAttributeLevel.GetAttributeLookup(__instance);
+			else
 				PUtil.LogWarning("Tried to add fast levels, but no attributes found!");
+		}
+	}
+	
+	/// <summary>
+	/// Applied to AttributeLevels to use fast lookup when SetExperience is called.
+	/// </summary>
+	[HarmonyPatch(typeof(AttributeLevels), nameof(AttributeLevels.SetExperience))]
+	public static class AttributeLevels_SetExperience_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.FastAttributesMode;
+
+		/// <summary>
+		/// Applied before SetExperience runs.
+		/// </summary>
+		internal static bool Prefix(AttributeLevels __instance, string attribute_id,
+				float experience) {
+			var lookup = LookupAttributeLevel.GetAttributeLookup(__instance);
+			if (lookup != null)
+				lookup.SetExperience(attribute_id, experience);
+			return lookup != null;
+		}
+	}
+	
+	/// <summary>
+	/// Applied to AttributeLevels to use fast lookup when SetLevel is called.
+	/// </summary>
+	[HarmonyPatch(typeof(AttributeLevels), nameof(AttributeLevels.SetLevel))]
+	public static class AttributeLevels_SetLevel_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.FastAttributesMode;
+
+		/// <summary>
+		/// Applied before SetLevel runs.
+		/// </summary>
+		internal static bool Prefix(AttributeLevels __instance, string attribute_id,
+				int level) {
+			var lookup = LookupAttributeLevel.GetAttributeLookup(__instance);
+			if (lookup != null)
+				lookup.SetLevel(attribute_id, level);
+			return lookup != null;
+		}
+	}
+	
+	/// <summary>
+	/// Applied to AttributeLevels to avoid serializing our fake attribute level.
+	/// </summary>
+	[HarmonyPatch(typeof(AttributeLevels), nameof(AttributeLevels.OnSerializing))]
+	public static class AttributeLevels_OnSerializing_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.FastAttributesMode;
+
+		/// <summary>
+		/// Applied after OnSerializing runs.
+		/// </summary>
+		internal static void Postfix(AttributeLevels __instance) {
+			var saveLoad = __instance.saveLoadLevels;
+			int n;
+			if (saveLoad != null && (n = saveLoad.Length) > 0 && saveLoad[0].attributeId ==
+					LookupAttributeLevel.ID) {
+				var newSaveLoad = new AttributeLevels.LevelSaveLoad[n - 1];
+				Array.Copy(saveLoad, 1, newSaveLoad, 0, n - 1);
+				__instance.saveLoadLevels = newSaveLoad;
+			}
 		}
 	}
 
@@ -129,9 +233,15 @@ namespace PeterHan.FastTrack.GamePatches {
 					circuitID) < 1.0f) || (!hasBatteries && circuitManager.HasConsumers(
 					circuitID));
 			}
-			if (worker.TryGetComponent(out FastAttributeLevels levels))
-				levels.AddExperience(Db.Get().Attributes.Athletics.Id, dt, TUNING.
-					DUPLICANTSTATS.ATTRIBUTE_LEVELING.ALL_DAY_EXPERIENCE);
+			if (worker.TryGetComponent(out AttributeLevels levels)) {
+				var lookup = LookupAttributeLevel.GetAttributeLookup(levels);
+				var athletics = Db.Get().Attributes.Athletics.Id;
+				var exp = TUNING.DUPLICANTSTATS.ATTRIBUTE_LEVELING.ALL_DAY_EXPERIENCE;
+				if (lookup != null)
+					lookup.AddExperience(athletics, dt, exp);
+				else
+					levels.AddExperience(athletics, dt, exp);
+			}
 			__result = !charged;
 			return false;
 		}
@@ -151,9 +261,11 @@ namespace PeterHan.FastTrack.GamePatches {
 			float mult = 1f;
 			int cell;
 			var ac = __instance.attributeConverter;
-			if (ac != null && worker.TryGetComponent(out FastAttributeConverters fac)) {
+			if (ac != null && worker.TryGetComponent(out AttributeConverters converters)) {
+				var lookup = LookupAttributeConverter.GetConverterLookup(converters);
+				var converter = (lookup != null) ? lookup.GetConverter(ac.Id) : converters.
+					GetConverter(ac.Id);
 				// Use fast attribute converters where possible
-				var converter = fac.GetConverter(ac.Id);
 				if (converter != null)
 					mult += converter.Evaluate();
 			}
@@ -200,11 +312,16 @@ namespace PeterHan.FastTrack.GamePatches {
 		private static Workable UpdateExperience(Attribute workAttribute, Worker worker,
 				float dt, MinionResume resume) {
 			var workable = worker.workable;
-			if (worker.TryGetComponent(out FastAttributeLevels fastLevels) &&
-					workAttribute != null && workAttribute.IsTrainable)
+			if (worker.TryGetComponent(out AttributeLevels levels) &&
+					workAttribute != null && workAttribute.IsTrainable) {
+				var lookup = LookupAttributeLevel.GetAttributeLookup(levels);
+				var exp = workable.GetAttributeExperienceMultiplier();
 				// Add experience to attribute like Farming
-				fastLevels.AddExperience(workAttribute.Id, dt, workable.
-					GetAttributeExperienceMultiplier());
+				if (lookup != null)
+					lookup.AddExperience(workAttribute.Id, dt, exp);
+				else
+					levels.AddExperience(workAttribute.Id, dt, exp);
+			}
 			string experienceGroup = workable.GetSkillExperienceSkillGroup();
 			if (resume != null && experienceGroup != null)
 				resume.AddExperienceWithAptitude(experienceGroup, dt, workable.
