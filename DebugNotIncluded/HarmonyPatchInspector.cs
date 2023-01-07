@@ -33,8 +33,8 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		private static readonly string[] BLACKLIST_ASSEMBLIES = new string[] {
 			"mscorlib", "System", "Assembly-CSharp", "Unity", "0Harmony", "Newtonsoft",
-			"Mono", "ArabicSupport", "I18N", "Ionic", "com.rlabrecque.steamworks.net",
-			"FMOD", "LibNoise", "Harmony", "Anonymously Hosted DynamicMethods Assembly"
+			"Mono", "ArabicSupport", "I18N", "Ionic", "com.rlabrecque.steamworks.net", "ImGui",
+			"FMOD", "LibNoise", "Harmony", "Anonymously Hosted DynamicMethods Assembly",
 		};
 
 		/// <summary>
@@ -61,69 +61,27 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
-		/// Checks a declared Harmony annotation and warns if an inherited method is being
-		/// patched, which "works" on Windows but fails on Mac OS X / Linux.
-		/// </summary>
-		/// <param name="target">The annotation to check.</param>
-		/// <param name="patcher">The type which created the patch</param>
-		internal static void CheckHarmonyMethod(HarmonyMethod target, Type patcher) {
-			var targetType = target.declaringType;
-			string name = target.methodName;
-			const BindingFlags ONLY_DEC = ALL | BindingFlags.DeclaredOnly;
-			if (targetType != null && !string.IsNullOrEmpty(name))
-				try {
-					PropertyInfo info;
-					string targetName = targetType.FullName + "." + name;
-					switch (target.methodType) {
-					case MethodType.Normal:
-						var argTypes = target.argumentTypes;
-						// If no argument types, provide what we can
-						if (((argTypes == null) ? targetType.GetMethod(name, ONLY_DEC) :
-								targetType.GetMethod(name, ONLY_DEC, null, argTypes, null)) ==
-								null)
-							DebugLogger.LogWarning("Patch {0} targets inherited method {1}",
-								patcher.FullName, targetName);
-						break;
-					case MethodType.Setter:
-						info = targetType.GetProperty(name, ONLY_DEC);
-						if (info?.GetSetMethod(true) == null)
-							DebugLogger.LogWarning("Patch {0} targets inherited property {1}",
-								patcher.FullName, targetName);
-						break;
-					case MethodType.Getter:
-						info = targetType.GetProperty(name, ONLY_DEC);
-						if (info?.GetGetMethod(true) == null)
-							DebugLogger.LogWarning("Patch {0} targets inherited property {1}",
-								patcher.FullName, targetName);
-						break;
-					default:
-						break;
-					}
-				} catch (AmbiguousMatchException) { }
-		}
-
-		/// <summary>
 		/// Checks the specified type and all of its nested types for issues.
 		/// </summary>
 		/// <param name="type">The type to check.</param>
 		internal static void CheckType(Type type) {
 			if (type == null)
-				throw new ArgumentNullException("type");
-			bool isAnnotated = false, hasMethods = false;
+				throw new ArgumentNullException(nameof(type));
+			bool isAnnotated = false;
 			foreach (var annotation in type.GetCustomAttributes(true))
-				if (annotation is HarmonyPatch patch) {
+				if (annotation is HarmonyPatch) {
 					isAnnotated = true;
 					break;
 				}
-			// Patchy method names?
-			foreach (var method in type.GetMethods(ALL))
-				if (HARMONY_NAMES.Contains(method.Name)) {
-					hasMethods = true;
-					break;
-				}
-			if (hasMethods && !isAnnotated)
-				DebugLogger.LogWarning("Type " + type.FullName +
-					" looks like a Harmony patch but does not have the annotation!");
+			if (!isAnnotated) {
+				// Patchy method names?
+				foreach (var method in type.GetMethods(ALL))
+					if (HARMONY_NAMES.Contains(method.Name)) {
+						DebugLogger.LogWarning("Type " + type.FullName +
+							" looks like a Harmony patch but does not have the annotation!");
+						break;
+					}
+			}
 		}
 
 		/// <summary>
@@ -132,28 +90,17 @@ namespace PeterHan.DebugNotIncluded {
 		/// <returns>A list of all types to inspect.</returns>
 		public static ICollection<Type> GetAllTypes() {
 			var types = new List<Type>(256);
-			var thisOne = Assembly.GetExecutingAssembly();
+			var running = Assembly.GetExecutingAssembly();
+			int bn = BLACKLIST_ASSEMBLIES.Length;
 			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) {
 				string name = assembly.FullName;
 				// Exclude assemblies on the blacklist
 				bool blacklist = false;
-				foreach (string entry in BLACKLIST_ASSEMBLIES)
-					if (name.StartsWith(entry)) {
-						blacklist = true;
-						break;
-					}
+				for (int i = 0; i < bn && !blacklist; i++)
+					blacklist = name.StartsWith(BLACKLIST_ASSEMBLIES[i]);
 				if (!blacklist)
 					try {
-						// This will fail when used with Ony's mod manager
-						var asmTypes = assembly.GetTypes();
-						int n = asmTypes.Length;
-						for (int i = 0; i < n; i++) {
-							var candidate = asmTypes[i];
-							// If the type is a PLib type, skip it
-							if (assembly == thisOne || !candidate.FullName.
-									StartsWith("PeterHan.PLib."))
-								types.Add(candidate);
-						}
+						InspectAssembly(assembly, running, types);
 					} catch (ReflectionTypeLoadException e) {
 						HandleTypeLoadExceptions(e, assembly, types);
 					}
@@ -182,6 +129,27 @@ namespace PeterHan.DebugNotIncluded {
 					else if (thrown != null)
 						DebugLogger.LogException(thrown);
 				}
+			}
+		}
+
+		/// <summary>
+		/// Inspects the specified assembly and reports a list of types to check.
+		/// </summary>
+		/// <param name="assembly">The assembly to inspect.</param>
+		/// <param name="running">The currently running assembly.</param>
+		/// <param name="types">The location where the found types will be stored.</param>
+		private static void InspectAssembly(Assembly assembly, Assembly running,
+				ICollection<Type> types) {
+			// This will fail when used with Ony's mod manager
+			var asmTypes = assembly.GetTypes();
+			int n = asmTypes.Length;
+			for (int i = 0; i < n; i++) {
+				var candidate = asmTypes[i];
+				string typeName = candidate.FullName;
+				// If the type is a PLib type, skip it
+				if (assembly == running || string.IsNullOrEmpty(typeName) ||
+						!typeName.StartsWith("PeterHan.PLib."))
+					types.Add(candidate);
 			}
 		}
 	}

@@ -28,6 +28,38 @@ namespace PeterHan.FastTrack.GamePatches {
 	[SkipSaveFileSerialization]
 	internal sealed class LookupAttributeConverter : AttributeConverterInstance {
 		/// <summary>
+		/// Should not be serialized, has a placeholder name
+		/// </summary>
+		internal static readonly AttributeConverter CONVERTER = new AttributeConverter(
+			LookupAttributeLevel.ID, "Lookup Attribute Converter", "Not shown in UI", 1.0f,
+			0.0f, LookupAttributeLevel.LOOKUP_ATTR);
+
+		/// <summary>
+		/// Gets an attribute converter instance by its ID.
+		/// </summary>
+		/// <param name="instance">The attribute converters to look up.</param>
+		/// <param name="id">The attribute converter's ID.</param>
+		/// <returns>The instance of that converter ID for this Duplicant.</returns>
+		public static AttributeConverterInstance GetConverter(AttributeConverters instance,
+				string id) {
+			var lookup = GetConverterLookup(instance);
+			AttributeConverterInstance result = null;
+			if (lookup != null)
+				result = lookup.GetConverter(id);
+			else {
+				// The slow way
+				var instances = instance.converters;
+				int n = instances.Count;
+				for (int i = 0; i < n && result == null; i++) {
+					var converter = instances[i];
+					if (converter.converter.Id == id)
+						result = converter;
+				}
+			}
+			return result;
+		}
+
+		/// <summary>
 		/// Gets the fast attribute converter lookup, or creates them if they do not exist.
 		/// </summary>
 		/// <param name="converters">The attribute converters to query.</param>
@@ -52,7 +84,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		private readonly IDictionary<string, AttributeConverterInstance> attrConverters;
 
 		internal LookupAttributeConverter(GameObject go, AttributeConverters converters) :
-				base(go, null, new AttributeInstance(go, LookupAttributeLevel.LOOKUP_ATTR)) {
+				base(go, CONVERTER, new AttributeInstance(go, LookupAttributeLevel.
+				LOOKUP_ATTR)) {
 			if (go == null)
 				throw new ArgumentNullException(nameof(go));
 			if (converters == null)
@@ -64,18 +97,6 @@ namespace PeterHan.FastTrack.GamePatches {
 				var converterInstance = convList[i];
 				attrConverters.Add(converterInstance.converter.Id, converterInstance);
 			}
-		}
-
-		/// <summary>
-		/// Gets an attribute converter instance.
-		/// </summary>
-		/// <param name="converter">The attribute converter to look up.</param>
-		/// <returns>The instance of that converter for this Duplicant.</returns>
-		public AttributeConverterInstance Get(AttributeConverter converter) {
-			if (converter == null || !attrConverters.TryGetValue(converter.Id,
-					out var instance))
-				instance = null;
-			return instance;
 		}
 
 		/// <summary>

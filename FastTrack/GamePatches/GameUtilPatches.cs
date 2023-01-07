@@ -91,20 +91,25 @@ namespace PeterHan.FastTrack.GamePatches {
 			var totalAmounts = AmountByTagDictPool.Allocate();
 			var worldAmounts = AmountByTagDictPool.Allocate();
 			var amounts = AmountByTagDictPool.Allocate();
-			foreach (var worldContainer in ClusterManager.Instance.WorldContainers) {
-				int id = worldContainer.id;
+			var containers = ClusterManager.Instance.WorldContainers;
+			int n = containers.Count;
+			for (int i = 0; i < n; i++) {
+				var worldContainer = containers[i];
 				var inventory = worldContainer.worldInventory;
 				byDestination.Clear();
 				totalAmounts.Clear();
 				worldAmounts.Clear();
-				SortByDestination(id, __instance, byDestination);
+				SortByDestination(worldContainer.id, __instance, byDestination);
 				foreach (var pair in byDestination) {
 					var fetchLists = pair.Value;
-					amounts.Clear();
-					GetExistingItems(fetchLists[0].Destination, existingItems);
-					foreach (var errand in fetchLists)
-						UpdateStatus(errand, amounts, totalAmounts, worldAmounts, inventory,
-							existingItems);
+					int fn = fetchLists.Count;
+					if (fn > 0) {
+						amounts.Clear();
+						GetExistingItems(fetchLists[0].Destination, existingItems);
+						for (int j = 0; j < fn; j++)
+							UpdateStatus(fetchLists[j], amounts, totalAmounts, worldAmounts,
+								inventory, existingItems);
+					}
 					fetchLists.Recycle();
 				}
 			}
@@ -149,19 +154,20 @@ namespace PeterHan.FastTrack.GamePatches {
 				// Only rescan world inventory if not already checked for this world
 				if (!totalAmounts.TryGetValue(tag, out float total))
 					totalAmounts.Add(tag, total = inventory.GetTotalAmount(tag, true));
-				if (!worldAmounts.TryGetValue(tag, out float world))
-					worldAmounts.Add(tag, world = inventory.GetAmount(tag, true));
-				float fetchable = world + Mathf.Min(remaining, total);
+				if (!worldAmounts.TryGetValue(tag, out float available))
+					worldAmounts.Add(tag, available = inventory.GetAmount(tag, true));
+				float fetchable = available + Mathf.Min(remaining, total);
 				float minimumAmount = errand.GetMinimumAmount(tag);
 				if (inStorage + fetchable < minimumAmount)
 					// No available materials
 					noMaterials = true;
-				if (fetchable <= remaining)
+				if (fetchable <= remaining) {
 					// Materials are stored and ready
 					needMaterials = false;
-				else if (inStorage + fetchable > remaining)
-					// Can run it with what we have + on the way, but not again
-					resourcesLow = true;
+					if (inStorage + fetchable > remaining)
+						// Can run it with what we have + on the way, but not again
+						resourcesLow = true;
+				}
 			}
 			errand.UpdateStatusItem(si.WaitingForMaterials,
 				ref errand.waitingForMaterialsHandle, needMaterials);

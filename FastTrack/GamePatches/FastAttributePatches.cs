@@ -40,14 +40,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		internal static bool Prefix(Component cmp, ref AttributeConverterInstance __result,
 				AttributeConverter __instance) {
-			if (cmp != null && cmp.TryGetComponent(out AttributeConverters converters)) {
-				var lookup = LookupAttributeConverter.GetConverterLookup(converters);
-				if (lookup != null)
-					__result = lookup.Get(__instance);
-				else
-					__result = converters.Get(__instance);
-			} else
-				__result = null;
+			__result = cmp != null && cmp.TryGetComponent(out AttributeConverters converters) ?
+				LookupAttributeConverter.GetConverter(converters, __instance.Id) : null;
 			return false;
 		}
 	}
@@ -65,14 +59,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		internal static bool Prefix(GameObject go, ref AttributeConverterInstance __result,
 				AttributeConverter __instance) {
-			if (go != null && go.TryGetComponent(out AttributeConverters converters)) {
-				var lookup = LookupAttributeConverter.GetConverterLookup(converters);
-				if (lookup != null)
-					__result = lookup.Get(__instance);
-				else
-					__result = converters.Get(__instance);
-			} else
-				__result = null;
+			__result = go != null && go.TryGetComponent(out AttributeConverters converters) ?
+				LookupAttributeConverter.GetConverter(converters, __instance.Id) : null;
 			return false;
 		}
 	}
@@ -95,7 +83,42 @@ namespace PeterHan.FastTrack.GamePatches {
 				PUtil.LogWarning("Tried to add fast converters, but no attributes found!");
 		}
 	}
-	
+
+	/// <summary>
+	/// Applied to AttributeConverters to use fast lookup when Get is called.
+	/// </summary>
+	[HarmonyPatch(typeof(AttributeConverters), nameof(AttributeConverters.Get))]
+	public static class AttributeConverters_Get_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.FastAttributesMode;
+
+		/// <summary>
+		/// Applied before Get runs.
+		/// </summary>
+		internal static bool Prefix(AttributeConverters __instance,
+				AttributeConverter converter, ref AttributeConverterInstance __result) {
+			__result = converter == null ? null : LookupAttributeConverter.GetConverter(
+				__instance, converter.Id);
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to AttributeConverters to use fast lookup when GetConverter is called.
+	/// </summary>
+	[HarmonyPatch(typeof(AttributeConverters), nameof(AttributeConverters.GetConverter))]
+	public static class AttributeConverters_GetConverter_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.FastAttributesMode;
+
+		/// <summary>
+		/// Applied before GetConverter runs.
+		/// </summary>
+		internal static bool Prefix(AttributeConverters __instance, string id,
+				ref AttributeConverterInstance __result) {
+			__result = LookupAttributeConverter.GetConverter(__instance, id);
+			return false;
+		}
+	}
+
 	/// <summary>
 	/// Applied to AttributeLevels to use fast lookup when GetAttributeLevel is called.
 	/// </summary>
@@ -165,8 +188,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal static bool Prefix(AttributeLevels __instance, string attribute_id,
 				float experience) {
 			var lookup = LookupAttributeLevel.GetAttributeLookup(__instance);
-			if (lookup != null)
-				lookup.SetExperience(attribute_id, experience);
+			lookup?.SetExperience(attribute_id, experience);
 			return lookup != null;
 		}
 	}
@@ -184,8 +206,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal static bool Prefix(AttributeLevels __instance, string attribute_id,
 				int level) {
 			var lookup = LookupAttributeLevel.GetAttributeLookup(__instance);
-			if (lookup != null)
-				lookup.SetLevel(attribute_id, level);
+			lookup?.SetLevel(attribute_id, level);
 			return lookup != null;
 		}
 	}
