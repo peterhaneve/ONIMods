@@ -26,9 +26,20 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// </summary>
 	public static class PathCacher {
 		/// <summary>
+		/// The number of scaled in-game seconds that will pass before the path cache is
+		/// automatically invalidated for an entity.
+		/// </summary>
+		public const double INVALIDATE_TIME = 6.0;
+
+		/// <summary>
+		/// The current frame time.
+		/// </summary>
+		private static double now;
+
+		/// <summary>
 		/// Map path cache IDs to path cache values.
 		/// </summary>
-		private static ConcurrentDictionary<PathProber, bool> pathCache;
+		private static ConcurrentDictionary<PathProber, double> pathCache;
 
 		/// <summary>
 		/// Avoid leaking the PathProbers when the game ends.
@@ -45,12 +56,13 @@ namespace PeterHan.FastTrack.PathPatches {
 			pathCache.TryRemove(prober, out _);
 		}
 
+
 		/// <summary>
 		/// When the game is started, reset the path prober caches.
 		/// </summary>
 		internal static void Init() {
 			if (pathCache == null)
-				pathCache = new ConcurrentDictionary<PathProber, bool>(4, 128);
+				pathCache = new ConcurrentDictionary<PathProber, double>(4, 128);
 			else
 				pathCache.Clear();
 		}
@@ -63,7 +75,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		internal static bool IsValid(PathProber prober) {
 			if (prober == null)
 				throw new ArgumentNullException(nameof(prober));
-			return pathCache.ContainsKey(prober);
+			return pathCache.TryGetValue(prober, out double expires) && now < expires;
 		}
 
 		/// <summary>
@@ -71,16 +83,21 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// </summary>
 		/// <param name="prober">The path prober to look up.</param>
 		/// <param name="valid">true if the prober is valid, or false if it is invalid.</param>
-		/// <returns>Whether the prober was previously valid or invalid.</returns>
-		internal static bool SetValid(PathProber prober, bool valid) {
-			bool result;
+		internal static void SetValid(PathProber prober, bool valid) {
 			if (prober == null)
 				throw new ArgumentNullException(nameof(prober));
 			if (valid)
-				result = !pathCache.TryAdd(prober, true);
+				pathCache[prober] = now + INVALIDATE_TIME;
 			else
-				result = pathCache.TryRemove(prober, out _);
-			return result;
+				pathCache.TryRemove(prober, out _);
+		}
+
+		/// <summary>
+		/// Updates the current time.
+		/// </summary>
+		/// <param name="time">The current scaled game time.</param>
+		internal static void UpdateTime(double time) {
+			now = time;
 		}
 	}
 }

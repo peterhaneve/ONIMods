@@ -195,23 +195,19 @@ namespace PeterHan.FastTrack.PathPatches {
 	}
 
 	/// <summary>
-	/// Applied to Navigator to force update the path cache (even if "clean") every 4000ms.
+	/// Applied to Navigator to turn off periodic path probes if async path probing is on.
 	/// </summary>
 	[HarmonyPatch(typeof(Navigator), nameof(Navigator.Sim4000ms))]
 	public static class Navigator_Sim4000ms_Patch {
 		internal static bool Prepare() {
-			var options = FastTrackOptions.Instance;
-			return options.CachePaths || options.AsyncPathProbe;
+			return FastTrackOptions.Instance.AsyncPathProbe;
 		}
 
 		/// <summary>
 		/// Applied before Sim4000ms runs.
 		/// </summary>
-		internal static bool Prefix(Navigator __instance) {
-			var options = FastTrackOptions.Instance;
-			if (__instance != null && options.CachePaths)
-				PathCacher.SetValid(__instance.PathProber, false);
-			return !options.AsyncPathProbe;
+		internal static bool Prefix() {
+			return false;
 		}
 	}
 
@@ -251,10 +247,14 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// Checks to see if the path cache is clean.
 		/// </summary>
 		/// <param name="instance">The prober that is querying.</param>
+		/// <param name="cell">The root cell that will be used for updates.</param>
 		/// <returns>true if the cache is clean, or false if it needs to run.</returns>
-		private static bool CheckCache(PathProber instance) {
+		private static bool CheckCache(PathProber instance, int cell) {
 			// If nothing has changed since last time, it is a hit!
-			bool hit = PathCacher.IsValid(instance);
+			var grid = instance.PathGrid;
+			bool hit = PathCacher.IsValid(instance) && (!grid.applyOffset || Grid.XYToCell(
+				grid.rootX + grid.widthInCells / 2, grid.rootY + grid.heightInCells / 2) ==
+				cell);
 			if (FastTrackOptions.Instance.Metrics)
 				Metrics.DebugMetrics.PATH_CACHE.Log(hit);
 			return hit;
@@ -299,7 +299,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			var replacement = typeof(PathProber_UpdateProbe_Patch).GetMethodSafe(nameof(
 				EndUpdate), true, typeof(PathGrid), typeof(bool), typeof(PathProber));
 			var checker = typeof(PathProber_UpdateProbe_Patch).GetMethodSafe(nameof(
-				CheckCache), true, typeof(PathProber));
+				CheckCache), true, typeof(PathProber), typeof(int));
 			bool patched = false;
 			var end = generator.DefineLabel();
 			// Sadly streaming is not possible with the "label last RET"
@@ -308,6 +308,8 @@ namespace PeterHan.FastTrack.PathPatches {
 				if (checker != null) {
 					method.InsertRange(0, new[] {
 						new CodeInstruction(OpCodes.Ldarg_0),
+						// Argument #2 is "cell"
+						new CodeInstruction(OpCodes.Ldarg_2),
 						new CodeInstruction(OpCodes.Call, checker),
 						new CodeInstruction(OpCodes.Brtrue_S, end)
 					});

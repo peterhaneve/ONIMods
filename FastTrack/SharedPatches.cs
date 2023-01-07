@@ -110,15 +110,15 @@ namespace PeterHan.FastTrack {
 	public static class Global_Update_Patch {
 		internal static bool Prepare() {
 			var options = FastTrackOptions.Instance;
-			return options.ConduitOpts || options.ParallelInventory;
+			return options.ConduitOpts || options.ParallelInventory || options.CachePaths;
 		}
 
 		/// <summary>
 		/// Applied before Update runs.
 		/// </summary>
 		internal static void Prefix() {
+			var options = FastTrackOptions.Instance;
 			if (Game.Instance != null) {
-				var options = FastTrackOptions.Instance;
 				if (options.ConduitOpts)
 					ConduitPatches.BackgroundConduitUpdater.StartUpdateAll();
 				UIPatches.BackgroundInventoryUpdater.Instance?.StartUpdateAll();
@@ -127,6 +127,8 @@ namespace PeterHan.FastTrack {
 					Metrics.FastTrackProfiler.LogGC();
 #endif
 			}
+			if (options.CachePaths)
+				PathPatches.PathCacher.UpdateTime(Time.timeAsDouble);
 		}
 	}
 
