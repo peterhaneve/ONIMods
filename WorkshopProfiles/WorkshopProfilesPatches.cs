@@ -56,12 +56,10 @@ namespace PeterHan.WorkshopProfiles {
 			if (type != null && type != choreTypes.EmptyStorage && type != choreTypes.
 					Deconstruct && type != choreTypes.Repair && type != choreTypes.Disinfect &&
 					!type.Id.Contains("Fetch") && chore.target is Component cmp && cmp !=
-					null && IS_ALLOWED.fn != null) {
+					null && IS_ALLOWED.fn != null && cmp.TryGetComponent(
+					out WorkshopProfile profiles))
 				// Look for WP object
-				var profiles = cmp.gameObject.GetComponentSafe<WorkshopProfile>();
-				if (profiles != null)
-					chore.AddPrecondition(IS_ALLOWED, profiles);
-			}
+				chore.AddPrecondition(IS_ALLOWED, profiles);
 		}
 
 		/// <summary>
@@ -73,18 +71,19 @@ namespace PeterHan.WorkshopProfiles {
 		/// <param name="options">The current mod options.</param>
 		private static void AddWorkshopProfile(GameObject go, WorkshopProfilesOptions options)
 		{
-			var cf = go.GetComponent<ComplexFabricator>();
-			var bc = go.GetComponent<BuildingComplete>();
 			// The pitcher pump should not have a profile as it only can be used for fetch
 			// errands, which are not modified by Workshop Profiles
-			if (go.GetComponent<Assignable>() == null && ((cf != null && cf.
-					duplicantOperated) || (bc != null && bc.isManuallyOperated && 
-					!BLACKLIST_IDS.Contains(bc.prefabid.PrefabTag.ToString())) ||
-					options.AddToBuildings.Contains(go.PrefabID().Name)))
-				// Since we do not affect Supply errands, ignore automated buildings like
-				// the kiln; BuildingComplete.isManuallyOperated covers grills, research
-				// stations, composts...
-				go.AddComponent<WorkshopProfile>();
+			if (go.TryGetComponent(out BuildingComplete bc) && !go.TryGetComponent(
+					out Assignable _)) {
+				string prefabTag = bc.prefabid.PrefabTag.Name;
+				if ((go.TryGetComponent(out ComplexFabricator cf) && cf.duplicantOperated) ||
+						(bc.isManuallyOperated && !BLACKLIST_IDS.Contains(prefabTag)) ||
+						options.AddToBuildings.Contains(prefabTag))
+					// Since we do not affect Supply errands, ignore automated buildings like
+					// the kiln; BuildingComplete.isManuallyOperated covers grills, research
+					// stations, composts...
+					go.AddComponent<WorkshopProfile>();
+			}
 		}
 
 		/// <summary>
@@ -96,11 +95,10 @@ namespace PeterHan.WorkshopProfiles {
 		private static bool IsAllowed(ref Chore.Precondition.Context context, object data) {
 			bool allow = true;
 			var worker = context.consumerState?.worker;
-			if (data is WorkshopProfile profile && profile != null && worker != null) {
-				var prefabID = context.consumerState.prefabid;
-				if (prefabID != null)
-					allow = profile.IsAllowed(prefabID.InstanceID);
-			}
+			KPrefabID prefabID;
+			if (data is WorkshopProfile profile && profile != null && worker != null &&
+					(prefabID = context.consumerState.prefabid) != null)
+				allow = profile.IsAllowed(prefabID.InstanceID);
 			return allow;
 		}
 
@@ -130,8 +128,7 @@ namespace PeterHan.WorkshopProfiles {
 		/// </summary>
 		/// <param name="dupe">The Duplicant that was removed.</param>
 		private static void OnRemoveDuplicant(MinionIdentity dupe) {
-			if (dupe != null) {
-				var prefabID = dupe.gameObject.GetComponentSafe<KPrefabID>();
+			if (dupe != null && dupe.TryGetComponent(out KPrefabID prefabID)) {
 				WorkshopProfile.CleanupCmps();
 				foreach (var cmp in WorkshopProfile.Cmps)
 					if (cmp != null)

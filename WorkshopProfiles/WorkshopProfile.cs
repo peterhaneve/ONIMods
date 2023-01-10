@@ -17,7 +17,6 @@
  */
 
 using KSerialization;
-using PeterHan.PLib.Core;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -31,9 +30,7 @@ namespace PeterHan.WorkshopProfiles {
 		/// ACL if present.
 		/// </summary>
 		private static readonly EventSystem.IntraObjectHandler<WorkshopProfile> ON_DEATH =
-			new EventSystem.IntraObjectHandler<WorkshopProfile>(delegate(WorkshopProfile target, object dead) {
-				target.OnDeath(dead);
-			});
+			new EventSystem.IntraObjectHandler<WorkshopProfile>(OnDeathDelegate);
 
 		/// <summary>
 		/// Do not use Components.Cmps as HashSet is way way faster!
@@ -52,6 +49,15 @@ namespace PeterHan.WorkshopProfiles {
 			foreach (var cmp in preserve)
 				Cmps.Add(cmp);
 			preserve.Recycle();
+		}
+
+		/// <summary>
+		/// Called when a Duplicant dies.
+		/// </summary>
+		/// <param name="target">The profile where the Duplicant should be removed.</param>
+		/// <param name="dead">The dead Duplicant's game object.</param>
+		private static void OnDeathDelegate(WorkshopProfile target, object dead) {
+			target.OnDeath(dead);
 		}
 
 		/// <summary>
@@ -78,8 +84,7 @@ namespace PeterHan.WorkshopProfiles {
 		/// </summary>
 		/// <param name="id">The ID of the Duplicant to add.</param>
 		public void AddDuplicant(int id) {
-			if (allowIDs != null)
-				allowIDs.Add(id);
+			allowIDs?.Add(id);
 		}
 
 		/// <summary>
@@ -97,10 +102,9 @@ namespace PeterHan.WorkshopProfiles {
 			if (allowIDs != null) {
 				var preserve = HashSetPool<int, WorkshopProfile>.Allocate();
 				var intersection = ListPool<int, WorkshopProfile>.Allocate();
-				KPrefabID minionID;
 				// Add all living Duplicants
 				foreach (var id in Components.LiveMinionIdentities.Items)
-					if (id != null && (minionID = id.GetComponent<KPrefabID>()) != null)
+					if (id != null && id.TryGetComponent(out KPrefabID minionID))
 						preserve.Add(minionID.InstanceID);
 				// Remove all dead ones
 				foreach (int id in allowIDs)
@@ -159,8 +163,8 @@ namespace PeterHan.WorkshopProfiles {
 		/// </summary>
 		/// <param name="data">The GameObject with the source settings.</param>
 		private void OnCopySettings(object data) {
-			var other = (data as GameObject).GetComponentSafe<WorkshopProfile>();
-			if (other != null) {
+			if (data is GameObject go && go != null && go.TryGetComponent(
+					out WorkshopProfile other)) {
 				if (other.IsPublicAllowed())
 					AllowAll();
 				else
@@ -173,8 +177,8 @@ namespace PeterHan.WorkshopProfiles {
 		/// </summary>
 		/// <param name="minion">The Duplicant to remove.</param>
 		private void OnDeath(object minion) {
-			var prefabID = (minion as GameObject).GetComponentSafe<KPrefabID>();
-			if (prefabID != null)
+			if (minion is GameObject go && go != null && go.TryGetComponent(
+					out KPrefabID prefabID))
 				RemoveDuplicant(prefabID.InstanceID);
 		}
 
@@ -192,8 +196,7 @@ namespace PeterHan.WorkshopProfiles {
 		/// </summary>
 		/// <param name="id">The ID of the Duplicant to remove.</param>
 		public void RemoveDuplicant(int id) {
-			if (allowIDs != null)
-				allowIDs.Remove(id);
+			allowIDs?.Remove(id);
 		}
 	}
 }

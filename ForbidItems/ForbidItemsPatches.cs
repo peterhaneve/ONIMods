@@ -41,17 +41,6 @@ namespace PeterHan.ForbidItems {
 				NotificationType.Neutral, false, OverlayModes.None.ID));
 		}
 
-		/// <summary>
-		/// Takes into account whether the item is forbidden when considering it for fetching.
-		/// </summary>
-		/// <param name="pickupable">The item to query.</param>
-		/// <param name="originalTag">The original tag that may not be fetched (StoredPrivate).</param>
-		/// <returns>true if the item may not be fetched, or false if it can be fetched.</returns>
-		private static bool IsSuitableTags(Component pickupable, Tag originalTag) {
-			return pickupable != null && pickupable.TryGetComponent(out KPrefabID id) &&
-				(id.HasTag(originalTag) || id.HasTag(Forbidden));
-		}
-
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
@@ -111,15 +100,12 @@ namespace PeterHan.ForbidItems {
 			IsFetchable))]
 		public static class FetchableMonitor_IsFetchable_Patch {
 			/// <summary>
-			/// Transpiles IsFetchable to check for the Forbidden tag. Much faster than
-			/// postfixing it, as this is a performance sensitive method.
+			/// Applied after IsFetchable runs.
 			/// </summary>
-			internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-				return PPatchTools.ReplaceMethodCallSafe(instructions, typeof(
-					KPrefabIDExtensions).GetMethodSafe(nameof(KPrefabIDExtensions.HasTag),
-					true, typeof(Component), typeof(Tag)), typeof(ForbidItemsPatches).
-					GetMethodSafe(nameof(IsSuitableTags), true, typeof(Component),
-					typeof(Tag)));
+			internal static void Postfix(FetchableMonitor.Instance __instance,
+					ref bool __result) {
+				if (__result)
+					__result = !__instance.pickupable.KPrefabID.HasTag(Forbidden);
 			}
 		}
 
