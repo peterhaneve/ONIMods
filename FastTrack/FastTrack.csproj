@@ -6,7 +6,7 @@
     <RootNamespace>PeterHan.FastTrack</RootNamespace>
     <Description>Optimizes Oxygen Not Included to improve performance.</Description>
     <AssemblyVersion>0.10.0.0</AssemblyVersion>
-    <LastWorkingBuild>534889</LastWorkingBuild>
+    <LastWorkingBuild>537329</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
     <Optimize>true</Optimize>
     <UsePublicized>true</UsePublicized>

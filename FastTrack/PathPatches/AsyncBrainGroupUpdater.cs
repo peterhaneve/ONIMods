@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2022 Peter Han
+ * Copyright 2023 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -229,18 +229,17 @@ namespace PeterHan.FastTrack.PathPatches {
 		internal void EndBrainCollect() {
 			var fm = Game.Instance.fetchManager;
 			if (fm != null) {
-				var toUpdate = updatingPickups;
 				int n = fm.prefabIdToFetchables.Count, b = brainsToUpdate.Count, have =
-					toUpdate.Count;
+					updatingPickups.Count;
 				for (int i = 0; i < b; i++) {
 					var brain = brainsToUpdate[i];
 					if (i < have)
-						toUpdate[i].Begin(brain.Key, brain.Value, n);
+						updatingPickups[i].Begin(brain.Key, brain.Value, n);
 					else {
 						// Add new entry
 						var entry = new CompilePickupsWork(this);
 						entry.Begin(brain.Key, brain.Value, n);
-						toUpdate.Add(entry);
+						updatingPickups.Add(entry);
 					}
 				}
 			}
@@ -330,6 +329,9 @@ namespace PeterHan.FastTrack.PathPatches {
 					foreach (var pair in fm.prefabIdToFetchables)
 						byId.Add(pair.Value);
 					inst.Run(updateOffsets);
+					// Wipe out cached items from the last run if still present (no sweepers
+					// built, or game is paused)
+					GamePatches.SolidTransferArmUpdater.Instance?.ClearCached();
 					for (int i = 0; i < n; i++)
 						inst.Run(updatingPickups[i]);
 				}
