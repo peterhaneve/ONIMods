@@ -3,10 +3,10 @@
   <PropertyGroup>
     <Title>PLib User Interface</Title>
     <AssemblyTitle>PLib.UI</AssemblyTitle>
-    <Version>4.11.5.0</Version>
+    <Version>$(PLibVersion)</Version>
     <UsesPLib>false</UsesPLib>
     <RootNamespace>PeterHan.PLib.UI</RootNamespace>
-    <AssemblyVersion>4.11.5.0</AssemblyVersion>
+    <AssemblyVersion>$(PLibVersion)</AssemblyVersion>
     <DistributeMod>false</DistributeMod>
     <PLibCore>true</PLibCore>
     <Platforms>Vanilla;Mergedown</Platforms>

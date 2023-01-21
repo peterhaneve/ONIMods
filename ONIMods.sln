@@ -109,6 +109,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MismatchedFinder", "Mismatc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForbidItems", "ForbidItems\ForbidItems.csproj", "{2498660E-640B-4FC4-A8AF-313577427C25}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Meta", "Meta", "{DD48872E-7B35-44EF-A5D3-6F1472F322CE}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.props.default = Directory.Build.props.default
+		Directory.Build.targets = Directory.Build.targets
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mergedown = Debug|Mergedown

@@ -72,5 +72,6 @@
     <DistributeMod>true</DistributeMod>
     <ArchivedVersionPath></ArchivedVersionPath>
     <UsePublicized>false</UsePublicized>
+	<PLibVersion>4.12.0.0</PLibVersion>
   </PropertyGroup>
 </Project>

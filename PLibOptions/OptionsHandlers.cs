@@ -141,9 +141,8 @@ namespace PeterHan.PLib.Options {
 				AddOptionClass(typeof(float?), typeof(NullableFloatOptionsEntry));
 				AddOptionClass(typeof(Color32), typeof(Color32OptionsEntry));
 				AddOptionClass(typeof(Color), typeof(ColorOptionsEntry));
-				AddOptionClass(typeof(int), typeof(IntOptionsEntry));
+				AddOptionClass(typeof(string), typeof(StringOptionsEntry));
 				AddOptionClass(typeof(Action<object>), typeof(ButtonOptionsEntry));
-				AddOptionClass(typeof(int), typeof(IntOptionsEntry));
 				AddOptionClass(typeof(LocText), typeof(TextBlockOptionsEntry));
 			}
 		}
