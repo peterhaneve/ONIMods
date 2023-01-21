@@ -34,7 +34,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		private static readonly Tag TREE_BRANCH_TAG = new Tag(ForestTreeBranchConfig.ID);
 
 		/// <summary>
-		/// The singleton instanec of this class.
+		/// The singleton instance of this class.
 		/// </summary>
 		internal static BackgroundRoomProber Instance { get; private set; }
 
@@ -62,7 +62,9 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Destroys the singleton instance.
 		/// </summary>
 		internal static void DestroyInstance() {
-			Instance?.Dispose();
+			var inst = Instance;
+			if (inst != null)
+				inst.Dispose();
 		}
 
 		/// <summary>
@@ -609,10 +611,12 @@ namespace PeterHan.FastTrack.GamePatches {
 					var cavity = cavityInfos.GetData(cavityID);
 					if (cavity != null) {
 						var creatures = cavity.creatures;
-						int n = creatures.Count;
-						for (int i = 0; i < n; i++)
-							// These critters need a room refresh on foreground thread
-							releasedCritters.Enqueue(creatures[i]);
+						lock (creatures) {
+							int n = creatures.Count;
+							for (int i = 0; i < n; i++)
+								// These critters need a room refresh on foreground thread
+								releasedCritters.Enqueue(creatures[i]);
+						}
 						pendingDestroy.Add(cavityID);
 						cavityID.Clear();
 					}
@@ -671,8 +675,10 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// Applied before GetCavityForCell runs.
 			/// </summary>
 			internal static bool Prefix(int cell, ref CavityInfo __result) {
-				__result = Instance?.GetCavityForCell(cell);
-				return false;
+				var inst = Instance;
+				if (inst != null)
+					__result = inst.GetCavityForCell(cell);
+				return inst == null;
 			}
 		}
 
@@ -688,8 +694,10 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// Applied before OnBuildingsChanged runs.
 			/// </summary>
 			internal static bool Prefix(int cell) {
-				Instance?.QueueBuildingChange(cell);
-				return false;
+				var inst = Instance;
+				if (inst != null)
+					inst.QueueBuildingChange(cell);
+				return inst == null;
 			}
 		}
 
@@ -704,8 +712,10 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// Applied before Refresh runs.
 			/// </summary>
 			internal static bool Prefix() {
-				Instance?.Refresh();
-				return false;
+				var inst = Instance;
+				if (inst != null)
+					inst.Refresh();
+				return inst == null;
 			}
 		}
 
@@ -736,9 +746,10 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// Applied before SolidChangedEvent runs.
 			/// </summary>
 			internal static bool Prefix(int cell, bool ignoreDoors) {
-				if (!ignoreDoors || !Grid.HasDoor[cell])
-					Instance?.QueueSolidChange(cell);
-				return false;
+				var inst = Instance;
+				if (inst != null && (!ignoreDoors || !Grid.HasDoor[cell]))
+					inst.QueueSolidChange(cell);
+				return inst == null;
 			}
 		}
 
@@ -753,8 +764,10 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// Applied before UpdateRoom runs.
 			/// </summary>
 			internal static bool Prefix(CavityInfo cavity) {
-				Instance?.UpdateRoom(cavity);
-				return false;
+				var inst = Instance;
+				if (inst != null)
+					inst.UpdateRoom(cavity);
+				return inst == null;
 			}
 		}
 	}

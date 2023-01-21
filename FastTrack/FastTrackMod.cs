@@ -88,7 +88,9 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
 		internal static void FixTimeLapseDrag() {
-			PlayerController.Instance?.CancelDragging();
+			var inst = PlayerController.Instance;
+			if (inst != null)
+				inst.CancelDragging();
 		}
 
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {

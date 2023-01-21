@@ -114,8 +114,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 				Material material, int layer) {
 			_ = quaterion;
 			_ = material;
-			if (mesh != null && visualizers.TryGetValue(mesh,
-					out ConduitMeshVisualizer visualizer))
+			if (mesh != null && visualizers.TryGetValue(mesh, out var visualizer))
 				visualizer.UpdateLayerAndPosition(position, layer);
 		}
 
@@ -131,8 +130,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 			/// Applied before Cleanup runs.
 			/// </summary>
 			internal static void Prefix(Mesh ___mesh) {
-				if (___mesh != null && visualizers.TryGetValue(___mesh,
-						out ConduitMeshVisualizer visualizer)) {
+				if (___mesh != null && visualizers.TryGetValue(___mesh, out var visualizer)) {
 					visualizer.DestroyRenderer();
 					visualizers.Remove(___mesh);
 				}
@@ -154,7 +152,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 				var mesh = __instance.mesh;
 				if (mesh != null) {
 					// Destroy the existing renderer if it exists
-					if (visualizers.TryGetValue(mesh, out ConduitMeshVisualizer visualizer))
+					if (visualizers.TryGetValue(mesh, out var visualizer))
 						visualizer.DestroyRenderer();
 					visualizers[mesh] = ConduitMeshVisualizer.Create(mesh, __instance.
 						material);

@@ -31,7 +31,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Applied to ChoreProvider to more efficiently check for chores.
 		/// </summary>
 		[HarmonyPatch(typeof(ChoreProvider), nameof(ChoreProvider.CollectChores))]
-		internal static class ChoreProvider_Patch {
+		internal static class ChoreProvider_CollectChores_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.ChoreOpts;
 
 			/// <summary>
@@ -66,7 +66,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Applied to GlobalChoreProvider to more efficiently check for chores.
 		/// </summary>
 		[HarmonyPatch(typeof(GlobalChoreProvider), nameof(GlobalChoreProvider.CollectChores))]
-		internal static class GlobalChoreProvider_Patch {
+		internal static class GlobalChoreProvider_CollectChores_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.ChoreOpts;
 
 			/// <summary>

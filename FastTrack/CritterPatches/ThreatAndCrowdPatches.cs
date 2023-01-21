@@ -152,8 +152,12 @@ namespace PeterHan.FastTrack.CritterPatches {
 				if (room != null) {
 					if (isEgg)
 						room.RemoveFromCavity(prefabID, room.eggs);
-					else
-						room.RemoveFromCavity(prefabID, room.creatures);
+					else {
+						var creatures = room.creatures;
+						lock (creatures) {
+							room.RemoveFromCavity(prefabID, creatures);
+						}
+					}
 					if (light) {
 						if (background)
 							GamePatches.BackgroundRoomProber.Instance.UpdateRoom(room);
@@ -165,8 +169,13 @@ namespace PeterHan.FastTrack.CritterPatches {
 				if (newRoom != null) {
 					if (isEgg)
 						newRoom.eggs.Add(prefabID);
-					else
-						newRoom.creatures.Add(prefabID);
+					else {
+						// Avoid a race on the room prober thread
+						var creatures = newRoom.creatures;
+						lock (creatures) {
+							creatures.Add(prefabID);
+						}
+					}
 					if (light) {
 						if (background)
 							GamePatches.BackgroundRoomProber.Instance.UpdateRoom(newRoom);

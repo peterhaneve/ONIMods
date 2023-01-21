@@ -128,13 +128,14 @@ namespace PeterHan.FastTrack.GamePatches {
 			harmony.Patch(typeof(ProcGenGame.WorldGen), nameof(ProcGenGame.WorldGen.
 				RenderOffline), prefix: new HarmonyMethod(typeof(NoDiseasePatches),
 				nameof(RenderOffline_Prefix)));
-			// Mark doctor buildings as deprecated
+			// Mark doctor buildings as deprecated (except apothecary in DLC for radpills)
 			harmony.Patch(typeof(AdvancedApothecaryConfig), nameof(AdvancedApothecaryConfig.
 				CreateBuildingDef), postfix: makeDeprecated);
 			harmony.Patch(typeof(AdvancedDoctorStationConfig), nameof(
 				AdvancedDoctorStationConfig.CreateBuildingDef), postfix: makeDeprecated);
-			harmony.Patch(typeof(ApothecaryConfig), nameof(ApothecaryConfig.CreateBuildingDef),
-				postfix: makeDeprecated);
+			if (!DlcManager.FeatureRadiationEnabled())
+				harmony.Patch(typeof(ApothecaryConfig), nameof(ApothecaryConfig.
+					CreateBuildingDef), postfix: makeDeprecated);
 			harmony.Patch(typeof(DoctorStationConfig), nameof(DoctorStationConfig.
 				CreateBuildingDef), postfix: makeDeprecated);
 			harmony.Patch(typeof(GasConduitDiseaseSensorConfig).GetMethodSafe(nameof(

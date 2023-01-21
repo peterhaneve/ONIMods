@@ -147,7 +147,7 @@ namespace PeterHan.FastTrack {
 						Constants.BULLETSTRING + "No new diseases can be contracted\n" +
 						Constants.BULLETSTRING + "Existing diseases will be immediately removed\n" +
 						Constants.BULLETSTRING + "All germs will be removed from pipes and buildings\n" +
-						"<i>Not compatible with mods: Diseases Restored, Diseases Expanded</i>\n" + PERF_MEDIUM;
+						"<i>Not compatible with mods: Diseases Restored, Diseases Expanded</i>" + PERF_MEDIUM;
 					public static LocString FASTREACHABILITY = "Only check items and chores for reachability when necessary." + PERF_MEDIUM;
 					public static LocString SENSOROPTS = "Only check for locations to Idle, Mingle, or Balloon Artist when necessary." + PERF_LOW;
 
@@ -163,12 +163,12 @@ namespace PeterHan.FastTrack {
 					public static LocString PARALLELINVENTORY = "Compiles the item quantites in the Resources panel on a non-blocking thread." + PERF_MEDIUM;
 					public static LocString INFOCARDOPTS = "Optimizes the info cards shown on hover." + PERF_MEDIUM;
 					public static LocString FASTUPDATEPICKUPS = "Speed up inefficient and memory-intensive checks for items.\n<i>Not compatible with mods: Efficient Supply</i>" + PERF_LOW;
-					public static LocString PICKUPOPTS = "Only look for the closest items when required,\nrather than every frame for each Duplicant." + PERF_MEDIUM;
+					public static LocString PICKUPOPTS = "Dramatically speed up scanning for items to store or supply." + PERF_MEDIUM;
 					public static LocString SIDESCREENOPTS = "Optimizes the informational side screens." + PERF_MEDIUM;
 					public static LocString MINIMALKCV = "Reduces memory allocations in most game-wide lists of items." + PERF_LOW;
 
 					public static LocString REDUCESOUNDUPDATES = "Reduces the frequency of sound location updates." + PERF_LOW;
-					public static LocString DISABLESOUND = "Completely disables all sound playback." + PERF_LOW;
+					public static LocString DISABLESOUND = "Completely disables <color=#FF0000>all</color> sound playback." + PERF_LOW;
 
 					public static LocString CULLCONDUITS = "Hide conduits and wires inside solid walls." + PERF_LOW;
 					public static LocString ANIMOPTS = "Optimizes slow code in animation playback." + PERF_MEDIUM;

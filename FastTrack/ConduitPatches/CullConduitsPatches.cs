@@ -178,11 +178,6 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	/// </summary>
 	[SkipSaveFileSerialization]
 	public sealed class UpdateGraphIfEntombed : KMonoBehaviour {
-		/// <summary>
-		/// The solid change entry to trigger when the conduit is put inside a solid tile.
-		/// </summary>
-		private HandleVector<int>.Handle partitionerEntry;
-
 #pragma warning disable IDE0044
 #pragma warning disable CS0649
 		// These fields are automatically populated by KMonoBehaviour
@@ -192,17 +187,22 @@ namespace PeterHan.FastTrack.ConduitPatches {
 #pragma warning restore IDE0044
 
 		/// <summary>
+		/// The cached cell for this building. Buildings cannot currently move...
+		/// </summary>
+		private int cell;
+
+		/// <summary>
 		/// Whether the current overlay forces the conduit to be visible.
 		/// </summary>
 		private bool overlayVisible;
 
 		/// <summary>
-		/// The layer to use for checking overlay visibility.
+		/// The solid change entry to trigger when the conduit is put inside a solid tile.
 		/// </summary>
-		internal ObjectLayer layer;
+		private HandleVector<int>.Handle partitionerEntry;
 
 		internal UpdateGraphIfEntombed() {
-			layer = ObjectLayer.Minion;
+			cell = Grid.InvalidCell;
 			overlayVisible = false;
 			partitionerEntry = HandleVector<int>.InvalidHandle;
 		}
@@ -211,7 +211,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// Checks if this building is in a visible tile.
 		/// </summary>
 		internal void CheckVisible() {
-			bool show = overlayVisible || Grid.PosToCell(transform.position).IsVisibleCell();
+			bool show = overlayVisible || cell.IsVisibleCell();
 			if (controller.enabled != show)
 				controller.enabled = show;
 		}
@@ -219,6 +219,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		public override void OnCleanUp() {
 			if (partitionerEntry.IsValid())
 				GameScenePartitioner.Instance.Free(ref partitionerEntry);
+			cell = Grid.InvalidCell;
 			base.OnCleanUp();
 		}
 
@@ -232,9 +233,11 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		public override void OnSpawn() {
 			var gsp = GameScenePartitioner.Instance;
 			base.OnSpawn();
+			cell = Grid.PosToCell(transform.position);
 			if (gsp != null)
-				partitionerEntry = gsp.Add(nameof(UpdateGraphIfEntombed), this, Grid.
-					PosToCell(transform.position), gsp.solidChangedLayer, OnSolidChanged);
+				partitionerEntry = gsp.Add(nameof(UpdateGraphIfEntombed), this, cell, gsp.
+					solidChangedLayer, OnSolidChanged);
+			CheckVisible();
 		}
 
 		/// <summary>
@@ -259,11 +262,11 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// Applied after OnSpawn runs.
 		/// </summary>
 		internal static void Postfix(KAnimGraphTileVisualizer __instance) {
-			if (__instance.TryGetComponent(out BuildingComplete building))
+			if (__instance.TryGetComponent(out BuildingComplete _) && !__instance.
+					TryGetComponent(out UpdateGraphIfEntombed _))
 				// Only apply to completed buildings, buildings under construction should be
 				// visible even inside any wall
-				__instance.gameObject.AddOrGet<UpdateGraphIfEntombed>().layer = building.Def.
-					TileLayer;
+				__instance.gameObject.AddComponent<UpdateGraphIfEntombed>();
 		}
 	}
 

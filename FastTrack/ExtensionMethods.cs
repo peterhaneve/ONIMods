@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Reflection;
 #endif
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using UnityEngine;
@@ -129,9 +130,9 @@ namespace PeterHan.FastTrack {
 		/// <returns>true if a pipe could be seen in the cell (visible, not fully solid or
 		/// transparent), or false otherwise</returns>
 		public static bool IsVisibleCell(this int cell) {
-			var element = Grid.Element[cell];
-			return Grid.IsValidCell(cell) && Grid.IsVisible(cell) && (element == null ||
-				!element.IsSolid || Grid.Transparent[cell]);
+			Element element;
+			return Grid.IsValidCell(cell) && Grid.IsVisible(cell) && ((element = Grid.
+				Element[cell]) == null || !element.IsSolid || Grid.Transparent[cell]);
 		}
 
 		/// <summary>
