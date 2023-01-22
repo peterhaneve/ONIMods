@@ -116,8 +116,11 @@ namespace PeterHan.FastTrack {
 			}
 			if (options.FastReachability)
 				GamePatches.FastCellChangeMonitor.CreateInstance();
-			if (options.SideScreenOpts)
+			if (options.SideScreenOpts) {
 				FastTrackCompat.CheckStatsCompat(harmony);
+				if (DlcManager.FeatureClusterSpaceEnabled())
+					FastTrackCompat.CheckRocketCompat(harmony);
+			}
 			if (options.NoDisease)
 				FastTrackCompat.CheckNoDiseaseCompat(harmony);
 			if (options.AllocOpts)
@@ -166,7 +169,7 @@ namespace PeterHan.FastTrack {
 				GamePatches.SolidTransferArmUpdater.DestroyInstance();
 			if (options.PickupOpts || options.FastUpdatePickups)
 				PathPatches.DeferredTriggers.DestroyInstance();
-			if (options.RadiationOpts)
+			if (options.RadiationOpts && DlcManager.FeatureRadiationEnabled())
 				GamePatches.FastProtonCollider.Cleanup();
 			if (options.AsyncPathProbe)
 				PathPatches.PathProbeJobManager.DestroyInstance();
@@ -177,6 +180,8 @@ namespace PeterHan.FastTrack {
 			if (options.SideScreenOpts) {
 				UIPatches.AdditionalDetailsPanelWrapper.Cleanup();
 				UIPatches.DetailsPanelWrapper.Cleanup();
+				if (DlcManager.FeatureClusterSpaceEnabled())
+					UIPatches.HarvestSideScreenWrapper.Cleanup();
 				UIPatches.VitalsPanelWrapper.Cleanup();
 			}
 			if (options.BackgroundRoomRebuild)
@@ -251,11 +256,13 @@ namespace PeterHan.FastTrack {
 			if (options.SideScreenOpts) {
 				UIPatches.AdditionalDetailsPanelWrapper.Init();
 				UIPatches.DetailsPanelWrapper.Init();
+				if (DlcManager.FeatureClusterSpaceEnabled())
+					UIPatches.HarvestSideScreenWrapper.Init();
 				UIPatches.VitalsPanelWrapper.Init();
 			}
 			if (options.PickupOpts || options.FastUpdatePickups)
 				PathPatches.DeferredTriggers.CreateInstance();
-			if (options.RadiationOpts)
+			if (options.RadiationOpts && DlcManager.FeatureRadiationEnabled())
 				GamePatches.FastProtonCollider.Init();
 			if (inst != null) {
 				var go = inst.gameObject;
@@ -268,7 +275,7 @@ namespace PeterHan.FastTrack {
 					UIPatches.BackgroundInventoryUpdater.CreateInstance();
 				if (options.MiscOpts)
 					go.AddOrGet<GamePatches.AchievementPatches>();
-				if (options.RadiationOpts)
+				if (options.RadiationOpts && DlcManager.FeatureRadiationEnabled())
 					go.AddOrGet<GamePatches.SlicedRadiationGridUpdater>();
 				// Requires the AJM to work
 				if (options.PickupOpts)

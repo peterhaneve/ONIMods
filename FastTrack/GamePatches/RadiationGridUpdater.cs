@@ -54,7 +54,8 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	[HarmonyPatch(typeof(Game), nameof(Game.RefreshRadiationLoop))]
 	public static class Game_RefreshRadiationLoop_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.RadiationOpts;
+		internal static bool Prepare() => FastTrackOptions.Instance.RadiationOpts &&
+			DlcManager.FeatureRadiationEnabled();
 
 		/// <summary>
 		/// Applied before RefreshRadiationLoop runs.
@@ -69,7 +70,8 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	[HarmonyPatch(typeof(RadiationGridEmitter), nameof(RadiationGridEmitter.Emit))]
 	public static class RadiationGridEmitter_Emit_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.RadiationOpts;
+		internal static bool Prepare() => FastTrackOptions.Instance.RadiationOpts &&
+			DlcManager.FeatureRadiationEnabled();
 
 		/// <summary>
 		/// Applied before Emit runs.
@@ -117,7 +119,8 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	[HarmonyPatch(typeof(Radiator), nameof(Radiator.OnSpawn))]
 	public static class Radiator_OnSpawn_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.RadiationOpts;
+		internal static bool Prepare() => FastTrackOptions.Instance.RadiationOpts &&
+			DlcManager.FeatureRadiationEnabled();
 
 		/// <summary>
 		/// Applied after OnSpawn runs.
@@ -133,7 +136,8 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	[HarmonyPatch(typeof(Radiator), nameof(Radiator.Update))]
 	public static class Radiator_Update_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.RadiationOpts;
+		internal static bool Prepare() => FastTrackOptions.Instance.RadiationOpts &&
+			DlcManager.FeatureRadiationEnabled();
 
 		/// <summary>
 		/// Applied before Update runs.

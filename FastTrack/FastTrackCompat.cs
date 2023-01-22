@@ -85,6 +85,18 @@ namespace PeterHan.FastTrack {
 		}
 
 		/// <summary>
+		/// Checks for compatibility and applies drillcone optimizations only if a rocket
+		/// mod is not enabled.
+		/// </summary>
+		/// <param name="harmony">The Harmony instance to use for patching.</param>
+		internal static void CheckRocketCompat(Harmony harmony) {
+			if (PPatchTools.GetTypeSafe("Rockets_TinyYetBig.Mod") != null)
+				PUtil.LogWarning("Disabling drillcone optimizations: Rockets mod active");
+			else
+				UIPatches.HarvestSideScreenWrapper.Apply(harmony);
+		}
+
+		/// <summary>
 		/// Checks for compatibility and applies stats panel optimizations only if mods which
 		/// show or alter attributes are not enabled.
 		/// </summary>

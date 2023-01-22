@@ -217,8 +217,6 @@ namespace PeterHan.FastTrack.GamePatches {
 			var hits = ListPool<ThreadsafePartitionerEntry, FastProtonCollider>.Allocate();
 			Grid.CellToXY(cell, out int x, out int y);
 			hepLayer.Gather(hits, x - 1, y - 1, 3, 3);
-			if (hits.Count > 0)
-				PUtil.LogWarning(hits.Join(","));
 			int n = hits.Count;
 			bool collided = false;
 			for (int i = 0; i < n && !collided; i++)
@@ -341,7 +339,8 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	[HarmonyPatch(typeof(HighEnergyParticle), nameof(HighEnergyParticle.CheckCollision))]
 	public static class HighEnergyParticle_CheckCollision_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.RadiationOpts;
+		internal static bool Prepare() => FastTrackOptions.Instance.RadiationOpts &&
+			DlcManager.FeatureRadiationEnabled();
 
 		/// <summary>
 		/// Applied before CheckCollision runs.
@@ -356,7 +355,8 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	[HarmonyPatch(typeof(HighEnergyParticle), nameof(HighEnergyParticle.MovingUpdate))]
 	public static class HighEnergyParticle_MovingUpdate_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.RadiationOpts;
+		internal static bool Prepare() => FastTrackOptions.Instance.RadiationOpts &&
+			DlcManager.FeatureRadiationEnabled();
 
 		/// <summary>
 		/// Applied before MovingUpdate runs.
@@ -381,7 +381,8 @@ namespace PeterHan.FastTrack.GamePatches {
 	[HarmonyPatch(typeof(HighEnergyParticleConfig), nameof(HighEnergyParticleConfig.
 		CreatePrefab))]
 	public static class HighEnergyParticleConfig_CreatePrefab_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.RadiationOpts;
+		internal static bool Prepare() => FastTrackOptions.Instance.RadiationOpts &&
+			DlcManager.FeatureRadiationEnabled();
 
 		/// <summary>
 		/// Applied after CreatePrefab runs.
