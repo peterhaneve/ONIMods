@@ -22,6 +22,7 @@ using PeterHan.PLib.Actions;
 using System.Collections.Generic;
 using System.Text;
 using PeterHan.PLib.Core;
+
 using TimeSlice = GameUtil.TimeSlice;
 
 namespace PeterHan.FastTrack.UIPatches {
@@ -428,6 +429,11 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Avoid reallocating a new StringBuilder every frame.
 		/// </summary>
 		private static readonly StringBuilder CACHED_BUILDER = new StringBuilder(512);
+		
+		/// <summary>
+		/// The prefix used for all mouse click substitutions.
+		/// </summary>
+		private const string CLICK_PREFIX = "ClickType";
 
 		/// <summary>
 		/// Buffers the hotkey text.
@@ -528,16 +534,21 @@ namespace PeterHan.FastTrack.UIPatches {
 					lookup[action.ToString()] = actionBuffer.Append("</b></color>").
 						ToString();
 				}
+				// Copy the click strings from LocText
+				foreach (var pair in LocText.ClickLookup) {
+					var text = pair.Value;
+					lookup[pair.Key] = isGamepad ? text.first : text.second;
+				}
 			}
 		}
 
 		/// <summary>
 		/// Checks to see if the buffered hotkey string matches the prefix.
 		/// </summary>
+		/// <param name="prefix">The prefix to compare.</param>
 		/// <returns>true if it is a hotkey, or false otherwise.</returns>
-		private static bool IsHotkey() {
+		private static bool IsHotkey(string prefix) {
 			var hkb = HOTKEY_BUFFER;
-			var prefix = HOTKEY_PREFIX;
 			int n = hkb.Length, compareN = prefix.Length;
 			bool equals = n == compareN;
 			for (int i = 0; i < n && equals; i++)
@@ -552,7 +563,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="input">The input text.</param>
 		private static void ParseHotkeys(StringBuilder text, string input) {
 			int n = input.Length;
-			bool substitute = false, hotkey = false;
+			bool hotkey = false;
+			char substitute = '0';
 			var hkb = HOTKEY_BUFFER;
 			var lookup = HOTKEY_LOOKUP;
 			text.Clear();
@@ -563,29 +575,30 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 			for (int i = 0; i < n; i++) {
 				char c = input[i];
-				if (c == '{') {
+				if (c == '{' || c == '(') {
 					hotkey = false;
-					substitute = true;
-				} else if (substitute)
+					substitute = c;
+				} else if (substitute != '0')
 					switch (c) {
 					case '/':
 						// Hotkey/...
-						if (IsHotkey()) {
+						if (IsHotkey(HOTKEY_PREFIX) || IsHotkey(CLICK_PREFIX)) {
 							hotkey = true;
 							hkb.Clear();
 						} else
 							hkb.Append(c);
 						break;
 					case '}':
+					case ')':
 						// What was requested?
 						if (hotkey) {
 							if (lookup.TryGetValue(hkb.ToString(), out string formatted))
 								text.Append(formatted);
 						} else
 							// Strings with other {} should get by unaltered
-							text.Append('{').Append(hkb).Append('}');
+							text.Append(substitute).Append(hkb).Append(c);
 						hkb.Clear();
-						substitute = false;
+						substitute = '0';
 						break;
 					default:
 						hkb.Append(c);
@@ -594,9 +607,9 @@ namespace PeterHan.FastTrack.UIPatches {
 				else
 					text.Append(c);
 			}
-			if (substitute) {
+			if (substitute != '0') {
 				// Unterminated string, fill it in verbatim
-				text.Append('{').Append(hkb);
+				text.Append(substitute).Append(hkb);
 				hkb.Clear();
 			}
 		}

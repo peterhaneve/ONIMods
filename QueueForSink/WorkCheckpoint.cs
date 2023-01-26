@@ -63,9 +63,8 @@ namespace PeterHan.QueueForSinks {
 		}
 
 		/// <summary>
-		/// Handles work events to keep the status of this workable.
+		/// Handles work events to update the status of this workable.
 		/// </summary>
-		/// <param name="evt">The type of work event which occurred.</param>
 		private void HandleWorkableAction(Workable _, Workable.WorkableEvent evt) {
 			switch (evt) {
 			case Workable.WorkableEvent.WorkStarted:
@@ -130,7 +129,7 @@ namespace PeterHan.QueueForSinks {
 			}
 
 			protected override void InternalBegin() {
-				reactorNavigator = reactor.GetComponent<Navigator>();
+				reactor.TryGetComponent(out reactorNavigator);
 				// Animation to make them stand impatiently in line
 				if (reactor.TryGetComponent(out KBatchedAnimController controller)) {
 					controller.AddAnimOverrides(distractedAnim, 1f);
@@ -152,6 +151,9 @@ namespace PeterHan.QueueForSinks {
 			}
 
 			protected override void InternalCleanup() {
+				// Global cooldown needs to be reset with reactions to lines of sinks
+				if (reactor != null && reactor.TryGetComponent(out StateMachineController smc))
+					smc.GetSMI<ReactionMonitor.Instance>()?.ClearLastReaction();
 				reactorNavigator = null;
 			}
 
@@ -185,12 +187,8 @@ namespace PeterHan.QueueForSinks {
 				else {
 					reactorNavigator.AdvancePath(false);
 					if (!reactorNavigator.path.IsValid() || !MustStop(reactor,
-							reactorNavigator.GetNextTransition().x)) {
-						var smi = reactor.GetSMI<ReactionMonitor.Instance>();
-						if (smi != null)
-							smi.ClearLastReaction();
+							reactorNavigator.GetNextTransition().x))
 						Cleanup();
-					}
 				}
 			}
 		}

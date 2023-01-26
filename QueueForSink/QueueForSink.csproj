@@ -2,11 +2,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Queue For Sinks</AssemblyTitle>
-    <FileVersion>3.9.0.0</FileVersion>
+    <FileVersion>3.10.0.0</FileVersion>
     <RootNamespace>PeterHan.QueueForSinks</RootNamespace>
     <Description>Forces Duplicants to queue up for sinks, wash basins, and ore scrubbers.</Description>
     <AssemblyVersion>3.2.0.0</AssemblyVersion>
-    <LastWorkingBuild>534889</LastWorkingBuild>
+    <LastWorkingBuild>537329</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
 </Project>
