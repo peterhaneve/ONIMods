@@ -59,6 +59,11 @@ namespace PeterHan.FinishTasks {
 		};
 
 		/// <summary>
+		/// The ID for the IsScheduledTime precondition.
+		/// </summary>
+		private static string IsScheduledTimeID;
+
+		/// <summary>
 		/// Cached reference to Db.Get().ScheduleBlockTypes.Work.
 		/// </summary>
 		private static ScheduleBlockType Work;
@@ -82,11 +87,10 @@ namespace PeterHan.FinishTasks {
 			// current chore is compulsory like emotes
 			if (normal && scheduleBlock != null && scheduleBlock.GroupId == FinishTask.Id) {
 				var currentChore = driver.GetCurrentChore();
-				var detector = driver.GetComponent<FinishChoreDetector>();
 				// Allow the task that the Duplicant initially was doing to continue even if
 				// temporarily interrupted
-				var savedChore = (detector == null) ? null : (detector.IsAcquiringChore ?
-					currentChore : detector.TaskToFinish);
+				var savedChore = driver.TryGetComponent(out FinishChoreDetector detector) ?
+					null : (detector.IsAcquiringChore ? currentChore : detector.TaskToFinish);
 				start = currentChore != null && (currentChore == context.chore || currentChore.
 					masterPriority.priority_class == PriorityScreen.PriorityClass.compulsory ||
 					savedChore == context.chore);
@@ -105,6 +109,7 @@ namespace PeterHan.FinishTasks {
 			FinishColor.hoverColor = FinishColor.activeColor;
 			FinishColor.disabledhoverColor = new Color(0.48f, 0.46f, 0.5f, 1.0f);
 			FinishTask = null;
+			IsScheduledTimeID = string.Empty;
 			Work = null;
 			PUtil.InitLibrary();
 			LocString.CreateLocStringKeys(typeof(FinishTasksStrings.DUPLICANTS));
@@ -124,8 +129,8 @@ namespace PeterHan.FinishTasks {
 			/// </summary>
 			internal static void Postfix(Chore __instance, Chore.Precondition precondition,
 					object data) {
-				if (precondition.id == ChorePreconditions.instance.IsScheduledTime.id && (data
-						is ScheduleBlockType type) && type == Work)
+				if (precondition.id == IsScheduledTimeID && (data is ScheduleBlockType type) &&
+						type == Work)
 					// Any task classified as Work gets our finish time precondition
 					__instance.AddPrecondition(CAN_START_NEW, __instance);
 			}
@@ -175,11 +180,7 @@ namespace PeterHan.FinishTasks {
 			/// Applied after the constructor runs.
 			/// </summary>
 			internal static void Postfix(ScheduleBlockTypes __instance) {
-				Color color;
-				if (FinishColor != null)
-					color = FinishColor.activeColor;
-				else
-					color = Color.green;
+				var color = FinishColor != null ? FinishColor.activeColor : Color.green;
 				// The type and color are not used by the base game
 				FinishBlock = __instance.Add(new ScheduleBlockType(FINISHTASK.ID, __instance,
 					FINISHTASK.NAME, FINISHTASK.DESCRIPTION, color));
@@ -205,9 +206,10 @@ namespace PeterHan.FinishTasks {
 					// Default schedule does not contain this type
 					FinishTask = __instance.Add(FINISHTASK.ID, 0, FINISHTASK.NAME, FINISHTASK.
 						DESCRIPTION, FINISHTASK.NOTIFICATION_TOOLTIP,
-						new List<ScheduleBlockType>() {
+						new List<ScheduleBlockType> {
 							Work, FinishBlock
-						}, false);
+						});
+				IsScheduledTimeID = ChorePreconditions.instance.IsScheduledTime.id;
 			}
 		}
 

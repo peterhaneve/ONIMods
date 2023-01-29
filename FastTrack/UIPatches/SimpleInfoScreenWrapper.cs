@@ -245,11 +245,10 @@ namespace PeterHan.FastTrack.UIPatches {
 				}
 				found.Recycle();
 				// Geysers can be uncovered over time
-				if (lastSelection.world != null)
-					allGeysers = FindObjectsOfType<Geyser>();
-				else
-					allGeysers = null;
+				allGeysers = lastSelection.world != null ? FindObjectsOfType<Geyser>() : null;
 			}
+			// Vanilla method force shows it
+			statusActive = true;
 		}
 
 		public override void OnSpawn() {
@@ -297,7 +296,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					bool showStatus = count > 0;
 					if (force)
 						UpdatePanels();
-					if (showStatus != statusActive) {
+					if (showStatus != statusActive || force) {
 						sis.statusItemPanel.gameObject.SetActive(showStatus);
 						statusActive = showStatus;
 					}
@@ -389,16 +388,15 @@ namespace PeterHan.FastTrack.UIPatches {
 			if (n > 0) {
 				int nHeaders = nh, nRows = nr;
 				var pr = processRows;
-				var ph = processHeaders;
 				string conditionName = StringFormatter.ToUpper(conditionType.ToString());
 				var seen = HashSetPool<ProcessCondition, SimpleInfoScreen>.Allocate();
 				ProcessConditionRow row;
 				// Grab a cached header if possible
-				if (nHeaders >= ph.Count)
-					ph.Add(row = new ProcessConditionRow(Util.KInstantiateUI(sis.
+				if (nHeaders >= processHeaders.Count)
+					processHeaders.Add(row = new ProcessConditionRow(Util.KInstantiateUI(sis.
 						processConditionHeader.gameObject, conditionParent, true), true));
 				else {
-					row = ph[nHeaders];
+					row = processHeaders[nHeaders];
 					row.SetActive(true);
 				}
 				row.SetTitle(Strings.Get("STRINGS.UI.DETAILTABS.PROCESS_CONDITIONS." +
@@ -652,10 +650,9 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before OnSelectTarget runs.
 			/// </summary>
-			internal static bool Prefix(SimpleInfoScreen __instance, GameObject target) {
-				if (__instance.lastTarget != target)
-					instance?.OnSelectTarget(target);
-				return true;
+			internal static void Prefix(SimpleInfoScreen __instance, GameObject target) {
+				if (instance != null && __instance.lastTarget != target)
+					instance.OnSelectTarget(target);
 			}
 		}
 
@@ -670,7 +667,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// Applied before Refresh runs.
 			/// </summary>
 			internal static bool Prefix(bool force) {
-				instance?.Refresh(force);
+				if (instance != null)
+					instance.Refresh(force);
 				return false;
 			}
 		}
@@ -687,7 +685,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// Applied before RefreshBreedingChance runs.
 			/// </summary>
 			internal static bool Prefix() {
-				instance?.RefreshBreedingChance();
+				if (instance != null)
+					instance.RefreshBreedingChance();
 				return false;
 			}
 		}
@@ -704,7 +703,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// Applied before RefreshProcessConditions runs.
 			/// </summary>
 			internal static bool Prefix() {
-				instance?.RefreshProcess();
+				if (instance != null)
+					instance.RefreshProcess();
 				return false;
 			}
 		}
@@ -739,7 +739,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// Applied before RefreshWorld runs.
 			/// </summary>
 			internal static bool Prefix(SimpleInfoScreen __instance) {
-				instance?.RefreshWorld();
+				if (instance != null)
+					instance.RefreshWorld();
 				return false;
 			}
 		}

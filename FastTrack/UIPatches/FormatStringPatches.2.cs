@@ -330,15 +330,22 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			internal static bool Prefix(float percent, TimeSlice timeSlice,
 					ref string __result) {
-				float absP = Mathf.Abs(percent);
 				var text = CACHED_BUILDER;
 				text.Clear();
-				if (!text.AppendIfInfinite(percent)) {
+				if (percent == 0.0f)
+					// Pretty common, make it fast
+					text.Append("0");
+				else if (!text.AppendIfInfinite(percent)) {
 					int precision;
 					percent = GameUtil.ApplyTimeSlice(percent, timeSlice);
+					float absP = Mathf.Abs(percent);
+					// The base game uses 2dp for anything under 0.1%, 1dp for 0.1-1%, and 0dp
+					// for anything higher. Improve UX a bit here by showing an extra place
 					if (absP < 0.1f)
-						precision = 2;
+						precision = 3;
 					else if (absP < 1.0f)
+						precision = 2;
+					else if (absP < 100.0f)
 						precision = 1;
 					else
 						precision = 0;

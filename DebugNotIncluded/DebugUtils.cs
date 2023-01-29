@@ -66,20 +66,6 @@ namespace PeterHan.DebugNotIncluded {
 		private const string MOD_INFO_FILENAME = "mod_info.yaml";
 
 		/// <summary>
-		/// Prestores a list of shorthand types used by Mono in stack traces.
-		/// </summary>
-		private static readonly IDictionary<string, Type> SHORTHAND_TYPES =
-			new Dictionary<string, Type> {
-				{ "bool", typeof(bool) }, { "byte", typeof(byte) }, { "sbyte", typeof(sbyte) },
-				{ "char", typeof(char) }, { "decimal", typeof(decimal) },
-				{ "double", typeof(double) }, { "float", typeof(float) },
-				{ "int", typeof(int) }, { "uint", typeof(uint) }, { "long", typeof(long) },
-				{ "ulong", typeof(ulong) }, { "short", typeof(short) },
-				{ "ushort", typeof(ushort) }, { "object", typeof(object) },
-				{ "string", typeof(string) }
-			};
-
-		/// <summary>
 		/// The Action used when "UI Debug" is pressed.
 		/// </summary>
 		internal static PAction UIDebugAction { get; private set; }
@@ -91,7 +77,8 @@ namespace PeterHan.DebugNotIncluded {
 		internal static void AppendMethod(StringBuilder message, MethodBase method) {
 			var declaringType = method.DeclaringType;
 			// If this method was declared in a generic type, choose the right method to log
-			if (declaringType.IsGenericType && !declaringType.IsGenericTypeDefinition) {
+			if (declaringType != null && declaringType.IsGenericType && !declaringType.
+					IsGenericTypeDefinition) {
 				declaringType = declaringType.GetGenericTypeDefinition();
 				foreach (var m in declaringType.GetMethods(DEC_FLAGS))
 					if (m.MetadataToken == method.MetadataToken) {
@@ -100,7 +87,7 @@ namespace PeterHan.DebugNotIncluded {
 					}
 			}
 			// Type and name
-			message.Append(declaringType.ToString());
+			message.Append(declaringType);
 			message.Append(".");
 			message.Append(method.Name);
 			// If the method itself is generic, use its definition
@@ -122,7 +109,7 @@ namespace PeterHan.DebugNotIncluded {
 				// Parameter type, use the definition if possible
 				if (paramType.IsGenericType && !paramType.IsGenericTypeDefinition)
 					paramType = paramType.GetGenericTypeDefinition();
-				message.Append(paramType.ToString());
+				message.Append(paramType);
 				// Parameter name
 				if (!string.IsNullOrEmpty(name)) {
 					message.Append(" ");
@@ -250,6 +237,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// <summary>
 		/// Opens the output log file.
 		/// </summary>
+		#if false
 		internal static void OpenOutputLog() {
 			// Ugly but true!
 			var platform = Application.platform;
@@ -278,6 +266,7 @@ namespace PeterHan.DebugNotIncluded {
 			if (!string.IsNullOrEmpty(path))
 				Application.OpenURL(Path.GetFullPath(path));
 		}
+		#endif
 
 		/// <summary>
 		/// Profiles a method, outputting how many milliseconds it took to run on each use.
@@ -321,6 +310,20 @@ namespace PeterHan.DebugNotIncluded {
 			UIDebugAction = new PActionManager().CreateAction("DebugNotIncluded.UIDebugAction",
 				DebugNotIncludedStrings.INPUT_BINDINGS.DEBUG.SNAPSHOT, new PKeyBinding(
 				KKeyCode.U, Modifier.Alt));
+		}
+
+		/// <summary>
+		/// Determines the original method name of compiler generated methods.
+		/// </summary>
+		/// <param name="methodName">The compiler generated method name.</param>
+		/// <param name="typeName">The compiler generated type name.</param>
+		/// <returns>The original method name that declared the code.</returns>
+		public static string StripCompilerGenerated(this string methodName, string typeName) {
+			int index = typeName.IndexOf('>');
+			if (index > 1)
+				methodName = typeName.Substring(1, index - 1) + (methodName.
+					EndsWith("MoveNext", StringComparison.Ordinal) ? "(Enum)" : "(Delegate)");
+			return methodName;
 		}
 	}
 }

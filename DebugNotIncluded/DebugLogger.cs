@@ -46,37 +46,82 @@ namespace PeterHan.DebugNotIncluded {
 		/// <returns>The new message.</returns>
 		internal static string AddCallingLocation(string message, StackTrace caller) {
 			int n = caller.FrameCount;
-			if (n > 0) {
-				StackFrame frame;
-				int i = 0;
-				do {
-					frame = caller.GetFrame(i++);
-					var method = frame.GetMethod();
-					// Valid method?
-					if (method != null) {
-						var type = method.DeclaringType;
-						string typeName = type.Name, methodName = method.Name;
-						// Do not add info to messages from this mod
-						if (type == typeof(DebugLogger)) break;
-						if ((typeName != nameof(PUtil) && type != typeof(DebugUtil)) ||
-								!methodName.StartsWith("Log")) {
-							var declaring = type.DeclaringType;
-							// Remove compiler generated delegate classes
-							if (typeName.StartsWith("<>") && declaring != null)
-								typeName = declaring.Name;
+			for (int i = 0; i < n; i++) {
+				Type type;
+				var frame = caller.GetFrame(i);
+				var method = frame.GetMethod();
+				// Valid method?
+				if (method != null && (type = method.DeclaringType) != null) {
+					string typeName = type.Name, methodName = method.Name;
+					if (type == typeof(DebugLogger)) break;
+					// Do not add info to messages from this mod
+					if ((typeName != nameof(PUtil) && type != typeof(DebugUtil)) ||
+							!methodName.StartsWith("Log", StringComparison.Ordinal)) {
+						var declaring = type.DeclaringType;
+						bool isGenerated = typeName.Length > 0 && typeName[0] == '<';
+						if (methodName == ".ctor")
+							methodName = "new";
+						else if (isGenerated)
+							// Method captured as anonymous class
+							methodName = methodName.StripCompilerGenerated(typeName);
+						else {
 							// Strip the patch suffix
-							int index = methodName.IndexOf("_Patch");
+							int index = methodName.IndexOf("_Patch", StringComparison.
+								Ordinal);
 							if (index > 0)
 								methodName = methodName.Substring(0, index);
-							// Found the caller
-							message = string.Format("[{0}] [{2}.{3}|{1:D}] ", GetTimeStamp(),
-								Thread.CurrentThread.ManagedThreadId, typeName, methodName);
-							break;
 						}
+						if (methodName.Length > 0 && methodName[0] == '<')
+							// Non-captured method as anonymous method
+							methodName = methodName.StripCompilerGenerated(methodName);
+						// Remove compiler generated delegate classes
+						if (isGenerated && declaring != null)
+							typeName = declaring.Name;
+						// Found the caller
+						message = string.Format("[{0}] [{2}.{3}|{1:D}] ", GetTimeStamp(),
+							Thread.CurrentThread.ManagedThreadId, typeName, methodName);
+						break;
 					}
-				} while (i < n);
+				}
 			}
 			return message;
+		}
+
+		/// <summary>
+		/// Adds stack frame information to the crash log.
+		/// </summary>
+		/// <param name="method">The method referenced in the stack frame.</param>
+		/// <param name="frame">The stack frame where the crash occurred.</param>
+		/// <param name="message">The location where the message will be stored.</param>
+		private static void AddStackFrame(MethodBase method, StackFrame frame,
+				StringBuilder message) {
+			// Try to give as much debug info as possible
+			int line = frame.GetFileLineNumber(), chr = frame.GetFileColumnNumber();
+			message.Append("  at ");
+			method = DebugUtils.GetOriginalMethod(method);
+			DebugUtils.AppendMethod(message, method);
+			if (line > 0 || chr > 0)
+				message.AppendFormat(" ({0:D}, {1:D})", line, chr);
+			else
+				message.AppendFormat(" [{0:D}]", frame.GetILOffset());
+			// The blame game
+			var type = method.DeclaringType;
+			if (type == null || type.IsBaseGameType())
+				message.Append(" <Klei>");
+			else {
+				var asm = type.Assembly;
+				ModDebugInfo mod;
+				if (asm == typeof(string).Assembly)
+					message.Append(" <mscorlib>");
+				else if ((mod = ModDebugRegistry.Instance.OwnerOfType(type)) != null) {
+					message.Append(" <");
+					message.Append(mod.ModName ?? "unknown");
+					message.Append(">");
+				} else if (asm.FullName.IndexOf("Unity", StringComparison.Ordinal) >= 0)
+					message.Append(" <Unity>");
+			}
+			message.AppendLine();
+			DebugUtils.GetPatchInfo(method, message);
 		}
 
 		/// <summary>
@@ -121,11 +166,11 @@ namespace PeterHan.DebugNotIncluded {
 				message.AppendFormat("{0}: {1}", e.GetType().Name, e.Message ??
 					"<no message>");
 				message.AppendLine();
-				ModLoadHandler.CrashingMod = DebugUtils.GetFirstModOnCallStack(stackTrace);
+				ModLoadHandler.CrashingMod = stackTrace.GetFirstModOnCallStack();
 				GetStackTraceLog(stackTrace, message);
 				// Log the root cause
 				var cause = e.GetBaseException();
-				if (cause != null && cause != e) {
+				if (cause != e) {
 					message.AppendLine("Root cause exception:");
 					message.Append(GetExceptionLog(cause));
 				}
@@ -137,43 +182,17 @@ namespace PeterHan.DebugNotIncluded {
 		/// Gets the log message for the specified stack trace.
 		/// </summary>
 		/// <param name="stackTrace">The stack trace, which must not be null.</param>
-		/// <param name="cache">The cache of Harmony methods.</param>
 		/// <param name="message">The location where the message will be stored.</param>
 		internal static void GetStackTraceLog(StackTrace stackTrace, StringBuilder message) {
-			var registry = ModDebugRegistry.Instance;
-			ModDebugInfo mod;
 			int n = stackTrace.FrameCount;
 			for (int i = 0; i < n; i++) {
 				var frame = stackTrace.GetFrame(i);
-				var method = frame?.GetMethod();
-				if (method == null)
-					method = HarmonyLib.Harmony.GetMethodFromStackframe(frame);
-				if (method != null)
-					method = DebugUtils.GetOriginalMethod(method);
-				if (method != null) {
-					// Try to give as much debug info as possible
-					int line = frame.GetFileLineNumber(), chr = frame.GetFileColumnNumber();
-					message.Append("  at ");
-					DebugUtils.AppendMethod(message, method);
-					if (line > 0 || chr > 0)
-						message.AppendFormat(" ({0:D}, {1:D})", line, chr);
-					else
-						message.AppendFormat(" [{0:D}]", frame.GetILOffset());
-					// The blame game
-					var type = method.DeclaringType;
-					var asm = type.Assembly;
-					if (type.IsBaseGameType())
-						message.Append(" <Klei>");
-					else if (asm == typeof(string).Assembly) {
-						message.Append(" <mscorlib>");
-					} else if ((mod = registry.OwnerOfType(type)) != null) {
-						message.Append(" <");
-						message.Append(mod.ModName ?? "unknown");
-						message.Append(">");
-					} else if (asm.FullName.Contains("Unity"))
-						message.Append(" <Unity>");
-					message.AppendLine();
-					DebugUtils.GetPatchInfo(method, message);
+				if (frame != null) {
+					var method = frame.GetMethod();
+					if (method == null)
+						method = HarmonyLib.Harmony.GetMethodFromStackframe(frame);
+					if (method != null)
+						AddStackFrame(method, frame, message);
 				}
 			}
 		}
@@ -199,39 +218,7 @@ namespace PeterHan.DebugNotIncluded {
 			} else
 				Handler = null;
 		}
-
-		/// <summary>
-		/// Logs an exception with a detailed breakdown. This overload is used in building
-		/// patches.
-		/// </summary>
-		/// <param name="e">The exception to log.</param>
-		/// <param name="config">The building config that failed to load.</param>
-		internal static void LogBuildingException(Exception e, IBuildingConfig config) {
-			var cause = e.InnerException ?? e;
-			try {
-				var message = new StringBuilder(256);
-				if (config != null) {
-					var type = config.GetType();
-					message.Append("Error when creating building ");
-					message.Append(type.Name);
-					// Name and shame!
-					var mod = ModDebugRegistry.Instance.OwnerOfType(type);
-					if (mod != null) {
-						message.Append(" from mod ");
-						message.Append(mod.ModName);
-						ModLoadHandler.CrashingMod = mod;
-					}
-					message.AppendLine(":");
-				}
-				message.Append(GetExceptionLog(cause));
-				LogError(message.ToString());
-			} catch {
-				// Ensure it gets logged at all costs
-				BaseLogException(cause, null);
-				throw;
-			}
-		}
-
+		
 		/// <summary>
 		/// Logs a debug message.
 		/// </summary>
@@ -331,7 +318,7 @@ namespace PeterHan.DebugNotIncluded {
 				var trace = new StackTrace(2);
 				message.AppendLine("An assert is about to fail:");
 				// Better stack traces!
-				ModLoadHandler.CrashingMod = DebugUtils.GetFirstModOnCallStack(trace);
+				ModLoadHandler.CrashingMod = trace.GetFirstModOnCallStack();
 				GetStackTraceLog(trace, message);
 				LogError(message.ToString());
 				message.Clear();

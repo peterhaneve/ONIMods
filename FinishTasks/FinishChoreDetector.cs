@@ -16,8 +16,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
+#if DEBUG
 using PeterHan.PLib.Core;
+#endif
 
 using PriorityClass = PriorityScreen.PriorityClass;
 
@@ -49,22 +50,14 @@ namespace PeterHan.FinishTasks {
 		/// <summary>
 		/// Reports whether the Duplicant is still looking for a task to finish.
 		/// </summary>
-		public bool IsAcquiringChore {
-			get {
-				return acquireChore;
-			}
-		}
+		public bool IsAcquiringChore => acquireChore;
 
 		/// <summary>
 		/// Reports the task that the Duplicant may finish. If null and IsAcquiringChore is
 		/// false, no new work task may be started. If null and IsAcquiringChore is true, any
 		/// work task may be started.
 		/// </summary>
-		public Chore TaskToFinish {
-			get {
-				return acquireChore ? null : allowedChore;
-			}
-		}
+		public Chore TaskToFinish => acquireChore ? null : allowedChore;
 
 		/// <summary>
 		/// Whether the behavior is still looking for a valid chore to "finish".
@@ -98,7 +91,7 @@ namespace PeterHan.FinishTasks {
 		/// complete during this Finish Tasks block.
 		/// </summary>
 		private void CheckAcquireChore() {
-			if (acquireChore) {
+			if (acquireChore && driver != null) {
 				var currentChore = driver.GetCurrentChore();
 				PriorityClass pc;
 				// Allow acquiring the current chore if it is above idle and below urgent
@@ -115,6 +108,7 @@ namespace PeterHan.FinishTasks {
 		}
 
 		protected override void OnCleanUp() {
+			Unsubscribe((int)GameHashes.ScheduleChanged, OnScheduleChanged);
 			Unsubscribe((int)GameHashes.ScheduleBlocksChanged, OnScheduleChanged);
 			base.OnCleanUp();
 		}
@@ -144,17 +138,17 @@ namespace PeterHan.FinishTasks {
 
 		protected override void OnSpawn() {
 			base.OnSpawn();
-			consumer = gameObject.GetComponent<ChoreConsumer>();
-			driver = gameObject.GetComponent<ChoreDriver>();
+			TryGetComponent(out consumer);
+			TryGetComponent(out driver);
 			Subscribe((int)GameHashes.ScheduleBlocksChanged, OnScheduleChanged);
+			Subscribe((int)GameHashes.ScheduleChanged, OnScheduleChanged);
 			lastGroupID = CurrentScheduleBlock;
 			acquireChore = lastGroupID == FinishTasksPatches.FinishTask.Id;
 			allowedChore = null;
 		}
 		
 		public void Update() {
-			if (driver != null)
-				CheckAcquireChore();
+			CheckAcquireChore();
 		}
 	}
 }

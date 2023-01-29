@@ -16,11 +16,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
 using System.Collections.Generic;
+using System.Threading;
+using PeterHan.PLib.Core;
 using UnityEngine;
 using UnityEngine.UI;
-using Object = UnityEngine.Object;
 
 namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
@@ -71,7 +71,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Whether a rebuild is already pending.
 		/// </summary>
-		private volatile bool pending;
+		private volatile int pendCount;
 
 		/// <summary>
 		/// The component actually responsible for laying out the children.
@@ -89,7 +89,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			freezeLayout = false;
 			lastPosition = Vector2.up;
 			margin = new Vector2(10.0f, 10.0f);
-			pending = false;
+			pendCount = 0;
 			realLayout = null;
 			virtualLayout = null;
 		}
@@ -115,16 +115,19 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Rebuilds the scroll pane in a coroutine after layout.
 		/// </summary>
 		private System.Collections.IEnumerator DoRebuild() {
-			pending = true;
-			yield return null;
+			int oldCount;
+			do {
+				oldCount = pendCount;
+				yield return null;
+			} while (Interlocked.CompareExchange(ref pendCount, 0, oldCount) != oldCount);
 			if (!App.IsExiting && scroll != null && itemList != null) {
 				int n = itemList.childCount;
 				float marginX = 0.0f, marginY = 0.0f;
 				bool ice = freezeLayout;
-				GameObject go;
 				components.Clear();
 				for (int i = 0; i < n; i++) {
 					var child = itemList.GetChild(i);
+					GameObject go;
 					if (child != null && (go = child.gameObject).activeSelf) {
 						var vi = new VirtualItem(child, go, itemList, ice);
 						float w = vi.size.x, h = vi.size.y;
@@ -150,7 +153,6 @@ namespace PeterHan.FastTrack.UIPatches {
 				// Calculate the margin
 				UpdateScroll();
 			}
-			pending = false;
 		}
 
 		/// <summary>
@@ -180,7 +182,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="target">The target object containing the items, or null to use the
 		/// object where this component is applied.</param>
-		/// <param name="margin">The display margin in pixels.</param>
 		internal void Initialize(RectTransform target = null) {
 			if (target == null && !TryGetComponent(out target))
 				target = null;
@@ -200,7 +201,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// about to be added or removed.
 		/// </summary>
 		internal void OnBuild() {
-			if (realLayout != null && !pending) {
+			if (realLayout != null && pendCount <= 0) {
 				virtualLayout.enabled = false;
 				realLayout.enabled = true;
 			}
@@ -236,7 +237,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Rebuilds the list of items next frame.
 		/// </summary>
 		internal void Rebuild() {
-			if (!pending && gameObject.activeSelf)
+			if (gameObject.activeSelf && Interlocked.Increment(ref pendCount) <= 1)
 				StartCoroutine(DoRebuild());
 		}
 
@@ -260,23 +261,8 @@ namespace PeterHan.FastTrack.UIPatches {
 					var item = components[i];
 					float yMin = item.min.y, xMin = item.min.x, yMax = item.max.y, xMax =
 						item.max.x;
-					if (forceShow.Contains(item.entry))
-						// Always visible
-						item.SetVisible(true);
-					else if (yMin > yt)
-						// Component above
-						item.SetVisible(false);
-					else if (yMax < yb)
-						// Component below
-						item.SetVisible(false);
-					else if (xMin > xr)
-						// Component to the right
-						item.SetVisible(false);
-					else if (xMax < xl)
-						// Component to the left
-						item.SetVisible(false);
-					else
-						item.SetVisible(true);
+					item.SetVisible(forceShow.Contains(item.entry) || (yMin <= yt &&
+						yMax >= yb && xMin <= xr && xMax >= xl));
 				}
 			}
 		}

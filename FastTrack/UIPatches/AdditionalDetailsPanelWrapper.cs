@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System.Collections.Generic;
 using HarmonyLib;
 using Klei.AI;
 using System.Text;
@@ -90,7 +91,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			string shcValue = text.ToString();
 			// Pass 2: Format into SHC header
 			string shcText = text.Clear().Append(ELEMENTAL.SHC.NAME).Replace("{0}", shcValue).
-				Append(" (DTU/g)/").Append(GameUtil.GetTemperatureUnitSuffix()).ToString();
+				ToString();
 			// Pass 3: Final format into tooltip
 			text.Clear().Append(ELEMENTAL.SHC.TOOLTIP).Replace("{SPECIFIC_HEAT_CAPACITY}",
 				shcValue).Replace("{TEMPERATURE_UNIT}", tempUnits);
@@ -122,8 +123,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			string shcValue = text.ToString();
 			// Pass 2: Format into TC header
 			string tcText = text.Clear().Append(ELEMENTAL.THERMALCONDUCTIVITY.NAME).Replace(
-				"{0}", shcValue).Append(" (DTU/(m*s))/").Append(GameUtil.
-				GetTemperatureUnitSuffix()).ToString();
+				"{0}", shcValue).ToString();
 			// Pass 3: Final format into tooltip
 			text.Clear().Append(ELEMENTAL.THERMALCONDUCTIVITY.TOOLTIP).Replace(
 				"{THERMAL_CONDUCTIVITY}", shcValue).Replace("{TEMPERATURE_UNIT}", tempUnits);
@@ -143,19 +143,20 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Populates the element phase change information.
 		/// </summary>
 		/// <param name="element">The selected element.</param>
+		/// <param name="isChunk">true to calculate the overheat temperature modifier, or false to ignore it.</param>
 		/// <param name="boil">The boiling/melting point information.</param>
 		/// <param name="freeze">The freezing/condensation point information.</param>
 		/// <param name="overheat">The overheat temperature information.</param>
-		private static void PopulatePhase(Element element, out InfoLine boil,
+		private static void PopulatePhase(Element element, bool isChunk, out InfoLine boil,
 				out InfoLine freeze, out InfoLine overheat) {
 			string htc = GameUtil.GetFormattedTemperature(element.highTemp),
 				ltc = GameUtil.GetFormattedTemperature(element.lowTemp);
 			if (element.IsSolid) {
-				string oh = GetOverheatModifier(element);
+				string oh;
 				boil = new InfoLine(ELEMENTAL.MELTINGPOINT.NAME.Format(htc),
 					ELEMENTAL.MELTINGPOINT.TOOLTIP.Format(htc));
 				freeze = default;
-				if (oh != null)
+				if (isChunk && (oh = GetOverheatModifier(element)) != null)
 					overheat = new InfoLine(ELEMENTAL.OVERHEATPOINT.NAME.Format(oh),
 						ELEMENTAL.OVERHEATPOINT.TOOLTIP.Format(oh));
 				else
@@ -293,8 +294,15 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="drawer">The renderer for the details.</param>
 		private void DetailDescriptors(DetailsPanelDrawer drawer) {
 			var target = lastSelection.target;
-			var attributes = target.GetAttributes();
-			var descriptors = GameUtil.GetAllDescriptors(target);
+			var attributes = lastSelection.modifiers.attributes;
+			IList<Descriptor> descriptors;
+			if (FastTrackOptions.Instance.AllocOpts) {
+				// Elide a patch call on a hot path
+				descriptors = DescriptorAllocPatches.ALL_DESCRIPTORS;
+				descriptors.Clear();
+				DescriptorAllocPatches.GetAllDescriptors(target, false, descriptors);
+			} else
+				descriptors = GameUtil.GetAllDescriptors(target);
 			int n;
 			if (attributes != null) {
 				n = attributes.Count;
@@ -311,8 +319,10 @@ namespace PeterHan.FastTrack.UIPatches {
 			n = descriptors.Count;
 			for (int i = 0; i < n; i++) {
 				var descriptor = descriptors[i];
-				if (descriptor.type == Descriptor.DescriptorType.Detail)
+				if (descriptor.type == Descriptor.DescriptorType.Detail) {
+					descriptor.IncreaseIndent();
 					drawer.NewLabel(descriptor.text).Tooltip(descriptor.tooltipText);
+				}
 			}
 		}
 
@@ -418,6 +428,8 @@ namespace PeterHan.FastTrack.UIPatches {
 
 			internal readonly bool insulator;
 
+			internal readonly Modifiers modifiers;
+
 			internal readonly Operational operational;
 
 			internal readonly InfoLine overheat;
@@ -442,11 +454,12 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal LastSelectionDetails(GameObject go) {
 				Building building;
 				string tempUnits = GameUtil.GetTemperatureUnitSuffix();
-				if (go.TryGetComponent(out BuildingComplete bc))
-					building = bc;
-				else
+				if (go.TryGetComponent(out buildingComplete))
+					building = buildingComplete;
+				else {
 					go.TryGetComponent(out building);
-				buildingComplete = bc;
+					buildingComplete = null;
+				}
 				creationTimeCached = null;
 				go.TryGetComponent(out operational);
 				// Use primary element by default, but allow CellSelectionObject to stand in
@@ -457,6 +470,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					element = cso.element;
 				else
 					element = null;
+				go.TryGetComponent(out modifiers);
 				primaryElement = pe;
 				// Why these in particular? Clay please
 				showUptime = go.TryGetComponent(out LogicPorts _) || go.TryGetComponent(
@@ -476,7 +490,8 @@ namespace PeterHan.FastTrack.UIPatches {
 							GetRadiationAbsorptionPercentage(cell) * 100.0f);
 					} else
 						radiationAbsorption = null;
-					PopulatePhase(element, out boil, out freeze, out overheat);
+					PopulatePhase(element, go.TryGetComponent(out ElementChunk _), out boil,
+						out freeze, out overheat);
 				} else {
 					boil = default;
 					elementName = default;

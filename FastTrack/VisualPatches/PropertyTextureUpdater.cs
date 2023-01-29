@@ -97,6 +97,11 @@ namespace PeterHan.FastTrack.VisualPatches {
 		private bool forceLateUpdate;
 
 		/// <summary>
+		/// The last fog of war scale.
+		/// </summary>
+		private float lastFog;
+
+		/// <summary>
 		/// The last coordinates of the upper right visible cell.
 		/// </summary>
 		private Vector2I lastViewMax;
@@ -146,6 +151,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			tIDFogOfWarScale = Shader.PropertyToID("_FogOfWarScale");
 			tIDTopBorderHeight = Shader.PropertyToID("_TopBorderHeight");
 			tIDWorldSize = Shader.PropertyToID("_WorldSizeInfo");
+			lastFog = float.MinValue;
 			Shader.SetGlobalVector(tIDPropTexWsToCs, new Vector4(0f, 0f, 1f, 1f));
 			Shader.SetGlobalVector(tIDPropTexCsToWs, new Vector4(0f, 0f, 1f, 1f));
 			allProperties = new List<TextureProperties>(16);
@@ -187,11 +193,16 @@ namespace PeterHan.FastTrack.VisualPatches {
 				lastWorldID = id;
 			}
 			// This one could be updated even if constants are the same
-			Shader.SetGlobalFloat(tIDFogOfWarScale, PropertyTextures.FogOfWarScale);
+			float scale = PropertyTextures.FogOfWarScale;
+			if (!Mathf.Approximately(scale, lastFog)) {
+				Shader.SetGlobalFloat(tIDFogOfWarScale, scale);
+				lastFog = scale;
+			}
 		}
 
 		public void Dispose() {
 			DisposeAll();
+			lastFog = float.MinValue;
 			onComplete.Dispose();
 		}
 
@@ -342,6 +353,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// right after the Sim would have been updated, and finishes up in LateUpdate.
 		/// </summary>
 		internal void StartUpdate() {
+			const int SolidDig = (int)SimProperty.SolidDigAmount, GasMass = (int)SimProperty.
+				SolidLiquidGasMass;
 			var inst = PropertyTextures.instance;
 			if (Grid.IsInitialized() && !Game.Instance.IsLoading() && inst != null &&
 					(!FullScreenDialogPatches.DialogVisible || forceLateUpdate)) {
@@ -349,7 +362,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 				bool timelapse = GameUtil.IsCapturingTimeLapse() || constantsDirty;
 				int n = allProperties.Count, update = nextPropertyIndex;
 				ConstantParamsUpdate();
-				bool redrawFlashy = GetVisibleCellRange(out Vector2I min, out Vector2I max);
+				bool redrawFlashy = GetVisibleCellRange(out var min, out var max);
 				// Page through the textures to update, once per frame
 				do {
 					update = (update + 1) % n;
@@ -359,7 +372,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 				for (int i = 0; i < n; i++) {
 					var properties = allProperties[i];
 					if (update == i || properties.UpdateEveryFrame || timelapse ||
-							(redrawFlashy && i == (int)SimProperty.SolidDigAmount))
+							(redrawFlashy && (i == SolidDig || i == GasMass)))
 						UpdateProperty(properties.PropertyIndex, buffers, min, max);
 				}
 				// Start them all at once
@@ -512,8 +525,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		internal static bool Prefix(PropertyTextures __instance) {
 			var inst = PropertyTextureUpdater.Instance;
 			try {
-				if (inst != null)
-					inst.FinishUpdate(__instance);
+				inst?.FinishUpdate(__instance);
 			} catch (Exception e) {
 				PUtil.LogError(e);
 			}

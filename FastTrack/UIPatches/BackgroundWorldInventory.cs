@@ -44,6 +44,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		internal static void Init() {
 			BANNED_TAGS.Add(GameTags.Pickupable);
 			BANNED_TAGS.Add(GameTags.PedestalDisplayable);
+			BANNED_TAGS.Add(GameTags.Garbage);
 			BANNED_TAGS.Add(GameTags.HasChores);
 			BANNED_TAGS.Add(GameTags.Stored);
 		}

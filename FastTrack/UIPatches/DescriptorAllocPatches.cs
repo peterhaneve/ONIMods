@@ -36,7 +36,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// A shared instance that will be reused for all descriptors. Only used on the
 		/// foreground thread.
 		/// </summary>
-		private static readonly List<Descriptor> ALL_DESCRIPTORS = new List<Descriptor>(32);
+		internal static readonly List<Descriptor> ALL_DESCRIPTORS = new List<Descriptor>(32);
 
 		/// <summary>
 		/// A shared buffer that will be reused for tooltip text. Only used on the foreground

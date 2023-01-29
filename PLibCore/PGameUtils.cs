@@ -132,8 +132,7 @@ namespace PeterHan.PLib.Core {
 			n += CreateSound(sheet, animFile, type, info, info.Name10, info.Frame10);
 			n += CreateSound(sheet, animFile, type, info, info.Name11, info.Frame11);
 #if DEBUG
-			PUtil.LogDebug("Added {0:D} audio event(s) to anim {1}.{2}".F(n,
-				animFile, anim));
+			PUtil.LogDebug("Added {0:D} audio event(s) to anim {1}".F(n, animFile));
 #endif
 		}
 

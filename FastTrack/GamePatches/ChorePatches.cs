@@ -18,7 +18,7 @@
 
 using HarmonyLib;
 using System.Collections.Generic;
-
+using UnityEngine;
 using PreContext = Chore.Precondition.Context;
 using SortedClearable = ClearableManager.SortedClearable;
 
@@ -27,6 +27,49 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// Groups patches used to optimize chore selection.
 	/// </summary>
 	internal static class ChorePatches {
+		/// <summary>
+		/// A much faster version of (extension) ClsuterUtil.GetMyParentWorldId.
+		/// </summary>
+		/// <param name="go">The game object to look up.</param>
+		/// <returns>The top level world ID of that game object.</returns>
+		private static int GetMyParentWorldID(GameObject go) {
+			int cell = Grid.PosToCell(go.transform.position), id;
+			int invalid = ClusterManager.INVALID_WORLD_IDX;
+			if (Grid.IsValidCell(cell)) {
+				WorldContainer world;
+				int index = Grid.WorldIdx[cell];
+				if (index != invalid && (world = ClusterManager.Instance.GetWorld(index)) !=
+						null)
+					id = world.ParentWorldId;
+				else
+					id = index;
+			} else
+				id = invalid;
+			return id;
+		}
+
+		/// <summary>
+		/// Merges common preconditions between the two patches to see if the fast chore
+		/// optimizations can be run.
+		/// </summary>
+		/// <param name="consumerState">The current chore consumer's state.</param>
+		/// <param name="parentWorldID">Returns the world ID to use for checking chores.</param>
+		/// <returns>true to run the patch, or false not to.</returns>
+		private static bool CanUseFastChores(ChoreConsumerState consumerState,
+				out int parentWorldID) {
+			var inst = RootMenu.Instance;
+			GameObject go;
+			bool result = false;
+			if ((inst != null && inst.IsBuildingChorePanelActive()) || consumerState.
+					selectable.IsSelected || (go = consumerState.gameObject) == null)
+				parentWorldID = 0;
+			else {
+				parentWorldID = GetMyParentWorldID(go);
+				result = true;
+			}
+			return result;
+		}
+
 		/// <summary>
 		/// Applied to ChoreProvider to more efficiently check for chores.
 		/// </summary>
@@ -37,24 +80,18 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// <summary>
 			/// Applied before CollectChores runs.
 			/// </summary>
+			[HarmonyPriority(Priority.LowerThanNormal)]
 			internal static bool Prefix(ChoreConsumerState consumer_state,
-					List<PreContext> succeeded, ChoreProvider __instance) {
-				var inst = RootMenu.Instance;
+					ChoreProvider __instance, List<PreContext> succeeded) {
 				bool run = false;
-				var map = __instance.choreWorldMap;
-				if ((inst == null || !inst.IsBuildingChorePanelActive()) && !consumer_state.
-						selectable.IsSelected) {
+				// Avoid doing double the work on the patch that GCP already has
+				if (__instance.GetType() != typeof(GlobalChoreProvider) && CanUseFastChores(
+						consumer_state, out int worldID) && __instance.choreWorldMap.
+						TryGetValue(worldID, out var chores) && chores != null) {
 					var ci = ChoreComparator.Instance;
-					int worldID = consumer_state.gameObject.GetMyParentWorldId();
 					run = ci.Setup(consumer_state, succeeded);
-					if (run && map.TryGetValue(worldID, out var chores) && chores != null) {
-						int n = chores.Count;
-						for (int i = 0; i < n; i++) {
-							var chore = chores[i];
-							// FetchChore.CollectChores is overridden to blank
-							if (!(chore is FetchChore))
-								ci.Collect(chore);
-						}
+					if (run) {
+						ci.CollectNonFetch(chores);
 						ci.Cleanup();
 					}
 				}
@@ -73,24 +110,15 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// Applied before CollectChores runs.
 			/// </summary>
 			internal static bool Prefix(ChoreConsumerState consumer_state,
-					List<PreContext> succeeded, GlobalChoreProvider __instance) {
-				var inst = RootMenu.Instance;
+					GlobalChoreProvider __instance, List<PreContext> succeeded) {
 				bool run = false;
-				if ((inst == null || !inst.IsBuildingChorePanelActive()) && !consumer_state.
-						selectable.IsSelected) {
+				if (CanUseFastChores(consumer_state, out int worldID)) {
 					var ci = ChoreComparator.Instance;
-					int worldID = consumer_state.gameObject.GetMyParentWorldId();
 					run = ci.Setup(consumer_state, succeeded);
 					if (run) {
 						var fetches = __instance.fetches;
-						if (__instance.choreWorldMap.TryGetValue(worldID, out var chores)) {
-							int nc = chores.Count;
-							for (int i = 0; i < nc; i++) {
-								var chore = chores[i];
-								if (!(chore is FetchChore))
-									ci.Collect(chore);
-							}
-						}
+						if (__instance.choreWorldMap.TryGetValue(worldID, out var chores))
+							ci.CollectNonFetch(chores);
 						ci.CollectSweep(__instance.clearableManager);
 						int n = fetches.Count;
 						for (int i = 0; i < n; i++)
@@ -201,8 +229,8 @@ namespace PeterHan.FastTrack.GamePatches {
 			}
 			// i = 0 is "IsValid"
 			for (int i = 1; i < n; i++) {
-				// It would be faster to just pull the preconditions completely, but they
-				// still need to be run when the tasks panel is open
+				// It would be faster to just remove the preconditions completely from all
+				// chores, but they still need to be run when the tasks panel is open
 				var pc = preconditions[i];
 				string id = pc.id;
 				if (id != "IsMoreSatisfyingEarly" && id != "IsPermitted" && id != "HasUrge" &&
@@ -212,6 +240,11 @@ namespace PeterHan.FastTrack.GamePatches {
 				}
 			}
 		}
+
+		/// <summary>
+		/// Whether advanced (i.e. proximity) priorities are enabled.
+		/// </summary>
+		private bool advPriority;
 
 		/// <summary>
 		/// The best chore precondition so far.
@@ -293,6 +326,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			consumerState = null;
 			currentChore = null;
 			exclusions = null;
+			interruptPriority = int.MinValue;
 			succeeded = null;
 		}
 
@@ -313,6 +347,19 @@ namespace PeterHan.FastTrack.GamePatches {
 							best = newContext;
 					}
 				}
+			}
+		}
+
+		/// <summary>
+		/// Collects all non-fetch chores from the specified list into the comparator.
+		/// </summary>
+		/// <param name="chores">The chores to collect.</param>
+		internal void CollectNonFetch(IList<Chore> chores) {
+			int nc = chores.Count;
+			for (int i = 0; i < nc; i++) {
+				var chore = chores[i];
+				if (!(chore is FetchChore))
+					Collect(chore);
 			}
 		}
 
@@ -339,6 +386,15 @@ namespace PeterHan.FastTrack.GamePatches {
 		
 		/// <summary>
 		/// Checks the universal Chore preconditions very quickly with no failure reason.
+		///
+		/// The current chore should *not* be returned as a potential candidate as this would
+		/// cause a chore-to-chore switch.
+		/// 
+		/// The base game does this INCORRECTLY: it compares the modified priority (including
+		/// proximity) to the unmodified priority (never explicit) in IsMoreSatisfyingEarly/
+		/// IsMoreSatisfyingLate no matter the proximity priority setting. To properly mimic
+		/// this bug, false will be returned all chores that would fail this check even if
+		/// they rightfully should be run.
 		/// </summary>
 		/// <param name="chore">The chore to check.</param>
 		/// <param name="typeForPermission">The chore type to use for IsPermitted.</param>
@@ -347,16 +403,14 @@ namespace PeterHan.FastTrack.GamePatches {
 			// IsValid
 			if (!chore.IsValid() || chore.isNull)
 				return false;
-			var go = chore.gameObject;
 			var consumer = consumerState.consumer;
 			var type = chore.choreType;
 			var overrideTarget = chore.overrideTarget;
-			return go != null &&
-				// Do not even consider chores that cannot interrupt the current chore
-				// The current chore should *not* be returned as a potential candidate as this
-				// causes a chore-to-chore switch
-				(currentChore == null || (GetInterruptPriority(chore) > interruptPriority &&
-					(exclusions == null || !exclusions.Overlaps(type.tags)))) &&
+			int contextPriority = advPriority ? type.explicitPriority : type.priority;
+			// Do not even consider chores that cannot interrupt the current chore
+			return (currentChore == null || (GetInterruptPriority(chore) > interruptPriority &&
+				(exclusions == null || !exclusions.Overlaps(type.tags)) && contextPriority >
+				currentChore.choreType.priority)) &&
 				// IsPermitted
 				consumer.IsPermittedOrEnabled(typeForPermission, chore) &&
 				// IsOverrideTargetNullOrMe
@@ -370,33 +424,26 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Sets up the initial state for chore comparison.
 		/// </summary>
 		/// <param name="state">The consumer of this chore.</param>
-		/// <param name="successfulContexts">The location where successful chores will be stored.</param>
+		/// <param name="contexts">The location where successful chores will be stored.</param>
 		/// <returns>true if some chores could match, or false if all chores will fail.</returns>
-		internal bool Setup(ChoreConsumerState state,
-				ICollection<PreContext> successfulContexts) {
-			var go = state.gameObject;
-			bool valid = go != null;
+		internal bool Setup(ChoreConsumerState state, ICollection<PreContext> contexts) {
+			int cell = Grid.PosToCell(state.gameObject.transform.position);
+			bool valid = Grid.IsValidCell(cell);
+			// If false, all vanilla chores would fail preconditions
 			if (valid) {
-				int cell = Grid.PosToCell(go.transform.position);
-				valid = Grid.IsValidCell(cell);
-				// If false, all vanilla chores would fail preconditions
-				if (valid) {
-					currentChore = state.choreDriver.GetCurrentChore();
-					if (currentChore != null) {
-						exclusions = currentChore.choreType.interruptExclusion;
-						interruptPriority = GetInterruptPriority(currentChore);
-					} else {
-						exclusions = null;
-						interruptPriority = int.MinValue;
-					}
-				} else
-					currentChore = null;
-				transportPriority = Game.Instance.advancedPersonalPriorities ? transport.
-					explicitPriority : transport.priority;
+				currentChore = state.choreDriver.GetCurrentChore();
+				if (currentChore != null) {
+					exclusions = currentChore.choreType.interruptExclusion;
+					interruptPriority = GetInterruptPriority(currentChore);
+				}
+				advPriority = Game.Instance.advancedPersonalPriorities;
+				transportPriority = advPriority ? transport.explicitPriority : transport.
+					priority;
 				best = default;
 				consumerState = state;
-				succeeded = successfulContexts;
-			}
+				succeeded = contexts;
+			} else
+				currentChore = null;
 			return valid;
 		}
 	}

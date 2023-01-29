@@ -114,44 +114,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 		}
 	}
-
-	/// <summary>
-	/// Applied to ReceptacleSideScreen to make it virtual scroll capable.
-	/// </summary>
-	[HarmonyPatch(typeof(ReceptacleSideScreen), nameof(ReceptacleSideScreen.Initialize))]
-	public static class ReceptacleSideScreen_Initialize_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.VirtualScroll;
-
-		/// <summary>
-		/// Applied before Initialize runs.
-		/// </summary>
-		internal static void Prefix(ReceptacleSideScreen __instance,
-				ref VirtualScroll __state) {
-			var obj = __instance.requestObjectList;
-			if (obj != null && obj.TryGetComponent(out VirtualScroll vs)) {
-				vs.OnBuild();
-				__state = vs;
-			} else
-				__state = null;
-		}
-
-		/// <summary>
-		/// Applied after Initialize runs.
-		/// </summary>
-		internal static void Postfix(ReceptacleSideScreen __instance, VirtualScroll __state) {
-			var entryList = __instance.requestObjectList;
-			GameObject go;
-			if (__state != null)
-				__state.Rebuild();
-			else if ((go = entryList.gameObject) != null) {
-				// Add if first load
-				var vs = go.AddComponent<VirtualScroll>();
-				vs.freezeLayout = true;
-				vs.Initialize();
-			}
-		}
-	}
-
+	
 	/// <summary>
 	/// Groups patches used for the Receptacle side screen (incubator, farm tile, pedestal...)
 	/// </summary>
@@ -174,8 +137,31 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before Initialize runs.
 			/// </summary>
-			internal static void Prefix() {
+			internal static void Prefix(ReceptacleSideScreen __instance,
+					ref VirtualScroll __state) {
+				var obj = __instance.requestObjectList;
+				if (obj != null && obj.TryGetComponent(out VirtualScroll vs)) {
+					vs.OnBuild();
+					__state = vs;
+				} else
+					__state = null;
 				initializing = true;
+			}
+
+			/// <summary>
+			/// Applied after Initialize runs.
+			/// </summary>
+			internal static void Postfix(ReceptacleSideScreen __instance, VirtualScroll __state) {
+				var entryList = __instance.requestObjectList;
+				GameObject go;
+				if (__state != null)
+					__state.Rebuild();
+				else if ((go = entryList.gameObject) != null) {
+					// Add if first load
+					var vs = go.AddComponent<VirtualScroll>();
+					vs.freezeLayout = true;
+					vs.Initialize();
+				}
 			}
 		}
 
