@@ -56,7 +56,6 @@ namespace PeterHan.FastTrack.PathPatches {
 			pathCache.TryRemove(prober, out _);
 		}
 
-
 		/// <summary>
 		/// When the game is started, reset the path prober caches.
 		/// </summary>
@@ -65,6 +64,21 @@ namespace PeterHan.FastTrack.PathPatches {
 				pathCache = new ConcurrentDictionary<PathProber, double>(4, 128);
 			else
 				pathCache.Clear();
+		}
+		
+		/// <summary>
+		/// Sets all Duplicant paths to invalid.
+		/// </summary>
+		internal static void InvalidateAllDuplicants() {
+			var ids = Components.LiveMinionIdentities;
+			int n = ids.Count;
+			for (int i = 0; i < n; i++) {
+				var id = ids[i];
+				Navigator nav;
+				// navigator is initialized in a Sim1000...
+				if (id != null && (nav = id.navigator) != null)
+					pathCache.TryRemove(nav.PathProber, out _);
+			}
 		}
 
 		/// <summary>

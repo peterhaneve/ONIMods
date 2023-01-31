@@ -57,7 +57,8 @@ namespace PeterHan.FastTrack.GamePatches {
 				SuitLocker target = null;
 				for (int i = 0; i < n && bestScore < 1.0f; i++) {
 					var locker = lockers[i];
-					float score = GetSuitScore(locker.GetStoredOutfit(), out _);
+					float score = TryGetStoredOutfit(locker, out var suit) ? -1.0f :
+						GetSuitScore(suit);
 					if (score >= 0.0f && (target == null || score > bestScore)) {
 						target = locker;
 						bestScore = score;
@@ -77,26 +78,46 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// dock can be used.
 		/// </summary>
 		/// <param name="outfit">The suit to check.</param>
-		/// <param name="partiallyCharged">The suit with sufficient charge, if any.</param>
 		/// <returns>The score of the suit, which must be 0.0f or more to be used.</returns>
-		private static float GetSuitScore(KPrefabID outfit, out KPrefabID partiallyCharged) {
-			float score = -1.0f, charge;
-			KPrefabID result = null;
-			if (outfit != null && outfit.TryGetComponent(out SuitTank tank) && (charge = tank.
-					PercentFull()) >= TUNING.EQUIPMENT.SUITS.MINIMUM_USABLE_SUIT_CHARGE) {
+		private static float GetSuitScore(KPrefabID outfit) {
+			float score = -1.0f, charge, min = TUNING.EQUIPMENT.SUITS.
+				MINIMUM_USABLE_SUIT_CHARGE;
+			if (outfit.TryGetComponent(out SuitTank tank) && (charge = tank.PercentFull()) >=
+					min) {
 				if (outfit.TryGetComponent(out JetSuitTank jetTank)) {
 					float jetCharge = jetTank.PercentFull();
-					if (jetCharge >= TUNING.EQUIPMENT.SUITS.MINIMUM_USABLE_SUIT_CHARGE) {
+					if (jetCharge >= min)
 						score = Mathf.Min(charge, jetCharge);
-						result = outfit;
-					}
-				} else {
+				} else
 					score = charge;
-					result = outfit;
+			}
+			return score;
+		}
+
+		/// <summary>
+		/// Looks for the stored suit in a suit dock.
+		/// </summary>
+		/// <param name="locker">The suit dock to search.</param>
+		/// <param name="suit">The location where the suit will be stored.</param>
+		/// <returns>true if a suit was found, or false otherwise.</returns>
+		private static bool TryGetStoredOutfit(SuitLocker locker, out KPrefabID suit) {
+			var tags = locker.OutfitTags;
+			bool found = false;
+			KPrefabID result = null;
+			if (locker.TryGetComponent(out Storage storage)) {
+				var items = storage.items;
+				int n = items.Count;
+				for (int i = 0; i < n && !found; i++) {
+					var go = items[i];
+					if (go != null && go.TryGetComponent(out KPrefabID id) && id.
+							IsAnyPrefabID(tags)) {
+						result = id;
+						found = true;
+					}
 				}
 			}
-			partiallyCharged = result;
-			return score;
+			suit = result;
+			return found;
 		}
 		
 		/// <summary>
@@ -203,17 +224,15 @@ namespace PeterHan.FastTrack.GamePatches {
 					var dock = docks[i];
 					if (dock != null) {
 						var smi = dock.smi;
-						var outfit = dock.GetStoredOutfit();
-						if (smi.sm.isConfigured.Get(smi) && !smi.sm.isWaitingForSuit.
-								Get(smi) && outfit == null)
-							vacancies++;
-						else {
-							GetSuitScore(outfit, out var partiallyCharged);
-							if (partiallyCharged != null)
+						if (TryGetStoredOutfit(dock, out var outfit)) {
+							if (GetSuitScore(outfit) >= 0.0f) {
 								charged++;
-						}
-						if (availableSuit == null && outfit != null)
-							availableSuit = outfit;
+								if (availableSuit == null)
+									availableSuit = outfit;
+							}
+						} else if (smi.sm.isConfigured.Get(smi) && !smi.sm.isWaitingForSuit.
+								Get(smi))
+							vacancies++;
 					}
 				}
 				bool hasSuit = availableSuit != null;
