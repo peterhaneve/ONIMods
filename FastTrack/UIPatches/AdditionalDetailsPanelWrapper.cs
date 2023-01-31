@@ -294,7 +294,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="drawer">The renderer for the details.</param>
 		private void DetailDescriptors(DetailsPanelDrawer drawer) {
 			var target = lastSelection.target;
-			var attributes = lastSelection.modifiers.attributes;
+			var modifiers = lastSelection.modifiers;
+			Attributes attributes;
 			IList<Descriptor> descriptors;
 			if (FastTrackOptions.Instance.AllocOpts) {
 				// Elide a patch call on a hot path
@@ -304,8 +305,9 @@ namespace PeterHan.FastTrack.UIPatches {
 			} else
 				descriptors = GameUtil.GetAllDescriptors(target);
 			int n;
-			if (attributes != null) {
-				n = attributes.Count;
+			// Some chunks can have modifiers, but no attributes?
+			if (modifiers != null && (attributes = modifiers.attributes) != null &&
+					(n = attributes.Count) > 0)
 				for (int i = 0; i < n; i++) {
 					var instance = attributes.AttributeTable[i];
 					var attr = instance.Attribute;
@@ -315,7 +317,6 @@ namespace PeterHan.FastTrack.UIPatches {
 						drawer.NewLabel(instance.modifier.Name + ": " + instance.
 							GetFormattedValue()).Tooltip(instance.GetAttributeValueTooltip());
 				}
-			}
 			n = descriptors.Count;
 			for (int i = 0; i < n; i++) {
 				var descriptor = descriptors[i];

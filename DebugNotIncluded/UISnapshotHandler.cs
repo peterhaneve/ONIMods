@@ -37,10 +37,7 @@ namespace PeterHan.DebugNotIncluded {
 
 		internal UISnapshotHandler() {
 			var action = DebugUtils.UIDebugAction;
-			if (action != null)
-				snapshotAction = action.GetKAction();
-			else
-				snapshotAction = PAction.MaxAction;
+			snapshotAction = action?.GetKAction() ?? PAction.MaxAction;
 		}
 
 		/// <summary>
@@ -50,17 +47,30 @@ namespace PeterHan.DebugNotIncluded {
 		public void OnKeyDown(KButtonEvent e) {
 			var es = UnityEngine.EventSystems.EventSystem.current;
 			if (e.TryConsume(snapshotAction) && es != null) {
+				var unique = HashSetPool<GameObject, DebugHandler>.Allocate();
+				var parents = HashSetPool<GameObject, DebugHandler>.Allocate();
 				var results = ListPool<RaycastResult, DebugHandler>.Allocate();
+				GameObject target;
 				es.RaycastAll(new PointerEventData(es) { position = KInputManager.
 					GetMousePos() }, results);
-				GameObject obj;
 				foreach (var hit in results)
-					if (hit.isValid && (obj = hit.gameObject) != null) {
-						// Found it!
-						PUIUtils.DebugObjectTree(obj);
-						PUIUtils.DebugObjectHierarchy(obj);
+					if (hit.isValid && (target = hit.gameObject) != null) {
+						target.DebugObjectTree();
+						do {
+							var t = target.transform.parent;
+							// GameObject.GetHashCode is fast and threadsafe
+							if (!unique.Add(target))
+								parents.Add(target);
+							target = t != null ? t.gameObject : null;
+						} while (target != null);
 					}
 				results.Recycle();
+				// Debug hierarchy
+				foreach (var hit in unique)
+					if (!parents.Contains(hit))
+						hit.DebugObjectHierarchy();
+				parents.Recycle();
+				unique.Recycle();
 			}
 		}
 	}

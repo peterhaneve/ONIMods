@@ -199,6 +199,11 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool DisableSound { get; set; }
 
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.CLUSTERMAPQUALITY", "STRINGS.UI.TOOLTIPS.FASTTRACK.CLUSTERMAPQUALITY", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_VISUAL")]
+		[JsonProperty]
+		[RequireDLC(DlcManager.EXPANSION1_ID)]
+		public bool ClusterMapReduce { get; set; }
+		
 		[Option("STRINGS.UI.FRONTEND.FASTTRACK.CULLCONDUITS", "STRINGS.UI.TOOLTIPS.FASTTRACK.CULLCONDUITS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_VISUAL")]
 		[JsonProperty]
 		public bool CullConduits { get; set; }
@@ -258,6 +263,7 @@ namespace PeterHan.FastTrack {
 			BackgroundRoomRebuild = true;
 			CachePaths = true;
 			ChoreOpts = true;
+			ClusterMapReduce = true;
 			ConduitOpts = false;
 			ConfigVersion = CURRENT_CONFIG_VERSION;
 			CritterConsumers = true;

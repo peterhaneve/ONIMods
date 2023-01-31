@@ -368,4 +368,25 @@ namespace PeterHan.FastTrack.PathPatches {
 				PathCacher.Cleanup(__instance);
 		}
 	}
+
+	/// <summary>
+	/// Applied to SuitMarker to clear all Duplicant path caches if an important flag changes.
+	/// Fixes a base game bug where turning checkpoints on or off (or toggling vacancy) does
+	/// not invalidate current paths.
+	/// </summary>
+	[HarmonyPatch(typeof(SuitMarker), nameof(SuitMarker.UpdateGridFlag))]
+	public static class SuitMarker_UpdateGridFlag_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
+
+		/// <summary>
+		/// Applied before UpdateGridFlag runs.
+		/// </summary>
+		internal static void Prefix(Grid.SuitMarker.Flags ___gridFlags, bool state,
+				Grid.SuitMarker.Flags flag) {
+			if (((___gridFlags & flag) == 0) == state && flag != Grid.SuitMarker.Flags.
+					Rotated && FastTrackMod.GameRunning)
+				// Just to be safe
+				PathCacher.InvalidateAllDuplicants();
+		}
+	}
 }

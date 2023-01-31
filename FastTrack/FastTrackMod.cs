@@ -35,8 +35,6 @@ namespace PeterHan.FastTrack {
 #if DEBUG
 		[PLibMethod(RunAt.AfterModsLoad)]
 		internal static void Profile(Harmony harmony) {
-			//harmony.Profile(typeof(KAnimBatchManager), nameof(KAnimBatchManager.UpdateDirty));
-			//harmony.Profile(typeof(KBatchedAnimUpdater), nameof(KBatchedAnimUpdater.UpdateRegisteredAnims));
 			harmony.Profile(typeof(Game), nameof(Game.UnsafeSim200ms));
 			harmony.Profile(typeof(ConduitFlow), nameof(ConduitFlow.Sim200ms));
 			harmony.Profile(typeof(EnergySim), nameof(EnergySim.EnergySim200ms));
@@ -81,6 +79,10 @@ namespace PeterHan.FastTrack {
 			}
 			if (options.ChoreOpts)
 				GamePatches.ChoreComparator.Init();
+			// Force feed our smaller unknown sprite to the sprite list
+			if (FastTrackOptions.Instance.ClusterMapReduce && DlcManager.
+					FeatureClusterSpaceEnabled())
+				UIPatches.ClusterMapScreenPatches.LoadSprites();
 		}
 
 		/// <summary>

@@ -81,6 +81,7 @@ namespace PeterHan.FastTrack {
 					public static LocString REDUCESOUNDUPDATES = "Batch Sounds";
 					public static LocString DISABLESOUND = "Disable <color=#FF0000>ALL</color> Sounds";
 
+					public static LocString CLUSTERMAPQUALITY = "Cluster Map Resolution";
 					public static LocString CULLCONDUITS = "Cull Buildings in Tiles";
 					public static LocString ANIMOPTS = "Faster Animations";
 					public static LocString NOPLACEREASING = "Instant Place Graphics";
@@ -170,6 +171,7 @@ namespace PeterHan.FastTrack {
 					public static LocString REDUCESOUNDUPDATES = "Reduces the frequency of sound location updates." + PERF_LOW;
 					public static LocString DISABLESOUND = "Completely disables <color=#FF0000>all</color> sound playback." + PERF_LOW;
 
+					public static LocString CLUSTERMAPQUALITY = "Slightly reduce the graphics quality of the Spaced Out! Starmap\nin exchange for a significant performance boost." + PERF_HIGH;
 					public static LocString CULLCONDUITS = "Hide conduits and wires inside solid walls." + PERF_LOW;
 					public static LocString ANIMOPTS = "Optimizes slow code in animation playback." + PERF_MEDIUM;
 					public static LocString NOPLACEREASING = "Disables the animation which appears when placing\nerrands like Dig or Mop." + PERF_LOW;

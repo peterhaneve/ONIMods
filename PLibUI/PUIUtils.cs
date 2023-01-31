@@ -60,8 +60,6 @@ namespace PeterHan.PLib.UI {
 					value = "Layer #" + lm.value;
 				else if (value is System.Collections.ICollection ic)
 					value = "[" + ic.Join() + "]";
-				else if (value is Array ar)
-					value = "[" + ar.Join() + "]";
 				result.AppendFormat(", {0}={1}", field.Name, value);
 			}
 		}
@@ -133,7 +131,7 @@ namespace PeterHan.PLib.UI {
 				string name = typeof(T).Name;
 				if (body != null && screens != null) {
 					// The ref normally contains a prefab which is instantiated
-					var newScreen = new DetailsScreen.SideScreenRef();
+					var newScreen = new SideScreenRef();
 					// Mimic the basic screens
 					var rootObject = PUIElements.CreateUI(body, name);
 					// Preserve the border by fitting the child
@@ -188,14 +186,12 @@ namespace PeterHan.PLib.UI {
 		/// <returns>The object's minimum and preferred size.</returns>
 		internal static LayoutSizes CalcSizes(GameObject obj, PanelDirection direction,
 				IEnumerable<Component> components) {
-			float min = 0.0f, preferred = 0.0f, flexible = 0.0f, scaleFactor;
+			float min = 0.0f, preferred = 0.0f, flexible = 0.0f;
 			int minPri = int.MinValue, prefPri = int.MinValue, flexPri = int.MinValue;
 			var scale = obj.transform.localScale;
 			// Find the correct scale direction
-			if (direction == PanelDirection.Horizontal)
-				scaleFactor = Math.Abs(scale.x);
-			else
-				scaleFactor = Math.Abs(scale.y);
+			float scaleFactor = Math.Abs(direction == PanelDirection.Horizontal ? scale.x :
+				scale.y);
 			bool ignore = false;
 			foreach (var component in components) {
 				if ((component as ILayoutIgnorer)?.ignoreLayout == true) {
@@ -233,11 +229,15 @@ namespace PeterHan.PLib.UI {
 			if (item != null) {
 				var result = new StringBuilder(256);
 				do {
+					var t = item.transform.parent;
 					result.Append("- ");
-					result.Append(item.name ?? "Unnamed");
-					item = item.transform?.parent?.gameObject;
-					if (item != null)
-						result.AppendLine();
+					result.Append(item.name);
+					if (t != null) {
+						item = t.gameObject;
+						if (item != null)
+							result.AppendLine();
+					} else
+						item = null;
 				} while (item != null);
 				info = result.ToString();
 			}
@@ -273,7 +273,7 @@ namespace PeterHan.PLib.UI {
 			newStyle.style = (style == null) ? root.style : (FontStyles)style;
 			newStyle.fontSize = (size > 0) ? size : root.fontSize;
 			newStyle.sdfFont = root.sdfFont;
-			newStyle.textColor = (newColor == null) ? root.textColor : (Color)newColor;
+			newStyle.textColor = newColor ?? root.textColor;
 			return newStyle;
 		}
 
@@ -427,9 +427,8 @@ namespace PeterHan.PLib.UI {
 				case TextAnchor.UpperRight:
 					offset = delta;
 					break;
-				default:
-					break;
-				} else
+				}
+			else
 				switch (alignment) {
 				case TextAnchor.MiddleLeft:
 				case TextAnchor.MiddleCenter:
@@ -440,8 +439,6 @@ namespace PeterHan.PLib.UI {
 				case TextAnchor.LowerCenter:
 				case TextAnchor.LowerRight:
 					offset = delta;
-					break;
-				default:
 					break;
 				}
 			return offset;
@@ -455,10 +452,11 @@ namespace PeterHan.PLib.UI {
 		public static GameObject GetParent(this GameObject child) {
 			GameObject parent = null;
 			if (child != null) {
-				var newParent = child.transform.parent?.gameObject;
+				var newParent = child.transform.parent;
+				GameObject go;
 				// If parent is disposed, prevent crash
-				if (newParent != null)
-					parent = newParent;
+				if (newParent != null && (go = newParent.gameObject) != null)
+					parent = go;
 			}
 			return parent;
 		}
@@ -469,12 +467,11 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <param name="parent">The parent component.</param>
 		/// <param name="child">The child to inset.</param>
-		/// <param name="vertical">The vertical inset on each side.</param>
-		/// <param name="horizontal">The horizontal inset on each side.</param>
+		/// <param name="insets">The insets on each side.</param>
 		/// <param name="prefSize">The minimum component size.</param>
 		/// <returns>The parent component.</returns>
 		internal static GameObject InsetChild(GameObject parent, GameObject child,
-				Vector2 insets, Vector2 prefSize = default(Vector2)) {
+				Vector2 insets, Vector2 prefSize = default) {
 			var rt = child.rectTransform();
 			float horizontal = insets.x, vertical = insets.y, width = prefSize.x, height =
 				prefSize.y;
@@ -552,8 +549,7 @@ namespace PeterHan.PLib.UI {
 		/// <exception cref="ArgumentException">If the image could not be loaded.</exception>
 		public static Sprite LoadSprite(string path, Vector4 border = default, bool log = true)
 		{
-			return LoadSprite(Assembly.GetCallingAssembly() ?? Assembly.GetExecutingAssembly(),
-				path, border, log);
+			return LoadSprite(Assembly.GetCallingAssembly(), path, border, log);
 		}
 
 		/// <summary>
@@ -578,9 +574,8 @@ namespace PeterHan.PLib.UI {
 					int len = (int)stream.Length;
 					byte[] buffer = new byte[len];
 					var texture = new Texture2D(2, 2);
-					// Load the texture from the stream
-					stream.Read(buffer, 0, len);
-					ImageConversion.LoadImage(texture, buffer, false);
+					len = ReadAllBytes(stream, buffer);
+					texture.LoadImage(buffer, false);
 					// Create a sprite centered on the texture
 					int width = texture.width, height = texture.height;
 #if DEBUG
@@ -605,7 +600,6 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <param name="path">The path to the image to load.</param>
 		/// <param name="border">The sprite border.</param>
-		/// <param name="log">true to log the load, or false otherwise.</param>
 		/// <returns>The sprite thus loaded, or null if it could not be loaded.</returns>
 		public static Sprite LoadSpriteFile(string path, Vector4 border = default) {
 			Sprite sprite = null;
@@ -613,12 +607,11 @@ namespace PeterHan.PLib.UI {
 			try {
 				using (var stream = new FileStream(path, FileMode.Open)) {
 					// If len > int.MaxValue we will not go to space today
-					int len = (int)stream.Length;
-					byte[] buffer = new byte[len];
+					byte[] buffer = new byte[(int)stream.Length];
 					var texture = new Texture2D(2, 2);
 					// Load the texture from the stream
-					stream.Read(buffer, 0, len);
-					ImageConversion.LoadImage(texture, buffer, false);
+					ReadAllBytes(stream, buffer);
+					texture.LoadImage(buffer, false);
 					// Create a sprite centered on the texture
 					int width = texture.width, height = texture.height;
 					sprite = Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(
@@ -642,7 +635,6 @@ namespace PeterHan.PLib.UI {
 		/// <param name="width">The desired width.</param>
 		/// <param name="height">The desired height.</param>
 		/// <param name="border">The sprite border.</param>
-		/// <param name="log">true to log the load, or false otherwise.</param>
 		/// <returns>The sprite thus loaded.</returns>
 		/// <exception cref="ArgumentException">If the image could not be loaded.</exception>
 		internal static Sprite LoadSpriteLegacy(Assembly assembly, string path, int width,
@@ -660,7 +652,7 @@ namespace PeterHan.PLib.UI {
 						throw new ArgumentException("Image is too small: " + path);
 					byte[] buffer = new byte[len];
 					stream.Seek(SKIP, SeekOrigin.Begin);
-					stream.Read(buffer, 0, len);
+					len = ReadAllBytes(stream, buffer);
 					// Load the texture from the stream
 					var texture = new Texture2D(width, height, TextureFormat.DXT5, false);
 					texture.LoadRawTextureData(buffer);
@@ -678,11 +670,26 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Reads as much of the array as possible from a stream.
+		/// </summary>
+		/// <param name="stream">The stream to be read.</param>
+		/// <param name="data">The location to store the data read.</param>
+		/// <returns>The number of bytes actually read.</returns>
+		private static int ReadAllBytes(Stream stream, byte[] data) {
+			int offset = 0, len = data.Length, n;
+			do {
+				n = stream.Read(data, offset, len - offset);
+				offset += n;
+			} while (n > 0 && offset < len);
+			return offset;
+		}
+
+		/// <summary>
 		/// Logs a debug message encountered in PLib UI functions.
 		/// </summary>
 		/// <param name="message">The debug message.</param>
 		internal static void LogUIDebug(string message) {
-			Debug.LogFormat("[PLib/UI/{0}] {1}", Assembly.GetCallingAssembly()?.GetName()?.
+			Debug.LogFormat("[PLib/UI/{0}] {1}", Assembly.GetCallingAssembly().GetName().
 				Name ?? "?", message);
 		}
 
@@ -691,8 +698,8 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <param name="message">The warning message.</param>
 		internal static void LogUIWarning(string message) {
-			Debug.LogWarningFormat("[PLib/UI/{0}] {1}", Assembly.GetCallingAssembly()?.
-				GetName()?.Name ?? "?", message);
+			Debug.LogWarningFormat("[PLib/UI/{0}] {1}", Assembly.GetCallingAssembly().
+				GetName().Name ?? "?", message);
 		}
 
 		/// <summary>
