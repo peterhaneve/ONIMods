@@ -68,6 +68,8 @@ namespace PeterHan.FastTrack {
 				CritterPatches.OvercrowdingMonitor_UpdateState_Patch.InitTagBits();
 			if (options.SensorOpts)
 				SensorPatches.SensorPatches.Init();
+			if (options.AnimOpts)
+				VisualPatches.KAnimLoopOptimizer.CreateInstance();
 			if (options.InfoCardOpts)
 				// Localization related
 				UIPatches.FormatStringPatches.Init();

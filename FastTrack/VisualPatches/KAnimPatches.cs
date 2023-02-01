@@ -51,6 +51,52 @@ namespace PeterHan.FastTrack.VisualPatches {
 	}
 
 	/// <summary>
+	/// Applied to KAnimControllerBase to make trivial anims stop triggering updates.
+	/// </summary>
+	[HarmonyPatch(typeof(KAnimControllerBase), nameof(KAnimControllerBase.StartQueuedAnim))]
+	public static class KAnimControllerBase_StartQueuedAnim_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.AnimOpts;
+
+		/// <summary>
+		/// Adjusts the play mode if the anim is trivial.
+		/// </summary>
+		internal static KAnim.PlayMode UpdateMode(KAnim.PlayMode mode,
+				KAnimControllerBase controller) {
+			var anim = controller.GetCurrentAnim();
+			var inst = KAnimLoopOptimizer.Instance;
+			if (anim != null && mode == KAnim.PlayMode.Loop && inst != null && controller.
+					animQueue.Count == 0)
+				mode = inst.GetAnimState(anim, mode);
+			return mode;
+		}
+
+		/// <summary>
+		/// Transpiles StartQueuedAnim to update the mode to Once on trivial anims.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+			var target = typeof(KAnimControllerBase).GetFieldSafe(nameof(KAnimControllerBase.
+				mode), false);
+			var injection = typeof(KAnimControllerBase_StartQueuedAnim_Patch).GetMethodSafe(
+				nameof(UpdateMode), true, typeof(KAnim.PlayMode), typeof(KAnimControllerBase));
+			if (target == null || injection == null) {
+				PUtil.LogWarning("Unable to patch KAnimControllerBase.StartQueuedAnim");
+				foreach (var instr in instructions)
+					yield return instr;
+			} else
+				foreach (var instr in instructions) {
+					if (instr.Is(OpCodes.Stfld, target)) {
+						yield return new CodeInstruction(OpCodes.Ldarg_0);
+						yield return new CodeInstruction(OpCodes.Call, injection);
+#if DEBUG
+						PUtil.LogDebug("Patched KAnimControllerBase.StartQueuedAnim");
+#endif
+					}
+					yield return instr;
+				}
+		}
+	}
+
+	/// <summary>
 	/// Applied to KAnimControllerBase to only update the hidden flag if the visibility
 	/// actually changed (yes the Klei method has a typo, like many...)
 	/// </summary>
