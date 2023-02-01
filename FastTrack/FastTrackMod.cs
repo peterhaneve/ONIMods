@@ -68,13 +68,11 @@ namespace PeterHan.FastTrack {
 				CritterPatches.OvercrowdingMonitor_UpdateState_Patch.InitTagBits();
 			if (options.SensorOpts)
 				SensorPatches.SensorPatches.Init();
-			if (options.AnimOpts)
-				VisualPatches.KAnimLoopOptimizer.CreateInstance();
 			if (options.InfoCardOpts)
 				// Localization related
 				UIPatches.FormatStringPatches.Init();
 			if (options.AllocOpts) {
-				UIPatches.TrappedDuplicantDiagnostic_CheckTrapped_Patch.Init();
+				UIPatches.TrappedDuplicantPatch.Init();
 				UIPatches.DescriptorAllocPatches.Init();
 			}
 			if (options.ChoreOpts)
@@ -125,8 +123,10 @@ namespace PeterHan.FastTrack {
 			}
 			if (options.NoDisease)
 				FastTrackCompat.CheckNoDiseaseCompat(harmony);
-			if (options.AllocOpts)
+			if (options.AllocOpts) {
 				FastTrackCompat.CheckMaterialPropertiesCompat(harmony);
+				FastTrackCompat.CheckTrappedCompat(harmony);
+			}
 			// In case the grid gets rewritten by a future mod idea
 			if (options.ENetOpts && !PRegistry.GetData<bool>("OverrideElectricalNetwork"))
 				GamePatches.FastElectricalNetworkCalculator.Apply(harmony);

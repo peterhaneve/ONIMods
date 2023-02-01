@@ -20,6 +20,7 @@ using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.FastTrack.UIPatches {
@@ -266,15 +267,21 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// Applied to TrappedDuplicantDiagnostic to fix the only nested GetWorldItems call in the
 	/// base game, required to allow pooling the return values of the call.
 	/// </summary>
-	[HarmonyPatch(typeof(TrappedDuplicantDiagnostic), nameof(TrappedDuplicantDiagnostic.
-		CheckTrapped))]
-	public static class TrappedDuplicantDiagnostic_CheckTrapped_Patch {
+	public static class TrappedDuplicantPatch {
 		/// <summary>
 		/// The tags applied to Duplicants that are doing idle-type things (namely not work).
 		/// </summary>
 		private static TagBits basicallyIdle;
 
-		internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
+		/// <summary>
+		/// Applies all Trapped diagnostic patches.
+		/// </summary>
+		/// <param name="harmony">The Harmony instance to use for patching.</param>
+		internal static void Apply(Harmony harmony) {
+			harmony.Patch(typeof(TrappedDuplicantDiagnostic), nameof(TrappedDuplicantDiagnostic.
+				CheckTrapped), prefix: new HarmonyMethod(typeof(TrappedDuplicantPatch),
+				nameof(CheckTrapped)));
+		}
 
 		/// <summary>
 		/// Checks to see if a Duplicant can reach any of the items on the list.
@@ -362,7 +369,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before CheckTrapped runs.
 		/// </summary>
-		internal static bool Prefix(TrappedDuplicantDiagnostic __instance,
+		private static bool CheckTrapped(TrappedDuplicantDiagnostic __instance,
 				ref ColonyDiagnostic.DiagnosticResult __result) {
 			bool trapped = false;
 			int worldID = __instance.worldID;

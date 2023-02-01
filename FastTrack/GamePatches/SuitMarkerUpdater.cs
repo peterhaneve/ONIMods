@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using System.Collections.Generic;
+using STRINGS;
 using UnityEngine;
 
 namespace PeterHan.FastTrack.GamePatches {
@@ -57,8 +58,8 @@ namespace PeterHan.FastTrack.GamePatches {
 				SuitLocker target = null;
 				for (int i = 0; i < n && bestScore < 1.0f; i++) {
 					var locker = lockers[i];
-					float score = TryGetStoredOutfit(locker, out var suit) ? -1.0f :
-						GetSuitScore(suit);
+					float score = TryGetStoredOutfit(locker, out var suit) ?
+						GetSuitScore(suit) : -1.0f;
 					if (score >= 0.0f && (target == null || score > bestScore)) {
 						target = locker;
 						bestScore = score;
@@ -186,12 +187,25 @@ namespace PeterHan.FastTrack.GamePatches {
 			docks = new List<SuitLocker>();
 		}
 
+		/// <summary>
+		/// Triggered when the checkpoint becomes operational or non-operational.
+		/// </summary>
+		private void OnOperationalChanged(object _) {
+			UpdateSuitStatus();
+		}
+
+		public override void OnCleanUp() {
+			Unsubscribe((int)GameHashes.OperationalChanged, OnOperationalChanged);
+			base.OnCleanUp();
+		}
+
 		public override void OnSpawn() {
 			base.OnSpawn();
 			hadAvailableSuit = false;
 			cell = Grid.PosToCell(transform.position);
 			if (suitCheckpoint != null)
 				suitCheckpoint.GetAttachedLockers(docks);
+			Subscribe((int)GameHashes.OperationalChanged, OnOperationalChanged);
 			UpdateSuitStatus();
 		}
 
