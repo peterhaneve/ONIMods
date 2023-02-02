@@ -1,16 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
-	<PropertyGroup Condition="Exists('$(OneDrive)')">
-		<DocumentsFolder>$(OneDrive)\Documents</DocumentsFolder>
-	</PropertyGroup>
-	<PropertyGroup Condition="!Exists('$(OneDrive)')">
-		<DocumentsFolder>$(UserProfile)\Documents</DocumentsFolder>
-	</PropertyGroup>
   <PropertyGroup>
     <SteamFolder>C:\Program Files (x86)\Steam</SteamFolder>
-    <GameFolder>$(SteamFolder)\steamapps\common\OxygenNotIncluded\OxygenNotIncluded_Data\Managed</GameFolder>
+    <GameFolder>$(registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 457140@InstallLocation)\OxygenNotIncluded_Data\Managed</GameFolder>
     <GameFolderMergedown>$(GameFolder)</GameFolderMergedown>
     <GameFolderLegacy>$(GameFolder)</GameFolderLegacy>
-    <ModFolder>$(DocumentsFolder)\Klei\OxygenNotIncluded\mods\dev</ModFolder>
+    <ModFolder>$(registry:HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders@Personal)\Klei\OxygenNotIncluded\mods\dev</ModFolder>
   </PropertyGroup>
 </Project>
