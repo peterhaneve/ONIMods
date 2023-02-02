@@ -238,9 +238,9 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// </summary>
 		internal static bool Prefix(KBatchedAnimController __instance) {
 			var anim = __instance.CurrentAnim;
-			if (__instance.animQueue.Count > 0) {
+			if (__instance.animQueue.Count > 0)
 				__instance.StartQueuedAnim();
-			} else if (anim != null && __instance.mode == KAnim.PlayMode.Once) {
+			else if (anim != null && __instance.mode == KAnim.PlayMode.Once) {
 				__instance.currentFrame = anim.numFrames - 1;
 				__instance.Stop();
 				DeferredTriggers.TriggerAndQueue(__instance, (int)GameHashes.

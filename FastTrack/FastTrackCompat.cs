@@ -102,9 +102,9 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		/// <param name="harmony">The Harmony instance to use for patching.</param>
 		internal static void CheckStatsCompat(Harmony harmony) {
-			if (PPatchTools.GetTypeSafe("OniStatsPlusSo.MyMod") == null) {
+			if (PPatchTools.GetTypeSafe("OniStatsPlusSo.MyMod") == null)
 				UIPatches.MinionStatsPanelWrapper.Apply(harmony);
-			} else
+			else
 				PUtil.LogDebug("Disabling attributes panel optimizations: Stats mod active");
 		}
 
@@ -131,6 +131,18 @@ namespace PeterHan.FastTrack {
 				PUtil.LogDebug("Patched BlockTileRenderer for mesh renderers");
 #endif
 			}
+		}
+
+		/// <summary>
+		/// Checks for compatibility and applies Trapped diagnostic patches only if a mod which
+		/// fixes them is not active.
+		/// </summary>
+		/// <param name="harmony">The Harmony instance to use for patching.</param>
+		internal static void CheckTrappedCompat(Harmony harmony) {
+			if (!PRegistry.GetData<bool>("Bugs.TrappedDiagnostic"))
+				UIPatches.TrappedDuplicantPatch.Apply(harmony);
+			else
+				PUtil.LogDebug("Disabling Trapped optimizations");
 		}
 	}
 }

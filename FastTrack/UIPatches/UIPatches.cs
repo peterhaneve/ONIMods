@@ -225,19 +225,14 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(NameDisplayScreen), nameof(NameDisplayScreen.RegisterComponent))]
 	public static class NameDisplayScreen_RegisterComponent_Patch {
-		internal static bool Prepare() {
-			var options = FastTrackOptions.Instance;
-			return options.NoConversations || options.MiscOpts;
-		}
+		internal static bool Prepare() => FastTrackOptions.Instance.NoConversations;
 
 		/// <summary>
 		/// Applied before RegisterComponent runs.
 		/// </summary>
 		internal static bool Prefix(object component) {
 			var options = FastTrackOptions.Instance;
-			// GameplayEventMonitor is for the unused event/dream framework :(
-			return !(component is ThoughtGraph.Instance && options.NoConversations) &&
-				!(component is GameplayEventMonitor.Instance && options.MiscOpts);
+			return !(component is ThoughtGraph.Instance && options.NoConversations);
 		}
 	}
 

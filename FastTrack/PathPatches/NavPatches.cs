@@ -22,7 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
-
+using UnityEngine;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.PathPatches {
@@ -381,9 +381,9 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Applied before UpdateGridFlag runs.
 		/// </summary>
-		internal static void Prefix(Grid.SuitMarker.Flags ___gridFlags, bool state,
+		internal static void Prefix(SuitMarker __instance, bool state,
 				Grid.SuitMarker.Flags flag) {
-			if (((___gridFlags & flag) == 0) == state && flag != Grid.SuitMarker.Flags.
+			if (((__instance.gridFlags & flag) == 0) == state && flag != Grid.SuitMarker.Flags.
 					Rotated && FastTrackMod.GameRunning)
 				// Just to be safe
 				PathCacher.InvalidateAllDuplicants();
