@@ -29,7 +29,16 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	[SkipSaveFileSerialization]
 	public sealed class BackgroundRoomProber : KMonoBehaviour, ISim200ms, IDisposable {
+		/// <summary>
+		/// Buildings with this tag, even if they are not Deconstructable (like the base game
+		/// enforces), will get added to the buildings list and sent rebuild events, for
+		/// compatibility wiht other mods.
+		/// </summary>
+		public const string REGISTER_ROOM = "RegisterRoom";
+
 		private static Database.RoomTypes roomTypes;
+
+		private static readonly Tag REGISTER_ROOM_TAG = new Tag(REGISTER_ROOM);
 
 		private static readonly Tag TREE_BRANCH_TAG = new Tag(ForestTreeBranchConfig.ID);
 
@@ -232,7 +241,8 @@ namespace PeterHan.FastTrack.GamePatches {
 					bool scanPlants = false, scanBuildings = false, dirty = false;
 					if (go != null && go.TryGetComponent(out KPrefabID prefabID)) {
 						// Is this entity already in the list?
-						if (go.TryGetComponent(out Deconstructable _)) {
+						if (go.TryGetComponent(out Deconstructable _) || prefabID.HasTag(
+								REGISTER_ROOM_TAG)) {
 							dirty = AddBuildingToRoom(cavity, prefabID);
 							scanBuildings = true;
 						} else if (prefabID.HasTag(GameTags.Plant) && !prefabID.HasTag(

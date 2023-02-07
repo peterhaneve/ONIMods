@@ -85,6 +85,6 @@ Mods should remain in their own subfolder.
 
 # Compiling this repository
 
-After cloning the repository, if Oxygen Not Included is stored in a different directory than the default (`C:\Program Files (x86)\Steam\steamapps\common`), create a copy of `Directory.Build.props.default` named `Directory.Build.props.user`. Modify the values in it to match the correct folder locations. The "legacy" game folder is only used for pre-Mergedown versions of the game and can usually be safely ignored.
+This repository requires an installed copy of Oxygen Not Included to compile. The project is currently built against Visual Studio 2022 and the .NET Framework 4.7.1 (as required by the game). Make sure that the correct targeting packs, as well as MSBuild support, are installed to build.
 
-The project is currently built against Visual Studio 2022 and the .NET Framework 4.7.1 (as required by the game). Make sure that the correct targeting packs, as well as MSBuild support, are installed in the Visual Studio Installer.
+The build scripts will automatically detect most Steam installations of Oxygen Not Included. To customize paths for other distribution platforms or operating systems, create a copy of `Directory.Build.props.default` named `Directory.Build.props.user`. Modify the values in it to match the correct folder locations. The "legacy" game folder is only used for pre-Mergedown versions of the game and can usually be safely ignored.

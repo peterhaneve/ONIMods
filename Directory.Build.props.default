@@ -1,10 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Instead of modifying this file, create a copy named Directory.Build.props.user and modify it to match the paths in your installation -->
 <Project>
   <PropertyGroup>
-    <SteamFolder>C:\Program Files (x86)\Steam</SteamFolder>
-    <GameFolder>$(registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 457140@InstallLocation)\OxygenNotIncluded_Data\Managed</GameFolder>
+    <GameFolderRegistry>$(registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 457140@InstallLocation)</GameFolderRegistry>
+    <GameFolderDefault>C:\Program Files (x86)\Steam\steamapps\common\OxygenNotIncluded</GameFolderDefault>
+    <DocumentsFolderRegistry>$(registry:HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders@Personal)</DocumentsFolderRegistry>
+    <DocumentsFolderDefault>$(UserProfile)\Documents</DocumentsFolderDefault>
+
+    <GameFolder>$(GameFolderDefault)/$(AssemblyFolder)</GameFolder>
+    <ModsFolder>$(DocumentsFolderDefault)/$(DevModsFolder)</ModsFolder>
+    <AssemblyFolder>OxygenNotIncluded_Data/Managed</AssemblyFolder>
+    <DevModsFolder>Klei/OxygenNotIncluded/mods/dev</DevModsFolder>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(GameFolderRegistry)' != '' ">
+    <GameFolder>$(GameFolderRegistry)/$(AssemblyFolder)</GameFolder>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(DocumentsFolderRegistry)' != '' ">
+    <ModsFolder>$(DocumentsFolderRegistry)/$(DevModsFolder)</ModsFolder>
+  </PropertyGroup>
+  <PropertyGroup>
     <GameFolderMergedown>$(GameFolder)</GameFolderMergedown>
     <GameFolderLegacy>$(GameFolder)</GameFolderLegacy>
-    <ModFolder>$(registry:HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders@Personal)\Klei\OxygenNotIncluded\mods\dev</ModFolder>
   </PropertyGroup>
 </Project>
