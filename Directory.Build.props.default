@@ -7,10 +7,10 @@
     <DocumentsFolderRegistry>$(registry:HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders@Personal)</DocumentsFolderRegistry>
     <DocumentsFolderDefault>$(UserProfile)\Documents</DocumentsFolderDefault>
 
-    <GameFolder>$(GameFolderDefault)/$(AssemblyFolder)</GameFolder>
-    <ModsFolder>$(DocumentsFolderDefault)/$(DevModsFolder)</ModsFolder>
     <AssemblyFolder>OxygenNotIncluded_Data/Managed</AssemblyFolder>
     <DevModsFolder>Klei/OxygenNotIncluded/mods/dev</DevModsFolder>
+    <GameFolder>$(GameFolderDefault)/$(AssemblyFolder)</GameFolder>
+    <ModsFolder>$(DocumentsFolderDefault)/$(DevModsFolder)</ModsFolder>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(GameFolderRegistry)' != '' ">
     <GameFolder>$(GameFolderRegistry)/$(AssemblyFolder)</GameFolder>
