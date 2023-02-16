@@ -19,10 +19,8 @@
 4.
 
 ## Output Log
-<!--- Include an output log to allow us to understand your issue. This file is located at -->
+<!--- Attach the full output log to allow us to understand your issue. This file is located at -->
 
 <!--- Windows: %userprofile%\AppData\LocalLow\Klei\Oxygen Not Included\Player.log -->
 <!--- Mac: ~/Library/Logs/Unity/Player.log -->
 <!--- Linux: ~/.config/unity3d/Klei/Oxygen Not Included/Player.log -->
-
-<!--- Provide a general summary of the issue in the Title above -->

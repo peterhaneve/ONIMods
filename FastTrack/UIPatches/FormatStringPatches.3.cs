@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
 using HarmonyLib;
 using Klei.AI;
 using PeterHan.PLib.Actions;
@@ -772,6 +773,90 @@ namespace PeterHan.FastTrack.UIPatches {
 				__result = text;
 			}
 			return cont;
+		}
+	}
+
+	/// <summary>
+	/// Speeds up and reduces allocations when stripping link formatting.
+	/// </summary>
+	public static class StripLinkPatches {
+		/// <summary>
+		/// Avoid reallocating a new StringBuilder every frame.
+		/// </summary>
+		private static readonly StringBuilder CACHED_BUILDER = new StringBuilder(64);
+
+		/// <summary>
+		/// An optimized version of STRINGS.UI.StripLinkFormatting and
+		/// TagManager.StripLinkFormatting. Also does not swallow all exceptions!
+		/// </summary>
+		/// <param name="text">The text to strip.</param>
+		/// <returns>The text with all link formatting removed.</returns>
+		private static string StripLinkFormatting(string text) {
+			if (text == null)
+				throw new ArgumentNullException(nameof(text));
+			int position = 0, len = text.Length;
+			int startIndex = text.IndexOf("<link=", 0, StringComparison.InvariantCulture);
+			int endIndex = text.IndexOf("</link>", 0, StringComparison.InvariantCulture);
+			// Substring() allocates so use a loop
+			CACHED_BUILDER.Clear();
+			while (startIndex >= 0 || endIndex >= 0) {
+				if (startIndex >= 0 && (endIndex < 0 || startIndex < endIndex)) {
+					for (int i = position; i < startIndex; i++)
+						CACHED_BUILDER.Append(text[i]);
+					position = text.IndexOf("\">", startIndex + 6, StringComparison.
+						InvariantCulture) + 2;
+					if (position < 2) {
+						Debug.LogWarningFormat("String has no open link tag: {0}", text);
+						position = len;
+						break;
+					}
+					startIndex = text.IndexOf("<link=", position, StringComparison.
+						InvariantCulture);
+				} else if (endIndex >= 0) {
+					// Truth tables show that testing startIndex is unnecessary as all of
+					// the potential conflict cases were already handled above
+					for (int i = position; i < endIndex; i++)
+						CACHED_BUILDER.Append(text[i]);
+					position = endIndex + 7;
+					endIndex = text.IndexOf("</link>", position, StringComparison.
+						InvariantCulture);
+				}
+			}
+			for (int i = position; i < len; i++)
+				CACHED_BUILDER.Append(text[i]);
+			return CACHED_BUILDER.ToString();
+		}
+
+		/// <summary>
+		/// Applied to TagManager to use the improved StripLinkFormatting method.
+		/// </summary>
+		[HarmonyPatch(typeof(TagManager), nameof(TagManager.StripLinkFormatting))]
+		internal static class TagManager_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
+
+			/// <summary>
+			/// Applied before StripLinkFormatting runs.
+			/// </summary>
+			internal static bool Prefix(string text, ref string __result) {
+				__result = StripLinkFormatting(text);
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Applied to STRINGS.UI to use the improved StripLinkFormatting method.
+		/// </summary>
+		[HarmonyPatch(typeof(STRINGS.UI), nameof(STRINGS.UI.StripLinkFormatting))]
+		internal static class Strings_UI_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
+
+			/// <summary>
+			/// Applied before StripLinkFormatting runs.
+			/// </summary>
+			internal static bool Prefix(string text, ref string __result) {
+				__result = StripLinkFormatting(text);
+				return false;
+			}
 		}
 	}
 }

@@ -10,13 +10,13 @@
     <AssemblyFolder>OxygenNotIncluded_Data/Managed</AssemblyFolder>
     <DevModsFolder>Klei/OxygenNotIncluded/mods/dev</DevModsFolder>
     <GameFolder>$(GameFolderDefault)/$(AssemblyFolder)</GameFolder>
-    <ModsFolder>$(DocumentsFolderDefault)/$(DevModsFolder)</ModsFolder>
+    <ModFolder>$(DocumentsFolderDefault)/$(DevModsFolder)</ModFolder>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(GameFolderRegistry)' != '' ">
     <GameFolder>$(GameFolderRegistry)/$(AssemblyFolder)</GameFolder>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(DocumentsFolderRegistry)' != '' ">
-    <ModsFolder>$(DocumentsFolderRegistry)/$(DevModsFolder)</ModsFolder>
+    <ModFolder>$(DocumentsFolderRegistry)/$(DevModsFolder)</ModFolder>
   </PropertyGroup>
   <PropertyGroup>
     <GameFolderMergedown>$(GameFolder)</GameFolderMergedown>
