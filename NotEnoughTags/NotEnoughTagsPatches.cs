@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2022 Peter Han
+ * Copyright 2023 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using KMod;
+
 using Label = System.Reflection.Emit.Label;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
@@ -130,7 +131,7 @@ namespace PeterHan.NotEnoughTags {
 		/// <param name="replacement">The method to call instead.</param>
 		/// <returns>true if the method was transpiled, or false if the reference was not
 		/// found.</returns>
-		private static bool ReplaceLastBitOp(List<CodeInstruction> method, OpCode operation,
+		private static bool ReplaceLastBitOp(IList<CodeInstruction> method, OpCode operation,
 				MethodBase replacement) {
 			int n = method.Count;
 			bool transpiled = false;
@@ -230,13 +231,13 @@ namespace PeterHan.NotEnoughTags {
 			/// <summary>
 			/// Applied before Clear runs.
 			/// </summary>
-			internal static bool Prefix(ref ulong ___bits3, Tag tag) {
+			internal static bool Prefix(ref ulong ___bits4, Tag tag) {
 				var inst = ExtendedTagBits.Instance;
 				int index = inst.ManifestFlagIndex(tag) - ExtendedTagBits.VANILLA_LIMIT;
 				bool vanilla = index <= 0;
-				if (!vanilla && ___bits3 != 0UL) {
-					int id = inst.GetIDWithTagClear(TagBitOps.GetUpperBits(___bits3), index);
-					___bits3 = TagBitOps.GetLowerBits(___bits3) | ((ulong)id << 32);
+				if (!vanilla && ___bits4 != 0UL) {
+					int id = inst.GetIDWithTagClear(TagBitOps.GetUpperBits(___bits4), index);
+					___bits4 = TagBitOps.GetLowerBits(___bits4) | ((ulong)id << 32);
 				}
 				return vanilla;
 			}
@@ -357,13 +358,13 @@ namespace PeterHan.NotEnoughTags {
 			/// <summary>
 			/// Applied before SetTag runs.
 			/// </summary>
-			internal static bool Prefix(ref ulong ___bits3, Tag tag) {
+			internal static bool Prefix(ref ulong ___bits4, Tag tag) {
 				var inst = ExtendedTagBits.Instance;
 				int index = inst.ManifestFlagIndex(tag) - ExtendedTagBits.VANILLA_LIMIT;
 				bool vanilla = index <= 0;
 				if (!vanilla) {
-					int id = inst.GetIDWithTagSet(TagBitOps.GetUpperBits(___bits3), index);
-					___bits3 = (___bits3 & 0xFFFFFFFFUL) | ((ulong)id << 32);
+					int id = inst.GetIDWithTagSet(TagBitOps.GetUpperBits(___bits4), index);
+					___bits4 = (___bits4 & 0xFFFFFFFFUL) | ((ulong)id << 32);
 				}
 				return vanilla;
 			}

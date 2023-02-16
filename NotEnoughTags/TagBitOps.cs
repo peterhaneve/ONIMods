@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2022 Peter Han
+ * Copyright 2023 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -27,12 +27,7 @@ namespace PeterHan.NotEnoughTags {
 		/// The maximum number of bits to set for a complemented (NOT) tag bits.
 		/// </summary>
 		private const int MAX_BITS = 2048;
-
-		/// <summary>
-		/// The upper 32 bits of a ulong.
-		/// </summary>
-		private const ulong UPPER_MASK = 0xFFFFFFFF00000000UL;
-
+		
 		/// <summary>
 		/// Ands two sets of tag bits and replaces Tag Bits A with the result A & B.
 		/// </summary>
@@ -112,17 +107,7 @@ namespace PeterHan.NotEnoughTags {
 			}
 			return has;
 		}
-
-		/// <summary>
-		/// Checks to see if tag bits 5/7 has extended bits set.
-		/// </summary>
-		/// <param name="value">The value to check.</param>
-		/// <returns>true if it needs resolution in the extended tag bits, or false if it is
-		/// a simple vanilla value.</returns>
-		internal static bool HasUpperBits(ulong value) {
-			return (value & UPPER_MASK) != 0UL;
-		}
-
+		
 		/// <summary>
 		/// Complements a set of tag bits.
 		/// </summary>
@@ -259,7 +244,7 @@ namespace PeterHan.NotEnoughTags {
 		/// </summary>
 		/// <returns>The pooled bit set.</returns>
 		public static BitSet Allocate() {
-			if (!POOL.TryPop(out BitSet set))
+			if (!POOL.TryPop(out var set))
 				set = new BitSet(PRESIZE);
 			return set;
 		}

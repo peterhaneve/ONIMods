@@ -2,11 +2,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Not Enough Tags</AssemblyTitle>
-    <FileVersion>2.6.0.0</FileVersion>
+    <FileVersion>2.7.0.0</FileVersion>
     <RootNamespace>PeterHan.NotEnoughTags</RootNamespace>
     <Description>Fixes a stock game bug where Tags can be exhausted in large bases.</Description>
-    <AssemblyVersion>2.2.0.0</AssemblyVersion>
-    <LastWorkingBuild>525812</LastWorkingBuild>
+    <AssemblyVersion>2.3.0.0</AssemblyVersion>
+    <LastWorkingBuild>543530</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
     <UsePublicized>true</UsePublicized>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>

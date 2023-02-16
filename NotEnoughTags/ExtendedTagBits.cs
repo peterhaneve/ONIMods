@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2022 Peter Han
+ * Copyright 2023 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -45,8 +45,9 @@ namespace PeterHan.NotEnoughTags {
 
 		/// <summary>
 		/// The number of indexes which can be efficiently still used by the base game.
+		/// Calculated as [number of tag fields]*64 - 32 = 288.
 		/// </summary>
-		public const int VANILLA_LIMIT = 224;
+		public const int VANILLA_LIMIT = 288;
 
 		/// <summary>
 		/// Maps indexes to their tag.
@@ -75,8 +76,8 @@ namespace PeterHan.NotEnoughTags {
 
 		private ExtendedTagBits() {
 			// This need not be thread safe, because TagBits itself is not thread safe
-			inverseTagBits = new Dictionary<BitSet, int>(4096);
-			tagBits = new Dictionary<int, BitSet>(4096);
+			inverseTagBits = new Dictionary<BitSet, int>(INITIAL_TAG_BITS * 4);
+			tagBits = new Dictionary<int, BitSet>(INITIAL_TAG_BITS * 4);
 			tagID = INITIAL_TAG_BITS;
 
 			// Fetch these through reflection

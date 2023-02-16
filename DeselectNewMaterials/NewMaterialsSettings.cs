@@ -18,7 +18,6 @@
 
 using KSerialization;
 using PeterHan.PLib.Actions;
-using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.DeselectNewMaterials {
@@ -30,11 +29,7 @@ namespace PeterHan.DeselectNewMaterials {
 		/// <summary>
 		/// Whether this storage accepts new materials.
 		/// </summary>
-		public bool AcceptsNewMaterials {
-			get {
-				return acceptsNew == NewMaterialSetting.Accepts;
-			}
-		}
+		public bool AcceptsNewMaterials => acceptsNew == NewMaterialSetting.Accepts;
 
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable CS0649
@@ -65,20 +60,20 @@ namespace PeterHan.DeselectNewMaterials {
 		/// </summary>
 		/// <param name="data">The GameObject with the source settings.</param>
 		private void OnCopySettings(object data) {
-			var other = (data as GameObject).GetComponentSafe<NewMaterialsSettings>();
-			if (other != null) {
+			if (data is GameObject go && go != null && go.TryGetComponent(
+					out NewMaterialsSettings other)) {
 				acceptsNew = other.acceptsNew;
 				Game.Instance.userMenu?.Refresh(gameObject);
 			}
 		}
 
-		protected override void OnPrefabInit() {
-			base.OnPrefabInit();
-			Subscribe((int)GameHashes.CopySettings, OnCopySettings);
-			Subscribe((int)GameHashes.RefreshUserMenu, OnRefreshUserMenu);
+		protected override void OnSpawn() {
+			base.OnSpawn();
 			if (acceptsNew != NewMaterialSetting.Accepts && acceptsNew != NewMaterialSetting.
 					Rejects)
 				SetInitialValue();
+			Subscribe((int)GameHashes.CopySettings, OnCopySettings);
+			Subscribe((int)GameHashes.RefreshUserMenu, OnRefreshUserMenu);
 		}
 
 		/// <summary>
