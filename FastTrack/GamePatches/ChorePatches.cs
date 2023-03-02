@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2022 Peter Han
+ * Copyright 2023 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -257,9 +257,14 @@ namespace PeterHan.FastTrack.GamePatches {
 		private ChoreConsumerState consumerState;
 
 		/// <summary>
-		/// The currently active chore; make sure it is always allowed.
+		/// The currently active chore.
 		/// </summary>
 		private Chore currentChore;
+
+		/// <summary>
+		/// The personal priority of the current chore.
+		/// </summary>
+		private int currentPersonal;
 
 		/// <summary>
 		/// The chore tags which cannot interrupt the current chore.
@@ -389,12 +394,6 @@ namespace PeterHan.FastTrack.GamePatches {
 		///
 		/// The current chore should *not* be returned as a potential candidate as this would
 		/// cause a chore-to-chore switch.
-		/// 
-		/// The base game does this INCORRECTLY: it compares the modified priority (including
-		/// proximity) to the unmodified priority (never explicit) in IsMoreSatisfyingEarly/
-		/// IsMoreSatisfyingLate no matter the proximity priority setting. To properly mimic
-		/// this bug, false will be returned all chores that would fail this check even if
-		/// they rightfully should be run.
 		/// </summary>
 		/// <param name="chore">The chore to check.</param>
 		/// <param name="typeForPermission">The chore type to use for IsPermitted.</param>
@@ -406,11 +405,8 @@ namespace PeterHan.FastTrack.GamePatches {
 			var consumer = consumerState.consumer;
 			var type = chore.choreType;
 			var overrideTarget = chore.overrideTarget;
-			int contextPriority = advPriority ? type.explicitPriority : type.priority;
 			// Do not even consider chores that cannot interrupt the current chore
-			return (currentChore == null || (GetInterruptPriority(chore) > interruptPriority &&
-				(exclusions == null || !exclusions.Overlaps(type.tags)) && contextPriority >
-				currentChore.choreType.priority)) &&
+			return (currentChore == null || IsMoreSatisfyingEarly(chore)) &&
 				// IsPermitted
 				consumer.IsPermittedOrEnabled(typeForPermission, chore) &&
 				// IsOverrideTargetNullOrMe
@@ -418,6 +414,40 @@ namespace PeterHan.FastTrack.GamePatches {
 				// HasUrge
 				(type.urge == null || consumer.GetUrges().Contains(type.urge));
 			// IsInMyParentWorld is no longer used!
+		}
+
+		/// <summary>
+		/// A faster version of the IsMoreSatisfyingEarly precondition. Only to be used if
+		/// there is a current chore.
+		///
+		/// The base game does this INCORRECTLY: it compares the modified priority (including
+		/// proximity) to the unmodified priority (never explicit) in IsMoreSatisfyingEarly/
+		/// IsMoreSatisfyingLate no matter the proximity priority setting. To properly mimic
+		/// this bug, false will be returned for all chores that would fail this check even if
+		/// they rightfully should be run.
+		/// </summary>
+		/// <param name="chore">The chore to check.</param>
+		/// <returns>true to allow the chore to be considered, or false to exclude it.</returns>
+		private bool IsMoreSatisfyingEarly(Chore chore) {
+			var type = chore.choreType;
+			var cp = currentChore.masterPriority;
+			var mp = chore.masterPriority;
+			bool result;
+			int d;
+			if (GetInterruptPriority(chore) > interruptPriority && (exclusions == null ||
+					!exclusions.Overlaps(type.tags)))
+				result = false;
+			else if ((d = mp.priority_class - cp.priority_class) != 0)
+				result = d > 0;
+			else if ((d = consumerState.consumer.GetPersonalPriority(type) -
+					currentPersonal) != 0)
+				result = d > 0;
+			else {
+				d = mp.priority_value - cp.priority_value;
+				result = d > 0 || (d == 0 && (advPriority ? type.explicitPriority : type.
+					priority) > currentChore.choreType.priority);
+			}
+			return result;
 		}
 
 		/// <summary>
@@ -435,6 +465,8 @@ namespace PeterHan.FastTrack.GamePatches {
 				if (currentChore != null) {
 					exclusions = currentChore.choreType.interruptExclusion;
 					interruptPriority = GetInterruptPriority(currentChore);
+					currentPersonal = state.consumer.GetPersonalPriority(currentChore.
+						choreType);
 				}
 				advPriority = Game.Instance.advancedPersonalPriorities;
 				transportPriority = advPriority ? transport.explicitPriority : transport.

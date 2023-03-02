@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2022 Peter Han
+ * Copyright 2023 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -562,9 +562,10 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="text">The location where the output will be stored.</param>
 		/// <param name="input">The input text.</param>
-		private static void ParseHotkeys(StringBuilder text, string input) {
+		/// <returns>true if the string was changed, or false otherwise.</returns>
+		private static bool ParseHotkeys(StringBuilder text, string input) {
 			int n = input.Length;
-			bool hotkey = false;
+			bool hotkey = false, changed = false;
 			char substitute = '0';
 			var hkb = HOTKEY_BUFFER;
 			var lookup = HOTKEY_LOOKUP;
@@ -593,8 +594,10 @@ namespace PeterHan.FastTrack.UIPatches {
 					case ')':
 						// What was requested?
 						if (hotkey) {
-							if (lookup.TryGetValue(hkb.ToString(), out string formatted))
-								text.Append(formatted);
+							string key = hkb.ToString();
+							text.Append(lookup.TryGetValue(key, out string formatted) ?
+								formatted : key);
+							changed = true;
 						} else
 							// Strings with other {} should get by unaltered
 							text.Append(substitute).Append(hkb).Append(c);
@@ -613,6 +616,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				text.Append(substitute).Append(hkb);
 				hkb.Clear();
 			}
+			return changed;
 		}
 
 		/// <summary>
@@ -668,7 +672,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			{
 				var text = CACHED_BUILDER;
 				if (input != null) {
-					ParseHotkeys(text, input);
+					__instance.originalString = ParseHotkeys(text, input) ? input : "";
 					// Link handling
 					if (__instance.AllowLinks && !input.Contains(LocText.linkColorPrefix))
 						text.Replace(LocText.linkPrefix_open, LocText.combinedPrefix).
