@@ -436,7 +436,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			int d;
 			if (GetInterruptPriority(chore) > interruptPriority && (exclusions == null ||
 					!exclusions.Overlaps(type.tags)))
-				result = false;
+				result = true;
 			else if ((d = mp.priority_class - cp.priority_class) != 0)
 				result = d > 0;
 			else if ((d = consumerState.consumer.GetPersonalPriority(type) -
