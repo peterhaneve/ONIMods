@@ -17,7 +17,7 @@ Mods should remain in their own subfolder.
 
 ![Location where local mods should be installed](Docs/localmods.png)
 
-* Windows: `%USERPROFILE%\Documents\Klei\OxygenNotIncluded\mods\local`
+* Windows: `%USERPROFILE%\Documents\Klei\OxygenNotIncluded\mods\Local`
   Replace the documents path with the path to your `Documents` folder if this folder has been redirected.
 * Mac OS: `/Users/user name/Library/Application Support/unity.Klei.Oxygen Not Included/mods/Local`
   Replace `user name` with your user name.
@@ -88,3 +88,5 @@ Mods should remain in their own subfolder.
 This repository requires an installed copy of Oxygen Not Included to compile. The project is currently built against Visual Studio 2022 and the .NET Framework 4.7.1 (as required by the game). Make sure that the correct targeting packs, as well as MSBuild support, are installed to build.
 
 The build scripts will automatically detect most Steam installations of Oxygen Not Included. To customize paths for other distribution platforms or operating systems, create a copy of `Directory.Build.props.default` named `Directory.Build.props.user`. Modify the values in it to match the correct folder locations. The "legacy" game folder is only used for pre-Mergedown versions of the game and can usually be safely ignored.
+
+*Note that ReSharper may have issues with the Steam build auto-detection; users of this plugin will need to manually specify paths to any custom Steam installations*
