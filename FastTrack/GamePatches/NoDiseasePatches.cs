@@ -126,8 +126,8 @@ namespace PeterHan.FastTrack.GamePatches {
 				new HarmonyMethod(typeof(NoDiseasePatches), nameof(CreateBasicTools_Postfix)));
 			// Disable disease from world gen
 			harmony.Patch(typeof(ProcGenGame.WorldGen), nameof(ProcGenGame.WorldGen.
-				RenderOffline), prefix: new HarmonyMethod(typeof(NoDiseasePatches),
-				nameof(RenderOffline_Prefix)));
+				RenderToMap), postfix: new HarmonyMethod(typeof(NoDiseasePatches),
+				nameof(RenderToMap_Postfix)));
 			// Mark doctor buildings as deprecated (except apothecary in DLC for radpills)
 			harmony.Patch(typeof(AdvancedApothecaryConfig), nameof(AdvancedApothecaryConfig.
 				CreateBuildingDef), postfix: makeDeprecated);
@@ -256,9 +256,9 @@ namespace PeterHan.FastTrack.GamePatches {
 		}
 
 		/// <summary>
-		/// Applied before RenderOffline runs.
+		/// Applied after RenderToMap runs.
 		/// </summary>
-		private static void RenderOffline_Prefix(ref Sim.DiseaseCell[] dc) {
+		private static void RenderToMap_Postfix(ref Sim.DiseaseCell[] dc) {
 			int n = dc.Length;
 			byte idx = SimUtil.DiseaseInfo.Invalid.idx;
 			for (int i = 0; i < n; i++) {

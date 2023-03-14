@@ -11,7 +11,7 @@
     <PackageIcon>icon.png</PackageIcon>
     <PackageTags>Game, OxygenNotIncluded, Oxygen, PLib, Library</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Copyright>Copyright 2022 Peter Han</Copyright>
+    <Copyright>Copyright 2023 Peter Han</Copyright>
     <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
     
 Contains methods aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>

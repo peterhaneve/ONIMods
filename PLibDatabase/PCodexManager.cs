@@ -46,6 +46,11 @@ namespace PeterHan.PLib.Database {
 		/// The subfolder from which plant codex entries are loaded.
 		/// </summary>
 		public const string PLANTS_DIR = "codex/Plants";
+		
+		/// <summary>
+		/// The subfolder from which story trait codex entries are loaded.
+		/// </summary>
+		public const string STORY_DIR = "codex/StoryTraits";
 
 		/// <summary>
 		/// The file extension used for codex entry/subentries.
@@ -61,6 +66,11 @@ namespace PeterHan.PLib.Database {
 		/// The codex category under which plant entries should go.
 		/// </summary>
 		public const string PLANTS_CATEGORY = "PLANTS";
+		
+		/// <summary>
+		/// The codex category under which story trait entries should go.
+		/// </summary>
+		public const string STORY_CATEGORY = "STORYTRAITS";
 
 		/// <summary>
 		/// The version of this component. Uses the running PLib version.
@@ -87,8 +97,6 @@ namespace PeterHan.PLib.Database {
 		/// </summary>
 		private static void CollectEntries_Postfix(string folder, List<CodexEntry> __result,
 				string ___baseEntryPath) {
-			// Check to see if we are loading from either the "Creatures" directory or
-			// "Plants" directory
 			if (Instance != null) {
 				string path = string.IsNullOrEmpty(folder) ? ___baseEntryPath : Path.Combine(
 					___baseEntryPath, folder);
@@ -101,12 +109,17 @@ namespace PeterHan.PLib.Database {
 					__result.AddRange(Instance.LoadEntries(PLANTS_CATEGORY));
 					modified = true;
 				}
+				if (path.EndsWith("StoryTraits")) {
+					__result.AddRange(Instance.LoadEntries(STORY_CATEGORY));
+					modified = true;
+				}
 				if (modified) {
 					foreach (var codexEntry in __result)
 						// Fill in a default sort string if necessary
 						if (string.IsNullOrEmpty(codexEntry.sortString))
 							codexEntry.sortString = Strings.Get(codexEntry.title);
-					__result.Sort((x, y) => x.sortString.CompareTo(y.sortString));
+					__result.Sort((x, y) => string.Compare(x.sortString, y.sortString,
+						StringComparison.CurrentCulture));
 				}
 			}
 		}
@@ -119,7 +132,8 @@ namespace PeterHan.PLib.Database {
 				int startSize = __result.Count;
 				__result.AddRange(Instance.LoadSubEntries());
 				if (__result.Count != startSize)
-					__result.Sort((x, y) => x.title.CompareTo(y.title));
+					__result.Sort((x, y) => string.Compare(x.title, y.title, StringComparison.
+						CurrentCulture));
 			}
 		}
 
@@ -131,7 +145,7 @@ namespace PeterHan.PLib.Database {
 		/// <param name="category">The category to assign to each entry thus loaded.</param>
 		private static void LoadFromDirectory(ICollection<CodexEntry> entries, string dir,
 				string category) {
-			string[] codexFiles = new string[0];
+			string[] codexFiles = Array.Empty<string>();
 			try {
 				// List codex data files in the codex directory
 				codexFiles = Directory.GetFiles(dir, CODEX_FILES);
@@ -143,14 +157,13 @@ namespace PeterHan.PLib.Database {
 			var widgetTagMappings = WIDGET_TAG_MAPPINGS?.GetValue(null) as WidgetMappingList;
 			if (widgetTagMappings == null)
 				PDatabaseUtils.LogDatabaseWarning("Unable to load codex files: no tag mappings found");
-			foreach (string str in codexFiles)
+			foreach (string filename in codexFiles)
 				try {
-					string filename = str;
 					var codexEntry = YamlIO.LoadFile<CodexEntry>(filename, YamlParseErrorCB,
 						widgetTagMappings);
 					if (codexEntry != null) {
 						codexEntry.category = category;
-						entries.Add(codexEntry);
+						entries?.Add(codexEntry);
 					}
 				} catch (IOException ex) {
 					PDatabaseUtils.LogDatabaseWarning("Unable to load codex files from {0}:".
@@ -170,7 +183,7 @@ namespace PeterHan.PLib.Database {
 		/// <param name="entries">The location where the data will be placed.</param>
 		/// <param name="dir">The directory to load.</param>
 		private static void LoadFromDirectory(ICollection<SubEntry> entries, string dir) {
-			string[] codexFiles = new string[0];
+			string[] codexFiles = Array.Empty<string>();
 			try {
 				// List codex data files in the codex directory
 				codexFiles = Directory.GetFiles(dir, CODEX_FILES, SearchOption.
@@ -187,8 +200,7 @@ namespace PeterHan.PLib.Database {
 				try {
 					var subEntry = YamlIO.LoadFile<SubEntry>(filename, YamlParseErrorCB,
 						widgetTagMappings);
-					if (entries != null)
-						entries.Add(subEntry);
+					entries?.Add(subEntry);
 				} catch (IOException ex) {
 					PDatabaseUtils.LogDatabaseWarning("Unable to load codex files from {0}:".
 						F(dir));
@@ -220,14 +232,21 @@ namespace PeterHan.PLib.Database {
 		/// The paths for plant codex entries.
 		/// </summary>
 		private readonly ISet<string> plantPaths;
+		
+		/// <summary>
+		/// The paths for story trait codex entries.
+		/// </summary>
+		private readonly ISet<string> storyPaths;
 
 		public PCodexManager() {
 			creaturePaths = new HashSet<string>();
 			plantPaths = new HashSet<string>();
+			storyPaths = new HashSet<string>();
 			// Data is a hacky but usable 2 item dictionary
 			InstanceData = new CodexDictionary(4) {
 				{ CREATURES_CATEGORY, creaturePaths },
-				{ PLANTS_CATEGORY, plantPaths }
+				{ PLANTS_CATEGORY, plantPaths },
+				{ STORY_CATEGORY, storyPaths }
 			};
 			PUtil.InitLibrary(false);
 			PRegistry.Instance.AddCandidateVersion(this);
@@ -247,13 +266,13 @@ namespace PeterHan.PLib.Database {
 		/// </summary>
 		/// <param name="category">The codex category under which these data entries should be loaded.</param>
 		/// <returns>The list of entries that were loaded.</returns>
-		private IList<CodexEntry> LoadEntries(string category) {
+		private IEnumerable<CodexEntry> LoadEntries(string category) {
 			var entries = new List<CodexEntry>(32);
 			var allMods = PRegistry.Instance.GetAllComponents(ID);
 			if (allMods != null)
 				foreach (var mod in allMods) {
 					var codex = mod?.GetInstanceData<CodexDictionary>();
-					if (codex != null && codex.TryGetValue(category, out ISet<string> dirs))
+					if (codex != null && codex.TryGetValue(category, out var dirs))
 						foreach (var dir in dirs)
 							LoadFromDirectory(entries, dir, category);
 				}
@@ -264,7 +283,7 @@ namespace PeterHan.PLib.Database {
 		/// Loads all codex subentries for all mods registered.
 		/// </summary>
 		/// <returns>The list of subentries that were loaded.</returns>
-		private IList<SubEntry> LoadSubEntries() {
+		private IEnumerable<SubEntry> LoadSubEntries() {
 			var entries = new List<SubEntry>(32);
 			var allMods = PRegistry.Instance.GetAllComponents(ID);
 			if (allMods != null)
@@ -302,7 +321,7 @@ namespace PeterHan.PLib.Database {
 		/// be read from the mod directory in the "codex/Plants" subfolder. If the argument
 		/// is omitted, the calling assembly is registered.
 		/// </summary>
-		/// <param name="assembly">The assembly to register as having creatures.</param>
+		/// <param name="assembly">The assembly to register as having plants.</param>
 		public void RegisterPlants(Assembly assembly = null) {
 			if (assembly == null)
 				assembly = Assembly.GetCallingAssembly();
@@ -310,6 +329,23 @@ namespace PeterHan.PLib.Database {
 			plantPaths.Add(dir);
 #if DEBUG
 			PDatabaseUtils.LogDatabaseDebug("Registered codex plants directory: {0}".F(dir));
+#endif
+		}
+
+		/// <summary>
+		/// Registers the calling mod as having custom story trait codex entries. The entries
+		/// will be read from the mod directory in the "codex/StoryTraits" subfolder. If the
+		/// argument is omitted, the calling assembly is registered.
+		/// </summary>
+		/// <param name="assembly">The assembly to register as having story traits.</param>
+		public void RegisterStory(Assembly assembly = null) {
+			if (assembly == null)
+				assembly = Assembly.GetCallingAssembly();
+			string dir = Path.Combine(PUtil.GetModPath(assembly), STORY_DIR);
+			storyPaths.Add(dir);
+#if DEBUG
+			PDatabaseUtils.LogDatabaseDebug("Registered codex story traits directory: {0}".
+				F(dir));
 #endif
 		}
 	}

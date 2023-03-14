@@ -37,8 +37,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StarmapQueue", "StarmapQueu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FoodTooltip", "FoodTooltip\FoodTooltip.csproj", "{CFE40396-D97A-4904-B13A-760D28E3EB31}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Resculpt", "Resculpt\Resculpt.csproj", "{74F922E7-30FA-4F88-B599-4ABBCAEB6938}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SandboxTools", "SandboxTools\SandboxTools.csproj", "{E7546BA6-2143-43A2-AE25-01899D7D8396}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ThermalPlate", "ThermalPlate\ThermalPlate.csproj", "{3DD95B2F-897D-49CA-BAB7-168C8A19B26B}"
@@ -256,14 +254,6 @@ Global
 		{CFE40396-D97A-4904-B13A-760D28E3EB31}.Release|Mergedown.Build.0 = Release|Mergedown
 		{CFE40396-D97A-4904-B13A-760D28E3EB31}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{CFE40396-D97A-4904-B13A-760D28E3EB31}.Release|Vanilla.Build.0 = Release|Vanilla
-		{74F922E7-30FA-4F88-B599-4ABBCAEB6938}.Debug|Mergedown.ActiveCfg = Debug|Mergedown
-		{74F922E7-30FA-4F88-B599-4ABBCAEB6938}.Debug|Mergedown.Build.0 = Debug|Mergedown
-		{74F922E7-30FA-4F88-B599-4ABBCAEB6938}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
-		{74F922E7-30FA-4F88-B599-4ABBCAEB6938}.Debug|Vanilla.Build.0 = Debug|Vanilla
-		{74F922E7-30FA-4F88-B599-4ABBCAEB6938}.Release|Mergedown.ActiveCfg = Release|Mergedown
-		{74F922E7-30FA-4F88-B599-4ABBCAEB6938}.Release|Mergedown.Build.0 = Release|Mergedown
-		{74F922E7-30FA-4F88-B599-4ABBCAEB6938}.Release|Vanilla.ActiveCfg = Release|Vanilla
-		{74F922E7-30FA-4F88-B599-4ABBCAEB6938}.Release|Vanilla.Build.0 = Release|Vanilla
 		{E7546BA6-2143-43A2-AE25-01899D7D8396}.Debug|Mergedown.ActiveCfg = Debug|Mergedown
 		{E7546BA6-2143-43A2-AE25-01899D7D8396}.Debug|Mergedown.Build.0 = Debug|Mergedown
 		{E7546BA6-2143-43A2-AE25-01899D7D8396}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
