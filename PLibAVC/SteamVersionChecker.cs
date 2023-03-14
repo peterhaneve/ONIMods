@@ -72,6 +72,32 @@ namespace PeterHan.PLib.AVC {
 		/// </summary>
 		private static readonly System.DateTime UNIX_EPOCH = new System.DateTime(1970, 1, 1,
 			0, 0, 0, DateTimeKind.Utc);
+		
+		/// <summary>
+		/// Checks to see if Steam is initialized yet.
+		/// </summary>
+		/// <param name="id">The mod's ID.</param>
+		/// <param name="boxedID">The ID converted to a boxed PublishedFileId_t and stored in
+		/// a single parameter array (for passing into the reflected function).</param>
+		/// <param name="mod">The mod to check.</param>
+		/// <returns>The results of the version check, or null if Steam has not populated it yet.</returns>
+		private static ModVersionCheckResults CheckSteamInit(ulong id, object[] boxedID,
+				Mod mod) {
+			var inst = SteamUGCService.Instance;
+			ModVersionCheckResults results = null;
+			// Mod takes time to be populated in the list
+			if (inst != null && FIND_MOD.Invoke(inst, boxedID) is
+				SteamUGCService.Mod steamMod) {
+				ulong ticks = steamMod.lastUpdateTime;
+				var steamUpdate = (ticks == 0U) ? System.DateTime.MinValue :
+					UnixEpochToDateTime(ticks);
+				bool updated = steamUpdate <= GetLocalLastModified(id).AddMinutes(
+					UPDATE_JITTER);
+				results = new ModVersionCheckResults(mod.staticID,
+					updated, updated ? null : steamUpdate.ToString("f"));
+			}
+			return results;
+		}
 
 		/// <summary>
 		/// Gets the last modified date of a mod's local files. The time is returned in UTC.
@@ -139,30 +165,18 @@ namespace PeterHan.PLib.AVC {
 		/// <param name="id">The Steam file ID of the mod.</param>
 		/// <param name="mod">The mod to check for updates.</param>
 		private System.Collections.IEnumerator WaitForSteamInit(ulong id, Mod mod) {
-			var boxedID = NEW_PUBLISHED_FILE_ID.Invoke(new object[] { id });
-			ModVersionCheckResults results = null;
+			var boxedID = new[] { NEW_PUBLISHED_FILE_ID.Invoke(new object[] { id }) };
+			ModVersionCheckResults results;
 			int timeout = 0;
 			do {
 				yield return null;
-				var inst = SteamUGCService.Instance;
-				// Mod takes time to be populated in the list
-				if (inst != null && FIND_MOD.Invoke(inst, new object[] { boxedID }) is
-						SteamUGCService.Mod steamMod) {
-					ulong ticks = steamMod.lastUpdateTime;
-					var steamUpdate = (ticks == 0U) ? System.DateTime.MinValue :
-						UnixEpochToDateTime(ticks);
-					bool updated = steamUpdate <= GetLocalLastModified(id).AddMinutes(
-						UPDATE_JITTER);
-					results = new ModVersionCheckResults(mod.staticID,
-						updated, updated ? null : steamUpdate.ToString("f"));
-				}
+				results = CheckSteamInit(id, boxedID, mod);
 				// 2 seconds at 60 FPS
 			} while (results == null && ++timeout < 120);
 			if (results == null)
 				PUtil.LogWarning("Unable to check version for mod {0} (SteamUGCService timeout)".
 					F(mod.label.title));
 			OnVersionCheckCompleted?.Invoke(results);
-			yield break;
 		}
 	}
 }

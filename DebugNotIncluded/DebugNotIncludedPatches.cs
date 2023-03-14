@@ -221,7 +221,7 @@ namespace PeterHan.DebugNotIncluded {
 	[HarmonyPatch(typeof(AudioSheets), "CreateSound")]
 	public static class AudioSheets_CreateSound_Patch {
 		internal static bool Prepare() {
-			return DebugNotIncludedOptions.Instance?.LogSounds ?? false;
+			return DebugNotIncludedOptions.Instance.LogSounds;
 		}
 
 		/// <summary>
@@ -240,7 +240,7 @@ namespace PeterHan.DebugNotIncluded {
 	[HarmonyPatch(typeof(Debug), "TimeStamp")]
 	public static class Debug_TimeStamp_Patch {
 		internal static bool Prepare() {
-			return DebugNotIncludedOptions.Instance?.ShowLogSenders ?? false;
+			return DebugNotIncludedOptions.Instance.ShowLogSenders;
 		}
 
 		/// <summary>
@@ -388,7 +388,7 @@ namespace PeterHan.DebugNotIncluded {
 		/// Applied after Update runs.
 		/// </summary>
 		internal static void Postfix(MainMenu __instance) {
-			if (DebugNotIncludedOptions.Instance?.SkipFirstModCheck != true)
+			if (!DebugNotIncludedOptions.Instance.SkipFirstModCheck)
 				ModDialogs.CheckFirstMod(__instance.gameObject);
 		}
 	}
@@ -525,7 +525,7 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		internal static bool Prepare() {
-			return DebugNotIncludedOptions.Instance?.PowerUserMode ?? false;
+			return DebugNotIncludedOptions.Instance.PowerUserMode;
 		}
 
 		/// <summary>
@@ -550,7 +550,7 @@ namespace PeterHan.DebugNotIncluded {
 	[HarmonyPatch(typeof(ModsScreen), "OnToggleClicked")]
 	public static class ModsScreen_OnToggleClicked_Patch {
 		internal static bool Prepare() {
-			return DebugNotIncludedOptions.Instance?.PowerUserMode ?? false;
+			return DebugNotIncludedOptions.Instance.PowerUserMode;
 		}
 
 		/// <summary>
@@ -562,6 +562,23 @@ namespace PeterHan.DebugNotIncluded {
 		}
 	}
 #endif
+
+	/// <summary>
+	/// Applied to NewGameSettingsPanel to force reload world gen if the option is selected.
+	/// </summary>
+	[HarmonyPatch(typeof(NewGameSettingsPanel), nameof(NewGameSettingsPanel.Init))]
+	public static class NewGameSettingsPanel_Init_Patch {
+		internal static bool Prepare() => DebugNotIncludedOptions.Instance.ForceReloadWorldgen;
+
+		/// <summary>
+		/// Applied before Init runs.
+		/// </summary>
+		internal static void Prefix(NewGameSettingsPanel __instance) {
+			ProcGen.SettingsCache.Clear();
+			ProcGenGame.WorldGen.LoadSettings();
+			CustomGameSettings.Instance.LoadClusters();
+		}
+	}
 
 	/// <summary>
 	/// Applied to SaveLoader to try and get rid of a duplicate Sim initialization.
@@ -594,7 +611,7 @@ namespace PeterHan.DebugNotIncluded {
 	[HarmonyPatch(typeof(ScheduleManager), "OnSpawn")]
 	public static class ScheduleManager_OnSpawn_Patch {
 		internal static bool Prepare() {
-			return DebugNotIncludedOptions.Instance?.SortSchedules ?? false;
+			return DebugNotIncludedOptions.Instance.SortSchedules;
 		}
 
 		/// <summary>

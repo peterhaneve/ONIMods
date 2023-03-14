@@ -17,10 +17,8 @@
  */
 
 using Newtonsoft.Json;
-using PeterHan.PLib;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Options;
-using System.Collections.Generic;
 
 namespace PeterHan.DebugNotIncluded {
 	/// <summary>
@@ -38,6 +36,10 @@ namespace PeterHan.DebugNotIncluded {
 		[Option("Disable Crash Dialog", "Crash to desktop instead of trying to show the Klei crash dialog.", "Debugging")]
 		[JsonProperty]
 		public bool DisableCrashDialog { get; set; }
+		
+		[Option("Force Reload New Worlds", "Reloads all world gen files when the New Game dialog is first opened.", "Debugging")]
+		[JsonProperty]
+		public bool ForceReloadWorldgen { get; set; }
 
 		[Option("Localize All Mods", "Localize all mods on the next load.", "Debugging")]
 		[JsonProperty]
@@ -74,6 +76,7 @@ namespace PeterHan.DebugNotIncluded {
 		public DebugNotIncludedOptions() {
 			DetailedBacktrace = true;
 			DisableCrashDialog = false;
+			ForceReloadWorldgen = false;
 			LocalizeMods = false;
 			LogAsserts = true;
 			LogSounds = false;
@@ -81,11 +84,6 @@ namespace PeterHan.DebugNotIncluded {
 			ShowLogSenders = false;
 			SkipFirstModCheck = false;
 			SortSchedules = false;
-		}
-
-		public override string ToString() {
-			return "DebugNotIncludedOptions[senders={0},assert={1},backtrace={2},sounds={3}]".
-				F(ShowLogSenders, LogAsserts, DetailedBacktrace, LogSounds);
 		}
 	}
 }
