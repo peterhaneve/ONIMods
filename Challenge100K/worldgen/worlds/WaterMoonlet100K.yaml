@@ -1,0 +1,139 @@
+name: STRINGS.WORLDS.WATERMOONLET100K.NAME
+description: STRINGS.WORLDS.WATERMOONLET100K.DESCRIPTION
+nameTables: [ WATER ]
+asteroidIcon: asteroid_water_moonlet_kanim
+
+worldTraitScale: 0.2
+worldsize:
+  X: 80
+  Y: 174
+layoutMethod: PowerTree
+
+defaultsOverrides:
+  data:
+    DrawWorldBorderForce: false
+    DrawWorldBorder: true
+    WorldBorderThickness: 4
+    WorldBorderRange: 2
+    OverworldDensityMin: 15
+    OverworldDensityMax: 15
+    OverworldAvoidRadius: 5
+    OverworldSampleBehaviour: PoissonDisk
+    POIPadding: 2
+
+disableWorldTraits: true
+
+subworldFiles:
+  - name: subworlds/space/SpaceFrigid
+  - name: subworlds/aquatic/SurfaceBeachFrigid
+  - name: subworlds/aquatic/OpenFrozen
+  - name: subworlds/aquatic/GraphiteCavesFrigid
+  - name: subworlds/barren/BadlandsFrigidCore
+  
+fixedTraits:
+  - sunlightLow
+  - cosmicRadiationLow
+  
+unknownCellsAllowedSubworlds:
+  - tagcommand: Default
+    command: Replace
+    subworldNames:
+      - subworlds/aquatic/OpenFrozen
+  - tagcommand: DistanceFromTag
+    tag: AtSurface
+    minDistance: 2
+    maxDistance: 2 
+    command: Replace
+    subworldNames:
+      - subworlds/aquatic/SurfaceBeachFrigid
+  - tagcommand: DistanceFromTag
+    tag: AtSurface
+    minDistance: 0
+    maxDistance: 1
+    command: Replace
+    subworldNames:
+      - subworlds/space/SpaceFrigid
+  - tagcommand: DistanceFromTag
+    tag: AtDepths
+    minDistance: 1
+    maxDistance: 1 
+    command: Replace
+    subworldNames:
+      - subworlds/aquatic/GraphiteCavesFrigid
+  - tagcommand: AtTag
+    tag: AtDepths
+    command: Replace
+    subworldNames:
+      - subworlds/barren/BadlandsFrigidCore
+
+worldTemplateRules:
+  - names:
+    - expansion1::poi/aquatic/dirty_water_geode
+    - expansion1::poi/aquatic/cool_slush_geode
+    - expansion1::poi/aquatic/salt_geyser_geode
+    - expansion1::poi/aquatic/hot_water_geode
+    listRule: TrySome
+    someCount: 2
+    allowedCellsFilter:
+      - command: Replace
+        subworldNames:
+          - subworlds/aquatic/OpenFrozen
+      - command: ExceptWith
+        tagcommand: DistanceFromTag
+        tag: AtDepths
+        minDistance: 0
+        maxDistance: 2
+  - names:
+    - expansion1::poi/aquatic/large_geode
+    - expansion1::poi/aquatic/large_coal_geode
+    listRule: TryOne
+    someCount: 2
+    priority: 40
+    allowedCellsFilter:
+      - command: Replace
+        subworldNames:
+          - subworlds/aquatic/OpenFrozen
+      - command: ExceptWith
+        tagcommand: DistanceFromTag
+        tag: AtDepths
+        minDistance: 0
+        maxDistance: 2
+  - names:
+    - expansion1::poi/aquatic/small_oxylite_geode
+    listRule: TrySome
+    someCount: 1
+    allowedCellsFilter:
+      - command: Replace
+        subworldNames:
+          - subworlds/aquatic/OpenFrozen
+      - command: ExceptWith
+        tagcommand: DistanceFromTag
+        tag: AtDepths
+        minDistance: 0
+        maxDistance: 2
+  - names:
+    - expansion1::poi/genericGravitas/poi_thermo_building
+    listRule: GuaranteeAll
+    priority: 450
+    allowedCellsFilter:
+      - command: Replace
+        subworldNames:
+          - subworlds/aquatic/GraphiteCavesFrigid
+      - command: ExceptWith
+        tagcommand: AtTag
+        tag: NoGravitasFeatures
+  - names:
+    - expansion1::bases/waterBase
+    listRule: GuaranteeAll
+    priority: 200
+    allowExtremeTemperatureOverlap: true
+    useRelaxedFiltering: true
+    overrideOffset:
+       X: 0
+       Y: -14
+    allowedCellsFilter:
+      - command: Replace
+        tagcommand: DistanceFromTag
+        tag: AtSurface
+        minDistance: 1
+        maxDistance: 1

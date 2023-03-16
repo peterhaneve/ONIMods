@@ -1,0 +1,109 @@
+name: STRINGS.WORLDS.NIOBIUMMOONLET100K.NAME
+description: STRINGS.WORLDS.NIOBIUMMOONLET100K.DESCRIPTION
+nameTables: [ MAGMA ]
+asteroidIcon: asteroid_niobium_planet_kanim
+# Superconductive Asteroid, but with less melty in the POI
+
+worldTraitScale: 0.06
+worldsize:
+  X: 64
+  Y: 96
+layoutMethod: PowerTree
+
+defaultsOverrides:
+  data:
+    DrawWorldBorderForce: false
+    DrawWorldBorder: true
+    WorldBorderThickness: 2
+    WorldBorderRange: 1
+    OverworldDensityMin: 15
+    OverworldDensityMax: 15
+    OverworldAvoidRadius: 5
+    OverworldSampleBehaviour: PoissonDisk
+    POIPadding: 0
+
+disableWorldTraits: true
+
+subworldFiles:
+  - name: subworlds/space/Space
+  - name: expansion1::subworlds/magma/MagmaSurface
+  - name: expansion1::subworlds/space/SpaceWithNoBorder
+  - name: expansion1::subworlds/niobium/NiobiumPatch
+    minCount: 2
+    maxCount: 3
+    overridePower: 1.25
+  - name: expansion1::subworlds/magma/BottomSmall
+
+fixedTraits:
+  - sunlightLow
+  - cosmicRadiationLow
+
+unknownCellsAllowedSubworlds:
+  - tagcommand: Default
+    command: Replace
+    subworldNames:
+      - expansion1::subworlds/magma/MagmaSurface
+  - tagcommand: AtTag
+    tag: AtSurface
+    command: Replace
+    subworldNames:
+      - subworlds/space/Space
+  - tagcommand: DistanceFromTag
+    tag: AtSurface
+    minDistance: 1
+    maxDistance: 1
+    command: Replace
+    subworldNames:
+      - expansion1::subworlds/space/SpaceWithNoBorder
+  - tagcommand: DistanceFromTag
+    tag: AtSurface
+    minDistance: 3
+    maxDistance: 3
+    command: Replace
+    subworldNames:
+      - expansion1::subworlds/niobium/NiobiumPatch
+  - tagcommand: DistanceFromTag
+    tag: AtDepths
+    minDistance: 0
+    maxDistance: 0
+    command: Replace
+    subworldNames:
+      - expansion1::subworlds/magma/BottomSmall
+      - expansion1::subworlds/niobium/NiobiumPatch
+
+worldTemplateRules:
+  - names:
+      - expansion1::geysers/molten_niobium
+    listRule: GuaranteeAll
+    priority: 98
+    allowedCellsFilter:
+      - command: Replace
+        subworldNames:
+          - expansion1::subworlds/niobium/NiobiumPatch
+  - names:
+      - poi/poi_mining_room_100k
+    listRule: GuaranteeAll
+    allowExtremeTemperatureOverlap: true
+    priority: 99
+    allowedCellsFilter:
+      - command: Replace
+        subworldNames:
+          - expansion1::subworlds/niobium/NiobiumPatch
+      - command: ExceptWith
+        tagcommand: AtTag
+        tag: NoGravitasFeatures
+  - names:
+    - expansion1::bases/magmaBase
+    listRule: GuaranteeAll
+    priority: 200
+    allowExtremeTemperatureOverlap: true
+    useRelaxedFiltering: true
+    overrideOffset:
+       X: 0
+       Y: -8
+    allowedCellsFilter:
+      - command: Replace
+        tagcommand: DistanceFromTag
+        tag: AtSurface
+        minDistance: 1
+        maxDistance: 1

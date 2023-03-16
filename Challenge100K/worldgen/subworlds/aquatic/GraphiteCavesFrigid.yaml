@@ -1,0 +1,16 @@
+biomeNoise: expansion1::noise/Sponge
+temperatureRange: 12
+minChildCount: 4
+density:
+  min: 10
+  max: 15
+avoidRadius: 20
+sampleBehaviour: PoissonDisk
+biomes:
+  - name: expansion1::biomes/Aquatic/GraphiteCavesOxygen
+    weight: 4
+  - name: expansion1::biomes/Aquatic/GraphiteCavesCO2
+    weight: 2
+tags:
+  - IgnoreCaveOverride
+zoneType: Swamp

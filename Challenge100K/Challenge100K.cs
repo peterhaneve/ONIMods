@@ -48,7 +48,10 @@ namespace PeterHan.Challenge100K {
 		/// The world names used for all 100K moonlets.
 		/// </summary>
 		private static readonly ISet<string> WORLD_NAMES = new HashSet<string>() {
-			"STRINGS.WORLDS.ONEHUNDREDK.NAME"
+			"STRINGS.WORLDS.ONEHUNDREDK.NAME", "STRINGS.WORLDS.MEDIUMSWAMPY100K.NAME",
+			"STRINGS.WORLDS.MARSHYMOONLET100K.NAME", "STRINGS.WORLDS.WATERMOONLET100K.NAME",
+			"STRINGS.WORLDS.TUNDRAMOONLET100K.NAME"
+			// 100K clamping is not used on Moo or Niobium classic
 		};
 
 		/// <summary>
@@ -67,7 +70,7 @@ namespace PeterHan.Challenge100K {
 		/// <returns>The minimum temperature to be used for world gen.</returns>
 		private static float GetMinTemperature(Element element, WorldGen worldGen) {
 			var world = worldGen?.Settings?.world;
-			return (world != null && WORLD_NAMES.Contains(world.name)) ? 1.0f : element.lowTemp;
+			return world != null && WORLD_NAMES.Contains(world.name) ? 1.0f : element.lowTemp;
 		}
 
 		/// <summary>
@@ -97,6 +100,50 @@ namespace PeterHan.Challenge100K {
 		}
 
 		/// <summary>
+		/// Removes the templates that look like geysers from the specified list.
+		/// </summary>
+		/// <param name="templates">The templates to process.</param>
+		/// <param name="newTemplates">Used as a temporary list to remove the geysers.</param>
+		private static void RemoveGeysers(List<ProcGen.World.TemplateSpawnRules> templates,
+				ICollection<ProcGen.World.TemplateSpawnRules> newTemplates) {
+			newTemplates.Clear();
+			// Remove any template that mentions "geyser"
+			foreach (var template in templates)
+				if (template != null) {
+					bool add = true;
+					var names = template.names;
+					int n = names.Count;
+					for (int i = 0; i < n && add; i++)
+						add = !names[i].ToLowerInvariant().Contains("geyser");
+					if (add)
+						newTemplates.Add(template);
+				}
+			templates.Clear();
+			templates.AddRange(newTemplates);
+		}
+
+		/// <summary>
+		/// Removes the geysers from the specified world.
+		/// </summary>
+		/// <param name="data">The world instance data to make harder.</param>
+		private static void RemoveGeysers(MutatedWorldData data) {
+			var templates = data.world.worldTemplateRules;
+			var subworlds = data.subworlds;
+			var newTemplates = ListPool<ProcGen.World.TemplateSpawnRules, MutatedWorldData>.
+				Allocate();
+			if (templates != null)
+				RemoveGeysers(templates, newTemplates);
+			// Remove the POI geysers too
+			if (subworlds != null)
+				foreach (var subworld in subworlds) {
+					templates = subworld.Value.subworldTemplateRules;
+					if (templates != null)
+						RemoveGeysers(templates, newTemplates);
+				}
+			newTemplates.Recycle();
+		}
+
+		/// <summary>
 		/// Applied to SettingsCache to create a custom 100K temperature range.
 		/// </summary>
 		[HarmonyPatch(typeof(SettingsCache), nameof(SettingsCache.LoadFiles),
@@ -112,7 +159,6 @@ namespace PeterHan.Challenge100K {
 			}
 		}
 
-#if false
 		/// <summary>
 		/// Applied to MutatedWorldData() to remove all geysers on hard mode on 100 K.
 		/// </summary>
@@ -123,24 +169,16 @@ namespace PeterHan.Challenge100K {
 			/// Applied after the constructor runs.
 			/// </summary>
 			internal static void Postfix(MutatedWorldData __instance) {
-				var world = __instance.world;
-				var subworlds = __instance.subworlds;
-				if (world.name == WORLD_NAME) {
-					var options = POptions.ReadSettings<Challenge100KOptions>();
-					if (options != null && options.RemoveGeysers) {
+				Challenge100KOptions options;
+				if (WORLD_NAMES.Contains(__instance.world.name) && (options = POptions.
+					ReadSettings<Challenge100KOptions>()) != null && options.RemoveGeysers) {
 #if DEBUG
-						PUtil.LogDebug("Hard mode: removing geysers");
+					PUtil.LogDebug("Hard mode: removing geysers");
 #endif
-						world.worldTemplateRules?.Clear();
-						// Remove the POI geysers too
-						if (subworlds != null)
-							foreach (var subworld in subworlds)
-								subworld.Value.subworldTemplateRules?.Clear();
-					}
+					RemoveGeysers(__instance);
 				}
 			}
 		}
-#endif
 
 		/// <summary>
 		/// Applied to TerrainCell to prevent element temperature clamping to the minimum

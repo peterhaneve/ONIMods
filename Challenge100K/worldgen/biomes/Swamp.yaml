@@ -1,0 +1,36 @@
+TerrainBiomeLookupTable:
+  remove: [] 
+  add:
+    Frigid:
+      - content: SedimentaryRock
+        bandSize: 0.05
+      - content: ToxicSand
+        bandSize: 0.30
+      - content: Dirt
+        bandSize: 0.05
+      - content: Mud
+        bandSize: 0.15
+      - content: DirtyIce
+        bandSize: 0.1
+      - content: ContaminatedOxygen
+        bandSize: 0.7
+    Water_CO2_Frigid:
+      - content: SedimentaryRock
+        bandSize: 0.05
+      - content: Phosphorite
+        bandSize: 0.05
+        overrides:
+          massOverride: 200
+      - content: ToxicSand
+        bandSize: 0.15
+      - content: Mud
+        bandSize: 0.2
+      - content: ToxicMud
+        bandSize: 0.35
+      - content: Fertilizer
+        bandSize: 0.05
+      - content: DirtyIce
+        bandSize: 0.6
+      - content: CarbonDioxide
+        bandSize: 0.4
+    

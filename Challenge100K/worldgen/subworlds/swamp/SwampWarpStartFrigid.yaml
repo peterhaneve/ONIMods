@@ -1,0 +1,30 @@
+biomeNoise: expansion1::noise/Swamp
+temperatureRange: 12
+density:
+  min: 10
+  max: 15
+avoidRadius: 20.0
+extraBiomeChildren: 3
+doAvoidPoints: false
+sampleBehaviour: PoissonDisk
+biomes:
+  - name: biomes/Swamp/Frigid
+    weight: 2
+    tags:
+      - WineCupsSeed
+      - SwampHarvestPlantSeed
+      - SwampForagePlant
+  - name: biomes/Swamp/Water_CO2_Frigid
+    weight: 3
+    tags:
+      - SwampForagePlant
+      - WineCupsSeed
+      - SwampHarvestPlantSeed
+centralFeature:
+  type: features/generic/StartLocation
+features:
+  - type: expansion1::features/swamp/ShallowPool
+tags:
+  - IgnoreCaveOverride
+  - NoGlobalFeatureSpawning
+zoneType: Swamp

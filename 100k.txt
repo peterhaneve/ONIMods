@@ -1,0 +1,77 @@
+Here is the 100k cluster plan so far:
+Start asteroid
+Size: Small
+Average Temperature: 200 K (-73 C)
+Biomes: Forest Start, 100K Rust, 100K Badlands, 100K Space
+Meteors: Crushed Ice
+Resources: Algae, Dirt, Stone, Mercury, Iron Ore (POI maybe 200kg or so), Sand, Coal, Rust, Salt, just enough Ice to research the co2 rocket
+Geysers: 1x Carbon Dioxide, 1x Infectious Polluted Oxygen
+Critters/Plants: Arbor Acorn, Hexalent, Buried Hexalent
+Warp Pipe is behind Abyssalite if possible
+
+Warp pipe asteroid
+Size: Medium
+Average Temperature: 100 K (-173 C)
+Biomes: Sandstone Start, 100K Desert, 100K Frozen, 100K Caustic, 100K Space
+Meteors: Algae
+Resources: Stone, Sand, Coal, Ice, Polluted Ice, Sucrose, Sulfur, Uranium Geode POI
+Geysers: 1x Gold Volcano, 1x Infectious Polluted Oxygen
+Critters/Plants: Mealwood Seed, Grubfruit Seed, Blossom Seed
+
+Asteroid at distance 2
+Size: Large
+Average Temperature: 100 K (-173 C)
+Biomes: 100K Space, 100K Swamp, 100K Caustic, 100K Radioactive, 100K Oil
+Meteors: None
+Resources: Polluted Dirt, Stone, Metal Ore, Sand, Coal, Uranium (if possible), Frozen Crude Oil, Diamond, Lead
+Geysers: 2x Brine, 4x [Polluted Oxygen, Hot Polluted Oxygen, Carbon Dioxide, Hot Carbon Dioxide, Leaky Oil Fissure, Hydrogen, Natural Gas]
+Critters/Plants: Balm Lily Seed, Pincha Pepper Seed, Bog Bucket Seed, Saturn Critter Trap Seed
+
+Asteroid at distance 3
+Size: Small
+Average Temperature: 50 K (-223 C)
+Biomes: 100K Space, 100K Slime, 100K Badlands, 100K Frozen
+Meteors: Yes (if possible)
+Resources: Stone, Metal Ore, Refined Iron, Slime, Algae, Ice, Polluted Ice, Coal
+Geysers: 1x Polluted Water, 2x [Gold Volcano, Iron Volcano, Copper Volcano]
+Critters/Plants: Thimble Reed Seed, Dusk Cap Seed, Sleet Wheat Grain
+
+Asteroid at distance 4
+Size: Medium
+Average Temperature: 240 K (-30 C)
+Biomes: Space, Cold Desert, Cold Caustic, Cold Salt, Cold Sandstone
+Meteors: Dust, Gold, Copper, Iron
+Resources: Stone, Sand, Sulfur, Niobium, Coal, Ice, Graphite
+Geysers: 1x Minor Volcano, 1x Liquid Sulfur Geyser, 1x [Water Geyser, Cool Steam Vent, Steam Vent, Salt Water Geyser], 1x [Aluminium Volcano, Tungsten Volcano]
+Critters/Plants: Buried Hatch, Sweetle, Glossy Drecko, Dense Puft, Sun Bug, Longhair Slickster, Pokeshell, Pip
+
+We Deliver
+Build a drone nav grid on the background with global solid change listener, require atmo 100g, only through open doors
+Repairs are always free and 30s, frequency scaled by suit durability (fix strings?)
+Drones can be deconstructed for 100% materials
+
+Logistics Drone - sweep and supply, Crafting Station, flight speed is always 1x at full load scaled by mass
+LD1 - 200 kg x1 10 kJ 20 J/m - 100 kg Refined Metal, 50 kg Ceramic, 50 kg Refined Carbon, Improved Tinkering, 60s, 10 cycle repair, Robotic Tools
+LD2 - 400 kg x1.5 20 kJ 50 J/m - 100 kg Steel / Basic Alloy, 50 kg Plastic, 50 kg Diamond, Electrical Engineering, 120s, 15 cycle repair, Computing
+LD3 - 1600 kg x3 100 kJ 200 J/m - 100 kg Thermium / Advanced Alloy, 50 kg Insulation, 50 kg Diamond, Mechatronics Engineering, 240s, 20 cycle repair, Solid Cargo / High Velocity Transport
+
+Mining Drone - digging, Crafting Station
+MD1 - only soft materials - 10 kJ 20 J/m max 50 J/block, 100 kg Refined Metal, 50 kg Ceramic, 50 kg Refined Carbon, Improved Tinkering, 60s, 5 cycle repair, Robotic Tools
+MD2 - hardness 1 - 20 kJ 40 J/m max 100 J/block, 100 kg Steel / Basic Alloy, 50 kg Plastic, 50 kg Diamond, Electrical Engineering, 120s, 10 cycle repair, Computing
+MD3 - hardness 2 - 100 kJ 100 J/m max 500 J/block, 100 kg Thermium / Advanced Alloy, 50 kg Insulation, 50 kg Diamond, Mechatronics Engineering, 240s, 15 cycle repair, Solid Cargo / High Velocity Destruction
+
+Construction Drone - building (NO supplying materials), Crafting Station
+CD1 - x2 rate - 20 kJ 20 J/m 50 W while building, 100 kg Steel / Basic Alloy, 50 kg Plastic, 50 kg Diamond, Electrical Engineering, 120s, 10 cycle repair, Computing
+CD2 - x4 rate - 100 kJ 80 J/m 100 W while building, 100 kg Thermium / Advanced Alloy, 50 kg Insulation, 50 kg Diamond, Mechatronics Engineering, 240s, 20 cycle repair, Cryofuel Propulsion
+
+Base Station
+Charging 240 W, 10 W at idle, automation to disable charging, require at least one to turn on drone grid, Robotic Tools, 15 tile range
+
+Turbo Charging Station
+Charging 960 W, 20 W at idle, automation to disable, t3 tech
+
+Auxiliary Antenna
+No charging, automation to disable entirely, 5 W, Computing, 25 tile range
+
+Drone Control Station 
+120 W, Duplicant operation, trains Research skill, requires Electrical Engineering, drones fly 50% faster (Max 5 stacks), Computing

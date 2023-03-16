@@ -1,0 +1,118 @@
+name: STRINGS.WORLDS.TUNDRAMOONLET100K.NAME
+description: STRINGS.WORLDS.TUNDRAMOONLET100K.DESCRIPTION
+nameTables: [ TUNDRA ]
+asteroidIcon: asteroid_ice_planet_kanim
+
+worldTraitScale: 0.08
+worldsize:
+  X: 64
+  Y: 128
+layoutMethod: PowerTree
+
+defaultsOverrides:
+  data:
+    DrawWorldBorderForce: false
+    DrawWorldBorder: true
+    WorldBorderThickness: 4
+    WorldBorderRange: 2
+    OverworldDensityMin: 15
+    OverworldDensityMax: 15
+    OverworldAvoidRadius: 5
+    OverworldSampleBehaviour: PoissonDisk
+    POIPadding: 1
+
+worldTraitRules:
+  - min: 1
+    max: 2
+    forbiddenTags:
+      - StartWorldOnly
+      - Geodes
+      - Oil
+      - GenericGeysers
+      - StartChange
+      - VeryCold
+      - LargeWorld
+    forbiddenTraits:
+      - traits/MagmaVents
+      - expansion1::traits/Volcanoes
+      - expansion1::traits/MetalCaves
+
+
+subworldFiles:
+  - name: subworlds/space/SpaceFrigid
+  - name: subworlds/frozen/FrozenFrigid
+  - name: subworlds/frozen/FrozenFrigidGravitas
+  
+unknownCellsAllowedSubworlds: 
+  - tagcommand: Default
+    command: Replace
+    subworldNames:
+      - subworlds/frozen/FrozenFrigidGravitas
+  - tagcommand: DistanceFromTag
+    tag: AtSurface
+    minDistance: 0
+    maxDistance: 1
+    command: Replace
+    subworldNames:
+      - subworlds/space/SpaceFrigid
+  - tagcommand: DistanceFromTag
+    tag: AtSurface
+    minDistance: 2
+    maxDistance: 2
+    command: Replace
+    subworldNames:
+      - subworlds/frozen/FrozenFrigid
+
+fixedTraits:
+  - sunlightVeryVeryLow
+  - cosmicRadiationMed
+
+worldTemplateRules:
+  - names:
+      - expansion1::poi/genericGravitas/poi_gift_shop
+    listRule: GuaranteeAll
+    priority: 200
+    allowExtremeTemperatureOverlap: true
+    allowedCellsFilter:
+      - command: Replace
+        tagcommand: DistanceFromTag
+        tag: AtSurface
+        minDistance: 4
+        maxDistance: 99
+      - command: ExceptWith
+        zoneTypes: [ Space ]
+      - command: ExceptWith
+        tagcommand: AtTag
+        tag: NoGravitasFeatures
+  - names:
+      - expansion1::poi/poi_temporal_tear_opener_lab
+    listRule: GuaranteeAll
+    priority: 201
+    allowExtremeTemperatureOverlap: true
+    allowedCellsFilter:
+      - command: Replace
+        tagcommand: DistanceFromTag
+        tag: AtSurface
+        minDistance: 2
+        maxDistance: 2
+  - names:
+    - expansion1::poi/poi_frozen_iron_geyser
+    - expansion1::poi/poi_frozen_iron_geyser_2
+    - expansion1::poi/poi_frozen_iron_geyser_3
+    - expansion1::poi/poi_frozen_iron_geyser_4
+    listRule: GuaranteeSomeTryMore
+    allowExtremeTemperatureOverlap: true
+    someCount: 2 
+    moreCount: 2
+    priority: 100
+    allowedCellsFilter:
+      - command: Replace
+        tagcommand: DistanceFromTag
+        tag: AtSurface
+        minDistance: 3
+        maxDistance: 6  
+      - command: IntersectWith
+        zoneTypes: [ FrozenWastes ]
+      - command: ExceptWith
+        tagcommand: AtTag
+        tag: NoGravitasFeatures

@@ -1,0 +1,19 @@
+biomeNoise: expansion1::noise/subworldWasteland
+temperatureRange: 12
+minChildCount: 4
+density:
+  min: 10
+  max: 20
+avoidRadius: 20.0
+doAvoidPoints: false
+dontRelaxChildren: false
+sampleBehaviour: PoissonDisk
+biomes:
+  - name: expansion1::biomes/Wasteland/Basic
+    tags:
+      - WormPlantSeed
+features:
+  - type: expansion1::features/wasteland/OxyliteBlob
+tags:
+  - IgnoreCaveOverride
+zoneType: Wasteland

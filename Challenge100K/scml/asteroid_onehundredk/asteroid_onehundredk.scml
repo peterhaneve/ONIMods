@@ -73,7 +73,7 @@
                     <object_ref id="1" timeline="0" key="15" z_index="1"/>
                 </key>
             </mainline>
-            <timeline id="0" name="asteroid01_sandstone_0_0">
+            <timeline id="0" name="asteroid_onehundredk_0_0">
                 <key id="0" spin="0">
                     <object folder="0" file="0" x="-10.375" y="6.275" angle="0"/>
                 </key>

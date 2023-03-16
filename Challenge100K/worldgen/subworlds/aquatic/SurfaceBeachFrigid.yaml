@@ -1,0 +1,14 @@
+biomeNoise: noise/Default
+temperatureRange: 12
+pdWeight: 1
+density:
+  min: 35
+  max: 45
+avoidRadius: 50.0
+sampleBehaviour: PoissonDisk
+borderOverride: NONE
+biomes:
+  - name: biomes/Aquatic/Frozen
+tags:
+  - IgnoreCaveOverride
+zoneType: Barren

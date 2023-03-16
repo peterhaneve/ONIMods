@@ -1,0 +1,24 @@
+biomeNoise: noise/subworldJungle
+temperatureRange: 12
+density:
+  min: 10
+  max: 15
+avoidRadius: 15.0
+doAvoidPoints: false
+dontRelaxChildren: true
+extraBiomeChildren: 8
+sampleBehaviour: PoissonDisk
+centralFeature:
+  type: features/jungle/SmallRoom
+features:
+  - type: features/jungle/SmallRoom
+  - type: features/jungle/BleachRoom
+  - type: features/jungle/SandGeode
+biomes:
+  - name: biomes/Jungle/Frigid
+    tags:
+      - med_SpiceVineSeed
+      - med_LeafyPlantSeed
+tags:
+  - IgnoreCaveOverride
+zoneType: ToxicJungle

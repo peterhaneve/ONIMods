@@ -1,0 +1,8 @@
+TerrainBiomeLookupTable:
+  remove: [] 
+  add:
+    Frozen:
+    - content: Ice
+      bandSize: 0.8
+      overrides:
+        massOverride: 1000

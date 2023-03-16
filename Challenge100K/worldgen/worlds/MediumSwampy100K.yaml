@@ -1,0 +1,270 @@
+name: STRINGS.WORLDS.MEDIUMSWAMPY100K.NAME
+description: STRINGS.WORLDS.MEDIUMSWAMPY100K.DESCRIPTION
+nameTables: [ SWAMP ]
+asteroidIcon: asteroid_vanilla_mediumswampy_kanim
+
+worldTraitScale: 0.3
+worldsize:
+  X: 160
+  Y: 176
+layoutMethod: PowerTree
+
+defaultsOverrides:
+  data:
+    DrawWorldBorderForce: false
+    DrawWorldBorder: true
+    WorldBorderThickness: 3
+    WorldBorderRange: 1
+    OverworldDensityMin: 18
+    OverworldDensityMax: 18
+    OverworldAvoidRadius: 5
+    OverworldSampleBehaviour: PoissonDisk
+    POIPadding: 1
+
+worldTraitRules:
+  - min: 2
+    max: 2
+    forbiddenTags:
+      - StartWorldOnly
+      - Oil
+      - LargeWorld
+      - Surface
+      - Core
+      - GenericGeysers
+      - Challenge
+
+fixedTraits:
+  - sunlightVeryLow
+  - cosmicRadiationVeryLow
+
+startSubworldName: subworlds/swamp/SwampWarpStartFrigid
+startingBaseTemplate: bases/ohkBaseSwamp
+startingBasePositionHorizontal:
+  min: 0.475
+  max: 0.525
+startingBasePositionVertical:
+  min: 0.4
+  max: 0.45
+
+subworldFiles:
+  - name: subworlds/space/Space
+  - name: subworlds/space/SpaceFrigidSandy
+  - name: subworlds/swamp/SwampFrigid
+  - name: subworlds/swamp/SwampWarpStartFrigid
+  - name: subworlds/marsh/MarshFrigid
+    minCount: 3
+  - name: subworlds/wasteland/WastelandFrigid
+    minCount: 4
+  - name: subworlds/barren/BadlandsFrigid
+    overridePower: 1
+    maxCount: 3
+  - name: subworlds/jungle/JungleFrigid
+  - name: subworlds/frozen/FrozenFrigid
+    minCount: 3
+    maxCount: 5
+    
+unknownCellsAllowedSubworlds: 
+  - tagcommand: Default
+    command: Replace
+    subworldNames:
+     - subworlds/swamp/SwampFrigid
+  # Start
+  - tagcommand: DistanceFromTag
+    tag: AtStart
+    minDistance: 1
+    maxDistance: 1
+    command: Replace
+    subworldNames:
+      - subworlds/swamp/SwampFrigid
+  # Ring-1
+  - tagcommand: DistanceFromTag
+    tag: AtStart
+    minDistance: 2
+    maxDistance: 2
+    command: Replace
+    subworldNames:
+      - subworlds/wasteland/WastelandFrigid
+      - subworlds/swamp/SwampFrigid
+      - subworlds/jungle/JungleFrigid
+  # Ring-2
+  - tagcommand: DistanceFromTag
+    tag: AtStart
+    minDistance: 3
+    maxDistance: 3
+    command: Replace
+    subworldNames:
+      - subworlds/wasteland/WastelandFrigid
+      - subworlds/frozen/FrozenFrigid
+      - subworlds/jungle/JungleFrigid
+      - subworlds/barren/BadlandsFrigid
+  # Ring-3
+  - tagcommand: DistanceFromTag
+    tag: AtStart
+    minDistance: 4
+    maxDistance: 99
+    command: Replace
+    subworldNames:
+      - subworlds/marsh/MarshFrigid
+      - subworlds/frozen/FrozenFrigid
+      - subworlds/jungle/JungleFrigid
+      - subworlds/barren/BadlandsFrigid
+  # Space
+  - tagcommand: AtTag
+    tag: AtSurface
+    command: Replace
+    subworldNames:
+      - subworlds/space/Space
+  # Crust
+  - tagcommand: DistanceFromTag
+    tag: AtSurface
+    minDistance: 1
+    maxDistance: 1
+    command: Replace
+    subworldNames:
+      - subworlds/space/SpaceFrigidSandy
+  # Surface
+  - tagcommand: DistanceFromTag
+    tag: AtSurface
+    minDistance: 2
+    maxDistance: 2
+    command: Replace
+    subworldNames:
+      - subworlds/marsh/MarshFrigid
+      - subworlds/jungle/JungleFrigid
+  # Above Core
+  - tagcommand: DistanceFromTag
+    tag: AtDepths
+    minDistance: 0
+    maxDistance: 0
+    command: Replace
+    subworldNames:
+      - subworlds/wasteland/WastelandFrigid
+      - subworlds/barren/BadlandsFrigid
+
+worldTemplateRules:
+    # Jungle
+  - names:
+      - poi/jungle/geyser_steam
+    listRule: TryOne
+    priority: 100
+    allowedCellsFilter:
+      - command: Replace
+        zoneTypes: [ToxicJungle]
+  - names:
+      - poi/jungle/geyser_methane
+      - poi/jungle/geyser_chlorine
+    listRule: TryOne
+    priority: 100
+    allowedCellsFilter:
+      - command: Replace
+        zoneTypes: [ToxicJungle]
+  # Marsh
+  - names:
+      - poi/hotmarsh/geyser_steam
+    listRule: TryOne
+    priority: 100
+    allowedCellsFilter:
+      - command: Replace
+        zoneTypes: [BoggyMarsh]
+  - names:
+      - poi/hotmarsh/geyser_methane
+    listRule: TryOne
+    priority: 100
+    allowedCellsFilter:
+      - command: Replace
+        zoneTypes: [BoggyMarsh]
+  # FrozenMedium
+  - names:
+      - poi/frozen/heatsink_a
+      - poi/frozen/heatsink_c
+      - poi/frozen/heatsink_d
+    listRule: GuaranteeOne
+    priority: 100
+    allowedCellsFilter:
+      - command: Replace
+        zoneTypes: [FrozenWastes]
+  # Gravitas
+  - names:
+    - poi/poi_warp_sender_100k
+    - poi/poi_warp_receiver_100k
+    listRule: GuaranteeAll
+    priority: 90
+    allowedCellsFilter:
+      - command: Replace
+        tagcommand: DistanceFromTag
+        tag: AtStart
+        minDistance: 1
+        maxDistance: 2
+      - command: IntersectWith
+        zoneTypes: [ Swamp, Rust, Forest ]
+      - command: ExceptWith
+        tagcommand: AtTag
+        tag: NoGravitasFeatures
+  # Curated geysers
+  - names:
+    - expansion1::geysers/molten_aluminum
+    - expansion1::geysers/molten_cobalt
+    - geysers/molten_copper
+    - geysers/molten_gold
+    - geysers/molten_iron
+    - geysers/hot_water
+    listRule: TryOne
+    times: 3
+    allowDuplicates: true
+    priority: 50
+    allowedCellsFilter:
+    - command: Replace
+      tagcommand: DistanceFromTag
+      tag: AtStart
+      minDistance: 1
+      maxDistance: 99
+    - command: ExceptWith
+      tagcommand: DistanceFromTag
+      tag: AtSurface
+      minDistance: 0
+      maxDistance: 2
+  - names:
+    - geysers/filthy_water
+    - geysers/salt_water
+    - geysers/slush_water
+    - expansion1::geysers/slush_salt_water
+    listRule: TryOne
+    times: 1
+    allowDuplicates: true
+    priority: 50
+    allowedCellsFilter:
+    - command: Replace
+      tagcommand: DistanceFromTag
+      tag: AtStart
+      minDistance: 1
+      maxDistance: 99
+    - command: ExceptWith
+      tagcommand: DistanceFromTag
+      tag: AtSurface
+      minDistance: 0
+      maxDistance: 2
+  - names:
+    - geysers/slimy_po2
+    - geysers/methane
+    - geysers/chlorine_gas
+    - geysers/hot_co2
+    - geysers/hot_hydrogen
+    - geysers/hot_po2
+    - expansion1::geysers/liquid_sulfur
+    - geysers/liquid_co2
+    - geysers/small_volcano
+    listRule: TryOne
+    times: 2
+    allowDuplicates: true
+    priority: 50
+    allowedCellsFilter:
+    - command: Replace
+      tagcommand: DistanceFromTag
+      tag: AtStart
+      minDistance: 1
+      maxDistance: 99
+    - command: ExceptWith
+      tagcommand: DistanceFromTag
+      tag: AtSurface
+      minDistance: 0
+      maxDistance: 2

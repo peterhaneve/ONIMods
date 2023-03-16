@@ -1,0 +1,145 @@
+name: STRINGS.WORLDS.MARSHYMOONLET100K.NAME
+description: STRINGS.WORLDS.MARSHYMOONLET100K.DESCRIPTION
+nameTables: [ SWAMP ]
+asteroidIcon: asteroid_marshy_moonlet_kanim
+
+worldTraitScale: 0.06
+worldsize:
+  X: 64
+  Y: 96
+layoutMethod: PowerTree
+
+defaultsOverrides:
+  data:
+    DrawWorldBorderForce: false
+    DrawWorldBorder: true
+    WorldBorderThickness: 2
+    WorldBorderRange: 1
+    OverworldDensityMin: 15
+    OverworldDensityMax: 15
+    OverworldAvoidRadius: 5
+    OverworldSampleBehaviour: PoissonDisk
+    POIPadding: 1
+
+startSubworldName: subworlds/marsh/MarshStartFrigid
+startingBaseTemplate: poi/poi_sap_tree_room_100k
+startingBasePositionHorizontal:
+  min: 0.45
+  max: 0.55
+startingBasePositionVertical:
+  min: 0.50
+  max: 0.55
+
+worldTraitRules:
+  - min: 0
+    max: 1
+    forbiddenTags:
+      - StartWorldOnly
+      - Geodes
+      - LargeWorld
+      - Oil
+      - GenericGeysers
+      - StartChange
+    forbiddenTraits:
+      - traits/MagmaVents
+      - expansion1::traits/Volcanoes
+      - traits/SlimeSplats
+      - expansion1::traits/LushCore
+      - expansion1::traits/MetalCaves
+
+fixedTraits:
+  - sunlightLow
+  - cosmicRadiationLow
+
+subworldFiles:
+  - name: subworlds/space/SpaceFrigid
+  - name: subworlds/space/SpaceFrigidOrganic
+  - name: subworlds/marsh/MarshStartFrigid
+  - name: subworlds/marsh/med_MarshInactiveFrigid
+  - name: subworlds/jungle/med_JungleInactiveFrigid
+    minCount: 1
+  
+unknownCellsAllowedSubworlds: 
+  - tagcommand: Default
+    command: Replace
+    subworldNames:
+      - subworlds/marsh/med_MarshInactiveFrigid
+      - subworlds/jungle/med_JungleInactiveFrigid
+  - tagcommand: AtTag
+    tag: AtSurface
+    command: Replace
+    subworldNames:
+      - subworlds/space/SpaceFrigid
+  - tagcommand: DistanceFromTag
+    tag: AtSurface
+    minDistance: 1
+    maxDistance: 1
+    command: Replace
+    subworldNames:
+      - subworlds/space/SpaceFrigidOrganic
+  - tagcommand: DistanceFromTag
+    tag: AtSurface
+    minDistance: 2
+    maxDistance: 2
+    command: Replace
+    subworldNames:
+      - subworlds/marsh/med_MarshInactiveFrigid
+  - tagcommand: DistanceFromTag
+    tag: AtSurface
+    minDistance: 3
+    maxDistance: 3
+    command: Replace
+    subworldNames:
+      - subworlds/marsh/med_MarshInactiveFrigid
+      - subworlds/jungle/med_JungleInactiveFrigid
+
+worldTemplateRules:
+  - names:
+    - expansion1::geysers/molten_tungsten_compact
+    listRule: GuaranteeAll
+    times: 1
+    priority: 150
+    useRelaxedFiltering: true
+    allowedCellsFilter:
+      - command: Replace
+        tagcommand: DistanceFromTag
+        tag: AtDepths
+        minDistance: 0
+        maxDistance: 2
+      - command: ExceptWith
+        zoneTypes: [ Space ]
+  - names:
+    - expansion1::geysers/molten_tungsten_exposed_compact
+    listRule: TryOne
+    times: 2
+    allowDuplicates: true
+    priority: 140
+    allowedCellsFilter:
+      - command: Replace
+        tagcommand: DistanceFromTag
+        tag: AtDepths
+        minDistance: 0
+        maxDistance: 0
+  - names:
+    - geysers/slimy_po2
+    - geysers/methane
+    - geysers/chlorine_gas
+    - geysers/hot_co2
+    - geysers/hot_hydrogen
+    - geysers/hot_po2
+    listRule: TryOne
+    times: 2
+    allowDuplicates: true
+    priority: 50
+    useRelaxedFiltering: true
+    allowedCellsFilter:
+      - command: Replace
+        tagcommand: DistanceFromTag
+        tag: AtStart
+        minDistance: 1
+        maxDistance: 99
+      - command: ExceptWith
+        zoneTypes: [ Space ]        
+      - command: ExceptWith
+        tagcommand: AtTag
+        tag: NoGravitasFeatures

@@ -1,0 +1,38 @@
+biomeNoise: expansion1::noise/Swamp
+temperatureRange: 12
+density:
+  min: 10
+  max: 15
+avoidRadius: 20.0
+extraBiomeChildren: 1
+doAvoidPoints: false
+sampleBehaviour: PoissonDisk
+biomes:
+  - name: biomes/Swamp/Frigid
+    weight: 2
+    tags:
+      - med_WineCupsSeed
+      - med_SwampHarvestPlantSeed
+      - med_SwampForagePlant
+  - name: biomes/Swamp/Water_CO2_Frigid
+    weight: 2
+    tags:
+      - med_SwampForagePlant
+      - med_WineCupsSeed
+      - med_SwampHarvestPlantSeed
+features:
+  - type: expansion1::features/swamp/DirtBallSmall
+  - type: expansion1::features/swamp/MetalCavernSmall
+  - type: expansion1::features/swamp/AirPocket
+  - type: expansion1::features/swamp/AirPocket
+  - type: expansion1::features/swamp/PacuPoolSmall
+tags:
+  - IgnoreCaveOverride
+  - NoGlobalFeatureSpawning
+zoneType: Swamp
+subworldTemplateRules:
+  - names:
+      - expansion1::poi/swamp/water_a
+      - expansion1::poi/swamp/water_b
+      - expansion1::poi/swamp/water_c
+    listRule: TryOne

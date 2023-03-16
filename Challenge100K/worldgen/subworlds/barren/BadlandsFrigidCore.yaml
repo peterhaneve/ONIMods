@@ -1,0 +1,17 @@
+biomeNoise: noise/Default
+temperatureRange: 12
+minChildCount: 4
+pdWeight: 1
+density:
+  min: 15
+  max: 20
+avoidRadius: 20.0
+sampleBehaviour: PoissonDisk
+biomes:
+  - name: expansion1::biomes/Barren/GraniteOre
+    weight: 1
+features:
+  - type: expansion1::features/barren/GraniteCoalDeposit
+tags:
+  - IgnoreCaveOverride
+zoneType: Barren

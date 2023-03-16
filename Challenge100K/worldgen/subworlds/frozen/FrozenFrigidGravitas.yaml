@@ -10,8 +10,11 @@ biomes:
   - name: biomes/Frozen/Solid
     tags:
       - ColdWheat
-      - ColdWheatSeed
       - ColdBreather
+features:
+  - type: features/frozen/ColdBubble
+  - type: features/frozen/ColdBubble
+  - type: features/frozen/SandGeode
 tags:
   - IgnoreCaveOverride
 zoneType: FrozenWastes

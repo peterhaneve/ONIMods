@@ -1,0 +1,17 @@
+biomeNoise: noise/Generic
+borderOverride: organicCrust
+temperatureRange: 12
+singleChildCount: true
+minChildCount: 1
+density:
+  min: 35
+  max: 45
+avoidRadius: 50.0
+sampleBehaviour: PoissonDisk
+biomes:
+  - name: biomes/Misc/Space
+tags:
+  - IgnoreCaveOverride
+  - NoGlobalFeatureSpawning
+  - RemoveWorldBorderOverVacuum
+zoneType: Space

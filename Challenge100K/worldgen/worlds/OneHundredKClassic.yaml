@@ -107,9 +107,9 @@ worldTemplateRules:
         zoneTypes: [OilField]
   # Gravitas
   - names:
-    - templates/poi/poi_warp_sender_100k
-    - templates/poi/poi_warp_receiver_100k
-    - templates/poi/poi_warp_teleporter_100k
+    - poi/poi_warp_sender_100k
+    - poi/poi_warp_receiver_100k
+    - poi/poi_warp_teleporter_100k
     listRule: GuaranteeAll
     priority: 90
     allowedCellsFilter:

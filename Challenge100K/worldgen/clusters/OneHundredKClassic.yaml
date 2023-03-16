@@ -15,42 +15,37 @@ worldPlacements:
   allowedRings:
     min: 0
     max: 0
-- world: expansion1::worlds/MediumSwampy
+- world: worlds/MediumSwampy100K
   buffer: 2
   locationType: InnerCluster
   allowedRings:
     min: 3
     max: 3
-- world: expansion1::worlds/TundraMoonlet
+- world: worlds/TundraMoonlet100K
   buffer: 4
   allowedRings:
     min: 5
     max: 5
-- world: expansion1::worlds/MarshyMoonlet
+- world: worlds/MarshyMoonlet100K
   buffer: 4
   allowedRings:
     min: 5
     max: 6
-- world: expansion1::worlds/NiobiumMoonlet
+- world: worlds/NiobiumMoonlet100K
   buffer: 3
   allowedRings:
     min: 5
     max: 6
-- world: expansion1::worlds/MooMoonlet
+- world: worlds/MooMoonlet100K
   buffer: 3
   allowedRings:
     min: 6
     max: 7
-- world: expansion1::worlds/WaterMoonlet
+- world: worlds/WaterMoonlet100K
   buffer: 4
   allowedRings:
     min: 5
     max: 7
-- world: expansion1::worlds/MiniRegolithMoonlet
-  buffer: 4
-  allowedRings:
-    min: 5
-    max: 8
 
 poiPlacements:
   - pois:
@@ -83,7 +78,7 @@ poiPlacements:
       - HarvestableSpacePOI_FrozenOreField
     numToSpawn: 5
     allowedRings:
-      min: 8
+      min: 9
       max: 11
   
   - pois:
