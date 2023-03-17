@@ -38,8 +38,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static readonly ISet<Tag> BANNED_TAGS = new HashSet<Tag>();
 
 		/// <summary>
-		/// Initializes the banned tags list after the Db is loaded (for Not Enough Tags'
-		/// sake).
+		/// Initializes the banned tags list after the Db is loaded.
 		/// </summary>
 		internal static void Init() {
 			BANNED_TAGS.Add(GameTags.Pickupable);

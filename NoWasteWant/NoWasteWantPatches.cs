@@ -34,7 +34,7 @@ namespace PeterHan.NoWasteWant {
 	/// Patches which will be applied via annotations for Waste Not, Want Not.
 	/// </summary>
 	public sealed class NoWasteWantPatches : KMod.UserMod2 {
-		private static readonly Tag[] EDIBLE_BITS = {
+		private static readonly Tag[] EDIBLE_TAGS = {
 			GameTags.CookingIngredient, GameTags.Edible
 		};
 
@@ -127,32 +127,17 @@ namespace PeterHan.NoWasteWant {
 		/// <summary>
 		/// Applied to FetchManager to ban fetching stale items to refrigerators.
 		/// </summary>
-		[HarmonyPatch]
+		[HarmonyPatch(typeof(FetchManager), nameof(FetchManager.IsFetchablePickup_Exclude),
+			typeof(KPrefabID), typeof(Storage), typeof(float), typeof(HashSet<Tag>),
+			typeof(Tag), typeof(Storage))]
 		public static class FetchManager_IsFetchablePickupExclude_Patch {
-			// Why can we not use byref types in attributes...
-			internal static IEnumerable<MethodBase> TargetMethods() {
-				var refTagBits = typeof(TagBits).MakeByRefType();
-				var excMethod = typeof(FetchManager).GetMethodSafe("IsFetchablePickup_Exclude",
-					true, typeof(KPrefabID), typeof(Storage), typeof(float),
-					typeof(HashSet<Tag>), typeof(Tag), typeof(Storage));
-				if (excMethod != null)
-					yield return excMethod;
-				// TODO Remove when versions prior to U44-535211 no longer need to be supported
-				// and convert the other one to an attribute patch
-				var oldMethod = typeof(FetchManager).GetMethodSafe(nameof(FetchManager.
-					IsFetchablePickup), true, typeof(KPrefabID), typeof(Storage),
-					typeof(float), refTagBits, refTagBits, refTagBits, typeof(Storage));
-				if (oldMethod != null)
-					yield return oldMethod;
-			}
-
 			/// <summary>
 			/// Applied after IsFetchablePickup runs.
 			/// </summary>
 			internal static void Postfix(KPrefabID pickup_id, Storage destination,
 					ref bool __result) {
 				if (__result && pickup_id != null && destination != null && pickup_id.
-						HasAnyTags(EDIBLE_BITS) && destination.TryGetComponent(
+						HasAnyTags(EDIBLE_TAGS) && destination.TryGetComponent(
 						out FreshnessControl freshness))
 					__result = freshness.IsAcceptable(pickup_id.gameObject);
 			}
@@ -184,7 +169,7 @@ namespace PeterHan.NoWasteWant {
 			internal static void Postfix(Pickupable pickup, Storage destination,
 					ref bool __result) {
 				if (__result && pickup != null && destination != null && pickup.
-						KPrefabID.HasAnyTags(EDIBLE_BITS) && destination.TryGetComponent(
+						KPrefabID.HasAnyTags(EDIBLE_TAGS) && destination.TryGetComponent(
 						out FreshnessControl freshness))
 					__result = freshness.IsAcceptable(pickup.gameObject);
 			}

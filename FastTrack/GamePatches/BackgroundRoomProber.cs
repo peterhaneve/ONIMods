@@ -32,7 +32,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Buildings with this tag, even if they are not Deconstructable (like the base game
 		/// enforces), will get added to the buildings list and sent rebuild events, for
-		/// compatibility wiht other mods.
+		/// compatibility with other mods.
 		/// </summary>
 		public const string REGISTER_ROOM = "RegisterRoom";
 
@@ -215,6 +215,8 @@ namespace PeterHan.FastTrack.GamePatches {
 			disposed = false;
 			floodFilling = new Queue<int>();
 			initialized = false;
+			// Only a default value to avoid crashes while loading - the actual maximum size
+			// is read from the Db
 			maxRoomSize = 128;
 			pendingDestroy = new HashSet<HandleVector<int>.Handle>();
 			pendingSolidChanges = new HashSet<int>();

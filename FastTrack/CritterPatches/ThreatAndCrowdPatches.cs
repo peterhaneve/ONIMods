@@ -32,7 +32,9 @@ namespace PeterHan.FastTrack.CritterPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(OvercrowdingMonitor), nameof(OvercrowdingMonitor.UpdateState))]
 	public static class OvercrowdingMonitor_UpdateState_Patch {
-		private static TagBits IMMUNE_CONFINEMENT;
+		private static readonly Tag[] IMMUNE_CONFINEMENT = new[] {
+			GameTags.Creatures.Burrowed, GameTags.Creatures.Digger
+		};
 
 		internal static bool Prepare() => FastTrackOptions.Instance.ThreatOvercrowding;
 
@@ -62,7 +64,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 				// no room (stuck in wall) or tiny room < 1 critter space
 				// Use HasAnyTags(TagBits) here because the burrowed/digger tags will never
 				// be a prefab ID
-				confined = !prefabID.HasAnyTags(ref IMMUNE_CONFINEMENT) &&
+				confined = !prefabID.HasAnyTags(IMMUNE_CONFINEMENT) &&
 					(room == null || room.numCells < requiredSpace);
 				if (room != null) {
 					eggs = room.eggs.Count;
@@ -83,14 +85,6 @@ namespace PeterHan.FastTrack.CritterPatches {
 					requiredSpace && !smi.isBaby;
 			}
 			return overcrowded;
-		}
-
-		/// <summary>
-		/// Initializes the tag bits.
-		/// </summary>
-		internal static void InitTagBits() {
-			IMMUNE_CONFINEMENT.SetTag(GameTags.Creatures.Burrowed);
-			IMMUNE_CONFINEMENT.SetTag(GameTags.Creatures.Digger);
 		}
 
 		/// <summary>
@@ -142,7 +136,6 @@ namespace PeterHan.FastTrack.CritterPatches {
 			int cell = Grid.PosToCell(smi.transform.position);
 			var newRoom = background ? GamePatches.BackgroundRoomProber.Instance.
 				GetCavityForCell(cell) : Game.Instance.roomProber.GetCavityForCell(cell);
-			prefabID.UpdateTagBits();
 			if (newRoom != room) {
 				bool isEgg = prefabID.HasTag(GameTags.Egg), light = smi.
 					GetComponent<Light2D>() != null;

@@ -44,11 +44,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <returns>true if it can be picked up, or false otherwise.</returns>
 		private static bool CanUse(Pickupable pickupable, GameObject go) {
 			var prefabID = pickupable.KPrefabID;
-			lock (TagBits.tagTable) {
-				prefabID.LaunderTagBits();
-			}
-			return pickupable.CouldBePickedUpByTransferArm(go) && prefabID.HasAnyTags(
-				ref SolidTransferArm.tagBits);
+			return pickupable.CouldBePickedUpByTransferArm(go) && Assets.
+				IsTagSolidTransferArmConveyable(prefabID.PrefabTag);
 		}
 
 		/// <summary>
@@ -200,20 +197,12 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal void UpdateCache(IList<FetchManager.Fetchable> items) {
 			int n = items.Count;
 			for (int i = 0; i < n; i++) {
-				KPrefabID prefabID;
 				var pickupable = items[i].pickupable;
-				if (pickupable != null && (prefabID = pickupable.KPrefabID).HasTag(GameTags.
-						Stored)) {
-					// Making this lock-free is possible, but then we conflict with
-					// Not Enough Tags
-					lock (TagBits.tagTable) {
-						prefabID.LaunderTagBits();
-					}
+				if (pickupable != null && pickupable.KPrefabID.HasTag(GameTags.Stored))
 					cached.Enqueue(new CachedPickupable {
 						pickupable = pickupable,
 						storage_cell = pickupable.cachedCell
 					});
-				}
 			}
 		}
 

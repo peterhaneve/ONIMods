@@ -43,7 +43,7 @@ Mods should remain in their own subfolder.
 | [Mismatched Wire Finder](https://steamcommunity.com/sharedfiles/filedetails/?id=2607620648) | Finds wires and pipes that do not match the rest of their network | Yes | Yes |
 | [Mod Updater](https://steamcommunity.com/sharedfiles/filedetails/?id=2018291283) | Updates mods that Steam leaves at old versions | Yes | Yes |
 | [No Splash Screen](https://steamcommunity.com/sharedfiles/filedetails/?id=2361698345) | Hides the Early Access splash screen | Yes | Yes |
-| [Not Enough Tags](https://steamcommunity.com/sharedfiles/filedetails/?id=2230218796) | Fixes Tag exhaustion in large bases | Yes | Yes |
+| [Not Enough Tags](https://steamcommunity.com/sharedfiles/filedetails/?id=2230218796) | Deprecated! No longer supported. | No | No |
 | [Pip Plant Overlay](https://steamcommunity.com/sharedfiles/filedetails/?id=2493100777) | Adds an overlay showing where Pips can plant seeds | Yes | Yes |
 | [Popup Control](https://steamcommunity.com/sharedfiles/filedetails/?id=2032187035) | Shows or hides text info popups for each source | Yes | Yes |
 | [Reloading In Motion](https://steamcommunity.com/sharedfiles/filedetails/?id=2182976959) | Deprecated! No longer supported. | No | No |

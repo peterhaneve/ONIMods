@@ -103,12 +103,11 @@ namespace PeterHan.FastTrack.GamePatches {
 			}
 
 			public override bool Equals(object obj) {
-				return obj is PickupTagKey other && PickupTagEqualityComparer.Instance.Equals(
-					this, other);
+				return obj is PickupTagKey other && Hash == other.Hash;
 			}
 
 			public bool Equals(PickupTagKey other) {
-				return PickupTagEqualityComparer.Instance.Equals(this, other);
+				return Hash == other.Hash;
 			}
 
 			public override int GetHashCode() {
@@ -133,15 +132,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			private PickupTagEqualityComparer() { }
 
 			public bool Equals(PickupTagKey x, PickupTagKey y) {
-				bool ret = false;
-				if (x.Hash == y.Hash) {
-					var bitsA = new TagBits(ref FetchManager.disallowedTagMask);
-					var bitsB = new TagBits(ref FetchManager.disallowedTagMask);
-					x.ID.AndTagBits(ref bitsA);
-					y.ID.AndTagBits(ref bitsB);
-					ret = bitsA.AreEqual(ref bitsB);
-				}
-				return ret;
+				return x.Hash == y.Hash;
 			}
 
 			public int GetHashCode(PickupTagKey obj) {

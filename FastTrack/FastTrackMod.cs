@@ -64,8 +64,6 @@ namespace PeterHan.FastTrack {
 			var options = FastTrackOptions.Instance;
 			if (options.BackgroundRoomRebuild)
 				GamePatches.BackgroundRoomProber.Init();
-			if (options.ThreatOvercrowding)
-				CritterPatches.OvercrowdingMonitor_UpdateState_Patch.InitTagBits();
 			if (options.SensorOpts)
 				SensorPatches.SensorPatches.Init();
 			if (options.AnimOpts)
@@ -73,10 +71,8 @@ namespace PeterHan.FastTrack {
 			if (options.InfoCardOpts)
 				// Localization related
 				UIPatches.FormatStringPatches.Init();
-			if (options.AllocOpts) {
-				UIPatches.TrappedDuplicantPatch.Init();
+			if (options.AllocOpts)
 				UIPatches.DescriptorAllocPatches.Init();
-			}
 			if (options.ChoreOpts)
 				GamePatches.ChoreComparator.Init();
 			// Force feed our smaller unknown sprite to the sprite list

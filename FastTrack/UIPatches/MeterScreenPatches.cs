@@ -271,7 +271,9 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// The tags applied to Duplicants that are doing idle-type things (namely not work).
 		/// </summary>
-		private static TagBits basicallyIdle;
+		private static readonly Tag[] BASICALLY_IDLE = new[] {
+			GameTags.Idle, GameTags.RecoveringBreath, GameTags.MakingMess
+		};
 
 		/// <summary>
 		/// Applies all Trapped diagnostic patches.
@@ -305,23 +307,12 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
-		/// Initializes the tag bits.
-		/// </summary>
-		internal static void Init() {
-			basicallyIdle = new TagBits();
-			basicallyIdle.SetTag(GameTags.Idle);
-			basicallyIdle.SetTag(GameTags.RecoveringBreath);
-			basicallyIdle.SetTag(GameTags.MakingMess);
-		}
-
-		/// <summary>
 		/// Checks to see if a Duplicant is idle, or doing idle-type things.
 		/// </summary>
 		/// <param name="minion">The Duplicant to query.</param>
 		/// <returns>true if they should be considered Idle for the Trapped diagnostic.</returns>
 		private static bool IsBasicallyIdle(MinionIdentity minion) {
-			return minion.TryGetComponent(out KPrefabID id) && id.HasAnyTags(
-				ref basicallyIdle);
+			return minion.TryGetComponent(out KPrefabID id) && id.HasAnyTags(BASICALLY_IDLE);
 		}
 
 		/// <summary>

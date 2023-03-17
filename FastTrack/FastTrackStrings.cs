@@ -60,7 +60,7 @@ namespace PeterHan.FastTrack {
 					public static LocString NOCONVERSATIONS = "Disable Conversations";
 					public static LocString NODISEASE = "Disable Disease";
 					public static LocString FASTREACHABILITY = "Fast Reachability Checks";
-					public static LocString SENSOROPTS = "Optimize Sensors";
+					public static LocString SENSOROPTS = "Optimize Idling";
 
 					public static LocString REDUCECOLONYTRACKING = "Colony Tracker Reduction";
 					public static LocString DISABLEACHIEVEMENTS = "Disable Achievements";
