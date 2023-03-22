@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System.Threading;
 using UnityEngine;
 
 namespace PeterHan.QueueForSinks {
@@ -41,9 +42,18 @@ namespace PeterHan.QueueForSinks {
 		private WorkCheckpointReactable reactable;
 
 		/// <summary>
+		/// Used to ensure that only one Duplicant is released when a checkpoint is vacated.
+		/// </summary>
+		private volatile int token;
+
+		/// <summary>
 		/// The workable which controls tasks.
 		/// </summary>
 		private T workable;
+
+		protected WorkCheckpoint() {
+			token = 0;
+		}
 
 		/// <summary>
 		/// Destroys the current reaction.
@@ -68,6 +78,7 @@ namespace PeterHan.QueueForSinks {
 		private void HandleWorkableAction(Workable _, Workable.WorkableEvent evt) {
 			switch (evt) {
 			case Workable.WorkableEvent.WorkStarted:
+				token = 1;
 				inUse = true;
 				break;
 			case Workable.WorkableEvent.WorkCompleted:
@@ -90,6 +101,7 @@ namespace PeterHan.QueueForSinks {
 			ClearReactable();
 			if (workable != null)
 				workable.OnWorkableEventCB -= HandleWorkableAction;
+			token = 0;
 		}
 
 		protected override void OnSpawn() {
@@ -101,10 +113,24 @@ namespace PeterHan.QueueForSinks {
 		}
 
 		/// <summary>
+		/// Tries to take the checkpoint token.
+		/// </summary>
+		/// <returns>true if the token was taken and the Duplicant may leave, or false if the
+		/// token is unavailable and the Duplicant must keep waiting.</returns>
+		internal bool TryTakeToken() {
+			return Interlocked.CompareExchange(ref token, 0, 1) == 1;
+		}
+
+		/// <summary>
 		/// A reaction which stops Duplicants in their tracks if they need to use a workable
 		/// that is already in use.
 		/// </summary>
 		private sealed class WorkCheckpointReactable : Reactable {
+			/// <summary>
+			/// Set once the Duplicant has begun waiting.
+			/// </summary>
+			private bool begun;
+
 			/// <summary>
 			/// The parent work checkpoint.
 			/// </summary>
@@ -118,18 +144,28 @@ namespace PeterHan.QueueForSinks {
 			/// <summary>
 			/// The navigator of the Duplicant who is waiting.
 			/// </summary>
-			private Navigator reactorNavigator;
+			private Navigator nav;
 
 			internal WorkCheckpointReactable(WorkCheckpoint<T> checkpoint) : base(checkpoint.
 					gameObject, "WorkCheckpointReactable", Db.Get().ChoreTypes.Checkpoint,
 					1, 1) {
+				begun = false;
 				this.checkpoint = checkpoint;
 				distractedAnim = Assets.GetAnim("anim_idle_distracted_kanim");
 				preventChoreInterruption = false;
 			}
 
+			/// <summary>
+			/// Returns true if the Duplicant is waiting in the queue.
+			/// </summary>
+			/// <returns>true if the Duplicant is waiting in the queue, or false otherwise.</returns>
+			private bool InQueue() {
+				return checkpoint.workable.GetWorker() != null || (begun && !checkpoint.
+					TryTakeToken());
+			}
+				
 			protected override void InternalBegin() {
-				reactor.TryGetComponent(out reactorNavigator);
+				reactor.TryGetComponent(out nav);
 				// Animation to make them stand impatiently in line
 				if (reactor.TryGetComponent(out KBatchedAnimController controller)) {
 					controller.AddAnimOverrides(distractedAnim, 1f);
@@ -137,6 +173,7 @@ namespace PeterHan.QueueForSinks {
 					controller.Queue("idle_default", KAnim.PlayMode.Loop);
 				}
 				checkpoint.CreateNewReactable();
+				begun = true;
 			}
 
 			public override bool InternalCanBegin(GameObject newReactor, Navigator.
@@ -154,7 +191,8 @@ namespace PeterHan.QueueForSinks {
 				// Global cooldown needs to be reset with reactions to lines of sinks
 				if (reactor != null && reactor.TryGetComponent(out StateMachineController smc))
 					smc.GetSMI<ReactionMonitor.Instance>()?.ClearLastReaction();
-				reactorNavigator = null;
+				nav = null;
+				begun = false;
 			}
 
 			protected override void InternalEnd() {
@@ -174,20 +212,17 @@ namespace PeterHan.QueueForSinks {
 				SuffocationMonitor.Instance suff;
 				// Left is decreasing X, must be facing the correct direction
 				return (dir == WorkableReactable.AllowedDirection.Any || (dir ==
-					WorkableReactable.AllowedDirection.Left) == (x < 0.0f)) && checkpoint.
-					workable.GetWorker() != null && dupe != null && checkpoint.MustStop(dupe,
-					x) && ((suff = dupe.GetSMI<SuffocationMonitor.Instance>()) == null ||
-					!suff.IsSuffocating());
+					WorkableReactable.AllowedDirection.Left) == x < 0.0f) && InQueue() &&
+					dupe != null && checkpoint.MustStop(dupe, x) && ((suff = dupe.
+					GetSMI<SuffocationMonitor.Instance>()) == null || !suff.IsSuffocating());
 			}
 
 			public override void Update(float dt) {
-				if (checkpoint == null || checkpoint.workable == null || reactorNavigator ==
-						null)
+				if (checkpoint == null || checkpoint.workable == null || nav == null)
 					Cleanup();
 				else {
-					reactorNavigator.AdvancePath(false);
-					if (!reactorNavigator.path.IsValid() || !MustStop(reactor,
-							reactorNavigator.GetNextTransition().x))
+					nav.AdvancePath(false);
+					if (!nav.path.IsValid() || !MustStop(reactor, nav.GetNextTransition().x))
 						Cleanup();
 				}
 			}
