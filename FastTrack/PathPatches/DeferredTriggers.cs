@@ -59,7 +59,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		internal static void TriggerAndQueue(KAnimControllerBase source, int hash,
 				object data) {
 			var inst = Instance;
-			if (inst == null || source.overrideAnimFiles.Count > 0) {
+			if (inst == null || source.overrideAnimFiles.Count > 0 || !inst.doDefer) {
 				source.gameObject.Trigger(hash, data);
 				if (source.destroyOnAnimComplete)
 					source.DestroySelf();
@@ -78,6 +78,11 @@ namespace PeterHan.FastTrack.PathPatches {
 		private readonly ConcurrentQueue<Pickupable> cacheCellPending;
 
 		/// <summary>
+		/// Set during dangerous parts of the frame where deferring anim triggers is wise.
+		/// </summary>
+		private volatile bool doDefer;
+
+		/// <summary>
 		/// The offsets which should be updated.
 		/// </summary>
 		private readonly ConcurrentQueue<UpdateOffset> offsetPending;
@@ -86,10 +91,19 @@ namespace PeterHan.FastTrack.PathPatches {
 			animPending = new Queue<TriggerEvent>();
 			cacheCellPending = new ConcurrentQueue<Pickupable>();
 			offsetPending = new ConcurrentQueue<UpdateOffset>();
+			doDefer = false;
 		}
 
 		public void Dispose() {
 			animPending.Clear();
+		}
+
+		/// <summary>
+		/// Ends deferring of anim queue complete triggers. Should be called when async
+		/// pickup collection ends.
+		/// </summary>
+		public void EndDefer() {
+			doDefer = false;
 		}
 
 		/// <summary>
@@ -152,6 +166,14 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <param name="item">The item to update.</param>
 		internal void Queue(Pickupable item) {
 			cacheCellPending.Enqueue(item);
+		}
+
+		/// <summary>
+		/// Requests deferring of anim queue complete triggers. Should be called when async
+		/// pickup collection starts.
+		/// </summary>
+		public void RequestDefer() {
+			doDefer = true;
 		}
 
 		/// <summary>

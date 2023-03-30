@@ -20,6 +20,7 @@ using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using PeterHan.PLib.Core;
 using TMPro;
 using UnityEngine;
 
@@ -243,24 +244,37 @@ namespace PeterHan.FastTrack.UIPatches {
 				joulesAvailable = new EnergyInfoLabel(es.labelTemplate, overviewParent,
 					nameof(joulesAvailable));
 				joulesAvailable.tooltip.toolTip = ENERGYGENERATOR.AVAILABLE_JOULES_TOOLTIP;
+				joulesAvailable.SetActive(false);
 				wattageGenerated = new EnergyInfoLabel(es.labelTemplate, overviewParent,
 					nameof(wattageGenerated));
 				wattageGenerated.tooltip.toolTip = ENERGYGENERATOR.WATTAGE_GENERATED_TOOLTIP;
+				wattageGenerated.SetActive(false);
 				wattageConsumed = new EnergyInfoLabel(es.labelTemplate, overviewParent, nameof(
 					wattageConsumed));
 				wattageConsumed.tooltip.toolTip = ENERGYGENERATOR.WATTAGE_CONSUMED_TOOLTIP;
+				wattageConsumed.SetActive(false);
 				potentialWattageConsumed = new EnergyInfoLabel(es.labelTemplate,
 					overviewParent, nameof(potentialWattageConsumed));
 				potentialWattageConsumed.tooltip.toolTip = ENERGYGENERATOR.
 					POTENTIAL_WATTAGE_CONSUMED_TOOLTIP;
+				potentialWattageConsumed.SetActive(false);
 				maxSafeWattage = new EnergyInfoLabel(es.labelTemplate, overviewParent, nameof(
 					maxSafeWattage));
 				maxSafeWattage.tooltip.toolTip = ENERGYGENERATOR.MAX_SAFE_WATTAGE_TOOLTIP;
+				maxSafeWattage.SetActive(false);
 				noCircuit = new EnergyInfoLabel(es.labelTemplate, overviewParent, nameof(
 					noCircuit));
+				noCircuit.text.SetText(ENERGYGENERATOR.DISCONNECTED);
 				noCircuit.tooltip.toolTip = ENERGYGENERATOR.DISCONNECTED;
-			} else
+				noCircuit.SetActive(true);
+				wasValid = false;
+				es.generatorsPanel.SetActive(false);
+				es.consumersPanel.SetActive(false);
+				es.batteriesPanel.SetActive(false);
+			} else {
 				noCircuit = null;
+				PUtil.LogWarning("Unable to find electrical overview panel");
+			}
 			generatorParent = es.generatorsPanel.TryGetComponent(out panel) ? panel.Content.
 				gameObject : null;
 			batteryParent = es.batteriesPanel.TryGetComponent(out panel) ? panel.Content.
@@ -271,6 +285,9 @@ namespace PeterHan.FastTrack.UIPatches {
 			dirty = true;
 		}
 
+		/// <summary>
+		/// Refreshes the energy info screen.
+		/// </summary>
 		internal void Refresh() {
 			var manager = Game.Instance.circuitManager;
 			var target = es.selectedTarget;
@@ -316,6 +333,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					potentialWattageConsumed.SetActive(false);
 					maxSafeWattage.SetActive(false);
 					noCircuit.SetActive(true);
+					wasValid = false;
 				}
 				dirty = false;
 			}
@@ -337,7 +355,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				var battery = batteries[i];
 				if (battery != null) {
 					var label = AddOrGetLabel(es.labelTemplate, batteryParent,
-						"battery" + i.ToString());
+						"battery" + i);
 					var go = battery.gameObject;
 					var fontStyle = (go == target) ? FontStyles.Bold : FontStyles.Normal;
 					var title = label.text;
@@ -409,7 +427,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				var generator = generators[i];
 				if (generator != null && !generator.TryGetComponent(out Battery _)) {
 					var label = AddOrGetLabel(es.labelTemplate, generatorParent,
-						"generator" + i.ToString());
+						"generator" + i);
 					var go = generator.gameObject;
 					var fontStyle = (go == target) ? FontStyles.Bold : FontStyles.Normal;
 					var title = label.text;
@@ -556,6 +574,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		[HarmonyPatch(typeof(CircuitManager), nameof(CircuitManager.GetWattsNeededWhenActive))]
 		internal static class GetWattsNeededWhenActive_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
+
 			/// <summary>
 			/// Applied before GetWattsNeededWhenActive runs.
 			/// </summary>

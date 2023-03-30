@@ -168,6 +168,7 @@ namespace PeterHan.FastTrack {
 		/// Applied before LateUpdate runs.
 		/// </summary>
 		internal static void Prefix() {
+			PathPatches.DeferredTriggers.Instance?.RequestDefer();
 			PathPatches.AsyncBrainGroupUpdater.Instance?.StartBrainUpdate();
 		}
 
@@ -175,8 +176,12 @@ namespace PeterHan.FastTrack {
 		/// Applied after LateUpdate runs.
 		/// </summary>
 		internal static void Postfix() {
+			var dt = PathPatches.DeferredTriggers.Instance;
 			PathPatches.AsyncBrainGroupUpdater.Instance?.EndBrainUpdate();
-			PathPatches.DeferredTriggers.Instance?.Process();
+			if (dt != null) {
+				dt.EndDefer();
+				dt.Process();
+			}
 		}
 	}
 }
