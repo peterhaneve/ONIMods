@@ -200,9 +200,9 @@ namespace PeterHan.FastTrack.GamePatches {
 				ref bool __result) {
 			int dupeCount = Components.LiveMinionIdentities.Items.Count;
 			bool success = false;
+			// You need at least one Duplicant
 			if (dupeCount > 0) {
 				var items = Components.BasicBuildings.Items;
-				// You need at least one Duplicant
 				int buildingCount = 0, n = items.Count;
 				var validTypes = __instance.validBuildingTypes;
 				// For the toilet achievement, there need be only one
@@ -427,7 +427,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	}
 
 	/// <summary>
-	/// Applied to RevealAsteriod to not scan the grid every check...
+	/// Applied to RevealAsteriod to not scan the grid every check... The typo is intentional!
 	/// </summary>
 	[HarmonyPatch(typeof(RevealAsteriod), nameof(RevealAsteriod.Success))]
 	public static class RevealAsteriod_Success_Patch {

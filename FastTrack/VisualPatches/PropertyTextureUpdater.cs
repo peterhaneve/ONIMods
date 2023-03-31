@@ -299,6 +299,13 @@ namespace PeterHan.FastTrack.VisualPatches {
 		}
 
 		/// <summary>
+		/// Sets the constant shader parameters to dirty so they will be updated next frame.
+		/// </summary>
+		internal void SetConstantsDirty() {
+			constantsDirty = true;
+		}
+
+		/// <summary>
 		/// Starts a multithreaded texture update. Uses the asynchronous job manager.
 		/// </summary>
 		/// <param name="property">The property to update.</param>
@@ -508,6 +515,24 @@ namespace PeterHan.FastTrack.VisualPatches {
 			}
 
 			public void TriggerStart() { }
+		}
+	}
+
+	/// <summary>
+	/// Applied to CameraController to force update the constant shaders when the fog of war is
+	/// toggled.
+	/// </summary>
+	[HarmonyPatch(typeof(CameraController), nameof(CameraController.ToggleClusterFX))]
+	public static class CameraController_ToggleClusterFX_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.ReduceTileUpdates;
+
+		/// <summary>
+		/// Applied after ToggleClusterFX runs.
+		/// </summary>
+		internal static void Postfix() {
+			var inst = PropertyTextureUpdater.Instance;
+			if (inst != null)
+				inst.SetConstantsDirty();
 		}
 	}
 

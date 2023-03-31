@@ -28,7 +28,7 @@ namespace PeterHan.FastTrack {
 	[JsonObject(MemberSerialization.OptIn)]
 	[RestartRequired]
 	public sealed class FastTrackOptions {
-		public const int CURRENT_CONFIG_VERSION = 1;
+		public const int CURRENT_CONFIG_VERSION = 2;
 
 		/// <summary>
 		/// The only instance of the Fast Track options.
@@ -278,7 +278,7 @@ namespace PeterHan.FastTrack {
 			FastAttributesMode = true;
 			FastReachability = true;
 			FastStructureTemperature = true;
-			FastUpdatePickups = false;
+			FastUpdatePickups = true;
 			FlattenAverages = true;
 			InfoCardOpts = true;
 			LoadOpts = true;

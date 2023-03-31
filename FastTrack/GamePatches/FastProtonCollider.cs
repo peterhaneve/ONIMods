@@ -326,7 +326,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			var diseases = Db.Get().Diseases;
 			diseaseIndex = diseases.GetIndex(diseases.RadiationPoisoning.Id);
 			if (FastTrackOptions.Instance.DisableAchievements == FastTrackOptions.
-					AchievementDisable.Always || AchievementDisablePatches.TrackAchievements())
+					AchievementDisable.Never || AchievementDisablePatches.TrackAchievements())
 				SaveGame.Instance.TryGetComponent(out tracker);
 			else
 				tracker = null;

@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using KMod;
@@ -77,10 +78,15 @@ namespace PeterHan.FastTrack {
 			else if (PPatchTools.GetTypeSafe("DiseasesExpanded.ModInfo") != null)
 				PUtil.LogWarning("Enabling diseases: Diseases Expanded active");
 			else {
-				GamePatches.NoDiseasePatches.Apply(harmony);
+				try {
+					GamePatches.NoDiseasePatches.Apply(harmony);
 #if DEBUG
-				PUtil.LogDebug("Disabled diseases");
+					PUtil.LogDebug("Disabled diseases");
 #endif
+				} catch (Exception e) {
+					PUtil.LogWarning("Error when disabling diseases, diseases may not be completely removed:");
+					PUtil.LogExcWarn(e);
+				}
 			}
 		}
 

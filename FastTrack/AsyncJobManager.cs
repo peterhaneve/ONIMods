@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using PeterHan.PLib.Core;
 
 namespace PeterHan.FastTrack {
 	/// <summary>
@@ -230,12 +231,19 @@ namespace PeterHan.FastTrack {
 			private void Run() {
 				bool disposed = false;
 				while (!disposed) {
-					parent.semaphore.WaitOne();
 					try {
-						while (!(disposed = parent.isDisposed) && parent.DoNextWorkItem()) { }
+						parent.semaphore.WaitOne();
+					} catch (ObjectDisposedException) {
+						// Should never happen, but make it nonfatal if it does
+						PUtil.LogWarning("AsyncJobManager thread tried to wait for a task, but the parent was disposed");
+						break;
+					}
+					try {
+						while (!parent.isDisposed && parent.DoNextWorkItem()) { }
 					} catch (Exception e) {
 						errors.Add(e);
 					}
+					disposed = parent.isDisposed;
 					if (!disposed)
 						parent.ReportInactive();
 				}
