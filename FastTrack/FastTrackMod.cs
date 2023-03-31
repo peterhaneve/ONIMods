@@ -211,30 +211,32 @@ namespace PeterHan.FastTrack {
 			if (options.UnstackLights)
 				PRegistry.PutData("Bugs.StackedLights", true);
 			PRegistry.PutData("Bugs.MassStringsReadOnly", true);
-			if (options.MiscOpts)
+			if (options.MiscOpts) {
 				PRegistry.PutData("Bugs.ElementTagInDetailsScreen", true);
-			// This patch is Windows only apparently
-			var target = typeof(Global).GetMethodSafe(nameof(Global.TestDataLocations), false);
-			if (options.MiscOpts && target != null && typeof(Global).GetFieldSafe(
-					nameof(Global.saveFolderTestResult), true) != null) {
-				harmony.Patch(target, prefix: new HarmonyMethod(typeof(FastTrackMod),
-					nameof(RemoveTestDataLocations)));
+				// This patch is Windows only apparently
+				var target = typeof(Global).GetMethodSafe(nameof(Global.TestDataLocations),
+					false);
+				if (target != null && typeof(Global).GetFieldSafe(
+						nameof(Global.saveFolderTestResult), true) != null) {
+					harmony.Patch(target, prefix: new HarmonyMethod(typeof(FastTrackMod),
+						nameof(RemoveTestDataLocations)));
 #if DEBUG
-				PUtil.LogDebug("Patched Global.TestDataLocations");
+					PUtil.LogDebug("Patched Global.TestDataLocations");
 #endif
-			} else
-				PUtil.LogDebug("Skipping TestDataLocations patch");
-			// Another potentially Windows only patch
-			target = typeof(Game).Assembly.GetType(nameof(InitializeCheck), false)?.
-				GetMethodSafe(nameof(InitializeCheck.CheckForSavePathIssue), false);
-			if (options.MiscOpts && target != null) {
-				harmony.Patch(target, prefix: new HarmonyMethod(typeof(FastTrackMod),
-					nameof(SkipInitCheck)));
+				} else
+					PUtil.LogDebug("Skipping TestDataLocations patch");
+				// Another potentially Windows only patch
+				target = typeof(Game).Assembly.GetType(nameof(InitializeCheck), false)?.
+					GetMethodSafe(nameof(InitializeCheck.CheckForSavePathIssue), false);
+				if (target != null) {
+					harmony.Patch(target, prefix: new HarmonyMethod(typeof(FastTrackMod),
+						nameof(SkipInitCheck)));
 #if DEBUG
-				PUtil.LogDebug("Patched InitializeCheck.Awake");
+					PUtil.LogDebug("Patched InitializeCheck.Awake");
 #endif
-			} else
-				PUtil.LogDebug("Skipping InitializeCheck patch");
+				} else
+					PUtil.LogDebug("Skipping InitializeCheck patch");
+			}
 			GameRunning = false;
 		}
 

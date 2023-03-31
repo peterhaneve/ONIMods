@@ -206,6 +206,8 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(RenderMeshTask), MethodType.Constructor, typeof(int), typeof(int))]
 	public static class ConduitFlowVisualizer_RenderMeshConstructor_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
+
 		/// <summary>
 		/// Resizes a list only if needed.
 		/// </summary>

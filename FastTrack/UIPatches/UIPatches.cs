@@ -241,6 +241,8 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(Database.TechItems), nameof(Database.TechItems.AddTechItem))]
 	public static class TechItems_AddTechItem_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+
 		/// <summary>
 		/// Transpiles AddTechItem to remove an Add call that duplicates every item, as it was
 		/// already added to the constructor.

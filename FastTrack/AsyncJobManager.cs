@@ -35,18 +35,16 @@ namespace PeterHan.FastTrack {
 		/// Destroys the singleton instance.
 		/// </summary>
 		internal static void DestroyInstance() {
-			Instance?.Dispose();
+			var inst = Instance;
+			if (inst != null)
+				inst.Dispose();
 			Instance = null;
 		}
 
 		/// <summary>
 		/// The number of job threads which will work on tasks in this job manager.
 		/// </summary>
-		public int ThreadCount {
-			get {
-				return threads.Length;
-			}
-		}
+		public int ThreadCount => threads.Length;
 
 		/// <summary>
 		/// The number of worker threads still finishing a task.
@@ -61,7 +59,7 @@ namespace PeterHan.FastTrack {
 		/// <summary>
 		/// Used to prevent multiple disposes.
 		/// </summary>
-		private bool isDisposed;
+		private volatile bool isDisposed;
 
 		/// <summary>
 		/// The index of the next not yet started work item.
@@ -125,6 +123,7 @@ namespace PeterHan.FastTrack {
 					while (workQueue.Count > 0)
 						workQueue.Dequeue().TriggerAbort();
 				}
+				semaphore.Dispose();
 			}
 		}
 
@@ -207,8 +206,8 @@ namespace PeterHan.FastTrack {
 
 			internal WorkerThread(AsyncJobManager parent, string name) {
 				errors = new List<Exception>(4);
-				this.parent = parent ?? throw new ArgumentNullException(nameof(parent));
-				var thread = new Thread(Run, 131072) {
+				this.parent = parent;
+				var thread = new Thread(Run) {
 					// Klei uses AboveNormal
 					Priority = ThreadPriority.Normal, Name = name
 				};

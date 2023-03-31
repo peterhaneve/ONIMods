@@ -24,6 +24,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
+using TemplateClasses;
 
 namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
@@ -119,31 +120,15 @@ namespace PeterHan.FastTrack.UIPatches {
 			0.102f);
 		
 		/// <summary>
-		/// The colors used for fog of war states (premixed).
-		/// </summary>
-		private static readonly Color[] COLORS_FOG = new Color[5];
-
-		/// <summary>
-		/// The colors used for non fog of war states (premixed).
-		/// </summary>
-		private static readonly Color[] COLORS_NORMAL = new Color[5];
-
-		/// <summary>
-		/// Non-hover color of a selected cell.
-		/// </summary>
-		private static readonly Color FILL_SELECTED = new Color(1.0f, 0.454999983f,
-			0.833294034f, 0.2509804f);
-
-		/// <summary>
-		/// Non-hover color of an orbit highlight cell.
-		/// </summary>
-		private static readonly Color FILL_ORBIT = new Color(0.192239255f, 0.9056604f,
-			0.5334042f, 0.117647059f);
-
-		/// <summary>
 		/// Non-hover color of an idle border. All hover borders are the same color.
 		/// </summary>
 		private static readonly Color BORDER_IDLE = new Color(1.0f, 1.0f, 1.0f, 0.101960786f);
+		
+		/// <summary>
+		/// Non-hover color of an orbit highlight cell.
+		/// </summary>
+		private static readonly Color BORDER_ORBIT = new Color(0.192156866f, 0.905882359f,
+			0.533333361f, 0.156862751f);
 
 		/// <summary>
 		/// Non-hover color of a selected cell.
@@ -152,10 +137,26 @@ namespace PeterHan.FastTrack.UIPatches {
 			1.0f);
 
 		/// <summary>
+		/// The colors used for fog of war states (premixed).
+		/// </summary>
+		private static readonly Color[] COLORS_FOG = new Color[5];
+
+		/// <summary>
+		/// The colors used for non fog of war states (premixed).
+		/// </summary>
+		private static readonly Color[] COLORS_NORMAL = new Color[5];
+		
+		/// <summary>
 		/// Non-hover color of an orbit highlight cell.
 		/// </summary>
-		private static readonly Color BORDER_ORBIT = new Color(0.192156866f, 0.905882359f,
-			0.533333361f, 0.156862751f);
+		private static readonly Color FILL_ORBIT = new Color(0.192239255f, 0.9056604f,
+			0.5334042f, 0.117647059f);
+
+		/// <summary>
+		/// Non-hover color of a selected cell.
+		/// </summary>
+		private static readonly Color FILL_SELECTED = new Color(1.0f, 0.454999983f,
+			0.833294034f, 0.2509804f);
 
 		/// <summary>
 		/// Fog of war overlay color.
@@ -329,6 +330,43 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
+		/// Applied to ClusterMapScreen to destroy unnecessary game objects from each hex
+		/// of the starmap. It is unsafe to remove them immediate from the prefabs as that
+		/// will native code crash on GC.
+		/// </summary>
+		[HarmonyPatch(typeof(ClusterMapScreen), nameof(ClusterMapScreen.GenerateGridVis))]
+		public static class ClusterMapScreen_GenerateGridVis_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.ClusterMapReduce &&
+				DlcManager.FeatureClusterSpaceEnabled();
+
+			/// <summary>
+			/// Applied after GenerateGridVis runs.
+			/// </summary>
+			internal static void Postfix(ClusterMapScreen __instance) {
+				foreach (var pair in __instance.m_cellVisByLocation) {
+					var hex = pair.Value;
+					if (hex != null) {
+						var t = hex.transform;
+						// Kill the fog of war and accent
+						var accent = t.Find("BorderAccent");
+						if (accent != null) {
+							Debug.Log("Destroying border accent");
+							Object.Destroy(accent.gameObject);
+						}
+						var fog = t.Find("FogOfWar");
+						if (fog != null) {
+							Debug.Log("Destroying fog of war");
+							Object.Destroy(fog.gameObject);
+						}
+						var fill = t.Find("Fill");
+						if (fill != null && fill.TryGetComponent(out Mask mask))
+							Object.Destroy(mask);
+					}
+				}
+			}
+		}
+
+		/// <summary>
 		/// Applied to ClusterMapScreen to optimize the move-to animation.
 		/// </summary>
 		[HarmonyPatch(typeof(ClusterMapScreen), nameof(ClusterMapScreen.MoveToNISPosition))]
@@ -367,30 +405,19 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static void Postfix(ClusterMapScreen __instance) {
 				var prefab = __instance.cellVisPrefab;
 				if (prefab != null && hexBorder != null && hexFill != null) {
+					var t = prefab.transform;
 					// Kill the Mask that will not actually work as it only applies to children
 					Image image;
-					var fill = prefab.transform.Find("Fill");
-					if (fill != null && fill.TryGetComponent(out Mask mask)) {
-						// Yes this is dangerous, but regular Destroy was not actually removing
-						// the objects from the prefab
-						Object.DestroyImmediate(mask);
-						if (fill.TryGetComponent(out image))
-							image.sprite = hexFill;
-					}
-					// Kill the redundant accent
-					var accent = prefab.transform.Find("BorderAccent");
-					if (accent != null)
-						Object.DestroyImmediate(accent.gameObject);
+					var fill = t.Find("Fill");
+					if (fill != null && fill.TryGetComponent(out image))
+						image.sprite = hexFill;
+					// Cannot destroy GOs from prefabs, have to destroy them on spawn (cry)
 					// Border: downsize image
-					var border = prefab.transform.Find("Border");
+					var border = t.Find("Border");
 					if (border != null && border.TryGetComponent(out image))
 						image.sprite = hexBorder;
-					// Kill the fog of war
-					var fog = prefab.transform.Find("FogOfWar");
-					if (fog != null)
-						Object.DestroyImmediate(fog.gameObject);
 					// Peek: downscale image
-					var peek = prefab.transform.Find("PeekedTile");
+					var peek = t.Find("PeekedTile");
 					if (peek != null && peek.TryGetComponent(out image)) {
 						image.sprite = hexReveal;
 						image.gameObject.SetActive(false);

@@ -67,6 +67,8 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(NavGrid), nameof(NavGrid.UpdateGraph), new Type[0])]
 	public static class NavGrid_UpdateGraph_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
+
 		/// <summary>
 		/// Transpiles UpdateGraph to clean up allocations and mark cells dirty when required.
 		/// </summary>
