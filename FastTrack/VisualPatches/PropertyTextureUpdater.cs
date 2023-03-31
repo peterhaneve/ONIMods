@@ -184,8 +184,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 						CameraController.Instance.ignoreClusterFX))
 					clusterSize = new Vector4(w, h, 0f, 0f);
 				else
-					clusterSize = new Vector4(worldSize.x, worldSize.y, 1.0f / (worldSize.x +
-						worldOffset.x), 1.0f / (worldSize.y + worldOffset.y));
+					clusterSize = new Vector4(worldSize.x, worldSize.y, worldOffset.x,
+						worldOffset.y);
 				Shader.SetGlobalVector(tIDClusterWorldSize, clusterSize);
 				Shader.SetGlobalFloat(tIDTopBorderHeight, activeWorld.FullyEnclosedBorder ?
 					0f : Grid.TopBorderHeight);
