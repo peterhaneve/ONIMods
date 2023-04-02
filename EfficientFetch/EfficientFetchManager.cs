@@ -35,6 +35,32 @@ namespace PeterHan.EfficientFetch {
 		/// The current instance of this class.
 		/// </summary>
 		public static EfficientFetchManager Instance { get; private set; }
+		
+		/// <summary>
+		/// Condenses the pickups.
+		/// </summary>
+		/// <param name="pickups">The pickups to condense down.</param>
+		private static void CondensePickups(List<Pickup> pickups) {
+			int n = pickups.Count;
+			var prevPickup = pickups[0];
+			int hash = prevPickup.tagBitsHash, last = n, next = 0;
+			for (int i = 1; i < n; i++) {
+				var pickup = pickups[i];
+				if (prevPickup.masterPriority == pickup.masterPriority && pickup.tagBitsHash ==
+						hash)
+					// Skip
+					last--;
+				else {
+					// Keep and move down
+					next++;
+					prevPickup = pickup;
+					hash = pickup.tagBitsHash;
+					if (i > next)
+						pickups[next] = pickup;
+				}
+			}
+			pickups.RemoveRange(last, n - last);
+		}
 
 		/// <summary>
 		/// Creates the current instance.
@@ -49,9 +75,42 @@ namespace PeterHan.EfficientFetch {
 		/// Destroys the current instance.
 		/// </summary>
 		public static void DestroyInstance() {
-			if (Instance != null)
-				Instance.Dispose();
+			Instance?.Dispose();
 			Instance = null;
+		}
+		
+		/// <summary>
+		/// Gets the list of fetchable pickups.
+		/// </summary>
+		/// <param name="fetch">The fetchables to update.</param>
+		/// <param name="fetcher">The Duplicant gathering the items.</param>
+		/// <param name="navigator">The navigator for that Duplicant.</param>
+		/// <param name="cellCosts">A location to store the cell costs.</param>
+		private static void GetFetchList(FetchablesByPrefabId fetch, Navigator navigator,
+				GameObject fetcher, IDictionary<int, int> cellCosts) {
+			cellCosts.Clear();
+			var pickups = fetch.finalPickups;
+			foreach (var fetchable in fetch.fetchables.GetDataList()) {
+				var pickupable = fetchable.pickupable;
+				if (pickupable.CouldBePickedUpByMinion(fetcher)) {
+					// Optimize if many pickupables are in the same cell
+					int cell = pickupable.cachedCell;
+					if (!cellCosts.TryGetValue(cell, out int cost)) {
+						cost = pickupable.GetNavigationCost(navigator, cell);
+						cellCosts.Add(cell, cost);
+					}
+					if (cost >= 0)
+						// This pickup is reachable
+						pickups.Add(new Pickup {
+							pickupable = pickupable,
+							tagBitsHash = fetchable.tagBitsHash,
+							PathCost = (ushort)Math.Min(cost, ushort.MaxValue),
+							masterPriority = fetchable.masterPriority,
+							freshness = fetchable.freshness,
+							foodQuality = fetchable.foodQuality
+						});
+				}
+			}
 		}
 
 		/// <summary>
@@ -77,7 +136,7 @@ namespace PeterHan.EfficientFetch {
 
 		private EfficientFetchManager(float thresholdFraction) {
 			if (thresholdFraction.IsNaNOrInfinity())
-				throw new ArgumentException("thresholdFraction");
+				throw new ArgumentException(nameof(thresholdFraction));
 			choreTypes = Db.Get().ChoreTypes;
 			outstanding = new ConcurrentDictionary<Tag, FetchData>(4, 512);
 			// Reflect that field!
@@ -93,43 +152,6 @@ namespace PeterHan.EfficientFetch {
 				PUtil.LogWarning("Unable to find pickups field on FetchManager!");
 			fmPickups = fp;
 			this.thresholdFraction = thresholdFraction;
-		}
-
-		/// <summary>
-		/// Condenses the pickups.
-		/// </summary>
-		/// <param name="pickups">The pickups to condense down.</param>
-		private void CondensePickups(List<Pickup> pickups) {
-			int n = pickups.Count;
-			Pickup prevPickup = pickups[0];
-			var tagBits = new TagBits(ref FetchManager.disallowedTagMask);
-			prevPickup.pickupable.KPrefabID.AndTagBits(ref tagBits);
-			int hash = prevPickup.tagBitsHash, last = n, next = 0;
-			for (int i = 1; i < n; i++) {
-				bool del = false;
-				var pickup = pickups[i];
-				var newTagBits = default(TagBits);
-				if (prevPickup.masterPriority == pickup.masterPriority) {
-					newTagBits = new TagBits(ref FetchManager.disallowedTagMask);
-					pickup.pickupable.KPrefabID.AndTagBits(ref newTagBits);
-					if (pickup.tagBitsHash == hash && newTagBits.AreEqual(ref tagBits))
-						// Identical to the previous item
-						del = true;
-				}
-				if (del)
-					// Skip
-					last--;
-				else {
-					// Keep and move down
-					next++;
-					prevPickup = pickup;
-					tagBits = newTagBits;
-					hash = pickup.tagBitsHash;
-					if (i > next)
-						pickups[next] = pickup;
-				}
-			}
-			pickups.RemoveRange(last, n - last);
 		}
 
 		public void Dispose() {
@@ -191,8 +213,8 @@ namespace PeterHan.EfficientFetch {
 			}
 			// Do not start a fetch entry if nothing is available
 			if (bestMatch != null) {
-				Tag itemType = bestMatch.PrefabID();
-				if (outstanding.TryGetValue(itemType, out FetchData current) && !current.
+				var itemType = bestMatch.PrefabID();
+				if (outstanding.TryGetValue(itemType, out var current) && !current.
 						NeedsScan) {
 					// Retire it, with the best item we could do
 					outstanding.TryRemove(itemType, out _);
@@ -214,40 +236,6 @@ namespace PeterHan.EfficientFetch {
 		}
 
 		/// <summary>
-		/// Gets the list of fetchable pickups.
-		/// </summary>
-		/// <param name="fetch">The fetchables to update.</param>
-		/// <param name="fetcher">The Duplicant gathering the items.</param>
-		/// <param name="navigator">The navigator for that Duplicant.</param>
-		/// <param name="cellCosts">A location to store the cell costs.</param>
-		private void GetFetchList(FetchablesByPrefabId fetch, Navigator navigator,
-				GameObject fetcher, IDictionary<int, int> cellCosts) {
-			cellCosts.Clear();
-			var pickups = fetch.finalPickups;
-			foreach (var fetchable in fetch.fetchables.GetDataList()) {
-				var pickupable = fetchable.pickupable;
-				if (pickupable.CouldBePickedUpByMinion(fetcher)) {
-					// Optimize if many pickupables are in the same cell
-					int cell = pickupable.cachedCell;
-					if (!cellCosts.TryGetValue(cell, out int cost)) {
-						cost = pickupable.GetNavigationCost(navigator, cell);
-						cellCosts.Add(cell, cost);
-					}
-					if (cost >= 0)
-						// This pickup is reachable
-						pickups.Add(new Pickup {
-							pickupable = pickupable,
-							tagBitsHash = fetchable.tagBitsHash,
-							PathCost = (ushort)Math.Min(cost, ushort.MaxValue),
-							masterPriority = fetchable.masterPriority,
-							freshness = fetchable.freshness,
-							foodQuality = fetchable.foodQuality
-						});
-				}
-			}
-		}
-
-		/// <summary>
 		/// Updates the available pickups.
 		/// </summary>
 		/// <param name="fetch">The fetchables to update.</param>
@@ -263,10 +251,7 @@ namespace PeterHan.EfficientFetch {
 				pickups.Clear();
 				GetFetchList(fetch, navigator, fetcher, cellCosts);
 				if (pickups.Count > 1) {
-					if (data != null)
-						pickups.Sort(data);
-					else
-						pickups.Sort(FetchData.Default);
+					pickups.Sort(data ?? FetchData.Default);
 					// Condense down using the stock game logic
 					CondensePickups(pickups);
 				}
@@ -316,9 +301,7 @@ namespace PeterHan.EfficientFetch {
 				if (comp != 0)
 					return comp;
 				comp = b.foodQuality.CompareTo(a.foodQuality);
-				if (comp != 0)
-					return comp;
-				return b.freshness.CompareTo(a.freshness);
+				return comp != 0 ? comp : b.freshness.CompareTo(a.freshness);
 			}
 		}
 	}

@@ -349,15 +349,11 @@ namespace PeterHan.FastTrack.UIPatches {
 						var t = hex.transform;
 						// Kill the fog of war and accent
 						var accent = t.Find("BorderAccent");
-						if (accent != null) {
-							Debug.Log("Destroying border accent");
+						if (accent != null)
 							Object.Destroy(accent.gameObject);
-						}
 						var fog = t.Find("FogOfWar");
-						if (fog != null) {
-							Debug.Log("Destroying fog of war");
+						if (fog != null)
 							Object.Destroy(fog.gameObject);
-						}
 						var fill = t.Find("Fill");
 						if (fill != null && fill.TryGetComponent(out Mask mask))
 							Object.Destroy(mask);
