@@ -434,19 +434,18 @@ namespace PeterHan.FastTrack.GamePatches {
 			var mp = chore.masterPriority;
 			bool result;
 			int d;
-			if (GetInterruptPriority(chore) > interruptPriority && (exclusions == null ||
-					!exclusions.Overlaps(type.tags)))
-				result = true;
-			else if ((d = mp.priority_class - cp.priority_class) != 0)
+			if ((d = mp.priority_class - cp.priority_class) != 0)
 				result = d > 0;
 			else if ((d = consumerState.consumer.GetPersonalPriority(type) -
 					currentPersonal) != 0)
 				result = d > 0;
 			else {
 				d = mp.priority_value - cp.priority_value;
-				result = d > 0 || (d == 0 && (advPriority ? type.explicitPriority : type.
-					priority) > currentChore.choreType.priority);
+				result = (d > 0 || (d == 0 && (advPriority ? type.explicitPriority : type.
+					priority) > currentChore.choreType.priority));
 			}
+			result = result && GetInterruptPriority(chore) > interruptPriority &&
+				(exclusions == null || !exclusions.Overlaps(type.tags));
 			return result;
 		}
 
