@@ -575,8 +575,13 @@ namespace PeterHan.DebugNotIncluded {
 		/// </summary>
 		internal static void Prefix(NewGameSettingsPanel __instance) {
 			ProcGen.SettingsCache.Clear();
-			ProcGenGame.WorldGen.LoadSettings();
-			CustomGameSettings.Instance.LoadClusters();
+			try {
+				ProcGenGame.WorldGen.LoadSettings();
+				CustomGameSettings.Instance.LoadClusters();
+			} catch (AggregateException e) {
+				PUtil.LogError("Error loading clusters:");
+				PUtil.LogException(e.GetBaseException());
+			}
 		}
 	}
 

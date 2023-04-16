@@ -52,13 +52,12 @@ namespace PeterHan.FastTrack.UIPatches {
 					ref string __result) {
 				string unit;
 				var text = CACHED_BUILDER;
-				text.Clear();
 				if (Mathf.Abs(calories) >= 1000.0f || forceKcal) {
 					calories *= 0.001f;
 					unit = SUFFIXES.CALORIES.KILOCALORIE;
 				} else
 					unit = SUFFIXES.CALORIES.CALORIE;
-				GameUtil.ApplyTimeSlice(calories, timeSlice).ToStandardString(text);
+				GameUtil.ApplyTimeSlice(calories, timeSlice).ToStandardString(text.Clear());
 				text.Append(unit);
 				text.AppendTimeSlice(timeSlice);
 				__result = text.ToString();
@@ -76,8 +75,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(float seconds, string formatString, bool forceCycles,
 					ref string __result) {
 				var text = CACHED_BUILDER;
-				text.Clear();
-				if (text.AppendIfInfinite(seconds))
+				if (text.Clear().AppendIfInfinite(seconds))
 					text.Append("s");
 				else if (forceCycles || Mathf.Abs(seconds) > 100.0f) {
 					string tmp = text.AppendSimpleFormat(formatString, seconds / Constants.
@@ -125,8 +123,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			internal static bool Prefix(int units, TimeSlice timeSlice, ref string __result) {
 				var text = CACHED_BUILDER;
-				text.Clear();
-				GetFormattedDiseaseAmount(text, units, timeSlice);
+				GetFormattedDiseaseAmount(text.Clear(), units, timeSlice);
 				__result = text.ToString();
 				return false;
 			}
@@ -140,9 +137,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// Applied before GetFormattedDistance runs.
 			/// </summary>
 			internal static bool Prefix(float meters, ref string __result) {
-				var text = CACHED_BUILDER;
+				var text = CACHED_BUILDER.Clear();
 				float absMeters = Mathf.Abs(meters);
-				text.Clear();
 				if (absMeters < 1.0f) {
 					(meters * 100.0f).ToRyuSoftString(text, 2);
 					// Hardcoded in original ONI source and no LocString for it :(
@@ -168,8 +164,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			internal static bool Prefix(float dtu, GameUtil.HeatEnergyFormatterUnit unit,
 					ref string __result) {
-				var text = CACHED_BUILDER;
-				text.Clear();
+				var text = CACHED_BUILDER.Clear();
 				switch (unit) {
 				case GameUtil.HeatEnergyFormatterUnit.DTU_S:
 					dtu.ToRyuHardString(text, 0);
@@ -205,7 +200,6 @@ namespace PeterHan.FastTrack.UIPatches {
 					ref string __result) {
 				var text = CACHED_BUILDER;
 				string unitText;
-				text.Clear();
 				switch (unit) {
 				case GameUtil.HeatEnergyFormatterUnit.DTU_S:
 					unitText = SUFFIXES.HEAT.DTU_S;
@@ -221,7 +215,7 @@ namespace PeterHan.FastTrack.UIPatches {
 						unitText = SUFFIXES.HEAT.DTU_S;
 					break;
 				}
-				dtu_s.ToRyuSoftString(text, 2);
+				dtu_s.ToRyuSoftString(text.Clear(), 2);
 				__result = text.Append(unitText).ToString();
 				return false;
 			}
@@ -237,8 +231,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(float units, TimeSlice timeSlice, bool displayUnits,
 					ref string __result) {
 				var text = CACHED_BUILDER;
-				text.Clear();
-				if (!text.AppendIfInfinite(units))
+				if (!text.Clear().AppendIfInfinite(units))
 					GameUtil.ApplyTimeSlice(units, timeSlice).ToRyuSoftString(text, 1);
 				if (displayUnits)
 					// That is not how particle is spelled
@@ -259,8 +252,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			internal static bool Prefix(float num, TimeSlice timeSlice, ref string __result) {
 				var text = CACHED_BUILDER;
-				text.Clear();
-				if (!text.AppendIfInfinite(num))
+				if (!text.Clear().AppendIfInfinite(num))
 					RyuFormat.ToString(text, (double)GameUtil.ApplyTimeSlice(num, timeSlice),
 						0, RyuFormatOptions.FixedMode | RyuFormatOptions.ThousandsSeparators);
 				__result = text.AppendTimeSlice(timeSlice).ToString();
@@ -277,8 +269,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			internal static bool Prefix(float joules, string floatFormat, TimeSlice timeSlice,
 					ref string __result) {
-				var text = CACHED_BUILDER;
-				text.Clear();
+				var text = CACHED_BUILDER.Clear();
 				if (timeSlice == TimeSlice.PerSecond)
 					GetFormattedWattage(text, joules);
 				else {
@@ -313,8 +304,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					GameUtil.MetricMassFormat massFormat, bool includeSuffix,
 					ref string __result) {
 				var text = CACHED_BUILDER;
-				text.Clear();
-				GetFormattedMass(text, mass, timeSlice, massFormat, includeSuffix,
+				GetFormattedMass(text.Clear(), mass, timeSlice, massFormat, includeSuffix,
 					floatFormat);
 				__result = text.ToString();
 				return false;
@@ -331,28 +321,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(float percent, TimeSlice timeSlice,
 					ref string __result) {
 				var text = CACHED_BUILDER;
-				text.Clear();
-				if (percent == 0.0f)
-					// Pretty common, make it fast
-					text.Append("0");
-				else if (!text.AppendIfInfinite(percent)) {
-					int precision;
-					percent = GameUtil.ApplyTimeSlice(percent, timeSlice);
-					float absP = Mathf.Abs(percent);
-					// The base game uses 2dp for anything under 0.1%, 1dp for 0.1-1%, and 0dp
-					// for anything higher. Improve UX a bit here by showing an extra place
-					if (absP < 0.1f)
-						precision = 3;
-					else if (absP < 1.0f)
-						precision = 2;
-					else if (absP < 100.0f)
-						precision = 1;
-					else
-						precision = 0;
-					percent.ToRyuSoftString(text, precision);
-				}
-				text.Append(PCT);
-				text.AppendTimeSlice(timeSlice);
+				GetFormattedPercent(text.Clear(), percent, timeSlice);
 				__result = text.ToString();
 				return false;
 			}
@@ -369,8 +338,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					ref string __result) {
 				float absP = Mathf.Abs(percent);
 				var text = CACHED_BUILDER;
-				text.Clear();
-				if (!text.AppendIfInfinite(percent)) {
+				if (!text.Clear().AppendIfInfinite(percent)) {
 					int precision;
 					percent = GameUtil.ApplyTimeSlice(percent, timeSlice);
 					if (absP < 0.1f)
@@ -397,8 +365,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(float range, TimeSlice timeSlice, bool displaySuffix,
 					ref string __result) {
 				var text = CACHED_BUILDER;
-				text.Clear();
-				GetFormattedRocketRange(text, range, timeSlice, displaySuffix);
+				GetFormattedRocketRange(text.Clear(), range, timeSlice, displaySuffix);
 				__result = text.ToString();
 				return false;
 			}
@@ -413,8 +380,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			internal static bool Prefix(float rads, TimeSlice timeSlice, ref string __result) {
 				var text = CACHED_BUILDER;
-				text.Clear();
-				if (!text.AppendIfInfinite(rads))
+				if (!text.Clear().AppendIfInfinite(rads))
 					GameUtil.ApplyTimeSlice(rads, timeSlice).ToStandardString(text);
 				text.Append(SUFFIXES.RADIATION.RADS);
 				__result = text.AppendTimeSlice(timeSlice).ToString();
@@ -432,8 +398,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(float joules, ref string __result) {
 				var text = CACHED_BUILDER;
 				var legend = JOULE_LEGEND;
-				text.Clear();
-				if (text.AppendIfInfinite(joules))
+				if (text.Clear().AppendIfInfinite(joules))
 					text.Append(legend[0]);
 				else if (Mathf.Abs(joules) > 1000.0f) {
 					(joules * 0.001f).ToRyuHardString(text, 1);
@@ -457,9 +422,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(float num, TimeSlice timeSlice, string formatString,
 					ref string __result) {
 				var text = CACHED_BUILDER;
-				text.Clear();
 				num = GameUtil.ApplyTimeSlice(num, timeSlice);
-				if (!text.AppendIfInfinite(num)) {
+				if (!text.Clear().AppendIfInfinite(num)) {
 					if (formatString != null)
 						AppendSimpleFormat(text, formatString, num);
 					else if (num == 0.0f)
@@ -485,9 +449,8 @@ namespace PeterHan.FastTrack.UIPatches {
 					GameUtil.TemperatureInterpretation interpretation, bool displayUnits,
 					bool roundInDestinationFormat, ref string __result) {
 				var text = CACHED_BUILDER;
-				text.Clear();
-				GetFormattedTemperature(text, temp, timeSlice, interpretation, displayUnits,
-					roundInDestinationFormat);
+				GetFormattedTemperature(text.Clear(), temp, timeSlice, interpretation,
+					displayUnits, roundInDestinationFormat);
 				__result = text.ToString();
 				return false;
 			}
@@ -505,8 +468,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			internal static bool Prefix(float seconds, string floatFormat, ref string __result) {
 				var text = CACHED_BUILDER;
-				text.Clear();
-				if (!text.AppendIfInfinite(seconds))
+				if (!text.Clear().AppendIfInfinite(seconds))
 					text.AppendSimpleFormat(floatFormat, seconds);
 				__result = text.Append("s").ToString();
 				return false;
@@ -523,9 +485,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(float units, TimeSlice timeSlice, bool displaySuffix,
 					string floatFormatOverride, ref string __result) {
 				var text = CACHED_BUILDER;
-				text.Clear();
 				units = GameUtil.ApplyTimeSlice(units, timeSlice);
-				if (!text.AppendIfInfinite(units)) {
+				if (!text.Clear().AppendIfInfinite(units)) {
 					if (!floatFormatOverride.IsNullOrWhiteSpace())
 						text.AppendFormat(floatFormatOverride, units);
 					else
@@ -548,8 +509,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(float watts, GameUtil.WattageFormatterUnit unit,
 					bool displayUnits, ref string __result) {
 				var text = CACHED_BUILDER;
-				text.Clear();
-				GetFormattedWattage(text, watts, unit, displayUnits);
+				GetFormattedWattage(text.Clear(), watts, unit, displayUnits);
 				__result = text.ToString();
 				return false;
 			}
@@ -577,8 +537,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			internal static bool Prefix(float f, ref string __result) {
 				var text = CACHED_BUILDER;
-				text.Clear();
-				if (!text.AppendIfInfinite(f))
+				if (!text.Clear().AppendIfInfinite(f))
 					f.ToStandardString(text);
 				__result = text.ToString();
 				return false;
@@ -631,8 +590,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(string name, float count, bool upperName,
 					ref string __result) {
 				var text = CACHED_BUILDER;
-				text.Clear();
-				GetUnitFormattedName(text, name, count, upperName);
+				GetUnitFormattedName(text.Clear(), name, count, upperName);
 				__result = text.ToString();
 				return false;
 			}

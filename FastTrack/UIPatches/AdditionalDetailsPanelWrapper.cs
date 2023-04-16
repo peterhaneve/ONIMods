@@ -277,11 +277,14 @@ namespace PeterHan.FastTrack.UIPatches {
 				string label = lastSelection.uptimeCached;
 				if (changed || label == null) {
 					var text = CACHED_BUILDER;
-					label = text.Clear().Append(uptimeStr).
-						Replace("{0}", GameUtil.GetFormattedPercent(thisCycle * 100.0f)).
-						Replace("{1}", GameUtil.GetFormattedPercent(lastCycle * 100.0f)).
-						Replace("{2}", GameUtil.GetFormattedPercent(prevCycles * 100.0f)).
-						ToString();
+					FormatStringPatches.GetFormattedPercent(text.Clear(), thisCycle * 100.0f);
+					string tc = text.ToString();
+					FormatStringPatches.GetFormattedPercent(text.Clear(), lastCycle * 100.0f);
+					string lc = text.ToString();
+					FormatStringPatches.GetFormattedPercent(text.Clear(), prevCycles * 100.0f);
+					string pc = text.ToString();
+					label = text.Clear().Append(uptimeStr).Replace("{0}", tc).
+						Replace("{1}", lc).Replace("{2}", pc).ToString();
 					lastSelection.uptimeCached = label;
 				}
 				drawer.NewLabel(label);

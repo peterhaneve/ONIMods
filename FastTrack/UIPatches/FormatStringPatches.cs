@@ -308,6 +308,37 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
+		/// Formats the percentage into a string buffer to save on allocations.
+		/// </summary>
+		/// <param name="text">The location where the percentage will be stored.</param>
+		/// <param name="percent">The percentage from 0 to 100 (NOT 0 to 1!)</param>
+		/// <param name="timeSlice">The time unit, if any.</param>
+		internal static void GetFormattedPercent(StringBuilder text, float percent,
+				TimeSlice timeSlice = TimeSlice.None) {
+			if (percent == 0.0f)
+				// Pretty common, make it fast
+				text.Append('0');
+			else if (!text.AppendIfInfinite(percent)) {
+				int precision;
+				percent = GameUtil.ApplyTimeSlice(percent, timeSlice);
+				float absP = Mathf.Abs(percent);
+				// The base game uses 2dp for anything under 0.1%, 1dp for 0.1-1%, and 0dp
+				// for anything higher. Improve UX a bit here by showing an extra place
+				if (absP < 0.1f)
+					precision = 3;
+				else if (absP < 1.0f)
+					precision = 2;
+				else if (absP < 100.0f)
+					precision = 1;
+				else
+					precision = 0;
+				percent.ToRyuSoftString(text, precision);
+			}
+			text.Append(PCT);
+			text.AppendTimeSlice(timeSlice);
+		}
+
+		/// <summary>
 		/// Formats the rocket range into a string buffer to save on allocations.
 		/// </summary>
 		/// <param name="text">The location where the rocket range will be stored.</param>

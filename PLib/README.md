@@ -17,7 +17,7 @@ If Oxygen Not Included is installed in a different location, make a copy of `Dir
 
 DLL releases for major versions are available in the [releases](https://github.com/peterhaneve/ONIMods/releases) page.
 **Only the complete library is available from NuGet, which is sufficient for most users.**
-The lightweight PLib Options library (which includes only the options portion of PLib, and does not perform any forwarding) is also available in the releases section.
+Individual components of the library are also available in the releases section.
 
 ### NuGet
 
@@ -48,7 +48,7 @@ Custom forwarded components in mod code can be implemented by subclassing `Peter
 Initialize PLib by calling `PUtil.InitLibrary(bool)` in `OnLoad`.
 PLib *must* be initialized before using most of PLib functionality, but instantiating most PLib components will now also initialize PLib if necessary.
 
-It will emit the mod's `AssemblyFileVersion` to the log if the `bool` parameter is true, which can aids with debugging.
+It will emit the mod's `AssemblyFileVersion` to the log if the `bool` parameter is true, which can aid with debugging.
 Using the `AssemblyVersion` instead is discouraged, because changing `AssemblyVersion` breaks any explicit references to the assembly by name.
 (Ever wonder why .NET 3.5 still uses the .NET 2.0 version string?)
 
@@ -86,7 +86,7 @@ In PLib 4.0, the type will be associated with the assembly that defines that typ
 By default, PLib will place the config file in the mod assembly directory, named `config.json`, and will give each archived version its own configuration.
 
 The `ConfigFile` attribute can be used to modify the name of the configuration file and enable auto-indenting to improve human readability.
-If the Use
+If the `UseSharedConfigLocation` flag is set, the configuration file will be saved in a location that survives updating or reinstalling the mod; the name of the mod's primary assembly will be used for the folder name.
 
 To write, use `PLib.Options.POptions.WriteSettings<T>(T settings)`, where again T is the settings type.
 

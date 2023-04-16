@@ -25,6 +25,8 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// Updates the starmap sections of the default "simple" info screen.
 	/// </summary>
 	internal sealed partial class SimpleInfoScreenWrapper {
+		private static readonly Tag NO_METEORS = new Tag("NoMeteorShowers");
+
 		public const string NO_GEYSERS = "NoGeysers";
 
 		private static readonly Tag UNKNOWN_GEYSERS = new Tag(GeyserGenericConfig.ID);
@@ -163,10 +165,53 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
+		/// Displays the given planetoid's meteor showers.
+		/// </summary>
+		private void AddMeteors() {
+			var showers = sis.meteorShowerRows;
+			var parent = sis.worldMeteorShowersPanel.Content.gameObject;
+			// Technically this is all loop invariant but it only runs every 4 seconds
+			if (!showers.ContainsKey(NO_METEORS)) {
+				var noMeteorsRow = Util.KInstantiateUI(sis.iconLabelRow, parent, true);
+				showers.Add(NO_METEORS, noMeteorsRow);
+				if (noMeteorsRow.TryGetComponent(out HierarchyReferences hr)) {
+					hr.GetReference<Image>("Icon").sprite = Assets.GetSprite(
+						"icon_action_cancel");
+					hr.GetReference<LocText>("NameLabel").SetText(STRINGS.UI.DETAILTABS.
+						SIMPLEINFO.NO_METEORSHOWERS);
+					hr.GetReference<LocText>("ValueLabel").gameObject.SetActive(false);
+				}
+			}
+			foreach (var pair in showers) {
+				var key = pair.Key;
+				var row = pair.Value;
+				row.SetActive(key == NO_METEORS ? meteors.Count <= 0 : meteors.ContainsKey(
+					key.Name));
+			}
+			foreach (var pair in meteors) {
+				string id = pair.Key, meteorType = pair.Value.GetClusterMapMeteorShowerID();
+				if (!showers.ContainsKey(id)) {
+					var prefab = Assets.TryGetPrefab(meteorType);
+					var row = Util.KInstantiateUI(sis.iconLabelRow, parent, true);
+					showers.Add(id, row);
+					if (row.TryGetComponent(out HierarchyReferences hr) && prefab != null) {
+						var sprite = Def.GetUISprite(meteorType);
+						var icon = hr.GetReference<Image>("Icon");
+						icon.sprite = sprite.first;
+						icon.color = sprite.second;
+						hr.GetReference<LocText>("NameLabel").SetText(prefab.GetProperName());
+						hr.GetReference<LocText>("ValueLabel").gameObject.SetActive(false);
+					}
+					row.SetActive(true);
+				}
+			}
+		}
+
+		/// <summary>
 		/// Displays the given planetoid's surface sunlight and radiation.
 		/// </summary>
 		/// <param name="world">The world to be displayed.</param>
-		internal void AddSurfaceConditions(WorldContainer world) {
+		private void AddSurfaceConditions(WorldContainer world) {
 			var surfaceConditionRows = sis.surfaceConditionRows;
 			var parent = sis.worldTraitsPanel.Content.gameObject;
 			int n = surfaceConditionRows.Count;
@@ -207,7 +252,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Displays the given planetoid's world traits.
 		/// </summary>
 		/// <param name="traitIDs">The trait IDs present on the selected planetoid.</param>
-		internal void AddWorldTraits(IList<string> traitIDs) {
+		private void AddWorldTraits(IList<string> traitIDs) {
 			var worldTraitRows = sis.worldTraitRows;
 			int n = traitIDs.Count, existing = worldTraitRows.Count;
 			for (int i = 0; i < n; i++) {
@@ -270,9 +315,12 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		private void RefreshWorld() {
 			var world = lastSelection.world;
-			bool isPlanetoid = world != null && lastSelection.isAsteroid;
+			bool isPlanetoid = world != null && lastSelection.isAsteroid && ManagementMenu.
+				Instance.IsScreenOpen(ClusterMapScreen.Instance);
 			sis.worldTraitsPanel.gameObject.SetActive(isPlanetoid);
 			sis.worldGeysersPanel.gameObject.SetActive(isPlanetoid);
+			sis.worldMeteorShowersPanel.gameObject.SetActive(isPlanetoid);
+			sis.worldBiomesPanel.gameObject.SetActive(isPlanetoid && world.Biomes != null);
 			if (isPlanetoid) {
 				var biomes = world.Biomes;
 				var biomeRows = sis.biomeRows;
@@ -282,14 +330,13 @@ namespace PeterHan.FastTrack.UIPatches {
 						pair.Value.SetActive(false);
 				else
 					AddBiomes(biomes, biomeRows);
-				sis.worldBiomesPanel.gameObject.SetActive(biomes != null);
 				if (allGeysers != null)
 					AddGeysers(world.id);
 				if (traitIDs != null)
 					AddWorldTraits(traitIDs);
 				AddSurfaceConditions(world);
-			} else
-				sis.worldBiomesPanel.gameObject.SetActive(false);
+				AddMeteors();
+			}
 		}
 	}
 }

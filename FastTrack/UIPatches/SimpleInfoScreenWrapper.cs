@@ -19,6 +19,7 @@
 using HarmonyLib;
 using System.Collections.Generic;
 using System.Text;
+using Klei.AI;
 using UnityEngine;
 
 using DETAILTABS = STRINGS.UI.DETAILTABS;
@@ -37,6 +38,12 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Avoid reallocating a new StringBuilder every frame.
 		/// </summary>
 		private static readonly StringBuilder CACHED_BUILDER = new StringBuilder(128);
+
+		/// <summary>
+		/// If set to true, runs the base game's rocket refresh method anyways even though it
+		/// is very slow, for mod compatibility.
+		/// </summary>
+		internal static bool AllowBaseRocketPanel = false;
 
 		/// <summary>
 		/// The singleton instance of this class.
@@ -103,6 +110,11 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// The last object selected in the additional details pane.
 		/// </summary>
 		private LastSelectionDetails lastSelection;
+
+		/// <summary>
+		/// The cached meteor shower list. Only valid if a planetoid is selected.
+		/// </summary>
+		private readonly IDictionary<string, MeteorShowerEvent> meteors;
 
 		/// <summary>
 		/// If non-null, allows a much faster path in getting storage item temperatures.
@@ -177,6 +189,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			lastReport = null;
 			lastSelection = default;
 			lastStressEntry = null;
+			meteors = new Dictionary<string, MeteorShowerEvent>(8);
 			processHeaders = new List<ProcessConditionRow>(8);
 			processRows = new List<ProcessConditionRow>(24);
 			processVisible = new List<ProcessConditionRow>(32);
@@ -246,6 +259,9 @@ namespace PeterHan.FastTrack.UIPatches {
 				found.Recycle();
 				// Geysers can be uncovered over time
 				allGeysers = lastSelection.world != null ? FindObjectsOfType<Geyser>() : null;
+				// If planetoid, check meteor showers
+				if (lastSelection.isAsteroid)
+					UpdateMeteors();
 			}
 			// Vanilla method force shows it
 			statusActive = true;
@@ -554,6 +570,23 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
+		/// Updates the meteors on the current planetoid.
+		/// </summary>
+		private void UpdateMeteors() {
+			var worldContainer = lastSelection.world;
+			var seasons = Db.Get().GameplaySeasons;
+			meteors.Clear();
+			foreach (string id in worldContainer.GetSeasonIds()) {
+				var season = seasons.TryGet(id);
+				if (season != null)
+					foreach (var evt in season.events)
+						if (evt is MeteorShowerEvent ms && evt.tags.Contains(GameTags.
+								SpaceDanger))
+							meteors[ms.Id] = ms;
+			}
+		}
+
+		/// <summary>
 		/// Updates the panels that should be updated every 200ms or when the selected object
 		/// changes.
 		/// </summary>
@@ -567,7 +600,11 @@ namespace PeterHan.FastTrack.UIPatches {
 				else
 					vi.Update(vitalsContainer);
 			}
-			RefreshRocket();
+			if (AllowBaseRocketPanel)
+				sis.rocketSimpleInfoPanel.Refresh(sis.rocketStatusContainer, sis.
+					selectedTarget);
+			else
+				RefreshRocket();
 			RefreshStorage();
 		}
 
@@ -576,7 +613,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// 
 		/// Do I really need to repeat my spiel about big structs again?
 		/// </summary>
-		private struct LastSelectionDetails {
+		private readonly struct LastSelectionDetails {
 			internal readonly IProcessConditionSet conditions;
 
 			internal readonly FertilityMonitor.Instance fertility;
@@ -738,7 +775,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before RefreshWorld runs.
 			/// </summary>
-			internal static bool Prefix(SimpleInfoScreen __instance) {
+			internal static bool Prefix() {
 				if (instance != null)
 					instance.RefreshWorld();
 				return false;

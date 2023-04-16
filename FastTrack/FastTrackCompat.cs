@@ -96,10 +96,12 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		/// <param name="harmony">The Harmony instance to use for patching.</param>
 		internal static void CheckRocketCompat(Harmony harmony) {
-			if (PPatchTools.GetTypeSafe("Rockets_TinyYetBig.Mod") != null)
+			bool rtb = PPatchTools.GetTypeSafe("Rockets_TinyYetBig.Mod") != null;
+			if (rtb)
 				PUtil.LogWarning("Disabling drillcone optimizations: Rockets mod active");
 			else
 				UIPatches.HarvestSideScreenWrapper.Apply(harmony);
+			UIPatches.SimpleInfoScreenWrapper.AllowBaseRocketPanel = rtb;
 		}
 
 		/// <summary>
