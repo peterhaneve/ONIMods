@@ -22,7 +22,6 @@ using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -117,6 +116,7 @@ namespace PeterHan.FastSave {
 					Game.SavingActiveCB ___activateActiveCB) {
 				var inst = PlayerController.Instance;
 				if (isAutoSave) {
+					var bi = BackgroundAutosave.Instance;
 					// Wait for player to stop dragging
 					while (inst.IsDragging())
 						yield return null;
@@ -129,13 +129,15 @@ namespace PeterHan.FastSave {
 							___activateActiveCB();
 							yield return null;
 						}
+						var t = Game.Instance.timelapser;
 						// Save in the background
-						Game.Instance.timelapser?.SaveColonyPreview(filename);
-						BackgroundAutosave.Instance.StartSave(filename);
+						if (t != null)
+							t.SaveColonyPreview(filename);
+						bi.StartSave(filename);
 						yield return null;
 						RetireColonyUtility.SaveColonySummaryData();
 						// Wait asynchronously for it
-						while (!BackgroundAutosave.Instance.CheckSaveStatus())
+						while (!bi.CheckSaveStatus())
 							yield return null;
 						if (updateSavePointer)
 							SaveLoader.SetActiveSaveFilePath(filename);
@@ -221,8 +223,9 @@ namespace PeterHan.FastSave {
 			internal static void Postfix(RetiredColonyData.RetiredColonyStatistic statistic,
 					Dictionary<string, GameObject> ___activeColonyWidgets,
 					Dictionary<string, Color> ___statColors) {
-				var reports = ReportManager.Instance?.reports;
-				if (___activeColonyWidgets.TryGetValue(statistic.name, out GameObject obj)) {
+				var ri = ReportManager.Instance;
+				var reports = (ri == null) ? null : ri.reports;
+				if (___activeColonyWidgets.TryGetValue(statistic.name, out var obj)) {
 					// Find first remaining report's cycle index
 					int minReport = (reports == null || reports.Count < 1) ? 0 : reports[0].
 						day;
@@ -252,13 +255,6 @@ namespace PeterHan.FastSave {
 		/// </summary>
 		[HarmonyPatch(typeof(Timelapser), "RenderAndPrint")]
 		public static class Timelapser_RenderAndPrint_Patch {
-			private static readonly PropertyInfo ORTHOGRAPHIC_SIZE_NEW =
-				typeof(CameraController).GetPropertySafe<float>("OrthographicSize", false);
-
-			private static readonly MethodInfo ORTHOGRAPHIC_SIZE_OLD =
-				typeof(CameraController).GetMethodSafe("SetOrthographicsSize", false,
-				typeof(float));
-
 			internal static bool Prepare() {
 				// Only enable if background save is on
 				return FastSaveOptions.Instance.BackgroundSave;
@@ -276,7 +272,7 @@ namespace PeterHan.FastSave {
 				if (world != null && rt != null && inst != null) {
 					float z = inst.transform.position.z;
 					if (world.IsStartWorld) {
-						var telepad = GameUtil.GetTelepad(0);
+						var telepad = GameUtil.GetTelepad(world_id);
 						if (telepad == null)
 							Debug.Log("No telepad present, aborting screenshot.");
 						else {
@@ -293,10 +289,7 @@ namespace PeterHan.FastSave {
 					inst.RenderForTimelapser(ref rt);
 					inst.StartCoroutine(TimelapseCoroutine(rt, ___previewSaveGamePath,
 						world_id, ___previewScreenshot));
-					if (ORTHOGRAPHIC_SIZE_NEW != null)
-						ORTHOGRAPHIC_SIZE_NEW.SetValue(inst, ___camSize);
-					else if (ORTHOGRAPHIC_SIZE_OLD != null)
-						ORTHOGRAPHIC_SIZE_OLD.Invoke(inst, new object[] { ___camSize });
+					inst.OrthographicSize = ___camSize;
 					inst.SetPosition(___camPosition);
 					RenderTexture.active = oldRT;
 				}

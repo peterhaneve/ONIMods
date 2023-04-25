@@ -125,6 +125,13 @@ namespace PeterHan.FastTrack.VisualPatches {
 							ref nextFrame);
 					}
 				}
+				// As a workaround for an ONI bug, do not allow any anim with FG symbols
+				if (trivial) {
+					var symbols = build.symbols;
+					int ns = symbols.Length;
+					for (int j = 0; j < ns && trivial; j++)
+						trivial = (symbols[j].flags & (int)KAnim.SymbolFlags.FG) == 0;
+				}
 				if (trivial && !idleAnims.ContainsKey(id))
 					// There are a couple of collisions in ONI, but they are properly handled
 					idleAnims.Add(id, new AnimWrapper(anim, nf));

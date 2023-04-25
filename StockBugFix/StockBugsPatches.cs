@@ -141,7 +141,7 @@ namespace PeterHan.StockBugFix {
 		/// </summary>
 		private static TranspiledMethod TranspileUpdateMods(TranspiledMethod method) {
 			return PPatchTools.ReplaceMethodCallSafe(method, new Dictionary<MethodInfo,
-					MethodInfo>() {
+					MethodInfo> {
 				{
 					typeof(Manager).GetMethodSafe(nameof(Manager.Report), false,
 						typeof(GameObject)),
@@ -670,6 +670,47 @@ namespace PeterHan.StockBugFix {
 	}
 
 	/// <summary>
+	/// Applied to Timelapser to squash a useless warning and fix timelapses not being saved.
+	/// </summary>
+	[HarmonyPatch(typeof(Timelapser), "OnNewDay")]
+	public static class Timelapser_OnNewDay_Patch {
+		private static bool NeedTimelapse(int cycle) {
+			int cycle10 = cycle % 10;
+			return cycle > 0 && (cycle <= 50 || (cycle < 100 && cycle10 == 5) || cycle10 == 0);
+		}
+
+		/// <summary>
+		/// Applied before OnNewDay runs.
+		/// </summary>
+		internal static bool Prefix(IList<int> ___worldsToScreenshot,
+				ref bool ___screenshotToday) {
+			var ci = ClusterManager.Instance;
+			if (___worldsToScreenshot != null && ci != null) {
+				var containers = ci.WorldContainers;
+				int n = containers.Count, cycle = GameClock.Instance.GetCycle();
+				bool screenshot = false;
+				if (___worldsToScreenshot.Count != 0)
+					PUtil.LogWarning("Timelapser.OnNewDay was called, but worlds are still pending a screenshot");
+				for (int i = 0; i < n; i++) {
+					var world = containers[i];
+					if (world.IsDiscovered && !world.IsModuleInterior && NeedTimelapse(cycle -
+							(int)world.DiscoveryTimestamp)) {
+						screenshot = true;
+#if DEBUG
+						PUtil.LogDebug("Requesting timelapse on cycle {0:D} for world {1:D}".F(
+							cycle, world.id));
+#endif
+						___worldsToScreenshot.Add(world.id);
+					}
+				}
+				if (screenshot)
+					___screenshotToday = true;
+			}
+			return false;
+		}
+	}
+
+	/// <summary>
 	/// Applied to Timelapser to cancel the current tool when autosave begins.
 	/// </summary>
 	[HarmonyPatch(typeof(Timelapser), "SaveScreenshot")]
@@ -678,7 +719,70 @@ namespace PeterHan.StockBugFix {
 		/// Applied after SaveScreenshot runs.
 		/// </summary>
 		internal static void Postfix() {
-			PlayerController.Instance?.CancelDragging();
+			var pc = PlayerController.Instance;
+			if (pc != null)
+				pc.CancelDragging();
+		}
+	}
+
+	/// <summary>
+	/// Applied to Timelapser to fix the camera positioning on each timelapse.
+	/// </summary>
+	[HarmonyPatch(typeof(Timelapser), "SetPostionAndOrtho")]
+	public static class Timelapser_SetPostionAndOrtho_Patch {
+		/// <summary>
+		/// Calculates the required size of the timelapse for the starting world.
+		/// </summary>
+		/// <param name="worldID">The world ID of the starting world.</param>
+		/// <param name="screenRatio">The screen aspect ratio.</param>
+		/// <param name="home">The world central position.</param>
+		/// <returns>The orthographic size to set.</returns>
+		private static float GetScreenshotSize(int worldID, float screenRatio, Vector3 home) {
+			float size = 0f;
+			foreach (var building in Components.BuildingCompletes.Items)
+				if (building != null) {
+					var pos = building.transform.position;
+					int cell = Grid.PosToCell(pos);
+					if (Grid.IsValidCell(cell) && Grid.WorldIdx[cell] == worldID) {
+						var diff = home - pos;
+						float newSize = Mathf.Max(diff.x / screenRatio, diff.y);
+						if (newSize > size) size = newSize;
+					}
+				}
+			return Mathf.Max(size + 10.0f, 18.0f);
+		}
+
+		/// <summary>
+		/// Applied before SetPostionAndOrtho runs.
+		/// </summary>
+		internal static bool Prefix(int world_id, ref Vector3 ___camPosition,
+				ref float ___camSize, RenderTexture ___bufferRenderTexture) {
+			var world = ClusterManager.Instance.GetWorld(world_id);
+			var cc = CameraController.Instance;
+			if (world != null && cc != null) {
+				var overlayCamera = cc.overlayCamera;
+				var cameraPos = cc.transform.position;
+				float z = cameraPos.z;
+				___camSize = overlayCamera.orthographicSize;
+				___camPosition = cameraPos;
+				if (world.IsStartWorld) {
+					var telepad = GameUtil.GetTelepad(world_id);
+					if (telepad != null) {
+						var home = telepad.transform.position;
+						cc.OrthographicSize = GetScreenshotSize(world_id, (float)
+							___bufferRenderTexture.width / ___bufferRenderTexture.height,
+							home);
+						cc.SetPosition(new Vector3(home.x, home.y, z));
+					}
+				} else {
+					var size = world.WorldSize;
+					var offset = world.WorldOffset;
+					float halfY = size.y * 0.5f;
+					cc.OrthographicSize = halfY;
+					cc.SetPosition(new Vector3(offset.x + size.x * 0.5f, offset.y + halfY, z));
+				}
+			}
+			return false;
 		}
 	}
 }

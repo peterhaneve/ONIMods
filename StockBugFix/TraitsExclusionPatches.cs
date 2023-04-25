@@ -132,6 +132,8 @@ namespace PeterHan.StockBugFix {
 			ExcludeTraitsMutually("GrantSkill_Arting1", "ArtDown");
 			ExcludeTraitsMutually("GrantSkill_Arting2", "ArtDown");
 			ExcludeTraitsMutually("GrantSkill_Arting3", "ArtDown");
+			// Handy and Unconstructive
+			ExcludeTraitsMutually("CantBuild", "ConstructionUp");
 			// Kitchen Menace on cook interest
 			ExcludeTraitFromInterest("CookingDown", sg.Cooking.Id);
 			// Unempathetic on doctoring interest

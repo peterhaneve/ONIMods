@@ -93,7 +93,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedDisease))]
-		internal static class GameUtil_GetFormattedDisease_Patch {
+		internal static class GetFormattedDisease_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
 
 			/// <summary>
@@ -115,7 +115,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedDiseaseAmount))]
-		internal static class GameUtil_GetFormattedDiseaseAmount_Patch {
+		internal static class GetFormattedDiseaseAmount_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
 
 			/// <summary>

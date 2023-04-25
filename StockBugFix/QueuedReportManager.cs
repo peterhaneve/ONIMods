@@ -93,7 +93,7 @@ namespace PeterHan.StockBugFix {
 					sanitizeRequested = false;
 				}
 			}
-			if (report) {
+			if (report && parent != null) {
 				// Automatically does nothing if 0 events
 				if (sanitize)
 					Global.Instance.modManager.Sanitize(parent);

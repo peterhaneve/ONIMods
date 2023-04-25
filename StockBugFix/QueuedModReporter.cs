@@ -22,9 +22,8 @@ namespace PeterHan.StockBugFix {
 	/// </summary>
 	public sealed class QueuedModReporter : KMonoBehaviour {
 		public void Update() {
-			var go = gameObject;
-			if (go != null)
-				QueuedReportManager.Instance.CheckQueuedReport(go);
+			if (isActiveAndEnabled)
+				QueuedReportManager.Instance.CheckQueuedReport(gameObject);
 		}
 	}
 }

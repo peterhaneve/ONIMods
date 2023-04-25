@@ -121,9 +121,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			private static void AddPhaseChange(StringBuilder text, Element element,
 					bool addHardnessColor) {
 				string ht, lt;
-				var part = PART_BUILDER;
-				text.AppendLine().AppendLine();
-				part.Clear();
+				var part = PART_BUILDER.Clear();
 				if (element.IsSolid) {
 					GetFormattedTemperature(part, element.highTemp);
 					ht = part.ToString();
@@ -132,8 +130,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				} else if (element.IsLiquid) {
 					GetFormattedTemperature(part, element.highTemp);
 					ht = part.ToString();
-					part.Clear();
-					GetFormattedTemperature(part, element.lowTemp);
+					GetFormattedTemperature(part.Clear(), element.lowTemp);
 					lt = part.ToString();
 					part.Clear().Append(STRINGS.ELEMENTS.ELEMENTDESCLIQUID).Replace("{1}",
 						lt).Replace("{2}", ht);
@@ -144,6 +141,10 @@ namespace PeterHan.FastTrack.UIPatches {
 						lt);
 				}
 				part.Replace("{0}", element.GetMaterialCategoryTag().ProperName());
+				text.AppendLine().AppendLine();
+				int n = part.Length;
+				for (int i = 0; i < n; i++)
+					text.Append(part[i]);
 			}
 
 			/// <summary>
