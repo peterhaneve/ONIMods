@@ -115,6 +115,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Meta", "Meta", "{DD48872E-7
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PreserveSeed", "PreserveSeed\PreserveSeed.csproj", "{135508AE-EF4B-49D6-882F-735B85B85B2B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mergedown = Debug|Mergedown
@@ -531,6 +533,14 @@ Global
 		{2498660E-640B-4FC4-A8AF-313577427C25}.Release|Mergedown.Build.0 = Release|Mergedown
 		{2498660E-640B-4FC4-A8AF-313577427C25}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{2498660E-640B-4FC4-A8AF-313577427C25}.Release|Vanilla.Build.0 = Release|Vanilla
+		{135508AE-EF4B-49D6-882F-735B85B85B2B}.Debug|Mergedown.ActiveCfg = Debug|Mergedown
+		{135508AE-EF4B-49D6-882F-735B85B85B2B}.Debug|Mergedown.Build.0 = Debug|Mergedown
+		{135508AE-EF4B-49D6-882F-735B85B85B2B}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
+		{135508AE-EF4B-49D6-882F-735B85B85B2B}.Debug|Vanilla.Build.0 = Debug|Vanilla
+		{135508AE-EF4B-49D6-882F-735B85B85B2B}.Release|Mergedown.ActiveCfg = Release|Mergedown
+		{135508AE-EF4B-49D6-882F-735B85B85B2B}.Release|Mergedown.Build.0 = Release|Mergedown
+		{135508AE-EF4B-49D6-882F-735B85B85B2B}.Release|Vanilla.ActiveCfg = Release|Vanilla
+		{135508AE-EF4B-49D6-882F-735B85B85B2B}.Release|Vanilla.Build.0 = Release|Vanilla
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

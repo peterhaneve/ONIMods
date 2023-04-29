@@ -60,8 +60,7 @@ namespace PeterHan.CritterInventory {
 			/// Applied after RefreshCharts runs.
 			/// </summary>
 			internal static void Postfix(AllResourcesScreen __instance) {
-				var cr = __instance.GetComponent<CritterCategoryRows>();
-				if (cr != null)
+				if (__instance.TryGetComponent(out CritterCategoryRows cr))
 					cr.UpdateCharts();
 			}
 		}
@@ -75,8 +74,7 @@ namespace PeterHan.CritterInventory {
 			/// Applied after RefreshRows runs.
 			/// </summary>
 			internal static void Postfix(AllResourcesScreen __instance) {
-				var cr = __instance.GetComponent<CritterCategoryRows>();
-				if (cr != null)
+				if (__instance.TryGetComponent(out CritterCategoryRows cr))
 					cr.UpdateContents();
 			}
 		}
@@ -90,8 +88,7 @@ namespace PeterHan.CritterInventory {
 			/// Applied before SearchFilter runs.
 			/// </summary>
 			internal static void Prefix(AllResourcesScreen __instance, string search) {
-				var cr = __instance.GetComponent<CritterCategoryRows>();
-				if (cr != null)
+				if (__instance.TryGetComponent(out CritterCategoryRows cr))
 					cr.SearchFilter(search);
 			}
 		}
@@ -105,8 +102,7 @@ namespace PeterHan.CritterInventory {
 			/// Applied after SetRowsActive runs.
 			/// </summary>
 			internal static void Postfix(AllResourcesScreen __instance) {
-				var cr = __instance.GetComponent<CritterCategoryRows>();
-				if (cr != null)
+				if (__instance.TryGetComponent(out CritterCategoryRows cr))
 					cr.SetRowsActive();
 			}
 		}
@@ -121,8 +117,7 @@ namespace PeterHan.CritterInventory {
 			/// Applied after SpawnRows runs.
 			/// </summary>
 			internal static void Postfix(AllResourcesScreen __instance) {
-				var cr = __instance.GetComponent<CritterCategoryRows>();
-				if (cr != null)
+				if (__instance.TryGetComponent(out CritterCategoryRows cr))
 					cr.SpawnRows();
 			}
 		}
@@ -149,8 +144,7 @@ namespace PeterHan.CritterInventory {
 			/// Applied after Refresh runs.
 			/// </summary>
 			internal static void Postfix(PinnedResourcesPanel __instance) {
-				var pcm = __instance.GetComponent<PinnedCritterManager>();
-				if (pcm != null)
+				if (__instance.TryGetComponent(out PinnedCritterManager pcm))
 					pcm.UpdateContents();
 			}
 		}
@@ -165,9 +159,24 @@ namespace PeterHan.CritterInventory {
 			/// Applied after SortRows runs.
 			/// </summary>
 			internal static void Postfix(PinnedResourcesPanel __instance) {
-				var pcm = __instance.GetComponent<PinnedCritterManager>();
-				if (pcm != null)
+				if (__instance.TryGetComponent(out PinnedCritterManager pcm))
 					pcm.PopulatePinnedRows();
+			}
+		}
+
+		/// <summary>
+		/// Applied to PinnedResourcesPanel to force refresh the rows if necessary.
+		/// </summary>
+		[HarmonyPatch(typeof(PinnedResourcesPanel), "SyncRows")]
+		public static class PinnedResourcesPanel_SyncRows_Patch {
+			/// <summary>
+			/// Applied after SyncRows runs.
+			/// </summary>
+			internal static void Postfix(PinnedResourcesPanel __instance) {
+				if (__instance.TryGetComponent(out PinnedCritterManager pcm) && pcm.IsDirty)
+					// Populate calls SortRows, so that will populate the pinned rows and wipe
+					// dirty
+					__instance.Populate();
 			}
 		}
 
@@ -181,8 +190,7 @@ namespace PeterHan.CritterInventory {
 			/// </summary>
 			internal static void Postfix(ResourceCategoryHeader __instance,
 					bool is_hovering, Color ___highlightColour) {
-				var info = __instance.GetComponent<CritterResourceHeader>();
-				if (info != null)
+				if (__instance.TryGetComponent(out CritterResourceHeader info))
 					info.HighlightAllMatching(is_hovering ? ___highlightColour : Color.black);
 			}
 		}
@@ -197,10 +205,12 @@ namespace PeterHan.CritterInventory {
 			/// </summary>
 			internal static bool Prefix(ResourceCategoryHeader __instance,
 					GameObject ___sparkChart) {
-				var info = __instance.GetComponent<CritterResourceHeader>();
-				if (info != null)
+				bool run = true;
+				if (__instance.TryGetComponent(out CritterResourceHeader info)) {
 					info.UpdateChart(___sparkChart);
-				return info == null;
+					run = false;
+				}
+				return run;
 			}
 		}
 
@@ -219,12 +229,14 @@ namespace PeterHan.CritterInventory {
 			/// </summary>
 			internal static bool Prefix(ResourceCategoryHeader __instance,
 					ref bool ___anyDiscovered) {
-				var info = __instance.GetComponent<CritterResourceHeader>();
-				// UpdateContents adds spurious entries (e.g. babies when only adults ever
-				// discovered) on critters so it must be skipped
-				if (info != null)
+				bool run = true;
+				if (__instance.TryGetComponent(out CritterResourceHeader info)) {
+					// UpdateContents adds spurious entries (e.g. babies when only adults ever
+					// discovered) on critters so it must be skipped
 					info.UpdateHeader(ref ___anyDiscovered);
-				return info == null;
+					run = false;
+				}
+				return run;
 			}
 		}
 
@@ -254,9 +266,9 @@ namespace PeterHan.CritterInventory {
 			/// Applied after Update runs.
 			/// </summary>
 			internal static void Postfix(ResourceCategoryScreen __instance) {
-				var headers = __instance.GetComponent<CritterHeaders>();
-				if (ClusterManager.Instance.activeWorld.worldInventory != null && headers !=
-						null)
+				var cm = ClusterManager.Instance;
+				if (cm != null && cm.activeWorld.worldInventory != null && __instance.
+						TryGetComponent(out CritterHeaders headers))
 					headers.UpdateContents();
 			}
 		}
@@ -271,8 +283,7 @@ namespace PeterHan.CritterInventory {
 			/// </summary>
 			internal static void Postfix(ResourceEntry __instance, bool is_hovering,
 					Color ___HighlightColor) {
-				var entry = __instance.GetComponent<CritterResourceEntry>();
-				if (entry != null)
+				if (__instance.TryGetComponent(out CritterResourceEntry entry))
 					entry.HighlightAllMatching(is_hovering ? ___HighlightColor : Color.black);
 			}
 		}
@@ -286,9 +297,8 @@ namespace PeterHan.CritterInventory {
 			/// Applied before OnClick runs.
 			/// </summary>
 			internal static bool Prefix(ResourceEntry __instance, ref int ___selectionIdx) {
-				var entry = __instance.gameObject.GetComponentSafe<CritterResourceEntry>();
-				bool cont = entry == null;
-				if (!cont) {
+				bool run = true;
+				if (__instance.TryGetComponent(out CritterResourceEntry entry)) {
 					var creaturesOfType = entry.CachedCritters;
 					// Build list if empty
 					entry.UpdateLastClick();
@@ -300,8 +310,9 @@ namespace PeterHan.CritterInventory {
 					if (count > 0)
 						// Rotate through valid indexes
 						PGameUtils.CenterAndSelect(creaturesOfType[___selectionIdx++ % count]);
+					run = false;
 				}
-				return cont;
+				return run;
 			}
 		}
 
@@ -314,10 +325,12 @@ namespace PeterHan.CritterInventory {
 			/// Applied before RefreshChart runs.
 			/// </summary>
 			internal static bool Prefix(ResourceEntry __instance, GameObject ___sparkChart) {
-				var entry = __instance.GetComponent<CritterResourceEntry>();
-				if (entry != null)
+				bool run = true;
+				if (__instance.TryGetComponent(out CritterResourceEntry entry)) {
 					entry.UpdateChart(___sparkChart);
-				return entry == null;
+					run = false;
+				}
+				return run;
 			}
 		}
 

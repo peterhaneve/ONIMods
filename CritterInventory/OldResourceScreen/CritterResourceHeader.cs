@@ -46,9 +46,10 @@ namespace PeterHan.CritterInventory.OldResourceScreen {
 				Tag species, CritterType type) {
 			var re = Util.KInstantiateUI(parent.Prefab_ResourceEntry, parent.
 				EntryContainer.gameObject, true);
-			var entry = re.GetComponent<ResourceEntry>();
-			entry.SetTag(species, GameUtil.MeasureUnit.quantity);
-			entry.SetName(species.ProperNameStripLink());
+			if (re.TryGetComponent(out ResourceEntry entry)) {
+				entry.SetTag(species, GameUtil.MeasureUnit.quantity);
+				entry.SetName(species.ProperNameStripLink());
+			}
 			// Add component to tag it as wild/tame
 			re.AddComponent<CritterResourceEntry>().CritterType = type;
 			return entry;
@@ -74,7 +75,7 @@ namespace PeterHan.CritterInventory.OldResourceScreen {
 		internal void HighlightAllMatching(Color color) {
 			var type = CritterType;
 			int id = ClusterManager.Instance.activeWorldId;
-			CritterInventoryUtils.GetCritters(id, (kpid) => {
+			CritterInventoryUtils.GetCritters(id, kpid => {
 				if (kpid.GetCritterType() == type)
 					PGameUtils.HighlightEntity(kpid, color);
 			});
@@ -85,14 +86,13 @@ namespace PeterHan.CritterInventory.OldResourceScreen {
 		/// </summary>
 		/// <returns>The tool tip text for a critter type (wild or tame).</returns>
 		private string OnAllTooltip() {
-			CritterInventory ci;
 			var categoryTracker = CritterInventoryUtils.GetTracker<AllCritterTracker>(
 				ClusterManager.Instance.activeWorldId, CritterType);
 			var world = ClusterManager.Instance.activeWorld;
 			string result = null;
-			if (world != null && (ci = world.GetComponent<CritterInventory>()) != null) {
-				float trend = (categoryTracker == null) ? 0.0f : categoryTracker.GetDelta(
-					CritterInventoryUtils.TREND_INTERVAL);
+			if (world != null && world.TryGetComponent(out CritterInventory ci)) {
+				float trend = categoryTracker?.GetDelta(CritterInventoryUtils.
+					TREND_INTERVAL) ?? 0.0f;
 				result = CritterInventoryUtils.FormatTooltip(header.elements.LabelText.text,
 					ci.PopulateTotals(CritterType, null), trend);
 			}
@@ -104,8 +104,8 @@ namespace PeterHan.CritterInventory.OldResourceScreen {
 		/// </summary>
 		/// <param name="anyDiscovered">A reference to the anyDiscovered field in header.</param>
 		internal void UpdateHeader(ref bool anyDiscovered) {
-			var ci = ClusterManager.Instance.activeWorld.GetComponent<CritterInventory>();
-			if (ci != null) {
+			var cm = ClusterManager.Instance;
+			if (cm != null && cm.activeWorld.TryGetComponent(out CritterInventory ci)) {
 				var totals = DictionaryPool<Tag, CritterTotals, ResourceCategoryHeader>.
 					Allocate();
 				var all = ci.PopulateTotals(CritterType, totals);
@@ -121,11 +121,10 @@ namespace PeterHan.CritterInventory.OldResourceScreen {
 					var quantity = pair.Value;
 					var species = pair.Key;
 					// Look up the species to see if we have found it already
-					if (!discovered.TryGetValue(species, out ResourceEntry entry))
+					if (!discovered.TryGetValue(species, out var entry))
 						discovered.Add(species, entry = NewResourceEntry(header, species,
 							CritterType));
-					var cre = entry.GetComponent<CritterResourceEntry>();
-					if (cre != null)
+					if (entry.TryGetComponent(out CritterResourceEntry cre))
 						cre.UpdateEntry(quantity);
 				}
 				// Still need to set this for expand/contract to work
@@ -134,9 +133,7 @@ namespace PeterHan.CritterInventory.OldResourceScreen {
 				header.elements.QuantityText.SetText(all.Available.ToString());
 				SET_ACTIVE_COLOR.Invoke(header, all.HasAny);
 				SET_INTERACTABLE.Invoke(header, anyDiscovered);
-				// Update category tooltip
-				var tooltip = header.GetComponent<ToolTip>();
-				if (tooltip != null)
+				if (header.TryGetComponent(out ToolTip tooltip))
 					tooltip.OnToolTip = OnAllTooltip;
 				totals.Recycle();
 			}

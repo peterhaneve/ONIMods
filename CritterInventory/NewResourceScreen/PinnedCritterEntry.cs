@@ -69,11 +69,18 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 		/// Unpins this critter type from the list.
 		/// </summary>
 		internal void OnUnpin() {
-			var ci = ClusterManager.Instance.activeWorld.GetComponent<CritterInventory>();
-			if (ci != null) {
+			var cm = ClusterManager.Instance;
+			if (cm != null && cm.activeWorld.TryGetComponent(out CritterInventory ci)) {
+				var ai = AllResourcesScreen.Instance;
+				var pi = PinnedResourcesPanel.Instance;
 				ci.GetPinnedSpecies(CritterType).Remove(Species);
-				AllResourcesScreen.Instance?.RefreshRows();
-				PinnedResourcesPanel.Instance?.Refresh();
+				if (ai != null)
+					ai.RefreshRows();
+				if (pi != null) {
+					if (pi.TryGetComponent(out PinnedCritterManager pm))
+						pm.SetDirty();
+					pi.Refresh();
+				}
 			}
 		}
 	}

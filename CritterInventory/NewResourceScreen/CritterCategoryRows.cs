@@ -52,17 +52,20 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 				rootListContainer, true);
 			// Create a heading for Critter (Type)
 			PUtil.LogDebug("Creating Critter ({0}) category".F(type.GetProperName()));
-			var refs = spawn.GetComponent<HierarchyReferences>();
-			// Set up chart
-			var graphBase = refs.GetReference<SparkLayer>("Chart").GetComponent<GraphBase>();
-			graphBase.axis_x.min_value = 0f;
-			graphBase.axis_x.max_value = 600f;
-			graphBase.axis_x.guide_frequency = 120f;
-			graphBase.RefreshGuides();
 			// Component which actually handles updating
 			var rg = spawn.AddComponent<CritterResourceRowGroup>();
 			rg.CritterType = type;
-			refs.GetReference<LocText>("NameLabel").SetText(rg.Title);
+			if (spawn.TryGetComponent(out HierarchyReferences refs)) {
+				// Set up chart
+				if (refs.GetReference<SparkLayer>("Chart").TryGetComponent(
+						out GraphBase graphBase)) {
+					graphBase.axis_x.min_value = 0f;
+					graphBase.axis_x.max_value = 600f;
+					graphBase.axis_x.guide_frequency = 120f;
+					graphBase.RefreshGuides();
+				}
+				refs.GetReference<LocText>("NameLabel").SetText(rg.Title);
+			}
 			return rg;
 		}
 

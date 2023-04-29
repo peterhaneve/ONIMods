@@ -33,12 +33,9 @@ namespace PeterHan.CritterInventory {
 
 		public override void UpdateData() {
 			var world = ClusterManager.Instance.GetWorld(WorldID);
-			if (world != null) {
-				var ci = world.GetComponent<CritterInventory>();
-				if (ci != null)
-					// Tracker excludes reserved
-					AddPoint(ci.GetBySpecies(Type, Tag).Available);
-			}
+			if (world != null && world.TryGetComponent(out CritterInventory ci))
+				// Tracker excludes reserved
+				AddPoint(ci.GetBySpecies(Type, Tag).Available);
 		}
 	}
 }

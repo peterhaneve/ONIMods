@@ -79,11 +79,10 @@ namespace PeterHan.CritterInventory.OldResourceScreen {
 		/// Highlights all critters matching this critter type on the active world.
 		/// </summary>
 		/// <param name="color">The color to highlight the critters.</param>
-		/// <param name="species">The species type to highlight.</param>
 		internal void HighlightAllMatching(Color color) {
 			var type = CritterType;
 			int id = ClusterManager.Instance.activeWorldId;
-			CritterInventoryUtils.GetCritters(id, (kpid) => {
+			CritterInventoryUtils.GetCritters(id, kpid => {
 				if (kpid.GetCritterType() == type)
 					PGameUtils.HighlightEntity(kpid, color);
 			}, entry.Resource);
@@ -95,13 +94,13 @@ namespace PeterHan.CritterInventory.OldResourceScreen {
 		/// <returns>The tool tip text for a critter type and species.</returns>
 		private string OnEntryTooltip() {
 			var speciesTracker = CritterInventoryUtils.GetTracker<CritterTracker>(
-				ClusterManager.Instance.activeWorldId, CritterType, (tracker) => tracker.Tag ==
+				ClusterManager.Instance.activeWorldId, CritterType, tracker => tracker.Tag ==
 				entry.Resource);
 			var world = ClusterManager.Instance.activeWorld;
 			string result = null;
 			if (world != null && world.TryGetComponent(out CritterInventory ci)) {
-				float trend = (speciesTracker == null) ? 0.0f : speciesTracker.GetDelta(
-					CritterInventoryUtils.TREND_INTERVAL);
+				float trend = speciesTracker?.GetDelta(CritterInventoryUtils.TREND_INTERVAL) ??
+					0.0f;
 				result = CritterInventoryUtils.FormatTooltip(entry.NameLabel.text, ci.
 					GetBySpecies(CritterType, entry.Resource), trend);
 			}
@@ -111,7 +110,6 @@ namespace PeterHan.CritterInventory.OldResourceScreen {
 		/// <summary>
 		/// Caches the list of critters of this type.
 		/// </summary>
-		/// <param name="species">The critter type to populate.</param>
 		/// <returns>The list of matching critters.</returns>
 		internal IList<KPrefabID> PopulateCache() {
 			int id = ClusterManager.Instance.activeWorldId;
@@ -150,9 +148,7 @@ namespace PeterHan.CritterInventory.OldResourceScreen {
 		/// </summary>
 		/// <param name="quantity">The quantity of this critter which is present.</param>
 		internal void UpdateEntry(CritterTotals quantity) {
-			// Update the tool tip text
-			var tooltip = entry.GetComponent<ToolTip>();
-			if (tooltip != null)
+			if (entry.TryGetComponent(out ToolTip tooltip))
 				tooltip.OnToolTip = OnEntryTooltip;
 			// Determine the color for the labels (overdrawn is impossible for critters)
 			var color = AVAILABLE_COLOR.Get(entry);

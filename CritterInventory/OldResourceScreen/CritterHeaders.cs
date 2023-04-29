@@ -51,18 +51,19 @@ namespace PeterHan.CritterInventory.OldResourceScreen {
 		/// <param name="type">The critter type to create.</param>
 		internal void Create(ResourceCategoryScreen resList, GameObject prefab,
 				CritterType type) {
-			var tag = GameTags.BagableCreature;
+			var targetTag = GameTags.BagableCreature;
 			// Create a heading for Critter (Type)
 			PUtil.LogDebug("Creating Critter ({0}) category".F(type.GetProperName()));
-			var gameObject = Util.KInstantiateUI(prefab, resList.CategoryContainer.gameObject,
-				false);
-			gameObject.name = "CategoryHeader_{0}_{1}".F(tag.Name, type.ToString());
-			var header = gameObject.GetComponent<ResourceCategoryHeader>();
-			header.SetTag(tag, GameUtil.MeasureUnit.quantity);
-			// Tag it with a wild/tame tag
-			header.gameObject.AddComponent<CritterResourceHeader>().CritterType = type;
-			header.elements.LabelText.SetText(CritterInventoryUtils.GetTitle(tag, type));
-			headers.Add(header);
+			var go = Util.KInstantiateUI(prefab, resList.CategoryContainer.gameObject);
+			go.name = "CategoryHeader_{0}_{1}".F(targetTag.Name, type.ToString());
+			if (go.TryGetComponent(out ResourceCategoryHeader header)) {
+				header.SetTag(targetTag, GameUtil.MeasureUnit.quantity);
+				// Tag it with a wild/tame tag
+				header.gameObject.AddComponent<CritterResourceHeader>().CritterType = type;
+				header.elements.LabelText.SetText(CritterInventoryUtils.GetTitle(targetTag,
+					type));
+				headers.Add(header);
+			}
 		}
 
 		/// <summary>

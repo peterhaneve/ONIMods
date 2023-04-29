@@ -71,13 +71,13 @@ namespace PeterHan.CritterInventory {
 		/// <summary>
 		/// Adds a critter in the current world to the inventory.
 		/// </summary>
-		/// <param name="creature">The creature to add.</param>
+		/// <param name="id">The prefab ID of the creature to add.</param>
 		private void AddCritter(KPrefabID id) {
-			if (counts.TryGetValue(id.GetCritterType(), out CritterInventoryPerType byType)) {
+			if (counts.TryGetValue(id.GetCritterType(), out var byType)) {
 				var species = id.PrefabTag;
 				bool targeted = false, targetable = false;
 				// Create critter totals if not present
-				if (!byType.TryGetValue(species, out CritterTotals totals)) {
+				if (!byType.TryGetValue(species, out var totals)) {
 					byType.Add(species, totals = new CritterTotals());
 					discovered = true;
 				}
@@ -101,9 +101,9 @@ namespace PeterHan.CritterInventory {
 		/// <param name="species">The critter species to examine.</param>
 		/// <returns>The total quantity of critters of that type and species.</returns>
 		internal CritterTotals GetBySpecies(CritterType type, Tag species) {
-			if (!counts.TryGetValue(type, out CritterInventoryPerType byType))
+			if (!counts.TryGetValue(type, out var byType))
 				throw new ArgumentOutOfRangeException(nameof(type));
-			if (!byType.TryGetValue(species, out CritterTotals totals))
+			if (!byType.TryGetValue(species, out var totals))
 				totals = new CritterTotals();
 			return totals;
 		}
@@ -114,7 +114,7 @@ namespace PeterHan.CritterInventory {
 		/// <param name="type">The critter type to look up.</param>
 		/// <returns>The pinned species, or null if pins are not yet initialized.</returns>
 		public ISet<Tag> GetPinnedSpecies(CritterType type) {
-			if (pinned == null || !pinned.TryGetValue(type, out HashSet<Tag> result))
+			if (pinned == null || !pinned.TryGetValue(type, out var result))
 				result = null;
 			return result;
 		}
@@ -146,7 +146,7 @@ namespace PeterHan.CritterInventory {
 		/// <returns>The total quantity of critters of that type.</returns>
 		internal CritterTotals PopulateTotals(CritterType type,
 				IDictionary<Tag, CritterTotals> results) {
-			if (!counts.TryGetValue(type, out CritterInventoryPerType byType))
+			if (!counts.TryGetValue(type, out var byType))
 				throw new ArgumentOutOfRangeException(nameof(type));
 			var all = new CritterTotals();
 			foreach (var pair in byType) {
@@ -178,7 +178,7 @@ namespace PeterHan.CritterInventory {
 				CritterInventoryUtils.GetCritters(id, AddCritter);
 				var inst = AllResourcesScreen.Instance;
 				if (discovered && inst != null)
-					inst.Populate(null);
+					inst.Populate();
 			}
 		}
 	}

@@ -31,7 +31,7 @@ namespace PeterHan.CritterInventory {
 		}
 
 		public override string FormatValueString(float value) {
-			return GameUtil.GetFormattedSimple(value, GameUtil.TimeSlice.None);
+			return GameUtil.GetFormattedSimple(value);
 		}
 	}
 }

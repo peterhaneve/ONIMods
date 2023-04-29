@@ -46,11 +46,7 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 		/// <summary>
 		/// The title displayed on screen.
 		/// </summary>
-		public string Title {
-			get {
-				return CritterInventoryUtils.GetTitle(Species, CritterType);
-			}
-		}
+		public string Title => CritterInventoryUtils.GetTitle(Species, CritterType);
 
 		public CritterResourceRow() {
 			IsVisible = true;
@@ -63,16 +59,19 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 			var ci = ClusterManager.Instance.activeWorld.GetComponent<CritterInventory>();
 			ISet<Tag> pinned;
 			if (ci != null && (pinned = ci.GetPinnedSpecies(CritterType)) != null) {
+				var inst = PinnedResourcesPanel.Instance;
 				// Toggle membership in pinned set
-				if (pinned.Contains(Species))
-					pinned.Remove(Species);
-				else
+				if (!pinned.Remove(Species))
 					pinned.Add(Species);
 				// Toggle visual checkbox
 				UpdatePinnedState(ci);
-				PinnedResourcesPanel.Instance?.Refresh();
+				if (inst != null) {
+					if (inst.TryGetComponent(out PinnedCritterManager pm))
+						pm.SetDirty();
+					inst.Refresh();
+				}
 			}
-			// TODO Notify checkbox isn't implemented yet in stock game?
+			// TODO Notify checkbox is not implemented yet in stock game?
 		}
 
 		/// <summary>
@@ -87,11 +86,9 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 			if (tracker != null) {
 				var chart = References.GetReference<SparkLayer>("Chart");
 				var chartableData = tracker.ChartableData(HISTORY);
-				var xAxis = chart.graph.axis_x;
-				if (chartableData.Length > 0)
-					xAxis.max_value = chartableData[chartableData.Length - 1].first;
-				else
-					xAxis.max_value = 0f;
+				ref var xAxis = ref chart.graph.axis_x;
+				xAxis.max_value = chartableData.Length > 0 ? chartableData[chartableData.
+					Length - 1].first : 0f;
 				xAxis.min_value = currentTime - HISTORY;
 				chart.RefreshLine(chartableData, "resourceAmount");
 			}

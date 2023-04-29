@@ -28,20 +28,12 @@ namespace PeterHan.CritterInventory {
 		/// <summary>
 		/// The number of critters available to be used (total minus reserved).
 		/// </summary>
-		public int Available {
-			get {
-				return Total - Reserved;
-			}
-		}
+		public int Available => Total - Reserved;
 
 		/// <summary>
 		/// Returns true if any critters were found.
 		/// </summary>
-		public bool HasAny {
-			get {
-				return Total > 0;
-			}
-		}
+		public bool HasAny => Total > 0;
 
 		/// <summary>
 		/// The number of critters of this type "reserved" for Wrangle or Attack errands.

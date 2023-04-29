@@ -124,6 +124,8 @@ namespace PeterHan.StockBugFix {
 			ExcludeTraitFromInterest("RanchingDown", sg.Ranching.Id);
 			// Plant Murderer on farm interest
 			ExcludeTraitFromInterest("BotanistDown", sg.Farming.Id);
+			// Slow Learner on research interest
+			ExcludeTraitFromInterest("SlowLearner", sg.Research.Id);
 			// Unpracticed Artist on decorate interest
 			ExcludeTraitFromInterest("ArtDown", sg.Art.Id);
 			// Uncultured and Unpracticed Artist

@@ -28,6 +28,21 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 	/// </summary>
 	public sealed class PinnedCritterManager : KMonoBehaviour {
 		/// <summary>
+		/// Refreshes one pinned critter entry.
+		/// </summary>
+		/// <param name="refs">The row to refresh.</param>
+		/// <param name="available">The quantity of the critter available.</param>
+		private static void RefreshLine(HierarchyReferences refs, int available) {
+			refs.GetReference<LocText>("ValueLabel").SetText(GameUtil.GetFormattedSimple(
+				available));
+		}
+
+		/// <summary>
+		/// True if critter rows were added or removed since the last sync.
+		/// </summary>
+		public bool IsDirty { get; private set; }
+
+		/// <summary>
 		/// The realized game objects of pinned critter entries.
 		/// </summary>
 		private readonly IDictionary<CritterType, PinnedCrittersPerType> pinnedObjects;
@@ -45,6 +60,7 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 			foreach (var type in Enum.GetValues(typeof(CritterType)))
 				if (type is CritterType ct)
 					pinnedObjects.Add(ct, new PinnedCrittersPerType(8, TagComparer.INSTANCE));
+			IsDirty = true;
 		}
 
 		/// <summary>
@@ -55,10 +71,9 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 		/// <returns>A pinned row with that critter type and species displayed.</returns>
 		internal HierarchyReferences Create(Tag species, CritterType type) {
 			var newRow = Util.KInstantiateUI(pinnedResources.linePrefab,
-				pinnedResources.rowContainer, false);
+				pinnedResources.rowContainer);
 			var refs = newRow.GetComponent<HierarchyReferences>();
-			// Set the image
-			var imageData = Def.GetUISprite(species, "ui", false);
+			var imageData = Def.GetUISprite(species);
 			if (imageData != null) {
 				var icon = refs.GetReference<Image>("Icon");
 				icon.sprite = imageData.first;
@@ -71,7 +86,8 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 			pinRow.CritterType = type;
 			pinRow.Species = species;
 			refs.GetReference<MultiToggle>("PinToggle").onClick = pinRow.OnUnpin;
-			newRow.GetComponent<MultiToggle>().onClick += pinRow.OnCycleThrough;
+			if (newRow.TryGetComponent(out MultiToggle mt))
+				mt.onClick += pinRow.OnCycleThrough;
 			return refs;
 		}
 
@@ -79,8 +95,8 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 		/// Populates the pinned critters in the resource panel, creating new rows if needed.
 		/// </summary>
 		internal void PopulatePinnedRows() {
-			var ci = ClusterManager.Instance.activeWorld.GetComponent<CritterInventory>();
-			if (ci != null) {
+			var cm = ClusterManager.Instance;
+			if (cm != null && cm.activeWorld.TryGetComponent(out CritterInventory ci)) {
 				var seen = HashSetPool<Tag, PinnedCritterManager>.Allocate();
 				foreach (var pair in pinnedObjects) {
 					var type = pair.Key;
@@ -110,25 +126,23 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 				// Move the buttons to the end
 				pinnedResources.clearNewButton.transform.SetAsLastSibling();
 				pinnedResources.seeAllButton.transform.SetAsLastSibling();
+				IsDirty = false;
 			}
 		}
 
 		/// <summary>
-		/// Refreshes one pinned critter entry.
+		/// Sets the dirty flag to force rebuild pinned critters on the next run.
 		/// </summary>
-		/// <param name="refs">The row to refresh.</param>
-		/// <param name="available">The quantity of the critter available.</param>
-		private void RefreshLine(HierarchyReferences refs, int available) {
-			refs.GetReference<LocText>("ValueLabel").SetText(GameUtil.GetFormattedSimple(
-				available));
+		internal void SetDirty() {
+			IsDirty = true;
 		}
 
 		/// <summary>
 		/// Updates the critter counts of visible pinned rows.
 		/// </summary>
 		internal void UpdateContents() {
-			var ci = ClusterManager.Instance.activeWorld.GetComponent<CritterInventory>();
-			if (ci != null) {
+			var cm = ClusterManager.Instance;
+			if (cm != null && cm.activeWorld.TryGetComponent(out CritterInventory ci)) {
 				var allCounts = DictionaryPool<Tag, CritterTotals, PinnedCritterManager>.
 					Allocate();
 				foreach (var pair in pinnedObjects) {
@@ -139,7 +153,7 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 						var entry = speciesPair.Value;
 						if (entry.gameObject.activeSelf) {
 							int available = 0;
-							if (allCounts.TryGetValue(speciesPair.Key, out CritterTotals totals))
+							if (allCounts.TryGetValue(speciesPair.Key, out var totals))
 								available = totals.Available;
 							RefreshLine(entry, available);
 						}

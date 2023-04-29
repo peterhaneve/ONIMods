@@ -154,6 +154,7 @@ namespace PeterHan.CritterInventory {
 		/// <typeparam name="T">The type of critter tracker to find.</typeparam>
 		/// <param name="id">The world ID to match.</param>
 		/// <param name="type">The critter type to look up.</param>
+		/// <param name="filter">Only results which match this predicate will be reported.</param>
 		/// <returns>The tracker for that critter type and world ID.</returns>
 		internal static T GetTracker<T>(int id, CritterType type, Func<T, bool> filter = null)
 				where T : BaseCritterTracker {

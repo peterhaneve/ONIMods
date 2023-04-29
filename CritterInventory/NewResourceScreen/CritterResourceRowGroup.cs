@@ -16,7 +16,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#if DEBUG
 using PeterHan.PLib.Core;
+#endif
 using System.Collections.Generic;
 using UnityEngine.UI;
 
@@ -39,11 +41,8 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 		/// <summary>
 		/// The title displayed on screen.
 		/// </summary>
-		public string Title {
-			get {
-				return CritterInventoryUtils.GetTitle(GameTags.BagableCreature, CritterType);
-			}
-		}
+		public string Title => CritterInventoryUtils.GetTitle(GameTags.BagableCreature,
+			CritterType);
 
 		/// <summary>
 		/// The resources being displayed by this group.
@@ -66,6 +65,7 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 		/// <summary>
 		/// Creates a resource category row for critters.
 		/// </summary>
+		/// <param name="allResources">The resources screen where the row should be added.</param>
 		/// <param name="species">The critter species to create.</param>
 		/// <returns>The row for that critter species.</returns>
 		private CritterResourceRow Create(AllResourcesScreen allResources, Tag species) {
@@ -74,29 +74,33 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 #if DEBUG
 			PUtil.LogDebug("Creating resource row for {0}".F(species.ProperNameStripLink()));
 #endif
-			var image = Def.GetUISprite(species, "ui", false);
-			var newRefs = spawn.GetComponent<HierarchyReferences>();
-			// Tint icon the correct color
-			if (image != null) {
-				var icon = newRefs.GetReference<Image>("Icon");
-				icon.sprite = image.first;
-				icon.color = image.second;
-			}
-			// Set up chart
-			var graphBase = newRefs.GetReference<SparkLayer>("Chart").GetComponent<GraphBase>();
-			graphBase.axis_x.min_value = 0f;
-			graphBase.axis_x.max_value = 600f;
-			graphBase.axis_x.guide_frequency = 120f;
-			graphBase.RefreshGuides();
 			// Component which actually handles updating
 			var cr = spawn.AddComponent<CritterResourceRow>();
 			cr.CritterType = CritterType;
-			cr.References = newRefs;
 			cr.Species = species;
-			newRefs.GetReference<LocText>("NameLabel").SetText(cr.Title);
-			// Checkmark to pin to resource list
-			newRefs.GetReference<MultiToggle>("PinToggle").onClick += cr.OnPinToggle;
-			spawn.GetComponent<MultiToggle>().onClick += cr.OnPinToggle;
+			if (spawn.TryGetComponent(out MultiToggle toggle))
+				toggle.onClick += cr.OnPinToggle;
+			if (spawn.TryGetComponent(out HierarchyReferences newRefs)) {
+				var image = Def.GetUISprite(species);
+				// Tint icon the correct color
+				if (image != null) {
+					var icon = newRefs.GetReference<Image>("Icon");
+					icon.sprite = image.first;
+					icon.color = image.second;
+				}
+				// Set up chart
+				if (newRefs.GetReference<SparkLayer>("Chart").TryGetComponent(out GraphBase
+						graphBase)) {
+					graphBase.axis_x.min_value = 0f;
+					graphBase.axis_x.max_value = 600f;
+					graphBase.axis_x.guide_frequency = 120f;
+					graphBase.RefreshGuides();
+				}
+				cr.References = newRefs;
+				newRefs.GetReference<LocText>("NameLabel").SetText(cr.Title);
+				// Checkmark to pin to resource list
+				newRefs.GetReference<MultiToggle>("PinToggle").onClick += cr.OnPinToggle;
+			}
 			return cr;
 		}
 
@@ -135,8 +139,8 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 		/// </summary>
 		/// <param name="allResources">The parent window for the rows.</param>
 		internal void SpawnRows(AllResourcesScreen allResources) {
-			var ci = ClusterManager.Instance.activeWorld.GetComponent<CritterInventory>();
-			if (ci != null) {
+			var cm = ClusterManager.Instance;
+			if (cm != null && cm.activeWorld.TryGetComponent(out CritterInventory ci)) {
 				var allCritters = DictionaryPool<Tag, CritterTotals, CritterResourceRowGroup>.
 					Allocate();
 				ci.PopulateTotals(CritterType, allCritters);
@@ -170,11 +174,9 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 				Instance.activeWorldId, CritterType);
 			var chart = refs.GetReference<SparkLayer>("Chart");
 			var chartableData = tracker.ChartableData(HISTORY);
-			var xAxis = chart.graph.axis_x;
-			if (chartableData.Length > 0)
-				xAxis.max_value = chartableData[chartableData.Length - 1].first;
-			else
-				xAxis.max_value = 0f;
+			ref var xAxis = ref chart.graph.axis_x;
+			xAxis.max_value = chartableData.Length > 0 ? chartableData[chartableData.
+				Length - 1].first : 0f;
 			xAxis.min_value = currentTime - HISTORY;
 			chart.RefreshLine(chartableData, "resourceAmount");
 			foreach (var resource in resources)
@@ -185,8 +187,8 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 		/// Updates the headings for the entire category.
 		/// </summary>
 		internal void UpdateContents() {
-			var ci = ClusterManager.Instance.activeWorld.GetComponent<CritterInventory>();
-			if (ci != null) {
+			var cm = ClusterManager.Instance;
+			if (cm != null && cm.activeWorld.TryGetComponent(out CritterInventory ci)) {
 				var allTotals = DictionaryPool<Tag, CritterTotals, CritterResourceRowGroup>.
 					Allocate();
 				var totals = ci.PopulateTotals(CritterType, allTotals);
