@@ -152,6 +152,11 @@ namespace PeterHan.PLib.Options {
 				PUtil.LogDebug("{0} was not found; using default settings".F(Path.GetFileName(
 					path)));
 #endif
+			} catch (DirectoryNotFoundException) {
+#if DEBUG
+				PUtil.LogDebug("{0} was not found; using default settings".F(Path.GetFileName(
+					path)));
+#endif
 			} catch (UnauthorizedAccessException e) {
 				// Options will be set to defaults
 				PUtil.LogExcWarn(e);
