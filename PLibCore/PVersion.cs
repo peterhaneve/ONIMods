@@ -25,6 +25,6 @@ namespace PeterHan.PLib {
 		/// <summary>
 		/// The PLib version.
 		/// </summary>
-		public const string VERSION = "4.12.2.0";
+		public const string VERSION = "4.13.0.0";
 	}
 }

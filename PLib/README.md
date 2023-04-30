@@ -112,6 +112,7 @@ If a property is of a user-defined type, PLib will check the public properties o
 If a valid localization string key name is used for `displaytext` (such as `STRINGS.YOURMOD.OPTIONS.YOUROPTION`), the localized value of that string from the strings database is used as the display text.
 
 To support types not in the predefined list, the `[DynamicOption(Type)]` attribute can be added to specify the type of an `IOptionsEntry` handler class that can display the specified type.
+If the type used as the handler has a constructor with the same signature as one of the predefined options entry classes, the arguments matching those parameters will be passed to it.
 
 #### Categories
 
@@ -169,7 +170,7 @@ public sealed class ModLoad : KMod.UserMod2
 
 This is how it looks in the mod menu:
 
-![mod menu example screenshot](https://i.imgur.com/1S1i9ru.png)
+![mod menu example screenshot](https://github.com/peterhaneve/ONIMods/raw/PLib4.13/Docs/modoptions.png)
 
 ## Actions
 
@@ -185,7 +186,8 @@ If multiple mods register the same action identifier, only the first will receiv
 The returned `PAction` object has a `GetKAction` method which can be used to retrieve an `Action` that works in standard Klei functions.
 The `PKeyBinding` is used to specify the default key binding.
 
-Note that the game can change the values in the `Action` enum. Instead of using the built-in `Action.NumActions` to denote "no action", consider using `PAction.MaxAction` instead which will use the correct value at runtime if necessary.
+Note that the game can change the values in the `Action` enum.
+Instead of using the built-in `Action.NumActions` to denote "no action", consider using `PAction.MaxAction` instead which will use the correct value at runtime if necessary.
 
 ## Lighting
 
