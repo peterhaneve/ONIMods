@@ -913,7 +913,34 @@ namespace PeterHan.PLib.Core {
 		}
 
 		/// <summary>
-		/// Attempts to read a field value from an object of a type not in this assembly.
+		/// Attempts to read a static field value from an object of a type not in this assembly.
+		/// 
+		/// If this operation is expected to be performed more than once on the same object,
+		/// use a delegate. If the type of the object is known, use Detours.
+		/// </summary>
+		/// <typeparam name="T">The type of the value to read.</typeparam>
+		/// <param name="type">The type whose static field should be read.</param>
+		/// <param name="name">The field name.</param>
+		/// <param name="value">The location where the field value will be stored.</param>
+		/// <returns>true if the field was read, or false if the field was not found or
+		/// has the wrong type.</returns>
+		public static bool TryGetFieldValue<T>(Type type, string name, out T value) {
+			bool ok = false;
+			if (type != null && !string.IsNullOrEmpty(name)) {
+				var field = type.GetFieldSafe(name, true);
+				if (field != null && field.GetValue(null) is T newValue) {
+					ok = true;
+					value = newValue;
+				} else
+					value = default;
+			} else
+				value = default;
+			return ok;
+		}
+
+		/// <summary>
+		/// Attempts to read a non-static field value from an object of a type not in this
+		/// assembly.
 		/// 
 		/// If this operation is expected to be performed more than once on the same object,
 		/// use a delegate. If the type of the object is known, use Detours.

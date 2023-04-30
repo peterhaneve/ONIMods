@@ -149,18 +149,25 @@ namespace PeterHan.DebugNotIncluded {
 		internal static Mod.PackagedModInfo GetModInfoForFolder(Mod modInfo,
 				string archivedPath) {
 			var items = new List<FileSystemItem>(32);
-			modInfo.file_source.GetTopLevelItems(items, archivedPath);
 			Mod.PackagedModInfo result = null;
-			foreach (var item in items)
-				if (item.type == FileSystemItem.ItemType.File && item.name ==
-						MOD_INFO_FILENAME) {
-					// No option but to read into memory, Klei API has no stream version
-					string contents = modInfo.file_source.Read(Path.Combine(archivedPath,
-						MOD_INFO_FILENAME));
-					if (!string.IsNullOrEmpty(contents))
-						result = Klei.YamlIO.Parse<Mod.PackagedModInfo>(contents, default);
-					break;
-				}
+			try {
+				modInfo.file_source.GetTopLevelItems(items, archivedPath);
+				foreach (var item in items)
+					if (item.type == FileSystemItem.ItemType.File && item.name ==
+							MOD_INFO_FILENAME) {
+						// No option but to read into memory, Klei API has no stream version
+						string contents = modInfo.file_source.Read(Path.Combine(archivedPath,
+							MOD_INFO_FILENAME));
+						if (!string.IsNullOrEmpty(contents))
+							result = Klei.YamlIO.Parse<Mod.PackagedModInfo>(contents, default);
+						break;
+					}
+			} catch (ObjectDisposedException) {
+				// Mod Updater properly closes resource handles. Ignore them
+				PUtil.LogWarning("Mod zip file for {0} was closed due to update".F(modInfo.
+					title));
+				result = null;
+			}
 			return result;
 		}
 
@@ -234,10 +241,10 @@ namespace PeterHan.DebugNotIncluded {
 			return isBase;
 		}
 
+#if false
 		/// <summary>
 		/// Opens the output log file.
 		/// </summary>
-		#if false
 		internal static void OpenOutputLog() {
 			// Ugly but true!
 			var platform = Application.platform;
@@ -266,7 +273,7 @@ namespace PeterHan.DebugNotIncluded {
 			if (!string.IsNullOrEmpty(path))
 				Application.OpenURL(Path.GetFullPath(path));
 		}
-		#endif
+#endif
 
 		/// <summary>
 		/// Profiles a method, outputting how many milliseconds it took to run on each use.

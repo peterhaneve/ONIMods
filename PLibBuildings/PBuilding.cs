@@ -361,7 +361,6 @@ namespace PeterHan.PLib.Buildings {
 				Noise);
 			// Solid tile?
 			if (IsSolidTile) {
-				//def.isSolidTile = true;
 				def.BaseTimeUntilRepair = -1.0f;
 				def.UseStructureTemperature = false;
 				BuildingTemplates.CreateFoundationTileDef(def);
@@ -407,6 +406,9 @@ namespace PeterHan.PLib.Buildings {
 				def.UtilityOutputOffset = conduit.Location;
 				def.OutputConduitType = conduit.Type;
 			}
+			// Add to the massive sub category dictionary to silence a warning
+			var subcategory = TUNING.BUILDINGS.PLANSUBCATEGORYSORTING;
+			subcategory[ID] = SubCategory;
 			return def;
 		}
 
@@ -459,7 +461,7 @@ namespace PeterHan.PLib.Buildings {
 				}
 			}
 			if (IndustrialMachine && go.TryGetComponent(out KPrefabID id))
-				id.AddTag(RoomConstraints.ConstraintTags.IndustrialMachinery, false);
+				id.AddTag(RoomConstraints.ConstraintTags.IndustrialMachinery);
 			if (PowerInput != null)
 				go.AddOrGet<EnergyConsumer>();
 			if (PowerOutput != null)

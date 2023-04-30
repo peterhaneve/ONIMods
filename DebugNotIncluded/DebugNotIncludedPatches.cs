@@ -20,6 +20,7 @@ using HarmonyLib;
 using KMod;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
+using PeterHan.PLib.Detours;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
 using PeterHan.PLib.UI;
@@ -631,6 +632,18 @@ namespace PeterHan.DebugNotIncluded {
 
 #if DEBUG
 	/// <summary>
+	/// Applied to StationaryChoreRangeVisualizer to silence a warning.
+	/// </summary>
+	[HarmonyPatch(typeof(StationaryChoreRangeVisualizer), "OnCleanUp")]
+	public static class StationaryChoreRangeVisualizer_OnCleanUp_Patch {
+		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+			return PPatchTools.ReplaceConstant(method, 0, 1, true);
+		}
+	}
+#endif
+
+#if DEBUG
+	/// <summary>
 	/// Applied to SelectToolHoverTextCard to show the cell coordinates, number, and other
 	/// attributes in the hover card.
 	/// </summary>
@@ -651,7 +664,6 @@ namespace PeterHan.DebugNotIncluded {
 					cell, x, y), instance.Styles_BodyText.Standard);
 				drawer.EndShadowBar();
 			}
-
 			return drawer;
 		}
 
@@ -674,6 +686,18 @@ namespace PeterHan.DebugNotIncluded {
 				foreach (var instr in method)
 					yield return instr;
 			}
+		}
+	}
+#endif
+
+#if DEBUG
+	/// <summary>
+	/// Applied to UtilityNetworkLink to silence a warning.
+	/// </summary>
+	[HarmonyPatch(typeof(UtilityNetworkLink), "OnCleanUp")]
+	public static class UtilityNetworkLink_OnCleanUp_Patch {
+		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
+			return PPatchTools.ReplaceConstant(method, 0, 1, true);
 		}
 	}
 #endif
