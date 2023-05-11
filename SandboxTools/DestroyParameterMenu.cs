@@ -18,9 +18,10 @@
 
 using PeterHan.PLib.Core;
 using PeterHan.PLib.UI;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
+
+using ToolToggleState = ToolParameterMenu.ToggleState;
 
 namespace PeterHan.SandboxTools {
 	/// <summary>
@@ -57,11 +58,7 @@ namespace PeterHan.SandboxTools {
 
 		public bool AllSelected { get; private set; }
 
-		public bool HasOptions {
-			get {
-				return options.Count > 0;
-			}
-		}
+		public bool HasOptions => options.Count > 0;
 
 		/// <summary>
 		/// The parent of each layer checkbox.
@@ -96,9 +93,9 @@ namespace PeterHan.SandboxTools {
 		/// </summary>
 		/// <param name="key">The destroy option to look up.</param>
 		/// <returns>Whether that option is selected.</returns>
-		public ToolParameterMenu.ToggleState GetState(string key) {
-			var state = ToolParameterMenu.ToggleState.Off;
-			if (options.TryGetValue(key, out DestroyMenuOption option))
+		public ToolToggleState GetState(string key) {
+			var state = ToolToggleState.Off;
+			if (options.TryGetValue(key, out var option))
 				state = option.State;
 			return state;
 		}
@@ -119,14 +116,14 @@ namespace PeterHan.SandboxTools {
 			foreach (var option in options.Values) {
 				var checkbox = option.Checkbox;
 				switch (option.State) {
-				case ToolParameterMenu.ToggleState.On:
+				case ToolToggleState.On:
 					PCheckBox.SetCheckState(checkbox, PCheckBox.STATE_CHECKED);
 					break;
-				case ToolParameterMenu.ToggleState.Off:
+				case ToolToggleState.Off:
 					PCheckBox.SetCheckState(checkbox, PCheckBox.STATE_UNCHECKED);
 					all = false;
 					break;
-				case ToolParameterMenu.ToggleState.Disabled:
+				case ToolToggleState.Disabled:
 				default:
 					PCheckBox.SetCheckState(checkbox, PCheckBox.STATE_PARTIAL);
 					all = false;
@@ -145,19 +142,17 @@ namespace PeterHan.SandboxTools {
 			foreach (var option in options.Values)
 				if (option.Checkbox == target) {
 					var value = option.State;
-					if (value != ToolParameterMenu.ToggleState.Disabled) {
-						if (SandboxToolsPatches.AdvancedFilterEnabled) {
+					if (value != ToolToggleState.Disabled) {
+						if (SandboxToolsPatches.AdvancedFilterEnabled)
 							// Flip the state
-							if (value == ToolParameterMenu.ToggleState.On)
-								option.State = ToolParameterMenu.ToggleState.Off;
-							else
-								option.State = ToolParameterMenu.ToggleState.On;
-						} else if (value == ToolParameterMenu.ToggleState.Off) {
+							option.State = value == ToolToggleState.On ? ToolToggleState.Off :
+								ToolToggleState.On;
+						else if (value == ToolToggleState.Off) {
 							// Set to on and all others to off
 							foreach (var disableOption in options.Values)
 								if (disableOption != option)
-									disableOption.State = ToolParameterMenu.ToggleState.Off;
-							option.State = ToolParameterMenu.ToggleState.On;
+									disableOption.State = ToolToggleState.Off;
+							option.State = ToolToggleState.On;
 						}
 						OnChange();
 					}
@@ -174,19 +169,19 @@ namespace PeterHan.SandboxTools {
 			var menu = ToolMenu.Instance.toolParameterMenu;
 			var baseContent = menu.content;
 			base.OnPrefabInit();
-			content = Util.KInstantiateUI(baseContent, baseContent.GetParent(), false);
-			var transform = content.rectTransform();
+			content = Util.KInstantiateUI(baseContent, baseContent.GetParent());
+			var t = content.rectTransform();
 			// Add buttons to the chooser
-			if (transform.childCount > 1)
-				choiceList = transform.GetChild(1).gameObject;
+			if (t.childCount > 1)
+				choiceList = t.GetChild(1).gameObject;
 			if (SandboxToolsPatches.AdvancedFilterEnabled) {
 				// Selects all options
 				var allButton = new PButton {
-					Text = "All", OnClick = (_) => SetAll(ToolParameterMenu.ToggleState.On)
+					Text = "All", OnClick = _ => SetAll(ToolToggleState.On)
 				}.SetKleiPinkStyle();
 				// Deselects all options
 				var noneButton = new PButton {
-					Text = "None", OnClick = (_) => SetAll(ToolParameterMenu.ToggleState.Off)
+					Text = "None", OnClick = _ => SetAll(ToolToggleState.Off)
 				};
 				new PRelativePanel {
 					BackColor = PUITuning.Colors.ButtonPinkStyle.inactiveColor
@@ -196,8 +191,8 @@ namespace PeterHan.SandboxTools {
 					AddTo(content, -1);
 			}
 			// Bump up the offset max to allow more space
-			transform.offsetMax = new Vector2(0.0f, 300.0f);
-			transform.SetAsFirstSibling();
+			t.offsetMax = new Vector2(0.0f, 300.0f);
+			t.SetAsFirstSibling();
 			HideMenu();
 		}
 
@@ -219,10 +214,10 @@ namespace PeterHan.SandboxTools {
 					// Set initial state, note that ChangeState is only called by SetCheckState
 					// if it appears to be different, but since this executes before the
 					// parent is active it must be set to something different
-					var option = new DestroyMenuOption(parameter, checkbox);
+					var option = new DestroyMenuOption(checkbox);
 					PCheckBox.SetCheckState(checkbox, PCheckBox.STATE_PARTIAL);
 					if (i == 0 || SandboxToolsPatches.AdvancedFilterEnabled)
-						option.State = ToolParameterMenu.ToggleState.On;
+						option.State = ToolToggleState.On;
 					options.Add(parameter.ID, option);
 					toggle.onClick += () => OnClick(checkbox);
 				} else
@@ -235,10 +230,26 @@ namespace PeterHan.SandboxTools {
 		/// Sets all check boxes to the same value.
 		/// </summary>
 		/// <param name="toggleState">The toggle state to set.</param>
-		public void SetAll(ToolParameterMenu.ToggleState toggleState) {
+		public void SetAll(ToolToggleState toggleState) {
 			foreach (var option in options)
 				option.Value.State = toggleState;
 			OnChange();
+		}
+
+		/// <summary>
+		/// Sets all check boxes to off except for the specified one, which will be on.
+		/// </summary>
+		/// <param name="id">The check box ID to enable.</param>
+		public void SetTo(string id) {
+			if (options.ContainsKey(id)) {
+				foreach (var option in options) {
+					var checkbox = option.Value;
+					if (checkbox.State != ToolToggleState.Disabled)
+						checkbox.State = option.Key == id ? ToolToggleState.On :
+							ToolToggleState.Off;
+				}
+				OnChange();
+			}
 		}
 
 		/// <summary>
@@ -257,25 +268,15 @@ namespace PeterHan.SandboxTools {
 			/// The check box in the UI.
 			/// </summary>
 			public GameObject Checkbox { get; }
-
-			/// <summary>
-			/// The filter representing this option.
-			/// </summary>
-			public DestroyFilter Filter { get; }
-
+			
 			/// <summary>
 			/// The current option state.
 			/// </summary>
-			public ToolParameterMenu.ToggleState State { get; set; }
+			public ToolToggleState State { get; set; }
 
-			public DestroyMenuOption(DestroyFilter filter, GameObject checkbox) {
-				Checkbox = checkbox ?? throw new ArgumentNullException("checkbox");
-				Filter = filter ?? throw new ArgumentNullException("filter");
-				State = ToolParameterMenu.ToggleState.Off;
-			}
-
-			public override string ToString() {
-				return Filter.ToString();
+			public DestroyMenuOption(GameObject checkbox) {
+				Checkbox = checkbox;
+				State = ToolToggleState.Off;
 			}
 		}
 	}

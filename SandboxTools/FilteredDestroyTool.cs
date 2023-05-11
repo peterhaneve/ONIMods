@@ -16,9 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using HarmonyLib;
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Buildings;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -30,7 +28,7 @@ namespace PeterHan.SandboxTools {
 	/// A replacement for "Destroy" that allows filtering of what to get rid of.
 	/// </summary>
 	public sealed class FilteredDestroyTool : BrushTool {
-		private static IDetouredField<SandboxDestroyerTool, Color> RECENTLY_AFFECTED =
+		private static readonly IDetouredField<SandboxDestroyerTool, Color> RECENTLY_AFFECTED =
 			PDetours.DetourField<SandboxDestroyerTool, Color>("recentlyAffectedCellColor");
 
 		/// <summary>
@@ -42,6 +40,37 @@ namespace PeterHan.SandboxTools {
 			foreach (var gameObject in destroy)
 				Util.KDestroyGameObject(gameObject);
 			destroy.Recycle();
+		}
+		
+		/// <summary>
+		/// Destroys Duplicants and Critters in the cell.
+		/// </summary>
+		/// <param name="cell">The cell to destroy.</param>
+		private static void DestroyCreatures(int cell) {
+			var destroy = HashSetPool<GameObject, FilteredDestroyTool>.Allocate();
+			// Critters, Duplicants, etc
+			foreach (var brain in Components.Brains.Items)
+				if (brain != null) {
+					var go = brain.gameObject;
+					if (Grid.PosToCell(go.transform.position) == cell)
+						destroy.Add(go);
+				}
+			DestroyAndRecycle(destroy);
+		}
+		
+		/// <summary>
+		/// Destroys plants in the cell.
+		/// </summary>
+		/// <param name="cell">The cell to destroy.</param>
+		private static void DestroyPlants(int cell) {
+			var destroy = HashSetPool<GameObject, FilteredDestroyTool>.Allocate();
+			foreach (var crop in Components.Uprootables.Items)
+				if (crop != null) {
+					var go = crop.gameObject;
+					if (Grid.PosToCell(go.transform.position) == cell)
+						destroy.Add(go);
+				}
+			DestroyAndRecycle(destroy);
 		}
 
 		/// <summary>
@@ -72,25 +101,33 @@ namespace PeterHan.SandboxTools {
 		internal FilteredDestroyTool() {
 			Color color;
 			modes = new List<DestroyFilter>(12) {
-				new DestroyFilter("Elements", SandboxToolsStrings.DESTROY_ELEMENTS,
-					DestroyElement),
-				new DestroyFilter("Items", SandboxToolsStrings.DESTROY_ITEMS, DestroyItems),
-				new DestroyFilter("Creatures", SandboxToolsStrings.DESTROY_CREATURES,
-					DestroyCreatures),
-				new DestroyFilter("Plants", SandboxToolsStrings.DESTROY_PLANTS,
-					DestroyPlants),
-				new DestroyFilter("Buildings", SandboxToolsStrings.DESTROY_BUILDINGS),
-				new DestroyFilter("BackWall", SandboxToolsStrings.DESTROY_DRYWALL),
-				new DestroyFilter("LiquidPipes", SandboxToolsStrings.DESTROY_LPIPES),
-				new DestroyFilter("GasPipes", SandboxToolsStrings.DESTROY_GPIPES),
-				new DestroyFilter("Wires", SandboxToolsStrings.DESTROY_POWER),
-				new DestroyFilter("Logic", SandboxToolsStrings.DESTROY_AUTO),
-				new DestroyFilter("SolidConduits", SandboxToolsStrings.DESTROY_SHIPPING)
+				new DestroyFilter("Elements", OverlayModes.TileMode.ID,
+					SandboxToolsStrings.DESTROY_ELEMENTS, DestroyElement),
+				new DestroyFilter("Items", HashedString.Invalid, SandboxToolsStrings.
+					DESTROY_ITEMS, DestroyItems),
+				new DestroyFilter("Creatures", HashedString.Invalid,
+					SandboxToolsStrings.DESTROY_CREATURES, DestroyCreatures),
+				new DestroyFilter("Plants", OverlayModes.Crop.ID,
+					SandboxToolsStrings.DESTROY_PLANTS, DestroyPlants),
+				new DestroyFilter("Buildings", OverlayModes.Decor.ID,
+					SandboxToolsStrings.DESTROY_BUILDINGS),
+				new DestroyFilter("BackWall", HashedString.Invalid, SandboxToolsStrings.
+					DESTROY_DRYWALL),
+				new DestroyFilter("LiquidPipes", OverlayModes.LiquidConduits.ID,
+					SandboxToolsStrings.DESTROY_LPIPES),
+				new DestroyFilter("GasPipes", OverlayModes.GasConduits.ID,
+					SandboxToolsStrings.DESTROY_GPIPES),
+				new DestroyFilter("Wires", OverlayModes.Power.ID, SandboxToolsStrings.
+					DESTROY_POWER),
+				new DestroyFilter("Logic", OverlayModes.Logic.ID, SandboxToolsStrings.
+					DESTROY_AUTO),
+				new DestroyFilter("SolidConduits", OverlayModes.SolidConveyor.ID,
+					SandboxToolsStrings.DESTROY_SHIPPING)
 			};
 			// "All" checkbox to destroy everything
 			if (!SandboxToolsPatches.AdvancedFilterEnabled)
-				modes.Insert(0, new DestroyFilter("All", SandboxToolsStrings.DESTROY_ALL,
-					DestroyAll));
+				modes.Insert(0, new DestroyFilter("All", HashedString.Invalid,
+					SandboxToolsStrings.DESTROY_ALL, DestroyAll));
 			pendingCells = new HashSet<int>();
 			try {
 				// Take from stock tool if possible
@@ -148,26 +185,13 @@ namespace PeterHan.SandboxTools {
 		}
 
 		/// <summary>
-		/// Destroys Duplicants and Critters in the cell.
-		/// </summary>
-		/// <param name="cell">The cell to destroy.</param>
-		private void DestroyCreatures(int cell) {
-			var destroy = HashSetPool<GameObject, FilteredDestroyTool>.Allocate();
-			// Critters, Duplicants, etc
-			foreach (var brain in Components.Brains.Items)
-				if (Grid.PosToCell(brain) == cell)
-					destroy.Add(brain.gameObject);
-			DestroyAndRecycle(destroy);
-		}
-
-		/// <summary>
 		/// Destroys the element (liquid, solid, or gas) in the cell.
 		/// </summary>
 		/// <param name="cell">The cell to destroy.</param>
 		private void DestroyElement(int cell) {
 			pendingCells.Add(cell);
 			// Register a sim callback to unhighlight the cells when destroyed
-			int index = Game.Instance.callbackManager.Add(new Game.CallbackInfo(delegate () {
+			int index = Game.Instance.callbackManager.Add(new Game.CallbackInfo(delegate {
 				pendingCells.Remove(cell);
 			})).index;
 			SimMessages.ReplaceElement(cell, SimHashes.Vacuum, CellEventLogger.Instance.
@@ -176,7 +200,7 @@ namespace PeterHan.SandboxTools {
 			var destroy = HashSetPool<GameObject, FilteredDestroyTool>.Allocate();
 			for (int i = 0; i < numObjectLayers; i++) {
 				var obj = Grid.Objects[cell, i];
-				if (obj != null && obj.GetComponentSafe<SimCellOccupier>() != null)
+				if (obj != null && obj.TryGetComponent(out SimCellOccupier _))
 					destroy.Add(obj);
 			}
 			DestroyAndRecycle(destroy);
@@ -188,33 +212,19 @@ namespace PeterHan.SandboxTools {
 		/// <param name="cell">The cell to destroy.</param>
 		private void DestroyItems(int cell) {
 			var destroy = HashSetPool<GameObject, FilteredDestroyTool>.Allocate();
-			var pickupable = Grid.Objects[cell, pickupLayer].GetComponentSafe<Pickupable>();
-			if (pickupable != null) {
-				// Linked list of debris in layer 3
+			var go = Grid.Objects[cell, pickupLayer];
+			if (go != null && go.TryGetComponent(out Pickupable pickupable)) {
+				// Linked list of debris in pickupable layer
 				var objectListNode = pickupable.objectLayerListItem;
 				while (objectListNode != null) {
 					var content = objectListNode.gameObject;
 					objectListNode = objectListNode.nextItem;
 					// Ignore Duplicants
-					if (content != null && content.GetComponent<MinionIdentity>() == null) {
-						var cc = content.GetComponent<Clearable>();
-						if (cc != null && cc.isClearable)
-							destroy.Add(content);
-					}
+					if (content != null && !content.TryGetComponent(out Brain _) &&
+							content.TryGetComponent(out Clearable cc) && cc.isClearable)
+						destroy.Add(content);
 				}
 			}
-			DestroyAndRecycle(destroy);
-		}
-
-		/// <summary>
-		/// Destroys plants in the cell.
-		/// </summary>
-		/// <param name="cell">The cell to destroy.</param>
-		private void DestroyPlants(int cell) {
-			var destroy = HashSetPool<GameObject, FilteredDestroyTool>.Allocate();
-			foreach (var crop in Components.Uprootables.Items)
-				if (Grid.PosToCell(crop) == cell)
-					destroy.Add(crop.gameObject);
 			DestroyAndRecycle(destroy);
 		}
 
@@ -229,13 +239,12 @@ namespace PeterHan.SandboxTools {
 		}
 
 		protected override void OnPrefabInit() {
+			var menu = DestroyParameterMenu.Instance;
 			base.OnPrefabInit();
 			affectFoundation = true;
 			var config = gameObject.AddComponent<HoverTextConfiguration>();
 			// Copy settings from the default destroy tool (which are set in a prefab)
-			var hConfig = SandboxDestroyerTool.instance?.gameObject.
-				GetComponentSafe<HoverTextConfiguration>();
-			if (hConfig != null) {
+			if (menu != null && menu.TryGetComponent(out HoverTextConfiguration hConfig)) {
 				// Tool tip and name
 				config.ActionName = hConfig.ActionName;
 				config.ActionStringKey = hConfig.ActionStringKey;
@@ -251,6 +260,7 @@ namespace PeterHan.SandboxTools {
 
 		protected override void OnActivateTool() {
 			var menu = DestroyParameterMenu.Instance;
+			var inst = Game.Instance;
 			base.OnActivateTool();
 			if (menu != null) {
 				if (!menu.HasOptions)
@@ -262,12 +272,24 @@ namespace PeterHan.SandboxTools {
 			sandboxMenu.gameObject.SetActive(true);
 			sandboxMenu.DisableParameters();
 			sandboxMenu.brushRadiusSlider.row.SetActive(true);
+			if (inst != null) {
+				inst.Subscribe((int)GameHashes.EnableOverlay, OnUpdateOverlay);
+				inst.Subscribe((int)GameHashes.OverlayChanged, OnUpdateOverlay);
+			}
+			UpdateOverlay(OverlayScreen.Instance.mode);
 		}
 
 		protected override void OnDeactivateTool(InterfaceTool newTool) {
+			var inst = Game.Instance;
+			var menu = DestroyParameterMenu.Instance;
 			base.OnDeactivateTool(newTool);
-			DestroyParameterMenu.Instance?.HideMenu();
+			if (menu != null)
+				menu.HideMenu();
 			SandboxToolParameterMenu.instance.gameObject.SetActive(false);
+			if (inst != null) {
+				inst.Unsubscribe((int)GameHashes.EnableOverlay);
+				inst.Unsubscribe((int)GameHashes.OverlayChanged);
+			}
 		}
 
 		protected override void OnPaintCell(int cell, int distFromOrigin) {
@@ -288,6 +310,32 @@ namespace PeterHan.SandboxTools {
 							else
 								DestroyBuildings(cell, mode.ID);
 						}
+			}
+		}
+
+		/// <summary>
+		/// Triggered when the game overlay is changed.
+		/// </summary>
+		/// <param name="mode">The new overlay mode.</param>
+		private void OnUpdateOverlay(object mode) {
+			if (mode is HashedString str)
+				UpdateOverlay(str);
+		}
+
+		/// <summary>
+		/// Updates the selected filters to match the current overlay.
+		/// </summary>
+		/// <param name="str"></param>
+		private void UpdateOverlay(HashedString str) {
+			var menu = DestroyParameterMenu.Instance;
+			if (!SandboxToolsPatches.AdvancedFilterEnabled && menu != null && str !=
+					HashedString.Invalid) {
+				// Look in the list for an option matching this mode
+				foreach (var mode in modes)
+					if (mode.OverlayMode == str) {
+						menu.SetTo(mode.ID);
+						break;
+					}
 			}
 		}
 	}

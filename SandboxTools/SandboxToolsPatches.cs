@@ -57,7 +57,9 @@ namespace PeterHan.SandboxTools {
 						// Vacillator's ID is private, we have to make do
 						ok = (name.StartsWith("Prop") && name.Length > 4 && char.IsUpper(
 							name, 4)) || name == MassiveHeatSinkConfig.ID ||
-							name == "GeneShuffler";
+							name == "GeneShuffler" || name == GravitasContainerConfig.ID ||
+							name == GravitasCreatureManipulatorConfig.ID ||
+							name == MegaBrainTankConfig.ID;
 					}
 					return ok;
 				}, null, Def.GetUISprite(Assets.GetPrefab("PropLadder"))));
@@ -74,8 +76,8 @@ namespace PeterHan.SandboxTools {
 			filters.Add(new SearchFilter(SandboxToolsStrings.FILTER_GEYSERS,
 				(entity) => {
 					var prefab = entity as KPrefabID;
-					return prefab != null && (prefab.GetComponent<Geyser>() != null || prefab.
-						PrefabTag.Name == "OilWell");
+					return prefab != null && (prefab.TryGetComponent(out Geyser _) || prefab.
+						PrefabTag.Name == OilWellConfig.ID);
 				}, null, Def.GetUISprite(Assets.GetPrefab("GeyserGeneric_slush_water"))));
 			// Add matching assets
 			var options = ListPool<object, SandboxToolParameterMenu>.Allocate();

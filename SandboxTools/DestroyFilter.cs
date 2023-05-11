@@ -33,20 +33,28 @@ namespace PeterHan.SandboxTools {
 		/// The action to perform when this filter is selected for each destroyed cell.
 		/// </summary>
 		public Action<int> OnPaintCell { get; }
+		
+		/// <summary>
+		/// The overlay mode that will select this filter.
+		/// </summary>
+		public HashedString OverlayMode { get; }
 
 		/// <summary>
 		/// The title of the filter.
 		/// </summary>
 		public string Title { get; }
+		
+		public DestroyFilter(string id, HashedString overlayMode, string title) :
+			this(id, overlayMode, title, null) { }
 
-		public DestroyFilter(string id, string title) : this(id, title, null) { }
-
-		public DestroyFilter(string id, string title, Action<int> onPaintCell) {
+		public DestroyFilter(string id, HashedString overlayMode, string title,
+				Action<int> onPaintCell) {
 			if (string.IsNullOrEmpty(id))
-				throw new ArgumentNullException("id");
+				throw new ArgumentNullException(nameof(id));
 			if (string.IsNullOrEmpty(title))
-				throw new ArgumentNullException("title");
+				throw new ArgumentNullException(nameof(title));
 			ID = id;
+			OverlayMode = overlayMode;
 			Title = title;
 			OnPaintCell = onPaintCell;
 		}

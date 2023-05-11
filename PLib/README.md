@@ -170,7 +170,7 @@ public sealed class ModLoad : KMod.UserMod2
 
 This is how it looks in the mod menu:
 
-![mod menu example screenshot](https://github.com/peterhaneve/ONIMods/raw/PLib4.13/Docs/modoptions.png)
+![mod menu example screenshot](https://raw.githubusercontent.com/peterhaneve/ONIMods/PLib4.13/Docs/modoptions.png)
 
 ## Actions
 
