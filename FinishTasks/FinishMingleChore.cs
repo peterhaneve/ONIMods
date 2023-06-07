@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.Detours;
 using UnityEngine;
 
 using MingleState = GameStateMachine<PeterHan.FinishTasks.FinishMingleChore.States,
@@ -33,7 +32,7 @@ namespace PeterHan.FinishTasks {
 		/// <summary>
 		/// A precondition that checks for a valid mingling cell.
 		/// </summary>
-		private static readonly Precondition HAS_MINGLE_CELL = new Precondition() {
+		private static readonly Precondition HAS_MINGLE_CELL = new Precondition {
 			id = "PeterHan.FinishTasks.HasMingleCell",
 			description = STRINGS.DUPLICANTS.CHORES.PRECONDITIONS.HAS_MINGLE_CELL,
 			fn = HasMingleCell
@@ -105,9 +104,9 @@ namespace PeterHan.FinishTasks {
 					Transition(null, smi => !Grid.IsValidCell(smi.GetMingleCell()));
 				move.MoveTo(smi => smi.GetMingleCell(), mingle);
 				// Will be cancelled when schedule blocks change or the mingle cell is invalid
-				mingle.ToggleAnims("anim_generic_convo_kanim");
-				mingle.PlayAnim("idle", KAnim.PlayMode.Loop).
-					ToggleTag(GameTags.AlwaysConverse);
+				mingle.ToggleAnims("anim_generic_convo_kanim").
+					ToggleTag(GameTags.AlwaysConverse).
+					PlayAnim("idle", KAnim.PlayMode.Loop);
 			}
 		}
 
@@ -117,15 +116,6 @@ namespace PeterHan.FinishTasks {
 		/// </summary>
 		public class StatesInstance : GameStateMachine<States, StatesInstance,
 				FinishMingleChore, object>.GameInstance {
-			private delegate GameObject SetParamValue(States.TargetParameter target,
-				GameObject value, StatesInstance smi);
-
-			/// <summary>
-			/// Gained an optional parameter in the Sweet Dreams update.
-			/// </summary>
-			private static readonly SetParamValue SET_MINGLER = typeof(States.TargetParameter).
-				Detour<SetParamValue>(nameof(States.TargetParameter.Set));
-
 			/// <summary>
 			/// The sensor which detects a location to mingle.
 			/// </summary>
@@ -136,9 +126,10 @@ namespace PeterHan.FinishTasks {
 			/// </summary>
 			private readonly Schedulable schedule;
 
-			public StatesInstance(FinishMingleChore master, GameObject mingler) : base(master) {
+			public StatesInstance(FinishMingleChore master, GameObject mingler) : base(master)
+			{
 				schedule = master.GetComponent<Schedulable>();
-				SET_MINGLER.Invoke(sm.mingler, mingler, smi);
+				sm.mingler.Set(mingler, smi);
 				mingleCellSensor = GetComponent<Sensors>().GetSensor<MingleCellSensor>();
 			}
 

@@ -47,23 +47,13 @@ namespace PeterHan.StockBugFix {
 		internal static int lastValue = int.MaxValue;
 
 		/// <summary>
-		/// Sets the default chore type of food storage depending on the user options. Also
-		/// fixes (DLC) the trait exclusions.
+		/// Runs after the Db is initialized.
 		/// </summary>
 		[PLibMethod(RunAt.AfterDbInit)]
 		internal static void AfterDbInit() {
-			var db = Db.Get();
-			var storeType = db.ChoreGroups?.Storage;
-			var storeFood = db.ChoreTypes?.FoodFetch;
-			var options = StockBugFixOptions.Instance;
-			if (options.StoreFoodChoreType == StoreFoodCategory.Store &&
-					storeType != null && storeFood != null) {
-				// Default is "supply"
-				db.ChoreGroups.Hauling?.choreTypes?.Remove(storeFood);
-				storeType.choreTypes.Add(storeFood);
-				storeFood.groups[0] = storeType;
-			}
-			if (options.FixTraits)
+			FixStoreFood();
+			FixRadiationSickness();
+			if (StockBugFixOptions.Instance.FixTraits)
 				TraitsExclusionPatches.FixTraits();
 		}
 
@@ -85,6 +75,38 @@ namespace PeterHan.StockBugFix {
 					nameof(TranspileUpdateMods)));
 				instance.Patch(typeof(MainMenu).GetMethodSafe("OnSpawn", false), postfix:
 					new HarmonyMethod(typeof(StockBugsPatches), nameof(PostfixMenuSpawn)));
+			}
+		}
+
+		/// <summary>
+		/// Fixes the radiation sickness cooldown trait to prevent endless loops of radiation
+		/// sickness, as it was copy pasted but not modified from zombie spores.
+		/// </summary>
+		private static void FixRadiationSickness() {
+			var ge = TUNING.GERM_EXPOSURE.TYPES;
+			int n = ge.Length;
+			for (int i = 0; i < n; i++) {
+				var exposure = ge[i];
+				if (exposure.germ_id == Klei.AI.RadiationSickness.ID) {
+					exposure.excluded_effects.Add(Klei.AI.RadiationSickness.ID + "recovery");
+					break;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Sets the default chore type of food storage depending on the user options.
+		/// </summary>
+		private static void FixStoreFood() {
+			var db = Db.Get();
+			var storeType = db.ChoreGroups?.Storage;
+			var storeFood = db.ChoreTypes?.FoodFetch;
+			if (StockBugFixOptions.Instance.StoreFoodChoreType == StoreFoodCategory.Store &&
+					storeType != null && storeFood != null) {
+				// Default is "supply"
+				db.ChoreGroups.Hauling?.choreTypes?.Remove(storeFood);
+				storeType.choreTypes.Add(storeFood);
+				storeFood.groups[0] = storeType;
 			}
 		}
 
@@ -176,6 +198,23 @@ namespace PeterHan.StockBugFix {
 			new POptions().RegisterOptions(this, typeof(StockBugFixOptions));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
 			ALREADY_DISPLAYED.Clear();
+		}
+	}
+
+	/// <summary>
+	/// Applied to AggressiveChore.StatesInstance to exclude unbreakable objects from the
+	/// Destructive stress reaction.
+	/// </summary>
+	[HarmonyPatch(typeof(AggressiveChore.StatesInstance), nameof(AggressiveChore.
+		StatesInstance.FindBreakable))]
+	public static class AggressiveChore_StatesInstance_FindBreakable_Patch {
+		/// <summary>
+		/// Applied after FindBreakable runs.
+		/// </summary>
+		internal static void Postfix(AggressiveChore.StatesInstance __instance) {
+			var target = __instance.sm.breakable.Get(__instance);
+			if (target != null && target.TryGetComponent(out BuildingHP hp) && hp.invincible)
+				__instance.StopSM("Chosen building is unbreakable");
 		}
 	}
 
@@ -458,28 +497,17 @@ namespace PeterHan.StockBugFix {
 	}
 
 	/// <summary>
-	/// Applied to MooConfig to make it actually eat Gas Grass again.
+	/// Applied to MinionConfig to make it possible to recover Duplicants from radiation
+	/// sickness.
 	/// </summary>
-	[HarmonyPatch(typeof(MooConfig), nameof(MooConfig.CreateMoo))]
-	public static class MooConfig_CreateMoo_Patch {
+	[HarmonyPatch(typeof(MinionConfig), nameof(MinionConfig.CreatePrefab))]
+	public static class MinionConfig_CreatePrefab_Patch {
 		/// <summary>
-		/// Applied after CreateMoo runs.
+		/// Applied after CreatePrefab runs.
 		/// </summary>
 		internal static void Postfix(GameObject __result) {
-			var monitor = __result.GetDef<CreatureCalorieMonitor.Def>();
-			Diet diet;
-			if (monitor != null && (diet = monitor.diet) != null) {
-				var infos = diet.infos;
-				int n = infos.Length;
-				for (int i = 0; i < n; i++) {
-					// Make a doppelganger with the same info except eat plants directly = true
-					var info = infos[i];
-					diet.infos[i] = new Diet.Info(info.consumedTags, info.producedElement,
-						info.caloriesPerKg, info.producedConversionRate, null, 0.0f,
-						info.produceSolidTile, true);
-				}
-				diet.eatsPlantsDirectly = true;
-			}
+			if (DlcManager.FeatureRadiationEnabled())
+				__result.AddOrGet<RadiationRecoveryFix>();
 		}
 	}
 

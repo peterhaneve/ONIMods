@@ -48,7 +48,8 @@ namespace PeterHan.ThermalPlate {
 			Element element2;
 			if (def != null)
 				area2 = def.WidthInCells * def.HeightInCells;
-			if (thatElement != null && (element2 = thatElement.Element) != null && area2 > 0) {
+			if (thatElement != null && (element2 = thatElement.Element) != null && area2 > 0 &&
+					element2.thermalConductivity != 0.0f) {
 				if (!temperatures.TryGetValue(newBuilding, out float temp2))
 					temp2 = thatElement.Temperature;
 				// No /5 factor since we are transferring building to building, it cancels out
@@ -142,7 +143,8 @@ namespace PeterHan.ThermalPlate {
 			var pe = building.primaryElement;
 			var def = building.Def;
 			Element element;
-			if (pe != null && def != null && (element = pe.Element) != null) {
+			if (pe != null && def != null && (element = pe.Element) != null && element.
+					thermalConductivity != 0.0f) {
 				// TSPs are 1x1, the area should never be zero
 				float temp = pe.Temperature;
 				float c1 = pe.Mass * element.specificHeatCapacity / (def.WidthInCells * def.

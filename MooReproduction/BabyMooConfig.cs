@@ -46,7 +46,7 @@ namespace PeterHan.MooReproduction {
 			kbac.Offset = new Vector3(X, 0f, 0f);
 			kbac.animScale *= 0.5f;
 			var occupyArea = prefab.AddOrGet<OccupyArea>();
-			occupyArea.OccupiedCellsOffsets = EntityTemplates.GenerateOffsets(WIDTH, HEIGHT);
+			occupyArea.SetCellOffsets(EntityTemplates.GenerateOffsets(WIDTH, HEIGHT));
 			EntityTemplates.ExtendEntityToBeingABaby(prefab, MooConfig.ID);
 			// Reduce to 1kg meat for baby
 			var butcherable = prefab.GetComponent<Butcherable>();

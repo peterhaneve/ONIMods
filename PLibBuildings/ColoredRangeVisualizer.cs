@@ -249,7 +249,7 @@ namespace PeterHan.PLib.Buildings {
 			public void Destroy() {
 				if (Controller != null) {
 					Controller.destroyOnAnimComplete = true;
-					Controller.Play(POST_ANIM, KAnim.PlayMode.Once, 1f, 0f);
+					Controller.Play(POST_ANIM);
 					Controller = null;
 				}
 			}
