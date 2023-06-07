@@ -73,6 +73,7 @@ namespace PeterHan.FastTrack {
 				UIPatches.FormatStringPatches.Init();
 			if (options.AllocOpts)
 				UIPatches.DescriptorAllocPatches.Init();
+			UIPatches.DescriptorSorter.CreateInstance();
 			if (options.ChoreOpts)
 				GamePatches.ChoreComparator.Init();
 			// Force feed our smaller unknown sprite to the sprite list

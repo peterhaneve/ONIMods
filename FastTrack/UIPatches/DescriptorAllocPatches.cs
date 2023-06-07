@@ -210,7 +210,6 @@ namespace PeterHan.FastTrack.UIPatches {
 			plantRequirements.SetupDescriptor(PLANTERSIDESCREEN.PLANTREQUIREMENTS,
 				PLANTERSIDESCREEN.TOOLTIPS.PLANTREQUIREMENTS, Descriptor.DescriptorType.
 				Requirement);
-			DescriptorSorter.CreateInstance();
 		}
 
 		/// <summary>

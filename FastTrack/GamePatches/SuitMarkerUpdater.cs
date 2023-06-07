@@ -18,7 +18,6 @@
 
 using HarmonyLib;
 using System.Collections.Generic;
-using STRINGS;
 using UnityEngine;
 
 namespace PeterHan.FastTrack.GamePatches {
@@ -58,11 +57,13 @@ namespace PeterHan.FastTrack.GamePatches {
 				SuitLocker target = null;
 				for (int i = 0; i < n && bestScore < 1.0f; i++) {
 					var locker = lockers[i];
-					float score = TryGetStoredOutfit(locker, out var suit) ?
-						GetSuitScore(suit) : -1.0f;
-					if (score >= 0.0f && (target == null || score > bestScore)) {
-						target = locker;
-						bestScore = score;
+					if (locker != null) {
+						float score = TryGetStoredOutfit(locker, out var suit) ?
+							GetSuitScore(suit) : -1.0f;
+						if (score >= 0.0f && (target == null || score > bestScore)) {
+							target = locker;
+							bestScore = score;
+						}
 					}
 				}
 				if (target != null) {
@@ -139,7 +140,7 @@ namespace PeterHan.FastTrack.GamePatches {
 					SuitLocker target = null;
 					for (int i = 0; i < n; i++) {
 						var locker = lockers[i];
-						if (locker.CanDropOffSuit()) {
+						if (locker != null && locker.CanDropOffSuit()) {
 							target = locker;
 							break;
 						}
