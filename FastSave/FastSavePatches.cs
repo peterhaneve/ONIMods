@@ -22,6 +22,7 @@ using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -41,50 +42,47 @@ namespace PeterHan.FastSave {
 		private static System.Collections.IEnumerator TimelapseCoroutine(RenderTexture rt,
 				string savePath, int worldID, bool preview) {
 			int width = rt.width, height = rt.height;
-			if (width > 0 && height > 0) {
-				bool needsFallback = true;
-				if (SystemInfo.supportsAsyncGPUReadback) {
-					var request = AsyncGPUReadback.Request(rt, 0, TextureFormat.RGBA32);
-					// Wait for texture to be read back from the GPU
-					while (!request.done)
-						yield return null;
-					if (!request.hasError) {
-						byte[] rawARGB = request.GetData<byte>().ToArray();
-						if (rawARGB != null) {
-							needsFallback = false;
-							BackgroundTimelapser.Instance.Start(savePath,
-								TextureToPNG(rawARGB, width, height),
-								 worldID, preview);
-						}
+			bool needsFallback = true;
+			if (SystemInfo.supportsAsyncGPUReadback) {
+				var request = AsyncGPUReadback.Request(rt, 0, TextureFormat.RGBA32);
+				// Wait for texture to be read back from the GPU
+				while (!request.done)
+					yield return null;
+				needsFallback = request.hasError;
+				if (needsFallback)
+					PUtil.LogWarning("Error saving background timelapse image!");
+				else
+					using (var rawARGB = request.GetData<byte>()) {
+						BackgroundTimelapser.Instance.Start(savePath, TextureToPNG(rawARGB,
+							width, height), worldID, preview);
 					}
-				}
-				if (needsFallback) {
-					// Read synchronously.
-					var oldRT = RenderTexture.active;
-					RenderTexture.active = rt;
-					Texture2D texture2D = new Texture2D(rt.width, rt.height,
-						TextureFormat.ARGB32, mipChain: false);
-					texture2D.ReadPixels( new Rect(0f, 0f, rt.width, rt.height), 0, 0);
-					texture2D.Apply();
-					byte[] bytes = texture2D.EncodeToPNG();
-					UnityEngine.Object.Destroy(texture2D);
-					RenderTexture.active = oldRT;
-					if (bytes != null)
-						BackgroundTimelapser.Instance.Start(savePath, bytes,
-							worldID, preview);
-				}
+			}
+			if (needsFallback) {
+				// Read synchronously if GPU readback fails
+				var oldRT = RenderTexture.active;
+				RenderTexture.active = rt;
+				var texture2D = new Texture2D(width, height, TextureFormat.ARGB32,
+					mipChain: false);
+				texture2D.ReadPixels(new Rect(0f, 0f, width, height), 0, 0);
+				texture2D.Apply();
+				RenderTexture.active = oldRT;
+				byte[] rawData = texture2D.EncodeToPNG();
+				Object.Destroy(texture2D);
+				if (rawData != null)
+					BackgroundTimelapser.Instance.Start(savePath, rawData, worldID,
+						preview);
 			}
 		}
-
+		
 		/// <summary>
 		/// Converts raw image data in ARGB32 format (the format used by the game for the
 		/// camera render texture) to PNG image data.
 		/// </summary>
-		/// <param name="rawData">The raw texture data.</param>
+		/// <param name="rawData">The raw texture data as a native array.</param>
 		/// <param name="width">The image width.</param>
 		/// <param name="height">The image height.</param>
 		/// <returns>The image encoded as PNG.</returns>
-		private static byte[] TextureToPNG(byte[] rawData, int width, int height) {
+		private static byte[] TextureToPNG(NativeArray<byte> rawData, int width, int height) {
 			// NOTE: The game uses ARGB32 as the RenderTexture format, but for some reason
 			// the returned data is RGBA32...
 			var pngTexture = new Texture2D(width, height, TextureFormat.RGBA32, false);
@@ -302,8 +300,9 @@ namespace PeterHan.FastSave {
 					// Center camera on the printing pod
 					RenderTexture.active = rt;
 					inst.RenderForTimelapser(ref rt);
-					inst.StartCoroutine(TimelapseCoroutine(rt, ___previewSaveGamePath,
-						world_id, ___previewScreenshot));
+					if (rt.width > 0 && rt.height > 0)
+						inst.StartCoroutine(TimelapseCoroutine(rt, ___previewSaveGamePath,
+							world_id, ___previewScreenshot));
 					inst.OrthographicSize = ___camSize;
 					inst.SetPosition(___camPosition);
 					RenderTexture.active = oldRT;
