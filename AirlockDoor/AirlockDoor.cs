@@ -292,8 +292,7 @@ namespace PeterHan.AirlockDoor {
 				Grid.HasDoor[cell] = true;
 				Pathfinding.Instance.AddDirtyNavGridCell(cell);
 			}
-			var kac = GetComponent<KAnimControllerBase>();
-			if (kac != null)
+			if (TryGetComponent(out KAnimControllerBase kac))
 				// Stock mechanized airlocks are 5.0f powered
 				kac.PlaySpeedMultiplier = 4.0f;
 			// Layer is ignored if you use infront

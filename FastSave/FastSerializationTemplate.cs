@@ -43,10 +43,11 @@ namespace PeterHan.FastSave {
 		private static MemberSerialization GetSerializationConfig(Type type) {
 			var result = MemberSerialization.Invalid;
 			// Scan through base classes as well
-			while (type != typeof(object)) {
+			while (type != typeof(object) && type != null) {
 				object[] attributes = type.GetCustomAttributes(typeof(SerializationConfig),
 					false);
-				for (int i = 0; i < attributes.Length; i++)
+				int n = attributes.Length;
+				for (int i = 0; i < n; i++)
 					if (attributes[i] is SerializationConfig sc) {
 						// Check for conflicting attributes removed, it really should only
 						// appear once per class
@@ -69,13 +70,13 @@ namespace PeterHan.FastSave {
 			var typeInfo = Helper.EncodeSerializationType(type);
 			writer.Write((byte)typeInfo);
 			if (type.IsGenericType) {
-				var type_arguments = type.GetGenericArguments();
-				int n = type_arguments.Length;
+				var typeArguments = type.GetGenericArguments();
+				int n = typeArguments.Length;
 				if (Helper.IsUserDefinedType(typeInfo))
 					writer.WriteKleiString(type.GetKTypeString());
 				writer.Write((byte)n);
 				for (int i = 0; i < n; i++)
-					WriteType(writer, type_arguments[i]);
+					WriteType(writer, typeArguments[i]);
 			} else if (Helper.IsArray(typeInfo))
 				WriteType(writer, type.GetElementType());
 			else if (type.IsEnum || Helper.IsUserDefinedType(typeInfo))
@@ -85,13 +86,8 @@ namespace PeterHan.FastSave {
 		/// <summary>
 		/// The lazily initialized Klei serialization template.
 		/// </summary>
-		public SerializationTemplate KleiTemplate {
-			get {
-				if (kleiTemplate == null)
-					kleiTemplate = new SerializationTemplate(targetType);
-				return kleiTemplate;
-			}
-		}
+		public SerializationTemplate KleiTemplate => kleiTemplate ?? (kleiTemplate =
+			new SerializationTemplate(targetType));
 
 		/// <summary>
 		/// If non-null, invoked to write custom serialization data from the supplied object.
@@ -138,18 +134,24 @@ namespace PeterHan.FastSave {
 				out onSerialized, out customSerialize);
 			// Add fields as set by the serialization config
 			var sc = GetSerializationConfig(type);
-			if (sc == MemberSerialization.OptIn)
-				while (type != typeof(object)) {
+			switch (sc) {
+			case MemberSerialization.OptIn:
+				while (type != typeof(object) && type != null) {
 					AddOptInFields(type);
 					AddOptInProperties(type);
 					type = type.BaseType;
 				}
-			else if (sc == MemberSerialization.OptOut)
-				while (type != typeof(object)) {
+				break;
+			case MemberSerialization.OptOut:
+				while (type != typeof(object) && type != null) {
 					AddPublicFields(type);
 					AddPublicProperties(type);
 					type = type.BaseType;
 				}
+				break;
+			default:
+				break;
+			}
 		}
 
 		/// <summary>
@@ -160,7 +162,7 @@ namespace PeterHan.FastSave {
 		private void AddOptInFields(Type type) {
 			foreach (var field in type.GetFields(MEMBER_FLAGS | BindingFlags.NonPublic)) {
 				object[] se = field.GetCustomAttributes(typeof(Serialize), false);
-				if (se != null && se.Length > 0)
+				if (se.Length > 0)
 					AddValidField(field);
 			}
 		}
@@ -180,7 +182,7 @@ namespace PeterHan.FastSave {
 		/// <param name="field">The field to be serialized.</param>
 		private void AddValidField(FieldInfo field) {
 			object[] ns = field.GetCustomAttributes(typeof(NonSerializedAttribute), false);
-			if (ns == null || ns.Length == 0)
+			if (ns.Length == 0)
 				serializableFields.Add(field.Name, new DeserializationFieldInfo(Manager.
 					GetTypeInfo(field.FieldType), field));
 		}
@@ -194,7 +196,7 @@ namespace PeterHan.FastSave {
 			foreach (var property in type.GetProperties(MEMBER_FLAGS | BindingFlags.NonPublic))
 			{
 				object[] se = property.GetCustomAttributes(typeof(Serialize), false);
-				if (se != null && se.Length > 0)
+				if (se.Length > 0)
 					AddValidProperty(property);
 			}
 		}
@@ -215,7 +217,7 @@ namespace PeterHan.FastSave {
 		private void AddValidProperty(PropertyInfo property) {
 			object[] ns = property.GetCustomAttributes(typeof(NonSerializedAttribute), false);
 			// Ignore indexed properties
-			if (property.GetIndexParameters().Length == 0 && (ns == null || ns.Length == 0) &&
+			if (property.GetIndexParameters().Length == 0 && ns.Length == 0 &&
 					property.GetSetMethod() != null)
 				serializableProperties.Add(property.Name, new DeserializationPropertyInfo(
 					Manager.GetTypeInfo(property.PropertyType), property));
@@ -275,11 +277,12 @@ namespace PeterHan.FastSave {
 		}
 
 		public override string ToString() {
+			// Inefficient string concat, but only used in the debugger
 			string result = "Template: " + targetType.FullName + "\n";
 			foreach (var f in serializableFields)
-				result = result + "\t" + f.ToString() + "\n";
+				result = result + "\t" + f + "\n";
 			foreach (var p in serializableProperties)
-				result = result + "\t" + p.ToString() + "\n";
+				result = result + "\t" + p + "\n";
 			return result;
 		}
 	}

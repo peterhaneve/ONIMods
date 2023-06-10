@@ -59,16 +59,16 @@ namespace PeterHan.FastSave {
 		/// The key type used for the lookup dictionary. Like KeyValuePair but has a useful
 		/// GetHashCode and Equals.
 		/// </summary>
-		private struct PairHashKey {
+		private readonly struct PairHashKey : IEquatable<PairHashKey> {
 			/// <summary>
 			/// The pair's key type.
 			/// </summary>
-			public readonly Type keyType;
+			private readonly Type keyType;
 
 			/// <summary>
 			/// The pair's value type.
 			/// </summary>
-			public readonly Type valueType;
+			private readonly Type valueType;
 
 			public PairHashKey(Type keyType, Type valueType) {
 				this.keyType = keyType;
@@ -76,8 +76,11 @@ namespace PeterHan.FastSave {
 			}
 
 			public override bool Equals(object obj) {
-				return obj is PairHashKey other && other.keyType == keyType && other.
-					valueType == valueType;
+				return obj is PairHashKey other && Equals(other);
+			}
+			
+			public bool Equals(PairHashKey other) {
+				return other.keyType == keyType && other.valueType == valueType;
 			}
 
 			public override int GetHashCode() {

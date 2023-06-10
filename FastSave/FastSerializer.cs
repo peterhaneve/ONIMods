@@ -99,9 +99,9 @@ namespace PeterHan.FastSave {
 				writer.Write((int)data);
 				break;
 			case SerializationTypeInfo.Vector2I:
-				if (data is Vector2I vector2i) {
-					writer.Write(vector2i.x);
-					writer.Write(vector2i.y);
+				if (data is Vector2I vec) {
+					writer.Write(vec.x);
+					writer.Write(vec.y);
 				} else {
 					writer.Write(0);
 					writer.Write(0);
@@ -260,57 +260,55 @@ namespace PeterHan.FastSave {
 		private static void WriteArrayPOD(BinaryWriter writer, TypeInfo elementType,
 				Array array) {
 			int n = array.Length;
-			sbyte[] arraySByte; short[] arrayShort; ushort[] arrayUShort; int[] arrayInt;
-			uint[] arrayUInt; long[] arrayLong; ulong[] arrayULong; float[] arrayFloat;
-			double[] arrayDouble;
 			switch (elementType.info) {
 			case SerializationTypeInfo.SByte:
-				arraySByte = array as sbyte[];
-				for (int i = 0; i < n; i++)
-					writer.Write(arraySByte[i]);
+				if (array is sbyte[] arraySByte)
+					for (int i = 0; i < n; i++)
+						writer.Write(arraySByte[i]);
 				break;
 			case SerializationTypeInfo.Byte:
-				writer.Write(array as byte[]);
+				if (array is byte[] arrayByte)
+					writer.Write(arrayByte);
 				break;
 			case SerializationTypeInfo.Int16:
-				arrayShort = array as short[];
-				for (int i = 0; i < n; i++)
-					writer.Write(arrayShort[i]);
+				if (array is short[] arrayShort)
+					for (int i = 0; i < n; i++)
+						writer.Write(arrayShort[i]);
 				break;
 			case SerializationTypeInfo.UInt16:
-				arrayUShort = array as ushort[];
-				for (int i = 0; i < n; i++)
-					writer.Write(arrayUShort[i]);
+				if (array is ushort[] arrayUShort)
+					for (int i = 0; i < n; i++)
+						writer.Write(arrayUShort[i]);
 				break;
 			case SerializationTypeInfo.Int32:
-				arrayInt = array as int[];
-				for (int i = 0; i < n; i++)
-					writer.Write(arrayInt[i]);
+				if (array is int[] arrayInt)
+					for (int i = 0; i < n; i++)
+						writer.Write(arrayInt[i]);
 				break;
 			case SerializationTypeInfo.UInt32:
-				arrayUInt = array as uint[];
-				for (int i = 0; i < n; i++)
-					writer.Write(arrayUInt[i]);
+				if (array is uint[] arrayUInt)
+					for (int i = 0; i < n; i++)
+						writer.Write(arrayUInt[i]);
 				break;
 			case SerializationTypeInfo.Int64:
-				arrayLong = array as long[];
-				for (int i = 0; i < n; i++)
-					writer.Write(arrayLong[n]);
+				if (array is long[] arrayLong)
+					for (int i = 0; i < n; i++)
+						writer.Write(arrayLong[n]);
 				break;
 			case SerializationTypeInfo.UInt64:
-				arrayULong = array as ulong[];
-				for (int i = 0; i < n; i++)
-					writer.Write(arrayULong[i]);
+				if (array is ulong[] arrayULong)
+					for (int i = 0; i < n; i++)
+						writer.Write(arrayULong[i]);
 				break;
 			case SerializationTypeInfo.Single:
-				arrayFloat = array as float[];
-				for (int i = 0; i < n; i++)
-					writer.WriteSingleFast(arrayFloat[i]);
+				if (array is float[] arrayFloat)
+					for (int i = 0; i < n; i++)
+						writer.WriteSingleFast(arrayFloat[i]);
 				break;
 			case SerializationTypeInfo.Double:
-				arrayDouble = array as double[];
-				for (int i = 0; i < n; i++)
-					writer.Write(arrayDouble[i]);
+				if (array is double[] arrayDouble)
+					for (int i = 0; i < n; i++)
+						writer.Write(arrayDouble[i]);
 				break;
 			default:
 				throw new ArgumentException("Unknown array element type: " + elementType.info);

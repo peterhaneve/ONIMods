@@ -62,7 +62,8 @@ namespace PeterHan.FastSave {
 		/// <param name="destination">The location where the data will be stored.</param>
 		/// <param name="elementType">The element type of the array.</param>
 		/// <param name="reader">The stream containing serialized data.</param>
-		private static void ReadArrayFast(Array destination, TypeInfo elementType, IReader reader) {
+		private static void ReadArrayFast(Array destination, TypeInfo elementType,
+				IReader reader) {
 			int length = destination.Length, bytesToCopy;
 			switch (elementType.info) {
 			case SerializationTypeInfo.SByte:
@@ -106,10 +107,7 @@ namespace PeterHan.FastSave {
 				n = reader.ReadInt32();
 				if (n >= 0) {
 					var itemType = typeInfo.type;
-					if (baseValue == null)
-						result = ConstructorDelegator.CreateInstance(itemType);
-					else
-						result = baseValue;
+					result = baseValue ?? ConstructorDelegator.CreateInstance(itemType);
 					FastSerializationManager.GetFastDeserializationMapping(itemType).
 						Deserialize(result, reader);
 				}
@@ -189,8 +187,10 @@ namespace PeterHan.FastSave {
 					var values = ListPool<object, FastDeserializationMapping>.Allocate();
 					for (int i = 0; i < n; i++)
 						values.Add(ReadValue(valueType, reader, null));
-					for (int i = 0; i < n; i++)
-						dict.Add(ReadValue(keyType, reader, null), values[i]);
+					for (int i = 0; i < n; i++) {
+						var value = ReadValue(keyType, reader, null);
+						dict?.Add(value, values[i]);
+					}
 					values.Recycle();
 				}
 				break;
@@ -276,7 +276,6 @@ namespace PeterHan.FastSave {
 		/// <param name="typeInfo">The type of the element to be skipped.</param>
 		/// <param name="reader">The stream containing serialized data.</param>
 		protected void SkipValue(SerializationTypeInfo typeInfo, IReader reader) {
-			int length;
 			switch (typeInfo) {
 			case SerializationTypeInfo.SByte:
 			case SerializationTypeInfo.Byte:
@@ -301,7 +300,7 @@ namespace PeterHan.FastSave {
 				reader.SkipBytes(8);
 				return;
 			case SerializationTypeInfo.String:
-				length = reader.ReadInt32();
+				int length = reader.ReadInt32();
 				if (length > 0)
 					reader.SkipBytes(length);
 				return;

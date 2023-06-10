@@ -55,98 +55,11 @@ namespace PeterHan.FastSave {
 		/// The singleton instance of this class.
 		/// </summary>
 		public static BackgroundAutosave Instance { get; } = new BackgroundAutosave();
-
-		/// <summary>
-		/// Enables save/load and removes the warning about quitting.
-		/// </summary>
-		internal static void EnableSaving() {
-			var instance = PauseScreen.Instance;
-			var buttons = (instance == null) ? null : BUTTONS.Get(instance);
-			if (buttons != null && buttons.Count > 0) {
-				foreach (var button in buttons) {
-					// Enable "save", "save as", "load", "quit to menu"
-					button.isEnabled = true;
-					button.toolTip = null;
-				}
-				instance.RefreshButtons();
-			}
-		}
-
-		/// <summary>
-		/// Disables save/load and adds a warning about quitting.
-		/// </summary>
-		internal static void DisableSaving() {
-			var instance = PauseScreen.Instance;
-			var buttons = (instance == null) ? null : BUTTONS.Get(instance);
-			if (buttons != null && buttons.Count > 0) {
-				foreach (var button in buttons) {
-					string text = button.text;
-					// Disable "save", "save as", "load", "quit to menu"
-					if (text == PAUSE_SCREEN.SAVE || text == PAUSE_SCREEN.SAVEAS || text ==
-							PAUSE_SCREEN.LOAD || text == PAUSE_SCREEN.QUIT) {
-						button.isEnabled = false;
-						button.toolTip = FastSaveStrings.AUTOSAVE_PROGRESS;
-					}
-					if (text == PAUSE_SCREEN.DESKTOPQUIT)
-						button.toolTip = FastSaveStrings.DESKTOP_QUIT_WARNING;
-				}
-				instance.RefreshButtons();
-			}
-		}
-
-		/// <summary>
-		/// Synchronizes starting and stopping threads.
-		/// </summary>
-		private readonly object startLock;
-
-		/// <summary>
-		/// The current save status.
-		/// </summary>
-		private SaveStatus status;
-
-		private BackgroundAutosave() {
-			startLock = new object();
-			status = SaveStatus.NotStarted;
-		}
-
-		/// <summary>
-		/// Checks the autosave status on the UI thread.
-		/// </summary>
-		/// <returns>true if save completed, or false otherwise.</returns>
-		public bool CheckSaveStatus() {
-			var status = this.status;
-			bool done = false;
-			switch (status) {
-			case SaveStatus.Done:
-				done = true;
-				break;
-			case SaveStatus.Failed:
-				// Generic error
-				done = true;
-				PUIElements.ShowMessageDialog(GameScreenManager.Instance.ssOverlayCanvas.
-					gameObject, string.Format(STRINGS.UI.CRASHSCREEN.SAVEFAILED,
-					FastSaveStrings.AUTOSAVE_FAILED));
-				break;
-			case SaveStatus.IOError:
-				// I/O error, raise a dialog
-				done = true;
-				PUIElements.ShowMessageDialog(GameScreenManager.Instance.ssOverlayCanvas.
-					gameObject, string.Format(STRINGS.UI.CRASHSCREEN.SAVEFAILED,
-					FastSaveStrings.IO_ERROR));
-				break;
-			case SaveStatus.InProgress:
-				break;
-			default:
-				// NotStarted, time to throw
-				throw new InvalidOperationException("Save not started");
-			}
-			return done;
-		}
-
+		
 		/// <summary>
 		/// Cleans up old autosaves.
 		/// </summary>
-		private void CleanAutosaves() {
+		private static void CleanAutosaves() {
 			var inst = SaveLoader.Instance;
 			if (!Klei.GenericGameSettings.instance.keepAllAutosaves && inst != null) {
 				string autoSavePath = GetActiveAutoSavePath(), colonyID = inst.GameInfo.
@@ -182,6 +95,93 @@ namespace PeterHan.FastSave {
 				}
 				autoSaveFiles.Recycle();
 			}
+		}
+		
+		/// <summary>
+		/// Disables save/load and adds a warning about quitting.
+		/// </summary>
+		internal static void DisableSaving() {
+			var instance = PauseScreen.Instance;
+			var buttons = (instance == null) ? null : BUTTONS.Get(instance);
+			if (buttons != null && buttons.Count > 0) {
+				foreach (var button in buttons) {
+					string text = button.text;
+					// Disable "save", "save as", "load", "quit to menu"
+					if (text == PAUSE_SCREEN.SAVE || text == PAUSE_SCREEN.SAVEAS || text ==
+							PAUSE_SCREEN.LOAD || text == PAUSE_SCREEN.QUIT) {
+						button.isEnabled = false;
+						button.toolTip = FastSaveStrings.AUTOSAVE_PROGRESS;
+					}
+					if (text == PAUSE_SCREEN.DESKTOPQUIT)
+						button.toolTip = FastSaveStrings.DESKTOP_QUIT_WARNING;
+				}
+				instance.RefreshButtons();
+			}
+		}
+
+		/// <summary>
+		/// Enables save/load and removes the warning about quitting.
+		/// </summary>
+		internal static void EnableSaving() {
+			var instance = PauseScreen.Instance;
+			var buttons = (instance == null) ? null : BUTTONS.Get(instance);
+			if (buttons != null && buttons.Count > 0) {
+				foreach (var button in buttons) {
+					// Enable "save", "save as", "load", "quit to menu"
+					button.isEnabled = true;
+					button.toolTip = null;
+				}
+				instance.RefreshButtons();
+			}
+		}
+
+		/// <summary>
+		/// Synchronizes starting and stopping threads.
+		/// </summary>
+		private readonly object startLock;
+
+		/// <summary>
+		/// The current save status.
+		/// </summary>
+		private SaveStatus status;
+
+		private BackgroundAutosave() {
+			startLock = new object();
+			status = SaveStatus.NotStarted;
+		}
+
+		/// <summary>
+		/// Checks the autosave status on the UI thread.
+		/// </summary>
+		/// <returns>true if save completed, or false otherwise.</returns>
+		public bool CheckSaveStatus() {
+			bool done = false;
+			switch (status) {
+			case SaveStatus.Done:
+				done = true;
+				break;
+			case SaveStatus.Failed:
+				// Generic error
+				done = true;
+				PUIElements.ShowMessageDialog(GameScreenManager.Instance.ssOverlayCanvas.
+					gameObject, string.Format(STRINGS.UI.CRASHSCREEN.SAVEFAILED,
+					FastSaveStrings.AUTOSAVE_FAILED));
+				break;
+			case SaveStatus.IOError:
+				// I/O error, raise a dialog
+				done = true;
+				PUIElements.ShowMessageDialog(GameScreenManager.Instance.ssOverlayCanvas.
+					gameObject, string.Format(STRINGS.UI.CRASHSCREEN.SAVEFAILED,
+					FastSaveStrings.IO_ERROR));
+				break;
+			case SaveStatus.InProgress:
+				break;
+			case SaveStatus.NotStarted:
+			default:
+				// NotStarted, time to throw
+				throw new InvalidOperationException("Save not started");
+			}
+			return done;
 		}
 
 		/// <summary>
@@ -230,7 +230,9 @@ namespace PeterHan.FastSave {
 				try {
 					// Cannot throw during a finally, or it will discard the original exception
 					data.Dispose();
-				} catch { }
+				} catch {
+					// Ignored
+				}
 			}
 		}
 
@@ -245,7 +247,7 @@ namespace PeterHan.FastSave {
 			if (flag) {
 				result = SaveLoader.GetAutoSavePrefix();
 			} else {
-				string root = Path.GetDirectoryName(filename);
+				string root = Path.GetDirectoryName(filename) ?? filename;
 				result = Path.Combine(root, "auto_save");
 			}
 			return result;
@@ -272,7 +274,9 @@ namespace PeterHan.FastSave {
 				if (COMPRESS_SAVE_DATA != null)
 					try {
 						compress = COMPRESS_SAVE_DATA.Get(inst);
-					} catch { }
+					} catch {
+						// Ignored
+					}
 				// Keep this part on the foreground
 				try {
 					SAVE.Invoke(inst, new BinaryWriter(buffer));
@@ -334,9 +338,9 @@ namespace PeterHan.FastSave {
 
 		public BackgroundSaveData(MemoryStream stream, bool compress, string filename) {
 			if (string.IsNullOrEmpty(filename))
-				throw new ArgumentNullException("filename");
+				throw new ArgumentNullException(nameof(filename));
 			Compress = compress;
-			Stream = stream ?? throw new ArgumentNullException("stream");
+			Stream = stream ?? throw new ArgumentNullException(nameof(stream));
 			FileName = filename;
 		}
 

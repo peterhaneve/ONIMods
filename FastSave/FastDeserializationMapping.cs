@@ -53,11 +53,11 @@ namespace PeterHan.FastSave {
 				FastDeserializationInfo dinfo;
 				string name = memberInfo.name;
 				var typeInfo = memberInfo.typeInfo;
-				if (fields.TryGetValue(name, out DeserializationFieldInfo outField) &&
-						typeInfo.Equals(outField.targetType))
+				if (fields.TryGetValue(name, out var outField) && typeInfo.Equals(outField.
+						targetType))
 					dinfo = outField;
-				else if (properties.TryGetValue(name, out DeserializationPropertyInfo
-						outProperty) && typeInfo.Equals(outProperty.targetType))
+				else if (properties.TryGetValue(name, out var outProperty) && typeInfo.Equals(
+						outProperty.targetType))
 					dinfo = outProperty;
 				else
 					dinfo = new FastDeserializationInfo(false, typeInfo);

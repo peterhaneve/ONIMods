@@ -41,8 +41,9 @@ namespace PeterHan.AirlockDoor {
 		/// <returns>true if the cell is solid and not inside an Airlock Door, or false
 		/// otherwise.</returns>
 		private static bool SolidAndNotAirlock(ref Grid.BuildFlagsSolidIndexer _, int cell) {
-			return Grid.Solid[cell] && (!Grid.IsValidCell(cell) || Grid.Objects[cell,
-				BUILDING_LAYER].GetComponentSafe<AirlockDoor>() == null);
+			GameObject go;
+			return Grid.Solid[cell] && (!Grid.IsValidCell(cell) || (go = Grid.Objects[cell,
+				BUILDING_LAYER]) == null || !go.TryGetComponent(out AirlockDoor _));
 		}
 
 		public override void OnLoad(Harmony harmony) {
@@ -68,7 +69,7 @@ namespace PeterHan.AirlockDoor {
 					ref bool ___waitForFetchesBeforeDigging) {
 				// Does it have an airlock door?
 				if (__instance.TryGetComponent(out Building building) && building.Def.
-						BuildingComplete.GetComponent<AirlockDoor>() != null)
+						BuildingComplete.TryGetComponent(out AirlockDoor _))
 					___waitForFetchesBeforeDigging = true;
 			}
 		}

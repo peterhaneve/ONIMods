@@ -50,6 +50,8 @@ namespace PeterHan.FastSave {
 			if (property == null)
 				throw new ArgumentNullException(nameof(property));
 			Type pt = property.PropertyType, tt = property.DeclaringType;
+			if (tt == null || pt == null)
+				throw new ArgumentException("Property has no declaring type");
 			var getProperty = property.GetGetMethod(true);
 			var getter = new DynamicMethod("Get_" + property.Name, typeof(object), new Type[] {
 				typeof(object)
@@ -75,6 +77,8 @@ namespace PeterHan.FastSave {
 			if (property == null)
 				throw new ArgumentNullException(nameof(property));
 			Type pt = property.PropertyType, tt = property.DeclaringType;
+			if (tt == null || pt == null)
+				throw new ArgumentException("Property has no declaring type");
 			var setProperty = property.GetSetMethod(true);
 			var setter = new DynamicMethod("Set_" + property.Name, null, new Type[] {
 				typeof(object), typeof(object)
@@ -116,10 +120,10 @@ namespace PeterHan.FastSave {
 				setValue = GenerateSetter(property);
 				if (getValue == null)
 					throw new ArgumentException(string.Format("Cannot create property getter: {0}.{1}",
-						property.DeclaringType.FullName, property.Name));
+						property.DeclaringType?.FullName, property.Name));
 				if (setValue == null)
 					throw new ArgumentException(string.Format("Cannot create property setter: {0}.{1}",
-						property.DeclaringType.FullName, property.Name));
+						property.DeclaringType?.FullName, property.Name));
 			}
 		}
 

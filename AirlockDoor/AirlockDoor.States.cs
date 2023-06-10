@@ -18,6 +18,7 @@
 
 using PeterHan.PLib.Core;
 using System;
+using System.Reflection;
 using UnityEngine;
 using PeterHan.PLib.Detours;
 
@@ -342,6 +343,29 @@ namespace PeterHan.AirlockDoor {
 		/// The instance parameters of this state machine.
 		/// </summary>
 		public sealed class Instance : States.GameInstance {
+			private delegate void TryOffsetNew(Pickupable instance, CellOffset offset);
+
+			private delegate void TryOffsetOld(Pickupable instance);
+
+			private static readonly TryOffsetNew TRY_OFFSET_NEW;
+
+			private static readonly TryOffsetOld TRY_OFFSET_OLD;
+
+			// FIXME New parameter introduced in June Quality of Life update U47-560136
+			static Instance() {
+				TryOffsetNew tryNew;
+				try {
+					tryNew = typeof(Pickupable).Detour<TryOffsetNew>(nameof(Pickupable.
+						TryToOffsetIfBuried));
+					TRY_OFFSET_OLD = null;
+				} catch (DetourException) {
+					tryNew = null;
+					TRY_OFFSET_OLD = typeof(Pickupable).Detour<TryOffsetOld>(nameof(Pickupable.
+						TryToOffsetIfBuried));
+				}
+				TRY_OFFSET_NEW = tryNew;
+			}
+
 			/// <summary>
 			/// The layer to check for Duplicants.
 			/// </summary>
@@ -427,33 +451,46 @@ namespace PeterHan.AirlockDoor {
 			}
 
 			/// <summary>
+			/// Ejects an item towards the target cell.
+			/// </summary>
+			/// <param name="item">The item to eject.</param>
+			/// <param name="newCell">The location to move the items.</param>
+			private void Eject(GameObject item, int newCell) {
+				var position = Grid.CellToPosCCC(newCell, Grid.SceneLayer.Move);
+				// Adjust for material's bounding box
+				if (item.TryGetComponent(out KCollider2D collider))
+					position.y += item.transform.GetPosition().y - collider.
+						bounds.min.y;
+				item.transform.SetPosition(position);
+				// Start falling if pushed off the edge
+				if (GameComps.Fallers.Has(item))
+					GameComps.Fallers.Remove(item);
+				GameComps.Fallers.Add(item, Vector2.zero);
+				if (item.TryGetComponent(out Pickupable pickupable)) {
+					if (TRY_OFFSET_NEW != null)
+						TRY_OFFSET_NEW(pickupable, CellOffset.none);
+					else
+						TRY_OFFSET_OLD(pickupable);
+				}
+			}
+
+			/// <summary>
 			/// Ejects all dropped items in the specified cell to the specified new cell.
 			/// </summary>
 			/// <param name="cell">The cell to check for items.</param>
 			/// <param name="newCell">The location to move the items.</param>
 			private void EjectAll(int cell, int newCell) {
-				if (Grid.IsValidCell(cell)) {
-					var node = Grid.Objects[cell, pickupableLayer].
-						GetComponentSafe<Pickupable>()?.objectLayerListItem;
+				GameObject go;
+				if (Grid.IsValidCell(cell) && (go = Grid.Objects[cell, pickupableLayer]) !=
+						null && go.TryGetComponent(out Pickupable pickupable)) {
+					var node = pickupable.objectLayerListItem;
 					while (node != null) {
 						var item = node.gameObject;
 						node = node.nextItem;
 						// Ignore living entities
 						if (item != null && item.GetSMI<DeathMonitor.Instance>()?.IsDead() !=
-								false) {
-							var position = Grid.CellToPosCCC(newCell, Grid.SceneLayer.Move);
-							var collider = item.GetComponent<KCollider2D>();
-							// Adjust for material's bounding box
-							if (collider != null)
-								position.y += item.transform.GetPosition().y - collider.
-									bounds.min.y;
-							item.transform.SetPosition(position);
-							// Start falling if pushed off the edge
-							if (GameComps.Fallers.Has(item))
-								GameComps.Fallers.Remove(item);
-							GameComps.Fallers.Add(item, Vector2.zero);
-							item.GetComponent<Pickupable>()?.TryToOffsetIfBuried();
-						}
+								false)
+							Eject(item, newCell);
 					}
 				}
 			}

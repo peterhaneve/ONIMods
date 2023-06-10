@@ -30,57 +30,8 @@ namespace PeterHan.FastSave {
 		/// The singleton instance of this class.
 		/// </summary>
 		public static BackgroundTimelapser Instance { get; } = new BackgroundTimelapser();
-
+		
 		private BackgroundTimelapser() { }
-
-		/// <summary>
-		/// Saves a preview image to disk in the background.
-		/// </summary>
-		/// <param name="data">The uncompressed preview image data.</param>
-		private void DoSave(BackgroundTimelapseData data) {
-			var screenData = data.RawData;
-			string previewPath = data.SaveGamePath;
-			bool preview = data.Preview;
-			try {
-				string retiredPath = Path.Combine(Util.RootFolder(), Util.
-					GetRetiredColoniesFolderName());
-				if (!Directory.Exists(retiredPath))
-					// This call is recursive
-					Directory.CreateDirectory(retiredPath);
-				string saveName = RetireColonyUtility.StripInvalidCharacters(SaveGame.Instance.
-					BaseName), path;
-				if (preview)
-					// Colony preview
-					path = Path.ChangeExtension(previewPath, ".png");
-				else {
-					string saveFolder = Path.Combine(retiredPath, saveName), worldName =
-						data.WorldName;
-					if (!string.IsNullOrWhiteSpace(worldName)) {
-						saveFolder = Path.Combine(saveFolder, data.WorldID.ToString("D5"));
-						saveFolder = Path.Combine(saveFolder, worldName);
-						saveName = worldName;
-					}
-					if (!Directory.Exists(saveFolder))
-						Directory.CreateDirectory(saveFolder);
-					// Suffix file name with the current cycle
-					saveName += "_cycle_" + GameClock.Instance.GetCycle().ToString("0000.##") +
-						".png";
-					// debugScreenShot is always false
-					path = Path.Combine(saveFolder, saveName);
-				}
-				PUtil.LogDebug("Saving screenshot to " + path);
-				File.WriteAllBytes(path, data.RawData);
-#if DEBUG
-				PUtil.LogDebug("Background screenshot save complete");
-#endif
-			} catch (IOException e) {
-				PUtil.LogWarning("Unable to save colony timelapse screenshot:");
-				PUtil.LogExcWarn(e);
-			} catch (UnauthorizedAccessException e) {
-				PUtil.LogWarning("Unable to save colony timelapse screenshot:");
-				PUtil.LogExcWarn(e);
-			}
-		}
 
 		/// <summary>
 		/// Starts saving the colony preview image in the background.
@@ -94,7 +45,7 @@ namespace PeterHan.FastSave {
 			PUtil.LogDebug("Encoding preview image");
 #endif
 			var data = new BackgroundTimelapseData(previewPath, rawData, worldID, preview);
-			var task = new Thread(() => DoSave(data));
+			var task = new Thread(data.DoSave);
 			Util.ApplyInvariantCultureToThread(task);
 			task.Priority = ThreadPriority.BelowNormal;
 			task.Name = "Background Timelapser";
@@ -135,19 +86,60 @@ namespace PeterHan.FastSave {
 		public BackgroundTimelapseData(string savePath, byte[] rawData, int worldID,
 				bool preview) {
 			if (string.IsNullOrEmpty(savePath) && preview)
-				throw new ArgumentNullException("savePath");
+				throw new ArgumentNullException(nameof(savePath));
 			Preview = preview;
 			SaveGamePath = savePath;
-			RawData = rawData ?? throw new ArgumentNullException("rawData");
+			RawData = rawData ?? throw new ArgumentNullException(nameof(rawData));
 			WorldID = worldID;
 			if (worldID >= 0) {
 				var world = ClusterManager.Instance.GetWorld(worldID);
-				if (world == null)
-					WorldName = "";
-				else
-					WorldName = world.GetComponent<ClusterGridEntity>().Name;
+				WorldName = world == null ? "" : world.GetComponent<ClusterGridEntity>().Name;
 			} else
 				WorldName = "";
+		}
+
+		/// <summary>
+		/// Saves a preview image to disk in the background.
+		/// </summary>
+		internal void DoSave() {
+			try {
+				string retiredPath = Path.Combine(Util.RootFolder(), Util.
+					GetRetiredColoniesFolderName());
+				if (!Directory.Exists(retiredPath))
+					// This call is recursive
+					Directory.CreateDirectory(retiredPath);
+				string saveName = RetireColonyUtility.StripInvalidCharacters(SaveGame.Instance.
+					BaseName), path;
+				if (Preview)
+					// Colony preview
+					path = Path.ChangeExtension(SaveGamePath, ".png");
+				else {
+					string saveFolder = Path.Combine(retiredPath, saveName);
+					if (!string.IsNullOrWhiteSpace(WorldName)) {
+						saveFolder = Path.Combine(saveFolder, WorldID.ToString("D5"));
+						saveFolder = Path.Combine(saveFolder, WorldName);
+						saveName = WorldName;
+					}
+					if (!Directory.Exists(saveFolder))
+						Directory.CreateDirectory(saveFolder);
+					// Suffix file name with the current cycle
+					saveName += "_cycle_" + GameClock.Instance.GetCycle().ToString("0000.##") +
+						".png";
+					// debugScreenShot is always false
+					path = Path.Combine(saveFolder, saveName);
+				}
+				PUtil.LogDebug("Saving screenshot to " + path);
+				File.WriteAllBytes(path, RawData);
+#if DEBUG
+				PUtil.LogDebug("Background screenshot save complete");
+#endif
+			} catch (IOException e) {
+				PUtil.LogWarning("Unable to save colony timelapse screenshot:");
+				PUtil.LogExcWarn(e);
+			} catch (UnauthorizedAccessException e) {
+				PUtil.LogWarning("Unable to save colony timelapse screenshot:");
+				PUtil.LogExcWarn(e);
+			}
 		}
 	}
 }

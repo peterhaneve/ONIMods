@@ -118,8 +118,10 @@ namespace PeterHan.AirlockDoor {
 			Prioritizable.AddRef(go);
 			go.AddOrGet<CopyBuildingSettings>().copyGroupTag = GameTags.Door;
 			go.AddOrGet<Workable>().workTime = 3f;
-			Object.DestroyImmediate(go.GetComponent<BuildingEnabledButton>());
-			go.GetComponent<KBatchedAnimController>().initialAnim = "closed";
+			if (go.TryGetComponent(out BuildingEnabledButton button))
+				Object.DestroyImmediate(button);
+			if (go.TryGetComponent(out KBatchedAnimController kbac))
+				kbac.initialAnim = "closed";
 		}
 	}
 }

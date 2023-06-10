@@ -47,7 +47,7 @@ namespace PeterHan.FastSave {
 		public static object CreateInstance(Type type, int capacity) {
 			if (type == null)
 				throw new ArgumentNullException(nameof(type));
-			if (!CONSTRUCTORS.TryGetValue(type, out ConstructDelegate constructor))
+			if (!CONSTRUCTORS.TryGetValue(type, out var constructor))
 				CONSTRUCTORS.Add(type, constructor = GenerateConstructor(type));
 			return (constructor == null) ? FormatterServices.GetUninitializedObject(
 				type) : constructor.Invoke(capacity);
@@ -60,12 +60,12 @@ namespace PeterHan.FastSave {
 		/// <returns>The delegate which can construct this object.</returns>
 		private static ConstructDelegate GenerateConstructor(Type type) {
 			var constructorToUse = type.GetConstructor(PPatchTools.BASE_FLAGS |
-				BindingFlags.Instance, null, new Type[] { typeof(int) }, null);
+				BindingFlags.Instance, null, new[] { typeof(int) }, null);
 			ConstructDelegate result;
 			if (constructorToUse == null)
 				result = null;
 			else {
-				var constructor = new DynamicMethod("Construct", typeof(object), new Type[] {
+				var constructor = new DynamicMethod("Construct", typeof(object), new[] {
 					typeof(int)
 				}, type, true);
 				var generator = constructor.GetILGenerator();

@@ -78,10 +78,10 @@ namespace PeterHan.FastSave {
 		/// </summary>
 		/// <param name="reader">The location to read the templates.</param>
 		public static void DeserializeDirectory(IReader reader) {
-			int n = reader.ReadInt32();
+			var n = reader.ReadInt32();
 			ClearSmart();
-			for (int i = 0; i < n; i++) {
-				string typeName = reader.ReadKleiString();
+			for (var i = 0; i < n; i++) {
+				var typeName = reader.ReadKleiString();
 				try {
 					// Sure the template does not get stored for unknown types, but it was dead
 					// anyways in the Klei version
@@ -103,8 +103,7 @@ namespace PeterHan.FastSave {
 		/// <param name="type">The type to look up.</param>
 		/// <returns>The existing template for that type, or null if none is cached.</returns>
 		internal static FastDeserializationTemplate GetDeserializationTemplate(Type type) {
-			DESERIALIZATION_TEMPLATES.TryGetValue(type, out FastDeserializationTemplate
-				template);
+			DESERIALIZATION_TEMPLATES.TryGetValue(type, out var template);
 			return template;
 		}
 
@@ -122,7 +121,7 @@ namespace PeterHan.FastSave {
 			if (stemplate == null)
 				throw new ArgumentException("Tried to deserialize into a class named: " +
 					type.GetKTypeString() + " but no such class exists");
-			if (!MAPPINGS.TryGetValue(dtemplate, out FastDeserializationMapping mapping)) {
+			if (!MAPPINGS.TryGetValue(dtemplate, out var mapping)) {
 				mapping = new FastDeserializationMapping(dtemplate, stemplate);
 				MAPPINGS.Add(dtemplate, mapping);
 			}
@@ -138,10 +137,8 @@ namespace PeterHan.FastSave {
 			if (type == null)
 				throw new ArgumentNullException(nameof(type),
 					"Invalid type encountered when serializing");
-			if (!SERIALIZATION_TEMPLATES_ACTIVE.TryGetValue(type, out FastSerializationTemplate
-					template)) {
-				if (!SERIALIZATION_TEMPLATES.TryGetValue(type, out FastSerializationTemplate
-						cached)) {
+			if (!SERIALIZATION_TEMPLATES_ACTIVE.TryGetValue(type, out var template)) {
+				if (!SERIALIZATION_TEMPLATES.TryGetValue(type, out var cached)) {
 					cached = new FastSerializationTemplate(type);
 					SERIALIZATION_TEMPLATES.Add(type, cached);
 				}
@@ -164,7 +161,7 @@ namespace PeterHan.FastSave {
 			if (stemplate == null)
 				throw new ArgumentException("Tried to deserialize into a class named: " +
 					type.GetKTypeString() + " but no such class exists");
-			if (!MAPPINGS_LEGACY.TryGetValue(dtemplate, out DeserializationMapping mapping)) {
+			if (!MAPPINGS_LEGACY.TryGetValue(dtemplate, out var mapping)) {
 				mapping = new DeserializationMapping(dtemplate, stemplate);
 				MAPPINGS_LEGACY.Add(dtemplate, mapping);
 			}
@@ -197,7 +194,7 @@ namespace PeterHan.FastSave {
 		public static void SerializeDirectory(BinaryWriter writer) {
 			writer.Write(SERIALIZATION_TEMPLATES_ACTIVE.Count);
 			foreach (var pair in SERIALIZATION_TEMPLATES_ACTIVE) {
-				string type = pair.Key.GetKTypeString();
+				var type = pair.Key.GetKTypeString();
 				try {
 					writer.WriteKleiString(type);
 					pair.Value.SerializeTemplate(writer);

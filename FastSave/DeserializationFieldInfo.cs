@@ -55,10 +55,10 @@ namespace PeterHan.FastSave {
 				setValue = GenerateSetter();
 				if (getValue == null)
 					throw new ArgumentException(string.Format("Cannot create field getter: {0}.{1}",
-						field.DeclaringType.FullName, field.Name));
+						field.DeclaringType?.FullName, field.Name));
 				if (setValue == null)
 					throw new ArgumentException(string.Format("Cannot create field setter: {0}.{1}",
-						field.DeclaringType.FullName, field.Name));
+						field.DeclaringType?.FullName, field.Name));
 			}
 		}
 
@@ -68,6 +68,8 @@ namespace PeterHan.FastSave {
 		/// <returns>The delegate which can get this field, boxing the value if necessary.</returns>
 		private GetValueDelegate GenerateGetter() {
 			Type ft = field.FieldType, tt = field.DeclaringType;
+			if (tt == null || ft == null)
+				throw new ArgumentException("Field has no declaring type");
 			var getter = new DynamicMethod("Get_" + field.Name, typeof(object), new Type[] {
 				typeof(object)
 			}, tt, true);
@@ -89,6 +91,8 @@ namespace PeterHan.FastSave {
 		/// <returns>The delegate which can set this property, unboxing the value if necessary.</returns>
 		private SetValueDelegate GenerateSetter() {
 			Type ft = field.FieldType, tt = field.DeclaringType;
+			if (tt == null || ft == null)
+				throw new ArgumentException("Field has no declaring type");
 			var setter = new DynamicMethod("Set_" + field.Name, null, new Type[] {
 				typeof(object), typeof(object)
 			}, tt, true);
@@ -114,7 +118,7 @@ namespace PeterHan.FastSave {
 				try {
 					setValue.Invoke(obj, ReadValue(targetType, reader, getValue.Invoke(obj)));
 				} catch (Exception e) {
-					Debug.LogErrorFormat("Exception occurred while attempting to deserialize field {0} on object {1}({2}).\n{3}",
+					Debug.LogErrorFormat("Exception when deserializing field {0} on object {1}({2}).\n{3}",
 						field, obj, obj.GetType(), e.ToString());
 					throw;
 				}
