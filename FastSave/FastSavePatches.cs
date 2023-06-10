@@ -42,21 +42,36 @@ namespace PeterHan.FastSave {
 				string savePath, int worldID, bool preview) {
 			int width = rt.width, height = rt.height;
 			if (width > 0 && height > 0) {
-				var request = AsyncGPUReadback.Request(rt, 0, TextureFormat.RGBA32);
-				// Wait for texture to be read back from the GPU
-				while (!request.done)
-					yield return null;
-				if (request.hasError) {
-					PUtil.LogWarning("Error saving background timelapse image!");
+				bool needsFallback = true;
+				if (SystemInfo.supportsAsyncGPUReadback) {
+					var request = AsyncGPUReadback.Request(rt, 0, TextureFormat.RGBA32);
+					// Wait for texture to be read back from the GPU
+					while (!request.done)
+						yield return null;
+					if (!request.hasError) {
+						byte[] rawARGB = request.GetData<byte>().ToArray();
+						if (rawARGB != null) {
+							needsFallback = false;
+							BackgroundTimelapser.Instance.Start(savePath,
+								TextureToPNG(rawARGB, width, height),
+								 worldID, preview);
+						}
+					}
+				}
+				if (needsFallback) {
+					// Read synchronously.
 					var oldRT = RenderTexture.active;
 					RenderTexture.active = rt;
-					Game.Instance.timelapser.WriteToPng(rt, worldID);
+					Texture2D texture2D = new Texture2D(rt.width, rt.height,
+						TextureFormat.ARGB32, mipChain: false);
+					texture2D.ReadPixels( new Rect(0f, 0f, rt.width, rt.height), 0, 0);
+					texture2D.Apply();
+					byte[] bytes = texture2D.EncodeToPNG();
+					UnityEngine.Object.Destroy(texture2D);
 					RenderTexture.active = oldRT;
-				} else {
-					byte[] rawARGB = request.GetData<byte>().ToArray();
-					if (rawARGB != null)
-						BackgroundTimelapser.Instance.Start(savePath, TextureToPNG(rawARGB,
-							width, height), worldID, preview);
+					if (bytes != null)
+						BackgroundTimelapser.Instance.Start(savePath, bytes,
+							worldID, preview);
 				}
 			}
 		}
