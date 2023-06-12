@@ -195,7 +195,7 @@ namespace PeterHan.ShowRange {
 			if (GetSelectedTarget(out var target, out var visParams)) {
 				var position = target.position;
 				int w = Grid.WidthInCells, h = Grid.HeightInCells, cell = Grid.PosToCell(
-					position), radius = visParams.worstCaseRadius;
+					position), radius = Mathf.Min(visParams.worstCaseRadius, OCCLUSION_WIDTH);
 				Grid.PosToXY(position, out int x, out int y);
 				// If moved, or a different object selected, update the cells
 				if (lastCell != cell || lastTransform != target) {
