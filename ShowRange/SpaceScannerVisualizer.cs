@@ -26,6 +26,8 @@ using UnityEngine;
 namespace PeterHan.ShowRange {
 	/// <summary>
 	/// Shows the range which must be clear for the Space Scanner.
+	///
+	/// TODO: Legacy code for versions less than 559498
 	/// </summary>
 	internal sealed class SpaceScannerVisualizer : ColoredRangeVisualizer {
 		/// <summary>

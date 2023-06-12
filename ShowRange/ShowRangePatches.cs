@@ -29,13 +29,17 @@ namespace PeterHan.ShowRange {
 		/// <summary>
 		/// The type name to ignore to avoid a crash with Wall Pumps and Vents.
 		/// </summary>
-		private static readonly string IGNORE_WALLPUMPS = "WallPumps.RotatableElementConsumer";
+		private const string IGNORE_WALLPUMPS = "WallPumps.RotatableElementConsumer";
+
+		internal const int USE_NEW_VIS = 559498;
 
 		/// <summary>
 		/// Adds ElementConsumer range previews to the specified building def.
+		///
+		/// TODO: Legacy code for versions less than 559498
 		/// </summary>
 		/// <param name="def">The preview to add.</param>
-		private static void AddConsumerPreview(BuildingDef def) {
+		private static void AddConsumerPreviewLegacy(BuildingDef def) {
 			GameObject complete = def.BuildingComplete, preview = def.BuildingPreview,
 				inBuild = def.BuildingUnderConstruction;
 			var consumers = complete.GetComponents<ElementConsumer>();
@@ -74,10 +78,105 @@ namespace PeterHan.ShowRange {
 			existing.Recycle();
 		}
 
+		/// <summary>
+		/// Adds ElementConsumer range previews to the specified building def.
+		/// </summary>
+		/// <param name="def">The preview to add.</param>
+		private static void AddConsumerPreview(BuildingDef def) {
+			GameObject complete = def.BuildingComplete, preview = def.BuildingPreview,
+				inBuild = def.BuildingUnderConstruction;
+			var consumers = complete.GetComponents<ElementConsumer>();
+			var existing = DictionaryPool<CellOffset, int, ElementConsumer>.Allocate();
+			foreach (var consumer in consumers)
+				// Avoid stomping the range preview of Wall Vents and Pumps
+				if (consumer.GetType().FullName != IGNORE_WALLPUMPS) {
+					int radius = consumer.consumptionRadius & 0xFF;
+					var sco = consumer.sampleCellOffset;
+					var offset = new CellOffset(Mathf.RoundToInt(sco.x), Mathf.RoundToInt(
+						sco.y));
+					if (!existing.TryGetValue(offset, out int oldRad) || radius != oldRad) {
+						PUtil.LogDebug("Visualizer added to {0}, range {1:D}".F(def.PrefabID,
+							radius));
+						if (radius > oldRad)
+							existing[offset] = radius;
+					}
+				}
+			int n = existing.Count;
+			if (n > 0) {
+				// Build an array of the offsets and ranges
+				var visualizers = new SimVisualizer[n];
+				int index = 0, worstCaseRadius = 0;
+				foreach (var pair in existing) {
+					var offset = pair.Key;
+					int radius = pair.Value, extentX = Mathf.Abs(offset.x) + radius,
+						extentY = Mathf.Abs(offset.y) + radius;
+					visualizers[index++] = new SimVisualizer(offset, radius);
+					if (extentX > worstCaseRadius)
+						worstCaseRadius = extentX;
+					if (extentY > worstCaseRadius)
+						worstCaseRadius = extentY;
+				}
+				SimRangeVisualizer.Create(complete, visualizers, worstCaseRadius);
+				if (preview != null)
+					SimRangeVisualizer.Create(preview, visualizers, worstCaseRadius);
+				if (inBuild != null)
+					SimRangeVisualizer.Create(inBuild, visualizers, worstCaseRadius);
+			}
+			existing.Recycle();
+		}
+
+		/// <summary>
+		/// Adds components to visualize the range of buildings.
+		/// </summary>
+		/// <param name="def">The building def to add previews (if necessary).</param>
+		private static void AddRangePreviews(BuildingDef def) {
+			if (PUtil.GameVersion < USE_NEW_VIS) {
+				AddConsumerPreviewLegacy(def);
+				switch (def.PrefabID) {
+				// After it runs, the telescope and space scanner should have defs
+				case TelescopeConfig.ID:
+					PUtil.LogDebug("Telescope visualizer added");
+					TelescopeVisualizer.Create(def.BuildingComplete);
+					TelescopeVisualizer.Create(def.BuildingPreview);
+					TelescopeVisualizer.Create(def.BuildingUnderConstruction);
+					break;
+				case ClusterTelescopeConfig.ID:
+				case ClusterTelescopeEnclosedConfig.ID:
+					PUtil.LogDebug("Cluster Telescope visualizer added");
+					ClusterTelescopeVisualizer.Create(def.BuildingComplete);
+					ClusterTelescopeVisualizer.Create(def.BuildingPreview);
+					ClusterTelescopeVisualizer.Create(def.BuildingUnderConstruction);
+					break;
+				}
+				if (def.PrefabID == CometDetectorConfig.ID) {
+					PUtil.LogDebug("Space scanner visualizer added");
+					SpaceScannerVisualizer.Create(def.BuildingComplete);
+					SpaceScannerVisualizer.Create(def.BuildingPreview);
+					SpaceScannerVisualizer.Create(def.BuildingUnderConstruction);
+				}
+			} else
+				AddConsumerPreview(def);
+		}
+
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 			new PVersionCheck().Register(this, new SteamVersionChecker());
+		}
+
+		/// <summary>
+		/// Applied to CameraController to add the range visualizer to the correct camera.
+		/// </summary>
+		[HarmonyPatch(typeof(CameraController), "OnPrefabInit")]
+		public static class CameraController_OnPrefabInit_Patch {
+			internal static bool Prepare() => PUtil.GameVersion >= USE_NEW_VIS;
+
+			/// <summary>
+			/// Applied after OnPrefabInit runs.
+			/// </summary>
+			internal static void Postfix(CameraController __instance) {
+				__instance.overlayNoDepthCamera.gameObject.AddComponent<SimRangeVisualizer>();
+			}
 		}
 
 		/// <summary>
@@ -93,28 +192,8 @@ namespace PeterHan.ShowRange {
 			/// </summary>
 			internal static void Postfix() {
 				foreach (var def in Assets.BuildingDefs)
-					if (def?.BuildingComplete != null) {
-						AddConsumerPreview(def);
-						// After it runs, the telescope and space scanner should have defs
-						if (def.PrefabID == TelescopeConfig.ID) {
-							PUtil.LogDebug("Telescope visualizer added");
-							TelescopeVisualizer.Create(def.BuildingComplete);
-							TelescopeVisualizer.Create(def.BuildingPreview);
-							TelescopeVisualizer.Create(def.BuildingUnderConstruction);
-						}
-						if (def.PrefabID == ClusterTelescopeConfig.ID || def.PrefabID ==
-								ClusterTelescopeEnclosedConfig.ID) {
-							PUtil.LogDebug("Cluster Telescope visualizer added");
-							ClusterTelescopeVisualizer.Create(def.BuildingComplete);
-							ClusterTelescopeVisualizer.Create(def.BuildingPreview);
-							ClusterTelescopeVisualizer.Create(def.BuildingUnderConstruction);
-						}
-						if (def.PrefabID == CometDetectorConfig.ID) {
-							PUtil.LogDebug("Space scanner visualizer added");
-							SpaceScannerVisualizer.Create(def.BuildingComplete);
-							SpaceScannerVisualizer.Create(def.BuildingPreview);
-							SpaceScannerVisualizer.Create(def.BuildingUnderConstruction);
-						}
+					if (def != null && def.BuildingComplete != null) {
+						AddRangePreviews(def);
 					}
 			}
 		}

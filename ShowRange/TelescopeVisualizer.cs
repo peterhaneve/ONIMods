@@ -24,6 +24,8 @@ using UnityEngine;
 namespace PeterHan.ShowRange {
     /// <summary>
 	/// Shows the range which must be clear for the Telescope.
+	///
+	/// TODO: Legacy code for versions less than 559498
 	/// </summary>
 	internal sealed class TelescopeVisualizer : ColoredRangeVisualizer {
 		/// <summary>

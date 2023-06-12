@@ -40,27 +40,15 @@ namespace PeterHan.ShowRange {
 			if (color == default)
 				color = Color.white;
 			if (template == null)
-				throw new ArgumentNullException("template");
-			if (radius > 0) {
-				var prefabID = template.GetComponent<KPrefabID>();
-				if (prefabID != null)
-					// Only when instantiated, not on the template
-					prefabID.instantiateFn += (obj) => {
-						var visualizer = obj.AddComponent<ElementConsumerVisualizer>();
-						visualizer.color = color;
-						visualizer.offset = offset;
-						visualizer.radius = radius;
-					};
-			}
-		}
-
-		private static void EnqueueIfPassable(ICollection<int> seen, int newCell, int cost,
-				PriorityDictionary<int, int> queue) {
-			if (Grid.IsValidCell(newCell) && Grid.Element[newCell]?.IsSolid == false &&
-					!seen.Contains(newCell)) {
-				seen.Add(newCell);
-				queue.Enqueue(cost, newCell);
-			}
+				throw new ArgumentNullException(nameof(template));
+			if (radius > 0 && template.TryGetComponent(out KPrefabID prefabID))
+				// Only when instantiated, not on the template
+				prefabID.instantiateFn += (obj) => {
+					var visualizer = obj.AddComponent<ElementConsumerVisualizer>();
+					visualizer.color = color;
+					visualizer.offset = offset;
+					visualizer.radius = radius;
+				};
 		}
 
 		/// <summary>
@@ -74,6 +62,11 @@ namespace PeterHan.ShowRange {
 		private CellOffset offset;
 
 		/// <summary>
+		/// A cached queue used to store the cells to visit.
+		/// </summary>
+		private readonly PriorityDictionary<int, int> queue;
+
+		/// <summary>
 		/// The effective radius of the element consumer.
 		/// </summary>
 		private int radius;
@@ -81,6 +74,7 @@ namespace PeterHan.ShowRange {
 		internal ElementConsumerVisualizer() {
 			color = Color.white;
 			offset = new CellOffset();
+			queue = new PriorityDictionary<int, int>(64);
 			radius = 1;
 		}
 
@@ -88,23 +82,9 @@ namespace PeterHan.ShowRange {
 			// Rotation is only used to rotate the offset, radius is the same in all directions
 			int startCell = RotateOffsetCell(Grid.PosToCell(gameObject), offset);
 			if (Grid.IsValidCell(startCell) && Grid.Element[startCell]?.IsSolid == false) {
-				var queue = new PriorityDictionary<int, int>(radius * radius);
-				// Initial cell is seen
 				var seen = HashSetPool<int, ElementConsumerVisualizer>.Allocate();
 				try {
-					queue.Enqueue(0, startCell);
-					seen.Add(startCell);
-					// Dijkstra's algorithm
-					do {
-						queue.Dequeue(out int cost, out int newCell);
-						if (cost < radius - 1) {
-							// Cardinal directions
-							EnqueueIfPassable(seen, Grid.CellLeft(newCell), cost + 1, queue);
-							EnqueueIfPassable(seen, Grid.CellRight(newCell), cost + 1, queue);
-							EnqueueIfPassable(seen, Grid.CellAbove(newCell), cost + 1, queue);
-							EnqueueIfPassable(seen, Grid.CellBelow(newCell), cost + 1, queue);
-						}
-					} while (queue.Count > 0);
+					SimRangeVisualizer.FindReachableCells(queue, seen, startCell, radius);
 					// Add all cells as normal color
 					foreach (var cell in seen)
 						newCells.Add(new VisCellData(cell, color));

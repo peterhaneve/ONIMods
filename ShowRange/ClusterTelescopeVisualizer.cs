@@ -17,13 +17,14 @@
  */
 
 using PeterHan.PLib.Buildings;
-using PeterHan.PLib.Core;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace PeterHan.ShowRange {
     /// <summary>
 	/// Shows the range which must be clear for the Cluster (DLC) Telescope.
+	///
+	/// TODO: Legacy code for versions less than 559498
 	/// </summary>
 	internal sealed class ClusterTelescopeVisualizer : ColoredRangeVisualizer {
 		/// <summary>
