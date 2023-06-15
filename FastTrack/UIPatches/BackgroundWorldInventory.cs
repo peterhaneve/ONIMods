@@ -292,11 +292,11 @@ namespace PeterHan.FastTrack.UIPatches {
 			var prefabTag = kpid.PrefabTag;
 			if (!inventory.ContainsKey(prefabTag)) {
 				var category = DiscoveredResources.GetCategoryForEntity(kpid);
-				if (!category.IsValid)
+				if (category.IsValid)
+					DiscoveredResources.Instance.Discover(prefabTag, category);
+				else
 					PUtil.LogWarning(pickupable.name +
 						" was found by WorldInventory, but has no category! Add it to the element definition.");
-				else
-					DiscoveredResources.Instance.Discover(prefabTag, category);
 			}
 			foreach (var itemTag in kpid.Tags)
 				AddFetchable(pickupable, inventory, itemTag);

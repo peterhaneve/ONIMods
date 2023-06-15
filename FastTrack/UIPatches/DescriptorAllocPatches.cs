@@ -260,10 +260,11 @@ namespace PeterHan.FastTrack.UIPatches {
 				filtered.Clear();
 				for (int i = 0; i < n; i++) {
 					var descriptor = descriptors[i];
-					if (descriptor.IsEffectDescriptor())
+					if (descriptor.IsEffectDescriptor()) {
+						descriptor.IncreaseIndent();
 						filtered.Add(descriptor);
+					}
 				}
-				GameUtil.IndentListOfDescriptors(filtered);
 				__result = filtered;
 				return false;
 			}
@@ -407,10 +408,11 @@ namespace PeterHan.FastTrack.UIPatches {
 				filtered.Clear();
 				for (int i = 0; i < n; i++) {
 					var descriptor = descriptors[i];
-					if (descriptor.type == Descriptor.DescriptorType.Requirement)
+					if (descriptor.type == Descriptor.DescriptorType.Requirement) {
+						descriptor.IncreaseIndent();
 						filtered.Add(descriptor);
+					}
 				}
-				GameUtil.IndentListOfDescriptors(filtered);
 				__result = filtered;
 				return false;
 			}

@@ -22,7 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
-using UnityEngine;
+
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.PathPatches {
@@ -49,7 +49,8 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// Applied to MoveToLocationTool to flush the path cache upon activating the tool,
 	/// which can help when players are trying to save Duplicants at the last second.
 	/// </summary>
-	[HarmonyPatch(typeof(MoveToLocationTool), nameof(MoveToLocationTool.Activate))]
+	[HarmonyPatch(typeof(MoveToLocationTool), nameof(MoveToLocationTool.Activate),
+		typeof(Navigator))]
 	public static class MoveToLocationTool_Activate_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
 

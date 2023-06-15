@@ -116,13 +116,11 @@ namespace PeterHan.FastTrack.VisualPatches {
 				bool trivial = nf < LONG_THRESHOLD;
 				var id = anim.id;
 				if (nf > 1 && trivial) {
-					var firstFrame = bgd.GetFrame(start++);
-					trivial = firstFrame.idx >= 0;
+					trivial = bgd.TryGetFrame(start++, out var firstFrame);
 					for (int j = start; j < end && trivial; j++) {
 						// Frames of the animation are available from the batch group
-						var nextFrame = bgd.GetFrame(j);
-						trivial = nextFrame.idx >= 0 && CompareFrames(bgd, ref firstFrame,
-							ref nextFrame);
+						trivial = bgd.TryGetFrame(j, out var nextFrame) && CompareFrames(bgd,
+							ref firstFrame, ref nextFrame);
 					}
 				}
 				// As a workaround for an ONI bug, do not allow any anim with FG symbols

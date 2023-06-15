@@ -208,12 +208,10 @@ namespace PeterHan.FastTrack.GamePatches {
 					int cell = pending.Dequeue();
 					for (int k = 0; k < o; k++) {
 						int newCell = Grid.OffsetCell(cell, OFFSETS[k]);
-						if (!visited.Contains(newCell)) {
-							if (Grid.IsValidCell(newCell) && test_func(newCell)) {
-								found.Add(newCell);
-								pending.Enqueue(newCell);
-							}
-							visited.Add(newCell);
+						if (Grid.IsValidCell(newCell) && visited.Add(newCell) && test_func(
+								newCell)) {
+							found.Add(newCell);
+							pending.Enqueue(newCell);
 						}
 					}
 				}
@@ -254,36 +252,6 @@ namespace PeterHan.FastTrack.GamePatches {
 					cells.Clear();
 				}
 			cells.Recycle();
-			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to StickerBombReactable to fix a memory leak when finding the target cell.
-	/// </summary>
-	[HarmonyPatch(typeof(StickerBombReactable), nameof(StickerBombReactable.
-		FindPlacementCell))]
-	public static class StickerBombReactable_FindPlacementCell_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
-
-		/// <summary>
-		/// Applied before FindPlacementCell runs.
-		/// </summary>
-		internal static bool Prefix(StickerBombReactable __instance, ref int __result) {
-			int cell = Grid.PosToCell(__instance.reactor.transform.position + Vector3.up);
-			var visited = HashSetPool<int, StickerBomber>.Allocate();
-			var hits = ListPool<int, StickerBomber>.Allocate();
-			var pending = QueuePool<GameUtil.FloodFillInfo, StickerBomber>.Allocate();
-			pending.Enqueue(new GameUtil.FloodFillInfo {
-				cell = cell,
-				depth = 0
-			});
-			GameUtil.FloodFillConditional(pending, __instance.canPlaceStickerCb, visited,
-				hits, 2);
-			__result = hits.Count > 0 ? hits.GetRandom() : 0;
-			visited.Recycle();
-			pending.Recycle();
-			hits.Recycle();
 			return false;
 		}
 	}

@@ -116,7 +116,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				GetMaterialDescriptors(element.attributeModifiers, descriptors);
 				element.GetSignificantMaterialPropertyDescriptors(descriptors);
 			} else if ((prefabGO = Assets.TryGetPrefab(tag)) != null && prefabGO.
-				TryGetComponent(out PrefabAttributeModifiers prefabMods))
+					TryGetComponent(out PrefabAttributeModifiers prefabMods))
 				GetMaterialDescriptors(prefabMods.descriptors, descriptors);
 			__result = descriptors;
 			return false;
@@ -129,8 +129,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			var text = BUFFER;
 			var element = ElementLoader.GetElement(tag);
 			GameObject prefabGO;
-			text.Clear();
-			text.Append(tag.ProperName());
+			text.Clear().Append(tag.ProperName());
 			if (element != null) {
 				var descriptors = EL_DESCRIPTORS;
 				descriptors.Clear();
@@ -144,7 +143,7 @@ namespace PeterHan.FastTrack.UIPatches {
 							StripTextFormatting(descriptors[i].text)).AppendLine();
 				}
 			} else if ((prefabGO = Assets.TryGetPrefab(tag)) != null && prefabGO.
-				TryGetComponent(out PrefabAttributeModifiers prefabMods))
+					TryGetComponent(out PrefabAttributeModifiers prefabMods))
 				AddModifiers(prefabMods.descriptors, text);
 			__result = text.ToString();
 			return false;
@@ -157,7 +156,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="element">The element to describe.</param>
 		/// <param name="descriptors">The location where the descriptors will be stored.</param>
 		private static void GetSignificantMaterialPropertyDescriptors(this Element element,
-				IList<Descriptor> descriptors) {
+				ICollection<Descriptor> descriptors) {
 			string name = element.name;
 			// No consts for these in ONI code :uuhhhh:
 			if (element.thermalConductivity > 10f) {

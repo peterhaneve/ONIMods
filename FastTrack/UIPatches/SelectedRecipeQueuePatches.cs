@@ -212,8 +212,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			for (int i = 0; i < n; i++) {
 				var effect = items[i];
 				bool isOld = i < nr;
-				GameObject go;
-				go = isOld ? oldRows[i] : Util.KInstantiateUI(prefab, parent, true);
+				var go = isOld ? oldRows[i] : Util.KInstantiateUI(prefab, parent, true);
 				if (go.TryGetComponent(out HierarchyReferences hr)) {
 					var icon = hr.GetReference<Image>("Icon");
 					var descriptor = effect.descriptor;
@@ -327,6 +326,124 @@ namespace PeterHan.FastTrack.UIPatches {
 			desc.Clear();
 			__result = desc;
 			return false;
+		}
+	}
+
+	/// <summary>
+	/// Updates the complex fabricator side screen much less often.
+	/// </summary>
+	internal static class ComplexFabricatorUpdater {
+		/// <summary>
+		/// How often to actually update the side screen in seconds, unscaled.
+		/// </summary>
+		private const double INTERVAL = 0.2;
+
+		/// <summary>
+		/// The color used when ingredients are unavailable.
+		/// </summary>
+		private static readonly Color UNAVAILABLE = new Color(0.22f, 0.22f, 0.22f, 1f);
+
+		/// <summary>
+		/// The next unscaled time when the recipe ingredients will be rechecked.
+		/// </summary>
+		private static double nextUpdateTime;
+
+		/// <summary>
+		/// Checks for sufficient materials to complete the recipe.
+		/// </summary>
+		/// <param name="inventory">The inventory to search for materials.</param>
+		/// <param name="fabricator">The complex fabricator that is creating the recipe.</param>
+		/// <param name="recipe">The recipe to look up.</param>
+		/// <returns>true if the recipe has enough materials, or false otherwise.</returns>
+		private static bool HasAllRecipeRequirements(WorldInventory inventory,
+				ComplexFabricator fabricator, ComplexRecipe recipe) {
+			bool hasAll = true;
+			var ingredients = recipe.ingredients;
+			int n = ingredients.Length;
+			var bannedTags = fabricator.ForbiddenTags;
+			for (int i = 0; i < n && hasAll; i++) {
+				var item = ingredients[i];
+				hasAll = inventory.GetAmountWithoutTag(item.material, true, bannedTags) +
+					fabricator.inStorage.GetAmountAvailable(item.material, bannedTags) +
+					fabricator.buildStorage.GetAmountAvailable(item.material, bannedTags) >=
+					item.amount;
+			}
+			return hasAll;
+		}
+
+		/// <summary>
+		/// Updates the ingredients in complex fabricators.
+		/// </summary>
+		/// <param name="instance">The side screen to update.</param>
+		/// <param name="fabricator">The curently selected complex fabricator.</param>
+		/// <param name="inventory">The world inventory to search.</param>
+		internal static void UpdateIngredients(ComplexFabricatorSideScreen instance,
+				ComplexFabricator fabricator, WorldInventory inventory) {
+			foreach (var pair in instance.recipeMap) {
+				var go = pair.Key;
+				var recipe = pair.Value;
+				if (go.TryGetComponent(out HierarchyReferences refs) && go.TryGetComponent(
+					out KToggle toggle)) {
+					Color color;
+					bool hasAll = HasAllRecipeRequirements(inventory, fabricator, recipe),
+						match = instance.selectedRecipe == recipe;
+					if (hasAll) {
+						color = Color.black;
+						toggle.ActivateFlourish(match, match ? ImageToggleState.State.Active :
+							ImageToggleState.State.Inactive);
+					} else {
+						color = UNAVAILABLE;
+						toggle.ActivateFlourish(match, match ? ImageToggleState.State.
+							DisabledActive : ImageToggleState.State.Disabled);
+					}
+					refs.GetReference<LocText>("Label").color = color;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Applied to ComplexFabricatorSideScreen to force an update when the fabricator
+		/// side screen is first opened.
+		/// </summary>
+		[HarmonyPatch(typeof(ComplexFabricatorSideScreen), nameof(ComplexFabricatorSideScreen.
+			Initialize))]
+		public static class Initialize_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
+
+			/// <summary>
+			/// Applied after Initialize runs.
+			/// </summary>
+			internal static void Postfix() {
+				nextUpdateTime = Time.timeAsDouble;
+			}
+		}
+
+		/// <summary>
+		/// Applied to ComplexFabricatorSideScreen to optimze updating the recipe screen.
+		/// </summary>
+		[HarmonyPatch(typeof(ComplexFabricatorSideScreen), nameof(ComplexFabricatorSideScreen.
+			RefreshIngredientAvailabilityVis))]
+		public static class RefreshIngredientAvailabilityVis_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
+
+			/// <summary>
+			/// Applied before RefreshIngredientAvailabilityVis runs.
+			/// </summary>
+			internal static bool Prefix(ComplexFabricatorSideScreen __instance) {
+				var target = __instance.targetFab;
+				int cell;
+				byte worldIndex;
+				double now = Time.timeAsDouble;
+				if (target != null && now >= nextUpdateTime && Grid.IsValidCell(cell =
+						Grid.PosToCell(target.transform.position)) && (worldIndex = Grid.
+						WorldIdx[cell]) != ClusterManager.INVALID_WORLD_IDX) {
+					var world = ClusterManager.Instance.GetWorld(worldIndex);
+					if (world != null)
+						UpdateIngredients(__instance, target, world.worldInventory);
+					nextUpdateTime = now + INTERVAL;
+				}
+				return false;
+			}
 		}
 	}
 }

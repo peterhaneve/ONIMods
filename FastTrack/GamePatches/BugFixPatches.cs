@@ -102,7 +102,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				GetMethodSafe(nameof(List<WorldContainer>.AsReadOnly), false);
 			var method = new List<CodeInstruction>(instructions);
 			if (targetMethod != null) {
-				method.RemoveAll((instr) => instr.Is(OpCodes.Callvirt, targetMethod));
+				method.RemoveAll(instr => instr.Is(OpCodes.Callvirt, targetMethod));
 #if DEBUG
 				PUtil.LogDebug("Patched ClusterManager.WorldContainers");
 #endif

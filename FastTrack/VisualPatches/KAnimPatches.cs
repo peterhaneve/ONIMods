@@ -97,35 +97,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 	}
 
 	/// <summary>
-	/// Applied to KAnimControllerBase to only update the hidden flag if the visibility
-	/// actually changed (yes the Klei method has a typo, like many...)
-	/// </summary>
-	[HarmonyPatch(typeof(KAnimControllerBase), nameof(KAnimControllerBase.SetSymbolVisiblity))]
-	public static class KAnimControllerBase_SetSymbolVisiblity_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.AnimOpts;
-
-		/// <summary>
-		/// Applied before SetSymbolVisiblity runs.
-		/// </summary>
-		internal static bool Prefix(KAnimControllerBase __instance, KAnimHashedString symbol,
-				bool is_visible) {
-			bool changed = false;
-			var hidden = __instance.hiddenSymbols;
-			if (is_visible)
-				changed = hidden.Remove(symbol);
-			else if (!hidden.Contains(symbol)) {
-				hidden.Add(symbol);
-				// This is not called all that often and the hidden symbol list is usually
-				// quite small, so not worth changing to hash set
-				changed = true;
-			}
-			if (changed && __instance.curBuild != null)
-				__instance.UpdateHidden();
-			return false;
-		}
-	}
-
-	/// <summary>
 	/// Applied to KAnimSynchronizedController to not dirty rocket anims (among others)
 	/// every frame.
 	/// </summary>

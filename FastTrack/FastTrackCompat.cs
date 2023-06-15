@@ -61,9 +61,9 @@ namespace PeterHan.FastTrack {
 		/// <param name="harmony">The Harmony instance to use for patching.</param>
 		internal static void CheckMaterialPropertiesCompat(Harmony harmony) {
 			if (PPatchTools.GetTypeSafe(
-					"MaterialSelectionProperties.MaterialSelectionProperties") == null) {
+					"MaterialSelectionProperties.MaterialSelectionProperties") == null)
 				UIPatches.DescriptorAllocPatches.ApplyMaterialPatches(harmony);
-			} else
+			else
 				PUtil.LogDebug("Disabling material properties optimizations: Properties mod active");
 		}
 
