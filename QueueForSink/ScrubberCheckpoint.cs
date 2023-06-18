@@ -29,7 +29,7 @@ namespace PeterHan.QueueForSinks {
 		/// </summary>
 		private readonly int buildingLayer;
 
-		public ScrubberCheckpoint() : base() {
+		public ScrubberCheckpoint() {
 			buildingLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Building),
 				ObjectLayer.Building);
 		}
@@ -66,7 +66,7 @@ namespace PeterHan.QueueForSinks {
 			return stop;
 		}
 
-		protected override bool MustStop(GameObject reactor, float direction) {
+		protected override bool MustStop(GameObject reactor, float dir) {
 			bool stop = false;
 			if (reactor.TryGetComponent(out Storage storage))
 				// Search all items, blacklist food, require a disease
@@ -77,7 +77,7 @@ namespace PeterHan.QueueForSinks {
 						stop = true;
 						break;
 					}
-			return stop && CheckForOtherScrubber(direction > 0.0f); 
+			return stop && CheckForOtherScrubber(dir > 0.0f); 
 		}
 	}
 }

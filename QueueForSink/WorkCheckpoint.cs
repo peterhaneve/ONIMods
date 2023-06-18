@@ -17,6 +17,7 @@
  */
 
 using System.Threading;
+using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.QueueForSinks {
@@ -127,6 +128,12 @@ namespace PeterHan.QueueForSinks {
 		/// </summary>
 		private sealed class WorkCheckpointReactable : Reactable {
 			/// <summary>
+			/// This value changes every few updates, calculate it at runtime
+			/// </summary>
+			private static readonly ObjectLayer NUM_LAYERS = PGameUtils.GetObjectLayer(
+				nameof(ObjectLayer.NumLayers), ObjectLayer.NumLayers);
+
+			/// <summary>
 			/// Set once the Duplicant has begun waiting.
 			/// </summary>
 			private bool begun;
@@ -148,7 +155,7 @@ namespace PeterHan.QueueForSinks {
 
 			internal WorkCheckpointReactable(WorkCheckpoint<T> checkpoint) : base(checkpoint.
 					gameObject, "WorkCheckpointReactable", Db.Get().ChoreTypes.Checkpoint,
-					1, 1) {
+					1, 1, false, 0.0f, 0.0f, float.PositiveInfinity, 0.0f, NUM_LAYERS) {
 				begun = false;
 				this.checkpoint = checkpoint;
 				distractedAnim = Assets.GetAnim("anim_idle_distracted_kanim");
@@ -163,7 +170,7 @@ namespace PeterHan.QueueForSinks {
 				return checkpoint.workable.GetWorker() != null || (begun && !checkpoint.
 					TryTakeToken());
 			}
-				
+
 			protected override void InternalBegin() {
 				reactor.TryGetComponent(out nav);
 				// Animation to make them stand impatiently in line

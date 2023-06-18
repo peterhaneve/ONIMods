@@ -36,7 +36,7 @@ namespace PeterHan.QueueForSinks {
 #pragma warning restore IDE0044
 #pragma warning restore CS0649
 
-		public SinkCheckpoint() : base() {
+		public SinkCheckpoint() {
 			buildingLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Building),
 				ObjectLayer.Building);
 		}
@@ -86,8 +86,8 @@ namespace PeterHan.QueueForSinks {
 				element) && element.DiseaseIdx != Klei.SimUtil.DiseaseInfo.Invalid.idx);
 		}
 
-		protected override bool MustStop(GameObject reactor, float direction) {
-			return NeedsToUse(reactor) && CheckForOtherSink(direction > 0.0f);
+		protected override bool MustStop(GameObject reactor, float dir) {
+			return NeedsToUse(reactor) && CheckForOtherSink(dir > 0.0f);
 		}
 	}
 }
