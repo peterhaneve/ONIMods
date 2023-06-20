@@ -20,6 +20,52 @@ using HarmonyLib;
 
 namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
+	/// Applied to Chatty to remove the every frame conversation behavior.
+	/// </summary>
+	[HarmonyPatch(typeof(Chatty), nameof(Chatty.SimEveryTick))]
+	public static class Chatty_SimEveryTick_Patch {
+		internal static bool Prepare() {
+			var options = FastTrackOptions.Instance;
+			return options.NoConversations || options.MiscOpts;
+		}
+
+		/// <summary>
+		/// Applied before SimEveryTick runs.
+		/// </summary>
+		internal static bool Prefix(Chatty __instance) {
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to Chatty to trigger the joy reactions when talking starts. If "no
+	/// conversations" is enabled, then this joy reaction can never trigger anyways.
+	/// </summary>
+	[HarmonyPatch(typeof(Chatty), nameof(Chatty.OnStartedTalking))]
+	public static class Chatty_OnStartedTalking_Patch {
+		internal static bool Prepare() {
+			var options = FastTrackOptions.Instance;
+			return !options.NoConversations && options.MiscOpts;
+		}
+
+		/// <summary>
+		/// Applied before OnStartedTalking runs.
+		/// </summary>
+		internal static bool Prefix(object data, Chatty __instance) {
+			if (data is MinionIdentity other && UnityEngine.Random.Range(0, 100) <= 1 &&
+					other != __instance.identity) {
+				// Cannot talk to yourself (self)
+				if (other.TryGetComponent(out StateMachineController smc))
+					smc.GetSMI<JoyBehaviourMonitor.Instance>()?.GoToOverjoyed();
+				if (__instance.TryGetComponent(out smc))
+					smc.GetSMI<JoyBehaviourMonitor.Instance>()?.GoToOverjoyed();
+			}
+			__instance.conversationPartners.Clear();
+			return false;
+		}
+	}
+
+	/// <summary>
 	/// Applied to ConversationManager to turn off all updates.
 	/// </summary>
 	[HarmonyPatch(typeof(ConversationManager), nameof(ConversationManager.Sim200ms))]

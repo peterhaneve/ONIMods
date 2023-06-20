@@ -142,7 +142,7 @@ namespace PeterHan.FastTrack {
 					public static LocString ASYNCPATHPROBE = "Moves some pathfinding calculations to a non-blocking thread." + PERF_HIGH;
 					public static LocString CACHEPATHS = "Cache frequently used paths and reuse them in future calculations." + PERF_MEDIUM;
 					public static LocString CHOREOPTS = "Reduces the number of chores scanned when choosing each Duplicant's next task." + PERF_MEDIUM;
-					public static LocString NOCONVERSATIONS = "Disables all Duplicant thought and speech balloons." + PERF_LOW;
+					public static LocString NOCONVERSATIONS = "Disables all Duplicant thought and speech balloons.\n\n<color=#FF0000>Disables the Mysterious Hermit's special trait.</color>" + PERF_LOW;
 					public static LocString NODISEASE = "Completely disable the entire disease system.\n" +
 						Constants.BULLETSTRING + "Sick Bay and Disease Clinic cannot be built or used\n" +
 						Constants.BULLETSTRING + "No new diseases can be contracted\n" +

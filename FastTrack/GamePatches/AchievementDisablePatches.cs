@@ -30,13 +30,19 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	public static class AchievementDisablePatches {
 		/// <summary>
+		/// Forces achievements to be enabled in sandbox for compatibility with other mods.
+		/// </summary>
+		internal static bool forceEnableAchievements;
+
+		/// <summary>
 		/// Checks to see if achievements should be tracked.
 		/// </summary>
 		/// <returns>true if they should be tracked, or false otherwise.</returns>
 		internal static bool TrackAchievements() {
-			return FastTrackOptions.Instance.DisableAchievements == FastTrackOptions.
-				AchievementDisable.SandboxDebug && !SaveGame.Instance.sandboxEnabled &&
-				!DebugHandler.InstantBuildMode && !Game.Instance.debugWasUsed;
+			return forceEnableAchievements || (FastTrackOptions.Instance.DisableAchievements ==
+				FastTrackOptions.AchievementDisable.SandboxDebug &&
+				!SaveGame.Instance.sandboxEnabled && !DebugHandler.InstantBuildMode &&
+				!Game.Instance.debugWasUsed);
 		}
 
 		/// <summary>

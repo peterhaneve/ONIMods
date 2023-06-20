@@ -97,6 +97,9 @@ namespace PeterHan.FastTrack {
 			const string PACU_SAYS_NO = "Bugs.TropicalPacuRooms";
 			var options = FastTrackOptions.Instance;
 			base.OnAllModsLoaded(harmony, mods);
+			if (options.DisableAchievements == FastTrackOptions.AchievementDisable.
+					SandboxDebug)
+				FastTrackCompat.CheckAchievementCompat();
 			if (options.MeshRendererOptions == FastTrackOptions.MeshRendererSettings.All &&
 					mods != null)
 				FastTrackCompat.CheckTileCompat(harmony, mods);

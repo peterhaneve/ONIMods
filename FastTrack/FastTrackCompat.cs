@@ -28,9 +28,59 @@ namespace PeterHan.FastTrack {
 	/// </summary>
 	internal static class FastTrackCompat {
 		/// <summary>
+		/// There are two achievement enabler mods on the workshop, allow achievements even
+		/// in sandbox if either of these types are defined.
+		/// </summary>
+		private const string ACHIEVEMENT_ENABLER_TYPE_1 = "AchievementEnablerLib.AchievementEnablerMod";
+		private const string ACHIEVEMENT_ENABLER_TYPE_2 = "EnableAchievements.Patches";
+
+		/// <summary>
+		/// Keep diseases enabled (Diseases Expanded) if this type is defined.
+		/// </summary>
+		private const string DISEASES_EXPANDED_TYPE = "DiseasesExpanded.ModInfo";
+
+		/// <summary>
+		/// Keep diseases enabled (Diseases Restored) if this type is defined.
+		/// </summary>
+		private const string DISEASES_RESTORED_TYPE = "DiseasesReimagined.DiseasesPatch";
+
+		/// <summary>
+		/// Reduce fetch manager patches if this type is defined.
+		/// </summary>
+		private const string EFFICIENT_SUPPLY_TYPE = "PeterHan.EfficientFetch.EfficientFetchManager";
+
+		/// <summary>
+		/// Avoid totally replacing material properties screens if this type is defined.
+		/// </summary>
+		private const string MATERIAL_PROPERTIES_TYPE = "MaterialSelectionProperties.MaterialSelectionProperties";
+
+		/// <summary>
+		/// Let Rocketry Expanded take over side screens if this type is defined.
+		/// </summary>
+		private const string ROCKETRY_EXPANDED_TYPE = "Rockets_TinyYetBig.Mod";
+
+		/// <summary>
+		/// Turn off most of the attributes and stats panel patches if this type is defined.
+		/// </summary>
+		private const string STATS_UNLIMITED_TYPE = "OniStatsPlusSo.MyMod";
+
+		/// <summary>
 		/// Turn off tile mesh renderers if this mod is active.
 		/// </summary>
 		private const string TRUE_TILES_ID = "TrueTiles";
+
+		/// <summary>
+		/// Checks for compatibility and allows achievements in sandbox and debug (even with
+		/// Disable Achievements set to In Sandbox/Debug) if Achievement Enabler or similar
+		/// mods are enabled.
+		/// </summary>
+		internal static void CheckAchievementCompat() {
+			if (PPatchTools.GetTypeSafe(ACHIEVEMENT_ENABLER_TYPE_1) != null || PPatchTools.
+					GetTypeSafe(ACHIEVEMENT_ENABLER_TYPE_2) != null) {
+				PUtil.LogWarning("Achievement Enabler is active, achievements allowed in sandbox");
+				GamePatches.AchievementDisablePatches.forceEnableAchievements = true;
+			}
+		}
 
 		/// <summary>
 		/// Checks for compatibility and applies fast fetch manager updates only if Efficient
@@ -38,8 +88,7 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		/// <param name="harmony">The Harmony instance to use for patching.</param>
 		internal static void CheckFetchCompat(Harmony harmony) {
-			if (PPatchTools.GetTypeSafe("PeterHan.EfficientFetch.EfficientFetchManager") ==
-					null) {
+			if (PPatchTools.GetTypeSafe(EFFICIENT_SUPPLY_TYPE) == null) {
 				PathPatches.AsyncBrainGroupUpdater.allowFastListSwap = true;
 				harmony.Patch(typeof(FetchManager.FetchablesByPrefabId),
 					nameof(FetchManager.FetchablesByPrefabId.UpdatePickups),
@@ -60,8 +109,7 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		/// <param name="harmony">The Harmony instance to use for patching.</param>
 		internal static void CheckMaterialPropertiesCompat(Harmony harmony) {
-			if (PPatchTools.GetTypeSafe(
-					"MaterialSelectionProperties.MaterialSelectionProperties") == null)
+			if (PPatchTools.GetTypeSafe(MATERIAL_PROPERTIES_TYPE) == null)
 				UIPatches.DescriptorAllocPatches.ApplyMaterialPatches(harmony);
 			else
 				PUtil.LogDebug("Disabling material properties optimizations: Properties mod active");
@@ -73,9 +121,9 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		/// <param name="harmony">The Harmony instance to use for patching.</param>
 		internal static void CheckNoDiseaseCompat(Harmony harmony) {
-			if (PPatchTools.GetTypeSafe("DiseasesReimagined.DiseasesPatch") != null)
+			if (PPatchTools.GetTypeSafe(DISEASES_RESTORED_TYPE) != null)
 				PUtil.LogWarning("Enabling diseases: Diseases Restored active");
-			else if (PPatchTools.GetTypeSafe("DiseasesExpanded.ModInfo") != null)
+			else if (PPatchTools.GetTypeSafe(DISEASES_EXPANDED_TYPE) != null)
 				PUtil.LogWarning("Enabling diseases: Diseases Expanded active");
 			else {
 				try {
@@ -96,7 +144,7 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		/// <param name="harmony">The Harmony instance to use for patching.</param>
 		internal static void CheckRocketCompat(Harmony harmony) {
-			bool rtb = PPatchTools.GetTypeSafe("Rockets_TinyYetBig.Mod") != null;
+			bool rtb = PPatchTools.GetTypeSafe(ROCKETRY_EXPANDED_TYPE) != null;
 			if (rtb)
 				PUtil.LogWarning("Disabling drillcone optimizations: Rockets mod active");
 			else
@@ -110,7 +158,7 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		/// <param name="harmony">The Harmony instance to use for patching.</param>
 		internal static void CheckStatsCompat(Harmony harmony) {
-			if (PPatchTools.GetTypeSafe("OniStatsPlusSo.MyMod") == null)
+			if (PPatchTools.GetTypeSafe(STATS_UNLIMITED_TYPE) == null)
 				UIPatches.MinionStatsPanelWrapper.Apply(harmony);
 			else
 				PUtil.LogDebug("Disabling attributes panel optimizations: Stats mod active");

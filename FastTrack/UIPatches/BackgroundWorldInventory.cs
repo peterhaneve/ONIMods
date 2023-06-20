@@ -146,17 +146,22 @@ namespace PeterHan.FastTrack.UIPatches {
 			if (inventory != null && accessibleAmounts != null && worldId >= 0 && worldId !=
 					ClusterManager.INVALID_WORLD_IDX) {
 				int index = 0, ui = updateIndex, n = inventory.Count;
-				foreach (var pair in inventory)
-					if (index++ == ui || firstUpdate) {
-						float total = SumTotal(pair.Value, worldId);
-						if (!validCount && ui + 1 >= n)
-							forceRefresh = validCount = true;
-						accessibleAmounts[pair.Key] = total;
-						updateIndex = ui = (ui + 1) % n;
-						if (!firstUpdate)
-							break;
+				if (firstUpdate) {
+					foreach (var pair in inventory) {
+						accessibleAmounts[pair.Key] = SumTotal(pair.Value, worldId);
+						ui = (ui + 1) % n;
 					}
-				firstUpdate = false;
+					if (!validCount)
+						validCount = forceRefresh = true;
+					updateIndex = ui;
+					firstUpdate = false;
+				} else
+					foreach (var pair in inventory)
+						if (index++ == ui) {
+							accessibleAmounts[pair.Key] = SumTotal(pair.Value, worldId);
+							updateIndex = (ui + 1) % n;
+							break;
+						}
 			}
 		}
 	}
@@ -308,12 +313,11 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Applied before OnAddedFetchable runs.
 		/// </summary>
 		internal static bool Prefix(WorldInventory __instance, object data) {
-			int cell, id;
+			int cell, id = __instance.worldId;
 			if (data is UnityEngine.GameObject gameObject && gameObject.TryGetComponent(
-					out Pickupable pickupable) && __instance.TryGetComponent(
-					out WorldContainer container) && Grid.IsValidCell(cell = pickupable.
-					cachedCell) && (id = container.id) != ClusterManager.INVALID_WORLD_IDX &&
-					Grid.WorldIdx[cell] == id && !gameObject.TryGetComponent(out Navigator _))
+					out Pickupable pickupable) && Grid.IsValidCell(cell = Grid.PosToCell(
+					gameObject.transform.position)) && id >= 0 && Grid.WorldIdx[cell] == id &&
+					!gameObject.TryGetComponent(out Navigator _))
 				AddFetchable(pickupable, __instance.Inventory);
 			return false;
 		}
