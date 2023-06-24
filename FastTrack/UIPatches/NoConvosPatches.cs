@@ -32,7 +32,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before SimEveryTick runs.
 		/// </summary>
-		internal static bool Prefix(Chatty __instance) {
+		internal static bool Prefix() {
 			return false;
 		}
 	}
@@ -52,7 +52,9 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Applied before OnStartedTalking runs.
 		/// </summary>
 		internal static bool Prefix(object data, Chatty __instance) {
-			if (data is MinionIdentity other && UnityEngine.Random.Range(0, 100) <= 1 &&
+			if ((data is MinionIdentity other || (data is ConversationManager.
+					StartedTalkingEvent evt && evt.talker != null && evt.talker.
+					TryGetComponent(out other))) && UnityEngine.Random.Range(0, 100) <= 1 &&
 					other != __instance.identity) {
 				// Cannot talk to yourself (self)
 				if (other.TryGetComponent(out StateMachineController smc))
@@ -70,6 +72,21 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(ConversationManager), nameof(ConversationManager.Sim200ms))]
 	public static class ConversationManager_Sim200ms_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.NoConversations;
+
+		/// <summary>
+		/// Applied before Sim200ms runs.
+		/// </summary>
+		internal static bool Prefix() {
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to DupeGreetingManager to disable greetings.
+	/// </summary>
+	[HarmonyPatch(typeof(DupeGreetingManager), nameof(DupeGreetingManager.Sim200ms))]
+	public static class DupeGreetingManager_Sim200ms_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.NoConversations;
 
 		/// <summary>

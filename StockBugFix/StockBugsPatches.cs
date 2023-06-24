@@ -195,6 +195,16 @@ namespace PeterHan.StockBugFix {
 			PRegistry.PutData("Bugs.TraitExclusionSpacedOut", true);
 			PRegistry.PutData("Bugs.TropicalPacuRooms", true);
 			PRegistry.PutData("Bugs.AutosaveDragFix", true);
+			/*
+			 * For Sgt_Imalas:
+			 *
+			 * if (!PRegistry.GetData<bool>("Bugs.FreeGridSpace")) {
+			 *     PRegistry.PutData("Bugs.FreeGridSpace", true);
+			 *     instance.Patch(typeof(Grid), nameof(Grid.FreeGridSpace), prefix:
+			 *         new HarmonyMethod(...));
+			 * }
+			 */
+			PRegistry.PutData("Bugs.FreeGridSpace", true);
 			new POptions().RegisterOptions(this, typeof(StockBugFixOptions));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
 			ALREADY_DISPLAYED.Clear();
@@ -460,6 +470,28 @@ namespace PeterHan.StockBugFix {
 	}
 
 	/// <summary>
+	/// Applied to Grid to fix bugged grid spaces left behind after demolishing rockets.
+	/// </summary>
+	[HarmonyPatch(typeof(Grid), nameof(Grid.FreeGridSpace))]
+	public static class Grid_FreeGridSpace_Patch {
+		/// <summary>
+		/// Applied before FreeGridSpace runs.
+		/// </summary>
+		internal static void Prefix(Vector2I size, Vector2I offset) {
+			int cell = Grid.XYToCell(offset.x, offset.y), width = size.x, stride =
+				Grid.WidthInCells - width;
+			for (int y = size.y; y > 0; y--) {
+				for (int x = width; x > 0; x--) {
+					if (Grid.IsValidCell(cell))
+						SimMessages.ReplaceElement(cell, SimHashes.Vacuum, null, 0.0f);
+					cell++;
+				}
+				cell += stride;
+			}
+		}
+	}
+
+	/// <summary>
 	/// Applied to HoverTextHelper to fix the integer overflow error on huge masses.
 	/// </summary>
 	[HarmonyPatch(typeof(HoverTextHelper), "MassStringsReadOnly")]
@@ -686,14 +718,19 @@ namespace PeterHan.StockBugFix {
 	/// </summary>
 	[HarmonyPatch(typeof(Substance), nameof(Substance.SpawnResource))]
 	public static class Substance_SpawnResource_Patch {
+		private static void SetTemperature(PrimaryElement element, float value) {
+			if (value > 0.0f && value < Sim.MaxTemperature)
+				element.Temperature = value;
+		}
+
 		/// <summary>
 		/// Transpiles SpawnResource to use the right temperature setter.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
 			return PPatchTools.ReplaceMethodCallSafe(method, typeof(PrimaryElement).
 				GetPropertySafe<float>(nameof(PrimaryElement.InternalTemperature), false).
-				GetSetMethod(true), typeof(PrimaryElement).GetMethodSafe("SetTemperature",
-				false, typeof(float)));
+				GetSetMethod(true), typeof(Substance_SpawnResource_Patch).GetMethodSafe(
+				nameof(SetTemperature), true, typeof(PrimaryElement), typeof(float)));
 		}
 	}
 
