@@ -81,14 +81,16 @@ namespace PeterHan.SandboxTools {
 					|| prefab.PrefabTag.Name == OilWellConfig.ID);
 				}, null, Def.GetUISprite(Assets.GetPrefab("GeyserGeneric_slush_water"))));
 			// Rover
-			var rover_name = GameTags.Robots.Models.ScoutRover.Name.ToUpper();
-			var icon = new Tuple<Sprite, Color>(CodexCache.entries[rover_name].icon, CodexCache.entries[rover_name].iconColor);
-			var creature_filter = filters.Find(filter => filter.Name == STRINGS.UI.SANDBOXTOOLS.FILTERS.ENTITIES.CREATURE);
-			filters.Add(new SearchFilter(STRINGS.CREATURES.FAMILY_PLURAL.SCOUTROVER,
-				(entity) => {
-					var prefab = entity as KPrefabID;
-					return prefab != null && prefab.PrefabTag.Name == ScoutRoverConfig.ID;
-				}, creature_filter, icon));
+			if (DlcManager.IsExpansion1Active()) {
+				var rover_name = GameTags.Robots.Models.ScoutRover.Name.ToUpper();
+				var icon = new Tuple<Sprite, Color>(CodexCache.entries[rover_name].icon, CodexCache.entries[rover_name].iconColor);
+				var creature_filter = filters.Find(filter => filter.Name == STRINGS.UI.SANDBOXTOOLS.FILTERS.ENTITIES.CREATURE);
+				filters.Add(new SearchFilter(STRINGS.CREATURES.FAMILY_PLURAL.SCOUTROVER,
+					(entity) => {
+						var prefab = entity as KPrefabID;
+						return prefab != null && prefab.PrefabTag.Name == ScoutRoverConfig.ID;
+					}, creature_filter, icon));
+			}
 			// Add matching assets
 			var options = ListPool<object, SandboxToolParameterMenu>.Allocate();
 			foreach (var prefab in Assets.Prefabs)
