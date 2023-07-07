@@ -21,7 +21,7 @@ using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-
+using UnityEngine;
 using InventoryDict = System.Collections.Generic.IDictionary<Tag, System.Collections.Generic.
 	HashSet<Pickupable>>;
 
@@ -65,13 +65,15 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <returns>The total mass of items on this world.</returns>
 		private static float SumTotal(IEnumerable<Pickupable> items, int worldId) {
 			float total = 0f;
-			foreach (var pickupable in items)
-				if (pickupable != null) {
-					int cell = pickupable.cachedCell;
-					if (Grid.IsValidCell(cell) && Grid.WorldIdx[cell] == worldId &&
-							!pickupable.KPrefabID.HasTag(GameTags.StoredPrivate))
-						total += pickupable.TotalAmount;
-				}
+			lock (items) {
+				foreach (var pickupable in items)
+					if (pickupable != null) {
+						int cell = pickupable.cachedCell;
+						if (Grid.IsValidCell(cell) && Grid.WorldIdx[cell] == worldId &&
+								!pickupable.KPrefabID.HasTag(GameTags.StoredPrivate))
+							total += pickupable.TotalAmount;
+					}
+			}
 			return total;
 		}
 
@@ -283,7 +285,9 @@ namespace PeterHan.FastTrack.UIPatches {
 			if (BackgroundWorldInventory.IsAcceptable(itemTag)) {
 				if (!inventory.TryGetValue(itemTag, out var entry))
 					inventory[itemTag] = entry = new HashSet<Pickupable>();
-				entry.Add(pickupable);
+				lock (entry) {
+					entry.Add(pickupable);
+				}
 			}
 		}
 
@@ -314,7 +318,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		internal static bool Prefix(WorldInventory __instance, object data) {
 			int cell, id = __instance.worldId;
-			if (data is UnityEngine.GameObject gameObject && gameObject.TryGetComponent(
+			if (data is GameObject gameObject && gameObject.TryGetComponent(
 					out Pickupable pickupable) && Grid.IsValidCell(cell = Grid.PosToCell(
 					gameObject.transform.position)) && id >= 0 && Grid.WorldIdx[cell] == id &&
 					!gameObject.TryGetComponent(out Navigator _))
@@ -336,6 +340,35 @@ namespace PeterHan.FastTrack.UIPatches {
 		internal static void Postfix(WorldInventory __instance) {
 			if (__instance != null)
 				__instance.gameObject.AddOrGet<BackgroundWorldInventory>();
+		}
+	}
+
+	/// <summary>
+	/// Applied to WorldInventory to synchronize accesses to removing items.
+	/// </summary>
+	[HarmonyPatch(typeof(WorldInventory), nameof(WorldInventory.OnRemovedFetchable))]
+	public static class WorldInventory_OnRemovedFetchable_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.ParallelInventory;
+
+		/// <summary>
+		/// Applied after OnRemovedFetchable runs.
+		/// </summary>
+		internal static bool Prefix(WorldInventory __instance, object data) {
+			if (data is GameObject obj && obj != null && obj.TryGetComponent(
+					out Pickupable pickupable)) {
+				var inventory = __instance.Inventory;
+				var kpid = pickupable.KPrefabID;
+				if (inventory.TryGetValue(kpid.PrefabTag, out HashSet<Pickupable> items))
+					lock (items) {
+						items.Remove(pickupable);
+					}
+				foreach (var tag in kpid.Tags)
+					if (inventory.TryGetValue(tag, out items))
+						lock (items) {
+							items.Remove(pickupable);
+						}
+			}
+			return false;
 		}
 	}
 
