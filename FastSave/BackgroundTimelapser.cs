@@ -117,7 +117,6 @@ namespace PeterHan.FastSave {
 					string saveFolder = Path.Combine(retiredPath, saveName);
 					if (!string.IsNullOrWhiteSpace(WorldName)) {
 						saveFolder = Path.Combine(saveFolder, WorldID.ToString("D5"));
-						saveFolder = Path.Combine(saveFolder, WorldName);
 						saveName = WorldName;
 					}
 					if (!Directory.Exists(saveFolder))
