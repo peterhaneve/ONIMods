@@ -495,9 +495,10 @@ namespace ReimaginationTeam.DecorRework {
 				var prober = Game.Instance.roomProber;
 				if (obj != null && prober != null) {
 					var room = prober.GetRoomOfGameObject(obj)?.roomType;
+					var types = Db.Get().RoomTypes;
 					// Only need to re-evaluate, if the room is a miscellaneous room
 					// or a park may be upgraded to a natural reserve.
-					if (room == Db.Get().RoomTypes.Neutral || room == types.Park)
+					if (room == types.Neutral || room == types.Park)
 						// Update that room
 						Game.Instance.roomProber.SolidChangedEvent(Grid.PosToCell(obj), true);
 				}

@@ -166,27 +166,7 @@ namespace PeterHan.FastSave {
 					AddValidField(field);
 			}
 		}
-
-		/// <summary>
-		/// Adds all public fields of the class to serialization.
-		/// </summary>
-		/// <param name="type">The type to scan for fields.</param>
-		private void AddPublicFields(Type type) {
-			foreach (var field in type.GetFields(MEMBER_FLAGS))
-				AddValidField(field);
-		}
-
-		/// <summary>
-		/// Adds a field to serialization if it does not have the [NonSerialized] attribute.
-		/// </summary>
-		/// <param name="field">The field to be serialized.</param>
-		private void AddValidField(FieldInfo field) {
-			object[] ns = field.GetCustomAttributes(typeof(NonSerializedAttribute), false);
-			if (ns.Length == 0)
-				serializableFields.Add(field.Name, new DeserializationFieldInfo(Manager.
-					GetTypeInfo(field.FieldType), field));
-		}
-
+		
 		/// <summary>
 		/// Adds the public and private properties of the class which have explicitly included
 		/// a [Serialize] attribute to serialization.
@@ -202,12 +182,32 @@ namespace PeterHan.FastSave {
 		}
 
 		/// <summary>
+		/// Adds all public fields of the class to serialization.
+		/// </summary>
+		/// <param name="type">The type to scan for fields.</param>
+		private void AddPublicFields(Type type) {
+			foreach (var field in type.GetFields(MEMBER_FLAGS))
+				AddValidField(field);
+		}
+		
+		/// <summary>
 		/// Adds all public properties of the class to serialization.
 		/// </summary>
 		/// <param name="type">The type to scan for properties.</param>
 		private void AddPublicProperties(Type type) {
 			foreach (var property in type.GetProperties(MEMBER_FLAGS))
 				AddValidProperty(property);
+		}
+
+		/// <summary>
+		/// Adds a field to serialization if it does not have the [NonSerialized] attribute.
+		/// </summary>
+		/// <param name="field">The field to be serialized.</param>
+		private void AddValidField(FieldInfo field) {
+			object[] ns = field.GetCustomAttributes(typeof(NonSerializedAttribute), false);
+			if (ns.Length == 0)
+				serializableFields[field.Name] = new DeserializationFieldInfo(Manager.
+					GetTypeInfo(field.FieldType), field);
 		}
 
 		/// <summary>
@@ -219,8 +219,8 @@ namespace PeterHan.FastSave {
 			// Ignore indexed properties
 			if (property.GetIndexParameters().Length == 0 && ns.Length == 0 &&
 					property.GetSetMethod() != null)
-				serializableProperties.Add(property.Name, new DeserializationPropertyInfo(
-					Manager.GetTypeInfo(property.PropertyType), property));
+				serializableProperties[property.Name] = new DeserializationPropertyInfo(
+					Manager.GetTypeInfo(property.PropertyType), property);
 		}
 
 		/// <summary>
