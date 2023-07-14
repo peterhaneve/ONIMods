@@ -16,11 +16,12 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System.Collections;
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using System.Collections.Generic;
 using System.Reflection.Emit;
-
+using UnityEngine;
 using GeyserType = GeyserConfigurator.GeyserType;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
@@ -157,6 +158,50 @@ namespace PeterHan.FastTrack.GamePatches {
 				geyserType = null;
 			}
 			__result = geyserType;
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to SpaceScannerNetworkManager to fix a racy out of bounds bug and reduce
+	/// memory allocations.
+	/// </summary>
+	[HarmonyPatch(typeof(SpaceScannerNetworkManager), nameof(SpaceScannerNetworkManager.
+		CalcWorldNetworkQuality))]
+	public static class SpaceScannerNetworkManager_CalcWorldNetworkQuality_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+
+		// The base game only calls CalcWorldNetworkQuality from a Sim100ms on the main thread
+		private static readonly BitArray COVERAGE = new BitArray(1024, false);
+
+		/// <summary>
+		/// Applied before CalcWorldNetworkQuality runs.
+		/// </summary>
+		internal static bool Prefix(WorldContainer world, ref float __result) {
+			var cmps = Components.DetectorNetworks.CreateOrGetCmps(world.id);
+			int width = world.Width, n = cmps.Count, start = world.WorldOffset.x, total = 0;
+			COVERAGE.SetAll(false);
+			var cells = HashSetPool<int, SpaceScannerNetworkManager>.Allocate();
+			for (int i = 0; i < n; i++) {
+				var network = cmps[i];
+				Operational operational;
+				if (network != null && (operational = network.GetComponent<Operational>()) !=
+						null && operational.IsOperational) {
+					cells.Clear();
+					CometDetectorConfig.SKY_VISIBILITY_INFO.CollectVisibleCellsTo(cells, Grid.
+						PosToCell(network.transform.position));
+					foreach (int cell in cells) {
+						int x = Grid.CellToXY(cell).x - start;
+						// Tally unique cells, but only in range
+						if (x >= 0 && x < width && !COVERAGE.Get(x)) {
+							COVERAGE.Set(x, true);
+							total++;
+						}
+					}
+				}
+			}
+			cells.Recycle();
+			__result = Mathf.Clamp01(2.0f * total / width);
 			return false;
 		}
 	}

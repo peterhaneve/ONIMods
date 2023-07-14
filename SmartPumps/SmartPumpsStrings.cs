@@ -61,6 +61,19 @@ namespace PeterHan.SmartPumps {
 			}
 		}
 
+		public static class UI {
+			public static class FRONTEND {
+				public static class SMARTPUMPS {
+					public static LocString CATEGORY_LARGEGASPUMP = "Filtered Gas Pump";
+					public static LocString CATEGORY_LARGELIQUIDPUMP = "Filtered Liquid Pump";
+					public static LocString CATEGORY_SMALLGASPUMP = "Vacuum Pump";
+
+					public static LocString POWER = "Power Consumption";
+					public static LocString RATE = "Pump Rate (kg/s)";
+				}
+			}
+		}
+
 		// "No Matching Gas to Pump"
 		public static LocString NOGASTOPUMP_NAME = "No Configured Gas to Pump";
 		public static LocString NOGASTOPUMP_DESC = string.Concat(

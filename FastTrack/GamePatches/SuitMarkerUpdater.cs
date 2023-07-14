@@ -130,10 +130,10 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <returns>true if the reaction was processed, or false otherwise.</returns>
 		internal static bool UnequipReact(SuitMarker checkpoint, GameObject reactor) {
 			bool react = false;
+			Equipment equipment;
 			if (reactor.TryGetComponent(out MinionIdentity id) && reactor.TryGetComponent(
 					out Navigator nav) && checkpoint.TryGetComponent(out SuitMarkerUpdater
-					updater)) {
-				var equipment = id.GetEquipment();
+					updater) && (equipment = id.GetEquipment()) != null) {
 				if ((nav.flags & checkpoint.PathFlag) > PathFinder.PotentialPath.Flags.None) {
 					var lockers = updater.docks;
 					int n = lockers.Count;

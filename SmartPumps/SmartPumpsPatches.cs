@@ -21,6 +21,7 @@ using PeterHan.PLib.AVC;
 using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
+using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
 using UnityEngine;
 
@@ -32,6 +33,7 @@ namespace PeterHan.SmartPumps {
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
+			LocString.CreateLocStringKeys(typeof(SmartPumpsStrings.UI));
 			new PLocalization().Register();
 			var bm = new PBuildingManager();
 			bm.Register(FilteredGasPumpConfig.CreateBuilding());
@@ -39,6 +41,7 @@ namespace PeterHan.SmartPumps {
 			bm.Register(VacuumPumpConfig.CreateBuilding());
 			new PPatchManager(harmony).RegisterPatchClass(typeof(FilteredPump));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
+			new POptions().RegisterOptions(this, typeof(SmartPumpsOptions));
 		}
 
 		/// <summary>

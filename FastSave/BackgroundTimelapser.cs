@@ -58,6 +58,36 @@ namespace PeterHan.FastSave {
 	/// Stores information for the handoff to PNG file writing in the background.
 	/// </summary>
 	internal sealed class BackgroundTimelapseData {
+		private const string EXTENSION = ".png";
+		
+		/// <summary>
+		/// Previous versions of Fast Save saved old timelapse images under the wrong path,
+		/// due to Klei using Path.Combine on partial file names in the original method (!!!).
+		/// Restore those images to the proper locations.
+		/// </summary>
+		/// <param name="from">The source directory containing old images.</param>
+		/// <param name="to">The location where the images should be moved.</param>
+		private static void MigrateOldTimelapses(string from, string to) {
+			foreach (string item in Directory.EnumerateFileSystemEntries(from)) {
+				string dest = Path.GetFileName(item);
+				if (dest.EndsWith(EXTENSION) && !string.IsNullOrEmpty(dest))
+					try {
+						File.Move(item, Path.Combine(to, dest));
+						PUtil.LogDebug("Moved screenshot: " + dest);
+					} catch (SystemException e) {
+						// Covers: IOException, UnauthorizedAccessException, SecurityException
+						PUtil.LogWarning("Unable to migrate screenshot:");
+						PUtil.LogExcWarn(e);
+					}
+			}
+			try {
+				Directory.Delete(from);
+			} catch (SystemException e) {
+				PUtil.LogWarning("Unable to remove the old screenshots directory:");
+				PUtil.LogExcWarn(e);
+			}
+		}
+
 		/// <summary>
 		/// Whether the screenshot is a colony preview.
 		/// </summary>
@@ -112,19 +142,21 @@ namespace PeterHan.FastSave {
 					BaseName), path;
 				if (Preview)
 					// Colony preview
-					path = Path.ChangeExtension(SaveGamePath, ".png");
+					path = Path.ChangeExtension(SaveGamePath, EXTENSION);
 				else {
 					string saveFolder = Path.Combine(retiredPath, saveName);
 					if (!string.IsNullOrWhiteSpace(WorldName)) {
 						saveFolder = Path.Combine(saveFolder, WorldID.ToString("D5"));
-						saveFolder = Path.Combine(saveFolder, WorldName);
 						saveName = WorldName;
+						string oldPath = Path.Combine(saveFolder, saveName);
+						if (Directory.Exists(oldPath))
+							MigrateOldTimelapses(oldPath, saveFolder);
 					}
 					if (!Directory.Exists(saveFolder))
 						Directory.CreateDirectory(saveFolder);
 					// Suffix file name with the current cycle
 					saveName += "_cycle_" + GameClock.Instance.GetCycle().ToString("0000.##") +
-						".png";
+						EXTENSION;
 					// debugScreenShot is always false
 					path = Path.Combine(saveFolder, saveName);
 				}

@@ -114,12 +114,27 @@ namespace PeterHan.QueueForSinks {
 		}
 
 		/// <summary>
+		/// Releases the token if it was taken, but no work was started within a few frames.
+		/// Handles cases where the Duplicant who took the token gets distracted or dies
+		/// before work can ever begin.
+		/// </summary>
+		private System.Collections.IEnumerator ReleaseToken() {
+			yield return null;
+			yield return null;
+			if (workable != null && workable.worker == null)
+				token = 1;
+		}
+
+		/// <summary>
 		/// Tries to take the checkpoint token.
 		/// </summary>
 		/// <returns>true if the token was taken and the Duplicant may leave, or false if the
 		/// token is unavailable and the Duplicant must keep waiting.</returns>
 		internal bool TryTakeToken() {
-			return Interlocked.CompareExchange(ref token, 0, 1) == 1;
+			bool taken = Interlocked.CompareExchange(ref token, 0, 1) == 1;
+			if (taken)
+				StartCoroutine(ReleaseToken());
+			return taken;
 		}
 
 		/// <summary>
@@ -219,9 +234,10 @@ namespace PeterHan.QueueForSinks {
 				SuffocationMonitor.Instance suff;
 				// Left is decreasing X, must be facing the correct direction
 				return (dir == WorkableReactable.AllowedDirection.Any || (dir ==
-					WorkableReactable.AllowedDirection.Left) == x < 0.0f) && InQueue() &&
+					WorkableReactable.AllowedDirection.Left) == x < 0.0f) &&
 					dupe != null && checkpoint.MustStop(dupe, x) && ((suff = dupe.
-					GetSMI<SuffocationMonitor.Instance>()) == null || !suff.IsSuffocating());
+					GetSMI<SuffocationMonitor.Instance>()) == null || !suff.IsSuffocating()) &&
+					InQueue();
 			}
 
 			public override void Update(float dt) {

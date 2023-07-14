@@ -232,6 +232,64 @@ namespace PeterHan.FastTrack.PathPatches {
 	}
 
 	/// <summary>
+	/// Applied to PathGrid to add a lock around a race condition in BeginUpdate where rootX
+	/// and rootY could be accessed while being updated.
+	/// </summary>
+	[HarmonyPatch(typeof(PathGrid), nameof(PathGrid.BeginUpdate))]
+	public static class PathGrid_BeginUpdate_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.AsyncPathProbe;
+
+		/// <summary>
+		/// Applied before BeginUpdate runs.
+		/// </summary>
+		internal static bool Prefix(PathGrid __instance, int root_cell, bool isContinuation) {
+			__instance.isUpdating = true;
+			__instance.freshlyOccupiedCells.Clear();
+			if (!isContinuation) {
+				var gp = __instance.groupProber;
+				short sn;
+				lock (__instance.Cells) {
+					sn = (short)(__instance.serialNo + 1);
+					if (__instance.applyOffset) {
+						Grid.CellToXY(root_cell, out int rootX, out int rootY);
+						__instance.rootX = rootX - (__instance.widthInCells >> 1);
+						__instance.rootY = rootY - (__instance.heightInCells >> 1);
+					}
+					__instance.serialNo = sn;
+				}
+				gp?.SetValidSerialNos(__instance, __instance.previousSerialNo, sn);
+			}
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to PathGrid to add a lock and stop a potential racy access in OffsetCell.
+	/// </summary>
+	[HarmonyPatch(typeof(PathGrid), nameof(PathGrid.OffsetCell))]
+	public static class PathGrid_OffsetCell_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.AsyncPathProbe;
+
+		/// <summary>
+		/// Applied before OffsetCell runs.
+		/// </summary>
+		internal static bool Prefix(PathGrid __instance, int cell, ref int __result) {
+			int newCell = cell;
+			if (__instance.applyOffset) {
+				int w = __instance.widthInCells, h = __instance.heightInCells;
+				Grid.CellToXY(cell, out int x, out int y);
+				lock (__instance.Cells) {
+					int rx = __instance.rootX, ry = __instance.rootY;
+					newCell = (x < rx || x >= rx + w || y < ry || y >= ry + h) ? -1 :
+						(y - ry) * w + (x - rx);
+				}
+			}
+			__result = newCell;
+			return false;
+		}
+	}
+
+	/// <summary>
 	/// Applied to PathProber to set full path probes as the source of truth for group probing
 	/// and update the path cache when it finishes.
 	/// 

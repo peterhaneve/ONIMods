@@ -66,7 +66,8 @@ namespace PeterHan.SmartPumps {
 				},
 				OverheatTemperature = 75.0f + Constants.CELSIUS2KELVIN,
 				Placement = BuildLocationRule.Anywhere,
-				PowerInput = new PowerRequirement(240.0f, new CellOffset(0, 1)),
+				PowerInput = new PowerRequirement(Mathf.Max(1.0f, SmartPumpsOptions.Instance.
+					PowerLargeLiquidPump), new CellOffset(0, 1)),
 				SubCategory = "pumps",
 				Tech = "ValveMiniaturization",
 				ViewMode = OverlayModes.LiquidConduits.ID,
@@ -105,7 +106,8 @@ namespace PeterHan.SmartPumps {
 			var elementConsumer = go.AddOrGet<ElementConsumer>();
 			elementConsumer.configuration = ElementConsumer.Configuration.Element;
 			elementConsumer.elementToConsume = SimHashes.Vacuum;
-			elementConsumer.consumptionRate = 10f;
+			elementConsumer.consumptionRate = Mathf.Max(0.0f, Mathf.Min(10.0f,
+				SmartPumpsOptions.Instance.RateLargeLiquidPump));
 			elementConsumer.storeOnConsume = true;
 			elementConsumer.showInStatusPanel = false;
 			elementConsumer.consumptionRadius = 2;
