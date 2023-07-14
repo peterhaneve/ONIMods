@@ -77,13 +77,13 @@ namespace PeterHan.SandboxTools {
 			filters.Add(new SearchFilter(SandboxToolsStrings.FILTER_GEYSERS,
 				(entity) => {
 					var prefab = entity as KPrefabID;
-					return prefab != null && ((prefab.TryGetComponent(out Geyser _) && prefab.TryGetComponent(out Uncoverable _))
-					|| prefab.PrefabTag.Name == OilWellConfig.ID);
+					return prefab != null && ((prefab.TryGetComponent(out Geyser _) && prefab.TryGetComponent(out Uncoverable _)) ||
+						prefab.PrefabTag.Name == OilWellConfig.ID);
 				}, null, Def.GetUISprite(Assets.GetPrefab("GeyserGeneric_slush_water"))));
 			// Rover
-			if (DlcManager.IsExpansion1Active()) {
-				var rover_name = GameTags.Robots.Models.ScoutRover.Name.ToUpper();
-				var icon = new Tuple<Sprite, Color>(CodexCache.entries[rover_name].icon, CodexCache.entries[rover_name].iconColor);
+			if (DlcManager.IsExpansion1Active() && CodexCache.entries != null &&
+					CodexCache.entries.TryGetValue(GameTags.Robots.Models.ScoutRover.Name.ToUpperInvariant(), out var entry) && entry != null) {
+				var icon = new Tuple<Sprite, Color>(entry.icon, entry.iconColor);
 				var creature_filter = filters.Find(filter => filter.Name == STRINGS.UI.SANDBOXTOOLS.FILTERS.ENTITIES.CREATURE);
 				filters.Add(new SearchFilter(STRINGS.CREATURES.FAMILY_PLURAL.SCOUTROVER,
 					(entity) => {
