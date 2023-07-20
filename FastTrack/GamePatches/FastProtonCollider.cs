@@ -345,6 +345,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before CheckCollision runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}
@@ -361,6 +362,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before MovingUpdate runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(HighEnergyParticle __instance, float dt) {
 			bool cont = !__instance.TryGetComponent(out FastProtonCollider fpc);
 			if (!cont)

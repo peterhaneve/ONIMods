@@ -35,6 +35,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetBreathableString runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(Element element, float Mass, ref string __result) {
 				__result = GetBreathableString(element, Mass);
 				return false;
@@ -48,6 +49,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedCalories runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float calories, TimeSlice timeSlice, bool forceKcal,
 					ref string __result) {
 				string unit;
@@ -72,6 +74,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedCycles runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float seconds, string formatString, bool forceCycles,
 					ref string __result) {
 				var text = CACHED_BUILDER;
@@ -99,6 +102,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedDisease runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(byte idx, int units, ref string __result) {
 				var text = CACHED_BUILDER;
 				if (idx == Sim.InvalidDiseaseIdx || units <= 0)
@@ -121,6 +125,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedDiseaseAmount runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(int units, TimeSlice timeSlice, ref string __result) {
 				var text = CACHED_BUILDER;
 				GetFormattedDiseaseAmount(text.Clear(), units, timeSlice);
@@ -136,6 +141,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedDistance runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float meters, ref string __result) {
 				var text = CACHED_BUILDER.Clear();
 				float absMeters = Mathf.Abs(meters);
@@ -162,6 +168,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedHeatEnergy runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float dtu, GameUtil.HeatEnergyFormatterUnit unit,
 					ref string __result) {
 				var text = CACHED_BUILDER.Clear();
@@ -196,6 +203,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedHeatEnergyRate runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float dtu_s, GameUtil.HeatEnergyFormatterUnit unit,
 					ref string __result) {
 				var text = CACHED_BUILDER;
@@ -228,6 +236,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedHighEnergyParticles runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float units, TimeSlice timeSlice, bool displayUnits,
 					ref string __result) {
 				var text = CACHED_BUILDER;
@@ -250,6 +259,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedInt runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float num, TimeSlice timeSlice, ref string __result) {
 				var text = CACHED_BUILDER;
 				if (!text.Clear().AppendIfInfinite(num))
@@ -267,6 +277,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedJoules runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float joules, string floatFormat, TimeSlice timeSlice,
 					ref string __result) {
 				var text = CACHED_BUILDER.Clear();
@@ -300,6 +311,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedMass runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float mass, TimeSlice timeSlice, string floatFormat,
 					GameUtil.MetricMassFormat massFormat, bool includeSuffix,
 					ref string __result) {
@@ -318,6 +330,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedPercent runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float percent, TimeSlice timeSlice,
 					ref string __result) {
 				var text = CACHED_BUILDER;
@@ -334,6 +347,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedPlantGrowth runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float percent, TimeSlice timeSlice,
 					ref string __result) {
 				float absP = Mathf.Abs(percent);
@@ -362,6 +376,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedRocketRange runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float range, TimeSlice timeSlice, bool displaySuffix,
 					ref string __result) {
 				var text = CACHED_BUILDER;
@@ -378,6 +393,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedRads runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float rads, TimeSlice timeSlice, ref string __result) {
 				var text = CACHED_BUILDER;
 				if (!text.Clear().AppendIfInfinite(rads))
@@ -395,6 +411,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedRoundedJoules runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float joules, ref string __result) {
 				var text = CACHED_BUILDER;
 				var legend = JOULE_LEGEND;
@@ -419,6 +436,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedSimple runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float num, TimeSlice timeSlice, string formatString,
 					ref string __result) {
 				var text = CACHED_BUILDER;
@@ -445,6 +463,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedTemperature runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float temp, TimeSlice timeSlice,
 					GameUtil.TemperatureInterpretation interpretation, bool displayUnits,
 					bool roundInDestinationFormat, ref string __result) {
@@ -466,6 +485,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedTime runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float seconds, string floatFormat, ref string __result) {
 				var text = CACHED_BUILDER;
 				if (!text.Clear().AppendIfInfinite(seconds))
@@ -482,6 +502,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedUnits runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float units, TimeSlice timeSlice, bool displaySuffix,
 					string floatFormatOverride, ref string __result) {
 				var text = CACHED_BUILDER;
@@ -506,6 +527,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetFormattedWattage runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float watts, GameUtil.WattageFormatterUnit unit,
 					bool displayUnits, ref string __result) {
 				var text = CACHED_BUILDER;
@@ -522,6 +544,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetHardnessString runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(Element element, bool addColor, ref string __result) {
 				__result = GetHardnessString(element, addColor);
 				return false;
@@ -535,6 +558,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetStandardFloat runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float f, ref string __result) {
 				var text = CACHED_BUILDER;
 				if (!text.Clear().AppendIfInfinite(f))
@@ -551,6 +575,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetThermalConductivityString runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(Element element, bool addColor, bool addValue,
 					ref string __result) {
 				int index;
@@ -587,6 +612,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetUnitFormattedName runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(string name, float count, bool upperName,
 					ref string __result) {
 				var text = CACHED_BUILDER;

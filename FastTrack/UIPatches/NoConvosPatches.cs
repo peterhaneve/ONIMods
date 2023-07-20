@@ -32,6 +32,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before SimEveryTick runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}
@@ -51,6 +52,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before OnStartedTalking runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(object data, Chatty __instance) {
 			if ((data is MinionIdentity other || (data is ConversationManager.
 					StartedTalkingEvent evt && evt.talker != null && evt.talker.
@@ -77,6 +79,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before Sim200ms runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}
@@ -92,6 +95,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before Sim200ms runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}
@@ -107,6 +111,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before PlaySpeech runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}
@@ -122,6 +127,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before AddThought runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}

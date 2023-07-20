@@ -80,7 +80,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// <summary>
 			/// Applied before CollectChores runs.
 			/// </summary>
-			[HarmonyPriority(Priority.LowerThanNormal)]
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(ChoreConsumerState consumer_state,
 					ChoreProvider __instance, List<PreContext> succeeded) {
 				bool run = false;
@@ -109,6 +109,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// <summary>
 			/// Applied before CollectChores runs.
 			/// </summary>
+			[HarmonyPriority(Priority.LowerThanNormal)]
 			internal static bool Prefix(ChoreConsumerState consumer_state,
 					GlobalChoreProvider __instance, List<PreContext> succeeded) {
 				bool run = false;

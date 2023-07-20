@@ -84,6 +84,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// <summary>
 		/// Applied before FindTargetCell runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(GasAndLiquidConsumerMonitor.Instance __instance) {
 			// The original query limited to 25 results, pufts have a typical path cost of 2
 			// for a move and slicksters 1, but pufts can go 4 directions while slicksters only

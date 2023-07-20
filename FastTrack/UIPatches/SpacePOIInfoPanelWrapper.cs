@@ -331,6 +331,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before Refresh runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(SpacePOISimpleInfoPanel __instance,
 					CollapsibleDetailContentPanel spacePOIPanel, GameObject selectedTarget) {
 				var inst = instance;

@@ -382,6 +382,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before OnNameChanged runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(DetailsScreen __instance, string newName) {
 				var inst = instance;
 				__instance.isEditing = false;
@@ -421,6 +422,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before OpenCodexEntry runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix() {
 				var inst = instance;
 				if (inst != null) {
@@ -442,6 +444,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before Refresh runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(DetailsScreen __instance, GameObject go) {
 				var screens = __instance.screens;
 				var oldTarget = __instance.target;
@@ -476,6 +479,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before SetTitle runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(DetailsScreen __instance) {
 				UpdateTitle(__instance);
 				return false;

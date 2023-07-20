@@ -39,6 +39,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before RenderEveryTick runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(Clustercraft ___craft) {
 			bool run = true;
 			if (___craft != null) {
@@ -71,6 +72,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied after GetBlockTileDecorInfo runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ref BlockTileDecorInfo __result) {
 			__result = null;
 			return false;
@@ -87,6 +89,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before OnCancel runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(CancellableDig __instance) {
 			if (__instance != null)
 				__instance.DeleteObject();
@@ -104,6 +107,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before Initialize runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}
@@ -119,6 +123,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before PlayAnimation runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}
@@ -144,6 +149,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before SpawnFX runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return FastTrackMod.GameRunning;
 		}
@@ -177,6 +183,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before RenderEveryTick runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}

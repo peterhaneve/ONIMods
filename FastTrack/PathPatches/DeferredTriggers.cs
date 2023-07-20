@@ -258,6 +258,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Applied before TriggerStop runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(KBatchedAnimController __instance) {
 			var anim = __instance.CurrentAnim;
 			if (__instance.animQueue.Count > 0)
@@ -283,6 +284,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Applied before GetOffsets runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(OffsetTracker __instance, int current_cell,
 				ref CellOffset[] __result) {
 			var offsets = __instance.offsets;

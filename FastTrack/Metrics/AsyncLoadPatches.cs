@@ -100,6 +100,7 @@ namespace PeterHan.FastTrack.Metrics {
 			/// <summary>
 			/// Applied before Run runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix() {
 				QuickAsyncLoad();
 				return false;
@@ -117,6 +118,7 @@ namespace PeterHan.FastTrack.Metrics {
 		/// <summary>
 		/// Applied before LoadEventHashes runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}

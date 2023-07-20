@@ -233,6 +233,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetAllDescriptors runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(GameObject go, bool simpleInfoScreen,
 					ref List<Descriptor> __result) {
 				var descriptors = ALL_DESCRIPTORS;
@@ -253,6 +254,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetEffectDescriptors runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(List<Descriptor> descriptors,
 					ref List<Descriptor> __result) {
 				var filtered = EFFECT_DESCRIPTORS;
@@ -280,6 +282,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetGameObjectEffects runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(GameObject go, bool simpleInfoScreen,
 					ref List<Descriptor> __result) {
 				__result = GetGameObjectEffects(go, simpleInfoScreen);
@@ -297,6 +300,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetPlantEffectDescriptors runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(GameObject go, ref List<Descriptor> __result) {
 				var descriptors = PLANT_DESCRIPTORS;
 				descriptors.Clear();
@@ -333,6 +337,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetPlantLifeCycleDescriptors runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(GameObject go, ref List<Descriptor> __result) {
 				var descriptors = PLANT_DESCRIPTORS;
 				var allDescriptors = ALL_DESCRIPTORS;
@@ -367,6 +372,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetPlantRequirementDescriptors runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(GameObject go, ref List<Descriptor> __result) {
 				var descriptors = PLANT_DESCRIPTORS;
 				var allDescriptors = ALL_DESCRIPTORS;
@@ -401,6 +407,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetRequirementDescriptors runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(List<Descriptor> descriptors,
 					ref List<Descriptor> __result) {
 				var filtered = EFFECT_DESCRIPTORS;

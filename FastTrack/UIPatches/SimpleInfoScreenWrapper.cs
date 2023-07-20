@@ -703,6 +703,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before Refresh runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(bool force) {
 				if (instance != null)
 					instance.Refresh(force);
@@ -721,6 +722,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before RefreshBreedingChance runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix() {
 				if (instance != null)
 					instance.RefreshBreedingChance();
@@ -739,6 +741,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before RefreshProcessConditions runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix() {
 				if (instance != null)
 					instance.RefreshProcess();
@@ -756,6 +759,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before RefreshStorage runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(SimpleInfoScreen __instance) {
 				var inst = instance;
 				if (inst != null && __instance.selectedTarget != null)
@@ -775,6 +779,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before RefreshWorld runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix() {
 				if (instance != null)
 					instance.RefreshWorld();

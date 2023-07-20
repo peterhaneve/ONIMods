@@ -106,6 +106,7 @@ namespace PeterHan.FastTrack {
 			/// <summary>
 			/// Applied before LateUpdate runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix() {
 				bool shouldRunAmbience = runAmbience;
 				runAmbience = false;
@@ -132,6 +133,7 @@ namespace PeterHan.FastTrack {
 			/// <summary>
 			/// Applied before RenderEveryTick runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix() {
 				bool shouldRunLooping = runLooping;
 				runLooping = !runLooping;
@@ -152,6 +154,7 @@ namespace PeterHan.FastTrack {
 			/// <summary>
 			/// Applied before Update runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix() {
 				bool shouldRunMix = runMix;
 				runMix = false;
@@ -171,6 +174,7 @@ namespace PeterHan.FastTrack {
 		/// <summary>
 		/// Applied before IsAudibleSound runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ref bool __result) {
 			__result = false;
 			return false;
@@ -188,6 +192,7 @@ namespace PeterHan.FastTrack {
 		/// <summary>
 		/// Applied before IsAudibleSound runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ref bool __result) {
 			__result = false;
 			return false;
@@ -205,6 +210,7 @@ namespace PeterHan.FastTrack {
 		/// <summary>
 		/// Applied before PlayDingSound runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(Notification notification,
 				IDictionary<NotificationType, string> ___notificationSounds) {
 			// No const for that sound name
@@ -234,6 +240,7 @@ namespace PeterHan.FastTrack {
 		/// <summary>
 		/// Applied before these methods run.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			var options = FastTrackOptions.Instance;
 			return !options.DisableSound && KPlayerPrefs.GetFloat(SoundUpdater.VOLUME_MUSIC,
@@ -283,6 +290,7 @@ namespace PeterHan.FastTrack {
 		/// <summary>
 		/// Applied before these methods run.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}

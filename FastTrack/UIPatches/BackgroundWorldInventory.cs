@@ -316,6 +316,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before OnAddedFetchable runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(WorldInventory __instance, object data) {
 			int cell, id = __instance.worldId;
 			if (data is GameObject gameObject && gameObject.TryGetComponent(
@@ -353,6 +354,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied after OnRemovedFetchable runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(WorldInventory __instance, object data) {
 			if (data is GameObject obj && obj != null && obj.TryGetComponent(
 					out Pickupable pickupable)) {
@@ -382,6 +384,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(WorldInventory __instance) {
 			// Only need to update the pinned resources panel
 			if (__instance.TryGetComponent(out BackgroundWorldInventory bwi))

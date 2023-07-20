@@ -313,6 +313,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before LateUpdate runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(InterfaceTool __instance) {
 				int cell;
 				if (!__instance.populateHitsList)
@@ -375,6 +376,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before OnLeftClickDown runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(Vector3 cursor_pos, SelectTool __instance) {
 				int cell = Grid.PosToCell(cursor_pos);
 				if (Grid.IsValidCell(cell)) {

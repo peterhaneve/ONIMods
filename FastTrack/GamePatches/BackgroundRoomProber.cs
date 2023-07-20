@@ -686,6 +686,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// <summary>
 			/// Applied before GetCavityForCell runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(int cell, ref CavityInfo __result) {
 				var inst = Instance;
 				if (inst != null)
@@ -705,6 +706,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// <summary>
 			/// Applied before OnBuildingsChanged runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(int cell) {
 				var inst = Instance;
 				if (inst != null)
@@ -723,6 +725,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// <summary>
 			/// Applied before Refresh runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix() {
 				var inst = Instance;
 				if (inst != null)
@@ -741,6 +744,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// <summary>
 			/// Applied before Sim1000ms runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix() {
 				return false;
 			}
@@ -757,6 +761,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// <summary>
 			/// Applied before SolidChangedEvent runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(int cell, bool ignoreDoors) {
 				var inst = Instance;
 				if (inst != null && (!ignoreDoors || !Grid.HasDoor[cell]))
@@ -775,6 +780,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// <summary>
 			/// Applied before UpdateRoom runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(CavityInfo cavity) {
 				var inst = Instance;
 				if (inst != null)

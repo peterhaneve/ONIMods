@@ -131,6 +131,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		/// <summary>
 		/// Applied before Render runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ConduitFlowVisualizer __instance, float z) {
 			double now = Time.unscaledTime, calcUpdateRate = updateRate;
 			var cc = CameraController.Instance;

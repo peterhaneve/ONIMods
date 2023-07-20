@@ -633,6 +633,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before FormatOneDecimalPlace runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float value, ref string __result) {
 				var text = CACHED_BUILDER;
 				text.Clear();
@@ -652,6 +653,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before FormatTwoDecimalPlace runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float value, ref string __result) {
 				var text = CACHED_BUILDER;
 				text.Clear();
@@ -671,6 +673,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before FormatWholeNumber runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(float value, ref string __result) {
 				var text = CACHED_BUILDER;
 				text.Clear();

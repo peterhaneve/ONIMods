@@ -159,6 +159,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// <summary>
 			/// Applied before Render runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(Vector3 position, RenderData __instance) {
 				var mesh = __instance.mesh;
 				if (mesh != null && visualizers.TryGetValue(mesh, out GroundMeshRenderer

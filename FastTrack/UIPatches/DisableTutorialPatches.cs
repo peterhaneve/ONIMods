@@ -45,6 +45,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before these methods run.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}
@@ -147,6 +148,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before these methods run.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}

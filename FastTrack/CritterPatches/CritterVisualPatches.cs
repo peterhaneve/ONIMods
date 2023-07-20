@@ -45,6 +45,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// <summary>
 		/// Applied before UpdateFreeMovement or UpdateRetractedLoop runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(SegmentedCreature.Instance smi) {
 			var head = smi.GetHeadSegmentNode().Value;
 			return head.Position != smi.previousHeadPosition;

@@ -303,6 +303,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before ClearLastKnownCell runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(Transform transform) {
 			FastCellChangeMonitor.FastInstance.ClearLastKnownCell(transform);
 			return false;
@@ -319,6 +320,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before IsMoving runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(Transform transform, ref bool __result) {
 			__result = FastCellChangeMonitor.FastInstance.IsMoving(transform);
 			return false;
@@ -335,6 +337,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before MarkDirty runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(Transform transform) {
 			FastCellChangeMonitor.FastInstance.MarkDirty(transform);
 			return false;
@@ -351,6 +354,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before RenderEveryTick runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			FastCellChangeMonitor.FastInstance.Update();
 			return false;
@@ -369,6 +373,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before RegisterCellChangedHandler runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(Transform transform, System.Action callback,
 				ref int __result) {
 			__result = FastCellChangeMonitor.FastInstance.RegisterCellChangedHandler(transform,
@@ -389,6 +394,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before RegisterMovementStateChanged runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(Transform transform, Action<Transform, bool> handler) {
 			FastCellChangeMonitor.FastInstance.RegisterMovementStateChanged(transform,
 				handler);
@@ -408,6 +414,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before UnregisterCellChangedHandler runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(int instance_id, System.Action callback) {
 			FastCellChangeMonitor.FastInstance.UnregisterCellChangedHandler(instance_id,
 				callback);
@@ -427,6 +434,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before UnregisterCellChangedHandler runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(Transform transform, System.Action callback) {
 			FastCellChangeMonitor.FastInstance.UnregisterCellChangedHandler(transform.
 				GetInstanceID(), callback);
@@ -446,6 +454,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before UnregisterMovementStateChanged runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(int instance_id, Action<Transform, bool> callback) {
 			FastCellChangeMonitor.FastInstance.UnregisterMovementStateChanged(instance_id,
 				callback);
@@ -465,6 +474,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before UnregisterMovementStateChanged runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(Transform transform, Action<Transform, bool> callback) {
 			FastCellChangeMonitor.FastInstance.UnregisterMovementStateChanged(transform.
 				GetInstanceID(), callback);

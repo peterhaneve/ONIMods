@@ -22,6 +22,7 @@ using PeterHan.PLib.Core;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using UnityEngine;
+
 using GeyserType = GeyserConfigurator.GeyserType;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
@@ -37,6 +38,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Accumulate runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(Accumulators __instance, HandleVector<int>.Handle handle,
 				float amount) {
 			var accumulated = __instance.accumulated;
@@ -61,6 +63,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Add runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(Accumulators __instance, ref HandleVector<int>.
 				Handle __result) {
 			__result = __instance.accumulated.Allocate(0f);
@@ -137,6 +140,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before FindType runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(HashedString typeId, ref GeyserType __result) {
 			GeyserType geyserType;
 			if (typeId.IsValid) {
@@ -177,6 +181,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before CalcWorldNetworkQuality runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(WorldContainer world, ref float __result) {
 			var cmps = Components.DetectorNetworks.CreateOrGetCmps(world.id);
 			int width = world.Width, n = cmps.Count, start = world.WorldOffset.x, total = 0;

@@ -554,6 +554,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before RefreshDetails runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(AdditionalDetailsPanel __instance) {
 			var inst = AdditionalDetailsPanelWrapper.Instance;
 			bool run = inst == null;

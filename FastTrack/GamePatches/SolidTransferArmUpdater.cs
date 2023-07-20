@@ -256,6 +256,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before BatchUpdate runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(List<SolidTransferArmBucket> solid_transfer_arms,
 				float time_delta) {
 			var inst = SolidTransferArmUpdater.Instance;

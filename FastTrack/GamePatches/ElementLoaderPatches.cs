@@ -29,6 +29,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before FindElementByName runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(string name, ref Element __result) {
 			if (!ElementLoader.elementTable.TryGetValue(Hash.SDBMLower(name), out var e))
 				e = null;

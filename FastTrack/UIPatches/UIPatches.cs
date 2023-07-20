@@ -51,6 +51,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before LateUpdate runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}
@@ -151,6 +152,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before LateUpdatePos runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(bool visibleToZoom, NameDisplayScreen __instance) {
 			var inst = CameraController.Instance;
 			if (inst != null) {
@@ -198,6 +200,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before LateUpdatePart2 runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(NameDisplayScreen __instance) {
 			var camera = Camera.main;
 			if (camera == null || camera.orthographicSize < __instance.HideDistance) {
@@ -230,6 +233,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before RegisterComponent runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(object component) {
 			var options = FastTrackOptions.Instance;
 			return !(component is ThoughtGraph.Instance && options.NoConversations);

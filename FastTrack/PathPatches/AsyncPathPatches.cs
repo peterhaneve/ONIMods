@@ -90,6 +90,7 @@ namespace PeterHan.FastTrack.PathPatches {
 	internal static class BrainScheduler_RenderEveryTick_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
 
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(BrainScheduler __instance) {
 			bool asyncProbe = __instance.isAsyncPathProbeEnabled;
 			var inst = AsyncBrainGroupUpdater.Instance;
@@ -150,6 +151,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Applied before coreCount's getter runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ref int __result) {
 			__result = FastTrackMod.CoreCount;
 			return false;

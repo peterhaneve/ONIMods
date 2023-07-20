@@ -36,6 +36,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before Bounce runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}
@@ -84,6 +85,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before Begin runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(NotificationAnimator __instance, ref bool ___animating,
 				ref LayoutElement ___layoutElement) {
 			if (__instance.TryGetComponent(out LayoutElement le))

@@ -38,6 +38,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Lookup runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(Component cmp, ref AttributeConverterInstance __result,
 				AttributeConverter __instance) {
 			__result = cmp != null && cmp.TryGetComponent(out AttributeConverters converters) ?
@@ -57,6 +58,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Lookup runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(GameObject go, ref AttributeConverterInstance __result,
 				AttributeConverter __instance) {
 			__result = go != null && go.TryGetComponent(out AttributeConverters converters) ?
@@ -94,6 +96,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Get runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(AttributeConverters __instance,
 				AttributeConverter converter, ref AttributeConverterInstance __result) {
 			__result = converter == null ? null : LookupAttributeConverter.GetConverter(
@@ -112,6 +115,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before GetConverter runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(AttributeConverters __instance, string id,
 				ref AttributeConverterInstance __result) {
 			__result = LookupAttributeConverter.GetConverter(__instance, id);
@@ -129,6 +133,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before GetAttributeLevel runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(AttributeLevels __instance, string attribute_id,
 				ref AttributeLevel __result) {
 			var lookup = LookupAttributeLevel.GetAttributeLookup(__instance);
@@ -148,6 +153,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before GetLevel runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(AttributeLevels __instance, Attribute attribute,
 				ref int __result) {
 			var lookup = LookupAttributeLevel.GetAttributeLookup(__instance);
@@ -185,6 +191,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before SetExperience runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(AttributeLevels __instance, string attribute_id,
 				float experience) {
 			var lookup = LookupAttributeLevel.GetAttributeLookup(__instance);
@@ -203,6 +210,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before SetLevel runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(AttributeLevels __instance, string attribute_id,
 				int level) {
 			var lookup = LookupAttributeLevel.GetAttributeLookup(__instance);
@@ -243,6 +251,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before OnWorkTick runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ref bool __result, Generator ___generator, Worker worker,
 				float dt) {
 			var circuitManager = Game.Instance.circuitManager;
@@ -278,6 +287,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before GetEfficiencyMultiplier runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(Worker worker, ref float __result, Workable __instance) {
 			float mult = 1f;
 			int cell;

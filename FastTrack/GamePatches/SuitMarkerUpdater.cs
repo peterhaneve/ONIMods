@@ -273,6 +273,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Run runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(GameObject ___reactor, SuitMarker ___suitMarker) {
 			return ___reactor != null && ___suitMarker != null && !SuitMarkerUpdater.
 				EquipReact(___suitMarker, ___reactor);
@@ -307,6 +308,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}
@@ -324,6 +326,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Run runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(GameObject ___reactor, SuitMarker ___suitMarker) {
 			return ___reactor != null && ___suitMarker != null && !SuitMarkerUpdater.
 				UnequipReact(___suitMarker, ___reactor);

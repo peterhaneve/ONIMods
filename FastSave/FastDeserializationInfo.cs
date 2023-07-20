@@ -18,7 +18,6 @@
 
 using KSerialization;
 using System;
-using System.Runtime.Serialization;
 
 namespace PeterHan.FastSave {
 	/// <summary>

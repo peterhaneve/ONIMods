@@ -107,6 +107,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before SetPreview runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(Image preview) {
 			preview.color = Color.black;
 			preview.gameObject.SetActive(false);
@@ -124,6 +125,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before ShowMigrationIfNecessary runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(LoadScreen __instance) {
 			bool closed = __instance != null;
 			if (closed)

@@ -35,6 +35,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before GetAverageValueString runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(BedDiagnostic __instance, ref string __result) {
 			int worldID = __instance.worldID, nDupes = Components.LiveMinionIdentities.
 				GetWorldItems(worldID).Count, numBeds = 0;
@@ -58,6 +59,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before UpdateData runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(BreathabilityTracker __instance) {
 			var duplicants = Components.LiveMinionIdentities.GetWorldItems(__instance.WorldID);
 			int n = duplicants.Count, total = 0;
@@ -86,6 +88,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before Sim4000ms runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(KMonoBehaviour ___sparkLayer) {
 			return ___sparkLayer == null || ___sparkLayer.isActiveAndEnabled;
 		}
@@ -108,6 +111,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before GetStressedMinions runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(MeterScreen __instance, ref IList<MinionIdentity> __result)
 		{
 			var stressAmount = Db.Get().Amounts.Stress;
@@ -192,6 +196,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before RefreshMinions runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(MeterScreen __instance) {
 			int living = Components.LiveMinionIdentities.Count;
 			int identities = __instance.GetWorldMinionIdentities().Count;
@@ -235,6 +240,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before RefreshWorldMinionIdentities runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ref IList<MinionIdentity> ___worldLiveMinionIdentities) {
 			var identities = ___worldLiveMinionIdentities;
 			var living = Components.LiveMinionIdentities.Items;

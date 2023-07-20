@@ -182,6 +182,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before UpdateAvailableAmounts runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(ReceptacleSideScreen __instance, ref bool __result) {
 				bool result = false, changed = false, hide = !DebugHandler.InstantBuildMode &&
 					__instance.hideUndiscoveredEntities;

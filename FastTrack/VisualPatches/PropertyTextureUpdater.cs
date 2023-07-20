@@ -547,6 +547,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before LateUpdate runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(PropertyTextures __instance) {
 			var inst = PropertyTextureUpdater.Instance;
 			try {

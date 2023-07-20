@@ -285,6 +285,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// <summary>
 			/// Applied before Render runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(KAnimBatchManager __instance) {
 				if (__instance.ready)
 					Render(__instance.activeBatchSets);

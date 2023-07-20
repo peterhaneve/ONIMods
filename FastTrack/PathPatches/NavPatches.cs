@@ -209,6 +209,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Applied before Sim4000ms runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}
@@ -242,6 +243,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Applied before BeginUpdate runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(PathGrid __instance, int root_cell, bool isContinuation) {
 			__instance.isUpdating = true;
 			__instance.freshlyOccupiedCells.Clear();
@@ -273,6 +275,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Applied before OffsetCell runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(PathGrid __instance, int cell, ref int __result) {
 			int newCell = cell;
 			if (__instance.applyOffset) {

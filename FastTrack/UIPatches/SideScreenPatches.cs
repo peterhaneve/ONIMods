@@ -112,6 +112,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before RenderEveryTick runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(LogicBitSelectorSideScreen __instance) {
 				ILogicRibbonBitSelector target;
 				if (__instance != null && __instance.isActiveAndEnabled && (target =
@@ -145,6 +146,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before RenderEveryTick runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(TimerSideScreen __instance) {
 			return __instance != null && __instance.isActiveAndEnabled;
 		}
@@ -161,6 +163,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before UpdateAllCheckBoxVisualState runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(TreeFilterableSideScreen __instance) {
 			var cb = __instance.allCheckBox;
 			var currentState = cb.CurrentState;
@@ -194,6 +197,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before UpdateCheckBoxVisualState runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(TreeFilterableSideScreenRow __instance) {
 			var cb = __instance.checkBoxToggle;
 			int targetState = (int)__instance.GetState();

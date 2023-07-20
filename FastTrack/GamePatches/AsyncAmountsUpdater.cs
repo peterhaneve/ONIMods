@@ -212,6 +212,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before BatchUpdate runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(List<AmountInstanceBucket> amount_instances,
 				float time_delta) {
 			var inst = AsyncAmountsUpdater.Instance;

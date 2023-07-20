@@ -196,6 +196,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Success runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(AtLeastOneBuildingForEachDupe __instance,
 				ref bool __result) {
 			int dupeCount = Components.LiveMinionIdentities.Items.Count;
@@ -264,6 +265,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Success runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ref bool __result) {
 			var inst = AchievementPatches.Instance;
 			bool cont = inst == null || inst.IsFirstTime(nameof(BuildOutsideStartBiome));
@@ -291,11 +293,11 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before IsAchievementUnlocked runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ColonyAchievementTracker __instance, ref bool __result,
 				ColonyAchievement achievement) {
 			bool achieved = false;
-			if (__instance.achievements.TryGetValue(achievement.Id, out ColonyAchievementStatus
-					status)) {
+			if (__instance.achievements.TryGetValue(achievement.Id, out var status)) {
 				achieved = status.success;
 				if (!achieved) {
 					status.UpdateAchievement();
@@ -317,6 +319,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Success runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(CritterTypeExists __instance, ref bool __result) {
 			var inst = AchievementPatches.Instance;
 			var types = __instance.critterTypes;
@@ -345,6 +348,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Success runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ref bool __result, EatXKCalProducedByY __instance) {
 			var inst = AchievementPatches.Instance;
 			// If this is the not-raw achievement
@@ -407,6 +411,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Success runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ProduceXEngeryWithoutUsingYList __instance,
 				ref bool __result) {
 			float total = 0f;
@@ -436,6 +441,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Success runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ref bool __result, RevealAsteriod __instance) {
 			var inst = AchievementPatches.Instance;
 			bool cont = inst == null;
@@ -475,6 +481,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Success runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ref bool __result, TuneUpGenerator __instance) {
 			var inst = AchievementPatches.Instance;
 			bool cont = inst == null || inst.IsFirstTime(nameof(TuneUpGenerator));

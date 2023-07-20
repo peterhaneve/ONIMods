@@ -63,6 +63,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Sim200ms runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(StructureTemperatureComponents __instance, float dt) {
 			__instance.GetDataLists(out List<StructureTemperatureHeader> headers,
 				out List<StructureTemperaturePayload> payloads);

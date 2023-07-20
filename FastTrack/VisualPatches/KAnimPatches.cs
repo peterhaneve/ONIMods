@@ -35,6 +35,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before UpdateOffset runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(AnimEventHandler __instance) {
 			var navigator = __instance.navigator;
 			var pivotSymbolPosition = __instance.controller.GetPivotSymbolPosition();
@@ -108,6 +109,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before Dirty runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(KAnimSynchronizedController __instance) {
 			var syncController = __instance.synchronizedController;
 			var controller = __instance.controller;
@@ -138,6 +140,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before UpdateAnim runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(KBatchedAnimController __instance, float dt) {
 			if (__instance.IsActive())
 				UpdateActive(__instance, dt);

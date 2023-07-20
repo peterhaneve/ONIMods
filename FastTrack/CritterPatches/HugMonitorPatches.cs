@@ -43,6 +43,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// <summary>
 		/// Applied before FindEgg runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(HugMonitor.Instance __instance) {
 			GameObject hugTarget = null;
 			var master = __instance.GetMaster();

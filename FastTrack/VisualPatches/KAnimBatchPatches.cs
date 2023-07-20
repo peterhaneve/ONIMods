@@ -38,6 +38,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before Deregister runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(KAnimConverter.IAnimConverter controller,
 				KAnimBatch __instance) {
 			var controllersToIndex = __instance.controllersToIdx;
@@ -95,6 +96,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before Register runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(KAnimConverter.IAnimConverter controller,
 				KAnimBatch __instance, ref bool __result) {
 			var batch = controller.GetBatch();
@@ -142,6 +144,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before UpdateDirty runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ref int __result, KAnimBatch __instance) {
 			int updated = 0;
 			if (__instance.needsWrite) {

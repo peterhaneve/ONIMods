@@ -35,6 +35,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before RenderEveryTick runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() => false;
 	}
 
@@ -48,6 +49,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before SpawnBreath runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(Vector3 position, float mass, float temperature) {
 			var offsets = OxygenBreather.DEFAULT_BREATHABLE_OFFSETS;
 			int gameCell = Grid.PosToCell(position), count = offsets.Length, spawnCell = -1;
@@ -120,6 +122,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before SpawnLiquidSplash runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}
@@ -135,6 +138,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before SpawnLiquidTopDecor runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ref bool __result) {
 			__result = false;
 			return false;

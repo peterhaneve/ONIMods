@@ -336,6 +336,7 @@ namespace PeterHan.FastTrack {
 		/// <summary>
 		/// Applied before UpdateStatusItem runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(Workable __instance) {
 			if (__instance.TryGetComponent(out KSelectable selectable)) {
 				var working = __instance.workingStatusItem;

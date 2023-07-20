@@ -55,6 +55,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// <summary>
 			/// Applied before LateUpdate runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix() {
 				return !DialogVisible || GameUtil.IsCapturingTimeLapse();
 			}
@@ -103,6 +104,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// <summary>
 			/// Applied before Render runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(bool forceVisibleRebuild) {
 				return forceVisibleRebuild || !DialogVisible;
 			}

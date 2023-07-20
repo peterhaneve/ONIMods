@@ -183,6 +183,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before SortRows runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(TableScreen __instance) {
 				SortRows(__instance);
 				return false;

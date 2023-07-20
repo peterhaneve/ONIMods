@@ -525,6 +525,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before Refresh runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(MinionVitalsPanel __instance) {
 				var inst = Instance;
 				bool run = inst == null;

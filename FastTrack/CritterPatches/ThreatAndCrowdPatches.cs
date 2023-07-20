@@ -90,6 +90,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// <summary>
 		/// Applied before UpdateState runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(OvercrowdingMonitor.Instance smi) {
 			var prefabID = smi.GetComponent<KPrefabID>();
 			bool overcrowded = CheckOvercrowding(smi, prefabID, out bool confined,
@@ -283,6 +284,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// <summary>
 		/// Applied before FindThreat runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ThreatMonitor.Instance __instance,
 				ref GameObject __result) {
 			var threats = __instance.threats;

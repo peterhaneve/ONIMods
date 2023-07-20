@@ -35,6 +35,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before UpdateDetectionState runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ClusterCometDetector.Instance __instance,
 				bool currentDetection) {
 			if (__instance != null) {

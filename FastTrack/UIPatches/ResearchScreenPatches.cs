@@ -226,6 +226,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ResearchScreen __instance) {
 			return ResearchScreenMovementUpdater.Update(__instance);
 		}

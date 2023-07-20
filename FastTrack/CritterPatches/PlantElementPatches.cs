@@ -88,6 +88,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 			/// <summary>
 			/// Applied before UpdateFertilization runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(FertilizationMonitor.Instance __instance, float dt) {
 				var consumed = __instance.def.consumedElements;
 				var storage = __instance.storage;
@@ -126,6 +127,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 			/// <summary>
 			/// Applied before UpdateIrrigation runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(IrrigationMonitor.Instance __instance, float dt) {
 				var consumed = __instance.def.consumedElements;
 				var storage = __instance.storage;
@@ -178,6 +180,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// <summary>
 		/// Applied before Add runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(Storage storage, PlantElementAbsorbers __instance,
 				PlantElementAbsorber.ConsumeInfo[] consumed_elements,
 				ref HandleVector<int>.Handle __result) {
@@ -240,6 +243,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// <summary>
 		/// Applied before Sim200ms runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(PlantElementAbsorbers __instance, float dt) {
 			var data = __instance.data;
 			var queue = __instance.queuedRemoves;

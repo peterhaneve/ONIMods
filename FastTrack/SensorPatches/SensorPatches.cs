@@ -69,6 +69,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 			/// <summary>
 			/// Applied before Update runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(MinionBrain ___brain) {
 				// A slim bit slow, but only run 1-2 times a frame, and way faster than what
 				// the sensor does by default
@@ -88,6 +89,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 			/// <summary>
 			/// Applied before Update runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(MinionBrain ___brain) {
 				var inst = ScheduleManager.Instance;
 				bool run = ___brain != null;
@@ -113,6 +115,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// <summary>
 		/// Applied before Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}
@@ -129,6 +132,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// <summary>
 		/// Applied before Update runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			return false;
 		}

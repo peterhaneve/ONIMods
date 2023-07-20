@@ -164,6 +164,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// <summary>
 		/// Applied before IsAllReachable runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(int cell, CellOffset[] offsets, ref bool __result) {
 			var inst = FastGroupProber.Instance;
 			if (inst != null)
@@ -183,6 +184,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// <summary>
 		/// Applied before IsReachable runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(int cell, ref bool __result) {
 			var inst = FastGroupProber.Instance;
 			if (inst != null)
@@ -201,6 +203,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// <summary>
 		/// Applied before IsReachable_AssumeLock runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(int cell, ref bool __result) {
 			var inst = FastGroupProber.Instance;
 			if (inst != null)
@@ -219,6 +222,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// <summary>
 		/// Applied before Occupy runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(object prober, IEnumerable<int> cells) {
 			var inst = FastGroupProber.Instance;
 			inst?.Occupy(prober, cells, false);
@@ -236,6 +240,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// <summary>
 		/// Applied before ReleaseProber runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(object prober) {
 			var inst = FastGroupProber.Instance;
 			inst?.Remove(prober);
@@ -253,6 +258,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// <summary>
 		/// Applied before SetValidSerialNos runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(object prober) {
 			var inst = FastGroupProber.Instance;
 			inst?.Allocate(prober);
@@ -270,6 +276,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// <summary>
 		/// Transpiles InitializeStates to remove the FastUpdate updater.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ref StateMachine.BaseState default_state,
 				ReachabilityMonitor __instance) {
 			// Existing states

@@ -86,6 +86,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before SetRevealed runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ClusterMapHex __instance, ClusterRevealLevel level) {
 			SetRevealed(__instance, level);
 			return false;
@@ -103,6 +104,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before UpdateHoverColors runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ClusterMapHex __instance, bool validDestination) {
 			ClusterMapScreenPatches.SetHover(__instance, validDestination);
 			return false;
@@ -324,6 +326,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before FloatyAsteroidAnimation runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix() {
 				return false;
 			}
@@ -372,6 +375,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before MoveToNISPosition runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(ClusterMapScreen __instance) {
 				RectTransform content;
 				var mapScrollRect = __instance.mapScrollRect;
@@ -443,6 +447,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before ScreenUpdate runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(ClusterMapScreen __instance) {
 				RectTransform content;
 				var mapScrollRect = __instance.mapScrollRect;

@@ -78,6 +78,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// <summary>
 			/// Applied before these methods run.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix() {
 				return TrackAchievements();
 			}
@@ -95,6 +96,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// <summary>
 			/// Applied before RenderEveryTick runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(ColonyAchievementTracker __instance) {
 				var mode = FastTrackOptions.Instance.DisableAchievements;
 				if (mode != FastTrackOptions.AchievementDisable.Always && (mode ==

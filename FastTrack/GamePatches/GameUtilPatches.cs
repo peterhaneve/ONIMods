@@ -24,7 +24,6 @@ using UnityEngine;
 using AmountByTagDict = System.Collections.Generic.IDictionary<Tag, float>;
 using AmountByTagDictPool = DictionaryPool<Tag, float, FetchListStatusItemUpdater>;
 using FetchList2List = ListPool<FetchList2, FetchListStatusItemUpdater>;
-using StickerBombReactable = StickerBomber.Instance.StickerBombReactable;
 
 namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
@@ -84,6 +83,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Render200ms runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(FetchListStatusItemUpdater __instance) {
 			var existingItems = ListPool<Pickupable, FetchListStatusItemUpdater>.Allocate();
 			var byDestination = DictionaryPool<int, FetchList2List.PooledList,
@@ -196,6 +196,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before CollectCellsBreadthFirst runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(int start_cell, Func<int, bool> test_func, int max_depth,
 				ref HashSet<int> __result) {
 			var pending = QueuePool<int, AcousticDisturbance>.Allocate();
@@ -235,6 +236,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before Initialize runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
 			if (!Enum.TryParse(nameof(NavType.NumNavTypes), out NavType numTypes))
 				numTypes = NavType.NumNavTypes;

@@ -579,6 +579,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetWattsNeededWhenActive runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(CircuitManager __instance, ushort circuitID,
 					ref float __result) {
 				__result = GetWattsNeededWhenActive(__instance, circuitID);
@@ -612,6 +613,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before Refresh runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix() {
 				var inst = Instance;
 				bool run = inst == null;

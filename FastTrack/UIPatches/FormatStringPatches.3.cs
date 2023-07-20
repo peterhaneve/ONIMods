@@ -221,6 +221,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before FullDescription runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(Element __instance, bool addHardnessColor,
 					ref string __result) {
 				var text = OUTER_BUILDER;
@@ -275,6 +276,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetDescription runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(AsPercentAmountDisplayer __instance, Amount master,
 					AmountInstance instance, ref string __result) {
 				// The string builder was a push, but this sure beats string.Format!
@@ -296,6 +298,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetTooltip runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(AsPercentAmountDisplayer __instance, Amount master,
 					AmountInstance instance, ref string __result) {
 				var text = CACHED_BUILDER;
@@ -339,6 +342,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetDescription runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(StandardAmountDisplayer __instance, Amount master,
 					AmountInstance instance, ref string __result) {
 				var text = CACHED_BUILDER;
@@ -361,6 +365,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetTooltip runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(StandardAmountDisplayer __instance, Amount master,
 					AmountInstance instance, ref string __result) {
 				var text = CACHED_BUILDER;
@@ -407,6 +412,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetValueString runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(StandardAmountDisplayer __instance, Amount master,
 					AmountInstance instance, ref string __result) {
 				var text = CACHED_BUILDER;
@@ -639,6 +645,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before GetActionString runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(Action action, ref string __result) {
 				string result;
 				// Allow actions over the max for mods
@@ -669,6 +676,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before FilterInput runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(LocText __instance, string input, ref string __result)
 			{
 				var text = CACHED_BUILDER;
@@ -695,8 +703,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before ParseText runs.
 			/// </summary>
-			internal static bool Prefix(string input, ref string __result)
-			{
+			[HarmonyPriority(Priority.Low)]
+			internal static bool Prefix(string input, ref string __result) {
 				var text = CACHED_BUILDER;
 				if (input != null) {
 					ParseHotkeys(text, input);
@@ -738,6 +746,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before Combine runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(string a, string b, string c, ref string __result) {
 			bool cont = b != "_";
 			if (!cont) {
@@ -766,6 +775,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before Combine runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(string a, string b, string c, string d,
 				ref string __result) {
 			bool cont = c != "_" || a != PREFIX;
@@ -842,6 +852,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before StripLinkFormatting runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(string text, ref string __result) {
 				__result = StripLinkFormatting(text);
 				return false;
@@ -858,6 +869,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before StripLinkFormatting runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(string text, ref string __result) {
 				__result = StripLinkFormatting(text);
 				return false;

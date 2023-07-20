@@ -257,6 +257,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before RefreshIngredientDescriptors runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(SelectedRecipeQueueScreen __instance) {
 				var ingredients = ListPool<DescriptorWithSprite, SelectedRecipeQueueScreen>.
 					Allocate();
@@ -282,6 +283,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before RefreshResultDescriptors runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(SelectedRecipeQueueScreen __instance) {
 				var products = ListPool<DescriptorWithSprite, SelectedRecipeQueueScreen>.
 					Allocate();
@@ -321,6 +323,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied before AdditionalEffectsForRecipe runs.
 		/// </summary>
+		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ref List<Descriptor> __result) {
 			var desc = CACHED_DESC;
 			desc.Clear();
@@ -429,6 +432,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before RefreshIngredientAvailabilityVis runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(ComplexFabricatorSideScreen __instance) {
 				var target = __instance.targetFab;
 				int cell;
