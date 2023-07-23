@@ -52,6 +52,7 @@ namespace PeterHan.FastTrack {
 					public static LocString THREATOVERCROWDING = "Critter Monitors";
 					public static LocString CRITTERCONSUMERS = "Optimize Eating";
 					public static LocString UNSTACKLIGHTS = "Unstack Lights";
+					public static LocString REDUCECRITTERIDLEMOVE = "Reduce Idle Movement";
 
 					public static LocString FASTATTRIBUTESMODE = "Attribute Leveling";
 					public static LocString ASYNCPATHPROBE = "Background Pathing";
@@ -61,6 +62,7 @@ namespace PeterHan.FastTrack {
 					public static LocString NODISEASE = "Disable Disease";
 					public static LocString FASTREACHABILITY = "Fast Reachability Checks";
 					public static LocString SENSOROPTS = "Optimize Idling";
+					public static LocString REDUCEDUPLICANTIDLEMOVE = "Reduce Idle Movement";
 
 					public static LocString REDUCECOLONYTRACKING = "Colony Tracker Reduction";
 					public static LocString DISABLEACHIEVEMENTS = "Disable Achievements";
@@ -144,6 +146,7 @@ namespace PeterHan.FastTrack {
 					public static LocString THREATOVERCROWDING = "Optimizes critter Threat and Overcrowding monitors.\n<i>May conflict with mods that add new critters</i>" + PERF_MEDIUM;
 					public static LocString CRITTERCONSUMERS = "Optimize how Critters find objects to eat." + PERF_LOW;
 					public static LocString UNSTACKLIGHTS = "Reduces the visual effects shown when many light sources are stacked.\nIntended for ranching critters like Shine Bugs." + PERF_LOW;
+					public static LocString REDUCECRITTERIDLEMOVE = "Reduces amount of idle movement of critters that are currently not visible on the screen." + PERF_LOW;
 
 					public static LocString FASTATTRIBUTESMODE = "Optimize attribute leveling and work efficiency calculation." + PERF_MEDIUM;
 					public static LocString ASYNCPATHPROBE = "Moves some pathfinding calculations to a non-blocking thread." + PERF_HIGH;
@@ -158,6 +161,7 @@ namespace PeterHan.FastTrack {
 						"<i>Not compatible with mods: Diseases Restored, Diseases Expanded</i>" + PERF_MEDIUM;
 					public static LocString FASTREACHABILITY = "Only check items and chores for reachability when necessary." + PERF_MEDIUM;
 					public static LocString SENSOROPTS = "Only check for locations to Idle, Mingle, or Balloon Artist when necessary." + PERF_LOW;
+					public static LocString REDUCEDUPLICANTIDLEMOVE = "Reduces amount of idle movement of duplicants that are currently not visible on the screen." + PERF_LOW;
 
 					public static LocString REDUCECOLONYTRACKING = "Reduces the update rate of Colony Diagnostics.\n<i>Some notifications may take longer to trigger</i>" + PERF_LOW;
 					public static LocString DISABLEACHIEVEMENTS = "Turn off checking for Colony Initiatives.\n<color=#FF0000>Disabling will prevent unlocking any Steam achievement</color>" + PERF_LOW;
