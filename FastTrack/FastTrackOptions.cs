@@ -100,6 +100,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool UnstackLights { get; set; }
 
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.REDUCECRITTERIDLEMOVE", "STRINGS.UI.TOOLTIPS.FASTTRACK.REDUCECRITTERIDLEMOVE", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_CRITTERS")]
+		[JsonProperty]
+		public bool ReduceCritterIdleMove { get; set; }
+
 		[Option("STRINGS.UI.FRONTEND.FASTTRACK.FASTATTRIBUTESMODE", "STRINGS.UI.TOOLTIPS.FASTTRACK.FASTATTRIBUTESMODE", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS")]
 		[JsonProperty]
 		public bool FastAttributesMode { get; set; }
@@ -131,6 +135,10 @@ namespace PeterHan.FastTrack {
 		[Option("STRINGS.UI.FRONTEND.FASTTRACK.SENSOROPTS", "STRINGS.UI.TOOLTIPS.FASTTRACK.SENSOROPTS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS")]
 		[JsonProperty]
 		public bool SensorOpts { get; set; }
+
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.REDUCEDUPLICANTIDLEMOVE", "STRINGS.UI.TOOLTIPS.FASTTRACK.REDUCEDUPLICANTIDLEMOVE", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS")]
+		[JsonProperty]
+		public bool ReduceDuplicantIdleMove { get; set; }
 
 		[Option("STRINGS.UI.FRONTEND.FASTTRACK.REDUCECOLONYTRACKING", "STRINGS.UI.TOOLTIPS.FASTTRACK.REDUCECOLONYTRACKING", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_INTERFACE")]
 		[JsonProperty]
@@ -300,6 +308,8 @@ namespace PeterHan.FastTrack {
 			PickupOpts = true;
 			RadiationOpts = true;
 			ReduceColonyTracking = false;
+			ReduceCritterIdleMove = true;
+			ReduceDuplicantIdleMove = true;
 			ReduceSoundUpdates = true;
 			ReduceTileUpdates = true;
 			RenderTicks = true;
