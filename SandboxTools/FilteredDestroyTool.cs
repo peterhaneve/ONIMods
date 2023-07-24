@@ -239,12 +239,12 @@ namespace PeterHan.SandboxTools {
 		}
 
 		protected override void OnPrefabInit() {
-			var menu = DestroyParameterMenu.Instance;
+			var si = SandboxDestroyerTool.instance;
 			base.OnPrefabInit();
 			affectFoundation = true;
 			var config = gameObject.AddComponent<HoverTextConfiguration>();
 			// Copy settings from the default destroy tool (which are set in a prefab)
-			if (menu != null && menu.TryGetComponent(out HoverTextConfiguration hConfig)) {
+			if (si != null && si.TryGetComponent(out HoverTextConfiguration hConfig)) {
 				// Tool tip and name
 				config.ActionName = hConfig.ActionName;
 				config.ActionStringKey = hConfig.ActionStringKey;

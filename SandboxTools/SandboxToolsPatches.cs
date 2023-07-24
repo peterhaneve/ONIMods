@@ -24,6 +24,7 @@ using PeterHan.PLib.Database;
 using PeterHan.PLib.PatchManager;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 using SearchFilter = SandboxToolParameterMenu.SelectorValue.SearchFilter;
 
@@ -44,8 +45,25 @@ namespace PeterHan.SandboxTools {
 		private static void AddToSpawnerMenu(SandboxToolParameterMenu instance) {
 			// Transpiling it is possible (and a bit faster) but way more brittle
 			var selector = instance.entitySelector;
+			var cc = CodexCache.entries;
 			var filters = ListPool<SearchFilter, SandboxToolParameterMenu>.Allocate();
+			int n;
 			filters.AddRange(selector.filters);
+			// Rover
+			if (DlcManager.IsExpansion1Active() && cc != null && cc.TryGetValue(
+					ScoutRoverConfig.ID.ToUpperInvariant(), out var entry)) {
+				var icon = new Tuple<Sprite, Color>(entry.icon, entry.iconColor);
+				n = filters.Count;
+				for (int i = 0; i < n; i++) {
+					var filter = filters[i];
+					if (filter.Name == STRINGS.UI.SANDBOXTOOLS.FILTERS.ENTITIES.CREATURE) {
+						filters.Add(new SearchFilter(STRINGS.CREATURES.FAMILY_PLURAL.
+							SCOUTROVER, entity => entity is KPrefabID prefab && prefab.
+							PrefabTag.Name == ScoutRoverConfig.ID, filter, icon));
+						break;
+					}
+				}
+			}
 			// POI Props
 			filters.Add(new SearchFilter(SandboxToolsStrings.FILTER_POIPROPS,
 				(entity) => {
@@ -76,14 +94,16 @@ namespace PeterHan.SandboxTools {
 			filters.Add(new SearchFilter(SandboxToolsStrings.FILTER_GEYSERS,
 				(entity) => {
 					var prefab = entity as KPrefabID;
-					return prefab != null && (prefab.TryGetComponent(out Geyser _) || prefab.
-						PrefabTag.Name == OilWellConfig.ID);
+					return prefab != null && prefab.TryGetComponent(out Uncoverable _) &&
+						(prefab.TryGetComponent(out Geyser _) || prefab.PrefabTag.Name ==
+						OilWellConfig.ID);
 				}, null, Def.GetUISprite(Assets.GetPrefab("GeyserGeneric_slush_water"))));
 			// Add matching assets
 			var options = ListPool<object, SandboxToolParameterMenu>.Allocate();
+			n = filters.Count;
 			foreach (var prefab in Assets.Prefabs)
-				foreach (var filter in filters)
-					if (filter.condition(prefab)) {
+				for (int i = 0; i < n; i++)
+					if (filters[i].condition(prefab)) {
 						options.Add(prefab);
 						break;
 					}
@@ -195,7 +215,7 @@ namespace PeterHan.SandboxTools {
 			/// Applied after CreateSandBoxTools runs.
 			/// </summary>
 			internal static void Postfix(ToolMenu __instance) {
-				if (!Enum.TryParse("SandboxDestroy", out Action destroyAction))
+				if (!Enum.TryParse(nameof(Action.SandboxDestroy), out Action destroyAction))
 					destroyAction = Action.SandboxDestroy;
 				var filteredDestroy = ToolMenu.CreateToolCollection(SandboxToolsStrings.
 					TOOL_DESTROY_NAME, SandboxToolsStrings.TOOL_DESTROY_ICON, destroyAction,
