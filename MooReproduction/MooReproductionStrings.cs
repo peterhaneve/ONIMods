@@ -53,7 +53,8 @@ namespace PeterHan.MooReproduction {
 
 			public static class TOOLTIPS {
 				public static class MOOREPRODUCTION {
-					public static LocString DISABLE_METEORS = "Disables Moo Meteors from falling on any planetoid. Can help avoid an exponential build-up of Gassy Moos.";
+					public static LocString DISABLE_METEORS = "Disables Moo Meteors from falling on any planetoid. Can help avoid an exponential build-up of Gassy Moos.\n\n" +
+						"Gassy Moos will also never call for new Moo Meteors when fed.";
 				}
 			}
 		}

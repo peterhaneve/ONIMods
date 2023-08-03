@@ -68,13 +68,20 @@ namespace PeterHan.MooReproduction {
 		}
 
 		/// <summary>
+		/// Applied after IsReadyToBeckon runs to prevent Moo Meteors from being summoned.
+		/// </summary>
+		[HarmonyPriority(Priority.LowerThanNormal)]
+		internal static void IsReadyToBeckon_Postfix(ref bool __result) {
+			__result = false;
+		}
+
+		/// <summary>
 		/// Adds the additional Moo chores required for growth. Growing up and giving birth
 		/// chores are required.
 		/// </summary>
 		/// <param name="prefab">The prefab to add chores.</param>
 		/// <param name="baby">true for babies (which cannot be ranched) or false for adults.</param>
 		internal static void UpdateMooChores(GameObject prefab, bool baby) {
-			var cc = prefab.GetComponent<ChoreConsumer>();
 			var newChoreTable = new ChoreTable.Builder().
 				Add(new DeathStates.Def()).
 				Add(new AnimInterruptStates.Def()).
@@ -89,17 +96,21 @@ namespace PeterHan.MooReproduction {
 				Add(new RanchedStates.Def(), !baby).
 				Add(new GiveBirthStates.Def()).
 				Add(new EatStates.Def()).
-				Add(new PlayAnimsStates.Def(GameTags.Creatures.Poop, false, "poop", STRINGS.CREATURES.STATUSITEMS.EXPELLING_GAS.NAME, STRINGS.CREATURES.STATUSITEMS.EXPELLING_GAS.TOOLTIP)).
+				Add(new PlayAnimsStates.Def(GameTags.Creatures.Poop, false, "poop", STRINGS.
+					CREATURES.STATUSITEMS.EXPELLING_GAS.NAME, STRINGS.CREATURES.STATUSITEMS.
+					EXPELLING_GAS.TOOLTIP)).
 				Add(new MoveToLureStates.Def()).
 				PopInterruptGroup().
 				Add(new IdleStates.Def {
 					customIdleAnim = MOO_IDLE_ANIM
 				});
-			if (cc != null)
+			if (prefab.TryGetComponent(out ChoreConsumer cc))
 				cc.choreTable = newChoreTable.CreateTable();
 		}
 
 		public override void OnLoad(Harmony harmony) {
+			var bm = PPatchTools.GetTypeSafe(nameof(BeckoningMonitor) + "+" + nameof(
+				BeckoningMonitor.Instance));
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 			LocString.CreateLocStringKeys(typeof(MooReproductionStrings.CREATURES));
@@ -108,6 +119,10 @@ namespace PeterHan.MooReproduction {
 			new PPatchManager(harmony).RegisterPatchClass(typeof(MooReproductionPatches));
 			new POptions().RegisterOptions(this, typeof(MooReproductionOptions));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
+			if (MooReproductionOptions.Instance.DisableMooMeteors && bm != null)
+				harmony.Patch(bm, nameof(BeckoningMonitor.Instance.IsReadyToBeckon),
+					postfix: new HarmonyMethod(typeof(MooReproductionPatches),
+					nameof(IsReadyToBeckon_Postfix)));
 		}
 
 		/// <summary>
@@ -171,7 +186,6 @@ namespace PeterHan.MooReproduction {
 			/// Applied after CreatePrefab runs.
 			/// </summary>
 			internal static void Postfix(GameObject __result) {
-				var prefabID = __result.GetComponent<KPrefabID>();
 				// ExtendEntityToFertileCreature requires an egg prefab
 				var fm = __result.AddOrGetDef<LiveFertilityMonitor.Def>();
 				fm.initialBreedingWeights = new List<FertilityMonitor.BreedingChance>() {
@@ -181,16 +195,16 @@ namespace PeterHan.MooReproduction {
 					}
 				};
 				// Reduce to 2kg meat for adult
-				var butcherable = __result.GetComponent<Butcherable>();
-				if (butcherable != null)
-					butcherable.SetDrops(new string[] { MeatConfig.ID, MeatConfig.ID });
+				if (__result.TryGetComponent(out Butcherable butcherable))
+					butcherable.SetDrops(new[] { MeatConfig.ID, MeatConfig.ID });
 				// Hardcoded in CreateMoo, 6/10ths of the max age
 				fm.baseFertileCycles = 45.0f;
-				prefabID.prefabSpawnFn += (inst) => {
-					// Needs to be changed for vanilla
-					DiscoveredResources.Instance.Discover(BabyMooConfig.ID_TAG,
-						DiscoveredResources.GetCategoryForTags(prefabID.Tags));
-				};
+				if (__result.TryGetComponent(out KPrefabID prefabID))
+					prefabID.prefabSpawnFn += (inst) => {
+						// Needs to be changed for vanilla
+						DiscoveredResources.Instance.Discover(BabyMooConfig.ID_TAG,
+							DiscoveredResources.GetCategoryForTags(prefabID.Tags));
+					};
 				UpdateMooChores(__result, false);
 			}
 		}

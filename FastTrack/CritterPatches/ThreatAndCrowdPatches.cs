@@ -46,16 +46,16 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// <param name="prefabID">The critter to be updated.</param>
 		/// <param name="confined">Will be true if the critter is now Confined.</param>
 		/// <param name="cramped">Will be true if the critter is now Cramped.</param>
-		/// <returns>true if the critter is now Overcrowded.</returns>
-		private static bool CheckOvercrowding(OvercrowdingMonitor.Instance smi,
+		/// <returns>The number of creatures in excess of the Overcrowded limit if the
+		/// critter is now Overcrowded, or zero if the critter is not overcrowded.</returns>
+		private static int CheckOvercrowding(OvercrowdingMonitor.Instance smi,
 				KPrefabID prefabID, out bool confined, out bool cramped) {
 			var room = UpdateRoom(smi, prefabID);
-			int requiredSpace = smi.def.spaceRequiredPerCreature;
-			bool overcrowded;
+			int requiredSpace = smi.def.spaceRequiredPerCreature, overcrowded;
 			// Share some checks for simplicity
 			if (requiredSpace < 1) {
 				confined = false;
-				overcrowded = false;
+				overcrowded = 0;
 				cramped = false;
 			} else {
 				var fishMonitor = smi.GetSMI<FishOvercrowdingMonitor.Instance>();
@@ -73,14 +73,15 @@ namespace PeterHan.FastTrack.CritterPatches {
 				if (fishMonitor != null) {
 					int fishCount = fishMonitor.fishCount;
 					if (fishCount > 0)
-						overcrowded = fishMonitor.cellCount < requiredSpace * fishCount;
+						overcrowded = Mathf.Max(0, fishCount - fishMonitor.cellCount /
+							requiredSpace);
 					else {
 						int cell = Grid.PosToCell(smi.transform.position);
-						overcrowded = !Grid.IsValidCell(cell) || !Grid.IsLiquid(cell);
+						overcrowded = Grid.IsValidCell(cell) && Grid.IsLiquid(cell) ? 0 : 1;
 					}
 				} else
-					overcrowded = room != null && critters > 1 && room.numCells <
-						requiredSpace * critters;
+					overcrowded = (room != null && critters > 1) ? Mathf.Max(0, critters -
+						room.numCells / requiredSpace) : 0;
 				cramped = room != null && eggs > 0 && room.numCells < (eggs + critters) *
 					requiredSpace && !smi.isBaby;
 			}
@@ -93,32 +94,35 @@ namespace PeterHan.FastTrack.CritterPatches {
 		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(OvercrowdingMonitor.Instance smi) {
 			var prefabID = smi.GetComponent<KPrefabID>();
-			bool overcrowded = CheckOvercrowding(smi, prefabID, out bool confined,
+			int overcrowded = CheckOvercrowding(smi, prefabID, out bool confined,
 				out bool cramped);
 			bool wasConfined = prefabID.HasTag(GameTags.Creatures.Confined);
 			bool wasCramped = prefabID.HasTag(GameTags.Creatures.Expecting);
 			bool wasOvercrowded = prefabID.HasTag(GameTags.Creatures.Overcrowded);
+			smi.overcrowdedModifier.SetValue(overcrowded > 0 ? -4 - overcrowded : 0);
 			if (wasCramped != cramped || wasConfined != confined || wasOvercrowded !=
-					overcrowded) {
+					overcrowded > 0) {
 				// Status has actually changed
 				var effects = smi.GetComponent<Effects>();
+				var overcrowdedEffect = smi.isFish ? smi.fishOvercrowdedEffect : smi.
+					overcrowdedEffect;
 				prefabID.SetTag(GameTags.Creatures.Confined, confined);
-				prefabID.SetTag(GameTags.Creatures.Overcrowded, overcrowded);
+				prefabID.SetTag(GameTags.Creatures.Overcrowded, overcrowded > 0);
 				prefabID.SetTag(GameTags.Creatures.Expecting, cramped);
 				if (confined) {
-					effects.Add(OvercrowdingMonitor.stuckEffect, false);
-					effects.Remove(OvercrowdingMonitor.overcrowdedEffect);
-					effects.Remove(OvercrowdingMonitor.futureOvercrowdedEffect);
+					effects.Add(smi.stuckEffect, false);
+					effects.Remove(overcrowdedEffect);
+					effects.Remove(smi.futureOvercrowdedEffect);
 				} else {
-					effects.Remove(OvercrowdingMonitor.stuckEffect);
-					if (overcrowded)
-						effects.Add(OvercrowdingMonitor.overcrowdedEffect, false);
+					effects.Remove(smi.stuckEffect);
+					if (overcrowded > 0)
+						effects.Add(overcrowdedEffect, false);
 					else
-						effects.Remove(OvercrowdingMonitor.overcrowdedEffect);
+						effects.Remove(overcrowdedEffect);
 					if (cramped)
-						effects.Add(OvercrowdingMonitor.futureOvercrowdedEffect, false);
+						effects.Add(smi.futureOvercrowdedEffect, false);
 					else
-						effects.Remove(OvercrowdingMonitor.futureOvercrowdedEffect);
+						effects.Remove(smi.futureOvercrowdedEffect);
 				}
 			}
 			return false;

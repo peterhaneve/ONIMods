@@ -167,6 +167,31 @@ namespace PeterHan.FastTrack.GamePatches {
 	}
 
 	/// <summary>
+	/// Applied to Growing.States to work around a base game bug where Arbor Tree branches set
+	/// their growth rate too early during load.
+	/// </summary>
+	[HarmonyPatch(typeof(Growing.States), nameof(Growing.States.InitializeStates))]
+	public static class Growing_States_InitializeStates_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.FlattenAverages;
+
+		private static IEnumerator FixLoadCoroutine(Growing.StatesInstance smi) {
+			var master = smi.master;
+			yield return null;
+			if (master != null && master.rm.Replanted)
+				smi.GoTo(smi.sm.growing.planted);
+		}
+
+		/// <summary>
+		/// Applied after InitializeStates runs.
+		/// </summary>
+		internal static void Postfix(Growing.States __instance) {
+			// It can only go from wild to farmed as the invalid value is only read wild
+			__instance.growing.wild.Enter("Fix Arbor Tree on-load bug", smi =>
+				smi.master.StartCoroutine(FixLoadCoroutine(smi)));
+		}
+	}
+
+	/// <summary>
 	/// Applied to SpaceScannerNetworkManager to fix a racy out of bounds bug and reduce
 	/// memory allocations.
 	/// </summary>
@@ -194,7 +219,7 @@ namespace PeterHan.FastTrack.GamePatches {
 						null && operational.IsOperational) {
 					cells.Clear();
 					CometDetectorConfig.SKY_VISIBILITY_INFO.CollectVisibleCellsTo(cells, Grid.
-						PosToCell(network.transform.position));
+						PosToCell(network.transform.position), world);
 					foreach (int cell in cells) {
 						int x = Grid.CellToXY(cell).x - start;
 						// Tally unique cells, but only in range

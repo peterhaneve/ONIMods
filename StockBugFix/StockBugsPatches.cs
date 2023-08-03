@@ -58,6 +58,20 @@ namespace PeterHan.StockBugFix {
 		}
 
 		/// <summary>
+		/// Fixes the integer overflow and incorrect rounding on large tile masses.
+		/// </summary>
+		/// <param name="instance">The Harmony instance to use for patching.</param>
+		private static void FixMassStringsReadOnly(Harmony instance) {
+			if (!PRegistry.GetData<bool>("Bugs.MassStringsReadOnly")) {
+#if DEBUG
+				PUtil.LogDebug("Fixing tile mass renderer");
+#endif
+				instance.Patch(typeof(HoverTextHelper), "MassStringsReadOnly", postfix:
+					new HarmonyMethod(typeof(StockBugsPatches), nameof(PostfixMassStrings)));
+			}
+		}
+
+		/// <summary>
 		/// Fixes the race condition in Steam.UpdateMods.
 		/// </summary>
 		/// <param name="instance">The Harmony instance to use for patching.</param>
@@ -136,6 +150,37 @@ namespace PeterHan.StockBugFix {
 				string key) {
 			return (lastValue = ALREADY_DISPLAYED.Add(key) ? startingLevels[key] : 0);
 		}
+		
+		/// <summary>
+		/// Applied to HoverTextHelper to fix the integer overflow error on huge masses.
+		/// </summary>
+		internal static void PostfixMassStrings(int cell, ref string[] __result,
+				float ___cachedMass, Element ___cachedElement) {
+			SimHashes id;
+			float mass = ___cachedMass;
+			if (Grid.IsValidCell(cell) && ___cachedElement != null && (id = ___cachedElement.
+					id) != SimHashes.Vacuum && id != SimHashes.Unobtanium) {
+				if (mass < 5.0f)
+					// kg => g
+					mass *= 1000.0f;
+				if (mass < 5.0f)
+					// g => mg
+					mass *= 1000.0f;
+				if (mass < 5.0f)
+					mass = Mathf.Floor(1000.0f * mass);
+				// Base game hardcodes dots so we will too
+				string formatted = mass.ToString("F1", System.Globalization.CultureInfo.
+					InvariantCulture);
+				int index = formatted.IndexOf('.');
+				if (index > 0) {
+					__result[0] = formatted.Substring(0, index);
+					__result[1] = formatted.Substring(index);
+				} else {
+					__result[0] = formatted;
+					__result[1] = "";
+				}
+			}
+		}
 
 		/// <summary>
 		/// Applied to MainMenu to display a queued Steam mod status report if pending.
@@ -182,6 +227,7 @@ namespace PeterHan.StockBugFix {
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
 			base.OnAllModsLoaded(harmony, mods);
 			DecorProviderRefreshFix.ApplyPatch(harmony);
+			FixMassStringsReadOnly(harmony);
 		}
 
 		public override void OnLoad(Harmony instance) {
@@ -310,6 +356,24 @@ namespace PeterHan.StockBugFix {
 			}
 			if (patched < 2)
 				PUtil.LogWarning("Unable to patch CharacterContainer.SetInfoText");
+		}
+	}
+
+	/// <summary>
+	/// Applied to ClusterUtil to mark rocket interiors as having no printing pod.
+	/// This patch applied at the request of asquared31415.
+	/// </summary>
+	[HarmonyPatch(typeof(ClusterUtil), nameof(ClusterUtil.ActiveWorldHasPrinter))]
+	public static class ClusterUtil_ActiveWorldHasPrinter_Patch {
+		/// <summary>
+		/// Applied after ActiveWorldHasPrinter runs.
+		/// </summary>
+		[HarmonyPriority(Priority.LowerThanNormal)]
+		internal static bool Prefix(ref bool __result) {
+			var ci = ClusterManager.Instance;
+			__result = ci != null && Components.Telepads.GetWorldItems(ci.activeWorldId).
+				Count > 0;
+			return false;
 		}
 	}
 
@@ -445,6 +509,23 @@ namespace PeterHan.StockBugFix {
 	}
 
 	/// <summary>
+	/// Applied to ExobaseHeadquartersConfig to ban them from being built in rockets. They
+	/// already cannot be built there in the base game, but this greatly improves the
+	/// diagnostic message.
+	/// </summary>
+	[HarmonyPatch(typeof(ExobaseHeadquartersConfig), nameof(ExobaseHeadquartersConfig.
+		ConfigureBuildingTemplate))]
+	public static class ExobaseHeadquartersConfig_ConfigureBuildingTemplate_Patch {
+		/// <summary>
+		/// Applied after ConfigureBuildingTemplate runs.
+		/// </summary>
+		internal static void Postfix(GameObject go) {
+			if (go.TryGetComponent(out KPrefabID id))
+				id.AddTag(GameTags.NotRocketInteriorBuilding);
+		}
+	}
+
+	/// <summary>
 	/// Applied to FuelTank's property setter to properly update the chore when its
 	/// capacity is changed.
 	/// </summary>
@@ -487,43 +568,6 @@ namespace PeterHan.StockBugFix {
 					cell++;
 				}
 				cell += stride;
-			}
-		}
-	}
-
-	/// <summary>
-	/// Applied to HoverTextHelper to fix the integer overflow error on huge masses.
-	/// </summary>
-	[HarmonyPatch(typeof(HoverTextHelper), "MassStringsReadOnly")]
-	public static class MassStringsReadOnly_Patch {
-		/// <summary>
-		/// Applied after MassStringsReadOnly runs.
-		/// </summary>
-		internal static void Postfix(int cell, ref string[] __result, float ___cachedMass,
-				Element ___cachedElement) {
-			SimHashes id;
-			float mass = ___cachedMass;
-			if (Grid.IsValidCell(cell) && ___cachedElement != null && (id = ___cachedElement.
-					id) != SimHashes.Vacuum && id != SimHashes.Unobtanium) {
-				if (mass < 5.0f)
-					// kg => g
-					mass *= 1000.0f;
-				if (mass < 5.0f)
-					// g => mg
-					mass *= 1000.0f;
-				if (mass < 5.0f)
-					mass = Mathf.Floor(1000.0f * mass);
-				// Base game hardcodes dots so we will too
-				string formatted = mass.ToString("F1", System.Globalization.CultureInfo.
-					InvariantCulture);
-				int index = formatted.IndexOf('.');
-				if (index > 0) {
-					__result[0] = formatted.Substring(0, index);
-					__result[1] = formatted.Substring(index);
-				} else {
-					__result[0] = formatted;
-					__result[1] = "";
-				}
 			}
 		}
 	}
