@@ -36,7 +36,7 @@ namespace PeterHan.PipPlantOverlay {
 			public static class OVERLAYS {
 				public static class PIPPLANTING {
 					public static LocString NAME = "PIP PLANTING OVERLAY";
-					public static LocString DESCRIPTION = "Displays the locations where Pips can plant seeds.\n\nPips will consider planting a seed in a tile under these conditions:\n1. The tile has no more than 2 other plants in a square 6 left, 6 down, 5 right, 5 up from the tile.\n2. It is either a \"natural tile\" of less than 150 hardness, a farm tile or a hydroponic farm.\n3. The pip can navigate to the seed and the tile, and there must be no buildings obstructing the plant's location.\n4. The atmospheric pressure is greater than 100g.\n5. The atmospheric temperature is around ±50C to ±100C of the requirements of the plant.\n";
+					public static LocString DESCRIPTION = "Displays the locations where Pips can plant seeds. The conditions which must be met include:\n1. No more than 2 other plants within 6 left, 6 down, 5 right, 5 up from the tile.\n2. It is a \"natural tile\" of less than 150 hardness, a farm tile or a hydroponic farm.\n3. No buildings obstructing the plant's location.\n4. The atmospheric pressure is greater than 100g.\n5. The atmospheric temperature is within 50 to 100 C of the plant's requirements.\n";
 					public static LocString BUTTON = "Pip Planting Overlay";
 					public static LocString TOOLTIP = "Displays locations where Pips can plant seeds";
 

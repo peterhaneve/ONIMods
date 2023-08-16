@@ -22,7 +22,6 @@ using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
 using System.Collections.Generic;
-using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -52,11 +51,14 @@ namespace PeterHan.FastSave {
 				if (needsFallback)
 					PUtil.LogWarning("Error saving background timelapse image!");
 				else
-					using (var rawARGB = request.GetData<byte>()) {
-						BackgroundTimelapser.Instance.Start(savePath, TextureToPNG(rawARGB,
-							width, height), worldID, preview);
+					// The native array gets disposed after 1 frame, so it must be copied
+					using (var data = request.GetData<byte>()) {
+						BackgroundTimelapser.Instance.Start(savePath, new ImageData(width,
+							height, data.ToArray()), worldID, preview);
 					}
-			}
+			} else
+				// Wait at least one frame in the failure case
+				yield return null;
 			if (needsFallback) {
 				// Read synchronously if GPU readback fails
 				var oldRT = RenderTexture.active;
@@ -69,35 +71,9 @@ namespace PeterHan.FastSave {
 				byte[] rawData = texture2D.EncodeToPNG();
 				Object.Destroy(texture2D);
 				if (rawData != null)
-					BackgroundTimelapser.Instance.Start(savePath, rawData, worldID,
-						preview);
+					BackgroundTimelapser.Instance.Start(savePath, new ImageData(rawData),
+						worldID, preview);
 			}
-		}
-		
-		/// <summary>
-		/// Converts raw image data in ARGB32 format (the format used by the game for the
-		/// camera render texture) to PNG image data.
-		/// </summary>
-		/// <param name="rawData">The raw texture data as a native array.</param>
-		/// <param name="width">The image width.</param>
-		/// <param name="height">The image height.</param>
-		/// <returns>The image encoded as PNG.</returns>
-		private static byte[] TextureToPNG(NativeArray<byte> rawData, int width, int height) {
-			// NOTE: The game uses ARGB32 as the RenderTexture format, but for some reason
-			// the returned data is RGBA32...
-			var pngTexture = new Texture2D(width, height, TextureFormat.RGBA32, false);
-#if DEBUG
-			PUtil.LogDebug("Copying texture {0:D}x{1:D} to render".F(width, height));
-#endif
-			byte[] data;
-			try {
-				pngTexture.LoadRawTextureData(rawData);
-				pngTexture.Apply();
-				data = pngTexture.EncodeToPNG();
-			} finally {
-				Object.Destroy(pngTexture);
-			}
-			return data;
 		}
 
 		public override void OnLoad(Harmony harmony) {

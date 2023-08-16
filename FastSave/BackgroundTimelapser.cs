@@ -37,10 +37,10 @@ namespace PeterHan.FastSave {
 		/// Starts saving the colony preview image in the background.
 		/// </summary>
 		/// <param name="previewPath">The path to save the preview; ignored if saving a colony summary / timelapse image.</param>
-		/// <param name="rawData">The image data to save, encoded as PNG.</param>
+		/// <param name="rawData">The image data to save.</param>
 		/// <param name="worldID">The ID of the world to write.</param>
 		/// <param name="preview">true if the image is a colony preview, or false otherwise.</param>
-		public void Start(string previewPath, byte[] rawData, int worldID, bool preview) {
+		public void Start(string previewPath, ImageData rawData, int worldID, bool preview) {
 #if DEBUG
 			PUtil.LogDebug("Encoding preview image");
 #endif
@@ -101,7 +101,7 @@ namespace PeterHan.FastSave {
 		/// <summary>
 		/// The screenshot data.
 		/// </summary>
-		internal byte[] RawData { get; }
+		internal ImageData RawData { get; }
 
 		/// <summary>
 		/// The ID of the world being written.
@@ -113,7 +113,7 @@ namespace PeterHan.FastSave {
 		/// </summary>
 		internal string WorldName { get; }
 
-		public BackgroundTimelapseData(string savePath, byte[] rawData, int worldID,
+		public BackgroundTimelapseData(string savePath, ImageData rawData, int worldID,
 				bool preview) {
 			if (string.IsNullOrEmpty(savePath) && preview)
 				throw new ArgumentNullException(nameof(savePath));
@@ -161,7 +161,7 @@ namespace PeterHan.FastSave {
 					path = Path.Combine(saveFolder, saveName);
 				}
 				PUtil.LogDebug("Saving screenshot to " + path);
-				File.WriteAllBytes(path, RawData);
+				File.WriteAllBytes(path, RawData.GetData());
 #if DEBUG
 				PUtil.LogDebug("Background screenshot save complete");
 #endif

@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Fast Save</AssemblyTitle>
-    <FileVersion>3.9.0.0</FileVersion>
+    <FileVersion>3.10.0.0</FileVersion>
     <RootNamespace>PeterHan.FastSave</RootNamespace>
     <Description>Trims data from save files to make saving and loading faster.</Description>
     <AssemblyVersion>3.1.0.0</AssemblyVersion>

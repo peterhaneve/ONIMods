@@ -124,10 +124,6 @@ namespace PeterHan.SandboxTools {
 				new DestroyFilter("SolidConduits", OverlayModes.SolidConveyor.ID,
 					SandboxToolsStrings.DESTROY_SHIPPING)
 			};
-			// "All" checkbox to destroy everything
-			if (!SandboxToolsPatches.AdvancedFilterEnabled)
-				modes.Insert(0, new DestroyFilter("All", HashedString.Invalid,
-					SandboxToolsStrings.DESTROY_ALL, DestroyAll));
 			pendingCells = new HashSet<int>();
 			try {
 				// Take from stock tool if possible
@@ -328,15 +324,13 @@ namespace PeterHan.SandboxTools {
 		/// <param name="str"></param>
 		private void UpdateOverlay(HashedString str) {
 			var menu = DestroyParameterMenu.Instance;
-			if (!SandboxToolsPatches.AdvancedFilterEnabled && menu != null && str !=
-					HashedString.Invalid) {
+			if (menu != null && str != HashedString.Invalid)
 				// Look in the list for an option matching this mode
 				foreach (var mode in modes)
 					if (mode.OverlayMode == str) {
 						menu.SetTo(mode.ID);
 						break;
 					}
-			}
 		}
 	}
 }

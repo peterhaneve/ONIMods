@@ -143,17 +143,9 @@ namespace PeterHan.SandboxTools {
 				if (option.Checkbox == target) {
 					var value = option.State;
 					if (value != ToolToggleState.Disabled) {
-						if (SandboxToolsPatches.AdvancedFilterEnabled)
-							// Flip the state
-							option.State = value == ToolToggleState.On ? ToolToggleState.Off :
-								ToolToggleState.On;
-						else if (value == ToolToggleState.Off) {
-							// Set to on and all others to off
-							foreach (var disableOption in options.Values)
-								if (disableOption != option)
-									disableOption.State = ToolToggleState.Off;
-							option.State = ToolToggleState.On;
-						}
+						// Flip the state
+						option.State = value == ToolToggleState.On ? ToolToggleState.Off :
+							ToolToggleState.On;
 						OnChange();
 					}
 					break;
@@ -174,22 +166,20 @@ namespace PeterHan.SandboxTools {
 			// Add buttons to the chooser
 			if (t.childCount > 1)
 				choiceList = t.GetChild(1).gameObject;
-			if (SandboxToolsPatches.AdvancedFilterEnabled) {
-				// Selects all options
-				var allButton = new PButton {
-					Text = "All", OnClick = _ => SetAll(ToolToggleState.On)
-				}.SetKleiPinkStyle();
-				// Deselects all options
-				var noneButton = new PButton {
-					Text = "None", OnClick = _ => SetAll(ToolToggleState.Off)
-				};
-				new PRelativePanel {
-					BackColor = PUITuning.Colors.ButtonPinkStyle.inactiveColor
-				}.AddChild(allButton).AddChild(noneButton).SetLeftEdge(allButton,
-					fraction: 0.0f).SetRightEdge(allButton, fraction: 0.5f).SetLeftEdge(
-					noneButton, toRight: allButton).SetRightEdge(noneButton, fraction: 1.0f).
-					AddTo(content, -1);
-			}
+			// Selects all options
+			var allButton = new PButton {
+				Text = "All", OnClick = _ => SetAll(ToolToggleState.On)
+			}.SetKleiPinkStyle();
+			// Deselects all options
+			var noneButton = new PButton {
+				Text = "None", OnClick = _ => SetAll(ToolToggleState.Off)
+			};
+			new PRelativePanel {
+				BackColor = PUITuning.Colors.ButtonPinkStyle.inactiveColor
+			}.AddChild(allButton).AddChild(noneButton).SetLeftEdge(allButton,
+				fraction: 0.0f).SetRightEdge(allButton, fraction: 0.5f).SetLeftEdge(
+				noneButton, toRight: allButton).SetRightEdge(noneButton, fraction: 1.0f).
+				AddTo(content, -1);
 			// Bump up the offset max to allow more space
 			t.offsetMax = new Vector2(0.0f, 300.0f);
 			t.SetAsFirstSibling();
@@ -216,8 +206,7 @@ namespace PeterHan.SandboxTools {
 					// parent is active it must be set to something different
 					var option = new DestroyMenuOption(checkbox);
 					PCheckBox.SetCheckState(checkbox, PCheckBox.STATE_PARTIAL);
-					if (i == 0 || SandboxToolsPatches.AdvancedFilterEnabled)
-						option.State = ToolToggleState.On;
+					option.State = ToolToggleState.On;
 					options.Add(parameter.ID, option);
 					toggle.onClick += () => OnClick(checkbox);
 				} else

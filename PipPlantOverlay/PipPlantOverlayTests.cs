@@ -49,6 +49,14 @@ namespace PeterHan.PipPlantOverlay {
 		internal const float PRESSURE_THRESHOLD = 0.1f;
 
 		/// <summary>
+		/// Game versions of this value and higher allow Vacuum as a planting location (but
+		/// not gases at low pressures?).
+		///
+		/// TODO Remove when these versions are all dead
+		/// </summary>
+		internal const uint PRESSURE_VERSION = 567980U;
+
+		/// <summary>
 		/// The maximum plantable temperature in K, for sanity - the highest plant surviving
 		/// temperature is Sporechid at 564 K.
 		/// </summary>
@@ -92,33 +100,38 @@ namespace PeterHan.PipPlantOverlay {
 				bool nb = IsPlantable(below, ReceptacleDirection.Top), na = IsPlantable(above,
 					ReceptacleDirection.Bottom);
 				float temp = Grid.Temperature[cell];
-				if (nb) {
+				if (nb)
 					// Check below
-					if (IsTooHard(below))
-						result = PipPlantFailedReasons.Hardness;
-					else if (COUNT_PLANTS.Invoke(below, PlantRadius) > PlantCount)
-						result = PipPlantFailedReasons.PlantCount;
-					else if (IsUnderPressure(cell))
-						result = PipPlantFailedReasons.Pressure;
-					else if (temp < TEMP_MIN || temp > TEMP_MAX)
-						result = PipPlantFailedReasons.Temperature;
-					else
-						result = PipPlantFailedReasons.CanPlant;
-				}
-				if (na && result == PipPlantFailedReasons.NoPlantablePlot) {
+					result = CheckCellInternal(cell, below);
+				if (na && result == PipPlantFailedReasons.NoPlantablePlot)
 					// Check above
-					if (IsTooHard(above))
-						result = PipPlantFailedReasons.Hardness;
-					else if (COUNT_PLANTS.Invoke(above, PlantRadius) > PlantCount)
-						result = PipPlantFailedReasons.PlantCount;
-					else if (IsUnderPressure(cell))
-						result = PipPlantFailedReasons.Pressure;
-					else if (temp < TEMP_MIN || temp > TEMP_MAX)
-						result = PipPlantFailedReasons.Temperature;
-					else
-						result = PipPlantFailedReasons.CanPlant;
-				}
+					result = CheckCellInternal(cell, above);
 			}
+			return result;
+		}
+
+		/// <summary>
+		/// Checks a cell to see if pips can plant there.
+		/// </summary>
+		/// <param name="cell">The cell to check.</param>
+		/// <param name="plant">The cell the plant will occupy when it is planted.</param>
+		/// <returns>Why pips can or cannot plant there.</returns>
+		private static PipPlantFailedReasons CheckCellInternal(int cell, int plant) {
+			PipPlantFailedReasons result;
+			float temp = Grid.Temperature[cell];
+			// Check below
+			if (IsTooHard(plant))
+				result = PipPlantFailedReasons.Hardness;
+			else if (COUNT_PLANTS.Invoke(plant, PlantRadius) > PlantCount)
+				result = PipPlantFailedReasons.PlantCount;
+			else if (IsUnderPressure(cell))
+				result = PipPlantFailedReasons.Pressure;
+			// Absolute zero (vacuum) is allowed in Song of the Moo
+			else if ((temp < TEMP_MIN || temp > TEMP_MAX) && (PUtil.GameVersion <
+					PRESSURE_VERSION || temp > 0.0f))
+				result = PipPlantFailedReasons.Temperature;
+			else
+				result = PipPlantFailedReasons.CanPlant;
 			return result;
 		}
 
@@ -141,12 +154,11 @@ namespace PeterHan.PipPlantOverlay {
 		/// <returns>true if it is a valid planting location, or false otherwise.</returns>
 		private static bool IsPlantable(int cell, ReceptacleDirection direction) {
 			bool valid = false;
-			PlantablePlot plot;
 			if (Grid.IsSolidCell(cell)) {
 				var building = Grid.Objects[cell, BUILDINGS_LAYER];
 				if (building == null)
 					valid = true;
-				else if ((plot = building.GetComponent<PlantablePlot>()) != null)
+				else if (building.TryGetComponent(out PlantablePlot plot))
 					// Check direction
 					valid = plot.Direction == direction;
 			}
@@ -172,8 +184,9 @@ namespace PeterHan.PipPlantOverlay {
 		private static bool IsUnderPressure(int cell) {
 			var element = Grid.Element[cell];
 			// Threshold is hardcoded in DrowningMonitor
-			return element == null || element.id == SimHashes.Vacuum || Grid.Mass[cell] <
-				PRESSURE_THRESHOLD || Grid.IsSubstantialLiquid(cell, 0.95f);
+			return element == null || (element.id == SimHashes.Vacuum ? PUtil.GameVersion <
+				PRESSURE_VERSION : Grid.Mass[cell] < PRESSURE_THRESHOLD ||
+				Grid.IsSubstantialLiquid(cell, 0.95f));
 		}
 
 		/// <summary>

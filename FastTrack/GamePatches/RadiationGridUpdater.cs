@@ -99,10 +99,8 @@ namespace PeterHan.FastTrack.GamePatches {
 						dist += 0.333333f;
 						if (!Grid.IsValidCell(cell))
 							break;
-						if (!scanCells.Contains(cell)) {
+						if (scanCells.Add(cell))
 							SimMessages.ModifyRadiationOnCell(cell, Mathf.RoundToInt(rads));
-							scanCells.Add(cell);
-						}
 						float mass = Grid.Mass[cell];
 						// Attenuate over distance, with a slight random factor
 						rads *= (mass > 0.0f ? Mathf.Max(0f, 1f - Mathf.Pow(mass, 1.25f) *

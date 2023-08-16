@@ -84,12 +84,13 @@ namespace PeterHan.PipPlantOverlay {
 		/// overlay buttons.
 		/// </summary>
 		/// <param name="text">The button text to be shown on mouseover.</param>
-		/// <param name="icon_name">The icon to show in the overlay list.</param>
-		/// <param name="sim_view">The overlay mode to enter when selected.</param>
+		/// <param name="iconName">The icon to show in the overlay list.</param>
+		/// <param name="simView">The overlay mode to enter when selected.</param>
+		/// <param name="openKey">The key binding to open the overlay.</param>
+		/// <param name="tooltip">The tooltip to show on the overlay toggle.</param>
 		/// <returns>The button to be added.</returns>
 		private static KIconToggleMenu.ToggleInfo CreateOverlayInfo(string text,
-				string icon_name, HashedString sim_view, Action openKey,
-				string tooltip) {
+				string iconName, HashedString simView, Action openKey, string tooltip) {
 			const int KNOWN_PARAMS = 7;
 			KIconToggleMenu.ToggleInfo info = null;
 			ConstructorInfo[] cs;
@@ -106,8 +107,8 @@ namespace PeterHan.PipPlantOverlay {
 				else {
 					object[] args = new object[paramCount];
 					args[0] = text;
-					args[1] = icon_name;
-					args[2] = sim_view;
+					args[1] = iconName;
+					args[2] = simView;
 					args[3] = "";
 					args[4] = openKey;
 					args[5] = tooltip;
@@ -178,8 +179,7 @@ namespace PeterHan.PipPlantOverlay {
 			/// </summary>
 			internal static void Postfix(ICollection<KIconToggleMenu.ToggleInfo> ___overlayToggleInfos) {
 				LocString.CreateLocStringKeys(typeof(PipPlantOverlayStrings.UI));
-				var action = (OpenOverlay == null) ? PAction.MaxAction : OpenOverlay.
-					GetKAction();
+				var action = OpenOverlay?.GetKAction() ?? PAction.MaxAction;
 				var info = CreateOverlayInfo(PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.
 					BUTTON, PipPlantOverlayStrings.OVERLAY_ICON, PipPlantOverlay.ID, action,
 					PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.TOOLTIP);

@@ -34,11 +34,6 @@ namespace PeterHan.SandboxTools {
 	/// </summary>
 	public sealed class SandboxToolsPatches : KMod.UserMod2 {
 		/// <summary>
-		/// Whether multi select is available for filtering on Destroy.
-		/// </summary>
-		public static bool AdvancedFilterEnabled { get; private set; }
-
-		/// <summary>
 		/// Adds more items to the spawner list, including geysers, artifacts, and POI items.
 		/// </summary>
 		/// <param name="instance">The sandbox tool menu to modify.</param>
@@ -67,9 +62,8 @@ namespace PeterHan.SandboxTools {
 			// POI Props
 			filters.Add(new SearchFilter(SandboxToolsStrings.FILTER_POIPROPS,
 				(entity) => {
-					var prefab = entity as KPrefabID;
-					bool ok = prefab != null;
-					if (ok) {
+					bool ok = false;
+					if (entity is KPrefabID prefab) {
 						string name = prefab.PrefabTag.Name;
 						// Include anti-entropy thermo nullifier and neural vacillator
 						// Vacillator's ID is private, we have to make do
@@ -83,21 +77,15 @@ namespace PeterHan.SandboxTools {
 				}, null, Def.GetUISprite(Assets.GetPrefab("PropLadder"))));
 			// Artifacts
 			filters.Add(new SearchFilter(SandboxToolsStrings.FILTER_ARTIFACTS,
-				(entity) => {
-					var prefab = entity as KPrefabID;
-					bool ok = prefab != null;
-					if (ok)
-						ok = prefab.PrefabTag.Name.StartsWith("artifact_");
-					return ok;
-				}, null, Def.GetUISprite(Assets.GetPrefab("artifact_eggrock"))));
+				(entity) => entity is KPrefabID prefab && prefab.PrefabTag.Name.
+					StartsWith("artifact_"),
+				null, Def.GetUISprite(Assets.GetPrefab("artifact_eggrock"))));
 			// Geysers
 			filters.Add(new SearchFilter(SandboxToolsStrings.FILTER_GEYSERS,
-				(entity) => {
-					var prefab = entity as KPrefabID;
-					return prefab != null && prefab.TryGetComponent(out Uncoverable _) &&
-						(prefab.TryGetComponent(out Geyser _) || prefab.PrefabTag.Name ==
-						OilWellConfig.ID);
-				}, null, Def.GetUISprite(Assets.GetPrefab("GeyserGeneric_slush_water"))));
+				(entity) => entity is KPrefabID prefab && ((prefab.TryGetComponent(
+					out Uncoverable _) && prefab.TryGetComponent(out Geyser _)) ||
+					prefab.PrefabTag.Name == OilWellConfig.ID),
+				null, Def.GetUISprite(Assets.GetPrefab("GeyserGeneric_slush_water"))));
 			// Add matching assets
 			var options = ListPool<object, SandboxToolParameterMenu>.Allocate();
 			n = filters.Count;
@@ -127,13 +115,7 @@ namespace PeterHan.SandboxTools {
 			PUtil.LogDebug("Destroying FilteredDestroyTool");
 			DestroyParameterMenu.DestroyInstance();
 		}
-
-		[PLibMethod(RunAt.AfterModsLoad)]
-		internal static void TestAdvancedFilter() {
-			AdvancedFilterEnabled = PPatchTools.GetTypeSafe(
-				"AdvancedFilterMenu.AdvancedFiltrationAssets", "AdvancedFilterMenu") != null;
-		}
-
+		
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
