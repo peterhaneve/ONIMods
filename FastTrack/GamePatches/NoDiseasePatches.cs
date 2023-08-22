@@ -22,6 +22,7 @@ using HarmonyLib;
 using Klei;
 using Klei.AI;
 using PeterHan.PLib.Core;
+using UnityEngine;
 
 namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
@@ -265,6 +266,28 @@ namespace PeterHan.FastTrack.GamePatches {
 				ref var cell = ref dcs[i];
 				cell.diseaseIdx = idx;
 				cell.elementCount = 0;
+			}
+		}
+
+		/// <summary>
+		/// Applied to MinionConfig to instantly cure all diseases on spawn.
+		/// </summary>
+		[HarmonyPatch(typeof(MinionConfig), nameof(MinionConfig.OnSpawn))]
+		internal static class CureExistingDiseases {
+			internal static bool Prepare() => FastTrackOptions.Instance.NoDisease;
+
+			/// <summary>
+			/// Applied after OnSpawn runs.
+			/// </summary>
+			internal static void Postfix(GameObject go) {
+				if (go.TryGetComponent(out MinionModifiers modifiers)) {
+					var diseaseList = modifiers.sicknesses.ModifierList;
+					if (diseaseList != null) {
+						foreach (var sicknessInstance in diseaseList)
+							modifiers.Trigger((int)GameHashes.SicknessCured, sicknessInstance);
+						diseaseList.Clear();
+					}
+				}
 			}
 		}
 
