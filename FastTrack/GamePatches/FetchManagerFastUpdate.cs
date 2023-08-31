@@ -55,7 +55,6 @@ namespace PeterHan.FastTrack.GamePatches {
 			var pathCosts = __instance.cellCosts;
 			var finalPickups = __instance.finalPickups;
 			// Will reflect the changes from Waste Not, Want Not and No Manual Delivery
-			var comparer = FetchManager.ComparerIncludingPriority;
 			var fetchables = __instance.fetchables.GetDataList();
 			int n = fetchables.Count;
 			if (!POOL.TryPop(out var canBePickedUp))
@@ -69,7 +68,7 @@ namespace PeterHan.FastTrack.GamePatches {
 						cell));
 				// Exclude unreachable items
 				if (target.CouldBePickedUpByMinion(worker_go) && cost >= 0)
-					canBePickedUp.AddItem(ref fetchable, cost, comparer);
+					canBePickedUp.AddItem(ref fetchable, cost);
 			}
 			pathCosts.Clear();
 			// Copy the remaining pickups to the list, there are now way fewer because only
@@ -172,9 +171,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// </summary>
 			/// <param name="fetchable">The item that can be fetched.</param>
 			/// <param name="cost">The path cost to the item.</param>
-			/// <param name="comparer">Determines whether the item is better than existing items in the list.</param>
-			public void AddItem(ref FetchManager.Fetchable fetchable, int cost,
-					IComparer<FMPickup> comparer) {
+			public void AddItem(ref FetchManager.Fetchable fetchable, int cost) {
 				int hash = fetchable.tagBitsHash, mp = fetchable.masterPriority, result;
 				var target = fetchable.pickupable;
 				var key = new PickupTagKey(hash, target.KPrefabID);
@@ -189,7 +186,8 @@ namespace PeterHan.FastTrack.GamePatches {
 					pickups.Add(key, slots);
 				}
 				if (mp < 0)
-					throw new IndexOutOfRangeException("Item priority out of bounds: " + mp);
+					// Priority Zero uses -200 priority
+					mp = 0;
 				else if (mp >= slots.Length) {
 #if DEBUG
 					PUtil.LogDebug("Item priority is outside bounds: " + mp);
@@ -200,8 +198,9 @@ namespace PeterHan.FastTrack.GamePatches {
 				ref var current = ref slots[mp];
 				var pu = current.pickupable;
 				// Is the new one better?
-				if (pu == null || (result = comparer.Compare(candidate, current)) < 0 ||
-						(result == 0 && target.UnreservedAmount > pu.UnreservedAmount))
+				if (pu == null || (result = FetchManager.ComparerIncludingPriority.Compare(
+						candidate, current)) < 0 || (result == 0 && target.UnreservedAmount >
+						pu.UnreservedAmount))
 					current = candidate;
 			}
 

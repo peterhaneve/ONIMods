@@ -119,8 +119,7 @@ namespace PeterHan.PLib.UI {
 			// Arrange the icon and text
 			var layout = button.AddComponent<RelativeLayoutGroup>();
 			layout.Margin = Margin;
-			GameObject inner;
-			ArrangeComponent(layout, inner = WrapTextAndSprite(text, sprite), TextAlignment);
+			ArrangeComponent(layout, WrapTextAndSprite(text, sprite), TextAlignment);
 			if (!DynamicSize) layout.LockLayout();
 			layout.flexibleWidth = FlexSize.x;
 			layout.flexibleHeight = FlexSize.y;
