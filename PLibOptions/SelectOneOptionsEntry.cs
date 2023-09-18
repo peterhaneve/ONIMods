@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using PeterHan.PLib.Core;
 using PeterHan.PLib.UI;
 using UnityEngine;
 
@@ -36,7 +37,7 @@ namespace PeterHan.PLib.Options {
 		private static EnumOption GetAttribute(object enumValue, Type fieldType) {
 			if (enumValue == null)
 				throw new ArgumentNullException(nameof(enumValue));
-			string valueName = enumValue.ToString(), title = valueName, tooltip = "";
+			string valueName = enumValue.GetEnumValue(), title = valueName, tooltip = "";
 			foreach (var enumField in fieldType.GetMember(valueName, BindingFlags.Public |
 						BindingFlags.Static))
 				if (enumField.DeclaringType == fieldType) {
