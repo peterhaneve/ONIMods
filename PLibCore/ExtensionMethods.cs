@@ -20,9 +20,9 @@ using HarmonyLib;
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using UnityEngine;
-using System.Runtime.Serialization;
 
 namespace PeterHan.PLib.Core
 {
@@ -226,8 +226,8 @@ namespace PeterHan.PLib.Core
             catch (AmbiguousMatchException e)
             {
 #if DEBUG
-                PUtil.LogWarning("When patching candidate method {0}.{1}:".F(type.FullName,
-                    methodName));
+				PUtil.LogWarning("When patching candidate method {0}.{1}:".F(type.FullName,
+					methodName));
 #endif
                 PUtil.LogException(e);
             }
