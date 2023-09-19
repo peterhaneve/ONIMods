@@ -119,7 +119,10 @@ namespace PeterHan.FastTrack.UIPatches {
 			tc = GameUtil.GetDisplayThermalConductivity(tc);
 			// Pass 1: float to string using Ryu
 			text.Clear();
-			tc.ToRyuHardString(text, 3);
+			if (tc < 0.001f)
+				tc.ToRyuSoftString(text, 11);
+			else
+				tc.ToRyuHardString(text, 3);
 			string shcValue = text.ToString();
 			// Pass 2: Format into TC header
 			string tcText = text.Clear().Append(ELEMENTAL.THERMALCONDUCTIVITY.NAME).Replace(
@@ -343,7 +346,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			if (instance != null && (target = instance.selectedTarget) != null) {
 				var drawer = instance.drawer;
 				bool changed = target != lastSelection.target;
-				if (changed) {
+				if (changed || lastSelection.ElementChanged) {
 					var detailsPanel = instance.detailsPanel;
 					lastSelection = new LastSelectionDetails(target);
 					detailsPanel.SetActive(true);
@@ -393,6 +396,24 @@ namespace PeterHan.FastTrack.UIPatches {
 				get {
 					var pe = primaryElement;
 					return pe != null ? pe.DiseaseIdx : cso.diseaseIdx;
+				}
+			}
+			
+			/// <summary>
+			/// Reports true if the element changed, to force an update of the element
+			/// displayed.
+			/// </summary>
+			public bool ElementChanged {
+				get {
+					bool result = false;
+					if (element != null) {
+						var hash = element.id;
+						if (cso != null)
+							result = hash != cso.element.id;
+						else if (primaryElement != null)
+							result = hash != primaryElement.Element.id;
+					}
+					return result;
 				}
 			}
 

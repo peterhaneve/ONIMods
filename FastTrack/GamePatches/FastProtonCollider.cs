@@ -214,11 +214,11 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="pos">The exact position of this radbolt.</param>
 		/// <returns>Whether the radbolt collided with another radbolt.</returns>
 		private bool CheckRadboltCollision(int cell, Vector3 pos) {
+			bool collided = false;
 			var hits = ListPool<ThreadsafePartitionerEntry, FastProtonCollider>.Allocate();
 			Grid.CellToXY(cell, out int x, out int y);
 			hepLayer.Gather(hits, x - 1, y - 1, 3, 3);
 			int n = hits.Count;
-			bool collided = false;
 			for (int i = 0; i < n && !collided; i++)
 				if (hits[i].data is HighEnergyParticle otherHEP && otherHEP != null &&
 						otherHEP != hep && otherHEP.isCollideable && CollidesWith(pos,
@@ -297,7 +297,7 @@ namespace PeterHan.FastTrack.GamePatches {
 							DISEASE_PER_CELL);
 						payload -= HighEnergyParticleConfig.PER_CELL_FALLOFF;
 						if (partitionerEntry != null) {
-							Grid.CellToXY(cell, out int x, out int y);
+							Grid.CellToXY(newCell, out int x, out int y);
 							partitionerEntry.UpdatePosition(x, y);
 						} else
 							CreatePartitioner(newCell);
@@ -308,7 +308,7 @@ namespace PeterHan.FastTrack.GamePatches {
 						hep.payload = payload;
 						// Use the Klei override to trigger kanim cell change update
 						tt.SetPosition(newPos);
-						CheckCollision(cell, pos);
+						CheckCollision(cell, newPos);
 					}
 				}
 				if (destroy)

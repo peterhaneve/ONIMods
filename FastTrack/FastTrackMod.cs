@@ -134,6 +134,8 @@ namespace PeterHan.FastTrack {
 				GamePatches.FastElectricalNetworkCalculator.Apply(harmony);
 			// Fix those world strings
 			UIPatches.FormatStringPatches.ApplyPatch(harmony);
+			// Temperature compatibility
+			FastTrackCompat.CheckTemperatureCompat();
 		}
 
 		/// <summary>

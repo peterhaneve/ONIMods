@@ -193,7 +193,7 @@ namespace PeterHan.PLib.UI {
 			var mToggle = checkbox.AddComponent<MultiToggle>();
 			var evt = OnChecked;
 			if (evt != null)
-				mToggle.onClick += () => evt?.Invoke(checkbox, mToggle.CurrentState);
+				mToggle.onClick += () => evt.Invoke(checkbox, mToggle.CurrentState);
 			UIDetours.PLAY_SOUND_CLICK.Set(mToggle, true);
 			UIDetours.PLAY_SOUND_RELEASE.Set(mToggle, false);
 			mToggle.states = GenerateStates(trueColor);

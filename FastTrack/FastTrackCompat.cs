@@ -50,6 +50,11 @@ namespace PeterHan.FastTrack {
 		private const string EFFICIENT_SUPPLY_TYPE = "PeterHan.EfficientFetch.EfficientFetchManager";
 
 		/// <summary>
+		/// Enable extended temperature precision if this type is defined.
+		/// </summary>
+		private const string HPT_TYPE = "Main.Temperature_Patch";
+
+		/// <summary>
 		/// Avoid totally replacing material properties screens if this type is defined.
 		/// </summary>
 		private const string MATERIAL_PROPERTIES_TYPE = "MaterialSelectionProperties.MaterialSelectionProperties";
@@ -162,6 +167,17 @@ namespace PeterHan.FastTrack {
 				UIPatches.MinionStatsPanelWrapper.Apply(harmony);
 			else
 				PUtil.LogDebug("Disabling attributes panel optimizations: Stats mod active");
+		}
+
+		/// <summary>
+		/// Checks for compatibility and enables extended precision temperature only if a mod
+		/// which requests it is enabled.
+		/// </summary>
+		internal static void CheckTemperatureCompat() {
+			bool hpt = PPatchTools.GetTypeSafe(HPT_TYPE) != null;
+			if (hpt)
+				PUtil.LogDebug("Extending temperature precision: High Precision Temperature active");
+			UIPatches.FormatStringPatches.ForceHighPrecisionTemperature = hpt;
 		}
 
 		/// <summary>

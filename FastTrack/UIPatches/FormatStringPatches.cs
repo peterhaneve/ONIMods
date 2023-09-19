@@ -76,6 +76,12 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static readonly string[] WATT_LEGEND = new string[2];
 
 		/// <summary>
+		/// For compatibility with the High Precision Temperature mod, add precision to all
+		/// temperature values in the Ryu stage.
+		/// </summary>
+		public static bool ForceHighPrecisionTemperature = false;
+
+		/// <summary>
 		/// Appends a standard infinity string to the buffer if the value is infinite.
 		/// </summary>
 		/// <param name="buffer">The string builder to append.</param>
@@ -378,7 +384,8 @@ namespace PeterHan.FastTrack.UIPatches {
 				temperature *= 1.8f;
 			temperature = GameUtil.ApplyTimeSlice(temperature, timeSlice);
 			if (!text.AppendIfInfinite(temperature))
-				temperature.ToRyuSoftString(text, Mathf.Abs(temperature) < 0.1f ? 4 : 1);
+				temperature.ToRyuSoftString(text, Mathf.Abs(temperature) < 0.1f ||
+					ForceHighPrecisionTemperature ? 4 : 1);
 			if (displayUnits)
 				text.Append(GameUtil.GetTemperatureUnitSuffix());
 			text.AppendTimeSlice(timeSlice);

@@ -40,21 +40,11 @@ namespace PeterHan.ModUpdateDate {
 			PDetours.DetourFieldLazy<KInputController, Modifier>("mActiveModifiers");
 
 		/// <summary>
-		/// Used to retrieve the global input manager, static or not.
-		/// TODO Remove when versions prior to U44-535211 no longer need to be supported
-		/// </summary>
-		private static readonly MethodInfo GET_INPUT_MANAGER = typeof(Global).GetMethod(nameof(
-				Global.GetInputManager), BindingFlags.Instance | BindingFlags.Static |
-			PPatchTools.BASE_FLAGS);
-		
-		/// <summary>
 		/// Gets the current input controller.
 		/// </summary>
 		/// <returns>The current input controller.</returns>
 		private static KInputController GetInputController() {
-			var getInput = GET_INPUT_MANAGER;
-			return (getInput.IsStatic ? getInput.Invoke(null, null) : getInput.Invoke(Global.
-				Instance, null)) is GameInputManager im ? im.GetDefaultController() : null;
+			return Global.GetInputManager()?.GetDefaultController();
 		}
 
 		/// <summary>

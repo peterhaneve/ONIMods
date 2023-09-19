@@ -117,6 +117,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Meta", "Meta", "{DD48872E-7
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PreserveSeed", "PreserveSeed\PreserveSeed.csproj", "{135508AE-EF4B-49D6-882F-735B85B85B2B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpiceOfLife", "SpiceOfLife\SpiceOfLife.csproj", "{E70A84A5-CF8F-4F7B-8D60-B0115553F9A9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mergedown = Debug|Mergedown
@@ -541,6 +543,14 @@ Global
 		{135508AE-EF4B-49D6-882F-735B85B85B2B}.Release|Mergedown.Build.0 = Release|Mergedown
 		{135508AE-EF4B-49D6-882F-735B85B85B2B}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{135508AE-EF4B-49D6-882F-735B85B85B2B}.Release|Vanilla.Build.0 = Release|Vanilla
+		{E70A84A5-CF8F-4F7B-8D60-B0115553F9A9}.Debug|Mergedown.ActiveCfg = Debug|Mergedown
+		{E70A84A5-CF8F-4F7B-8D60-B0115553F9A9}.Debug|Mergedown.Build.0 = Debug|Mergedown
+		{E70A84A5-CF8F-4F7B-8D60-B0115553F9A9}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
+		{E70A84A5-CF8F-4F7B-8D60-B0115553F9A9}.Debug|Vanilla.Build.0 = Debug|Vanilla
+		{E70A84A5-CF8F-4F7B-8D60-B0115553F9A9}.Release|Mergedown.ActiveCfg = Release|Mergedown
+		{E70A84A5-CF8F-4F7B-8D60-B0115553F9A9}.Release|Mergedown.Build.0 = Release|Mergedown
+		{E70A84A5-CF8F-4F7B-8D60-B0115553F9A9}.Release|Vanilla.ActiveCfg = Release|Vanilla
+		{E70A84A5-CF8F-4F7B-8D60-B0115553F9A9}.Release|Vanilla.Build.0 = Release|Vanilla
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
