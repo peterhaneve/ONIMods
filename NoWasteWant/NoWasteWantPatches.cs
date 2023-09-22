@@ -24,10 +24,12 @@ using PeterHan.PLib.PatchManager;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using PeterHan.PLib.Detours;
 using UnityEngine;
 
 using RotCallback = StateMachine<Rottable, Rottable.Instance, IStateMachineTarget,
 	Rottable.Def>.State.Callback;
+using SapTreeStates = SapTree.StatesInstance;
 
 namespace PeterHan.NoWasteWant {
 	/// <summary>
@@ -256,6 +258,53 @@ namespace PeterHan.NoWasteWant {
 			/// </summary>
 			internal static void Postfix(Rottable __instance) {
 				ReplaceRotHandler(__instance);
+			}
+		}
+
+		/// <summary>
+		/// Applied to SapTree.StatesInstance to make the tree also look for the most rotten
+		/// food instead of the "first one it finds". As the previous method did not respect
+		/// the food quality at all, neither will this implementation.
+		/// </summary>
+		[HarmonyPatch(typeof(SapTreeStates), nameof(SapTreeStates.CheckForFood))]
+		public static class SapTree_StatesInstance_CheckForFood_Patch {
+			// Private fields ahoy!
+			private static readonly IDetouredField<SapTreeStates, Extents> FEED_EXTENTS =
+				PDetours.DetourFieldLazy<SapTreeStates, Extents>("feedExtents");
+
+			private static readonly IDetouredField<SapTree, StateMachine<SapTree,
+				SapTreeStates, IStateMachineTarget, SapTree.Def>.TargetParameter> FOOD_ITEM =
+				PDetours.DetourFieldLazy<SapTree, StateMachine<SapTree, SapTreeStates,
+				IStateMachineTarget, SapTree.Def>.TargetParameter>("foodItem");
+
+			/// <summary>
+			/// Applied before CheckForFood runs.
+			/// </summary>
+			[HarmonyPriority(Priority.HigherThanNormal)]
+			internal static bool Prefix(SapTreeStates __instance) {
+				var items = ListPool<ScenePartitionerEntry, SapTree>.Allocate();
+				var gsp = GameScenePartitioner.Instance;
+				GameObject foodItem = null;
+				float rotten = float.MaxValue;
+				gsp.GatherEntries(FEED_EXTENTS.Get(__instance), gsp.pickupablesLayer, items);
+				int n = items.Count;
+				for (int i = 0; i < n; i++)
+					if (items[i].obj is Pickupable item && item.TryGetComponent(
+							out Edible food)) {
+						float rotValue = float.MaxValue;
+						Rottable.Instance smi;
+						// Only look for stale food on food that can rot in the first place
+						if (food.FoodInfo.CanRot && (smi = food.GetSMI<Rottable.Instance>()) !=
+								null)
+							rotValue = smi.RotConstitutionPercentage;
+						if (rotValue <= rotten) {
+							foodItem = item.gameObject;
+							rotten = rotValue;
+						}
+					}
+				FOOD_ITEM.Get(__instance.sm).Set(foodItem, __instance);
+				items.Recycle();
+				return false;
 			}
 		}
 	}

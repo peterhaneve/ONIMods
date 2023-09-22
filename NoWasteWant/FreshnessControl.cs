@@ -84,6 +84,10 @@ namespace PeterHan.NoWasteWant {
 			return string.Format(Strings.Get(GetSliderTooltipKey(0)), MinFreshness * 100.0f);
 		}
 
+		public string GetSliderTooltip(int index) {
+			return string.Format(Strings.Get(GetSliderTooltipKey(index)), MinFreshness * 100.0f);
+		}
+
 		public string GetSliderTooltipKey(int index) {
 			return "STRINGS.UI.UISIDESCREENS.FRESHNESS_CONTROL_SIDE_SCREEN.TOOLTIP";
 		}

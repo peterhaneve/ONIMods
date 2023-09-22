@@ -107,12 +107,13 @@ namespace ReimaginationTeam.DecorRework {
 			// Bounds were already checked for us
 			var inst = DecorCellManager.Instance;
 			if (inst != null) {
+				var pid = prefabID.PrefabTag;
 				cells.Clear();
 				for (int x = extents.x; x < maxX; x++)
 					for (int y = extents.y; y < maxY; y++) {
 						int target = Grid.XYToCell(x, y);
 						if (Grid.IsValidCell(target) && Grid.VisibilityTest(cell, target)) {
-							inst.AddDecorProvider(target, provider, prefabID.PrefabTag, decor);
+							inst.AddDecorProvider(target, provider, pid, decor);
 							cells.Add(target);
 						}
 					}
@@ -146,9 +147,10 @@ namespace ReimaginationTeam.DecorRework {
 			RemoveDecor();
 			if (obj != null && Grid.IsValidCell(cell = Grid.PosToCell(obj))) {
 				float decor = provider.decor?.GetTotalValue() ?? 0.0f;
-				int radius = (int?)provider.decorRadius?.GetTotalValue() ?? 5;
+				int radius = UnityEngine.Mathf.RoundToInt(provider.decorRadius?.
+					GetTotalValue() ?? 5.0f);
 				// Hide decor in bins?
-				if (DecorTuning.HIDE_DECOR_IN_STORAGE && obj.HasTag(GameTags.Stored))
+				if (DecorTuning.HIDE_DECOR_IN_STORAGE && prefabID.HasTag(GameTags.Stored))
 					decor = 0.0f;
 				// Hide decor in walls?
 				if (DecorTuning.HIDE_DECOR_IN_WALLS && !Grid.Transparent[cell] && Grid.Solid[
@@ -159,18 +161,13 @@ namespace ReimaginationTeam.DecorRework {
 					decor = DecorReimaginedPatches.Options.BrokenBuildingDecor;
 				if (decor != 0.0f && (!disabled || decor < 0.0f) && radius > 0) {
 					// Decor actually can be applied
-					var rot = provider.rotatable;
-					var orientation = rot ? rot.GetOrientation() : Orientation.Neutral;
-					// Calculate expanded extents
-					Extents extents, be = provider.occupyArea?.GetExtents(orientation) ??
-						Extents.OneCell(Grid.PosToCell(obj));
-					int x = Math.Max(0, be.x - radius), y = Math.Max(0, be.y - radius);
-					extents.x = x;
-					extents.y = y;
-					extents.width = Math.Min(Grid.WidthInCells - 1, be.x + be.width + radius) -
-						x;
-					extents.height = Math.Min(Grid.HeightInCells - 1, be.y + be.height +
-						radius) - y;
+					var area = provider.occupyArea;
+					Extents extents, be = (area == null) ? Extents.OneCell(cell) : area.
+						GetExtents();
+					extents.x = Math.Max(0, be.x - radius);
+					extents.y = Math.Max(0, be.y - radius);
+					extents.width = Math.Min(Grid.WidthInCells - 1, be.width + radius * 2);
+					extents.height = Math.Min(Grid.HeightInCells - 1, be.height + radius * 2);
 					// Names are the same as the base game
 					partitioner = GameScenePartitioner.Instance.Add(
 						"DecorProvider.SplatCollectDecorProviders", obj, extents,
@@ -221,20 +218,23 @@ namespace ReimaginationTeam.DecorRework {
 		/// </summary>
 		private void RemoveDecor() {
 			var inst = DecorCellManager.Instance;
-			if (partitioner != IntHandle.InvalidHandle) {
-				GameScenePartitioner.Instance?.Free(ref partitioner);
-				partitioner = IntHandle.InvalidHandle;
-			}
-			if (solidChangedPartitioner != IntHandle.InvalidHandle) {
-				GameScenePartitioner.Instance?.Free(ref solidChangedPartitioner);
-				solidChangedPartitioner = IntHandle.InvalidHandle;
+			var gsp = GameScenePartitioner.Instance;
+			if (gsp != null) {
+				if (partitioner != IntHandle.InvalidHandle) {
+					gsp.Free(ref partitioner);
+					partitioner = IntHandle.InvalidHandle;
+				}
+				if (solidChangedPartitioner != IntHandle.InvalidHandle) {
+					gsp.Free(ref solidChangedPartitioner);
+					solidChangedPartitioner = IntHandle.InvalidHandle;
+				}
 			}
 			if (inst != null) {
 				if (cacheDecor != 0.0f) {
 					int n = cells.Count;
+					var pid = prefabID.PrefabTag;
 					for (int i = 0; i < n; i++)
-						inst.RemoveDecorProvider(cells[i], provider, prefabID.PrefabTag,
-							cacheDecor);
+						inst.RemoveDecorProvider(cells[i], provider, pid, cacheDecor);
 				}
 				cacheDecor = 0.0f;
 				cells.Clear();

@@ -144,6 +144,23 @@ namespace PeterHan.MooReproduction {
 					MOO_TAG;
 			}
 		}
+		
+		/// <summary>
+		/// Applied to EntityConfigManager to fix a bug where the baby roller snake would
+		/// sometimes be loaded before the real one, depending on what other mods might be
+		/// installed or the game version. EntityConfigOrder is private and cannot be used by
+		/// mods, so is EntityConfigManager.ConfigEntry
+		/// </summary>
+		[HarmonyPatch(typeof(EntityConfigManager), "GetSortOrder")]
+		public static class EntityConfigManager_GetSortOrder_Patch {
+			/// <summary>
+			/// Applied after GetSortOrder runs.
+			/// </summary>
+			internal static void Postfix(System.Type type, ref int __result) {
+				if (type == typeof(BabyMooConfig))
+					__result = 1;
+			}
+		}
 
 		/// <summary>
 		/// Applied to HappinessMonitor to adjust the happy egg multiplier (default 10x -> 16

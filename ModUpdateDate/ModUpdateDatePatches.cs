@@ -28,6 +28,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using PeterHan.PLib.Detours;
 
 namespace PeterHan.ModUpdateDate {
 	/// <summary>
@@ -181,6 +182,8 @@ namespace PeterHan.ModUpdateDate {
 		/// <summary>
 		/// Applied to Manager to close the ZIP file handle after updating. This handles the
 		/// path of MakeMod from Steam mods.
+		///
+		/// TODO Remove when versions older than U49-573946 no longer need to be supported
 		/// </summary>
 		[HarmonyPatch]
 		public static class Manager_Update_Patch {
@@ -189,6 +192,15 @@ namespace PeterHan.ModUpdateDate {
 			/// </summary>
 			private static readonly FieldInfo ZIP_FILE_HANDLE = ZIP_FILE_TYPE?.GetFieldSafe(
 				"zipfile", false);
+
+			/// <summary>
+			/// This field changed to a property in U49-573946, but the patch is obsolete in
+			/// those versions anyways
+			/// </summary>
+			private static readonly IDetouredField<Mod, IFileSource> FILE_SOURCE =
+				PDetours.DetourFieldLazy<Mod, IFileSource>(nameof(Mod.file_source));
+
+			internal static bool Prepare() => PUtil.GameVersion < 573946U;
 
 			/// <summary>
 			/// Targets both Update and Subscribe.
@@ -204,7 +216,7 @@ namespace PeterHan.ModUpdateDate {
 			/// Applied after these methods run.
 			/// </summary>
 			internal static void Postfix(Mod mod) {
-				var src = mod.file_source;
+				var src = FILE_SOURCE.Get(mod);
 				if (src != null && ZIP_FILE_HANDLE != null && ZIP_FILE_TYPE.IsAssignableFrom(
 						src.GetType()) && ZIP_FILE_HANDLE.GetValue(src) is Ionic.Zip.ZipFile
 						file)

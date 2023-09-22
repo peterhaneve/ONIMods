@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.Serialization;
 using PeterHan.PLib.UI;
 using UnityEngine;
 
@@ -47,6 +48,10 @@ namespace PeterHan.PLib.Options {
 								spec = HandleDefaults(spec, enumField);
 							title = LookInStrings(spec.Title);
 							tooltip = LookInStrings(spec.Tooltip);
+							break;
+						} else if (attrib is EnumMemberAttribute attr && attr.
+								IsValueSetExplicitly) {
+							title = LookInStrings(attr.Value);
 							break;
 						}
 					break;
@@ -126,7 +131,7 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		private void Update() {
 			if (comboBox != null && chosen != null)
-				PComboBox<EnumOption>.SetSelectedItem(comboBox, chosen, false);
+				PComboBox<EnumOption>.SetSelectedItem(comboBox, chosen);
 		}
 
 		/// <summary>

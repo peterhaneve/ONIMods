@@ -400,8 +400,12 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="typeForPermission">The chore type to use for IsPermitted.</param>
 		/// <returns>true if the universal Chore preconditions are satisfied, or false otherwise.</returns>
 		private bool FastCheckPreconditions(Chore chore, ChoreType typeForPermission) {
+			GameObject go;
+			int cell;
 			// IsValid
-			if (!chore.IsValid() || chore.isNull)
+			if (chore.target == null || chore.target.isNull || chore.provider == null ||
+					(go = chore.gameObject) == null || !Grid.IsValidCell(cell = Grid.
+					PosToCell(go)) || Grid.WorldIdx[cell] == ClusterManager.INVALID_WORLD_IDX)
 				return false;
 			var consumer = consumerState.consumer;
 			var type = chore.choreType;

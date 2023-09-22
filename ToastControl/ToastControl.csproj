@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Popup Control</AssemblyTitle>
-    <FileVersion>2.5.0.0</FileVersion>
+    <FileVersion>2.6.0.0</FileVersion>
     <RootNamespace>PeterHan.ToastControl</RootNamespace>
     <Description>Control which text popups are shown.</Description>
     <AssemblyVersion>2.1.0.0</AssemblyVersion>

@@ -67,8 +67,7 @@ namespace PeterHan.ToastControl {
 		/// </summary>
 		private static ICollection<string> TargetsLong => new List<string>() {
 			"BaseUtilityBuildTool:BuildPath", // 2 hits
-			"BuildTool:PostProcessBuild", // >= 534889
-			"BuildTool:TryBuild", // TODO < 534889
+			"BuildTool:PostProcessBuild",
 			"CaptureTool:MarkForCapture",
 			"CopyBuildingSettings:ApplyCopy",
 			"DebugHandler:SpawnMinion",
@@ -409,8 +408,14 @@ namespace PeterHan.ToastControl {
 		/// <summary>
 		/// Applied to LiquidPumpingStation to determine whether pickup popups are shown.
 		/// </summary>
-		[HarmonyPatch(typeof(LiquidPumpingStation), "OnCompleteWork")]
+		[HarmonyPatch]
 		public static class LiquidPumpingStation_OnCompleteWork_Patch {
+			internal static MethodBase TargetMethod() {
+				return typeof(LiquidPumpingStation).GetMethodSafe("OnCompleteWork",
+					false, PPatchTools.AnyArguments) ?? typeof(LiquidPumpingStation).
+					GetMethodSafe("OnStopWork", false, PPatchTools.AnyArguments);
+			}
+
 			/// <summary>
 			/// Transpiles OnCompleteWork to alter the "display popup" flag on Storage.Store
 			/// depending on the options settings.

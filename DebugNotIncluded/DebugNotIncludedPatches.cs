@@ -397,7 +397,7 @@ namespace PeterHan.DebugNotIncluded {
 	/// <summary>
 	/// Applied to Manager to make the mod events dialog more user friendly.
 	/// </summary>
-	[HarmonyPatch(typeof(Manager), "MakeEventList")]
+	[HarmonyPatch(typeof(Manager), "MakeEventList", typeof(List<Event>), typeof(string))]
 	public static class Manager_MakeEventList_Patch {
 		/// <summary>
 		/// Applied after MakeEventList runs.
