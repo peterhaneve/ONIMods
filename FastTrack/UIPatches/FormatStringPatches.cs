@@ -117,6 +117,8 @@ namespace PeterHan.FastTrack.UIPatches {
 				else if (type == 'E')
 					RyuFormat.ToString(buffer, (double)num, precision, RyuFormatOptions.
 						ExponentialMode);
+				else
+					buffer.Append(num.ToString(floatFormat));
 			} else
 				buffer.Append(num.ToString(floatFormat));
 			return buffer;

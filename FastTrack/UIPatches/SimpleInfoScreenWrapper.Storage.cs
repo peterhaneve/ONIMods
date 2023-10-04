@@ -152,9 +152,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 			if (rottable != null) {
 				string rotText = rottable.StateString();
-				if (!string.IsNullOrEmpty(rotText)) {
+				if (!string.IsNullOrEmpty(rotText))
 					text.Append("\n " + Constants.BULLETSTRING).Append(rotText);
-				}
 				tooltip.AddMultiStringTooltip(rottable.GetToolTip(), defaultStyle);
 			}
 			if (pe != null && pe.DiseaseIdx != Sim.InvalidDiseaseIdx) {

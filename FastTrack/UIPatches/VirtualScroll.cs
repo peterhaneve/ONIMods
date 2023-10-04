@@ -18,7 +18,6 @@
 
 using System.Collections.Generic;
 using System.Threading;
-using PeterHan.PLib.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -237,7 +236,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Rebuilds the list of items next frame.
 		/// </summary>
 		internal void Rebuild() {
-			if (gameObject.activeSelf && Interlocked.Increment(ref pendCount) <= 1)
+			if (gameObject.activeInHierarchy && Interlocked.Increment(ref pendCount) <= 1)
 				StartCoroutine(DoRebuild());
 		}
 

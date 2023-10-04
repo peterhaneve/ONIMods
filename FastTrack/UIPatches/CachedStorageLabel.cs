@@ -151,8 +151,9 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		private System.Collections.IEnumerator FreezeIt() {
-			yield return new WaitForEndOfFrame();
-			if (freeze != null && thaw != null) {
+			yield return null;
+			yield return null;
+			if (freeze != null && thaw != null && freeze.isActiveAndEnabled) {
 				freeze.CopyFrom(thaw);
 				freeze.enabled = true;
 				thaw.enabled = false;

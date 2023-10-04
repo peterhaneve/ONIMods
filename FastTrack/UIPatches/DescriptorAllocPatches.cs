@@ -160,37 +160,40 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
-		/// Gets the game object's effects in the shared descriptor list.
+		/// Filters the descriptors for effects.
 		/// </summary>
-		/// <param name="go">The game object to describe.</param>
-		/// <param name="simpleInfoScreen">Whether the descriptors are to be shown in the
+		/// <param name="desc">All descriptors of the active game object.</param>
+		/// <param name="simpleScreen">Whether the descriptors are to be shown in the
 		/// simplified info screen.</param>
-		/// <returns>The game object's effect descriptors.</returns>
-		internal static List<Descriptor> GetGameObjectEffects(GameObject go,
-				bool simpleInfoScreen) {
+		/// <returns>The matching effect descriptors.</returns>
+		internal static IList<Descriptor> GetGameObjectEffects(IList<Descriptor> desc,
+				bool simpleScreen) {
 			var descriptors = EFFECT_DESCRIPTORS;
-			var comps = ListPool<IGameObjectEffectDescriptor, DescriptorSorter>.Allocate();
+			int n = desc.Count;
 			descriptors.Clear();
-			go.GetComponents(comps);
-			if (go.TryGetComponent(out StateMachineController smc))
-				smc.AddStateMachineDescriptors(comps);
-			comps.Sort(DescriptorSorter.Instance);
-			int n = comps.Count;
 			for (int i = 0; i < n; i++) {
-				var toAdd = comps[i].GetDescriptors(go);
-				if (toAdd != null) {
-					int nd = toAdd.Count;
-					for (int j = 0; j < nd; j++) {
-						var descriptor = toAdd[j];
-						if ((simpleInfoScreen || !descriptor.onlyForSimpleInfoScreen) &&
-								descriptor.IsEffectDescriptor())
-							descriptors.Add(descriptor);
-					}
-				}
+				var descriptor = desc[i];
+				if ((simpleScreen || !descriptor.onlyForSimpleInfoScreen) && descriptor.
+						IsEffectDescriptor())
+					descriptors.Add(descriptor);
 			}
-			comps.Recycle();
-			if (go.TryGetComponent(out KPrefabID prefabID))
-				descriptors.AddDescriptors(prefabID.AdditionalEffects, simpleInfoScreen);
+			return descriptors;
+		}
+		
+		/// <summary>
+		/// Filters the descriptors for requirements.
+		/// </summary>
+		/// <param name="desc">All descriptors of the active game object.</param>
+		/// <returns>The matching requirement descriptors.</returns>
+		internal static IList<Descriptor> GetRequirements(IList<Descriptor> desc) {
+			var descriptors = EFFECT_DESCRIPTORS;
+			int n = desc.Count;
+			descriptors.Clear();
+			for (int i = 0; i < n; i++) {
+				var descriptor = desc[i];
+				if (!descriptor.IsEffectDescriptor())
+					descriptors.Add(descriptor);
+			}
 			return descriptors;
 		}
 
@@ -285,7 +288,30 @@ namespace PeterHan.FastTrack.UIPatches {
 			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(GameObject go, bool simpleInfoScreen,
 					ref List<Descriptor> __result) {
-				__result = GetGameObjectEffects(go, simpleInfoScreen);
+				var descriptors = EFFECT_DESCRIPTORS;
+				var comps = ListPool<IGameObjectEffectDescriptor, DescriptorSorter>.Allocate();
+				descriptors.Clear();
+				go.GetComponents(comps);
+				if (go.TryGetComponent(out StateMachineController smc))
+					smc.AddStateMachineDescriptors(comps);
+				comps.Sort(DescriptorSorter.Instance);
+				int n = comps.Count;
+				for (int i = 0; i < n; i++) {
+					var toAdd = comps[i].GetDescriptors(go);
+					if (toAdd != null) {
+						int nd = toAdd.Count;
+						for (int j = 0; j < nd; j++) {
+							var descriptor = toAdd[j];
+							if ((simpleInfoScreen || !descriptor.onlyForSimpleInfoScreen) &&
+								descriptor.IsEffectDescriptor())
+								descriptors.Add(descriptor);
+						}
+					}
+				}
+				comps.Recycle();
+				if (go.TryGetComponent(out KPrefabID prefabID))
+					descriptors.AddDescriptors(prefabID.AdditionalEffects, simpleInfoScreen);
+				__result = descriptors;
 				return false;
 			}
 		}
@@ -400,7 +426,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied to GameUtil to reuse a list for getting requirement descriptors.
 		/// </summary>
-		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetRequirementDescriptors))]
+		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetRequirementDescriptors),
+			typeof(List<Descriptor>), typeof(bool))]
 		internal static class GetRequirementDescriptors_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
 
@@ -408,7 +435,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// Applied before GetRequirementDescriptors runs.
 			/// </summary>
 			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix(List<Descriptor> descriptors,
+			internal static bool Prefix(List<Descriptor> descriptors, bool indent,
 					ref List<Descriptor> __result) {
 				var filtered = EFFECT_DESCRIPTORS;
 				int n = descriptors.Count;
@@ -416,7 +443,8 @@ namespace PeterHan.FastTrack.UIPatches {
 				for (int i = 0; i < n; i++) {
 					var descriptor = descriptors[i];
 					if (descriptor.type == Descriptor.DescriptorType.Requirement) {
-						descriptor.IncreaseIndent();
+						if (indent)
+							descriptor.IncreaseIndent();
 						filtered.Add(descriptor);
 					}
 				}

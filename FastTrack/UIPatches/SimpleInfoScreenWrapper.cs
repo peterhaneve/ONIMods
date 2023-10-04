@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using HarmonyLib;
 using System.Collections.Generic;
 using System.Text;
 using Klei.AI;
@@ -85,6 +84,30 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 			stressNotes.Recycle();
 			return total;
+		}
+
+		/// <summary>
+		/// Adds text for the room constraints used on a building.
+		/// </summary>
+		/// <param name="target">The building to check.</param>
+		/// <param name="infoPanel">The location where the constraints will be populated.</param>
+		/// <returns>The number of matching constraints found.</returns>
+		private static int GetRoomConstraints(GameObject target,
+				CollapsibleDetailContentPanel infoPanel) {
+			int constraints = 0;
+			if (target.TryGetComponent(out KPrefabID kp)) {
+				var rooms = CodexEntryGenerator.room_constraint_to_building_label_dict;
+				var sb = CACHED_BUILDER;
+				sb.Clear().Append('\n').Append(STRINGS.CODEX.HEADERS.BUILDINGTYPE).Append(':');
+				foreach (var tag in kp.Tags)
+					if (rooms.TryGetValue(tag, out string title)) {
+						sb.AppendLine().Append(Constants.TABBULLETSTRING).Append(title);
+						constraints++;
+					}
+				if (constraints > 0)
+					infoPanel.SetLabel("RoomClass", sb.ToString(), "");
+			}
+			return constraints;
 		}
 
 		/// <summary>
@@ -302,10 +325,8 @@ namespace PeterHan.FastTrack.UIPatches {
 				}
 				if (sis.lastTarget != target || force) {
 					sis.lastTarget = target;
-					if (target != null) {
+					if (target != null)
 						SetPanels(target);
-						sis.SetStamps(target);
-					}
 				}
 				if (target != null) {
 					int count = statusItems.Count;
@@ -336,7 +357,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				for (int i = 0; i < n; i++) {
 					var chance = chances[i];
 					var eggTag = chance.egg;
-					string tooltip, eggName = TagManager.GetProperName(eggTag), weight =
+					string eggName = TagManager.GetProperName(eggTag), weight =
 						GameUtil.GetFormattedPercent(chance.weight * 100.0f);
 					int found = 0;
 					text.Clear();
@@ -354,16 +375,13 @@ namespace PeterHan.FastTrack.UIPatches {
 						text.Clear().Append(DETAILTABS.EGG_CHANCES.CHANCE_FORMAT_TOOLTIP).
 							Replace("{0}", eggName).Replace("{1}", weight).Replace("{2}",
 							modifierText);
-						tooltip = text.ToString();
-					} else {
+					} else
 						text.Append(DETAILTABS.EGG_CHANCES.CHANCE_FORMAT_TOOLTIP_NOMOD).
 							Replace("{0}", eggName).Replace("{1}", weight);
-						tooltip = text.ToString();
-					}
+					string tooltip = text.ToString();
 					text.Clear().Append(DETAILTABS.EGG_CHANCES.CHANCE_FORMAT).Replace("{0}",
 						eggName).Replace("{1}", weight);
-					fertilityPanel.SetLabel("breeding_" + (total++).ToString(), text.
-						ToString(), tooltip);
+					fertilityPanel.SetLabel("breeding_" + (total++), text.ToString(), tooltip);
 				}
 				fertilityPanel.Commit();
 			}
@@ -488,12 +506,81 @@ namespace PeterHan.FastTrack.UIPatches {
 				}
 				stressDrawer.EndDrawing();
 				if (!stressActive) {
-					sis.stressPanel.SetActive(true);
+					sis.stressPanel.gameObject.SetActive(true);
 					stressActive = true;
 				}
 			} else if (stressActive) {
-				stressPanel.SetActive(false);
+				stressPanel.gameObject.SetActive(false);
 				stressActive = false;
+			}
+		}
+
+		/// <summary>
+		/// Updates the requirements and effects for non-Duplicant selections.
+		/// </summary>
+		/// <param name="target">The selected target object.</param>
+		/// <param name="hasAmounts">true if there are Amounts, or false if there are none.</param>
+		private void SetEffects(GameObject target, bool hasAmounts) {
+			var descriptors = ListPool<Descriptor, SimpleInfoScreenWrapper>.Allocate();
+			DescriptorAllocPatches.GetAllDescriptors(target, true, descriptors);
+			var effects = DescriptorAllocPatches.GetGameObjectEffects(descriptors, true);
+			bool hasEffects = effects.Count > 0;
+			// Effects
+			var effectsContent = sis.effectsContent;
+			if (hasEffects) {
+				effectsContent.gameObject.SetActive(true);
+				effectsContent.SetDescriptors(effects);
+			}
+			sis.effectsPanel.gameObject.SetActive(hasEffects);
+			effectsContent.gameObject.SetActive(hasEffects);
+			// Requirements
+			var requirements = DescriptorAllocPatches.GetRequirements(descriptors);
+			bool showReq = requirements.Count > 0 && !hasAmounts;
+			var requirementContent = sis.requirementContent;
+			if (showReq) {
+				requirementContent.gameObject.SetActive(true);
+				requirementContent.SetDescriptors(requirements);
+			}
+			descriptors.Recycle();
+			sis.requirementsPanel.gameObject.SetActive(showReq);
+			requirementContent.gameObject.SetActive(showReq);
+		}
+
+		/// <summary>
+		/// Updates the description and flavor text.
+		/// </summary>
+		/// <param name="target">The selected target object.</param>
+		private void SetFlavor(GameObject target) {
+			bool isDuplicant = lastSelection.identity != null;
+			var infoPanel = sis.infoPanel;
+			if (isDuplicant)
+				infoPanel.gameObject.SetActive(false);
+			else {
+				string descText = "", flavorText = "";
+				if (target.TryGetComponent(out InfoDescription description)) {
+					descText = description.description;
+					flavorText = description.effect;
+				} else if (target.TryGetComponent(out Building building)) {
+					descText = building.Def.Effect;
+					flavorText = building.Desc;
+				} else if (target.TryGetComponent(out Edible edible))
+					descText = STRINGS.UI.GAMEOBJECTEFFECTS.CALORIES.Format(GameUtil.
+						GetFormattedCalories(edible.FoodInfo.CaloriesPerUnit));
+				else if (target.TryGetComponent(out CellSelectionObject cso))
+					descText = cso.element.FullDescription(false);
+				else if (target.TryGetComponent(out PrimaryElement pe)) {
+					var element = ElementLoader.FindElementByHash(pe.ElementID);
+					descText = element != null ? element.FullDescription(false) : "";
+				}
+				bool hasFlavor = !string.IsNullOrWhiteSpace(flavorText);
+				if (descText != null)
+					infoPanel.SetLabel("Description", descText, "");
+				if (hasFlavor)
+					infoPanel.SetLabel("Flavour", '\n' + flavorText, "");
+				int constraints = GetRoomConstraints(target, infoPanel);
+				infoPanel.Commit();
+				infoPanel.gameObject.SetActive((descText != null || hasFlavor || constraints >
+					0));
 			}
 		}
 
@@ -503,16 +590,12 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="target">The selected target object.</param>
 		private void SetPanels(GameObject target) {
 			var modifiers = lastSelection.modifiers;
-			var descriptionContainer = sis.descriptionContainer;
-			var id = lastSelection.identity;
+			bool isDuplicant = lastSelection.identity != null;
 			var attributeLabels = sis.attributeLabels;
 			int n = attributeLabels.Count;
-			string descText = "", flavorText = "";
-			var effects = DescriptorAllocPatches.GetGameObjectEffects(target, true);
-			Klei.AI.Amounts amounts;
+			Amounts amounts;
 			bool hasAmounts = modifiers != null && (amounts = modifiers.amounts) != null &&
-				amounts.Count > 0, hasProcess = lastSelection.conditions != null,
-				hasEffects = effects.Count > 0;
+				amounts.Count > 0, hasProcess = lastSelection.conditions != null;
 			for (int i = 0; i < n; i++)
 				Destroy(attributeLabels[i]);
 			attributeLabels.Clear();
@@ -524,39 +607,18 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 			vitalsActive = hasAmounts;
 			sis.vitalsPanel.gameObject.SetActive(hasAmounts);
-			sis.processConditionContainer.SetActive(hasProcess);
+			sis.processConditionContainer.gameObject.SetActive(hasProcess);
 			if (hasProcess)
 				sis.RefreshProcessConditions();
-			if (id != null)
-				descText = "";
-			else if (target.TryGetComponent(out InfoDescription description))
-				descText = description.description;
-			else if (target.TryGetComponent(out Building building)) {
-				descText = building.Def.Effect;
-				flavorText = building.Def.Desc;
-			} else if (target.TryGetComponent(out Edible edible))
-				descText = STRINGS.UI.GAMEOBJECTEFFECTS.CALORIES.Format(GameUtil.
-					GetFormattedCalories(edible.FoodInfo.CaloriesPerUnit));
-			else if (target.TryGetComponent(out CellSelectionObject cso))
-				descText = cso.element.FullDescription(false);
-			else if (target.TryGetComponent(out PrimaryElement pe)) {
-				var element = ElementLoader.FindElementByHash(pe.ElementID);
-				descText = (element != null) ? element.FullDescription(false) : "";
-			}
-			bool showInfo = id == null && (!descText.IsNullOrWhiteSpace() || !flavorText.
-				IsNullOrWhiteSpace() || hasEffects);
-			descriptionContainer.descriptors.gameObject.SetActive(hasEffects);
-			if (hasEffects)
-				descriptionContainer.descriptors.SetDescriptors(effects);
-			descriptionContainer.gameObject.SetActive(showInfo);
-			if (descText != null)
-				descriptionContainer.description.SetText(descText);
-			if (flavorText != null)
-				descriptionContainer.flavour.SetText(flavorText);
-			sis.infoPanel.gameObject.SetActive(showInfo);
-			descriptionContainer.flavour.gameObject.SetActive(!string.IsNullOrWhiteSpace(
-				flavorText));
-			storageParent.HeaderLabel.SetText((id != null) ? DETAILTABS.DETAILS.
+			// Effects and requirements
+			if (isDuplicant) {
+				sis.effectsPanel.gameObject.SetActive(false);
+				sis.requirementsPanel.gameObject.SetActive(false);
+			} else
+				SetEffects(target, hasAmounts);
+			SetFlavor(target);
+			// Other headers
+			storageParent.HeaderLabel.SetText(isDuplicant ? DETAILTABS.DETAILS.
 				GROUPNAME_MINION_CONTENTS : DETAILTABS.DETAILS.GROUPNAME_CONTENTS);
 			if (lastSelection.fertility == null)
 				sis.fertilityPanel.gameObject.SetActive(false);
@@ -624,7 +686,7 @@ namespace PeterHan.FastTrack.UIPatches {
 
 			internal readonly bool isRocket;
 
-			internal readonly Klei.AI.Modifiers modifiers;
+			internal readonly Modifiers modifiers;
 
 			internal readonly CraftModuleInterface rocketInterface;
 
@@ -658,132 +720,6 @@ namespace PeterHan.FastTrack.UIPatches {
 				else
 					isRocket = target.TryGetComponent(out LaunchableRocket _);
 				isAsteroid = gridEntity != null && gridEntity is AsteroidGridEntity;
-			}
-		}
-
-		/// <summary>
-		/// Applied to SimpleInfoScreen to add our component to its game object.
-		/// </summary>
-		[HarmonyPatch(typeof(SimpleInfoScreen), nameof(SimpleInfoScreen.OnPrefabInit))]
-		internal static class OnPrefabInit_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
-
-			/// <summary>
-			/// Applied after OnPrefabInit runs.
-			/// </summary>
-			internal static void Postfix(SimpleInfoScreen __instance) {
-				if (__instance != null)
-					__instance.gameObject.AddOrGet<SimpleInfoScreenWrapper>();
-			}
-		}
-
-		/// <summary>
-		/// Applied to SimpleInfoScreen to update the selected target.
-		/// </summary>
-		[HarmonyPatch(typeof(SimpleInfoScreen), nameof(SimpleInfoScreen.OnSelectTarget))]
-		internal static class OnSelectTarget_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
-
-			/// <summary>
-			/// Applied before OnSelectTarget runs.
-			/// </summary>
-			internal static void Prefix(SimpleInfoScreen __instance, GameObject target) {
-				if (instance != null && __instance.lastTarget != target)
-					instance.OnSelectTarget(target);
-			}
-		}
-
-		/// <summary>
-		/// Applied to SimpleInfoScreen to speed up refreshing it.
-		/// </summary>
-		[HarmonyPatch(typeof(SimpleInfoScreen), nameof(SimpleInfoScreen.Refresh))]
-		internal static class Refresh_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
-
-			/// <summary>
-			/// Applied before Refresh runs.
-			/// </summary>
-			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix(bool force) {
-				if (instance != null)
-					instance.Refresh(force);
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to SimpleInfoScreen to refresh the egg chances when they change.
-		/// </summary>
-		[HarmonyPatch(typeof(SimpleInfoScreen), nameof(SimpleInfoScreen.
-			RefreshBreedingChance))]
-		internal static class RefreshBreedingChance_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
-
-			/// <summary>
-			/// Applied before RefreshBreedingChance runs.
-			/// </summary>
-			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix() {
-				if (instance != null)
-					instance.RefreshBreedingChance();
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to SimpleInfoScreen to refresh the checklist of conditions for operation.
-		/// </summary>
-		[HarmonyPatch(typeof(SimpleInfoScreen), nameof(SimpleInfoScreen.
-			RefreshProcessConditions))]
-		internal static class RefreshProcessConditions_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
-
-			/// <summary>
-			/// Applied before RefreshProcessConditions runs.
-			/// </summary>
-			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix() {
-				if (instance != null)
-					instance.RefreshProcess();
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to SimpleInfoScreen to refresh the storage when storage changes.
-		/// </summary>
-		[HarmonyPatch(typeof(SimpleInfoScreen), nameof(SimpleInfoScreen.RefreshStorage))]
-		internal static class RefreshStorage_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
-
-			/// <summary>
-			/// Applied before RefreshStorage runs.
-			/// </summary>
-			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix(SimpleInfoScreen __instance) {
-				var inst = instance;
-				if (inst != null && __instance.selectedTarget != null)
-					inst.RefreshStorage();
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to SimpleInfoScreen to refresh the cluster map info when the refresh is
-		/// triggered.
-		/// </summary>
-		[HarmonyPatch(typeof(SimpleInfoScreen), nameof(SimpleInfoScreen.RefreshWorld))]
-		internal static class RefreshWorld_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
-
-			/// <summary>
-			/// Applied before RefreshWorld runs.
-			/// </summary>
-			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix() {
-				if (instance != null)
-					instance.RefreshWorld();
-				return false;
 			}
 		}
 	}
