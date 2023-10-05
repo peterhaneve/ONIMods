@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using PeterHan.PLib.Detours;
 using UnityEngine;
 
 using UISTRINGS = PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER;
@@ -35,6 +36,23 @@ namespace PeterHan.ModUpdateDate {
 	/// Adds an update button to the mod menu.
 	/// </summary>
 	public sealed class ModUpdateHandler : IDisposable {
+		private delegate string GetCurrentLanguageCode();
+
+		private delegate Localization.Locale GetLocale();
+
+		/// <summary>
+		/// Gets the current locale.
+		/// </summary>
+		private static readonly GetLocale GET_LOCALE = typeof(Localization).
+			Detour<GetLocale>(nameof(Localization.GetLocale));
+
+		/// <summary>
+		/// Gets the current language code.
+		/// </summary>
+		private static readonly GetCurrentLanguageCode GET_CURRENT_LANGUAGE_CODE =
+			typeof(Localization).Detour<GetCurrentLanguageCode>(nameof(Localization.
+			GetCurrentLanguageCode));
+
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
@@ -72,7 +90,6 @@ namespace PeterHan.ModUpdateDate {
 
 		static ModUpdateHandler() {
 			COLOR_AUTO = ScriptableObject.CreateInstance<ColorStyleSetting>();
-			// Button is always disabled
 			COLOR_AUTO.disabledColor = COLOR_AUTO.inactiveColor = new Color(0.2f, 0.6f, 0.6f);
 			COLOR_AUTO.disabledActiveColor = COLOR_AUTO.activeColor =
 				new Color(0.2f, 0.6f, 0.6f);
@@ -114,7 +131,6 @@ namespace PeterHan.ModUpdateDate {
 			if (settings != null)
 				autoUpdate = settings.AutoUpdate;
 			if (rowInstance != null && mods != null && index >= 0 && index < mods.Count) {
-				ColorStyleSetting color;
 				var mod = mods[index];
 				var tooltip = new StringBuilder(128);
 				var localInfo = ModUpdateInfo.GetLocalInfo(mod);
@@ -124,35 +140,24 @@ namespace PeterHan.ModUpdateDate {
 					Margin = BUTTON_MARGIN, SpriteSize = ICON_SIZE,
 					MaintainSpriteAspect = true
 				};
-				// Format DateTime to the current Klei culture (otherwise it uses
-				// CurrentCulture which defaults to the Steam culture)
-				if (cultureInfo == null) {
-					var langCode = Localization.GetLocale()?.Code;
-					if (string.IsNullOrEmpty(langCode))
-						langCode = Localization.GetCurrentLanguageCode();
-					cultureInfo = string.IsNullOrEmpty(langCode) ? CultureInfo.CurrentCulture :
-						// Klei uses _ instead of - for some reason
-						new CultureInfo(langCode.Replace('_', '-'));
-				}
+				UpdateCurrentCulture();
 				if (mod.label.distribution_platform == Label.DistributionPlatform.Steam) {
 					var modUpdate = new ModToUpdate(mod);
 					if (autoUpdate)
 						tooltip.Append(UISTRINGS.MOD_AUTO_UPDATE);
 					updated = AddSteamUpdate(tooltip, modUpdate, localInfo, updButton,
 						autoUpdate);
-					if (updated == ModStatus.Outdated || updated == ModStatus.UnpackFailed)
+					if (IsOutdated(updated))
 						outdated.Add(modUpdate);
 				} else
 					tooltip.AppendFormat(cultureInfo, UISTRINGS.LOCAL_UPDATE, localInfo.
 						LocalLastModified.ToLocalTime());
 				// Icon, color, and tooltip
-				updButton.Sprite = (updated == ModStatus.UpToDate || updated == ModStatus.
-					Disabled) ? PUITuning.Images.Checked : PUITuning.Images.GetSpriteByName(
+				updButton.Sprite = updated == ModStatus.UpToDate || updated == ModStatus.
+					Disabled ? PUITuning.Images.Checked : PUITuning.Images.GetSpriteByName(
 					"iconWarning");
-				if (updated == ModStatus.Outdated || updated == ModStatus.UnpackFailed)
-					color = COLOR_OUTDATED;
-				else
-					color = autoUpdate ? COLOR_AUTO : COLOR_UPDATED;
+				var color = IsOutdated(updated) ? COLOR_OUTDATED : autoUpdate ? COLOR_AUTO :
+					COLOR_UPDATED;
 				updButton.Color = color;
 				updButton.ToolTip = tooltip.ToString();
 				// Just before subscription button, and after the Options button
@@ -230,15 +235,16 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		/// <returns>The number of outdated mods.</returns>
 		internal static int CountOutdatedMods() {
-			var mods = Global.Instance?.modManager?.mods;
+			var inst = Global.Instance;
+			List<Mod> mods;
 			int outdated = 0;
-			if (mods != null && mods.Count > 0)
+			if (inst != null && (mods = inst.modManager?.mods) != null && mods.Count > 0)
 				foreach (var mod in mods)
 					// Steam mods only, count outdated
 					if (mod.label.distribution_platform == Label.DistributionPlatform.Steam) {
 						var localInfo = ModUpdateInfo.GetLocalInfo(mod);
 						var status = GetModStatus(new ModToUpdate(mod), localInfo, out _);
-						if (status == ModStatus.Outdated || status == ModStatus.UnpackFailed)
+						if (IsOutdated(status))
 							outdated++;
 					}
 			return outdated;
@@ -291,6 +297,36 @@ namespace PeterHan.ModUpdateDate {
 				localDate = System.DateTime.UtcNow;
 			}
 			return updated;
+		}
+
+		/// <summary>
+		/// Reports whether the mod is outdated and should be shown in red on the menu.
+		/// </summary>
+		/// <param name="status">The mod update status.</param>
+		/// <returns>true if the mod is outdated or failed to unpack, or false otherwise.</returns>
+		private static bool IsOutdated(ModStatus status) => status == ModStatus.Outdated ||
+			status == ModStatus.UnpackFailed;
+
+		/// <summary>
+		/// Updates the culture used for formatting times. Try to use the current Klei culture
+		/// (otherwise it uses CurrentCulture which defaults to the Steam culture) to match
+		/// the user language setting.
+		/// </summary>
+		private static void UpdateCurrentCulture() {
+			if (cultureInfo == null) {
+				var langCode = GET_LOCALE?.Invoke()?.Code;
+				if (string.IsNullOrWhiteSpace(langCode))
+					langCode = GET_CURRENT_LANGUAGE_CODE?.Invoke();
+				if (string.IsNullOrWhiteSpace(langCode))
+					cultureInfo = CultureInfo.CurrentCulture;
+				else
+					try {
+						// Klei uses _ instead of - for some reason
+						cultureInfo = new CultureInfo(langCode.Replace('_', '-'));
+					} catch (CultureNotFoundException) {
+						cultureInfo = CultureInfo.CurrentCulture;
+					}
+			}
 		}
 
 		/// <summary>

@@ -324,7 +324,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Stores component references to the last selected object.
 		/// </summary>
-		private struct LastSelectionDetails {
+		private readonly struct LastSelectionDetails {
 			internal readonly bool hasWilting;
 
 			internal readonly Modifiers modifiers;

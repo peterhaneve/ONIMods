@@ -101,7 +101,7 @@ namespace PeterHan.ModUpdateDate {
 					}
 					ExtensionMethods.RemoveOldDownload(path);
 				}
-				mod.state = SteamUGCServiceFixed.SteamModState.Updated;
+				mod.state = SteamModState.Updated;
 				if (ok && id.GetGlobalLastModified(out System.DateTime when))
 					ModUpdateDetails.UpdateConfigFor(id.m_PublishedFileId, when);
 			} else

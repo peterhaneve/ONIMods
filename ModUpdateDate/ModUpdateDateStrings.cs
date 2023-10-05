@@ -27,8 +27,7 @@ namespace PeterHan.ModUpdateDate {
 			public static class MODUPDATER {
 				// Confirmation of update
 				public static LocString CONFIRM_UPDATE = "Continuing will reinstall the latest version of:\n" +
-					"{0}from the Workshop.\n<color=#FFCC00>A best effort will be made to preserve mod options.</color>\n\n" +
-					"Check again after updating and enable the mod if necessary.";
+					"{0}from the Workshop.\n<color=#FFCC00>A best effort will be made to preserve mod options.</color>";
 				public static LocString CONFIRM_LINE = "<b>{0}</b>\n";
 				public static LocString CONFIRM_MORE = "<i>(and {0:D} more...)</i>\n";
 				public static LocString CONFIRM_CANCEL = "CANCEL";
@@ -45,14 +44,14 @@ namespace PeterHan.ModUpdateDate {
 				public static LocString OPTION_MAINMENU = "Show Updates in Main Menu";
 				
 				// Mod update status
-				public static LocString MOD_AUTO_UPDATE = "<b>Automatic updates are enabled.</b>\n";
+				public static LocString MOD_AUTO_UPDATE = "<b>Automatic updates are enabled</b>; select to manually force update\n";
 				public static LocString MOD_UPDATED = "This mod appears to be up to date.";
 				public static LocString MOD_UPDATED_BYUS = "This mod was locally updated by Mod Updater.";
 				public static LocString MOD_OUTDATED = "This mod appears to be out of date!";
 				public static LocString MOD_UPDATE_ALL = "Update {0:D} mods which appear to be out of date";
 				public static LocString MOD_UPDATE_1 = "Update one mod which appears to be out of date";
-				public static LocString MOD_ERR_UPDATE = "Unable to automatically update this mod!\nA manual update may be required.";
-				public static LocString MOD_ERR_UNPACK = "Installed mod version {0} does not match the cached version.\nA manual update may be required.";
+				public static LocString MOD_ERR_UPDATE = "Unable to automatically update this mod!\nManual updating may be required if this status\npersists after a game restart.";
+				public static LocString MOD_ERR_UNPACK = "Installed mod version {0} does not match the cached version.\nManual updating may be required.";
 
 				// Passive mode
 				public static LocString OPTION_PASSIVE = "Auto-Update";

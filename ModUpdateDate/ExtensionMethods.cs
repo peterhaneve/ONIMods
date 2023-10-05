@@ -19,8 +19,6 @@
 using KMod;
 using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
-using PeterHan.PLib.Options;
 using Steamworks;
 using System;
 using System.IO;
@@ -61,8 +59,8 @@ namespace PeterHan.ModUpdateDate {
 				out System.DateTime when) {
 			bool result = false;
 			var inst = SteamUGCService.Instance;
-			var steamMod = (inst == null) ? null : inst.FindMod(id);
-			if (steamMod != null) {
+			SteamUGCService.Mod steamMod;
+			if (inst != null && (steamMod = inst.FindMod(id)) != null) {
 				ulong ticks = steamMod.lastUpdateTime;
 				result = true;
 				when = (ticks == 0U) ? System.DateTime.MinValue : SteamVersionChecker.

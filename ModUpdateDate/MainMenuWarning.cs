@@ -61,8 +61,7 @@ namespace PeterHan.ModUpdateDate {
 				}
 			}
 			if (modsButton == null)
-				PUtil.LogWarning("Unable to find Mods menu button, main menu update " +
-					"warning will not be functional");
+				PUtil.LogWarning("Unable to find Mods menu button, main menu update warning will not be functional");
 		}
 
 		protected override void OnCleanUp() {
@@ -71,17 +70,17 @@ namespace PeterHan.ModUpdateDate {
 		}
 
 		protected override void OnPrefabInit() {
-			Transform buttonParent;
-			KButton resumeButton;
 			base.OnPrefabInit();
 			var mm = GetComponent<MainMenu>();
 			if (Instance != null)
 				PUtil.LogWarning("Multiple instances of MainMenuWarning have been created!");
 			Instance = this;
 			try {
+				Transform buttonParent;
+				KButton resumeButton;
 				// "Resume game" is in the same panel as "Mods"
 				if (mm != null && (resumeButton = RESUME_GAME.Get(mm)) != null &&
-						(buttonParent = resumeButton.gameObject.transform?.parent) != null)
+						(buttonParent = resumeButton.transform.parent) != null)
 					FindModsButton(buttonParent);
 			} catch (DetourException) { }
 			UpdateText();
