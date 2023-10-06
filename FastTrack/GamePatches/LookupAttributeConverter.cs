@@ -95,7 +95,9 @@ namespace PeterHan.FastTrack.GamePatches {
 			attrConverters = new Dictionary<string, AttributeConverterInstance>(n);
 			for (int i = 0; i < n; i++) {
 				var converterInstance = convList[i];
-				attrConverters.Add(converterInstance.converter.Id, converterInstance);
+				// Some broken mods (or the base game?) can add the same attribute more than
+				// once
+				attrConverters[converterInstance.converter.Id] = converterInstance;
 			}
 		}
 
