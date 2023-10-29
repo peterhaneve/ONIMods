@@ -28,19 +28,12 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
-using PeterHan.PLib.Detours;
 
 namespace PeterHan.ModUpdateDate {
 	/// <summary>
 	/// Patches which will be applied via annotations for Mod Updater.
 	/// </summary>
 	public sealed class ModUpdateDatePatches : KMod.UserMod2 {
-		/// <summary>
-		/// Private structs are no fun...
-		/// </summary>
-		private static readonly Type ZIP_FILE_TYPE = PPatchTools.GetTypeSafe("KMod.ZipFile",
-			"Assembly-CSharp");
-
 		/// <summary>
 		/// Whether the mod is in safe mode.
 		/// </summary>
@@ -62,7 +55,9 @@ namespace PeterHan.ModUpdateDate {
 		/// Updates the number of outdated mods on the main menu.
 		/// </summary>
 		internal static void UpdateMainMenu() {
-			MainMenuWarning.Instance?.UpdateText();
+			var inst = MainMenuWarning.Instance;
+			if (inst != null)
+				inst.UpdateText();
 		}
 
 		public override void OnLoad(Harmony harmony) {
@@ -176,51 +171,6 @@ namespace PeterHan.ModUpdateDate {
 					} else
 						notCheck = false;
 				}
-			}
-		}
-
-		/// <summary>
-		/// Applied to Manager to close the ZIP file handle after updating. This handles the
-		/// path of MakeMod from Steam mods.
-		///
-		/// TODO Remove when versions older than U49-573946 no longer need to be supported
-		/// </summary>
-		[HarmonyPatch]
-		public static class Manager_Update_Patch {
-			/// <summary>
-			/// Accesses the private field zipfile on the private struct ZipFile.
-			/// </summary>
-			private static readonly FieldInfo ZIP_FILE_HANDLE = ZIP_FILE_TYPE?.GetFieldSafe(
-				"zipfile", false);
-
-			/// <summary>
-			/// This field changed to a property in U49-573946, but the patch is obsolete in
-			/// those versions anyways
-			/// </summary>
-			private static readonly IDetouredField<Mod, IFileSource> FILE_SOURCE =
-				PDetours.DetourFieldLazy<Mod, IFileSource>(nameof(Mod.file_source));
-
-			internal static bool Prepare() => PUtil.GameVersion < 573946U;
-
-			/// <summary>
-			/// Targets both Update and Subscribe.
-			/// </summary>
-			internal static IEnumerable<MethodBase> TargetMethods() {
-				yield return typeof(Manager).GetMethodSafe(nameof(Manager.Subscribe), false,
-					typeof(Mod), typeof(object));
-				yield return typeof(Manager).GetMethodSafe(nameof(Manager.Update), false,
-					typeof(Mod), typeof(object));
-			}
-
-			/// <summary>
-			/// Applied after these methods run.
-			/// </summary>
-			internal static void Postfix(Mod mod) {
-				var src = FILE_SOURCE.Get(mod);
-				if (src != null && ZIP_FILE_HANDLE != null && ZIP_FILE_TYPE.IsAssignableFrom(
-						src.GetType()) && ZIP_FILE_HANDLE.GetValue(src) is Ionic.Zip.ZipFile
-						file)
-					file.Dispose();
 			}
 		}
 
@@ -397,24 +347,6 @@ namespace PeterHan.ModUpdateDate {
 				if (!SafeMode)
 					SteamUGCServiceFixed.Instance.Process();
 				return SafeMode;
-			}
-		}
-
-		/// <summary>
-		/// Applied to ZipFile (Klei) to destroy the file_source after copying and thus unlock
-		/// the file.
-		/// </summary>
-		[HarmonyPatch]
-		public static class ZipFile_CopyTo_Patch {
-			internal static MethodBase TargetMethod() {
-				return ZIP_FILE_TYPE?.GetMethodSafe("CopyTo", false, PPatchTools.AnyArguments);
-			}
-
-			/// <summary>
-			/// Applied after Install runs.
-			/// </summary>
-			internal static void Postfix(Ionic.Zip.ZipFile ___zipfile) {
-				___zipfile.Dispose();
 			}
 		}
 	}

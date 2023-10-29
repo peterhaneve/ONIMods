@@ -120,10 +120,11 @@ namespace PeterHan.DebugNotIncluded {
 			var failedTypes = exception?.Types;
 			DebugLogger.LogError("Error when loading types from " + assembly.FullName);
 			if (failedTypes != null) {
-				int n = failedTypes.Length;
+				var tlExceptions = exception.LoaderExceptions;
+				int n = failedTypes.Length, maxExceptions = tlExceptions.Length;
 				for (int i = 0; i < n; i++) {
 					var type = failedTypes[i];
-					var thrown = exception.LoaderExceptions[i];
+					var thrown = i < maxExceptions ? tlExceptions[i] : null;
 					if (type != null)
 						types.Add(type);
 					else if (thrown != null)
