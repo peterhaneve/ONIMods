@@ -19,6 +19,8 @@
 using KSerialization;
 using System;
 using System.Collections.Generic;
+using PeterHan.PLib.Core;
+
 using IntHandle = HandleVector<int>.Handle;
 
 namespace ReimaginationTeam.DecorRework {
@@ -28,6 +30,17 @@ namespace ReimaginationTeam.DecorRework {
 	[SerializationConfig(MemberSerialization.OptIn)]
 	[SkipSaveFileSerialization]
 	internal sealed class DecorSplatNew : KMonoBehaviour {
+		/// <summary>
+		/// The layer used for drywall and other backwall buildings.
+		/// </summary>
+		internal static readonly int BackwallLayer = (int)PGameUtils.GetObjectLayer(
+			nameof(ObjectLayer.Backwall), ObjectLayer.Backwall);
+
+		/// <summary>
+		/// Reports if this building is visually behind backwalls like drywall or wallpaper.
+		/// </summary>
+		internal bool IsBehindBackwall { get; private set; }
+		
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable CS0649
 		/// <summary>
@@ -35,6 +48,12 @@ namespace ReimaginationTeam.DecorRework {
 		/// </summary>
 		[MyCmpGet]
 		private BuildingHP breakStatus;
+
+		/// <summary>
+		/// Used to calculate extents for buildings.
+		/// </summary>
+		[MyCmpGet]
+		private BuildingComplete building;
 
 		/// <summary>
 		/// Monitors status modifiers like "glum".
@@ -68,7 +87,7 @@ namespace ReimaginationTeam.DecorRework {
 
 #pragma warning restore CS0649
 #pragma warning restore IDE0044 // Add readonly modifier
-
+		
 		/// <summary>
 		/// The cached decor value.
 		/// </summary>
@@ -78,6 +97,11 @@ namespace ReimaginationTeam.DecorRework {
 		/// The cells this decor splat affects.
 		/// </summary>
 		private readonly IList<int> cells;
+		
+		/// <summary>
+		/// The building's layer if available.
+		/// </summary>
+		private int layer;
 
 		/// <summary>
 		/// The partitioner used for decor changes.
@@ -94,6 +118,7 @@ namespace ReimaginationTeam.DecorRework {
 			cells = new List<int>(64);
 			partitioner = IntHandle.InvalidHandle;
 			solidChangedPartitioner = IntHandle.InvalidHandle;
+			layer = -1;
 		}
 
 		/// <summary>
@@ -120,8 +145,35 @@ namespace ReimaginationTeam.DecorRework {
 			}
 		}
 
+		/// <summary>
+		/// Reports true if this building is completely hidden by backwall.
+		/// </summary>
+		/// <returns>true if the building should be hidden by backwalls, or false otherwise.</returns>
+		private bool IsHiddenByBackwall() {
+			bool hidden = IsBehindBackwall;
+			if (hidden) {
+				var inst = DecorCellManager.Instance;
+				var buildCells = building.PlacementCells;
+				int n = buildCells.Length;
+				for (int i = 0; i < n && hidden; i++)
+					hidden = inst.HasBackwall(buildCells[i]);
+			}
+			return hidden;
+		}
+
 		protected override void OnCleanUp() {
+			var inst = DecorCellManager.Instance;
 			RemoveDecor();
+			// For drywall, TSP and so forth, clean up backwall tracking
+			if (layer == BackwallLayer && inst != null && inst.NoDecorBehindDrywall) {
+				var buildCells = building.PlacementCells;
+				int n = buildCells.Length;
+				for (int i = 0; i < n; i++) {
+					int cell = buildCells[i];
+					inst.SetBackwall(cell, false);
+					inst.RefreshAllAt(cell);
+				}
+			}
 			Unsubscribe((int)GameHashes.FunctionalChanged, OnFunctionalChanged);
 			base.OnCleanUp();
 		}
@@ -134,8 +186,24 @@ namespace ReimaginationTeam.DecorRework {
 		protected override void OnSpawn() {
 			base.OnSpawn();
 			Subscribe((int)GameHashes.FunctionalChanged, OnFunctionalChanged);
+			if (building != null) {
+				var def = building.Def;
+				var inst = DecorCellManager.Instance;
+				layer = (int)def.ObjectLayer;
+				IsBehindBackwall = def.SceneLayer < Grid.SceneLayer.LogicGatesFront;
+				// For drywall, TSP and so forth, enable backwall tracking
+				if (layer == BackwallLayer && inst != null && inst.NoDecorBehindDrywall) {
+					var buildCells = building.PlacementCells;
+					int n = buildCells.Length;
+					for (int i = 0; i < n; i++) {
+						int cell = buildCells[i];
+						inst.SetBackwall(cell, true);
+						inst.RefreshAllAt(cell);
+					}
+				}
+			}
 		}
-
+		
 		/// <summary>
 		/// Refreshes this splat.
 		/// </summary>
@@ -159,6 +227,10 @@ namespace ReimaginationTeam.DecorRework {
 				// Broken buildings are ugly!
 				if (broken)
 					decor = DecorReimaginedPatches.Options.BrokenBuildingDecor;
+				// Hide decor behind drywall?
+				if (decor != 0.0f && DecorCellManager.Instance.NoDecorBehindDrywall &&
+						IsHiddenByBackwall())
+					decor = 0.0f;
 				if (decor != 0.0f && (!disabled || decor < 0.0f) && radius > 0) {
 					// Decor actually can be applied
 					var area = provider.occupyArea;
@@ -187,8 +259,10 @@ namespace ReimaginationTeam.DecorRework {
 		/// </summary>
 		internal void RefreshDecor() {
 			// Get status of the object
-			var happiness = glumStatus?.attributes?.Get(DecorCellManager.Instance.
-				HappinessAttribute);
+			Klei.AI.AttributeInstance happiness = null;
+			if (glumStatus != null)
+				happiness = glumStatus.attributes?.Get(DecorCellManager.Instance.
+					HappinessAttribute);
 			// Entombed/disabled = 0 decor, broken = use value in DecorTuning for broken
 			bool disabled = (operational != null && !operational.IsFunctional) ||
 				(happiness != null && happiness.GetTotalValue() < 0.0f);

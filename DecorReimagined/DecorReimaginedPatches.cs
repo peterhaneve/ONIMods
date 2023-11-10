@@ -39,6 +39,8 @@ namespace ReimaginationTeam.DecorRework {
 		/// </summary>
 		private const string ACHIEVE_NAME = "AndItFeelsLikeHome";
 
+		private static ChoreType SleepChoreType;
+
 		/// <summary>
 		/// The options for Decor Reimagined.
 		/// </summary>
@@ -60,6 +62,7 @@ namespace ReimaginationTeam.DecorRework {
 				},
 				Icon = "art_underground"
 			}.AddAchievement();
+			SleepChoreType = Db.Get().ChoreTypes.Sleep;
 			PUtil.LogDebug("Initialized decor effects");
 		}
 
@@ -181,9 +184,8 @@ namespace ReimaginationTeam.DecorRework {
 			internal static void Prefix(Artable __instance) {
 				// Remove the decor bonus (SetStage adds it back)
 				var attr = __instance.GetAttributes().Get(Db.Get().BuildingAttributes.Decor);
-				if (attr != null)
-					attr.Modifiers.RemoveAll(modifier => modifier.Description ==
-						"Art Quality");
+				attr?.Modifiers.RemoveAll(modifier => modifier.Description ==
+					"Art Quality");
 			}
 		}
 
@@ -227,7 +229,7 @@ namespace ReimaginationTeam.DecorRework {
 					cont = false;
 					// Slew to half decor if sleeping
 					float decorAtCell = GameUtil.GetDecorAtCell(Grid.PosToCell(__instance));
-					if (chore != null && chore.choreType == Db.Get().ChoreTypes.Sleep)
+					if (chore != null && chore.choreType == SleepChoreType)
 						decorAtCell *= DecorTuning.DECOR_FRACTION_SLEEP;
 					___cycleTotalDecor += decorAtCell * dt;
 					// Constants are the same as the base game
@@ -274,12 +276,8 @@ namespace ReimaginationTeam.DecorRework {
 			/// <summary>
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
-			internal static void Postfix(DecorProvider __instance, ref int[] ___cells,
-					ref int ___cellCount) {
+			internal static void Postfix(DecorProvider __instance) {
 				__instance.gameObject.AddOrGet<DecorSplatNew>();
-				// Save a lot of memory
-				___cells = new int[16];
-				___cellCount = 0;
 			}
 		}
 

@@ -44,8 +44,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <returns>true if it can be picked up, or false otherwise.</returns>
 		private static bool CanUse(Pickupable pickupable, GameObject go) {
 			var prefabID = pickupable.KPrefabID;
-			return pickupable.CouldBePickedUpByTransferArm(go) && Assets.
-				IsTagSolidTransferArmConveyable(prefabID.PrefabTag);
+			return Assets.IsTagSolidTransferArmConveyable(prefabID.PrefabTag) && pickupable.
+				CouldBePickedUpByTransferArm(go);
 		}
 
 		/// <summary>
@@ -88,8 +88,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		private void AsyncUpdate(SolidTransferArmInfo info) {
 			var sweeper = info.sweeper;
 			var reachableCells = HashSetPool<int, SolidTransferArmUpdater>.Allocate();
-			int range = sweeper.pickupRange, cell = info.cell;
-			Grid.CellToXY(cell, out int x, out int y);
+			int range = sweeper.pickupRange, cell;
+			Grid.CellToXY(info.cell, out int x, out int y);
 			int maxY = Math.Min(Grid.HeightInCells, y + range), maxX = Math.Min(Grid.
 				WidthInCells, x + range), minY = Math.Max(0, y - range), minX = Math.Max(0,
 				x - range);

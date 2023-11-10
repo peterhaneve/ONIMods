@@ -17,6 +17,7 @@
  */
 
 using System;
+using PeterHan.PLib.Core;
 
 namespace ReimaginationTeam.DecorRework {
 	/// <summary>
@@ -49,9 +50,19 @@ namespace ReimaginationTeam.DecorRework {
 		public Klei.AI.Attribute HappinessAttribute { get; }
 
 		/// <summary>
+		/// True if decor behind walls is disabled by another mod.
+		/// </summary>
+		public bool NoDecorBehindDrywall { get; }
+
+		/// <summary>
 		/// Tracks the "And It Feels Like Home" achievement.
 		/// </summary>
 		public int NumPositiveDecor { get; private set; }
+
+		/// <summary>
+		/// A very fast method to check for backwalls on the entire grid.
+		/// </summary>
+		private readonly bool[] backwall;
 
 		/// <summary>
 		/// Stores the decor providers at a given location.
@@ -72,7 +83,10 @@ namespace ReimaginationTeam.DecorRework {
 			HappinessAttribute = Db.Get().CritterAttributes.Happiness;
 			size = Grid.CellCount;
 			noCritterDecor = DecorReimaginedPatches.Options.AllCrittersZeroDecor;
+			NoDecorBehindDrywall = PPatchTools.GetTypeSafe(
+				"BlockDecorBehindWalls.BlockDecorBehindWalls") != null;
 			NumPositiveDecor = 0;
+			backwall = new bool[size];
 			decorGrid = new DecorCell[size];
 		}
 
@@ -113,6 +127,7 @@ namespace ReimaginationTeam.DecorRework {
 				for (int i = 0; i < size; i++) {
 					decorGrid[i]?.Dispose();
 					decorGrid[i] = null;
+					backwall[i] = false;
 				}
 			}
 		}
@@ -135,6 +150,34 @@ namespace ReimaginationTeam.DecorRework {
 		}
 
 		/// <summary>
+		/// Checks very quickly if a cell has a backwall.
+		/// </summary>
+		/// <param name="cell">The cell to check.</param>
+		/// <returns>true if it has backwall, or false otherwise.</returns>
+		public bool HasBackwall(int cell) {
+			return Grid.IsValidCell(cell) && backwall[cell];
+		}
+
+		/// <summary>
+		/// Refreshes all building decor providers at the specified location. Filtered to
+		/// only refresh buildings that are visually behind a drywall.
+		/// </summary>
+		/// <param name="cell">The location to update.</param>
+		internal void RefreshAllAt(int cell) {
+			if (Grid.IsValidCell(cell)) {
+				int n = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.NumLayers),
+					ObjectLayer.NumLayers);
+				for (int i = 0; i < n; i++)
+					if (i != DecorSplatNew.BackwallLayer) {
+						var go = Grid.Objects[cell, i];
+						if (go != null && go.TryGetComponent(out DecorSplatNew splat) &&
+								splat.IsBehindBackwall)
+							splat.RefreshDecor();
+					}
+			}
+		}
+
+		/// <summary>
 		/// Removes a decor provider from a given cell.
 		/// </summary>
 		/// <param name="cell">The cell.</param>
@@ -154,6 +197,16 @@ namespace ReimaginationTeam.DecorRework {
 						}
 					}
 				}
+		}
+
+		/// <summary>
+		/// Tracks the presence of drywall or other backwall buildings at a specified location.
+		/// </summary>
+		/// <param name="cell">The cell to update.</param>
+		/// <param name="hasBackwall">true if it has backwall, or false otherwise.</param>
+		public void SetBackwall(int cell, bool hasBackwall) {
+			if (Grid.IsValidCell(cell))
+				backwall[cell] = hasBackwall;
 		}
 
 		/// <summary>

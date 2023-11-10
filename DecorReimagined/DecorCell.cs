@@ -128,7 +128,7 @@ namespace ReimaginationTeam.DecorRework {
 				decor = values.BestDecor;
 			return decor;
 		}
-
+		
 		/// <summary>
 		/// Removes a decor provider from the list.
 		/// </summary>
