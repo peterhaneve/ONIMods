@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
 using HarmonyLib;
 using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
@@ -33,6 +34,11 @@ namespace PeterHan.NoSensorLimits {
 		/// </summary>
 		private const float AFFECT_LIMITS_BELOW = 9000.0f;
 
+		/// <summary>
+		/// Sensors of this type will always be affected.
+		/// </summary>
+		private static Type[] AFFECT_TYPES;
+
 		// Delegates for private methods to update displayed values
 		private delegate void UpdateTargetThresholdLabel(ThresholdSwitchSideScreen screen);
 		private delegate void UpdateMaxCapacityLabel(CapacityControlSideScreen screen);
@@ -49,14 +55,28 @@ namespace PeterHan.NoSensorLimits {
 		/// <param name="target">The sensor component being affected.</param>
 		/// <returns>true if the sensor should be affected, or false otherwise.</returns>
 		private static bool ShouldAffect(float normalMax, object target) {
-			return normalMax <= AFFECT_LIMITS_BELOW || target is LogicWattageSensor ||
-				target is LogicDiseaseSensor || target is ConduitDiseaseSensor;
+			bool affected = normalMax <= AFFECT_LIMITS_BELOW;
+			if (target != null) {
+				int n = AFFECT_TYPES.Length;
+				var targetType = target.GetType();
+				for (int i = 0; i < n && !affected; i++) {
+					var t = AFFECT_TYPES[i];
+					affected = t != null && t.IsAssignableFrom(targetType);
+				}
+			}
+			return affected;
 		}
 
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 			new PVersionCheck().Register(this, new SteamVersionChecker());
+			AFFECT_TYPES = new[] {
+				typeof(LogicWattageSensor), typeof(LogicDiseaseSensor),
+				typeof(ConduitDiseaseSensor),
+				// Introduced by U49-575720
+				PPatchTools.GetTypeSafe("LogicLightSensor", "Assembly-CSharp")
+			};
 		}
 
 		/// <summary>

@@ -20,13 +20,12 @@ using HarmonyLib;
 using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
+using PeterHan.PLib.Detours;
 using PeterHan.PLib.PatchManager;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
-using PeterHan.PLib.Detours;
 using UnityEngine;
-
 using RotCallback = StateMachine<Rottable, Rottable.Instance, IStateMachineTarget,
 	Rottable.Def>.State.Callback;
 using SapTreeStates = SapTree.StatesInstance;
@@ -66,6 +65,18 @@ namespace PeterHan.NoWasteWant {
 		/// <param name="go">The prefab template to modify.</param>
 		public static void AddFreshnessControl(GameObject go) {
 			go.AddOrGet<FreshnessControl>();
+		}
+
+		/// <summary>
+		/// For edible items that cannot rot, set their freshness to the maximum instead of 0.
+		/// </summary>
+		/// <param name="oldFreshness">The old freshness value.</param>
+		/// <param name="target">The food that is being added.</param>
+		/// <returns>The new freshness value.</returns>
+		private static int AlignFreshness(int oldFreshness, Edible target) {
+			if (target != null && !target.FoodInfo.CanRot)
+				oldFreshness = int.MaxValue;
+			return oldFreshness;
 		}
 		
 		public override void OnLoad(Harmony harmony) {
@@ -146,25 +157,53 @@ namespace PeterHan.NoWasteWant {
 		}
 
 		/// <summary>
+		/// Applied to FetchManager.FetchablesByPrefabId to make non-spoilable foods chosen
+		/// last again after all spoilables of that quality are depleted.
+		/// </summary>
+		[HarmonyPatch(typeof(FetchManager.FetchablesByPrefabId), nameof(FetchManager.
+			FetchablesByPrefabId.AddPickupable))]
+		public static class FetchManager_FetchablesByPrefabId_AddPickupable_Patch {
+			/// <summary>
+			/// Transpiles AddPickupable to fill the maximum possible value instead of 0 on
+			/// non-rottable foods.
+			/// </summary>
+			internal static IEnumerable<CodeInstruction> Transpiler(ILGenerator generator,
+					IEnumerable<CodeInstruction> method) {
+				var targetField = typeof(FetchManager.Fetchable).GetFieldSafe(nameof(
+					FetchManager.Fetchable.freshness), false);
+				var insertion = typeof(NoWasteWantPatches).GetMethodSafe(nameof(
+					AlignFreshness), true, typeof(int), typeof(Edible));
+				var local = generator.DeclareLocal(typeof(Edible));
+				yield return new CodeInstruction(OpCodes.Ldnull);
+				yield return new CodeInstruction(OpCodes.Stloc, local.LocalIndex);
+				foreach (var instruction in method) {
+					var opcode = instruction.opcode;
+					if (opcode == OpCodes.Stfld && instruction.operand is FieldInfo fi &&
+							fi == targetField) {
+						yield return new CodeInstruction(OpCodes.Ldloc, local.LocalIndex);
+						yield return new CodeInstruction(OpCodes.Call, insertion);
+#if DEBUG
+						PUtil.LogDebug("Patched FetchManager.FetchablesByPrefabId");
+#endif
+					}
+					yield return instruction;
+					if (opcode == OpCodes.Callvirt && instruction.operand is MethodInfo mi &&
+							mi.ReturnType == typeof(Edible) && mi.Name == nameof(Component.
+							GetComponent)) {
+						// Store edible reference
+						yield return new CodeInstruction(OpCodes.Dup);
+						yield return new CodeInstruction(OpCodes.Stloc, local.LocalIndex);
+					}
+				}
+			}
+		}
+
+		/// <summary>
 		/// Applied to FetchManager to ban fetching stale items to refrigerators.
 		/// </summary>
-		[HarmonyPatch]
+		[HarmonyPatch(typeof(FetchManager), nameof(FetchManager.IsFetchablePickup),
+			typeof(Pickupable), typeof(FetchChore), typeof(Storage))]
 		public static class FetchManager_IsFetchablePickup_Patch {
-			/// <summary>
-			/// The target method to patch.
-			/// </summary>
-			private static readonly MethodBase TARGET = typeof(FetchManager).GetMethodSafe(
-				nameof(FetchManager.IsFetchablePickup), true, typeof(Pickupable),
-				typeof(FetchChore), typeof(Storage));
-
-			internal static bool Prepare() {
-				return TARGET != null;
-			}
-
-			internal static MethodBase TargetMethod() {
-				return TARGET;
-			}
-
 			/// <summary>
 			/// Applied after IsFetchablePickup runs.
 			/// </summary>
