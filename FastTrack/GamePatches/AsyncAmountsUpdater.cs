@@ -222,29 +222,4 @@ namespace PeterHan.FastTrack.GamePatches {
 			return run;
 		}
 	}
-
-	/// <summary>
-	/// Applied to CalorieMonitor.Instance to debug why Duplicants suddenly starve while
-	/// eating.
-	/// </summary>
-	[HarmonyPatch(typeof(CalorieMonitor.Instance), nameof(CalorieMonitor.Instance.IsDepleted))]
-	public static class CalorieMonitor_Instance_IsDepleted_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FlattenAverages;
-
-		/// <summary>
-		/// Applied after IsDepleted runs.
-		/// </summary>
-		internal static void Postfix(CalorieMonitor.Instance __instance) {
-			var kcal = __instance.calories;
-			float calories;
-			if (kcal == null)
-				PUtil.LogError("Calories is null");
-			else if (kcal.GetMax() <= 0.0f)
-				PUtil.LogWarning("Calorie max is invalid!");
-			else if (float.IsNaN(calories = kcal.value) || calories <= 0.0f)
-				PUtil.LogWarning("Calories is {0:F2}".F(calories));
-			else if (float.IsNaN(kcal.deltaAttribute.GetTotalValue()))
-				PUtil.LogWarning("Delta is invalid!");
-		}
-	}
 }

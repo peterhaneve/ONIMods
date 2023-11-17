@@ -143,86 +143,6 @@ namespace PeterHan.FastTrack.UIPatches {
 	}
 
 	/// <summary>
-	/// Applied to NameDisplayScreen to speed up checking name card positions.
-	/// </summary>
-	[HarmonyPatch(typeof(NameDisplayScreen), nameof(NameDisplayScreen.LateUpdatePos))]
-	public static class NameDisplayScreen_LateUpdatePos_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
-
-		/// <summary>
-		/// Applied before LateUpdatePos runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(bool visibleToZoom, NameDisplayScreen __instance) {
-			var inst = CameraController.Instance;
-			if (inst != null) {
-				var area = inst.VisibleArea.CurrentArea;
-				var entries = __instance.entries;
-				var followTarget = inst.followTarget;
-				int n = entries.Count;
-				for (int i = 0; i < n; i++) {
-					var entry = entries[i];
-					var go = entry.world_go;
-					var dg = entry.display_go;
-					var animController = entry.world_go_anim_controller;
-					if (go != null && dg != null) {
-						Vector3 pos;
-						// Merely fetching the position appears to take almost 1 us?
-						var transform = go.transform;
-						bool active = dg.activeSelf;
-						if (visibleToZoom && area.Contains(pos = transform.position)) {
-							// Visible
-							if (followTarget == transform)
-								pos = inst.followTargetPos;
-							else if (animController != null)
-								pos = animController.GetWorldPivot();
-							entry.display_go_rect.anchoredPosition = __instance.
-								worldSpace ? pos : __instance.WorldToScreen(pos);
-							if (!active)
-								dg.SetActive(true);
-						} else if (active)
-							// Invisible
-							dg.SetActive(false);
-					}
-				}
-			}
-			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to NameDisplayScreen to speed up marking name cards dirty.
-	/// </summary>
-	[HarmonyPatch(typeof(NameDisplayScreen), nameof(NameDisplayScreen.LateUpdatePart2))]
-	public static class NameDisplayScreen_LateUpdatePart2_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
-
-		/// <summary>
-		/// Applied before LateUpdatePart2 runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(NameDisplayScreen __instance) {
-			var camera = Camera.main;
-			if (camera == null || camera.orthographicSize < __instance.HideDistance) {
-				var entries = __instance.entries;
-				int n = entries.Count;
-				for (int i = 0; i < n; i++) {
-					var go = entries[i].bars_go;
-					if (go != null) {
-						var colliders = __instance.workingList;
-						// Mark the colliders in the bars list dirty only if visible
-						go.GetComponentsInChildren(false, colliders);
-						int c = colliders.Count;
-						for (int j = 0; j < c; j++)
-							colliders[j].MarkDirty();
-					}
-				}
-			}
-			return false;
-		}
-	}
-
-	/// <summary>
 	/// Applied to NameDisplayScreen to destroy the thought prefabs if conversations are
 	/// turned off.
 	/// </summary>
@@ -237,6 +157,49 @@ namespace PeterHan.FastTrack.UIPatches {
 		internal static bool Prefix(object component) {
 			var options = FastTrackOptions.Instance;
 			return !(component is ThoughtGraph.Instance && options.NoConversations);
+		}
+	}
+	
+	/// <summary>
+	/// Applied to NameDisplayScreen to speed up checking name card positions.
+	/// </summary>
+	[HarmonyPatch(typeof(NameDisplayScreen), nameof(NameDisplayScreen.UpdatePos))]
+	public static class NameDisplayScreen_UpdatePos_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
+
+		/// <summary>
+		/// Applied before UpdatePos runs.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static bool Prefix(NameDisplayScreen __instance) {
+			var inst = CameraController.Instance;
+			if (inst != null) {
+				var entries = __instance.entries;
+				var followTarget = inst.followTarget;
+				bool worldSpace = __instance.worldSpace;
+				int n = entries.Count;
+				for (int i = 0; i < n; i++) {
+					var entry = entries[i];
+					var go = entry.world_go;
+					if (entry.visible && go != null) {
+						var transform = go.transform;
+						var pos = transform.position;
+						if (followTarget == transform)
+							pos = inst.followTargetPos;
+						else if (entry.world_go_anim_controller != null) {
+							var collider = entry.collider;
+							if (collider != null) {
+								var offset = collider.offset;
+								pos.x += offset.x;
+								pos.y += offset.y - collider.size.y / 2f;
+							}
+						}
+						entry.display_go_rect.anchoredPosition = worldSpace ? pos :
+							__instance.WorldToScreen(pos);
+					}
+				}
+			}
+			return false;
 		}
 	}
 

@@ -96,12 +96,13 @@ namespace PeterHan.FastTrack.UIPatches {
 				CollapsibleDetailContentPanel infoPanel) {
 			int constraints = 0;
 			if (target.TryGetComponent(out KPrefabID kp)) {
-				var rooms = CodexEntryGenerator.room_constraint_to_building_label_dict;
+				var constraintTags = RoomConstraints.ConstraintTags.AllTags;
 				var sb = CACHED_BUILDER;
 				sb.Clear().Append('\n').Append(STRINGS.CODEX.HEADERS.BUILDINGTYPE).Append(':');
 				foreach (var tag in kp.Tags)
-					if (rooms.TryGetValue(tag, out string title)) {
-						sb.AppendLine().Append(Constants.TABBULLETSTRING).Append(title);
+					if (constraintTags.Contains(tag)) {
+						sb.AppendLine().Append(Constants.TABBULLETSTRING).Append(
+							RoomConstraints.ConstraintTags.GetRoomConstraintLabelText(tag));
 						constraints++;
 					}
 				if (constraints > 0)
@@ -579,8 +580,8 @@ namespace PeterHan.FastTrack.UIPatches {
 					infoPanel.SetLabel("Flavour", '\n' + flavorText, "");
 				int constraints = GetRoomConstraints(target, infoPanel);
 				infoPanel.Commit();
-				infoPanel.gameObject.SetActive((descText != null || hasFlavor || constraints >
-					0));
+				infoPanel.gameObject.SetActive(descText != null || hasFlavor ||
+					constraints > 0);
 			}
 		}
 

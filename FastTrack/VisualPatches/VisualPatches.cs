@@ -63,23 +63,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 	}
 
 	/// <summary>
-	/// Applied to Assets to disable ALL tile decorations.
-	/// </summary>
-	[HarmonyPatch(typeof(Assets), nameof(Assets.GetBlockTileDecorInfo))]
-	public static class Assets_GetBlockTileDecorInfo_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.NoTileDecor;
-
-		/// <summary>
-		/// Applied after GetBlockTileDecorInfo runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(ref BlockTileDecorInfo __result) {
-			__result = null;
-			return false;
-		}
-	}
-
-	/// <summary>
 	/// Applied to CancellableDig to instantly remove the placer.
 	/// </summary>
 	[HarmonyPatch(typeof(CancellableDig), nameof(CancellableDig.OnCancel))]

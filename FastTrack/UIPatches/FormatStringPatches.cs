@@ -214,7 +214,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="text">The location where the germs will be stored.</param>
 		/// <param name="germs">The number of germs.</param>
 		/// <param name="timeSlice">The time unit, if any.</param>
-		private static void GetFormattedDiseaseAmount(StringBuilder text, int germs,
+		private static void GetFormattedDiseaseAmount(StringBuilder text, long germs,
 				TimeSlice timeSlice = TimeSlice.None) {
 			// /cycle is broken in vanilla, clay please
 			GameUtil.ApplyTimeSlice(germs, timeSlice).ToStandardString(text);

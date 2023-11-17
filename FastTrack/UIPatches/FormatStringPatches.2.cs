@@ -118,8 +118,9 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 		}
 
-		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedDiseaseAmount))]
-		internal static class GetFormattedDiseaseAmount_Patch {
+		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedDiseaseAmount),
+			typeof(int), typeof(TimeSlice))]
+		internal static class GetFormattedDiseaseAmount_Int_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
 
 			/// <summary>
@@ -127,6 +128,23 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(int units, TimeSlice timeSlice, ref string __result) {
+				var text = CACHED_BUILDER;
+				GetFormattedDiseaseAmount(text.Clear(), units, timeSlice);
+				__result = text.ToString();
+				return false;
+			}
+		}
+
+		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedDiseaseAmount),
+			typeof(long), typeof(TimeSlice))]
+		internal static class GetFormattedDiseaseAmount_Long_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
+
+			/// <summary>
+			/// Applied before GetFormattedDiseaseAmount runs.
+			/// </summary>
+			[HarmonyPriority(Priority.Low)]
+			internal static bool Prefix(long units, TimeSlice timeSlice, ref string __result) {
 				var text = CACHED_BUILDER;
 				GetFormattedDiseaseAmount(text.Clear(), units, timeSlice);
 				__result = text.ToString();

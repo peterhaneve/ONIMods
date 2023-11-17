@@ -177,7 +177,7 @@ namespace PeterHan.FastTrack {
 					public static LocString NOPLACEREASING = "Disables the animation which appears when placing\nerrands like Dig or Mop." + PERF_LOW;
 					public static LocString NOBOUNCE = "Disables the bounce effect when new notifications appear." + PERF_MEDIUM;
 					public static LocString NOSPLASH = "Disables most puff, splash, and breath animations." + PERF_LOW;
-					public static LocString NOTILEDECOR = "Disables all ornaments and edges on constructed tiles." + PERF_LOW;
+					public static LocString NOTILEDECOR = "Disables all ornaments and edges on constructed tiles.\n<i>Not compatible with mods: True Tiles</i>" + PERF_LOW;
 					public static LocString RENDERTICKS = "Optimizes several renderers that run every frame.\n<i>Some visual artifacts may appear with no effect on gameplay</i>" + PERF_MEDIUM;
 					public static LocString DISABLECONDUITANIMATION = "Controls the visual fidelity of pipe animations.\n<i>No changes to actual pipe mechanics will occur</i>" + PERF_MEDIUM;
 					public static LocString CUSTOMSTRINGFORMAT = "Reduces memory allocations when formatting strings.\n<i>Not compatible with mods: DisplayAllTemps</i>" + PERF_MEDIUM;

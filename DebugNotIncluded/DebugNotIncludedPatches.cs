@@ -20,7 +20,6 @@ using HarmonyLib;
 using KMod;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
-using PeterHan.PLib.Detours;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
 using PeterHan.PLib.UI;
@@ -69,6 +68,23 @@ namespace PeterHan.DebugNotIncluded {
 			// Input manager is not set up until this time
 			KInputHandler.Add(Global.GetInputManager().GetDefaultController(),
 				new UISnapshotHandler(), 1024);
+		}
+
+		[PLibMethod(RunAt.AfterDbInit)]
+		internal static void AfterDbInit(Harmony harmony) {
+			// Avoid breaking localization by patching some dangerous classes after Db load
+#if DEBUG
+			harmony.ProfileMethod(typeof(SaveLoader).GetMethodSafe("Load", false, typeof(
+				IReader)));
+			harmony.ProfileMethod(typeof(SaveLoader).GetMethodSafe("Save", false, typeof(
+				System.IO.BinaryWriter)));
+			harmony.ProfileMethod(typeof(SaveManager).GetMethodSafe("Load", false,
+				PPatchTools.AnyArguments));
+			harmony.ProfileMethod(typeof(SaveManager).GetMethodSafe("Save", false,
+				PPatchTools.AnyArguments));
+#endif
+			harmony.PatchTranspile(typeof(SaveLoader), "OnSpawn", new HarmonyMethod(
+				typeof(DebugNotIncludedPatches), nameof(TranspileSaveLoader)));
 		}
 
 		/// <summary>
@@ -158,18 +174,30 @@ namespace PeterHan.DebugNotIncluded {
 				DebugLogger.LogDebug("Executing version of PLib is from: " + latest.ModName);
 
 			HarmonyPatchInspector.Check();
-#if DEBUG
-			harmony.ProfileMethod(typeof(SaveLoader).GetMethodSafe("Load", false, typeof(
-				IReader)));
-			harmony.ProfileMethod(typeof(SaveLoader).GetMethodSafe("Save", false, typeof(
-				System.IO.BinaryWriter)));
-			harmony.ProfileMethod(typeof(SaveManager).GetMethodSafe("Load", false,
-				PPatchTools.AnyArguments));
-			harmony.ProfileMethod(typeof(SaveManager).GetMethodSafe("Save", false,
-				PPatchTools.AnyArguments));
-#endif
 			if (options?.LocalizeMods == true)
 				typeof(PLocalization).GetMethodSafe("DumpAll", false)?.Invoke(loc, null);
+		}
+		
+		/// <summary>
+		/// Applied to SaveLoader to try and get rid of a duplicate Sim initialization.
+		/// </summary>
+		internal static TranspiledMethod TranspileSaveLoader(TranspiledMethod method) {
+			return PPatchTools.ReplaceMethodCallSafe(method, new Dictionary<MethodInfo,
+				MethodInfo>() {
+				{
+					typeof(Sim).GetMethodSafe(nameof(Sim.SIM_Initialize), true,
+						PPatchTools.AnyArguments), PPatchTools.RemoveCall
+				},
+				{
+					typeof(SimMessages).GetMethodSafe(nameof(SimMessages.
+						CreateSimElementsTable), true, PPatchTools.AnyArguments),
+					PPatchTools.RemoveCall
+				},
+				{
+					typeof(SimMessages).GetMethodSafe(nameof(SimMessages.CreateDiseaseTable),
+						true, PPatchTools.AnyArguments), PPatchTools.RemoveCall
+				}
+			});
 		}
 
 		/// <summary>
@@ -583,31 +611,6 @@ namespace PeterHan.DebugNotIncluded {
 				PUtil.LogError("Error loading clusters:");
 				PUtil.LogException(e.GetBaseException());
 			}
-		}
-	}
-
-	/// <summary>
-	/// Applied to SaveLoader to try and get rid of a duplicate Sim initialization.
-	/// </summary>
-	[HarmonyPatch(typeof(SaveLoader), "OnSpawn")]
-	public static class SaveLoader_OnSpawn_Patch {
-		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-			return PPatchTools.ReplaceMethodCallSafe(method, new Dictionary<MethodInfo,
-				MethodInfo>() {
-				{
-					typeof(Sim).GetMethodSafe(nameof(Sim.SIM_Initialize), true,
-						PPatchTools.AnyArguments), PPatchTools.RemoveCall
-				},
-				{
-					typeof(SimMessages).GetMethodSafe(nameof(SimMessages.
-						CreateSimElementsTable), true, PPatchTools.AnyArguments),
-					PPatchTools.RemoveCall
-				},
-				{
-					typeof(SimMessages).GetMethodSafe(nameof(SimMessages.CreateDiseaseTable),
-						true, PPatchTools.AnyArguments), PPatchTools.RemoveCall
-				}
-			});
 		}
 	}
 

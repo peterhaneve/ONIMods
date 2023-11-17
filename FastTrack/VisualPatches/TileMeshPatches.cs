@@ -40,6 +40,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		/// <param name="harmony">The Harmony instance to use for patching.</param>
 		internal static void Apply(Harmony harmony) {
+			if (FastTrackOptions.Instance.NoTileDecor)
+				harmony.Patch(typeof(Assets), nameof(Assets.GetBlockTileDecorInfo),
+					prefix: new HarmonyMethod(typeof(TileMeshPatches),
+					nameof(GetBlockTileDecorInfo_Prefix)));
 			harmony.Patch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.AddBlock),
 				prefix: new HarmonyMethod(typeof(TileMeshPatches), nameof(AddBlock_Prefix)));
 			harmony.Patch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.HighlightCell),
@@ -60,6 +64,15 @@ namespace PeterHan.FastTrack.VisualPatches {
 				nameof(SetInvalidPlaceCell_Prefix)));
 			harmony.Patch(typeof(World), nameof(World.OnPrefabInit), postfix:
 				new HarmonyMethod(typeof(TileMeshPatches), nameof(OnPrefabInit_Postfix)));
+		}
+
+		/// <summary>
+		/// Applied after GetBlockTileDecorInfo runs.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static bool GetBlockTileDecorInfo_Prefix(ref BlockTileDecorInfo __result) {
+			__result = null;
+			return false;
 		}
 
 		/// <summary>

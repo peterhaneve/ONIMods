@@ -26,17 +26,35 @@ using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
 using PeterHan.PLib.UI;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using KMod;
 
 namespace PeterHan.PreserveSeed {
 	/// <summary>
 	/// Patches which will be applied via annotations for Preserve Random Seed.
 	/// </summary>
-	public sealed class PreserveSeedPatches : KMod.UserMod2 {
+	public sealed class PreserveSeedPatches : UserMod2 {
 		private static readonly IDetouredField<Immigration, int> GET_SPAWN_IDX = PDetours.
 			DetourField<Immigration, int>("spawnIdx");
+
+		/// <summary>
+		/// Applied to multiple methods to switch out the random calls for something a little
+		/// less random.
+		/// </summary>
+		[PLibMethod(RunAt.AfterDbInit)]
+		internal static void AfterDbInit(Harmony harmony) {
+			var useSharedRandom = new HarmonyMethod(typeof(PreserveSeedPatches),
+				nameof(TranspileRandom));
+			harmony.PatchTranspile(typeof(CharacterContainer), "GetIdleAnim", useSharedRandom);
+			harmony.PatchTranspile(typeof(CharacterSelectionController),
+				"InitializeContainers", useSharedRandom);
+			harmony.PatchTranspile(typeof(CryoTank), "DropContents", useSharedRandom);
+			harmony.PatchTranspile(typeof(MinionStartingStats), "GenerateStats",
+				useSharedRandom);
+		}
 
 		public override void OnLoad(Harmony harmony) {
 			PreserveSeedOptions.InitInstance();
@@ -54,6 +72,20 @@ namespace PeterHan.PreserveSeed {
 		[PLibMethod(RunAt.OnStartGame)]
 		internal static void OnStartGame() {
 			PreserveSeedOptions.InitInstance();
+		}
+
+		/// <summary>
+		/// Transpiles these methods to replace UnityEngine.Random calls with the Random
+		/// initialized on the shared seed.
+		/// </summary>
+		[HarmonyPriority(Priority.LowerThanNormal)]
+		internal static IEnumerable<CodeInstruction> TranspileRandom(
+				IEnumerable<CodeInstruction> method) {
+			return PPatchTools.ReplaceMethodCallSafe(method,
+				typeof(UnityEngine.Random).GetMethodSafe(nameof(UnityEngine.Random.Range),
+					true, typeof(int), typeof(int)),
+				typeof(SharedRandom).GetMethodSafe(nameof(SharedRandom.GetRange), true,
+					typeof(int), typeof(int)));
 		}
 
 		/// <summary>
@@ -139,7 +171,7 @@ namespace PeterHan.PreserveSeed {
 			/// Restores the random seed to using random values (for spawn Duplicant and so
 			/// forth) after the printing pod has been generated, wait 2 frames to make sure.
 			/// </summary>
-			private static System.Collections.IEnumerator RestoreRandomSeed() {
+			private static IEnumerator RestoreRandomSeed() {
 				yield return null;
 				yield return null;
 				SharedRandom.Reset();
@@ -271,7 +303,7 @@ namespace PeterHan.PreserveSeed {
 					MakeGenericMethod(typeof(SkillGroup));
 				var map = new Dictionary<MethodInfo, MethodInfo> {
 					{
-						typeof(UnityEngine.Random).GetMethodSafe(nameof(UnityEngine.Random.
+						typeof(Random).GetMethodSafe(nameof(UnityEngine.Random.
 							Range), true, typeof(int), typeof(int)),
 						typeof(SharedRandom).GetMethodSafe(nameof(SharedRandom.
 							GetRange), true, typeof(int), typeof(int))
@@ -331,37 +363,6 @@ namespace PeterHan.PreserveSeed {
 			internal static void Postfix() {
 				Immigration.Instance.timeBeforeSpawn = PreserveSeedOptions.Instance.
 					RechargeReject * Constants.SECONDS_PER_CYCLE;
-			}
-		}
-
-		/// <summary>
-		/// Applied to multiple methods to switch out the random calls for something a little
-		/// less random.
-		/// </summary>
-		[HarmonyPatch]
-		public static class UseSharedRandomPatch {
-			internal static IEnumerable<MethodBase> TargetMethods() {
-				yield return typeof(CharacterContainer).GetMethodSafe("GetIdleAnim", false,
-					PPatchTools.AnyArguments);
-				yield return typeof(CharacterSelectionController).GetMethodSafe(
-					"InitializeContainers", false, PPatchTools.AnyArguments);
-				yield return typeof(CryoTank).GetMethodSafe("DropContents", false, PPatchTools.
-					AnyArguments);
-				yield return typeof(MinionStartingStats).GetMethodSafe("GenerateStats", false,
-					PPatchTools.AnyArguments);
-			}
-
-			/// <summary>
-			/// Transpiles these methods to replace UnityEngine.Random calls with the Random
-			/// initialized on the shared seed.
-			/// </summary>
-			[HarmonyPriority(Priority.LowerThanNormal)]
-			internal static IEnumerable<CodeInstruction> Transpiler(
-					IEnumerable<CodeInstruction> method) {
-				return PPatchTools.ReplaceMethodCallSafe(method, typeof(UnityEngine.Random).
-					GetMethodSafe(nameof(UnityEngine.Random.Range), true, typeof(int),
-					typeof(int)), typeof(SharedRandom).GetMethodSafe(nameof(SharedRandom.
-					GetRange), true, typeof(int), typeof(int)));
 			}
 		}
 	}

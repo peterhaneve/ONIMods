@@ -32,7 +32,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(OvercrowdingMonitor), nameof(OvercrowdingMonitor.UpdateState))]
 	public static class OvercrowdingMonitor_UpdateState_Patch {
-		private static readonly Tag[] IMMUNE_CONFINEMENT = new[] {
+		private static readonly Tag[] IMMUNE_CONFINEMENT = {
 			GameTags.Creatures.Burrowed, GameTags.Creatures.Digger
 		};
 
@@ -58,34 +58,56 @@ namespace PeterHan.FastTrack.CritterPatches {
 				overcrowded = 0;
 				cramped = false;
 			} else {
-				var fishMonitor = smi.GetSMI<FishOvercrowdingMonitor.Instance>();
 				int eggs = 0, critters = 0;
-				// Voles/burrowed Hatches cannot be confined, otherwise check for either
-				// no room (stuck in wall) or tiny room < 1 critter space
-				// Use HasAnyTags(TagBits) here because the burrowed/digger tags will never
-				// be a prefab ID
-				confined = !prefabID.HasAnyTags(IMMUNE_CONFINEMENT) &&
-					(room == null || room.numCells < requiredSpace);
 				if (room != null) {
 					eggs = room.eggs.Count;
 					critters = room.creatures.Count;
 				}
-				if (fishMonitor != null) {
-					int fishCount = fishMonitor.fishCount;
+				if (smi.isFish) {
+					var fishMonitor = smi.GetSMI<FishOvercrowdingMonitor.Instance>();
+					int fishCount = fishMonitor.fishCount, water = fishMonitor.cellCount;
+					confined = IsConfined(smi, prefabID, water);
 					if (fishCount > 0)
-						overcrowded = Mathf.Max(0, fishCount - fishMonitor.cellCount /
-							requiredSpace);
+						overcrowded = Mathf.Max(0, fishCount - water / requiredSpace);
 					else {
 						int cell = Grid.PosToCell(smi.transform.position);
 						overcrowded = Grid.IsValidCell(cell) && Grid.IsLiquid(cell) ? 0 : 1;
 					}
-				} else
+				} else {
+					confined = IsConfined(smi, prefabID, room?.numCells ?? 0);
 					overcrowded = (room != null && critters > 1) ? Mathf.Max(0, critters -
 						room.numCells / requiredSpace) : 0;
+				}
 				cramped = room != null && eggs > 0 && room.numCells < (eggs + critters) *
 					requiredSpace && !smi.isBaby;
 			}
 			return overcrowded;
+		}
+
+		/// <summary>
+		/// Checks to see if a critter is Confined. There is a lot of intricate new logic for
+		/// handling Pacu, so this method has gotten quite complex...
+		/// </summary>
+		/// <param name="smi">The overcrowding monitor to check.</param>
+		/// <param name="prefabID">The critter to be updated.</param>
+		/// <param name="roomCells">The number of water/air cells in the appropriate environment.</param>
+		/// <returns>true if the critter is Confined, or false otherwise.</returns>
+		private static bool IsConfined(OvercrowdingMonitor.Instance smi, KPrefabID prefabID,
+				int roomCells) {
+			bool confined = true;
+			// Voles/burrowed Hatches cannot be confined, otherwise check for either
+			// no room (stuck in wall) or tiny room < 1 critter space
+			// Use HasAnyTags(Tag[]) here because the burrowed/digger tags will never
+			// be a prefab ID
+			if (!prefabID.HasAnyTags(IMMUNE_CONFINEMENT)) {
+				int requiredSpace = smi.def.spaceRequiredPerCreature;
+				confined = roomCells < requiredSpace;
+				if (!confined && smi.isFish) {
+					int cell = Grid.PosToCell(smi.transform.position);
+					confined = Grid.IsValidCell(cell) && !Grid.IsLiquid(cell);
+				}
+			}
+			return confined;
 		}
 
 		/// <summary>
@@ -99,7 +121,7 @@ namespace PeterHan.FastTrack.CritterPatches {
 			bool wasConfined = prefabID.HasTag(GameTags.Creatures.Confined);
 			bool wasCramped = prefabID.HasTag(GameTags.Creatures.Expecting);
 			bool wasOvercrowded = prefabID.HasTag(GameTags.Creatures.Overcrowded);
-			smi.overcrowdedModifier.SetValue(overcrowded > 0 ? -4 - overcrowded : 0);
+			smi.overcrowdedModifier.SetValue(-overcrowded);
 			if (wasCramped != cramped || wasConfined != confined || wasOvercrowded !=
 					overcrowded > 0) {
 				// Status has actually changed
