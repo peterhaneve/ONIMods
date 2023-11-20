@@ -293,8 +293,12 @@ namespace PeterHan.FastTrack.GamePatches {
 				} else {
 					float payload = hep.payload;
 					if (cell != newCell) {
-						SimMessages.ModifyDiseaseOnCell(newCell, diseaseIndex,
-							DISEASE_PER_CELL);
+						var element = Grid.Element[newCell];
+						// The Sim divides by zero when modifying diseases on near vacuum
+						if (element != null && !element.IsVacuum && Grid.Mass[newCell] >
+								0.001f)
+							SimMessages.ModifyDiseaseOnCell(newCell, diseaseIndex,
+								DISEASE_PER_CELL);
 						payload -= HighEnergyParticleConfig.PER_CELL_FALLOFF;
 						if (partitionerEntry != null) {
 							Grid.CellToXY(newCell, out int x, out int y);
