@@ -90,18 +90,18 @@ namespace PeterHan.FastTrack.CritterPatches {
 		/// </summary>
 		/// <param name="smi">The overcrowding monitor to check.</param>
 		/// <param name="prefabID">The critter to be updated.</param>
-		/// <param name="roomCells">The number of water/air cells in the appropriate environment.</param>
+		/// <param name="availableCells">The number of water/air cells in the appropriate environment.</param>
 		/// <returns>true if the critter is Confined, or false otherwise.</returns>
 		private static bool IsConfined(OvercrowdingMonitor.Instance smi, KPrefabID prefabID,
-				int roomCells) {
-			bool confined = true;
+				int availableCells) {
+			bool confined = false;
 			// Voles/burrowed Hatches cannot be confined, otherwise check for either
 			// no room (stuck in wall) or tiny room < 1 critter space
 			// Use HasAnyTags(Tag[]) here because the burrowed/digger tags will never
 			// be a prefab ID
 			if (!prefabID.HasAnyTags(IMMUNE_CONFINEMENT)) {
 				int requiredSpace = smi.def.spaceRequiredPerCreature;
-				confined = roomCells < requiredSpace;
+				confined = availableCells < requiredSpace;
 				if (!confined && smi.isFish) {
 					int cell = Grid.PosToCell(smi.transform.position);
 					confined = Grid.IsValidCell(cell) && !Grid.IsLiquid(cell);

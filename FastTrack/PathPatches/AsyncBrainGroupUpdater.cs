@@ -234,11 +234,11 @@ namespace PeterHan.FastTrack.PathPatches {
 				for (int i = 0; i < b; i++) {
 					var brain = brainsToUpdate[i];
 					if (i < have)
-						updatingPickups[i].Begin(brain.Key, brain.Value, n);
+						updatingPickups[i].Begin(brain.Key, brain.Value, n, i == 0);
 					else {
 						// Add new entry
 						var entry = new CompilePickupsWork(this);
-						entry.Begin(brain.Key, brain.Value, n);
+						entry.Begin(brain.Key, brain.Value, n, i == 0);
 						updatingPickups.Add(entry);
 					}
 				}
@@ -322,18 +322,23 @@ namespace PeterHan.FastTrack.PathPatches {
 		internal void StartBrainUpdate() {
 			var fm = Game.Instance.fetchManager;
 			var inst = AsyncJobManager.Instance;
+			var sau = GamePatches.SolidTransferArmUpdater.Instance;
 			if (inst != null && fm != null) {
 				int n = brainsToUpdate.Count;
+				onFetchComplete.Reset();
+				foreach (var pair in fm.prefabIdToFetchables)
+					byId.Add(pair.Value);
+				inst.Run(updateOffsets);
 				if (n > 0) {
-					onFetchComplete.Reset();
-					foreach (var pair in fm.prefabIdToFetchables)
-						byId.Add(pair.Value);
-					inst.Run(updateOffsets);
 					// Wipe out cached items from the last run if still present (no sweepers
 					// built, or game is paused)
-					GamePatches.SolidTransferArmUpdater.Instance?.ClearCached();
+					sau?.ClearCached();
 					for (int i = 0; i < n; i++)
 						inst.Run(updatingPickups[i]);
+				} else if (sau != null) {
+					sau.ClearCached();
+					// If there are no Duplicants, run sweeper arms manually
+					inst.Run(new GraveyardShift(this));
 				}
 				// This will not start until all the updatingPickups are completed
 				finishFetches.Begin(n);
@@ -413,6 +418,11 @@ namespace PeterHan.FastTrack.PathPatches {
 			/// The Duplicant navigator that is trying to pick up items.
 			/// </summary>
 			internal Navigator navigator;
+			
+			/// <summary>
+			/// If true, this task also updates Auto-Sweeper caches.
+			/// </summary>
+			private bool passToSweepers;
 
 			/// <summary>
 			/// The location where the compiled fetch errands are stored.
@@ -433,6 +443,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				fetches = new List<Fetch>(64);
 				pickups = new List<Pickup>(128);
 				this.updater = updater;
+				passToSweepers = false;
 			}
 
 			/// <summary>
@@ -442,7 +453,9 @@ namespace PeterHan.FastTrack.PathPatches {
 			/// <param name="newBrain">The brain to update.</param>
 			/// <param name="newNavigator">The navigator to compute paths for this brain.</param>
 			/// <param name="n">The number of pickup prefab IDs to be updated.</param>
-			public void Begin(Brain newBrain, Navigator newNavigator, int n) {
+			/// <param name="updateSweepers">If true, Auto-Sweeper caches are also updated by this task.</param>
+			public void Begin(Brain newBrain, Navigator newNavigator, int n,
+					bool updateSweepers = false) {
 				var gcp = GlobalChoreProvider.Instance;
 				Count = n;
 				brain = newBrain;
@@ -452,6 +465,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				else
 					fetchChores = null;
 				navigator = newNavigator;
+				passToSweepers = updateSweepers;
 				worker = newNavigator.gameObject;
 			}
 
@@ -470,8 +484,9 @@ namespace PeterHan.FastTrack.PathPatches {
 					var thisPrefab = updater.byId[index];
 					thisPrefab.UpdatePickups(navigator.PathProber, navigator, worker);
 					// Help out our poor transfer arms in need
-					GamePatches.SolidTransferArmUpdater.Instance?.UpdateCache(thisPrefab.
-						fetchables.GetDataList());
+					if (passToSweepers)
+						GamePatches.SolidTransferArmUpdater.Instance.UpdateCache(thisPrefab.
+							fetchables.GetDataList());
 				}
 			}
 
@@ -535,6 +550,42 @@ namespace PeterHan.FastTrack.PathPatches {
 
 			public void TriggerComplete() {
 				updater.FinishFetches();
+				OffsetTracker.isExecutingWithinJob = false;
+			}
+
+			public void TriggerStart() {
+				OffsetTracker.isExecutingWithinJob = true;
+			}
+		}
+
+		/// <summary>
+		/// Updates only Auto-Sweepers if no Duplicants remain.
+		/// </summary>
+		private sealed class GraveyardShift : AsyncJobManager.IWork, IWorkItemCollection {
+			/// <summary>
+			/// The list of fetchables collected by prefab ID.
+			/// </summary>
+			private readonly IList<FetchablesByPrefabId> byId;
+
+			public int Count => byId.Count;
+			
+			public IWorkItemCollection Jobs => this;
+
+			internal GraveyardShift(AsyncBrainGroupUpdater updater) {
+				byId = updater.byId;
+			}
+
+			public void InternalDoWorkItem(int index) {
+				if (index >= 0 && index < byId.Count)
+					GamePatches.SolidTransferArmUpdater.Instance?.UpdateCache(byId[index].
+						fetchables.GetDataList());
+			}
+
+			public void TriggerAbort() {
+				OffsetTracker.isExecutingWithinJob = false;
+			}
+
+			public void TriggerComplete() {
 				OffsetTracker.isExecutingWithinJob = false;
 			}
 
