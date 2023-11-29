@@ -162,24 +162,18 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Adds a brain to update asynchronously.
 		/// </summary>
-		/// <param name="brain">The rover brain to update.</param>
-		internal void AddBrain(CreatureBrain brain) {
-			if (brain.TryGetComponent(out Navigator nav))
+		/// <param name="brain">The rover or Duplicant brain to update.</param>
+		internal void AddBrain(Brain brain) {
+			Navigator nav;
+			if (brain is MinionBrain mb)
+				nav = mb.Navigator;
+			else
+				brain.TryGetComponent(out nav);
+			if (nav != null) {
 				// What PathProberSensor did
 				nav.UpdateProbe();
-			brainsToUpdate.Add(new BrainPair(brain, nav));
-		}
-
-		/// <summary>
-		/// Adds a brain to update asynchronously.
-		/// </summary>
-		/// <param name="brain">The Duplicant brain to update.</param>
-		internal void AddBrain(MinionBrain brain) {
-			var nav = brain.Navigator;
-			if (nav != null)
-				// What PathProberSensor did
-				nav.UpdateProbe();
-			brainsToUpdate.Add(new BrainPair(brain, nav));
+				brainsToUpdate.Add(new BrainPair(brain, nav));
+			}
 		}
 
 		/// <summary>

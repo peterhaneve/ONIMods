@@ -121,11 +121,8 @@ namespace PeterHan.FastTrack.PathPatches {
 					var brain = brains[index];
 					if (brain.IsRunning()) {
 						// Add minion and rover brains to the brain scheduler
-						if (brain is MinionBrain mb)
-							inst.AddBrain(mb);
-						else if (brain is CreatureBrain cb && cb.species == GameTags.Robots.
-								Models.ScoutRover)
-							inst.AddBrain(cb);
+						if (brain.prefabId.HasTag(GameTags.DupeBrain))
+							inst.AddBrain(brain);
 						else
 							brain.UpdateBrain();
 					}

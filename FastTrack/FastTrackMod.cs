@@ -129,9 +129,8 @@ namespace PeterHan.FastTrack {
 				FastTrackCompat.CheckMaterialPropertiesCompat(harmony);
 				FastTrackCompat.CheckTrappedCompat(harmony);
 			}
-			// In case the grid gets rewritten by a future mod idea
-			if (options.ENetOpts && !PRegistry.GetData<bool>("OverrideElectricalNetwork"))
-				GamePatches.FastElectricalNetworkCalculator.Apply(harmony);
+			if (options.ENetOpts)
+				FastTrackCompat.CheckENetCompat(harmony);
 			// Fix those world strings
 			UIPatches.FormatStringPatches.ApplyPatch(harmony);
 			// Temperature compatibility

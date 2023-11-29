@@ -121,7 +121,10 @@ namespace PeterHan.FastTrack.CritterPatches {
 			bool wasConfined = prefabID.HasTag(GameTags.Creatures.Confined);
 			bool wasCramped = prefabID.HasTag(GameTags.Creatures.Expecting);
 			bool wasOvercrowded = prefabID.HasTag(GameTags.Creatures.Overcrowded);
-			smi.overcrowdedModifier.SetValue(-overcrowded);
+			if (smi.isFish)
+				smi.fishOvercrowdedModifier.SetValue(-overcrowded);
+			else
+				smi.overcrowdedModifier.SetValue(-overcrowded);
 			if (wasCramped != cramped || wasConfined != confined || wasOvercrowded !=
 					overcrowded > 0) {
 				// Status has actually changed

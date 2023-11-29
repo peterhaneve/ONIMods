@@ -50,6 +50,12 @@ namespace PeterHan.FastTrack {
 		private const string EFFICIENT_SUPPLY_TYPE = "PeterHan.EfficientFetch.EfficientFetchManager";
 
 		/// <summary>
+		/// Turn off electrical patches if either this type is defined, or the registry
+		/// entry is set.
+		/// </summary>
+		private const string GW_WIRE_TYPE = "Egladil.WirePatchs";
+
+		/// <summary>
 		/// Enable extended temperature precision if this type is defined.
 		/// </summary>
 		private const string HPT_TYPE = "Main.Temperature_Patch";
@@ -85,6 +91,21 @@ namespace PeterHan.FastTrack {
 				PUtil.LogWarning("Achievement Enabler is active, achievements allowed in sandbox");
 				GamePatches.AchievementDisablePatches.forceEnableAchievements = true;
 			}
+		}
+
+		/// <summary>
+		/// Checks for compatibility and turns off electrical network patches if conflicting
+		/// mods (either set the registry key or define a conflicting type) are active.
+		///
+		/// The registry key is in case the grid gets rewritten by a future mod idea.
+		/// </summary>
+		/// <param name="harmony">The Harmony instance to use for patching.</param>
+		internal static void CheckENetCompat(Harmony harmony) {
+			if (PPatchTools.GetTypeSafe(GW_WIRE_TYPE) != null || PRegistry.GetData<bool>(
+					"OverrideElectricalNetwork"))
+				PUtil.LogWarning("Disabling electrical network patches: Conflicting mod active");
+			else
+				GamePatches.FastElectricalNetworkCalculator.Apply(harmony);
 		}
 
 		/// <summary>
