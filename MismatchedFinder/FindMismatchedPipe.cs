@@ -33,6 +33,20 @@ namespace PeterHan.MismatchedFinder {
 		private static readonly EventSystem.IntraObjectHandler<FindMismatchedPipe>
 			ON_REFRESH_MENU = PGameUtils.CreateUserMenuHandler<FindMismatchedPipe>();
 
+		/// <summary>
+		/// Checks to see if the conduit does not match.
+		/// </summary>
+		/// <param name="current">The current conduit's element.</param>
+		/// <param name="type">The current conduit's type.</param>
+		/// <param name="otherConduit">The conduit that may not be matching.</param>
+		/// <returns>true if the conduit does not match, or false otherwise.</returns>
+		private static bool IsMismatched(PrimaryElement current, ConduitType type,
+				FlowUtilityNetwork.IItem otherConduit) {
+			var go = otherConduit.GameObject;
+			return go != null && go.TryGetComponent(out PrimaryElement pe) && (pe.ElementID !=
+				current.ElementID || otherConduit.ConduitType != type) && current != pe;
+		}
+
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable CS0649
 		[MyCmpGet]
@@ -64,16 +78,15 @@ namespace PeterHan.MismatchedFinder {
 		private void OnFindMismatched() {
 			var cnet = GetNetwork();
 			if (pe != null && cnet != null) {
-				var element = pe.ElementID;
 				var type = conduit.ConduitType;
-				foreach (var conduit in cnet.conduits) {
-					var otherPE = conduit.GameObject.GetComponentSafe<PrimaryElement>();
-					if (((otherPE != null && otherPE.ElementID != element) || conduit.
-							ConduitType != type) && otherPE != pe) {
-						PGameUtils.CenterAndSelect(otherPE);
+				foreach (var otherConduit in cnet.conduits)
+					if (IsMismatched(pe, type, otherConduit)) {
+						var go = otherConduit.GameObject;
+						if (go.TryGetComponent(out KSelectable select))
+							SelectTool.Instance.SelectAndFocus(go.transform.position, select,
+								Vector3.zero);
 						break;
 					}
-				}
 			}
 		}
 
@@ -87,24 +100,21 @@ namespace PeterHan.MismatchedFinder {
 		/// </summary>
 		public void OnRefreshUserMenu() {
 			var cnet = GetNetwork();
-			if (pe != null && cnet != null) {
-				var element = pe.ElementID;
+			var gi = Game.Instance;
+			if (pe != null && cnet != null && gi != null) {
 				var type = conduit.ConduitType;
 				bool mismatch = false;
 				// Search by either conduit type or different element
-				foreach (var conduit in cnet.conduits) {
-					var otherPE = conduit.GameObject.GetComponentSafe<PrimaryElement>();
-					if ((otherPE != null && otherPE.ElementID != element) || conduit.
-							ConduitType != type) {
+				foreach (var otherConduit in cnet.conduits)
+					if (IsMismatched(pe, type, otherConduit)) {
 						mismatch = true;
 						break;
 					}
-				}
 				if (mismatch) {
-					Game.Instance?.userMenu?.AddButton(gameObject, new KIconButtonMenu.
-						ButtonInfo("action_follow_cam", MismatchedFinderStrings.UI.
-						USERMENUOPTIONS.FIND_PIPE, OnFindMismatched, PAction.MaxAction, null,
-						null, null, MismatchedFinderStrings.UI.TOOLTIPS.FIND_PIPE));
+					gi.userMenu?.AddButton(gameObject, new KIconButtonMenu.ButtonInfo(
+						"action_follow_cam", MismatchedFinderStrings.UI.USERMENUOPTIONS.
+						FIND_PIPE, OnFindMismatched, PAction.MaxAction, null, null, null,
+						MismatchedFinderStrings.UI.TOOLTIPS.FIND_PIPE));
 				}
 			}
 		}

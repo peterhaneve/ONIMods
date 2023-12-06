@@ -82,13 +82,14 @@ namespace PeterHan.MismatchedFinder {
 		/// </summary>
 		public void OnRefreshUserMenu() {
 			var enet = GetNetwork();
-			if (wire != null && enet != null) {
+			var gi = Game.Instance;
+			if (wire != null && enet != null && gi != null) {
 				float wattage = Wire.GetMaxWattageAsFloat(wire.MaxWattageRating);
 				if (!Mathf.Approximately(wattage, enet.GetMaxSafeWattage())) {
-					Game.Instance?.userMenu?.AddButton(gameObject, new KIconButtonMenu.
-						ButtonInfo("action_follow_cam", MismatchedFinderStrings.UI.
-						USERMENUOPTIONS.FIND_WIRE, OnFindMismatched, PAction.MaxAction, null,
-						null, null, MismatchedFinderStrings.UI.TOOLTIPS.FIND_WIRE));
+					gi.userMenu?.AddButton(gameObject, new KIconButtonMenu.ButtonInfo(
+						"action_follow_cam", MismatchedFinderStrings.UI.USERMENUOPTIONS.
+						FIND_WIRE, OnFindMismatched, PAction.MaxAction, null, null, null,
+						MismatchedFinderStrings.UI.TOOLTIPS.FIND_WIRE));
 				}
 			}
 		}

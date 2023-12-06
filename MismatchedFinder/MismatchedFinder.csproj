@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Mismatched Wire Finder</AssemblyTitle>
-    <FileVersion>1.1.0.0</FileVersion>
+    <FileVersion>1.2.0.0</FileVersion>
     <RootNamespace>PeterHan.MismatchedFinder</RootNamespace>
     <Description>Finds wires and pipes that do not match the rest of their network.</Description>
     <AssemblyVersion>1.1.0.0</AssemblyVersion>
