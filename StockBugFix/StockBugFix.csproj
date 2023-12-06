@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Stock Bug Fix</AssemblyTitle>
-    <FileVersion>3.23.0.0</FileVersion>
+    <FileVersion>3.24.0.0</FileVersion>
     <RootNamespace>PeterHan.StockBugFix</RootNamespace>
     <Description>Fixes bugs and annoyances in the stock game.</Description>
     <AssemblyVersion>3.2.0.0</AssemblyVersion>

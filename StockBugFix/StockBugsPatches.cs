@@ -185,10 +185,9 @@ namespace PeterHan.StockBugFix {
 		/// <summary>
 		/// Applied to MainMenu to display a queued Steam mod status report if pending.
 		/// </summary>
-		private static void PostfixMenuSpawn(MainMenu __instance) {
-			GameObject go;
-			if (__instance != null && (go = __instance.gameObject) != null)
-				go.AddOrGet<QueuedModReporter>();
+		private static void PostfixMenuSpawn(Component __instance) {
+			if (__instance != null && !__instance.TryGetComponent(out QueuedModReporter _))
+				__instance.gameObject.AddComponent<QueuedModReporter>();
 		}
 
 		/// <summary>
@@ -225,9 +224,15 @@ namespace PeterHan.StockBugFix {
 		}
 
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
+			const string FIX_IRRIGATION = "Bugs.PlantIrrigation";
 			base.OnAllModsLoaded(harmony, mods);
 			DecorProviderRefreshFix.ApplyPatch(harmony);
 			FixMassStringsReadOnly(harmony);
+			if (PPatchTools.GetTypeSafe("BetterPlantTending.TendedPlant") == null &&
+					!PRegistry.GetData<bool>(FIX_IRRIGATION)) {
+				PlantIrrigationFixPatches.Apply(harmony);
+				PRegistry.PutData(FIX_IRRIGATION, true);
+			}
 		}
 
 		public override void OnLoad(Harmony instance) {
@@ -544,9 +549,8 @@ namespace PeterHan.StockBugFix {
 		/// Applied after the setter runs.
 		/// </summary>
 		internal static void Postfix(FuelTank __instance) {
-			var obj = __instance.gameObject;
-			if (obj != null && obj.TryGetComponent(out Storage storage))
-				storage.Trigger((int)GameHashes.OnStorageChange, obj);
+			if (__instance != null && __instance.TryGetComponent(out Storage storage))
+				storage.Trigger((int)GameHashes.OnStorageChange, __instance.gameObject);
 		}
 	}
 
@@ -606,9 +610,8 @@ namespace PeterHan.StockBugFix {
 		/// Applied after the setter runs.
 		/// </summary>
 		internal static void Postfix(OxidizerTank __instance) {
-			var obj = __instance.gameObject;
-			if (obj != null && obj.TryGetComponent(out Storage storage))
-				storage.Trigger((int)GameHashes.OnStorageChange, obj);
+			if (__instance != null && __instance.TryGetComponent(out Storage storage))
+				storage.Trigger((int)GameHashes.OnStorageChange, __instance.gameObject);
 		}
 	}
 

@@ -178,14 +178,14 @@ namespace PeterHan.StockBugFix {
 		/// attributes (including difficulty level).
 		/// </summary>
 		private static float GetRequiredFoodPerCycle(IEnumerable<MinionIdentity> dupes) {
-			var totalCalories = 0f;
+			var totalCalories = 0.0f;
 			if (dupes != null)
 				foreach (var dupe in dupes) {
 					var caloriesPerSecond = Db.Get().Amounts.Calories.Lookup(dupe).
 						GetDelta();
 					// "tummyless" attribute adds float.PositiveInfinity
-					if (caloriesPerSecond != float.PositiveInfinity)
-						totalCalories += ToCaloriesPerCycle(caloriesPerSecond);
+					if (!float.IsInfinity(caloriesPerSecond))
+						totalCalories += caloriesPerSecond * Constants.SECONDS_PER_CYCLE;
 				}
 			return Mathf.Abs(totalCalories);
 		}
@@ -196,34 +196,30 @@ namespace PeterHan.StockBugFix {
 		internal static bool Prefix(FoodDiagnostic __instance,
 				ref ColonyDiagnostic.DiagnosticResult __result,
 				float ___trackerSampleCountSeconds) {
-			__result = new ColonyDiagnostic.DiagnosticResult(ColonyDiagnostic.
+			var result = new ColonyDiagnostic.DiagnosticResult(ColonyDiagnostic.
 				DiagnosticResult.Opinion.Normal, STRINGS.UI.COLONY_DIAGNOSTICS.
 				GENERIC_CRITERIA_PASS);
-			if (__instance.tracker.GetDataTimeLength() < 10f) {
-				__result.opinion = ColonyDiagnostic.DiagnosticResult.Opinion.Normal;
-				__result.Message = STRINGS.UI.COLONY_DIAGNOSTICS.NO_DATA;
+			if (__instance.tracker.GetDataTimeLength() < 10.0f) {
+				result.opinion = ColonyDiagnostic.DiagnosticResult.Opinion.Normal;
+				result.Message = STRINGS.UI.COLONY_DIAGNOSTICS.NO_DATA;
 			} else {
-				var dupes = Components.LiveMinionIdentities.GetWorldItems(
-					__instance.worldID);
-				var requiredCaloriesPerCycle = GetRequiredFoodPerCycle(dupes);
-				// show warning if food doesn't last for 3 days
-				var daysReserve = 3;
-				if (requiredCaloriesPerCycle * daysReserve > __instance.tracker.
+				var dupes = Components.LiveMinionIdentities.GetWorldItems(__instance.worldID);
+				float requiredCaloriesPerCycle = GetRequiredFoodPerCycle(dupes);
+				// Show warning if food does not last for 3 days
+				const float DAYS_TO_RESERVE = 3.0f;
+				if (requiredCaloriesPerCycle * DAYS_TO_RESERVE > __instance.tracker.
 						GetAverageValue(___trackerSampleCountSeconds)) {
 					var currentValue = __instance.tracker.GetCurrentValue();
 					var text = STRINGS.MISC.NOTIFICATIONS.FOODLOW.TOOLTIP;
-					__result.opinion = ColonyDiagnostic.DiagnosticResult.Opinion.Concern;
+					result.opinion = ColonyDiagnostic.DiagnosticResult.Opinion.Concern;
 					text = text.Replace("{0}", GameUtil.GetFormattedCalories(
 						currentValue)).Replace("{1}", GameUtil.GetFormattedCalories(
 						requiredCaloriesPerCycle));
-					__result.Message = text;
+					result.Message = text;
 				}
 			}
+			__result = result;
 			return false;
-		}
-
-		private static float ToCaloriesPerCycle(float caloriesPerSec) {
-			return caloriesPerSec * Constants.SECONDS_PER_CYCLE;
 		}
 	}
 }
