@@ -198,6 +198,10 @@ namespace PeterHan.FastTrack {
 		[Option("STRINGS.UI.FRONTEND.FASTTRACK.DISABLESOUND", "STRINGS.UI.TOOLTIPS.FASTTRACK.DISABLESOUND", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_SOUND")]
 		[JsonProperty]
 		public bool DisableSound { get; set; }
+		
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.VERINWATERMARK", "STRINGS.UI.TOOLTIPS.FASTTRACK.VERINWATERMARK", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_VISUAL")]
+		[JsonProperty]
+		public WatermarkMessage VersionInWatermark { get; set; }
 
 		[Option("STRINGS.UI.FRONTEND.FASTTRACK.CLUSTERMAPQUALITY", "STRINGS.UI.TOOLTIPS.FASTTRACK.CLUSTERMAPQUALITY", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_VISUAL")]
 		[JsonProperty]
@@ -307,6 +311,7 @@ namespace PeterHan.FastTrack {
 			SideScreenOpts = true;
 			ThreatOvercrowding = true;
 			UnstackLights = true;
+			VersionInWatermark = WatermarkMessage.Show;
 			VirtualScroll = true;
 		}
 
@@ -357,6 +362,18 @@ namespace PeterHan.FastTrack {
 			WarningsOnly,
 			[Option("STRINGS.UI.FRONTEND.FASTTRACK.TUTORIALS.OFF", "STRINGS.UI.TOOLTIPS.FASTTRACK.TUTORIALS.OFF")]
 			None
+		}
+
+		/// <summary>
+		/// The version to show in the build watermark.
+		/// </summary>
+		public enum WatermarkMessage {
+			[Option("STRINGS.UI.FRONTEND.FASTTRACK.WATERMARK.SHOW", "STRINGS.UI.TOOLTIPS.FASTTRACK.WATERMARK.SHOW")]
+			Show,
+			[Option("STRINGS.UI.FRONTEND.FASTTRACK.WATERMARK.HIDE", "STRINGS.UI.TOOLTIPS.FASTTRACK.WATERMARK.HIDE")]
+			Hide,
+			[Option("STRINGS.UI.FRONTEND.FASTTRACK.WATERMARK.OFF", "STRINGS.UI.TOOLTIPS.FASTTRACK.WATERMARK.OFF")]
+			Off
 		}
 	}
 }

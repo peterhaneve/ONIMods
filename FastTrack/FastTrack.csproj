@@ -11,11 +11,25 @@
     <Optimize>true</Optimize>
     <UsePublicized>true</UsePublicized>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <VersionFileContent>
+namespace PeterHan.FastTrack {
+  public static class ModVersion {
+    public static string BUILD_VERSION = "$(LastWorkingBuild)"%3B
+    public static string FILE_VERSION = "$(FileVersion)"%3B
+  }
+}
+    </VersionFileContent>
   </PropertyGroup>
+  <Target Name="WriteModVersionFile" BeforeTargets="PreBuildEvent">
+    <WriteLinesToFile File="$(IntermediateOutputPath)\Version.cs" Overwrite="true" Lines="$(VersionFileContent)"/>
+  </Target>
   <ItemGroup>
     <None Remove="images/*.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="images/*.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(IntermediateOutputPath)\Version.cs" />
   </ItemGroup>
 </Project>

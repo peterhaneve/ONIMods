@@ -81,6 +81,7 @@ namespace PeterHan.FastTrack {
 					public static LocString REDUCESOUNDUPDATES = "Batch Sounds";
 					public static LocString DISABLESOUND = "Disable <color=#FF0000>ALL</color> Sounds";
 
+					public static LocString VERINWATERMARK = "Build Watermark";
 					public static LocString CLUSTERMAPQUALITY = "Cluster Map Resolution";
 					public static LocString CULLCONDUITS = "Cull Buildings in Tiles";
 					public static LocString ANIMOPTS = "Faster Animations";
@@ -119,6 +120,12 @@ namespace PeterHan.FastTrack {
 						public static LocString ALL = "All";
 						public static LocString WARNINGS = "Warnings";
 						public static LocString OFF = "Off";
+					}
+
+					public static class WATERMARK {
+						public static LocString SHOW = "Show version";
+						public static LocString HIDE = "Hide version";
+						public static LocString OFF = "Hide completely";
 					}
 				}
 			}
@@ -171,6 +178,7 @@ namespace PeterHan.FastTrack {
 					public static LocString REDUCESOUNDUPDATES = "Reduces the frequency of sound location updates." + PERF_LOW;
 					public static LocString DISABLESOUND = "Completely disables <color=#FF0000>all</color> sound playback." + PERF_LOW;
 
+					public static LocString VERINWATERMARK = "Show the Fast Track version in the build watermark.\n\n<i>No performance impact</i>";
 					public static LocString CLUSTERMAPQUALITY = "Slightly reduce the graphics quality of the Spaced Out! Starmap\nin exchange for a significant performance boost." + PERF_HIGH;
 					public static LocString CULLCONDUITS = "Hide conduits and wires inside solid walls." + PERF_LOW;
 					public static LocString ANIMOPTS = "Optimizes slow code in animation playback." + PERF_MEDIUM;
@@ -217,6 +225,12 @@ namespace PeterHan.FastTrack {
 							Constants.BULLETSTRING + "No Oxygen Generator built\n" +
 							Constants.BULLETSTRING + "Unrefrigerated Food\n" +
 							Constants.BULLETSTRING + "No Sick Bay built\n\n<i>Keep a careful eye on your colony...</i>";
+					}
+
+					public static class WATERMARK {
+						public static LocString SHOW = "Show the current Fast Track version and game version in the build watermark.";
+						public static LocString HIDE = "Show only the current game version in the build watermark.";
+						public static LocString OFF = "Hide the build watermark completely in-game.";
 					}
 				}
 			}
