@@ -1,0 +1,151 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"X-Generator: Poedit 3.4.1\n"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.INPUT_BINDINGS.ROOT.PIPPLANT
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.INPUT_BINDINGS.ROOT.PIPPLANT"
+msgid "Open Pip Planting Overlay"
+msgstr "Ouvrir le calque Pip"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.BUTTON
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"BUTTON"
+msgid "Pip Planting Overlay"
+msgstr "Calque Pip"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.CANPLANT
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"CANPLANT"
+msgid "Can plant here"
+msgstr "Ne peut pas planter ici"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.DESCRIPTION
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"DESCRIPTION"
+msgid ""
+"Displays the locations where Pips can plant seeds.\n"
+"\n"
+"Pips will consider planting a seed in a tile under these conditions:\n"
+"1. The tile has no more than 2 other plants in a square 6 left, 6 down, 5 "
+"right, 5 up from the tile.\n"
+"2. It is either a \"natural tile\" of less than 150 hardness, a farm tile or "
+"a hydroponic farm.\n"
+"3. The pip can navigate to the seed and the tile, and there must be no "
+"buildings obstructing the plant's location.\n"
+"4. The atmospheric pressure is greater than 100g.\n"
+"5. The atmospheric temperature is around ±50C to ±100C of the requirements "
+"of the plant.\n"
+msgstr ""
+"Affiche les endroits où Pips peut planter des graines.\n"
+"\n"
+"Les Pips envisageront de planter une graine dans une tuile dans les "
+"conditions suivantes : \n"
+"1. La dalle n'a pas plus de 2 autres plantes dans un carré de 6 à gauche, 6 "
+"en bas, 5 à droite, 5 en haut de la dalle. \n"
+"2. Il s'agit soit d'une \"dalle naturelle\" d'une dureté inférieure à 150, "
+"soit d'une dalle de ferme ou d'une ferme hydroponique. \n"
+"3. Le pip peut naviguer jusqu'à la graine et la tuile, et aucun bâtiment ne "
+"doit obstruer l'emplacement de la plante. \n"
+"4. La pression atmosphérique est supérieure à 100 g. \n"
+"5. La température atmosphérique se situe entre ±50C et ±100C par rapport aux "
+"exigences de la plante.\n"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.HARDNESS
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"HARDNESS"
+msgid "Tile is too hard"
+msgstr "Dalle trop dur"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.NAME
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.NAME"
+msgid "PIP PLANTING OVERLAY"
+msgstr "CALQUE PIP"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.PLANTCOUNT
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"PLANTCOUNT"
+msgid "Too many plants"
+msgstr "Trop de plantes"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.PRESSURE
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"PRESSURE"
+msgid "Pressure too low"
+msgstr "Pression trop faible"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.TEMPERATURE
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"TEMPERATURE"
+msgid "Temperature too extreme"
+msgstr "Température trop élevée"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.TOOLTIP
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"TOOLTIP"
+msgid "Displays locations where Pips can plant seeds"
+msgstr "Affiche les endroits où les Pips peuvent planter des graines"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.TOOLTIPS.CANPLANT
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"TOOLTIPS.CANPLANT"
+msgid "Seeds can be planted here, if there is room and temperature is valid"
+msgstr ""
+"Les graines peuvent être plantées ici, s'il y a de la place et si la "
+"température est correcte"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.TOOLTIPS.HARDNESS
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"TOOLTIPS.HARDNESS"
+msgid "Natural tile hardness is above {0:D}!"
+msgstr "La dureté naturelle des carreaux est supérieure à {0:D} !"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.TOOLTIPS.PLANTCOUNT
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"TOOLTIPS.PLANTCOUNT"
+msgid "More than {0:D} other plants are within the range of {1:D}!"
+msgstr "Plus de {0:D} autres plantes se trouvent dans l'intervalle de {1:D} !"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.TOOLTIPS.PLANTCOUNT_1
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"TOOLTIPS.PLANTCOUNT_1"
+msgid "More than one other plant is within the range of {1:D}!"
+msgstr "Plus d'une autre plante se trouve dans l'intervalle de {1:D} !"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.TOOLTIPS.PRESSURE
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"TOOLTIPS.PRESSURE"
+msgid "Atmospheric pressure is below {0} or tile is flooded!"
+msgstr ""
+"La pression atmosphérique est inférieure à {0} ou la tuile est inondée !"
+
+#. PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING.TOOLTIPS.TEMPERATURE
+msgctxt ""
+"PeterHan.PipPlantOverlay.PipPlantOverlayStrings.UI.OVERLAYS.PIPPLANTING."
+"TOOLTIPS.TEMPERATURE"
+msgid "Temperature is below {0} or above {1}!"
+msgstr "La température est inférieure à {0} ou supérieure à {1} !"

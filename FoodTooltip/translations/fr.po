@@ -1,0 +1,68 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"X-Generator: Poedit 3.4.1\n"
+
+#. PeterHan.FoodTooltip.FoodTooltipStrings.CRITTER_INFERTILE
+msgctxt "PeterHan.FoodTooltip.FoodTooltipStrings.CRITTER_INFERTILE"
+msgid "{0}: Insufficient reproduction"
+msgstr "{0}: Reproduction insuffisante"
+
+#. PeterHan.FoodTooltip.FoodTooltipStrings.CRITTER_INFERTILE_TOOLTIP
+msgctxt "PeterHan.FoodTooltip.FoodTooltipStrings.CRITTER_INFERTILE_TOOLTIP"
+msgid "This critter is not reproducing enough to provide this item"
+msgstr "Cette créature ne se reproduit pas suffisamment pour fournir cet objet"
+
+#. PeterHan.FoodTooltip.FoodTooltipStrings.CRITTER_PER_CYCLE
+msgctxt "PeterHan.FoodTooltip.FoodTooltipStrings.CRITTER_PER_CYCLE"
+msgid "{0}: {1}"
+msgstr "{0}: {1}"
+
+#. PeterHan.FoodTooltip.FoodTooltipStrings.CRITTER_PER_CYCLE_TOOLTIP
+msgctxt "PeterHan.FoodTooltip.FoodTooltipStrings.CRITTER_PER_CYCLE_TOOLTIP"
+msgid "This critter's {2} will provide {1} if used to make {0}"
+msgstr "Le {2} de cette créature fournira {1} s'il est utilisé pour fabriquer {0}"
+
+#. PeterHan.FoodTooltip.FoodTooltipStrings.FOOD_RATE_CURRENT
+msgctxt "PeterHan.FoodTooltip.FoodTooltipStrings.FOOD_RATE_CURRENT"
+msgid "This Cycle: <color=#57b95e>+{0}</color> <color=#f44a47>-{1}</color>"
+msgstr "Ce cycle : <color=#57b95e>+{0}</color> <color=#f44a47>-{1}</color>"
+
+#. PeterHan.FoodTooltip.FoodTooltipStrings.FOOD_RATE_LAST1
+msgctxt "PeterHan.FoodTooltip.FoodTooltipStrings.FOOD_RATE_LAST1"
+msgid "Last Cycle: <color=#57b95e>+{0}</color> <color=#f44a47>-{1}</color>"
+msgstr "Dernier cycle : <color=#57b95e>+{0}</color> <color=#f44a47>-{1}</color>"
+
+#. PeterHan.FoodTooltip.FoodTooltipStrings.FOOD_RATE_LAST5
+msgctxt "PeterHan.FoodTooltip.FoodTooltipStrings.FOOD_RATE_LAST5"
+msgid "5 Cycle Average: <color=#57b95e>+{0}</color> <color=#f44a47>-{1}</color>"
+msgstr "Moyenne sur 5 cycles: <color=#57b95e>+{0}</color> <color=#f44a47>-{1}</color>"
+
+#. PeterHan.FoodTooltip.FoodTooltipStrings.PLANT_PER_CYCLE
+msgctxt "PeterHan.FoodTooltip.FoodTooltipStrings.PLANT_PER_CYCLE"
+msgid "{0}: {1}"
+msgstr "{0}: {1}"
+
+#. PeterHan.FoodTooltip.FoodTooltipStrings.PLANT_PER_CYCLE_TOOLTIP
+msgctxt "PeterHan.FoodTooltip.FoodTooltipStrings.PLANT_PER_CYCLE_TOOLTIP"
+msgid "This plant will provide {1} if used to make {0}"
+msgstr "Cette plante fournira {1} si elle est utilisée pour fabriquer {0}"
+
+#. PeterHan.FoodTooltip.FoodTooltipStrings.PLANT_WILTING
+msgctxt "PeterHan.FoodTooltip.FoodTooltipStrings.PLANT_WILTING"
+msgid "{0}: Not growing"
+msgstr "{0} : Pas en croissance"
+
+#. PeterHan.FoodTooltip.FoodTooltipStrings.PLANT_WILTING_TOOLTIP
+msgctxt "PeterHan.FoodTooltip.FoodTooltipStrings.PLANT_WILTING_TOOLTIP"
+msgid "This plant is not currently growing"
+msgstr "Cette plante n'est pas en croissance actuellement"

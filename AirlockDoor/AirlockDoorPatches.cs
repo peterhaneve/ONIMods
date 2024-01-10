@@ -16,12 +16,14 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
 using HarmonyLib;
 using PeterHan.PLib.AVC;
 using PeterHan.PLib.Buildings;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using System.Collections.Generic;
+using KMod;
 using UnityEngine;
 
 namespace PeterHan.AirlockDoor {
@@ -46,6 +48,14 @@ namespace PeterHan.AirlockDoor {
 				BUILDING_LAYER]) == null || !go.TryGetComponent(out AirlockDoor _));
 		}
 
+		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
+			var baseRover = PPatchTools.GetTypeSafe(nameof(BaseRoverConfig));
+			var targetMethod = new HarmonyMethod(typeof(AirlockDoorPatches),
+				nameof(AddTransitionLayer));
+			harmony.Patch(baseRover ?? typeof(ScoutRoverConfig), nameof(ScoutRoverConfig.
+				OnSpawn), targetMethod);
+		}
+
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			BUILDING_LAYER = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Building),
@@ -54,6 +64,15 @@ namespace PeterHan.AirlockDoor {
 			new PBuildingManager().Register(AirlockDoorConfig.CreateBuilding());
 			new PLocalization().Register();
 			new PVersionCheck().Register(this, new SteamVersionChecker());
+		}
+
+		/// <summary>
+		/// Applied to ScoutRoverConfig and/or BaseRoverConfig to ensure they properly use
+		/// airlock doors.
+		/// </summary>
+		private static void AddTransitionLayer(GameObject inst) {
+			if (inst.TryGetComponent(out Navigator nav))
+				nav.transitionDriver.overrideLayers.Add(new AirlockDoorTransitionLayer(nav));
 		}
 
 		/// <summary>
@@ -71,6 +90,23 @@ namespace PeterHan.AirlockDoor {
 				if (__instance.TryGetComponent(out Building building) && building.Def.
 						BuildingComplete.TryGetComponent(out AirlockDoor _))
 					___waitForFetchesBeforeDigging = true;
+			}
+		}
+
+		/// <summary>
+		/// Applied to DoorTransitionLayer to fix a base game bug where the void offsets
+		/// (which can be null if swapped with an empty transition) are recklessly used by
+		/// DoorTransitionLayer without any checks.
+		/// </summary>
+		[HarmonyPatch(typeof(DoorTransitionLayer), nameof(DoorTransitionLayer.BeginTransition))]
+		public static class DoorTransitionLayer_BeginTransition_Patch {
+			/// <summary>
+			/// Applied before BeginTransition runs.
+			/// </summary>
+			internal static void Prefix(Navigator.ActiveTransition transition) {
+				ref var pending = ref transition.navGridTransition;
+				if (pending.voidOffsets == null)
+					pending.voidOffsets = Array.Empty<CellOffset>();
 			}
 		}
 
@@ -107,24 +143,7 @@ namespace PeterHan.AirlockDoor {
 			/// Applied after OnSpawn runs.
 			/// </summary>
 			internal static void Postfix(GameObject go) {
-				if (go.TryGetComponent(out Navigator nav))
-					nav.transitionDriver.overrideLayers.Add(
-						new AirlockDoorTransitionLayer(nav));
-			}
-		}
-
-		/// <summary>
-		/// Applied to ScoutRoverConfig to add the navigator transition for airlocks.
-		/// </summary>
-		[HarmonyPatch(typeof(ScoutRoverConfig), nameof(ScoutRoverConfig.OnSpawn))]
-		public static class ScoutRoverConfig_OnSpawn_Patch {
-			/// <summary>
-			/// Applied after OnSpawn runs.
-			/// </summary>
-			internal static void Postfix(GameObject inst) {
-				if (inst.TryGetComponent(out Navigator nav))
-					nav.transitionDriver.overrideLayers.Add(
-						new AirlockDoorTransitionLayer(nav));
+				AddTransitionLayer(go);
 			}
 		}
 	}

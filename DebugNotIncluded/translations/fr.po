@@ -1,0 +1,410 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"X-Generator: Poedit 3.4.1\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.INPUT_BINDINGS.DEBUG.SNAPSHOT
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.INPUT_BINDINGS.DEBUG."
+"SNAPSHOT"
+msgid "Log UI element under cursor"
+msgstr "Enregistrer l'élément de l'interface sous le curseur"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODEVENTS.ACTIVATED
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODEVENTS.ACTIVATED"
+msgid "<b><style=\"logic_on\">Activated</style></b>"
+msgstr "<b><style=\"logic_on\">Activé</style></b>"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODEVENTS.DEACTIVATED
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODEVENTS.DEACTIVATED"
+msgid "<b><style=\"logic_off\">Deactivated</style></b>"
+msgstr "<b><style=\"logic_off\">Désactivé</style></b>"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODEVENTS.NOTLOADED
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODEVENTS.NOTLOADED"
+msgid "<b><style=\"logic_off\">Not loaded</style></b>"
+msgstr "<b><style=\"logic_off\">Non chargé</style></b>"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.CANCEL
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.CANCEL"
+msgid "CANCEL"
+msgstr "ANNULER"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.CAPTION
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.CAPTION"
+msgid "Title"
+msgstr "Titre"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.DATA_PATH
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.DATA_PATH"
+msgid "Mod Data"
+msgstr "Données du mod"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.DESC
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.DESC"
+msgid "Description"
+msgstr "Description"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.IMAGE_PATH
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.IMAGE_PATH"
+msgid "Preview Image"
+msgstr "Image de prévisualisation"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.OK
+msgctxt "PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.OK"
+msgid "OK"
+msgstr "OK"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.PATCHNOTES
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.PATCHNOTES"
+msgid "Patch Notes"
+msgstr "Notes de mise à jour"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.SUCCESS
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.SUCCESS"
+msgid "Succesfully updated mod <b>{0}</b>!"
+msgstr "Mise à jour réussie du mod <b>{0}</b> !"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.TITLE
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYDIALOG.TITLE"
+msgid "UPDATE MOD <i>{0}</i>"
+msgstr "METTRE À JOUR LE MOD <i>{0}</i>"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYFAILEDDIALOG.TEXT
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODIFYFAILEDDIALOG.TEXT"
+msgid ""
+"Unable to modify mod <b>{0}</b>.\n"
+"Mods can only be edited if you are the owner."
+msgstr ""
+"Impossible de modifier le mod <b>{0}</b>. Les mods ne peuvent être modifiés "
+"que si vous en êtes le propriétaire."
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.BUTTON_ALL
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.BUTTON_ALL"
+msgid "ALL"
+msgstr "TOUT"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.BUTTON_LOCAL
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.BUTTON_LOCAL"
+msgid "Local Folder"
+msgstr "Dossier Local"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.BUTTON_MODIFY
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.BUTTON_MODIFY"
+msgid "Edit"
+msgstr "Modifier"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.BUTTON_SUBSCRIPTION
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"BUTTON_SUBSCRIPTION"
+msgid "Subscription"
+msgstr "Abonnement"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.BUTTON_UNSUB
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.BUTTON_UNSUB"
+msgid "Unsubscribe"
+msgstr "Se désabonner"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_ARCHIVED_VERSION_ACTIVE
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_ARCHIVED_VERSION_ACTIVE"
+msgid ""
+"• <style=\"logic_on\"><b>{0}</b>: Supports {1} since version {2:D} (API v{3:"
+"D})</style>\n"
+msgstr ""
+"• <style=\"logic_on\"><b>{0}</b> : Supporte {1} depuis la version {2:D} (API "
+"v{3:D})</style>\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_ARCHIVED_VERSION_DEFAULT
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_ARCHIVED_VERSION_DEFAULT"
+msgid "Base"
+msgstr "Base"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_ARCHIVED_VERSION_INACTIVE
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_ARCHIVED_VERSION_INACTIVE"
+msgid "• <b>{0}</b>: Supports {1} since version {2:D} (API v{3:D})\n"
+msgstr "• <b>{0}</b> : Supporte {1} depuis la version {2:D} (API v{3:D})\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_ARCHIVED_VERSIONS
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_ARCHIVED_VERSIONS"
+msgid "<b>Versions</b>:\n"
+msgstr "<b>Versions</b> :\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_ASSEMBLY_NOCODE
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_ASSEMBLY_NOCODE"
+msgid "<style=logic_off><b>No code loaded</b></style>"
+msgstr "<style=logic_off><b>Aucun code chargé</b></style>"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_CONTENT
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_CONTENT"
+msgid "<b>Enabled content</b>: {0}\n"
+msgstr "<b>Contenu activé</b> : {0}\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_DESCRIPTION
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_DESCRIPTION"
+msgid "<b>Mod ID</b>: {0} ({1})\n"
+msgstr "<b>Mod ID</b> : {0} ({1})\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_DLC_ALL
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_DLC_ALL"
+msgid "All"
+msgstr "TOUT"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_DLC_ENABLE
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_DLC_ENABLE"
+msgid "<b>Enabled for DLCs</b>: {0}\n"
+msgstr "<b>Activé pour les DLC</b> : {0}\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_DLC_EXPANSION1
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_DLC_EXPANSION1"
+msgid "Spaced Out"
+msgstr "Spaced Out"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_DLC_VANILLA
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_DLC_VANILLA"
+msgid "Vanilla"
+msgstr "Vanilla"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_PATCHES
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_PATCHES"
+msgid "<b>Patches registered by ONI</b>: {0:D}\n"
+msgstr "<b>Patchs enregistrés par ONI</b> : {0:D}\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_PLIB
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_PLIB"
+msgid "PLib Version: {0}"
+msgstr "Version PLib : {0}"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_PLIB_MERGED
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_PLIB_MERGED"
+msgid " <b>merged</b>"
+msgstr " <b>fusionné</b>"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_PLIB_PACKED
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_PLIB_PACKED"
+msgid " <b>packed</b>"
+msgstr " <b>conditionné</b>"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_THISMOD
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_THISMOD"
+msgid "Thank you for using Debug Not Included!"
+msgstr "Merci d'avoir utilisé Debug Not Included !"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_VERSIONS_ASSEMBLY
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_VERSIONS_ASSEMBLY"
+msgid "<b>{0}</b>: {1}Assembly Version {2}\n"
+msgstr "<b>{0}</b> : {1}Version de l'assemblage {2}\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_VERSIONS_BOTH
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_VERSIONS_BOTH"
+msgid "<b>{0}</b>: Version {1}\n"
+msgstr "<b>{0}</b> : version {1}\n"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN.LABEL_VERSIONS_FILE
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.MODSSCREEN."
+"LABEL_VERSIONS_FILE"
+msgid "File Version {0}, "
+msgstr "Version du fichier {0}, "
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.CANCEL
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.CANCEL"
+msgid "CONTINUE"
+msgstr "CONTINUER"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.CONFIRM
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.CONFIRM"
+msgid "MOVE TO TOP"
+msgstr "DÉPLACER EN HAUT"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.IGNORE
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.IGNORE"
+msgid "DISABLE THIS WARNING"
+msgstr "DÉSACTIVER CET AVERTISSEMENT"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.TEXT
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.TEXT"
+msgid ""
+"Debug Not Included is not the first active mod in the load order.\n"
+"Debug Not Included can only debug mods loaded after it.\n"
+"\n"
+"Move Debug Not Included to the first position?"
+msgstr ""
+"Debug Not Included n'est pas le premier mod actif dans l'ordre de "
+"chargement. \n"
+"Debug Not Included ne peut déboguer que les mods chargés après lui.\n"
+"\n"
+"Déplacer Debug Not Included en première position ?"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.TITLE
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.NOTFIRSTDIALOG.TITLE"
+msgid "LOAD ORDER"
+msgstr "ORDRE DE CHARGEMENT"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_ALL
+msgctxt "PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_ALL"
+msgid "Enable or disable all"
+msgstr "Activer ou désactiver tout"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_BOTTOM
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_BOTTOM"
+msgid "Move to bottom"
+msgstr "Déplacer vers le bas"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_CELL
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_CELL"
+msgid "Cell: {0:D} ({1:D}, {2:D})"
+msgstr "Cellule : {0:D} ({1:D}, {2:D})"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_DOWN
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_DOWN"
+msgid "Move down 10 slots"
+msgstr "Descendre de 10 places"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_INSTANT_GROW
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS."
+"DNI_INSTANT_GROW"
+msgid "Set plant growth to 100%"
+msgstr "Régler la croissance de la plante à 100 %"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_INSTANT_TAME
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS."
+"DNI_INSTANT_TAME"
+msgid "Set wildness to 0%"
+msgstr "Fixer l'état sauvage à 0%"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_MODIFY
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_MODIFY"
+msgid "Modify this mod"
+msgstr "Modifier ce mod"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_OVERJOY
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_OVERJOY"
+msgid "Start this Duplicant's Overjoyed reaction immediately"
+msgstr "Lancez immédiatement la réaction de joie de ce Duplicant"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_PLIB
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_PLIB"
+msgid ""
+"The currently active version of PLib\n"
+"From Mod: <b>{0}</b>"
+msgstr ""
+"La version actuellement active de PLib\n"
+"From Mod : <b>{0}</b>"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_STRESSOUT
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_STRESSOUT"
+msgid "Start this Duplicant's Stress reaction immediately"
+msgstr "Lancer immédiatement la réaction de stress du Duplicant"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_TOP
+msgctxt "PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_TOP"
+msgid "Move to top"
+msgstr "Déplacer en haut"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_UNSUB
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_UNSUB"
+msgid "Unsubscribe from this mod"
+msgstr "Se désabonner de ce mod"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_UP
+msgctxt "PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.TOOLTIPS.DNI_UP"
+msgid "Move up 10 slots"
+msgstr "Avancer de 10 places"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.UNSUBFAILEDDIALOG.TEXT
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.UNSUBFAILEDDIALOG.TEXT"
+msgid "Unable to unsubscribe from mod <b>{0}</b>."
+msgstr "Impossible de se désabonner du mod <b>{0}</b>."
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.USERMENUOPTIONS.INSTANTGROW
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.USERMENUOPTIONS."
+"INSTANTGROW"
+msgid "Instantly Grow"
+msgstr "Croissance instantanée"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.USERMENUOPTIONS.OVERJOY
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.USERMENUOPTIONS.OVERJOY"
+msgid "Start Overjoyed Reaction"
+msgstr "Début de la réaction de joie"
+
+#. PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.USERMENUOPTIONS.STRESSOUT
+msgctxt ""
+"PeterHan.DebugNotIncluded.DebugNotIncludedStrings.UI.USERMENUOPTIONS."
+"STRESSOUT"
+msgid "Start Stress Reaction"
+msgstr "Début de la réaction au stress"
