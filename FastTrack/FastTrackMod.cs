@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2023 Peter Han
+ * Copyright 2024 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -203,8 +203,8 @@ namespace PeterHan.FastTrack {
 			int overrideCoreCount = TuningData<CPUBudget.Tuning>.Get().overrideCoreCount,
 				coreCount = UnityEngine.SystemInfo.processorCount;
 			PUtil.InitLibrary();
-			LocString.CreateLocStringKeys(typeof(FastTrackStrings.UI));
 			new PLocalization().Register();
+			LocString.CreateLocStringKeys(typeof(FastTrackStrings.UI));
 			new POptions().RegisterOptions(this, typeof(FastTrackOptions));
 			new PPatchManager(harmony).RegisterPatchClass(typeof(FastTrackMod));
 			new PVersionCheck().Register(this, new SteamVersionChecker());

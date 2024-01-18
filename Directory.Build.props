@@ -65,7 +65,7 @@
   <PropertyGroup>
     <Product>PeterHanONIMods</Product>
     <Authors>Peter Han</Authors>
-    <Copyright>Copyright ©Peter Han 2023</Copyright>
+    <Copyright>Copyright ©Peter Han 2024</Copyright>
     <TargetFramework>net471</TargetFramework>
     <SupportedContent>VANILLA_ID,EXPANSION1_ID</SupportedContent>
     <LastWorkingBuild>0</LastWorkingBuild>
