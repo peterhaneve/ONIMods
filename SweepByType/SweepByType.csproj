@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Sweep By Type</AssemblyTitle>
-    <FileVersion>3.2.0.0</FileVersion>
+    <FileVersion>3.3.0.0</FileVersion>
     <RootNamespace>PeterHan.SweepByType</RootNamespace>
     <Description>Adds an optional material type filter to the Sweep tool.</Description>
     <AssemblyVersion>3.1.0.0</AssemblyVersion>

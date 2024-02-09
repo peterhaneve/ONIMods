@@ -160,7 +160,7 @@ namespace PeterHan.SweepByType {
 				Text = STRINGS.UI.UISIDESCREENS.TREEFILTERABLESIDESCREEN.ALLBUTTON,
 				CheckSize = ROW_SIZE, InitialState = PCheckBox.STATE_CHECKED,
 				OnChecked = OnCheck, TextStyle = PUITuning.Fonts.TextDarkStyle
-			}.AddOnRealize((obj) => allItems = obj)).AddOnRealize((obj) => childPanel = obj);
+			}.AddOnRealize(obj => allItems = obj)).AddOnRealize(obj => childPanel = obj);
 			// Scroll to select elements
 			var sp = new PScrollPane("Scroll") {
 				Child = cp, ScrollHorizontal = false, ScrollVertical = true,
@@ -169,9 +169,13 @@ namespace PeterHan.SweepByType {
 			// Title bar
 			var title = new PLabel("Title") {
 				TextAlignment = TextAnchor.MiddleCenter, Text = SweepByTypeStrings.
-				DIALOG_TITLE, FlexSize = Vector2.right, Margin = TITLE_MARGIN,
-				Sprite = PUITuning.Images.BoxBorder, SpriteMode = Image.Type.Sliced
-			}.SetKleiPinkColor();
+				DIALOG_TITLE, FlexSize = Vector2.right, Margin = TITLE_MARGIN
+			}.SetKleiPinkColor().AddOnRealize(obj => {
+				var img = obj.AddOrGet<Image>();
+				img.sprite = PUITuning.Images.BoxBorder;
+				img.type = Image.Type.Sliced;
+				img.preserveAspect = true;
+			});
 			// 1px black border on the rest of the dialog for contrast
 			RootPanel = new PRelativePanel("Border") {
 				BackImage = PUITuning.Images.BoxBorder, ImageMode = Image.Type.Sliced,
