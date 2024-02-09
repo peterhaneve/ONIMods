@@ -19,6 +19,7 @@
 using HarmonyLib;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -47,11 +48,7 @@ namespace PeterHan.PLib.Core {
 		/// This method is non-virtual for a reason, as the ID is sometimes only available
 		/// on methods of type object, so GetType().FullName is used directly there.
 		/// </summary>
-		public string ID {
-			get {
-				return GetType().FullName;
-			}
-		}
+		public string ID => GetType().FullName;
 
 		/// <summary>
 		/// The JSON serialization settings to be used if the Data is marshaled across
@@ -287,6 +284,17 @@ namespace PeterHan.PLib.Core {
 		/// <param name="value">The new value for the shared data.</param>
 		public void SetSharedData(object value) {
 			PRegistry.Instance.SetSharedData(ID, value);
+		}
+
+		/// <summary>
+		/// Compares two forwarded components to each other. The latest versions will be
+		/// sorted first.
+		/// </summary>
+		public sealed class PComponentComparator : IComparer<PForwardedComponent> {
+			public int Compare(PForwardedComponent a, PForwardedComponent b) {
+				return b == null ? (a == null ? 0 : -1) : (a == null ? 1 : b.Version.
+					CompareTo(a.Version));
+			}
 		}
 	}
 }

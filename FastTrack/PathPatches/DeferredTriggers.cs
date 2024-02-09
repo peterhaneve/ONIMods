@@ -121,20 +121,22 @@ namespace PeterHan.FastTrack.PathPatches {
 						src.DestroySelf();
 				}
 			}
-			while (cacheCellPending.TryDequeue(out var item)) {
-				int cell = Grid.PosToCell(item.transform.position), oldCell = item.cachedCell;
-				if (cell != oldCell) {
+			while (cacheCellPending.TryDequeue(out var item))
+				// Pickupables can be destroyed mid-frame
+				if (item != null) {
+					int cell = Grid.PosToCell(item.transform.position), oldCell = item.cachedCell;
+					if (cell != oldCell) {
 #if DEBUG
-					PUtil.LogDebug("Adjusted bugged item {0} from {1:D} to {2:D}".F(
-						item.name, oldCell, cell));
+						PUtil.LogDebug("Adjusted bugged item {0} from {1:D} to {2:D}".F(
+							item.name, oldCell, cell));
 #endif
-					item.UpdateCachedCell(cell);
-					gsp.UpdatePosition(item.solidPartitionerEntry, cell);
-					gsp.UpdatePosition(item.partitionerEntry, cell);
-					item.NotifyChanged(oldCell);
-					item.NotifyChanged(cell);
+						item.UpdateCachedCell(cell);
+						gsp.UpdatePosition(item.solidPartitionerEntry, cell);
+						gsp.UpdatePosition(item.partitionerEntry, cell);
+						item.NotifyChanged(oldCell);
+						item.NotifyChanged(cell);
+					}
 				}
-			}
 			while (offsetPending.TryDequeue(out var offset))
 				offset.offsets.GetOffsets(offset.newCell);
 		}

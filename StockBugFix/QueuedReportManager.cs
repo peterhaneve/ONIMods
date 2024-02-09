@@ -52,27 +52,47 @@ namespace PeterHan.StockBugFix {
 		internal static void QueueDelayedSanitize(KMod.Manager manager, GameObject _) {
 			Instance.QueueReport(true);
 		}
+		
+		/// <summary>
+		/// Returns true if a report can (probably) be safely requested (by opening the Mods
+		/// menu).
+		/// </summary>
+		/// <returns>true if a report is unlikely to reinstall all mods, or false if you should
+		/// wait longer.</returns>
+		internal bool ReadyToReport {
+			get {
+				bool ready = false;
+				lock (reportLock) {
+					float time = lastSanitizeTime;
+					// Due for a report?
+					if (time > 0.0f && Time.unscaledTime - time > QUEUED_REPORT_DELAY)
+						ready = true;
+				}
+				return ready;
+			}
+		}
 
 		/// <summary>
 		/// The last Time.unscaledTime value when a report was generated. 0.0 if no
 		/// report is pending.
 		/// </summary>
-		private float lastReportTime;
+		private volatile float lastReportTime;
+		
+		/// <summary>
+		/// The last Time.unscaledTime value when a sanitize request was made. 0.0 if no
+		/// sanitize is pending.
+		/// </summary>
+		private volatile float lastSanitizeTime;
 
 		/// <summary>
 		/// Manages multithreaded access to this object.
 		/// </summary>
 		private readonly object reportLock;
 
-		/// <summary>
-		/// Whether a sanitization pass was requested by Steam.
-		/// </summary>
-		private bool sanitizeRequested;
-
 		private QueuedReportManager() {
 			lastReportTime = 0.0f;
+			lastSanitizeTime = 0.0f;
 			reportLock = new object();
-			sanitizeRequested = false;
 		}
 
 		/// <summary>
@@ -85,12 +105,11 @@ namespace PeterHan.StockBugFix {
 			lock (reportLock) {
 				float time = lastReportTime;
 				// Due for a report?
-				if (time > 0.0f && (Time.unscaledTime - lastReportTime) >
-						QUEUED_REPORT_DELAY) {
-					sanitize = sanitizeRequested;
+				if (time > 0.0f && Time.unscaledTime - time > QUEUED_REPORT_DELAY) {
+					sanitize = lastSanitizeTime > 0.0f;
 					report = true;
 					lastReportTime = 0.0f;
-					sanitizeRequested = false;
+					lastSanitizeTime = 0.0f;
 				}
 			}
 			if (report && parent != null) {
@@ -107,9 +126,10 @@ namespace PeterHan.StockBugFix {
 		/// </summary>
 		internal void QueueReport(bool sanitize) {
 			lock (reportLock) {
-				lastReportTime = Time.unscaledTime;
+				float now = Time.unscaledTime;
+				lastReportTime = now;
 				if (sanitize)
-					sanitizeRequested = true;
+					lastSanitizeTime = now;
 			}
 		}
 	}

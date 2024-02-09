@@ -60,7 +60,7 @@ namespace PeterHan.PLib.AVC {
 
 		private static readonly ConstructorInfo NEW_PUBLISHED_FILE_ID = PUBLISHED_FILE_ID?.
 			GetConstructor(PPatchTools.BASE_FLAGS | BindingFlags.Instance, null,
-			new Type[] { typeof(ulong) }, null);
+			new[] { typeof(ulong) }, null);
 
 		/// <summary>
 		/// The number of minutes allowed before a mod is considered out of date.
@@ -87,9 +87,9 @@ namespace PeterHan.PLib.AVC {
 			ModVersionCheckResults results = null;
 			// Mod takes time to be populated in the list
 			if (inst != null && FIND_MOD.Invoke(inst, boxedID) is
-				SteamUGCService.Mod steamMod) {
+					SteamUGCService.Mod steamMod) {
 				ulong ticks = steamMod.lastUpdateTime;
-				var steamUpdate = (ticks == 0U) ? System.DateTime.MinValue :
+				var steamUpdate = ticks == 0U ? System.DateTime.MinValue :
 					UnixEpochToDateTime(ticks);
 				bool updated = steamUpdate <= GetLocalLastModified(id).AddMinutes(
 					UPDATE_JITTER);
@@ -109,7 +109,7 @@ namespace PeterHan.PLib.AVC {
 			// Create a published file object, leave it boxed
 			if (GET_ITEM_INSTALL_INFO != null) {
 				// 260 = MAX_PATH
-				var methodArgs = new object[] {
+				var methodArgs = new[] {
 					NEW_PUBLISHED_FILE_ID.Invoke(new object[] { id }), 0UL, "", 260U, 0U
 				};
 				if (GET_ITEM_INSTALL_INFO.Invoke(null, methodArgs) is bool success &&

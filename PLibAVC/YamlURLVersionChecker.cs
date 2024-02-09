@@ -18,8 +18,8 @@
 
 using Klei;
 using KMod;
-using PeterHan.PLib.Core;
 using System;
+using PeterHan.PLib.Core;
 using UnityEngine.Networking;
 
 namespace PeterHan.PLib.AVC {
@@ -71,7 +71,7 @@ namespace PeterHan.PLib.AVC {
 					PUtil.LogDebug("Current version: {0} New YAML version: {1}".F(
 						curVersion, newVersion));
 #endif
-					result = new ModVersionCheckResults(mod.staticID, newVersion !=
+					result = new ModVersionCheckResults(mod.staticID, newVersion ==
 						curVersion, newVersion);
 				}
 			}

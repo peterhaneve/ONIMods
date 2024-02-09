@@ -110,6 +110,16 @@ namespace PeterHan.PLib.Core {
 		public static LocString RESTART_OK = STRINGS.UI.FRONTEND.MOD_DIALOGS.RESTART.OK;
 
 		/// <summary>
+		/// Displayed in the menu when mods report as being outdated.
+		/// </summary>
+		public static LocString MAINMENU_UPDATE = "\n\n<color=#FFCC00>{0:D} mods may be out of date</color>";
+
+		/// <summary>
+		/// Displayed in the menu when a mod reports as being outdated.
+		/// </summary>
+		public static LocString MAINMENU_UPDATE_1 = "\n\n<color=#FFCC00>1 mod may be out of date</color>";
+
+		/// <summary>
 		/// The details tooltip when AVC detects a mod to be outdated.
 		/// </summary>
 		public static LocString OUTDATED_TOOLTIP = "This mod is out of date!\nNew version: <b>{0}</b>\n\nUpdate local mods manually, or use <b>Mod Updater</b> to force update Steam mods";

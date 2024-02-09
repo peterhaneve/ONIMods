@@ -23,6 +23,28 @@ msgctxt "PeterHan.PLib.Core.PLibStrings.DIALOG_TITLE"
 msgid "Options for {0}"
 msgstr "Options pour {0}"
 
+#. PeterHan.PLib.Core.PLibStrings.MAINMENU_UPDATE
+msgctxt "PeterHan.PLib.Core.PLibStrings.MAINMENU_UPDATE"
+msgid ""
+"\n"
+"\n"
+"<color=#FFCC00>{0:D} mods may be out of date</color>"
+msgstr ""
+"\n"
+"\n"
+"<color=#FFCC00>{0:D} mods peuvent être obsolètes</color>"
+
+#. PeterHan.PLib.Core.PLibStrings.MAINMENU_UPDATE_1
+msgctxt "PeterHan.PLib.Core.PLibStrings.MAINMENU_UPDATE_1"
+msgid ""
+"\n"
+"\n"
+"<color=#FFCC00>1 mod may be out of date</color>"
+msgstr ""
+"\n"
+"\n"
+"<color=#FFCC00>1 mod peut être obsolète</color>"
+
 #. PeterHan.PLib.Core.PLibStrings.MOD_ASSEMBLY_VERSION
 msgctxt "PeterHan.PLib.Core.PLibStrings.MOD_ASSEMBLY_VERSION"
 msgid "Assembly Version: {0}"

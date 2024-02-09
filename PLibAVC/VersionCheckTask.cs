@@ -18,7 +18,7 @@
 
 using PeterHan.PLib.Core;
 using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace PeterHan.PLib.AVC {
 	/// <summary>
@@ -43,10 +43,10 @@ namespace PeterHan.PLib.AVC {
 		/// <summary>
 		/// The location where the outcome of mod version checking will be stored.
 		/// </summary>
-		private readonly ConcurrentDictionary<string, ModVersionCheckResults> results;
+		private readonly ICollection<ModVersionCheckResults> results;
 
 		internal VersionCheckTask(KMod.Mod mod, IModVersionChecker method,
-				ConcurrentDictionary<string, ModVersionCheckResults> results) {
+				ICollection<ModVersionCheckResults> results) {
 			this.mod = mod ?? throw new ArgumentNullException(nameof(mod));
 			this.method = method ?? throw new ArgumentNullException(nameof(method));
 			this.results = results ?? throw new ArgumentNullException(nameof(results));
@@ -61,7 +61,7 @@ namespace PeterHan.PLib.AVC {
 		private void OnComplete(ModVersionCheckResults result) {
 			method.OnVersionCheckCompleted -= OnComplete;
 			if (result != null) {
-				results.TryAdd(result.ModChecked, result);
+				results.Add(result);
 				if (!result.IsUpToDate)
 					PUtil.LogWarning("Mod {0} is out of date! New version: {1}".F(result.
 						ModChecked, result.NewVersion ?? "unknown"));
@@ -70,8 +70,8 @@ namespace PeterHan.PLib.AVC {
 					PUtil.LogDebug("Mod {0} is up to date".F(result.ModChecked));
 #endif
 				}
-			} else
-				RunNext();
+			}
+			RunNext();
 		}
 
 		/// <summary>
@@ -79,10 +79,16 @@ namespace PeterHan.PLib.AVC {
 		/// it is not null.
 		/// </summary>
 		internal void Run() {
-			if (results.ContainsKey(mod.staticID))
-				RunNext();
-			else {
-				bool run = false;
+			bool found = false;
+			// Usually there are few results, and using a dictionary has problems with
+			// the Values list being a snapshot at the time
+			foreach (var result in results)
+				if (result.ModChecked == mod.staticID) {
+					found = true;
+					break;
+				}
+			if (!found) {
+				bool run;
 				method.OnVersionCheckCompleted += OnComplete;
 				// Version check errors should not crash the game
 				try {

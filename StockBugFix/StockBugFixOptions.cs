@@ -57,6 +57,14 @@ namespace PeterHan.StockBugFix {
 		[Option("Fix Trait Conflicts", "Prevents nonsensical combinations of traits and interests that contradict each other from appearing.")]
 		[JsonProperty]
 		public bool FixTraits { get; set; }
+		
+		/// <summary>
+		/// If true, locks out the Mods button until the race condition which reinstalls all
+		/// mods clears out, or until the timeout passes.
+		/// </summary>
+		[Option("Prevent Mod Reinstalls", "Disable the Mods menu until the vanilla game race condition that could reinstall all mods resolves.")]
+		[JsonProperty]
+		public bool DelayModsMenu { get; set; }
 
 		/// <summary>
 		/// Allows changing food storage to a store errand. Does not affect cooking supply.
@@ -67,6 +75,7 @@ namespace PeterHan.StockBugFix {
 
 		public StockBugFixOptions() {
 			AllowTepidizerPulsing = false;
+			DelayModsMenu = false;
 			FixMultipleAttributes = true;
 			FixOverheat = true;
 			FixTraits = true;
@@ -74,8 +83,9 @@ namespace PeterHan.StockBugFix {
 		}
 
 		public override string ToString() {
-			return "StockBugFixOptions[allowTepidizer={1},fixOverheat={0},foodChoreType={2},fixAttributes={3}]".F(
-				FixOverheat, AllowTepidizerPulsing, StoreFoodChoreType, FixMultipleAttributes);
+			return "StockBugFixOptions[allowTepidizer={1},fixOverheat={0},foodChoreType={2},fixAttributes={3},fixTraits={4},delayModsMenu={5}]".F(
+				FixOverheat, AllowTepidizerPulsing, StoreFoodChoreType, FixMultipleAttributes,
+				FixTraits, DelayModsMenu);
 		}
 	}
 

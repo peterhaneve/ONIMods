@@ -19,7 +19,6 @@
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -38,6 +37,12 @@ namespace PeterHan.PLib.AVC {
 		/// <param name="result">The results of the check. If null, the check has failed,
 		/// and the next version should be tried.</param>
 		public delegate void OnVersionCheckComplete(ModVersionCheckResults result);
+
+		/// <summary>
+		/// Versions of PVersionCheck older than this version are broken and do not pass the
+		/// linked list correctly.
+		/// </summary>
+		private static readonly Version WORKING_VERSION = new Version(4, 14, 0, 0);
 
 		/// <summary>
 		/// The instantiated copy of this class.
@@ -59,7 +64,7 @@ namespace PeterHan.PLib.AVC {
 			if (assembly != null) {
 				version = assembly.GetFileVersion();
 				if (string.IsNullOrEmpty(version))
-					version = assembly.GetName()?.Version?.ToString();
+					version = assembly.GetName().Version?.ToString();
 			}
 			return version;
 		}
@@ -103,8 +108,10 @@ namespace PeterHan.PLib.AVC {
 			return version;
 		}
 
-		private static void MainMenu_OnSpawn_Postfix() {
+		private static void MainMenu_OnSpawn_Postfix(MainMenu __instance) {
 			Instance?.RunVersionCheck();
+			if (__instance != null)
+				__instance.gameObject.AddOrGet<ModOutdatedWarning>();
 		}
 
 		private static void ModsScreen_BuildDisplay_Postfix(System.Collections.IEnumerable
@@ -121,16 +128,34 @@ namespace PeterHan.PLib.AVC {
 		private readonly IDictionary<string, VersionCheckMethods> checkVersions;
 
 		/// <summary>
+		/// The number of mods that appear to be outdated.
+		/// </summary>
+		public int OutdatedMods {
+			get {
+				int outdated = 0;
+				foreach (var mod in results)
+					if (!mod.IsUpToDate) outdated++;
+				return outdated;
+			}
+		}
+
+		/// <summary>
 		/// The location where the outcome of mod version checking will be stored.
 		/// </summary>
-		private readonly ConcurrentDictionary<string, ModVersionCheckResults> results;
+		private readonly ICollection<ModVersionCheckResults> results;
+		
+		/// <summary>
+		/// Stores results by the mod static ID. Only populated in the active instance.
+		/// </summary>
+		private readonly IDictionary<string, ModVersionCheckResults> resultsByMod;
 
 		public override Version Version => VERSION;
 
 		public PVersionCheck() {
 			checkVersions = new Dictionary<string, VersionCheckMethods>(8);
-			results = new ConcurrentDictionary<string, ModVersionCheckResults>(2, 16);
-			InstanceData = results.Values;
+			results = new List<ModVersionCheckResults>(8);
+			resultsByMod = new Dictionary<string, ModVersionCheckResults>(32);
+			InstanceData = results;
 		}
 
 		/// <summary>
@@ -149,7 +174,7 @@ namespace PeterHan.PLib.AVC {
 			string id;
 			if (rowInstance != null && mods != null && index >= 0 && index < mods.Count &&
 					!string.IsNullOrEmpty(id = mods[index]?.staticID) && rowInstance.
-					TryGetComponent(out HierarchyReferences hr) && results.TryGetValue(id,
+					TryGetComponent(out HierarchyReferences hr) && resultsByMod.TryGetValue(id,
 					out ModVersionCheckResults data) && data != null)
 				// Version text is thankfully known, even if other mods have added buttons
 				AddWarningIfOutdated(data, hr.GetReference<LocText>("Version"));
@@ -188,9 +213,9 @@ namespace PeterHan.PLib.AVC {
 				VersionCheckTask first = null, previous = null;
 				results.Clear();
 				foreach (var pair in checkVersions) {
-					string staticID = pair.Key;
 					var mod = pair.Value;
 #if DEBUG
+					string staticID = pair.Key;
 					PUtil.LogDebug("Checking version for mod {0}".F(staticID));
 #endif
 					foreach (var checker in mod.Methods) {
@@ -198,9 +223,10 @@ namespace PeterHan.PLib.AVC {
 							Next = runNext
 						};
 						if (previous != null)
-							previous.Next = runNext;
+							previous.Next = node.Run;
 						if (first == null)
 							first = node;
+						previous = node;
 					}
 				}
 				first?.Run();
@@ -220,14 +246,12 @@ namespace PeterHan.PLib.AVC {
 		/// <param name="mod">The mod instance to check.</param>
 		/// <param name="checker">The method to use for checking the mod version.</param>
 		public void Register(KMod.UserMod2 mod, IModVersionChecker checker) {
-			var kmod = mod?.mod;
-			if (kmod == null)
-				throw new ArgumentNullException(nameof(mod));
+			var kmod = mod?.mod ?? throw new ArgumentNullException(nameof(mod));
 			if (checker == null)
 				throw new ArgumentNullException(nameof(checker));
 			RegisterForForwarding();
 			string staticID = kmod.staticID;
-			if (!checkVersions.TryGetValue(staticID, out VersionCheckMethods checkers))
+			if (!checkVersions.TryGetValue(staticID, out var checkers))
 				checkVersions.Add(staticID, checkers = new VersionCheckMethods(kmod));
 			checkers.Methods.Add(checker);
 		}
@@ -237,16 +261,27 @@ namespace PeterHan.PLib.AVC {
 		/// </summary>
 		private void ReportResults() {
 			var allMods = PRegistry.Instance.GetAllComponents(ID);
-			results.Clear();
-			if (allMods != null)
+			if (allMods != null) {
+				var inst = ModOutdatedWarning.Instance;
 				// Consolidate them through JSON roundtrip into results dictionary
+				resultsByMod.Clear();
 				foreach (var mod in allMods) {
 					var modResults = mod.GetInstanceDataSerialized<ICollection<
 						ModVersionCheckResults>>();
 					if (modResults != null)
-						foreach (var result in modResults)
-							results.TryAdd(result.ModChecked, result);
+						foreach (var result in modResults) {
+							string id = result.ModChecked;
+							if (!resultsByMod.ContainsKey(id))
+								resultsByMod[id] = result;
+						}
 				}
+				results.Clear();
+				foreach (var pair in resultsByMod)
+					results.Add(pair.Value);
+				// Attempt to update the main menu
+				if (inst != null)
+					inst.StartCoroutine(inst.UpdateTextThreaded());
+			}
 		}
 
 		/// <summary>
@@ -284,7 +319,11 @@ namespace PeterHan.PLib.AVC {
 					PVersionCheck parent) {
 				if (allMods == null)
 					throw new ArgumentNullException(nameof(allMods));
-				checkAllVersions = new List<PForwardedComponent>(allMods);
+				var modList = new List<PForwardedComponent>(allMods);
+				// Due to bugs in older versions of PVersionCheck, try to run all of the
+				// working ones first
+				modList.Sort(new PComponentComparator());
+				checkAllVersions = modList;
 				index = 0;
 				this.parent = parent ?? throw new ArgumentNullException(nameof(parent));
 			}
@@ -294,16 +333,29 @@ namespace PeterHan.PLib.AVC {
 			/// </summary>
 			internal void Run() {
 				int n = checkAllVersions.Count;
-				if (index >= n)
-					parent.ReportResults();
+				bool allowReport = true;
 				while (index < n) {
 					var doCheck = checkAllVersions[index++];
-					if (doCheck != null) {
-						doCheck.Process(0, new System.Action(Run));
-						break;
-					} else if (index >= n)
+					if (doCheck == null)
+						PUtil.LogDebug("Invalid version checker reported by PForwardedComponent!");
+					else if (doCheck.Version.CompareTo(WORKING_VERSION) < 0) {
+#if DEBUG
+						if (index < n)
+							PUtil.LogWarning("Skipped {0:D} broken PLib version checks".
+								F(n - index));
+#endif
+						// All remaining versions are bad
 						parent.ReportResults();
+						allowReport = false;
+						break;
+					} else {
+						doCheck.Process(0, new System.Action(Run));
+						allowReport = false;
+						break;
+					}
 				}
+				if (index >= n && allowReport)
+					parent.ReportResults();
 			}
 
 			public override string ToString() {
@@ -320,7 +372,7 @@ namespace PeterHan.PLib.AVC {
 			/// </summary>
 			internal IList<IModVersionChecker> Methods { get; }
 
-			// <summary>
+			/// <summary>
 			/// The mod whose version will be checked.
 			/// </summary>
 			internal KMod.Mod ModToCheck { get; }

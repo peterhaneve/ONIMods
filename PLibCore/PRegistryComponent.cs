@@ -119,8 +119,8 @@ namespace PeterHan.PLib.Core {
 				bool first = list.Count < 1;
 				list.Add(instance);
 #if DEBUG
-				PRegistry.LogPatchDebug("Candidate version of {0} from {1}".F(id, instance.
-					GetOwningAssembly()));
+				PRegistry.LogPatchDebug("Candidate version {2} of {0} from {1}".F(id, instance.
+					GetOwningAssembly(), instance.Version));
 #endif
 				if (first)
 					instance.Bootstrap(PLibInstance);

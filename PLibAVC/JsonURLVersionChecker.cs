@@ -101,7 +101,7 @@ namespace PeterHan.PLib.AVC {
 						if (string.IsNullOrEmpty(newVersion))
 							result = new ModVersionCheckResults(id, true);
 						else
-							result = new ModVersionCheckResults(id, newVersion !=
+							result = new ModVersionCheckResults(id, newVersion ==
 								PVersionCheck.GetCurrentVersion(mod), newVersion);
 						break;
 					}
