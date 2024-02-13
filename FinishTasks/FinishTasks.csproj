@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Rest for the Weary</AssemblyTitle>
-    <FileVersion>2.5.0.0</FileVersion>
+    <FileVersion>2.6.0.0</FileVersion>
     <RootNamespace>PeterHan.FinishTasks</RootNamespace>
     <Description>Defines a schedule block type to allow Duplicants to finish their current task but not start new ones.</Description>
     <AssemblyVersion>2.1.0.0</AssemblyVersion>
