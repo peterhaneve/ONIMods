@@ -48,8 +48,30 @@ namespace PeterHan.NoWasteWant {
 #pragma warning restore IDE0044
 #pragma warning restore CS0649
 
+		private static readonly EventSystem.IntraObjectHandler<FreshnessControl> OnCopySettingsDelegate
+			= new EventSystem.IntraObjectHandler<FreshnessControl>(delegate(FreshnessControl component, object data)
+		{
+			component.OnCopySettings(data);
+		});
+
 		public FreshnessControl() {
 			minFreshness = 0.0f;
+		}
+
+		protected override void OnPrefabInit()
+		{
+			base.OnPrefabInit();
+			Subscribe((int)GameHashes.CopySettings, OnCopySettingsDelegate);
+		}
+
+		private void OnCopySettings(object data)
+		{
+			FreshnessControl component = ((GameObject)data).GetComponent<FreshnessControl>();
+			if (component != null)
+			{
+				minFreshness = component.minFreshness;
+				DropStaleItems();
+			}
 		}
 
 		/// <summary>
