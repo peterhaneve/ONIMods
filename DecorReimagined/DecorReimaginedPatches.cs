@@ -62,6 +62,9 @@ namespace ReimaginationTeam.DecorRework {
 				},
 				Icon = "art_underground"
 			}.AddAchievement();
+			// Moved to avoid breaking localization
+			PatchParks();
+			PatchRecBuildings();
 			SleepChoreType = Db.Get().ChoreTypes.Sleep;
 			PUtil.LogDebug("Initialized decor effects");
 		}
@@ -117,8 +120,8 @@ namespace ReimaginationTeam.DecorRework {
 		/// </summary>
 		private static void PatchRecBuildings() {
 			RoomConstraints.REC_BUILDING = new RoomConstraints.Constraint(IsWorkingRecBuilding,
-				null, 1, STRINGS.ROOMS.CRITERIA.REC_BUILDING.NAME, STRINGS.ROOMS.CRITERIA.
-				REC_BUILDING.DESCRIPTION);
+				null, 1, RoomConstraints.REC_BUILDING.name, RoomConstraints.REC_BUILDING.
+				description);
 		}
 
 		/// <summary>
@@ -140,8 +143,6 @@ namespace ReimaginationTeam.DecorRework {
 			new POptions().RegisterOptions(this, typeof(DecorReimaginedOptions));
 			new PPatchManager(harmony).RegisterPatchClass(typeof(DecorReimaginedPatches));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
-			PatchParks();
-			PatchRecBuildings();
 		}
 
 		/// <summary>

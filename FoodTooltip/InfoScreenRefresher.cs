@@ -16,7 +16,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System.Collections.Generic;
 using Klei.AI;
+using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.FoodTooltip {
@@ -25,6 +27,10 @@ namespace PeterHan.FoodTooltip {
 	/// </summary>
 	[SkipSaveFileSerialization]
 	internal sealed class InfoScreenRefresher : KMonoBehaviour {
+		private static readonly ICollection<string> EFFECTS = new HashSet<string>() {
+			"Happy", "Neutral", "Glum", "Miserable", "FarmTinker"
+		};
+
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable CS0649
 		[MyCmpGet]
@@ -39,9 +45,8 @@ namespace PeterHan.FoodTooltip {
 		/// <param name="data">The effect that was added or removed.</param>
 		private void EffectRefresh(object data) {
 			// Effect IDs are hard coded in HappinessMonitor and Tinkerable
-			if (data is Effect effect && (effect.Id == "Happy" || effect.Id == "Unhappy" ||
-					effect.Id == "FarmTinker"))
-				infoScreen?.Refresh(true);
+			if (data is Effect effect && EFFECTS.Contains(effect.Id) && infoScreen != null)
+				infoScreen.RefreshInfoScreen(true);
 		}
 
 		/// <summary>
@@ -79,7 +84,8 @@ namespace PeterHan.FoodTooltip {
 		/// Refreshes the information panel. The argument is always null when reached.
 		/// </summary>
 		private void RefreshInfoPanel(object _) {
-			infoScreen?.Refresh(true);
+			if (infoScreen != null)
+				infoScreen.RefreshInfoScreen(true);
 		}
 	}
 }

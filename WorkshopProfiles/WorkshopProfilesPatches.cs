@@ -22,6 +22,7 @@ using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.PatchManager;
 using System.Collections.Generic;
+using PeterHan.PLib.UI;
 using UnityEngine;
 
 using SideScreenRef = DetailsScreen.SideScreenRef;
@@ -162,9 +163,9 @@ namespace PeterHan.WorkshopProfiles {
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
 			internal static void Postfix(List<SideScreenRef> ___sideScreens,
-					GameObject ___sideScreenContentBody) {
+					DetailsScreen __instance) {
 				WorkshopProfileSideScreen.AddSideScreen(___sideScreens,
-					___sideScreenContentBody);
+					PUIUtils.GetSideScreenContent(__instance));
 			}
 		}
 

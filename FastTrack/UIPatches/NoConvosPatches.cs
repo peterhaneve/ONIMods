@@ -57,7 +57,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			if ((data is MinionIdentity other || (data is ConversationManager.
 					StartedTalkingEvent evt && evt.talker != null && evt.talker.
 					TryGetComponent(out other))) && UnityEngine.Random.Range(0, 100) <= 1 &&
-					other != __instance.identity) {
+					other != null && other != __instance.identity) {
 				// Cannot talk to yourself (self)
 				if (other.TryGetComponent(out StateMachineController smc))
 					smc.GetSMI<JoyBehaviourMonitor.Instance>()?.GoToOverjoyed();

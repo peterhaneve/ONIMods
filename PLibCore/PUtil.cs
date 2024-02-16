@@ -63,15 +63,18 @@ namespace PeterHan.PLib.Core {
 		/// </summary>
 		/// <returns>A mapping from assemblies to the Mod instance that owns them.</returns>
 		public static IDictionary<Assembly, KMod.Mod> CreateAssemblyToModTable() {
-			var allMods = Global.Instance?.modManager?.mods;
+			var gi = Global.Instance;
 			var result = new Dictionary<Assembly, KMod.Mod>(32);
-			if (allMods != null)
-				foreach (var mod in allMods) {
-					var dlls = mod?.loaded_mod_data?.dlls;
-					if (dlls != null)
-						foreach (var assembly in dlls)
-							result[assembly] = mod;
-				}
+			if (gi != null) {
+				var allMods = gi.modManager?.mods;
+				if (allMods != null)
+					foreach (var mod in allMods) {
+						var dlls = mod?.loaded_mod_data?.dlls;
+						if (dlls != null)
+							foreach (var assembly in dlls)
+								result[assembly] = mod;
+					}
+			}
 			return result;
 		}
 
@@ -111,8 +114,7 @@ namespace PeterHan.PLib.Core {
 			 * accessed directly, PLib would have a version "baked in" and would never
 			 * update depending on the game version in use.
 			 */
-			var field = PPatchTools.GetFieldSafe(typeof(KleiVersion), nameof(KleiVersion.
-				ChangeList), true);
+			var field = typeof(KleiVersion).GetFieldSafe(nameof(KleiVersion.ChangeList), true);
 			uint ver = 0U;
 			if (field != null && field.GetValue(null) is uint newVer)
 				ver = newVer;
@@ -141,9 +143,8 @@ namespace PeterHan.PLib.Core {
 				// Guess from the Klei strings
 				LogExcWarn(e);
 			}
-			if (dir == null)
-				dir = Path.Combine(KMod.Manager.GetDirectory(), modDLL.GetName()?.Name ?? "");
-			return dir;
+			return dir ?? Path.Combine(KMod.Manager.GetDirectory(), modDLL.GetName().Name ??
+				"");
 		}
 
 		/// <summary>
@@ -156,7 +157,7 @@ namespace PeterHan.PLib.Core {
 			lock (initializeLock) {
 				if (!initialized) {
 					initialized = true;
-					if (assembly != null && logVersion)
+					if (logVersion)
 						Debug.LogFormat("[PLib] Mod {0} initialized, version {1}",
 							assembly.GetNameSafe(), assembly.GetFileVersion() ?? "Unknown");
 				}

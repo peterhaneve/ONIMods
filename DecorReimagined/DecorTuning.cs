@@ -22,6 +22,7 @@ using PeterHan.PLib.Core;
 using System;
 using System.IO;
 using System.Reflection;
+using PeterHan.PLib.Database;
 using UnityEngine;
 
 namespace ReimaginationTeam.DecorRework {
@@ -170,8 +171,8 @@ namespace ReimaginationTeam.DecorRework {
 						decorLevel.Tooltip, DECOR_EFFECT_LEN, false, false, false, null, 0.0f,
 						"DecorQuality"));
 				effect.SelfModifiers.Clear();
-				effect.Add(new AttributeModifier("QualityOfLife", decorLevel.MoraleBonus,
-					decorLevel.Title));
+				effect.Add(PDatabaseUtils.CreateAttributeModifier("QualityOfLife",
+					decorLevel.MoraleBonus, decorLevel.Title));
 			}
 		}
 
@@ -182,8 +183,8 @@ namespace ReimaginationTeam.DecorRework {
 		/// <param name="suit">The suit def to modify.</param>
 		internal static void TuneSuits(DecorReimaginedOptions options, EquipmentDef suit) {
 			var attr = Db.Get().BuildingAttributes;
-			suit.AttributeModifiers.Add(new AttributeModifier(attr.Decor.Id, options.
-				AtmoSuitDecor, STRINGS.EQUIPMENT.PREFABS.ATMO_SUIT.NAME));
+			suit.AttributeModifiers.Add(PDatabaseUtils.CreateAttributeModifier(attr.Decor.Id,
+				options.AtmoSuitDecor, STRINGS.EQUIPMENT.PREFABS.ATMO_SUIT.NAME));
 		}
 
 		/// <summary>

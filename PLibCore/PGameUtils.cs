@@ -36,6 +36,14 @@ namespace PeterHan.PLib.Core {
 			typeof(AudioSheets).DetourLazy<CreateSoundDelegate>("CreateSound");
 
 		/// <summary>
+		/// Refreshes the simple info screen.
+		/// </summary>
+		private delegate void InfoRefreshFunction(SimpleInfoScreen instance, bool force);
+
+		private static readonly DetouredMethod<InfoRefreshFunction> REFRESH_INFO_SCREEN =
+			typeof(SimpleInfoScreen).DetourLazy<InfoRefreshFunction>("Refresh");
+
+		/// <summary>
 		/// Centers and selects an entity.
 		/// </summary>
 		/// <param name="entity">The entity to center and focus.</param>
@@ -163,7 +171,7 @@ namespace PeterHan.PLib.Core {
 		/// <returns>A handler which can be used to Subscribe for RefreshUserMenu events.</returns>
 		public static EventSystem.IntraObjectHandler<T> CreateUserMenuHandler<T>()
 				where T : Component, IRefreshUserMenu {
-			return new Action<T, object>((T target, object ignore) => {
+			return new Action<T, object>((target, ignore) => {
 #if DEBUG
 				PUtil.LogDebug("OnRefreshUserMenu<{0}> on {1}".F(typeof(T).Name, target));
 #endif
@@ -202,6 +210,16 @@ namespace PeterHan.PLib.Core {
 		/// <param name="position">The position where the sound is generated.</param>
 		public static void PlaySound(string name, Vector3 position) {
 			SoundEvent.PlayOneShot(GlobalAssets.GetSound(name), position);
+		}
+
+		/// <summary>
+		/// Refreshes the info screen.
+		/// </summary>
+		/// <param name="screen">The info screen to refresh.</param>
+		/// <param name="force">If true, the refresh is forced.</param>
+		public static void RefreshInfoScreen(this SimpleInfoScreen screen, bool force = false) {
+			if (screen != null)
+				REFRESH_INFO_SCREEN.Invoke(screen, force);
 		}
 
 		/// <summary>

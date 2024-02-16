@@ -462,6 +462,15 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Retrieves the side screen content body in a way that works across game versions.
+		/// </summary>
+		/// <param name="screen">The current details screen instance.</param>
+		/// <returns>The content body where side screen content should be added.</returns>
+		public static GameObject GetSideScreenContent(DetailsScreen screen) {
+			return screen == null ? null : UIDetours.SS_CONTENT_BODY.Get(screen);
+		}
+
+		/// <summary>
 		/// Insets a child component from its parent, and assigns a fixed size to the parent
 		/// equal to the provided size plus the insets.
 		/// </summary>

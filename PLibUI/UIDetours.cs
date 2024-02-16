@@ -19,6 +19,7 @@
 using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
+using PeterHan.PLib.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -43,7 +44,11 @@ namespace PeterHan.PLib.UI {
 
 		#region DetailsScreen
 		public static readonly IDetouredField<DetailsScreen, List<SideScreenRef>> SIDE_SCREENS = PDetours.DetourFieldLazy<DetailsScreen, List<SideScreenRef>>("sideScreens");
-		public static readonly IDetouredField<DetailsScreen, GameObject> SS_CONTENT_BODY = PDetours.DetourFieldLazy<DetailsScreen, GameObject>("sideScreenContentBody");
+
+		private const string OLD_FIELD = "sideScreenContentBody";
+		public static readonly IDetouredField<DetailsScreen, GameObject> SS_CONTENT_BODY =
+			PDetours.DetourFieldLazy<DetailsScreen, GameObject>(typeof(DetailsScreen).
+			GetFieldSafe(OLD_FIELD, false) != null ? OLD_FIELD : "sideScreenConfigContentBody");
 		#endregion
 
 		#region KButton

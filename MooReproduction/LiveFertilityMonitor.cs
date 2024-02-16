@@ -18,6 +18,7 @@
 
 using Klei.AI;
 using PeterHan.PLib.Core;
+using PeterHan.PLib.Database;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using UnityEngine;
@@ -114,16 +115,15 @@ namespace PeterHan.MooReproduction {
 				fertility = Db.Get().Amounts.Fertility.Lookup(gameObject);
 				if (Klei.GenericGameSettings.instance.acceleratedLifecycle)
 					// Debug setting
-					fertility.deltaAttribute.Add(new AttributeModifier(fertility.
-						deltaAttribute.Id, 33.3333333f, "Accelerated Lifecycle", false, false,
-						true));
-				float base_fertile_rate = 1.0f / (def.baseFertileCycles * 6.0f);
+					fertility.deltaAttribute.Add(PDatabaseUtils.CreateAttributeModifier(
+						fertility.deltaAttribute.Id, 33.3333333f, "Accelerated Lifecycle"));
+				float baseFertileRate = 1.0f / (def.baseFertileCycles * 6.0f);
 				fertileEffect = new Effect("Fertile", STRINGS.CREATURES.MODIFIERS.
 					BASE_FERTILITY.NAME, STRINGS.CREATURES.MODIFIERS.BASE_FERTILITY.TOOLTIP,
 					0f, false, false, false);
-				fertileEffect.Add(new AttributeModifier(Db.Get().Amounts.Fertility.
-					deltaAttribute.Id, base_fertile_rate, STRINGS.CREATURES.MODIFIERS.
-					BASE_FERTILITY.NAME));
+				fertileEffect.Add(PDatabaseUtils.CreateAttributeModifier(Db.Get().Amounts.
+					Fertility.deltaAttribute.Id, baseFertileRate, STRINGS.CREATURES.
+					MODIFIERS.BASE_FERTILITY.NAME));
 				InitializeBreedingChances();
 			}
 

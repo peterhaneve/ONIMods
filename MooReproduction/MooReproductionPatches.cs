@@ -172,10 +172,15 @@ namespace PeterHan.MooReproduction {
 			/// Applied after InitializeStates runs.
 			/// </summary>
 			internal static void Postfix(HappinessMonitor __instance) {
-				var newEffect = new Effect("Happy", STRINGS.CREATURES.MODIFIERS.HAPPY.
-					NAME, STRINGS.CREATURES.MODIFIERS.HAPPY.TOOLTIP, 0f, true, false, false);
-				newEffect.Add(new AttributeModifier(Db.Get().Amounts.Fertility.
-					deltaAttribute.Id, 4f, STRINGS.CREATURES.MODIFIERS.HAPPY.NAME, true));
+				const string PREFIX = "STRINGS.CREATURES.MODIFIERS.";
+				// TODO Remove when versions less than U51-594211 no longer need to be supported
+				if (!Strings.TryGet(PREFIX + "HAPPY_TAME.NAME", out var name))
+					name = Strings.Get(PREFIX + "HAPPY.NAME");
+				if (!Strings.TryGet(PREFIX + "HAPPY_TAME.TOOLTIP", out var tooltip))
+					tooltip = Strings.Get(PREFIX + "HAPPY.TOOLTIP");
+				var newEffect = new Effect("Happy", name, tooltip, 0f, true, false, false);
+				newEffect.Add(PDatabaseUtils.CreateAttributeModifier(Db.Get().Amounts.
+					Fertility.deltaAttribute.Id, 4f, name, true));
 				if (__instance != null) {
 					var happyState = HAPPY_TAME_STATE.Get(__instance);
 					var happyTameEffect = HAPPY_TAME_EFFECT.Get(__instance);
@@ -184,7 +189,7 @@ namespace PeterHan.MooReproduction {
 						var tame = happyState.tame;
 						tame.ClearEnterActions();
 						tame.ClearExitActions();
-						tame.ToggleEffect((smi) => {
+						tame.ToggleEffect(smi => {
 							var obj = smi.master.gameObject;
 							return (obj != null && obj.PrefabID() == MOO_TAG) ? newEffect :
 								happyTameEffect;

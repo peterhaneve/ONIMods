@@ -78,7 +78,7 @@ namespace PeterHan.PLib.UI {
 			bool found = false;
 			if (patchList != null) {
 				foreach (var patch in patchList) {
-					string ownerName = patch.PatchMethod.DeclaringType.Name;
+					string ownerName = patch.PatchMethod?.DeclaringType?.Name;
 					// Avoid stomping ourselves, or legacy PLibs < 3.14
 					if (ownerName == nameof(TextMeshProPatcher) || ownerName == "PLibPatches")
 					{
@@ -98,7 +98,6 @@ namespace PeterHan.PLib.UI {
 		/// Patches TMP_InputField with fixes, but only if necessary.
 		/// </summary>
 		/// <param name="tmpType">The type of TMP_InputField.</param>
-		/// <param name="instance">The Harmony instance to use for patching.</param>
 		private static void InputFieldPatches(Type tmpType) {
 			var instance = new Harmony(HARMONY_ID);
 			var aip = tmpType.GetMethodSafe("AssignPositioningIfNeeded", false,
