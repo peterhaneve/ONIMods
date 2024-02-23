@@ -33,6 +33,12 @@ namespace PeterHan.FoodTooltip {
 		public static FoodRecipeCache Instance { get; private set; }
 
 		/// <summary>
+		/// Breaks a loop that would confuse the mod since plant products can be used in the
+		/// Plant Pulverizer to generate Brackene -> Brackwax -> Brine -> Water.
+		/// </summary>
+		private static readonly Tag MILK_TAG = SimHashes.Milk.CreateTag();
+
+		/// <summary>
 		/// Creates the singleton instance.
 		/// </summary>
 		public static void CreateInstance() {
@@ -45,6 +51,57 @@ namespace PeterHan.FoodTooltip {
 		public static void DestroyInstance() {
 			Instance?.Dispose();
 			Instance = null;
+		}
+		
+		/// <summary>
+		/// Recursively iterates the recipe list looking for foods that can be made with this
+		/// item.
+		/// </summary>
+		/// <param name="item">The item to search.</param>
+		/// <param name="found">The foods found so far.</param>
+		/// <param name="seen">The items already seen, to prevent recipe loops from crashing.</param>
+		/// <param name="quantity">The quantity of the base item.</param>
+		private static void SearchForRecipe(Tag item, ICollection<FoodResult> found,
+				ISet<Tag> seen, float quantity) {
+			var prefab = Assets.GetPrefab(item);
+			if (prefab != null && quantity > 0.0f && seen.Add(item) && item != MILK_TAG) {
+				float kcal;
+				// Item itself is usable as food
+				if (prefab.TryGetComponent(out Edible edible) && (kcal = edible.FoodInfo.
+						CaloriesPerUnit) > 0.0f)
+					found.Add(new FoodResult(kcal, quantity, item));
+				// Search for recipes using this item
+				foreach (var recipe in RecipeManager.Get().recipes) {
+					float amount = 0.0f;
+					foreach (var ingredient in recipe.Ingredients)
+						// Search for this item in the recipe
+						if (ingredient.tag == item) {
+							amount = ingredient.amount;
+							break;
+						}
+					if (amount > 0.0f)
+						SearchForRecipe(recipe.Result, found, seen, recipe.OutputUnits *
+							quantity / amount);
+				}
+				// And complex ones too
+				foreach (var recipe in ComplexRecipeManager.Get().recipes)
+					// Dehydrated foods are not how you are supposed to get water!
+					// (prevents Mush Bar from showing up spuriously)
+					if (!recipe.fabricators.Contains(FoodDehydratorConfig.ID)) {
+						float amount = 0.0f;
+						foreach (var ingredient in recipe.ingredients)
+							// Search for this item in the recipe
+							if (ingredient.material == item) {
+								amount = ingredient.amount;
+								break;
+							}
+						if (amount > 0.0f)
+							// Check all results of the recipe
+							foreach (var result in recipe.results)
+								SearchForRecipe(result.material, found, seen, result.amount *
+									quantity / amount);
+					}
+			}
 		}
 
 		/// <summary>
@@ -64,9 +121,9 @@ namespace PeterHan.FoodTooltip {
 		/// for any foods.</returns>
 		public FoodResult[] Lookup(Tag tag) {
 			if (tag == null)
-				throw new ArgumentNullException("tag");
+				throw new ArgumentNullException(nameof(tag));
 			// Check for existing list
-			if (!cache.TryGetValue(tag, out IList<FoodResult> items)) {
+			if (!cache.TryGetValue(tag, out var items)) {
 				var seen = HashSetPool<Tag, FoodRecipeCache>.Allocate();
 				try {
 					items = new List<FoodResult>();
@@ -89,58 +146,9 @@ namespace PeterHan.FoodTooltip {
 		}
 
 		/// <summary>
-		/// Recursively iterates the recipe list looking for foods that can be made with this
-		/// item.
-		/// </summary>
-		/// <param name="item">The item to search.</param>
-		/// <param name="found">The foods found so far.</param>
-		/// <param name="seen">The items already seen, to prevent recipe loops from crashing.</param>
-		/// <param name="quantity">The quantity of the base item.</param>
-		private void SearchForRecipe(Tag item, IList<FoodResult> found, ICollection<Tag> seen,
-				float quantity) {
-			var prefab = Assets.GetPrefab(item);
-			if (prefab != null && quantity > 0.0f && !seen.Contains(item)) {
-				var edible = prefab.GetComponent<Edible>();
-				float kcal;
-				seen.Add(item);
-				// Item itself is usable as food
-				if (edible != null && (kcal = edible.FoodInfo.CaloriesPerUnit) > 0.0f)
-					found.Add(new FoodResult(kcal, quantity, item));
-				// Search for recipes using this item
-				foreach (var recipe in RecipeManager.Get().recipes) {
-					float amount = 0.0f;
-					foreach (var ingredient in recipe.Ingredients)
-						// Search for this item in the recipe
-						if (ingredient.tag == item) {
-							amount = ingredient.amount;
-							break;
-						}
-					if (amount > 0.0f)
-						SearchForRecipe(recipe.Result, found, seen, recipe.OutputUnits *
-							quantity / amount);
-				}
-				// And complex ones too
-				foreach (var recipe in ComplexRecipeManager.Get().recipes) {
-					float amount = 0.0f;
-					foreach (var ingredient in recipe.ingredients)
-						// Search for this item in the recipe
-						if (ingredient.material == item) {
-							amount = ingredient.amount;
-							break;
-						}
-					if (amount > 0.0f)
-						// Check all results of the recipe
-						foreach (var result in recipe.results)
-							SearchForRecipe(result.material, found, seen, result.amount *
-								quantity / amount);
-				}
-			}
-		}
-
-		/// <summary>
 		/// The results of a recipe as pertinent to a particular food.
 		/// </summary>
-		public struct FoodResult {
+		public readonly struct FoodResult {
 			/// <summary>
 			/// The calories provided per unit of completed recipe (not per input unit!)
 			/// </summary>

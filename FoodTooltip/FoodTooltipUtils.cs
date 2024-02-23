@@ -17,7 +17,6 @@
  */
 
 using PeterHan.PLib.Core;
-using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -55,9 +54,10 @@ namespace PeterHan.FoodTooltip {
 		/// <param name="descriptors">The location where the descriptors should be placed.</param>
 		internal static void AddCritterDescriptors(GameObject critter,
 				IList<Descriptor> descriptors) {
-			var drops = critter.GetComponentSafe<Butcherable>()?.drops;
+			string[] drops;
 			// Check the meat it drops
-			if (critter != null && drops != null && drops.Length > 0) {
+			if (critter != null && critter.TryGetComponent(out Butcherable butcher) &&
+					(drops = butcher.drops).Length > 0) {
 				var dict = DictionaryPool<string, int, FoodRecipeCache>.Allocate();
 				GetEggsPerCycle(critter, out float replacement, out float noReplacement);
 				// Find out what it drops when it dies - critters always die so the
@@ -97,10 +97,10 @@ namespace PeterHan.FoodTooltip {
 		/// <param name="descriptors">The location where the descriptors should be placed.</param>
 		/// <param name="dropRate">The quantity dropped per cycle.</param>
 		/// <param name="text">The text to be displayed.</param>
-		private static void CreateDescriptors(Tag drop, IList<Descriptor> descriptors,
+		private static void CreateDescriptors(Tag drop, ICollection<Descriptor> descriptors,
 				float dropRate, FoodDescriptorText text) {
 			if (text == null)
-				throw new ArgumentNullException("text");
+				throw new ArgumentNullException(nameof(text));
 			string dropName = drop.ProperName();
 			foreach (var food in FoodRecipeCache.Instance.Lookup(drop)) {
 				string foodName = food.Result.ProperName();

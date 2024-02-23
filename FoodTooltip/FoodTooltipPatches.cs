@@ -86,7 +86,7 @@ namespace PeterHan.FoodTooltip {
 		}
 
 		/// <summary>
-		/// Applied to MeterScreen.
+		/// Applied to MeterScreen to add food usage statistics to the upper left food icon.
 		/// </summary>
 		[HarmonyPatch(typeof(MeterScreen), "OnRationsTooltip")]
 		public static class MeterScreen_OnRationsTooltip_Patch {
@@ -115,14 +115,15 @@ namespace PeterHan.FoodTooltip {
 		/// Applied to SimpleInfoScreen to refresh the panel on plant wilt/recover or critter
 		/// status changes.
 		/// </summary>
-		[HarmonyPatch(typeof(SimpleInfoScreen), nameof(SimpleInfoScreen.OnSelectTarget))]
+		[HarmonyPatch(typeof(SimpleInfoScreen), "OnSelectTarget")]
 		public static class SimpleInfoScreen_OnSelectTarget_Patch {
 			/// <summary>
 			/// Applied after OnSelectTarget runs.
 			/// </summary>
 			internal static void Postfix(SimpleInfoScreen __instance, GameObject target) {
-				__instance.gameObject.GetComponentSafe<InfoScreenRefresher>()?.
-					OnSelectTarget(target);
+				if (__instance != null && __instance.TryGetComponent(
+						out InfoScreenRefresher rf))
+					rf.OnSelectTarget(target);
 			}
 		}
 
@@ -135,8 +136,9 @@ namespace PeterHan.FoodTooltip {
 			/// Applied after OnDeselectTarget runs.
 			/// </summary>
 			internal static void Postfix(SimpleInfoScreen __instance, GameObject target) {
-				__instance.gameObject.GetComponentSafe<InfoScreenRefresher>()?.
-					OnDeselectTarget(target);
+				if (__instance != null && __instance.TryGetComponent(
+						out InfoScreenRefresher rf))
+					rf.OnDeselectTarget(target);
 			}
 		}
 	}

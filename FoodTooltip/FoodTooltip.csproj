@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Food Supply Tooltip</AssemblyTitle>
-    <FileVersion>3.5.0.0</FileVersion>
+    <FileVersion>3.6.0.0</FileVersion>
     <RootNamespace>PeterHan.FoodTooltip</RootNamespace>
     <Description>Shows tooltips on plants and critters for how much food they can supply per cycle in their current states.</Description>
     <AssemblyVersion>3.2.0.0</AssemblyVersion>
