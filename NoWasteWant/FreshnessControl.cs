@@ -26,6 +26,12 @@ namespace PeterHan.NoWasteWant {
 	/// </summary>
 	[SerializationConfig(MemberSerialization.OptIn)]
 	public class FreshnessControl : KMonoBehaviour, ISim4000ms, ISingleSliderControl {
+		private static readonly EventSystem.IntraObjectHandler<FreshnessControl> OnCopySettingsDelegate =
+			new EventSystem.IntraObjectHandler<FreshnessControl>(delegate(FreshnessControl component, object data)
+			{
+				component.OnCopySettings(data);
+			});
+
 		public float MinFreshness {
 			get => minFreshness;
 			set {
@@ -47,12 +53,6 @@ namespace PeterHan.NoWasteWant {
 		private Storage storage;
 #pragma warning restore IDE0044
 #pragma warning restore CS0649
-
-		private static readonly EventSystem.IntraObjectHandler<FreshnessControl> OnCopySettingsDelegate
-			= new EventSystem.IntraObjectHandler<FreshnessControl>(delegate(FreshnessControl component, object data)
-		{
-			component.OnCopySettings(data);
-		});
 
 		public FreshnessControl() {
 			minFreshness = 0.0f;

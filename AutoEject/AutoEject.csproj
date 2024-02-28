@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Auto-Eject</AssemblyTitle>
-    <FileVersion>1.1.0.0</FileVersion>
+    <FileVersion>1.2.0.0</FileVersion>
     <RootNamespace>PeterHan.AutoEject</RootNamespace>
     <Description>Automatically completes several chores in the UI that can be easily forgotten.</Description>
     <AssemblyVersion>1.1.0.0</AssemblyVersion>
