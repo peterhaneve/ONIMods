@@ -72,6 +72,11 @@ namespace PeterHan.ModUpdateDate {
 		/// The background color if outdated.
 		/// </summary>
 		private static readonly ColorStyleSetting COLOR_OUTDATED;
+		
+		/// <summary>
+		/// The background color if pending an update on next restart.
+		/// </summary>
+		private static readonly ColorStyleSetting COLOR_PENDING;
 
 		/// <summary>
 		/// The background color if up to date.
@@ -99,6 +104,10 @@ namespace PeterHan.ModUpdateDate {
 			COLOR_OUTDATED.inactiveColor = new Color(0.753f, 0.0f, 0.0f);
 			COLOR_OUTDATED.activeColor = new Color(1.0f, 0.0f, 0.0f);
 			COLOR_OUTDATED.hoverColor = new Color(1.0f, 0.0f, 0.0f);
+			COLOR_PENDING = ScriptableObject.CreateInstance<ColorStyleSetting>();
+			COLOR_PENDING.inactiveColor = new Color(0.753f, 0.6f, 0.0f);
+			COLOR_PENDING.activeColor = new Color(1.0f, 0.8f, 0.0f);
+			COLOR_PENDING.hoverColor = new Color(1.0f, 0.8f, 0.0f);
 			// Should be unreachable
 			COLOR_OUTDATED.disabledColor = COLOR_OUTDATED.disabledActiveColor =
 				COLOR_OUTDATED.disabledhoverColor = new Color(0.706f, 0.549f, 0.549f);
@@ -156,8 +165,9 @@ namespace PeterHan.ModUpdateDate {
 				updButton.Sprite = updated == ModStatus.UpToDate || updated == ModStatus.
 					Disabled ? PUITuning.Images.Checked : PUITuning.Images.GetSpriteByName(
 					"iconWarning");
-				var color = IsOutdated(updated) ? COLOR_OUTDATED : autoUpdate ? COLOR_AUTO :
-					COLOR_UPDATED;
+				var color = updated == ModStatus.Pending ? COLOR_PENDING :
+					(IsOutdated(updated) ? COLOR_OUTDATED : (autoUpdate ? COLOR_AUTO :
+					COLOR_UPDATED));
 				updButton.Color = color;
 				updButton.ToolTip = tooltip.ToString();
 				// Just before subscription button, and after the Options button
@@ -193,6 +203,10 @@ namespace PeterHan.ModUpdateDate {
 				break;
 			case ModStatus.Outdated:
 				tooltip.Append(autoUpdate ? UISTRINGS.MOD_ERR_UPDATE : UISTRINGS.MOD_OUTDATED);
+				break;
+			case ModStatus.Pending:
+				tooltip.AppendFormat(cultureInfo, UISTRINGS.MOD_PENDING_RESTART, localInfo.
+					FilesystemVersion);
 				break;
 			}
 			// AppendLine appends platform specific separator
@@ -233,20 +247,25 @@ namespace PeterHan.ModUpdateDate {
 		/// <summary>
 		/// Determines how many mods may be out of date.
 		/// </summary>
+		/// <param name="pending">Will be set to true if any mods are pending restart.</param>
 		/// <returns>The number of outdated mods.</returns>
-		internal static int CountOutdatedMods() {
+		internal static int CountOutdatedMods(out bool pending) {
 			var inst = Global.Instance;
 			List<Mod> mods;
 			int outdated = 0;
+			bool anyPending = false;
 			if (inst != null && (mods = inst.modManager?.mods) != null && mods.Count > 0)
 				foreach (var mod in mods)
 					// Steam mods only, count outdated
 					if (mod.label.distribution_platform == Label.DistributionPlatform.Steam) {
 						var localInfo = ModUpdateInfo.GetLocalInfo(mod);
 						var status = GetModStatus(new ModToUpdate(mod), localInfo, out _);
-						if (IsOutdated(status))
+						if (status == ModStatus.Pending)
+							anyPending = true;
+						else if (IsOutdated(status))
 							outdated++;
 					}
+			pending = anyPending;
 			return outdated;
 		}
 
@@ -282,11 +301,13 @@ namespace PeterHan.ModUpdateDate {
 				// Do we have a better estimate?
 				if (ours != null)
 					ourDate = new System.DateTime(ours.LastUpdated, DateTimeKind.Utc);
-				// Allow some time for download delays etc
-				if (reportedDate.AddMinutes(SteamVersionChecker.UPDATE_JITTER) >=
+				if (!string.IsNullOrEmpty(modUpdate.Mod.reinstall_path))
+					updated = ModStatus.Pending;
+				else if (reportedDate.AddMinutes(SteamVersionChecker.UPDATE_JITTER) >=
 						steamDate)
-					updated = string.IsNullOrEmpty(status.FilesystemVersion) ? ModStatus.
-						UpToDate : ModStatus.UnpackFailed;
+					// Allow some time for download delays etc
+					updated = string.IsNullOrEmpty(status.FilesystemVersion) ?
+						ModStatus.UpToDate : ModStatus.UnpackFailed;
 				else if (ourDate.AddMinutes(SteamVersionChecker.UPDATE_JITTER) >= steamDate) {
 					localDate = ourDate;
 					updated = ModStatus.UpToDateLocal;
@@ -404,6 +425,7 @@ namespace PeterHan.ModUpdateDate {
 					status = new ModUpdateResult(ModDownloadStatus.SteamError, mod,
 						steamStatus);
 				} else {
+					var li = ModUpdateInfo.GetLocalInfo(mod);
 					// Try to copy the configs
 					if (BackupConfigs(out int copied))
 						status = new ModUpdateResult(ModDownloadStatus.OK, mod, steamStatus) {
@@ -415,7 +437,8 @@ namespace PeterHan.ModUpdateDate {
 					// Mod has been updated
 					mod.status = Mod.Status.ReinstallPending;
 					mod.reinstall_path = active.DownloadPath;
-					ModUpdateInfo.GetLocalInfo(mod).RefreshLastModified();
+					li.FilesystemVersion = "";
+					li.RefreshLastModified();
 					PGameUtils.SaveMods();
 					// Update the config
 					var when = active.LastSteamUpdate;
@@ -496,7 +519,7 @@ namespace PeterHan.ModUpdateDate {
 		/// Potential statuses in the mods menu.
 		/// </summary>
 		private enum ModStatus {
-			Disabled, UpToDate, UpToDateLocal, Outdated, UnpackFailed
+			Disabled, UpToDate, UpToDateLocal, Outdated, UnpackFailed, Pending
 		}
 	}
 }

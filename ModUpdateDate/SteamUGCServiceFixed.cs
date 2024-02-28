@@ -198,10 +198,10 @@ namespace PeterHan.ModUpdateDate {
 		private void OnUGCDetailsComplete(SteamUGCQueryCompleted_t callback, bool ioError) {
 			var result = callback.m_eResult;
 			var handle = callback.m_handle;
-			PublishedFileId_t id;
 			if (!ioError && result == EResult.k_EResultOK) {
 				var allResults = ListPool<SteamUGCDetails_t, SteamUGCServiceFixed>.Allocate();
 				for (uint i = 0U; i < callback.m_unNumResultsReturned; i++) {
+					PublishedFileId_t id;
 					if (SteamUGC.GetQueryUGCResult(handle, i, out var details) && allMods.
 							TryGetValue(id = details.m_nPublishedFileId, out var mod)) {
 #if false

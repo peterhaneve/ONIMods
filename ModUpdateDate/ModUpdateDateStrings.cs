@@ -40,6 +40,7 @@ namespace PeterHan.ModUpdateDate {
 				public static LocString MAINMENU_UPDATE = "\n\n<color=#FFCC00>{0:D} mods may be out of date</color>";
 				public static LocString MAINMENU_UPDATE_1 = "\n\n<color=#FFCC00>1 mod may be out of date</color>";
 				public static LocString MAINMENU_UPDATING = "\n\n<color=#00CC00>Auto-Update in progress</color>";
+				public static LocString MAINMENU_RESTART = "\n\n<color=#FFCC00>Restart to update mods</color>";
 
 				public static LocString OPTION_MAINMENU = "Show Updates in Main Menu";
 				
@@ -52,6 +53,7 @@ namespace PeterHan.ModUpdateDate {
 				public static LocString MOD_UPDATE_1 = "Update one mod which appears to be out of date";
 				public static LocString MOD_ERR_UPDATE = "Unable to automatically update this mod!\nManual updating may be required if this status\npersists after a game restart.";
 				public static LocString MOD_ERR_UNPACK = "Installed mod version {0} does not match the cached version.\nManual updating may be required.";
+				public static LocString MOD_PENDING_RESTART = "Version {0} of this mod is currently running.\nIt will be updated on the next restart.";
 
 				// Passive mode
 				public static LocString OPTION_PASSIVE = "Auto-Update";

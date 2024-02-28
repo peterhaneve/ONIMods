@@ -151,7 +151,7 @@ namespace PeterHan.ModUpdateDate {
 						instr.operand = updateCC;
 					yield return instr;
 					if (autoUpdate) {
-						// Only apply the UpdateContentChanged patch in auto-update mode
+						// Apply just the SuppressContentChanged patch in manual update mode
 					} else if (opcode == OpCodes.Callvirt && targetMethod != null &&
 							(operand as MethodBase) == targetMethod) {
 						// Only the one after calling get_available_content
@@ -171,6 +171,46 @@ namespace PeterHan.ModUpdateDate {
 					} else
 						notCheck = false;
 				}
+			}
+		}
+		
+		/// <summary>
+		/// Applied to KMod.Manager to recheck the outdated filesystem status on update.
+		/// </summary>
+		[HarmonyPatch(typeof(Manager), nameof(Manager.Update), typeof(Mod), typeof(object))]
+		public static class Manager_Update_Patch {
+			/// <summary>
+			/// Transpiles Update to replace a call to CopyPersistentDataTo with
+			/// UpdateContentChanged.
+			/// </summary>
+			internal static IEnumerable<CodeInstruction> Transpiler(
+					IEnumerable<CodeInstruction> method) {
+				var copyPersistent = typeof(Mod).GetMethodSafe(nameof(Mod.
+					CopyPersistentDataTo), false, typeof(Mod));
+				var updateCC = typeof(ModUpdateDetails).GetMethodSafe(nameof(ModUpdateDetails.
+					UpdateContentChanged), true, typeof(Mod), typeof(Mod));
+				foreach (var instr in method) {
+					var opcode = instr.opcode;
+					if (opcode == OpCodes.Callvirt && copyPersistent != null && updateCC !=
+							null && (instr.operand as MethodBase) == copyPersistent)
+						instr.operand = updateCC;
+					yield return instr;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Applied to Mod to schedule config scrubs when mods are installed or updated.
+		/// </summary>
+		[HarmonyPatch(typeof(Mod), nameof(Mod.Install))]
+		public static class Mod_Install_Patch {
+			internal static bool Prepare() => ModUpdateInfo.Settings?.AutoUpdate == true;
+
+			/// <summary>
+			/// Applied after Install runs.
+			/// </summary>
+			internal static void Postfix() {
+				ModUpdateDetails.ScrubConfig();
 			}
 		}
 

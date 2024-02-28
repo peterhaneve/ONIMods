@@ -93,7 +93,7 @@ namespace PeterHan.ModUpdateDate {
 			if (modsButton != null) {
 				var modsText = modsButton.GetComponentInChildren<LocText>();
 				// How many are out of date?
-				int outdated = ModUpdateHandler.CountOutdatedMods();
+				int outdated = ModUpdateHandler.CountOutdatedMods(out bool pending);
 				string text = STRINGS.UI.FRONTEND.MODS.TITLE;
 				var inst = SteamUGCServiceFixed.Instance;
 				if (inst != null && inst.UpdateInProgress)
@@ -102,6 +102,8 @@ namespace PeterHan.ModUpdateDate {
 					text += UISTRINGS.MAINMENU_UPDATE_1;
 				else if (outdated > 1)
 					text += string.Format(UISTRINGS.MAINMENU_UPDATE, outdated);
+				else if (pending)
+					text += UISTRINGS.MAINMENU_RESTART;
 				if (modsText != null)
 					modsText.text = text;
 			}

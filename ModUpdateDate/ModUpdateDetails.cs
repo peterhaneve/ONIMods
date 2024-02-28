@@ -24,12 +24,15 @@ using PeterHan.PLib.Options;
 using Steamworks;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace PeterHan.ModUpdateDate {
 	/// <summary>
 	/// Manages the mod update details from Steamworks.
 	/// </summary>
 	internal static class ModUpdateDetails {
+		private const float SCRUB_COOLDOWN = 3.0f;
+
 		/// <summary>
 		/// The details of each mod by ID as fetched by the game.
 		/// </summary>
@@ -40,6 +43,11 @@ namespace PeterHan.ModUpdateDate {
 		// It is a property so cannot be accessed with ref ___ in a patch
 		private static readonly IDetouredField<Mod, Content> MOD_AVAILABLE_CONTENT =
 			PDetours.DetourField<Mod, Content>(nameof(Mod.available_content));
+
+		/// <summary>
+		/// Prevents scrubs from running more often than once every few seconds.
+		/// </summary>
+		private static float lastScrub;
 
 		/// <summary>
 		/// True if a config scrub is required after mod details update.
@@ -125,12 +133,14 @@ namespace PeterHan.ModUpdateDate {
 		/// false otherwise.</returns>
 		internal static bool ScrubConfig() {
 			bool scrubbed = false;
+			float now = Time.unscaledTime;
 			lock (DETAILS) {
-				if (scrubRequired) {
+				if (scrubRequired && now - lastScrub > SCRUB_COOLDOWN) {
 					DoScrubConfig();
 					scrubbed = true;
+					scrubRequired = false;
+					lastScrub = now;
 				}
-				scrubRequired = false;
 			}
 			return scrubbed;
 		}
@@ -233,8 +243,8 @@ namespace PeterHan.ModUpdateDate {
 					DistributionPlatform.Steam) {
 				string idString = target.label.id;
 				foreach (var info in existing)
-					if (idString == info.ID.ToString() && (info.Status == ModUpdateStatus.
-						PendingUpdate || info.Status == ModUpdateStatus.UpdatedByThisMod)) {
+					if (idString == info.ID.ToString() && (info.Status != ModUpdateStatus.
+							Default)) {
 						found = true;
 						break;
 					}

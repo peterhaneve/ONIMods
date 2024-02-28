@@ -178,6 +178,8 @@ namespace PeterHan.ModUpdateDate {
 			int updated = 0, nominal = 0, n = 0;
 			var resultText = new StringBuilder(512);
 			resultText.Append(UISTRINGS.UPDATE_HEADER);
+			// Update the main menu warning text since mods were just updated
+			ModUpdateDatePatches.UpdateMainMenu();
 			Results.Sort();
 			foreach (var result in Results) {
 				// Update cumulative status

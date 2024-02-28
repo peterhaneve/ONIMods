@@ -352,7 +352,7 @@ namespace PeterHan.ModUpdateDate {
 		/// </summary>
 		/// <param name="mod">The mod ID to queue.</param>
 		internal void Queue(PublishedFileId_t mod) {
-			int count = 0;
+			int count;
 			lock (toDo) {
 				// Avoid a race between two concurrent Queue calls
 				count = toDo.Count;
