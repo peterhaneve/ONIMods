@@ -226,23 +226,26 @@ namespace ReimaginationTeam.DecorRework {
 				var go = __instance.gameObject;
 				// If no chore driver, allow stock implementation
 				if (go != null && go.TryGetComponent(out ChoreDriver driver)) {
-					var chore = driver.GetCurrentChore();
-					cont = false;
-					// Slew to half decor if sleeping
-					float decorAtCell = GameUtil.GetDecorAtCell(Grid.PosToCell(__instance));
-					if (chore != null && chore.choreType == SleepChoreType)
-						decorAtCell *= DecorTuning.DECOR_FRACTION_SLEEP;
-					___cycleTotalDecor += decorAtCell * dt;
-					// Constants are the same as the base game
-					float value = 0.0f, curDecor = ___amount.value;
-					if (Mathf.Abs(decorAtCell - curDecor) > 0.5f) {
-						if (decorAtCell > curDecor)
-							value = 3.0f * SLEW;
-						else if (decorAtCell < curDecor)
-							value = -SLEW;
-					} else
-						___amount.value = decorAtCell;
-					___modifier.SetValue(value);
+					int cell = Grid.PosToCell(__instance);
+					if (Grid.IsValidCell(cell)) {
+						var chore = driver.GetCurrentChore();
+						cont = false;
+						// Slew to half decor if sleeping
+						float decorAtCell = GameUtil.GetDecorAtCell(cell);
+						if (chore != null && chore.choreType == SleepChoreType)
+							decorAtCell *= DecorTuning.DECOR_FRACTION_SLEEP;
+						___cycleTotalDecor += decorAtCell * dt;
+						// Constants are the same as the base game
+						float value = 0.0f, curDecor = ___amount.value;
+						if (Mathf.Abs(decorAtCell - curDecor) > 0.5f) {
+							if (decorAtCell > curDecor)
+								value = 3.0f * SLEW;
+							else if (decorAtCell < curDecor)
+								value = -SLEW;
+						} else
+							___amount.value = decorAtCell;
+						___modifier.SetValue(value);
+					}
 				}
 				return cont;
 			}

@@ -104,7 +104,7 @@ namespace PeterHan.ThermalTooltips {
 			/// Applied after SetEffects runs.
 			/// </summary>
 			internal static void Postfix(MaterialSelector __instance, Tag element) {
-				if (__instance.selectorIndex == 0)
+				if (__instance.selectorIndex == 0 && __instance.MaterialDescriptionPane != null)
 					// Primary element only
 					buildingInstance?.AddThermalInfo(__instance.MaterialEffectsPane, element);
 			}
