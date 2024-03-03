@@ -29,7 +29,7 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// Stores state information about the additional details panel to avoid recalculating so
 	/// much every frame.
 	/// </summary>
-	public sealed class AdditionalDetailsPanelWrapper : System.IDisposable {
+	public sealed partial class AdditionalDetailsPanelWrapper : System.IDisposable {
 		/// <summary>
 		/// Avoid reallocating a new StringBuilder every frame.
 		/// </summary>
@@ -49,8 +49,10 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Called at shutdown to avoid leaking references.
 		/// </summary>
 		internal static void Cleanup() {
+			var inst = Instance;
 			CACHED_BUILDER.Clear();
-			Instance?.Dispose();
+			if (inst != null)
+				inst.Dispose();
 			Instance = null;
 		}
 
@@ -196,14 +198,15 @@ namespace PeterHan.FastTrack.UIPatches {
 			uptimeStr = string.Format(ELEMENTAL.UPTIME.NAME, Constants.TABBULLETSTRING,
 				ELEMENTAL.UPTIME.THIS_CYCLE, "{0}", ELEMENTAL.UPTIME.LAST_CYCLE, "{1}",
 				ELEMENTAL.UPTIME.LAST_X_CYCLES.Replace("{0}", NUM_CYCLES.ToString()), "{2}");
+			enetDirty = true;
 		}
 
 		/// <summary>
 		/// Draws the building's creation time, or nothing if the data is not available.
 		/// </summary>
-		/// <param name="drawer">The renderer for the details.</param>
+		/// <param name="panel">The panel where the details should be populated.</param>
 		/// <param name="changed">true if the target changed, or false otherwise.</param>
-		private void AddCreationTime(DetailsPanelDrawer drawer, bool changed) {
+		private void AddCreationTime(CollapsibleDetailContentPanel panel, bool changed) {
 			var bc = lastSelection.buildingComplete;
 			float creationTime;
 			if (bc != null && (creationTime = bc.creationTime) > 0.0f) {
@@ -213,64 +216,63 @@ namespace PeterHan.FastTrack.UIPatches {
 						creationTime) / Constants.SECONDS_PER_CYCLE);
 					lastSelection.creationTimeCached = time;
 				}
-				drawer.NewLabel(drawer.Format(ELEMENTAL.AGE.NAME, time)).Tooltip(
-					drawer.Format(ELEMENTAL.AGE.TOOLTIP, time));
+				panel.SetLabel("element_age", ELEMENTAL.AGE.NAME.Format(time),
+					ELEMENTAL.AGE.TOOLTIP.Format(time));
 			}
 		}
 
 		/// <summary>
 		/// Draws the thermal properties of the constituent element.
 		/// </summary>
-		/// <param name="drawer">The renderer for the details.</param>
-		private void AddElementInfo(DetailsPanelDrawer drawer) {
+		/// <param name="panel">The panel where the details should be populated.</param>
+		private void AddElementInfo(CollapsibleDetailContentPanel panel) {
 			string tempStr = GameUtil.GetFormattedTemperature(lastSelection.Temperature);
 			byte diseaseIdx = lastSelection.DiseaseIndex;
 			int diseaseCount = lastSelection.DiseaseCount;
-			drawer.NewLabel(drawer.Format(ELEMENTAL.TEMPERATURE.NAME, tempStr)).
-				Tooltip(drawer.Format(ELEMENTAL.TEMPERATURE.TOOLTIP, tempStr)).
-				NewLabel(drawer.Format(ELEMENTAL.DISEASE.NAME, GameUtil.
-					GetFormattedDisease(diseaseIdx, diseaseCount))).
-				Tooltip(drawer.Format(ELEMENTAL.DISEASE.TOOLTIP, GameUtil.GetFormattedDisease(
-					diseaseIdx, diseaseCount, true)));
-			lastSelection.specificHeat.AddLine(drawer);
-			lastSelection.thermalConductivity.AddLine(drawer);
+			panel.SetLabel("temperature", ELEMENTAL.TEMPERATURE.NAME.Format(tempStr),
+				ELEMENTAL.TEMPERATURE.TOOLTIP.Format(tempStr));
+			panel.SetLabel("disease", ELEMENTAL.DISEASE.NAME.Format(GameUtil.
+				GetFormattedDisease(diseaseIdx, diseaseCount)), ELEMENTAL.DISEASE.TOOLTIP.
+				Format(GameUtil.GetFormattedDisease(diseaseIdx, diseaseCount, true)));
+			lastSelection.specificHeat.SetLabel(panel, "shc");
+			lastSelection.thermalConductivity.SetLabel(panel, "tc");
 			if (lastSelection.insulator)
-				drawer.NewLabel(STRINGS.UI.GAMEOBJECTEFFECTS.INSULATED.NAME).Tooltip(
+				panel.SetLabel("insulated", STRINGS.UI.GAMEOBJECTEFFECTS.INSULATED.NAME,
 					STRINGS.UI.GAMEOBJECTEFFECTS.INSULATED.TOOLTIP);
 		}
 
 		/// <summary>
 		/// Draws the state change and radiation (if enabled) information of an element.
 		/// </summary>
-		/// <param name="drawer">The renderer for the details.</param>
+		/// <param name="panel">The panel where the details should be populated.</param>
 		/// <param name="element">The element to display.</param>
-		private void AddPhaseChangeInfo(DetailsPanelDrawer drawer, Element element) {
+		private void AddPhaseChangeInfo(CollapsibleDetailContentPanel panel, Element element) {
 			// Phase change points
 			if (element.IsSolid) {
 				var overheat = lastSelection.overheat;
-				lastSelection.boil.AddLine(drawer);
+				lastSelection.boil.SetLabel(panel, "melting_point");
 				if (!string.IsNullOrEmpty(overheat.text))
-					overheat.AddLine(drawer);
+					overheat.SetLabel(panel, "overheat");
 			} else if (element.IsLiquid) {
-				lastSelection.freeze.AddLine(drawer);
-				lastSelection.boil.AddLine(drawer);
+				lastSelection.freeze.SetLabel(panel, "freezepoint");
+				lastSelection.boil.SetLabel(panel, "vapourizationpoint");
 			} else if (element.IsGas)
-				lastSelection.freeze.AddLine(drawer);
+				lastSelection.freeze.SetLabel(panel, "dewpoint");
 			// Radiation absorption
 			if (DlcManager.FeatureRadiationEnabled()) {
 				string radAbsorb = lastSelection.radiationAbsorption;
-				drawer.NewLabel(drawer.Format(STRINGS.UI.DETAILTABS.DETAILS.
-					RADIATIONABSORPTIONFACTOR.NAME, radAbsorb)).Tooltip(drawer.Format(STRINGS.
-					UI.DETAILTABS.DETAILS.RADIATIONABSORPTIONFACTOR.TOOLTIP, radAbsorb));
+				panel.SetLabel("radiationabsorption", STRINGS.UI.DETAILTABS.DETAILS.
+					RADIATIONABSORPTIONFACTOR.NAME.Format(radAbsorb), STRINGS.
+					UI.DETAILTABS.DETAILS.RADIATIONABSORPTIONFACTOR.TOOLTIP.Format(radAbsorb));
 			}
 		}
 
 		/// <summary>
 		/// Draws the uptime statistics of the building if available.
 		/// </summary>
-		/// <param name="drawer">The renderer for the details.</param>
+		/// <param name="panel">The panel where the details should be populated.</param>
 		/// <param name="changed">true if the target changed, or false otherwise.</param>
-		private void AddUptimeStats(DetailsPanelDrawer drawer, bool changed) {
+		private void AddUptimeStats(CollapsibleDetailContentPanel panel, bool changed) {
 			var operational = lastSelection.operational;
 			float thisCycle;
 			if (operational != null && lastSelection.showUptime && (thisCycle = operational.
@@ -290,15 +292,15 @@ namespace PeterHan.FastTrack.UIPatches {
 						Replace("{1}", lc).Replace("{2}", pc).ToString();
 					lastSelection.uptimeCached = label;
 				}
-				drawer.NewLabel(label);
+				panel.SetLabel("uptime_name", label, "");
 			}
 		}
 
 		/// <summary>
 		/// Draws the extra descriptors (attributes and details) for the selected object.
 		/// </summary>
-		/// <param name="drawer">The renderer for the details.</param>
-		private void DetailDescriptors(DetailsPanelDrawer drawer) {
+		/// <param name="panel">The panel where the details should be populated.</param>
+		private void DetailDescriptors(CollapsibleDetailContentPanel panel) {
 			var target = lastSelection.target;
 			var modifiers = lastSelection.modifiers;
 			Attributes attributes;
@@ -319,16 +321,18 @@ namespace PeterHan.FastTrack.UIPatches {
 					var attr = instance.Attribute;
 					if (DlcManager.IsDlcListValidForCurrentContent(attr.DLCIds) && (attr.
 							ShowInUI == Attribute.Display.Details || attr.ShowInUI ==
-							Attribute.Display.Expectation))
-						drawer.NewLabel(instance.modifier.Name + ": " + instance.
-							GetFormattedValue()).Tooltip(instance.GetAttributeValueTooltip());
+							Attribute.Display.Expectation)) {
+						var modifier = instance.modifier;
+						panel.SetLabel(modifier.Id, modifier.Name + ": " + instance.
+							GetFormattedValue(), instance.GetAttributeValueTooltip());
+					}
 				}
 			n = descriptors.Count;
 			for (int i = 0; i < n; i++) {
 				var descriptor = descriptors[i];
 				if (descriptor.type == Descriptor.DescriptorType.Detail) {
 					descriptor.IncreaseIndent();
-					drawer.NewLabel(descriptor.text).Tooltip(descriptor.tooltipText);
+					panel.SetLabel("descriptor_" + i, descriptor.text, descriptor.tooltipText);
 				}
 			}
 		}
@@ -340,34 +344,31 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Updates the additional details panel.
 		/// </summary>
-		/// <param name="instance">The panel to update.</param>
-		internal void Update(AdditionalDetailsPanel instance) {
-			GameObject target;
-			if (instance != null && (target = instance.selectedTarget) != null) {
-				var drawer = instance.drawer;
+		/// <param name="panel">The panel to update.</param>
+		/// <param name="target">The selected object.</param>
+		internal void Update(CollapsibleDetailContentPanel panel, GameObject target) {
+			if (panel != null && target != null) {
 				bool changed = target != lastSelection.target;
 				if (changed || lastSelection.ElementChanged) {
-					var detailsPanel = instance.detailsPanel;
 					lastSelection = new LastSelectionDetails(target);
-					detailsPanel.SetActive(true);
-					if (detailsPanel.TryGetComponent(out CollapsibleDetailContentPanel panel))
-						panel.HeaderLabel.SetText(STRINGS.UI.DETAILTABS.DETAILS.
-							GROUPNAME_DETAILS);
+					panel.SetActive(true);
+					panel.HeaderLabel.SetText(STRINGS.UI.DETAILTABS.DETAILS.GROUPNAME_DETAILS);
 				}
 				var element = lastSelection.element;
 				if (element != null) {
 					string massStr = GameUtil.GetFormattedMass(lastSelection.Mass);
 					var id = element.id;
 					changed |= !SpeedControlScreen.Instance.IsPaused;
-					lastSelection.elementName.AddLine(drawer);
-					drawer.NewLabel(drawer.Format(ELEMENTAL.MASS.NAME, massStr)).
-						Tooltip(drawer.Format(ELEMENTAL.MASS.TOOLTIP, massStr));
-					AddCreationTime(drawer, changed);
-					AddUptimeStats(drawer, changed);
+					lastSelection.elementName.SetLabel(panel, "element_name");
+					panel.SetLabel("element_mass", ELEMENTAL.MASS.NAME.Format(massStr),
+						ELEMENTAL.MASS.TOOLTIP.Format(massStr));
+					AddCreationTime(panel, changed);
+					AddUptimeStats(panel, changed);
 					if (id != SimHashes.Vacuum && id != SimHashes.Void)
-						AddElementInfo(drawer);
-					AddPhaseChangeInfo(drawer, element);
-					DetailDescriptors(drawer);
+						AddElementInfo(panel);
+					AddPhaseChangeInfo(panel, element);
+					DetailDescriptors(panel);
+					panel.Commit();
 				}
 			}
 		}
@@ -379,6 +380,23 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// is mostly a container, and should never be copied.
 		/// </summary>
 		private struct LastSelectionDetails {
+			/// <summary>
+			/// The circuit ID connected to the selected object, or ushort.MaxValue if no
+			/// circuit is connected.
+			/// </summary>
+			internal ushort CircuitID {
+				get {
+					var manager = Game.Instance.circuitManager;
+					ushort circuitID = ushort.MaxValue;
+					var conn = connected;
+					if (conn != null)
+						circuitID = manager.GetCircuitID(conn);
+					else if (Grid.IsValidCell(wireCell))
+						circuitID = manager.GetCircuitID(wireCell);
+					return circuitID;
+				}
+			}
+
 			/// <summary>
 			/// The number of germs on this item.
 			/// </summary>
@@ -443,6 +461,8 @@ namespace PeterHan.FastTrack.UIPatches {
 
 			internal string creationTimeCached;
 
+			private readonly ICircuitConnected connected;
+			
 			private readonly CellSelectionObject cso;
 
 			internal readonly Element element;
@@ -475,6 +495,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal readonly InfoLine thermalConductivity;
 
 			internal string uptimeCached;
+			
+			private readonly int wireCell;
 
 			internal LastSelectionDetails(GameObject go) {
 				Building building;
@@ -487,6 +509,9 @@ namespace PeterHan.FastTrack.UIPatches {
 				}
 				creationTimeCached = null;
 				go.TryGetComponent(out operational);
+				go.TryGetComponent(out connected);
+				wireCell = go.TryGetComponent(out Wire _) ? Grid.PosToCell(go.transform.
+					position) : Grid.InvalidCell;
 				// Use primary element by default, but allow CellSelectionObject to stand in
 				if (go.TryGetComponent(out PrimaryElement pe)) {
 					element = pe.Element;
@@ -553,9 +578,10 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Adds this info descriptor to the details screen.
 		/// </summary>
-		/// <param name="drawer">The renderer for the details.</param>
-		public void AddLine(DetailsPanelDrawer drawer) {
-			drawer.NewLabel(text).Tooltip(tooltip);
+		/// <param name="panel">The panel to update.</param>
+		/// <param name="caption">The panel caption to use for the text.</param>
+		public void SetLabel(CollapsibleDetailContentPanel panel, string caption) {
+			panel.SetLabel(caption, text, tooltip);
 		}
 
 		public override string ToString() {
@@ -568,19 +594,108 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// frame.
 	/// </summary>
 	[HarmonyPatch(typeof(AdditionalDetailsPanel), nameof(AdditionalDetailsPanel.
-		RefreshDetails))]
-	public static class AdditionalDetailsPanel_RefreshDetails_Patch {
+		RefreshDetailsPanel))]
+	public static class AdditionalDetailsPanel_RefreshDetailsPanel_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 		/// <summary>
-		/// Applied before RefreshDetails runs.
+		/// Applied before RefreshDetailsPanel runs.
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(AdditionalDetailsPanel __instance) {
+		internal static bool Prefix(CollapsibleDetailContentPanel targetPanel,
+				GameObject targetEntity) {
 			var inst = AdditionalDetailsPanelWrapper.Instance;
 			bool run = inst == null;
 			if (!run)
-				inst.Update(__instance);
+				inst.Update(targetPanel, targetEntity);
+			return run;
+		}
+	}
+
+	/// <summary>
+	/// Applied to AdditionalDetailsPanel to optimize this memory hungry method that runs every
+	/// frame.
+	/// </summary>
+	[HarmonyPatch(typeof(AdditionalDetailsPanel), nameof(AdditionalDetailsPanel.
+		RefreshEnergyGeneratorPanel))]
+	public static class AdditionalDetailsPanel_RefreshEnergyGeneratorPanel_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
+
+		/// <summary>
+		/// Applied before RefreshEnergyGeneratorPanel runs.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static bool Prefix(CollapsibleDetailContentPanel targetPanel) {
+			var inst = AdditionalDetailsPanelWrapper.Instance;
+			bool run = inst == null;
+			if (!run)
+				inst.UpdateGenerators(targetPanel);
+			return run;
+		}
+	}
+
+	/// <summary>
+	/// Applied to AdditionalDetailsPanel to optimize this memory hungry method that runs every
+	/// frame.
+	/// </summary>
+	[HarmonyPatch(typeof(AdditionalDetailsPanel), nameof(AdditionalDetailsPanel.
+		RefreshEnergyConsumerPanel))]
+	public static class AdditionalDetailsPanel_RefreshEnergyConsumerPanel_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
+
+		/// <summary>
+		/// Applied before RefreshEnergyConsumerPanel runs.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static bool Prefix(CollapsibleDetailContentPanel targetPanel) {
+			var inst = AdditionalDetailsPanelWrapper.Instance;
+			bool run = inst == null;
+			if (!run)
+				inst.UpdateConsumers(targetPanel);
+			return run;
+		}
+	}
+
+	/// <summary>
+	/// Applied to AdditionalDetailsPanel to optimize this memory hungry method that runs every
+	/// frame.
+	/// </summary>
+	[HarmonyPatch(typeof(AdditionalDetailsPanel), nameof(AdditionalDetailsPanel.
+		RefreshEnergyBatteriesPanel))]
+	public static class AdditionalDetailsPanel_RefreshEnergyBatteriesPanel_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
+
+		/// <summary>
+		/// Applied before RefreshEnergyBatteriesPanel runs.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static bool Prefix(CollapsibleDetailContentPanel targetPanel) {
+			var inst = AdditionalDetailsPanelWrapper.Instance;
+			bool run = inst == null;
+			if (!run)
+				inst.UpdateBatteries(targetPanel);
+			return run;
+		}
+	}
+
+	/// <summary>
+	/// Applied to AdditionalDetailsPanel to optimize this memory hungry method that runs every
+	/// frame.
+	/// </summary>
+	[HarmonyPatch(typeof(AdditionalDetailsPanel), nameof(AdditionalDetailsPanel.
+		RefreshEnergyOverviewPanel))]
+	public static class AdditionalDetailsPanel_RefreshEnergyOverviewPanel_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
+
+		/// <summary>
+		/// Applied before RefreshEnergyOverviewPanel runs.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static bool Prefix(CollapsibleDetailContentPanel targetPanel) {
+			var inst = AdditionalDetailsPanelWrapper.Instance;
+			bool run = inst == null;
+			if (!run)
+				inst.UpdateSummary(targetPanel);
 			return run;
 		}
 	}

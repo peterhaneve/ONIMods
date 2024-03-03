@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using ROCKETS = STRINGS.UI.CLUSTERMAP.ROCKETS;
-using TimeSlice = GameUtil.TimeSlice;
 
 namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
@@ -67,8 +66,11 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 			string tooltip = text.ToString();
 			text.Clear().Append(ROCKETS.RANGE.NAME);
-			float range = (fuelPerDist == 0.0f) ? 0.0f : burnable / fuelPerDist;
-			FormatStringPatches.GetFormattedRocketRange(text, range, TimeSlice.None, true);
+			float range = fuelPerDist == 0.0f ? 0.0f : burnable / fuelPerDist;
+			// This disgusting rounding hack is straight from the base game in
+			// CraftModuleInterface.RangeInTiles.
+			text.Append((int)Mathf.Floor((range + 0.001f) / Constants.SECONDS_PER_CYCLE)).
+				Append(' ').Append(STRINGS.UI.CLUSTERMAP.TILES);
 			return tooltip;
 		}
 
@@ -93,26 +95,24 @@ namespace PeterHan.FastTrack.UIPatches {
 			text.Clear().Append(ROCKETS.SPEED.NAME);
 			float speed = (clustercraft == null || burden == 0.0f) ? 0.0f : enginePower *
 				clustercraft.AutoPilotMultiplier * clustercraft.PilotSkillMultiplier / burden;
-			FormatStringPatches.GetFormattedRocketRange(text, speed, TimeSlice.PerCycle, true);
+			FormatStringPatches.GetFormattedRocketRange(text, speed, true);
 			return tooltip;
 		}
 
 		/// <summary>
 		/// Refreshes the cargo of a Spaced Out rocket.
 		/// </summary>
-		/// <param name="parent">The parent where the cargo labels will be placed.</param>
 		/// <param name="allCargoBays">The cargo bays found in the rocket.</param>
-		private void RefreshCargo(GameObject parent, IList<CargoBayCluster> allCargoBays) {
+		private void RefreshCargo(IList<CargoBayCluster> allCargoBays) {
 			int count = 0, n = allCargoBays.Count;
 			var text = CACHED_BUILDER;
+			var panel = sis.rocketStatusContainer;
 			for (int i = 0; i < n; i++) {
 				var cargoBay = allCargoBays[i];
-				var label = GetStorageLabel(parent, "cargoBay_" + count.ToString());
 				var storage = cargoBay.storage;
 				var items = storage.GetItems();
 				float mass = 0.0f;
 				int nitems = items.Count;
-				count++;
 				text.Clear();
 				for (int j = 0; j < nitems; j++) {
 					var item = items[j];
@@ -125,15 +125,12 @@ namespace PeterHan.FastTrack.UIPatches {
 						mass += m;
 					}
 				}
-				label.tooltip.SetSimpleTooltip(text.ToString());
-				label.SetAllowDrop(false, storage, null);
+				string tooltip = text.ToString();
 				text.Clear().Append(cargoBay.GetProperName()).Append(": ");
 				FormatStringPatches.GetFormattedMass(text, mass);
 				text.Append('/');
 				FormatStringPatches.GetFormattedMass(text, storage.capacityKg);
-				label.text.SetText(text);
-				label.FreezeIfMatch(text.Length);
-				rocketLabels.Add(label);
+				panel.SetLabel("cargoBay_" + (++count), text.ToString(), tooltip);
 			}
 		}
 
@@ -243,23 +240,18 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		private void RefreshRocketModules() {
 			string moduleName = null;
-			var rocketInterface = lastSelection.rocketInterface;
-			var parent = sis.rocketStatusContainer.Content.gameObject;
+			var panel = sis.rocketStatusContainer;
 			var text = CACHED_BUILDER;
-			var allModules = rocketInterface.ClusterModules;
+			var allModules = lastSelection.rocketInterface.ClusterModules;
 			int count = 0, n = allModules.Count;
 			var allCargoBays = ListPool<CargoBayCluster, RocketSimpleInfoPanel>.
 				Allocate();
-			setInactive.UnionWith(rocketLabels);
-			rocketLabels.Clear();
 			// Iterates the rocket again, but needs to be done after the engine stats
 			for (int i = 0; i < n; i++) {
 				var module = allModules[i].Get();
 				if (module != null) {
 					if (module.TryGetComponent(out ArtifactModule artModule)) {
-						var label = GetStorageLabel(parent, "artifactModule_" + count);
 						var occupant = artModule.Occupant;
-						count++;
 						if (moduleName == null)
 							moduleName = artModule.GetProperName();
 						text.Clear().Append(moduleName).Append(": ");
@@ -267,22 +259,14 @@ namespace PeterHan.FastTrack.UIPatches {
 							text.Append(occupant.GetProperName());
 						else
 							text.Append(ROCKETS.ARTIFACT_MODULE.EMPTY);
-						label.text.SetText(text);
-						label.FreezeIfMatch(text.Length);
-						label.SetAllowDrop(false, null, artModule.Occupant);
-						rocketLabels.Add(label);
+						panel.SetLabel("artifactModule_" + (++count), text.ToString(), "");
 					} else if (module.TryGetComponent(out CargoBayCluster cargoBay))
 						allCargoBays.Add(cargoBay);
 				}
 			}
 			if (allCargoBays.Count > 0)
-				RefreshCargo(parent, allCargoBays);
+				RefreshCargo(allCargoBays);
 			allCargoBays.Recycle();
-			// Only turn off the things that are gone
-			setInactive.ExceptWith(rocketLabels);
-			foreach (var inactive in setInactive)
-				inactive.SetActive(false);
-			setInactive.Clear();
 		}
 	}
 }

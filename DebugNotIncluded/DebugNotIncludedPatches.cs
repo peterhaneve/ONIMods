@@ -331,7 +331,8 @@ namespace PeterHan.DebugNotIncluded {
 	/// <summary>
 	/// Applied to EntityTemplates to allow things to be instantly tamed in sandbox mode.
 	/// </summary>
-	[HarmonyPatch(typeof(EntityTemplates), nameof(EntityTemplates.ExtendEntityToWildCreature))]
+	[HarmonyPatch(typeof(EntityTemplates), nameof(EntityTemplates.ExtendEntityToWildCreature),
+		typeof(GameObject), typeof(int), typeof(bool))]
 	public static class EntityTemplates_ExtendEntityToWildCreature_Patch {
 		/// <summary>
 		/// Applied after ExtendEntityToWildCreature runs.

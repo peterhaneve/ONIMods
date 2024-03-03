@@ -406,13 +406,13 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Applied before Sim200msLast runs.
 		/// </summary>
 		private static bool Sim200msLast_Prefix(CircuitManager __instance, float dt) {
-			var infoScreen = UIPatches.EnergyInfoScreenWrapper.Instance;
+			var infoScreen = UIPatches.AdditionalDetailsPanelWrapper.Instance;
 			float elapsedTime = __instance.elapsedTime + dt;
 			if (elapsedTime >= UpdateManager.SecondsPerSimTick) {
 				elapsedTime -= UpdateManager.SecondsPerSimTick;
 				Update(__instance);
 				if (infoScreen != null)
-					infoScreen.dirty = true;
+					infoScreen.enetDirty = true;
 			}
 			__instance.elapsedTime = elapsedTime;
 			return false;

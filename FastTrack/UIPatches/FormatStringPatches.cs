@@ -209,12 +209,36 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
+		/// Formats the time into a string buffer to save on allocations.
+		/// </summary>
+		/// <param name="text">The location where the time will be stored.</param>
+		/// <param name="seconds">The time in seconds.</param>
+		/// <param name="format">The string format to use.</param>
+		/// <param name="forceCycles">true to always use cycles, or false to use seconds for
+		/// short intervals.</param>
+		internal static void GetFormattedCycles(StringBuilder text, float seconds,
+				string format, bool forceCycles = false) {
+			if (text.Clear().AppendIfInfinite(seconds))
+				text.Append("s");
+			else if (forceCycles || Mathf.Abs(seconds) > 100.0f) {
+				string tmp = text.AppendSimpleFormat(format, seconds / Constants.
+					SECONDS_PER_CYCLE).ToString();
+				text.Clear();
+				text.Append(STRINGS.UI.FORMATDAY);
+				text.Replace("{0}", tmp);
+			} else {
+				seconds.ToRyuHardString(text, 0);
+				text.Append("s");
+			}
+		}
+
+		/// <summary>
 		/// Formats the germ quantity into a string buffer to save on allocations.
 		/// </summary>
 		/// <param name="text">The location where the germs will be stored.</param>
 		/// <param name="germs">The number of germs.</param>
 		/// <param name="timeSlice">The time unit, if any.</param>
-		private static void GetFormattedDiseaseAmount(StringBuilder text, long germs,
+		internal static void GetFormattedDiseaseAmount(StringBuilder text, long germs,
 				TimeSlice timeSlice = TimeSlice.None) {
 			// /cycle is broken in vanilla, clay please
 			GameUtil.ApplyTimeSlice(germs, timeSlice).ToStandardString(text);
@@ -351,20 +375,13 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="text">The location where the rocket range will be stored.</param>
 		/// <param name="range">The rocket range in tiles.</param>
-		/// <param name="timeSlice">The time unit, if any.</param>
 		/// <param name="displaySuffix">Whether to display the units.</param>
 		internal static void GetFormattedRocketRange(StringBuilder text, float range,
-				TimeSlice timeSlice, bool displaySuffix) {
-			if (timeSlice == TimeSlice.PerCycle) {
-				// Range cannot be over 999 tiles right now ;)
-				range.ToRyuHardString(text, 1);
-				if (displaySuffix)
-					text.Append(' ').Append(STRINGS.UI.CLUSTERMAP.TILES_PER_CYCLE);
-			} else {
-				(range / 600.0f).ToRyuHardString(text, 0);
-				if (displaySuffix)
-					text.Append(' ').Append(STRINGS.UI.CLUSTERMAP.TILES);
-			}
+				bool displaySuffix) {
+			// Range cannot be over 999 tiles right now ;)
+			range.ToRyuHardString(text, 1);
+			if (displaySuffix)
+				text.Append(' ').Append(STRINGS.UI.CLUSTERMAP.TILES_PER_CYCLE);
 		}
 
 		/// <summary>

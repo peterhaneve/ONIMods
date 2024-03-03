@@ -141,7 +141,7 @@ namespace PeterHan.FastTrack {
 					public static LocString RADIATIONOPTS = "Speeds up radiation calculations." + PERF_LOW;
 					public static LocString CONDUITOPTS = "Multi-threads some updates to liquid and gas conduits." + PERF_LOW;
 
-					public static LocString THREATOVERCROWDING = "Optimizes critter Threat and Overcrowding monitors.\n<i>May conflict with mods that add new critters</i>" + PERF_MEDIUM;
+					public static LocString THREATOVERCROWDING = "Optimizes critter Threat and Overcrowding monitors.\n<i>May conflict with mods that add new critters</i>" + PERF_LOW;
 					public static LocString CRITTERCONSUMERS = "Optimize how Critters find objects to eat." + PERF_LOW;
 					public static LocString UNSTACKLIGHTS = "Reduces the visual effects shown when many light sources are stacked.\nIntended for ranching critters like Shine Bugs." + PERF_LOW;
 

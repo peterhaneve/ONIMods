@@ -37,6 +37,8 @@ namespace PeterHan.FastTrack.GamePatches {
 			var doNothing = new HarmonyMethod(typeof(NoDiseasePatches), nameof(DisableMethod));
 			var makeDeprecated = new HarmonyMethod(typeof(NoDiseasePatches), nameof(
 				MakeBuildingDeprecated));
+			var disablePanel = new HarmonyMethod(typeof(NoDiseasePatches),
+				nameof(RefreshAPanel_Prefix));
 			var outFloat = typeof(float).MakeByRefType();
 			// Disable auto disinfect
 			harmony.Patch(typeof(AutoDisinfectableManager), nameof(AutoDisinfectableManager.
@@ -44,11 +46,10 @@ namespace PeterHan.FastTrack.GamePatches {
 			harmony.Patch(typeof(AutoDisinfectableManager), nameof(AutoDisinfectableManager.
 				RemoveAutoDisinfectable), prefix: doNothing);
 			// Hide the disease info panel
-			harmony.Patch(typeof(DiseaseInfoScreen), nameof(DiseaseInfoScreen.
-				IsValidForTarget), prefix: new HarmonyMethod(typeof(NoDiseasePatches),
-				nameof(IsValidForTarget_Prefix)));
-			harmony.Patch(typeof(DiseaseInfoScreen), nameof(DiseaseInfoScreen.
-				Refresh), prefix: doNothing);
+			harmony.Patch(typeof(AdditionalDetailsPanel), nameof(AdditionalDetailsPanel.
+				RefreshCurrentGermsPanel), prefix: disablePanel);
+			harmony.Patch(typeof(AdditionalDetailsPanel), nameof(AdditionalDetailsPanel.
+				RefreshDiseaseSourcePanel), prefix: disablePanel);
 			// Turn off disease updates in pipes
 			harmony.Patch(typeof(ConduitDiseaseManager), nameof(ConduitDiseaseManager.
 				AddDisease), prefix: doNothing);
@@ -217,9 +218,11 @@ namespace PeterHan.FastTrack.GamePatches {
 		}
 
 		/// <summary>
-		/// Applied before IsValidForTarget runs.
+		/// Applied before RefreshPanel variants run.
 		/// </summary>
-		private static bool IsValidForTarget_Prefix(ref bool __result) {
+		private static bool RefreshAPanel_Prefix(CollapsibleDetailContentPanel targetPanel,
+				ref bool __result) {
+			targetPanel.SetActive(false);
 			__result = false;
 			return false;
 		}

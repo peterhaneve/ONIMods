@@ -29,26 +29,26 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Displays an item in storage.
 		/// </summary>
 		/// <param name="item">The item to be displayed.</param>
-		/// <param name="storage">The parent storage of this item.</param>
-		/// <param name="parent">The parent object for the displayed item.</param>
 		/// <param name="total">The total number of items displayed so far.</param>
-		private void AddStorageItem(GameObject item, Storage storage, GameObject parent,
-				ref int total) {
+		private int AddStorageItem(GameObject item, int total) {
 			if (!item.TryGetComponent(out PrimaryElement pe) || pe.Mass > 0.0f) {
-				int t = total;
-				var storeLabel = GetStorageLabel(parent, "storage_" + t);
-				storageLabels.Add(storeLabel);
-				SetItemDescription(storeLabel, item, pe);
-				storeLabel.SetAllowDrop(storage.allowUIItemRemoval, storage, item);
-				total = t + 1;
+				var panel = sis.StoragePanel;
+				var text = CACHED_BUILDER;
+				string tooltip = GetItemDescription(item, pe);
+				if (item.TryGetComponent(out KSelectable selectable))
+					panel.SetLabelWithButton("storage_" + total, text.ToString(), tooltip,
+						() => SelectTool.Instance.Select(selectable));
+				else
+					panel.SetLabel("storage_" + total, text.ToString(), tooltip);
+				total++;
 			}
+			return total;
 		}
 
 		/// <summary>
 		/// Displays all items in storage.
 		/// </summary>
-		/// <param name="parent">The parent panel to add new labels.</param>
-		private void AddAllItems(GameObject parent) {
+		private void AddAllItems() {
 			int n = storages.Count, total = 0;
 			for (int i = 0; i < n; i++) {
 				var storage = storages[i];
@@ -59,74 +59,26 @@ namespace PeterHan.FastTrack.UIPatches {
 					for (int j = 0; j < nitems; j++) {
 						var item = items[j];
 						if (item != null)
-							AddStorageItem(item, storage, parent, ref total);
+							total = AddStorageItem(item, total);
 					}
 				}
 			}
-			if (total == 0) {
-				var label = GetStorageLabel(parent, CachedStorageLabel.EMPTY_ITEM);
-				label.FreezeIfMatch(1);
-				storageLabels.Add(label);
-			}
+			if (total == 0)
+				sis.StoragePanel.SetLabel("storage_empty", DETAILTABS.DETAILS.STORAGE_EMPTY, "");
 		}
 
 		/// <summary>
-		/// Retrieves a pooled label used for displaying stored objects.
+		/// Updates the text to be displayed for a single stored item. The text will be stored
+		/// in the cached builder.
 		/// </summary>
-		/// <param name="parent">The parent panel to add new labels.</param>
-		/// <param name="id">The name of the label to be added or created.</param>
-		/// <returns>A label which can be used to display stored items, pooled if possible.</returns>
-		private CachedStorageLabel GetStorageLabel(GameObject parent, string id) {
-			if (labelCache.TryGetValue(id, out CachedStorageLabel result))
-				result.Reset();
-			else {
-				result = new CachedStorageLabel(sis, parent, id);
-				labelCache[id] = result;
-			}
-			result.SetActive(true);
-			return result;
-		}
-
-		/// <summary>
-		/// Refreshes the storage objects on this object (and its children?)
-		/// </summary>
-		private void RefreshStorage() {
-			if (storageParent != null) {
-				var panel = sis.StoragePanel;
-				if (storages.Count > 0) {
-					setInactive.UnionWith(storageLabels);
-					storageLabels.Clear();
-					AddAllItems(storageParent.Content.gameObject);
-					// Only turn off the things that are gone
-					setInactive.ExceptWith(storageLabels);
-					foreach (var inactive in setInactive)
-						inactive.SetActive(false);
-					setInactive.Clear();
-					if (!storageActive) {
-						panel.gameObject.SetActive(true);
-						storageActive = true;
-					}
-				} else if (storageActive) {
-					panel.gameObject.SetActive(false);
-					storageActive = false;
-				}
-			}
-		}
-
-		/// <summary>
-		/// Updates the text to be displayed for a single stored item.
-		/// </summary>
-		/// <param name="label">The label to be updated.</param>
 		/// <param name="item">The item to be displayed.</param>
 		/// <param name="pe">The item's primary element, or null if it has none.</param>
-		private void SetItemDescription(CachedStorageLabel label, GameObject item,
-				PrimaryElement pe) {
-			var defaultStyle = PluginAssets.Instance.defaultTextStyleSetting;
+		/// <returns>The tooltip to display.</returns>
+		private string GetItemDescription(GameObject item, PrimaryElement pe) {
 			var text = CACHED_BUILDER;
 			var rottable = item.GetSMI<Rottable.Instance>();
-			var tooltip = label.tooltip;
+			string tooltip = "";
 			text.Clear();
-			tooltip.ClearMultiStringTooltip();
 			if (item.TryGetComponent(out HighEnergyParticleStorage hepStorage))
 				// Radbolts
 				text.Append(STRINGS.ITEMS.RADIATION.HIGHENERGYPARITCLE.NAME).Append(": ").
@@ -154,15 +106,27 @@ namespace PeterHan.FastTrack.UIPatches {
 				string rotText = rottable.StateString();
 				if (!string.IsNullOrEmpty(rotText))
 					text.Append("\n " + Constants.BULLETSTRING).Append(rotText);
-				tooltip.AddMultiStringTooltip(rottable.GetToolTip(), defaultStyle);
+				tooltip = rottable.GetToolTip();
 			}
-			if (pe != null && pe.DiseaseIdx != Sim.InvalidDiseaseIdx) {
-				string diseased = GameUtil.GetFormattedDisease(pe.DiseaseIdx, pe.DiseaseCount);
-				text.Append("\n " + Constants.BULLETSTRING).Append(diseased);
-				tooltip.AddMultiStringTooltip(diseased, defaultStyle);
+			if (pe != null && !FastTrackOptions.Instance.NoDisease && pe.DiseaseIdx !=
+					Sim.InvalidDiseaseIdx) {
+				text.Append("\n " + Constants.BULLETSTRING).Append(GameUtil.
+					GetFormattedDisease(pe.DiseaseIdx, pe.DiseaseCount));
+				tooltip += GameUtil.GetFormattedDisease(pe.DiseaseIdx, pe.DiseaseCount, true);
 			}
-			label.text.SetText(text);
-			label.FreezeIfMatch(text.Length);
+			return tooltip;
+		}
+
+		/// <summary>
+		/// Refreshes the storage objects on this object (and its children?)
+		/// </summary>
+		private void RefreshStorage() {
+			if (conditionParent != null) {
+				var panel = sis.StoragePanel;
+				if (storages.Count > 0)
+					AddAllItems();
+				panel.Commit();
+			}
 		}
 	}
 }

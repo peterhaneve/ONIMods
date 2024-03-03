@@ -26,32 +26,6 @@ using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeI
 
 namespace PeterHan.FastTrack.VisualPatches {
 	/// <summary>
-	/// Applied to AnimEventHandler to shave off a bit of time on repeated component lookups.
-	/// </summary>
-	[HarmonyPatch(typeof(AnimEventHandler), nameof(AnimEventHandler.UpdateOffset))]
-	public static class AnimEventHandler_UpdateOffset_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.AnimOpts;
-
-		/// <summary>
-		/// Applied before UpdateOffset runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(AnimEventHandler __instance) {
-			var navigator = __instance.navigator;
-			var pivotSymbolPosition = __instance.controller.GetPivotSymbolPosition();
-			var offset = navigator.NavGrid.GetNavTypeData(navigator.CurrentNavType).
-				animControllerOffset;
-			var baseOffset = __instance.baseOffset;
-			var pos = __instance.transform.position;
-			// Is the minus on x a typo? (Or is the plus on y the typo?)
-			__instance.animCollider.offset = new Vector2(baseOffset.x + pivotSymbolPosition.x -
-				pos.x - offset.x, baseOffset.y + pivotSymbolPosition.y - pos.y + offset.y);
-			__instance.isDirty = Mathf.Max(0, __instance.isDirty - 1);
-			return false;
-		}
-	}
-
-	/// <summary>
 	/// Applied to KAnimControllerBase to make trivial anims stop triggering updates.
 	/// </summary>
 	[HarmonyPatch(typeof(KAnimControllerBase), nameof(KAnimControllerBase.StartQueuedAnim))]

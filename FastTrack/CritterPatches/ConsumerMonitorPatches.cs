@@ -100,35 +100,4 @@ namespace PeterHan.FastTrack.CritterPatches {
 			return false;
 		}
 	}
-
-	/// <summary>
-	/// Applied to GasAndLiquidConsumerMonitor to reduce food search frequency to 4 seconds.
-	/// See comment on SolidConsumerMonitor patch for why we believe that this will not cause
-	/// critters to prematurely starve.
-	/// </summary>
-	[HarmonyPatch(typeof(GasAndLiquidConsumerMonitor), nameof(GasAndLiquidConsumerMonitor.
-		InitializeStates))]
-	public static class GasAndLiquidConsumerMonitor_InitializeStates_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.CritterConsumers;
-
-		/// <summary>
-		/// Applied after InitializeStates runs.
-		/// </summary>
-		internal static void Postfix(GasAndLiquidConsumerMonitor __instance) {
-			var lookingForFood = __instance.looking;
-			var actions = lookingForFood?.updateActions;
-			if (actions != null)
-				lookingForFood.Enter(smi => smi.FindTargetCell());
-		}
-
-		/// <summary>
-		/// Transpiles InitializeStates to convert the 1000ms to 4000ms. Note that postfixing
-		/// and swapping is not enough, Update mutates the buckets for the singleton state
-		/// machine updater, CLAY PLEASE.
-		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-			return PPatchTools.ReplaceConstant(method, (int)UpdateRate.SIM_1000ms, (int)
-				UpdateRate.SIM_4000ms, true);
-		}
-	}
 }

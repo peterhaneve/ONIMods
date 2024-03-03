@@ -17,7 +17,6 @@
  */
 
 using HarmonyLib;
-using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -45,49 +44,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		internal static void Cleanup() {
 			instance = null;
-		}
-
-		/// <summary>
-		/// Enables or disables side screens to match the selected object, and selects an
-		/// appropriate default tab.
-		/// </summary>
-		/// <param name="ds">The details screen being spawned.</param>
-		/// <param name="target">The selected target.</param>
-		/// <param name="screens">The side screens to show or hide.</param>
-		/// <returns>The number of tabs that are active.</returns>
-		private static int EnableScreens(KTabMenu ds, GameObject target,
-				DetailsScreen.Screens[] screens) {
-			int n = screens.Length, activeIndex = -1, enabledTabs = 0, lastActive =
-				ds.previouslyActiveTab;
-			// Vanilla checks the details screen itself to see if it is dead!?!? But no
-			// side screens are set to check this so the bug goes by unnoticed
-			bool isDead = target != null && target.TryGetComponent(out KPrefabID id) && id.
-				HasTag(GameTags.Dead);
-			string lastActiveName = null;
-			// Find the last selected active screen
-			if (lastActive >= 0 && lastActive < n)
-				lastActiveName = screens[lastActive].name;
-			for (int i = 0; i < n; i++) {
-				ref var screen = ref screens[i];
-				bool enabled = screen.screen.IsValidForTarget(target) && !(isDead && screen.
-					hideWhenDead);
-				ds.SetTabEnabled(screen.tabIdx, enabled);
-				if (enabled) {
-					enabledTabs++;
-					if (activeIndex < 0) {
-						var mode = SimDebugView.Instance.GetMode();
-						if (mode != OverlayModes.None.ID) {
-							// Is it related to the current overlay mode?
-							if (mode == screen.focusInViewMode)
-								activeIndex = i;
-						} else if (lastActiveName != null && screen.name == lastActiveName)
-							// Is it the screen that was last selected?
-							activeIndex = screen.tabIdx;
-					}
-				}
-			}
-			ds.ActivateTab(Math.Max(activeIndex, 0));
-			return enabledTabs;
 		}
 
 		/// <summary>
@@ -157,28 +113,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
-		/// Creates the built-in game side screens.
-		/// </summary>
-		/// <param name="ds">The details screen being spawned.</param>
-		/// <param name="screens">The side screens to create.</param>
-		private static void InstantiateScreens(KTabMenu ds, DetailsScreen.Screens[] screens) {
-			var body = ds.body.gameObject;
-			int n = screens.Length;
-			// First time initialization, ref screen allows reassignment back!
-			for (int i = 0; i < n; i++) {
-				ref var screen = ref screens[i];
-				var targetScreen = screen.screen;
-				var screenGO = KScreenManager.Instance.InstantiateScreen(targetScreen.
-					gameObject, body).gameObject;
-				if (screenGO.TryGetComponent(out targetScreen)) {
-					screen.screen = targetScreen;
-					screen.tabIdx = ds.AddTab(screen.icon, Strings.Get(screen.
-						displayName), targetScreen, Strings.Get(screen.tooltip));
-				}
-			}
-		}
-
-		/// <summary>
 		/// Sorts the side screens using their sort key.
 		/// </summary>
 		/// <param name="ds">The details screen to sort.</param>
@@ -207,7 +141,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					if (prefab.IsValidForTarget(target)) {
 						if (inst == null) {
 							inst = Util.KInstantiateUI<SideScreenContent>(prefab.gameObject,
-								ds.sideScreenContentBody);
+								ds.sideScreenConfigContentBody);
 							screen.screenInstance = inst;
 						}
 						int sortOrder = inst.GetSideScreenSortOrder();
@@ -218,7 +152,7 @@ namespace PeterHan.FastTrack.UIPatches {
 						sortedScreens.Add(new SideScreenPair(inst.gameObject, sortOrder));
 						if (currentScreen == null || sortOrder > currentOrder) {
 							ds.currentSideScreen = currentScreen = inst;
-							ds.sideScreenTitle.SetText(inst.GetTitle());
+							ds.sideScreenTitleLabel.SetText(inst.GetTitle());
 						}
 					} else if (inst != null && (instGO = inst.gameObject).activeSelf) {
 						instGO.SetActive(false);
@@ -240,63 +174,56 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="screen">The details screen to be updated.</param>
 		private static void UpdateTitle(DetailsScreen screen) {
-			var inst = instance;
-			if (inst != null) {
-				ref var lastSelection = ref inst.lastSelection;
-				string codexLink = lastSelection.codexLink;
-				bool valid = !string.IsNullOrEmpty(codexLink);
-				var commandModule = lastSelection.rocketCommand;
-				var rocketDoor = lastSelection.rocketDoor;
-				var editTooltip = lastSelection.editTooltip;
-				var titleText = screen.TabTitle;
-				string name = lastSelection.selectable.GetProperName();
-				var changeOutfit = screen.ChangeOutfitButton;
-				// The codex button is surprisingly expensive to calculate?
-				var button = screen.CodexEntryButton;
-				if (button.isInteractable != valid) {
-					button.isInteractable = valid;
-					if (button.TryGetComponent(out ToolTip tooltip))
-						tooltip.SetSimpleTooltip(valid ? STRINGS.UI.TOOLTIPS.OPEN_CODEX_ENTRY :
-							STRINGS.UI.TOOLTIPS.NO_CODEX_ENTRY);
-				}
-				// Show or hide the change outfit (~~Barbie~~) button
-				if (changeOutfit != null)
-					changeOutfit.gameObject.SetActive(lastSelection.id != null);
-				if (titleText != null) {
-					var resume = lastSelection.resume;
-					titleText.SetTitle(name);
-					if (resume != null) {
-						titleText.SetSubText(resume.GetSkillsSubtitle());
-						titleText.SetUserEditable(true);
-					} else if (lastSelection.rename != null) {
-						titleText.SetSubText("");
-						titleText.SetUserEditable(true);
-					} else if (commandModule != null) {
-						var sm = SpacecraftManager.instance;
-						if (sm != null)
-							titleText.SetTitle(sm.GetSpacecraftFromLaunchConditionManager(
-								lastSelection.conditions).GetRocketName());
-						else
-							titleText.SetTitle("");
-						titleText.SetSubText(name);
-						titleText.SetUserEditable(true);
-					} else if (rocketDoor != null)
-						screen.TrySetRocketTitle(rocketDoor);
-					else {
-						titleText.SetSubText("");
-						titleText.SetUserEditable(false);
-					}
-				}
-				if (editTooltip != null) {
-					string text;
-					if (lastSelection.id != null)
-						text = STRINGS.UI.TOOLTIPS.EDITNAME;
-					else if (commandModule != null || rocketDoor != null)
-						text = STRINGS.UI.TOOLTIPS.EDITNAMEROCKET;
+			ref var lastSelection = ref instance.lastSelection;
+			string codexLink = lastSelection.codexLink;
+			bool valid = !string.IsNullOrEmpty(codexLink);
+			var commandModule = lastSelection.rocketCommand;
+			var rocketDoor = lastSelection.rocketDoor;
+			var editTooltip = lastSelection.editTooltip;
+			var titleText = screen.TabTitle;
+			string name = lastSelection.selectable.GetProperName();
+			// The codex button is surprisingly expensive to calculate?
+			var button = screen.CodexEntryButton;
+			if (button.isInteractable != valid) {
+				button.isInteractable = valid;
+				if (button.TryGetComponent(out ToolTip tooltip))
+					tooltip.SetSimpleTooltip(valid ? STRINGS.UI.TOOLTIPS.OPEN_CODEX_ENTRY :
+						STRINGS.UI.TOOLTIPS.NO_CODEX_ENTRY);
+			}
+			if (titleText != null) {
+				var resume = lastSelection.resume;
+				titleText.SetTitle(name);
+				if (resume != null) {
+					titleText.SetSubText(resume.GetSkillsSubtitle());
+					titleText.SetUserEditable(true);
+				} else if (lastSelection.rename != null) {
+					titleText.SetSubText("");
+					titleText.SetUserEditable(true);
+				} else if (commandModule != null) {
+					var sm = SpacecraftManager.instance;
+					if (sm != null)
+						titleText.SetTitle(sm.GetSpacecraftFromLaunchConditionManager(
+							lastSelection.conditions).GetRocketName());
 					else
-						text = STRINGS.UI.TOOLTIPS.EDITNAMEGENERIC.Format(name);
-					editTooltip.toolTip = text;
+						titleText.SetTitle("");
+					titleText.SetSubText(name);
+					titleText.SetUserEditable(true);
+				} else if (rocketDoor != null)
+					screen.TrySetRocketTitle(rocketDoor);
+				else {
+					titleText.SetSubText("");
+					titleText.SetUserEditable(false);
 				}
+			}
+			if (editTooltip != null) {
+				string text;
+				if (lastSelection.id != null)
+					text = STRINGS.UI.TOOLTIPS.EDITNAME;
+				else if (commandModule != null || rocketDoor != null)
+					text = STRINGS.UI.TOOLTIPS.EDITNAMEROCKET;
+				else
+					text = STRINGS.UI.TOOLTIPS.EDITNAMEGENERIC.Format(name);
+				editTooltip.toolTip = text;
 			}
 		}
 
@@ -455,13 +382,8 @@ namespace PeterHan.FastTrack.UIPatches {
 						cso.OnObjectSelected(null);
 					if ((oldTarget == null || go != oldTarget) && inst != null)
 						inst.lastSelection = new LastSelectionDetails(go, cso, __instance);
-					if (!__instance.HasActivated) {
-						InstantiateScreens(__instance, screens);
-						__instance.onTabActivated += __instance.OnTabActivated;
-						__instance.HasActivated = true;
-					}
-					int tabCount = EnableScreens(__instance, go, screens);
-					__instance.tabHeaderContainer.gameObject.SetActive(tabCount > 1);
+					UpdateTitle(__instance);
+					__instance.tabHeader.RefreshTabDisplayForTarget(go);
 					SortSideScreens(__instance, go);
 				}
 				return false;
@@ -472,16 +394,17 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Applied to DetailsScreen to speed up setting the title and break a hard
 		/// MinionIdentity dependency (hey Romen!).
 		/// </summary>
-		[HarmonyPatch(typeof(DetailsScreen), nameof(DetailsScreen.SetTitle), typeof(int))]
+		[HarmonyPatch(typeof(DetailsScreen), nameof(DetailsScreen.UpdateTitle))]
 		internal static class SetTitle_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 			/// <summary>
-			/// Applied before SetTitle runs.
+			/// Applied before UpdateTitle runs.
 			/// </summary>
 			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(DetailsScreen __instance) {
-				UpdateTitle(__instance);
+				if (instance != null)
+					UpdateTitle(__instance);
 				return false;
 			}
 		}

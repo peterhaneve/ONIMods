@@ -132,7 +132,7 @@ namespace PeterHan.FastTrack.PathPatches {
 #endif
 						item.UpdateCachedCell(cell);
 						gsp.UpdatePosition(item.solidPartitionerEntry, cell);
-						gsp.UpdatePosition(item.partitionerEntry, cell);
+						gsp.UpdatePosition(item.worldPartitionerEntry, cell);
 						item.NotifyChanged(oldCell);
 						item.NotifyChanged(cell);
 					}

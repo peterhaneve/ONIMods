@@ -185,7 +185,7 @@ namespace PeterHan.FastTrack {
 		/// <param name="harmony">The Harmony instance to use for patching.</param>
 		internal static void CheckStatsCompat(Harmony harmony) {
 			if (PPatchTools.GetTypeSafe(STATS_UNLIMITED_TYPE) == null)
-				UIPatches.MinionStatsPanelWrapper.Apply(harmony);
+				UIPatches.MinionPersonalityPanelWrapper.Apply(harmony);
 			else
 				PUtil.LogDebug("Disabling attributes panel optimizations: Stats mod active");
 		}

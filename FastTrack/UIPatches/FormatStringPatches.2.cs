@@ -78,18 +78,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(float seconds, string formatString, bool forceCycles,
 					ref string __result) {
 				var text = CACHED_BUILDER;
-				if (text.Clear().AppendIfInfinite(seconds))
-					text.Append("s");
-				else if (forceCycles || Mathf.Abs(seconds) > 100.0f) {
-					string tmp = text.AppendSimpleFormat(formatString, seconds / Constants.
-						SECONDS_PER_CYCLE).ToString();
-					text.Clear();
-					text.Append(STRINGS.UI.FORMATDAY);
-					text.Replace("{0}", tmp);
-				} else {
-					seconds.ToRyuHardString(text, 0);
-					text.Append("s");
-				}
+				GetFormattedCycles(text, seconds, formatString, forceCycles);
 				__result = text.ToString();
 				return false;
 			}
@@ -387,18 +376,17 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 		}
 
-		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedRocketRange))]
-		internal static class GetFormattedRocketRange_Patch {
+		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedRocketRangePerCycle))]
+		internal static class GetFormattedRocketRangePerCycle_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
 
 			/// <summary>
-			/// Applied before GetFormattedRocketRange runs.
+			/// Applied before GetFormattedRocketRangePerCycle runs.
 			/// </summary>
 			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix(float range, TimeSlice timeSlice, bool displaySuffix,
-					ref string __result) {
+			internal static bool Prefix(float range, bool displaySuffix, ref string __result) {
 				var text = CACHED_BUILDER;
-				GetFormattedRocketRange(text.Clear(), range, timeSlice, displaySuffix);
+				GetFormattedRocketRange(text.Clear(), range, displaySuffix);
 				__result = text.ToString();
 				return false;
 			}

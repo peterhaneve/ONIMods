@@ -20,6 +20,7 @@ using HarmonyLib;
 using Klei.AI;
 using System;
 using System.Collections.Generic;
+using PeterHan.PLib.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -200,7 +201,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="instance">The panel to update.</param>
 		internal void Update(MinionVitalsPanel instance) {
-			var entity = instance.selectedEntity;
+			var entity = instance.lastSelectedEntity;
 			GameObject go;
 			// Update the wrapper if necessary
 			if (instance != panel.vitals)

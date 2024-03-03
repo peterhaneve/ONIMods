@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace PeterHan.FastTrack.UIPatches {
@@ -75,57 +76,40 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
-		/// Applied to SimpleInfoScreen to refresh the egg chances when they change.
-		/// </summary>
-		[HarmonyPatch(typeof(SimpleInfoScreen), nameof(SimpleInfoScreen.
-			RefreshBreedingChance))]
-		internal static class RefreshBreedingChance_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
-
-			/// <summary>
-			/// Applied before RefreshBreedingChance runs.
-			/// </summary>
-			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix() {
-				if (instance != null)
-					instance.RefreshBreedingChance();
-				return false;
-			}
-		}
-
-		/// <summary>
 		/// Applied to SimpleInfoScreen to refresh the checklist of conditions for operation.
 		/// </summary>
 		[HarmonyPatch(typeof(SimpleInfoScreen), nameof(SimpleInfoScreen.
-			RefreshProcessConditions))]
+			RefreshProcessConditionsPanel))]
 		internal static class RefreshProcessConditions_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 			/// <summary>
-			/// Applied before RefreshProcessConditions runs.
+			/// Applied before RefreshProcessConditionsPanel runs.
 			/// </summary>
 			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix() {
-				if (instance != null)
+				if (instance != null && instance.lastSelection.conditions != null)
 					instance.RefreshProcess();
 				return false;
 			}
 		}
 
 		/// <summary>
-		/// Applied to SimpleInfoScreen to refresh the storage when storage changes.
+		/// Applied to SimpleInfoScreen to refresh the storage when storage changes. Even
+		/// though the Refresh method was replaced, other sections of the game call this method
+		/// directly.
 		/// </summary>
-		[HarmonyPatch(typeof(SimpleInfoScreen), nameof(SimpleInfoScreen.RefreshStorage))]
-		internal static class RefreshStorage_Patch {
+		[HarmonyPatch(typeof(SimpleInfoScreen), nameof(SimpleInfoScreen.RefreshStoragePanel))]
+		internal static class RefreshStoragePanel_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 			/// <summary>
-			/// Applied before RefreshStorage runs.
+			/// Applied before RefreshStoragePanel runs.
 			/// </summary>
 			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix(SimpleInfoScreen __instance) {
+			internal static bool Prefix() {
 				var inst = instance;
-				if (inst != null && __instance.selectedTarget != null)
+				if (inst != null)
 					inst.RefreshStorage();
 				return false;
 			}
@@ -133,14 +117,15 @@ namespace PeterHan.FastTrack.UIPatches {
 
 		/// <summary>
 		/// Applied to SimpleInfoScreen to refresh the cluster map info when the refresh is
-		/// triggered.
+		/// triggered. Even though the Refresh method was replaced, other sections of the game
+		/// call this method directly.
 		/// </summary>
-		[HarmonyPatch(typeof(SimpleInfoScreen), nameof(SimpleInfoScreen.RefreshWorld))]
-		internal static class RefreshWorld_Patch {
+		[HarmonyPatch(typeof(SimpleInfoScreen), nameof(SimpleInfoScreen.RefreshWorldPanel))]
+		internal static class RefreshWorldPanel_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 			/// <summary>
-			/// Applied before RefreshWorld runs.
+			/// Applied before RefreshWorldPanel runs.
 			/// </summary>
 			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix() {
@@ -150,4 +135,21 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 		}
     }
+
+	/// <summary>
+	/// Sorts side screens by their sort key.
+	/// </summary>
+	internal sealed class StressNoteComparer : IComparer<ReportManager.ReportEntry.Note> {
+		/// <summary>
+		/// The singleton instance of this class.
+		/// </summary>
+		internal static readonly StressNoteComparer INSTANCE = new StressNoteComparer();
+
+		private StressNoteComparer() { }
+
+		public int Compare(ReportManager.ReportEntry.Note x, ReportManager.ReportEntry.Note y)
+		{
+			return x.value.CompareTo(y.value);
+		}
+	}
 }

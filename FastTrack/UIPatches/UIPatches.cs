@@ -159,49 +159,6 @@ namespace PeterHan.FastTrack.UIPatches {
 			return !(component is ThoughtGraph.Instance && options.NoConversations);
 		}
 	}
-	
-	/// <summary>
-	/// Applied to NameDisplayScreen to speed up checking name card positions.
-	/// </summary>
-	[HarmonyPatch(typeof(NameDisplayScreen), nameof(NameDisplayScreen.UpdatePos))]
-	public static class NameDisplayScreen_UpdatePos_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
-
-		/// <summary>
-		/// Applied before UpdatePos runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(NameDisplayScreen __instance) {
-			var inst = CameraController.Instance;
-			if (inst != null) {
-				var entries = __instance.entries;
-				var followTarget = inst.followTarget;
-				bool worldSpace = __instance.worldSpace;
-				int n = entries.Count;
-				for (int i = 0; i < n; i++) {
-					var entry = entries[i];
-					var go = entry.world_go;
-					if (entry.visible && go != null) {
-						var transform = go.transform;
-						var pos = transform.position;
-						if (followTarget == transform)
-							pos = inst.followTargetPos;
-						else if (entry.world_go_anim_controller != null) {
-							var collider = entry.collider;
-							if (collider != null) {
-								var offset = collider.offset;
-								pos.x += offset.x;
-								pos.y += offset.y - collider.size.y / 2f;
-							}
-						}
-						entry.display_go_rect.anchoredPosition = worldSpace ? pos :
-							__instance.WorldToScreen(pos);
-					}
-				}
-			}
-			return false;
-		}
-	}
 
 	/// <summary>
 	/// Applied to TechItems to remove a duplicate Add call.

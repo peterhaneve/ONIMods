@@ -18,6 +18,7 @@
 
 using System.Collections.Generic;
 using System.Text;
+using Klei;
 using Klei.AI;
 using UnityEngine;
 
@@ -53,10 +54,10 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Collects the stress change reasons and displays them in the UI.
 		/// </summary>
 		/// <param name="stressEntries">The stress change entries in the report entry.</param>
-		/// <param name="stressDrawer">The renderer for this info screen.</param>
+		/// <param name="panel">The panel where the details should be populated.</param>
 		/// <returns>The total stress change.</returns>
 		private static float CompileNotes(Dictionary<NoteEntryKey, float> stressEntries,
-				DetailsPanelDrawer stressDrawer) {
+				CollapsibleDetailContentPanel panel) {
 			var stringTable = ReportManager.Instance.noteStorage.stringTable;
 			var stressNotes = ListPool<ReportEntry.Note, SimpleInfoScreen>.Allocate();
 			string pct = STRINGS.UI.UNITSUFFIXES.PERCENT;
@@ -79,11 +80,58 @@ namespace PeterHan.FastTrack.UIPatches {
 				text.Append(pct);
 				if (stressDelta > 0.0f)
 					text.Append(UIConstants.ColorSuffix);
-				stressDrawer.NewLabel(text.ToString());
+				panel.SetLabel("stressNotes_" + i, text.ToString(), "");
 				total += stressDelta;
 			}
 			stressNotes.Recycle();
 			return total;
+		}
+		
+		/// <summary>
+		/// Generates the required tooltip text for Move To errands. Populates the cached
+		/// string builder with the output text.
+		/// </summary>
+		/// <param name="target">The item that is being moved.</param>
+		/// <param name="pe">The primary element of the target item.</param>
+		/// <returns>The tooltip to display.</returns>
+		private static string DescribeMovable(GameObject target, PrimaryElement pe) {
+			var smi = target.GetSMI<Rottable.Instance>();
+			var text = CACHED_BUILDER;
+			bool hasHEP = target.TryGetComponent(out HighEnergyParticleStorage hep);
+			string tooltip = "", itemName = "";
+			if (target.TryGetComponent(out KSelectable selectable))
+				itemName = selectable.name;
+			text.Clear();
+			if (hasHEP) {
+				if (pe != null) {
+					if (target.TryGetComponent(out KPrefabID kpid) && Assets.IsTagCountable(
+						kpid.PrefabTag))
+						itemName = GameUtil.GetUnitFormattedName(itemName, pe.Units);
+					text.AppendFormat(DETAILTABS.DETAILS.CONTENTS_MASS, itemName, "");
+					FormatStringPatches.GetFormattedMass(text, pe.Mass);
+					string what = text.ToString();
+					text.Clear().AppendFormat(DETAILTABS.DETAILS.CONTENTS_TEMPERATURE, what,
+						"");
+					FormatStringPatches.GetFormattedTemperature(text, pe.Temperature);
+				} else {
+					itemName = STRINGS.ITEMS.RADIATION.HIGHENERGYPARITCLE.NAME;
+					text.AppendFormat(DETAILTABS.DETAILS.CONTENTS_MASS, itemName,
+						GameUtil.GetFormattedHighEnergyParticles(hep.Particles));
+				}
+			}
+			if (smi != null) {
+				string str = smi.StateString();
+				if (!string.IsNullOrEmpty(str))
+					text.Append(DETAILTABS.DETAILS.CONTENTS_ROTTABLE.Format(str));
+				tooltip = smi.GetToolTip();
+			}
+			if (!FastTrackOptions.Instance.NoDisease && pe.DiseaseIdx != Sim.InvalidDiseaseIdx)
+			{
+				text.Append(DETAILTABS.DETAILS.CONTENTS_DISEASED.Format(GameUtil.
+					GetFormattedDisease(pe.DiseaseIdx, pe.DiseaseCount)));
+				tooltip += GameUtil.GetFormattedDisease(pe.DiseaseIdx, pe.DiseaseCount, true);
+			}
+			return tooltip;
 		}
 
 		/// <summary>
@@ -117,11 +165,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		private Geyser[] allGeysers;
 
 		private GameObject conditionParent;
-
-		/// <summary>
-		/// Caches labels for storage items.
-		/// </summary>
-		private readonly IDictionary<string, CachedStorageLabel> labelCache;
 
 		/// <summary>
 		/// The last daily report when stress was updated.
@@ -166,12 +209,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		private readonly IList<ProcessConditionRow> processVisible;
 
-		/// <summary>
-		/// The currently visible rocket labels, to avoid iterating the entire cache to set
-		/// inactive.
-		/// </summary>
-		private readonly ISet<CachedStorageLabel> rocketLabels;
-
 #pragma warning disable IDE0044
 #pragma warning disable CS0649
 		// These fields are automatically populated by KMonoBehaviour
@@ -185,31 +222,13 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		private readonly List<Storage> storages;
 
-		/// <summary>
-		/// A temporary set for determine which labels need to be hidden.
-		/// </summary>
-		private readonly ISet<CachedStorageLabel> setInactive;
-
 		private bool statusActive;
-
-		/// <summary>
-		/// The currently visible storage labels, to avoid iterating the entire cache to set
-		/// inactive.
-		/// </summary>
-		private readonly ISet<CachedStorageLabel> storageLabels;
-
-		private bool storageActive;
-
-		private CollapsibleDetailContentPanel storageParent;
-
-		private bool stressActive;
 
 		private bool vitalsActive;
 
 		internal SimpleInfoScreenWrapper() {
 			allGeysers = null;
 			conditionParent = null;
-			labelCache = new Dictionary<string, CachedStorageLabel>(64);
 			lastReport = null;
 			lastSelection = default;
 			lastStressEntry = null;
@@ -217,24 +236,15 @@ namespace PeterHan.FastTrack.UIPatches {
 			processHeaders = new List<ProcessConditionRow>(8);
 			processRows = new List<ProcessConditionRow>(24);
 			processVisible = new List<ProcessConditionRow>(32);
-			rocketLabels = new HashSet<CachedStorageLabel>();
-			setInactive = new HashSet<CachedStorageLabel>();
 			statusActive = false;
 			storages = new List<Storage>(8);
-			storageActive = false;
-			storageLabels = new HashSet<CachedStorageLabel>();
-			storageParent = null;
-			stressActive = false;
 			vitalsActive = false;
 			instance = this;
 		}
-
+		
 		public override void OnCleanUp() {
 			int n = processHeaders.Count;
 			allGeysers = null;
-			foreach (var pair in labelCache)
-				pair.Value.Dispose();
-			labelCache.Clear();
 			// Avoid leaking the report
 			lastReport = null;
 			lastStressEntry = null;
@@ -249,10 +259,6 @@ namespace PeterHan.FastTrack.UIPatches {
 			processRows.Clear();
 			processVisible.Clear();
 			storages.Clear();
-			// All of these were in the label cache so they should already be disposed
-			rocketLabels.Clear();
-			storageLabels.Clear();
-			storageParent = null;
 			conditionParent = null;
 			instance = null;
 			base.OnCleanUp();
@@ -294,10 +300,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		public override void OnSpawn() {
 			string atTemperature = DETAILTABS.DETAILS.CONTENTS_TEMPERATURE;
 			base.OnSpawn();
-			sis.StoragePanel.TryGetComponent(out storageParent);
-			if (sis.stressPanel.TryGetComponent(out CollapsibleDetailContentPanel panel))
-				panel.HeaderLabel.SetText(DETAILTABS.STATS.GROUPNAME_STRESS);
-			if (sis.processConditionContainer.TryGetComponent(out panel))
+			sis.stressPanel.SetTitle(DETAILTABS.STATS.GROUPNAME_STRESS);
+			if (sis.processConditionContainer.TryGetComponent(out CollapsibleDetailContentPanel panel))
 				conditionParent = panel.Content.gameObject;
 			// Check for the localization fast path
 			if (atTemperature.StartsWith("{0}") && atTemperature.EndsWith("{1}"))
@@ -316,7 +320,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			var target = sis.selectedTarget;
 			var statusItems = sis.statusItems;
 			// OnSelectTarget gets called before the first Init, so the UI is not ready then
-			if (storageParent != null) {
+			if (conditionParent != null) {
 				if (pendingProcessFreeze) {
 					// Freeze the condition rows
 					int n = processVisible.Count;
@@ -347,7 +351,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Refreshes the egg chances.
 		/// </summary>
-		private void RefreshBreedingChance() {
+		private void RefreshFertility() {
 			var smi = lastSelection.fertility;
 			var fertilityPanel = sis.fertilityPanel;
 			if (smi != null && fertilityPanel != null) {
@@ -386,6 +390,86 @@ namespace PeterHan.FastTrack.UIPatches {
 				}
 				fertilityPanel.Commit();
 			}
+		}
+
+		/// <summary>
+		/// Refreshes the Info panel.
+		/// </summary>
+		private void RefreshInfo() {
+			var targetEntity = sis.selectedTarget;
+			var infoPanel = sis.infoPanel;
+			var text = CACHED_BUILDER;
+			string desc = "", effect = "";
+			if (lastSelection.identity == null) {
+				var id = lastSelection.description;
+				var buildingComplete = lastSelection.complete;
+				var buildingConstruction = lastSelection.underConstruction;
+				var pe = lastSelection.primaryElement;
+				var edible = lastSelection.edible;
+				var cso = lastSelection.cso;
+				if (id != null) {
+					desc = id.description;
+					effect = id.effect;
+				} else if (buildingComplete != null) {
+					desc = buildingComplete.DescFlavour;
+					effect = buildingComplete.Desc;
+				} else if (buildingConstruction != null) {
+					desc = buildingConstruction.Def.Effect;
+					effect = buildingConstruction.Desc;
+				} else if (edible != null)
+					desc = STRINGS.UI.GAMEOBJECTEFFECTS.CALORIES.Format(GameUtil.
+						GetFormattedCalories(edible.FoodInfo.CaloriesPerUnit));
+				else if (cso != null)
+					desc = cso.element.FullDescription(false);
+				else if (pe != null) {
+					var element = ElementLoader.FindElementByHash(pe.ElementID);
+					desc = element == null ? "" : element.FullDescription(false);
+				}
+				if (!string.IsNullOrEmpty(desc))
+					infoPanel.SetLabel("Description", desc, "");
+				if (!string.IsNullOrWhiteSpace(effect))
+					infoPanel.SetLabel("Flavour", "\n" + effect, "");
+				var roomClass = CodexEntryGenerator.GetRoomClassForObject(targetEntity);
+				if (roomClass != null) {
+					int n = roomClass.Length;
+					text.Clear().AppendLine().Append(STRINGS.CODEX.HEADERS.BUILDINGTYPE).
+						Append(':');
+					for (int i = 0; i < n; i++)
+						text.AppendLine().Append(Constants.TABBULLETSTRING).Append(
+							roomClass[i]);
+					infoPanel.SetLabel("RoomClass", text.ToString(), "");
+				}
+			}
+			infoPanel.Commit();
+		}
+
+		/// <summary>
+		/// Refreshes the Move To panel.
+		/// </summary>
+		private void RefreshMove() {
+			var moveTo = lastSelection.moveTo;
+			var movePanel = sis.movePanel;
+			var text = CACHED_BUILDER;
+			var canMove = lastSelection.canMove;
+			if (moveTo != null) {
+				var movingObjects = moveTo.movingObjects;
+				int n = movingObjects.Count;
+				for (int i = 0; i < n; i++) {
+					var movable = movingObjects[i].Get();
+					if (movable != null && (!movable.TryGetComponent(out PrimaryElement pe) ||
+							pe.Mass != 0.0f)) {
+						var go = movable.gameObject;
+						string tooltip = DescribeMovable(go, pe);
+						movePanel.SetLabelWithButton("move_" + i, text.ToString(), tooltip,
+							new SelectMovable(movable).Select);
+					}
+				}
+			} else if (canMove != null && canMove.IsMarkedForMove)
+				movePanel.SetLabelWithButton("moveplacer",
+					STRINGS.MISC.PLACERS.MOVEPICKUPABLEPLACER.PLACER_STATUS,
+					STRINGS.MISC.PLACERS.MOVEPICKUPABLEPLACER.PLACER_STATUS_TOOLTIP,
+					new SelectMovable(canMove.StorageProxy).Select);
+			movePanel.Commit();
 		}
 
 		/// <summary>
@@ -465,7 +549,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Refreshes the Stress readout of the info screen.
 		/// </summary>
 		private void RefreshStress() {
-			var stressDrawer = sis.stressDrawer;
 			var ri = ReportManager.Instance;
 			var allNoteEntries = ri.noteStorage.noteEntries;
 			var report = ri.TodaysReport;
@@ -481,7 +564,6 @@ namespace PeterHan.FastTrack.UIPatches {
 				string properName = lastSelection.selectable.GetProperName();
 				var stressEntries = stressEntry.contextEntries;
 				int n = stressEntries.Count;
-				stressDrawer.BeginDrawing();
 				// Look for this Duplicant in the report
 				for (int i = 0; i < n; i++) {
 					var reportEntry = stressEntries[i];
@@ -490,7 +572,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					if (reportEntry.context == properName && allNoteEntries.entries.
 							TryGetValue(nodeID, out var nodeEntries)) {
 						var text = CACHED_BUILDER;
-						float total = CompileNotes(nodeEntries, stressDrawer);
+						float total = CompileNotes(nodeEntries, stressPanel);
 						// Ryu to the rescue again!
 						text.Clear();
 						total.ToRyuHardString(text, 2);
@@ -501,19 +583,12 @@ namespace PeterHan.FastTrack.UIPatches {
 						text.Append(DETAILTABS.DETAILS.NET_STRESS).Replace("{0}", totalText);
 						if (total > 0.0f)
 							text.Append(UIConstants.ColorSuffix);
-						stressDrawer.NewLabel(text.ToString());
+						stressPanel.SetLabel("net_stress", text.ToString(), "");
 						break;
 					}
 				}
-				stressDrawer.EndDrawing();
-				if (!stressActive) {
-					sis.stressPanel.gameObject.SetActive(true);
-					stressActive = true;
-				}
-			} else if (stressActive) {
-				stressPanel.gameObject.SetActive(false);
-				stressActive = false;
 			}
+			stressPanel.Commit();
 		}
 
 		/// <summary>
@@ -592,25 +667,18 @@ namespace PeterHan.FastTrack.UIPatches {
 		private void SetPanels(GameObject target) {
 			var modifiers = lastSelection.modifiers;
 			bool isDuplicant = lastSelection.identity != null;
-			var attributeLabels = sis.attributeLabels;
-			int n = attributeLabels.Count;
 			Amounts amounts;
 			bool hasAmounts = modifiers != null && (amounts = modifiers.amounts) != null &&
 				amounts.Count > 0, hasProcess = lastSelection.conditions != null;
-			for (int i = 0; i < n; i++)
-				Destroy(attributeLabels[i]);
-			attributeLabels.Clear();
-			if (hasAmounts) {
-				sis.vitalsContainer.selectedEntity = target;
-				if (target.TryGetComponent(out Uprootable plant) && !target.TryGetComponent(
-						out WiltCondition _))
-					hasAmounts = plant.GetPlanterStorage != null;
-			}
+			if (hasAmounts && target.TryGetComponent(out Uprootable plant) && !target.
+					TryGetComponent(out WiltCondition _))
+				hasAmounts = plant.GetPlanterStorage != null;
 			vitalsActive = hasAmounts;
 			sis.vitalsPanel.gameObject.SetActive(hasAmounts);
+			sis.vitalsPanel.lastSelectedEntity = hasAmounts ? target : null;
 			sis.processConditionContainer.gameObject.SetActive(hasProcess);
 			if (hasProcess)
-				sis.RefreshProcessConditions();
+				sis.RefreshProcessConditionsPanel();
 			// Effects and requirements
 			if (isDuplicant) {
 				sis.effectsPanel.gameObject.SetActive(false);
@@ -619,7 +687,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				SetEffects(target, hasAmounts);
 			SetFlavor(target);
 			// Other headers
-			storageParent.HeaderLabel.SetText(isDuplicant ? DETAILTABS.DETAILS.
+			sis.StoragePanel.SetTitle(isDuplicant ? DETAILTABS.DETAILS.
 				GROUPNAME_MINION_CONTENTS : DETAILTABS.DETAILS.GROUPNAME_CONTENTS);
 			if (lastSelection.fertility == null)
 				sis.fertilityPanel.gameObject.SetActive(false);
@@ -628,7 +696,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		public void Sim200ms(float _) {
-			if (sis.lastTarget != null && storageParent != null && isActiveAndEnabled)
+			if (sis.lastTarget != null && isActiveAndEnabled)
 				UpdatePanels();
 		}
 
@@ -654,21 +722,24 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// changes.
 		/// </summary>
 		private void UpdatePanels() {
-			var vitalsContainer = sis.vitalsContainer;
+			var vitalsPanel = sis.vitalsPanel;
 			RefreshStress();
+			RefreshStorage();
+			RefreshMove();
+			RefreshFertility();
 			if (vitalsActive) {
 				var vi = VitalsPanelWrapper.Instance;
 				if (vi == null)
-					vitalsContainer.Refresh();
+					vitalsPanel.Refresh(sis.selectedTarget);
 				else
-					vi.Update(vitalsContainer);
+					vi.Update(vitalsPanel);
 			}
+			RefreshInfo();
 			if (AllowBaseRocketPanel)
-				sis.rocketSimpleInfoPanel.Refresh(sis.rocketStatusContainer, sis.
-					selectedTarget);
+				sis.rocketSimpleInfoPanel.Refresh(sis.rocketStatusContainer,
+					sis.selectedTarget);
 			else
 				RefreshRocket();
-			RefreshStorage();
 		}
 
 		/// <summary>
@@ -678,6 +749,14 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		private readonly struct LastSelectionDetails {
 			internal readonly IProcessConditionSet conditions;
+
+			internal readonly BuildingComplete complete;
+			
+			internal readonly CellSelectionObject cso;
+
+			internal readonly InfoDescription description;
+			
+			internal readonly Edible edible;
 
 			internal readonly FertilityMonitor.Instance fertility;
 
@@ -689,21 +768,38 @@ namespace PeterHan.FastTrack.UIPatches {
 
 			internal readonly Modifiers modifiers;
 
+			internal readonly CancellableMove moveTo;
+
+			internal readonly Movable canMove;
+			
+			internal readonly PrimaryElement primaryElement;
+
 			internal readonly CraftModuleInterface rocketInterface;
 
 			internal readonly RocketModuleCluster rocketModule;
 
 			internal readonly KSelectable selectable;
 
+			internal readonly BuildingUnderConstruction underConstruction;
+
 			internal readonly WorldContainer world;
 
 			internal LastSelectionDetails(GameObject target) {
 				ClusterGridEntity gridEntity;
+				target.TryGetComponent(out canMove);
+				target.TryGetComponent(out complete);
+				target.TryGetComponent(out canMove);
 				target.TryGetComponent(out conditions);
+				target.TryGetComponent(out cso);
+				target.TryGetComponent(out description);
+				target.TryGetComponent(out edible);
 				target.TryGetComponent(out identity);
 				target.TryGetComponent(out modifiers);
+				target.TryGetComponent(out moveTo);
+				target.TryGetComponent(out primaryElement);
 				target.TryGetComponent(out rocketModule);
 				target.TryGetComponent(out selectable);
+				target.TryGetComponent(out underConstruction);
 				target.TryGetComponent(out world);
 				if (rocketModule != null) {
 					rocketInterface = rocketModule.CraftInterface;
@@ -721,6 +817,25 @@ namespace PeterHan.FastTrack.UIPatches {
 				else
 					isRocket = target.TryGetComponent(out LaunchableRocket _);
 				isAsteroid = gridEntity != null && gridEntity is AsteroidGridEntity;
+			}
+		}
+		
+		/// <summary>
+		/// A wrapper class used to allow selecting movable items from the tooltip.
+		/// </summary>
+		private sealed class SelectMovable {
+			private readonly Component target;
+
+			public SelectMovable(Component target) {
+				this.target = target;
+			}
+
+			public void Select() {
+				if (target != null) {
+					target.TryGetComponent(out KSelectable selectable);
+					SelectTool.Instance.SelectAndFocus(target.transform.position, selectable,
+						new Vector3(5f, 0.0f, 0.0f));
+				}
 			}
 		}
 	}

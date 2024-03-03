@@ -34,8 +34,6 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// UpgradeAllBasicBuildings is not slow enough to matter
 	/// VentXKG generally completes quickly once there are enough vents for it to matter
 	/// BuildALaunchPad will complete before the number of pads gets big enough to matter
-	/// 
-	/// You should totally play on SNDST-C-495240352-9WS
 	/// </summary>
 	[SkipSaveFileSerialization]
 	public sealed class AchievementPatches : KMonoBehaviour {
