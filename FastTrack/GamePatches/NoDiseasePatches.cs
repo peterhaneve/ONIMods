@@ -220,10 +220,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied before RefreshPanel variants run.
 		/// </summary>
-		private static bool RefreshAPanel_Prefix(CollapsibleDetailContentPanel targetPanel,
-				ref bool __result) {
+		private static bool RefreshAPanel_Prefix(CollapsibleDetailContentPanel targetPanel) {
 			targetPanel.SetActive(false);
-			__result = false;
 			return false;
 		}
 
