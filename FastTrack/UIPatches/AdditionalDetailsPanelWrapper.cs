@@ -212,9 +212,11 @@ namespace PeterHan.FastTrack.UIPatches {
 			if (bc != null && (creationTime = bc.creationTime) > 0.0f) {
 				string time = lastSelection.creationTimeCached;
 				if (changed || time == null) {
-					time = Util.FormatTwoDecimalPlace((GameClock.Instance.GetTime() -
-						creationTime) / Constants.SECONDS_PER_CYCLE);
-					lastSelection.creationTimeCached = time;
+					var text = CACHED_BUILDER;
+					text.Clear();
+					((GameClock.Instance.GetTime() - creationTime) / Constants.
+						SECONDS_PER_CYCLE).ToRyuHardString(text, 2);
+					lastSelection.creationTimeCached = time = text.ToString();
 				}
 				panel.SetLabel("element_age", ELEMENTAL.AGE.NAME.Format(time),
 					ELEMENTAL.AGE.TOOLTIP.Format(time));

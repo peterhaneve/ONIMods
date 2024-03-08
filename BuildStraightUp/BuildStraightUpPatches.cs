@@ -46,7 +46,7 @@ namespace PeterHan.BuildStraightUp {
 		/// <param name="def">The building to be placed.</param>
 		/// <returns>true if it can use attachment points, or false otherwise.</returns>
 		private static bool CanUseAttachmentPoint(BuildingDef def) {
-			var rule = def?.BuildLocationRule ?? BuildLocationRule.Anywhere;
+			var rule = def.BuildLocationRule;
 			return rule == BuildLocationRule.BuildingAttachPoint || rule == BuildLocationRule.
 				OnFloorOrBuildingAttachPoint;
 		}
@@ -59,7 +59,7 @@ namespace PeterHan.BuildStraightUp {
 		/// <param name="attachCell">The location of the attaching building.</param>
 		/// <returns>true if an attachment point was found, or false otherwise.</returns>
 		private static bool CheckBuilding(Building underCons, Tag attachTag, int attachCell) {
-			var complete = underCons.Def?.BuildingComplete;
+			var complete = underCons.Def.BuildingComplete;
 			bool found = false;
 			if (complete != null && complete.TryGetComponent(out BuildingAttachPoint attach)) {
 				int origin = Grid.PosToCell(underCons);
@@ -88,7 +88,7 @@ namespace PeterHan.BuildStraightUp {
 			for (int layer = 0; layer < numObjectLayers && !found; layer++) {
 				var building = Grid.Objects[target, layer];
 				if (building != null && building.TryGetComponent(out 
-						BuildingUnderConstruction underCons)) {
+						BuildingUnderConstruction underCons) && underCons.Def != null) {
 #if DEBUG
 					PUtil.LogDebug("Checking cell {0:D}: found {1}".F(target, underCons.
 						name));
@@ -107,7 +107,7 @@ namespace PeterHan.BuildStraightUp {
 		/// <param name="cell">The cell where it would go.</param>
 		/// <returns>true if it could go there eventually, or false otherwise.</returns>
 		private static bool CheckVirtualAttachments(bool result, BuildingDef def, int cell) {
-			if (!result && CanUseAttachmentPoint(def))
+			if (!result && def != null && CanUseAttachmentPoint(def))
 				result = IsAttachmentPointValid(def, cell);
 			return result;
 		}
@@ -222,8 +222,29 @@ namespace PeterHan.BuildStraightUp {
 		/// Applied to BuildingDef to add logic for checking in-progress buildings when placing
 		/// attachment points.
 		/// </summary>
-		[HarmonyPatch(typeof(BuildingDef), "IsAreaClear")]
+		[HarmonyPatch]
 		public static class BuildingDef_IsAreaClear_Patch {
+			/// <summary>
+			/// Target the method with the most parameters, as that is the one with the
+			/// content.
+			///
+			/// TODO Remove once versions before U51-581979 no longer need to be supported
+			/// </summary>
+			internal static MethodBase TargetMethod() {
+				MethodBase mostArgs = null;
+				int argCount = 0;
+				foreach (var method in typeof(BuildingDef).GetMethods(PPatchTools.BASE_FLAGS |
+						BindingFlags.Instance))
+					if (method.Name == "IsAreaClear") {
+						int n = method.GetParameters().Length;
+						if (mostArgs == null || n > argCount) {
+							argCount = n;
+							mostArgs = method;
+						}
+					}
+				return mostArgs;
+			}	
+		
 			/// <summary>
 			/// Transpiles IsAreaClear to insert our check in exactly the right place.
 			/// </summary>
@@ -244,23 +265,9 @@ namespace PeterHan.BuildStraightUp {
 			/// </summary>
 			internal static MethodBase TargetMethod() {
 				var refStr = typeof(string).MakeByRefType();
-				MethodBase target = typeof(BuildingDef).GetMethodSafe(nameof(BuildingDef.
+				return typeof(BuildingDef).GetMethodSafe(nameof(BuildingDef.
 					IsValidBuildLocation), false, typeof(GameObject), typeof(int),
-					typeof(Orientation), refStr);
-				foreach (var method in typeof(BuildingDef).GetMethods(PPatchTools.BASE_FLAGS |
-						BindingFlags.Instance)) {
-					var parameters = method.GetParameters();
-					if (method.Name == nameof(BuildingDef.IsValidBuildLocation) && parameters.
-							Length > 3 && parameters[0].ParameterType == typeof(GameObject) &&
-							parameters[1].ParameterType == typeof(int) && parameters[2].
-							ParameterType == typeof(Orientation)) {
-						target = method;
-						break;
-					}
-				}
-				if (target == null)
-					PUtil.LogWarning("Unable to patch BuildingDef.IsValidBuildLocation");
-				return target;
+					typeof(Orientation), typeof(bool), refStr);
 			}
 
 			/// <summary>

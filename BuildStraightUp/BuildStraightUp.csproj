@@ -2,11 +2,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Build Straight Up</AssemblyTitle>
-    <FileVersion>2.3.0.0</FileVersion>
+    <FileVersion>2.4.0.0</FileVersion>
     <RootNamespace>PeterHan.BuildStraightUp</RootNamespace>
     <Description>Allows Rocket and Monument parts to be planned while other parts are still under construction.</Description>
     <AssemblyVersion>2.1.0.0</AssemblyVersion>
-    <LastWorkingBuild>493472</LastWorkingBuild>
+    <LastWorkingBuild>581979</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
 </Project>

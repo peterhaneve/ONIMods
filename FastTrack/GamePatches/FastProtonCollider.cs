@@ -160,8 +160,10 @@ namespace PeterHan.FastTrack.GamePatches {
 			// If the cell is the same, do not check building or tile collision again
 			bool same = cell == cachedCell;
 			if (!CheckBuildingCollision(cell, !same, pos) && (cell == cachedCell ||
-					CheckSolidTileCollision(cell)) && !CheckRadboltCollision(cell, pos))
-				CheckLivingCollision(cell);
+					CheckSolidTileCollision(cell)) && !CheckRadboltCollision(cell, pos) &&
+					!CheckLivingCollision(cell))
+				// Handle head-height hits on Duplicants and pokeshells
+				CheckLivingCollision(Grid.CellBelow(cell));
 			cachedCell = cell;
 		}
 
@@ -198,13 +200,19 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Checks for radbolt collision with a creature or Duplicant.
 		/// </summary>
 		/// <param name="cell">The current cell that this radbolt occupies.</param>
-		private void CheckLivingCollision(int cell) {
-			var go = Grid.Objects[cell, (int)ObjectLayer.Pickupables];
-			if (go != null && go.TryGetComponent(out Pickupable pickupable)) {
-				var entries = pickupable.objectLayerListItem;
-				while (entries != null && !CheckLivingCollision(entries.gameObject))
-					entries = entries.nextItem;
+		/// <returns>true if a collision occurred, or false otherwise.</returns>
+		private bool CheckLivingCollision(int cell) {
+			bool collided = false;
+			if (Grid.IsValidCell(cell)) {
+				var go = Grid.Objects[cell, (int)ObjectLayer.Pickupables];
+				if (go != null && go.TryGetComponent(out Pickupable pickupable)) {
+					var entries = pickupable.objectLayerListItem;
+					while (entries != null && !(collided = CheckLivingCollision(entries.
+							gameObject)))
+						entries = entries.nextItem;
+				}
 			}
+			return collided;
 		}
 
 		/// <summary>
@@ -278,13 +286,14 @@ namespace PeterHan.FastTrack.GamePatches {
 		public void MovingUpdate(float dt) {
 			var tt = transform;
 			if (hep.collision == HighEnergyParticle.CollisionType.None && dt > 0.0f) {
+				var fto = FastTrackOptions.Instance;
 				Vector3 pos = tt.position, newPos = pos + EightDirectionUtil.GetNormal(
 					hep.direction) * hep.speed * dt;
 				int cell = Grid.PosToCell(pos), newCell = Grid.PosToCell(newPos);
 				bool destroy = false;
 				if (tracker != null)
 					tracker.radBoltTravelDistance += hep.speed * dt;
-				if (!FastTrackOptions.Instance.DisableSound)
+				if (!fto.DisableSound)
 					hep.loopingSounds.UpdateVelocity(hep.flyingSound, newPos - pos);
 				if (!Grid.IsValidCell(newCell)) {
 					PUtil.LogWarning("High energy particle moved into invalid cell {0:D}".F(
@@ -296,7 +305,7 @@ namespace PeterHan.FastTrack.GamePatches {
 						var element = Grid.Element[newCell];
 						// The Sim divides by zero when modifying diseases on near vacuum
 						if (element != null && !element.IsVacuum && Grid.Mass[newCell] >
-								0.001f)
+								0.001f && !fto.NoDisease)
 							SimMessages.ModifyDiseaseOnCell(newCell, diseaseIndex,
 								DISEASE_PER_CELL);
 						payload -= HighEnergyParticleConfig.PER_CELL_FALLOFF;

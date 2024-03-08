@@ -100,7 +100,6 @@ namespace PeterHan.FastTrack.UIPatches {
 				if (id != ushort.MaxValue) {
 					var batteries = Game.Instance.circuitManager.circuitInfo[id].batteries;
 					int n = batteries.Count;
-					panel.SetActive(true);
 					for (int i = 0; i < n; i++) {
 						var battery = batteries[i];
 						if (battery != null) {
@@ -118,9 +117,8 @@ namespace PeterHan.FastTrack.UIPatches {
 					}
 					if (n <= 0)
 						panel.SetLabel("nobatteries", ENERGYGENERATOR.NOBATTERIES, "");
-					panel.Commit();
-				} else
-					panel.SetActive(false);
+				}
+				panel.Commit();
 			}
 		}
 
@@ -137,7 +135,6 @@ namespace PeterHan.FastTrack.UIPatches {
 					var consumers = info.consumers;
 					var transformers = info.inputTransformers;
 					int nc = consumers.Count, nt = transformers.Count;
-					panel.SetActive(true);
 					for (int i = 0; i < nc; i++) {
 						var consumer = consumers[i];
 						AddConsumer(panel, consumer, consumer.WattsNeededWhenActive, target);
@@ -149,9 +146,8 @@ namespace PeterHan.FastTrack.UIPatches {
 					}
 					if (nc + nt <= 0)
 						panel.SetLabel("noconsumers", ENERGYGENERATOR.NOCONSUMERS, "");
-					panel.Commit();
-				} else
-					panel.SetActive(false);
+				}
+				panel.Commit();
 			}
 		}
 
@@ -168,7 +164,6 @@ namespace PeterHan.FastTrack.UIPatches {
 					var generators = Game.Instance.circuitManager.circuitInfo[id].generators;
 					int n = generators.Count;
 					bool hasGenerator = false;
-					panel.SetActive(true);
 					for (int i = 0; i < n; i++) {
 						var generator = generators[i];
 						if (generator != null && !generator.TryGetComponent(out Battery _)) {
@@ -186,9 +181,8 @@ namespace PeterHan.FastTrack.UIPatches {
 					}
 					if (!hasGenerator)
 						panel.SetLabel("nogenerators", ENERGYGENERATOR.NOGENERATORS, "");
-					panel.Commit();
-				} else
-					panel.SetActive(false);
+				}
+				panel.Commit();
 			}
 		}
 
@@ -218,27 +212,27 @@ namespace PeterHan.FastTrack.UIPatches {
 						text.Append(" / ");
 						FormatStringPatches.GetFormattedWattage(text, potential);
 					}
-					string ratio = text.ToString();
-					text.Clear().Append(ENERGYGENERATOR.WATTAGE_GENERATED).Replace("{0}",
-						ratio);
-					panel.SetLabel("wattageGenerated", text.ToString(), ENERGYGENERATOR.
-						WATTAGE_GENERATED_TOOLTIP);
+					panel.SetLabel("wattageGenerated", ENERGYGENERATOR.WATTAGE_GENERATED.
+						Format(text.ToString()), ENERGYGENERATOR.WATTAGE_GENERATED_TOOLTIP);
 					// Consumed
-					text.Clear().Append(ENERGYGENERATOR.WATTAGE_CONSUMED).Replace("{0}",
-						GameUtil.GetFormattedWattage(manager.GetWattsUsedByCircuit(id)));
-					panel.SetLabel("wattageConsumed", text.ToString(), ENERGYGENERATOR.
-						WATTAGE_CONSUMED_TOOLTIP);
+					text.Clear();
+					FormatStringPatches.GetFormattedWattage(text, manager.
+						GetWattsUsedByCircuit(id));
+					panel.SetLabel("wattageConsumed", ENERGYGENERATOR.WATTAGE_CONSUMED.
+						Format(text.ToString()), ENERGYGENERATOR.WATTAGE_CONSUMED_TOOLTIP);
 					// Max consumed
-					text.Clear().Append(ENERGYGENERATOR.POTENTIAL_WATTAGE_CONSUMED).Replace(
-						"{0}", GameUtil.GetFormattedWattage(manager.
-						GetWattsNeededWhenActive(id)));
-					panel.SetLabel("potentialWattageConsumed", text.ToString(),
-						ENERGYGENERATOR.POTENTIAL_WATTAGE_CONSUMED_TOOLTIP);
+					text.Clear();
+					FormatStringPatches.GetFormattedWattage(text, manager.
+						GetWattsNeededWhenActive(id));
+					panel.SetLabel("potentialWattageConsumed", ENERGYGENERATOR.
+						POTENTIAL_WATTAGE_CONSUMED.Format(text.ToString()), ENERGYGENERATOR.
+						POTENTIAL_WATTAGE_CONSUMED_TOOLTIP);
 					// Max safe
-					text.Clear().Append(ENERGYGENERATOR.MAX_SAFE_WATTAGE).Replace("{0}",
-						GameUtil.GetFormattedWattage(manager.GetMaxSafeWattageForCircuit(id)));
-					panel.SetLabel("maxSafeWattage", text.ToString(), ENERGYGENERATOR.
-						MAX_SAFE_WATTAGE_TOOLTIP);
+					text.Clear();
+					FormatStringPatches.GetFormattedWattage(text, manager.
+						GetMaxSafeWattageForCircuit(id));
+					panel.SetLabel("maxSafeWattage", ENERGYGENERATOR.MAX_SAFE_WATTAGE.Format(
+						text.ToString()), ENERGYGENERATOR.MAX_SAFE_WATTAGE_TOOLTIP);
 				} else
 					panel.SetLabel("nocircuit", ENERGYGENERATOR.DISCONNECTED, ENERGYGENERATOR.
 						DISCONNECTED);

@@ -436,7 +436,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Avoid reallocating a new StringBuilder every frame.
 		/// </summary>
-		private static readonly StringBuilder CACHED_BUILDER = new StringBuilder(512);
+		private static readonly StringBuilder CACHED_BUILDER = new StringBuilder(128);
 		
 		/// <summary>
 		/// The prefix used for all mouse click substitutions.
@@ -567,16 +567,15 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Parses hotkey sequences from the text.
 		/// </summary>
-		/// <param name="text">The location where the output will be stored.</param>
 		/// <param name="input">The input text.</param>
 		/// <returns>true if the string was changed, or false otherwise.</returns>
-		private static bool ParseHotkeys(StringBuilder text, string input) {
+		private static bool ParseHotkeys(string input) {
 			int n = input.Length;
 			bool hotkey = false, changed = false;
 			char substitute = '0';
 			var hkb = HOTKEY_BUFFER;
 			var lookup = HOTKEY_LOOKUP;
-			text.Clear();
+			var text = CACHED_BUILDER.Clear();
 			// Populate table only if necessary
 			lock (lookup) {
 				if (lookup.Count < 1)
@@ -654,8 +653,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					if (KInputManager.currentControllerIsGamepad)
 						result = KInputManager.steamInputInterpreter.GetActionGlyph(action);
 					else {
-						var text = ACTION_BUFFER;
-						text.Clear();
+						var text = ACTION_BUFFER.Clear();
 						GetActionString(ref bindingEntry, text);
 						result = text.ToString();
 					}
@@ -681,12 +679,12 @@ namespace PeterHan.FastTrack.UIPatches {
 			{
 				var text = CACHED_BUILDER;
 				if (input != null) {
-					__instance.originalString = ParseHotkeys(text, input) ? input : "";
+					__instance.originalString = ParseHotkeys(input) ? input : "";
+					var newStr = text.ToString();
 					// Link handling
-					if (__instance.AllowLinks && !input.Contains(LocText.linkColorPrefix))
-						text.Replace(LocText.linkPrefix_open, LocText.combinedPrefix).
-							Replace(LocText.linkSuffix, LocText.combinedSuffix);
-					__result = text.ToString();
+					if (__instance.AllowLinks)
+						newStr = LocText.ModifyLinkStrings(newStr);
+					__result = newStr;
 				} else
 					__result = null;
 				return false;
@@ -707,7 +705,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			internal static bool Prefix(string input, ref string __result) {
 				var text = CACHED_BUILDER;
 				if (input != null) {
-					ParseHotkeys(text, input);
+					ParseHotkeys(input);
 					__result = text.ToString();
 				} else
 					__result = null;
