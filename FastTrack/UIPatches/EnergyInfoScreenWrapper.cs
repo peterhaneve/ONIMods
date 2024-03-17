@@ -198,9 +198,9 @@ namespace PeterHan.FastTrack.UIPatches {
 				var manager = Game.Instance.circuitManager;
 				if (id != ushort.MaxValue) {
 					// Available
-					text.Clear().Append(ENERGYGENERATOR.AVAILABLE_JOULES).Replace("{0}",
-						GameUtil.GetFormattedJoules(manager.GetJoulesAvailableOnCircuit(id)));
-					panel.SetLabel("joulesAvailable", text.ToString(), ENERGYGENERATOR.
+					panel.SetLabel("joulesAvailable", ENERGYGENERATOR.AVAILABLE_JOULES.
+						Format(GameUtil.GetFormattedJoules(manager.
+						GetJoulesAvailableOnCircuit(id))), ENERGYGENERATOR.
 						AVAILABLE_JOULES_TOOLTIP);
 					// Generated
 					float generated = GetWattageGenerated(manager, id, out float potential);
@@ -215,21 +215,18 @@ namespace PeterHan.FastTrack.UIPatches {
 					panel.SetLabel("wattageGenerated", ENERGYGENERATOR.WATTAGE_GENERATED.
 						Format(text.ToString()), ENERGYGENERATOR.WATTAGE_GENERATED_TOOLTIP);
 					// Consumed
-					text.Clear();
-					FormatStringPatches.GetFormattedWattage(text, manager.
+					FormatStringPatches.GetFormattedWattage(text.Clear(), manager.
 						GetWattsUsedByCircuit(id));
 					panel.SetLabel("wattageConsumed", ENERGYGENERATOR.WATTAGE_CONSUMED.
 						Format(text.ToString()), ENERGYGENERATOR.WATTAGE_CONSUMED_TOOLTIP);
 					// Max consumed
-					text.Clear();
-					FormatStringPatches.GetFormattedWattage(text, manager.
+					FormatStringPatches.GetFormattedWattage(text.Clear(), manager.
 						GetWattsNeededWhenActive(id));
 					panel.SetLabel("potentialWattageConsumed", ENERGYGENERATOR.
 						POTENTIAL_WATTAGE_CONSUMED.Format(text.ToString()), ENERGYGENERATOR.
 						POTENTIAL_WATTAGE_CONSUMED_TOOLTIP);
 					// Max safe
-					text.Clear();
-					FormatStringPatches.GetFormattedWattage(text, manager.
+					FormatStringPatches.GetFormattedWattage(text.Clear(), manager.
 						GetMaxSafeWattageForCircuit(id));
 					panel.SetLabel("maxSafeWattage", ENERGYGENERATOR.MAX_SAFE_WATTAGE.Format(
 						text.ToString()), ENERGYGENERATOR.MAX_SAFE_WATTAGE_TOOLTIP);

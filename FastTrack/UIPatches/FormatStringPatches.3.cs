@@ -317,7 +317,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				else if (timeSlice == TimeSlice.PerSecond)
 					text.Append(STRINGS.UI.CHANGEPERSECOND).Replace("{0}", formatter.
 						GetFormattedValue(__instance.ToPercent(delta.GetTotalDisplayValue(),
-						instance), TimeSlice.PerCycle));
+						instance), TimeSlice.PerSecond));
 				for (int i = 0; i < n; i++) {
 					var modifier = modifiers[i];
 					text.AppendLine().Append(Constants.TABBULLETSTRING).Append(modifier.

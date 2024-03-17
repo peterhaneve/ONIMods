@@ -246,14 +246,13 @@ namespace PeterHan.FastTrack.PathPatches {
 			var fm = Game.Instance.fetchManager;
 			var inst = GlobalChoreProvider.Instance;
 			int n = brainsToUpdate.Count;
+			// Wait out the pickups update - GC pauses always seem to occur during this time?
+			bool updated = onFetchComplete.WaitAndMeasure(FastTrackMod.MAX_TIMEOUT, 1000);
+			if (!updated)
+				PUtil.LogWarning("Fetch updates did not complete within the timeout!");
 			if (n > 0) {
-				// Wait out the pickups update - GC pauses always seem to occur during this
-				// time?
-				bool updated = onFetchComplete.WaitAndMeasure(FastTrackMod.MAX_TIMEOUT, 1000),
-					quickSwap = allowFastListSwap;
-				if (!updated)
-					PUtil.LogWarning("Fetch updates did not complete within the timeout!");
 				if (fm != null && inst != null && updated) {
+					bool quickSwap = allowFastListSwap;
 					var cm = inst.clearableManager;
 					var fetches = inst.fetches;
 					var pickups = fm.pickups;

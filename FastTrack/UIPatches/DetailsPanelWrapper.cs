@@ -117,7 +117,9 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="ds">The details screen to sort.</param>
 		/// <param name="target">The selected target.</param>
-		private static void SortSideScreens(DetailsScreen ds, GameObject target) {
+		/// <param name="force">Forces the side screen to be shown even if no config.</param>
+		private static void SortSideScreens(DetailsScreen ds, GameObject target,
+				bool force) {
 			var sideScreens = ds.sideScreens;
 			var sortedScreens = ds.sortedSideScreens;
 			int n;
@@ -125,7 +127,9 @@ namespace PeterHan.FastTrack.UIPatches {
 			if (sideScreens != null && sideScreens.Count > 0) {
 				int currentOrder = 0;
 				var currentScreen = ds.currentSideScreen;
+				var noConfig = ds.noConfigSideScreen;
 				var dss = ds.sideScreen;
+				bool anyScreens = false;
 				n = sideScreens.Count;
 				if (currentScreen != null) {
 					if (!currentScreen.gameObject.activeSelf)
@@ -154,6 +158,7 @@ namespace PeterHan.FastTrack.UIPatches {
 							ds.currentSideScreen = currentScreen = inst;
 							ds.sideScreenTitleLabel.SetText(inst.GetTitle());
 						}
+						anyScreens = true;
 					} else if (inst != null && (instGO = inst.gameObject).activeSelf) {
 						instGO.SetActive(false);
 						// If the current screen was just hidden, allow another one to
@@ -161,6 +166,16 @@ namespace PeterHan.FastTrack.UIPatches {
 						if (inst == currentScreen)
 							currentScreen = null;
 					}
+				}
+				if (anyScreens)
+					noConfig.SetActive(false);
+				else if (force) {
+					noConfig.SetActive(true);
+					ds.sideScreenTitleLabel.SetText(STRINGS.UI.UISIDESCREENS.NOCONFIG.TITLE);
+					dss.SetActive(true);
+				} else {
+					noConfig.SetActive(false);
+					dss.SetActive(false);
 				}
 			}
 			sortedScreens.Sort(SideScreenOrderComparer.INSTANCE);
@@ -243,10 +258,12 @@ namespace PeterHan.FastTrack.UIPatches {
 		private readonly struct LastSelectionDetails {
 			internal readonly string codexLink;
 
+			internal readonly bool forceSideScreen;
+
 			internal readonly LaunchConditionManager conditions;
 
 			internal readonly ToolTip editTooltip;
-
+			
 			internal readonly MinionIdentity id;
 
 			internal readonly MinionResume resume;
@@ -269,12 +286,14 @@ namespace PeterHan.FastTrack.UIPatches {
 				else
 					codexLink = "";
 				go.TryGetComponent(out selectable);
-				go.TryGetComponent(out id);
 				go.TryGetComponent(out rename);
 				go.TryGetComponent(out resume);
 				go.TryGetComponent(out rocketCommand);
 				go.TryGetComponent(out conditions);
 				go.TryGetComponent(out rocketDoor);
+				forceSideScreen = go.TryGetComponent(out id) || (go.TryGetComponent(
+					out Reconstructable reconstructable) && reconstructable.
+					AllowReconstruct) || go.TryGetComponent(out BuildingFacade _);
 				if (title != null)
 					title.editNameButton.TryGetComponent(out editTooltip);
 				else
@@ -376,15 +395,19 @@ namespace PeterHan.FastTrack.UIPatches {
 				var screens = __instance.screens;
 				var oldTarget = __instance.target;
 				var inst = instance;
+				bool force;
 				if (screens != null) {
 					__instance.target = go;
 					if (go.TryGetComponent(out CellSelectionObject cso))
 						cso.OnObjectSelected(null);
-					if ((oldTarget == null || go != oldTarget) && inst != null)
+					if ((oldTarget == null || go != oldTarget) && inst != null) {
 						inst.lastSelection = new LastSelectionDetails(go, cso, __instance);
+						force = inst.lastSelection.forceSideScreen;
+					} else
+						force = true;
 					UpdateTitle(__instance);
 					__instance.tabHeader.RefreshTabDisplayForTarget(go);
-					SortSideScreens(__instance, go);
+					SortSideScreens(__instance, go, force);
 				}
 				return false;
 			}
