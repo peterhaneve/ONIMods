@@ -312,8 +312,8 @@ namespace PeterHan.FastTrack {
 			PickupOpts = true;
 			RadiationOpts = true;
 			ReduceColonyTracking = false;
-			ReduceCritterIdleMove = true;
-			ReduceDuplicantIdleMove = true;
+			ReduceCritterIdleMove = false;
+			ReduceDuplicantIdleMove = false;
 			ReduceSoundUpdates = true;
 			ReduceTileUpdates = true;
 			RenderTicks = true;
