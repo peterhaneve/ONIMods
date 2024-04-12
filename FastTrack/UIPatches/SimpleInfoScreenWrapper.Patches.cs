@@ -88,9 +88,11 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix() {
-				if (instance != null && instance.lastSelection.conditions != null)
+				bool ready = instance != null;
+				if (ready && instance.conditionParent != null && instance.lastSelection.
+						conditions != null)
 					instance.RefreshProcess();
-				return false;
+				return !ready;
 			}
 		}
 

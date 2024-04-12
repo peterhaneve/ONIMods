@@ -18,7 +18,6 @@
 
 using System.Collections.Generic;
 using System.Text;
-using Klei;
 using Klei.AI;
 using UnityEngine;
 
@@ -301,8 +300,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			string atTemperature = DETAILTABS.DETAILS.CONTENTS_TEMPERATURE;
 			base.OnSpawn();
 			sis.stressPanel.SetTitle(DETAILTABS.STATS.GROUPNAME_STRESS);
-			if (sis.processConditionContainer.TryGetComponent(out CollapsibleDetailContentPanel panel))
-				conditionParent = panel.Content.gameObject;
+			if (sis.processConditionContainer != null)
+				conditionParent = sis.processConditionContainer.Content.gameObject;
 			// Check for the localization fast path
 			if (atTemperature.StartsWith("{0}") && atTemperature.EndsWith("{1}"))
 				optimizedStorageTemp = atTemperature.Substring(3, atTemperature.Length - 6);
@@ -676,7 +675,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			vitalsActive = hasAmounts;
 			sis.vitalsPanel.gameObject.SetActive(hasAmounts);
 			sis.vitalsPanel.lastSelectedEntity = hasAmounts ? target : null;
-			sis.processConditionContainer.gameObject.SetActive(hasProcess);
+			sis.processConditionContainer.SetActive(hasProcess);
 			if (hasProcess)
 				sis.RefreshProcessConditionsPanel();
 			// Effects and requirements

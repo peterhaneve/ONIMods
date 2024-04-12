@@ -148,7 +148,12 @@ namespace PeterHan.FastTrack.UIPatches {
 					virtualLayout.enabled = true;
 					realLayout.enabled = false;
 				}
-				margin = new Vector2(marginX * 1.5f, marginY * 1.5f);
+				float scalar = KPlayerPrefs.GetFloat(KCanvasScaler.UIScalePrefKey, 0.0f);
+				// 100 = x1.0
+				if (scalar < 100.0f)
+					scalar = 100.0f;
+				scalar *= 0.015f;
+				margin = new Vector2(marginX * scalar, marginY * scalar);
 				// Calculate the margin
 				UpdateScroll();
 			}
