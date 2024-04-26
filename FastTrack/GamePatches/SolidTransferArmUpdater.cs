@@ -90,8 +90,8 @@ namespace PeterHan.FastTrack.GamePatches {
 			var reachableCells = HashSetPool<int, SolidTransferArmUpdater>.Allocate();
 			int range = sweeper.pickupRange, cell;
 			Grid.CellToXY(info.cell, out int x, out int y);
-			int maxY = Math.Min(Grid.HeightInCells, y + range), maxX = Math.Min(Grid.
-				WidthInCells, x + range), minY = Math.Max(0, y - range), minX = Math.Max(0,
+			int maxY = Math.Min(Grid.HeightInCells - 1, y + range), maxX = Math.Min(Grid.
+				WidthInCells - 1, x + range), minY = Math.Max(0, y - range), minX = Math.Max(0,
 				x - range);
 			var oldReachable = sweeper.reachableCells;
 			var go = info.gameObject;

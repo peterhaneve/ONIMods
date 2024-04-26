@@ -135,7 +135,7 @@ namespace PeterHan.FastTrack {
 			public static class TOOLTIPS {
 				public static class FASTTRACK {
 					public static LocString BACKGROUNDROOMREBUILD = "Processes most room changes on a background thread." + PERF_MEDIUM;
-					public static LocString ENETOPTS = "Speeds up calculations of electrical networks." + PERF_MEDIUM;
+					public static LocString ENETOPTS = "Speeds up calculations of electrical networks.\n\n<i>Not compatible with mods: Giga-Watt Wire</i>" + PERF_MEDIUM;
 					public static LocString FLATTENAVERAGES = "Optimize Amounts and average calculations." + PERF_LOW;
 					public static LocString LOGICUPDATES = "Optimizes some buildings to not trigger logic network updates every frame." + PERF_LOW;
 					public static LocString NOREPORTS = "Disables colony reports completely.\n<color=#FF0000>Disabling will prevent some achievements from being unlocked</color>" + PERF_MEDIUM;
