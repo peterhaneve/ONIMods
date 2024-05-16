@@ -54,17 +54,21 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(object data, Chatty __instance) {
-			if ((data is MinionIdentity other || (data is ConversationManager.
-					StartedTalkingEvent evt && evt.talker != null && evt.talker.
-					TryGetComponent(out other))) && UnityEngine.Random.Range(0, 100) <= 1 &&
-					other != null && other != __instance.identity) {
-				// Cannot talk to yourself (self)
-				if (other.TryGetComponent(out StateMachineController smc))
-					smc.GetSMI<JoyBehaviourMonitor.Instance>()?.GoToOverjoyed();
-				if (__instance.TryGetComponent(out smc))
-					smc.GetSMI<JoyBehaviourMonitor.Instance>()?.GoToOverjoyed();
+			if (__instance != null) {
+				// The base game is missing an Unsubscribe on clean up so destroyed instances
+				// still get this event!
+				if ((data is MinionIdentity other || (data is ConversationManager.
+						StartedTalkingEvent evt && evt.talker != null && evt.talker.
+						TryGetComponent(out other))) && other != null && other != __instance.
+						identity && UnityEngine.Random.Range(0, 100) <= 1) {
+					// Cannot talk to yourself (self)
+					if (other.TryGetComponent(out StateMachineController smc))
+						smc.GetSMI<JoyBehaviourMonitor.Instance>()?.GoToOverjoyed();
+					if (__instance.TryGetComponent(out smc))
+						smc.GetSMI<JoyBehaviourMonitor.Instance>()?.GoToOverjoyed();
+				}
+				__instance.conversationPartners.Clear();
 			}
-			__instance.conversationPartners.Clear();
 			return false;
 		}
 	}

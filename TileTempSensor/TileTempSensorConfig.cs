@@ -65,8 +65,8 @@ namespace PeterHan.TileTempSensor {
 					STRINGS.BUILDINGS.PREFABS.LOGICTEMPERATURESENSOR.LOGIC_PORT_ACTIVE,
 					STRINGS.BUILDINGS.PREFABS.LOGICTEMPERATURESENSOR.LOGIC_PORT_INACTIVE, true)
 				},
-				ObjectLayer = PGameUtils.GetObjectLayer(nameof(ObjectLayer.Backwall),
-					ObjectLayer.Backwall),
+				ObjectLayer = PGameUtils.GetObjectLayer(nameof(ObjectLayer.FoundationTile),
+					ObjectLayer.FoundationTile),
 				Placement = BuildLocationRule.Tile,
 				SceneLayer = Grid.SceneLayer.TileMain,
 				SubCategory = "sensors",
