@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.PLib.Core;
 #if DEBUG
 using PeterHan.PLib.Core;
 #endif

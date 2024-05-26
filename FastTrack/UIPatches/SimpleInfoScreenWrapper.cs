@@ -219,7 +219,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// The storages found in the currently selected object.
 		/// </summary>
-		private readonly List<Storage> storages;
+		private readonly List<IStorage> storages;
 
 		private bool statusActive;
 
@@ -236,7 +236,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			processRows = new List<ProcessConditionRow>(24);
 			processVisible = new List<ProcessConditionRow>(32);
 			statusActive = false;
-			storages = new List<Storage>(8);
+			storages = new List<IStorage>(8);
 			vitalsActive = false;
 			instance = this;
 		}
@@ -275,7 +275,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				lastSelection = default;
 				vitalsActive = false;
 			} else {
-				var found = ListPool<Storage, SimpleInfoScreen>.Allocate();
+				var found = ListPool<IStorage, SimpleInfoScreen>.Allocate();
 				lastSelection = new LastSelectionDetails(target);
 				target.GetComponentsInChildren(found);
 				// Add only storages that should be shown

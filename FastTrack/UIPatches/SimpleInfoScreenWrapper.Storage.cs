@@ -28,11 +28,12 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Displays an item in storage.
 		/// </summary>
+		/// <param name="panel">The panel where the item will be displayed.</param>
 		/// <param name="item">The item to be displayed.</param>
 		/// <param name="total">The total number of items displayed so far.</param>
-		private int AddStorageItem(GameObject item, int total) {
+		private int AddStorageItem(CollapsibleDetailContentPanel panel, GameObject item,
+				int total) {
 			if (!item.TryGetComponent(out PrimaryElement pe) || pe.Mass > 0.0f) {
-				var panel = sis.StoragePanel;
 				var text = CACHED_BUILDER;
 				string tooltip = GetItemDescription(item, pe);
 				if (item.TryGetComponent(out KSelectable selectable))
@@ -50,16 +51,26 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		private void AddAllItems() {
 			int n = storages.Count, total = 0;
+			var panel = sis.StoragePanel;
+			var text = CACHED_BUILDER;
 			for (int i = 0; i < n; i++) {
 				var storage = storages[i];
 				// Storage could have been destroyed along the way
 				if (storage != null) {
-					var items = storage.GetItems();
-					int nitems = items.Count;
-					for (int j = 0; j < nitems; j++) {
-						var item = items[j];
-						if (item != null)
-							total = AddStorageItem(item, total);
+					if (storage is HighEnergyParticleStorage hepStorage) {
+						// Radbolts
+						text.Clear().Append(STRINGS.ITEMS.RADIATION.HIGHENERGYPARITCLE.NAME).
+							Append(": ").Append(GameUtil.GetFormattedHighEnergyParticles(
+							hepStorage.Particles));
+						panel.SetLabel("storage_" + (total++), text.ToString(), "");
+					} else {
+						var items = storage.GetItems();
+						int nitems = items.Count;
+						for (int j = 0; j < nitems; j++) {
+							var item = items[j];
+							if (item != null)
+								total = AddStorageItem(panel, item, total);
+						}
 					}
 				}
 			}
@@ -76,15 +87,10 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <returns>The tooltip to display.</returns>
 		private string GetItemDescription(GameObject item, PrimaryElement pe) {
 			var text = CACHED_BUILDER;
-			var rottable = item.GetSMI<Rottable.Instance>();
 			string tooltip = "";
 			text.Clear();
-			if (item.TryGetComponent(out HighEnergyParticleStorage hepStorage))
-				// Radbolts
-				text.Append(STRINGS.ITEMS.RADIATION.HIGHENERGYPARITCLE.NAME).Append(": ").
-					Append(GameUtil.GetFormattedHighEnergyParticles(hepStorage.Particles));
-			else if (pe != null) {
-				// Element
+			if (pe != null) {
+				// Element; rottables have an element too
 				var properName = item.GetProperName();
 				if (item.TryGetComponent(out KPrefabID id) && Assets.IsTagCountable(id.
 						PrefabTag))
@@ -101,18 +107,20 @@ namespace PeterHan.FastTrack.UIPatches {
 					text.Clear().Append(DETAILTABS.DETAILS.CONTENTS_TEMPERATURE).Replace("{1}",
 						GameUtil.GetFormattedTemperature(pe.Temperature)).Replace("{0}", mass);
 				}
-			}
-			if (rottable != null) {
-				string rotText = rottable.StateString();
-				if (!string.IsNullOrEmpty(rotText))
-					text.Append("\n " + Constants.BULLETSTRING).Append(rotText);
-				tooltip = rottable.GetToolTip();
-			}
-			if (pe != null && !FastTrackOptions.Instance.NoDisease && pe.DiseaseIdx !=
-					Sim.InvalidDiseaseIdx) {
-				text.Append("\n " + Constants.BULLETSTRING).Append(GameUtil.
-					GetFormattedDisease(pe.DiseaseIdx, pe.DiseaseCount));
-				tooltip += GameUtil.GetFormattedDisease(pe.DiseaseIdx, pe.DiseaseCount, true);
+				var rottable = item.GetSMI<Rottable.Instance>();
+				if (rottable != null) {
+					string rotText = rottable.StateString();
+					if (!string.IsNullOrEmpty(rotText))
+						text.Append("\n " + Constants.BULLETSTRING).Append(rotText);
+					tooltip = rottable.GetToolTip();
+				}
+				if (!FastTrackOptions.Instance.NoDisease && pe.DiseaseIdx !=
+						Sim.InvalidDiseaseIdx) {
+					text.Append("\n " + Constants.BULLETSTRING).Append(GameUtil.
+						GetFormattedDisease(pe.DiseaseIdx, pe.DiseaseCount));
+					tooltip += GameUtil.GetFormattedDisease(pe.DiseaseIdx, pe.DiseaseCount,
+						true);
+				}
 			}
 			return tooltip;
 		}
