@@ -20,6 +20,7 @@ using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Klei.AI;
 
 using TimeSlice = GameUtil.TimeSlice;
 
@@ -40,11 +41,14 @@ namespace PeterHan.FoodTooltip {
 		/// <param name="descriptors">The location where the descriptors should be placed.</param>
 		internal static void AddCropDescriptors(Crop crop, IList<Descriptor> descriptors) {
 			var cropVal = crop.cropVal;
+			GameObject go = crop.gameObject;
+			Klei.AI.Attribute yieldAmount = Db.Get().PlantAttributes.YieldAmount;
+			float preModifiedAttributeValue = go.GetComponent<Modifiers>().GetPreModifiedAttributeValue(yieldAmount);
 			var maturity = Db.Get().Amounts.Maturity.Lookup(crop.gameObject);
 			if (maturity != null)
 				CreateDescriptors(TagManager.Create(cropVal.cropId), descriptors,
-					maturity.GetDelta() * Constants.SECONDS_PER_CYCLE * cropVal.numProduced /
-					maturity.GetMax(), FoodDescriptorTexts.PLANTS);
+					maturity.GetDelta() * Constants.SECONDS_PER_CYCLE * cropVal.numProduced
+					* preModifiedAttributeValue / maturity.GetMax(), FoodDescriptorTexts.PLANTS);
 		}
 
 		/// <summary>
