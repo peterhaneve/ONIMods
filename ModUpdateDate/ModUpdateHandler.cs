@@ -165,9 +165,9 @@ namespace PeterHan.ModUpdateDate {
 				updButton.Sprite = updated == ModStatus.UpToDate || updated == ModStatus.
 					Disabled ? PUITuning.Images.Checked : PUITuning.Images.GetSpriteByName(
 					"iconWarning");
-				var color = updated == ModStatus.Pending ? COLOR_PENDING :
-					(IsOutdated(updated) ? COLOR_OUTDATED : (autoUpdate ? COLOR_AUTO :
-					COLOR_UPDATED));
+				var color = updated == ModStatus.Pending || updated == ModStatus.NewerLocal ?
+					COLOR_PENDING : IsOutdated(updated) ? COLOR_OUTDATED : autoUpdate ?
+					COLOR_AUTO : COLOR_UPDATED;
 				updButton.Color = color;
 				updButton.ToolTip = tooltip.ToString();
 				// Just before subscription button, and after the Options button
@@ -189,6 +189,7 @@ namespace PeterHan.ModUpdateDate {
 				ModTransientInfo localInfo, PButton updButton, bool autoUpdate) {
 			var steamDate = modUpdate.LastSteamUpdate;
 			var updated = GetModStatus(modUpdate, localInfo, out var localDate);
+			string fs = localInfo.FilesystemVersion;
 			// Generate tooltip for mod's current date and last Steam update
 			switch (updated) {
 			case ModStatus.UpToDate:
@@ -198,15 +199,19 @@ namespace PeterHan.ModUpdateDate {
 				tooltip.Append(UISTRINGS.MOD_UPDATED_BYUS);
 				break;
 			case ModStatus.UnpackFailed:
-				tooltip.AppendFormat(cultureInfo, UISTRINGS.MOD_ERR_UNPACK, localInfo.
-					FilesystemVersion);
+				tooltip.AppendFormat(cultureInfo, UISTRINGS.MOD_ERR_UNPACK, fs);
+				break;
+			case ModStatus.NewerLocal:
+				tooltip.AppendFormat(cultureInfo, UISTRINGS.MOD_WARNING_NEWER, fs);
 				break;
 			case ModStatus.Outdated:
 				tooltip.Append(autoUpdate ? UISTRINGS.MOD_ERR_UPDATE : UISTRINGS.MOD_OUTDATED);
 				break;
 			case ModStatus.Pending:
-				tooltip.AppendFormat(cultureInfo, UISTRINGS.MOD_PENDING_RESTART, localInfo.
-					FilesystemVersion);
+				if (string.IsNullOrEmpty(fs))
+					tooltip.AppendFormat(cultureInfo, UISTRINGS.MOD_PENDING_RESTART);
+				else
+					tooltip.AppendFormat(cultureInfo, UISTRINGS.MOD_PENDING_RESTART_VER, fs);
 				break;
 			}
 			// AppendLine appends platform specific separator
@@ -242,6 +247,32 @@ namespace PeterHan.ModUpdateDate {
 					OnClick = new ModUpdateTask(outdated).TryUpdateMods,
 					Sprite = PUITuning.Images.GetSpriteByName("iconWarning"),
 				}.AddTo(parent, 0);
+		}
+
+		/// <summary>
+		/// Compares the executing and cached versions of the mod to see if the unpack failed.
+		/// 
+		/// Only detects failed unpacks where the mod info file is not updated; hashing the
+		/// mod data is not really feasible.
+		/// </summary>
+		/// <param name="modUpdate">The mod to query.</param>
+		/// <param name="status">The local mod status.</param>
+		/// <returns>The status of that mod.</returns>
+		private static ModStatus CompareVersions(ModToUpdate modUpdate,
+				ModTransientInfo status) {
+			ModStatus updated;
+			string fv = status.FilesystemVersion, rv = modUpdate.Mod.packagedModInfo?.
+				version;
+			// Allow some time for download delays etc
+			if (string.IsNullOrEmpty(fv))
+				updated = ModStatus.UpToDate;
+			else if (System.Version.TryParse(fv, out var cachedVersion) && rv != null &&
+				System.Version.TryParse(rv, out var runningVersion) &&
+				cachedVersion > runningVersion)
+				updated = ModStatus.NewerLocal;
+			else
+				updated = ModStatus.UnpackFailed;
+			return updated;
 		}
 
 		/// <summary>
@@ -305,9 +336,7 @@ namespace PeterHan.ModUpdateDate {
 					updated = ModStatus.Pending;
 				else if (reportedDate.AddMinutes(SteamVersionChecker.UPDATE_JITTER) >=
 						steamDate)
-					// Allow some time for download delays etc
-					updated = string.IsNullOrEmpty(status.FilesystemVersion) ?
-						ModStatus.UpToDate : ModStatus.UnpackFailed;
+					updated = CompareVersions(modUpdate, status);
 				else if (ourDate.AddMinutes(SteamVersionChecker.UPDATE_JITTER) >= steamDate) {
 					localDate = ourDate;
 					updated = ModStatus.UpToDateLocal;
@@ -519,7 +548,7 @@ namespace PeterHan.ModUpdateDate {
 		/// Potential statuses in the mods menu.
 		/// </summary>
 		private enum ModStatus {
-			Disabled, UpToDate, UpToDateLocal, Outdated, UnpackFailed, Pending
+			Disabled, UpToDate, UpToDateLocal, Outdated, UnpackFailed, NewerLocal, Pending
 		}
 	}
 }

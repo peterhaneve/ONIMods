@@ -318,7 +318,9 @@ namespace PeterHan.DebugNotIncluded {
 	/// <summary>
 	/// Applied to EggConfig to allow eggs to be instantly hatched.
 	/// </summary>
-	[HarmonyPatch(typeof(EggConfig), nameof(EggConfig.CreateEgg))]
+	[HarmonyPatch(typeof(EggConfig), nameof(EggConfig.CreateEgg), typeof(string),
+		typeof(string), typeof(string), typeof(Tag), typeof(string), typeof(float),
+		typeof(int), typeof(float), typeof(string[]))]
 	public static class EggConfig_CreateEgg_Patch {
 		/// <summary>
 		/// Applied after CreateEgg runs.

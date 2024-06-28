@@ -53,7 +53,9 @@ namespace PeterHan.ModUpdateDate {
 				public static LocString MOD_UPDATE_1 = "Update one mod which appears to be out of date";
 				public static LocString MOD_ERR_UPDATE = "Unable to automatically update this mod!\nManual updating may be required if this status\npersists after a game restart.";
 				public static LocString MOD_ERR_UNPACK = "Installed mod version {0} does not match the cached version.\nManual updating may be required.";
-				public static LocString MOD_PENDING_RESTART = "Version {0} of this mod is currently running.\nIt will be updated on the next restart.";
+				public static LocString MOD_WARNING_NEWER = "Installed mod version {0} is <b>newer</b> than the cached version.\nIf you are experiencing problems with this mod, consider manually updating.";
+				public static LocString MOD_PENDING_RESTART = "An older version of this mod is currently running.\nIt will be updated on the next restart.";
+				public static LocString MOD_PENDING_RESTART_VER = "Version {0} of this mod is currently running.\nIt will be updated on the next restart.";
 
 				// Passive mode
 				public static LocString OPTION_PASSIVE = "Auto-Update";

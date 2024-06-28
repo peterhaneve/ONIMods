@@ -219,8 +219,8 @@ namespace PeterHan.PLib.Options {
 				int n = attributes.Count;
 				for (int i = 0; i < n; i++)
 					// Do not create an entry if the DLC does not match
-					if (attributes[i] is RequireDLCAttribute requireDLC && DlcManager.
-							IsContentActive(requireDLC.DlcID) != requireDLC.Required) {
+					if (attributes[i] is RequireDLCAttribute requireDLC && PGameUtils.
+							IsDLCOwned(requireDLC.DlcID) != requireDLC.Required) {
 						dlcMatch = false;
 						break;
 					}

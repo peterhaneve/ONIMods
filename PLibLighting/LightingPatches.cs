@@ -33,12 +33,6 @@ namespace PeterHan.PLib.Lighting {
 	/// the latest version of PLightManager.
 	/// </summary>
 	internal static class LightingPatches {
-		private delegate IntHandle AddToLayerDelegate(Light2D instance, Extents ext,
-			ScenePartitionerLayer layer);
-
-		private static readonly DetouredMethod<AddToLayerDelegate> ADD_TO_LAYER =
-			typeof(Light2D).DetourLazy<AddToLayerDelegate>("AddToLayer");
-
 		private static readonly IDetouredField<Light2D, int> ORIGIN = PDetours.
 			DetourFieldLazy<Light2D, int>("origin");
 
