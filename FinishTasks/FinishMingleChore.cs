@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.Detours;
 using UnityEngine;
 
 using MingleState = GameStateMachine<PeterHan.FinishTasks.FinishMingleChore.States,
@@ -82,6 +83,12 @@ namespace PeterHan.FinishTasks {
 		/// A variation of MingleChore.States, that can run during finish time.
 		/// </summary>
 		public sealed class States : GameStateMachine<States, StatesInstance, FinishMingleChore> {
+			// TODO Remove once versions before U52-617614 no longer need to be supported
+			private delegate MingleState ToggleAnims(MingleState instance, string anim_file);
+
+			private static readonly ToggleAnims TOGGLE_ANIMS = typeof(MingleState).
+				Detour<ToggleAnims>();
+
 			/// <summary>
 			/// The Duplicant which is returning to the mingle cell.
 			/// </summary>
@@ -104,7 +111,7 @@ namespace PeterHan.FinishTasks {
 					Transition(null, smi => !Grid.IsValidCell(smi.GetMingleCell()));
 				move.MoveTo(smi => smi.GetMingleCell(), mingle);
 				// Will be cancelled when schedule blocks change or the mingle cell is invalid
-				mingle.ToggleAnims("anim_generic_convo_kanim").
+				TOGGLE_ANIMS.Invoke(mingle, "anim_generic_convo_kanim").
 					ToggleTag(GameTags.AlwaysConverse).
 					PlayAnim("idle", KAnim.PlayMode.Loop);
 			}

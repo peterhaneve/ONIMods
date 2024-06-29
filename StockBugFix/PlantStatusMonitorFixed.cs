@@ -19,9 +19,6 @@ namespace PeterHan.StockBugFix {
 			component.QueueApplyModifier();
 		});
 
-		private static readonly IDetouredField<TreeBud, Growing> BRANCH_GROWING = PDetours.
-			DetourField<TreeBud, Growing>("growing");
-
 		/// <summary>
 		/// Subscribes to plant lifecycle change events. A reference counter is used so calls
 		/// should be matched with Unsubscribe when the state machine leaves the proper state.
@@ -55,11 +52,11 @@ namespace PeterHan.StockBugFix {
 
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable CS0649
-		[MyCmpGet]
-		private BuddingTrunk buddingTrunk;
-
 		[MySmiGet]
 		private FertilizationMonitor.Instance fertilization;
+
+		[MySmiGet]
+		private PlantBranchGrower.Instance grower;
 
 		[MyCmpGet]
 		private Growing growing;
@@ -172,18 +169,17 @@ namespace PeterHan.StockBugFix {
 		private void UpdateAbsorb() {
 			if (growing != null) {
 				bool harvestReady = growing.ReachedNextHarvest();
-				if (buddingTrunk != null && harvestReady) {
-					int branches = 0, branchesGrowing = 0;
-					for (int i = 0; i < ForestTreeConfig.NUM_BRANCHES; i++) {
-						var branch = buddingTrunk.GetBranchAtPosition(i);
-						if (branch != null) {
-							var bg = BRANCH_GROWING.Get(branch);
-							branches++;
-							if (bg != null && bg.IsGrowing() && !bg.ReachedNextHarvest())
-								branchesGrowing++;
-						}
+				if (grower != null && harvestReady) {
+					var branches = grower.GetExistingBranches();
+					int n = branches.Length, branchesGrowing = 0;
+					for (int i = 0; i < n; i++) {
+						var go = branches[i];
+						if (go != null && go.TryGetComponent(out Growing growing) && growing.
+								IsGrowing() && !growing.ReachedNextHarvest())
+							branchesGrowing++;
 					}
-					shouldAbsorb = branchesGrowing > 0 || branches < buddingTrunk.maxBuds;
+					shouldAbsorb = branchesGrowing > 0 || n < grower.
+						MaxBranchesAllowedAtOnce;
 				} else
 					shouldAbsorb = growing.IsGrowing() && !harvestReady;
 			}
