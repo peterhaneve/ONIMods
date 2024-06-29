@@ -25,7 +25,6 @@ using PeterHan.PLib.Detours;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
 using PeterHan.PLib.UI;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -288,7 +287,7 @@ namespace PeterHan.PreserveSeed {
 				// method is generic
 				MethodInfo target = null;
 				ParameterInfo[] parameters;
-				Type paramType;
+				System.Type paramType;
 				foreach (var candidate in typeof(Util).GetMethods(BindingFlags.Static |
 						PPatchTools.BASE_FLAGS))
 					if (candidate.Name == nameof(Util.Shuffle) && (parameters = candidate.
@@ -303,7 +302,7 @@ namespace PeterHan.PreserveSeed {
 					MakeGenericMethod(typeof(SkillGroup));
 				var map = new Dictionary<MethodInfo, MethodInfo> {
 					{
-						typeof(Random).GetMethodSafe(nameof(UnityEngine.Random.
+						typeof(UnityEngine.Random).GetMethodSafe(nameof(UnityEngine.Random.
 							Range), true, typeof(int), typeof(int)),
 						typeof(SharedRandom).GetMethodSafe(nameof(SharedRandom.
 							GetRange), true, typeof(int), typeof(int))
@@ -331,7 +330,7 @@ namespace PeterHan.PreserveSeed {
 			internal static IEnumerable<CodeInstruction> Transpiler(
 					IEnumerable<CodeInstruction> method) {
 				var target = typeof(KRandom).GetConstructor(BindingFlags.Instance |
-					PPatchTools.BASE_FLAGS, null, Type.EmptyTypes, null);
+					PPatchTools.BASE_FLAGS, null, System.Type.EmptyTypes, null);
 				var replacement = typeof(KRandom).GetConstructor(BindingFlags.Instance |
 					PPatchTools.BASE_FLAGS, null, new[] { typeof(int) }, null);
 				var nextSeed = typeof(SharedRandom).GetMethodSafe(nameof(SharedRandom.

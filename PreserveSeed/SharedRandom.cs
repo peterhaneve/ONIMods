@@ -83,7 +83,7 @@ namespace PeterHan.PreserveSeed {
 					WorldgenSeed);
 				if (seed != null) {
 					ResetDistributionDeck();
-					random = new Random((int)(seed.coordinate_offset + (world ==
+					random = new Random((int)(seed.coordinate_value + (world ==
 						ClusterManager.INVALID_WORLD_IDX ? 0 : world)));
 				}
 			}

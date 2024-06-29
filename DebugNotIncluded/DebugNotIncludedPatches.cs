@@ -314,6 +314,21 @@ namespace PeterHan.DebugNotIncluded {
 		}
 	}
 
+	/// <summary>
+	/// Applied to DebugUtil to log exceptions more cleanly.
+	/// </summary>
+	[HarmonyPatch(typeof(DebugUtil), nameof(DebugUtil.LogExceptionCallstack))]
+	public static class DebugUtil_LogExceptionCallstack_Patch {
+		/// <summary>
+		/// Applied before LogExceptionCallstack runs.
+		/// </summary>
+		internal static bool Prefix(Exception e, string msg) {
+			DebugLogger.LogError(msg);
+			DebugLogger.LogException(e);
+			return false;
+		}
+	}
+
 #if DEBUG
 	/// <summary>
 	/// Applied to EggConfig to allow eggs to be instantly hatched.
