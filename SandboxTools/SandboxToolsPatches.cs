@@ -125,36 +125,29 @@ namespace PeterHan.SandboxTools {
 		}
 
 		/// <summary>
-		/// Applied to BuildTool to build items at the correct temperature.
+		/// Applied to BuildTool to fix the building materials for a few buildings.
 		/// </summary>
 		[HarmonyPatch(typeof(BuildingDef), nameof(BuildingDef.Build), typeof(int),
 			typeof(Orientation), typeof(Storage), typeof(IList<Tag>), typeof(float),
 			typeof(bool), typeof(float))]
 		public static class BuildingDef_Build_Patch {
+			private static bool IsInstantBuild => DebugHandler.InstantBuildMode || (Game.
+				Instance.SandboxModeActive && SandboxToolParameterMenu.instance.
+				settings.InstantBuild);
+
 			/// <summary>
 			/// If in sandbox or debug mode (building would be built instantly), fix the
-			/// temperature and materials.
+			/// materials for the AETN.
 			/// </summary>
-			internal static void Prefix(BuildingDef __instance, IList<Tag> selected_elements,
-					ref float temperature) {
-				// Instant build mode?
-				if (selected_elements != null && (DebugHandler.InstantBuildMode || (Game.
-						Instance.SandboxModeActive && SandboxToolParameterMenu.instance.
-						settings.InstantBuild))) {
-					if (__instance.PrefabID == MassiveHeatSinkConfig.ID) {
-						// Special case the AETN to iron (it uses niobium otherwise)
-						var iron = ElementLoader.FindElementByHash(SimHashes.Iron).tag;
-						if (selected_elements.Count == 1 && selected_elements[0] != iron &&
-								!selected_elements.IsReadOnly) {
-							selected_elements.Clear();
-							selected_elements.Add(iron);
-						}
-					} else if (selected_elements.Count > 0) {
-						// Lower temperature to at least the element's melt point - 1 K
-						var pe = ElementLoader.GetElement(selected_elements[0]);
-						if (pe != null)
-							temperature = Math.Min(temperature, Math.Max(1.0f, pe.highTemp -
-								1.0f));
+			internal static void Prefix(BuildingDef __instance, IList<Tag> selected_elements) {
+				if (selected_elements != null && IsInstantBuild && __instance.PrefabID ==
+						MassiveHeatSinkConfig.ID) {
+					// Special case the AETN to iron (it uses niobium otherwise)
+					var iron = ElementLoader.FindElementByHash(SimHashes.Iron).tag;
+					if (selected_elements.Count == 1 && selected_elements[0] != iron &&
+							!selected_elements.IsReadOnly) {
+						selected_elements.Clear();
+						selected_elements.Add(iron);
 					}
 				}
 			}

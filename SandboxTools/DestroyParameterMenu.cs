@@ -64,18 +64,27 @@ namespace PeterHan.SandboxTools {
 		/// The parent of each layer checkbox.
 		/// </summary>
 		private GameObject choiceList;
+
 		/// <summary>
 		/// The filter menu.
 		/// </summary>
 		private GameObject content;
+
 		/// <summary>
 		/// The checkboxes for each layer.
 		/// </summary>
 		private readonly IDictionary<string, DestroyMenuOption> options;
 
+		/// <summary>
+		/// When overlay modes are enabled, saves the list of filtered destroy tool options and
+		/// restores them after returning to the normal overlay.
+		/// </summary>
+		private readonly IDictionary<string, ToolToggleState> savedState;
+
 		public DestroyParameterMenu() {
 			AllSelected = false;
-			options = new Dictionary<string, DestroyMenuOption>();
+			options = new Dictionary<string, DestroyMenuOption>(16);
+			savedState = new Dictionary<string, ToolToggleState>(16);
 		}
 
 		/// <summary>
@@ -86,6 +95,7 @@ namespace PeterHan.SandboxTools {
 			foreach (var option in options)
 				Destroy(option.Value.Checkbox);
 			options.Clear();
+			savedState.Clear();
 		}
 
 		/// <summary>
@@ -213,6 +223,24 @@ namespace PeterHan.SandboxTools {
 					PUtil.LogWarning("Could not find destroy menu checkbox!");
 				i++;
 			}
+		}
+
+		/// <summary>
+		/// Restores the saved state of the check boxes.
+		/// </summary>
+		internal void PopState() {
+			foreach (var pair in savedState)
+				if (options.TryGetValue(pair.Key, out var option))
+					option.State = pair.Value;
+			OnChange();
+		}
+
+		/// <summary>
+		/// Saves the current state of the check boxes.
+		/// </summary>
+		internal void PushState() {
+			foreach (var pair in options)
+				savedState[pair.Key] = pair.Value.State;
 		}
 
 		/// <summary>

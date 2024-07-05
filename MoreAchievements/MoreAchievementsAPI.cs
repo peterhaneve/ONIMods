@@ -49,9 +49,8 @@ namespace PeterHan.MoreAchievements {
 			foreach (var pair in ___achievementEntries) {
 				var obj = pair.Value;
 				string id = pair.Key;
-				MultiToggle toggle;
 				var info = Instance?.GetAchievement(id);
-				if (obj != null && (toggle = obj.GetComponent<MultiToggle>()) != null &&
+				if (obj != null && obj.TryGetComponent(out MultiToggle toggle) &&
 						info != null && info.Hidden)
 					// Hide achievements that have never been achieved
 					obj.SetActive(toggle.CurrentState != 2 || newly.Contains(id));

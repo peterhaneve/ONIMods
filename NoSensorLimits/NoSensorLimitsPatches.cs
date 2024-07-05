@@ -17,7 +17,9 @@
  */
 
 using System;
+using System.Collections.Generic;
 using HarmonyLib;
+using KMod;
 using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
@@ -39,6 +41,11 @@ namespace PeterHan.NoSensorLimits {
 		/// </summary>
 		private static Type[] AFFECT_TYPES;
 
+		/// <summary>
+		/// The types which use CapacityControlSideScreen which may need a maximum override.
+		/// </summary>
+		private static Type[] CAPACITY_TYPES;
+
 		// Delegates for private methods to update displayed values
 		private delegate void UpdateTargetThresholdLabel(ThresholdSwitchSideScreen screen);
 		private delegate void UpdateMaxCapacityLabel(CapacityControlSideScreen screen);
@@ -47,6 +54,41 @@ namespace PeterHan.NoSensorLimits {
 			typeof(CapacityControlSideScreen).Detour<UpdateMaxCapacityLabel>();
 		private static readonly UpdateTargetThresholdLabel UPDATE_TARGET_THRESHOLD_LABEL =
 			typeof(ThresholdSwitchSideScreen).Detour<UpdateTargetThresholdLabel>();
+		
+		/// <summary>
+		/// Checks to see if the target game object has a component on the explicit
+		/// compatibility by name list.
+		/// </summary>
+		/// <param name="target">The currently selected object.</param>
+		/// <param name="result">Returns the object that matched the list, or null if none did.</param>
+		/// <returns>true if it has a component on the manual compatibility list, or false otherwise.</returns>
+		private static bool HasCompatibilityType(GameObject target, out Component result) {
+			int n = CAPACITY_TYPES.Length;
+			bool found = false;
+			Component c = null;
+			for (int i = 0; i < n && !found; i++) {
+				var candidate = CAPACITY_TYPES[i];
+				found = candidate != null && target.TryGetComponent(candidate, out c);
+			}
+			result = c;
+			return found;
+		}
+
+		/// <summary>
+		/// Checks to see if the target object is on the explicit compatibility by name list.
+		/// </summary>
+		/// <param name="target">The currently selected object.</param>
+		/// <returns>true if it is on the manual compatibility list, or false otherwise.</returns>
+		private static bool IsCompatibilityType(object target) {
+			int n = CAPACITY_TYPES.Length;
+			var type = target.GetType();
+			bool found = false;
+			for (int i = 0; i < n && !found; i++) {
+				var candidate = CAPACITY_TYPES[i];
+				found = candidate != null && candidate.IsAssignableFrom(type);
+			}
+			return found;
+		}
 
 		/// <summary>
 		/// Determines if a sensor should be affected by this mod.
@@ -67,16 +109,24 @@ namespace PeterHan.NoSensorLimits {
 			return affected;
 		}
 
+		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
+			base.OnAllModsLoaded(harmony, mods);
+			AFFECT_TYPES = new[] {
+				typeof(LogicWattageSensor), typeof(LogicDiseaseSensor),
+				typeof(ConduitDiseaseSensor), typeof(LogicLightSensor),
+				PPatchTools.GetTypeSafe("ResourceSensor.LogicResourceSensor")
+			};
+			CAPACITY_TYPES = new[] {
+				typeof(CreatureDeliveryPoint),
+				// Added in U50-587362
+				PPatchTools.GetTypeSafe("BaggableCritterCapacityTracker", "Assembly-CSharp")
+			};
+		}
+
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 			new PVersionCheck().Register(this, new SteamVersionChecker());
-			AFFECT_TYPES = new[] {
-				typeof(LogicWattageSensor), typeof(LogicDiseaseSensor),
-				typeof(ConduitDiseaseSensor),
-				// Introduced by U49-575720
-				PPatchTools.GetTypeSafe("LogicLightSensor", "Assembly-CSharp")
-			};
 		}
 
 		/// <summary>
@@ -90,12 +140,10 @@ namespace PeterHan.NoSensorLimits {
 			/// </summary>
 			internal static void Postfix(KNumberInputField ___numberInput,
 					GameObject new_target) {
-				float normalMax = (___numberInput == null) ? ___numberInput.maxValue : 0.0f;
-				if (new_target != null) {
-					var cdp = new_target.GetComponent<CreatureDeliveryPoint>();
-					if (cdp != null && ShouldAffect(normalMax, cdp))
-						___numberInput.maxValue = float.MaxValue;
-				}
+				float normalMax = ___numberInput == null ? ___numberInput.maxValue : 0.0f;
+				if (new_target != null && HasCompatibilityType(new_target, out var cdp) &&
+						ShouldAffect(normalMax, cdp))
+					___numberInput.maxValue = float.MaxValue;
 			}
 		}
 
@@ -111,7 +159,7 @@ namespace PeterHan.NoSensorLimits {
 			internal static bool Prefix(IUserControlledCapacity ___target, float newValue,
 					KSlider ___slider, CapacityControlSideScreen __instance) {
 				float normalMax = ___target.MaxCapacity;
-				bool skip = newValue > normalMax && ___target is CreatureDeliveryPoint &&
+				bool skip = newValue > normalMax && IsCompatibilityType(___target) &&
 					ShouldAffect(normalMax, ___target);
 				if (skip) {
 					___target.UserMaxCapacity = newValue;
@@ -134,11 +182,9 @@ namespace PeterHan.NoSensorLimits {
 			internal static void Postfix(KNumberInputField ___numberInput,
 					GameObject new_target) {
 				float normalMax = (___numberInput == null) ? ___numberInput.maxValue : 0.0f;
-				if (new_target != null) {
-					var sw = new_target.GetComponent<IThresholdSwitch>();
-					if (sw != null && ShouldAffect(normalMax, sw))
-						___numberInput.maxValue = float.MaxValue;
-				}
+				if (new_target != null && new_target.TryGetComponent(out IThresholdSwitch
+						sw) && ShouldAffect(normalMax, sw))
+					___numberInput.maxValue = float.MaxValue;
 			}
 		}
 

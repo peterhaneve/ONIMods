@@ -98,6 +98,13 @@ namespace PeterHan.SandboxTools {
 		/// </summary>
 		private readonly int pickupLayer;
 
+		/// <summary>
+		/// Avoid smashing the state unnecessarily if the game sends multiple events for the
+		/// same overlay toggle, by only updating the check boxes if the overlay is actually
+		/// different.
+		/// </summary>
+		private HashedString previousMode;
+
 		internal FilteredDestroyTool() {
 			Color color;
 			modes = new List<DestroyFilter>(12) {
@@ -268,10 +275,8 @@ namespace PeterHan.SandboxTools {
 			sandboxMenu.gameObject.SetActive(true);
 			sandboxMenu.DisableParameters();
 			sandboxMenu.brushRadiusSlider.row.SetActive(true);
-			if (inst != null) {
-				inst.Subscribe((int)GameHashes.EnableOverlay, OnUpdateOverlay);
+			if (inst != null)
 				inst.Subscribe((int)GameHashes.OverlayChanged, OnUpdateOverlay);
-			}
 			UpdateOverlay(OverlayScreen.Instance.mode);
 		}
 
@@ -282,10 +287,8 @@ namespace PeterHan.SandboxTools {
 			if (menu != null)
 				menu.HideMenu();
 			SandboxToolParameterMenu.instance.gameObject.SetActive(false);
-			if (inst != null) {
-				inst.Unsubscribe((int)GameHashes.EnableOverlay);
+			if (inst != null)
 				inst.Unsubscribe((int)GameHashes.OverlayChanged);
-			}
 		}
 
 		protected override void OnPaintCell(int cell, int distFromOrigin) {
@@ -314,20 +317,28 @@ namespace PeterHan.SandboxTools {
 		/// </summary>
 		/// <param name="mode">The new overlay mode.</param>
 		private void OnUpdateOverlay(object mode) {
-			if (mode is HashedString str)
-				UpdateOverlay(str);
+			if (mode is HashedString newMode && newMode != previousMode) {
+				UpdateOverlay(newMode);
+				previousMode = newMode;
+			}
 		}
 
 		/// <summary>
 		/// Updates the selected filters to match the current overlay.
 		/// </summary>
-		/// <param name="str"></param>
-		private void UpdateOverlay(HashedString str) {
+		/// <param name="newMode">The new overlay mode ID.</param>
+		private void UpdateOverlay(HashedString newMode) {
 			var menu = DestroyParameterMenu.Instance;
-			if (menu != null && str != HashedString.Invalid)
+			if (menu == null) { }
+			else if (newMode == HashedString.Invalid)
+				// OverlayModes.None has an ID of HashedString.Invalid
+				menu.PopState();
+			else
 				// Look in the list for an option matching this mode
 				foreach (var mode in modes)
-					if (mode.OverlayMode == str) {
+					if (mode.OverlayMode == newMode) {
+						if (previousMode == HashedString.Invalid)
+							menu.PushState();
 						menu.SetTo(mode.ID);
 						break;
 					}

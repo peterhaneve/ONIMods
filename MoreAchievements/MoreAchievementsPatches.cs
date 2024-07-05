@@ -21,7 +21,6 @@ using PeterHan.MoreAchievements.Criteria;
 using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
-using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
 using PeterHan.PLib.UI;
 using System.Collections.Generic;
@@ -173,8 +172,6 @@ namespace PeterHan.MoreAchievements {
 			/// Applied after DoDamage runs.
 			/// </summary>
 			internal static void Postfix(BuildingHP __instance, object data) {
-				Wire wire;
-				WireUtilityNetworkLink bridge;
 				if (__instance != null && data is BuildingHP.DamageSourceInfo source &&
 						(source.source == STRINGS.BUILDINGS.DAMAGESOURCES.CIRCUIT_OVERLOADED ||
 						source.takeDamageEffect == SpawnFXHashes.BuildingSpark)) {
@@ -182,10 +179,10 @@ namespace PeterHan.MoreAchievements {
 #if DEBUG
 					PUtil.LogDebug("Wire overloaded: " + obj.name);
 #endif
-					if ((wire = obj.GetComponentSafe<Wire>()) != null)
+					if (obj.TryGetComponent(out Wire wire))
 						// Wire is overloading
 						AchievementStateComponent.OnOverload(wire.GetMaxWattageRating());
-					else if ((bridge = obj.GetComponentSafe<WireUtilityNetworkLink>()) != null)
+					else if (obj.TryGetComponent(out WireUtilityNetworkLink bridge))
 						// Wire bridge is overloading
 						AchievementStateComponent.OnOverload(bridge.GetMaxWattageRating());
 				}
@@ -225,14 +222,14 @@ namespace PeterHan.MoreAchievements {
 			/// Applied after OnStartWork runs.
 			/// </summary>
 			internal static void Postfix(Clinic __instance, Worker worker) {
-				var building = __instance.gameObject.GetComponentSafe<Building>();
 				var hp = Db.Get().Amounts.HitPoints.Lookup(worker);
 #if DEBUG
 				if (hp != null)
 					PUtil.LogDebug("Reached clinic with {0:F2} left".F(hp.value));
 #endif
-				if (building != null && building.Def.PrefabID == MedicalCotConfig.ID && hp !=
-						null && hp.value <= AchievementStrings.SAVINGMEEP.THRESHOLD)
+				if (__instance.TryGetComponent(out Building building) && building.Def.
+						PrefabID == MedicalCotConfig.ID && hp != null && hp.value <=
+						AchievementStrings.SAVINGMEEP.THRESHOLD)
 					AchievementStateComponent.Trigger(AchievementStrings.SAVINGMEEP.ID);
 			}
 		}
@@ -277,7 +274,8 @@ namespace PeterHan.MoreAchievements {
 		/// <summary>
 		/// Applied to DiscoveredResources to grant an achievement upon discovering items.
 		/// </summary>
-		[HarmonyPatch(typeof(DiscoveredResources), nameof(DiscoveredResources.Discover))]
+		[HarmonyPatch(typeof(DiscoveredResources), nameof(DiscoveredResources.Discover),
+			typeof(Tag))]
 		public static class DiscoveredResources_Discover_Patch {
 			/// <summary>
 			/// Applied after Discover runs.
@@ -316,10 +314,10 @@ namespace PeterHan.MoreAchievements {
 			/// Applied after Incapacitate runs.
 			/// </summary>
 			internal static void Postfix(Health __instance) {
-				KSelectable target;
-				if (ScaldedTag != null && (target = __instance.GetComponent<KSelectable>()) !=
-						null && target.HasStatusItem(Db.Get().CreatureStatusItems.Scalding))
-					__instance.GetComponent<KPrefabID>()?.AddTag(ScaldedTag);
+				if (ScaldedTag != null && __instance.TryGetComponent(out KSelectable target) &&
+						target.HasStatusItem(Db.Get().CreatureStatusItems.Scalding) &&
+						__instance.TryGetComponent(out KPrefabID id))
+					id.AddTag(ScaldedTag);
 			}
 		}
 
@@ -333,8 +331,8 @@ namespace PeterHan.MoreAchievements {
 			/// </summary>
 			internal static void Prefix(Health __instance) {
 				if (__instance.State != Health.HealthState.Invincible && __instance.hitPoints >
-						0.0f)
-					__instance.GetComponent<KPrefabID>()?.RemoveTag(ScaldedTag);
+						0.0f && __instance.TryGetComponent(out KPrefabID id))
+					id.RemoveTag(ScaldedTag);
 			}
 		}
 
@@ -347,7 +345,8 @@ namespace PeterHan.MoreAchievements {
 			/// Applied after Recover runs.
 			/// </summary>
 			internal static void Postfix(Health __instance) {
-				__instance.GetComponent<KPrefabID>()?.RemoveTag(ScaldedTag);
+				if (__instance.TryGetComponent(out KPrefabID id))
+					id.RemoveTag(ScaldedTag);
 			}
 		}
 
@@ -406,7 +405,7 @@ namespace PeterHan.MoreAchievements {
 			/// </summary>
 			internal static IEnumerable<CodeInstruction> Transpiler(
 					IEnumerable<CodeInstruction> method) {
-				return PPatchTools.ReplaceMethodCall(method, typeof(Util).GetMethodSafe(
+				return PPatchTools.ReplaceMethodCallSafe(method, typeof(Util).GetMethodSafe(
 					nameof(Util.KDestroyGameObject), true, typeof(GameObject)),
 					typeof(MoreAchievementsPatches).GetMethodSafe(nameof(CheckAndDestroy),
 					true, typeof(GameObject)));

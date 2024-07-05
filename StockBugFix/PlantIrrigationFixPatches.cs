@@ -5,7 +5,6 @@
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 
 namespace PeterHan.StockBugFix {
@@ -41,10 +40,10 @@ namespace PeterHan.StockBugFix {
 			harmony.Patch(typeof(IrrigationMonitor), nameof(IrrigationMonitor.
 				InitializeStates), postfix: PatchMethod(nameof(IM_InitializeStates_Postfix)));
 			// TreeBud
-			harmony.Patch(typeof(TreeBud), "SubscribeToTrunk", postfix: PatchMethod(
-				nameof(SubscribeToTrunk_Postfix)));
-			harmony.Patch(typeof(TreeBud), "UnsubscribeToTrunk", postfix: PatchMethod(
-				nameof(UnsubscribeToTrunk_Postfix)));
+			harmony.Patch(typeof(PlantBranch.Instance), "SubscribeToTrunk",
+				postfix: PatchMethod(nameof(SubscribeToTrunk_Postfix)));
+			harmony.Patch(typeof(PlantBranch.Instance), "UnsubscribeToTrunk",
+				postfix: PatchMethod(nameof(UnsubscribeToTrunk_Postfix)));
 			// EntityTemplates
 			var ep = PatchMethod(nameof(ExtendPlant_Postfix));
 			harmony.Patch(typeof(EntityTemplates), nameof(EntityTemplates.
