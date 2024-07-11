@@ -37,13 +37,18 @@ msgstr "ОБНОВИТЬ ПРИНУДИТЕЛЬНО"
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_UPDATE
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_UPDATE"
-msgid "Continuing will reinstall the latest version of:\n{0}from the Workshop.\n<color=#FFCC00>A best effort will be made to preserve mod options.</color>\n\nCheck again after updating and enable the mod if necessary."
-msgstr "Продолжение переустановит последнюю версию:\n{0}из Мастерской.\n<color=#FFCC00>Будут приложены все усилия, чтобы сохранить настройки мода.</color>\n\nПроверьте еще раз после обновления и при необходимости включите мод."
+msgid "Continuing will reinstall the latest version of:\n{0}from the Workshop.\n<color=#FFCC00>A best effort will be made to preserve mod options.</color>"
+msgstr "Продолжение переустановит последнюю версию:\n{0}из Мастерской.\n<color=#FFCC00>Будут приложены все усилия, чтобы сохранить настройки мода.</color>"
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.LOCAL_UPDATE
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.LOCAL_UPDATE"
 msgid "<b>Local Updated:</b> {0:f}"
 msgstr "<b>Локальное Обновление:</b> {0:f}"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_RESTART
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_RESTART"
+msgid "\n\n<color=#FFCC00>Restart to update mods</color>"
+msgstr "\n\n<color=#FFCC00>Перезапустите, чтобы обновить моды</color>"
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_UPDATE
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_UPDATE"
@@ -62,18 +67,33 @@ msgstr "\n\n<color=#00CC00>Выполняется авто-обновление<
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_AUTO_UPDATE
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_AUTO_UPDATE"
-msgid "<b>Automatic updates are enabled.</b>\n"
-msgstr "<b>Автоматическое обновление включено.</b>\n"
+msgid "<b>Automatic updates are enabled</b>; click to manually force update\n"
+msgstr "<b>Автоматическое обновление включено</b>; нажмите, чтобы принудительно обновить вручную\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_ERR_UNPACK
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_ERR_UNPACK"
+msgid "Installed mod version {0} does not match the cached version.\nManual updating may be required."
+msgstr "Версия установленного мода {0} не соответствует версии в кэше.\nМожет потребоваться обновление вручную."
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_ERR_UPDATE
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_ERR_UPDATE"
-msgid "Unable to automatically update this mod!\nA manual update may be required."
-msgstr "Невозможно автоматически обновить этот мод!\nМожет потребоваться обновление вручную."
+msgid "Unable to automatically update this mod!\nManual updating may be required if this status\npersists after a game restart."
+msgstr "Невозможно автоматически обновить этот мод!\nЕсли этот статус сохраняется после перезапуска игры,\nможет потребоваться обновление вручную."
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_OUTDATED
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_OUTDATED"
 msgid "This mod appears to be out of date!"
 msgstr "Этот мод очевидно устарел!"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_PENDING_RESTART
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_PENDING_RESTART"
+msgid "An older version of this mod is currently running.\nIt will be updated on the next restart."
+msgstr "Сейчас запущена более старая версия этого мода.\nОн будет обновлен при следующем перезапуске."
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_PENDING_RESTART_VER
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_PENDING_RESTART_VER"
+msgid "Version {0} of this mod is currently running.\nIt will be updated on the next restart."
+msgstr "Сейчас запущена версия {0} этого мода.\nОн будет обновлен при следующем перезапуске."
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATE_1
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATE_1"
@@ -94,6 +114,11 @@ msgstr "Этот мод очевидно обновлен."
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATED_BYUS"
 msgid "This mod was locally updated by Mod Updater."
 msgstr "Этот мод был локально обновлен Mod Updater-ом."
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_WARNING_NEWER
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_WARNING_NEWER"
+msgid "Installed mod version {0} is <b>newer</b> than the cached version.\nIf you are experiencing problems with this mod, consider manually updating."
+msgstr "Установленная версия {0} мода <b>более новая</b>, чем версии в кэше.\nЕсли у вас возникли проблемы с этим модом, попробуйте обновить его вручную."
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.OPTION_MAINMENU
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.OPTION_MAINMENU"

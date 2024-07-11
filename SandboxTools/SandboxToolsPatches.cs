@@ -53,8 +53,9 @@ namespace PeterHan.SandboxTools {
 					var filter = filters[i];
 					if (filter.Name == STRINGS.UI.SANDBOXTOOLS.FILTERS.ENTITIES.CREATURE) {
 						filters.Add(new SearchFilter(STRINGS.CREATURES.FAMILY_PLURAL.
-							SCOUTROVER, entity => entity is KPrefabID prefab && prefab.
-							PrefabTag.Name == ScoutRoverConfig.ID, filter, icon));
+							SCOUTROVER, entity => entity is KPrefabID prefab && (prefab.
+							PrefabTag.Name == ScoutRoverConfig.ID || prefab.
+							PrefabTag.Name == MorbRoverConfig.ID), filter, icon));
 						break;
 					}
 				}
