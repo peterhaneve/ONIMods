@@ -1,6 +1,6 @@
 # Peter Han&#39;s Mods for Oxygen Not Included
 
-Last tested on game version: **U47-561558**
+Last tested on game version: **U51-596100**
 
 **No support** for Public Testing branches, including the rolled back Legacy Vanilla (CS-469300).
 
