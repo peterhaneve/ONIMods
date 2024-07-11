@@ -49,14 +49,6 @@ namespace PeterHan.PipPlantOverlay {
 		internal const float PRESSURE_THRESHOLD = 0.1f;
 
 		/// <summary>
-		/// Game versions of this value and higher allow Vacuum as a planting location (but
-		/// not gases at low pressures?).
-		///
-		/// TODO Remove when these versions are all dead
-		/// </summary>
-		internal const uint PRESSURE_VERSION = 567980U;
-
-		/// <summary>
 		/// The maximum plantable temperature in K, for sanity - the highest plant surviving
 		/// temperature is Sporechid at 564 K.
 		/// </summary>
@@ -97,13 +89,11 @@ namespace PeterHan.PipPlantOverlay {
 			if (Grid.IsValidCell(cell) && !Grid.Solid[cell] && Grid.Objects[cell,
 					BUILDINGS_LAYER] == null) {
 				int above = Grid.CellAbove(cell), below = Grid.CellBelow(cell);
-				bool nb = IsPlantable(below, ReceptacleDirection.Top), na = IsPlantable(above,
-					ReceptacleDirection.Bottom);
-				float temp = Grid.Temperature[cell];
-				if (nb)
+				if (IsPlantable(below, ReceptacleDirection.Top))
 					// Check below
 					result = CheckCellInternal(cell, below);
-				if (na && result == PipPlantFailedReasons.NoPlantablePlot)
+				if (result == PipPlantFailedReasons.NoPlantablePlot && IsPlantable(above,
+						ReceptacleDirection.Bottom))
 					// Check above
 					result = CheckCellInternal(cell, above);
 			}
@@ -126,9 +116,8 @@ namespace PeterHan.PipPlantOverlay {
 				result = PipPlantFailedReasons.PlantCount;
 			else if (IsUnderPressure(cell))
 				result = PipPlantFailedReasons.Pressure;
-			// Absolute zero (vacuum) is allowed in Song of the Moo
-			else if ((temp < TEMP_MIN || temp > TEMP_MAX) && (PUtil.GameVersion <
-					PRESSURE_VERSION || temp > 0.0f))
+			// Absolute zero (vacuum) is allowed since Song of the Moo
+			else if ((temp < TEMP_MIN || temp > TEMP_MAX) && temp > 0.0f)
 				result = PipPlantFailedReasons.Temperature;
 			else
 				result = PipPlantFailedReasons.CanPlant;
@@ -183,10 +172,8 @@ namespace PeterHan.PipPlantOverlay {
 		/// <returns>true if the pressure is too low or it is flooded, or false otherwise.</returns>
 		private static bool IsUnderPressure(int cell) {
 			var element = Grid.Element[cell];
-			// Threshold is hardcoded in DrowningMonitor
-			return element == null || (element.id == SimHashes.Vacuum ? PUtil.GameVersion <
-				PRESSURE_VERSION : Grid.Mass[cell] < PRESSURE_THRESHOLD ||
-				Grid.IsSubstantialLiquid(cell, 0.95f));
+			return element == null || (element.id != SimHashes.Vacuum && (Grid.Mass[cell] <
+				PRESSURE_THRESHOLD || Grid.IsNavigatableLiquid(cell)));
 		}
 
 		/// <summary>

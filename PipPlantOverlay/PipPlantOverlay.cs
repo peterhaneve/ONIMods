@@ -53,7 +53,6 @@ namespace PeterHan.PipPlantOverlay {
 			case PipPlantFailedReasons.Pressure:
 				shade = colors.heatflowThreshold0;
 				break;
-			case PipPlantFailedReasons.Temperature:
 			default:
 				shade = colors.cropHalted;
 				break;
@@ -116,17 +115,14 @@ namespace PeterHan.PipPlantOverlay {
 			int pc = PipPlantOverlayTests.PlantCount;
 			// Plural forms are annoying
 			PipPlantOverlayTests.UpdatePlantCriteria();
-			string plantCountText = string.Format((pc == 1) ? PPO.TOOLTIPS.PLANTCOUNT_1 :
+			string plantCountText = string.Format(pc == 1 ? PPO.TOOLTIPS.PLANTCOUNT_1 :
 				PPO.TOOLTIPS.PLANTCOUNT, pc, PipPlantOverlayTests.PlantRadius);
-			cameraLayerMask = LayerMask.GetMask(new string[] {
-				"MaskedOverlay",
-				"MaskedOverlayBG"
-			});
+			cameraLayerMask = LayerMask.GetMask("MaskedOverlay", "MaskedOverlayBG");
 			cells = new PipPlantFailedReasons[Grid.CellCount];
 			for (int i = 0; i < Grid.CellCount; i++)
 				// Avoid a big green screen flash on first load
 				cells[i] = PipPlantFailedReasons.NoPlantablePlot;
-			conditions = new OverlayModes.ColorHighlightCondition[] {
+			conditions = new[] {
 				new OverlayModes.ColorHighlightCondition(GetHighlightColor, ShouldHighlight)
 			};
 			layerTargets = new HashSet<Uprootable>();
@@ -150,17 +146,17 @@ namespace PeterHan.PipPlantOverlay {
 			};
 			partition = null;
 			plants = new HashSet<Tag>(Assets.GetPrefabTagsWithComponent<Uprootable>());
-			selectionMask = LayerMask.GetMask(new string[] {
-				"MaskedOverlay"
-			});
+			selectionMask = LayerMask.GetMask("MaskedOverlay");
 			targetLayer = LayerMask.NameToLayer("MaskedOverlay");
 		}
 
 		public override void Disable() {
+			var camera = Camera.main;
 			UnregisterSaveLoadListeners();
 			DisableHighlightTypeOverlay(layerTargets);
 			CameraController.Instance.ToggleColouredOverlayView(false);
-			Camera.main.cullingMask &= ~cameraLayerMask;
+			if (camera != null)
+				camera.cullingMask &= ~cameraLayerMask;
 			partition?.Clear();
 			layerTargets.Clear();
 			SelectTool.Instance.ClearLayerMask();
@@ -168,11 +164,13 @@ namespace PeterHan.PipPlantOverlay {
 		}
 
 		public override void Enable() {
+			var camera = Camera.main;
 			base.Enable();
 			RegisterSaveLoadListeners();
 			partition = PopulatePartition<Uprootable>(plants);
 			CameraController.Instance.ToggleColouredOverlayView(true);
-			Camera.main.cullingMask |= cameraLayerMask;
+			if (camera != null)
+				camera.cullingMask |= cameraLayerMask;
 			SelectTool.Instance.SetLayerMask(selectionMask);
 		}
 
@@ -191,7 +189,7 @@ namespace PeterHan.PipPlantOverlay {
 				ScreenToWorldPoint(KInputManager.GetMousePos()));
 			var colors = GlobalAssets.Instance.colorSet;
 			if (Grid.IsValidCell(mouseCell))
-				color = (cells[mouseCell] == PipPlantFailedReasons.PlantCount) ?
+				color = cells[mouseCell] == PipPlantFailedReasons.PlantCount ?
 					colors.cropHalted : colors.cropGrown;
 			return color;
 		}
@@ -279,14 +277,12 @@ namespace PeterHan.PipPlantOverlay {
 		}
 
 		public override void Update() {
-			int x1, x2, y1, y2;
 			var intersecting = HashSetPool<Uprootable, PipPlantOverlay>.Allocate();
 			base.Update();
 			// SimDebugView is updated on a background thread, so since plant checking
 			// must be done on the FG thread, it is updated here
-			Grid.GetVisibleExtents(out Vector2I min, out Vector2I max);
-			x1 = min.x; x2 = max.x;
-			y1 = min.y; y2 = max.y;
+			Grid.GetVisibleExtents(out var min, out var max);
+			int x1 = min.x, x2 = max.x, y1 = min.y, y2 = max.y;
 			// Refresh plant list with plants on the screen
 			RemoveOffscreenTargets(layerTargets, min, max, null);
 			partition.GetAllIntersecting(new Vector2(x1, y1), new Vector2(x2, y2),

@@ -22,7 +22,6 @@ using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace PeterHan.ResearchQueue {
 	/// <summary>
@@ -34,14 +33,6 @@ namespace PeterHan.ResearchQueue {
 		/// </summary>
 		private static readonly IDetouredField<KInputController, Modifier> ACTIVE_MODIFIERS =
 			PDetours.DetourField<KInputController, Modifier>("mActiveModifiers");
-
-		/// <summary>
-		/// Used to retrieve the global input manager, static or not.
-		/// TODO Remove when versions prior to U44-535211 no longer need to be supported
-		/// </summary>
-		private static readonly MethodInfo GET_INPUT_MANAGER = typeof(Global).GetMethod(nameof(
-			Global.GetInputManager), BindingFlags.Instance | BindingFlags.Static |
-			PPatchTools.BASE_FLAGS);
 
 		/// <summary>
 		/// Adds a tech to the research queue.
@@ -88,9 +79,7 @@ namespace PeterHan.ResearchQueue {
 		/// </summary>
 		/// <returns>The current input controller.</returns>
 		private static KInputController GetInputController() {
-			var getInput = GET_INPUT_MANAGER;
-			return (getInput.IsStatic ? getInput.Invoke(null, null) : getInput.Invoke(Global.
-				Instance, null)) is GameInputManager im ? im.GetDefaultController() : null;
+			return Global.GetInputManager().GetDefaultController();
 		}
 
 		/// <summary>
@@ -202,9 +191,6 @@ namespace PeterHan.ResearchQueue {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 			new PVersionCheck().Register(this, new SteamVersionChecker());
-			if (GET_INPUT_MANAGER == null || GET_INPUT_MANAGER.ReturnType != typeof(
-					GameInputManager))
-				PUtil.LogWarning("Unable to find current input controller");
 		}
 
 		/// <summary>
