@@ -23,7 +23,6 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-using IntHandle = HandleVector<int>.Handle;
 using LightGridEmitter = LightGridManager.LightGridEmitter;
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
@@ -86,8 +85,10 @@ namespace PeterHan.PLib.Lighting {
 				UpdateLitCells), prefix: PatchMethod(nameof(UpdateLitCells_Prefix)));
 
 			// LightGridManager
-			plibInstance.Patch(typeof(LightGridManager), nameof(LightGridManager.
-				CreatePreview), prefix: PatchMethod(nameof(CreatePreview_Prefix)));
+			plibInstance.Patch(typeof(LightGridManager).GetOverloadWithMostArguments(nameof(
+				LightGridManager.CreatePreview), true, typeof(int), typeof(float),
+				typeof(LightShape), typeof(int)),
+				prefix: PatchMethod(nameof(CreatePreview_Prefix)));
 
 			// LightShapePreview
 			plibInstance.Patch(typeof(LightShapePreview), "Update", prefix:

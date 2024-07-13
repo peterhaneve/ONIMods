@@ -95,8 +95,12 @@ namespace PeterHan.ToastControl {
 			"ElementDropperMonitor+Instance:DropElement",
 			"ElementEmitter:ForceEmit",
 			"FleeStates+<>c:<InitializeStates>b__8_2",
+			// TODO Remove when versions prior to U52-621068 no longer need to be supported
 			"HarvestDesignatable:<OnRefreshUserMenu>b__34_0",
 			"HarvestDesignatable:<OnRefreshUserMenu>b__34_1",
+
+			"HarvestDesignatable:<OnRefreshUserMenu>b__35_0",
+			"HarvestDesignatable:<OnRefreshUserMenu>b__35_1",
 			"Klei.AI.EffectInstance:.ctor",
 			"Klei.AI.SicknessInstance+StatesInstance:Infect",
 			"Klei.AI.SicknessInstance+StatesInstance:Cure",
@@ -171,7 +175,7 @@ namespace PeterHan.ToastControl {
 				if (instr.opcode == OpCodes.Callvirt) {
 					// ReplaceMethodCall will not work here since we need information not
 					// available in the call to Store
-					if (find != null && (instr.operand as MethodInfo) == find) {
+					if (find != null && instr.operand is MethodBase mi && mi == find) {
 						patched = SwapArgument(instructions, previousCall, i, newInstructions);
 						break;
 					}
@@ -408,14 +412,8 @@ namespace PeterHan.ToastControl {
 		/// <summary>
 		/// Applied to LiquidPumpingStation to determine whether pickup popups are shown.
 		/// </summary>
-		[HarmonyPatch]
-		public static class LiquidPumpingStation_OnCompleteWork_Patch {
-			internal static MethodBase TargetMethod() {
-				return typeof(LiquidPumpingStation).GetMethodSafe("OnCompleteWork",
-					false, PPatchTools.AnyArguments) ?? typeof(LiquidPumpingStation).
-					GetMethodSafe("OnStopWork", false, PPatchTools.AnyArguments);
-			}
-
+		[HarmonyPatch(typeof(LiquidPumpingStation), "OnStopWork")]
+		public static class LiquidPumpingStation_OnStopWork_Patch {
 			/// <summary>
 			/// Transpiles OnCompleteWork to alter the "display popup" flag on Storage.Store
 			/// depending on the options settings.
@@ -453,17 +451,8 @@ namespace PeterHan.ToastControl {
 		[HarmonyPatch]
 		public static class PopFX_Spawn_Patch {
 			internal static MethodBase TargetMethod() {
-				var options = typeof(PopFX).GetMethods(PPatchTools.BASE_FLAGS | BindingFlags.
-					Instance | BindingFlags.DeclaredOnly);
-				MethodBase target = null;
-				// Look for a match that is not KMonoBehaviour.Spawn()
-				foreach (var method in options)
-					if (method.Name == nameof(PopFX.Spawn) && method.GetParameters().
-							Length > 0) {
-						target = method;
-						break;
-					}
-				return target;
+				return typeof(PopFX).GetOverloadWithMostArguments(nameof(PopFX.Spawn), false,
+					typeof(Sprite));
 			}
 
 			/// <summary>

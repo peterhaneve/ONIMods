@@ -277,14 +277,11 @@ namespace PeterHan.PreserveSeed {
 			}
 
 			/// <summary>
-			/// Transpiles these methods to replace Shuffle calls with the Random
-			/// initialized on the shared seed.
+			/// Shuffle has 2 overloads, but cannot bind by concrete parameter type as the
+			/// method is generic.
 			/// </summary>
-			[HarmonyPriority(Priority.LowerThanNormal)]
-			internal static IEnumerable<CodeInstruction> Transpiler(
-					IEnumerable<CodeInstruction> method) {
-				// Shuffle has 2 overloads, but cannot bind by concrete parameter type as the
-				// method is generic
+			/// <returns>The Util.Shuffle method to replace.</returns>
+			private static MethodInfo FindShuffleMethod() {
 				MethodInfo target = null;
 				ParameterInfo[] parameters;
 				System.Type paramType;
@@ -297,6 +294,17 @@ namespace PeterHan.PreserveSeed {
 						target = candidate.MakeGenericMethod(typeof(SkillGroup));
 						break;
 					}
+				return target;
+			}
+
+			/// <summary>
+			/// Transpiles these methods to replace Shuffle calls with the Random
+			/// initialized on the shared seed.
+			/// </summary>
+			[HarmonyPriority(Priority.LowerThanNormal)]
+			internal static IEnumerable<CodeInstruction> Transpiler(
+					IEnumerable<CodeInstruction> method) {
+				var target = FindShuffleMethod();
 				var replacement = typeof(SharedRandom).GetMethod(nameof(SharedRandom.
 					ShuffleSeeded), BindingFlags.Static | PPatchTools.BASE_FLAGS)?.
 					MakeGenericMethod(typeof(SkillGroup));

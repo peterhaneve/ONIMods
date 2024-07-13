@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Custom Pipe Colors</AssemblyTitle>
-    <FileVersion>2.4.0.0</FileVersion>
+    <FileVersion>2.5.0.0</FileVersion>
     <RootNamespace>PeterHan.OldPipeColor</RootNamespace>
     <Description>Restores the former colo(u)r of Insulated Pipes and allows configuration of custom colors.</Description>
     <AssemblyVersion>2.1.0.0</AssemblyVersion>

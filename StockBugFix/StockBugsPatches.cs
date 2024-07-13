@@ -805,8 +805,9 @@ namespace PeterHan.StockBugFix {
 					PUtil.LogWarning("Timelapser.OnNewDay was called, but worlds are still pending a screenshot");
 				for (int i = 0; i < n; i++) {
 					var world = containers[i];
-					if (world.IsDiscovered && !world.IsModuleInterior && NeedTimelapse(cycle -
-							(int)world.DiscoveryTimestamp)) {
+					int ds = (int)world.DiscoveryTimestamp;
+					if (world.IsDiscovered && !world.IsModuleInterior && ds >= 0 &&
+							NeedTimelapse(cycle - ds)) {
 						screenshot = true;
 #if DEBUG
 						PUtil.LogDebug("Requesting timelapse on cycle {0:D} for world {1:D}".F(

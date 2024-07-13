@@ -82,7 +82,6 @@ namespace PeterHan.PLib.Core {
 		/// faster than reflection, so useful if called frequently on the same object.
 		/// </summary>
 		/// <typeparam name="T">A delegate type which matches the method signature.</typeparam>
-		/// <param name="type">The declaring type of the target method.</param>
 		/// <param name="method">The target method.</param>
 		/// <param name="caller">The object on which to call the method.</param>
 		/// <returns>A delegate which calls this method, or null if the method was null or did
@@ -340,7 +339,7 @@ namespace PeterHan.PLib.Core {
 				return $"{lb.LocalIndex} ({lb.LocalType})";
 
 			if (argument is string sval)
-				return sval.ToString().ToLiteral();
+				return sval.ToLiteral();
 
 			return argument.ToString().Trim();
 		}
@@ -352,13 +351,16 @@ namespace PeterHan.PLib.Core {
 		/// <param name="method">The method that is called.</param>
 		private static void FormatMethodCall(StringBuilder result, MethodBase method) {
 			bool first = true;
+			var dt = method.DeclaringType;
 			// The default representation leaves off the class name!
 			if (method is MethodInfo hasRet) {
 				result.Append(hasRet.ReturnType.Name);
 				result.Append(' ');
 			}
-			result.Append(method.DeclaringType.Name);
-			result.Append('.');
+			if (dt != null) {
+				result.Append(dt.Name);
+				result.Append('.');
+			}
 			result.Append(method.Name);
 			result.Append('(');
 			// Put the default value in there too
@@ -391,7 +393,7 @@ namespace PeterHan.PLib.Core {
 		public static FieldInfo GetFieldSafe(this Type type, string fieldName,
 				bool isStatic) {
 			FieldInfo field = null;
-			if (type != null)
+			if (type != null && !string.IsNullOrEmpty(fieldName))
 				try {
 					var flag = isStatic ? BindingFlags.Static : BindingFlags.Instance;
 					field = type.GetField(fieldName, BASE_FLAGS | flag);
@@ -439,7 +441,7 @@ namespace PeterHan.PLib.Core {
 		public static MethodInfo GetMethodSafe(this Type type, string methodName,
 				bool isStatic, params Type[] arguments) {
 			MethodInfo method = null;
-			if (type != null && arguments != null)
+			if (type != null && arguments != null && !string.IsNullOrEmpty(methodName))
 				try {
 					var flag = isStatic ? BindingFlags.Static : BindingFlags.Instance;
 					if (arguments.Length == 1 && arguments[0] == null)
@@ -455,6 +457,38 @@ namespace PeterHan.PLib.Core {
 		}
 
 		/// <summary>
+		/// Retrieves the method matching the criteria that has the most arguments. Useful when
+		/// patching a base game overload is added with extra parameters (for binary
+		/// compatibility) where the shorter methods just call the longer one.
+		/// </summary>
+		/// <param name="type">The base type.</param>
+		/// <param name="methodName">The netgh</param>
+		/// <param name="isStatic">true to find static methods, or false to find instance
+		/// methods.</param>
+		/// <param name="arguments">The method argument types. If null is provided, any
+		/// argument types are matched, whereas no arguments match only void methods.</param>
+		/// <returns>The method, or null if no such method could be found.</returns>
+		public static MethodInfo GetOverloadWithMostArguments(this Type type,
+				string methodName, bool isStatic, params Type[] arguments) {
+			MethodInfo method = null;
+			if (type != null && arguments != null && !string.IsNullOrEmpty(methodName)) {
+				var methods = type.GetMethods(BASE_FLAGS | (isStatic ? BindingFlags.
+					Static : BindingFlags.Instance));
+				int n = methods.Length, bestLength = -1;
+				for (int i = 0; i < n; i++) {
+					var candidate = methods[i];
+					int matched;
+					if (candidate.Name == methodName && (matched = ParametersMatch(candidate,
+							arguments)) > bestLength) {
+						bestLength = matched;
+						method = candidate;
+					}
+				}
+			}
+			return method;
+		}
+
+		/// <summary>
 		/// Retrieves a property using reflection, or returns null if it does not exist.
 		/// </summary>
 		/// <param name="type">The base type.</param>
@@ -466,7 +500,7 @@ namespace PeterHan.PLib.Core {
 		public static PropertyInfo GetPropertySafe<T>(this Type type, string propName,
 				bool isStatic) {
 			PropertyInfo field = null;
-			if (type != null)
+			if (type != null && !string.IsNullOrEmpty(propName))
 				try {
 					var flag = isStatic ? BindingFlags.Static : BindingFlags.Instance;
 					field = type.GetProperty(propName, BASE_FLAGS | flag, null, typeof(T),
@@ -491,7 +525,7 @@ namespace PeterHan.PLib.Core {
 		public static PropertyInfo GetPropertyIndexedSafe<T>(this Type type, string propName,
 				bool isStatic, params Type[] arguments) {
 			PropertyInfo field = null;
-			if (type != null && arguments != null)
+			if (type != null && arguments != null && !string.IsNullOrEmpty(propName))
 				try {
 					var flag = isStatic ? BindingFlags.Static : BindingFlags.Instance;
 					field = type.GetProperty(propName, BASE_FLAGS | flag, null, typeof(T),
@@ -537,6 +571,13 @@ namespace PeterHan.PLib.Core {
 					PUtil.LogWarning("Unable to load type {0} from assembly {1}:".F(name,
 						assemblyName));
 					PUtil.LogExcWarn(e);
+				} catch (ReflectionTypeLoadException e) {
+					PUtil.LogWarning("Unable to load type {0} from assembly {1}:".F(name,
+						assemblyName));
+					// Help diagnose RTLEs
+					foreach (var exception in e.LoaderExceptions)
+						if (exception != null)
+							PUtil.LogExcWarn(exception);
 				} catch (System.IO.IOException) {
 					// The common parent of exceptions when the type requires another type that
 					// cannot be loaded
@@ -637,6 +678,28 @@ namespace PeterHan.PLib.Core {
 		}
 
 		/// <summary>
+		/// Compares the method parameter list to the required parameters.
+		/// </summary>
+		/// <param name="method">The method to check.</param>
+		/// <param name="required">The types its parameters need to have.</param>
+		/// <returns>Negative if the method did not match, otherwise the total number of method parameters.</returns>
+		private static int ParametersMatch(MethodBase method, Type[] required) {
+			int result = -1;
+			var methodParams = method.GetParameters();
+			int nArgs = methodParams.Length, minArgs = required.Length;
+			if (minArgs == 1 && required[0] == null)
+				result = nArgs;
+			else if (nArgs >= minArgs) {
+				bool match = true;
+				for (int j = 0; j < minArgs && match; j++)
+					match = methodParams[j].ParameterType == required[j];
+				if (match)
+					result = nArgs;
+			}
+			return result;
+		}
+
+		/// <summary>
 		/// Transpiles a method to replace instances of one constant value with another.
 		/// </summary>
 		/// <param name="method">The method to patch.</param>
@@ -652,16 +715,15 @@ namespace PeterHan.PLib.Core {
 				throw new ArgumentNullException(nameof(method));
 			int replaced = 0;
 			foreach (var inst in method) {
-				var instruction = inst;
-				var opcode = instruction.opcode;
-				if ((opcode == OpCodes.Ldc_R8 && (instruction.operand is double dval) &&
+				var opcode = inst.opcode;
+				if ((opcode == OpCodes.Ldc_R8 && (inst.operand is double dval) &&
 						dval == oldValue)) {
 					// Replace instruction if first instance, or all to be replaced
 					if (all || replaced == 0)
-						instruction.operand = newValue;
+						inst.operand = newValue;
 					replaced++;
 				}
-				yield return instruction;
+				yield return inst;
 			}
 		}
 
@@ -681,16 +743,15 @@ namespace PeterHan.PLib.Core {
 				throw new ArgumentNullException(nameof(method));
 			int replaced = 0;
 			foreach (var inst in method) {
-				var instruction = inst;
-				var opcode = instruction.opcode;
-				if ((opcode == OpCodes.Ldc_R4 && (instruction.operand is float fval) &&
+				var opcode = inst.opcode;
+				if ((opcode == OpCodes.Ldc_R4 && (inst.operand is float fval) &&
 						fval == oldValue)) {
 					// Replace instruction if first instance, or all to be replaced
 					if (all || replaced == 0)
-						instruction.operand = newValue;
+						inst.operand = newValue;
 					replaced++;
 				}
-				yield return instruction;
+				yield return inst;
 			}
 		}
 
@@ -718,18 +779,17 @@ namespace PeterHan.PLib.Core {
 			if (quickCode)
 				qc = PTranspilerTools.LOAD_INT[oldValue + 1];
 			foreach (var inst in method) {
-				var instruction = inst;
-				var opcode = instruction.opcode;
-				object operand = instruction.operand;
+				var opcode = inst.opcode;
+				object operand = inst.operand;
 				if ((opcode == OpCodes.Ldc_I4 && (operand is int ival) && ival == oldValue) ||
 						(opcode == OpCodes.Ldc_I4_S && (operand is byte bval) && bval ==
 						oldValue) || (quickCode && qc == opcode)) {
 					// Replace instruction if first instance, or all to be replaced
 					if (all || replaced == 0)
-						PTranspilerTools.ModifyLoadI4(instruction, newValue);
+						PTranspilerTools.ModifyLoadI4(inst, newValue);
 					replaced++;
 				}
-				yield return instruction;
+				yield return inst;
 			}
 		}
 
@@ -749,16 +809,15 @@ namespace PeterHan.PLib.Core {
 				throw new ArgumentNullException(nameof(method));
 			int replaced = 0;
 			foreach (var inst in method) {
-				var instruction = inst;
-				var opcode = instruction.opcode;
-				if ((opcode == OpCodes.Ldc_I8 && (instruction.operand is long lval) &&
+				var opcode = inst.opcode;
+				if ((opcode == OpCodes.Ldc_I8 && (inst.operand is long lval) &&
 						lval == oldValue)) {
 					// Replace instruction if first instance, or all to be replaced
 					if (all || replaced == 0)
-						instruction.operand = newValue;
+						inst.operand = newValue;
 					replaced++;
 				}
-				yield return instruction;
+				yield return inst;
 			}
 		}
 
@@ -952,18 +1011,16 @@ namespace PeterHan.PLib.Core {
 		/// <returns>true if the field was read, or false if the field was not found or
 		/// has the wrong type.</returns>
 		public static bool TryGetFieldValue<T>(object source, string name, out T value) {
-			bool ok = false;
 			if (source != null && !string.IsNullOrEmpty(name)) {
 				var type = source.GetType();
 				var field = type.GetFieldSafe(name, false);
 				if (field != null && field.GetValue(source) is T newValue) {
-					ok = true;
 					value = newValue;
-				} else
-					value = default;
-			} else
-				value = default;
-			return ok;
+					return true;
+				}
+			}
+			value = default;
+			return false;
 		}
 
 		/// <summary>
@@ -979,20 +1036,19 @@ namespace PeterHan.PLib.Core {
 		/// <returns>true if the property was read, or false if the property was not found or
 		/// has the wrong type.</returns>
 		public static bool TryGetPropertyValue<T>(object source, string name, out T value) {
-			bool ok = false;
 			if (source != null && !string.IsNullOrEmpty(name)) {
 				var type = source.GetType();
 				var prop = type.GetPropertySafe<T>(name, false);
-				ParameterInfo[] indexes;
-				if (prop != null && ((indexes = prop.GetIndexParameters()) == null || indexes.
-						Length < 1) && prop.GetValue(source, null) is T newValue) {
-					ok = true;
-					value = newValue;
-				} else
-					value = default;
-			} else
-				value = default;
-			return ok;
+				if (prop != null) {
+					var indexes = prop.GetIndexParameters();
+					if (indexes.Length < 1 && prop.GetValue(source, null) is T newValue) {
+						value = newValue;
+						return true;
+					}
+				}
+			}
+			value = default;
+			return false;
 		}
 
 		/// <summary>
@@ -1023,7 +1079,6 @@ namespace PeterHan.PLib.Core {
 					if (hasNext)
 						yield return last;
 				} while (hasNext);
-				CodeInstruction startHandler;
 				// Preserves the labels "ret" might have had
 				last.opcode = OpCodes.Nop;
 				last.operand = null;
@@ -1031,10 +1086,8 @@ namespace PeterHan.PLib.Core {
 				// Add a "leave"
 				yield return new CodeInstruction(OpCodes.Leave, endMethod);
 				// The exception is already on the stack
-				if (logger != null)
-					startHandler = new CodeInstruction(OpCodes.Call, logger);
-				else
-					startHandler = new CodeInstruction(OpCodes.Pop);
+				var startHandler = logger != null ? new CodeInstruction(OpCodes.Call, logger) :
+					new CodeInstruction(OpCodes.Pop);
 				startHandler.blocks.Add(new ExceptionBlock(ExceptionBlockType.BeginCatchBlock,
 					typeof(Exception)));
 				yield return startHandler;
@@ -1050,6 +1103,7 @@ namespace PeterHan.PLib.Core {
 				ret.labels.Add(endMethod);
 				yield return ret;
 			} // Otherwise, there were no instructions to wrap
+			ee.Dispose();
 		}
 	}
 }

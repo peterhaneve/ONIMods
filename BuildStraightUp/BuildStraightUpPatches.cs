@@ -227,22 +227,11 @@ namespace PeterHan.BuildStraightUp {
 			/// <summary>
 			/// Target the method with the most parameters, as that is the one with the
 			/// content.
-			///
-			/// TODO Remove once versions before U51-581979 no longer need to be supported
 			/// </summary>
 			internal static MethodBase TargetMethod() {
-				MethodBase mostArgs = null;
-				int argCount = 0;
-				foreach (var method in typeof(BuildingDef).GetMethods(PPatchTools.BASE_FLAGS |
-						BindingFlags.Instance))
-					if (method.Name == "IsAreaClear") {
-						int n = method.GetParameters().Length;
-						if (mostArgs == null || n > argCount) {
-							argCount = n;
-							mostArgs = method;
-						}
-					}
-				return mostArgs;
+				return typeof(BuildingDef).GetOverloadWithMostArguments("IsAreaClear", false,
+					typeof(GameObject), typeof(int), typeof(Orientation), typeof(ObjectLayer),
+					typeof(ObjectLayer), typeof(bool));
 			}	
 		
 			/// <summary>

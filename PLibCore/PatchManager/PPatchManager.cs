@@ -156,7 +156,6 @@ namespace PeterHan.PLib.PatchManager {
 		/// </summary>
 		/// <param name="when">When to run the patch.</param>
 		/// <param name="instance">The patch method instance to run.</param>
-		/// <param name="harmony">The Harmony instance to use for patching.</param>
 		private void AddHandler(uint when, IPatchMethodInstance instance) {
 			if (!patches.TryGetValue(when, out PrivateRunList atTime))
 				patches.Add(when, atTime = new List<IPatchMethodInstance>(16));
@@ -239,8 +238,6 @@ namespace PeterHan.PLib.PatchManager {
 		/// not be recognized.
 		/// </summary>
 		/// <param name="type">The type to register.</param>
-		/// <param name="harmony">The Harmony instance to use for immediate patches. Use
-		/// the instance provided from UserMod2.OnLoad().</param>
 		public void RegisterPatchClass(Type type) {
 			int count = 0;
 			if (type == null)
