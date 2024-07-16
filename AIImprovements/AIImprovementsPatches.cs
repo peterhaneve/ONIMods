@@ -50,8 +50,8 @@ namespace PeterHan.AIImprovements {
 		/// <param name="chore">The parent chore.</param>
 		private static void AdjustBuildPriority(ref int priorityMod, Chore chore) {
 			BuildingDef def;
-			if (chore.target is Constructable target && target != null && (def = target.
-					GetComponent<Building>()?.Def) != null) {
+			if (chore.target is Constructable target && target != null && target.
+					TryGetComponent(out Building building) && (def = building.Def) != null) {
 				string id = def.PrefabID;
 				if (Options.PrioritizeBuildings.Contains(id))
 					priorityMod += AIImprovementsOptions.BUILD_PRIORIY_MOD;
@@ -75,9 +75,9 @@ namespace PeterHan.AIImprovements {
 		private static void AdjustDeconstructPriority(ref int priorityMod,
 				Chore chore) {
 			BuildingDef def;
-			if (chore.target is Deconstructable target && target != null && (def = target.
-					GetComponent<Building>()?.Def) != null) {
-				string id = target.GetComponent<Building>()?.Def?.PrefabID;
+			if (chore.target is Deconstructable target && target != null && target.
+					TryGetComponent(out Building building) && (def = building.Def) != null) {
+				string id = def.PrefabID;
 				if (Options.PrioritizeBuildings.Contains(id))
 					priorityMod -= AIImprovementsOptions.BUILD_PRIORIY_MOD;
 				else if (Options.DeprioritizeBuildings.Contains(id))
@@ -98,39 +98,19 @@ namespace PeterHan.AIImprovements {
 		/// <param name="instance">The fall monitor to update if successful.</param>
 		/// <param name="destination">The destination cell.</param>
 		/// <param name="navigator">The navigator to move.</param>
+		/// <param name="flipEmote">Returns whether the emote should be reversed.</param>
 		private static void ForceMoveTo(FallMonitor.Instance instance, int destination,
 				Navigator navigator, ref bool flipEmote) {
-			var navType = navigator.CurrentNavType;
-			var navGrid = navigator.NavGrid;
-			int cell = Grid.PosToCell(navigator);
-			bool moved = false;
-			foreach (var transition in navGrid.transitions)
-				if (transition.isEscape && navType == transition.start) {
-					int possibleDest = transition.IsValid(cell, navGrid.NavTable);
-					if (destination == possibleDest) {
-						// The "nice" method, use their animation
-						Grid.CellToXY(cell, out int startX, out _);
-						Grid.CellToXY(destination, out int endX, out _);
-						flipEmote = endX < startX;
-						navigator.BeginTransition(transition);
-						moved = true;
-						break;
-					}
-				}
-			if (!moved) {
-				var transform = instance.transform;
-				// Teleport to the new location
-				transform.SetPosition(Grid.CellToPosCBC(destination, Grid.SceneLayer.Move));
-				navigator.Stop(false, true);
-				if (instance.gameObject.HasTag(GameTags.Incapacitated))
-					navigator.SetCurrentNavType(NavType.Floor);
-				instance.UpdateFalling();
-				// If they get pushed into entombment, start entombment animation
-				if (instance.sm.isEntombed.Get(instance))
-					instance.GoTo(instance.sm.entombed.stuck);
-				else
-					instance.GoTo(instance.sm.standing);
-			}
+			var transform = instance.transform;
+			// Teleport to the new location
+			transform.SetPosition(Grid.CellToPosCBC(destination, Grid.SceneLayer.Move));
+			navigator.Stop();
+			if (instance.gameObject.HasTag(GameTags.Incapacitated))
+				navigator.SetCurrentNavType(NavType.Floor);
+			instance.UpdateFalling();
+			// If they get pushed into entombment, start entombment animation
+			instance.GoTo(instance.sm.isEntombed.Get(instance) ? instance.sm.entombed.
+				stuck : instance.sm.standing);
 		}
 
 		/// <summary>
@@ -145,7 +125,7 @@ namespace PeterHan.AIImprovements {
 			int above = Grid.CellAbove(cell);
 			return navigator.NavGrid.NavTable.IsValid(cell, navType) && !Grid.
 				Solid[cell] && !Grid.DupeImpassable[cell] && Grid.IsValidCell(above) &&
-				!Grid.Solid[above] && !Grid.DupeImpassable[above];
+				!Grid.Solid[above] && !Grid.DupeImpassable[above] && !Grid.HasDoor[cell];
 		}
 
 		[PLibMethod(RunAt.AfterDbInit)]
@@ -179,19 +159,22 @@ namespace PeterHan.AIImprovements {
 		/// <param name="layer">The location history of the Duplicant.</param>
 		/// <param name="navigator">The Duplicant to check.</param>
 		/// <param name="instance">The fall monitor to update if successful.</param>
+		/// <param name="flipEmote">Returns whether the emote should be reversed.</param>
 		/// <returns>true if the Duplicant was successfully moved away, or false otherwise.</returns>
 		private static bool TryEscape(LocationHistoryTransitionLayer layer,
 				Navigator navigator, FallMonitor.Instance instance, ref bool flipEmote) {
 			bool moved = false;
-			for (int i = 0; i < LocationHistoryTransitionLayer.TRACK_CELLS; i++) {
+			for (int i = 0; i < LocationHistoryTransitionLayer.TRACK_CELLS && !moved; i++) {
 				int last = layer.VisitedCells[i];
 				if (Grid.IsValidCell(last) && IsValidNavCell(navigator, last)) {
+#if DEBUG
 					PUtil.LogDebug("{0} is in trouble, trying to escape to {1:D}".F(navigator.
 						gameObject?.name, last));
+#endif
 					ForceMoveTo(instance, last, navigator, ref flipEmote);
 					// Prevents a loop back and forth between two cells in the history
 					layer.Reset();
-					break;
+					moved = true;
 				}
 			}
 			return moved;
@@ -237,14 +220,16 @@ namespace PeterHan.AIImprovements {
 					Navigator ___navigator, ref bool ___flipRecoverEmote) {
 				// This is not run too often so searching is fine
 				bool moved = false;
-				var layers = ___navigator?.transitionDriver?.overrideLayers;
-				if (layers != null)
-					foreach (var layer in layers)
-						if (layer is LocationHistoryTransitionLayer lhs) {
-							moved = TryEscape(lhs, ___navigator, __instance,
-								ref ___flipRecoverEmote);
-							if (moved) break;
-						}
+				if (___navigator != null) {
+					var layers = ___navigator.transitionDriver?.overrideLayers;
+					if (layers != null)
+						foreach (var layer in layers)
+							if (layer is LocationHistoryTransitionLayer lhs) {
+								moved = TryEscape(lhs, ___navigator, __instance,
+									ref ___flipRecoverEmote);
+								if (moved) break;
+							}
+				}
 				return !moved;
 			}
 		}
@@ -263,14 +248,16 @@ namespace PeterHan.AIImprovements {
 					Navigator ___navigator, ref bool ___flipRecoverEmote) {
 				// This is not run too often so searching is fine
 				bool moved = false;
-				var layers = ___navigator?.transitionDriver?.overrideLayers;
-				if (layers != null)
-					foreach (var layer in layers)
-						if (layer is LocationHistoryTransitionLayer lhs) {
-							moved = TryEscape(lhs, ___navigator, __instance,
-								ref ___flipRecoverEmote);
-							if (moved) break;
-						}
+				if (___navigator != null) {
+					var layers = ___navigator.transitionDriver?.overrideLayers;
+					if (layers != null)
+						foreach (var layer in layers)
+							if (layer is LocationHistoryTransitionLayer lhs) {
+								moved = TryEscape(lhs, ___navigator, __instance,
+									ref ___flipRecoverEmote);
+								if (moved) break;
+							}
+				}
 				return !moved;
 			}
 		}
@@ -285,9 +272,9 @@ namespace PeterHan.AIImprovements {
 			/// Applied after OnSpawn runs.
 			/// </summary>
 			internal static void Postfix(GameObject go) {
-				var nav = go.GetComponent<Navigator>();
-				nav.transitionDriver.overrideLayers.Add(new LocationHistoryTransitionLayer(
-					nav));
+				if (go.TryGetComponent(out Navigator nav))
+					nav.transitionDriver.overrideLayers.Add(new LocationHistoryTransitionLayer(
+						nav));
 			}
 		}
 	}

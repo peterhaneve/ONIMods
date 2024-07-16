@@ -91,13 +91,11 @@ namespace PeterHan.SweepByType {
 		/// <param name="content">The item to sweep.</param>
 		/// <param name="priority">The priority to set the sweep errand.</param>
 		private void MarkForClear(GameObject content, PrioritySetting priority) {
-			var cc = content.GetComponent<Clearable>();
-			if (cc != null && cc.isClearable && (cachedAll || cachedTypes.Contains(content.
-					PrefabID()))) {
+			if (content.TryGetComponent(out Clearable cc) && cc.isClearable && (cachedAll ||
+					cachedTypes.Contains(content.PrefabID()))) {
 				// In beta branch a new optional parameter was added
-				cc.MarkForClear(false);
-				var pr = content.GetComponent<Prioritizable>();
-				if (pr != null)
+				cc.MarkForClear();
+				if (content.TryGetComponent(out Prioritizable pr))
 					pr.SetMasterPriority(priority);
 			}
 		}
@@ -109,10 +107,11 @@ namespace PeterHan.SweepByType {
 			if (TypeSelect != null) {
 				var root = TypeSelect.RootPanel;
 				bool firstTime = TypeSelect.CategoryCount < 1;
+				var si = SaveGame.Instance;
 				TypeSelect.Update();
-				if (firstTime) {
-					var savedTypes = SaveGame.Instance?.GetComponent<SavedTypeSelections>()?.
-						GetSavedTypes();
+				if (firstTime && si != null && si.TryGetComponent(
+						out SavedTypeSelections st)) {
+					var savedTypes = st.GetSavedTypes();
 					// First time, load the user's old settings if available
 					// If nothing at all is selected, then this is probably the first ever load
 					if (savedTypes != null && savedTypes.Count > 0)
@@ -149,10 +148,10 @@ namespace PeterHan.SweepByType {
 		}
 
 		protected override void OnDragTool(int cell, int distFromOrigin) {
-			var gameObject = Grid.Objects[cell, (int)ObjectLayer.Pickupables];
-			if (gameObject != null && TypeSelect != null) {
+			var go = Grid.Objects[cell, (int)ObjectLayer.Pickupables];
+			if (go != null && TypeSelect != null && go.TryGetComponent(out Pickupable p)) {
 				// Linked list of debris in layer 3
-				var objectListNode = gameObject.GetComponent<Pickupable>().objectLayerListItem;
+				var objectListNode = p.objectLayerListItem;
 				var priority = ToolMenu.Instance.PriorityScreen.GetLastSelectedPriority();
 				if (cachedTypes == null) {
 					// Build the list
@@ -164,7 +163,7 @@ namespace PeterHan.SweepByType {
 					var content = objectListNode.gameObject;
 					objectListNode = objectListNode.nextItem;
 					// Ignore Duplicants
-					if (content != null && content.GetComponent<MinionIdentity>() == null)
+					if (content != null && !content.TryGetComponent(out MinionIdentity _))
 						MarkForClear(content, priority);
 				}
 			}
@@ -187,8 +186,7 @@ namespace PeterHan.SweepByType {
 					var areaVisualizer = Util.KInstantiate(avTemplate, gameObject,
 						"FilteredClearToolAreaVisualizer");
 					areaVisualizer.SetActive(false);
-					areaVisualizerSpriteRenderer = areaVisualizer.GetComponent<
-						SpriteRenderer>();
+					areaVisualizer.TryGetComponent(out areaVisualizerSpriteRenderer);
 					// The visualizer is private so we need to set it with reflection
 					AREA_VISUALIZER.Set(this, areaVisualizer);
 					AREA_VISUALIZER_TEXT_PREFAB.Set(this, AREA_VISUALIZER_TEXT_PREFAB.Get(

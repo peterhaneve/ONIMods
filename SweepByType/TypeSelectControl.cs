@@ -235,8 +235,8 @@ namespace PeterHan.SweepByType {
 		/// the selected types across reload.
 		/// </summary>
 		private void SaveTypes() {
-			var savedTypes = SaveGame.Instance?.GetComponent<SavedTypeSelections>();
-			if (savedTypes != null) {
+			var si = SaveGame.Instance;
+			if (si != null && si.TryGetComponent(out SavedTypeSelections savedTypes)) {
 				// Save type list to the save game
 				var tags = ListPool<Tag, TypeSelectControl>.Allocate();
 				AddTypesToSweep(tags);

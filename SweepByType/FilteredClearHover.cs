@@ -26,11 +26,10 @@ namespace PeterHan.SweepByType {
 	/// </summary>
 	sealed class FilteredClearHover : HoverTextConfiguration {
 		protected override void OnSpawn() {
+			var ct = ClearTool.Instance;
 			base.OnSpawn();
 			// Take the text configuration from the existing sweep tool's hover text
-			var template = ClearTool.Instance?.gameObject?.GetComponentSafe<
-				HoverTextConfiguration>();
-			if (template != null) {
+			if (ct != null && ct.TryGetComponent(out HoverTextConfiguration template)) {
 				Styles_BodyText = template.Styles_BodyText;
 				Styles_Instruction = template.Styles_Instruction;
 				Styles_Title = template.Styles_Title;
@@ -53,7 +52,7 @@ namespace PeterHan.SweepByType {
 			string titleStr = all ? STRINGS.UI.TOOLS.MARKFORSTORAGE.TOOLNAME :
 				SweepByTypeStrings.TOOL_NAME_FILTERED;
 			var drawer = hoverInstance.BeginDrawing();
-			drawer.BeginShadowBar(false);
+			drawer.BeginShadowBar();
 			drawer.DrawText(titleStr.ToUpper(), ToolTitleTextStyle);
 			// Draw the instructions
 			ActionName = all ? STRINGS.UI.TOOLS.MARKFORSTORAGE.TOOLACTION.text :
@@ -74,13 +73,12 @@ namespace PeterHan.SweepByType {
 		private void DrawPickupText(IEnumerable<KSelectable> selected, HoverTextDrawer drawer,
 				Sprite dash) {
 			// For each pickupable object, show the type
-			foreach (var selectable in selected) {
-				var cc = selectable.GetComponent<Clearable>();
-				var ec = selectable.GetComponent<PrimaryElement>();
+			foreach (var selectable in selected)
 				// Ignore Duplicants
-				if (cc != null && cc.isClearable && ec != null && selectable.GetComponent<
-						MinionIdentity>() == null) {
-					drawer.BeginShadowBar(false);
+				if (selectable.TryGetComponent(out Clearable cc) && cc.isClearable &&
+						selectable.TryGetComponent(out PrimaryElement ec) &&
+						!selectable.TryGetComponent(out MinionIdentity _)) {
+					drawer.BeginShadowBar();
 					// Element name (uppercase)
 					drawer.DrawText(GameUtil.GetUnitFormattedName(selectable.gameObject, true),
 						Styles_Title.Standard);
@@ -96,7 +94,6 @@ namespace PeterHan.SweepByType {
 						Styles_BodyText.Standard);
 					drawer.EndShadowBar();
 				}
-			}
 		}
 	}
 }

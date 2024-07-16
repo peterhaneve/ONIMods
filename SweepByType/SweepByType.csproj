@@ -7,7 +7,7 @@
     <Description>Adds an optional material type filter to the Sweep tool.</Description>
     <AssemblyVersion>3.1.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
-    <LastWorkingBuild>493472</LastWorkingBuild>
+    <LastWorkingBuild>525812</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
   <ItemGroup>
