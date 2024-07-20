@@ -148,7 +148,7 @@ namespace PeterHan.PLib.Database {
 		/// </summary>
 		public void AddAchievement() {
 			if (Requirements == null)
-				throw new ArgumentNullException("No colony achievement requirements specified");
+				throw new ArgumentNullException(nameof(Requirements));
 			var achieve = NEW_COLONY_ACHIEVEMENT.Invoke(ID, "", Name, Description, IsVictory,
 				Requirements, VictoryTitle, VictoryMessage, VictoryVideoData, VictoryVideoLoop,
 				OnVictory);

@@ -173,10 +173,13 @@ namespace PeterHan.PLib.Core {
 				else if (type == typeof(double))
 					// double
 					generator.Emit(OpCodes.Ldc_R8, (value is double dVal) ? dVal : 0.0);
-				else if (type == typeof(string))
+				else if (type == typeof(string)) {
 					// string
-					generator.Emit(OpCodes.Ldstr, (value is string sVal) ? sVal : "");
-				else if (type.IsPointer)
+					if (value == null)
+						generator.Emit(OpCodes.Ldnull);
+					else
+						generator.Emit(OpCodes.Ldstr, (value is string sVal) ? sVal : "");
+				} else if (type.IsPointer)
 					// All pointers
 					generator.Emit(OpCodes.Ldc_I4_0);
 				else if (!type.IsValueType)

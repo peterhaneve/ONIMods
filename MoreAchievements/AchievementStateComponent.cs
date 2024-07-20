@@ -57,11 +57,11 @@ namespace PeterHan.MoreAchievements {
 		/// <param name="cause">The cause of death.</param>
 		public static void OnDeath(Death cause) {
 			var asc = Instance;
-			var instance = GameClock.Instance;
+			var gc = GameClock.Instance;
 			if (cause != null) {
 				Trigger(DeathFromCause.PREFIX + cause.Id);
-				if (instance != null)
-					asc.LastDeath = instance.GetCycle();
+				if (gc != null)
+					asc.LastDeath = gc.GetCycle();
 			}
 		}
 
@@ -79,7 +79,7 @@ namespace PeterHan.MoreAchievements {
 		/// </summary>
 		/// <param name="rating">The rating of the overloaded wire.</param>
 		public static void OnOverload(Wire.WattageRating rating) {
-			Trigger(OverloadWire.PREFIX + rating.ToString());
+			Trigger(OverloadWire.PREFIX + rating);
 		}
 
 		/// <summary>
@@ -87,7 +87,9 @@ namespace PeterHan.MoreAchievements {
 		/// </summary>
 		/// <param name="destination">The destination of the mission.</param>
 		public static void OnVisit(int destination) {
-			Instance?.PlanetsVisited?.Add(destination);
+			var asc = Instance;
+			if (asc != null)
+				asc.PlanetsVisited?.Add(destination);
 		}
 
 		/// <summary>
@@ -95,11 +97,12 @@ namespace PeterHan.MoreAchievements {
 		/// </summary>
 		/// <param name="achievement">The requirement ID to trigger.</param>
 		public static void Trigger(string achievement) {
-			if (!string.IsNullOrEmpty(achievement)) {
+			var asc = Instance;
+			if (!string.IsNullOrEmpty(achievement) && asc != null) {
 #if DEBUG
 				PUtil.LogDebug("Achievement requirement triggered: " + achievement);
 #endif
-				var te = Instance?.TriggerEvents;
+				var te = asc.TriggerEvents;
 				if (te != null)
 					te[achievement] = true;
 			}
@@ -230,9 +233,9 @@ namespace PeterHan.MoreAchievements {
 		private void InitGrimReaper() {
 			// Look for the last dip in Duplicant count
 			float lastValue = -1.0f;
-			RetiredColonyData.RetiredColonyStatistic[] stats;
 			try {
 				var data = RetireColonyUtility.GetCurrentColonyRetiredColonyData();
+				RetiredColonyData.RetiredColonyStatistic[] stats;
 				if ((stats = data?.Stats) != null && data.cycleCount > 0) {
 					var liveDupes = new SortedList<int, float>(stats.Length);
 					// Copy and sort the values
@@ -253,9 +256,11 @@ namespace PeterHan.MoreAchievements {
 					liveDupes.Clear();
 				}
 			} catch (Exception e) {
+				var gc = GameClock.Instance;
 				PUtil.LogWarning("Unable to determine the last date of death:");
 				PUtil.LogExcWarn(e);
-				LastDeath = GameClock.Instance?.GetCycle() ?? 0;
+				if (gc != null)
+					LastDeath = gc.GetCycle();
 			}
 		}
 
@@ -302,7 +307,7 @@ namespace PeterHan.MoreAchievements {
 			if (LastDeath <= 0)
 				InitGrimReaper();
 			var dbAttr = Db.Get().Attributes;
-			VarietyAttributes = new Klei.AI.Attribute[] { dbAttr.Art, dbAttr.Athletics,
+			VarietyAttributes = new[] { dbAttr.Art, dbAttr.Athletics,
 				dbAttr.Botanist, dbAttr.Caring, dbAttr.Construction, dbAttr.Cooking,
 				dbAttr.Digging, dbAttr.Learning, dbAttr.Machinery, dbAttr.Ranching,
 				dbAttr.Strength };
@@ -315,11 +320,11 @@ namespace PeterHan.MoreAchievements {
 				PlanetsRequired = ClusterManager.Instance.worldCount;
 			else {
 				// VANILLA STARMAP
-				var dest = SpacecraftManager.instance?.destinations;
-				if (dest != null) {
+				var si = SpacecraftManager.instance;
+				if (si != null && si.destinations != null) {
 					int count = 0;
 					// Exclude unreachable destinations (earth) but include temporal tear
-					foreach (var destination in dest)
+					foreach (var destination in si.destinations)
 						if (destination.GetDestinationType()?.visitable == true)
 							count++;
 					if (count > 0)
@@ -336,8 +341,8 @@ namespace PeterHan.MoreAchievements {
 			int have = 0;
 			// Count artifacts discovered
 			foreach (var pair in ArtifactConfig.artifactItems)
-				foreach (string name in pair.Value)
-					if (DiscoveredResources.Instance.IsDiscovered(Assets.GetPrefab(name).
+				foreach (string artName in pair.Value)
+					if (DiscoveredResources.Instance.IsDiscovered(Assets.GetPrefab(artName).
 							PrefabID()))
 						have++;
 			ArtifactsObtained = have;

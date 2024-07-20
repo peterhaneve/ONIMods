@@ -37,25 +37,43 @@ namespace PeterHan.MoreAchievements {
 		/// <summary>
 		/// The version of this component.
 		/// </summary>
-		internal static readonly Version VERSION = new Version(1, 0, 0, 0);
+		internal static readonly Version VERSION = new Version(1, 1, 0, 0);
+		
+		private static void FilterAchievements_Postfix(
+				Dictionary<string, GameObject> ___achievementEntries) {
+			var inst = Instance;
+			if (inst != null)
+				foreach (var pair in ___achievementEntries) {
+					var obj = pair.Value;
+					string id = pair.Key;
+					var info = inst.GetAchievement(id);
+					if (obj != null && obj.TryGetComponent(out MultiToggle toggle) &&
+							info != null && info.Hidden)
+						// Hide achievements that have never been achieved
+						obj.SetActive(toggle.CurrentState != 2);
+				}
+		}
 
 		private static void UpdateAchievementData_Postfix(string[] newlyAchieved,
 				Dictionary<string, GameObject> ___achievementEntries) {
-			var newly = HashSetPool<string, AchievementStateComponent>.Allocate();
-			// Achievements just obtained should always be shown
-			if (newlyAchieved != null)
-				foreach (string achieved in newlyAchieved)
-					newly.Add(achieved);
-			foreach (var pair in ___achievementEntries) {
-				var obj = pair.Value;
-				string id = pair.Key;
-				var info = Instance?.GetAchievement(id);
-				if (obj != null && obj.TryGetComponent(out MultiToggle toggle) &&
-						info != null && info.Hidden)
-					// Hide achievements that have never been achieved
-					obj.SetActive(toggle.CurrentState != 2 || newly.Contains(id));
+			var inst = Instance;
+			if (inst != null) {
+				var newly = HashSetPool<string, AchievementStateComponent>.Allocate();
+				// Achievements just obtained should always be shown
+				if (newlyAchieved != null)
+					foreach (string achieved in newlyAchieved)
+						newly.Add(achieved);
+				foreach (var pair in ___achievementEntries) {
+					var obj = pair.Value;
+					string id = pair.Key;
+					var info = inst.GetAchievement(id);
+					if (obj != null && obj.TryGetComponent(out MultiToggle toggle) &&
+							info != null && info.Hidden)
+						// Hide achievements that have never been achieved
+						obj.SetActive(toggle.CurrentState != 2 || newly.Contains(id));
+				}
+				newly.Recycle();
 			}
-			newly.Recycle();
 		}
 
 		public override Version Version => VERSION;
@@ -105,27 +123,28 @@ namespace PeterHan.MoreAchievements {
 		/// <param name="id">The achievement ID to look up.</param>
 		/// <returns>The extra information about that achievement.</returns>
 		internal AchievementInfo GetAchievement(string id) {
-			if (!allAchievements.TryGetValue(id, out AchievementInfo info))
+			if (!allAchievements.TryGetValue(id, out var info))
 				info = null;
 			return info;
 		}
 
 		public override void Initialize(Harmony plibInstance) {
 			Instance = this;
-			foreach (var achievementProvider in PRegistry.Instance.GetAllComponents(ID))
-				if (achievementProvider != null) {
-					var toAdd = achievementProvider.GetInstanceDataSerialized<ICollection<
-						AchievementInfo>>();
-					if (toAdd != null)
-						foreach (var achievement in toAdd) {
-							allAchievements[achievement.ID] = achievement;
+			foreach (var achievementProvider in PRegistry.Instance.GetAllComponents(ID)) {
+				var toAdd = achievementProvider?.GetInstanceDataSerialized<ICollection<
+					AchievementInfo>>();
+				if (toAdd != null)
+					foreach (var achievement in toAdd) {
+						allAchievements[achievement.ID] = achievement;
 #if DEBUG
-							PUtil.LogDebug("Added data for achievement " + achievement.ID);
+						PUtil.LogDebug("Added data for achievement " + achievement.ID);
 #endif
-						}
-				}
+					}
+			}
 			plibInstance.Patch(typeof(RetiredColonyInfoScreen), "UpdateAchievementData",
 				postfix: PatchMethod(nameof(UpdateAchievementData_Postfix)));
+			plibInstance.Patch(typeof(RetiredColonyInfoScreen), "FilterAchievements",
+				postfix: PatchMethod(nameof(FilterAchievements_Postfix)));
 		}
 
 		/// <summary>

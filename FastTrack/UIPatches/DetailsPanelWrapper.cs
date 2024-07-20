@@ -82,19 +82,15 @@ namespace PeterHan.FastTrack.UIPatches {
 				codexText = FormatLinkID(building.Def.PrefabID);
 			else if (go.TryGetComponent(out KPrefabID id)) {
 				string prefabID = id.PrefabTag.ToString();
+				PlantBranch.Instance smi;
 				if (id.HasTag(GameTags.Creature))
 					codexText = FormatLinkID(prefabID, "BABY", "");
 				else if (id.HasTag(GameTags.Plant))
 					codexText = FormatLinkID(prefabID, "SEED", "");
-				else if (go.TryGetComponent(out BudUprootedMonitor monitor)) {
-					KPrefabID parent;
-					BuddingTrunk trunk;
-					if ((parent = monitor.parentObject.Get()) != null)
-						codexText = FormatLinkID(parent.PrefabTag.ToString());
-					else if (go.TryGetComponent(out TreeBud bud) && (trunk = bud.buddingTrunk.
-							Get()) != null)
-						// Special case for trees?
-						codexText = FormatLinkID(trunk.PrefabID().ToString());
+				else if ((smi = go.GetSMI<PlantBranch.Instance>()) != null) {
+					var parent = smi.trunk;
+					if (parent != null && (id = parent.GetComponent<KPrefabID>()) != null)
+						codexText = FormatLinkID(id.PrefabTag.ToString());
 					else
 						codexText = FormatLinkID(prefabID);
 				} else
@@ -361,7 +357,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Applied to DetailsScreen to make opening the codex entry much faster!
 		/// </summary>
-		[HarmonyPatch(typeof(DetailsScreen), nameof(DetailsScreen.OpenCodexEntry))]
+		[HarmonyPatch(typeof(DetailsScreen), nameof(DetailsScreen.CodexEntryButton_OnClick))]
 		internal static class OpenCodexEntry_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 

@@ -137,6 +137,32 @@ namespace PeterHan.MoreAchievements {
 		}
 
 		/// <summary>
+		/// Applied to BuildingHP to check for damage from overloading wires.
+		/// </summary>
+		[HarmonyPatch(typeof(BuildingHP), "OnDoBuildingDamage")]
+		public static class BuildingHP_OnDoBuildingDamage_Patch {
+			/// <summary>
+			/// Applied after DoDamage runs.
+			/// </summary>
+			internal static void Postfix(BuildingHP __instance, object data) {
+				if (__instance != null && data is BuildingHP.DamageSourceInfo source &&
+					(source.source == STRINGS.BUILDINGS.DAMAGESOURCES.CIRCUIT_OVERLOADED ||
+						source.takeDamageEffect == SpawnFXHashes.BuildingSpark)) {
+					var obj = __instance.gameObject;
+#if DEBUG
+					PUtil.LogDebug("Wire overloaded: " + obj.name);
+#endif
+					if (obj.TryGetComponent(out Wire wire))
+						// Wire is overloading
+						AchievementStateComponent.OnOverload(wire.GetMaxWattageRating());
+					else if (obj.TryGetComponent(out WireUtilityNetworkLink bridge))
+						// Wire bridge is overloading
+						AchievementStateComponent.OnOverload(bridge.GetMaxWattageRating());
+				}
+			}
+		}
+
+		/// <summary>
 		/// Applied to BuildingComplete to update the maximum building temperature seen.
 		/// </summary>
 		[HarmonyPatch(typeof(BuildingComplete), "OnSetTemperature")]
@@ -160,32 +186,6 @@ namespace PeterHan.MoreAchievements {
 			internal static void Postfix(PrimaryElement ___primaryElement) {
 				if (___primaryElement != null)
 					AchievementStateComponent.UpdateMaxKelvin(___primaryElement.Temperature);
-			}
-		}
-
-		/// <summary>
-		/// Applied to BuildingHP to check for damage from overloading wires.
-		/// </summary>
-		[HarmonyPatch(typeof(BuildingHP), "OnDoBuildingDamage")]
-		public static class BuildingHP_DoDamage_Patch {
-			/// <summary>
-			/// Applied after DoDamage runs.
-			/// </summary>
-			internal static void Postfix(BuildingHP __instance, object data) {
-				if (__instance != null && data is BuildingHP.DamageSourceInfo source &&
-						(source.source == STRINGS.BUILDINGS.DAMAGESOURCES.CIRCUIT_OVERLOADED ||
-						source.takeDamageEffect == SpawnFXHashes.BuildingSpark)) {
-					var obj = __instance.gameObject;
-#if DEBUG
-					PUtil.LogDebug("Wire overloaded: " + obj.name);
-#endif
-					if (obj.TryGetComponent(out Wire wire))
-						// Wire is overloading
-						AchievementStateComponent.OnOverload(wire.GetMaxWattageRating());
-					else if (obj.TryGetComponent(out WireUtilityNetworkLink bridge))
-						// Wire bridge is overloading
-						AchievementStateComponent.OnOverload(bridge.GetMaxWattageRating());
-				}
 			}
 		}
 
@@ -275,7 +275,7 @@ namespace PeterHan.MoreAchievements {
 		/// Applied to DiscoveredResources to grant an achievement upon discovering items.
 		/// </summary>
 		[HarmonyPatch(typeof(DiscoveredResources), nameof(DiscoveredResources.Discover),
-			typeof(Tag))]
+			typeof(Tag), typeof(Tag))]
 		public static class DiscoveredResources_Discover_Patch {
 			/// <summary>
 			/// Applied after Discover runs.
