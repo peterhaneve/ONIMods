@@ -40,23 +40,21 @@ namespace PeterHan.SandboxTools {
 		private static void AddToSpawnerMenu(SandboxToolParameterMenu instance) {
 			// Transpiling it is possible (and a bit faster) but way more brittle
 			var selector = instance.entitySelector;
-			var cc = CodexCache.entries;
 			var filters = ListPool<SearchFilter, SandboxToolParameterMenu>.Allocate();
 			int n;
 			filters.AddRange(selector.filters);
-			// Rover
-			if (DlcManager.IsExpansion1Active() && cc != null && cc.TryGetValue(
-					ScoutRoverConfig.ID.ToUpperInvariant(), out var entry)) {
-				var icon = new Tuple<Sprite, Color>(entry.icon, entry.iconColor);
-				n = filters.Count;
-				for (int i = 0; i < n; i++) {
-					var filter = filters[i];
-					if (filter.Name == STRINGS.UI.SANDBOXTOOLS.FILTERS.ENTITIES.CREATURE) {
-						filters.Add(new SearchFilter(STRINGS.CREATURES.FAMILY_PLURAL.
-							SCOUTROVER, entity => entity is KPrefabID prefab && prefab.
-							PrefabTag.Name == ScoutRoverConfig.ID, filter, icon));
-						break;
-					}
+			// Rover and Biobot
+			var icon_id = DlcManager.IsExpansion1Active() ? ScoutRoverConfig.ID : MorbRoverConfig.ID;
+			var icon = Def.GetUISprite(Assets.GetPrefab(icon_id));
+			n = filters.Count;
+			for (int i = 0; i < n; i++) {
+				var filter = filters[i];
+				if (filter.Name == STRINGS.UI.SANDBOXTOOLS.FILTERS.ENTITIES.CREATURE) {
+					filters.Add(new SearchFilter(STRINGS.CREATURES.FAMILY_PLURAL.
+						SCOUTROVER, entity => entity is KPrefabID prefab && (prefab.
+						PrefabTag.Name == ScoutRoverConfig.ID || prefab.
+						PrefabTag.Name == MorbRoverConfig.ID), filter, icon));
+					break;
 				}
 			}
 			// POI Props

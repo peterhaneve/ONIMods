@@ -25,12 +25,17 @@ msgstr ""
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_UPDATE
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_UPDATE"
-msgid "Continuing will reinstall the latest version of:\n{0}from the Workshop.\n<color=#FFCC00>A best effort will be made to preserve mod options.</color>\n\nCheck again after updating and enable the mod if necessary."
+msgid "Continuing will reinstall the latest version of:\n{0}from the Workshop.\n<color=#FFCC00>A best effort will be made to preserve mod options.</color>"
 msgstr ""
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.LOCAL_UPDATE
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.LOCAL_UPDATE"
 msgid "<b>Local Updated:</b> {0:f}"
+msgstr ""
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_RESTART
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_RESTART"
+msgid "\n\n<color=#FFCC00>Restart to update mods</color>"
 msgstr ""
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_UPDATE
@@ -50,17 +55,32 @@ msgstr ""
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_AUTO_UPDATE
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_AUTO_UPDATE"
-msgid "<b>Automatic updates are enabled.</b>\n"
+msgid "<b>Automatic updates are enabled</b>; select to manually force update\n"
+msgstr ""
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_ERR_UNPACK
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_ERR_UNPACK"
+msgid "Installed mod version {0} does not match the cached version.\nManual updating may be required."
 msgstr ""
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_ERR_UPDATE
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_ERR_UPDATE"
-msgid "Unable to automatically update this mod!\nA manual update may be required."
+msgid "Unable to automatically update this mod!\nManual updating may be required if this status\npersists after a game restart."
 msgstr ""
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_OUTDATED
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_OUTDATED"
 msgid "This mod appears to be out of date!"
+msgstr ""
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_PENDING_RESTART
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_PENDING_RESTART"
+msgid "An older version of this mod is currently running.\nIt will be updated on the next restart."
+msgstr ""
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_PENDING_RESTART_VER
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_PENDING_RESTART_VER"
+msgid "Version {0} of this mod is currently running.\nIt will be updated on the next restart."
 msgstr ""
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATE_1
@@ -81,6 +101,11 @@ msgstr ""
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATED_BYUS
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATED_BYUS"
 msgid "This mod was locally updated by Mod Updater."
+msgstr ""
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_WARNING_NEWER
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_WARNING_NEWER"
+msgid "Installed mod version {0} is <b>newer</b> than the cached version.\nIf you are experiencing problems with this mod, consider manually updating."
 msgstr ""
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.OPTION_MAINMENU

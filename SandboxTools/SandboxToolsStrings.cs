@@ -33,7 +33,7 @@ namespace PeterHan.SandboxTools {
 		// Filter names for the spawner
 		public static LocString FILTER_ARTIFACTS = "Artifacts";
 		public static LocString FILTER_GEYSERS = "Geysers";
-		public static LocString FILTER_POIPROPS = "Props";
+		public static LocString FILTER_POIPROPS = "Ruins Props";
 
 		// Filter names for the filtered "Destroy" tool
 		public static LocString DESTROY_ELEMENTS = "Elements";

@@ -26,7 +26,7 @@ msgstr "Автоматизация"
 #. PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_BUILDINGS
 msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_BUILDINGS"
 msgid "Buildings"
-msgstr "Здания"
+msgstr "Постройки"
 
 #. PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_CREATURES
 msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_CREATURES"
@@ -36,7 +36,7 @@ msgstr "Существа"
 #. PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_DRYWALL
 msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_DRYWALL"
 msgid "Background Buildings"
-msgstr "Постройки на фоне"
+msgstr "Постройки на заднем плане"
 
 #. PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_ELEMENTS
 msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.DESTROY_ELEMENTS"
@@ -85,8 +85,8 @@ msgstr "Гейзеры"
 
 #. PeterHan.SandboxTools.SandboxToolsStrings.FILTER_POIPROPS
 msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.FILTER_POIPROPS"
-msgid "Props"
-msgstr "Объекты"
+msgid "Ruins Props"
+msgstr "Объекты Руин"
 
 #. PeterHan.SandboxTools.SandboxToolsStrings.TOOL_DESTROY_NAME
 msgctxt "PeterHan.SandboxTools.SandboxToolsStrings.TOOL_DESTROY_NAME"
