@@ -55,7 +55,7 @@ msgstr ""
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_AUTO_UPDATE
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_AUTO_UPDATE"
-msgid "<b>Automatic updates are enabled</b>; click to manually force update\n"
+msgid "<b>Automatic updates are enabled</b>; select to manually force update\n"
 msgstr ""
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_ERR_UNPACK

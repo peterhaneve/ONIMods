@@ -45,7 +45,7 @@ namespace PeterHan.ModUpdateDate {
 				public static LocString OPTION_MAINMENU = "Show Updates in Main Menu";
 				
 				// Mod update status
-				public static LocString MOD_AUTO_UPDATE = "<b>Automatic updates are enabled</b>; click to manually force update\n";
+				public static LocString MOD_AUTO_UPDATE = "<b>Automatic updates are enabled</b>; select to manually force update\n";
 				public static LocString MOD_UPDATED = "This mod appears to be up to date.";
 				public static LocString MOD_UPDATED_BYUS = "This mod was locally updated by Mod Updater.";
 				public static LocString MOD_OUTDATED = "This mod appears to be out of date!";

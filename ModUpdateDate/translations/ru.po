@@ -67,7 +67,7 @@ msgstr "\n\n<color=#00CC00>Выполняется авто-обновление<
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_AUTO_UPDATE
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_AUTO_UPDATE"
-msgid "<b>Automatic updates are enabled</b>; click to manually force update\n"
+msgid "<b>Automatic updates are enabled</b>; select to manually force update\n"
 msgstr "<b>Автоматическое обновление включено</b>; нажмите, чтобы принудительно обновить вручную\n"
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_ERR_UNPACK
