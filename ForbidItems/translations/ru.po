@@ -1,0 +1,46 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: DarkEviL88\n"
+"Language-Team: \n"
+"Language: ru_RU\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"X-Generator: Poedit 3.4.2\n"
+
+#. PeterHan.ForbidItems.ForbidItemsStrings.MISC.STATUSITEMS.FORBIDDEN.NAME
+msgctxt "PeterHan.ForbidItems.ForbidItemsStrings.MISC.STATUSITEMS.FORBIDDEN.NAME"
+msgid "Item Forbidden"
+msgstr "Предмет запрещён"
+
+#. PeterHan.ForbidItems.ForbidItemsStrings.MISC.STATUSITEMS.FORBIDDEN.TOOLTIP
+msgctxt "PeterHan.ForbidItems.ForbidItemsStrings.MISC.STATUSITEMS.FORBIDDEN.TOOLTIP"
+msgid "This item cannot be picked up by Duplicants or <style=\"KKeyword\">Auto-Sweepers</style>"
+msgstr "Дубликанты и <style=\"KKeyword\">автосборщики</style> не могут подобрать этот предмет"
+
+#. PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.NAME
+msgctxt "PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.NAME"
+msgid "Forbid Item"
+msgstr "Запретить предме"
+
+#. PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.NAME_OFF
+msgctxt "PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.NAME_OFF"
+msgid "Reclaim Item"
+msgstr "Разрешить предмет"
+
+#. PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.TOOLTIP
+msgctxt "PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.TOOLTIP"
+msgid "Prevent this item from being picked up"
+msgstr "Запретить подбирать этот предмет"
+
+#. PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.TOOLTIP_OFF
+msgctxt "PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.TOOLTIP_OFF"
+msgid "Allow this item to be picked up"
+msgstr "Разрешить подбирать этот предмет"
+

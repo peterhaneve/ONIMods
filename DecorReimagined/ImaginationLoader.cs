@@ -31,12 +31,12 @@ namespace ReimaginationTeam.Reimagination {
 		/// <summary>
 		/// The world name key for the Final Destination.
 		/// </summary>
-		public const string FINALDEST_KEY = "STRINGS.WORLDS.FINAL_DESTINATION.NAME";
+		public const string FINALDEST_PATH = "FinalDestination";
 
 		/// <summary>
 		/// Imagination Loader 2 (post mergedown)
 		/// </summary>
-		private static readonly Version VERSION = new Version(2, 0, 0, 0);
+		private static readonly Version VERSION = new Version(2, 1, 0, 0);
 
 		/// <summary>
 		/// The singleton instance of this class, for a particular mod.
@@ -74,7 +74,7 @@ namespace ReimaginationTeam.Reimagination {
 			if (loader == null)
 				PUtil.LogWarning("IsFinalDestination() called before save loaded!");
 #endif
-			return loader?.ClusterLayout?.Id == FINALDEST_KEY;
+			return loader != null && loader.ClusterLayout.filePath.EndsWith(FINALDEST_PATH);
 		}
 
 		/// <summary>
