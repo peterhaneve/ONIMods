@@ -71,7 +71,7 @@ namespace PeterHan.SweepByType {
 			/// <summary>
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
-			internal static void Postfix(Game __instance) {
+			internal static void Postfix(SaveGame __instance) {
 				__instance.gameObject.AddOrGet<SavedTypeSelections>();
 			}
 		}

@@ -220,10 +220,10 @@ namespace PeterHan.PreserveSeed {
 			/// Applied after RandomCarePackage runs.
 			/// </summary>
 			internal static void Postfix(ref CarePackageInfo __result,
-					CarePackageInfo[] ___carePackages) {
+					IList<CarePackageInfo> ___carePackages) {
 				if (SharedRandom.UseSharedRandom) {
 					var viable = ListPool<CarePackageInfo, Immigration>.Allocate();
-					int n = ___carePackages.Length;
+					int n = ___carePackages.Count;
 					for (int i = 0; i < n; i++) {
 						var candidate = ___carePackages[i];
 						if (candidate.requirement == null || candidate.requirement())

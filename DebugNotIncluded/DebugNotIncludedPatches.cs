@@ -365,6 +365,7 @@ namespace PeterHan.DebugNotIncluded {
 	/// Applied to EventSystem to debug the cause of the pesky "Not subscribed to event"
 	/// log spam.
 	/// </summary>
+	[ExcludeInspection]
 	[HarmonyPatch(typeof(EventSystem), nameof(EventSystem.Unsubscribe), typeof(int),
 		typeof(int), typeof(bool))]
 	public static class EventSystem_Unsubscribe_Patch {
@@ -653,18 +654,6 @@ namespace PeterHan.DebugNotIncluded {
 
 #if DEBUG
 	/// <summary>
-	/// Applied to StationaryChoreRangeVisualizer to silence a warning.
-	/// </summary>
-	[HarmonyPatch(typeof(StationaryChoreRangeVisualizer), "OnCleanUp")]
-	public static class StationaryChoreRangeVisualizer_OnCleanUp_Patch {
-		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-			return PPatchTools.ReplaceConstant(method, 0, 1, true);
-		}
-	}
-#endif
-
-#if DEBUG
-	/// <summary>
 	/// Applied to SelectToolHoverTextCard to show the cell coordinates, number, and other
 	/// attributes in the hover card.
 	/// </summary>
@@ -722,4 +711,9 @@ namespace PeterHan.DebugNotIncluded {
 		}
 	}
 #endif
+
+	/// <summary>
+	/// Exclude a patch type from inspections. Any type from any assembly with this name will work.
+	/// </summary>
+	public sealed class ExcludeInspectionAttribute : Attribute { }
 }

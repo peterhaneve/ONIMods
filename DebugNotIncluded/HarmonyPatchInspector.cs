@@ -29,9 +29,9 @@ namespace PeterHan.DebugNotIncluded {
 	/// </summary>
 	public static class HarmonyPatchInspector {
 		/// <summary>
-		/// Assemblies beginning with these strings will be blacklisted from checks.
+		/// Assemblies beginning with these strings will not be included in checks.
 		/// </summary>
-		private static readonly string[] BLACKLIST_ASSEMBLIES = new string[] {
+		private static readonly string[] DISALLOW_ASSEMBLIES = new[] {
 			"mscorlib", "System", "Assembly-CSharp", "Unity", "0Harmony", "Newtonsoft",
 			"Mono", "ArabicSupport", "I18N", "Ionic", "com.rlabrecque.steamworks.net", "ImGui",
 			"FMOD", "LibNoise", "Harmony", "Anonymously Hosted DynamicMethods Assembly",
@@ -61,19 +61,81 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
+		/// Checks the patch parameters of the method against the intended types.
+		/// </summary>
+		/// <param name="method">The method to inspect.</param>
+		/// <param name="target">The target method it is patching.</param>
+		private static void CheckPatchParameters(MethodBase method, MethodInfo target) {
+			string patchName = (method.DeclaringType?.FullName ?? "") + "." + method.Name;
+			var declaringType = target.DeclaringType;
+			string targetName = (declaringType?.FullName ?? "") + "." + target.Name;
+			foreach (var parameter in method.GetParameters()) {
+				string name = parameter.Name;
+				var pt = parameter.ParameterType;
+				if (name == "__result") {
+					// Result of method
+					var rt = target.ReturnType;
+					if (!IsAssignable(rt, pt))
+						PUtil.LogWarning("Method {0} return type of {1} does not match patch {2} expected return type of {3}".
+							F(targetName, rt.FullName, patchName, pt.FullName));
+				} else if (name == "__instance") {
+					// Instance type
+					if (declaringType == null)
+						PUtil.LogWarning("Patch {0} expects an instance type, but method {1} does not have a declaring type".
+							F(patchName, target.Name));
+					else if (target.IsStatic)
+						PUtil.LogWarning("Patch {0} expects an instance type, but method {1} is static".
+							F(patchName, targetName));
+					else if (!IsAssignable(declaringType, pt))
+						PUtil.LogWarning("Method {0} does not match patch {1} expected instance type of {2}".
+							F(targetName, patchName, pt.FullName));
+				} else if (name.StartsWith("___") && declaringType != null) {
+					string fn = name.Substring(3);
+					// Field names
+					var targetField = declaringType.GetField(fn, PPatchTools.BASE_FLAGS |
+						BindingFlags.Static | BindingFlags.Instance);
+					if (targetField == null)
+						PUtil.LogWarning("Patch {0} references a field named {1} not found on type {2}".
+							F(patchName, fn, declaringType.FullName));
+					else if (!IsAssignable(targetField.FieldType, pt))
+						PUtil.LogWarning("Patch {0} references field {1} expecting type {2}, but actual type is {3}".
+							F(patchName, fn, pt.FullName, targetField.FieldType.FullName));
+				} else
+					// Try to match parameters (Harmony should scream at these?)
+					foreach (var mp in target.GetParameters())
+						if (mp.Name == name) {
+							if (!IsAssignable(mp.ParameterType, pt))
+								PUtil.LogWarning("Method {0} parameter {1} has type {2}, but patch {3} parameter has type {4}".
+									F(targetName, name, mp.ParameterType.FullName, patchName,
+									pt.FullName));
+							break;
+						}
+			}
+		}
+
+		/// <summary>
 		/// Checks the specified type and all of its nested types for issues.
 		/// </summary>
 		/// <param name="type">The type to check.</param>
 		internal static void CheckType(Type type) {
+			HarmonyPatch harmonyAnnotation = null;
 			if (type == null)
 				throw new ArgumentNullException(nameof(type));
-			bool isAnnotated = false;
 			foreach (var annotation in type.GetCustomAttributes(true))
-				if (annotation is HarmonyPatch) {
-					isAnnotated = true;
-					break;
-				}
-			if (!isAnnotated) {
+				if (annotation is HarmonyPatch hp)
+					harmonyAnnotation = hp;
+				else if (annotation.GetType().Name.Contains("ExcludeInspection"))
+					return;
+			if (harmonyAnnotation != null) {
+				var info = harmonyAnnotation.info;
+				var target = AccessTools.Method(info.declaringType, info.methodName,
+					info.argumentTypes);
+				if (target != null)
+					// Check each patch for broken ___, __instance and __result parameters
+					foreach (var method in type.GetMethods(ALL))
+						if (IsHarmonyPatchMethod(method))
+							CheckPatchParameters(method, target);
+			} else
 				// Patchy method names?
 				foreach (var method in type.GetMethods(ALL))
 					if (HARMONY_NAMES.Contains(method.Name)) {
@@ -81,7 +143,6 @@ namespace PeterHan.DebugNotIncluded {
 							" looks like a Harmony patch but does not have the annotation!");
 						break;
 					}
-			}
 		}
 
 		/// <summary>
@@ -91,13 +152,13 @@ namespace PeterHan.DebugNotIncluded {
 		public static ICollection<Type> GetAllTypes() {
 			var types = new List<Type>(256);
 			var running = Assembly.GetExecutingAssembly();
-			int bn = BLACKLIST_ASSEMBLIES.Length;
+			int bn = DISALLOW_ASSEMBLIES.Length;
 			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) {
 				string name = assembly.FullName;
 				// Exclude assemblies on the blacklist
 				bool blacklist = false;
 				for (int i = 0; i < bn && !blacklist; i++)
-					blacklist = name.StartsWith(BLACKLIST_ASSEMBLIES[i]);
+					blacklist = name.StartsWith(DISALLOW_ASSEMBLIES[i]);
 				if (!blacklist)
 					try {
 						InspectAssembly(assembly, running, types);
@@ -152,6 +213,37 @@ namespace PeterHan.DebugNotIncluded {
 						!typeName.StartsWith("PeterHan.PLib."))
 					types.Add(candidate);
 			}
+		}
+
+		/// <summary>
+		/// Checks to see if the patch parameter type can successfully target a type,
+		/// respecting the use of ref to allow mutation.
+		/// </summary>
+		/// <param name="targetType">The target type as declared.</param>
+		/// <param name="parameterType">The patch method's expected type.</param>
+		/// <returns>true if the patch can apply against this type, or false otherwise.</returns>
+		private static bool IsAssignable(Type targetType, Type parameterType) =>
+			parameterType.IsAssignableFrom(targetType) || (parameterType.IsByRef &&
+			(parameterType.GetElementType()?.IsAssignableFrom(targetType) ?? false));
+
+		/// <summary>
+		/// Checks to see if a method is a Harmony postfix or prefix method. Only valid on
+		/// methods declared inside a properly annotated type.
+		/// </summary>
+		/// <param name="method">The method to inspect.</param>
+		/// <returns>true if the method will be used as a Harmony postfix or prefix injection
+		/// method, or false otherwise.</returns>
+		private static bool IsHarmonyPatchMethod(MethodBase method) {
+			string name = method.Name;
+			bool isPatch = name.Contains("Prefix") || name.Contains("Postfix");
+			var attributes = method.GetCustomAttributes();
+			if (!isPatch)
+				foreach (var attribute in attributes)
+					if (attribute is HarmonyPostfix || attribute is HarmonyPrefix) {
+						isPatch = true;
+						break;
+					}
+			return isPatch;
 		}
 	}
 }
