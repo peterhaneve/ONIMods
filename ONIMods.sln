@@ -27,11 +27,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Challenge100K", "Challenge1
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartPumps", "SmartPumps\SmartPumps.csproj", "{E364DF8A-73B5-4AF7-AC34-230BFA1E84B1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ElementDict", "ElementDict\ElementDict.csproj", "{1DDF3C07-4FDC-4F8D-B998-14229938E097}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ResearchQueue", "ResearchQueue\ResearchQueue.csproj", "{5E9C5B40-C5B0-4F39-9950-4D0E350185AA}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TraitRework", "TraitRework\TraitRework.csproj", "{89F93E0F-394A-4914-9050-B8B278A05245}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StarmapQueue", "StarmapQueue\StarmapQueue.csproj", "{C55DDC3F-B911-43E3-BBF8-5C7147D1CE90}"
 EndProject

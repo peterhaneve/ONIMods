@@ -31,53 +31,6 @@ namespace PeterHan.ShowRange {
 		/// </summary>
 		private const string IGNORE_WALLPUMPS = "WallPumps.RotatableElementConsumer";
 
-		internal const int USE_NEW_VIS = 559498;
-
-		/// <summary>
-		/// Adds ElementConsumer range previews to the specified building def.
-		///
-		/// TODO: Legacy code for versions less than 559498
-		/// </summary>
-		/// <param name="def">The preview to add.</param>
-		private static void AddConsumerPreviewLegacy(BuildingDef def) {
-			GameObject complete = def.BuildingComplete, preview = def.BuildingPreview,
-				inBuild = def.BuildingUnderConstruction;
-			var consumers = complete.GetComponents<ElementConsumer>();
-			int n = consumers.Length;
-			var existing = DictionaryPool<CellOffset, int, ElementConsumer>.Allocate();
-			foreach (var consumer in consumers)
-				// Avoid stomping the range preview of Wall Vents and Pumps
-				if (consumer.GetType().FullName != IGNORE_WALLPUMPS) {
-					int radius = consumer.consumptionRadius & 0xFF;
-					var sco = consumer.sampleCellOffset;
-					var color = Color.white;
-					var offset = new CellOffset(Mathf.RoundToInt(sco.x), Mathf.RoundToInt(
-						sco.y));
-					// Make secondary consumers a color related to their element
-					if (n > 1 && consumer.configuration == ElementConsumer.Configuration.
-							Element) {
-						var target = ElementLoader.FindElementByHash(consumer.
-							elementToConsume);
-						if (target != null)
-							color = target.substance.conduitColour;
-					}
-					if (!existing.TryGetValue(offset, out int oldRad) || radius != oldRad) {
-						PUtil.LogDebug("Visualizer added to {0}, range {1:D}".F(def.PrefabID,
-							radius));
-						ElementConsumerVisualizer.Create(complete, offset, radius, color);
-						// Consumer found, update the preview and under construction versions
-						if (preview != null)
-							// Previews should always be white as other colors are hard to see
-							// on overlays
-							ElementConsumerVisualizer.Create(preview, offset, radius);
-						if (inBuild != null)
-							ElementConsumerVisualizer.Create(inBuild, offset, radius, color);
-						existing[offset] = radius;
-					}
-				}
-			existing.Recycle();
-		}
-
 		/// <summary>
 		/// Adds ElementConsumer range previews to the specified building def.
 		/// </summary>
@@ -130,32 +83,7 @@ namespace PeterHan.ShowRange {
 		/// </summary>
 		/// <param name="def">The building def to add previews (if necessary).</param>
 		private static void AddRangePreviews(BuildingDef def) {
-			if (PUtil.GameVersion < USE_NEW_VIS) {
-				AddConsumerPreviewLegacy(def);
-				switch (def.PrefabID) {
-				// After it runs, the telescope and space scanner should have defs
-				case TelescopeConfig.ID:
-					PUtil.LogDebug("Telescope visualizer added");
-					TelescopeVisualizer.Create(def.BuildingComplete);
-					TelescopeVisualizer.Create(def.BuildingPreview);
-					TelescopeVisualizer.Create(def.BuildingUnderConstruction);
-					break;
-				case ClusterTelescopeConfig.ID:
-				case ClusterTelescopeEnclosedConfig.ID:
-					PUtil.LogDebug("Cluster Telescope visualizer added");
-					ClusterTelescopeVisualizer.Create(def.BuildingComplete);
-					ClusterTelescopeVisualizer.Create(def.BuildingPreview);
-					ClusterTelescopeVisualizer.Create(def.BuildingUnderConstruction);
-					break;
-				}
-				if (def.PrefabID == CometDetectorConfig.ID) {
-					PUtil.LogDebug("Space scanner visualizer added");
-					SpaceScannerVisualizer.Create(def.BuildingComplete);
-					SpaceScannerVisualizer.Create(def.BuildingPreview);
-					SpaceScannerVisualizer.Create(def.BuildingUnderConstruction);
-				}
-			} else
-				AddConsumerPreview(def);
+			AddConsumerPreview(def);
 		}
 
 		public override void OnLoad(Harmony harmony) {
@@ -169,8 +97,6 @@ namespace PeterHan.ShowRange {
 		/// </summary>
 		[HarmonyPatch(typeof(CameraController), "OnPrefabInit")]
 		public static class CameraController_OnPrefabInit_Patch {
-			internal static bool Prepare() => PUtil.GameVersion >= USE_NEW_VIS;
-
 			/// <summary>
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
@@ -192,9 +118,8 @@ namespace PeterHan.ShowRange {
 			/// </summary>
 			internal static void Postfix() {
 				foreach (var def in Assets.BuildingDefs)
-					if (def != null && def.BuildingComplete != null) {
+					if (def != null && def.BuildingComplete != null)
 						AddRangePreviews(def);
-					}
 			}
 		}
 	}

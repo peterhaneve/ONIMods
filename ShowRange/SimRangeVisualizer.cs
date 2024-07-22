@@ -23,8 +23,7 @@ using UnityEngine;
 
 namespace PeterHan.ShowRange {
 	/// <summary>
-	/// Visualizes element consumer ranges using the new, much faster Klei visualizer since
-	/// U47-559498.
+	/// Visualizes element consumer ranges using the new, much faster Klei visualizer.
 	/// </summary>
 	internal sealed class SimRangeVisualizer : MonoBehaviour {
 		private const int OCCLUSION_HEIGHT = 64;

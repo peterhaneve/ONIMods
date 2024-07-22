@@ -2,11 +2,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Show Building Ranges</AssemblyTitle>
-    <FileVersion>3.5.0.0</FileVersion>
+    <FileVersion>3.6.0.0</FileVersion>
     <RootNamespace>PeterHan.ShowRange</RootNamespace>
     <Description>Shows the range of buildings such as the Pump, Deodorizer, Space Scanner, and Telescope.</Description>
     <AssemblyVersion>3.2.0.0</AssemblyVersion>
-    <LastWorkingBuild>493472</LastWorkingBuild>
+    <LastWorkingBuild>559498</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
 </Project>

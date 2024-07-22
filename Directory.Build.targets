@@ -6,9 +6,17 @@
     </PropertyGroup>
   </Target>
 
-  <!-- Fast Track only -->
   <Target Name="Publicize" AfterTargets="Clean" Condition=" '$(UsePublicized)' == 'true' ">
     <Publicise InputAssemblies="@(PubliciseInputAssemblies)" OutputPath="../public-lib/"/>
+  </Target>
+
+  <Target Name="GenerateRefAssemblies" AfterTargets="Clean" Condition=" '$(MSBuildProjectName)' == 'PLib' ">
+    <Exec Command="Refasmer -v -O ../Lib -c $(GameFolderActive)/Assembly-CSharp.dll $(GameFolderActive)/Assembly-CSharp-firstpass.dll ^
+    $(GameFolderActive)/0Harmony.dll $(GameFolderActive)/FMODUnity.dll $(GameFolderActive)/Newtonsoft.Json.dll ^
+    $(GameFolderActive)/UnityEngine.dll $(GameFolderActive)/UnityEngine.CoreModule.dll ^
+    $(GameFolderActive)/UnityEngine.ImageConversionModule.dll $(GameFolderActive)/UnityEngine.InputLegacyModule.dll ^
+    $(GameFolderActive)/Unity.TextMeshPro.dll $(GameFolderActive)/UnityEngine.TextRenderingModule.dll ^
+    $(GameFolderActive)/UnityEngine.UI.dll $(GameFolderActive)/UnityEngine.UIModule.dll" />
   </Target>
 
   <Target Name="PLibTranslationEmbeddedResources" BeforeTargets="ResolveReferences" Condition=" '$(AssemblyName)' == 'PLibCore' ">
