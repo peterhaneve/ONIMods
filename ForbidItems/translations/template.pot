@@ -1,0 +1,35 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not Included"
+"POT Version: 2.0"
+
+#. PeterHan.ForbidItems.ForbidItemsStrings.MISC.STATUSITEMS.FORBIDDEN.NAME
+msgctxt "PeterHan.ForbidItems.ForbidItemsStrings.MISC.STATUSITEMS.FORBIDDEN.NAME"
+msgid "Item Forbidden"
+msgstr ""
+
+#. PeterHan.ForbidItems.ForbidItemsStrings.MISC.STATUSITEMS.FORBIDDEN.TOOLTIP
+msgctxt "PeterHan.ForbidItems.ForbidItemsStrings.MISC.STATUSITEMS.FORBIDDEN.TOOLTIP"
+msgid "This item cannot be picked up by Duplicants or <style=\"KKeyword\">Auto-Sweepers</style>"
+msgstr ""
+
+#. PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.NAME
+msgctxt "PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.NAME"
+msgid "Forbid Item"
+msgstr ""
+
+#. PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.NAME_OFF
+msgctxt "PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.NAME_OFF"
+msgid "Reclaim Item"
+msgstr ""
+
+#. PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.TOOLTIP
+msgctxt "PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.TOOLTIP"
+msgid "Prevent this item from being picked up"
+msgstr ""
+
+#. PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.TOOLTIP_OFF
+msgctxt "PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.TOOLTIP_OFF"
+msgid "Allow this item to be picked up"
+msgstr ""
+
