@@ -33,6 +33,8 @@ namespace PeterHan.ForbidItems {
 		
 		[PLibMethod(RunAt.AfterDbInit)]
 		internal static void AfterDbInit() {
+			LocString.CreateLocStringKeys(typeof(ForbidItemsStrings.MISC));
+			LocString.CreateLocStringKeys(typeof(ForbidItemsStrings.UI));
 			ForbiddenStatus = Db.Get().MiscStatusItems.Add(new StatusItem(Forbidden.Name,
 				"MISC", "status_item_building_disabled", StatusItem.IconType.Custom,
 				NotificationType.Neutral, false, OverlayModes.None.ID));
@@ -42,8 +44,6 @@ namespace PeterHan.ForbidItems {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 			new PPatchManager(harmony).RegisterPatchClass(typeof(ForbidItemsPatches));
-			LocString.CreateLocStringKeys(typeof(ForbidItemsStrings.MISC));
-			LocString.CreateLocStringKeys(typeof(ForbidItemsStrings.UI));
 			new PLocalization().Register();
 		}
 
