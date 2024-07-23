@@ -258,4 +258,3 @@ paket-files/
 *.cmd
 Assets/
 *.lnk
-Lib/*.dll

@@ -379,7 +379,6 @@ Global
 		{899F0603-8236-49E8-93E5-856FB540409C}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
 		{899F0603-8236-49E8-93E5-856FB540409C}.Debug|Vanilla.Build.0 = Debug|Vanilla
 		{899F0603-8236-49E8-93E5-856FB540409C}.Release|Mergedown.ActiveCfg = Release|Mergedown
-		{899F0603-8236-49E8-93E5-856FB540409C}.Release|Mergedown.Build.0 = Release|Mergedown
 		{899F0603-8236-49E8-93E5-856FB540409C}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{899F0603-8236-49E8-93E5-856FB540409C}.Release|Vanilla.Build.0 = Release|Vanilla
 		{5031ADAF-C406-4EA0-8003-6C88A2A64802}.Debug|Mergedown.ActiveCfg = Debug|Mergedown
@@ -544,7 +543,6 @@ Global
 		{E70A84A5-CF8F-4F7B-8D60-B0115553F9A9}.Debug|Vanilla.ActiveCfg = Debug|Vanilla
 		{E70A84A5-CF8F-4F7B-8D60-B0115553F9A9}.Debug|Vanilla.Build.0 = Debug|Vanilla
 		{E70A84A5-CF8F-4F7B-8D60-B0115553F9A9}.Release|Mergedown.ActiveCfg = Release|Mergedown
-		{E70A84A5-CF8F-4F7B-8D60-B0115553F9A9}.Release|Mergedown.Build.0 = Release|Mergedown
 		{E70A84A5-CF8F-4F7B-8D60-B0115553F9A9}.Release|Vanilla.ActiveCfg = Release|Vanilla
 		{E70A84A5-CF8F-4F7B-8D60-B0115553F9A9}.Release|Vanilla.Build.0 = Release|Vanilla
 	EndGlobalSection

@@ -1,0 +1,13 @@
+The libraries in this folder are automatically generated Reference Assemblies. Each library is used under license:
+
+Harmony is available from https://github.com/pardeike/Harmony under the MIT License.
+
+Steamworks.NET is available from https://github.com/rlabrecque/Steamworks.NET under the MIT License.
+
+FMODUnity is available from https://github.com/fmod/fmod-for-unity under the MIT License.
+
+Ionic.Zip is available from https://github.com/haf/DotNetZip.Semverd/ under the Microsoft Public License, BSD 3-clause license, MIT License, Apache License and zlib License. See https://github.com/haf/DotNetZip.Semverd/blob/master/LICENSE for license texts.
+
+Newtonsoft.Json is available from https://github.com/JamesNK/Newtonsoft.Json under the MIT License.
+
+Code distributed with the base Oxygen Not Included game used under license from Klei Entertainment: https://support.klei.com/hc/en-us/articles/27787028069012-General-Mod-and-UGC-Guidelines
