@@ -110,16 +110,18 @@ namespace PeterHan.StockBugFix {
 		/// Applied after SubscribeToTrunk runs.
 		/// </summary>
 		[HarmonyPriority(Priority.LowerThanNormal)]
-		private static void SubscribeToTrunk_Postfix(TreeBud __instance) {
-			__instance.Subscribe((int)GameHashes.Grow, OnGrowDelegate);
+		private static void SubscribeToTrunk_Postfix(PlantBranch.Instance __instance) {
+			if (__instance.HasTrunk)
+				__instance.trunk.gameObject.Subscribe((int)GameHashes.Grow, OnGrowDelegate);
 		}
 
 		/// <summary>
 		/// Applied after UnsubscribeToTrunk runs.
 		/// </summary>
 		[HarmonyPriority(Priority.LowerThanNormal)]
-		private static void UnsubscribeToTrunk_Postfix(TreeBud __instance) {
-			__instance.Unsubscribe((int)GameHashes.Grow, OnGrowDelegate, true);
+		private static void UnsubscribeToTrunk_Postfix(PlantBranch.Instance __instance) {
+			if (__instance.HasTrunk)
+				__instance.trunk.gameObject.Unsubscribe((int)GameHashes.Grow);
 		}
 
 		/// <summary>
