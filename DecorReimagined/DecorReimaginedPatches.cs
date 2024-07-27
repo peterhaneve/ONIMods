@@ -79,10 +79,11 @@ namespace ReimaginationTeam.DecorRework {
 			if (room != null)
 				foreach (var plant in room.cavity.plants)
 					// Plant must not be wilted
-					if (plant != null && ((plant.TryGetComponent(out ReceptacleMonitor farm) &&
-							!farm.Replanted) || plant.TryGetComponent(
-							out BasicForagePlantPlanted _)) && (!plant.TryGetComponent(
-							out WiltCondition wilting) || !wilting.IsWilting()))
+					if (plant != null && !plant.HasTag(GameTags.PlantBranch) && ((plant.
+							TryGetComponent(out ReceptacleMonitor farm) &&!farm.Replanted) ||
+							plant.TryGetComponent(out BasicForagePlantPlanted _)) &&
+							(!plant.TryGetComponent(out WiltCondition wilting) ||
+							!wilting.IsWilting()))
 						wildPlants++;
 			return wildPlants;
 		}

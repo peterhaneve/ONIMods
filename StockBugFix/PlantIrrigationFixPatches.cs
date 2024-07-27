@@ -12,12 +12,6 @@ namespace PeterHan.StockBugFix {
 	/// Fixes a nasty bug where plants continue to burn their fertilizer even when wilted.
 	/// </summary>
 	internal static class PlantIrrigationFixPatches {
-		private static readonly EventSystem.IntraObjectHandler<TreeBud> OnGrowDelegate =
-			new EventSystem.IntraObjectHandler<TreeBud>((component, data) => {
-				if (component != null)
-					component.buddingTrunk?.Get()?.Trigger((int)GameHashes.Grow);
-			});
-		
 		private static HarmonyMethod PatchMethod(string name) => new HarmonyMethod(
 			typeof(PlantIrrigationFixPatches), name);
 
@@ -39,11 +33,9 @@ namespace PeterHan.StockBugFix {
 				UpdateAbsorbing_Prefix)));
 			harmony.Patch(typeof(IrrigationMonitor), nameof(IrrigationMonitor.
 				InitializeStates), postfix: PatchMethod(nameof(IM_InitializeStates_Postfix)));
-			// TreeBud
+			// PlantBranch.Instance
 			harmony.Patch(typeof(PlantBranch.Instance), "SubscribeToTrunk",
 				postfix: PatchMethod(nameof(SubscribeToTrunk_Postfix)));
-			harmony.Patch(typeof(PlantBranch.Instance), "UnsubscribeToTrunk",
-				postfix: PatchMethod(nameof(UnsubscribeToTrunk_Postfix)));
 			// EntityTemplates
 			var ep = PatchMethod(nameof(ExtendPlant_Postfix));
 			harmony.Patch(typeof(EntityTemplates), nameof(EntityTemplates.
@@ -111,17 +103,7 @@ namespace PeterHan.StockBugFix {
 		/// </summary>
 		[HarmonyPriority(Priority.LowerThanNormal)]
 		private static void SubscribeToTrunk_Postfix(PlantBranch.Instance __instance) {
-			if (__instance.HasTrunk)
-				__instance.trunk.gameObject.Subscribe((int)GameHashes.Grow, OnGrowDelegate);
-		}
-
-		/// <summary>
-		/// Applied after UnsubscribeToTrunk runs.
-		/// </summary>
-		[HarmonyPriority(Priority.LowerThanNormal)]
-		private static void UnsubscribeToTrunk_Postfix(PlantBranch.Instance __instance) {
-			if (__instance.HasTrunk)
-				__instance.trunk.gameObject.Unsubscribe((int)GameHashes.Grow);
+			__instance.gameObject.AddOrGet<PlantBranchHealthMonitor>();
 		}
 
 		/// <summary>

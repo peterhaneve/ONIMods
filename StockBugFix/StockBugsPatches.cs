@@ -263,23 +263,6 @@ namespace PeterHan.StockBugFix {
 	}
 
 	/// <summary>
-	/// Applied to AggressiveChore.StatesInstance to exclude unbreakable objects from the
-	/// Destructive stress reaction.
-	/// </summary>
-	[HarmonyPatch(typeof(AggressiveChore.StatesInstance), nameof(AggressiveChore.
-		StatesInstance.FindBreakable))]
-	public static class AggressiveChore_StatesInstance_FindBreakable_Patch {
-		/// <summary>
-		/// Applied after FindBreakable runs.
-		/// </summary>
-		internal static void Postfix(AggressiveChore.StatesInstance __instance) {
-			var target = __instance.sm.breakable.Get(__instance);
-			if (target != null && target.TryGetComponent(out BuildingHP hp) && hp.invincible)
-				__instance.StopSM("Chosen building is unbreakable");
-		}
-	}
-
-	/// <summary>
 	/// Applied to ArtableSelectionSideScreen to fix a crash due to a missing null check.
 	/// </summary>
 	[HarmonyPatch]
@@ -482,34 +465,6 @@ namespace PeterHan.StockBugFix {
 				}
 			}
 			return cont;
-		}
-	}
-
-	/// <summary>
-	/// Applied to Edible to only display the yuck emote if there are actually no germs on the
-	/// food. If the disease type is invalid, the germ count is an uninitialized variable and
-	/// can be anything...
-	/// </summary>
-	[HarmonyPatch(typeof(Edible), "StopConsuming")]
-	public static class Edible_StopConsuming_Patch {
-		/// <summary>
-		/// Returns the corrected disease count, account for if the disease is invalid.
-		/// </summary>
-		/// <param name="element">The potentially diseased item.</param>
-		/// <returns>The number of active germs on the item.</returns>
-		private static int GetRealDiseaseCount(PrimaryElement element) {
-			return element.DiseaseIdx == Klei.SimUtil.DiseaseInfo.Invalid.idx ? 0 : element.
-				DiseaseCount;
-		}
-
-		/// <summary>
-		/// Transpiles StopConsuming to ignore disease if the handle is invalid.
-		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-			return PPatchTools.ReplaceMethodCallSafe(method, typeof(PrimaryElement).
-				GetPropertySafe<int>(nameof(PrimaryElement.DiseaseCount), false)?.
-				GetGetMethod(true), typeof(Edible_StopConsuming_Patch).GetMethodSafe(
-				nameof(GetRealDiseaseCount), true, typeof(PrimaryElement)));
 		}
 	}
 

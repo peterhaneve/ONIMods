@@ -2,14 +2,13 @@
 // available from https://github.com/SanchozzDeponianin/ONIMods/blob/master/LICENSE under
 // the MIT license.
 
-using PeterHan.PLib.Detours;
-
 using PlantHandler = EventSystem.IntraObjectHandler<PeterHan.StockBugFix.PlantStatusMonitorFixed>;
 
 namespace PeterHan.StockBugFix {
 	/// <summary>
 	/// Monitors plant status events and properly turns irrigation on and off.
 	/// </summary>
+	[SkipSaveFileSerialization]
 	internal sealed class PlantStatusMonitorFixed : KMonoBehaviour {
 		/// <summary>
 		/// Invoked when a plant lifecycle-related event occurs.
@@ -169,13 +168,14 @@ namespace PeterHan.StockBugFix {
 		private void UpdateAbsorb() {
 			if (growing != null) {
 				bool harvestReady = growing.ReachedNextHarvest();
-				if (grower != null && harvestReady) {
+				int n;
+				if (grower != null && harvestReady && (n = grower.CurrentBranchCount) > 0) {
 					var branches = grower.GetExistingBranches();
-					int n = branches.Length, branchesGrowing = 0;
+					int branchesGrowing = 0;
 					for (int i = 0; i < n; i++) {
 						var go = branches[i];
-						if (go != null && go.TryGetComponent(out Growing growing) && growing.
-								IsGrowing() && !growing.ReachedNextHarvest())
+						if (go != null && go.TryGetComponent(out Growing gr) && gr.
+								IsGrowing() && !gr.ReachedNextHarvest())
 							branchesGrowing++;
 					}
 					shouldAbsorb = branchesGrowing > 0 || n < grower.

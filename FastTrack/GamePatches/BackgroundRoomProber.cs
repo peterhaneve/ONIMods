@@ -40,8 +40,6 @@ namespace PeterHan.FastTrack.GamePatches {
 
 		private static readonly Tag REGISTER_ROOM_TAG = new Tag(REGISTER_ROOM);
 
-		private static readonly Tag TREE_BRANCH_TAG = new Tag(ForestTreeBranchConfig.ID);
-
 		/// <summary>
 		/// The singleton instance of this class.
 		/// </summary>
@@ -262,7 +260,7 @@ namespace PeterHan.FastTrack.GamePatches {
 							dirty = AddBuildingToRoom(cavity, prefabID);
 							scanBuildings = true;
 						} else if (prefabID.HasTag(GameTags.Plant) && !prefabID.HasTag(
-								TREE_BRANCH_TAG)) {
+								GameTags.PlantBranch)) {
 							dirty = AddPlantToRoom(cavity, prefabID);
 							scanPlants = true;
 						}
