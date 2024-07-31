@@ -406,13 +406,14 @@ namespace PeterHan.StockBugFix {
 		/// </summary>
 		[HarmonyPriority(Priority.HigherThanNormal)]
 		private static void PrefixRoomProbe(RoomProber __instance) {
-			foreach (int cell in ROOMS_PENDING) {
-				var cavity = __instance.GetCavityForCell(cell);
-				if (cavity != null)
-					__instance.UpdateRoom(cavity);
-				else
-					__instance.SolidChangedEvent(cell, true);
-			}
+			foreach (int cell in ROOMS_PENDING)
+				if (Grid.IsValidCell(cell)) {
+					var cavity = __instance.GetCavityForCell(cell);
+					if (cavity != null)
+						__instance.UpdateRoom(cavity);
+					else
+						__instance.SolidChangedEvent(cell, true);
+				}
 			ROOMS_PENDING.Clear();
 		}
 
@@ -851,6 +852,31 @@ namespace PeterHan.StockBugFix {
 				}
 			}
 			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to Worker to quash an exception caused by trying to start work on a destroyed
+	/// object.
+	/// </summary>
+	[HarmonyPatch(typeof(Worker), nameof(Worker.StartWork))]
+	public static class Worker_StartWork_Patch {
+		/// <summary>
+		/// Applied before StartWork runs.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static bool Prefix(Worker.StartWorkInfo start_work_info) {
+			if (start_work_info == null) {
+				PUtil.LogWarning("Attempted to start work on empty workable");
+				return false;
+			}
+			if (start_work_info.workable is Workable target && target == null) {
+				// target cannot be ref null, because "is Workable target" would be false
+				PUtil.LogWarning("Attempted to start work on invalid workable of type: " +
+					target.GetType().Name);
+				return false;
+			}
+			return true;
 		}
 	}
 }
