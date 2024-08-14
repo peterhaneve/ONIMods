@@ -50,12 +50,6 @@ namespace ReimaginationTeam.DecorRework {
 		private BuildingHP breakStatus;
 
 		/// <summary>
-		/// Used to calculate extents for buildings.
-		/// </summary>
-		[MyCmpGet]
-		private BuildingComplete building;
-
-		/// <summary>
 		/// Monitors status modifiers like "glum".
 		/// </summary>
 		[MyCmpGet]
@@ -68,18 +62,6 @@ namespace ReimaginationTeam.DecorRework {
 		private Operational operational;
 
 		/// <summary>
-		/// The ID of this object.
-		/// </summary>
-		[MyCmpReq]
-		private KPrefabID prefabID;
-
-		/// <summary>
-		/// The decor provider responsible for this splat.
-		/// </summary>
-		[MyCmpReq]
-		private DecorProvider provider;
-
-		/// <summary>
 		/// Avoid infinite loops when resolving some buildings like the sauna.
 		/// </summary>
 		[MyCmpGet]
@@ -88,6 +70,11 @@ namespace ReimaginationTeam.DecorRework {
 #pragma warning restore CS0649
 #pragma warning restore IDE0044 // Add readonly modifier
 		
+		/// <summary>
+		/// Used to calculate extents for buildings.
+		/// </summary>
+		private BuildingComplete building;
+
 		/// <summary>
 		/// The cached decor value.
 		/// </summary>
@@ -99,6 +86,11 @@ namespace ReimaginationTeam.DecorRework {
 		private readonly IList<int> cells;
 		
 		/// <summary>
+		/// The decor provider responsible for this splat.
+		/// </summary>
+		private DecorProvider provider;
+
+		/// <summary>
 		/// The building's layer if available.
 		/// </summary>
 		private int layer;
@@ -107,6 +99,11 @@ namespace ReimaginationTeam.DecorRework {
 		/// The partitioner used for decor changes.
 		/// </summary>
 		private IntHandle partitioner;
+		
+		/// <summary>
+		/// The ID of this object.
+		/// </summary>
+		private KPrefabID prefabID;
 
 		/// <summary>
 		/// The solid partitioner used for decor changes;
@@ -114,11 +111,14 @@ namespace ReimaginationTeam.DecorRework {
 		private IntHandle solidChangedPartitioner;
 
 		internal DecorSplatNew() {
+			building = null;
 			cacheDecor = 0.0f;
 			cells = new List<int>(64);
-			partitioner = IntHandle.InvalidHandle;
-			solidChangedPartitioner = IntHandle.InvalidHandle;
 			layer = -1;
+			partitioner = IntHandle.InvalidHandle;
+			prefabID = null;
+			provider = null;
+			solidChangedPartitioner = IntHandle.InvalidHandle;
 		}
 
 		/// <summary>
@@ -176,6 +176,7 @@ namespace ReimaginationTeam.DecorRework {
 			}
 			Unsubscribe((int)GameHashes.FunctionalChanged, OnFunctionalChanged);
 			base.OnCleanUp();
+			prefabID = null;
 		}
 
 		private void OnFunctionalChanged(object argument) {
@@ -185,8 +186,12 @@ namespace ReimaginationTeam.DecorRework {
 
 		protected override void OnSpawn() {
 			base.OnSpawn();
+			TryGetComponent(out provider);
 			Subscribe((int)GameHashes.FunctionalChanged, OnFunctionalChanged);
-			if (building != null) {
+			// Hack: The new Bonbon Tree branch crashes if KPrefabID is referenced, even
+			// transitively, in component initialization (MyCmpGet)!
+			TryGetComponent(out prefabID);
+			if (TryGetComponent(out building)) {
 				var def = building.Def;
 				var inst = DecorCellManager.Instance;
 				layer = (int)def.ObjectLayer;
@@ -258,32 +263,34 @@ namespace ReimaginationTeam.DecorRework {
 		/// Replaces the Refresh method of DecorProvider to handle the decor ourselves.
 		/// </summary>
 		internal void RefreshDecor() {
-			// Get status of the object
-			Klei.AI.AttributeInstance happiness = null;
-			if (glumStatus != null)
-				happiness = glumStatus.attributes?.Get(DecorCellManager.Instance.
-					HappinessAttribute);
-			// Entombed/disabled = 0 decor, broken = use value in DecorTuning for broken
-			bool disabled = (operational != null && !operational.IsFunctional) ||
-				(happiness != null && happiness.GetTotalValue() < 0.0f);
-			bool broken = breakStatus != null && breakStatus.IsBroken;
-			RefreshCells(broken, disabled);
-			// Handle rooms which require an item with 20 decor: has to actually be functional
-			bool hasTag = prefabID.HasTag(RoomConstraints.ConstraintTags.Decor20);
-			bool needsTag = provider.decor.GetTotalValue() >= 20f && !broken && !disabled;
-			// Do not trigger on buildings with a room tracker, as that could set up an
-			// infinite loop
-			if ((tracker == null || tracker.requirement == RoomTracker.Requirement.
-					TrackingOnly) && hasTag != needsTag) {
-				int pos = Grid.PosToCell(gameObject);
-				// Tag needs to be added/removed
-				if (needsTag)
-					prefabID.AddTag(RoomConstraints.ConstraintTags.Decor20);
-				else
-					prefabID.RemoveTag(RoomConstraints.ConstraintTags.Decor20);
-				// Force room recalculation
-				if (Grid.IsValidCell(pos))
-					Game.Instance.roomProber.SolidChangedEvent(pos, true);
+			if (prefabID != null && provider != null) {
+				// Get status of the object
+				Klei.AI.AttributeInstance happiness = null;
+				if (glumStatus != null)
+					happiness = glumStatus.attributes?.Get(DecorCellManager.Instance.
+						HappinessAttribute);
+				// Entombed/disabled = 0 decor, broken = use value in DecorTuning for broken
+				bool disabled = (operational != null && !operational.IsFunctional) ||
+					(happiness != null && happiness.GetTotalValue() < 0.0f);
+				bool broken = breakStatus != null && breakStatus.IsBroken;
+				RefreshCells(broken, disabled);
+				// Handle rooms which require an item with 20 decor: has to actually be functional
+				bool hasTag = prefabID.HasTag(RoomConstraints.ConstraintTags.Decor20);
+				bool needsTag = provider.decor.GetTotalValue() >= 20f && !broken && !disabled;
+				// Do not trigger on buildings with a room tracker, as that could set up an
+				// infinite loop
+				if ((tracker == null || tracker.requirement == RoomTracker.Requirement.
+						TrackingOnly) && hasTag != needsTag) {
+					int pos = Grid.PosToCell(gameObject);
+					// Tag needs to be added/removed
+					if (needsTag)
+						prefabID.AddTag(RoomConstraints.ConstraintTags.Decor20);
+					else
+						prefabID.RemoveTag(RoomConstraints.ConstraintTags.Decor20);
+					// Force room recalculation
+					if (Grid.IsValidCell(pos))
+						Game.Instance.roomProber.SolidChangedEvent(pos, true);
+				}
 			}
 		}
 
@@ -304,7 +311,7 @@ namespace ReimaginationTeam.DecorRework {
 				}
 			}
 			if (inst != null) {
-				if (cacheDecor != 0.0f) {
+				if (cacheDecor != 0.0f && prefabID != null && provider != null) {
 					int n = cells.Count;
 					var pid = prefabID.PrefabTag;
 					for (int i = 0; i < n; i++)

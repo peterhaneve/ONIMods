@@ -60,8 +60,8 @@ namespace ReimaginationTeam.DecorRework {
 				STRINGS.DUPLICANTS.MODIFIERS.DECOR3.TOOLTIP),
 			new DecorLevel("Decor4", 80.0f, 9, STRINGS.DUPLICANTS.MODIFIERS.DECOR4.NAME,
 				STRINGS.DUPLICANTS.MODIFIERS.DECOR4.TOOLTIP),
-			new DecorLevel("Decor5", float.MaxValue, 12, STRINGS.DUPLICANTS.MODIFIERS.DECOR5.NAME,
-				STRINGS.DUPLICANTS.MODIFIERS.DECOR5.TOOLTIP)
+			new DecorLevel("Decor5", float.MaxValue, 12, STRINGS.DUPLICANTS.MODIFIERS.DECOR5.
+				NAME, STRINGS.DUPLICANTS.MODIFIERS.DECOR5.TOOLTIP)
 		};
 
 		/// <summary>
@@ -116,7 +116,7 @@ namespace ReimaginationTeam.DecorRework {
 						editDecor.Add(id, entry);
 				foreach (var def in Assets.BuildingDefs)
 					// If PreserveTileDecor is set to true, ignore foundation tile decor mods
-					if (editDecor.TryGetValue(id = def.PrefabID, out DecorDbEntry entry) &&
+					if (editDecor.TryGetValue(id = def.PrefabID, out var entry) &&
 							(def.TileLayer != tileLayer || !options.PreserveTileDecor)) {
 						float decor = entry.decor;
 						int radius = entry.radius;

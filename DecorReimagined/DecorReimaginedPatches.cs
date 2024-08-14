@@ -80,7 +80,7 @@ namespace ReimaginationTeam.DecorRework {
 				foreach (var plant in room.cavity.plants)
 					// Plant must not be wilted
 					if (plant != null && !plant.HasTag(GameTags.PlantBranch) && ((plant.
-							TryGetComponent(out ReceptacleMonitor farm) &&!farm.Replanted) ||
+							TryGetComponent(out ReceptacleMonitor farm) && !farm.Replanted) ||
 							plant.TryGetComponent(out BasicForagePlantPlanted _)) &&
 							(!plant.TryGetComponent(out WiltCondition wilting) ||
 							!wilting.IsWilting()))
@@ -152,7 +152,6 @@ namespace ReimaginationTeam.DecorRework {
 		[PLibMethod(RunAt.OnStartGame)]
 		internal static void SetupDecor() {
 			DecorCellManager.CreateInstance();
-			//ImaginationLoader.Instance.IsFinalDestination();
 			PUtil.LogDebug("Created DecorCellManager");
 		}
 
@@ -274,7 +273,7 @@ namespace ReimaginationTeam.DecorRework {
 		}
 
 		/// <summary>
-		/// Applied to DecorProvider to refresh it when operational status changes.
+		/// Applied to DecorProvider to add the mod's custom decor calculation component.
 		/// </summary>
 		[HarmonyPatch(typeof(DecorProvider), "OnPrefabInit")]
 		public static class DecorProvider_OnPrefabInit_Patch {
@@ -296,8 +295,7 @@ namespace ReimaginationTeam.DecorRework {
 			/// </summary>
 			internal static bool Prefix(DecorProvider __instance) {
 				bool cont = true;
-				if (__instance != null && __instance.TryGetComponent(out DecorSplatNew splat))
-				{
+				if (__instance != null && __instance.TryGetComponent(out DecorSplatNew splat)) {
 					// Replace it
 					cont = false;
 					splat.RefreshDecor();
