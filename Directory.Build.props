@@ -9,7 +9,7 @@
   </ItemDefinitionGroup>
 
   <ItemGroup Condition=" '$(PLibCore)' != 'true' ">
-    <PackageReference Include="ILRepack.MSBuild.Task" Version="2.0.13" Private="True" PrivateAssets="all" />
+    <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.26" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'Mergedown' ">
     <GameFolderActive>$(GameFolderMergedown)</GameFolderActive>
