@@ -76,14 +76,13 @@ staticID: PeterHan.$(AssemblyName)
 
     <ILRepack
         TargetPlatformVersion="v4"
-        OutputType="SameAsPrimaryAssembly"
-        MainAssembly="$(TargetPath)"
-        OutputAssembly="$(TargetPath)"
+        TargetKind="SameAsPrimaryAssembly"
+        OutputFile="$(TargetPath)"
         InputAssemblies="@(InputAssemblies)"
         XmlDocumentation="true"
         Internalize="$(Internalize)"
-        WilcardInputAssemblies="true"
-        WorkingDirectory="$(GameFolderActive)" />
+        Wildcards="true"
+        LibraryPath="$(GameFolderActive)" />
   </Target>
 
   <Target Name="CopyArtifactsToInstallFolder" AfterTargets="ILRepack" Condition=" '$(DistributeMod)' == 'true' ">

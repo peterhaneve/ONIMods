@@ -85,7 +85,15 @@ Mods should remain in their own subfolder.
 
 # Compiling this repository
 
-This repository requires an installed copy of Oxygen Not Included to compile. The project is currently built against Visual Studio 2022 and the .NET Framework 4.7.1 (as required by the game). Make sure that the correct targeting packs, as well as MSBuild support, are installed to build.
+This repository requires an installed copy of Oxygen Not Included to compile. The project is currently built against Visual Studio 2022, the .NET Framework 4.7.1 (as required by the game), and [Refasmer](https://github.com/JetBrains/Refasmer). Make sure that the correct targeting packs, as well as MSBuild support, are installed to build.
+
+To install the .NET runtime, targeting pack, and external build tools, run the following commands in a terminal.
+
+```sh
+> winget install Microsoft.DotNet.Framework.DeveloperPack_4 -v 4.7.1
+> winget install Microsoft.DotNet.SDK.8
+> dotnet tool install -g JetBrains.Refasmer.CliTool
+```
 
 The build scripts will automatically detect most Steam installations of Oxygen Not Included. To customize paths for other distribution platforms or operating systems, create a copy of `Directory.Build.props.default` named `Directory.Build.props.user`. Modify the values in it to match the correct folder locations. The "legacy" game folder is only used for pre-Mergedown versions of the game and can usually be safely ignored.
 
