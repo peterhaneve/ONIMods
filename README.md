@@ -1,6 +1,6 @@
 # Peter Han&#39;s Mods for Oxygen Not Included
 
-Last tested on game version: **U51-596100**
+Last tested on game version: **U52-623711**
 
 **No support** for Public Testing branches, including the rolled back Legacy Vanilla (CS-469300).
 
@@ -42,7 +42,6 @@ Mods should remain in their own subfolder.
 | [Food Supply Tooltips](https://steamcommunity.com/sharedfiles/filedetails/?id=1914501780) | Adds tooltips to food sources indicating their calorie production per cycle | Yes | Yes |
 | [Mismatched Wire Finder](https://steamcommunity.com/sharedfiles/filedetails/?id=2607620648) | Finds wires and pipes that do not match the rest of their network | Yes | Yes |
 | [Mod Updater](https://steamcommunity.com/sharedfiles/filedetails/?id=2018291283) | Updates mods that Steam leaves at old versions | Yes | Yes |
-| [No Splash Screen](https://steamcommunity.com/sharedfiles/filedetails/?id=2361698345) | Hides the Early Access splash screen | Yes | Yes |
 | [Not Enough Tags](https://steamcommunity.com/sharedfiles/filedetails/?id=2230218796) | Deprecated! No longer supported. | No | No |
 | [Pip Plant Overlay](https://steamcommunity.com/sharedfiles/filedetails/?id=2493100777) | Adds an overlay showing where Pips can plant seeds | Yes | Yes |
 | [Popup Control](https://steamcommunity.com/sharedfiles/filedetails/?id=2032187035) | Shows or hides text info popups for each source | Yes | Yes |
@@ -80,21 +79,24 @@ Mods should remain in their own subfolder.
 |  **Name**  |  **Description**  |  **Vanilla**  |  **Spaced Out! DLC**  |
 | :--------: | :---------------: | :-----------: | :-------------------: |
 | [Decor Reimagined](https://steamcommunity.com/sharedfiles/filedetails/?id=1892161928) | Reimagines decor, rewarding bases with consistent, unique decor items | Yes | Yes |
-| [Diseases Restored](https://steamcommunity.com/sharedfiles/filedetails/?id=1911357229) | Restores diseases making germs more dangerous again, and adds methods to deal with germ spread | Yes | No |
-| [Traits Reworked](https://steamcommunity.com/sharedfiles/filedetails/?id=1905214098) | Reworks Duplicant traits to make all traits meaningful and the most extreme traits more sensible | Yes | No |
+| [Diseases Restored](https://steamcommunity.com/sharedfiles/filedetails/?id=1911357229) | Restores diseases making germs more dangerous again, and adds methods to deal with germ spread | Yes | Yes |
+| [Traits Reworked](https://steamcommunity.com/sharedfiles/filedetails/?id=1905214098) | Deprecated! No longer supported. | No | No |
 
 # Compiling this repository
 
-This repository requires an installed copy of Oxygen Not Included to compile. The project is currently built against Visual Studio 2022, the .NET Framework 4.7.1 (as required by the game), and [Refasmer](https://github.com/JetBrains/Refasmer). Make sure that the correct targeting packs, as well as MSBuild support, are installed to build.
+This repository requires an installed copy of Oxygen Not Included to compile.
+The project is currently built against Visual Studio 2022, the .NET Framework 4.7.1 (as required by the game), and optionally [Refasmer](https://github.com/JetBrains/Refasmer) to regenerate the CI assemblies.
+Make sure that the correct targeting packs, as well as MSBuild support, are installed to build.
 
 To install the .NET runtime, targeting pack, and external build tools, run the following commands in a terminal.
 
 ```sh
 > winget install Microsoft.DotNet.Framework.DeveloperPack_4 -v 4.7.1
 > winget install Microsoft.DotNet.SDK.8
-> dotnet tool install -g JetBrains.Refasmer.CliTool
 ```
 
-The build scripts will automatically detect most Steam installations of Oxygen Not Included. To customize paths for other distribution platforms or operating systems, create a copy of `Directory.Build.props.default` named `Directory.Build.props.user`. Modify the values in it to match the correct folder locations. The "legacy" game folder is only used for pre-Mergedown versions of the game and can usually be safely ignored.
+The build scripts will automatically detect most Steam installations of Oxygen Not Included.
+To customize paths for other distribution platforms or operating systems, create a copy of `Directory.Build.props.default` named `Directory.Build.props.user`.
+Modify the values in it to match the correct folder locations. The "legacy" game folder is only used for pre-Mergedown versions of the game and can usually be safely ignored.
 
 *Note that ReSharper may have issues with the Steam build auto-detection; users of this plugin will need to manually specify paths to any custom Steam installations*

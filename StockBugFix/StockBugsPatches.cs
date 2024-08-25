@@ -470,6 +470,58 @@ namespace PeterHan.StockBugFix {
 	}
 
 	/// <summary>
+	/// Applied to EnergyGenerator to use the correct building output temperature.
+	/// </summary>
+	[HarmonyPatch(typeof(EnergyGenerator), "Emit")]
+	public static class EnergyGenerator_Emit_Patch {
+		/// <summary>
+		/// Allow this patch to be turned off in the config.
+		/// </summary>
+		internal static bool Prepare() {
+			return StockBugFixOptions.Instance.MinOutputTemperature;
+		}
+
+		/// <summary>
+		/// Transpiles Emit to add a call to Mathf.Max on each attempt to access the building
+		/// temperature with the output minimum temperature.
+		/// </summary>
+		internal static TranspiledMethod Transpiler(TranspiledMethod method,
+				ILGenerator generator) {
+			var targetMethod = typeof(PrimaryElement).GetPropertySafe<float>(nameof(
+				PrimaryElement.Temperature), false)?.GetGetMethod();
+			var maxMethod = typeof(Mathf).GetMethodSafe(nameof(Mathf.Max), true, typeof(float),
+				typeof(float));
+			var emitOffset = typeof(EnergyGenerator.OutputItem).GetFieldSafe(nameof(
+				EnergyGenerator.OutputItem.emitOffset), false);
+			var minTempField = typeof(EnergyGenerator.OutputItem).GetFieldSafe(
+				nameof(EnergyGenerator.OutputItem.minTemperature), false);
+			if (maxMethod != null && targetMethod != null) {
+				var local = generator.DeclareLocal(typeof(float));
+				bool emitCase = false;
+				// Store the min temperature into local
+				yield return new CodeInstruction(OpCodes.Ldarg_1);
+				yield return new CodeInstruction(OpCodes.Ldfld, minTempField);
+				yield return new CodeInstruction(OpCodes.Stloc_S, local.LocalIndex);
+				foreach (var instr in method) {
+					yield return instr;
+					if (!emitCase && instr.opcode == OpCodes.Callvirt && instr.operand is
+							MethodBase getter && getter == targetMethod) {
+						// Patch all cases until the emit offset is used
+						yield return new CodeInstruction(OpCodes.Ldloc_S, local.LocalIndex);
+						yield return new CodeInstruction(OpCodes.Call, maxMethod);
+					}
+					if (instr.operand is FieldInfo info && info == emitOffset)
+						emitCase = true;
+				}
+			} else {
+				PUtil.LogWarning("Target PrimaryElement method not found.");
+				foreach (var instr in method)
+					yield return instr;
+			}
+		}
+	}
+
+	/// <summary>
 	/// Applied to ExobaseHeadquartersConfig to ban them from being built in rockets. They
 	/// already cannot be built there in the base game, but this greatly improves the
 	/// diagnostic message.

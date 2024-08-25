@@ -1,0 +1,1 @@
+The libraries in this folder are automatically generated Reference Assemblies. They do not contain the actual game code, only stubs of it with the implementations removed. This usage has been allowed by Klei for the game DLLs; other dependency DLLs are used under their license.

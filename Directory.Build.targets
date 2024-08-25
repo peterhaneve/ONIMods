@@ -18,7 +18,8 @@
     $(GameFolderActive)/UnityEngine.InputLegacyModule.dll $(GameFolderActive)/Unity.TextMeshPro.dll ^
     $(GameFolderActive)/UnityEngine.TextRenderingModule.dll $(GameFolderActive)/UnityEngine.UI.dll ^
     $(GameFolderActive)/UnityEngine.UIModule.dll $(GameFolderActive)/UnityEngine.UnityWebRequestModule.dll ^
-    $(GameFolderActive)/Ionic.Zip.dll $(GameFolderActive)/Newtonsoft.Json.dll $(GameFolderActive)/com.rlabrecque.steamworks.net.dll" />
+    $(GameFolderActive)/Ionic.Zip.dll $(GameFolderActive)/Newtonsoft.Json.dll $(GameFolderActive)/com.rlabrecque.steamworks.net.dll"
+    IgnoreExitCode="true"/>
   </Target>
 
   <Target Name="PLibTranslationEmbeddedResources" BeforeTargets="ResolveReferences" Condition=" '$(AssemblyName)' == 'PLibCore' ">
@@ -68,6 +69,7 @@ staticID: PeterHan.$(AssemblyName)
       <Internalize>true</Internalize>
     </PropertyGroup>
     <ItemGroup Condition=" '$(UsesPLib)' != 'false' Or '$(AssemblyName)' == 'PLib' ">
+      <InputAssemblies Include="$(TargetPath)" />
       <InputAssemblies Include="$(TargetDir)PLib*.dll" />
     </ItemGroup>
     <ItemGroup Condition=" '$(UsesPLib)' == 'false' ">

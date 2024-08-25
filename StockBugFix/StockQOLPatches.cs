@@ -60,25 +60,6 @@ namespace PeterHan.StockBugFix {
 	}
 
 	/// <summary>
-	/// Applied to IceMachineConfig to give it a sensible overheat temperature.
-	/// </summary>
-	[HarmonyPatch(typeof(IceMachineConfig), "CreateBuildingDef")]
-	public static class IceMachineConfig_CreateBuildingDef_Patch {
-		internal static bool Prepare() {
-			return StockBugFixOptions.Instance.FixOverheat;
-		}
-
-		/// <summary>
-		/// Applied after CreateBuildingDef runs.
-		/// </summary>
-		internal static void Postfix(BuildingDef __result) {
-			// Overheat at 125 C
-			__result.Overheatable = true;
-			__result.OverheatTemperature = TUNING.BUILDINGS.OVERHEAT_TEMPERATURES.HIGH_2;
-		}
-	}
-
-	/// <summary>
 	/// Applied to KilnConfig to give it a sensible overheat temperature.
 	/// </summary>
 	[HarmonyPatch(typeof(KilnConfig), "CreateBuildingDef")]

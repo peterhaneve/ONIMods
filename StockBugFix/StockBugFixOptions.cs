@@ -59,6 +59,13 @@ namespace PeterHan.StockBugFix {
 		public bool FixTraits { get; set; }
 		
 		/// <summary>
+		/// If true, fixes a bug where generator minimum output temperatures are ignored.
+		/// </summary>
+		[Option("Minimum Output Temperatures", "Corrects the minimum output exhaust temperatures of many generators.")]
+		[JsonProperty]
+		public bool MinOutputTemperature { get; set; }
+
+		/// <summary>
 		/// If true, locks out the Mods button until the race condition which reinstalls all
 		/// mods clears out, or until the timeout passes.
 		/// </summary>
@@ -75,17 +82,18 @@ namespace PeterHan.StockBugFix {
 
 		public StockBugFixOptions() {
 			AllowTepidizerPulsing = false;
-			DelayModsMenu = false;
+			DelayModsMenu = true;
 			FixMultipleAttributes = true;
 			FixOverheat = true;
 			FixTraits = true;
+			MinOutputTemperature = false;
 			StoreFoodChoreType = StoreFoodCategory.Store;
 		}
 
 		public override string ToString() {
-			return "StockBugFixOptions[allowTepidizer={1},fixOverheat={0},foodChoreType={2},fixAttributes={3},fixTraits={4},delayModsMenu={5}]".F(
+			return "StockBugFixOptions[allowTepidizer={1},fixOverheat={0},foodChoreType={2},fixAttributes={3},fixTraits={4},delayModsMenu={5},minOutput={6}]".F(
 				FixOverheat, AllowTepidizerPulsing, StoreFoodChoreType, FixMultipleAttributes,
-				FixTraits, DelayModsMenu);
+				FixTraits, DelayModsMenu, MinOutputTemperature);
 		}
 	}
 
