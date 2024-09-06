@@ -1,5 +1,5 @@
 biomeNoise: noise/subworldFrozen
-temperatureRange: 12
+temperatureRange: 25
 minChildCount: 1
 density:
   min: 70

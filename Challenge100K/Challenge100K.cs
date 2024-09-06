@@ -37,7 +37,7 @@ namespace PeterHan.Challenge100K {
 		/// <summary>
 		/// The enum value used for 100K subworlds.
 		/// </summary>
-		public const Temperature.Range ONE_HUNDRED_K = (Temperature.Range)12;
+		public const Temperature.Range ONE_HUNDRED_K = (Temperature.Range)25;
 
 		/// <summary>
 		/// The sprite to load for the asteroid selection.
@@ -52,7 +52,7 @@ namespace PeterHan.Challenge100K {
 		/// <summary>
 		/// The "to 11" cold temperature for frigid biomes.
 		/// 
-		/// Changed to 12 to avoid a clash with I Love Slicksters.
+		/// Changed to 25 to avoid a clash with I Love Slicksters.
 		/// </summary>
 		private static Temperature to11 = null;
 

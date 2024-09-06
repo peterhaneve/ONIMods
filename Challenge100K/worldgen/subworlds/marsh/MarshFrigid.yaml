@@ -1,5 +1,5 @@
 biomeNoise: noise/subworldHotMarsh
-temperatureRange: 12
+temperatureRange: 25
 density:
   min: 20
   max: 25

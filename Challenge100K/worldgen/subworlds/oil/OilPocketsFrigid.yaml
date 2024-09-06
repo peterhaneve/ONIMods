@@ -1,5 +1,5 @@
 biomeNoise: noise/OilPockets
-temperatureRange: 12
+temperatureRange: 25
 minChildCount: 2
 density:
   min: 35
