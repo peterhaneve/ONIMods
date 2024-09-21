@@ -1,0 +1,126 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.0\n"
+"Last-Translator: edubistkrank\n"
+"Language: es_ES\n"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.BUILDINGS.PREFABS.FILTEREDGASPUMP.DESC
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.BUILDINGS.PREFABS.FILTEREDGASPUMP.DESC"
+msgid ""
+"Rumors hold that hidden behind the parts from discarded Carbon Skimmers used "
+"in this pump is a demon with a pair of chopsticks, picking gas molecules "
+"from the air forever and ever."
+msgstr ""
+"Se rumorea que escondido detrás de las piezas de las Espumaderas de Carbón desechadas "
+"que se utilizan en esta bomba hay un demonio con un par de palillos, "
+"recogiendo moléculas de gas del aire para siempre jamás."
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.BUILDINGS.PREFABS.FILTEREDGASPUMP.EFFECT
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.BUILDINGS.PREFABS.FILTEREDGASPUMP.EFFECT"
+msgid ""
+"Draws in only the specified <link=\"ELEMENTSGAS\">Gas</link> and runs it "
+"through <link=\"GASPIPING\">Pipes</link>.\n"
+"\n"
+"Must be immersed in <link=\"ELEMENTSGAS\">Gas</link>."
+msgstr ""
+"Extrae únicamente un <link=\"ELEMENTSGAS\">Gas</link> específico del aire "
+"y lo canaliza a través de <link=\"GASPIPING\">Gaseoductos</link>.\n"
+"\n"
+"Debe estar rodeado de <link=\"ELEMENTSGAS\">Gas</link>."
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.BUILDINGS.PREFABS.FILTEREDGASPUMP.NAME
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.BUILDINGS.PREFABS.FILTEREDGASPUMP.NAME"
+msgid "<link=\"FILTEREDGASPUMP\">Filtered Gas Pump</link>"
+msgstr "<link=\"FILTEREDGASPUMP\">Bomba de Gas Inteligente</link>"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.BUILDINGS.PREFABS.FILTEREDLIQUIDPUMP.DESC
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.BUILDINGS.PREFABS.FILTEREDLIQUIDPUMP.DESC"
+msgid ""
+"Scarred by nightmares of mixed liquid pools, an obsessive colony AI "
+"commissioned this pump with an attached Element Sensor in an attempt to "
+"purge this heresy forever."
+msgstr ""
+"Asustada por las pesadillas de charcos con líquidos mezclados, una IA obsesiva "
+"de la colonia encargó esta bomba con un Sensor de Elementos integrado "
+"en un intento de deshacerse de esta herejía para siempre."
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.BUILDINGS.PREFABS.FILTEREDLIQUIDPUMP.EFFECT
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.BUILDINGS.PREFABS.FILTEREDLIQUIDPUMP.EFFECT"
+msgid ""
+"Draws in only the specified <link=\"ELEMENTSLIQUID\">Liquid</link> and runs "
+"it through <link=\"LIQUIDPIPING\">Pipes</link>.\n"
+"\n"
+"Must be submerged in <link=\"ELEMENTSLIQUID\">Liquid</link>."
+msgstr ""
+"Extrae únicamente un <link=\"ELEMENTSLIQUID\">Líquido</link> específico"
+"y lo canaliza a través de <link=\"LIQUIDPIPING\">Cañerías</link>.\n"
+"\n"
+"Debe estar sumergido en <link=\"ELEMENTSLIQUID\">Líquido</link>."
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.BUILDINGS.PREFABS.FILTEREDLIQUIDPUMP.NAME
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.BUILDINGS.PREFABS.FILTEREDLIQUIDPUMP.NAME"
+msgid "<link=\"FILTEREDLIQUIDPUMP\">Filtered Liquid Pump</link>"
+msgstr "<link=\"FILTEREDLIQUIDPUMP\">Bomba de Líquidos Inteligente</link>"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.NOGASTOPUMP_DESC
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.NOGASTOPUMP_DESC"
+msgid ""
+"This pump must be immersed in the proper <style=\"KKeyword\">Gas</style> to "
+"work"
+msgstr "Debe estar rodeada del <style=\"KKeyword\">Gas</style> "
+"específico para funcionar"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.NOGASTOPUMP_NAME
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.NOGASTOPUMP_NAME"
+msgid "No Configured Gas to Pump"
+msgstr "Sin filtro designado"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.NOLIQUIDTOPUMP_DESC
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.NOLIQUIDTOPUMP_DESC"
+msgid ""
+"This pump must be immersed in the proper <style=\"KKeyword\">Liquid</style> "
+"to work"
+msgstr "Debe estar sumergido en el<style=\"KKeyword\">Líquido</style> "
+"específico para funcionar"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.NOLIQUIDTOPUMP_NAME
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.NOLIQUIDTOPUMP_NAME"
+msgid "No Configured Liquid to Pump"
+msgstr "Sin filtro designado"
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.BUILDINGS.PREFABS.VACUUMPUMP.DESC
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.BUILDINGS.PREFABS.VACUUMPUMP.DESC"
+msgid ""
+"After watching a Gas Pump work all night to lower the pressure in a room "
+"from 5 mg to 4 mg, Liam decided to invent this Vacuum Pump instead of "
+"wasting his time on the Manual Generator all day."
+msgstr ""
+"Después de ver cómo una Bomba de Gas trabajaba toda la noche para bajar la presión "
+"de una habitación de 5 mg a 4 mg, Liam decidió inventar esta Bomba de Vacío "
+"en lugar de perder el tiempo todo el día con el Generador Manual."
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.BUILDINGS.PREFABS.VACUUMPUMP.EFFECT
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.BUILDINGS.PREFABS.VACUUMPUMP.EFFECT"
+msgid ""
+"Draws in low-pressure <link=\"ELEMENTSGAS\">Gas</link> and runs it through "
+"<link=\"GASPIPING\">Pipes</link>.\n"
+"\n"
+"Must be immersed in <link=\"ELEMENTSGAS\">Gas</link>."
+msgstr ""
+"Aspira <link=\"ELEMENTSGAS\">Gas</link> a baja presión y lo canaliza "
+"a través de <link=\"GASPIPING\">Gaseoductos</link>.\n"
+"\n"
+"Debe estar rodeado de <link=\"ELEMENTSGAS\">Gas</link>."
+
+#. PeterHan.SmartPumps.SmartPumpsStrings.BUILDINGS.PREFABS.VACUUMPUMP.NAME
+msgctxt "PeterHan.SmartPumps.SmartPumpsStrings.BUILDINGS.PREFABS.VACUUMPUMP.NAME"
+msgid "<link=\"VACUUMPUMP\">Vacuum Pump</link>"
+msgstr "<link=\"VACUUMPUMP\">Bomba de Vacío</link>"
