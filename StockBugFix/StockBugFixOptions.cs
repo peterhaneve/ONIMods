@@ -52,6 +52,13 @@ namespace PeterHan.StockBugFix {
 		public bool FixOverheat { get; set; }
 		
 		/// <summary>
+		/// If true, plant irrigation patches will be applied.
+		/// </summary>
+		[Option("Fix Plants", "Prevent consumption of fertilizer and irrigation by plants that cannot grow.")]
+		[JsonProperty]
+		public bool FixPlants { get; set; }
+
+		/// <summary>
 		/// If true, trait conflict patches will be applied.
 		/// </summary>
 		[Option("Fix Trait Conflicts", "Prevents nonsensical combinations of traits and interests that contradict each other from appearing.")]
@@ -85,6 +92,7 @@ namespace PeterHan.StockBugFix {
 			DelayModsMenu = true;
 			FixMultipleAttributes = true;
 			FixOverheat = true;
+			FixPlants = true;
 			FixTraits = true;
 			MinOutputTemperature = false;
 			StoreFoodChoreType = StoreFoodCategory.Store;

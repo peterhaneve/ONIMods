@@ -229,7 +229,8 @@ namespace PeterHan.StockBugFix {
 			DecorProviderRefreshFix.ApplyPatch(harmony);
 			FixMassStringsReadOnly(harmony);
 			if (PPatchTools.GetTypeSafe("BetterPlantTending.TendedPlant") == null &&
-					!PRegistry.GetData<bool>(FIX_IRRIGATION)) {
+					!PRegistry.GetData<bool>(FIX_IRRIGATION) && StockBugFixOptions.Instance.
+					FixPlants) {
 				PlantIrrigationFixPatches.Apply(harmony);
 				PRegistry.PutData(FIX_IRRIGATION, true);
 			}

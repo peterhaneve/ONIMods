@@ -18,6 +18,8 @@
 
 using HarmonyLib;
 using System.Collections.Generic;
+using System.Reflection;
+using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.StockBugFix {
@@ -201,6 +203,92 @@ namespace PeterHan.StockBugFix {
 			}
 			__result = result;
 			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to multiple types to add a Disease Source icon to Buddy Buds, Bristle
+	/// Blossoms and Bammoths.
+	/// </summary>
+	[HarmonyPatch]
+	public static class PollenDiseaseSources_Patch {
+		internal static IEnumerable<MethodBase> TargetMethods() {
+			const string METHOD_NAME = nameof(IEntityConfig.CreatePrefab);
+			var bammothType = PPatchTools.GetTypeSafe("IceBellyConfig");
+			yield return typeof(BulbPlantConfig).GetMethodSafe(METHOD_NAME, false);
+			yield return typeof(PrickleFlowerConfig).GetMethodSafe(METHOD_NAME, false);
+			if (bammothType != null)
+				yield return bammothType.GetMethodSafe(METHOD_NAME, false);
+		}
+
+		/// <summary>
+		/// Applied after CreatePrefab runs.
+		/// </summary>
+		internal static void Postfix(GameObject __result) {
+			__result.AddOrGet<DiseaseSourceVisualizer>().alwaysShowDisease = "PollenGerms";
+		}
+	}
+
+	/// <summary>
+	/// Applied to BeeConfig to add a Disease Source icon to Beetas.
+	/// </summary>
+	[HarmonyPatch(typeof(BeeConfig), nameof(BeeConfig.CreatePrefab))]
+	public static class BeeConfig_CreatePrefab_Patch {
+		internal static bool Prepare() {
+			return DlcManager.FeatureRadiationEnabled();
+		}
+
+		/// <summary>
+		/// Applied after CreatePrefab runs.
+		/// </summary>
+		internal static void Postfix(GameObject __result) {
+			__result.AddOrGet<DiseaseSourceVisualizer>().alwaysShowDisease =
+				"RadiationSickness";
+		}
+	}
+
+	/// <summary>
+	/// Applied to EvilFlowerConfig to add a Disease Source icon to Sporechids.
+	/// </summary>
+	[HarmonyPatch(typeof(EvilFlowerConfig), nameof(EvilFlowerConfig.CreatePrefab))]
+	public static class EvilFlowerConfig_CreatePrefab_Patch {
+		/// <summary>
+		/// Applied after CreatePrefab runs.
+		/// </summary>
+		internal static void Postfix(GameObject __result) {
+			__result.AddOrGet<DiseaseSourceVisualizer>().alwaysShowDisease = "ZombieSpores";
+		}
+	}
+	
+	/// <summary>
+	/// Applied to multiple types to add a Disease Source icon to the Radbolt Engine,
+	/// Radbolt Generator, Manual Radbolt Generator, Radiation Lamp and Research Reactor.
+	/// </summary>
+	[HarmonyPatch]
+	public static class RadiationBuildingDiseaseSources_Patch {
+		internal static bool Prepare() {
+			return DlcManager.FeatureRadiationEnabled();
+		}
+
+		internal static IEnumerable<MethodBase> TargetMethods() {
+			const string METHOD_NAME = nameof(IBuildingConfig.CreateBuildingDef);
+			yield return typeof(HEPEngineConfig).GetMethodSafe(METHOD_NAME, false);
+			yield return typeof(HighEnergyParticleSpawnerConfig).GetMethodSafe(METHOD_NAME,
+				false);
+			yield return typeof(ManualHighEnergyParticleSpawnerConfig).GetMethodSafe(
+				METHOD_NAME, false);
+			yield return typeof(NuclearReactorConfig).GetMethodSafe(METHOD_NAME, false);
+			yield return typeof(RadiationLightConfig).GetMethodSafe(METHOD_NAME, false);
+		}
+
+		/// <summary>
+		/// Applied after CreateBuildingDef runs.
+		/// </summary>
+		internal static void Postfix(BuildingDef __result) {
+			__result.DiseaseCellVisName = "RadiationSickness";
+			// The disease cell vis is hardcoded to use the pipe output cell. None of these
+			// buildings have a piped output yet, so this is fine to set to the origin.
+			__result.UtilityOutputOffset = CellOffset.none;
 		}
 	}
 }
