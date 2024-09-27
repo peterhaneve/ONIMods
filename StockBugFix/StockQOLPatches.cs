@@ -20,6 +20,7 @@ using HarmonyLib;
 using System.Collections.Generic;
 using System.Reflection;
 using PeterHan.PLib.Core;
+using PeterHan.PLib.PatchManager;
 using UnityEngine;
 
 namespace PeterHan.StockBugFix {
@@ -210,21 +211,27 @@ namespace PeterHan.StockBugFix {
 	/// Applied to multiple types to add a Disease Source icon to Buddy Buds, Bristle
 	/// Blossoms and Bammoths.
 	/// </summary>
-	[HarmonyPatch]
-	public static class PollenDiseaseSources_Patch {
-		internal static IEnumerable<MethodBase> TargetMethods() {
+	internal static class DiseaseSourcesPatch {
+		/// <summary>
+		/// Since referencing the Bammoth causes localization to break through transitive
+		/// string references, apply the patch manually after the Db is loaded.
+		/// </summary>
+		[PLibMethod(RunAt.AfterDbInit)]
+		internal static void ApplyPatch(Harmony harmony) {
 			const string METHOD_NAME = nameof(IEntityConfig.CreatePrefab);
 			var bammothType = PPatchTools.GetTypeSafe("IceBellyConfig");
-			yield return typeof(BulbPlantConfig).GetMethodSafe(METHOD_NAME, false);
-			yield return typeof(PrickleFlowerConfig).GetMethodSafe(METHOD_NAME, false);
+			var patchMethod = new HarmonyMethod(typeof(DiseaseSourcesPatch),
+				nameof(PollenGermsPostfix));
+			harmony.Patch(typeof(BulbPlantConfig), METHOD_NAME, postfix: patchMethod);
+			harmony.Patch(typeof(PrickleFlowerConfig), METHOD_NAME, postfix: patchMethod);
 			if (bammothType != null)
-				yield return bammothType.GetMethodSafe(METHOD_NAME, false);
+				harmony.Patch(bammothType, METHOD_NAME, postfix: patchMethod);
 		}
 
 		/// <summary>
 		/// Applied after CreatePrefab runs.
 		/// </summary>
-		internal static void Postfix(GameObject __result) {
+		internal static void PollenGermsPostfix(GameObject __result) {
 			__result.AddOrGet<DiseaseSourceVisualizer>().alwaysShowDisease = "PollenGerms";
 		}
 	}

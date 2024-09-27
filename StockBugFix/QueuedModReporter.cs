@@ -31,6 +31,16 @@ namespace PeterHan.StockBugFix {
 		private static readonly IDetouredField<MainMenu, KButton> RESUME_GAME = PDetours.
 			DetourFieldLazy<MainMenu, KButton>(nameof(MainMenu.Button_ResumeGame));
 
+		public static void Init() {
+			firstLoad = true;
+		}
+
+		/// <summary>
+		/// Only lock the button out on the first main menu load; loading and quitting a game
+		/// is so slow that it will certainly be loaded by then.
+		/// </summary>
+		private static volatile bool firstLoad;
+
 		/// <summary>
 		/// Is the mods button already enabled?
 		/// </summary>
@@ -74,8 +84,9 @@ namespace PeterHan.StockBugFix {
 		protected override void OnSpawn() {
 			base.OnSpawn();
 			startupTime = 0.0f;
-			if (StockBugFixOptions.Instance.DelayModsMenu && TryGetComponent(out MainMenu mm))
-			{
+			if (firstLoad && StockBugFixOptions.Instance.DelayModsMenu && TryGetComponent(
+					out MainMenu mm)) {
+				firstLoad = false;
 				try {
 					Transform buttonParent;
 					KButton resumeButton;

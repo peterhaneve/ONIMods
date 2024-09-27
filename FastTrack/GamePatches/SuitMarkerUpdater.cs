@@ -33,12 +33,14 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="equipment">The assignables containing the suit to drop.</param>
 		private static void DropSuit(Assignables equipment) {
 			var assignable = equipment.GetAssignable(Db.Get().AssignableSlots.Suit);
-			var notification = new Notification(STRINGS.MISC.NOTIFICATIONS.SUIT_DROPPED.NAME,
-				NotificationType.BadMinor, (_, data) => STRINGS. MISC.NOTIFICATIONS.
-				SUIT_DROPPED.TOOLTIP);
-			assignable.Unassign();
-			if (assignable.TryGetComponent(out Notifier notifier))
-				notifier.Add(notification);
+			if (assignable != null) {
+				var notification = new Notification(STRINGS.MISC.NOTIFICATIONS.SUIT_DROPPED.NAME,
+					NotificationType.BadMinor, (_, data) => STRINGS. MISC.NOTIFICATIONS.
+					SUIT_DROPPED.TOOLTIP);
+				assignable.Unassign();
+				if (assignable.TryGetComponent(out Notifier notifier))
+					notifier.Add(notification);
+			}
 		}
 		
 		/// <summary>
@@ -263,7 +265,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	
 	/// <summary>
 	/// Applied to SuitMarker.EquipSuitReactable to make the Run method more efficient and
-	/// use the SuitMarkerUpdater..
+	/// use the SuitMarkerUpdater.
 	/// </summary>
 	[HarmonyPatch(typeof(SuitMarker.EquipSuitReactable), nameof(SuitMarker.
 		EquipSuitReactable.Run))]
@@ -316,7 +318,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	
 	/// <summary>
 	/// Applied to SuitMarker.UnequipSuitReactable to make the Run method more efficient and
-	/// use the SuitMarkerUpdater..
+	/// use the SuitMarkerUpdater.
 	/// </summary>
 	[HarmonyPatch(typeof(SuitMarker.UnequipSuitReactable), nameof(SuitMarker.
 		UnequipSuitReactable.Run))]

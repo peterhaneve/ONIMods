@@ -108,7 +108,7 @@ namespace PeterHan.PLib.PatchManager {
 						Method.Invoke(null, new object[] { instance, requiredType });
 				} else
 					PUtil.LogWarning("Invalid signature for PLibMethod - must have (), " +
-						"(HarmonyInstance), or (HarmonyInstance, Type)");
+						"(Harmony), or (Harmony, Type)");
 			}
 		}
 	}
