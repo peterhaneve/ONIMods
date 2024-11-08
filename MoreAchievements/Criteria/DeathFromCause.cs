@@ -41,7 +41,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 
 		public DeathFromCause(string cause) {
 			if (string.IsNullOrEmpty(cause))
-				throw new ArgumentNullException("cause");
+				throw new ArgumentNullException(nameof(cause));
 			this.cause = cause;
 			triggered = null;
 		}

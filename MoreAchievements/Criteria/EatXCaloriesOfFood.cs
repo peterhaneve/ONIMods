@@ -36,7 +36,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 
 		public EatXCaloriesOfFood(float numKCal, string foodTag) {
 			if (string.IsNullOrEmpty(foodTag))
-				throw new ArgumentNullException("foodTag");
+				throw new ArgumentNullException(nameof(foodTag));
 			// kcal to cal
 			numCalories = Math.Max(1.0f, numKCal) * 1000.0f;
 			this.foodTag = foodTag;

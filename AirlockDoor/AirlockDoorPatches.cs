@@ -24,6 +24,7 @@ using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using System.Collections.Generic;
 using KMod;
+using PeterHan.PLib.PatchManager;
 using UnityEngine;
 
 namespace PeterHan.AirlockDoor {
@@ -35,17 +36,14 @@ namespace PeterHan.AirlockDoor {
 		/// The layer to check for airlock doors.
 		/// </summary>
 		private static int BUILDING_LAYER;
-
+		
 		/// <summary>
-		/// Checks to see if a grid cell is solid and not an Airlock Door.
+		/// Applied to ScoutRoverConfig and/or BaseRoverConfig to ensure they properly use
+		/// airlock doors.
 		/// </summary>
-		/// <param name="cell">The grid cell to check.</param>
-		/// <returns>true if the cell is solid and not inside an Airlock Door, or false
-		/// otherwise.</returns>
-		private static bool SolidAndNotAirlock(ref Grid.BuildFlagsSolidIndexer _, int cell) {
-			GameObject go;
-			return Grid.Solid[cell] && (!Grid.IsValidCell(cell) || (go = Grid.Objects[cell,
-				BUILDING_LAYER]) == null || !go.TryGetComponent(out AirlockDoor _));
+		private static void AddTransitionLayer(GameObject inst) {
+			if (inst.TryGetComponent(out Navigator nav))
+				nav.transitionDriver.overrideLayers.Add(new AirlockDoorTransitionLayer(nav));
 		}
 
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
@@ -61,18 +59,32 @@ namespace PeterHan.AirlockDoor {
 			BUILDING_LAYER = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Building),
 				ObjectLayer.Building);
 			PUtil.InitLibrary();
+			new PPatchManager(harmony).RegisterPatchClass(typeof(AirlockDoorPatches));
 			new PBuildingManager().Register(AirlockDoorConfig.CreateBuilding());
 			new PLocalization().Register();
 			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>
-		/// Applied to ScoutRoverConfig and/or BaseRoverConfig to ensure they properly use
-		/// airlock doors.
+		/// Applied to MinionConfig to add the navigator transition for airlocks.
 		/// </summary>
-		private static void AddTransitionLayer(GameObject inst) {
-			if (inst.TryGetComponent(out Navigator nav))
+		[PLibPatch(RunAt.AfterDbInit, nameof(MinionConfig.OnSpawn),
+			RequireType = nameof(MinionConfig), PatchType = HarmonyPatchType.Postfix)]
+		internal static void MinionSpawn_Postfix(GameObject go) {
+			if (go.TryGetComponent(out Navigator nav))
 				nav.transitionDriver.overrideLayers.Add(new AirlockDoorTransitionLayer(nav));
+		}
+		
+		/// <summary>
+		/// Checks to see if a grid cell is solid and not an Airlock Door.
+		/// </summary>
+		/// <param name="cell">The grid cell to check.</param>
+		/// <returns>true if the cell is solid and not inside an Airlock Door, or false
+		/// otherwise.</returns>
+		private static bool SolidAndNotAirlock(ref Grid.BuildFlagsSolidIndexer _, int cell) {
+			GameObject go;
+			return Grid.Solid[cell] && (!Grid.IsValidCell(cell) || (go = Grid.Objects[cell,
+				BUILDING_LAYER]) == null || !go.TryGetComponent(out AirlockDoor _));
 		}
 
 		/// <summary>
@@ -131,19 +143,6 @@ namespace PeterHan.AirlockDoor {
 					typeof(int))?.GetGetMethod(), typeof(AirlockDoorPatches).GetMethodSafe(
 					nameof(SolidAndNotAirlock), true, typeof(Grid.BuildFlagsSolidIndexer).
 					MakeByRefType(), typeof(int)));
-			}
-		}
-
-		/// <summary>
-		/// Applied to MinionConfig to add the navigator transition for airlocks.
-		/// </summary>
-		[HarmonyPatch(typeof(MinionConfig), nameof(MinionConfig.OnSpawn))]
-		public static class MinionConfig_OnSpawn_Patch {
-			/// <summary>
-			/// Applied after OnSpawn runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				AddTransitionLayer(go);
 			}
 		}
 	}

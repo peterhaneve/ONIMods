@@ -202,7 +202,8 @@ namespace PeterHan.PLib.Core {
 		/// Adds an object to the PriorityDictionary&lt;<typeparamref name="K"/>,
 		/// <typeparamref name="V"/>&gt;.
 		/// </summary>
-		/// <param name="item">The object to add to this PriorityDictionary.</param>
+		/// <param name="key">The key to add to this PriorityDictionary.</param>
+		/// <param name="value">The value to add to this PriorityDictionary.</param>
 		/// <exception cref="ArgumentNullException">If item is null.</exception>
 		public void Enqueue(K key, V value) {
 			Enqueue(new PriorityQueuePair(key, value));

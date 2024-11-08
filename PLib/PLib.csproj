@@ -15,7 +15,7 @@
     <Description>PLib - Peter Han's library used for creating mods for Oxygen Not Included, a simulation game by Klei Entertainment.
     
 Contains methods aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
-    <PackageReleaseNotes>Add compatibility methods to ease porting to U52-622509.</PackageReleaseNotes>
+    <PackageReleaseNotes>Update side screen handling code for U53-640445.</PackageReleaseNotes>
     <RootNamespace>PeterHan.PLib</RootNamespace>
     <AssemblyVersion>$(PLibVersion)</AssemblyVersion>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  

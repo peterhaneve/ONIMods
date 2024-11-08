@@ -128,6 +128,18 @@ namespace PeterHan.AIImprovements {
 				!Grid.Solid[above] && !Grid.DupeImpassable[above] && !Grid.HasDoor[cell];
 		}
 
+		/// <summary>
+		/// Applied to MinionConfig to add the navigator transition for keeping track of
+		/// their location history. Big Brother is watching...
+		/// </summary>
+		[PLibPatch(RunAt.AfterDbInit, nameof(MinionConfig.OnSpawn),
+			RequireType = nameof(MinionConfig), PatchType = HarmonyPatchType.Postfix)]
+		internal static void MinionSpawn_Postfix(GameObject go) {
+			if (go.TryGetComponent(out Navigator nav))
+				nav.transitionDriver.overrideLayers.Add(new LocationHistoryTransitionLayer(
+					nav));
+		}
+
 		[PLibMethod(RunAt.AfterDbInit)]
 		internal static void OnDbInit() {
 			var db = Db.Get();
@@ -259,22 +271,6 @@ namespace PeterHan.AIImprovements {
 							}
 				}
 				return !moved;
-			}
-		}
-
-		/// <summary>
-		/// Applied to MinionConfig to add the navigator transition for keeping track of
-		/// their location history. Big Brother is watching...
-		/// </summary>
-		[HarmonyPatch(typeof(MinionConfig), "OnSpawn")]
-		public static class MinionConfig_OnSpawn_Patch {
-			/// <summary>
-			/// Applied after OnSpawn runs.
-			/// </summary>
-			internal static void Postfix(GameObject go) {
-				if (go.TryGetComponent(out Navigator nav))
-					nav.transitionDriver.overrideLayers.Add(new LocationHistoryTransitionLayer(
-						nav));
 			}
 		}
 	}

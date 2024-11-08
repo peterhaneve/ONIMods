@@ -206,6 +206,7 @@ namespace PeterHan.PLib.PatchManager {
 		/// Gets the specified instance constructor.
 		/// </summary>
 		/// <param name="targetType">The type to be constructed.</param>
+		/// <param name="argumentTypes">The types of the arguments for this constructor.</param>
 		/// <returns>The target constructor.</returns>
 		/// <exception cref="AmbiguousMatchException">If no parameter types were specified,
 		/// and multiple declared constructors exist.</exception>

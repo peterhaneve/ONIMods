@@ -22,8 +22,10 @@ using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using System.Collections.Generic;
+using PeterHan.PLib.PatchManager;
+using PeterHan.PLib.UI;
 using UnityEngine;
-
+using UnityEngine.UI;
 using FINISHTASK = PeterHan.FinishTasks.FinishTasksStrings.UI.SCHEDULEGROUPS.FINISHTASK;
 
 namespace PeterHan.FinishTasks {
@@ -97,6 +99,16 @@ namespace PeterHan.FinishTasks {
 			}
 			return start;
 		}
+		
+		/// <summary>
+		/// Applied to MinionConfig to add a task completion sensor to each Duplicant.
+		/// </summary>
+		[PLibPatch(RunAt.AfterDbInit, nameof(BaseMinionConfig.BaseMinion),
+			RequireType = nameof(BaseMinionConfig), PatchType = HarmonyPatchType.Postfix)]
+		internal static void MinionConfig_Postfix(GameObject __result) {
+			if (__result != null)
+				__result.AddOrGet<FinishChoreDetector>();
+		}
 
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
@@ -114,16 +126,17 @@ namespace PeterHan.FinishTasks {
 			PUtil.InitLibrary();
 			LocString.CreateLocStringKeys(typeof(FinishTasksStrings.DUPLICANTS));
 			LocString.CreateLocStringKeys(typeof(FinishTasksStrings.UI));
+			new PPatchManager(harmony).RegisterPatchClass(typeof(FinishTasksPatches));
 			new PLocalization().Register();
 			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
 
 		/// <summary>
-		/// Applied to Chore to add a precondition for not starting new work chores during
-		/// finish tasks blocks.
+		/// Applied to StandardChoreBase to add a precondition for not starting new work chores
+		/// during finish tasks blocks.
 		/// </summary>
-		[HarmonyPatch(typeof(Chore), nameof(Chore.AddPrecondition))]
-		public static class Chore_AddPrecondition_Patch {
+		[HarmonyPatch(typeof(StandardChoreBase), nameof(StandardChoreBase.AddPrecondition))]
+		public static class StandardChoreBase_AddPrecondition_Patch {
 			/// <summary>
 			/// Applied after AddPrecondition runs.
 			/// </summary>
@@ -158,20 +171,6 @@ namespace PeterHan.FinishTasks {
 		}
 
 		/// <summary>
-		/// Applied to MinionConfig to add a task completion sensor to each Duplicant.
-		/// </summary>
-		[HarmonyPatch(typeof(MinionConfig), nameof(MinionConfig.CreatePrefab))]
-		public static class MinionConfig_CreatePrefab_Patch {
-			/// <summary>
-			/// Applied after CreatePrefab runs.
-			/// </summary>
-			internal static void Postfix(GameObject __result) {
-				if (__result != null)
-					__result.AddOrGet<FinishChoreDetector>();
-			}
-		}
-
-		/// <summary>
 		/// Applied to ScheduleBlockTypes to create and add our dummy chore type.
 		/// </summary>
 		[HarmonyPatch(typeof(ScheduleBlockTypes), MethodType.Constructor, typeof(ResourceSet))]
@@ -181,7 +180,6 @@ namespace PeterHan.FinishTasks {
 			/// </summary>
 			internal static void Postfix(ScheduleBlockTypes __instance) {
 				var color = FinishColor != null ? FinishColor.activeColor : Color.green;
-				// The type and color are not used by the base game
 				FinishBlock = __instance.Add(new ScheduleBlockType(FINISHTASK.ID, __instance,
 					FINISHTASK.NAME, FINISHTASK.DESCRIPTION, color));
 				// Allow localization to update the string (this is running in Db.Initialize)
@@ -205,8 +203,8 @@ namespace PeterHan.FinishTasks {
 				else
 					// Default schedule does not contain this type
 					FinishTask = __instance.Add(FINISHTASK.ID, 0, FINISHTASK.NAME, FINISHTASK.
-						DESCRIPTION, FINISHTASK.NOTIFICATION_TOOLTIP,
-						new List<ScheduleBlockType> {
+						DESCRIPTION, FinishColor.inactiveColor,
+						FINISHTASK.NOTIFICATION_TOOLTIP, new List<ScheduleBlockType> {
 							Work, FinishBlock
 						});
 				IsScheduledTimeID = ChorePreconditions.instance.IsScheduledTime.id;
@@ -214,17 +212,30 @@ namespace PeterHan.FinishTasks {
 		}
 
 		/// <summary>
-		/// Applied to ScheduleScreen to add a color for our new block.
+		/// Applied to ScheduleScreenEntry to add a button for Finish Tasks.
 		/// </summary>
-		[HarmonyPatch(typeof(ScheduleScreen), "OnPrefabInit")]
-		public static class ScheduleScreen_OnPrefabInit_Patch {
+		[HarmonyPatch(typeof(ScheduleScreenEntry), nameof(ScheduleScreenEntry.Setup))]
+		public static class ScheduleScreenEntry_Setup_Patch {
 			/// <summary>
-			/// Applied after OnPrefabInit runs.
+			/// Applied after Setup runs.
 			/// </summary>
-			internal static void Postfix(Dictionary<string, ColorStyleSetting> ___paintStyles)
-			{
-				if (___paintStyles != null && FinishColor != null)
-					___paintStyles[FINISHTASK.ID] = FinishColor;
+			internal static void Postfix(ScheduleScreenEntry __instance) {
+				var bathtime = __instance.PaintButtonBathtime;
+				if (bathtime != null && FinishBlock != null) {
+					var button = Util.KInstantiateUI(bathtime, bathtime.GetParent()); 
+					if (button.TryGetComponent(out MultiToggle toggle)) {
+						// Set the color
+						ref var ads = ref toggle.states[0].additional_display_settings[0];
+						ads.color = FinishColor.inactiveColor;
+						ads.color_on_hover = FinishColor.hoverColor;
+						toggle.states[1].additional_display_settings[0].color = FinishColor.
+							inactiveColor;
+					}
+					button.name = FINISHTASK.ID;
+					__instance.ConfigPaintButton(button, FinishTask, Def.GetUISprite(
+						Assets.GetPrefab("PropClock")).first);
+					__instance.RefreshPaintButtons();
+				}
 			}
 		}
 	}

@@ -32,7 +32,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 
 		public HeatBuildingToXKelvin(float required) {
 			if (required.IsNaNOrInfinity())
-				throw new ArgumentOutOfRangeException("required");
+				throw new ArgumentOutOfRangeException(nameof(required));
 			this.required = Math.Max(0.0f, required);
 		}
 

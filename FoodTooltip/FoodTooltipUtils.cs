@@ -182,10 +182,9 @@ namespace PeterHan.FoodTooltip {
 		/// Shows food consumption and production stats for the current cycle, last cycle, and
 		/// last 5 cycle average.
 		/// </summary>
-		/// <param name="screen">The screen to add the stats.</param>
-		internal static void ShowFoodUseStats(MeterScreen screen) {
-			var tooltip = screen.RationsTooltip;
-			var style = screen.ToolTipStyle_Property;
+		/// <param name="tooltip">The tool tip that should be appended.</param>
+		/// <param name="style">The text style to use for display.</param>
+		internal static void ShowFoodUseStats(ToolTip tooltip, TextStyleSetting style) {
 			var reports = ReportManager.Instance;
 			if (tooltip != null && reports != null) {
 				GetCalorieDeltas(reports.TodaysReport, out float produced, out float consumed);

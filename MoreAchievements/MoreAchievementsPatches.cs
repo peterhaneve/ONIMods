@@ -221,7 +221,7 @@ namespace PeterHan.MoreAchievements {
 			/// <summary>
 			/// Applied after OnStartWork runs.
 			/// </summary>
-			internal static void Postfix(Clinic __instance, Worker worker) {
+			internal static void Postfix(Clinic __instance, KMonoBehaviour worker) {
 				var hp = Db.Get().Amounts.HitPoints.Lookup(worker);
 #if DEBUG
 				if (hp != null)

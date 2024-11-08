@@ -22,6 +22,8 @@ using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.PatchManager;
 using System.Collections.Generic;
+using System.Reflection;
+using PeterHan.PLib.Detours;
 using PeterHan.PLib.UI;
 using UnityEngine;
 
@@ -32,6 +34,10 @@ namespace PeterHan.WorkshopProfiles {
 	/// Patches which will be applied via annotations for Workshop Profiles.
 	/// </summary>
 	public sealed class WorkshopProfilesPatches : KMod.UserMod2 {
+		// TODO Remove when versions less than U52-640445 no longer need to be supported
+		private static readonly IDetouredField<ChoreConsumerState, KMonoBehaviour> WORKER =
+			PDetours.DetourFieldLazy<ChoreConsumerState, KMonoBehaviour>("worker");
+
 		/// <summary>
 		/// Building IDs that should not have workshop profiles.
 		/// </summary>
@@ -95,9 +101,10 @@ namespace PeterHan.WorkshopProfiles {
 		/// <returns>true if the Duplicant can use the building, or false otherwise.</returns>
 		private static bool IsAllowed(ref Chore.Precondition.Context context, object data) {
 			bool allow = true;
-			var worker = context.consumerState?.worker;
+			var state = context.consumerState;
 			KPrefabID prefabID;
-			if (data is WorkshopProfile profile && profile != null && worker != null &&
+			if (data is WorkshopProfile profile && profile != null && state != null &&
+					WORKER.Get(state) != null &&
 					(prefabID = context.consumerState.prefabid) != null)
 				allow = profile.IsAllowed(prefabID.InstanceID);
 			return allow;
@@ -140,8 +147,15 @@ namespace PeterHan.WorkshopProfiles {
 		/// <summary>
 		/// Applied to Chore to add workshop profile conditions to all Work chores.
 		/// </summary>
-		[HarmonyPatch(typeof(Chore), nameof(Chore.AddPrecondition))]
+		[HarmonyPatch]
 		public static class Chore_AddPrecondition_Patch {
+			internal static MethodBase TargetMethod() {
+				// TODO Remove when versions less than U52-622222 no longer need to be supported
+				var type = PPatchTools.GetTypeSafe(nameof(StandardChoreBase)) ?? typeof(Chore);
+				return type.GetMethodSafe(nameof(Chore.AddPrecondition), false, PPatchTools.
+					AnyArguments);
+			}
+
 			/// <summary>
 			/// Applied after AddPrecondition runs.
 			/// </summary>

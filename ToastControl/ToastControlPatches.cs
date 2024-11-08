@@ -95,7 +95,7 @@ namespace PeterHan.ToastControl {
 			"ElementDropperMonitor+Instance:DropElement",
 			"ElementEmitter:ForceEmit",
 			"FleeStates+<>c:<InitializeStates>b__8_2",
-			// TODO Remove when versions prior to U52-621068 no longer need to be supported
+			// TODO Remove when versions less than U52-621068 no longer need to be supported
 			"HarvestDesignatable:<OnRefreshUserMenu>b__34_0",
 			"HarvestDesignatable:<OnRefreshUserMenu>b__34_1",
 
@@ -258,7 +258,7 @@ namespace PeterHan.ToastControl {
 		/// Determines if popups should be hidden from pick ups.
 		/// </summary>
 		/// <param name="worker">The worker who completed the chore.</param>
-		private static bool ShouldHidePickupPopups(Worker worker) {
+		private static bool ShouldHidePickupPopups(KMonoBehaviour worker) {
 			var opts = ToastControlPopups.Options;
 			bool pickupDupe = opts.PickedUp;
 #pragma warning disable IDE0031 // Use null propagation
@@ -423,7 +423,8 @@ namespace PeterHan.ToastControl {
 					// Loads the first real Worker argument (arg 0 is this)
 					new CodeInstruction(OpCodes.Ldarg_1),
 					new CodeInstruction(OpCodes.Call, typeof(ToastControlPatches).
-						GetMethodSafe(nameof(ShouldHidePickupPopups), true, typeof(Worker)))
+						GetMethodSafe(nameof(ShouldHidePickupPopups), true,
+						typeof(KMonoBehaviour)))
 				});
 		}
 
@@ -441,7 +442,8 @@ namespace PeterHan.ToastControl {
 					// Loads the first real Worker argument (arg 0 is this)
 					new CodeInstruction(OpCodes.Ldarg_1),
 					new CodeInstruction(OpCodes.Call, typeof(ToastControlPatches).
-						GetMethodSafe(nameof(ShouldHidePickupPopups), true, typeof(Worker)))
+						GetMethodSafe(nameof(ShouldHidePickupPopups), true,
+						typeof(KMonoBehaviour)))
 				});
 		}
 

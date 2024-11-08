@@ -42,7 +42,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 
 		public TriggerEvent(string id) {
 			if (string.IsNullOrEmpty(id))
-				throw new ArgumentNullException("id");
+				throw new ArgumentNullException(nameof(id));
 			ID = id;
 			triggered = null;
 			UpdateDescription();

@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
 using HarmonyLib;
 using System.Collections.Generic;
 using System.Reflection;
@@ -206,6 +207,24 @@ namespace PeterHan.StockBugFix {
 			return false;
 		}
 	}
+
+#if false
+	/// <summary>
+	/// Applied to RotPile to suppress notifications for rot piles with the default name.
+	/// Prevents notification spam from Exuberant plants.
+	/// </summary>
+	[HarmonyPatch(typeof(RotPile), nameof(RotPile.TryCreateNotification))]
+	public static class RotPile_TryCreateNotification_Patch {
+		/// <summary>
+		/// Applied before TryCreateNotification runs.
+		/// </summary>
+		internal static bool Prefix(RotPile __instance) {
+			string name = __instance.smi.master.gameObject.GetProperName();
+			return !name.Equals(STRINGS.ITEMS.FOOD.ROTPILE.NAME, StringComparison.
+				CurrentCultureIgnoreCase);
+		}
+	}
+#endif
 
 	/// <summary>
 	/// Applied to multiple types to add a Disease Source icon to Buddy Buds, Bristle

@@ -34,7 +34,9 @@ namespace PeterHan.FoodTooltip {
 		/// </summary>
 		[PLibMethod(RunAt.OnEndGame)]
 		internal static void CleanupCache() {
+#if DEBUG
 			PUtil.LogDebug("Destroying FoodRecipeCache");
+#endif
 			FoodRecipeCache.DestroyInstance();
 		}
 
@@ -44,7 +46,9 @@ namespace PeterHan.FoodTooltip {
 		[PLibMethod(RunAt.OnStartGame)]
 		internal static void InitCache() {
 			FoodRecipeCache.CreateInstance();
+#if DEBUG
 			PUtil.LogDebug("Created FoodRecipeCache");
+#endif
 		}
 
 		public override void OnLoad(Harmony harmony) {
@@ -86,15 +90,16 @@ namespace PeterHan.FoodTooltip {
 		}
 
 		/// <summary>
-		/// Applied to MeterScreen to add food usage statistics to the upper left food icon.
+		/// Applied to MeterScreen_Rations to add food usage statistics to the upper left food icon.
 		/// </summary>
-		[HarmonyPatch(typeof(MeterScreen), "OnRationsTooltip")]
-		public static class MeterScreen_OnRationsTooltip_Patch {
+		[HarmonyPatch(typeof(MeterScreen_Rations), "OnTooltip")]
+		public static class MeterScreenRations_Refresh_Patch {
 			/// <summary>
-			/// Applied after OnRationsTooltip runs.
+			/// Applied after OnTooltip runs.
 			/// </summary>
-			internal static void Postfix(MeterScreen __instance) {
-				FoodTooltipUtils.ShowFoodUseStats(__instance);
+			internal static void Postfix(MeterScreen_ValueTrackerDisplayer __instance) {
+				FoodTooltipUtils.ShowFoodUseStats(__instance.Tooltip, __instance.
+					ToolTipStyle_Property);
 			}
 		}
 

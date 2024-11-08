@@ -223,6 +223,17 @@ namespace PeterHan.StockBugFix {
 				}
 			});
 		}
+		
+		/// <summary>
+		/// Applied to MinionConfig to make it possible to recover Duplicants from radiation
+		/// sickness.
+		/// </summary>
+		[PLibPatch(RunAt.AfterDbInit, nameof(MinionConfig.CreatePrefab),
+			RequireType = nameof(MinionConfig), PatchType = HarmonyPatchType.Postfix)]
+		internal static void MinionSpawn_Postfix(GameObject __result) {
+			if (DlcManager.FeatureRadiationEnabled())
+				__result.AddOrGet<RadiationRecoveryFix>();
+		}
 
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
 			const string FIX_IRRIGATION = "Bugs.PlantIrrigation";
@@ -452,7 +463,7 @@ namespace PeterHan.StockBugFix {
 		/// <summary>
 		/// Applied before InstantlyFinish runs.
 		/// </summary>
-		internal static bool Prefix(Diggable __instance, Worker worker, ref bool __result) {
+		internal static bool Prefix(Diggable __instance, ref bool __result) {
 			bool cont = true;
 			if (__instance != null) {
 				int cell = Grid.PosToCell(__instance);
@@ -460,9 +471,6 @@ namespace PeterHan.StockBugFix {
 				// Complete by removing the cell instantaneously
 				if (Grid.IsValidCell(cell) && (element = Grid.Element[cell]) != null &&
 						element.hardness > 254) {
-					if (worker != null)
-						// Give some experience
-						worker.Work(1.0f);
 					SimMessages.Dig(cell);
 					__result = true;
 					cont = false;
@@ -584,21 +592,6 @@ namespace PeterHan.StockBugFix {
 				}
 				cell += stride;
 			}
-		}
-	}
-
-	/// <summary>
-	/// Applied to MinionConfig to make it possible to recover Duplicants from radiation
-	/// sickness.
-	/// </summary>
-	[HarmonyPatch(typeof(MinionConfig), nameof(MinionConfig.CreatePrefab))]
-	public static class MinionConfig_CreatePrefab_Patch {
-		/// <summary>
-		/// Applied after CreatePrefab runs.
-		/// </summary>
-		internal static void Postfix(GameObject __result) {
-			if (DlcManager.FeatureRadiationEnabled())
-				__result.AddOrGet<RadiationRecoveryFix>();
 		}
 	}
 
@@ -907,31 +900,6 @@ namespace PeterHan.StockBugFix {
 				}
 			}
 			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to Worker to quash an exception caused by trying to start work on a destroyed
-	/// object.
-	/// </summary>
-	[HarmonyPatch(typeof(Worker), nameof(Worker.StartWork))]
-	public static class Worker_StartWork_Patch {
-		/// <summary>
-		/// Applied before StartWork runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(Worker.StartWorkInfo start_work_info) {
-			if (start_work_info == null) {
-				PUtil.LogWarning("Attempted to start work on empty workable");
-				return false;
-			}
-			if (start_work_info.workable is Workable target && target == null) {
-				// target cannot be ref null, because "is Workable target" would be false
-				PUtil.LogWarning("Attempted to start work on invalid workable of type: " +
-					target.GetType().Name);
-				return false;
-			}
-			return true;
 		}
 	}
 }

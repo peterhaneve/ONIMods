@@ -85,6 +85,9 @@ namespace PeterHan.DebugNotIncluded {
 #endif
 			harmony.PatchTranspile(typeof(SaveLoader), "OnSpawn", new HarmonyMethod(
 				typeof(DebugNotIncludedPatches), nameof(TranspileSaveLoader)));
+			harmony.Patch(typeof(MinionConfig), nameof(MinionConfig.CreatePrefab),
+				postfix: new HarmonyMethod(typeof(DebugNotIncludedPatches), nameof(
+				OnMinionSpawn)));
 		}
 
 		/// <summary>
@@ -141,6 +144,16 @@ namespace PeterHan.DebugNotIncluded {
 			} catch (Exception e) {
 				DebugLogger.BaseLogException(e, null);
 			}
+		}
+		
+		/// <summary>
+		/// Applied to MinionConfig to add buttons for triggering stress and joy reactions.
+		///
+		/// Since Bio-Bots and Scout Rovers would not have these reactions, do not patch
+		/// BaseMinion.
+		/// </summary>
+		private static void OnMinionSpawn(GameObject __result) {
+			__result.AddOrGet<InstantEmotable>();
 		}
 
 		/// <summary>
@@ -467,19 +480,6 @@ namespace PeterHan.DebugNotIncluded {
 		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
 			return PPatchTools.RemoveMethodCall(method, typeof(Debug).GetMethodSafe(nameof(
 				Debug.LogFormat), true, typeof(string), typeof(object[])));
-		}
-	}
-
-	/// <summary>
-	/// Applied to MinionConfig to add buttons for triggering stress and joy reactions.
-	/// </summary>
-	[HarmonyPatch(typeof(MinionConfig), nameof(MinionConfig.CreatePrefab))]
-	public static class MinionConfig_CreatePrefab_Patch {
-		/// <summary>
-		/// Applied after CreatePrefab runs.
-		/// </summary>
-		internal static void Postfix(GameObject __result) {
-			__result.AddOrGet<InstantEmotable>();
 		}
 	}
 

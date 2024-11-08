@@ -37,8 +37,8 @@ namespace PeterHan.MoreAchievements.Criteria {
 
 		public ReachXAttributeValue(string attribute, float required) {
 			if (required.IsNaNOrInfinity())
-				throw new ArgumentOutOfRangeException("required");
-			this.attribute = attribute ?? throw new ArgumentNullException("attribute");
+				throw new ArgumentOutOfRangeException(nameof(required));
+			this.attribute = attribute ?? throw new ArgumentNullException(nameof(attribute));
 			this.required = Math.Max(0.0f, required);
 		}
 

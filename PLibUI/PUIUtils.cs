@@ -127,7 +127,7 @@ namespace PeterHan.PLib.UI {
 				LogUIWarning("DetailsScreen is not yet initialized, try a postfix on DetailsScreen.OnPrefabInit");
 			else {
 				var screens = UIDetours.SIDE_SCREENS.Get(inst);
-				var body = UIDetours.SS_CONTENT_BODY.Get(inst);
+				var body = GetSideScreenContent(inst);
 				string name = typeof(T).Name;
 				if (body != null && screens != null) {
 					// The ref normally contains a prefab which is instantiated
@@ -463,11 +463,25 @@ namespace PeterHan.PLib.UI {
 
 		/// <summary>
 		/// Retrieves the side screen content body in a way that works across game versions.
+		/// Always uses the config side screen (where custom ones end up) body in recent
+		/// versions of the game.
 		/// </summary>
 		/// <param name="screen">The current details screen instance.</param>
 		/// <returns>The content body where side screen content should be added.</returns>
 		public static GameObject GetSideScreenContent(DetailsScreen screen) {
-			return screen == null ? null : UIDetours.SS_CONTENT_BODY.Get(screen);
+			GameObject result = null;
+			if (screen != null) {
+				// This ugly hack is for U54-640445's migration of DetailsScreen
+				if (UIDetours.SS_CONTENT_BODY != null)
+					result = UIDetours.SS_CONTENT_BODY.Get(screen);
+				else if (UIDetours.SS_GET_TAB != null) {
+					object intermed = UIDetours.SS_GET_TAB.Invoke(screen, new object[] { 0 });
+					if (intermed != null)
+						PPatchTools.TryGetFieldValue(intermed, nameof(DetailsScreen.
+							SidescreenTab.bodyInstance), out result);
+				}
+			}
+			return result;
 		}
 
 		/// <summary>

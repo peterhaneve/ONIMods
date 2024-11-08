@@ -16,9 +16,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#if DEBUG
 using PeterHan.PLib.Core;
-#endif
+using PeterHan.PLib.Detours;
+using System;
 
 using PriorityClass = PriorityScreen.PriorityClass;
 
@@ -29,22 +29,16 @@ namespace PeterHan.FinishTasks {
 	/// </summary>
 	public sealed class FinishChoreDetector : KMonoBehaviour {
 		/// <summary>
-		/// Retrieves the ID of the Duplicant's current schedule block.
+		/// Retrieves the ID of the current schedule block.
+		///
+		/// <param name="schedule">The active schedule.</param>
 		/// </summary>
-		public string CurrentScheduleBlock {
-			get {
-				string block = "";
-				Schedulable target;
-				if (consumer != null && (target = consumer.consumerState?.schedulable) !=
-						null) {
-					// ChoreConsumerState.scheduleBlock is only updated on check for new chore
-					int blockPosition = Schedule.GetBlockIdx();
-					var schedule = target.GetSchedule();
-					if (schedule != null)
-						block = schedule.GetBlock(blockPosition)?.GroupId ?? "";
-				}
-				return block;
-			}
+		public static string GetScheduleBlock(Schedule schedule) {
+			string block = "";
+			// ChoreConsumerState.scheduleBlock is only updated on check for new chore
+			if (schedule != null)
+				block = schedule.GetCurrentScheduleBlock()?.GroupId ?? "";
+			return block;
 		}
 
 		/// <summary>
@@ -63,12 +57,6 @@ namespace PeterHan.FinishTasks {
 		/// Whether the behavior is still looking for a valid chore to "finish".
 		/// </summary>
 		private bool acquireChore;
-
-		/// <summary>
-		/// The current chore consumer. Cannot be populated with [MyCmpGet] because that force
-		/// spawns the component if it exists, which crashes on dead Dupes.
-		/// </summary>
-		private ChoreConsumer consumer;
 
 		/// <summary>
 		/// The current chore driver. Cannot be populated with [MyCmpGet] because that force
@@ -107,23 +95,26 @@ namespace PeterHan.FinishTasks {
 			}
 		}
 
-		protected override void OnCleanUp() {
+		public override void OnCleanUp() {
 			Unsubscribe((int)GameHashes.ScheduleChanged, OnScheduleChanged);
 			Unsubscribe((int)GameHashes.ScheduleBlocksChanged, OnScheduleChanged);
 			base.OnCleanUp();
 		}
 
 		/// <summary>
-		/// Fired when a schedule block boundary is reached.
+		/// Fired when a schedule block boundary is reached, or the overall schedule changes.
+		/// 
+		/// <param name="parameter">The new schedule.</param>
 		/// </summary>
-		private void OnScheduleChanged(object _) {
-			if (driver != null) {
-				string groupID = CurrentScheduleBlock, ft = FinishTasksPatches.FinishTask.Id;
+		private void OnScheduleChanged(object parameter) {
+			if (driver != null && parameter is Schedule schedule) {
+				string groupID = GetScheduleBlock(schedule), ft = FinishTasksPatches.
+					FinishTask.Id;
 #if DEBUG
 				PUtil.LogDebug("{0}: Schedule change from {1} to {2}".F(gameObject.name,
 					lastGroupID, groupID));
 #endif
-				if (groupID == ft && lastGroupID != ft) {
+				if (groupID == ft && lastGroupID != null && lastGroupID != ft) {
 					// Entered Finish Tasks from a non-finish tasks block
 					acquireChore = true;
 					CheckAcquireChore();
@@ -136,13 +127,12 @@ namespace PeterHan.FinishTasks {
 			}
 		}
 
-		protected override void OnSpawn() {
+		public override void OnSpawn() {
 			base.OnSpawn();
-			TryGetComponent(out consumer);
 			TryGetComponent(out driver);
 			Subscribe((int)GameHashes.ScheduleBlocksChanged, OnScheduleChanged);
 			Subscribe((int)GameHashes.ScheduleChanged, OnScheduleChanged);
-			lastGroupID = CurrentScheduleBlock;
+			lastGroupID = null;
 			acquireChore = lastGroupID == FinishTasksPatches.FinishTask.Id;
 			allowedChore = null;
 		}

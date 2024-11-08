@@ -126,23 +126,28 @@ namespace PeterHan.DebugNotIncluded {
 					harmonyAnnotation = hp;
 				else if (annotation.GetType().Name.Contains("ExcludeInspection"))
 					return;
-			if (harmonyAnnotation != null) {
-				var info = harmonyAnnotation.info;
-				var target = AccessTools.Method(info.declaringType, info.methodName,
-					info.argumentTypes);
-				if (target != null)
-					// Check each patch for broken ___, __instance and __result parameters
+			try {
+				if (harmonyAnnotation != null) {
+					var info = harmonyAnnotation.info;
+					var target = AccessTools.Method(info.declaringType, info.methodName,
+						info.argumentTypes);
+					if (target != null)
+						// Check each patch for broken ___, __instance and __result parameters
+						foreach (var method in type.GetMethods(ALL))
+							if (IsHarmonyPatchMethod(method))
+								CheckPatchParameters(method, target);
+				} else
+					// Patchy method names?
 					foreach (var method in type.GetMethods(ALL))
-						if (IsHarmonyPatchMethod(method))
-							CheckPatchParameters(method, target);
-			} else
-				// Patchy method names?
-				foreach (var method in type.GetMethods(ALL))
-					if (HARMONY_NAMES.Contains(method.Name)) {
-						DebugLogger.LogWarning("Type " + type.FullName +
-							" looks like a Harmony patch but does not have the annotation!");
-						break;
-					}
+						if (HARMONY_NAMES.Contains(method.Name)) {
+							DebugLogger.LogWarning("Type " + type.FullName +
+								" looks like a Harmony patch but does not have the annotation!");
+							break;
+						}
+			} catch (TypeLoadException e) {
+				DebugLogger.LogWarning("Unable to check type " + type.FullName);
+				DebugLogger.LogException(e);
+			}
 		}
 
 		/// <summary>
