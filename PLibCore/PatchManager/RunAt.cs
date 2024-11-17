@@ -73,6 +73,21 @@ namespace PeterHan.PLib.PatchManager {
 		public const uint AfterLayerableLoad = 7U;
 
 		/// <summary>
+		/// Runs immediately before Db.PostProcess.
+		/// </summary>
+		public const uint BeforeDbPostProcess = 8U;
+
+		/// <summary>
+		/// Runs immediately after Db.PostProcess.
+		/// </summary>
+		public const uint AfterDbPostProcess = 9U;
+
+		/// <summary>
+		/// Runs when DetailsScreen.OnPrefabInit has completed.
+		/// </summary>
+		public const uint OnDetailsScreenInit = 10U;
+
+		/// <summary>
 		/// The string equivalents of each constant for debugging.
 		/// </summary>
 		private static readonly string[] STRING_VALUES = new string[] {
