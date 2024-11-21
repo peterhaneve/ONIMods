@@ -72,6 +72,14 @@ namespace PeterHan.PLib.PatchManager {
 			Instance?.InvokeAllProcess(RunAt.AfterDbInit, null);
 		}
 
+		private static void PostProcess_Prefix() {
+			Instance?.InvokeAllProcess(RunAt.BeforeDbPostProcess, null);
+		}
+
+		private static void PostProcess_Postfix() {
+			Instance?.InvokeAllProcess(RunAt.AfterDbPostProcess, null);
+		}
+
 		private static void Instance_Postfix() {
 			bool load = false;
 			if (Instance != null)
@@ -85,6 +93,10 @@ namespace PeterHan.PLib.PatchManager {
 
 		private static void MainMenu_OnSpawn_Postfix() {
 			Instance?.InvokeAllProcess(RunAt.InMainMenu, null);
+		}
+
+		private static void DetailsScreen_OnPrefabInit_Postfix() {
+			Instance?.InvokeAllProcess(RunAt.OnDetailsScreenInit, null);
 		}
 
 		public override Version Version => VERSION;
@@ -147,7 +159,7 @@ namespace PeterHan.PLib.PatchManager {
 					GetNameSafe());
 			}
 			this.harmony = harmony;
-			patches = new Dictionary<uint, PrivateRunList>(8);
+			patches = new Dictionary<uint, PrivateRunList>(11);
 			InstanceData = patches;
 		}
 
@@ -168,6 +180,8 @@ namespace PeterHan.PLib.PatchManager {
 			// Db
 			plibInstance.Patch(typeof(Db), nameof(Db.Initialize), prefix: PatchMethod(nameof(
 				Initialize_Prefix)), postfix: PatchMethod(nameof(Initialize_Postfix)));
+			plibInstance.Patch(typeof(Db), nameof(Db.PostProcess), prefix: PatchMethod(nameof(
+				PostProcess_Prefix)), postfix: PatchMethod(nameof(PostProcess_Postfix)));
 
 			// Game
 			plibInstance.Patch(typeof(Game), "DestroyInstances", postfix: PatchMethod(nameof(
@@ -182,6 +196,10 @@ namespace PeterHan.PLib.PatchManager {
 			// MainMenu
 			plibInstance.Patch(typeof(MainMenu), "OnSpawn", postfix: PatchMethod(
 				nameof(MainMenu_OnSpawn_Postfix)));
+
+			// DetailsScreen
+			plibInstance.Patch(typeof(DetailsScreen), "OnPrefabInit", postfix: PatchMethod(
+				nameof(DetailsScreen_OnPrefabInit_Postfix)));
 		}
 
 		public override void PostInitialize(Harmony plibInstance) {
