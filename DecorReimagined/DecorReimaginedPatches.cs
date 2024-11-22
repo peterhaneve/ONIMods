@@ -22,6 +22,7 @@ using Klei.AI;
 using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
+using PeterHan.PLib.Detours;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
 using ReimaginationTeam.Reimagination;
@@ -34,6 +35,14 @@ namespace ReimaginationTeam.DecorRework {
 	/// Patches which will be applied via annotations for Decor Reimagined.
 	/// </summary>
 	public sealed class DecorReimaginedPatches : KMod.UserMod2 {
+		// Klei updates rooms often enough to leave this detour in
+		private delegate RoomConstraints.Constraint NewConstraint(
+			Func<KPrefabID, bool> building_criteria, Func<Room, bool> room_criteria,
+			int times_required, string name, string description);
+
+		private static readonly NewConstraint CREATE_ROOM_CONSTRAINT =
+			PDetours.DetourConstructor<NewConstraint>(typeof(RoomConstraints.Constraint));
+
 		/// <summary>
 		/// The achievement name of the bugged initial And It Feels Like Home achievement.
 		/// </summary>
@@ -104,11 +113,11 @@ namespace ReimaginationTeam.DecorRework {
 		/// Patches the park and nature reserve to require living plants.
 		/// </summary>
 		private static void PatchParks() {
-			RoomConstraints.WILDPLANT = new RoomConstraints.Constraint(null, room =>
+			RoomConstraints.WILDPLANT = CREATE_ROOM_CONSTRAINT.Invoke(null, room =>
 				CountValidPlants(room) >= 2, 1, STRINGS.ROOMS.CRITERIA.WILDPLANT.NAME, STRINGS.
 				ROOMS.CRITERIA.WILDPLANT.DESCRIPTION);
-			RoomConstraints.WILDPLANTS = new RoomConstraints.Constraint(null, room =>
-					CountValidPlants(room) >= 4, 1, STRINGS.ROOMS.CRITERIA.WILDPLANTS.NAME,
+			RoomConstraints.WILDPLANTS = CREATE_ROOM_CONSTRAINT.Invoke(null, room =>
+				CountValidPlants(room) >= 4, 1, STRINGS.ROOMS.CRITERIA.WILDPLANTS.NAME,
 				STRINGS.ROOMS.CRITERIA.WILDPLANTS.DESCRIPTION);
 		}
 
@@ -120,7 +129,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// Broken, disabled, entombed, and unplugged buildings are not functional.
 		/// </summary>
 		private static void PatchRecBuildings() {
-			RoomConstraints.REC_BUILDING = new RoomConstraints.Constraint(IsWorkingRecBuilding,
+			RoomConstraints.REC_BUILDING = CREATE_ROOM_CONSTRAINT.Invoke(IsWorkingRecBuilding,
 				null, 1, RoomConstraints.REC_BUILDING.name, RoomConstraints.REC_BUILDING.
 				description);
 		}
