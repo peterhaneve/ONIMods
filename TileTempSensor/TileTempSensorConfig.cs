@@ -98,7 +98,8 @@ namespace PeterHan.TileTempSensor {
 				prefab_tag);
 			// Must occupy the tile to transfer heat
 			var occupier = go.AddOrGet<SimCellOccupier>();
-			occupier.movementSpeedMultiplier = TUNING.DUPLICANTSTATS.MOVEMENT.NEUTRAL;
+			// TUNING.DUPLICANTSTATS.MOVEMENT_MODIFIERS.NEUTRAL
+			occupier.movementSpeedMultiplier = 1.0f;
 			occupier.notifyOnMelt = true;
 			go.AddOrGet<TileTemperature>();
 			go.AddOrGet<BuildingHP>().destroyOnDamaged = true;

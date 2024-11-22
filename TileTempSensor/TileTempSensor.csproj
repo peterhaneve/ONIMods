@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Thermo Sensor Tile</AssemblyTitle>
-    <FileVersion>3.9.0.0</FileVersion>
+    <FileVersion>3.10.0.0</FileVersion>
     <RootNamespace>PeterHan.TileTempSensor</RootNamespace>
     <Description>A Thermo Sensor in tile form, allowing heat transfer to it even in Vacuum.</Description>
     <AssemblyVersion>3.1.0.0</AssemblyVersion>
