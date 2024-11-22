@@ -18,6 +18,7 @@
 
 using System.Threading;
 using PeterHan.PLib.Core;
+using PeterHan.PLib.Detours;
 using UnityEngine;
 
 namespace PeterHan.QueueForSinks {
@@ -26,6 +27,10 @@ namespace PeterHan.QueueForSinks {
 	/// and they could use it.
 	/// </summary>
 	public abstract class WorkCheckpoint<T> : KMonoBehaviour where T : Workable {
+		// TODO Remove once versions before U52-621068 no longer need to be supported
+		private static readonly IDetouredField<Workable, KMonoBehaviour> WORKER =
+			PDetours.DetourField<Workable, KMonoBehaviour>(nameof(Workable.worker));
+
 		// These fields are filled in automatically by KMonoBehaviour
 #pragma warning disable CS0649
 		[MyCmpReq]
@@ -121,7 +126,7 @@ namespace PeterHan.QueueForSinks {
 		private System.Collections.IEnumerator ReleaseToken() {
 			yield return null;
 			yield return null;
-			if (workable != null && workable.worker == null)
+			if (workable != null && WORKER.Get(workable) == null)
 				token = 1;
 		}
 
