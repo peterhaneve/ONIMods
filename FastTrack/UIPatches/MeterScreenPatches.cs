@@ -95,11 +95,11 @@ namespace PeterHan.FastTrack.UIPatches {
 	}
 
 	/// <summary>
-	/// Applied to MeterScreen to reduce allocations and speed up getting the list of
+	/// Applied to MeterScreen_Stress to reduce allocations and speed up getting the list of
 	/// Duplicants by stress value.
 	/// </summary>
-	[HarmonyPatch(typeof(MeterScreen), nameof(MeterScreen.GetStressedMinions))]
-	public static class MeterScreen_GetStressedMinions_Patch {
+	[HarmonyPatch(typeof(MeterScreen_Stress), nameof(MeterScreen_Stress.GetStressedMinions))]
+	public static class MeterScreen_Stress_GetStressedMinions_Patch {
 		/// <summary>
 		/// Avoids allocating new lists every frame.
 		/// </summary>
@@ -112,13 +112,13 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Applied before GetStressedMinions runs.
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(MeterScreen __instance, ref IList<MinionIdentity> __result)
-		{
+		internal static bool Prefix(MeterScreen_Stress __instance,
+				ref IList<MinionIdentity> __result) {
 			var stressAmount = Db.Get().Amounts.Stress;
 			var duplicants = __instance.GetWorldMinionIdentities();
 			var result = CACHED_LIST;
 			int n = duplicants.Count;
-			var byStress = ListPool<StressEntry, MeterScreen>.Allocate();
+			var byStress = ListPool<StressEntry, MeterScreen_Stress>.Allocate();
 			result.Clear();
 			// The previous comparer looked up the stress on every comparison!
 			for (int i = 0; i < n; i++) {

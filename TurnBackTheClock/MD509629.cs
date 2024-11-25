@@ -36,12 +36,12 @@ namespace PeterHan.TurnBackTheClock {
 
 			internal static void Postfix(Diet.Info[] __result) {
 				var oldInfo = __result[0];
-				// BUG: Klei still has not set the disease per produced kg correctly
 				__result[0] = new Diet.Info(new HashSet<Tag> {
 					"ForestTree"
 				}, oldInfo.producedElement, oldInfo.caloriesPerKg, oldInfo.
 					producedConversionRate, null, oldInfo.diseasePerKgProduced, oldInfo.
-					produceSolidTile, oldInfo.eatsPlantsDirectly);
+					produceSolidTile, oldInfo.foodType, oldInfo.emmitDiseaseOnCell,
+					oldInfo.eatAnims);
 			}
 		}
 		

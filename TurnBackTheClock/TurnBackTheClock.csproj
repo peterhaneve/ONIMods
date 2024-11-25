@@ -2,13 +2,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Turn Back The Clock</AssemblyTitle>
-    <FileVersion>1.4.0.0</FileVersion>
+    <FileVersion>1.5.0.0</FileVersion>
     <RootNamespace>PeterHan.TurnBackTheClock</RootNamespace>
     <Description>Changes the game to be more like previous versions.</Description>
     <AssemblyVersion>1.2.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
     <SupportedContent>VANILLA_ID</SupportedContent>
-    <LastWorkingBuild>535720</LastWorkingBuild>
+    <LastWorkingBuild>642443</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
 </Project>

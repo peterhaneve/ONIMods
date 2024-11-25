@@ -196,12 +196,13 @@ namespace PeterHan.FastTrack.SensorPatches {
 	/// <summary>
 	/// Applied to MinionGroupProber to use our check for reachability instead of its own.
 	/// </summary>
-	[HarmonyPatch(typeof(MinionGroupProber), nameof(MinionGroupProber.IsReachable_AssumeLock))]
-	public static class MinionGroupProber_IsReachableAssumeLock_Patch {
+	[HarmonyPatch(typeof(MinionGroupProber), nameof(MinionGroupProber.IsReachable),
+		typeof(int))]
+	public static class MinionGroupProber_IsReachable_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
 
 		/// <summary>
-		/// Applied before IsReachable_AssumeLock runs.
+		/// Applied before IsReachable runs.
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(int cell, ref bool __result) {

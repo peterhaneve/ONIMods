@@ -252,8 +252,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Applied before OnWorkTick runs.
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(ref bool __result, Generator ___generator, Worker worker,
-				float dt) {
+		internal static bool Prefix(ref bool __result, Generator ___generator,
+				KMonoBehaviour worker, float dt) {
 			var circuitManager = Game.Instance.circuitManager;
 			bool charged = false;
 			if (circuitManager != null) {
@@ -288,7 +288,8 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Applied before GetEfficiencyMultiplier runs.
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(Worker worker, ref float __result, Workable __instance) {
+		internal static bool Prefix(KMonoBehaviour worker, ref float __result,
+				Workable __instance) {
 			float mult = 1f;
 			int cell;
 			var ac = __instance.attributeConverter;
@@ -307,7 +308,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				bool lit;
 				if (Grid.LightIntensity[cell] > 0) {
 					lit = true;
-					mult += TUNING.DUPLICANTSTATS.LIGHT.LIGHT_WORK_EFFICIENCY_BONUS;
+					mult += TUNING.DUPLICANTSTATS.STANDARD.Light.LIGHT_WORK_EFFICIENCY_BONUS;
 					if (hv == Guid.Empty && worker.TryGetComponent(out KSelectable ks))
 						handle = ks.AddStatusItem(Db.Get().DuplicantStatusItems.
 							LightWorkEfficiencyBonus, __instance);
@@ -329,7 +330,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
 	/// Applied to Worker to work more efficiently using faster attribute leveling!
 	/// </summary>
-	[HarmonyPatch(typeof(Worker), nameof(Worker.Work), typeof(float))]
+	[HarmonyPatch(typeof(StandardWorker), nameof(StandardWorker.Work), typeof(float))]
 	public static class Worker_Work_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.FastAttributesMode;
 
@@ -339,10 +340,10 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="workAttribute">The attribute being trained.</param>
 		/// <param name="worker">The worker doing the job.</param>
 		/// <param name="dt">The time since the last update.</param>
-		/// <param name="resume">The worker's total experience resume.</param>
-		private static Workable UpdateExperience(Attribute workAttribute, Worker worker,
-				float dt, MinionResume resume) {
-			var workable = worker.workable;
+		/// <param name="recipient">The location where the experience gained will be stored.</param>
+		private static Workable UpdateExperience(Attribute workAttribute, WorkerBase worker,
+				float dt, IExperienceRecipient recipient) {
+			var workable = worker.GetWorkable();
 			if (worker.TryGetComponent(out AttributeLevels levels) &&
 					workAttribute != null && workAttribute.IsTrainable) {
 				var lookup = LookupAttributeLevel.GetAttributeLookup(levels);
@@ -354,8 +355,8 @@ namespace PeterHan.FastTrack.GamePatches {
 					levels.AddExperience(workAttribute.Id, dt, exp);
 			}
 			string experienceGroup = workable.GetSkillExperienceSkillGroup();
-			if (resume != null && experienceGroup != null)
-				resume.AddExperienceWithAptitude(experienceGroup, dt, workable.
+			if (recipient != null && experienceGroup != null)
+				recipient.AddExperienceWithAptitude(experienceGroup, dt, workable.
 					GetSkillExperienceMultiplier());
 			return workable;
 		}
@@ -367,13 +368,14 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
 			var getAttribute = typeof(Workable).GetMethodSafe(nameof(Workable.
 				GetWorkAttribute), false);
-			var getResume = typeof(Worker).GetFieldSafe(nameof(Worker.resume), false);
+			var getTarget = typeof(StandardWorker).GetFieldSafe(nameof(StandardWorker.
+				experienceRecipient), false);
 			var updateExp = typeof(Worker_Work_Patch).GetMethodSafe(nameof(UpdateExperience),
-				true, typeof(Attribute), typeof(Worker), typeof(float), typeof(MinionResume));
+				true, typeof(Attribute), typeof(StandardWorker), typeof(float), typeof(MinionResume));
 			var getEfficiency = typeof(Workable).GetMethodSafe(nameof(Workable.
-				GetEfficiencyMultiplier), false, typeof(Worker));
+				GetEfficiencyMultiplier), false, typeof(WorkerBase));
 			int state = 0;
-			if (getAttribute != null && getEfficiency != null && getResume != null &&
+			if (getAttribute != null && getEfficiency != null && getTarget != null &&
 					updateExp != null)
 				foreach (var instr in instructions) {
 					if (state == 1 && instr.Is(OpCodes.Callvirt, getEfficiency)) {
@@ -381,7 +383,7 @@ namespace PeterHan.FastTrack.GamePatches {
 						// Load this
 						yield return new CodeInstruction(OpCodes.Ldarg_0);
 #if DEBUG
-						PUtil.LogDebug("Patched Worker.Work");
+						PUtil.LogDebug("Patched StandardWorker.Work");
 #endif
 					}
 					if (state != 1)
@@ -394,7 +396,7 @@ namespace PeterHan.FastTrack.GamePatches {
 						yield return new CodeInstruction(OpCodes.Ldarg_1);
 						// Load this.resume
 						yield return new CodeInstruction(OpCodes.Ldarg_0);
-						yield return new CodeInstruction(OpCodes.Ldfld, getResume);
+						yield return new CodeInstruction(OpCodes.Ldfld, getTarget);
 						// Call our method
 						yield return new CodeInstruction(OpCodes.Call, updateExp);
 						state = 1;

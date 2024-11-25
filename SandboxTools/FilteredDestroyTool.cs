@@ -132,6 +132,7 @@ namespace PeterHan.SandboxTools {
 					SandboxToolsStrings.DESTROY_SHIPPING)
 			};
 			pendingCells = new HashSet<int>();
+#pragma warning disable CS0168
 			try {
 				// Take from stock tool if possible
 				color = RECENTLY_AFFECTED.Get(SandboxDestroyerTool.instance);
@@ -142,6 +143,7 @@ namespace PeterHan.SandboxTools {
 				// Use default
 				color = new Color(1f, 1f, 1f, 0.1f);
 			}
+#pragma warning restore CS0168
 			// Read value at runtime if possible
 			numObjectLayers = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.NumLayers),
 				ObjectLayer.NumLayers);

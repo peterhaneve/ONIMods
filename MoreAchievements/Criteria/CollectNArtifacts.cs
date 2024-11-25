@@ -27,7 +27,7 @@ namespace PeterHan.MoreAchievements.Criteria {
 		/// <summary>
 		/// The number of artifacts required.
 		/// </summary>
-		protected int required;
+		private int required;
 
 		public CollectNArtifacts(int required) {
 			this.required = Math.Max(1, required);
