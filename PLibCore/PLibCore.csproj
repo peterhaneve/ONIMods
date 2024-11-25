@@ -12,10 +12,23 @@
     <DistributeMod>false</DistributeMod>
     <PLibCore>true</PLibCore>
     <Platforms>Vanilla;Mergedown</Platforms>
+    <PLibVersionFileContent>
+namespace PeterHan.PLib {
+  public static class PVersion {
+    public const string VERSION = "$(PLibVersion)"%3B
+  }
+}
+    </PLibVersionFileContent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DocumentationFile>bin\$(Platform)\Release\PLibCore.xml</DocumentationFile>
   </PropertyGroup>
+  <Target Name="WriteModVersionFile" BeforeTargets="PreBuildEvent">
+    <WriteLinesToFile File="$(IntermediateOutputPath)\PVersion.cs" Overwrite="true" Lines="$(PLibVersionFileContent)"/>
+  </Target>
+  <ItemGroup>
+    <Compile Include="$(IntermediateOutputPath)\PVersion.cs" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Remove="Utils\**" />
     <EmbeddedResource Remove="Utils\**" />
