@@ -68,11 +68,6 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal readonly ISet<Tag> crittersHatched;
 
 		/// <summary>
-		/// The foods to target for the EatXKcalProducedByY achievement.
-		/// </summary>
-		internal readonly List<string> targetFoods;
-
-		/// <summary>
 		/// Stores the computed starting world extents.
 		/// </summary>
 		internal Extents startWorldExtents;
@@ -97,7 +92,6 @@ namespace PeterHan.FastTrack.GamePatches {
 			builtOutside = false;
 			crittersHatched = new HashSet<Tag>();
 			startWorldExtents = new Extents(0, 0, Grid.WidthInCells, Grid.HeightInCells);
-			targetFoods = new List<string>();
 			targetTiles = 1;
 			tilesRevealed = 0;
 			tuneUps = 0;
@@ -129,25 +123,6 @@ namespace PeterHan.FastTrack.GamePatches {
 		public override void OnPrefabInit() {
 			base.OnPrefabInit();
 			achievementsRun.Clear();
-			targetFoods.Clear();
-			var foodList = new HashSet<string>();
-			var foodProducers = new List<Tag>(4);
-			// Use the default "It's Not Raw" achievement
-			var achieve = Db.Get().ColonyAchievements.EatCookedFood;
-			if (achieve != null)
-				foreach (var requirement in achieve.requirementChecklist)
-					if (requirement is EatXKCalProducedByY eatIt)
-						foodProducers.AddRange(eatIt.foodProducers);
-			foreach (var recipe in ComplexRecipeManager.Get().recipes)
-				foreach (var fabricator in recipe.fabricators)
-					// Only 2 elements!
-					if (foodProducers.Contains(fabricator))
-						foodList.Add(recipe.FirstResult.ToString());
-			targetFoods.AddRange(foodList);
-			foodList.Clear();
-#if DEBUG
-			PUtil.LogDebug("Foods allowed for It's Not Raw: " + targetFoods.Join(", "));
-#endif
 			Instance = this;
 		}
 
@@ -337,29 +312,6 @@ namespace PeterHan.FastTrack.GamePatches {
 	}
 
 	/// <summary>
-	/// Applied to EatXKCalProducedByY to avoid re-indexing the list of recipes every call.
-	/// </summary>
-	[HarmonyPatch(typeof(EatXKCalProducedByY), nameof(EatXKCalProducedByY.Success))]
-	public static class EatXKCalProducedByY_Success_Patch {
-		internal static bool Prepare() => AchievementPatches.ShouldRun();
-
-		/// <summary>
-		/// Applied before Success runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(ref bool __result, EatXKCalProducedByY __instance) {
-			var inst = AchievementPatches.Instance;
-			// If this is the not-raw achievement
-			bool cont = inst == null || !Db.Get().ColonyAchievements.EatCookedFood.
-				requirementChecklist.Contains(__instance);
-			if (!cont)
-				__result = RationTracker.Get().GetCaloiresConsumedByFood(inst.targetFoods) *
-					0.001f > __instance.numCalories;
-			return cont;
-		}
-	}
-
-	/// <summary>
 	/// Applied to Grid to track revealed cells much more intelligently.
 	/// </summary>
 	[HarmonyPatch(typeof(Grid), nameof(Grid.Reveal))]
@@ -392,7 +344,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal static void Postfix(Navigator __instance) {
 			var instance = AchievementPatches.Instance;
 			var tag = __instance.PrefabID();
-			if (tag != GameTags.Minion && __instance.sceneLayer == Grid.SceneLayer.
+			if (!tag.ToString().Contains("Minion") && __instance.sceneLayer == Grid.SceneLayer.
 					Creatures && instance != null)
 				instance.crittersHatched.Add(tag);
 		}

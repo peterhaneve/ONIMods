@@ -80,7 +80,7 @@ namespace PeterHan.ToastControl {
 			"Storage:DropSome",
 			"Storage:Store",
 			"SuperProductive+<>c:<InitializeStates>b__3_0",
-			"Toilet:Flush",
+			"Toilet:FlushMultiple",
 			"ToiletWorkableUse:OnCompleteWork",
 			"UtilityBuildTool:ApplyPathToConduitSystem"
 		};
@@ -94,11 +94,8 @@ namespace PeterHan.ToastControl {
 			"CreatureCalorieMonitor+Stomach:Poop",
 			"ElementDropperMonitor+Instance:DropElement",
 			"ElementEmitter:ForceEmit",
+			"FleeStates+<>c:<InitializeStates>b__8_1",
 			"FleeStates+<>c:<InitializeStates>b__8_2",
-			// TODO Remove when versions less than U52-621068 no longer need to be supported
-			"HarvestDesignatable:<OnRefreshUserMenu>b__34_0",
-			"HarvestDesignatable:<OnRefreshUserMenu>b__34_1",
-
 			"HarvestDesignatable:<OnRefreshUserMenu>b__35_0",
 			"HarvestDesignatable:<OnRefreshUserMenu>b__35_1",
 			"Klei.AI.EffectInstance:.ctor",

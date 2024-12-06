@@ -113,20 +113,17 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="context">The chore context to evaluate.</param>
 		private static void RunSomePreconditions(ref PreContext context) {
 			var chore = context.chore;
-			var preconditions = chore.preconditions;
+			var preconditions = chore.GetPreconditions();
 			int n = preconditions.Count;
-			if (chore.arePreconditionsDirty) {
-				preconditions.Sort(ChorePreconditionComparer.Instance);
-				chore.arePreconditionsDirty = false;
-			}
 			// i = 0 is "IsValid"
 			for (int i = 1; i < n; i++) {
 				// It would be faster to just remove the preconditions completely from all
 				// chores, but they still need to be run when the tasks panel is open
 				var pc = preconditions[i];
-				string id = pc.id;
+				string id = pc.condition.id;
 				if (id != "IsMoreSatisfyingEarly" && id != "IsPermitted" && id != "HasUrge" &&
-						id != "IsOverrideTargetNullOrMe" && !pc.fn(ref context, pc.data)) {
+						id != "IsOverrideTargetNullOrMe" && !pc.condition.fn(ref context,
+						pc.data)) {
 					context.failedPreconditionId = i;
 					break;
 				}
@@ -372,18 +369,6 @@ namespace PeterHan.FastTrack.GamePatches {
 			} else
 				currentChore = null;
 			return valid;
-		}
-		
-		/// <summary>
-		/// Sorts two chore precondition instances by sort order.
-		/// </summary>
-		private sealed class ChorePreconditionComparer : IComparer<Chore.PreconditionInstance> {
-			internal static readonly ChorePreconditionComparer Instance =
-				new ChorePreconditionComparer();
-
-			public int Compare(Chore.PreconditionInstance x, Chore.PreconditionInstance y) {
-				return x.sortOrder.CompareTo(y.sortOrder);
-			}
 		}
 	}
 }

@@ -499,7 +499,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 				region.buffer.Unlock(region);
 			}
 
-			public void InternalDoWorkItem(int index) {
+			public void InternalDoWorkItem(int index, int threadIndex) {
 				int regionMin = index * TEXTURE_RESOLUTION + yMin;
 				int regionMax = Math.Min(regionMin + TEXTURE_RESOLUTION - 1, yMax);
 				updateTexture.Invoke(region, xMin, regionMin, xMax, regionMax);

@@ -141,7 +141,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			}
 		}
 
-		public void InternalDoWorkItem(int index) {
+		public void InternalDoWorkItem(int index, int threadIndex) {
 			float dt = deltaTime;
 			if (index >= 0 && index < slices.Length && allAmounts != null && dt > 0.0f) {
 				var range = slices[index];

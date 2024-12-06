@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
-using SideScreenPair = System.Collections.Generic.KeyValuePair<UnityEngine.GameObject, int>;
+using SideScreenPair = System.Collections.Generic.KeyValuePair<DetailsScreen.SideScreenRef, int>;
 
 namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
@@ -33,6 +33,12 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Avoids allocating a new instance every time a link is formatted.
 		/// </summary>
 		private static readonly StringBuilder CACHED_BUILDER = new StringBuilder(64);
+
+		/// <summary>
+		/// Stores the tabs that have at least one valid side screen.
+		/// </summary>
+		private static readonly ISet<DetailsScreen.SidescreenTabTypes> VALID_TYPES =
+			new HashSet<DetailsScreen.SidescreenTabTypes>();
 
 		/// <summary>
 		/// The singleton instance of this class.
@@ -113,26 +119,18 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="ds">The details screen to sort.</param>
 		/// <param name="target">The selected target.</param>
-		/// <param name="force">Forces the side screen to be shown even if no config.</param>
-		private static void SortSideScreens(DetailsScreen ds, GameObject target,
-				bool force) {
+		private static void SortSideScreens(DetailsScreen ds, GameObject target) {
 			var sideScreens = ds.sideScreens;
 			var sortedScreens = ds.sortedSideScreens;
+			var tabs = ds.sidescreenTabs;
 			int n;
 			sortedScreens.Clear();
+			VALID_TYPES.Clear();
+			ds.tabHeader.RefreshTabDisplayForTarget(target);
 			if (sideScreens != null && sideScreens.Count > 0) {
-				int currentOrder = 0;
-				var currentScreen = ds.currentSideScreen;
-				var noConfig = ds.noConfigSideScreen;
 				var dss = ds.sideScreen;
 				bool anyScreens = false;
 				n = sideScreens.Count;
-				if (currentScreen != null) {
-					if (!currentScreen.gameObject.activeSelf)
-						currentScreen = null;
-					else
-						currentOrder = currentScreen.GetSideScreenSortOrder();
-				}
 				for (int i = 0; i < n; i++) {
 					var screen = sideScreens[i];
 					var inst = screen.screenInstance;
@@ -140,8 +138,9 @@ namespace PeterHan.FastTrack.UIPatches {
 					GameObject instGO;
 					if (prefab.IsValidForTarget(target)) {
 						if (inst == null) {
+							var targetTab = ds.GetTabOfType(screen.tab);
 							inst = Util.KInstantiateUI<SideScreenContent>(prefab.gameObject,
-								ds.sideScreenConfigContentBody);
+								targetTab.bodyInstance);
 							screen.screenInstance = inst;
 						}
 						int sortOrder = inst.GetSideScreenSortOrder();
@@ -149,35 +148,42 @@ namespace PeterHan.FastTrack.UIPatches {
 							dss.SetActive(true);
 						inst.SetTarget(target);
 						inst.Show();
-						sortedScreens.Add(new SideScreenPair(inst.gameObject, sortOrder));
-						if (currentScreen == null || sortOrder > currentOrder) {
-							ds.currentSideScreen = currentScreen = inst;
-							ds.sideScreenTitleLabel.SetText(inst.GetTitle());
-						}
+						sortedScreens.Add(new SideScreenPair(screen, sortOrder));
 						anyScreens = true;
 					} else if (inst != null && (instGO = inst.gameObject).activeSelf) {
 						instGO.SetActive(false);
 						// If the current screen was just hidden, allow another one to
 						// take its place
-						if (inst == currentScreen)
-							currentScreen = null;
 					}
 				}
-				if (anyScreens)
-					noConfig.SetActive(false);
-				else if (force) {
-					noConfig.SetActive(true);
-					ds.sideScreenTitleLabel.SetText(STRINGS.UI.UISIDESCREENS.NOCONFIG.TITLE);
-					dss.SetActive(true);
-				} else {
-					noConfig.SetActive(false);
-					dss.SetActive(false);
+				if (!anyScreens) {
+					n = tabs.Length;
+					bool showAtAll = false;
+					for (int i = 0; i < n && !showAtAll; i++) {
+						var tab = tabs[i];
+						if (tab.type == DetailsScreen.SidescreenTabTypes.Material || tab.
+								type == DetailsScreen.SidescreenTabTypes.Blueprints)
+							showAtAll = tab.ValidateTarget(target);
+					}
+					dss.SetActive(showAtAll);
 				}
 			}
 			sortedScreens.Sort(SideScreenOrderComparer.INSTANCE);
 			n = sortedScreens.Count;
-			for (int i = 0; i < n; i++)
-				sortedScreens[i].Key.transform.SetSiblingIndex(i);
+			// Sort screens visually
+			for (int i = 0; i < n; i++) {
+				var inst = sortedScreens[i].Key;
+				inst.screenInstance.transform.SetSiblingIndex(i);
+				VALID_TYPES.Add(inst.tab);
+			}
+			// Enable/disable "no config"
+			n = tabs.Length;
+			for (int i = 0; i < n; i++) {
+				var tab = tabs[i];
+				tab.RepositionTitle();
+				tab.SetNoConfigMessageVisibility(!VALID_TYPES.Contains(tab.type));
+			}
+			ds.RefreshTitle();
 		}
 
 		/// <summary>
@@ -254,8 +260,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		private readonly struct LastSelectionDetails {
 			internal readonly string codexLink;
 
-			internal readonly bool forceSideScreen;
-
 			internal readonly LaunchConditionManager conditions;
 
 			internal readonly ToolTip editTooltip;
@@ -281,15 +285,13 @@ namespace PeterHan.FastTrack.UIPatches {
 					codexLink = rawLink;
 				else
 					codexLink = "";
+				go.TryGetComponent(out id);
 				go.TryGetComponent(out selectable);
 				go.TryGetComponent(out rename);
 				go.TryGetComponent(out resume);
 				go.TryGetComponent(out rocketCommand);
 				go.TryGetComponent(out conditions);
 				go.TryGetComponent(out rocketDoor);
-				forceSideScreen = go.TryGetComponent(out id) || (go.TryGetComponent(
-					out Reconstructable reconstructable) && reconstructable.
-					AllowReconstruct) || go.TryGetComponent(out BuildingFacade _);
 				if (title != null)
 					title.editNameButton.TryGetComponent(out editTooltip);
 				else
@@ -391,19 +393,15 @@ namespace PeterHan.FastTrack.UIPatches {
 				var screens = __instance.screens;
 				var oldTarget = __instance.target;
 				var inst = instance;
-				bool force;
 				if (screens != null) {
 					__instance.target = go;
 					if (go.TryGetComponent(out CellSelectionObject cso))
 						cso.OnObjectSelected(null);
-					if ((oldTarget == null || go != oldTarget) && inst != null) {
+					if ((oldTarget == null || go != oldTarget) && inst != null)
 						inst.lastSelection = new LastSelectionDetails(go, cso, __instance);
-						force = inst.lastSelection.forceSideScreen;
-					} else
-						force = true;
 					UpdateTitle(__instance);
 					__instance.tabHeader.RefreshTabDisplayForTarget(go);
-					SortSideScreens(__instance, go, force);
+					SortSideScreens(__instance, go);
 				}
 				return false;
 			}

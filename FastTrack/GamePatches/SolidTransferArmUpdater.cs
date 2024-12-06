@@ -185,7 +185,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			sweepers.Clear();
 		}
 
-		public void InternalDoWorkItem(int index) {
+		public void InternalDoWorkItem(int index, int threadIndex) {
 			if (index >= 0 && index < sweepers.Count)
 				AsyncUpdate(sweepers[index]);
 		}

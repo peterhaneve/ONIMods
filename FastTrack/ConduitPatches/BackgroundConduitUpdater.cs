@@ -97,7 +97,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 			onComplete.Dispose();
 		}
 
-		public void InternalDoWorkItem(int index) {
+		public void InternalDoWorkItem(int index, int threadIndex) {
 			var inst = Game.Instance;
 			if (inst != null && inst.IsInitialized() && !inst.IsLoading())
 				switch (index) {

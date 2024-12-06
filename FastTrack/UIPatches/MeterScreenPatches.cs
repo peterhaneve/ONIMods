@@ -25,30 +25,6 @@ using UnityEngine;
 
 namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
-	/// Applied to BedDiagnostic to remove wasteful allocations in the average value
-	/// calculation.
-	/// </summary>
-	[HarmonyPatch(typeof(BedDiagnostic), nameof(BedDiagnostic.GetAverageValueString))]
-	public static class BedDiagnostic_GetAverageValueString_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
-
-		/// <summary>
-		/// Applied before GetAverageValueString runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(BedDiagnostic __instance, ref string __result) {
-			int worldID = __instance.worldID, nDupes = Components.LiveMinionIdentities.
-				GetWorldItems(worldID).Count, numBeds = 0;
-			var sleepables = Components.Sleepables.GetWorldItems(worldID);
-			int n = sleepables.Count;
-			for (int i = 0; i < n; i++)
-				if (sleepables[i].TryGetComponent(out Assignable _)) numBeds++;
-			__result = numBeds + "/" + nDupes;
-			return false;
-		}
-	}
-
-	/// <summary>
 	/// Applied to BreathabilityTracker to reduce queries and speed up updating the
 	/// suffocation status of Duplicants.
 	/// </summary>
@@ -336,10 +312,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 			trapped = trapped && !CanReach(navigator, pods);
 			trapped = trapped && !CanReach(navigator, teleporters);
-			if (trapped) {
-				n = beds.Count;
-				for (int i = 0; i < n; i++) {
-					var bed = beds[i];
+			if (trapped)
+				foreach (var bed in beds)
 					if (bed.TryGetComponent(out Assignable assignable) && assignable.
 							IsAssignedTo(duplicant) && bed.TryGetComponent(
 							out IApproachable ia)) {
@@ -348,8 +322,6 @@ namespace PeterHan.FastTrack.UIPatches {
 						// reachable
 						break;
 					}
-				}
-			}
 			return trapped;
 		}
 
@@ -367,7 +339,8 @@ namespace PeterHan.FastTrack.UIPatches {
 				int n = duplicants.Count;
 				var pods = Components.Telepads.GetWorldItems(worldID);
 				var teleporters = Components.WarpReceivers.GetWorldItems(worldID);
-				var beds = Components.Sleepables.GetWorldItems(worldID);
+				var beds = ListPool<Sleepable, TrappedDuplicantDiagnostic>.Allocate();
+				beds.AddRange(Components.NormalBeds.WorldItemsEnumerate(worldID, true));
 				for (int i = 0; i < n && !trapped; i++) {
 					var duplicant = duplicants[i];
 					// The criteria used by Trapped basically requires idle Duplicants who
@@ -382,6 +355,7 @@ namespace PeterHan.FastTrack.UIPatches {
 						trapped = true;
 					}
 				}
+				beds.Recycle();
 			}
 			if (!trapped)
 				__result.clickThroughTarget = null;

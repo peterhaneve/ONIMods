@@ -227,7 +227,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			toUpdate.Clear();
 		}
 
-		public void InternalDoWorkItem(int index) {
+		public void InternalDoWorkItem(int index, int threadIndex) {
 			int n = toUpdate.Count;
 			if (index >= 0 && index < n)
 				toUpdate[index].RunUpdate();

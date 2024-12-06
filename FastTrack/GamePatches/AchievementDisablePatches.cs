@@ -69,8 +69,6 @@ namespace PeterHan.FastTrack.GamePatches {
 					false, PPatchTools.AnyArguments);
 				yield return type.GetMethodSafe(nameof(ColonyAchievementTracker.
 					UpgradeTamedCritterAchievements), false, PPatchTools.AnyArguments);
-				yield return typeof(RationTracker).GetMethodSafe(nameof(RationTracker.
-					RegisterRationsConsumed), false, PPatchTools.AnyArguments);
 				yield return typeof(Vent).GetMethodSafe(nameof(Vent.UpdateVentedMass), false,
 					PPatchTools.AnyArguments);
 			}

@@ -472,7 +472,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				pickups.Clear();
 			}
 
-			public void InternalDoWorkItem(int index) {
+			public void InternalDoWorkItem(int index, int threadIndex) {
 				if (index >= 0 && index < Count) {
 					var thisPrefab = updater.byId[index];
 					thisPrefab.UpdatePickups(navigator.PathProber, navigator, worker);
@@ -529,7 +529,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				Count = count;
 			}
 
-			public void InternalDoWorkItem(int index) {
+			public void InternalDoWorkItem(int index, int threadIndex) {
 				if (index >= 0 && index < Count) {
 					var task = updater.updatingPickups[index];
 					updater.UpdateFetches(task.navigator, task.fetchChores, task.fetches);
@@ -568,7 +568,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				byId = updater.byId;
 			}
 
-			public void InternalDoWorkItem(int index) {
+			public void InternalDoWorkItem(int index, int threadIndex) {
 				if (index >= 0 && index < byId.Count)
 					GamePatches.SolidTransferArmUpdater.Instance?.UpdateCache(byId[index].
 						fetchables.GetDataList());
@@ -611,7 +611,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				this.updater = updater;
 			}
 
-			public void InternalDoWorkItem(int index) {
+			public void InternalDoWorkItem(int index, int threadIndex) {
 				// Few offset tables should be updated here, as the offset tables are already
 				// recalculated when the pickupable's cached cell is updated
 				if (index >= 0 && index < byId.Count)

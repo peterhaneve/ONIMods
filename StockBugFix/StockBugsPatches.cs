@@ -51,7 +51,8 @@ namespace PeterHan.StockBugFix {
 		/// </summary>
 		[PLibMethod(RunAt.AfterDbInit)]
 		internal static void AfterDbInit() {
-			FixStoreFood();
+			if (StockBugFixOptions.Instance.StoreFoodChoreType == StoreFoodCategory.Store)
+				FixStoreFood();
 			FixRadiationSickness();
 			if (StockBugFixOptions.Instance.FixTraits)
 				TraitsExclusionPatches.FixTraits();
@@ -114,14 +115,26 @@ namespace PeterHan.StockBugFix {
 		/// </summary>
 		private static void FixStoreFood() {
 			var db = Db.Get();
-			var storeType = db.ChoreGroups?.Storage;
-			var storeFood = db.ChoreTypes?.FoodFetch;
-			if (StockBugFixOptions.Instance.StoreFoodChoreType == StoreFoodCategory.Store &&
-					storeType != null && storeFood != null) {
-				// Default is "supply"
-				db.ChoreGroups.Hauling?.choreTypes?.Remove(storeFood);
-				storeType.choreTypes.Add(storeFood);
-				storeFood.groups[0] = storeType;
+			var groups = db.ChoreGroups;
+			var types = db.ChoreTypes;
+			if (groups != null && types != null) {
+				var supplyType = groups.Hauling;
+				var storeType = groups.Storage;
+				var storeFood = types.FoodFetch;
+				var storeEquipment = types.EquipmentFetch;
+				if (supplyType != null && storeType != null) {
+					// Default is "supply"
+					if (storeFood != null) {
+						supplyType.choreTypes?.Remove(storeFood);
+						storeType.choreTypes?.Add(storeFood);
+						storeFood.groups[0] = storeType;
+					}
+					if (storeEquipment != null) {
+						supplyType.choreTypes?.Remove(storeEquipment);
+						storeType.choreTypes?.Add(storeEquipment);
+						storeEquipment.groups[0] = storeType;
+					}
+				}
 			}
 		}
 

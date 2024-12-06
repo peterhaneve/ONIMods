@@ -95,7 +95,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 				bool run = ___brain != null;
 				if (run && ___brain.TryGetComponent(out Schedulable schedulable) && inst !=
 						null && recreation != null) {
-					var block = schedulable.GetSchedule().GetBlock(Schedule.GetBlockIdx());
+					var block = schedulable.GetSchedule().GetCurrentScheduleBlock();
 					run = block.IsAllowed(recreation) || (finishTasks != null && block.
 						IsAllowed(finishTasks));
 				}

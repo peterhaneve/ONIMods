@@ -96,7 +96,7 @@ namespace PeterHan.FastTrack {
 			threads = new WorkerThread[n];
 			workQueue = new Queue<IWork>();
 			for (int i = 0; i < n; i++)
-				threads[i] = new WorkerThread(this, "FastTrackWorker" + i);
+				threads[i] = new WorkerThread(this, "FastTrackWorker" + i, i);
 		}
 
 		/// <summary>
@@ -131,12 +131,13 @@ namespace PeterHan.FastTrack {
 		/// <summary>
 		/// Called by workers to dequeue and execute a work item.
 		/// </summary>
-		internal bool DoNextWorkItem() {
+		/// <param name="threadIndex">The currently running thread ID.</param>
+		internal bool DoNextWorkItem(int threadIndex) {
 			int index = Interlocked.Increment(ref nextWorkIndex);
 			IWorkItemCollection items;
 			bool executed = false;
 			if (currentJob != null && index >= 0 && index < (items = currentJob.Jobs).Count) {
-				items.InternalDoWorkItem(index);
+				items.InternalDoWorkItem(index, threadIndex);
 				executed = true;
 			}
 			return executed;
@@ -205,9 +206,15 @@ namespace PeterHan.FastTrack {
 			/// </summary>
 			private readonly AsyncJobManager parent;
 
-			internal WorkerThread(AsyncJobManager parent, string name) {
+			/// <summary>
+			/// Required for running Klei jobs, but none of them use it yet
+			/// </summary>
+			private readonly int threadIndex;
+
+			internal WorkerThread(AsyncJobManager parent, string name, int index) {
 				errors = new List<Exception>(4);
 				this.parent = parent;
+				threadIndex = index;
 				var thread = new Thread(Run) {
 					// Klei uses AboveNormal
 					Priority = ThreadPriority.Normal, Name = name
@@ -239,7 +246,7 @@ namespace PeterHan.FastTrack {
 						break;
 					}
 					try {
-						while (!parent.isDisposed && parent.DoNextWorkItem()) { }
+						while (!parent.isDisposed && parent.DoNextWorkItem(threadIndex)) { }
 					} catch (Exception e) {
 						errors.Add(e);
 					}

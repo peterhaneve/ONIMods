@@ -37,7 +37,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// The tags with which to collide.
 		/// </summary>
 		private static readonly Tag[] COLLIDE_WITH = {
-			GameTags.Creature, GameTags.Minion
+			GameTags.Creature, GameTags.BaseMinion
 		};
 
 		/// <summary>
@@ -180,13 +180,14 @@ namespace PeterHan.FastTrack.GamePatches {
 					item.TryGetComponent(out Health hp) && !hp.IsDefeated()) {
 				collided = true;
 				hp.Damage(DAMAGE_ON_HIT);
-				if (prefabID.HasTag(GameTags.Minion)) {
+				if (prefabID.HasTag(GameTags.BaseMinion)) {
 					var smi = item.GetSMI<WoundMonitor.Instance>();
 					// If the hit was not a KO hit
 					if (smi != null && !hp.IsDefeated())
 						smi.PlayKnockedOverImpactAnimation();
 					// Add germs to them
-					if (item.TryGetComponent(out PrimaryElement pe))
+					if (!FastTrackOptions.Instance.NoDisease && item.TryGetComponent(
+							out PrimaryElement pe))
 						pe.AddDisease(diseaseIndex, Mathf.FloorToInt(hep.payload * 50.0f),
 							"HEPImpact");
 					hep.Collide(HighEnergyParticle.CollisionType.Minion);

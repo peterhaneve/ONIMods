@@ -81,9 +81,10 @@ namespace PeterHan.StockBugFix {
 		public bool DelayModsMenu { get; set; }
 
 		/// <summary>
-		/// Allows changing food storage to a store errand. Does not affect cooking supply.
+		/// Allows changing food and equipment storage to a store errand. Does not affect cooking supply.
 		/// </summary>
-		[Option("Store Food Chore Type", "Selects which type of chore is used for storing food in Ration Boxes or Refrigerators.\r\nDoes not affect deliveries to the Electric Grill, Microbe Musher, or Gas Range.")]
+		[Option("Storage Chore Type", "Selects which type of chore is used for storing food in Ration Boxes or Refrigerators,\r\nand storing equipment such as Atmo Suits.\r\n\r\n" +
+			"Does not affect deliveries to the Electric Grill, Microbe Musher, or Gas Range.")]
 		[JsonProperty]
 		public StoreFoodCategory StoreFoodChoreType { get; set; }
 
@@ -110,9 +111,9 @@ namespace PeterHan.StockBugFix {
 	/// put food in the fridges...
 	/// </summary>
 	public enum StoreFoodCategory {
-		[Option("Store", "Store Food uses the Store priority")]
+		[Option("Store", "Store Food and Store Equipment use the Store priority")]
 		Store,
-		[Option("Supply", "Store Food uses the Supply priority")]
+		[Option("Supply", "Store Food and Store Equipment use the Supply priority")]
 		Supply,
 	}
 }
