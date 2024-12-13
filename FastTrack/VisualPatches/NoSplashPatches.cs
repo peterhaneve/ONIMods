@@ -51,7 +51,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(Vector3 position, float mass, float temperature) {
-			var offsets = OxygenBreather.DEFAULT_BREATHABLE_OFFSETS;
+			var offsets = GasBreatherFromWorldProvider.DEFAULT_BREATHABLE_OFFSETS;
 			int gameCell = Grid.PosToCell(position), count = offsets.Length, spawnCell = -1;
 			for (int i = 0; i < count; i++) {
 				int testCell = Grid.OffsetCell(gameCell, offsets[i]);
@@ -62,7 +62,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 							Breathable)) {
 						spawnCell = testCell;
 						break;
-					} else if (element.IsGas)
+					}
+					if (element.IsGas)
 						// Only in gases, not in vacuums, liquids, or solids
 						spawnCell = testCell;
 				}

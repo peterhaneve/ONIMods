@@ -44,8 +44,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			else {
 				for (int i = 0; i < n; i++)
 					if (duplicants[i].TryGetComponent(out OxygenBreather breather) &&
-							!breather.IsSuffocating)
-						total += breather.GetGasProvider().IsLowOxygen() ? 50 : 100;
+							breather.IsOutOfOxygen)
+						total += breather.GetCurrentGasProvider().IsLowOxygen() ? 50 : 100;
 				__instance.AddPoint(Mathf.Round((float)total / n));
 			}
 			return false;
