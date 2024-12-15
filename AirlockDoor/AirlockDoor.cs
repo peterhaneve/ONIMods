@@ -186,6 +186,11 @@ namespace PeterHan.AirlockDoor {
 		/// </summary>
 		private bool requestedState;
 
+		/// <summary>
+		/// Updates the world state if the door is plugged or unplugged.
+		/// </summary>
+		private bool wasConnected;
+
 		// These fields are populated automatically by KMonoBehaviour
 #pragma warning disable IDE0044
 #pragma warning disable CS0649
@@ -207,7 +212,7 @@ namespace PeterHan.AirlockDoor {
 #pragma warning restore IDE0044
 
 		internal AirlockDoor() {
-			locked = requestedState = false;
+			locked = requestedState = wasConnected = false;
 			energyAvailable = 0.0f;
 			EnergyCapacity = 1000.0f;
 			EnergyPerUse = 0.0f;
@@ -241,6 +246,14 @@ namespace PeterHan.AirlockDoor {
 			return smi.IsInsideState(smi.sm.left) || smi.IsInsideState(smi.sm.
 				vacuum) || smi.IsInsideState(smi.sm.right) || smi.IsInsideState(smi.sm.
 				vacuum_check);
+		}
+
+		/// <summary>
+		/// Whether the door is not even plugged in at all.
+		/// </summary>
+		/// <returns>true if the door is completely unplugged, or false otherwise.</returns>
+		public bool IsUnplugged() {
+			return !consumer.IsConnected;
 		}
 
 		/// <summary>
@@ -368,11 +381,16 @@ namespace PeterHan.AirlockDoor {
 		}
 
 		public void Sim200ms(float dt) {
+			bool connected = consumer != null && consumer.IsConnected;
 			if (requestedState != locked && !IsDoorActive()) {
 				// Automation locked or unlocked the door
 				locked = requestedState;
 				RefreshControlState();
 				Trigger((int)GameHashes.DoorStateChanged, this);
+			}
+			if (wasConnected != connected) {
+				wasConnected = connected;
+				UpdateWorldState();
 			}
 			if (operational.IsOperational) {
 				float power = energyAvailable, capacity = EnergyCapacity;
@@ -405,18 +423,19 @@ namespace PeterHan.AirlockDoor {
 		/// Updates the state of the door's cells in the game.
 		/// </summary>
 		private void UpdateWorldState() {
-			bool usable = IsUsableOrActive(), openLeft = IsLeftOpen, openRight = IsRightOpen;
+			bool usable = IsUsableOrActive(), openLeft = IsLeftOpen, openRight = IsRightOpen,
+				unplugged = IsUnplugged();
 			int baseCell = building.GetCell(), centerUpCell = Grid.CellAbove(baseCell);
 			if (Grid.IsValidBuildingCell(baseCell))
 				Game.Instance.SetDupePassableSolid(baseCell, !locked && usable, false);
 			if (Grid.IsValidBuildingCell(centerUpCell))
 				Game.Instance.SetDupePassableSolid(centerUpCell, !locked && usable, false);
 			// Left side cells controlled by left open
-			UpdateWorldState(Grid.CellLeft(baseCell), usable, openLeft);
-			UpdateWorldState(Grid.CellUpLeft(baseCell), usable, openLeft);
+			UpdateWorldState(Grid.CellLeft(baseCell), usable || unplugged, openLeft);
+			UpdateWorldState(Grid.CellUpLeft(baseCell), usable || unplugged, openLeft);
 			// Right side cells controlled by right open
-			UpdateWorldState(Grid.CellRight(baseCell), usable, openRight);
-			UpdateWorldState(Grid.CellUpRight(baseCell), usable, openRight);
+			UpdateWorldState(Grid.CellRight(baseCell), usable || unplugged, openRight);
+			UpdateWorldState(Grid.CellUpRight(baseCell), usable || unplugged, openRight);
 			var inst = Pathfinding.Instance;
 			foreach (var cell in building.PlacementCells)
 				inst.AddDirtyNavGridCell(cell);

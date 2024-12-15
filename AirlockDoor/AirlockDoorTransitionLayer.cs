@@ -49,7 +49,7 @@ namespace PeterHan.AirlockDoor {
 			if (Grid.HasDoor[doorCell]) {
 				var go = Grid.Objects[doorCell, buildingLayer];
 				if (go != null && go.TryGetComponent(out AirlockDoor door) && door.isSpawned &&
-						!doors.ContainsKey(door))
+						!doors.ContainsKey(door) && !door.IsUnplugged())
 					RequestOpenDoor(door, doorCell, navCell);
 			}
 		}
@@ -175,7 +175,7 @@ namespace PeterHan.AirlockDoor {
 					doors.Add(door, DoorRequestType.EnterLeft);
 					door.EnterLeft?.Queue();
 				}
-			} // Else, entering center cell which is "always" passable
+			} // Else, entering center cell which is "always" passable if powered
 		}
 
 		/// <summary>

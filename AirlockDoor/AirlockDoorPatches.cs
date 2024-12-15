@@ -66,10 +66,10 @@ namespace PeterHan.AirlockDoor {
 		}
 
 		/// <summary>
-		/// Applied to MinionConfig to add the navigator transition for airlocks.
+		/// Applied to BaseMinionConfig to add the navigator transition for airlocks.
 		/// </summary>
-		[PLibPatch(RunAt.AfterDbInit, nameof(MinionConfig.OnSpawn),
-			RequireType = nameof(MinionConfig), PatchType = HarmonyPatchType.Postfix)]
+		[PLibPatch(RunAt.AfterDbInit, nameof(BaseMinionConfig.BaseOnSpawn),
+			RequireType = nameof(BaseMinionConfig), PatchType = HarmonyPatchType.Postfix)]
 		internal static void MinionSpawn_Postfix(GameObject go) {
 			if (go.TryGetComponent(out Navigator nav))
 				nav.transitionDriver.overrideLayers.Add(new AirlockDoorTransitionLayer(nav));

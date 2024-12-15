@@ -165,11 +165,14 @@ namespace PeterHan.StockBugFix {
 			var totalCalories = 0.0f;
 			if (dupes != null)
 				foreach (var dupe in dupes) {
-					var caloriesPerSecond = Db.Get().Amounts.Calories.Lookup(dupe).
-						GetDelta();
-					// "tummyless" attribute adds float.PositiveInfinity
-					if (!float.IsInfinity(caloriesPerSecond))
-						totalCalories += caloriesPerSecond * Constants.SECONDS_PER_CYCLE;
+					var kcalAttribute = Db.Get().Amounts.Calories.Lookup(dupe);
+					// No kcal on bionic minions
+					if (kcalAttribute != null) {
+						var caloriesPerSecond = kcalAttribute.GetDelta();
+						// "tummyless" attribute adds float.PositiveInfinity
+						if (!float.IsInfinity(caloriesPerSecond))
+							totalCalories += caloriesPerSecond * Constants.SECONDS_PER_CYCLE;
+					}
 				}
 			return Mathf.Abs(totalCalories);
 		}
