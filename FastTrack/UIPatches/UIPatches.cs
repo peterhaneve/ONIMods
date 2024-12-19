@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
+using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using UnityEngine;
@@ -163,7 +164,9 @@ namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
 	/// Applied to TechItems to remove a duplicate Add call.
 	/// </summary>
-	[HarmonyPatch(typeof(Database.TechItems), nameof(Database.TechItems.AddTechItem))]
+	[HarmonyPatch(typeof(Database.TechItems), nameof(Database.TechItems.AddTechItem),
+		typeof(string), typeof(string), typeof(string), typeof(Func<string, bool, Sprite>),
+		typeof(string[]), typeof(string[]), typeof(bool))]
 	public static class TechItems_AddTechItem_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
 

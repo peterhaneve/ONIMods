@@ -360,11 +360,11 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Applied to DetailsScreen to make opening the codex entry much faster!
 		/// </summary>
 		[HarmonyPatch(typeof(DetailsScreen), nameof(DetailsScreen.CodexEntryButton_OnClick))]
-		internal static class OpenCodexEntry_Patch {
+		internal static class CodexEntryButton_OnClick_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.SideScreenOpts;
 
 			/// <summary>
-			/// Applied before OpenCodexEntry runs.
+			/// Applied before CodexEntryButton_OnClick runs.
 			/// </summary>
 			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix() {

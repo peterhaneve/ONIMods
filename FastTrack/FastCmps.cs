@@ -235,7 +235,8 @@ namespace PeterHan.FastTrack {
 				foreach (var type in TYPES_TO_PATCH)
 					yield return typeof(Components.Cmps<>).MakeGenericType(type).GetMethodSafe(
 						nameof(Components.Cmps<MinionIdentity>.GetWorldItems), false,
-						typeof(int), typeof(bool));
+						typeof(int), typeof(ICollection<int>), typeof(Func<,>).
+						MakeGenericType(type, typeof(bool)));
 			}
 
 			/// <summary>
