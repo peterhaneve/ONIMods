@@ -67,7 +67,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		public static LookupAttributeConverter GetConverterLookup(
 				AttributeConverters converters) {
 			LookupAttributeConverter lookup = null;
-			if (converters != null) {
+			if (converters != null && converters.Count > 0) {
 				var convList = converters.converters;
 				if (!(convList[0] is LookupAttributeConverter lol)) {
 					lol = new LookupAttributeConverter(converters.gameObject, converters);
