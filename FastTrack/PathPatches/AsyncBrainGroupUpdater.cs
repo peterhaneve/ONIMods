@@ -291,6 +291,20 @@ namespace PeterHan.FastTrack.PathPatches {
 		private void FinishFetches() {
 			onFetchComplete.Set();
 		}
+		
+		/// <summary>
+		/// Adds a brain to the queue.
+		/// </summary>
+		/// <param name="brain">The brain to queue up.</param>
+		internal void QueueBrain(Brain brain) {
+			if (brain.IsRunning()) {
+				// Add minion and rover brains to the brain scheduler
+				if (brain.prefabId.HasTag(GameTags.DupeBrain))
+					AddBrain(brain);
+				else
+					brain.UpdateBrain();
+			}
+		}
 
 		/// <summary>
 		/// Removes a storage from the cache.

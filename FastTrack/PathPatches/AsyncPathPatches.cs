@@ -88,6 +88,8 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(BrainScheduler), nameof(BrainScheduler.RenderEveryTick))]
 	internal static class BrainScheduler_RenderEveryTick_Patch {
+		private static readonly ISet<Brain> UPDATED = new HashSet<Brain>();
+
 		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
 
 		[HarmonyPriority(Priority.Low)]
@@ -117,15 +119,21 @@ namespace PeterHan.FastTrack.PathPatches {
 			int n = brains.Count;
 			if (n > 0) {
 				int index = brainGroup.nextUpdateBrain % n;
+				UPDATED.Clear();
+				if (brainGroup.AllowPriorityBrains()) {
+					var prioritize = brainGroup.priorityBrains;
+					if (prioritize.Count > 0) {
+						var brain = prioritize.Dequeue();
+						// Execute a priority brain if possible first
+						UPDATED.Add(brain);
+						inst.QueueBrain(brain);
+					}
+				}
 				for (int i = brainGroup.InitialProbeCount(); i > 0; i--) {
 					var brain = brains[index];
-					if (brain.IsRunning()) {
-						// Add minion and rover brains to the brain scheduler
-						if (brain.prefabId.HasTag(GameTags.DupeBrain))
-							inst.AddBrain(brain);
-						else
-							brain.UpdateBrain();
-					}
+					if (UPDATED.Add(brain))
+						// Do not run a brain twice
+						inst.QueueBrain(brain);
 					index = (index + 1) % n;
 				}
 				brainGroup.nextUpdateBrain = index;
