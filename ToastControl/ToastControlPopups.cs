@@ -62,6 +62,7 @@ namespace PeterHan.ToastControl {
 			{ nameof(FleeStates), (c, t) => Options.Fleeing },
 			{ nameof(FlushToilet), ShowGermsAdded },
 			{ nameof(HarvestDesignatable), (c, t) => Options.HarvestToggle },
+			{ nameof(MaterialSelector), ShowMaterialChanged },
 			{ nameof(MinionResume), (c, t) => Options.SkillPointEarned },
 			{ nameof(Moppable), (c, t) => Options.ElementMopped },
 			{ nameof(MopTool), ShowMopError },
@@ -153,6 +154,8 @@ namespace PeterHan.ToastControl {
 			return (storage == null || storage.fxPrefix == Storage.FXPrefix.Delivered) ?
 				Options.Delivered : Options.PickedUp;
 		}
+
+		private static bool ShowMaterialChanged(object _, string text) => Options.MaterialChanged;
 
 		private static bool ShowMopError(object _, string text) {
 			return (text == STRINGS.UI.TOOLS.MOP.NOT_ON_FLOOR) ? Options.MopNotFloor : Options.

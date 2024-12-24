@@ -204,6 +204,11 @@ namespace PeterHan.ToastControl {
 			"STRINGS.UI.TOOLTIPS.SELECTAMATERIAL",
 			"STRINGS.UI.FRONTEND.TOASTCONTROL.MATERIALS")]
 		public bool InsufficientMaterials { get; set; }
+		
+		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.MATERIAL_CHANGED",
+			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.MATERIAL_CHANGED",
+			"STRINGS.UI.FRONTEND.TOASTCONTROL.MATERIALS")]
+		public bool MaterialChanged { get; set; }
 
 		[Option("STRINGS.UI.FRONTEND.TOASTCONTROL.RESEARCH_GAINED",
 			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.RESEARCH_GAINED",
@@ -239,7 +244,7 @@ namespace PeterHan.ToastControl {
 			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.DEBUG_LOCATION_INVALID",
 			"STRINGS.UI.FRONTEND.TOASTCONTROL.TOOLS")]
 		public bool InvalidLocation { get; set; }
-
+		
 		[Option("STRINGS.UI.TOOLS.MOP.NOT_ON_FLOOR",
 			"STRINGS.UI.TOOLTIPS.TOASTCONTROL.MOP_NOT_FLOOR",
 			"STRINGS.UI.FRONTEND.TOASTCONTROL.TOOLS")]
@@ -288,6 +293,7 @@ namespace PeterHan.ToastControl {
 			InvalidLocation = true;
 			ItemGained = true;
 			Overjoyed = true;
+			MaterialChanged = true;
 			MopNotFloor = true;
 			MopTooMuch = true;
 			PickedUp = false;

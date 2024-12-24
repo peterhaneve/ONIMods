@@ -67,6 +67,7 @@ namespace PeterHan.ToastControl {
 					public static LocString HARVEST_TOGGLED = "Autoharvest toggled";
 					public static LocString INVALID_CONNECTION = "Invalid utility connection";
 					public static LocString ITEM_GAINED = "Item obtained";
+					public static LocString MATERIAL_CHANGED = "Building material changed";
 					public static LocString OVERJOYED = "Overjoyed reactions";
 					public static LocString PICKEDUP_DUPLICANT = string.Format(STRINGS.UI.PICKEDUP,
 						ITEM, DUPLICANT);
@@ -137,6 +138,7 @@ namespace PeterHan.ToastControl {
 						"GERMS") + " were spawned by a building or Duplicant action";
 					public static LocString INVALID_CONNECTION = "Utility connection is not valid:\n - Transit Tube cannot make a U-Turn";
 					public static LocString ITEM_GAINED = "A new item was obtained";
+					public static LocString MATERIAL_CHANGED = "Selected building material was changed due to insufficient quantity";
 					public static LocString MOP_NOT_FLOOR = STRINGS.UI.FormatAsLink("Liquid",
 						"LIQUID") + " is not on floor";
 					public static LocString MOP_TOO_MUCH = "Too much " + STRINGS.UI.
