@@ -22,12 +22,12 @@ using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using System.Collections.Generic;
+using System.Reflection;
 using PeterHan.PLib.PatchManager;
 using PeterHan.PLib.UI;
 using UnityEngine;
 
 using FINISHTASK = PeterHan.FinishTasks.FinishTasksStrings.UI.SCHEDULEGROUPS.FINISHTASK;
-using System.Reflection;
 
 namespace PeterHan.FinishTasks {
 	/// <summary>
@@ -136,16 +136,8 @@ namespace PeterHan.FinishTasks {
 		/// Applied to StandardChoreBase to add a precondition for not starting new work chores
 		/// during finish tasks blocks.
 		/// </summary>
-		[HarmonyPatch]
+		[HarmonyPatch(typeof(StandardChoreBase), nameof(Chore.AddPrecondition))]
 		public static class StandardChoreBase_AddPrecondition_Patch {
-			internal static IEnumerable<MethodBase> TargetMethods() {
-				const string METHOD_NAME = nameof(Chore.AddPrecondition);
-				yield return typeof(StandardChoreBase).GetMethodSafe(METHOD_NAME, false,
-					PPatchTools.AnyArguments);
-				yield return typeof(MovePickupableChore).GetMethodSafe(METHOD_NAME, false,
-					PPatchTools.AnyArguments);
-			}
-
 			/// <summary>
 			/// Applied after AddPrecondition runs.
 			/// </summary>
@@ -155,6 +147,21 @@ namespace PeterHan.FinishTasks {
 						type == Work)
 					// Any task classified as Work gets our finish time precondition
 					__instance.AddPrecondition(CAN_START_NEW, __instance);
+			}
+		}
+
+		/// <summary>
+		/// Applied to MovePickupableChore to add a precondition for not starting new Relocate
+		/// Item chores during finish tasks blocks.
+		/// </summary>
+		[HarmonyPatch(typeof(MovePickupableChore), MethodType.Constructor,
+			typeof(IStateMachineTarget), typeof(GameObject), typeof(System.Action<Chore>))]
+		public static class MovePickupableChore_AddPrecondition_Patch {
+			/// <summary>
+			/// Applied after the constructor runs.
+			/// </summary>
+			internal static void Postfix(Chore __instance) {
+				__instance.AddPrecondition(CAN_START_NEW, __instance);
 			}
 		}
 
