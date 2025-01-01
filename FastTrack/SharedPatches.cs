@@ -176,11 +176,13 @@ namespace PeterHan.FastTrack {
 		/// Applied after LateUpdate runs.
 		/// </summary>
 		internal static void Postfix() {
-			var dt = PathPatches.DeferredTriggers.Instance;
-			PathPatches.AsyncBrainGroupUpdater.Instance?.EndBrainUpdate();
-			if (dt != null) {
-				dt.EndDefer();
-				dt.Process();
+			if (!Game.IsQuitting() && !KMonoBehaviour.isLoadingScene) {
+				var dt = PathPatches.DeferredTriggers.Instance;
+				PathPatches.AsyncBrainGroupUpdater.Instance?.EndBrainUpdate();
+				if (dt != null) {
+					dt.EndDefer();
+					dt.Process();
+				}
 			}
 		}
 	}

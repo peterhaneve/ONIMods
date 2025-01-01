@@ -57,7 +57,7 @@ namespace PeterHan.FastTrack {
 					public static LocString FASTATTRIBUTESMODE = "Attribute Leveling";
 					public static LocString ASYNCPATHPROBE = "Background Pathing";
 					public static LocString CACHEPATHS = "Cache Paths";
-					public static LocString CHOREOPTS = "Chore Optimizations";
+					public static LocString CHOREPRIORITYMODE = "Chore Priority Mode";
 					public static LocString NOCONVERSATIONS = "Disable Conversations";
 					public static LocString NODISEASE = "Disable Disease";
 					public static LocString FASTREACHABILITY = "Fast Reachability Checks";
@@ -111,6 +111,12 @@ namespace PeterHan.FastTrack {
 						public static LocString EXCEPTTILES = "All but Tiles";
 						public static LocString NONE = "None";
 					}
+					
+					public static class NEXTCHOREPRIORITY {
+						public static LocString HIGHER = "Immediate (default)";
+						public static LocString NORMAL = "Round Robin";
+						public static LocString DELAY = "Until Reachable Update";
+					}
 
 					public static class PIPEANIM {
 						public static LocString FULL = "Full";
@@ -151,7 +157,7 @@ namespace PeterHan.FastTrack {
 					public static LocString FASTATTRIBUTESMODE = "Optimize attribute leveling and work efficiency calculation." + PERF_MEDIUM;
 					public static LocString ASYNCPATHPROBE = "Moves some pathfinding calculations to a non-blocking thread." + PERF_HIGH;
 					public static LocString CACHEPATHS = "Cache frequently used paths and reuse them in future calculations." + PERF_MEDIUM;
-					public static LocString CHOREOPTS = "Reduces the number of chores scanned when choosing each Duplicant's next task." + PERF_MEDIUM;
+					public static LocString CHOREPRIORITYMODE = "Adjust the priority of choosing a Duplicant's next task.";
 					public static LocString NOCONVERSATIONS = "Disables all Duplicant thought and speech balloons.\n\n<color=#FF0000>Disables the Mysterious Hermit's special trait.</color>" + PERF_LOW;
 					public static LocString NODISEASE = "Completely disable the entire disease system.\n" +
 						Constants.BULLETSTRING + "Sick Bay and Disease Clinic cannot be built or used\n" +
@@ -209,6 +215,12 @@ namespace PeterHan.FastTrack {
 						public static LocString ALL = "Use mesh renderers for all graphics.\r\n<i>Incompatible with mods: True Tiles</i>";
 						public static LocString EXCEPTTILES = "Use mesh renderers for all non-tileable graphics.";
 						public static LocString NONE = "Do not use mesh renderers for any graphics.";
+					}
+					
+					public static class NEXTCHOREPRIORITY {
+						public static LocString HIGHER = "Immediately schedule Duplicants for chore selection when a chore completes.\n\n<color=#00CC00>Lowest</color> ponder time, but <color=#FF3300>slowest</color> overall.";
+						public static LocString NORMAL = "Select new chores in normal order.\n\n<color=#00CC00>Fastest</color> overall performance.";
+						public static LocString DELAY = "Delay selecting new chores until Reachability updates.\n\n<color=#FF3300>Longest</color> ponder time, but selects chores more optimally.\n<b>Fast Reachability Checks</b> must also be enabled.";
 					}
 
 					public static class PIPEANIM {

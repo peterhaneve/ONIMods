@@ -116,6 +116,10 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool CachePaths { get; set; }
 
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.CHOREPRIORITYMODE", "STRINGS.UI.TOOLTIPS.FASTTRACK.CHOREPRIORITYMODE", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS")]
+		[JsonProperty]
+		public NextChorePriority ChorePriorityMode { get; set; }
+
 		[Option("STRINGS.UI.FRONTEND.FASTTRACK.NOCONVERSATIONS", "STRINGS.UI.TOOLTIPS.FASTTRACK.NOCONVERSATIONS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS")]
 		[JsonProperty]
 		public bool NoConversations { get; set; }
@@ -270,6 +274,7 @@ namespace PeterHan.FastTrack {
 			AsyncPathProbe = true;
 			BackgroundRoomRebuild = true;
 			CachePaths = true;
+			ChorePriorityMode = NextChorePriority.Higher;
 			ClusterMapReduce = true;
 			ConduitOpts = false;
 			ConfigVersion = CURRENT_CONFIG_VERSION;
@@ -331,7 +336,7 @@ namespace PeterHan.FastTrack {
 			[Option("STRINGS.UI.FRONTEND.FASTTRACK.ACHIEVEDISABLE.DISABLED", "STRINGS.UI.TOOLTIPS.FASTTRACK.ACHIEVEDISABLE.DISABLED")]
 			Always
 		}
-
+		
 		/// <summary>
 		/// The quality to use for conduit rendering.
 		/// </summary>
@@ -355,6 +360,18 @@ namespace PeterHan.FastTrack {
 			AllButTiles,
 			[Option("STRINGS.UI.FRONTEND.FASTTRACK.MESHRENDERERS.NONE", "STRINGS.UI.TOOLTIPS.FASTTRACK.MESHRENDERERS.NONE")]
 			None
+		}
+		
+		/// <summary>
+		/// Controls priority inheritance of Duplicants that recently became idle.
+		/// </summary>
+		public enum NextChorePriority {
+			[Option("STRINGS.UI.FRONTEND.FASTTRACK.NEXTCHOREPRIORITY.HIGHER", "STRINGS.UI.TOOLTIPS.FASTTRACK.NEXTCHOREPRIORITY.HIGHER")]
+			Higher,
+			[Option("STRINGS.UI.FRONTEND.FASTTRACK.NEXTCHOREPRIORITY.NORMAL", "STRINGS.UI.TOOLTIPS.FASTTRACK.NEXTCHOREPRIORITY.NORMAL")]
+			Normal,
+			[Option("STRINGS.UI.FRONTEND.FASTTRACK.NEXTCHOREPRIORITY.DELAY", "STRINGS.UI.TOOLTIPS.FASTTRACK.NEXTCHOREPRIORITY.DELAY")]
+			Delay
 		}
 
 		/// <summary>

@@ -64,6 +64,11 @@ namespace PeterHan.FastTrack.SensorPatches {
 		public ThreadsafePartitionerLayer Mask { get; }
 
 		/// <summary>
+		/// Used to delay brain updates until reachability processes at least once.
+		/// </summary>
+		public int UpdateCount => updateCount;
+
+		/// <summary>
 		/// The cells which were added (background thread use only).
 		/// </summary>
 		private readonly IList<int> added;
@@ -112,6 +117,11 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// Called when there is work to do.
 		/// </summary>
 		private readonly EventWaitHandle trigger;
+		
+		/// <summary>
+		/// Incremented (wrap is OK) whenever a Reachability update occurs.
+		/// </summary>
+		private volatile int updateCount;
 
 		private FastGroupProber() {
 			added = new List<int>(256);
@@ -126,6 +136,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 			toDestroy = new Queue<object>(8);
 			toDo = new Queue<ReachabilityMonitor.Instance>();
 			trigger = new AutoResetEvent(false);
+			updateCount = int.MinValue;
 			// Start the task
 			var thread = new Thread(ProcessLoop) {
 				IsBackground = true, Name = "Group Prober Updater", Priority = ThreadPriority.
@@ -274,10 +285,12 @@ namespace PeterHan.FastTrack.SensorPatches {
 				d = destroyed;
 				if (!d && hit)
 					Process();
+				Interlocked.Increment(ref updateCount);
 			} while (!d);
 			// Clean up the object for real
 			probers.Clear();
 			trigger.Dispose();
+			updateCount = 0;
 		}
 
 		/// <summary>
