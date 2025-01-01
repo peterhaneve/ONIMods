@@ -25,8 +25,9 @@ using System.Collections.Generic;
 using PeterHan.PLib.PatchManager;
 using PeterHan.PLib.UI;
 using UnityEngine;
-using UnityEngine.UI;
+
 using FINISHTASK = PeterHan.FinishTasks.FinishTasksStrings.UI.SCHEDULEGROUPS.FINISHTASK;
+using System.Reflection;
 
 namespace PeterHan.FinishTasks {
 	/// <summary>
@@ -135,8 +136,16 @@ namespace PeterHan.FinishTasks {
 		/// Applied to StandardChoreBase to add a precondition for not starting new work chores
 		/// during finish tasks blocks.
 		/// </summary>
-		[HarmonyPatch(typeof(StandardChoreBase), nameof(StandardChoreBase.AddPrecondition))]
+		[HarmonyPatch]
 		public static class StandardChoreBase_AddPrecondition_Patch {
+			internal static IEnumerable<MethodBase> TargetMethods() {
+				const string METHOD_NAME = nameof(Chore.AddPrecondition);
+				yield return typeof(StandardChoreBase).GetMethodSafe(METHOD_NAME, false,
+					PPatchTools.AnyArguments);
+				yield return typeof(MovePickupableChore).GetMethodSafe(METHOD_NAME, false,
+					PPatchTools.AnyArguments);
+			}
+
 			/// <summary>
 			/// Applied after AddPrecondition runs.
 			/// </summary>
