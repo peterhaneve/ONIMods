@@ -92,6 +92,11 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// The cells which were marked dirty during path probes.
 		/// </summary>
 		private readonly ConcurrentQueue<int> dirtyCells;
+
+		/// <summary>
+		/// The temporary list of cells that became dirty this update.
+		/// </summary>
+		private readonly IList<int> dirtyTemp;
 		
 		/// <summary>
 		/// The cells which were marked dirty during path probes.
@@ -129,6 +134,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 			cells = new int[Grid.CellCount];
 			destroyed = false;
 			dirtyCells = new ConcurrentQueue<int>();
+			dirtyTemp = new List<int>(32);
 			Mask = new ThreadsafePartitionerLayer("Path Updates", Grid.WidthInCells, Grid.
 				HeightInCells);
 			probers = new ConcurrentDictionary<object, ReachableCells>(2, 64);
@@ -285,7 +291,6 @@ namespace PeterHan.FastTrack.SensorPatches {
 				d = destroyed;
 				if (!d && hit)
 					Process();
-				Interlocked.Increment(ref updateCount);
 			} while (!d);
 			// Clean up the object for real
 			probers.Clear();
@@ -310,11 +315,13 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// </summary>
 		internal void Update() {
 			// Trigger partitioner updates on the foreground thread
-			var dirtyList = ListPool<int, FastGroupProber>.Allocate();
 			while (dirtyCells.TryDequeue(out int cell))
-				dirtyList.Add(cell);
-			Mask.Trigger(dirtyList, this);
-			dirtyList.Recycle();
+				dirtyTemp.Add(cell);
+			if (dirtyTemp.Count > 0) {
+				Mask.Trigger(dirtyTemp, this);
+				dirtyTemp.Clear();
+			}
+			Interlocked.Increment(ref updateCount);
 			int n = toDo.Count;
 			if (n > 0 && FastTrackMod.GameRunning) {
 				if (n > MIN_PROCESS)

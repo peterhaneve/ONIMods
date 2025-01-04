@@ -137,7 +137,9 @@ namespace PeterHan.FastTrack.PathPatches {
 				handled.Clear();
 				switch (priorityMode) {
 				case FastTrackOptions.NextChorePriority.Delay:
-					// Add priority brains to the delay list and wait until reachability pops
+					// Add priority brains to the delay list
+					// Chicken and egg problem: Need to update the brain to get a pathing
+					// update, but not drop the chore
 					if (gp != null) {
 						reachability = gp.UpdateCount;
 						if (reachability == lastReachability)
