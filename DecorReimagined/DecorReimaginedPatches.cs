@@ -312,6 +312,25 @@ namespace ReimaginationTeam.DecorRework {
 				return cont;
 			}
 		}
+		
+		/// <summary>
+		/// Applied to EntityTemplates to alter debris decor. Runs before the buildings are
+		/// created, so the settings are loaded here.
+		/// </summary>
+		[HarmonyPatch(typeof(EntityTemplates), nameof(EntityTemplates.CreateBaseOreTemplates))]
+		public static class EntityTemplates_CreateBaseOreTemplates_Patch {
+			/// <summary>
+			/// Applied after CreateBaseOreTemplates runs.
+			/// </summary>
+			internal static void Postfix() {
+				// Settings need to be read at this time
+				Options = POptions.ReadSettings<DecorReimaginedOptions>() ??
+					new DecorReimaginedOptions();
+				PUtil.LogDebug("DecorReimaginedOptions settings: Hard Mode = {0}".F(Options.
+					HardMode));
+				DecorTuning.ApplyDebris(Options);
+			}
+		}
 
 		/// <summary>
 		/// Applied to adjust sculpture art decor levels.
@@ -357,13 +376,10 @@ namespace ReimaginationTeam.DecorRework {
 			/// Applied after LoadBuildings runs.
 			/// </summary>
 			internal static void Postfix() {
-				// Settings need to be read at this time
-				Options = POptions.ReadSettings<DecorReimaginedOptions>() ??
-					new DecorReimaginedOptions();
-				PUtil.LogDebug("DecorReimaginedOptions settings: Hard Mode = {0}".F(Options.
-					HardMode));
-				PUtil.LogDebug("Loading decor database");
-				DecorTuning.ApplyDatabase(Options);
+				if (Options != null) {
+					PUtil.LogDebug("Loading decor database");
+					DecorTuning.ApplyDatabase(Options);
+				}
 			}
 		}
 

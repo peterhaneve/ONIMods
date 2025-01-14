@@ -24,6 +24,7 @@ using System.IO;
 using System.Reflection;
 using PeterHan.PLib.Database;
 using UnityEngine;
+using Epic.OnlineServices.Platform;
 
 namespace ReimaginationTeam.DecorRework {
 	/// <summary>
@@ -84,6 +85,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// <summary>
 		/// Applies decor values from the database.
 		/// </summary>
+		/// <param name="options">The currently active Decor Reimagined options.</param>
 		internal static void ApplyDatabase(DecorReimaginedOptions options) {
 			DecorDbEntry[] entries = null;
 			try {
@@ -134,23 +136,28 @@ namespace ReimaginationTeam.DecorRework {
 					}
 				editDecor.Recycle();
 			}
-			// Patch in the debris decor
-			var baseOreTemplate = typeof(EntityTemplates).GetFieldSafe("baseOreTemplate",
-				true)?.GetValue(null) as GameObject;
-			DecorProvider component;
-			if (baseOreTemplate != null && (component = baseOreTemplate.
-					GetComponent<DecorProvider>()) != null) {
-				int radius = Math.Max(1, options.DebrisRadius);
-				component.baseDecor = options.DebrisDecor;
-				component.baseRadius = radius;
-				PUtil.LogDebug("Debris: {0:F1} radius {1:D}".F(options.DebrisDecor, radius));
-			}
 			// Patch the suits
 			PUtil.LogDebug("Snazzy Suit: {0:D} Warm/Cool Vest: {1:D}".F(options.
 				SnazzySuitDecor, options.VestDecor));
 			ClothingWearer.ClothingInfo.FANCY_CLOTHING.decorMod = options.SnazzySuitDecor;
 			ClothingWearer.ClothingInfo.COOL_CLOTHING.decorMod = options.VestDecor;
 			ClothingWearer.ClothingInfo.WARM_CLOTHING.decorMod = options.VestDecor;
+		}
+		
+		/// <summary>
+		/// Applies the selected debris decor values.
+		/// </summary>
+		/// <param name="options">The currently active Decor Reimagined options.</param>
+		internal static void ApplyDebris(DecorReimaginedOptions options) {
+			// Patch in the debris decor
+			if (PPatchTools.TryGetFieldValue(typeof(EntityTemplates), "baseOreTemplate",
+					out GameObject baseOreTemplate) && baseOreTemplate.TryGetComponent(
+					out DecorProvider component)) {
+				int radius = Math.Max(1, options.DebrisRadius);
+				component.baseDecor = options.DebrisDecor;
+				component.baseRadius = radius;
+				PUtil.LogDebug("Debris: {0:F1} radius {1:D}".F(options.DebrisDecor, radius));
+			}
 		}
 
 		/// <summary>
