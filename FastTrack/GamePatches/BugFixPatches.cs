@@ -235,4 +235,61 @@ namespace PeterHan.FastTrack.GamePatches {
 			return false;
 		}
 	}
+
+	/// <summary>
+	/// Applied to RobotElectroBankMonitor to try and figure out how a Flydo gets an invalid
+	/// power bank.
+	/// </summary>
+	[HarmonyPatch(typeof(RobotElectroBankMonitor), nameof(RobotElectroBankMonitor.
+		ChargeDecent))]
+	public static class RobotElectroBankMonitor_ChargeDecent_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
+
+		/// <summary>
+		/// Applied before ChargeDecent runs.
+		/// </summary>
+		internal static void Prefix(RobotElectroBankMonitor.Instance smi) {
+			var items = smi.electroBankStorage.items;
+			var parent = smi.gameObject;
+			int n = items.Count;
+			for (int i = 0; i < n; i++) {
+				var go = items[i];
+				if (go == null)
+					PUtil.LogWarning("Power bank was destroyed before drone: " + parent);
+				else if (!go.TryGetComponent(out Electrobank _))
+					PUtil.LogWarning("Non-power bank item in the power bank storage: " + go);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Applied to Sensors to try and debug why ClosestPickupableSensor is crashing. The
+	/// default error will not even include the correct class name (it is a generic class)
+	/// </summary>
+	[HarmonyPatch(typeof(Sensors), nameof(Sensors.UpdateSensors))]
+	public static class Sensors_UpdateSensors_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
+
+		/// <summary>
+		/// Applied before UpdateSensors runs.
+		/// </summary>
+		internal static bool Prefix(Sensors __instance) {
+			var allSensors = __instance.sensors;
+			int n = allSensors.Count;
+			for (int i = 0; i < n; i++) {
+				var sensor = allSensors[i];
+				if (sensor.IsEnabled) {
+					try {
+						sensor.Update();
+					} catch (System.Exception e) {
+						PUtil.LogError("When updating sensor " + sensor.GetType().FullName +
+							" on " + __instance.gameObject);
+						PUtil.LogException(e);
+						throw;
+					}
+				}
+			}
+			return false;
+		}
+	}
 }

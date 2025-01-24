@@ -278,57 +278,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	}
 
 	/// <summary>
-	/// Applied to Workable to speed up the GetEfficiencyMultiplier method.
-	/// </summary>
-	[HarmonyPatch(typeof(Workable), nameof(Workable.GetEfficiencyMultiplier))]
-	public static class Workable_GetEfficiencyMultiplier_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastAttributesMode;
-
-		/// <summary>
-		/// Applied before GetEfficiencyMultiplier runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(KMonoBehaviour worker, ref float __result,
-				Workable __instance) {
-			float mult = 1f;
-			int cell;
-			var ac = __instance.attributeConverter;
-			if (ac != null && worker.TryGetComponent(out AttributeConverters converters)) {
-				var lookup = LookupAttributeConverter.GetConverterLookup(converters);
-				var converter = (lookup != null) ? lookup.GetConverter(ac.Id) : converters.
-					GetConverter(ac.Id);
-				// Use fast attribute converters where possible
-				if (converter != null)
-					mult += converter.Evaluate();
-			}
-			if (__instance.lightEfficiencyBonus && Grid.IsValidCell(cell = Grid.PosToCell(
-					worker.transform.position))) {
-				ref var handle = ref __instance.lightEfficiencyBonusStatusItemHandle;
-				var hv = handle;
-				bool lit;
-				if (Grid.LightIntensity[cell] > 0) {
-					lit = true;
-					mult += TUNING.DUPLICANTSTATS.STANDARD.Light.LIGHT_WORK_EFFICIENCY_BONUS;
-					if (hv == Guid.Empty && worker.TryGetComponent(out KSelectable ks))
-						handle = ks.AddStatusItem(Db.Get().DuplicantStatusItems.
-							LightWorkEfficiencyBonus, __instance);
-				} else {
-					lit = false;
-					if (hv != Guid.Empty && worker.TryGetComponent(out KSelectable ks)) {
-						// Properly zero the Guid to avoid spamming the call later
-						ks.RemoveStatusItem(hv);
-						handle = Guid.Empty;
-					}
-				}
-				__instance.currentlyLit = lit;
-			}
-			__result = Mathf.Max(mult, __instance.minimumAttributeMultiplier);
-			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to Worker to work more efficiently using faster attribute leveling!
+	/// Applied to StandardWorker to work more efficiently using faster attribute leveling!
 	/// </summary>
 	[HarmonyPatch(typeof(StandardWorker), nameof(StandardWorker.Work), typeof(float))]
 	public static class Worker_Work_Patch {
