@@ -44,8 +44,10 @@ namespace PeterHan.FoodTooltip {
 		/// </summary>
 		/// <param name="data">The effect that was added or removed.</param>
 		private void EffectRefresh(object data) {
+			var di = DetailsScreen.Instance;
 			// Effect IDs are hard coded in HappinessMonitor and Tinkerable
-			if (data is Effect effect && EFFECTS.Contains(effect.Id) && infoScreen != null)
+			if (data is Effect effect && EFFECTS.Contains(effect.Id) && infoScreen != null &&
+					di != null && di.isActiveAndEnabled && di.target != null)
 				infoScreen.RefreshInfoScreen(true);
 		}
 
@@ -84,7 +86,8 @@ namespace PeterHan.FoodTooltip {
 		/// Refreshes the information panel. The argument is always null when reached.
 		/// </summary>
 		private void RefreshInfoPanel(object _) {
-			if (infoScreen != null)
+			var di = DetailsScreen.Instance;
+			if (infoScreen != null && di != null && di.isActiveAndEnabled && di.target != null)
 				infoScreen.RefreshInfoScreen(true);
 		}
 	}

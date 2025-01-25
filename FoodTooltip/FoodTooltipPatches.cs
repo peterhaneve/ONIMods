@@ -70,7 +70,7 @@ namespace PeterHan.FoodTooltip {
 			/// Applied after GetDescriptors runs.
 			/// </summary>
 			internal static void Postfix(GameObject obj, List<Descriptor> __result) {
-				if (__result != null && obj != null)
+				if (__result != null)
 					FoodTooltipUtils.AddCritterDescriptors(obj, __result);
 			}
 		}
@@ -140,7 +140,7 @@ namespace PeterHan.FoodTooltip {
 			/// <summary>
 			/// Applied after OnDeselectTarget runs.
 			/// </summary>
-			internal static void Postfix(SimpleInfoScreen __instance, GameObject target) {
+			internal static void Prefix(SimpleInfoScreen __instance, GameObject target) {
 				if (__instance != null && __instance.TryGetComponent(
 						out InfoScreenRefresher rf))
 					rf.OnDeselectTarget(target);

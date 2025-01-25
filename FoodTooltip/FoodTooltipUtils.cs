@@ -40,15 +40,18 @@ namespace PeterHan.FoodTooltip {
 		/// <param name="crop">The plant to query.</param>
 		/// <param name="descriptors">The location where the descriptors should be placed.</param>
 		internal static void AddCropDescriptors(Crop crop, IList<Descriptor> descriptors) {
+			var db = Db.Get();
 			var cropVal = crop.cropVal;
-			GameObject go = crop.gameObject;
-			Klei.AI.Attribute yieldAmount = Db.Get().PlantAttributes.YieldAmount;
-			float preModifiedAttributeValue = go.GetComponent<Modifiers>().GetPreModifiedAttributeValue(yieldAmount);
-			var maturity = Db.Get().Amounts.Maturity.Lookup(crop.gameObject);
-			if (maturity != null)
-				CreateDescriptors(TagManager.Create(cropVal.cropId), descriptors,
-					maturity.GetDelta() * Constants.SECONDS_PER_CYCLE * cropVal.numProduced
-					* preModifiedAttributeValue / maturity.GetMax(), FoodDescriptorTexts.PLANTS);
+			if (crop != null && crop.TryGetComponent(out Modifiers modifiers)) {
+				float preModifiedAttributeValue = modifiers.GetPreModifiedAttributeValue(
+					db.PlantAttributes.YieldAmount);
+				var maturity = Db.Get().Amounts.Maturity.Lookup(crop);
+				if (maturity != null)
+					CreateDescriptors(TagManager.Create(cropVal.cropId), descriptors,
+						maturity.GetDelta() * Constants.SECONDS_PER_CYCLE * cropVal.
+						numProduced * preModifiedAttributeValue / maturity.GetMax(),
+						FoodDescriptorTexts.PLANTS);
+			}
 		}
 
 		/// <summary>
@@ -86,8 +89,10 @@ namespace PeterHan.FoodTooltip {
 		/// <param name="drops">The tag IDs of the dropped items.</param>
 		/// <param name="result">The location where the dropped items will be stored.</param>
 		private static void CollectDrops(string[] drops, IDictionary<string, int> result) {
+			int n = drops.Length;
 			result.Clear();
-			foreach (string drop in drops) {
+			for (int i = 0; i < n; i++) {
+				string drop = drops[i];
 				if (!result.TryGetValue(drop, out int qty))
 					qty = 0;
 				result[drop] = qty + 1;
