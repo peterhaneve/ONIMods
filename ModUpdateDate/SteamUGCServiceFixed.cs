@@ -296,6 +296,7 @@ namespace PeterHan.ModUpdateDate {
 			toQuery.Recycle();
 			if (toAdd.Count > 0 || toUpdate.Count > 0 || toRemove.Count > 0 || loadPreviews.
 					Count > 0) {
+				string path;
 				firstEvent = true;
 				// Event needs to be triggered
 				for (int i = 0; i < n; i++)
@@ -303,7 +304,10 @@ namespace PeterHan.ModUpdateDate {
 				if (n > 0)
 					foreach (var added in toAdd)
 						// Mods that were successfully added will be updated in the future
-						if (allMods.TryGetValue(added, out var info))
+						// Do not mark mods which will be classified as "failed to read
+						// details" as updated to mitigate a TOCTTOU in Klei code
+						if (allMods.TryGetValue(added, out var info) && !string.IsNullOrEmpty(
+								path = info.installPath) && System.IO.File.Exists(path))
 							info.clientSeen = true;
 			}
 			// Actually destroy all pending destroy mods

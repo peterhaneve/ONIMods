@@ -17,7 +17,6 @@
  */
 
 using HarmonyLib;
-using PeterHan.FastTrack.SensorPatches;
 using PeterHan.PLib.Core;
 using System.Collections.Generic;
 using System.Reflection;
@@ -27,6 +26,28 @@ using SceneEntryHash = System.Collections.Generic.HashSet<ScenePartitionerEntry>
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.PathPatches {
+	/// <summary>
+	/// Applied to Brain to stop chore selection until reachability updates.
+	/// </summary>
+	[HarmonyPatch(typeof(Brain), nameof(Brain.UpdateChores))]
+	public static class Brain_UpdateChores_Patch {
+		internal static bool Prepare() {
+			var opts = FastTrackOptions.Instance;
+			return opts.PickupOpts && opts.FastReachability && opts.ChorePriorityMode ==
+				FastTrackOptions.NextChorePriority.Delay;
+		}
+
+		/// <summary>
+		/// Applied before UpdateChores runs.
+		/// </summary>
+		internal static bool Prefix(Brain __instance) {
+			var consumer = __instance.choreConsumer;
+			var inst = PriorityBrainScheduler.Instance;
+			return consumer == null || consumer.choreDriver.HasChore() || !inst.updateFirst.
+				Contains(__instance);
+		}
+	}
+
 	/// <summary>
 	/// Applied to BrainScheduler.BrainGroup to move the path probe updates to a fully
 	/// asychronous task.
@@ -85,101 +106,10 @@ namespace PeterHan.FastTrack.PathPatches {
 	}
 
 	/// <summary>
-	/// Updates priority brains in one of three modes.
-	/// </summary>
-	internal sealed class PriorityBrainScheduler {
-		/// <summary>
-		/// The singleton instance of this class.
-		/// </summary>
-		public static readonly PriorityBrainScheduler Instance = new PriorityBrainScheduler();
-
-		/// <summary>
-		/// The brains already updated, or delayed from updating.
-		/// </summary>
-		private readonly ISet<Brain> handled = new HashSet<Brain>();
-
-		/// <summary>
-		/// The last reachability update count.
-		/// </summary>
-		private int lastReachability;
-
-		/// <summary>
-		/// Caches the settings value for the priority brain update mode.
-		/// </summary>
-		private readonly FastTrackOptions.NextChorePriority priorityMode;
-
-		public PriorityBrainScheduler() {
-			var inst = FastTrackOptions.Instance;
-			priorityMode = inst.ChorePriorityMode;
-			// Fall back to normal if fast reachability will not update the flag
-			if (priorityMode == FastTrackOptions.NextChorePriority.Delay &&
-					!inst.FastReachability)
-				priorityMode = FastTrackOptions.NextChorePriority.Normal;
-			lastReachability = 0;
-		}
-		
-		/// <summary>
-		/// Updates a brain group.
-		/// </summary>
-		/// <param name="inst">The updater for asynchronous brains like Duplicants.</param>
-		/// <param name="asyncProbe">Whether to run path probes asynchronously.</param>
-		/// <param name="brainGroup">The brain group to update.</param>
-		internal void UpdateBrainGroup(AsyncBrainGroupUpdater inst, bool asyncProbe,
-				BrainScheduler.BrainGroup brainGroup) {
-			var brains = brainGroup.brains;
-			if (asyncProbe)
-				brainGroup.AsyncPathProbe();
-			int n = brains.Count, reachability = 0;
-			if (n > 0) {
-				int index = brainGroup.nextUpdateBrain % n;
-				var prioritize = brainGroup.priorityBrains;
-				var gp = FastGroupProber.Instance;
-				handled.Clear();
-				switch (priorityMode) {
-				case FastTrackOptions.NextChorePriority.Delay:
-					// Add priority brains to the delay list
-					// Chicken and egg problem: Need to update the brain to get a pathing
-					// update, but not drop the chore
-					if (gp != null) {
-						reachability = gp.UpdateCount;
-						if (reachability == lastReachability)
-							foreach (var brain in prioritize)
-								handled.Add(brain);
-						else
-							lastReachability = reachability;
-					}
-					break;
-				case FastTrackOptions.NextChorePriority.Normal:
-					// Ban priority brains, and always use round robin
-					prioritize.Clear();
-					break;
-				default:
-					if (brainGroup.AllowPriorityBrains() && prioritize.Count > 0) {
-						var brain = prioritize.Dequeue();
-						// Execute a priority brain if possible first
-						handled.Add(brain);
-						inst.QueueBrain(brain);
-					}
-					break;
-				}
-				for (int i = brainGroup.InitialProbeCount(); i > 0; i--) {
-					var brain = brains[index];
-					if (handled.Add(brain))
-						// Do not run a brain twice
-						inst.QueueBrain(brain);
-					index = (index + 1) % n;
-				}
-				brainGroup.nextUpdateBrain = index;
-			}
-		}
-	}
-
-	/// <summary>
 	/// Applied to BrainScheduler to gather brains to update.
 	/// </summary>
 	[HarmonyPatch(typeof(BrainScheduler), nameof(BrainScheduler.RenderEveryTick))]
 	internal static class BrainScheduler_RenderEveryTick_Patch {
-		
 		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
 
 		[HarmonyPriority(Priority.Low)]

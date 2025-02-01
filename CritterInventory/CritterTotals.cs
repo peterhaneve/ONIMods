@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
 using PeterHan.PLib.Core;
 
 namespace PeterHan.CritterInventory {
@@ -24,7 +25,7 @@ namespace PeterHan.CritterInventory {
 	/// 
 	/// While this could be a struct, it would get copied a lot.
 	/// </summary>
-	internal sealed class CritterTotals {
+	internal sealed class CritterTotals : IEquatable<CritterTotals> {
 		/// <summary>
 		/// The number of critters available to be used (total minus reserved).
 		/// </summary>
@@ -48,6 +49,19 @@ namespace PeterHan.CritterInventory {
 		public CritterTotals() {
 			Reserved = 0;
 			Total = 0;
+		}
+
+		public bool Equals(CritterTotals other) {
+			if (ReferenceEquals(null, other)) return false;
+			return Reserved == other.Reserved && Total == other.Total;
+		}
+
+		public override bool Equals(object obj) {
+			return ReferenceEquals(this, obj) || (obj is CritterTotals other && Equals(other));
+		}
+
+		public override int GetHashCode() {
+			return (Reserved * 397) ^ Total;
 		}
 
 		public override string ToString() {

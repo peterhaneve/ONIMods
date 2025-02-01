@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using KMod;
+using PeterHan.FastTrack.PathPatches;
 using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
@@ -168,8 +169,11 @@ namespace PeterHan.FastTrack {
 			}
 			if (options.MiscOpts)
 				GamePatches.GeyserConfigurator_FindType_Patch.Cleanup();
-			if (options.PickupOpts)
+			if (options.PickupOpts) {
 				GamePatches.SolidTransferArmUpdater.DestroyInstance();
+				// Avoid leaking Brains
+				PriorityBrainScheduler.Instance.updateFirst.Clear();
+			}
 			if (options.PickupOpts || options.FastUpdatePickups)
 				PathPatches.DeferredTriggers.DestroyInstance();
 			if (options.RadiationOpts && DlcManager.FeatureRadiationEnabled())

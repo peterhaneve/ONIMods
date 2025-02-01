@@ -31,7 +31,7 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// Sim1000 vs Sim200.
 	/// </summary>
 	[HarmonyPatch(typeof(ChoreDriver.States), nameof(ChoreDriver.States.InitializeStates))]
-	public static class ChoreDriver_States_InitializeStates_Patch {
+	public static class ChoreDriver_States_InitializeStates_Patch1 {
 		internal static bool Prepare() => FastTrackOptions.Instance.ReduceColonyTracking;
 
 		/// <summary>
@@ -42,6 +42,33 @@ namespace PeterHan.FastTrack.PathPatches {
 		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
 			return PPatchTools.ReplaceConstant(method, (int)UpdateRate.SIM_200ms, (int)
 				UpdateRate.SIM_1000ms, true);
+		}
+	}
+
+	/// <summary>
+	/// Applied to ChoreDriver.States to invalidate the path cache when a chore completes if
+	/// delaying chore calculation is requested.
+	/// </summary>
+	[HarmonyPatch(typeof(ChoreDriver.States), nameof(ChoreDriver.States.InitializeStates))]
+	public static class ChoreDriver_States_InitializeStates_Patch2 {
+		internal static bool Prepare() {
+			var opts = FastTrackOptions.Instance;
+			return opts.PickupOpts && opts.ChorePriorityMode == FastTrackOptions.
+				NextChorePriority.Delay;
+		}
+
+		/// <summary>
+		/// Applied after InitializeStates runs.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static void Postfix(ChoreDriver.States __instance) {
+			__instance.haschore.Exit(smi => {
+				if (smi != null) {
+					var consumer = smi.choreConsumer;
+					if (consumer != null)
+						PathCacher.SetValid(consumer.navigator.PathProber, false);
+				}
+			});
 		}
 	}
 
@@ -344,12 +371,16 @@ namespace PeterHan.FastTrack.PathPatches {
 					gp.Occupy(grid, sn, cells);
 			}
 			if (isComplete) {
+				var opts = FastTrackOptions.Instance;
 				// There is no need to do this on the minion group prober, but in case another
 				// one appears later
 				gp?.SetValidSerialNos(grid, grid.previousSerialNo, sn);
 				grid.previousSerialNo = sn;
-				if (FastTrackOptions.Instance.CachePaths)
+				if (opts.CachePaths)
 					PathCacher.SetValid(prober, true);
+				if (opts.ChorePriorityMode == FastTrackOptions.NextChorePriority.Delay)
+					// Bump the brain out of the the waiting list
+					PriorityBrainScheduler.Instance.PathReady(prober);
 			}
 		}
 
