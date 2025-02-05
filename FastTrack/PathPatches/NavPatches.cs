@@ -63,10 +63,11 @@ namespace PeterHan.FastTrack.PathPatches {
 		[HarmonyPriority(Priority.Low)]
 		internal static void Postfix(ChoreDriver.States __instance) {
 			__instance.haschore.Exit(smi => {
-				if (smi != null) {
-					var consumer = smi.choreConsumer;
-					if (consumer != null)
-						PathCacher.SetValid(consumer.navigator.PathProber, false);
+				var consumer = smi.choreConsumer;
+				if (consumer != null && !consumer.consumerState.hasSolidTransferArm) {
+					var nav = consumer.navigator;
+					if (nav != null)
+						PathCacher.SetValid(nav.PathProber, false);
 				}
 			});
 		}
