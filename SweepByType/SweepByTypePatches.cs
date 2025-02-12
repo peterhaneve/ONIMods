@@ -36,12 +36,31 @@ namespace PeterHan.SweepByType {
 		internal static SweepByTypeOptions Options { get; private set; }
 
 		/// <summary>
+		/// Triggers the default Sweep (all) tool if enabled.
+		/// </summary>
+		internal static PAction defaultSweepAction;
+
+		/// <summary>
 		/// Adds the filtered sweep icon to the list of sprites.
 		/// </summary>
 		[PLibMethod(RunAt.AfterDbInit)]
 		internal static void AddToolSprite() {
 			Assets.Sprites.Add(SweepByTypeStrings.TOOL_ICON_NAME, SpriteRegistry.
 				GetToolIcon());
+		}
+		
+		/// <summary>
+		/// Generates a new sweep tool collection that contains the new filtered sweep tool
+		/// with an alternate mode for the original version.
+		/// </summary>
+		/// <returns>A replacement tool collection with filtered and base tools.</returns>
+		private static ToolMenu.ToolCollection CreateFilteredSweepTool() {
+			if (!Enum.TryParse("Clear", out Action clearAction))
+				clearAction = Action.Clear;
+			var filteredSweep = ToolMenu.CreateToolCollection(STRINGS.UI.TOOLS.
+					MARKFORSTORAGE.NAME, SweepByTypeStrings.TOOL_ICON_NAME, clearAction,
+				nameof(FilteredClearTool), STRINGS.UI.TOOLTIPS.CLEARBUTTON, false);
+			return filteredSweep;
 		}
 
 		/// <summary>
@@ -61,6 +80,20 @@ namespace PeterHan.SweepByType {
 			Options = null;
 			new PPatchManager(harmony).RegisterPatchClass(typeof(SweepByTypePatches));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
+			defaultSweepAction = new PActionManager().CreateAction(SweepByTypeStrings.
+				DEFAULT_SWEEP_KEY, SweepByTypeStrings.DEFAULT_SWEEP_TITLE);
+		}
+
+		/// <summary>
+		/// Swaps the hotkey of all tools in the collection to a new one.
+		/// </summary>
+		/// <param name="collection">The collection to modify.</param>
+		/// <param name="newKey">The hotkey to assign.</param>
+		private static void SwapHotkey(ToolMenu.ToolCollection collection, Action newKey) {
+			var tools = collection.tools;
+			int n = tools.Count;
+			for (int i = 0; i < n; i++)
+				tools[i].hotkey = newKey;
 		}
 
 		/// <summary>
@@ -103,22 +136,27 @@ namespace PeterHan.SweepByType {
 			/// Applied after CreateBasicTools runs.
 			/// </summary>
 			internal static void Postfix(ToolMenu __instance) {
-				if (!Enum.TryParse("Clear", out Action clearAction))
-					clearAction = Action.Clear;
-				var filteredSweep = ToolMenu.CreateToolCollection(STRINGS.UI.TOOLS.
-					MARKFORSTORAGE.NAME, SweepByTypeStrings.TOOL_ICON_NAME, clearAction,
-					nameof(FilteredClearTool), STRINGS.UI.TOOLTIPS.
-					CLEARBUTTON, false);
 				var tools = __instance.basicTools;
+				var classicAction = PAction.MaxAction;
 				int n = tools.Count;
 				bool replaced = false;
-				for (int i = 0; i < n && !replaced; i++)
+				if (defaultSweepAction != null)
+					classicAction = defaultSweepAction.GetKAction();
+				for (int i = 0; i < n && !replaced; i++) {
+					var tool = tools[i];
 					// Replace by icon since it is a top level member
-					if (tools[i].icon == "icon_action_store") {
+					if (tool.icon == "icon_action_store") {
+						var fs = CreateFilteredSweepTool();
 						PUtil.LogDebug("Replacing sweep tool {0:D} with filtered sweep".F(i));
-						tools[i] = filteredSweep;
+						if (classicAction == PAction.MaxAction)
+							tools[i] = fs;
+						else {
+							tools.Insert(i, fs);
+							SwapHotkey(tool, classicAction);
+						}
 						replaced = true;
 					}
+				}
 				// If no tool match found, log a warning
 				if (!replaced)
 					PUtil.LogWarning("Could not install filtered sweep tool!");

@@ -36,5 +36,10 @@ namespace PeterHan.SweepByType {
 
 		// Displayed in the tooltip action menu
 		public static LocString TOOLTIP_FILTERED = "SWEEP ONLY SELECTED ITEMS";
+
+		public const string DEFAULT_SWEEP_KEY = "SWEEPBYTYPE.ACTION.DEFAULTSWEEP";
+
+		// Only used in the key binding menu to allow binding the original Sweep tool
+		public static LocString DEFAULT_SWEEP_TITLE = "Default Sweep Tool";
 	}
 }

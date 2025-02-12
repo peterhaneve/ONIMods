@@ -115,6 +115,7 @@ namespace PeterHan.SmartPumps {
 			elementConsumer.EnableConsumption(false);
 			go.AddOrGetDef<OperationalController.Def>();
 			go.AddOrGet<PumpFixed>().detectRadius = 2;
+			go.AddOrGet<KPrefabID>().AddTag(GameTags.OverlayBehindConduits, false);
 		}
 	}
 }

@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.Core;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -24,7 +23,7 @@ namespace PeterHan.SweepByType {
 	/// <summary>
 	/// The hover text shown when filtered sweep is invoked.
 	/// </summary>
-	sealed class FilteredClearHover : HoverTextConfiguration {
+	internal sealed class FilteredClearHover : HoverTextConfiguration {
 		protected override void OnSpawn() {
 			var ct = ClearTool.Instance;
 			base.OnSpawn();
