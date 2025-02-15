@@ -266,7 +266,6 @@ namespace PeterHan.StockBugFix {
 			PUtil.InitLibrary();
 			var pm = new PPatchManager(instance);
 			pm.RegisterPatchClass(typeof(StockBugsPatches));
-			pm.RegisterPatchClass(typeof(DiseaseSourcesPatch));
 			pm.RegisterPatchClass(typeof(SweepFixPatches));
 			FixModUpdateRace(instance);
 			PRegistry.PutData("Bugs.TepidizerPulse", true);
