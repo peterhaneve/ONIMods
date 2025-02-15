@@ -32,7 +32,7 @@ namespace PeterHan.SweepByType {
 
 		// Tool name displayed in the hover card when dragging filtered (uses stock game
 		// string for the default mode)
-		public static LocString TOOL_NAME_FILTERED = "FILTERED SWEEP TOOL";
+		public static LocString TOOL_NAME_FILTERED = "Filtered Sweep Tool";
 
 		// Displayed in the tooltip action menu
 		public static LocString TOOLTIP_FILTERED = "SWEEP ONLY SELECTED ITEMS";
@@ -41,5 +41,8 @@ namespace PeterHan.SweepByType {
 
 		// Only used in the key binding menu to allow binding the original Sweep tool
 		public static LocString DEFAULT_SWEEP_TITLE = "Default Sweep Tool";
+
+		// Only displayed to differentiate Filtered Sweep from Sweep if the default tool is visible
+		public static LocString TOOLBAR_TITLE_FILTERED = "Filtered Sweep";
 	}
 }

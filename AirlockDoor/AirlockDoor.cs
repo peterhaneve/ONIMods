@@ -301,6 +301,7 @@ namespace PeterHan.AirlockDoor {
 			SetFakeFloor(true);
 			// Lock out the critters
 			foreach (int cell in building.PlacementCells) {
+				SimMessages.SetInsulation(cell, building.Def.ThermalConductivity);
 				Grid.CritterImpassable[cell] = true;
 				Grid.HasDoor[cell] = true;
 				Pathfinding.Instance.AddDirtyNavGridCell(cell);
@@ -327,6 +328,7 @@ namespace PeterHan.AirlockDoor {
 			foreach (int cell in building.PlacementCells) {
 				// Clear the airlock flags, render critter and duplicant passable
 				Grid.HasDoor[cell] = false;
+				SimMessages.SetInsulation(cell, 1.0f);
 				Game.Instance.SetDupePassableSolid(cell, false, Grid.Solid[cell]);
 				Grid.CritterImpassable[cell] = false;
 				Pathfinding.Instance.AddDirtyNavGridCell(cell);

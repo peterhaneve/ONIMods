@@ -48,8 +48,8 @@ namespace PeterHan.SweepByType {
 			int cell = Grid.PosToCell(Camera.main.ScreenToWorldPoint(KInputManager.
 				GetMousePos()));
 			// Draw the tool title
-			string titleStr = all ? STRINGS.UI.TOOLS.MARKFORSTORAGE.TOOLNAME :
-				SweepByTypeStrings.TOOL_NAME_FILTERED;
+			string titleStr = all ? STRINGS.UI.TOOLS.MARKFORSTORAGE.TOOLNAME.ToString() :
+				SweepByTypeStrings.TOOL_NAME_FILTERED.ToString().ToUpper();
 			var drawer = hoverInstance.BeginDrawing();
 			drawer.BeginShadowBar();
 			drawer.DrawText(titleStr.ToUpper(), ToolTitleTextStyle);

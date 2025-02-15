@@ -24,6 +24,7 @@ using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
 using System;
+using System.Collections.Generic;
 
 namespace PeterHan.SweepByType {
 	/// <summary>
@@ -53,14 +54,14 @@ namespace PeterHan.SweepByType {
 		/// Generates a new sweep tool collection that contains the new filtered sweep tool
 		/// with an alternate mode for the original version.
 		/// </summary>
+		/// <param name="title">The title to assign the tool.</param>
 		/// <returns>A replacement tool collection with filtered and base tools.</returns>
-		private static ToolMenu.ToolCollection CreateFilteredSweepTool() {
-			if (!Enum.TryParse("Clear", out Action clearAction))
+		private static ToolMenu.ToolCollection CreateFilteredSweepTool(string title) {
+			if (!Enum.TryParse(nameof(Action.Clear), out Action clearAction))
 				clearAction = Action.Clear;
-			var filteredSweep = ToolMenu.CreateToolCollection(STRINGS.UI.TOOLS.
-					MARKFORSTORAGE.NAME, SweepByTypeStrings.TOOL_ICON_NAME, clearAction,
-				nameof(FilteredClearTool), STRINGS.UI.TOOLTIPS.CLEARBUTTON, false);
-			return filteredSweep;
+			return ToolMenu.CreateToolCollection(title, SweepByTypeStrings.TOOL_ICON_NAME,
+				clearAction, nameof(FilteredClearTool), STRINGS.UI.TOOLTIPS.CLEARBUTTON,
+				false);
 		}
 
 		/// <summary>
@@ -70,6 +71,58 @@ namespace PeterHan.SweepByType {
 		internal static void DestroyTool() {
 			PUtil.LogDebug("Destroying FilteredClearTool");
 			FilteredClearTool.DestroyInstance();
+		}
+
+		/// <summary>
+		/// Determines the Action to use for activating the classic sweep tool, if a key is
+		/// bound to it.
+		/// </summary>
+		/// <returns>The action to use, or PAction.MaxAction if no key is bound.</returns>
+		private static Action GetDefaultSweepAction() {
+			var ds = defaultSweepAction;
+			Action result = PAction.MaxAction, candidate = ds.GetKAction();
+			// Klei loves changing enums
+			if (!Enum.TryParse(nameof(KKeyCode.None), out KKeyCode noKey))
+				noKey = KKeyCode.None;
+			if (!Enum.TryParse(nameof(GamepadButton.NumButtons), out GamepadButton noButton))
+				noButton = GamepadButton.NumButtons;
+			if (ds != null)
+				foreach (var entry in GameInputMapping.KeyBindings)
+					if (entry.mAction == candidate && (entry.mKeyCode != noKey || entry.
+							mButton != noButton)) {
+						result = candidate;
+						break;
+					}
+			return result;
+		}
+
+		/// <summary>
+		/// Installs the Filtered Sweep tool in the specified collection.
+		/// </summary>
+		/// <param name="tools">The tool menu in which to show the tool.</param>
+		private static void InstallSweepTool(IList<ToolMenu.ToolCollection> tools) {
+			var defaultAction = GetDefaultSweepAction();
+			int n = tools.Count;
+			bool replaced = false;
+			for (int i = 0; i < n && !replaced; i++) {
+				var tool = tools[i];
+				// Replace by icon since it is a top level member
+				if (tool.icon == "icon_action_store") {
+					PUtil.LogDebug("Replacing sweep tool {0:D} with filtered sweep".F(i));
+					if (defaultAction == PAction.MaxAction)
+						tools[i] = CreateFilteredSweepTool(STRINGS.UI.TOOLS.MARKFORSTORAGE.
+							NAME);
+					else {
+						tools.Insert(i, CreateFilteredSweepTool(SweepByTypeStrings.
+							TOOLBAR_TITLE_FILTERED));
+						SwapHotkey(tool, defaultAction);
+					}
+					replaced = true;
+				}
+			}
+			// If no tool match found, log a warning
+			if (!replaced)
+				PUtil.LogWarning("Could not install filtered sweep tool!");
 		}
 
 		public override void OnLoad(Harmony harmony) {
@@ -136,30 +189,7 @@ namespace PeterHan.SweepByType {
 			/// Applied after CreateBasicTools runs.
 			/// </summary>
 			internal static void Postfix(ToolMenu __instance) {
-				var tools = __instance.basicTools;
-				var classicAction = PAction.MaxAction;
-				int n = tools.Count;
-				bool replaced = false;
-				if (defaultSweepAction != null)
-					classicAction = defaultSweepAction.GetKAction();
-				for (int i = 0; i < n && !replaced; i++) {
-					var tool = tools[i];
-					// Replace by icon since it is a top level member
-					if (tool.icon == "icon_action_store") {
-						var fs = CreateFilteredSweepTool();
-						PUtil.LogDebug("Replacing sweep tool {0:D} with filtered sweep".F(i));
-						if (classicAction == PAction.MaxAction)
-							tools[i] = fs;
-						else {
-							tools.Insert(i, fs);
-							SwapHotkey(tool, classicAction);
-						}
-						replaced = true;
-					}
-				}
-				// If no tool match found, log a warning
-				if (!replaced)
-					PUtil.LogWarning("Could not install filtered sweep tool!");
+				InstallSweepTool(__instance.basicTools);
 			}
 		}
 	}
