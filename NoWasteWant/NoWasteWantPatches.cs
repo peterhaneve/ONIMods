@@ -101,14 +101,16 @@ namespace PeterHan.NoWasteWant {
 					if (action.callback is RotCallback originalCode)
 						targets.Add(originalCode);
 				spoiledActions.Clear();
-				sm.Spoiled.Enter((smi) => {
+				sm.Spoiled.Enter(smi => {
 					var go = smi.master.gameObject;
-					var rotted = go.GetComponentSafe<PrimaryElement>();
-					if (rotted == null || rotted.Mass > MASS_TO_ROT)
-						foreach (var action in targets)
-							action.Invoke(smi);
-					else if (go != null)
-						Util.KDestroyGameObject(go);
+					if (go != null) {
+						if (!go.TryGetComponent(out PrimaryElement rotted) || rotted.Mass >
+								MASS_TO_ROT)
+							foreach (var action in targets)
+								action.Invoke(smi);
+						else
+							Util.KDestroyGameObject(go);
+					}
 				});
 			}
 		}

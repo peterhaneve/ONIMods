@@ -67,6 +67,8 @@
     <Authors>Peter Han</Authors>
     <Copyright>Copyright ©Peter Han 2024</Copyright>
     <TargetFramework>net471</TargetFramework>
+    <RequiredDLCs></RequiredDLCs>
+    <ForbiddenDLCs></ForbiddenDLCs>
     <SupportedContent>VANILLA_ID,EXPANSION1_ID</SupportedContent>
     <LastWorkingBuild>0</LastWorkingBuild>
     <DistributeMod>true</DistributeMod>

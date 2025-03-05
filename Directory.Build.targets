@@ -40,6 +40,8 @@
     <PropertyGroup>
       <ModInfoFile>$(IntermediateOutputPath)\mod_info.yaml</ModInfoFile>
       <ModInfoFileContent>
+requiredDlcIds: $(RequiredDLCs)
+forbiddenDlcIds: $(ForbiddenDLCs)
 supportedContent: $(SupportedContent)
 minimumSupportedBuild: $(LastWorkingBuild)
 version: $(FileVersion)

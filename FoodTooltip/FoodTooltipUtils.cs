@@ -41,16 +41,16 @@ namespace PeterHan.FoodTooltip {
 		/// <param name="descriptors">The location where the descriptors should be placed.</param>
 		internal static void AddCropDescriptors(Crop crop, IList<Descriptor> descriptors) {
 			var db = Db.Get();
-			var cropVal = crop.cropVal;
 			if (crop != null && crop.TryGetComponent(out Modifiers modifiers)) {
+				var cropVal = crop.cropVal;
 				float preModifiedAttributeValue = modifiers.GetPreModifiedAttributeValue(
 					db.PlantAttributes.YieldAmount);
 				var maturity = Db.Get().Amounts.Maturity.Lookup(crop);
 				if (maturity != null)
+					// Do not multiply by cropVal.numProduced, it is factored into YieldAmount
 					CreateDescriptors(TagManager.Create(cropVal.cropId), descriptors,
-						maturity.GetDelta() * Constants.SECONDS_PER_CYCLE * cropVal.
-						numProduced * preModifiedAttributeValue / maturity.GetMax(),
-						FoodDescriptorTexts.PLANTS);
+						maturity.GetDelta() * preModifiedAttributeValue * Constants.
+						SECONDS_PER_CYCLE / maturity.GetMax(), FoodDescriptorTexts.PLANTS);
 			}
 		}
 

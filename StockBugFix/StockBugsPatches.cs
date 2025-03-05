@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using PeterHan.PLib.Detours;
 using UnityEngine;
 
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
@@ -240,11 +241,13 @@ namespace PeterHan.StockBugFix {
 		/// <summary>
 		/// Applied to MinionConfig to make it possible to recover Duplicants from radiation
 		/// sickness.
+		///
+		/// TODO Remove when versions prior to U55-658361 no longer need to be supported
 		/// </summary>
 		[PLibPatch(RunAt.AfterDbInit, nameof(MinionConfig.CreatePrefab),
 			RequireType = nameof(MinionConfig), PatchType = HarmonyPatchType.Postfix)]
 		internal static void MinionSpawn_Postfix(GameObject __result) {
-			if (DlcManager.FeatureRadiationEnabled())
+			if (DlcManager.FeatureRadiationEnabled() && PUtil.GameVersion < 658361U)
 				__result.AddOrGet<RadiationRecoveryFix>();
 		}
 
@@ -779,6 +782,11 @@ namespace PeterHan.StockBugFix {
 	/// </summary>
 	[HarmonyPatch(typeof(Timelapser), "OnNewDay")]
 	public static class Timelapser_OnNewDay_Patch {
+		// TODO Remove when versions prior to U55-658361 no longer need to be supported
+		private static readonly IDetouredField<ClusterManager, IList<WorldContainer>>
+			WHOLE_NEW_WORLDS = PDetours.DetourField<ClusterManager, IList<WorldContainer>>(
+			nameof(ClusterManager.WorldContainers));
+
 		private static bool NeedTimelapse(int cycle) {
 			int cycle10 = cycle % 10;
 			return cycle > 0 && (cycle <= 50 || (cycle < 100 && cycle10 == 5) || cycle10 == 0);
@@ -791,7 +799,7 @@ namespace PeterHan.StockBugFix {
 				ref bool ___screenshotToday) {
 			var ci = ClusterManager.Instance;
 			if (___worldsToScreenshot != null && ci != null) {
-				var containers = ci.WorldContainers;
+				var containers = WHOLE_NEW_WORLDS.Get(ci);
 				int n = containers.Count, cycle = GameClock.Instance.GetCycle();
 				bool screenshot = false;
 				if (___worldsToScreenshot.Count != 0)
