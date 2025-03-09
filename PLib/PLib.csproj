@@ -19,7 +19,7 @@ Contains methods aimed at improving cross-mod compatibility, in-game user interf
 		Update side screen handling code for U53-640445.
 
 		Add new PPatchManager locations for DetailsScreen.OnPrefabInit and Db.PostProcess.
-	</PackageReleaseNotes>
+    </PackageReleaseNotes>
     <RootNamespace>PeterHan.PLib</RootNamespace>
     <AssemblyVersion>$(PLibVersion)</AssemblyVersion>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  

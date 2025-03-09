@@ -9,37 +9,33 @@
   </ItemDefinitionGroup>
 
   <ItemGroup Condition=" '$(PLibCore)' != 'true' ">
-    <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.26" />
+    <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.40">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'Mergedown' ">
-    <GameFolderActive>$(GameFolderMergedown)</GameFolderActive>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Platform)' != 'Mergedown' ">
-    <GameFolderActive>$(GameFolderLegacy)</GameFolderActive>
-  </PropertyGroup>
   <ItemGroup Condition=" '$(UsePublicized)' == 'true' " >
-    <PubliciseInputAssemblies Include="$(GameFolderActive)/Assembly-CSharp.dll;
-      $(GameFolderActive)/Assembly-CSharp-firstpass.dll"/>
+    <PubliciseInputAssemblies Include="$(GameFolder)/Assembly-CSharp.dll;
+      $(GameFolder)/Assembly-CSharp-firstpass.dll"/>
     <Reference Include="Assembly-CSharp_public" HintPath="../public-lib/Assembly-CSharp_public.dll" />
     <Reference Include="Assembly-CSharp-firstpass_public" HintPath="../public-lib/Assembly-CSharp-firstpass_public.dll" />
     <PackageReference Include="Aze.Publicise.MSBuild.Task" Version="1.1.0"/>
   </ItemGroup>
   <ItemGroup Condition=" '$(UsePublicized)' != 'true' " >
-    <Reference Include="Assembly-CSharp" HintPath="$(GameFolderActive)/Assembly-CSharp.dll" />
-    <Reference Include="Assembly-CSharp-firstpass" HintPath="$(GameFolderActive)/Assembly-CSharp-firstpass.dll" />
+    <Reference Include="Assembly-CSharp" HintPath="$(GameFolder)/Assembly-CSharp.dll" />
+    <Reference Include="Assembly-CSharp-firstpass" HintPath="$(GameFolder)/Assembly-CSharp-firstpass.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="0Harmony" HintPath="$(GameFolderActive)/0Harmony.dll" />
-    <Reference Include="FMODUnity" HintPath="$(GameFolderActive)/FMODUnity.dll" />
-    <Reference Include="Newtonsoft.Json" HintPath="$(GameFolderActive)/Newtonsoft.Json.dll" />
-    <Reference Include="UnityEngine" HintPath="$(GameFolderActive)/UnityEngine.dll" />
-    <Reference Include="UnityEngine.CoreModule" HintPath="$(GameFolderActive)/UnityEngine.CoreModule.dll" />
-    <Reference Include="UnityEngine.ImageConversionModule" HintPath="$(GameFolderActive)/UnityEngine.ImageConversionModule.dll" />
-    <Reference Include="UnityEngine.InputLegacyModule" HintPath="$(GameFolderActive)/UnityEngine.InputLegacyModule.dll" />
-    <Reference Include="Unity.TextMeshPro" HintPath="$(GameFolderActive)/Unity.TextMeshPro.dll" />
-    <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(GameFolderActive)/UnityEngine.TextRenderingModule.dll" />
-    <Reference Include="UnityEngine.UI" HintPath="$(GameFolderActive)/UnityEngine.UI.dll" />
-    <Reference Include="UnityEngine.UIModule" HintPath="$(GameFolderActive)/UnityEngine.UIModule.dll" />
+    <Reference Include="0Harmony" HintPath="$(GameFolder)/0Harmony.dll" />
+    <Reference Include="FMODUnity" HintPath="$(GameFolder)/FMODUnity.dll" />
+    <Reference Include="Newtonsoft.Json" HintPath="$(GameFolder)/Newtonsoft.Json.dll" />
+    <Reference Include="UnityEngine" HintPath="$(GameFolder)/UnityEngine.dll" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="$(GameFolder)/UnityEngine.CoreModule.dll" />
+    <Reference Include="UnityEngine.ImageConversionModule" HintPath="$(GameFolder)/UnityEngine.ImageConversionModule.dll" />
+    <Reference Include="UnityEngine.InputLegacyModule" HintPath="$(GameFolder)/UnityEngine.InputLegacyModule.dll" />
+    <Reference Include="Unity.TextMeshPro" HintPath="$(GameFolder)/Unity.TextMeshPro.dll" />
+    <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(GameFolder)/UnityEngine.TextRenderingModule.dll" />
+    <Reference Include="UnityEngine.UI" HintPath="$(GameFolder)/UnityEngine.UI.dll" />
+    <Reference Include="UnityEngine.UIModule" HintPath="$(GameFolder)/UnityEngine.UIModule.dll" />
   </ItemGroup>
   <ItemGroup Condition=" '$(UsesPLib)' != 'false' ">
     <ProjectReference Include="../PLibCore/PLibCore.csproj" />
@@ -51,14 +47,6 @@
     <ProjectReference Include="../PLibOptions/PLibOptions.csproj" />
     <ProjectReference Include="../PLibUI/PLibUI.csproj" />
   </ItemGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'Mergedown' ">
-    <DefineConstants>MERGEDOWN</DefineConstants>
-    <APIVersion>2</APIVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'Vanilla' ">
-    <DefineConstants>LEGACY</DefineConstants>
-    <APIVersion>1</APIVersion>
-  </PropertyGroup>
   <PropertyGroup Condition=" '$(UsesPLib)' == 'true' ">
     <AllowedReferenceRelatedFileExtensions>.yaml</AllowedReferenceRelatedFileExtensions>
   </PropertyGroup>
@@ -75,5 +63,8 @@
     <ArchivedVersionPath></ArchivedVersionPath>
     <UsePublicized>false</UsePublicized>
     <PLibVersion>4.17.1.0</PLibVersion>
+    <DefineConstants>MERGEDOWN</DefineConstants>
+    <APIVersion>2</APIVersion>
+	<ModInfoFile>$(IntermediateOutputPath)\mod_info.yaml</ModInfoFile>
   </PropertyGroup>
 </Project>

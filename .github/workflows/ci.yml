@@ -17,4 +17,4 @@ jobs:
     - name: NuGet Restore
       run: msbuild -t:restore -property:Configuration=Release
     - name: Build project
-      run: msbuild -t:rebuild -property:Configuration=Release -property:GameFolderActive="../Lib"
+      run: msbuild -t:rebuild -property:Configuration=Release -property:GameFolder="../Lib"

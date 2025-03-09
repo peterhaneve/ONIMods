@@ -17,6 +17,6 @@
   <ItemGroup>
     <ProjectReference Include="../PLibCore/PLibCore.csproj" />
     <ProjectReference Include="../PLibUI/PLibUI.csproj" />
-    <Reference Include="UnityEngine.UnityWebRequestModule" HintPath="$(GameFolderActive)/UnityEngine.UnityWebRequestModule.dll" />
+    <Reference Include="UnityEngine.UnityWebRequestModule" HintPath="$(GameFolder)/UnityEngine.UnityWebRequestModule.dll" />
   </ItemGroup>
 </Project>

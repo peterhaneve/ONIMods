@@ -18,8 +18,4 @@
   <PropertyGroup Condition=" '$(DocumentsFolderRegistry)' != '' ">
     <ModFolder>$(DocumentsFolderRegistry)/$(DevModsFolder)</ModFolder>
   </PropertyGroup>
-  <PropertyGroup>
-    <GameFolderMergedown>$(GameFolder)</GameFolderMergedown>
-    <GameFolderLegacy>$(GameFolder)</GameFolderLegacy>
-  </PropertyGroup>
 </Project>

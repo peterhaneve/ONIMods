@@ -18,8 +18,8 @@ namespace PeterHan.ModUpdateDate {
     </VersionFileContent>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Ionic.Zip" HintPath="$(GameFolderActive)/Ionic.Zip.dll" />
-    <Reference Include="com.rlabrecque.steamworks.net" HintPath="$(GameFolderActive)/com.rlabrecque.steamworks.net.dll" />
+    <Reference Include="Ionic.Zip" HintPath="$(GameFolder)/Ionic.Zip.dll" />
+    <Reference Include="com.rlabrecque.steamworks.net" HintPath="$(GameFolder)/com.rlabrecque.steamworks.net.dll" />
   </ItemGroup>
   <Target Name="WriteModVersionFile" BeforeTargets="PreBuildEvent">
     <WriteLinesToFile File="$(IntermediateOutputPath)\Version.cs" Overwrite="true" Lines="$(VersionFileContent)"/>
