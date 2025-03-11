@@ -129,12 +129,12 @@ namespace PeterHan.FastTrack.ConduitPatches {
 			if (inst.gasConduitSystem.IsDirty) {
 				// Invalidate: gas
 				startUpdate = true;
-				ConduitFlowVisualizerRenderer.ForceUpdate(inst.gasFlowVisualizer);
+				ConduitFlowVisualizerPatches.ForceUpdate(inst.gasFlowVisualizer);
 			}
 			if (inst.liquidConduitSystem.IsDirty) {
 				// Invalidate: liquid
 				startUpdate = true;
-				ConduitFlowVisualizerRenderer.ForceUpdate(inst.liquidFlowVisualizer);
+				ConduitFlowVisualizerPatches.ForceUpdate(inst.liquidFlowVisualizer);
 			}
 			if (inst != null && !inst.IsLoading() && startUpdate) {
 				var jobManager = AsyncJobManager.Instance;

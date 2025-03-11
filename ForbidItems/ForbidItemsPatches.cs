@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System.Reflection;
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.PatchManager;
@@ -57,6 +58,7 @@ namespace PeterHan.ForbidItems {
 			/// <summary>
 			/// Applied after CanReach runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static void Postfix(IApproachable approachable, ref bool __result) {
 				if (__result && approachable is Pickupable pickupable && pickupable != null)
 					__result = !pickupable.KPrefabID.HasTag(Forbidden);
@@ -99,6 +101,7 @@ namespace PeterHan.ForbidItems {
 			/// <summary>
 			/// Applied after IsFetchable runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static void Postfix(FetchableMonitor.Instance __instance,
 					ref bool __result) {
 				if (__result)
@@ -110,11 +113,19 @@ namespace PeterHan.ForbidItems {
 		/// Applied to Pickupable to ban collection of forbidden items by Auto-Sweepers.
 		/// Auto-Sweepers do not check if the item is actually fetchable.
 		/// </summary>
-		[HarmonyPatch(typeof(Pickupable), "CouldBePickedUpCommon")]
-		public static class Pickupable_CouldBePickedUpCommon_Patch {
+		[HarmonyPatch]
+		public static class Pickupable_CouldBePickedUpCommonOld_Patch {
+			internal static MethodBase TargetMethod() {
+				const string TARGET = "CouldBePickedUpCommon";
+				// TODO Remove when versions prior to U55-658361 no longer need to be supported
+				return typeof(Pickupable).GetMethodSafe(TARGET, false, typeof(int)) ??
+					typeof(Pickupable).GetMethodSafe(TARGET, false, typeof(GameObject));
+			}
+
 			/// <summary>
 			/// Applied after CouldBePickedUpCommon runs.
 			/// </summary>
+			[HarmonyPriority(Priority.Low)]
 			internal static void Postfix(Pickupable __instance, ref bool __result) {
 				if (__result)
 					__result = !__instance.KPrefabID.HasTag(Forbidden);

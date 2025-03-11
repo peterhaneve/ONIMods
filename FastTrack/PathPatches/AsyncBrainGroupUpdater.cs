@@ -420,6 +420,11 @@ namespace PeterHan.FastTrack.PathPatches {
 			/// The location where the compiled fetch errands are stored.
 			/// </summary>
 			internal readonly List<Fetch> fetches;
+			
+			/// <summary>
+			/// The worker instance ID that is trying to pick up items.
+			/// </summary>
+			private int instanceID;
 
 			/// <summary>
 			/// The Duplicant navigator that is trying to pick up items.
@@ -440,11 +445,6 @@ namespace PeterHan.FastTrack.PathPatches {
 			/// The parent object to notify when this completes.
 			/// </summary>
 			private readonly AsyncBrainGroupUpdater updater;
-
-			/// <summary>
-			/// The worker that is trying to pick up items.
-			/// </summary>
-			private GameObject worker;
 
 			internal CompilePickupsWork(AsyncBrainGroupUpdater updater) {
 				fetches = new List<Fetch>(64);
@@ -473,7 +473,7 @@ namespace PeterHan.FastTrack.PathPatches {
 					fetchChores = null;
 				navigator = newNavigator;
 				passToSweepers = updateSweepers;
-				worker = newNavigator.gameObject;
+				instanceID = newBrain.prefabId.InstanceID;
 			}
 
 			/// <summary>
@@ -489,7 +489,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			public void InternalDoWorkItem(int index, int threadIndex) {
 				if (index >= 0 && index < Count) {
 					var thisPrefab = updater.byId[index];
-					thisPrefab.UpdatePickups(navigator.PathProber, navigator, worker);
+					thisPrefab.UpdatePickups(navigator.PathProber, navigator, instanceID);
 					// Help out our poor transfer arms in need
 					if (passToSweepers)
 						GamePatches.SolidTransferArmUpdater.Instance.UpdateCache(thisPrefab.

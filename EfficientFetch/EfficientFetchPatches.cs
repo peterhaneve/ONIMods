@@ -84,13 +84,12 @@ namespace PeterHan.EfficientFetch {
 			/// Applied before UpdatePickups runs.
 			/// </summary>
 			internal static bool Prefix(FetchManager.FetchablesByPrefabId __instance,
-					Navigator worker_navigator, GameObject worker_go,
-					Dictionary<int, int> ___cellCosts) {
+					Navigator worker_navigator, Dictionary<int, int> ___cellCosts, int worker) {
 				var inst = EfficientFetchManager.Instance;
 				bool cont = true;
 				if (inst != null && options.MinimumAmountPercent > 0)
 					try {
-						inst.UpdatePickups(__instance, worker_navigator, worker_go,
+						inst.UpdatePickups(__instance, worker_navigator, worker,
 							___cellCosts);
 						cont = false;
 					} catch (Exception e) {

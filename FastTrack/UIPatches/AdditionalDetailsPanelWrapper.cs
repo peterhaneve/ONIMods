@@ -321,9 +321,9 @@ namespace PeterHan.FastTrack.UIPatches {
 				for (int i = 0; i < n; i++) {
 					var instance = attributes.AttributeTable[i];
 					var attr = instance.Attribute;
-					if (DlcManager.IsDlcListValidForCurrentContent(attr.DLCIds) && (attr.
-							ShowInUI == Attribute.Display.Details || attr.ShowInUI ==
-							Attribute.Display.Expectation)) {
+					if (DlcManager.IsCorrectDlcSubscribed(attr) && (attr.ShowInUI == Attribute.
+						Display.Details || attr.ShowInUI == Attribute.Display.Expectation))
+					{
 						var modifier = instance.modifier;
 						panel.SetLabel(modifier.Id, modifier.Name + ": " + instance.
 							GetFormattedValue(), instance.GetAttributeValueTooltip());

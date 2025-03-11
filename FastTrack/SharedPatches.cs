@@ -27,17 +27,17 @@ namespace PeterHan.FastTrack {
 	[HarmonyPriority(Priority.Low)]
 	public static class Game_LateUpdate_Patch {
 		internal static bool Prepare() => !FastTrackOptions.Instance.ConduitOpts &&
-			ConduitPatches.ConduitFlowVisualizerRenderer.Prepare();
+			ConduitPatches.ConduitFlowVisualizerPatches.ReduceFlowUpdates;
 
 		/// <summary>
 		/// Applied before LateUpdate runs.
 		/// </summary>
 		internal static void Prefix(Game __instance) {
 			if (__instance.gasConduitSystem.IsDirty)
-				ConduitPatches.ConduitFlowVisualizerRenderer.ForceUpdate(__instance.
+				ConduitPatches.ConduitFlowVisualizerPatches.ForceUpdate(__instance.
 					gasFlowVisualizer);
 			if (__instance.liquidConduitSystem.IsDirty)
-				ConduitPatches.ConduitFlowVisualizerRenderer.ForceUpdate(__instance.
+				ConduitPatches.ConduitFlowVisualizerPatches.ForceUpdate(__instance.
 					liquidFlowVisualizer);
 		}
 	}
@@ -52,7 +52,7 @@ namespace PeterHan.FastTrack {
 			var options = FastTrackOptions.Instance;
 			return options.ReduceTileUpdates || options.FastReachability || options.
 				FlattenAverages || (!options.ConduitOpts && ConduitPatches.
-				ConduitFlowVisualizerRenderer.Prepare()) || options.ParallelInventory ||
+				ConduitFlowVisualizerPatches.ReduceFlowUpdates) || options.ParallelInventory ||
 				options.AsyncPathProbe;
 		}
 
@@ -62,12 +62,12 @@ namespace PeterHan.FastTrack {
 		[HarmonyPriority(Priority.High)]
 		internal static void Prefix(Game __instance) {
 			if (!FastTrackOptions.Instance.ConduitOpts && ConduitPatches.
-					ConduitFlowVisualizerRenderer.Prepare()) {
+					ConduitFlowVisualizerPatches.ReduceFlowUpdates) {
 				if (__instance.gasConduitSystem.IsDirty)
-					ConduitPatches.ConduitFlowVisualizerRenderer.ForceUpdate(__instance.
+					ConduitPatches.ConduitFlowVisualizerPatches.ForceUpdate(__instance.
 						gasFlowVisualizer);
 				if (__instance.liquidConduitSystem.IsDirty)
-					ConduitPatches.ConduitFlowVisualizerRenderer.ForceUpdate(__instance.
+					ConduitPatches.ConduitFlowVisualizerPatches.ForceUpdate(__instance.
 						liquidFlowVisualizer);
 			}
 			UIPatches.BackgroundInventoryUpdater.Instance?.EndUpdateAll();

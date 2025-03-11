@@ -51,7 +51,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// runtime on a test world dropped from ~60 ms/1000 ms to ~45 ms/1000 ms.
 		/// </summary>
 		internal static bool BeforeUpdatePickups(FetchManager.FetchablesByPrefabId __instance,
-				Navigator worker_navigator, GameObject worker_go) {
+				Navigator worker_navigator, int worker) {
 			var pathCosts = __instance.cellCosts;
 			var finalPickups = __instance.finalPickups;
 			// Will reflect the changes from Waste Not, Want Not and No Manual Delivery
@@ -67,7 +67,7 @@ namespace PeterHan.FastTrack.GamePatches {
 					pathCosts.Add(cell, cost = target.GetNavigationCost(worker_navigator,
 						cell));
 				// Exclude unreachable items
-				if (target.CouldBePickedUpByMinion(worker_go) && cost >= 0)
+				if (target.CouldBePickedUpByMinion(worker) && cost >= 0)
 					canBePickedUp.AddItem(ref fetchable, cost);
 			}
 			pathCosts.Clear();

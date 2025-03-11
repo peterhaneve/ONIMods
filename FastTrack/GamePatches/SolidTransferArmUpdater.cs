@@ -40,12 +40,12 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Tests an object to see if a sweeper can pick it up.
 		/// </summary>
 		/// <param name="pickupable">The item to pick up.</param>
-		/// <param name="go">The sweeper trying to pick it up.</param>
+		/// <param name="instanceID">The sweeper instance ID trying to pick it up.</param>
 		/// <returns>true if it can be picked up, or false otherwise.</returns>
-		private static bool CanUse(Pickupable pickupable, GameObject go) {
+		private static bool CanUse(Pickupable pickupable, int instanceID) {
 			var prefabID = pickupable.KPrefabID;
 			return Assets.IsTagSolidTransferArmConveyable(prefabID.PrefabTag) && pickupable.
-				CouldBePickedUpByTransferArm(go);
+				CouldBePickedUpByTransferArm(instanceID);
 		}
 
 		/// <summary>
@@ -88,13 +88,12 @@ namespace PeterHan.FastTrack.GamePatches {
 		private void AsyncUpdate(SolidTransferArmInfo info) {
 			var sweeper = info.sweeper;
 			var reachableCells = HashSetPool<int, SolidTransferArmUpdater>.Allocate();
-			int range = sweeper.pickupRange, cell;
+			int range = sweeper.pickupRange, cell, instanceID = sweeper.kPrefabID.InstanceID;
 			Grid.CellToXY(info.cell, out int x, out int y);
 			int maxY = Math.Min(Grid.HeightInCells - 1, y + range), maxX = Math.Min(Grid.
 				WidthInCells - 1, x + range), minY = Math.Max(0, y - range), minX = Math.Max(0,
 				x - range);
 			var oldReachable = sweeper.reachableCells;
-			var go = info.gameObject;
 			// Recalculate the visible cells
 			for (int ny = minY; ny <= maxY; ny++)
 				for (int nx = minX; nx <= maxX; nx++) {
@@ -117,7 +116,7 @@ namespace PeterHan.FastTrack.GamePatches {
 					cell = entry.storage_cell;
 					Grid.CellToXY(cell, out x, out y);
 					if (x >= minX && x <= maxX && y >= minY && y <= maxY && reachableCells.
-							Contains(cell) && CanUse(pickupable, go))
+							Contains(cell) && CanUse(pickupable, instanceID))
 						pickupables.Add(pickupable);
 				}
 			}
@@ -135,7 +134,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				for (int i = 0; i < n; i++)
 					if (found[i].obj is Pickupable pickupable && pickupable != null) {
 						cell = pickupable.cachedCell;
-						if (reachableCells.Contains(cell) && CanUse(pickupable, go))
+						if (reachableCells.Contains(cell) && CanUse(pickupable, instanceID))
 							pickupables.Add(pickupable);
 					}
 				found.Recycle();
@@ -216,11 +215,6 @@ namespace PeterHan.FastTrack.GamePatches {
 			internal readonly int cell;
 
 			/// <summary>
-			/// .gameObject cannot be used on background tasks, so save it separately.
-			/// </summary>
-			internal readonly GameObject gameObject;
-
-			/// <summary>
 			/// Whether the reachable cells have been refreshed.
 			/// </summary>
 			internal bool refreshedCells;
@@ -233,8 +227,6 @@ namespace PeterHan.FastTrack.GamePatches {
 			public SolidTransferArmInfo(SolidTransferArm sweeper) {
 				if (sweeper == null)
 					throw new ArgumentNullException(nameof(sweeper));
-				var go = sweeper.gameObject;
-				gameObject = go;
 				cell = Grid.PosToCell(sweeper.transform.position);
 				refreshedCells = false;
 				this.sweeper = sweeper;

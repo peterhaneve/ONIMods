@@ -21,7 +21,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
-using UnityEngine;
 
 using FetchablesByPrefabId = FetchManager.FetchablesByPrefabId;
 using Pickup = FetchManager.Pickup;
@@ -83,16 +82,16 @@ namespace PeterHan.EfficientFetch {
 		/// Gets the list of fetchable pickups.
 		/// </summary>
 		/// <param name="fetch">The fetchables to update.</param>
-		/// <param name="fetcher">The Duplicant gathering the items.</param>
+		/// <param name="instanceID">The instance ID of the Duplicant gathering the items.</param>
 		/// <param name="navigator">The navigator for that Duplicant.</param>
 		/// <param name="cellCosts">A location to store the cell costs.</param>
 		private static void GetFetchList(FetchablesByPrefabId fetch, Navigator navigator,
-				GameObject fetcher, IDictionary<int, int> cellCosts) {
+				int instanceID, IDictionary<int, int> cellCosts) {
 			cellCosts.Clear();
 			var pickups = fetch.finalPickups;
 			foreach (var fetchable in fetch.fetchables.GetDataList()) {
 				var pickupable = fetchable.pickupable;
-				if (pickupable.CouldBePickedUpByMinion(fetcher)) {
+				if (pickupable.CouldBePickedUpByMinion(instanceID)) {
 					// Optimize if many pickupables are in the same cell
 					int cell = pickupable.cachedCell;
 					if (!cellCosts.TryGetValue(cell, out int cost)) {
@@ -239,17 +238,17 @@ namespace PeterHan.EfficientFetch {
 		/// Updates the available pickups.
 		/// </summary>
 		/// <param name="fetch">The fetchables to update.</param>
-		/// <param name="fetcher">The Duplicant gathering the items.</param>
+		/// <param name="instanceID">The instance ID of the Duplicant gathering the items.</param>
 		/// <param name="navigator">The navigator for that Duplicant.</param>
 		/// <param name="cellCosts">A location to store the cell costs.</param>
 		internal void UpdatePickups(FetchablesByPrefabId fetch, Navigator navigator,
-				GameObject fetcher, IDictionary<int, int> cellCosts) {
+				int instanceID, IDictionary<int, int> cellCosts) {
 			var pickups = fetch.finalPickups;
 			if (pickups != null) {
-				if (!outstanding.TryGetValue(fetch.prefabId, out FetchData data))
+				if (!outstanding.TryGetValue(fetch.prefabId, out var data))
 					data = null;
 				pickups.Clear();
-				GetFetchList(fetch, navigator, fetcher, cellCosts);
+				GetFetchList(fetch, navigator, instanceID, cellCosts);
 				if (pickups.Count > 1) {
 					pickups.Sort(data ?? FetchData.Default);
 					// Condense down using the stock game logic

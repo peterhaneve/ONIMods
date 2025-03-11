@@ -60,8 +60,9 @@ namespace PeterHan.FastTrack {
 		/// <summary>
 		/// Runs several one-time patches after the Db is initialized.
 		/// </summary>
+		/// <param name="harmony">The Harmony instance to use for patching.</param>
 		[PLibMethod(RunAt.AfterDbInit)]
-		internal static void AfterDbInit() {
+		internal static void AfterDbInit(Harmony harmony) {
 			var options = FastTrackOptions.Instance;
 			if (options.BackgroundRoomRebuild)
 				GamePatches.BackgroundRoomProber.Init();
@@ -74,6 +75,7 @@ namespace PeterHan.FastTrack {
 				UIPatches.FormatStringPatches.Init();
 			if (options.AllocOpts)
 				UIPatches.DescriptorAllocPatches.Init();
+			ConduitPatches.ConduitFlowVisualizerPatches.ApplyPatch(harmony);
 			UIPatches.DescriptorSorter.CreateInstance();
 			// Force feed our smaller unknown sprite to the sprite list
 			if (FastTrackOptions.Instance.ClusterMapReduce && DlcManager.
@@ -145,7 +147,7 @@ namespace PeterHan.FastTrack {
 #if DEBUG
 			Metrics.FastTrackProfiler.End();
 #endif
-			ConduitPatches.ConduitFlowVisualizerRenderer.Cleanup();
+			ConduitPatches.ConduitFlowVisualizerPatches.Cleanup();
 			if (options.CachePaths)
 				PathPatches.PathCacher.Cleanup();
 			if (options.UnstackLights)
@@ -296,7 +298,7 @@ namespace PeterHan.FastTrack {
 					go.AddOrGet<Metrics.DebugMetrics>();
 				inst.StartCoroutine(WaitForCleanLoad());
 			}
-			ConduitPatches.ConduitFlowVisualizerRenderer.Init();
+			ConduitPatches.ConduitFlowVisualizerPatches.Init();
 			if (options.UnstackLights)
 				VisualPatches.LightBufferManager.Init();
 			VisualPatches.FullScreenDialogPatches.Init();
