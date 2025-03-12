@@ -30,6 +30,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using KMod;
+using UnityEngine.Pool;
+using static STRINGS.DUPLICANTS;
 
 namespace PeterHan.PreserveSeed {
 	/// <summary>
@@ -125,19 +127,82 @@ namespace PeterHan.PreserveSeed {
 		/// <summary>
 		/// Applied to Database.Personalities to control the random personality handed out.
 		/// </summary>
-		[HarmonyPatch(typeof(Personalities), nameof(Personalities.GetRandom))]
-		public static class Database_Personalities_GetRandom_Patch {
+		[HarmonyPatch(typeof(Personalities), nameof(Personalities.GetRandom), typeof(bool),
+			typeof(bool))]
+		public static class Database_Personalities_GetRandomOne_Patch {
 			/// <summary>
 			/// Applied after GetRandom runs.
 			/// </summary>
-			internal static void Postfix(Personalities __instance, bool onlyEnabledMinions,
+			[HarmonyPriority(Priority.High)]
+			internal static bool Prefix(Personalities __instance, bool onlyEnabledMinions,
 					bool onlyStartingMinions, ref Personality __result) {
-				if (SharedRandom.UseSharedRandom) {
+				bool shared = SharedRandom.UseSharedRandom;
+				if (shared) {
 					var results = __instance.GetAll(onlyEnabledMinions, onlyStartingMinions);
 					int n = results.Count;
-					if (n > 0)
-						__result = results[SharedRandom.GetRange(0, n)];
+					__result = n > 0 ? results[SharedRandom.GetRange(0, n)] : null;
 				}
+				return !shared;
+			}
+		}
+		
+		/// <summary>
+		/// Applied to Database.Personalities to control the random personality handed out.
+		/// </summary>
+		[HarmonyPatch(typeof(Personalities), nameof(Personalities.GetRandom), typeof(Tag),
+			typeof(bool), typeof(bool))]
+		public static class Database_Personalities_GetRandomTwo_Patch {
+			/// <summary>
+			/// Applied after GetRandom runs.
+			/// </summary>
+			[HarmonyPriority(Priority.High)]
+			internal static bool Postfix(Personalities __instance, bool onlyEnabledMinions,
+					Tag model, bool onlyStartingMinions, ref Personality __result) {
+				bool shared = SharedRandom.UseSharedRandom;
+				if (shared) {
+					var results = __instance.GetAll(onlyEnabledMinions, onlyStartingMinions);
+					var eligible = ListPool<Personality, Personalities>.Allocate();
+					int n = results.Count;
+					for (int i = 0; i < n; i++) {
+						var candidate = results[i];
+						if (model == null || candidate.model == model)
+							eligible.Add(candidate);
+					}
+					n = eligible.Count;
+					__result = n > 0 ? eligible[SharedRandom.GetRange(0, n)] : null;
+					eligible.Recycle();
+				}
+				return !shared;
+			}
+		}
+
+		/// <summary>
+		/// Applied to Database.Personalities to control the random personality handed out.
+		/// </summary>
+		[HarmonyPatch(typeof(Personalities), nameof(Personalities.GetRandom),
+			typeof(List<Tag>), typeof(bool), typeof(bool))]
+		public static class Database_Personalities_GetRandomThree_Patch {
+			/// <summary>
+			/// Applied after GetRandom runs.
+			/// </summary>
+			[HarmonyPriority(Priority.High)]
+			internal static bool Postfix(Personalities __instance, bool onlyEnabledMinions,
+					List<Tag> models, bool onlyStartingMinions, ref Personality __result) {
+				bool shared = SharedRandom.UseSharedRandom;
+				if (shared) {
+					var results = __instance.GetAll(onlyEnabledMinions, onlyStartingMinions);
+					var eligible = ListPool<Personality, Personalities>.Allocate();
+					int n = results.Count;
+					for (int i = 0; i < n; i++) {
+						var candidate = results[i];
+						if (models == null || models.Contains(candidate.model))
+							eligible.Add(candidate);
+					}
+					n = eligible.Count;
+					__result = n > 0 ? eligible[SharedRandom.GetRange(0, n)] : null;
+					eligible.Recycle();
+				}
+				return !shared;
 			}
 		}
 

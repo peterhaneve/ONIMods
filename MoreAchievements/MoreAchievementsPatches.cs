@@ -24,6 +24,7 @@ using PeterHan.PLib.Database;
 using PeterHan.PLib.PatchManager;
 using PeterHan.PLib.UI;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace PeterHan.MoreAchievements {
@@ -317,7 +318,7 @@ namespace PeterHan.MoreAchievements {
 				if (ScaldedTag != null && __instance.TryGetComponent(out KSelectable target) &&
 						target.HasStatusItem(Db.Get().CreatureStatusItems.Scalding) &&
 						__instance.TryGetComponent(out KPrefabID id))
-					id.AddTag(ScaldedTag);
+					id.AddTag(ScaldedTag, true);
 			}
 		}
 
@@ -339,8 +340,15 @@ namespace PeterHan.MoreAchievements {
 		/// <summary>
 		/// Applied to Health to remove scalding tags when a Duplicant recovers.
 		/// </summary>
-		[HarmonyPatch(typeof(Health), "Recover")]
+		[HarmonyPatch]
 		public static class Health_Recover_Patch {
+			// TODO Remove when versions prior to U55-658361 no longer need to be supported
+			internal static MethodBase TargetMethod() {
+				return typeof(Health).GetMethodSafe("OnRecover", false, PPatchTools.
+					AnyArguments) ?? typeof(Health).GetMethodSafe("Recover", false,
+					PPatchTools.AnyArguments);
+			}
+
 			/// <summary>
 			/// Applied after Recover runs.
 			/// </summary>
