@@ -226,8 +226,10 @@ namespace PeterHan.NoWasteWant {
 		public static class FetchManager_PickupComparerIncludingPriority_Patch {
 			internal static MethodBase TargetMethod() {
 				return typeof(FetchManager).GetNestedType("PickupComparerIncludingPriority",
-					PPatchTools.BASE_FLAGS)?.GetMethodSafe(nameof(IComparer<int>.Compare),
-					false, typeof(FetchManager.Pickup), typeof(FetchManager.Pickup));
+					PPatchTools.BASE_FLAGS)?.GetMethod(nameof(IComparer<int>.Compare),
+					PPatchTools.BASE_FLAGS | BindingFlags.Instance | BindingFlags.Static,
+					null, new[] { typeof(FetchManager.Pickup), typeof(FetchManager.Pickup) },
+					null);
 			}
 
 			/// <summary>
@@ -247,8 +249,10 @@ namespace PeterHan.NoWasteWant {
 		public static class FetchManager_PickupComparerNoPriority_Patch {
 			internal static MethodBase TargetMethod() {
 				return typeof(FetchManager).GetNestedType("PickupComparerNoPriority",
-					PPatchTools.BASE_FLAGS)?.GetMethodSafe(nameof(IComparer<int>.Compare),
-					false, typeof(FetchManager.Pickup), typeof(FetchManager.Pickup));
+					PPatchTools.BASE_FLAGS)?.GetMethod(nameof(IComparer<int>.Compare),
+					PPatchTools.BASE_FLAGS | BindingFlags.Instance | BindingFlags.Static,
+					null, new[] { typeof(FetchManager.Pickup), typeof(FetchManager.Pickup) },
+					null);
 			}
 
 			/// <summary>

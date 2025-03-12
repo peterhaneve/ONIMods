@@ -198,9 +198,9 @@ namespace PeterHan.FastTrack.GamePatches {
 				ref var current = ref slots[mp];
 				var pu = current.pickupable;
 				// Is the new one better?
-				if (pu == null || (result = FetchManager.ComparerIncludingPriority.Compare(
-						candidate, current)) < 0 || (result == 0 && target.UnreservedAmount >
-						pu.UnreservedAmount))
+				if (pu == null || (result = FetchManager.PickupComparerIncludingPriority.
+						Compare(candidate, current)) < 0 || (result == 0 && target.
+						UnreservedAmount > pu.UnreservedAmount))
 					current = candidate;
 			}
 

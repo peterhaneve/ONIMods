@@ -507,7 +507,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				pickups.Clear();
 				for (int i = 0; i < n; i++)
 					pickups.AddRange(byId[i].finalPickups);
-				pickups.Sort(FetchManager.ComparerNoPriority);
+				pickups.Sort(FetchManager.PickupComparerIncludingPriority.CompareInst);
 				OffsetTracker.isExecutingWithinJob = false;
 			}
 
