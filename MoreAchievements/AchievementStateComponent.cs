@@ -21,6 +21,7 @@ using PeterHan.MoreAchievements.Criteria;
 using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
+using PeterHan.PLib.Detours;
 using UnityEngine;
 
 namespace PeterHan.MoreAchievements {
@@ -29,6 +30,11 @@ namespace PeterHan.MoreAchievements {
 	/// </summary>
 	[SerializationConfig(MemberSerialization.OptIn)]
 	public sealed class AchievementStateComponent : KMonoBehaviour, ISim1000ms {
+		// TODO Remove when versions prior to U55-658361 no longer need to be supported
+		private static readonly IDetouredField<ClusterManager, IList<WorldContainer>>
+			WHOLE_NEW_WORLDS = PDetours.DetourField<ClusterManager, IList<WorldContainer>>(
+				nameof(ClusterManager.WorldContainers));
+
 		/// <summary>
 		/// Retrieves the singleton instance of this component, which is created when a game
 		/// is loaded or started.
@@ -375,7 +381,7 @@ namespace PeterHan.MoreAchievements {
 			keys.Recycle();
 			// Mark visited worlds for DLC
 			if (DlcManager.IsExpansion1Active())
-				foreach (var world in ClusterManager.Instance.WorldContainers)
+				foreach (var world in WHOLE_NEW_WORLDS.Get(ClusterManager.Instance))
 					if (world.IsDupeVisited)
 						PlanetsVisited.Add(world.id);
 		}
