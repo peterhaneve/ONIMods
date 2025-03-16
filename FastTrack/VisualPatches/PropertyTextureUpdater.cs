@@ -411,6 +411,9 @@ namespace PeterHan.FastTrack.VisualPatches {
 			case SimProperty.ExposedToSunlight:
 				UpdateSimProperty(p, PropertyTextures.externalExposedToSunlight, cells);
 				break;
+			case SimProperty.LiquidData:
+				UpdateSimProperty(p, PropertyTextures.externalLiquidDataTex, 4 * cells);
+				break;
 			default:
 				if (p < buffers.Length)
 					StartTextureUpdate(property, buffers[p], min, max);

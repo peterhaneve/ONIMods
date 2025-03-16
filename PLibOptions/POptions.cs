@@ -265,14 +265,17 @@ namespace PeterHan.PLib.Options {
 				var modSpec = mods[index];
 				string label = modSpec.staticID;
 				if (modSpec.IsEnabledForActiveDlc() && registered.TryGetValue(label,
-						out ModOptionsHandler handler)) {
+						out var handler)) {
+					string title = modSpec.title;
+					if (Strings.TryGet(title, out var localized))
+						title = localized.String;
 #if DEBUG
 					PUtil.LogDebug("Adding options for mod: {0}".F(modSpec.staticID));
 #endif
 					// Create delegate to open settings dialog
 					new PButton("ModSettingsButton") {
 						FlexSize = Vector2.up, OnClick = handler.ShowDialog,
-						ToolTip = PLibStrings.DIALOG_TITLE.text.F(modSpec.title), Text =
+						ToolTip = PLibStrings.DIALOG_TITLE.text.F(title), Text =
 						CultureInfo.CurrentCulture.TextInfo.ToTitleCase(PLibStrings.
 						BUTTON_OPTIONS.text.ToLower()), Margin = OPTION_BUTTON_MARGIN
 						// Move before the subscription and enable button

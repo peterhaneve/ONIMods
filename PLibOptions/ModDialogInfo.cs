@@ -69,6 +69,8 @@ namespace PeterHan.PLib.Options {
 			if (mod != null) {
 				string modInfoVersion = mod.packagedModInfo?.version;
 				title = mod.title;
+				if (Strings.TryGet(title, out var localized))
+					title = localized.String;
 				if (string.IsNullOrEmpty(url) && mod.label.distribution_platform == KMod.Label.
 						DistributionPlatform.Steam)
 					url = "https://steamcommunity.com/sharedfiles/filedetails/?id=" + mod.

@@ -37,27 +37,17 @@
   </Target>
 
   <Target Name="WriteModInfoFile" BeforeTargets="PreBuildEvent" Condition=" '$(DistributeMod)' == 'true' ">
-    <PropertyGroup>
-	  <ModInfoFileContent>
-minimumSupportedBuild: $(LastWorkingBuild)
-version: $(FileVersion)
-APIVersion: $(APIVersion)
-      </ModInfoFileContent>
-    </PropertyGroup>
     <ItemGroup>
-      <RequiredDLCList Include="$(RequiredDLCs.Split(','))"/>
-      <ForbiddenDLCList Include="$(ForbiddenDLCs.Split(','))"/>
+      <ModInfoFileContent Include="minimumSupportedBuild: $(LastWorkingBuild)"/>
+      <ModInfoFileContent Include="version: $(FileVersion)"/>
+      <ModInfoFileContent Include="APIVersion: $(APIVersion)"/>
+      <ModInfoFileContent Include="supportedContent: $(SupportedContent)" Condition="'$(SupportedContent)' != ''"/>
+      <ModInfoFileContent Include="requiredDlcIds:" Condition="'$(RequiredDLCs)' != ''"/>
+      <ModInfoFileContent Include="$([System.String]::Copy('$(RequiredDLCs)').Insert(0,' - ').Replace(',','%0a- '))" Condition="'$(RequiredDLCs)' != ''"/>
+      <ModInfoFileContent Include="forbiddenDlcIds:" Condition="'$(ForbiddenDLCs)' != ''"/>
+      <ModInfoFileContent Include="$([System.String]::Copy('$(ForbiddenDLCs)').Insert(0,' - ').Replace(',','%0a- '))" Condition="'$(ForbiddenDLCs)' != ''"/>
     </ItemGroup>
-    <WriteLinesToFile File="$(ModInfoFile)" Overwrite="true" Lines="$(ModInfoFileContent)"/>
-    <WriteLinesToFile File="$(ModInfoFile)" Overwrite="false" Condition="'$(SupportedContent)' != ''" Lines="supportedContent: $(SupportedContent)"/>
-    <WriteLinesToFile Condition="'$(RequiredDLCs)' != ''" File="$(ModInfoFile)" Overwrite="false" Lines="requiredDlcIds:"/>
-    <MSBuild Projects="$(MSBuildProjectFile)" Condition="'$(RequiredDLCs)' != ''" Properties="DLC=%(RequiredDLCList.Identity)" Targets="WriteSingleRequirement"/>
-    <WriteLinesToFile Condition="'$(ForbiddenDLCs)' != ''" File="$(ModInfoFile)" Overwrite="false" Lines="forbiddenDlcIds:"/>
-    <MSBuild Projects="$(MSBuildProjectFile)" Condition="'$(ForbiddenDLCs)' != ''" Properties="DLC=%(ForbiddenDLCList.Identity)" Targets="WriteSingleRequirement"/>
-  </Target>
-
-  <Target Name="WriteSingleRequirement" Condition="'$(DLC)' != ''">
-    <WriteLinesToFile File="$(ModInfoFile)" Overwrite="false" Lines=" - $(DLC)"/>
+    <WriteLinesToFile File="$(ModInfoFile)" Overwrite="true" Lines="@(ModInfoFileContent)"/>
   </Target>
 
   <Target Name="WriteModDescriptionFile" BeforeTargets="PreBuildEvent" Condition=" '$(DistributeMod)' == 'true' ">

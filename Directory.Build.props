@@ -62,9 +62,9 @@
     <DistributeMod>true</DistributeMod>
     <ArchivedVersionPath></ArchivedVersionPath>
     <UsePublicized>false</UsePublicized>
-    <PLibVersion>4.17.1.0</PLibVersion>
+    <PLibVersion>4.18.0.0</PLibVersion>
     <DefineConstants>MERGEDOWN</DefineConstants>
     <APIVersion>2</APIVersion>
-	<ModInfoFile>$(IntermediateOutputPath)\mod_info.yaml</ModInfoFile>
+    <ModInfoFile>$(IntermediateOutputPath)\mod_info.yaml</ModInfoFile>
   </PropertyGroup>
 </Project>
