@@ -1,0 +1,87 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.0\n"
+"Last-Translator: Nubula\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"Language: ko\n"
+
+#. PeterHan.AirlockDoor.AirlockDoorStrings.BUILDING.STATUSITEMS.AIRLOCKSTOREDCHARGE.NAME
+msgctxt ""
+"PeterHan.AirlockDoor.AirlockDoorStrings.BUILDING.STATUSITEMS."
+"AIRLOCKSTOREDCHARGE.NAME"
+msgid "Charge Available: {0}/{1}"
+msgstr "사용 가능 전력：{0}/{1}"
+
+#. PeterHan.AirlockDoor.AirlockDoorStrings.BUILDING.STATUSITEMS.AIRLOCKSTOREDCHARGE.TOOLTIP
+msgctxt ""
+"PeterHan.AirlockDoor.AirlockDoorStrings.BUILDING.STATUSITEMS."
+"AIRLOCKSTOREDCHARGE.TOOLTIP"
+msgid ""
+"This Airlock has <b>{0}</b> of stored <style=\"KKeyword\">Power</style>\n"
+"\n"
+"It consumes up to <style=\"consumed\">{2}</style> per use"
+msgstr "이 에어록에 저장된 <b>{0}</b>의 <style=\"KKeyword\">전력</style>을 사용할 수 있습니다.\n\n"
+"한번 사용할 때 마다 <style=\"consumed\">{2}</style> 만큼의 전력이 소모됩니다."
+
+#. PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.DESC
+msgctxt ""
+"PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.DESC"
+msgid ""
+"Sucking Duplicants that have nowhere to go into space through <link="
+"\"PRESSUREDOOR\">Mechanized Airlocks</link> is poor taste. Airlock Doors now "
+"allow Duplicants safe passage without the loss of any of their mysterious "
+"fluids."
+msgstr ""
+"복제체가 <link=\"PRESSUREDOOR\">기계식 에어록</link>을 사용할 때 마다 유체가 통과하는 것을 방지하여 "
+"시설과 복제체 모두 안전한 상태로 통행할 수 있는 특수 에어록입니다.\n"
+"이 문을 통해 열이 전도되는 것을 막지는 않습니다."
+
+#. PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.EFFECT
+msgctxt ""
+"PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.EFFECT"
+msgid ""
+"Blocks <link=\"ELEMENTSLIQUID\">Liquid</link> and <link=\"ELEMENTSGAS\">Gas</"
+"link> flow, even while Duplicants are passing.\n"
+"\n"
+"Will not allow passage when no <link=\"POWER\">Power</link> is available.\n"
+"\n"
+"<link=\"CRITTERS\">Critters</link> can never pass through this door."
+msgstr "복제체가 지나가는 동안 <link=\"ELEMENTSLIQUID\">액체</link>와 <link=\"ELEMENTSGAS"
+"\">기체</link>의 흐름을 차단합니다.\n\n"
+"충전된 <link=\"POWER\">전력</link>이 부족하면 통과할 수 없습니다。\n\n"
+"<link=\"CRITTERS\">동물</link>들은 이 문을 통과할 수 없습니다."
+
+#. PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.LOGIC_OPEN
+msgctxt ""
+"PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR."
+"LOGIC_OPEN"
+msgid "Unlock/Lock"
+msgstr "잠금 해제/잠금"
+
+#. PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.LOGIC_OPEN_ACTIVE
+msgctxt ""
+"PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR."
+"LOGIC_OPEN_ACTIVE"
+msgid "<b><style=\"logic_on\">Green Signal</style></b>: Unlock door"
+msgstr "<b><style=\"logic_on\">녹색 신호</style></b>이 문의 잠금을 해제합니다."
+
+#. PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.LOGIC_OPEN_INACTIVE
+msgctxt ""
+"PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR."
+"LOGIC_OPEN_INACTIVE"
+msgid "<b><style=\"logic_off\">Red Signal</style></b>: Lock door"
+msgstr "<b><style=\"logic_off\">적색 신호</style></b>이 문을 잠급니다."
+
+#. PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.NAME
+msgctxt ""
+"PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.NAME"
+msgid "<link=\"PAIRLOCKDOOR\">Airlock Door</link>"
+msgstr "<link=\"PAIRLOCKDOOR\">밀폐 에어록</link>"

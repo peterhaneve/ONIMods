@@ -1,0 +1,27 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: Nubula\n"
+"Language-Team: \n"
+"Language: ko\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"X-Generator: Poedit 3.4.1\n"
+
+#. PeterHan.NoWasteWant.NoWasteWantStrings.UI.UISIDESCREENS.FRESHNESS_CONTROL_SIDE_SCREEN.TITLE
+msgctxt ""
+"PeterHan.NoWasteWant.NoWasteWantStrings.UI.UISIDESCREENS."
+"FRESHNESS_CONTROL_SIDE_SCREEN.TITLE"
+msgid "Freshness Control"
+msgstr "신선도 관리"
+
+#. PeterHan.NoWasteWant.NoWasteWantStrings.UI.UISIDESCREENS.FRESHNESS_CONTROL_SIDE_SCREEN.TOOLTIP
+msgctxt ""
+"PeterHan.NoWasteWant.NoWasteWantStrings.UI.UISIDESCREENS."
+"FRESHNESS_CONTROL_SIDE_SCREEN.TOOLTIP"
+msgid "Will accept <b>Food</b> with a <b>Freshness</b> of at least <b>{0:F0}</b> %"
+msgstr "<b>신선도</b>가 최소 <b>{0:F0}</b> %인 <b>음식</b>을 허용합니다"

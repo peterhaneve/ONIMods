@@ -1,0 +1,268 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: Nubula\n"
+"Language-Team: \n"
+"Language: ko\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"X-Generator: Poedit 2.4.2\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_CANCEL
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_CANCEL"
+msgid "CANCEL"
+msgstr "닫기"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_LINE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_LINE"
+msgid "<b>{0}</b>\n"
+msgstr "<b>{0}</b>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_MORE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_MORE"
+msgid "<i>(and {0:D} more...)</i>\n"
+msgstr "<i>(and {0:D} more...)</i>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_OK
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_OK"
+msgid "FORCE UPDATE"
+msgstr "강제 업데이트"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_UPDATE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_UPDATE"
+msgid ""
+"Continuing will reinstall the latest version of:\n"
+"{0}from the Workshop.\n"
+"<color=#FFCC00>A best effort will be made to preserve mod options.</color>\n"
+"\n"
+"Check again after updating and enable the mod if necessary."
+msgstr ""
+"강제 업데이트 시 WorkShop에서 최신 버전인\n{0}\n모드를 다시 설치합니다."
+"<color=#FFCC00>모드 설정을 최대한 보존합니다.</color>\n\n"
+"업데이트 후 필요할 경우 다시 이 기능을 활성화하십시오."
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.LOCAL_UPDATE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.LOCAL_UPDATE"
+msgid "<b>Local Updated:</b> {0:f}"
+msgstr "<b>로컬 업데이트 날짜:</b> {0:f}"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_UPDATE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_UPDATE"
+msgid ""
+"\n"
+"\n"
+"<color=#FFCC00>{0:D} mods may be out of date</color>"
+msgstr ""
+"\n"
+"\n"
+"<color=#FFCC00>{0:D} 오래된 모드입니다.</color>"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_UPDATE_1
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_UPDATE_1"
+msgid ""
+"\n"
+"\n"
+"<color=#FFCC00>1 mod may be out of date</color>"
+msgstr ""
+"\n"
+"\n"
+"<color=#FFCC00>모드의 업데이트가 필요합니다.</color>"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_OUTDATED
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_OUTDATED"
+msgid "This mod appears to be out of date!"
+msgstr "이 모드는 업데이트가 필요합니다!"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATE_1
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATE_1"
+msgid "Update one mod which appears to be out of date"
+msgstr "오래된 모드를 업데이트합니다."
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATE_ALL
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATE_ALL"
+msgid "Update {0:D} mods which appear to be out of date"
+msgstr "오래된 {0:D} 모드를 업데이트합니다."
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATED
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATED"
+msgid "This mod appears to be up to date."
+msgstr "이 모드는 최신 상태입니다."
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATED_BYUS
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_UPDATED_BYUS"
+msgid "This mod was locally updated by Mod Updater."
+msgstr "이 모드는 Mod Updater를 통해 로컬로 업데이트되었습니다."
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.OPTION_MAINMENU
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.OPTION_MAINMENU"
+msgid "Show Updates in Main Menu"
+msgstr "메인 메뉴에 업데이트 표시"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.STEAM_UPDATE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.STEAM_UPDATE"
+msgid "<b>Steam Updated:</b> {0:f}"
+msgstr "<b>스팀 업데이트 날짜:</b> {0:f}"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.STEAM_UPDATE_UNKNOWN
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER."
+"STEAM_UPDATE_UNKNOWN"
+msgid "<b>Steam Updated</b>: Unknown"
+msgstr "<b>스팀 업데이트 날짜:</b> 확인 불가"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_CANTSTART
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_CANTSTART"
+msgid "Unable to start download"
+msgstr "다운로드를 시작할 수 없습니다."
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_ERROR
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_ERROR"
+msgid "<b>{0}</b>: <color=#FF0000>{1}</color>\n"
+msgstr "<b>{0}</b>：<color=#FF0000>{1}</color>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_FOOTER_CONFIG
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER."
+"UPDATE_FOOTER_CONFIG"
+msgid ""
+"\n"
+"<b><color=#FFCC00>Back up any valuable mod configurations now manually!</"
+"color></b>"
+msgstr ""
+"\n"
+"<b><color=#FFCC00>현재 모드 구성을 수동으로 백업하십시오!</color></b>"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_FOOTER_ERROR
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_FOOTER_ERROR"
+msgid ""
+"\n"
+"Check your connection, and that the mods directory has sufficient disk space "
+"and permissions."
+msgstr ""
+"\n"
+"인터넷 연결을 확인한 후 mods 폴더에 충분한 디스크 공간과 권한이 있는지 확인하십시오."
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_FOOTER_OK
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_FOOTER_OK"
+msgid ""
+"\n"
+"{0} will be updated on the next restart."
+msgstr ""
+"\n"
+"{0} 모드는 게임을 다시 시작한 이후에 업데이트됩니다。"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_HEADER
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_HEADER"
+msgid ""
+"<size=16>Update results:</size>\n"
+"\n"
+msgstr ""
+"<size=16>업데이트 결과：</size>\n"
+"\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_INPROGRESS
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_INPROGRESS"
+msgid "다른 모드에 대한 업데이트가 이미 진행중입니다."
+msgstr "另一个模组的更新正在进行。"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_MULTIPLE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_MULTIPLE"
+msgid "These mods"
+msgstr "이 모드들"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_NODETAILS
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_NODETAILS"
+msgid "Uninstalled or not found on workshop"
+msgstr "WorkShop에 등록되지 않았거나 찾을 수 없습니다."
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_NOFILE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_NOFILE"
+msgid "No file found to download"
+msgstr "다운로드를 진행할 파일이 없습니다."
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_OFFLINE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_OFFLINE"
+msgid "Cannot download in Offline Mode"
+msgstr "오프라인 상태에서 다운로드를 진행할 수 없습니다."
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_OK_CONFIG
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_OK_CONFIG"
+msgid ""
+"<b>{0}</b>: <color=#00CC00>{1:D} custom mod option files backed up</color>\n"
+msgstr "<b>{0}</b>：<color=#00CC00>{1:D} 사용자 정의 모드 설정 파일이 백업되었습니다.</color>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_OK_CONFIG_1
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_OK_CONFIG_1"
+msgid ""
+"<b>{0}</b>: <color=#00CC00>One custom mod option file backed up</color>\n"
+msgstr "<b>{0}</b>：<color=#00CC00>사용자 정의 모드 설정 파일이 백업되었습니다.</color>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_OK_NOCONFIG
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_OK_NOCONFIG"
+msgid ""
+"<b>{0}</b>: <color=#FFCC00>Unable to back up configuration files</color>\n"
+msgstr "<b>{0}</b>：<color=#FFCC00>설정 파일을 백업할 수 없습니다.</color>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_ONE
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_ONE"
+msgid "This mod"
+msgstr "이 모드"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_REST
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_REST"
+msgid "<b>{0:D}</b> <color=#00CC00>mods were updated with no errors</color>\n"
+msgstr "<b>{0:D}</b><color=#00CC00>모드가 오류 없이 업데이트 되었습니다.</color>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_REST_1
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_REST_1"
+msgid "<b>One</b> <color=#00CC00>mod was updated with no errors</color>\n"
+msgstr "<b>一</b><color=#00CC00>모드가 오류 없이 업데이트 되었습니다.</color>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_SINGLE
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.UPDATE_SINGLE"
+msgid "<b>{0}</b>: <color=#00CC00>Updated</color>\n"
+msgstr "<b>{0}</b>：<color=#00CC00>업데이트됨</color>\n"
+
+#. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.TOOLTIPS.MODUPDATER.OPTION_MAINMENU
+msgctxt ""
+"PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.TOOLTIPS.MODUPDATER."
+"OPTION_MAINMENU"
+msgid ""
+"If selected, a warning with the number of potentially\n"
+"outdated mods is shown in the main menu."
+msgstr ""
+"선택 시 잠재적으로 발생할 수 있는 경고가 표시됩니다.\n"
+"오래된 모드가 메인 메뉴에서 표시됩니다."
