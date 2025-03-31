@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using System;
 using TTS = PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS;
 
 namespace PeterHan.ThermalTooltips {
@@ -41,30 +42,35 @@ namespace PeterHan.ThermalTooltips {
 		public void AddThermalInfo(DescriptorPanel effectsPane, Tag elementTag) {
 			var element = ElementLoader.GetElement(elementTag);
 			var desc = default(Descriptor);
+			var descriptors = GameUtil.GetMaterialDescriptors(elementTag);
+			// GetMaterialDescriptors returns a fresh list
+			desc.SetupDescriptor(STRINGS.ELEMENTS.MATERIAL_MODIFIERS.EFFECTS_HEADER,
+				STRINGS.ELEMENTS.MATERIAL_MODIFIERS.TOOLTIP.EFFECTS_HEADER);
+			if (descriptors.Count > 0)
+				descriptors.Insert(0, desc);
 			if (element != null && Def != null) {
-				var descriptors = GameUtil.GetMaterialDescriptors(element);
 				// Get building mass from its def (primary element is in slot 0)
 				var masses = Def.Mass;
+				string name = Def.Name ?? "";
 				float tc = element.thermalConductivity * Def.ThermalConductivity, shc =
 					element.specificHeatCapacity, mass = ThermalTranspilerPatch.
-					GetAdjustedMass(Def.BuildingComplete, masses != null && masses.Length >
-					0 ? masses[0] : 0.0f), tMass = GameUtil.GetDisplaySHC(mass * shc);
-				string deg = GameUtil.GetTemperatureUnitSuffix()?.Trim(), kDTU = STRINGS.UI.
-					UNITSUFFIXES.HEAT.KDTU.text.Trim();
-				// GetMaterialDescriptors returns a fresh list
-				desc.SetupDescriptor(STRINGS.ELEMENTS.MATERIAL_MODIFIERS.EFFECTS_HEADER,
-					STRINGS.ELEMENTS.MATERIAL_MODIFIERS.TOOLTIP.EFFECTS_HEADER);
-				descriptors.Insert(0, desc);
+					GetAdjustedMass(Def.BuildingComplete, Def, masses != null && masses.
+					Length > 0 ? masses[0] : 0.0f), tMass = GameUtil.GetDisplaySHC(mass * shc);
+				string deg = GameUtil.GetTemperatureUnitSuffix().Trim(), kDTU = STRINGS.UI.
+					UNITSUFFIXES.HEAT.KDTU.text?.Trim();
+				// Display effects even on tags with no descriptors if possible
+				if (descriptors.Count == 0)
+					descriptors.Add(desc);
 				// Thermal Conductivity
 				desc.SetupDescriptor(string.Format(TTS.EFFECT_CONDUCTIVITY, tc),
-					string.Format(TTS.BUILDING_CONDUCTIVITY, Def.Name, GameUtil.
+					string.Format(TTS.BUILDING_CONDUCTIVITY, name, GameUtil.
 					GetFormattedThermalConductivity(tc), tc, deg,
-					STRINGS.UI.UNITSUFFIXES.HEAT.DTU_S.text.Trim()));
+					STRINGS.UI.UNITSUFFIXES.HEAT.DTU_S.text?.Trim()));
 				desc.IncreaseIndent();
 				descriptors.Add(desc);
 				// Thermal Mass
 				desc.SetupDescriptor(string.Format(TTS.EFFECT_THERMAL_MASS, tMass, kDTU, deg),
-					string.Format(TTS.BUILDING_THERMAL_MASS, Def.Name, tMass, kDTU, deg));
+					string.Format(TTS.BUILDING_THERMAL_MASS, name, tMass, kDTU, deg));
 				descriptors.Add(desc);
 				// Melt Temperature
 				var hotElement = element.highTempTransition;
@@ -72,13 +78,16 @@ namespace PeterHan.ThermalTooltips {
 					string meltTemp = GameUtil.GetFormattedTemperature(element.highTemp +
 						ExtendedThermalTooltip.TRANSITION_HYSTERESIS);
 					desc.SetupDescriptor(string.Format(TTS.EFFECT_MELT_TEMPERATURE, meltTemp),
-						string.Format(TTS.BUILDING_MELT_TEMPERATURE, Def.Name, meltTemp,
+						string.Format(TTS.BUILDING_MELT_TEMPERATURE, name, meltTemp,
 						hotElement.FormatName(STRINGS.UI.StripLinkFormatting(element.name))));
 					descriptors.Add(desc);
 				}
-				effectsPane.SetDescriptors(descriptors);
-				effectsPane.gameObject.SetActive(true);
 			}
+			if (descriptors.Count > 0) {
+				effectsPane.gameObject.SetActive(true);
+				effectsPane.SetDescriptors(descriptors);
+			} else
+				effectsPane.gameObject.SetActive(false);
 		}
 
 		/// <summary>

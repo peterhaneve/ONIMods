@@ -101,12 +101,17 @@ namespace PeterHan.ThermalTooltips {
 		[HarmonyPatch(typeof(MaterialSelector), "SetEffects")]
 		public static class MaterialSelector_SetEffects_Patch {
 			/// <summary>
-			/// Applied after SetEffects runs.
+			/// Applied before SetEffects runs.
 			/// </summary>
-			internal static void Postfix(MaterialSelector __instance, Tag element) {
-				if (__instance.selectorIndex == 0 && __instance.MaterialDescriptionPane != null)
-					// Primary element only
-					buildingInstance?.AddThermalInfo(__instance.MaterialEffectsPane, element);
+			[HarmonyPriority(Priority.Low)]
+			internal static bool Prefix(MaterialSelector __instance, Tag element) {
+				var inst = buildingInstance;
+				var effectsPane = __instance.MaterialEffectsPane;
+				bool hasInfo = inst != null && __instance.selectorIndex == 0 && __instance.
+					MaterialDescriptionPane != null && effectsPane != null;
+				if (hasInfo)
+					inst.AddThermalInfo(effectsPane, element);
+				return !hasInfo;
 			}
 		}
 

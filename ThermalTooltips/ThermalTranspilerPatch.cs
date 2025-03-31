@@ -29,12 +29,6 @@ namespace PeterHan.ThermalTooltips {
 	/// </summary>
 	internal sealed class ThermalTranspilerPatch {
 		/// <summary>
-		/// The current runtime value of the buildings layer.
-		/// </summary>
-		private static readonly int LAYER_BUILDINGS = (int)PGameUtils.GetObjectLayer(nameof(
-			ObjectLayer.Building), ObjectLayer.Building);
-
-		/// <summary>
 		/// Called when thermal information needs to be displayed for buildings and other
 		/// items in game (like debris).
 		/// </summary>
@@ -44,11 +38,14 @@ namespace PeterHan.ThermalTooltips {
 			var primaryElement = instance?.PrimaryElement;
 			if (primaryElement != null) {
 				float insulation = 1.0f;
+				BuildingDef def = null;
 				// Check for insulation
-				var building = primaryElement.GetComponent<Building>();
-				if (building != null)
+				if (primaryElement.TryGetComponent(out Building building)) {
 					insulation = building.Def.ThermalConductivity;
-				float mass = GetAdjustedMass(primaryElement.gameObject, primaryElement.Mass);
+					def = building.Def;
+				}
+				float mass = GetAdjustedMass(primaryElement.gameObject, def, primaryElement.
+					Mass);
 				instance.Drawer = drawer;
 				instance.Style = style;
 				instance.DisplayThermalInfo(primaryElement.Element, primaryElement.Temperature,
@@ -80,17 +77,33 @@ namespace PeterHan.ThermalTooltips {
 		/// Returns the adjusted mass for an entity.
 		/// </summary>
 		/// <param name="entity">The entity.</param>
+		/// <param name="def">The building definition.</param>
 		/// <param name="originalMass">The original entity mass.</param>
 		/// <returns>The mass used for that entity in temperature calculations.</returns>
-		public static float GetAdjustedMass(GameObject entity, float originalMass) {
-			var sco = entity.GetComponentSafe<SimCellOccupier>();
-			var def = entity.GetComponentSafe<Building>()?.Def;
-			// Buildings have that insidious /5 multiplier... if they do not use tile
-			// temperature instead (with doors only being /5 if open)
-			//  isSolidTile almost works but it is false on FarmTile
-			//  IsFoundation almost works but it is true on Mesh and Airflow tiles
-			return (def == null || (sco != null && sco.IsVisuallySolid)) ? originalMass : def.
-				MassForTemperatureModification;
+		public static float GetAdjustedMass(GameObject entity, BuildingDef def,
+				float originalMass) {
+			float mass = originalMass;
+			if (entity != null && def != null && entity.TryGetComponent(
+					out SimCellOccupier sco) && sco.IsVisuallySolid)
+				// Buildings have that insidious /5 multiplier... if they do not use tile
+				// temperature instead (with doors only being /5 if open)
+				//  isSolidTile almost works but it is false on FarmTile
+				//  IsFoundation almost works but it is true on Mesh and Airflow tiles
+				mass = def.MassForTemperatureModification;
+			return mass;
+		}
+		
+		/// <summary>
+		/// Checks to see if the instruction is a call instruction to the specified method.
+		/// </summary>
+		/// <param name="instruction">The IL instruction.</param>
+		/// <param name="method">The method which should be called.</param>
+		/// <returns>true if it is a call or callvirt instruction to the specified method, or
+		/// false otherwise.</returns>
+		private static bool IsCallTo(CodeInstruction instruction, MethodInfo method) {
+			return instruction != null && (instruction.opcode == OpCodes.Call || instruction.
+				opcode == OpCodes.Callvirt) && method != null && method == (instruction.
+				operand as MethodInfo);
 		}
 
 		/// <summary>
@@ -189,7 +202,7 @@ namespace PeterHan.ThermalTooltips {
 				}
 			}
 			// Find first instance of GetFormattedTemperature
-			for (i++; i < n && !IsCallTo(newMethod[i], marker); i++) ;
+			for (i++; i < n && !IsCallTo(newMethod[i], marker); i++) { }
 #if DEBUG
 			if (i < n)
 				PUtil.LogDebug("PATCH: GetFormattedTemperature(1) at {0:D}".F(i));
@@ -208,7 +221,7 @@ namespace PeterHan.ThermalTooltips {
 				}
 			}
 			// Find second instance of GetFormattedTemperature
-			for (i++; i < n && !IsCallTo(newMethod[i], marker); i++) ;
+			for (i++; i < n && !IsCallTo(newMethod[i], marker); i++) { }
 #if DEBUG
 			if (i < n)
 				PUtil.LogDebug("PATCH: GetFormattedTemperature(2) at {0:D}".F(i));
@@ -228,19 +241,6 @@ namespace PeterHan.ThermalTooltips {
 			}
 			PUtil.LogDebug("UpdateHoverElements patch complete");
 			return newMethod;
-		}
-
-		/// <summary>
-		/// Checks to see if the instruction is a call instruction to the specified method.
-		/// </summary>
-		/// <param name="instruction">The IL instruction.</param>
-		/// <param name="method">The method which should be called.</param>
-		/// <returns>true if it is a call or callvirt instruction to the specified method, or
-		/// false otherwise.</returns>
-		private bool IsCallTo(CodeInstruction instruction, MethodInfo method) {
-			return instruction != null && (instruction.opcode == OpCodes.Call || instruction.
-				opcode == OpCodes.Callvirt) && method != null && method == (instruction.
-				operand as MethodInfo);
 		}
 	}
 }

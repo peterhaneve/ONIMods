@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using System;
+
 #if DEBUG
 using PeterHan.PLib.Core;
 #endif
@@ -148,45 +149,18 @@ namespace PeterHan.FastTrack.VisualPatches {
 		internal static bool Prefix(ref int __result, KAnimBatch __instance) {
 			int updated = 0;
 			if (__instance.needsWrite) {
-				bool symbolDirty = false, overrideDirty = false;
-				var controllers = __instance.controllers;
-				var dirtySet = __instance.dirtySet;
 				// Create the texture if it is null
-				var tex = __instance.dataTex;
-				if (tex == null || !__instance.isSetup) {
+				var dataTex = __instance.dataTex;
+				if (dataTex == null || !__instance.isSetup) {
 					__instance.Init();
-					tex = __instance.dataTex;
+					dataTex = __instance.dataTex;
 				}
-				var dataTexData = tex.GetDataPointer();
-				var overrideTex = __instance.symbolOverrideInfoTex;
-				var symbolTex = __instance.symbolInstanceTex;
-				var symbolInstanceTexData = symbolTex.GetDataPointer();
-				foreach (int index in dirtySet) {
-					var converter = controllers[index];
-					if (converter is UnityEngine.Object obj && obj != null) {
-						// Update the textures; they are different over 90% of the time, so
-						// almost no gain from checking if actually dirty
-						__instance.WriteBatchedAnimInstanceData(index, converter, dataTexData);
-						symbolDirty |= __instance.WriteSymbolInstanceData(index, converter,
-							symbolInstanceTexData);
-						if (converter.ApplySymbolOverrides()) {
-							overrideTex = SetupOverride(__instance, overrideTex);
-							overrideDirty |= __instance.WriteSymbolOverrideInfoTex(index,
-								converter, overrideTex.GetDataPointer());
-						}
-						updated++;
-					}
-				}
-				dirtySet.Clear();
-				__instance.needsWrite = false;
-				// Write any dirty textures
-				tex.Apply();
-				if (symbolDirty)
-					symbolTex.Apply();
-				if (overrideDirty)
-					overrideTex.Apply();
+				if (__instance.dirtySet.Count > 0)
+					updated = UpdateDirtySet(__instance);
+				if (updated == 0)
+					dataTex.Apply();
 				// Update those mesh renderers too
-				if (updated > 0 && FastTrackOptions.Instance.MeshRendererOptions !=
+				else if (FastTrackOptions.Instance.MeshRendererOptions !=
 						FastTrackOptions.MeshRendererSettings.None)
 					KAnimMeshRendererPatches.UpdateMaterialProperties(__instance);
 			}
@@ -216,6 +190,50 @@ namespace PeterHan.FastTrack.VisualPatches {
 				instance.symbolOverrideInfoTex = overrideTex;
 			}
 			return overrideTex;
+		}
+		
+		/// <summary>
+		/// Updates all dirty override textures.
+		/// </summary>
+		/// <param name="instance">The instance to update.</param>
+		/// <returns>The number of textures updated in this way.</returns>
+		private static int UpdateDirtySet(KAnimBatch instance) {
+			bool symbolDirty = false, overrideDirty = false;
+			int updated = 0;
+			var overrideTex = instance.symbolOverrideInfoTex;
+			var symbolTex = instance.symbolInstanceTex;
+			var dataTex = instance.dataTex;
+			var dirtySet = instance.dirtySet;
+			var controllers = instance.controllers;
+			foreach (int index in dirtySet) {
+				var controller = controllers[index];
+				if (controller is UnityEngine.Object obj && obj != null) {
+					// Update the textures; they are different over 90% of the time, so
+					// almost no gain from checking if actually dirty
+					instance.WriteBatchedAnimInstanceData(index, controller, dataTex.
+						GetDataPointer());
+					symbolDirty |= instance.WriteSymbolInstanceData(index, controller,
+						symbolTex.GetDataPointer());
+					if (controller.ApplySymbolOverrides()) {
+						overrideTex = SetupOverride(instance, overrideTex);
+						overrideDirty |= instance.WriteSymbolOverrideInfoTex(index, controller,
+							overrideTex.GetDataPointer());
+					}
+					updated++;
+				}
+			}
+			if (updated > 0) {
+				// Write any dirty textures
+				dirtySet.Clear();
+				instance.needsWrite = false;
+				dataTex.Apply();
+				if (symbolDirty)
+					symbolTex.Apply();
+				if (overrideDirty)
+					overrideTex.Apply();
+			} else
+				PUtil.LogWarning("No textures were updated");
+			return updated;
 		}
 	}
 
