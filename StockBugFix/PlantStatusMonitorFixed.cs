@@ -128,7 +128,8 @@ namespace PeterHan.StockBugFix {
 		}
 
 		protected override void OnCleanUp() {
-			ForceUnsubscribe();
+			if (subscribeCount > 0)
+				ForceUnsubscribe();
 			subscribeCount = 0;
 			if (updateHandle.IsValid)
 				updateHandle.ClearScheduler();

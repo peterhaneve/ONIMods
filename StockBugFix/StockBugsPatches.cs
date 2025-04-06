@@ -762,7 +762,8 @@ namespace PeterHan.StockBugFix {
 
 	/// <summary>
 	/// Applied to StaterpillarGeneratorConfig to prevent it from overheating, breaking,
-	/// or in any way being damaged.
+	/// or in any way being damaged. This prevents a crash from Duplicants trying to "repair"
+	/// the Plug Slug if it sleeps in a hot environment.
 	/// </summary>
 	[HarmonyPatch(typeof(StaterpillarGeneratorConfig), nameof(StaterpillarGeneratorConfig.
 		CreateBuildingDef))]
@@ -806,9 +807,10 @@ namespace PeterHan.StockBugFix {
 					PUtil.LogWarning("Timelapser.OnNewDay was called, but worlds are still pending a screenshot");
 				for (int i = 0; i < n; i++) {
 					var world = containers[i];
-					int ds = (int)world.DiscoveryTimestamp;
-					if (world.IsDiscovered && !world.IsModuleInterior && ds >= 0 &&
-							NeedTimelapse(cycle - ds)) {
+					int ds = Mathf.FloorToInt(world.DiscoveryTimestamp);
+					if (ds < 0) ds = 0;
+					if (world.IsDiscovered && !world.IsModuleInterior && NeedTimelapse(cycle -
+							ds)) {
 						screenshot = true;
 #if DEBUG
 						PUtil.LogDebug("Requesting timelapse on cycle {0:D} for world {1:D}".F(
