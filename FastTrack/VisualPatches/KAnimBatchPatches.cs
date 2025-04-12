@@ -18,10 +18,7 @@
 
 using HarmonyLib;
 using System;
-
-#if DEBUG
 using PeterHan.PLib.Core;
-#endif
 
 using KAnimBatchTextureCache = KAnimBatchGroup.KAnimBatchTextureCache;
 

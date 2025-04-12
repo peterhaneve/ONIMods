@@ -38,15 +38,18 @@ namespace PeterHan.FastTrack.UIPatches {
 		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(BreathabilityTracker __instance) {
 			var duplicants = Components.LiveMinionIdentities.GetWorldItems(__instance.WorldID);
-			int n = duplicants.Count, total = 0;
+			int n = duplicants.Count, total = 0, denom = 0;
 			if (n == 0)
 				__instance.AddPoint(0f);
 			else {
 				for (int i = 0; i < n; i++)
-					if (duplicants[i].TryGetComponent(out OxygenBreather breather) &&
-							breather.IsOutOfOxygen)
-						total += breather.GetCurrentGasProvider().IsLowOxygen() ? 50 : 100;
-				__instance.AddPoint(Mathf.Round((float)total / n));
+					if (duplicants[i].TryGetComponent(out OxygenBreather breather)) {
+						var provider = breather.GetCurrentGasProvider();
+						denom++;
+						if (!breather.IsOutOfOxygen)
+							total += provider.IsLowOxygen() ? 50 : 100;
+					}
+				__instance.AddPoint(denom == 0 ? 0f : Mathf.Round((float)total / denom));
 			}
 			return false;
 		}

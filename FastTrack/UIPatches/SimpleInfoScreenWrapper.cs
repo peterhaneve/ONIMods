@@ -99,24 +99,22 @@ namespace PeterHan.FastTrack.UIPatches {
 			bool hasHEP = target.TryGetComponent(out HighEnergyParticleStorage hep);
 			string tooltip = "", itemName = "";
 			if (target.TryGetComponent(out KSelectable selectable))
-				itemName = selectable.name;
+				itemName = selectable.GetName();
 			text.Clear();
-			if (hasHEP) {
-				if (pe != null) {
-					if (target.TryGetComponent(out KPrefabID kpid) && Assets.IsTagCountable(
+			if (pe != null && !hasHEP) {
+				if (target.TryGetComponent(out KPrefabID kpid) && Assets.IsTagCountable(
 						kpid.PrefabTag))
-						itemName = GameUtil.GetUnitFormattedName(itemName, pe.Units);
-					text.AppendFormat(DETAILTABS.DETAILS.CONTENTS_MASS, itemName, "");
-					FormatStringPatches.GetFormattedMass(text, pe.Mass);
-					string what = text.ToString();
-					text.Clear().AppendFormat(DETAILTABS.DETAILS.CONTENTS_TEMPERATURE, what,
-						"");
-					FormatStringPatches.GetFormattedTemperature(text, pe.Temperature);
-				} else {
-					itemName = STRINGS.ITEMS.RADIATION.HIGHENERGYPARITCLE.NAME;
-					text.AppendFormat(DETAILTABS.DETAILS.CONTENTS_MASS, itemName,
-						GameUtil.GetFormattedHighEnergyParticles(hep.Particles));
-				}
+					itemName = GameUtil.GetUnitFormattedName(itemName, pe.Units);
+				text.AppendFormat(DETAILTABS.DETAILS.CONTENTS_MASS, itemName, "");
+				FormatStringPatches.GetFormattedMass(text, pe.Mass);
+				string what = text.ToString();
+				text.Clear().AppendFormat(DETAILTABS.DETAILS.CONTENTS_TEMPERATURE, what,
+					"");
+				FormatStringPatches.GetFormattedTemperature(text, pe.Temperature);
+			} else if (hasHEP) {
+				itemName = STRINGS.ITEMS.RADIATION.HIGHENERGYPARITCLE.NAME;
+				text.AppendFormat(DETAILTABS.DETAILS.CONTENTS_MASS, itemName,
+					GameUtil.GetFormattedHighEnergyParticles(hep.Particles));
 			}
 			if (smi != null) {
 				string str = smi.StateString();
