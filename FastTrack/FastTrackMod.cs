@@ -70,7 +70,7 @@ namespace PeterHan.FastTrack {
 				SensorPatches.SensorPatches.Init();
 			if (options.AnimOpts)
 				VisualPatches.KAnimLoopOptimizer.CreateInstance();
-			if (options.InfoCardOpts)
+			if (options.InfoCardOpts || options.CustomStringFormat)
 				// Localization related
 				UIPatches.FormatStringPatches.Init();
 			if (options.AllocOpts)

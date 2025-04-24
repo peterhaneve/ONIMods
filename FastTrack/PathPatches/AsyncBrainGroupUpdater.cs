@@ -21,7 +21,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using UnityEngine;
 
 using BrainPair = System.Collections.Generic.KeyValuePair<Brain, Navigator>;
 using Fetch = GlobalChoreProvider.Fetch;
@@ -507,7 +506,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				pickups.Clear();
 				for (int i = 0; i < n; i++)
 					pickups.AddRange(byId[i].finalPickups);
-				pickups.Sort(FetchManager.PickupComparerIncludingPriority.CompareInst);
+				pickups.Sort(FetchManager.PickupComparerNoPriority.CompareInst);
 				OffsetTracker.isExecutingWithinJob = false;
 			}
 
@@ -631,9 +630,8 @@ namespace PeterHan.FastTrack.PathPatches {
 				if (index >= 0 && index < byId.Count)
 					foreach (var item in byId[index].fetchables.GetDataList()) {
 						var pickupable = item.pickupable;
-						var tracker = pickupable.offsetTracker;
 						int cachedCell = pickupable.cachedCell;
-						if (tracker != null && tracker.previousCell != cachedCell)
+						if (!pickupable.ValidateOffsets(cachedCell))
 							// If an update is actually being performed here, the cached cell
 							// may need to be updated, to fix incubator related issues
 							DeferredTriggers.Instance.Queue(pickupable);

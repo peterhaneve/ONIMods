@@ -419,10 +419,10 @@ namespace PeterHan.FastTrack.GamePatches {
 
 		public void Dispose() {
 			if (!disposed) {
-				disposed = true;
 				cellChanges.Clear();
 				roomsChanged.Set();
 				roomsReady.Reset();
+				disposed = true;
 				Instance = null;
 			}
 		}
