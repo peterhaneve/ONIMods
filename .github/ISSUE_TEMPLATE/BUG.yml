@@ -5,39 +5,44 @@ body:
     id: triedupdate
     attributes:
       options:
-      - label: "**Before reporting an issue**, have you tried to force update the mod using Mod Updater?"
-        required: true
+        - label: "**Before reporting an issue**, have you tried to force update the mod
+            using Mod Updater?"
+          required: true
   - type: textarea
     id: expected
     attributes:
       label: Expected behavior
-      description: "Tell us what should happen"
+      description: Tell us what should happen
   - type: textarea
     id: expected
     attributes:
       label: Actual behavior
-      description: "Tell us what happens instead of the expected behavior"
+      description: Tell us what happens instead of the expected behavior
   - type: markdown
     attributes:
-      value: |
-        Please also attach the full output log to allow us to understand your issue. This file is located at:
-      
+      value: >
+        Please also attach the full output log to allow us to understand your
+        issue. This file is located at:
+
+
         Windows: `%userprofile%\AppData\LocalLow\Klei\Oxygen Not Included\Player.log`
+
         Mac: `~/Library/Logs/Unity/Player.log`
+
         Linux: `~/.config/unity3d/Klei/Oxygen Not Included/Player.log`
   - type: textarea
     id: repro
     attributes:
       label: Reproduction steps
-      description: "How can this issue be reproduced?"
+      description: How can this issue be reproduced?
   - type: checkboxes
     id: dlcs
     attributes:
       description: Which DLCs are active?
       options:
-      - label: Spaced Out
-      - label: Frosty Planet Pack
-      - label: Bionic Booster Pack
+        - label: Spaced Out
+        - label: Frosty Planet Pack
+        - label: Bionic Booster Pack
   - type: dropdown
     id: store
     attributes:
@@ -59,7 +64,3 @@ body:
       options:
         - Windows
         - Mac
-        - Linux
-        - Other
-    validations:
-      required: true
