@@ -1,5 +1,6 @@
-name: Issue
-description: File an issue.
+name: Issue Report
+description: File an issue
+title: "Issue: "
 body:
   - type: checkboxes
     id: triedupdate
@@ -9,18 +10,20 @@ body:
             using Mod Updater?"
           required: true
   - type: textarea
-    id: expected
+    id: mod
     attributes:
-      label: Expected behavior
-      description: Tell us what should happen
+      label: Failing mod
+      description: Which mod is failing? If this is a PLib issue, specify which PLib library you believe has the issue
+    validations:
+      required: true
   - type: textarea
     id: expected
     attributes:
-      label: Actual behavior
-      description: Tell us what happens instead of the expected behavior
+      label: Issue description
+      description: Tell us what should happen and what happens instead of the expected behavior
   - type: markdown
     attributes:
-      value: >
+      value: |
         Please also attach the full output log to allow us to understand your
         issue. This file is located at:
 
