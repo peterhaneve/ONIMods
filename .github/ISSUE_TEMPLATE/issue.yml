@@ -1,0 +1,79 @@
+name: "Bug/Crash Report"
+description: File an issue
+title: "Issue: "
+body:
+  - type: checkboxes
+    id: triedupdate
+    attributes:
+      label: "Steam users: Before reporting an issue, have you tried to force update the mod using Mod Updater?" 
+      options:
+        - label: Mod is up to date
+          required: true
+  - type: input
+    id: modname
+    attributes:
+      label: Which Mod?
+      description: What mod has the issue?
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Issue description
+      description: Tell us what should happen and what happens instead of the expected behavior
+  - type: textarea
+    id: reprosteps
+    attributes:
+      label: Steps To Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: Please write the steps in a list form
+    validations:
+      required: true
+  - type: textarea
+    id: playerlog
+    attributes:
+      label: Player.log
+      description: |
+        Please attach the full output log to allow us to understand your
+        issue. This file is located at:
+
+
+        Windows: `%userprofile%\AppData\LocalLow\Klei\Oxygen Not Included\Player.log`
+
+        Mac: `~/Library/Logs/Unity/Player.log`
+
+        Linux: `~/.config/unity3d/Klei/Oxygen Not Included/Player.log`
+      placeholder: Click in here to enable drag and drop, or use the built in file selector by clicking the bottom bar to add your log.
+    validations:
+      required: true
+  - type: checkboxes
+    id: dlcs
+    attributes:
+      label: Active DLCs
+      description: Which DLCs are active?
+      options:
+        - label: Spaced Out
+        - label: Frosty Planet Pack
+        - label: Bionic Booster Pack
+  - type: dropdown
+    id: store
+    attributes:
+      label: Game Platform
+      description: On which store was the game purchased?
+      options:
+        - Steam
+        - Epic
+        - WeGame
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: platforms
+    attributes:
+      label: On what operating systems/platforms does the problem occur?
+      multiple: true
+      options:
+        - Windows
+        - Mac
+        - Linux
+      default: 0
