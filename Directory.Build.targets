@@ -37,6 +37,9 @@
   </Target>
 
   <Target Name="WriteModInfoFile" BeforeTargets="PreBuildEvent" Condition=" '$(DistributeMod)' == 'true' ">
+    <PropertyGroup>
+      <ModInfoFile>$(IntermediateOutputPath)\mod_info.yaml</ModInfoFile>
+    </PropertyGroup>
     <ItemGroup>
       <ModInfoFileContent Include="minimumSupportedBuild: $(LastWorkingBuild)"/>
       <ModInfoFileContent Include="version: $(FileVersion)"/>

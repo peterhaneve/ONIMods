@@ -39,9 +39,13 @@ namespace PeterHan.ResearchQueue {
 		/// </summary>
 		internal static readonly Action<Research, Tech> ADD_TECH = typeof(Research).Detour<
 			Action<Research, Tech>>("AddTechToQueue");
-
+		
 		private static readonly IDetouredField<ResearchEntry, LocText> RESEARCH_NAME =
 			PDetours.DetourField<ResearchEntry, LocText>("researchName");
+
+		// GetResearchQueue inexplicably copies the list!!!
+		private static readonly IDetouredField<Research, IList<TechInstance>> QUEUED_TECH =
+			PDetours.DetourField<Research, IList<TechInstance>>("queuedTech");
 
 		private static readonly IDetouredField<ManagementMenu, ResearchScreen> RESEARCH_SCREEN =
 			PDetours.DetourField<ManagementMenu, ResearchScreen>("researchScreen");
@@ -98,10 +102,8 @@ namespace PeterHan.ResearchQueue {
 #if DEBUG
 				PUtil.LogDebug("Dequeue tech: " + targetTech.Name);
 #endif
-				// Remove from queue
-				screen.CancelResearch();
-				research.CancelResearch(targetTech);
-				var queue = research.GetResearchQueue();
+				var queue = QUEUED_TECH.Get(research);
+				RemoveResearch(screen, queue, targetTech);
 				// Restack research
 				int n = queue.Count;
 				research.SetActiveResearch((n > 0) ? queue[n - 1].tech : null);
@@ -131,29 +133,56 @@ namespace PeterHan.ResearchQueue {
 #if DEBUG
 				PUtil.LogDebug("Queue tech: " + targetTech.Name);
 #endif
-				var queue = research.GetResearchQueue();
+				var queue = QUEUED_TECH.Get(research);
 				int index = -1, n = queue.Count;
 				for (int i = 0; i < n && index < 0; i++)
 					// If the user shift clicks a tech already in the queue, remove it
 					if (queue[i].tech.Id == id)
 						index = i;
-				screen.CancelResearch();
 				if (index >= 0) {
-					// Remove from queue and dynamically restack
-					research.CancelResearch(targetTech);
-					queue = research.GetResearchQueue();
+					// CancelResearch is horribly broken and wipes the entire queue
+					RemoveResearch(screen, queue, targetTech);
 					n = queue.Count;
 					research.SetActiveResearch((n > 0) ? queue[n - 1].tech : null);
-					cont = false;
 				} else {
 					if (shiftDown)
 						// If not in the queue already and shift clicked, queue it on the end
 						ADD_TECH(research, targetTech);
+					else
+						screen.CancelResearch();
 					research.SetActiveResearch(targetTech, !shiftDown);
-					cont = false;
 				}
+				cont = false;
 			}
 			return cont;
+		}
+
+		/// <summary>
+		/// Removes the tech and any dependent techs (recursively) from the queue.
+		/// </summary>
+		/// <param name="screen">The active research screen.</param>
+		/// <param name="queue">The queue to clean up.</param>
+		/// <param name="targetTech">The technology to remove.</param>
+		private static void RemoveResearch(ResearchScreen screen, IList<TechInstance> queue,
+				Tech targetTech) {
+			if (targetTech == null)
+				throw new ArgumentNullException(nameof(targetTech));
+			// Find the technology to remove
+			int n = queue.Count;
+			string id = targetTech.Id;
+			var unlocked = targetTech.unlockedTech;
+			for (int i = 0; i < n; i++) {
+				var ti = queue[i];
+				if (ti.tech.Id == id) {
+					var entry = screen.GetEntry(targetTech);
+					queue.RemoveAt(i);
+					entry?.QueueStateChanged(isSelected: false);
+					n = unlocked.Count;
+					for (int j = 0; j < n; j++)
+						RemoveResearch(screen, queue, unlocked[j]);
+					break;
+				}
+			}
 		}
 
 		/// <summary>
