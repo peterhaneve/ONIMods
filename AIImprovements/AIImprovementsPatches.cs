@@ -19,15 +19,23 @@
 using HarmonyLib;
 using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
+using PeterHan.PLib.Detours;
 using PeterHan.PLib.Options;
 using PeterHan.PLib.PatchManager;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
+using static ResearchTypes;
 
 namespace PeterHan.AIImprovements {
 	/// <summary>
 	/// Patches which will be applied via annotations for AI Improvements.
 	/// </summary>
 	public sealed class AIImprovementsPatches : KMod.UserMod2 {
+		private static readonly IDetouredField<Constructable, Building> CONS_BUILDING =
+			PDetours.DetourFieldLazy<Constructable, Building>("building");
+
 		/// <summary>
 		/// The chore type used for Build chores.
 		/// </summary>
@@ -44,25 +52,36 @@ namespace PeterHan.AIImprovements {
 		internal static AIImprovementsOptionsInstance Options { get; private set; }
 
 		/// <summary>
+		/// Queues up chores that need to be reprioritized on the main thread.
+		/// </summary>
+		internal static readonly ConcurrentDictionary<Chore, bool> reprioritize =
+			new ConcurrentDictionary<Chore, bool>(4, 256);
+
+		/// <summary>
 		/// Adjusts build priorities based on the options.
 		/// </summary>
 		/// <param name="priorityMod">The priority to modify.</param>
 		/// <param name="chore">The parent chore.</param>
 		private static void AdjustBuildPriority(ref int priorityMod, Chore chore) {
 			BuildingDef def;
-			if (chore.target is Constructable target && target != null && target.
-					TryGetComponent(out Building building) && (def = building.Def) != null) {
+			Building building;
+			// The queue would work, but the Building field is required and faster
+			if (chore.target is Constructable target && target != null && (building =
+					CONS_BUILDING.Get(target)) != null && (def = building.Def) != null) {
 				string id = def.PrefabID;
 				if (Options.PrioritizeBuildings.Contains(id))
 					priorityMod += AIImprovementsOptions.BUILD_PRIORIY_MOD;
 				else if (Options.DeprioritizeBuildings.Contains(id))
 					priorityMod -= AIImprovementsOptions.BUILD_PRIORIY_MOD;
 				if (def.IsFoundation) {
-					// Avoid building a tile which would block a location recently used by
-					// a dupe
-					int cell = Grid.PosToCell(target);
-					if (AllMinionsLocationHistory.Instance.WasRecentlyOccupied(cell))
-						priorityMod -= AIImprovementsOptions.BLOCK_PRIORITY_MOD;
+					if (Game.IsOnMainThread()) {
+						// Avoid building a tile which would block a location recently used by
+						// a dupe
+						int cell = Grid.PosToCell(target);
+						if (AllMinionsLocationHistory.Instance.WasRecentlyOccupied(cell))
+							priorityMod -= AIImprovementsOptions.BLOCK_PRIORITY_MOD;
+					} else
+						reprioritize.TryAdd(chore, true);
 				}
 			}
 		}
@@ -72,21 +91,25 @@ namespace PeterHan.AIImprovements {
 		/// </summary>
 		/// <param name="priorityMod">The priority to modify.</param>
 		/// <param name="chore">The parent chore.</param>
-		private static void AdjustDeconstructPriority(ref int priorityMod,
-				Chore chore) {
+		private static void AdjustDeconstructPriority(ref int priorityMod, Chore chore) {
 			BuildingDef def;
-			if (chore.target is Deconstructable target && target != null && target.
-					TryGetComponent(out Building building) && (def = building.Def) != null) {
-				string id = def.PrefabID;
-				if (Options.PrioritizeBuildings.Contains(id))
-					priorityMod -= AIImprovementsOptions.BUILD_PRIORIY_MOD;
-				else if (Options.DeprioritizeBuildings.Contains(id))
-					priorityMod += AIImprovementsOptions.BUILD_PRIORIY_MOD;
-				if (def.IsFoundation) {
-					// Avoid destroying a tile recently stood on by a dupe
-					int cell = Grid.CellAbove(Grid.PosToCell(target));
-					if (AllMinionsLocationHistory.Instance.WasRecentlyOccupied(cell))
-						priorityMod -= AIImprovementsOptions.BLOCK_PRIORITY_MOD;
+			if (chore.target is Deconstructable target && target != null) {
+				if (!Game.IsOnMainThread())
+					// Reprioritize the chore
+					reprioritize.TryAdd(chore, true);
+				else if (target.TryGetComponent(out Building building) &&
+						(def = building.Def) != null) {
+					string id = def.PrefabID;
+					if (Options.PrioritizeBuildings.Contains(id))
+						priorityMod -= AIImprovementsOptions.BUILD_PRIORIY_MOD;
+					else if (Options.DeprioritizeBuildings.Contains(id))
+						priorityMod += AIImprovementsOptions.BUILD_PRIORIY_MOD;
+					if (def.IsFoundation) {
+						// Avoid destroying a tile recently stood on by a dupe
+						int cell = Grid.CellAbove(Grid.PosToCell(target));
+						if (AllMinionsLocationHistory.Instance.WasRecentlyOccupied(cell))
+							priorityMod -= AIImprovementsOptions.BLOCK_PRIORITY_MOD;
+					}
 				}
 			}
 		}
@@ -153,6 +176,7 @@ namespace PeterHan.AIImprovements {
 			PUtil.LogDebug("Destroying AllMinionsLocationHistory");
 #endif
 			AllMinionsLocationHistory.DestroyInstance();
+			reprioritize.Clear();
 		}
 
 		[PLibMethod(RunAt.OnStartGame)]
@@ -200,6 +224,26 @@ namespace PeterHan.AIImprovements {
 			new PPatchManager(harmony).RegisterPatchClass(typeof(AIImprovementsPatches));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}
+		
+		/// <summary>
+		/// Applied to Chore.Precondition.Context to finish required chore priority
+		/// evaluations on the main thread.
+		/// </summary>
+		[HarmonyPatch(typeof(Chore.Precondition.Context), nameof(Chore.Precondition.Context.
+			FinishPreconditions))]
+		public static class Chore_Context_FinishPreconditions_Patch {
+			/// <summary>
+			/// Applied after FinishPreconditions runs.
+			/// </summary>
+			internal static void Postfix(ref int ___priorityMod, Chore ___chore) {
+				if (BuildChore != null && ___chore.choreType == BuildChore && reprioritize.
+						TryRemove(___chore, out _))
+					AdjustBuildPriority(ref ___priorityMod, ___chore);
+				else if (DeconstructChore != null && ___chore.choreType == DeconstructChore &&
+						reprioritize.TryRemove(___chore, out _))
+					AdjustDeconstructPriority(ref ___priorityMod, ___chore);
+			}
+		}
 
 		/// <summary>
 		/// Applied to Chore.Precondition.Context to adjust the priority modifier on chores
@@ -220,41 +264,34 @@ namespace PeterHan.AIImprovements {
 		}
 
 		/// <summary>
-		/// Applied to FallMonitor.Instance to try and back out to a previously visited tile
-		/// if the floor is removed from under a Duplicant.
+		/// Applied to ChoreConsumer to clean up the reprioritize list after all chores are
+		/// collected.
 		/// </summary>
-		[HarmonyPatch(typeof(FallMonitor.Instance), nameof(FallMonitor.Instance.Recover))]
-		public static class FallMonitor_Instance_Recover_Patch {
+		[HarmonyPatch(typeof(ChoreConsumer), nameof(ChoreConsumer.FindNextChore))]
+		public static class ChoreConsumer_FindNextChore_Patch {
 			/// <summary>
-			/// Applied before Recover runs.
+			/// Applied after FindNextChore runs.
 			/// </summary>
-			internal static bool Prefix(FallMonitor.Instance __instance,
-					Navigator ___navigator, ref bool ___flipRecoverEmote) {
-				// This is not run too often so searching is fine
-				bool moved = false;
-				if (___navigator != null) {
-					var layers = ___navigator.transitionDriver?.overrideLayers;
-					if (layers != null)
-						foreach (var layer in layers)
-							if (layer is LocationHistoryTransitionLayer lhs) {
-								moved = TryEscape(lhs, ___navigator, __instance,
-									ref ___flipRecoverEmote);
-								if (moved) break;
-							}
-				}
-				return !moved;
+			internal static void Postfix() {
+				reprioritize.Clear();
 			}
 		}
 
 		/// <summary>
 		/// Applied to FallMonitor.Instance to try and back out to a previously visited tile
-		/// instead of teleporting upwards.
+		/// if the floor is removed from under a Duplicant or they become entombed.
 		/// </summary>
-		[HarmonyPatch(typeof(FallMonitor.Instance), nameof(FallMonitor.Instance.
-			TryEntombedEscape))]
-		public static class FallMonitor_Instance_TryEntombedEscape_Patch {
+		[HarmonyPatch]
+		public static class FallMonitor_Instance_Recover_Patch {
+			internal static IEnumerable<MethodBase> TargetMethods() {
+				yield return typeof(FallMonitor.Instance).GetMethodSafe(nameof(FallMonitor.
+					Instance.Recover), false, PPatchTools.AnyArguments);
+				yield return typeof(FallMonitor.Instance).GetMethodSafe(nameof(FallMonitor.
+					Instance.TryEntombedEscape), false, PPatchTools.AnyArguments);
+			}
+
 			/// <summary>
-			/// Applied before TryEntombedEscape runs.
+			/// Applied before Recover runs.
 			/// </summary>
 			internal static bool Prefix(FallMonitor.Instance __instance,
 					Navigator ___navigator, ref bool ___flipRecoverEmote) {
