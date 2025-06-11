@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>One Giant Leap</AssemblyTitle>
-    <FileVersion>2.10.0.0</FileVersion>
+    <FileVersion>2.11.0.0</FileVersion>
     <RootNamespace>PeterHan.MoreAchievements</RootNamespace>
     <Description>Adds many new Colony Initiatives.</Description>
     <AssemblyVersion>2.1.0.0</AssemblyVersion>
@@ -90,6 +90,7 @@
     <None Remove="images\youmonster.png" />
     <None Remove="images\youmonster_locked.png" />
     <None Remove="images\youmonster_unlocked.png" />
+    <None Remove="PoiProps.txt" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="images\art_20.png" />
@@ -170,5 +171,6 @@
     <EmbeddedResource Include="images\youmonster.png" />
     <EmbeddedResource Include="images\youmonster_locked.png" />
     <EmbeddedResource Include="images\youmonster_unlocked.png" />
+    <EmbeddedResource Include="PoiProps.txt" />
   </ItemGroup>
 </Project>

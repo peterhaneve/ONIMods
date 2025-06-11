@@ -16,14 +16,13 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.Core;
 using UnityEngine;
 
 namespace PeterHan.MooReproduction {
 	/// <summary>
 	/// A baby Gassy Moo entity that uses a rescaled sprite from the regular Gassy Moo.
 	/// </summary>
-	public sealed class BabyMooConfig : IEntityConfig {
+	public sealed class BabyMooConfig : IEntityConfig, IHasDlcRestrictions {
 		// Baby Moos are only 1x1
 		private const int HEIGHT = 1;
 
@@ -67,7 +66,15 @@ namespace PeterHan.MooReproduction {
 		}
 
 		public string[] GetDlcIds() {
-			return DlcManager.AVAILABLE_EXPANSION1_ONLY;
+			return null;
+		}
+
+		public string[] GetRequiredDlcIds() {
+			return DlcManager.EXPANSION1;
+		}
+
+		public string[] GetForbiddenDlcIds() {
+			return null;
 		}
 
 		public void OnPrefabInit(GameObject inst) {

@@ -172,13 +172,9 @@ namespace PeterHan.MooReproduction {
 			/// Applied after InitializeStates runs.
 			/// </summary>
 			internal static void Postfix(HappinessMonitor __instance) {
-				const string PREFIX = "STRINGS.CREATURES.MODIFIERS.";
-				// TODO Remove when versions less than U51-594211 no longer need to be supported
-				if (!Strings.TryGet(PREFIX + "HAPPY_TAME.NAME", out var name))
-					name = Strings.Get(PREFIX + "HAPPY.NAME");
-				if (!Strings.TryGet(PREFIX + "HAPPY_TAME.TOOLTIP", out var tooltip))
-					tooltip = Strings.Get(PREFIX + "HAPPY.TOOLTIP");
-				var newEffect = new Effect("Happy", name, tooltip, 0f, true, false, false);
+				string name = STRINGS.CREATURES.MODIFIERS.HAPPY_TAME.NAME;
+				var newEffect = new Effect("Happy", name, STRINGS.CREATURES.MODIFIERS.
+					HAPPY_TAME.TOOLTIP, 0f, true, false, false);
 				newEffect.Add(PDatabaseUtils.CreateAttributeModifier(Db.Get().Amounts.
 					Fertility.deltaAttribute.Id, 4f, name, true));
 				if (__instance != null) {
@@ -218,7 +214,9 @@ namespace PeterHan.MooReproduction {
 				};
 				// Reduce to 2kg meat for adult
 				if (__result.TryGetComponent(out Butcherable butcherable))
-					butcherable.SetDrops(new[] { MeatConfig.ID, MeatConfig.ID });
+					butcherable.SetDrops(new Dictionary<string, float>() {
+						{ MeatConfig.ID, 2.0f }
+					});
 				// Hardcoded in CreateMoo, 6/10ths of the max age
 				fm.baseFertileCycles = 45.0f;
 				if (__result.TryGetComponent(out KPrefabID prefabID))

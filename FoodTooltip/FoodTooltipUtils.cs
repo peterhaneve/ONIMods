@@ -61,41 +61,21 @@ namespace PeterHan.FoodTooltip {
 		/// <param name="descriptors">The location where the descriptors should be placed.</param>
 		internal static void AddCritterDescriptors(GameObject critter,
 				IList<Descriptor> descriptors) {
-			string[] drops;
+			IDictionary<string, float> drops;
 			// Check the meat it drops
 			if (critter != null && critter.TryGetComponent(out Butcherable butcher) &&
-					(drops = butcher.drops).Length > 0) {
-				var dict = DictionaryPool<string, int, FoodRecipeCache>.Allocate();
+					(drops = butcher.drops).Count > 0) {
 				GetEggsPerCycle(critter, out float replacement, out float noReplacement);
 				// Find out what it drops when it dies - critters always die so the
 				// no-replacement rate must be positive
-				CollectDrops(drops, dict);
-				foreach (var pair in dict)
+				foreach (var pair in drops)
 					CreateDescriptors(TagManager.Create(pair.Key), descriptors,
 						pair.Value * noReplacement, FoodDescriptorTexts.CRITTERS);
-				dict.Recycle();
 				// How much omelette can the egg be made into? Babies are excluded here
 				var fertDef = critter.GetDef<FertilityMonitor.Def>();
 				if (fertDef != null)
 					CreateDescriptors(fertDef.eggPrefab, descriptors, replacement,
 						FoodDescriptorTexts.CRITTERS);
-			}
-		}
-
-		/// <summary>
-		/// Collects critter drops to determine the correct quantity of each, since the game
-		/// duplicates the drops N times if more than one is to be dropped.
-		/// </summary>
-		/// <param name="drops">The tag IDs of the dropped items.</param>
-		/// <param name="result">The location where the dropped items will be stored.</param>
-		private static void CollectDrops(string[] drops, IDictionary<string, int> result) {
-			int n = drops.Length;
-			result.Clear();
-			for (int i = 0; i < n; i++) {
-				string drop = drops[i];
-				if (!result.TryGetValue(drop, out int qty))
-					qty = 0;
-				result[drop] = qty + 1;
 			}
 		}
 

@@ -6,7 +6,7 @@
     <RootNamespace>PeterHan.PreserveSeed</RootNamespace>
     <Description>Preserves the random seed for the Printing Pod.</Description>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <SupportedContent>VANILLA_ID,EXPANSION1_ID</SupportedContent>
+    <SupportedContent></SupportedContent>
     <LastWorkingBuild>552078</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>

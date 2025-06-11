@@ -18,6 +18,7 @@
 
 using Database;
 using PeterHan.MoreAchievements.Criteria;
+using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
 
@@ -28,6 +29,8 @@ namespace PeterHan.MoreAchievements {
 	/// Lists all achievements added by this mod.
 	/// </summary>
 	internal static class Achievements {
+		private const string PROPS_PATH = "PeterHan.MoreAchievements.PoiProps.txt";
+
 		/// <summary>
 		/// The achievement list.
 		/// </summary>
@@ -179,43 +182,26 @@ namespace PeterHan.MoreAchievements {
 				new AD(AS.ISEEWHATYOUDIDTHERE.ID, "cheat", new TriggerEvent(AS.
 					ISEEWHATYOUDIDTHERE.ID)),
 			};
-			// Meltable props, but unfortunately the IDs are not constants
-			POI_PROPS.Add("PropDesk");
-			POI_PROPS.Add("PropElevator");
-			POI_PROPS.Add("PropFacilityChair");
-			POI_PROPS.Add("PropFacilityChairFlip");
-			POI_PROPS.Add("PropFacilityChandelier");
-			POI_PROPS.Add("PropFacilityCouch");
-			POI_PROPS.Add("PropFacilityDesk");
-			POI_PROPS.Add("PropFacilityDisplay");
-			POI_PROPS.Add("PropFacilityDisplay2");
-			POI_PROPS.Add("PropFacilityDisplay3");
-			POI_PROPS.Add("PropFacilityGlobeDroors");
-			POI_PROPS.Add("PropFacilityHangingLight");
-			POI_PROPS.Add("PropFacilityPainting");
-			POI_PROPS.Add("PropFacilityStatue");
-			POI_PROPS.Add("PropFacilityTable");
-			POI_PROPS.Add("PropFacilityWallDegree");
-			POI_PROPS.Add("PropGravitasCeilingRobot");
-			POI_PROPS.Add("PropGravitasDecorativeWindow");
-			POI_PROPS.Add("PropGravitasDisplay4");
-			POI_PROPS.Add("PropGravitasFloorRobot");
-			POI_PROPS.Add("PropGravitasHandScanner");
-			POI_PROPS.Add("PropGravitasJar1");
-			POI_PROPS.Add("PropGravitasJar2");
-			POI_PROPS.Add("PropGravitasLabTable");
-			POI_PROPS.Add("PropGravitasLabWindow");
-			POI_PROPS.Add("PropGravitasLabWindowHorizontal");
-			POI_PROPS.Add("PropGravitasRobitcTable");
-			POI_PROPS.Add("PropGravitasShelf");
-			POI_PROPS.Add("PropLight");
-			POI_PROPS.Add("PropReceptionDesk");
-			POI_PROPS.Add("PropSkeleton");
-			POI_PROPS.Add("PropSurfaceSatellite1");
-			POI_PROPS.Add("PropSurfaceSatellite2");
-			POI_PROPS.Add("PropSurfaceSatellite3");
-			POI_PROPS.Add("PropTable");
-			POI_PROPS.Add("PropTallPlant");
+			LoadProps();
+		}
+
+		/// <summary>
+		/// Loads the meltable props list. Unfortunately the IDs are not constants; exclude
+		/// anything made of Neutronium (you hacker!)
+		/// </summary>
+		private static void LoadProps() {
+			using (var stream = typeof(Achievements).Assembly.GetManifestResourceStream(
+					PROPS_PATH)) {
+				if (stream == null)
+					PUtil.LogWarning("Unable to load POI props list");
+				else {
+					var reader = new System.IO.StreamReader(stream);
+					string line;
+					while (!string.IsNullOrEmpty(line = reader.ReadLine()))
+						POI_PROPS.Add(line.Trim());
+					PUtil.LogDebug("Loaded " + POI_PROPS.Count + " props");
+				}
+			}
 		}
 	}
 }
