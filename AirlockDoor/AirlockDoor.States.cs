@@ -343,29 +343,6 @@ namespace PeterHan.AirlockDoor {
 		/// The instance parameters of this state machine.
 		/// </summary>
 		public sealed class Instance : States.GameInstance {
-			private delegate void TryOffsetNew(Pickupable instance, CellOffset offset);
-
-			private delegate void TryOffsetOld(Pickupable instance);
-
-			private static readonly TryOffsetNew TRY_OFFSET_NEW;
-
-			private static readonly TryOffsetOld TRY_OFFSET_OLD;
-
-			// FIXME New parameter introduced in June Quality of Life update U47-560136
-			static Instance() {
-				TryOffsetNew tryNew;
-				try {
-					tryNew = typeof(Pickupable).Detour<TryOffsetNew>(nameof(Pickupable.
-						TryToOffsetIfBuried));
-					TRY_OFFSET_OLD = null;
-				} catch (DetourException) {
-					tryNew = null;
-					TRY_OFFSET_OLD = typeof(Pickupable).Detour<TryOffsetOld>(nameof(Pickupable.
-						TryToOffsetIfBuried));
-				}
-				TRY_OFFSET_NEW = tryNew;
-			}
-
 			/// <summary>
 			/// The layer to check for Duplicants.
 			/// </summary>
@@ -466,12 +443,8 @@ namespace PeterHan.AirlockDoor {
 				if (GameComps.Fallers.Has(item))
 					GameComps.Fallers.Remove(item);
 				GameComps.Fallers.Add(item, Vector2.zero);
-				if (item.TryGetComponent(out Pickupable pickupable)) {
-					if (TRY_OFFSET_NEW != null)
-						TRY_OFFSET_NEW(pickupable, CellOffset.none);
-					else
-						TRY_OFFSET_OLD(pickupable);
-				}
+				if (item.TryGetComponent(out Pickupable pickupable))
+					pickupable.TryToOffsetIfBuried(CellOffset.none);
 			}
 
 			/// <summary>
