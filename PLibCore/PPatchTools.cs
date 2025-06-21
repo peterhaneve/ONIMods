@@ -287,11 +287,15 @@ namespace PeterHan.PLib.Core {
 						result.AppendLine(" {");
 					}
 				}
+#if NETSTANDARD2_1_OR_GREATER
+				result.Append("<labels unavailable in .NET Standard 2.1>");
+#else
 				foreach (var label in instr.labels) {
 					// Label hashcodes are just easy integers
 					result.Append(label.GetHashCode());
 					result.Append(": ");
 				}
+#endif
 				result.Append('\t');
 				result.Append(instr.opcode);
 				var operand = instr.operand;
@@ -1100,7 +1104,9 @@ namespace PeterHan.PLib.Core {
 				yield return endCatch;
 				// Actual new ret
 				var ret = new CodeInstruction(OpCodes.Ret);
+#if !NETSTANDARD2_1_OR_GREATER
 				ret.labels.Add(endMethod);
+#endif
 				yield return ret;
 			} // Otherwise, there were no instructions to wrap
 			ee.Dispose();
