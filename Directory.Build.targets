@@ -65,7 +65,7 @@ staticID: PeterHan.$(AssemblyName)
     <WriteLinesToFile File="$(ModDescriptionFile)" Overwrite="true" Lines="$(ModDescriptionFileContent)"/>
   </Target>
 
-  <Target Name="ILRepack" AfterTargets="Build" Condition=" '$(PLibCore)' != 'true' ">
+  <Target Name="ILRepack" AfterTargets="Build" Condition=" '$(PLibCore)' != 'true' and '$(TargetFramework)' != '' ">
     <PropertyGroup Condition=" '$(AssemblyName)' == 'PLib' ">
       <Internalize>false</Internalize>
     </PropertyGroup>
@@ -91,7 +91,7 @@ staticID: PeterHan.$(AssemblyName)
         LibraryPath="$(GameFolder)" />
   </Target>
 
-  <Target Name="CopyArtifactsToInstallFolder" AfterTargets="ILRepack" Condition=" '$(DistributeMod)' == 'true' ">
+  <Target Name="CopyArtifactsToInstallFolder" AfterTargets="ILRepack" Condition=" '$(DistributeMod)' == 'true' and '$(TargetFramework)' != '' ">
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
       <RootInstallFolder>..\Release\$(ProjectName)</RootInstallFolder>
     </PropertyGroup>
@@ -108,7 +108,7 @@ staticID: PeterHan.$(AssemblyName)
       <WorldGenFiles Include="$(ProjectDir)\worldgen\**\*.*" />
       <WorldGenTemplates Include="$(ProjectDir)\templates\**\*.*" />
       <YamlFiles Include="$(ProjectDir)\*.yaml" />
-    </ItemGroup>  
+    </ItemGroup>
 
     <Copy SourceFiles="@(AnimFiles)" DestinationFiles="@(AnimFiles->'$(InstallFolder)\anim\%(RecursiveDir)%(Filename)%(Extension)')" />
     <Copy SourceFiles="@(TranslationFiles)" DestinationFolder="$(InstallFolder)\translations" />
