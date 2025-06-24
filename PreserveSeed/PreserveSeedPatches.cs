@@ -30,8 +30,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using KMod;
-using UnityEngine.Pool;
-using static STRINGS.DUPLICANTS;
 
 namespace PeterHan.PreserveSeed {
 	/// <summary>
@@ -131,7 +129,7 @@ namespace PeterHan.PreserveSeed {
 			typeof(bool))]
 		public static class Database_Personalities_GetRandomOne_Patch {
 			/// <summary>
-			/// Applied after GetRandom runs.
+			/// Applied before GetRandom runs.
 			/// </summary>
 			[HarmonyPriority(Priority.High)]
 			internal static bool Prefix(Personalities __instance, bool onlyEnabledMinions,
@@ -153,10 +151,10 @@ namespace PeterHan.PreserveSeed {
 			typeof(bool), typeof(bool))]
 		public static class Database_Personalities_GetRandomTwo_Patch {
 			/// <summary>
-			/// Applied after GetRandom runs.
+			/// Applied before GetRandom runs.
 			/// </summary>
 			[HarmonyPriority(Priority.High)]
-			internal static bool Postfix(Personalities __instance, bool onlyEnabledMinions,
+			internal static bool Prefix(Personalities __instance, bool onlyEnabledMinions,
 					Tag model, bool onlyStartingMinions, ref Personality __result) {
 				bool shared = SharedRandom.UseSharedRandom;
 				if (shared) {
@@ -183,10 +181,10 @@ namespace PeterHan.PreserveSeed {
 			typeof(List<Tag>), typeof(bool), typeof(bool))]
 		public static class Database_Personalities_GetRandomThree_Patch {
 			/// <summary>
-			/// Applied after GetRandom runs.
+			/// Applied before GetRandom runs.
 			/// </summary>
 			[HarmonyPriority(Priority.High)]
-			internal static bool Postfix(Personalities __instance, bool onlyEnabledMinions,
+			internal static bool Prefix(Personalities __instance, bool onlyEnabledMinions,
 					List<Tag> models, bool onlyStartingMinions, ref Personality __result) {
 				bool shared = SharedRandom.UseSharedRandom;
 				if (shared) {

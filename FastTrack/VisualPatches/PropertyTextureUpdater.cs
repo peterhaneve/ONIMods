@@ -349,6 +349,9 @@ namespace PeterHan.FastTrack.VisualPatches {
 			case SimProperty.Radiation:
 				updater = PropertyTextures.UpdateRadiation;
 				break;
+			case SimProperty.SolidLiquidGasMassForLight:
+				updater = PropertyTextures.UpdateSolidLiquidGasMassForLight;
+				break;
 			default:
 				throw new ArgumentException("No updater for property: " + property);
 			}

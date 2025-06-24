@@ -42,7 +42,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 		}
 
-		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedCalories))]
+		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetFormattedCalories), typeof(float),
+			typeof(bool), typeof(TimeSlice), typeof(bool))]
 		internal static class GetFormattedCalories_Patch {
 			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
 
