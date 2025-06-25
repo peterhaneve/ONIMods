@@ -221,11 +221,10 @@ namespace PeterHan.FastTrack.UIPatches {
 			if (text.Clear().AppendIfInfinite(seconds))
 				text.Append("s");
 			else if (forceCycles || Mathf.Abs(seconds) > 100.0f) {
+				// The format is always F1 now in the base game apparently
 				string tmp = text.AppendSimpleFormat(format, seconds / Constants.
 					SECONDS_PER_CYCLE).ToString();
-				text.Clear();
-				text.Append(STRINGS.UI.FORMATDAY);
-				text.Replace("{0}", tmp);
+				text.Clear().Append(STRINGS.UI.FORMATDAY).Replace("{0:F1}", tmp);
 			} else {
 				seconds.ToRyuHardString(text, 0);
 				text.Append("s");
