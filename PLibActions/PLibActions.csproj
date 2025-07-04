@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;net471</TargetFrameworks>
     <Title>PLib Actions</Title>
     <AssemblyTitle>PLib.Actions</AssemblyTitle>
     <Version>$(PLibVersion)</Version>
