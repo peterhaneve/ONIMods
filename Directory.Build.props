@@ -52,7 +52,7 @@
     <Product>PeterHanONIMods</Product>
     <Authors>Peter Han</Authors>
     <Copyright>Copyright ©Peter Han 2024</Copyright>
-    <TargetFramework>net471</TargetFramework>
+    <TargetFrameworks>net471</TargetFrameworks>
     <RequiredDLCs></RequiredDLCs>
     <ForbiddenDLCs></ForbiddenDLCs>
     <SupportedContent>VANILLA_ID,EXPANSION1_ID</SupportedContent>
@@ -64,4 +64,10 @@
     <DefineConstants>MERGEDOWN</DefineConstants>
     <APIVersion>2</APIVersion>
   </PropertyGroup>
+  <ItemGroup Condition="'$(TargetFrameworks.Contains(netstandard2.1))' == 'true'">
+    <!-- Choose the correct version to reduce log spam w.r.t. mismatched assembly versions -->
+    <Reference Include="System.IO.Compression, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+      <SpecificVersion>True</SpecificVersion>
+    </Reference>
+  </ItemGroup>
 </Project>
