@@ -22,7 +22,7 @@ namespace PeterHan.ModUpdateDate {
     <Reference Include="com.rlabrecque.steamworks.net" HintPath="$(GameFolder)/com.rlabrecque.steamworks.net.dll" />
   </ItemGroup>
   <Target Name="WriteModVersionFile" BeforeTargets="PreBuildEvent">
-    <WriteLinesToFile File="$(IntermediateOutputPath)\Version.cs" Overwrite="true" Lines="$(VersionFileContent)"/>
+    <WriteLinesToFile File="$(IntermediateOutputPath)\Version.cs" Overwrite="true" WriteOnlyWhenDifferent="true" Lines="$(VersionFileContent)"/>
   </Target>
   <ItemGroup>
     <Compile Include="$(IntermediateOutputPath)\Version.cs" />
