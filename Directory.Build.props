@@ -14,17 +14,15 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup Condition=" '$(UsePublicized)' == 'true' " >
-    <PubliciseInputAssemblies Include="$(GameFolder)/Assembly-CSharp.dll;
-      $(GameFolder)/Assembly-CSharp-firstpass.dll"/>
-    <Reference Include="Assembly-CSharp_public" HintPath="../public-lib/Assembly-CSharp_public.dll" />
-    <Reference Include="Assembly-CSharp-firstpass_public" HintPath="../public-lib/Assembly-CSharp-firstpass_public.dll" />
-    <PackageReference Include="Aze.Publicise.MSBuild.Task" Version="1.1.0"/>
-  </ItemGroup>
-  <ItemGroup Condition=" '$(UsePublicized)' != 'true' " >
-    <Reference Include="Assembly-CSharp" HintPath="$(GameFolder)/Assembly-CSharp.dll" />
-    <Reference Include="Assembly-CSharp-firstpass" HintPath="$(GameFolder)/Assembly-CSharp-firstpass.dll" />
+    <PackageReference Include="Krafs.Publicizer" Version="2.3.0">
+      <PrivateAssets>all</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+    <Publicize Include="Assembly-CSharp;Assembly-CSharp-firstpass" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Assembly-CSharp" HintPath="$(GameFolder)/Assembly-CSharp.dll" />
+    <Reference Include="Assembly-CSharp-firstpass" HintPath="$(GameFolder)/Assembly-CSharp-firstpass.dll" />
     <Reference Include="0Harmony" HintPath="$(GameFolder)/0Harmony.dll" />
     <Reference Include="FMODUnity" HintPath="$(GameFolder)/FMODUnity.dll" />
     <Reference Include="Newtonsoft.Json" HintPath="$(GameFolder)/Newtonsoft.Json.dll" />

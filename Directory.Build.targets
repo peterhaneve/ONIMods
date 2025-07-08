@@ -6,12 +6,8 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="Publicize" AfterTargets="Clean" Condition=" '$(UsePublicized)' == 'true' ">
-    <Publicise InputAssemblies="@(PubliciseInputAssemblies)" OutputPath="../public-lib/"/>
-  </Target>
-
   <Target Name="GenerateRefAssemblies" AfterTargets="Clean" Condition=" '$(MSBuildProjectName)' == 'PLib' And '$(GameFolder)' != '../Lib' ">
-    <Exec Command="Refasmer -v -O ../Lib --all -c ../public-lib/Assembly-CSharp_public.dll ../public-lib/Assembly-CSharp-firstpass_public.dll ^
+    <Exec Command="Refasmer -v -O ../Lib --all -c ^
     $(GameFolder)/Assembly-CSharp.dll $(GameFolder)/Assembly-CSharp-firstpass.dll $(GameFolder)/0Harmony.dll ^
     $(GameFolder)/FMODUnity.dll $(GameFolder)/Newtonsoft.Json.dll $(GameFolder)/UnityEngine.dll ^
     $(GameFolder)/UnityEngine.CoreModule.dll $(GameFolder)/UnityEngine.ImageConversionModule.dll ^
@@ -81,7 +77,6 @@ staticID: PeterHan.$(AssemblyName)
     </ItemGroup>
 
     <ILRepack
-        TargetPlatformVersion="v4"
         TargetKind="SameAsPrimaryAssembly"
         OutputFile="$(TargetPath)"
         InputAssemblies="@(InputAssemblies)"
