@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2024 Peter Han
+ * Copyright 2025 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -91,6 +91,18 @@ namespace PeterHan.BulkSettingsChange {
 		/// </summary>
 		private static readonly IDetouredField<Repairable, Repairable.SMInstance> REPAIR_SMI =
 			PDetours.DetourField<Repairable, Repairable.SMInstance>("smi");
+
+		/// <summary>
+		/// Enables or disables tinker.
+		/// </summary>
+		private static readonly Action<Tinkerable> TINKER_TOGGLE =
+			typeof(Tinkerable).Detour<Action<Tinkerable>>("UpdateChore");
+
+		/// <summary>
+		/// Reports the status of tinker.
+		/// </summary>
+		private static readonly IDetouredField<Tinkerable, bool> TINKER_FLAG =
+			PDetours.DetourField<Tinkerable, bool>("userMenuAllowed");
 		#endregion
 
 		/// <summary>
@@ -283,6 +295,24 @@ namespace PeterHan.BulkSettingsChange {
 		}
 
 		/// <summary>
+		/// Toggles tinker on the specified building/plant.
+		/// </summary>
+		/// <param name="item">The building/plant to toggle if it exists.</param>
+		/// <param name="enable">true to allow tinker, or false to disallow it.</param>
+		/// <returns>true if changes were made, or false otherwise.</returns>
+		private static bool ToggleTinker(GameObject item, bool enable) {
+			bool changed = false;
+			if (item != null && item.TryGetComponent(out Tinkerable tinkerableComponent) &&
+				TINKER_FLAG != null && TINKER_FLAG.Get(tinkerableComponent) != enable &&
+				TINKER_TOGGLE != null) {
+				TINKER_FLAG.Set(tinkerableComponent, enable);
+				TINKER_TOGGLE(tinkerableComponent);
+				changed = true;
+			}
+			return changed;
+		}
+
+		/// <summary>
 		/// Based on the current tool mode, updates the overlay mode.
 		/// </summary>
 		internal static void UpdateViewMode() {
@@ -314,11 +344,18 @@ namespace PeterHan.BulkSettingsChange {
 		/// </summary>
 		private readonly int pickupableLayer;
 
+		/// <summary>
+		/// The layer to check for tinkerable buildings/plants.
+		/// </summary>
+		private readonly int buildingLayer;
+
 		public BulkChangeTool() {
 			numObjectLayers = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.NumLayers),
 				ObjectLayer.NumLayers);
 			pickupableLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Pickupables),
 				ObjectLayer.Pickupables);
+			buildingLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Building),
+				ObjectLayer.Building);
 		}
 
 		protected override string GetConfirmSound() {
@@ -371,6 +408,7 @@ namespace PeterHan.BulkSettingsChange {
 					repair = BulkChangeTools.EnableRepair.IsOn(menu),
 					empty = BulkChangeTools.EnableEmpty.IsOn(menu),
 					compost = BulkChangeTools.EnableCompost.IsOn(menu),
+					tinker = BulkChangeTools.EnableTinker.IsOn(menu),
 					forbid = BulkChangeTools.DisablePickup.IsOn(menu);
 #if DEBUG
 				// Log what we are about to do
@@ -411,6 +449,11 @@ namespace PeterHan.BulkSettingsChange {
 					if (ToggleCompost(Grid.Objects[cell, pickupableLayer], compost))
 						ShowPopup(compost, BulkChangeTools.EnableCompost, BulkChangeTools.
 							DisableCompost, cell);
+				} else if (tinker || BulkChangeTools.DisableTinker.IsOn(menu)) {
+					// Allow/disallow tinker
+					if (ToggleTinker(Grid.Objects[cell, buildingLayer], tinker))
+						ShowPopup(tinker, BulkChangeTools.EnableTinker, BulkChangeTools.
+							DisableTinker, cell);
 				} else if (forbid || BulkChangeTools.EnablePickup.IsOn(menu)) {
 					// Enable/disable forbid (yeah the tool names are suboptimal)
 					if (ToggleForbid(Grid.Objects[cell, pickupableLayer], forbid))

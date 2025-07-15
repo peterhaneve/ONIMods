@@ -2,11 +2,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Settings Change Tool</AssemblyTitle>
-    <FileVersion>3.7.0.0</FileVersion>
+    <FileVersion>3.8.0.0</FileVersion>
     <RootNamespace>PeterHan.BulkSettingsChange</RootNamespace>
     <Description>Adds a tool to enable/disable disinfect, auto repair, compost, empty storage, or building operation in bulk.</Description>
     <AssemblyVersion>3.2.0.0</AssemblyVersion>
-    <LastWorkingBuild>493472</LastWorkingBuild>
+    <LastWorkingBuild>674504</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
   <ItemGroup>

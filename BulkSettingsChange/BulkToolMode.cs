@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2024 Peter Han
+ * Copyright 2025 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -58,6 +58,8 @@ namespace PeterHan.BulkSettingsChange {
 					BulkChangeTools.EnableCompost.AddTo(MODES);
 					BulkChangeTools.DisableEmpty.AddTo(MODES);
 					BulkChangeTools.EnableEmpty.AddTo(MODES);
+					BulkChangeTools.DisableTinker.AddTo(MODES);
+					BulkChangeTools.EnableTinker.AddTo(MODES);
 					if (BulkChangePatches.CanForbidItems) {
 						BulkChangeTools.DisablePickup.AddTo(MODES);
 						BulkChangeTools.EnablePickup.AddTo(MODES);

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2024 Peter Han
+ * Copyright 2025 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -174,7 +174,7 @@ namespace PeterHan.BulkSettingsChange {
 			if (transform.childCount > 1)
 				choiceList = transform.GetChild(1).gameObject;
 			// Bump up the offset max to allow more space
-			transform.offsetMax = new Vector2(0.0f, 300.0f);
+			transform.offsetMax = new Vector2(0.0f, 500.0f);
 			transform.SetAsFirstSibling();
 			HideMenu();
 		}
