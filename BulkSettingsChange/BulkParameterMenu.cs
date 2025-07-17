@@ -174,7 +174,7 @@ namespace PeterHan.BulkSettingsChange {
 			if (transform.childCount > 1)
 				choiceList = transform.GetChild(1).gameObject;
 			// Bump up the offset max to allow more space
-			transform.offsetMax = new Vector2(0.0f, 300.0f);
+			transform.offsetMax = new Vector2(0.0f, 630.0f);
 			transform.SetAsFirstSibling();
 			HideMenu();
 		}
