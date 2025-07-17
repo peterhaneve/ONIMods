@@ -58,9 +58,9 @@ namespace PeterHan.BulkSettingsChange {
 					BulkChangeTools.EnableCompost.AddTo(MODES);
 					BulkChangeTools.DisableEmpty.AddTo(MODES);
 					BulkChangeTools.EnableEmpty.AddTo(MODES);
-                    BulkChangeTools.DisableTinker.AddTo(MODES);
-                    BulkChangeTools.EnableTinker.AddTo(MODES);
-                    if (BulkChangePatches.CanForbidItems) {
+					BulkChangeTools.DisableTinker.AddTo(MODES);
+					BulkChangeTools.EnableTinker.AddTo(MODES);
+					if (BulkChangePatches.CanForbidItems) {
 						BulkChangeTools.DisablePickup.AddTo(MODES);
 						BulkChangeTools.EnablePickup.AddTo(MODES);
 					}

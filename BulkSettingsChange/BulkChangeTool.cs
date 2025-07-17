@@ -92,23 +92,23 @@ namespace PeterHan.BulkSettingsChange {
 		private static readonly IDetouredField<Repairable, Repairable.SMInstance> REPAIR_SMI =
 			PDetours.DetourField<Repairable, Repairable.SMInstance>("smi");
 
-        /// <summary>
-        /// Enables or disables tinker.
-        /// </summary>
-        private static readonly Action<Tinkerable> TINKER_TOGGLE =
-            typeof(Tinkerable).Detour<Action<Tinkerable>>("UpdateChore");
+		/// <summary>
+		/// Enables or disables tinker.
+		/// </summary>
+		private static readonly Action<Tinkerable> TINKER_TOGGLE =
+			typeof(Tinkerable).Detour<Action<Tinkerable>>("UpdateChore");
 
-        /// <summary>
-        /// Reports the status of tinker.
-        /// </summary>
-        private static readonly IDetouredField<Tinkerable, bool> TINKER_FLAG =
-            PDetours.DetourField<Tinkerable, bool>("userMenuAllowed");
-        #endregion
+		/// <summary>
+		/// Reports the status of tinker.
+		/// </summary>
+		private static readonly IDetouredField<Tinkerable, bool> TINKER_FLAG =
+			PDetours.DetourField<Tinkerable, bool>("userMenuAllowed");
+		#endregion
 
-        /// <summary>
-        /// The color to use for this tool's placer icon.
-        /// </summary>
-        private static readonly Color32 TOOL_COLOR = new Color32(255, 172, 52, 255);
+		/// <summary>
+		/// The color to use for this tool's placer icon.
+		/// </summary>
+		private static readonly Color32 TOOL_COLOR = new Color32(255, 172, 52, 255);
 
 		/// <summary>
 		/// A version of Compostable.OnToggleCompost that does not crash if the select tool
@@ -294,30 +294,30 @@ namespace PeterHan.BulkSettingsChange {
 			return changed;
 		}
 
-        /// <summary>
-        /// Toggles tinker on the specified building/plant.
-        /// </summary>
-        /// <param name="item">The building/plant to toggle if it exists.</param>
-        /// <param name="enable">true to allow tinker, or false to disallow it.</param>
-        /// <returns>true if changes were made, or false otherwise.</returns>
-        private static bool ToggleTinker(GameObject item, bool enable) {
-            bool changed = false;
-            if (item != null && item.TryGetComponent(out Tinkerable tinkerableComponent)) {
-                if (tinkerableComponent != null && TINKER_FLAG != null) {
-                    if (TINKER_FLAG.Get(tinkerableComponent) != enable && TINKER_TOGGLE != null) { 
-                        TINKER_FLAG.Set(tinkerableComponent, enable);
-                        TINKER_TOGGLE(tinkerableComponent);
-                        changed = true;
-                    }
-                }
-            }
-            return changed;
-        }
+		/// <summary>
+		/// Toggles tinker on the specified building/plant.
+		/// </summary>
+		/// <param name="item">The building/plant to toggle if it exists.</param>
+		/// <param name="enable">true to allow tinker, or false to disallow it.</param>
+		/// <returns>true if changes were made, or false otherwise.</returns>
+		private static bool ToggleTinker(GameObject item, bool enable) {
+			bool changed = false;
+			if (item != null && item.TryGetComponent(out Tinkerable tinkerableComponent)) {
+				if (tinkerableComponent != null && TINKER_FLAG != null) {
+					if (TINKER_FLAG.Get(tinkerableComponent) != enable && TINKER_TOGGLE != null) { 
+						TINKER_FLAG.Set(tinkerableComponent, enable);
+						TINKER_TOGGLE(tinkerableComponent);
+						changed = true;
+					}
+				}
+			}
+			return changed;
+		}
 
-        /// <summary>
-        /// Based on the current tool mode, updates the overlay mode.
-        /// </summary>
-        internal static void UpdateViewMode() {
+		/// <summary>
+		/// Based on the current tool mode, updates the overlay mode.
+		/// </summary>
+		internal static void UpdateViewMode() {
 			var inst = BulkParameterMenu.Instance;
 			if (BulkChangeTools.EnableDisinfect.IsOn(inst) || BulkChangeTools.
 					DisableDisinfect.IsOn(inst)) {
@@ -432,7 +432,7 @@ namespace PeterHan.BulkSettingsChange {
 					if (changed)
 						ShowPopup(repair, BulkChangeTools.EnableRepair, BulkChangeTools.
 							DisableRepair, cell);
-                } else if (empty || BulkChangeTools.DisableEmpty.IsOn(menu)) {
+				} else if (empty || BulkChangeTools.DisableEmpty.IsOn(menu)) {
 					// Enable/disable empty storage
 					for (int i = 0; i < numObjectLayers; i++)
 						changed |= ToggleEmptyStorage(Grid.Objects[cell, i], empty);
@@ -444,14 +444,14 @@ namespace PeterHan.BulkSettingsChange {
 					if (ToggleCompost(Grid.Objects[cell, pickupableLayer], compost))
 						ShowPopup(compost, BulkChangeTools.EnableCompost, BulkChangeTools.
 							DisableCompost, cell);
-                } else if (tinker || BulkChangeTools.DisableTinker.IsOn(menu)) {
-                    // Allow/disallow tinker
-                    for (int i = 0; i < numObjectLayers; i++)
-                        changed |= ToggleTinker(Grid.Objects[cell, i], tinker);
-                    if (changed)
-                        ShowPopup(tinker, BulkChangeTools.EnableTinker, BulkChangeTools.
-                            DisableTinker, cell);
-                } else if (forbid || BulkChangeTools.EnablePickup.IsOn(menu)) {
+				} else if (tinker || BulkChangeTools.DisableTinker.IsOn(menu)) {
+					// Allow/disallow tinker
+					for (int i = 0; i < numObjectLayers; i++)
+						changed |= ToggleTinker(Grid.Objects[cell, i], tinker);
+					if (changed)
+						ShowPopup(tinker, BulkChangeTools.EnableTinker, BulkChangeTools.
+							DisableTinker, cell);
+				} else if (forbid || BulkChangeTools.EnablePickup.IsOn(menu)) {
 					// Enable/disable forbid (yeah the tool names are suboptimal)
 					if (ToggleForbid(Grid.Objects[cell, pickupableLayer], forbid))
 						ShowPopup(forbid, BulkChangeTools.DisablePickup, BulkChangeTools.
