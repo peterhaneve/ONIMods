@@ -259,6 +259,16 @@ namespace PeterHan.FastTrack.UIPatches {
 				rbc.Add(ingredientRow, ingredientRows = new List<GameObject>());
 			int n = selectedRecipes.Count, oldRows = ingredientRows.Count, knownCount = 0;
 			var state = new RecipeState(instance, ingredientCounts);
+			if (n > 0) {
+				int hep = selectedRecipes[0].consumedHEP;
+				var text = CACHED_BUILDER;
+				instance.radboltSpacer.SetActive(hep > 0);
+				instance.radboltHeader.SetActive(hep > 0);
+				instance.RadboltDescriptorPanel.SetActive(hep > 0);
+				// Format string is hard coded in the base game too
+				instance.radboltLabel.SetText(text.Clear().Append(HEP_TOOLTIP).Append(hep).
+					ToString());
+			}
 			state.CountIngredientQueue(selectedRecipes);
 			for (int i = 0; i < n; i++) {
 				var recipe = selectedRecipes[i];
