@@ -91,6 +91,18 @@ namespace PeterHan.BulkSettingsChange {
 		/// </summary>
 		private static readonly IDetouredField<Repairable, Repairable.SMInstance> REPAIR_SMI =
 			PDetours.DetourField<Repairable, Repairable.SMInstance>("smi");
+
+		/// <summary>
+		/// Enables or disables tinker.
+		/// </summary>
+		private static readonly Action<Tinkerable> TINKER_TOGGLE =
+			typeof(Tinkerable).Detour<Action<Tinkerable>>("UpdateChore");
+
+		/// <summary>
+		/// Reports the status of tinker.
+		/// </summary>
+		private static readonly IDetouredField<Tinkerable, bool> TINKER_FLAG =
+			PDetours.DetourField<Tinkerable, bool>("userMenuAllowed");
 		#endregion
 
 		/// <summary>
@@ -283,6 +295,26 @@ namespace PeterHan.BulkSettingsChange {
 		}
 
 		/// <summary>
+		/// Toggles tinker on the specified building/plant.
+		/// </summary>
+		/// <param name="item">The building/plant to toggle if it exists.</param>
+		/// <param name="enable">true to allow tinker, or false to disallow it.</param>
+		/// <returns>true if changes were made, or false otherwise.</returns>
+		private static bool ToggleTinker(GameObject item, bool enable) {
+			bool changed = false;
+			if (item != null && item.TryGetComponent(out Tinkerable tinkerableComponent)) {
+				if (tinkerableComponent != null && TINKER_FLAG != null) {
+					if (TINKER_FLAG.Get(tinkerableComponent) != enable && TINKER_TOGGLE != null) { 
+						TINKER_FLAG.Set(tinkerableComponent, enable);
+						TINKER_TOGGLE(tinkerableComponent);
+						changed = true;
+					}
+				}
+			}
+			return changed;
+		}
+
+		/// <summary>
 		/// Based on the current tool mode, updates the overlay mode.
 		/// </summary>
 		internal static void UpdateViewMode() {
@@ -371,6 +403,7 @@ namespace PeterHan.BulkSettingsChange {
 					repair = BulkChangeTools.EnableRepair.IsOn(menu),
 					empty = BulkChangeTools.EnableEmpty.IsOn(menu),
 					compost = BulkChangeTools.EnableCompost.IsOn(menu),
+					tinker = BulkChangeTools.EnableTinker.IsOn(menu),
 					forbid = BulkChangeTools.DisablePickup.IsOn(menu);
 #if DEBUG
 				// Log what we are about to do
@@ -411,6 +444,13 @@ namespace PeterHan.BulkSettingsChange {
 					if (ToggleCompost(Grid.Objects[cell, pickupableLayer], compost))
 						ShowPopup(compost, BulkChangeTools.EnableCompost, BulkChangeTools.
 							DisableCompost, cell);
+				} else if (tinker || BulkChangeTools.DisableTinker.IsOn(menu)) {
+					// Allow/disallow tinker
+					for (int i = 0; i < numObjectLayers; i++)
+						changed |= ToggleTinker(Grid.Objects[cell, i], tinker);
+					if (changed)
+						ShowPopup(tinker, BulkChangeTools.EnableTinker, BulkChangeTools.
+							DisableTinker, cell);
 				} else if (forbid || BulkChangeTools.EnablePickup.IsOn(menu)) {
 					// Enable/disable forbid (yeah the tool names are suboptimal)
 					if (ToggleForbid(Grid.Objects[cell, pickupableLayer], forbid))
