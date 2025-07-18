@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
+  <PropertyGroup Condition=" '$(PLibCore)' != 'true' ">
+    <SkipCopyBuildProduct>true</SkipCopyBuildProduct>
+    <ClearOutputDirectory>false</ClearOutputDirectory>
+  </PropertyGroup>
+
   <Target Name="SetPlatform" BeforeTargets="CoreCompile">
     <PropertyGroup>
       <PlatformTarget>AnyCPU</PlatformTarget>
@@ -61,20 +66,33 @@ staticID: PeterHan.$(AssemblyName)
     <WriteLinesToFile File="$(ModDescriptionFile)" Overwrite="true" Lines="$(ModDescriptionFileContent)"/>
   </Target>
 
-  <Target Name="ILRepack" AfterTargets="Build" Condition=" '$(PLibCore)' != 'true' and '$(TargetFramework)' != '' ">
-    <PropertyGroup Condition=" '$(AssemblyName)' == 'PLib' ">
-      <Internalize>false</Internalize>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(AssemblyName)' != 'PLib' ">
-      <Internalize>true</Internalize>
-    </PropertyGroup>
+  <Target Name="_GetRepackInputs">
+    <ItemGroup>
+      <!-- Since ILRepack outputs to 'bin/ASSEMBLY_NAME.dll', use the intermediate assembly in 'obj/ASSEMBLY_NAME.dll' as input. -->
+      <InputAssemblies Include="@(IntermediateAssembly)"/>
+    </ItemGroup>
     <ItemGroup Condition=" '$(UsesPLib)' != 'false' Or '$(AssemblyName)' == 'PLib' ">
-      <InputAssemblies Include="$(TargetPath)" />
-      <InputAssemblies Include="$(TargetDir)PLib*.dll" />
+      <!-- Use referenced PLib assemblies before they are copied to 'bin' by matching their filename to the glob 'PLib*.dll'. -->
+      <InputAssemblies
+        Include="@(ReferenceCopyLocalPaths->WithMetadataValue('Extension', '.dll'))"
+        Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Filename)', '^PLib'))"/>
     </ItemGroup>
-    <ItemGroup Condition=" '$(UsesPLib)' == 'false' ">
-      <InputAssemblies Include="$(TargetPath)" />
-    </ItemGroup>
+  </Target>
+
+  <Target
+    Name="ILRepack"
+    DependsOnTargets="_GetRepackInputs"
+    AfterTargets="PrepareForRun"
+    Inputs="@(InputAssemblies)"
+    Outputs="$(TargetPath)"
+    Condition=" '$(PLibCore)' != 'true' ">
+    <Warning
+      Text="ILRepack will clobber redundant output. To suppress redundant output, configure CopyBuildOutputToOutputDirectory='false' or SkipCopyBuildProduct='true'."
+      Condition="'$(CopyBuildOutputToOutputDirectory)' == 'true' And '$(SkipCopyBuildProduct)' != 'true'"/>
+
+    <PropertyGroup>
+      <Internalize>$('$(AssemblyName)' == 'PLib')</Internalize>
+    </PropertyGroup>
 
     <ILRepack
         TargetKind="SameAsPrimaryAssembly"
@@ -84,9 +102,15 @@ staticID: PeterHan.$(AssemblyName)
         Internalize="$(Internalize)"
         Wildcards="true"
         LibraryPath="$(GameFolder)" />
+
+    <!-- Notify MSBuild of files output by ILRepack to support targets 'Clean' and 'IncrementalClean'. -->
+    <ItemGroup>
+      <FileWrites Include="$(TargetPath)" Condition="Exists('$(TargetPath)')"/>
+      <FileWrites Include="$(OutputPath)$(AssemblyName).xml" Condition="Exists('$(OutputPath)$(AssemblyName).xml')"/>
+    </ItemGroup>
   </Target>
 
-  <Target Name="CopyArtifactsToInstallFolder" AfterTargets="ILRepack" Condition=" '$(DistributeMod)' == 'true' and '$(TargetFramework)' != '' ">
+  <Target Name="CopyArtifactsToInstallFolder" AfterTargets="ILRepack" Condition=" '$(DistributeMod)' == 'true' ">
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
       <RootInstallFolder>..\Release\$(ProjectName)</RootInstallFolder>
     </PropertyGroup>

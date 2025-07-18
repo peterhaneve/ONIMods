@@ -22,7 +22,7 @@ namespace PeterHan.FastTrack {
     <SupportedContent></SupportedContent>
   </PropertyGroup>
   <Target Name="WriteModVersionFile" BeforeTargets="PreBuildEvent">
-    <WriteLinesToFile File="$(IntermediateOutputPath)\Version.cs" Overwrite="true" Lines="$(VersionFileContent)" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)\Version.cs" Overwrite="true" WriteOnlyWhenDifferent="true" Lines="$(VersionFileContent)" />
   </Target>
   <ItemGroup>
     <None Remove="images/*.png" />

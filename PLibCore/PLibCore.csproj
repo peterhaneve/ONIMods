@@ -25,7 +25,7 @@ namespace PeterHan.PLib {
     <DocumentationFile>bin\$(Platform)\Release\PLibCore.xml</DocumentationFile>
   </PropertyGroup>
   <Target Name="WriteModVersionFile" BeforeTargets="PreBuildEvent">
-    <WriteLinesToFile File="$(IntermediateOutputPath)\PVersion.cs" Overwrite="true" Lines="$(PLibVersionFileContent)"/>
+    <WriteLinesToFile File="$(IntermediateOutputPath)\PVersion.cs" Overwrite="true" WriteOnlyWhenDifferent="true" Lines="$(PLibVersionFileContent)"/>
   </Target>
   <ItemGroup>
     <Compile Include="$(IntermediateOutputPath)\PVersion.cs" />
