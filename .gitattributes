@@ -1,0 +1,57 @@
+# Infer text attribute.
+# *           text=auto
+
+# Source files.
+*.cs        text diff=csharp
+
+# Plaintext data.
+*.txt       text
+*.json      text diff=json
+*.yaml      text diff=yaml
+*.yml       text diff=yaml
+*.md        text diff=markdown
+*.scml      text diff=xml
+
+# Licenses.
+LICENSE     text
+
+# PO Translations.
+*.po        text
+*.pot       text
+*.mo        binary
+
+# Images
+*.png       binary
+*.gif       binary
+*.xcf       binary
+
+# Assemblies.
+*.dll       binary
+
+# Archives.
+*.zip       binary
+*.nupkg     binary
+
+# Binary artifacts.
+*.bytes     binary
+
+# Git.
+*.gitattributes   text
+.gitignore        text
+
+# MSBuild.
+*.props             text
+*.targets           text
+*.tasks             text
+*.*proj             text
+*.props.user        text
+*.targets.user      text
+*.tasks.user        text
+*.*proj.user        text
+*.props.default     text
+*.targets.default   text
+*.tasks.default     text
+*.*proj.default     text
+*.sln               text
+*.slnf              text
+*.slnx              text
