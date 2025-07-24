@@ -237,19 +237,6 @@ namespace PeterHan.StockBugFix {
 				}
 			});
 		}
-		
-		/// <summary>
-		/// Applied to MinionConfig to make it possible to recover Duplicants from radiation
-		/// sickness.
-		///
-		/// TODO Remove when versions prior to U55-658361 no longer need to be supported
-		/// </summary>
-		[PLibPatch(RunAt.AfterDbInit, nameof(MinionConfig.CreatePrefab),
-			RequireType = nameof(MinionConfig), PatchType = HarmonyPatchType.Postfix)]
-		internal static void MinionSpawn_Postfix(GameObject __result) {
-			if (DlcManager.FeatureRadiationEnabled() && PUtil.GameVersion < 658361U)
-				__result.AddOrGet<RadiationRecoveryFix>();
-		}
 
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
 			const string FIX_IRRIGATION = "Bugs.PlantIrrigation";
@@ -783,11 +770,6 @@ namespace PeterHan.StockBugFix {
 	/// </summary>
 	[HarmonyPatch(typeof(Timelapser), "OnNewDay")]
 	public static class Timelapser_OnNewDay_Patch {
-		// TODO Remove when versions prior to U55-658361 no longer need to be supported
-		private static readonly IDetouredField<ClusterManager, IList<WorldContainer>>
-			WHOLE_NEW_WORLDS = PDetours.DetourField<ClusterManager, IList<WorldContainer>>(
-			nameof(ClusterManager.WorldContainers));
-
 		private static bool NeedTimelapse(int cycle) {
 			int cycle10 = cycle % 10;
 			return cycle > 0 && (cycle <= 50 || (cycle < 100 && cycle10 == 5) || cycle10 == 0);
@@ -800,7 +782,7 @@ namespace PeterHan.StockBugFix {
 				ref bool ___screenshotToday) {
 			var ci = ClusterManager.Instance;
 			if (___worldsToScreenshot != null && ci != null) {
-				var containers = WHOLE_NEW_WORLDS.Get(ci);
+				var containers = ci.WorldContainers;
 				int n = containers.Count, cycle = GameClock.Instance.GetCycle();
 				bool screenshot = false;
 				if (___worldsToScreenshot.Count != 0)
@@ -899,6 +881,29 @@ namespace PeterHan.StockBugFix {
 				}
 			}
 			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to Toilet.StatesInstance to fix an order of operations bug that makes toilets
+	/// never reset to full uses if cleaned early (either due to request or Bionic gunk).
+	/// </summary>
+	[HarmonyPatch(typeof(Toilet.StatesInstance), "OnCleanComplete")]
+	public static class Toilet_StatesInstance_OnCleanComplete_Patch {
+		/// <summary>
+		/// Applied before OnCleanComplete runs.
+		/// </summary>
+		internal static void Prefix(Toilet.StatesInstance __instance) {
+			// The first call to DropFromStorage to dump the polluted dirt triggers a
+			// transition to exit_full (as the ToxicSand is removed). But then the remaining
+			// dirt is dropped, triggering the root state to transition to needsdirt as dirt
+			// is needed. Thus the transition to empty is lost, so FlushesUsed is never reset
+			__instance.master.FlushesUsed = 0;
+			// This code path does not run when the toilet fills normally, because there is
+			// no dirt remaining and thus the second drop is a no-op!
+			var kbac = __instance.GetComponent<KAnimControllerBase>();
+			if (kbac != null)
+				kbac.Play("off");
 		}
 	}
 }
