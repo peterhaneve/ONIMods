@@ -786,8 +786,9 @@ namespace PeterHan.PLib.Core {
 				var opcode = inst.opcode;
 				object operand = inst.operand;
 				if ((opcode == OpCodes.Ldc_I4 && (operand is int ival) && ival == oldValue) ||
-						(opcode == OpCodes.Ldc_I4_S && (operand is byte bval) && bval ==
-						oldValue) || (quickCode && qc == opcode)) {
+						(opcode == OpCodes.Ldc_I4_S && ((operand is byte bval && bval ==
+						oldValue) || (operand is sbyte sbval && sbval == oldValue))) || 
+						(quickCode && qc == opcode)) {
 					// Replace instruction if first instance, or all to be replaced
 					if (all || replaced == 0)
 						PTranspilerTools.ModifyLoadI4(inst, newValue);
