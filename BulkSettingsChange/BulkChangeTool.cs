@@ -302,14 +302,12 @@ namespace PeterHan.BulkSettingsChange {
 		/// <returns>true if changes were made, or false otherwise.</returns>
 		private static bool ToggleTinker(GameObject item, bool enable) {
 			bool changed = false;
-			if (item != null && item.TryGetComponent(out Tinkerable tinkerableComponent)) {
-				if (tinkerableComponent != null && TINKER_FLAG != null) {
-					if (TINKER_FLAG.Get(tinkerableComponent) != enable && TINKER_TOGGLE != null) { 
-						TINKER_FLAG.Set(tinkerableComponent, enable);
-						TINKER_TOGGLE(tinkerableComponent);
-						changed = true;
-					}
-				}
+			if (item != null && item.TryGetComponent(out Tinkerable tinkerableComponent) &&
+				TINKER_FLAG != null && TINKER_FLAG.Get(tinkerableComponent) != enable &&
+				TINKER_TOGGLE != null) {
+				TINKER_FLAG.Set(tinkerableComponent, enable);
+				TINKER_TOGGLE(tinkerableComponent);
+				changed = true;
 			}
 			return changed;
 		}
@@ -346,11 +344,18 @@ namespace PeterHan.BulkSettingsChange {
 		/// </summary>
 		private readonly int pickupableLayer;
 
+		/// <summary>
+		/// The layer to check for tinkerable buildings/plants.
+		/// </summary>
+		private readonly int buildingLayer;
+
 		public BulkChangeTool() {
 			numObjectLayers = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.NumLayers),
 				ObjectLayer.NumLayers);
 			pickupableLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Pickupables),
 				ObjectLayer.Pickupables);
+			buildingLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Building),
+				ObjectLayer.Building);
 		}
 
 		protected override string GetConfirmSound() {
@@ -446,9 +451,7 @@ namespace PeterHan.BulkSettingsChange {
 							DisableCompost, cell);
 				} else if (tinker || BulkChangeTools.DisableTinker.IsOn(menu)) {
 					// Allow/disallow tinker
-					for (int i = 0; i < numObjectLayers; i++)
-						changed |= ToggleTinker(Grid.Objects[cell, i], tinker);
-					if (changed)
+					if (ToggleTinker(Grid.Objects[cell, buildingLayer], tinker))
 						ShowPopup(tinker, BulkChangeTools.EnableTinker, BulkChangeTools.
 							DisableTinker, cell);
 				} else if (forbid || BulkChangeTools.EnablePickup.IsOn(menu)) {
