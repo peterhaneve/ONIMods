@@ -131,18 +131,16 @@ namespace ReimaginationTeam.DecorRework {
 			int maxX = extents.x + extents.width, maxY = extents.y + extents.height;
 			// Bounds were already checked for us
 			var inst = DecorCellManager.Instance;
-			if (inst != null) {
-				var pid = prefabID.PrefabTag;
-				cells.Clear();
-				for (int x = extents.x; x < maxX; x++)
-					for (int y = extents.y; y < maxY; y++) {
-						int target = Grid.XYToCell(x, y);
-						if (Grid.IsValidCell(target) && Grid.VisibilityTest(cell, target)) {
-							inst.AddDecorProvider(target, provider, pid, decor);
-							cells.Add(target);
-						}
+			var pid = prefabID.PrefabTag;
+			cells.Clear();
+			for (int x = extents.x; x < maxX; x++)
+				for (int y = extents.y; y < maxY; y++) {
+					int target = Grid.XYToCell(x, y);
+					if (Grid.IsValidCell(target) && Grid.VisibilityTest(cell, target)) {
+						inst.AddDecorProvider(target, provider, pid, decor);
+						cells.Add(target);
 					}
-			}
+				}
 		}
 
 		/// <summary>
@@ -216,6 +214,7 @@ namespace ReimaginationTeam.DecorRework {
 		/// <param name="disabled">true if the building is treated as disabled, or false otherwise.</param>
 		private void RefreshCells(bool broken, bool disabled) {
 			var obj = gameObject;
+			var gsp = GameScenePartitioner.Instance;
 			int cell;
 			RemoveDecor();
 			if (obj != null && Grid.IsValidCell(cell = Grid.PosToCell(obj))) {
@@ -246,13 +245,11 @@ namespace ReimaginationTeam.DecorRework {
 					extents.width = Math.Min(Grid.WidthInCells - 1, be.width + radius * 2);
 					extents.height = Math.Min(Grid.HeightInCells - 1, be.height + radius * 2);
 					// Names are the same as the base game
-					partitioner = GameScenePartitioner.Instance.Add(
-						"DecorProvider.SplatCollectDecorProviders", obj, extents,
-						GameScenePartitioner.Instance.decorProviderLayer, provider.
+					partitioner = gsp.Add("DecorProvider.SplatCollectDecorProviders", obj,
+						extents, gsp.decorProviderLayer, provider.
 						onCollectDecorProvidersCallback);
-					solidChangedPartitioner = GameScenePartitioner.Instance.Add(
-						"DecorProvider.SplatSolidCheck", obj, extents, GameScenePartitioner.
-						Instance.solidChangedLayer, provider.refreshPartionerCallback);
+					solidChangedPartitioner = gsp.Add("DecorProvider.SplatSolidCheck", obj,
+						extents, gsp.solidChangedLayer, provider.refreshPartionerCallback);
 					AddDecor(cell, decor, extents);
 					cacheDecor = decor;
 				}
@@ -263,12 +260,12 @@ namespace ReimaginationTeam.DecorRework {
 		/// Replaces the Refresh method of DecorProvider to handle the decor ourselves.
 		/// </summary>
 		internal void RefreshDecor() {
-			if (prefabID != null && provider != null) {
+			var manager = DecorCellManager.Instance;
+			if (prefabID != null && provider != null && manager != null) {
 				// Get status of the object
 				Klei.AI.AttributeInstance happiness = null;
 				if (glumStatus != null)
-					happiness = glumStatus.attributes?.Get(DecorCellManager.Instance.
-						HappinessAttribute);
+					happiness = glumStatus.attributes?.Get(manager.HappinessAttribute);
 				// Entombed/disabled = 0 decor, broken = use value in DecorTuning for broken
 				bool disabled = (operational != null && !operational.IsFunctional) ||
 					(happiness != null && happiness.GetTotalValue() < 0.0f);

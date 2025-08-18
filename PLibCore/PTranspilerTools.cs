@@ -306,8 +306,7 @@ namespace PeterHan.PLib.Core {
 				instruction.opcode = LOAD_INT[newValue + 1];
 				instruction.operand = null;
 			} else if (newValue >= sbyte.MinValue && newValue <= sbyte.MaxValue) {
-				// Short form: -128 to 127 -- looks like Harmony has issues with emitting
-				// the operand as a Byte
+				// Short form: -128 to 127
 				instruction.opcode = OpCodes.Ldc_I4_S;
 				instruction.operand = (sbyte)newValue;
 			} else {

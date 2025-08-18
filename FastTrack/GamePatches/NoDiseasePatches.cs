@@ -80,6 +80,12 @@ namespace PeterHan.FastTrack.GamePatches {
 			harmony.Patch(typeof(Disinfectable), nameof(Disinfectable.MarkForDisinfect),
 				prefix: new HarmonyMethod(typeof(NoDiseasePatches),
 				nameof(MarkForDisinfect_Prefix)));
+			// Remove disease from element emitters
+			harmony.Patch(typeof(ElementEmitter), nameof(ElementEmitter.ForceEmit),
+				prefix: new HarmonyMethod(typeof(NoDiseasePatches), nameof(ForceEmit_Prefix)));
+			harmony.Patch(typeof(ElementEmitter), nameof(ElementEmitter.OnSimActivate),
+				prefix: new HarmonyMethod(typeof(NoDiseasePatches),
+				nameof(OnSimActivate_Prefix)));
 			// Turn off germ exposure tracker and monitor
 			harmony.Patch(typeof(GermExposureMonitor), nameof(GermExposureMonitor.
 				InitializeStates), prefix: new HarmonyMethod(typeof(NoDiseasePatches),
@@ -187,6 +193,14 @@ namespace PeterHan.FastTrack.GamePatches {
 		}
 
 		/// <summary>
+		/// Applied before ForceEmit runs.
+		/// </summary>
+		private static void ForceEmit_Prefix(ref byte disease_idx, ref int disease_count) {
+			disease_idx = Sim.InvalidDiseaseIdx;
+			disease_count = 0;
+		}
+
+		/// <summary>
 		/// Applied after InitializeCells runs.
 		/// </summary>
 		private static void InitializeCells_Postfix() {
@@ -215,6 +229,14 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		private static void InitializeToggles_Postfix(OverlayMenu __instance) {
 			__instance.overlayToggleInfos.RemoveAll(info => info.icon == "overlay_disease");
+		}
+
+		/// <summary>
+		/// Applied before OnSimActivate runs.
+		/// </summary>
+		private static void OnSimActivate_Prefix(ref ElementEmitter __instance) {
+			__instance.outputElement.addedDiseaseIdx = Sim.InvalidDiseaseIdx;
+			__instance.outputElement.addedDiseaseCount = 0;
 		}
 
 		/// <summary>
