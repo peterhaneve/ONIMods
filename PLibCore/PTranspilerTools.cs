@@ -309,7 +309,7 @@ namespace PeterHan.PLib.Core {
 				// Short form: -128 to 127 -- looks like Harmony has issues with emitting
 				// the operand as a Byte
 				instruction.opcode = OpCodes.Ldc_I4_S;
-				instruction.operand = newValue;
+				instruction.operand = (sbyte)newValue;
 			} else {
 				// Long form
 				instruction.opcode = OpCodes.Ldc_I4;
