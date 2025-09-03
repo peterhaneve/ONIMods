@@ -26,7 +26,7 @@ msgstr "<b>{0}</b>\n"
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_MORE
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_MORE"
 msgid "<i>(and {0:D} more...)</i>\n"
-msgstr "<i>(y{0:D} más...)</i>\n"
+msgstr "<i>(y {0:D} más...)</i>\n"
 
 #. PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_OK
 msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.CONFIRM_OK"
