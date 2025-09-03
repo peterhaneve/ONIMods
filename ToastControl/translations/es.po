@@ -1,0 +1,367 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: Ferchu\n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"X-Generator: Poedit 3.7\n"
+
+#. PeterHan.ToastControl.ToastControlStrings.ACTION_TITLE
+msgctxt "PeterHan.ToastControl.ToastControlStrings.ACTION_TITLE"
+msgid "Popup Control Settings"
+msgstr "Control de notificaciones"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.BUILD_COMPLETE
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.BUILD_COMPLETE"
+msgid "Construction completed"
+msgstr "Construcción completada"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.BUILDINGS
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.BUILDINGS"
+msgid "Buildings"
+msgstr "Edificios"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.CONTROL_ALL
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.CONTROL_ALL"
+msgid "<b>All</b> Popups"
+msgstr "<b>Todas</b> las notificaciones"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.CONTROL_ALL_TOOLTIP
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.CONTROL_ALL_TOOLTIP"
+msgid ""
+"If <b>deselected</b>, hides all popup notifications\n"
+"regardless of the other settings"
+msgstr ""
+"Si <b>no está seleccionado</b>, oculta todas las notificaciones\n"
+"independientemente de los demás ajustes"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.CRITTER_DROPS
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.CRITTER_DROPS"
+msgid "Critter drops"
+msgstr "Botín de criaturas"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DAMAGE_INPUT
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DAMAGE_INPUT"
+msgid "Damage: Wrong input element"
+msgstr "Daño: Elemento de entrada incorrecto"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DAMAGE_METEOR
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DAMAGE_METEOR"
+msgid "Damage: Meteors"
+msgstr "Daño: Meteoritos"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DAMAGE_OTHER
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DAMAGE_OTHER"
+msgid "Damage: other sources"
+msgstr "Daño: otras fuentes"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DAMAGE_PIPE
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DAMAGE_PIPE"
+msgid "Damage: Pipe state change"
+msgstr "Daño: Cambio de estado en conductos"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DAMAGE_PRESSURE
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DAMAGE_PRESSURE"
+msgid "Damage: Overpressure"
+msgstr "Daño: Sobrepresión"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DAMAGE_ROCKET
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DAMAGE_ROCKET"
+msgid "Damage: Rocket"
+msgstr "Daño: Cohete"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DELIVERED_DUPLICANT
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DELIVERED_DUPLICANT"
+msgid "Delivered: Item (Duplicant)"
+msgstr "Entregado: Objeto (Duplicante)"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DELIVERED_MACHINE
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DELIVERED_MACHINE"
+msgid "Delivered: Item (Machine)"
+msgstr "Entregado: Objeto (Máquina)"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DISEASE_CURED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DISEASE_CURED"
+msgid "Cured of disease"
+msgstr "Curado de una enfermedad"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DISEASE_INFECTED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DISEASE_INFECTED"
+msgid "Became infected by disease"
+msgstr "Se ha contagiado de una enfermedad"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DUPLICANTS
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.DUPLICANTS"
+msgid "Duplicants and Critters"
+msgstr "Duplicantes y criaturas"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.EFFECT_ADDED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.EFFECT_ADDED"
+msgid "Effect applied"
+msgstr "Efecto aplicado"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.ELEMENT_DUG
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.ELEMENT_DUG"
+msgid "Materials from digging"
+msgstr "Materiales de excavación"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.ELEMENT_GAINED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.ELEMENT_GAINED"
+msgid "Materials produced"
+msgstr "Materiales producidos"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.ELEMENT_MOPPED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.ELEMENT_MOPPED"
+msgid "Liquid mopped"
+msgstr "Líquido recogido"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.ELEMENT_REMOVED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.ELEMENT_REMOVED"
+msgid "Materials consumed"
+msgstr "Materiales consumidos"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.GERMS_ADDED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.GERMS_ADDED"
+msgid "Added germs"
+msgstr "Gérmenes añadidos"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.HARVEST_TOGGLED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.HARVEST_TOGGLED"
+msgid "Autoharvest toggled"
+msgstr "Recolección automática activada/desactivada"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.INVALID_CONNECTION
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.INVALID_CONNECTION"
+msgid "Invalid utility connection"
+msgstr "Conexión a red no válida"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.ITEM_GAINED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.ITEM_GAINED"
+msgid "Item obtained"
+msgstr "Objeto obtenido"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.MATERIALS
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.MATERIALS"
+msgid "Materials"
+msgstr "Materiales"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.NAME
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.NAME"
+msgid "Popup Control"
+msgstr "Control de notificaciones"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.OPTIONS_CAPTION
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.OPTIONS_CAPTION"
+msgid ""
+"<b>Selected</b> check boxes will show the popup.\n"
+"<b>Deselected</b> check boxes will hide the popup.\n"
+" "
+msgstr ""
+"<b>Seleccionadas</b>, las casillas mostrarán la notificación.\n"
+"<b>No seleccionadas</b>, las casillas la ocultarán.\n"
+" "
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.OVERJOYED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.OVERJOYED"
+msgid "Overjoyed reactions"
+msgstr "Reacciones de júbilo"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.PICKEDUP_DUPLICANT
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.PICKEDUP_DUPLICANT"
+msgid "Picked Up: Item (Duplicant)"
+msgstr "Recogido: Objeto (Duplicante)"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.PICKEDUP_MACHINE
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.PICKEDUP_MACHINE"
+msgid "Picked Up: Item (Machine)"
+msgstr "Recogido: Objeto (Máquina)"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.RESEARCH_GAINED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.RESEARCH_GAINED"
+msgid "Research point gained"
+msgstr "Punto de investigación obtenido"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.TOOLS
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.FRONTEND.TOASTCONTROL.TOOLS"
+msgid "Tools"
+msgstr "Herramientas"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.BUILD_COMPLETE
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.BUILD_COMPLETE"
+msgid "Building construction completed"
+msgstr "Construcción del edificio completada"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.CAPTURE_FAILED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.CAPTURE_FAILED"
+msgid "Critter cannot be wrangled manually"
+msgstr "La criatura no puede ser capturada manualmente"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.CRITTER_DROPS
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.CRITTER_DROPS"
+msgid "Materials dropped from critters after death or through excretions"
+msgstr "Materiales soltados por las criaturas tras su muerte o mediante excreciones"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DAMAGE_INPUT
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DAMAGE_INPUT"
+msgid "A building sustained damage from receiving an incorrect substance"
+msgstr "Un edificio ha sufrido daños al recibir una sustancia incorrecta"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DAMAGE_METEOR
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DAMAGE_METEOR"
+msgid "A building sustained damage from falling space rocks"
+msgstr "Un edificio ha sufrido daños por la caída de meteoritos"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DAMAGE_OTHER
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DAMAGE_OTHER"
+msgid "A building sustained damage from other sources"
+msgstr "Un edificio ha sufrido daños por otras causas"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DAMAGE_PIPE
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DAMAGE_PIPE"
+msgid "A building sustained damage from pipe contents becoming too hot or pipe contents becoming too cold"
+msgstr "Un edificio ha sufrido daños porque el contenido de las tuberías se ha vuelto demasiado caliente o demasiado frío"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DAMAGE_PRESSURE
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DAMAGE_PRESSURE"
+msgid "A building sustained damage from neighboring liquid pressure"
+msgstr "Un edificio ha sufrido daños por la presión de un líquido cercano"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DAMAGE_ROCKET
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DAMAGE_ROCKET"
+msgid "A building sustained damage from rocket engine"
+msgstr "Un edificio ha sufrido daños por el motor de un cohete"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DEBUG_LOCATION_INVALID
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DEBUG_LOCATION_INVALID"
+msgid "Location selected for spawn is not valid"
+msgstr "La ubicación seleccionada para aparecer no es válida"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DELIVERED_DUPLICANT
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DELIVERED_DUPLICANT"
+msgid "Item was delivered to storage or building by a duplicant"
+msgstr "Un objeto fue entregado al almacén o al edificio por un duplicante"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DELIVERED_MACHINE
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DELIVERED_MACHINE"
+msgid "Item was delivered to storage or building by a machine"
+msgstr "Un objeto fue entregado al almacén o al edificio por una máquina"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DISEASE_CURED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DISEASE_CURED"
+msgid "Successfully cured of a disease"
+msgstr "Se ha curado con éxito de una enfermedad"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DISEASE_INFECTED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.DISEASE_INFECTED"
+msgid "Became infected by a disease"
+msgstr "Se ha contagiado de una enfermedad"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.EFFECT_ADDED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.EFFECT_ADDED"
+msgid "An effect was applied to a Duplicant or critter"
+msgstr "Se ha aplicado un efecto a un duplicante o a una criatura"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.ELEMENT_DUG
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.ELEMENT_DUG"
+msgid "Materials were mined from the world"
+msgstr "Se han extraído materiales del terreno"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.ELEMENT_GAINED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.ELEMENT_GAINED"
+msgid "Materials were produced from a building and dropped on the ground"
+msgstr "Se han producido materiales en un edificio y se han depositado en el suelo"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.ELEMENT_MOPPED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.ELEMENT_MOPPED"
+msgid "<link=\"LIQUID\">Liquid</link> was mopped into a bottle"
+msgstr "Se ha recogido <link=\"LIQUID\">líquido</link> en una botella"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.ELEMENT_REMOVED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.ELEMENT_REMOVED"
+msgid "Materials were consumed by a building"
+msgstr "Los materiales han sido consumidos por un edificio"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.FLOOR_CLEARED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.FLOOR_CLEARED"
+msgid "Dropped items were cleared"
+msgstr "Los objetos caídos han sido retirados"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.FOODROT
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.FOODROT"
+msgid "<link=\"FOOD\">Food</link> items have rotted and are no longer edible"
+msgstr "Los <link=\"FOOD\">alimentos</link> se han podrido y ya no son comestibles"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.FORGIVENESS
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.FORGIVENESS"
+msgid "Creature is no longer hostile"
+msgstr "La criatura ya no es hostil"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.GERMS_ADDED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.GERMS_ADDED"
+msgid "<link=\"GERMS\">Germs</link> were spawned by a building or Duplicant action"
+msgstr "Se generaron <link=\"GERMS\">gérmenes</link> por la acción de un edificio o de un duplicante"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.HARVEST_TOGGLED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.HARVEST_TOGGLED"
+msgid "Autoharvest was enabled or disabled for a plant"
+msgstr "La recolección automática fue activada o desactivada para una planta"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.INVALID_CONNECTION
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.INVALID_CONNECTION"
+msgid ""
+"Utility connection is not valid:\n"
+" - Transit Tube cannot make a U-Turn"
+msgstr ""
+"La conexión de servicio no es válida:\n"
+" - El tubo de tránsito no puede hacer un giro en U"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.ITEM_GAINED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.ITEM_GAINED"
+msgid "A new item was obtained"
+msgstr "Se obtuvo un nuevo objeto"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.MOP_NOT_FLOOR
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.MOP_NOT_FLOOR"
+msgid "<link=\"LIQUID\">Liquid</link> is not on floor"
+msgstr "El <link=\"LIQUID\">líquido</link> no está en el suelo"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.MOP_TOO_MUCH
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.MOP_TOO_MUCH"
+msgid "Too much <link=\"LIQUID\">Liquid</link> to mop"
+msgstr "Demasiado <link=\"LIQUID\">líquido</link> para limpiar"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.OVERJOYED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.OVERJOYED"
+msgid ""
+"Duplicants' Overjoyed reactions:\n"
+" - Super Productive"
+msgstr ""
+"Reacciones de júbilo de los duplicantes:\n"
+" - Súper productivo"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.PICKEDUP_DUPLICANT
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.PICKEDUP_DUPLICANT"
+msgid "Item was removed from storage or building by a duplicant"
+msgstr "Un duplicante retiró un objeto del almacén o del edificio"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.PICKEDUP_MACHINE
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.PICKEDUP_MACHINE"
+msgid "Item was removed from storage or building by a machine"
+msgstr "Una máquina retiró un objeto del almacén o del edificio"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.RESEARCH_GAINED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.RESEARCH_GAINED"
+msgid "Progress made towards a research objective"
+msgstr "Se ha avanzado en un objetivo de investigación"
+
+#. PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.SETTINGS_APPLIED
+msgctxt "PeterHan.ToastControl.ToastControlStrings.UI.TOOLTIPS.TOASTCONTROL.SETTINGS_APPLIED"
+msgid "Settings were copied to another building"
+msgstr "Los ajustes se copiaron en otro edificio"
