@@ -25,8 +25,7 @@ using PeterHan.PLib.PatchManager;
 
 namespace PeterHan.ThermalPlate {
 	/// <summary>
-	/// Instantiates the mod, there are no actual patches to apply but the thermal interface
-	/// plate must be registered with PLib.
+	/// Patches which will be applied for Thermal Interface Plate.
 	/// </summary>
 	public sealed class ThermalPlatePatches : KMod.UserMod2 {
 		public override void OnLoad(Harmony harmony) {
@@ -46,6 +45,19 @@ namespace PeterHan.ThermalPlate {
 		[PLibMethod(RunAt.OnStartGame)]
 		internal static void OnStartGame() {
 			Game.Instance.gameObject.AddOrGet<ThermalInterfaceManager>();
+		}
+
+		/// <summary>
+		/// Applied to Blueprints to add our collection source.
+		/// </summary>
+		[HarmonyPatch(typeof(Blueprints), MethodType.Constructor)]
+		public static class Blueprints_Constructor_Patch {
+			/// <summary>
+			/// Applied after the constructor runs.
+			/// </summary>
+			internal static void Postfix(Blueprints __instance) {
+				__instance.all.AddBlueprintsFrom(new ThermalBlueprintProvider());
+			}
 		}
 	}
 }

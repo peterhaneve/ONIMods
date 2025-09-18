@@ -27,7 +27,9 @@ namespace PeterHan.ThermalPlate {
 		public static class BUILDINGS {
 			public static class PREFABS {
 				public static class THERMALINTERFACEPLATE {
-					public static LocString NAME = "Thermal Interface Plate";
+					private static readonly string ID = ThermalPlateConfig.ID.ToUpperInvariant();
+
+					public static LocString NAME = STRINGS.UI.FormatAsLink("Thermal Interface Plate", ID);
 					public static LocString DESC = "With eyes glazed over from proposals such as \"heat pipes\" or \"vapor chambers\", one Duplicant had the bright idea of simply wedging this piece of scrap metal between buildings to transfer heat.";
 					public static LocString EFFECT = string.Concat("Transfers ",
 						STRINGS.UI.FormatAsLink("Heat", "HEAT"),
@@ -38,6 +40,80 @@ namespace PeterHan.ThermalPlate {
 						" and ",
 						STRINGS.UI.FormatAsLink("Liquid", "ELEMENTS_LIQUID"),
 						" loss in space.");
+
+					public static class FACADES {
+						public class BASIC_BLUE_COBALT {
+							public static LocString NAME = STRINGS.UI.FormatAsLink("Solid Cobalt Thermal Interface Plate", ID);
+
+							public static LocString DESC = "It doesn't cure the blues, so much as emphasize them.";
+						}
+
+						public class BASIC_GREEN_KELLY {
+							public static LocString NAME = STRINGS.UI.FormatAsLink("Spring Green Thermal Interface Plate", ID);
+
+							public static LocString DESC = "It's cheaper than having a garden.";
+						}
+
+						public class BASIC_GREY_CHARCOAL {
+							public static LocString NAME = STRINGS.UI.FormatAsLink("Solid Charcoal Thermal Interface Plate", ID);
+
+							public static LocString DESC = "An elevated take on \"gray\".";
+						}
+
+						public class BASIC_ORANGE_SATSUMA {
+							public static LocString NAME = STRINGS.UI.FormatAsLink("Solid Satsuma Thermal Interface Plate", ID);
+
+							public static LocString DESC = "Less fruit-forward, but just as fresh.";
+						}
+
+						public class BASIC_PINK_FLAMINGO {
+							public static LocString NAME = STRINGS.UI.FormatAsLink("Solid Pink Thermal Interface Plate", ID);
+
+							public static LocString DESC = "A bold statement, for bold Duplicants.";
+						}
+
+						public class BASIC_RED_DEEP {
+							public static LocString NAME = STRINGS.UI.FormatAsLink("Chili Red Thermal Interface Plate", ID);
+
+							public static LocString DESC = "It really spices up dull walls.";
+						}
+
+						public class BASIC_YELLOW_LEMON {
+							public static LocString NAME = STRINGS.UI.FormatAsLink("Canary Yellow Thermal Interface Plate", ID);
+
+							public static LocString DESC = "The original coal-mine chic.";
+						}
+
+						public class PASTELBLUE {
+							public static LocString NAME = STRINGS.UI.FormatAsLink("Pastel Blue Thermal Interface Plate", ID);
+
+							public static LocString DESC = "A soothing blue thermal interface plate.";
+						}
+
+						public class PASTELGREEN {
+							public static LocString NAME = STRINGS.UI.FormatAsLink("Pastel Green Thermal Interface Plate", ID);
+
+							public static LocString DESC = "A soothing green thermal interface plate.";
+						}
+
+						public class PASTELPINK {
+							public static LocString NAME = STRINGS.UI.FormatAsLink("Pastel Pink Thermal Interface Plate", ID);
+
+							public static LocString DESC = "A soothing pink thermal interface plate.";
+						}
+
+						public class PASTELPURPLE {
+							public static LocString NAME = STRINGS.UI.FormatAsLink("Pastel Purple Thermal Interface Plate", ID);
+
+							public static LocString DESC = "A soothing purple thermal interface plate.";
+						}
+
+						public class PASTELYELLOW {
+							public static LocString NAME = STRINGS.UI.FormatAsLink("Pastel Yellow Thermal Interface Plate", ID);
+
+							public static LocString DESC = "A soothing yellow thermal interface plate.";
+						}
+					}
 				}
 			}
 		}

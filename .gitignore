@@ -256,5 +256,5 @@ paket-files/
 /*.pptx
 /*.zip
 *.cmd
-Assets/
+/Assets/
 *.lnk

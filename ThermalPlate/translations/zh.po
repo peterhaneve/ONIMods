@@ -5,8 +5,8 @@ msgstr ""
 
 #. PeterHan.ThermalPlate.ThermalPlateStrings.BUILDINGS.PREFABS.THERMALINTERFACEPLATE.NAME
 msgctxt "PeterHan.ThermalPlate.ThermalPlateStrings.BUILDINGS.PREFABS.THERMALINTERFACEPLATE.NAME"
-msgid "Thermal Interface Plate"
-msgstr "热量传导板"
+msgid "<link=\"THERMALINTERFACEPLATE\">Thermal Interface Plate</link>"
+msgstr "<link=\"THERMALINTERFACEPLATE\">热量传导板</link>"
 
 #. PeterHan.ThermalPlate.ThermalPlateStrings.BUILDINGS.PREFABS.THERMALINTERFACEPLATE.DESC
 msgctxt "PeterHan.ThermalPlate.ThermalPlateStrings.BUILDINGS.PREFABS.THERMALINTERFACEPLATE.DESC"
