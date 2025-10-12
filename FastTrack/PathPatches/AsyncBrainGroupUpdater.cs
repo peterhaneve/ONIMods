@@ -630,8 +630,9 @@ namespace PeterHan.FastTrack.PathPatches {
 				if (index >= 0 && index < byId.Count)
 					foreach (var item in byId[index].fetchables.GetDataList()) {
 						var pickupable = item.pickupable;
+						var tracker = pickupable.offsetTracker;
 						int cachedCell = pickupable.cachedCell;
-						if (!pickupable.ValidateOffsets(cachedCell))
+						if (tracker != null && tracker.previousCell != cachedCell)
 							// If an update is actually being performed here, the cached cell
 							// may need to be updated, to fix incubator related issues
 							DeferredTriggers.Instance.Queue(pickupable);

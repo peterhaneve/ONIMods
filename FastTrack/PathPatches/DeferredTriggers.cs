@@ -20,7 +20,6 @@ using HarmonyLib;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using PeterHan.PLib.Core;
 
 namespace PeterHan.FastTrack.PathPatches {
 	/// <summary>
@@ -126,10 +125,6 @@ namespace PeterHan.FastTrack.PathPatches {
 				if (item != null) {
 					int cell = Grid.PosToCell(item.transform.position), oldCell = item.cachedCell;
 					if (cell != oldCell) {
-#if DEBUG
-						PUtil.LogDebug("Adjusted bugged item {0} from {1:D} to {2:D}".F(
-							item.name, oldCell, cell));
-#endif
 						item.UpdateCachedCell(cell);
 						gsp.UpdatePosition(item.solidPartitionerEntry, cell);
 						gsp.UpdatePosition(item.worldPartitionerEntry, cell);

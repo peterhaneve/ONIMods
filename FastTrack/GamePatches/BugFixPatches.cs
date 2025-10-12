@@ -236,6 +236,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		}
 	}
 
+#if false
 	/// <summary>
 	/// Applied to RobotElectroBankMonitor to try and figure out how a Flydo gets an invalid
 	/// power bank.
@@ -292,4 +293,5 @@ namespace PeterHan.FastTrack.GamePatches {
 			return false;
 		}
 	}
+#endif
 }

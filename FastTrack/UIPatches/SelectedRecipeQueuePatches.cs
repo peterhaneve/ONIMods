@@ -453,7 +453,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 			if (choice.TryGetComponent(out MultiToggle toggle)) {
 				toggle.ChangeState(selectedMaterial ? 1 : 0);
-				toggle.onClick += () => {
+				toggle.onClick = () => {
 					// Do not use cached variables here as they will leak memory
 					instance.selectedMaterialOption[index] = materialTag;
 					instance.RefreshIngredientDescriptors();
@@ -753,6 +753,24 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// Applied after Initialize runs.
 			/// </summary>
 			internal static void Postfix() {
+				nextUpdateTime = Time.timeAsDouble;
+			}
+		}
+
+		/// <summary>
+		/// Applied to ComplexFabricatorSideScreen to fix a visual issue caused by back to
+		/// back updates of buttons occurring on the same frame needing to update the
+		/// visualizer twice.
+		/// </summary>
+		[HarmonyPatch(typeof(ComplexFabricatorSideScreen), nameof(ComplexFabricatorSideScreen.
+			ToggleClicked))]
+		public static class ComplexFabricatorSideScreen_ToggleClicked_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
+
+			/// <summary>
+			/// Applied before ToggleClicked runs.
+			/// </summary>
+			internal static void Prefix(ComplexFabricatorSideScreen __instance) {
 				nextUpdateTime = Time.timeAsDouble;
 			}
 		}
