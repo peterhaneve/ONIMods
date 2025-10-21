@@ -1,5 +1,5 @@
 name: "Bug/Crash Report"
-description: File an issue
+description: Create a report of a crash or bug in a mod
 title: "Issue: "
 body:
   - type: checkboxes
@@ -34,7 +34,7 @@ body:
     attributes:
       label: Player.log
       description: |
-        Please attach the full output log to allow us to understand your
+        Please attach the full output log to allow us to understand the
         issue. This file is located at:
 
 

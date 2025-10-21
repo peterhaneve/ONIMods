@@ -1,0 +1,40 @@
+name: "Other Issue"
+description: Feature requests, translations or compatibility
+title: "Request: "
+body:
+  - type: input
+    id: modname
+    attributes:
+      label: Which Mod?
+      description: What mod or mods is relevant to the request?
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Request description
+      description: Clearly describe the desired request. For compatibility issues, please provide the name and a link to the other mod.
+  - type: textarea
+    id: playerlog
+    attributes:
+      label: Player.log
+      description: |
+        Please attach the full output log if relevant to allow us to understand the
+        issue. This file is located at:
+
+
+        Windows: `%userprofile%\AppData\LocalLow\Klei\Oxygen Not Included\Player.log`
+
+        Mac: `~/Library/Logs/Unity/Player.log`
+
+        Linux: `~/.config/unity3d/Klei/Oxygen Not Included/Player.log`
+      placeholder: Click in here to enable drag and drop, or use the built in file selector by clicking the bottom bar to add your log.
+  - type: checkboxes
+    id: dlcs
+    attributes:
+      label: Active DLCs
+      description: Which DLCs are active?
+      options:
+        - label: Spaced Out
+        - label: Frosty Planet Pack
+        - label: Bionic Booster Pack
