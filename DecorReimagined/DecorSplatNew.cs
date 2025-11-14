@@ -36,6 +36,11 @@ namespace ReimaginationTeam.DecorRework {
 		internal static readonly int BackwallLayer = (int)PGameUtils.GetObjectLayer(
 			nameof(ObjectLayer.Backwall), ObjectLayer.Backwall);
 
+		// TODO Remove when versions prior to U57-699077 no longer need to be supported
+		private static readonly Tag TAG_DECOR_20 = "Decor20".ToTag();
+
+		private static readonly bool NEEDS_DECOR_20 = PUtil.GameVersion < 699077U;
+
 		/// <summary>
 		/// Reports if this building is visually behind backwalls like drywall or wallpaper.
 		/// </summary>
@@ -271,22 +276,26 @@ namespace ReimaginationTeam.DecorRework {
 					(happiness != null && happiness.GetTotalValue() < 0.0f);
 				bool broken = breakStatus != null && breakStatus.IsBroken;
 				RefreshCells(broken, disabled);
-				// Handle rooms which require an item with 20 decor: has to actually be functional
-				bool hasTag = prefabID.HasTag(RoomConstraints.ConstraintTags.Decor20);
-				bool needsTag = provider.decor.GetTotalValue() >= 20f && !broken && !disabled;
-				// Do not trigger on buildings with a room tracker, as that could set up an
-				// infinite loop
-				if ((tracker == null || tracker.requirement == RoomTracker.Requirement.
-						TrackingOnly) && hasTag != needsTag) {
-					int pos = Grid.PosToCell(gameObject);
-					// Tag needs to be added/removed
-					if (needsTag)
-						prefabID.AddTag(RoomConstraints.ConstraintTags.Decor20);
-					else
-						prefabID.RemoveTag(RoomConstraints.ConstraintTags.Decor20);
-					// Force room recalculation
-					if (Grid.IsValidCell(pos))
-						Game.Instance.roomProber.SolidChangedEvent(pos, true);
+				// Handle rooms which require an item with 20 decor: has to actually be
+				// functional
+				if (NEEDS_DECOR_20) {
+					bool hasTag = prefabID.HasTag(TAG_DECOR_20);
+					bool needsTag = provider.decor.GetTotalValue() >= 20f && !broken &&
+						!disabled;
+					// Do not trigger on buildings with a room tracker, as that could set up an
+					// infinite loop
+					if ((tracker == null || tracker.requirement == RoomTracker.Requirement.
+							TrackingOnly) && hasTag != needsTag) {
+						int pos = Grid.PosToCell(gameObject);
+						// Tag needs to be added/removed
+						if (needsTag)
+							prefabID.AddTag(TAG_DECOR_20);
+						else
+							prefabID.RemoveTag(TAG_DECOR_20);
+						// Force room recalculation
+						if (Grid.IsValidCell(pos))
+							Game.Instance.roomProber.SolidChangedEvent(pos, true);
+					}
 				}
 			}
 		}

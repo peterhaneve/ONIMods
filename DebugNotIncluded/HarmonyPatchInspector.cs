@@ -147,6 +147,9 @@ namespace PeterHan.DebugNotIncluded {
 			} catch (TypeLoadException e) {
 				DebugLogger.LogWarning("Unable to check type " + type.FullName);
 				DebugLogger.LogException(e);
+			} catch (AmbiguousMatchException e) {
+				DebugLogger.LogWarning("Unable to check type " + type.FullName);
+				DebugLogger.LogException(e);
 			}
 		}
 

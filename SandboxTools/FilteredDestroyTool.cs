@@ -17,19 +17,30 @@
  */
 
 using PeterHan.PLib.Core;
+using PeterHan.PLib.Detours;
 using System.Collections.Generic;
 using UnityEngine;
 
 using CellColorData = ToolMenu.CellColorData;
-using PeterHan.PLib.Detours;
 
 namespace PeterHan.SandboxTools {
 	/// <summary>
 	/// A replacement for "Destroy" that allows filtering of what to get rid of.
 	/// </summary>
 	public sealed class FilteredDestroyTool : BrushTool {
-		private static readonly IDetouredField<SandboxDestroyerTool, Color> RECENTLY_AFFECTED =
-			PDetours.DetourField<SandboxDestroyerTool, Color>("recentlyAffectedCellColor");
+		// TODO Replace with ClearParticles once versions prior to U57-699077 no longer need
+		// to be supported
+		private delegate void ClearParticles(FallingWater instance, int cell);
+
+		private static readonly ClearParticles CLEAR_PARTICLES;
+
+		static FilteredDestroyTool() {
+			try {
+				CLEAR_PARTICLES = typeof(FallingWater).Detour<ClearParticles>();
+			} catch (DetourException) {
+				CLEAR_PARTICLES = null;
+			}
+		}
 
 		/// <summary>
 		/// Destroys the items in the set and recycles the list.
@@ -57,7 +68,7 @@ namespace PeterHan.SandboxTools {
 				}
 			DestroyAndRecycle(destroy);
 		}
-		
+
 		/// <summary>
 		/// Destroys plants in the cell.
 		/// </summary>
@@ -82,16 +93,6 @@ namespace PeterHan.SandboxTools {
 		/// The number of object layers, determined at RUNTIME.
 		/// </summary>
 		private readonly int numObjectLayers;
-
-		/// <summary>
-		/// The cells recently destroyed by the tool.
-		/// </summary>
-		private readonly HashSet<int> pendingCells;
-
-		/// <summary>
-		/// The color to highlight the recently affected cells.
-		/// </summary>
-		private readonly Color pendingHighlightColor;
 
 		/// <summary>
 		/// The layer for dropped items, determined at RUNTIME.
@@ -131,25 +132,11 @@ namespace PeterHan.SandboxTools {
 				new DestroyFilter("SolidConduits", OverlayModes.SolidConveyor.ID,
 					SandboxToolsStrings.DESTROY_SHIPPING)
 			};
-			pendingCells = new HashSet<int>();
-#pragma warning disable CS0168
-			try {
-				// Take from stock tool if possible
-				color = RECENTLY_AFFECTED.Get(SandboxDestroyerTool.instance);
-			} catch (System.Exception e) {
-#if DEBUG
-				PUtil.LogExcWarn(e);
-#endif
-				// Use default
-				color = new Color(1f, 1f, 1f, 0.1f);
-			}
-#pragma warning restore CS0168
 			// Read value at runtime if possible
 			numObjectLayers = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.NumLayers),
 				ObjectLayer.NumLayers);
 			pickupLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Pickupables),
 				ObjectLayer.Pickupables);
-			pendingHighlightColor = color;
 		}
 
 		/// <summary>
@@ -158,6 +145,7 @@ namespace PeterHan.SandboxTools {
 		/// <param name="cell">The cell to destroy.</param>
 		private void DestroyAll(int cell) {
 			var destroy = HashSetPool<GameObject, FilteredDestroyTool>.Allocate();
+			int world = Grid.WorldIdx[cell];
 			DestroyElement(cell);
 			DestroyItems(cell);
 			DestroyPlants(cell);
@@ -168,6 +156,13 @@ namespace PeterHan.SandboxTools {
 				if (obj != null)
 					destroy.Add(obj);
 			}
+			// Remove meteors
+			if (world != ClusterManager.INVALID_WORLD_IDX)
+				foreach (var meteor in Components.Meteors.GetItems(world))
+					if (!meteor.IsNullOrDestroyed() && Grid.PosToCell(meteor) == cell)
+						destroy.Add(meteor.gameObject);
+			// Clear liquid drops
+			CLEAR_PARTICLES?.Invoke(FallingWater.instance, cell);
 			DestroyAndRecycle(destroy);
 		}
 
@@ -194,13 +189,8 @@ namespace PeterHan.SandboxTools {
 		/// </summary>
 		/// <param name="cell">The cell to destroy.</param>
 		private void DestroyElement(int cell) {
-			pendingCells.Add(cell);
-			// Register a sim callback to unhighlight the cells when destroyed
-			int index = Game.Instance.callbackManager.Add(new Game.CallbackInfo(delegate {
-				pendingCells.Remove(cell);
-			})).index;
 			SimMessages.ReplaceElement(cell, SimHashes.Vacuum, CellEventLogger.Instance.
-				SandBoxTool, 0.0f, 0.0f, Klei.SimUtil.DiseaseInfo.Invalid.idx, 0, index);
+				SandBoxTool, 0.0f, 0.0f, Klei.SimUtil.DiseaseInfo.Invalid.idx);
 			// Destroy any solid tiles / doors on the area as well to avoid bad states
 			var destroy = HashSetPool<GameObject, FilteredDestroyTool>.Allocate();
 			for (int i = 0; i < numObjectLayers; i++) {
@@ -235,9 +225,6 @@ namespace PeterHan.SandboxTools {
 
 		public override void GetOverlayColorData(out HashSet<CellColorData> colors) {
 			colors = new HashSet<CellColorData>();
-			// Highlight recently destroyed cells
-			foreach (int cell in pendingCells)
-				colors.Add(new CellColorData(cell, pendingHighlightColor));
 			// Highlight cells in destroy radius
 			foreach (int cell in cellsInRadius)
 				colors.Add(new CellColorData(cell, radiusIndicatorColor));

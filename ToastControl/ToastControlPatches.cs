@@ -447,12 +447,20 @@ namespace PeterHan.ToastControl {
 
 		/// <summary>
 		/// Applied to PopFX to disable the popups moving upward if necessary.
+		/// 
+		/// TODO Remove when versions prior to U57-699077 no longer need to be supported
 		/// </summary>
 		[HarmonyPatch]
 		public static class PopFX_Spawn_Patch {
+			private static readonly MethodBase TARGET = typeof(PopFX).
+				GetOverloadWithMostArguments(nameof(PopFX.Spawn), false, typeof(Sprite));
+
+			internal static bool Prepare() {
+				return TARGET != null;
+			}
+
 			internal static MethodBase TargetMethod() {
-				return typeof(PopFX).GetOverloadWithMostArguments(nameof(PopFX.Spawn), false,
-					typeof(Sprite));
+				return TARGET;
 			}
 
 			/// <summary>
@@ -461,6 +469,30 @@ namespace PeterHan.ToastControl {
 			internal static void Postfix(ref float ___Speed) {
 				if (ToastControlPopups.Options.DisableMoving)
 					___Speed = 0.0f;
+			}
+		}
+
+		/// <summary>
+		/// Applied to PopFX to disable motion if specified in the settings.
+		/// </summary>
+		[HarmonyPatch(typeof(PopFX), "Update")]
+		public static class PopFX_Update_Patch {
+			internal static bool Prepare() {
+				return PUtil.GameVersion >= 699077U;
+			}
+
+			private static Vector3 MaybeUp() {
+				return ToastControlPopups.Options.DisableMoving ? Vector3.zero : Vector3.up;
+			}
+
+			/// <summary>
+			/// Transpiles Update to replace calls to fetch Vector3.up with our handler.
+			/// </summary>
+			internal static TranspiledMethod Transpiler(TranspiledMethod method,
+					MethodBase original) {
+				return PPatchTools.ReplaceMethodCallSafe(method, typeof(Vector3).
+					GetPropertySafe<Vector3>(nameof(Vector3.up), true)?.GetGetMethod(),
+					typeof(PopFX_Update_Patch).GetMethodSafe(nameof(MaybeUp), true));
 			}
 		}
 
