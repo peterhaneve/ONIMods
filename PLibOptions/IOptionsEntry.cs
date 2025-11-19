@@ -24,6 +24,11 @@ namespace PeterHan.PLib.Options {
 	/// </summary>
 	public interface IOptionsEntry : IOptionSpec {
 		/// <summary>
+		/// Stores whether changing this option requires a restart.
+		/// </summary>
+		bool RestartRequired { get; set; }
+
+		/// <summary>
 		/// Creates UI components that will present this option.
 		/// </summary>
 		/// <param name="parent">The parent panel where the components should be added.</param>
@@ -41,6 +46,7 @@ namespace PeterHan.PLib.Options {
 		/// Writes the option value from the UI into the provided settings object.
 		/// </summary>
 		/// <param name="settings">The settings object.</param>
-		void WriteTo(object settings);
+		/// <returns>true if the value changed, or false otherwise.</returns>
+		bool WriteTo(object settings);
 	}
 }

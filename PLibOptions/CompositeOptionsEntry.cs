@@ -150,12 +150,13 @@ namespace PeterHan.PLib.Options {
 				pair.Value.ReadFrom(value);
 		}
 
-		public override void WriteTo(object settings) {
+		public override bool WriteTo(object settings) {
+			bool changed = false;
 			foreach (var pair in subOptions)
 				// Cannot detour as the types are not known at compile time, and delegates
 				// bake in the target object which changes upon each update
-				pair.Value.WriteTo(value);
-			base.WriteTo(settings);
+				changed |= pair.Value.WriteTo(value);
+			return changed | base.WriteTo(settings);
 		}
 	}
 }

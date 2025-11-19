@@ -197,7 +197,7 @@ namespace PeterHan.PLib.Options {
 			string result = keyOrValue;
 			if (!string.IsNullOrEmpty(keyOrValue) && Strings.TryGet(keyOrValue, out var
 					entry))
-				result = entry.String;
+				result = STRINGS.UI.StripLinkFormatting(entry.String);
 			return result;
 		}
 
@@ -214,19 +214,21 @@ namespace PeterHan.PLib.Options {
 			var indexes = prop.GetIndexParameters();
 			if (indexes.Length < 1) {
 				var attributes = ListPool<Attribute, OptionsEntry>.Allocate();
-				bool dlcMatch = true;
+				bool dlcMatch = true, restart = false;
 				attributes.AddRange(prop.GetCustomAttributes());
 				int n = attributes.Count;
-				for (int i = 0; i < n; i++)
+				for (int i = 0; i < n; i++) {
+					var attr = attributes[i];
 					// Do not create an entry if the DLC does not match
-					if (attributes[i] is RequireDLCAttribute requireDLC && PGameUtils.
-							IsDLCOwned(requireDLC.DlcID) != requireDLC.Required) {
+					if (attr is RequireDLCAttribute requireDLC && PGameUtils.IsDLCOwned(
+							requireDLC.DlcID) != requireDLC.Required)
 						dlcMatch = false;
-						break;
-					}
+					else if (attr is RestartRequiredAttribute)
+						restart = true;
+				}
 				if (dlcMatch)
 					for (int i = 0; i < n; i++) {
-						result = TryCreateEntry(attributes[i], prop, depth);
+						result = TryCreateEntry(attributes[i], prop, depth, restart);
 						if (result != null)
 							break;
 					}
@@ -242,9 +244,10 @@ namespace PeterHan.PLib.Options {
 		/// <param name="attribute">The attribute to parse.</param>
 		/// <param name="prop">The property to inspect.</param>
 		/// <param name="depth">The current depth of iteration to avoid infinite loops.</param>
+		/// <param name="restart">true if the options class requests a restart for value changes.</param>
 		/// <returns>The OptionsEntry created from the attribute, or null if none was.</returns>
 		private static IOptionsEntry TryCreateEntry(Attribute attribute, PropertyInfo prop,
-				int depth) {
+				int depth, bool restart) {
 			IOptionsEntry result = null;
 			if (prop == null)
 				throw new ArgumentNullException(nameof(prop));
@@ -254,14 +257,16 @@ namespace PeterHan.PLib.Options {
 				// Attempt to find a class that will represent it
 				var type = prop.PropertyType;
 				result = OptionsHandlers.FindOptionClass(spec, prop);
-				// See if it has entries that can themselves be added, ignore
-				// value types and avoid infinite recursion
+				// See if it has entries that can themselves be added, ignore value types and
+				// avoid infinite recursion
 				if (result == null && !type.IsValueType && depth < 16 && type !=
 						prop.DeclaringType)
 					result = CompositeOptionsEntry.Create(spec, prop, depth);
 			} else if (attribute is DynamicOptionAttribute doa &&
 					typeof(IOptionsEntry).IsAssignableFrom(doa.Handler))
 				result = CreateDynamicOption(prop, doa.Handler);
+			if (result != null)
+				result.RestartRequired = restart;
 			return result;
 		}
 
@@ -284,6 +289,8 @@ namespace PeterHan.PLib.Options {
 
 		public event PUIDelegates.OnRealize OnRealize;
 
+		public bool RestartRequired { get; set; }
+
 		/// <summary>
 		/// The option title on screen.
 		/// </summary>
@@ -304,6 +311,7 @@ namespace PeterHan.PLib.Options {
 				throw new ArgumentNullException(nameof(attr));
 			Field = field;
 			Format = attr.Format;
+			RestartRequired = false;
 			Title = attr.Title ?? throw new ArgumentException("attr.Title is null");
 			Tooltip = attr.Tooltip;
 			Category = attr.Category;
@@ -362,12 +370,24 @@ namespace PeterHan.PLib.Options {
 			return "{1}[field={0},title={2}]".F(Field, GetType().Name, Title);
 		}
 
-		public virtual void WriteTo(object settings) {
+		public virtual bool WriteTo(object settings) {
+			bool changed = false;
 			if (Field != null && settings != null)
 				try {
 					var prop = settings.GetType().GetProperty(Field, INSTANCE_PUBLIC);
-					if (prop != null && prop.CanWrite)
-						prop.SetValue(settings, Value, null);
+					if (prop != null && prop.CanWrite) {
+						object newValue = Value;
+						bool changePending = false;
+						if (prop.CanRead) {
+							// Store change in a pending flag so exceptions will not set the
+							// restart required
+							object oldValue = prop.GetValue(settings, null);
+							changePending = (oldValue == null) ? (newValue != null) :
+								!oldValue.Equals(newValue);
+						}
+						prop.SetValue(settings, newValue, null);
+						changed = changePending;
+					}
 				} catch (TargetInvocationException e) {
 					// Other mod's error
 					PUtil.LogException(e);
@@ -378,6 +398,7 @@ namespace PeterHan.PLib.Options {
 					// Our error!
 					PUtil.LogException(e);
 				}
+			return changed;
 		}
 	}
 }

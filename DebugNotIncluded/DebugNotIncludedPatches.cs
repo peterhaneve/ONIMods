@@ -638,17 +638,15 @@ namespace PeterHan.DebugNotIncluded {
 	/// </summary>
 	[HarmonyPatch(typeof(ScheduleManager), "OnSpawn")]
 	public static class ScheduleManager_OnSpawn_Patch {
-		internal static bool Prepare() {
-			return DebugNotIncludedOptions.Instance.SortSchedules;
-		}
-
 		/// <summary>
 		/// Applied after OnSpawn runs.
 		/// </summary>
 		internal static void Postfix(ScheduleManager __instance) {
-			DebugLogger.LogDebug("Sorting schedules");
-			__instance.GetSchedules().Sort((a, b) => string.Compare(a.name, b.name,
-				StringComparison.CurrentCultureIgnoreCase));
+			if (DebugNotIncludedOptions.Instance.SortSchedules) {
+				DebugLogger.LogDebug("Sorting schedules");
+				__instance.GetSchedules().Sort((a, b) => string.Compare(a.name, b.name,
+					StringComparison.CurrentCultureIgnoreCase));
+			}
 		}
 	}
 
