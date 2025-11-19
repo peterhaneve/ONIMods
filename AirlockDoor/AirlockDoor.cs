@@ -17,7 +17,10 @@
  */
 
 using KSerialization;
+using PeterHan.PLib.Core;
+using PeterHan.PLib.Detours;
 using System;
+using System.Reflection;
 using UnityEngine;
 
 namespace PeterHan.AirlockDoor {
@@ -284,6 +287,33 @@ namespace PeterHan.AirlockDoor {
 			doorOpeningSound = GlobalAssets.GetSound("MechanizedAirlock_opening");
 		}
 
+		protected override void OnCleanUp() {
+			SetFakeFloor(false);
+			foreach (int cell in building.PlacementCells) {
+				// Clear the airlock flags, render critter and duplicant passable
+				Grid.HasDoor[cell] = false;
+				SimMessages.SetInsulation(cell, 1.0f);
+				Game.Instance.SetDupePassableSolid(cell, false, Grid.Solid[cell]);
+				Grid.CritterImpassable[cell] = false;
+				Pathfinding.Instance.AddDirtyNavGridCell(cell);
+			}
+			Unsubscribe((int)GameHashes.LogicEvent, OnLogicValueChanged);
+			base.OnCleanUp();
+		}
+
+		private void OnLogicValueChanged(object data) {
+			var logicValueChanged = (LogicValueChanged)data;
+			if (logicValueChanged.portID == OPEN_CLOSE_PORT_ID) {
+				int newValue = logicValueChanged.newValue;
+				if (changeStateChore != null) {
+					changeStateChore.Cancel("Automation state change");
+					changeStateChore = null;
+				}
+				// Bit 0 green: automatic, bit 0 red: lock the door
+				requestedState = !LogicCircuitNetwork.IsBitActive(0, newValue);
+			}
+		}
+		
 		protected override void OnSpawn() {
 			base.OnSpawn();
 			var structureTemperatures = GameComps.StructureTemperatures;
@@ -323,40 +353,13 @@ namespace PeterHan.AirlockDoor {
 				storedCharge, this);
 		}
 
-		protected override void OnCleanUp() {
-			SetFakeFloor(false);
-			foreach (int cell in building.PlacementCells) {
-				// Clear the airlock flags, render critter and duplicant passable
-				Grid.HasDoor[cell] = false;
-				SimMessages.SetInsulation(cell, 1.0f);
-				Game.Instance.SetDupePassableSolid(cell, false, Grid.Solid[cell]);
-				Grid.CritterImpassable[cell] = false;
-				Pathfinding.Instance.AddDirtyNavGridCell(cell);
-			}
-			Unsubscribe((int)GameHashes.LogicEvent, OnLogicValueChanged);
-			base.OnCleanUp();
-		}
-
-		private void OnLogicValueChanged(object data) {
-			var logicValueChanged = (LogicValueChanged)data;
-			if (logicValueChanged.portID == OPEN_CLOSE_PORT_ID) {
-				int newValue = logicValueChanged.newValue;
-				if (changeStateChore != null) {
-					changeStateChore.Cancel("Automation state change");
-					changeStateChore = null;
-				}
-				// Bit 0 green: automatic, bit 0 red: lock the door
-				requestedState = !LogicCircuitNetwork.IsBitActive(0, newValue);
-			}
-		}
-
 		/// <summary>
 		/// Updates the locked/open/auto state in the UI and the state machine.
 		/// </summary>
 		private void RefreshControlState() {
+			var state = locked ? Door.ControlState.Locked : Door.ControlState.Auto;
 			smi.sm.isLocked.Set(locked, smi);
-			Trigger((int)GameHashes.DoorControlStateChanged, locked ? Door.ControlState.
-				Locked : Door.ControlState.Auto);
+			BoxingTrigger((int)GameHashes.DoorControlStateChanged, state);
 			UpdateWorldState();
 			selectable.SetStatusItem(Db.Get().StatusItemCategories.Main, doorControlState,
 				this);
