@@ -18,7 +18,6 @@
 
 using HarmonyLib;
 using KMod;
-using PeterHan.FastTrack.PathPatches;
 using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
@@ -174,7 +173,7 @@ namespace PeterHan.FastTrack {
 			if (options.PickupOpts) {
 				GamePatches.SolidTransferArmUpdater.DestroyInstance();
 				// Avoid leaking Brains
-				PriorityBrainScheduler.Instance.updateFirst.Clear();
+				PathPatches.PriorityBrainScheduler.Instance.updateFirst.Clear();
 			}
 			if (options.PickupOpts || options.FastUpdatePickups)
 				PathPatches.DeferredTriggers.DestroyInstance();
@@ -304,6 +303,8 @@ namespace PeterHan.FastTrack {
 			VisualPatches.FullScreenDialogPatches.Init();
 #if DEBUG
 			Metrics.FastTrackProfiler.Begin();
+			Localization.GenerateStringsTemplate(typeof(FastTrackMod), System.IO.Path.Combine(
+				Manager.GetDirectory(), "strings_templates"));
 #endif
 		}
 

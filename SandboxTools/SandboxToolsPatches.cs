@@ -24,7 +24,6 @@ using PeterHan.PLib.Database;
 using PeterHan.PLib.PatchManager;
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 using SearchFilter = SandboxToolParameterMenu.SelectorValue.SearchFilter;
 
