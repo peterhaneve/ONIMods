@@ -2,11 +2,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Forbid Items</AssemblyTitle>
-    <FileVersion>1.4.0.0</FileVersion>
+    <FileVersion>1.5.0.0</FileVersion>
     <RootNamespace>PeterHan.ForbidItems</RootNamespace>
     <Description>Prevents specific items from being picked up by Duplicants.</Description>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <LastWorkingBuild>537329</LastWorkingBuild>
+    <LastWorkingBuild>699077</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
 </Project>

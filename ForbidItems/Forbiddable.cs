@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2024 Peter Han
+ * Copyright 2025 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -19,7 +19,7 @@
 using System;
 using KSerialization;
 using PeterHan.PLib.Actions;
-using UnityEngine;
+using PeterHan.PLib.Core;
 
 namespace PeterHan.ForbidItems {
 	/// <summary>
@@ -126,8 +126,9 @@ namespace PeterHan.ForbidItems {
 		/// </summary>
 		/// <param name="data">The tag data that changed.</param>
 		private void OnTagsChanged(object data) {
-			if (!(data is TagChangedEventData tagData) || tagData.tag == ForbidItemsPatches.
-					Forbidden)
+			// TODO Remove when versions prior to U57-699077 no longer need to be supported
+			if (AutoUnbox<TagChangedEventData>.Unbox(data, out var tagData) && tagData.tag ==
+					ForbidItemsPatches.Forbidden)
 				RefreshStatus();
 		}
 

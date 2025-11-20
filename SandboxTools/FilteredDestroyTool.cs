@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2024 Peter Han
+ * Copyright 2025 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -306,7 +306,9 @@ namespace PeterHan.SandboxTools {
 		/// </summary>
 		/// <param name="mode">The new overlay mode.</param>
 		private void OnUpdateOverlay(object mode) {
-			if (mode is HashedString newMode && newMode != previousMode) {
+			// TODO Remove when versions prior to U57-699077 no longer need to be supported
+			if (AutoUnbox<HashedString>.Unbox(mode, out HashedString newMode) &&
+					newMode != previousMode) {
 				UpdateOverlay(newMode);
 				previousMode = newMode;
 			}
