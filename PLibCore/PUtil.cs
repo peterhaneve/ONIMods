@@ -114,9 +114,9 @@ namespace PeterHan.PLib.Core {
 			 * accessed directly, PLib would have a version "baked in" and would never
 			 * update depending on the game version in use.
 			 */
-			var field = typeof(KleiVersion).GetFieldSafe(nameof(KleiVersion.ChangeList), true);
 			uint ver = 0U;
-			if (field != null && field.GetValue(null) is uint newVer)
+			if (PPatchTools.TryGetFieldValue(typeof(KleiVersion), nameof(KleiVersion.
+					ChangeList), out uint newVer))
 				ver = newVer;
 			return ver;
 		}

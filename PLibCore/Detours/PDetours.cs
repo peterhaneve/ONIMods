@@ -20,6 +20,7 @@ using PeterHan.PLib.Core;
 using System;
 using System.Reflection;
 using System.Reflection.Emit;
+using static UnityEngine.GraphicsBuffer;
 
 namespace PeterHan.PLib.Detours {
 	/// <summary>
@@ -486,6 +487,126 @@ namespace PeterHan.PLib.Detours {
 				var param = actualParams[i - offset];
 				PTranspilerTools.GenerateDefaultLoad(generator, param.ParameterType, param.
 					DefaultValue);
+			}
+		}
+
+		/// <summary>
+		/// Creates a dynamic detour method of the specified delegate type to wrap a base game
+		/// method with the specified name. The dynamic method will automatically adapt if
+		/// optional parameters are added, filling in their default values.
+		/// </summary>
+		/// <typeparam name="D">The delegate type to be used to call the detour.</typeparam>
+		/// <param name="type">The target type.</param>
+		/// <param name="name">The method name.</param>
+		/// <returns>The detour that will call that method.</returns>
+		/// <exception cref="DetourException">If the delegate does not match any valid target method.</exception>
+		public static D TryDetour<D>(this Type type, string name) where D : Delegate {
+			if (type == null)
+				throw new ArgumentNullException(nameof(type));
+			if (string.IsNullOrEmpty(name))
+				throw new ArgumentNullException(nameof(name));
+			try {
+				return Detour<D>(type, name);
+			} catch (DetourException) {
+				return null;
+			}
+		}
+
+		/// <summary>
+		/// Creates a dynamic detour method of the specified delegate type to wrap a base game
+		/// constructor. The dynamic method will automatically adapt if optional parameters
+		/// are added, filling in their default values.
+		/// </summary>
+		/// <typeparam name="D">The delegate type to be used to call the detour.</typeparam>
+		/// <param name="type">The target type.</param>
+		/// <returns>The detour that will call that type's constructor, or null if the
+		/// delegate does not match any valid target method.</returns>
+		public static D TryDetourConstructor<D>(this Type type) where D : Delegate {
+			if (type == null)
+				throw new ArgumentNullException(nameof(type));
+			try {
+				return DetourConstructor<D>(type);
+			} catch (DetourException) {
+				return null;
+			}
+		}
+
+		/// <summary>
+		/// Creates a dynamic detour method of the specified delegate type to wrap a base game
+		/// method with the specified name. The dynamic method will automatically adapt if
+		/// optional parameters are added, filling in their default values.
+		/// </summary>
+		/// <typeparam name="D">The delegate type to be used to call the detour.</typeparam>
+		/// <param name="target">The target method to be called.</param>
+		/// <returns>The detour that will call that method, or null if the delegate does
+		/// not match the target.</returns>
+		public static D TryDetour<D>(this MethodInfo target) where D : Delegate {
+			if (target == null)
+				throw new ArgumentNullException(nameof(target));
+			try {
+				return Detour<D>(target);
+			} catch (DetourException) {
+				return null;
+			}
+		}
+
+		/// <summary>
+		/// Creates a dynamic detour method of the specified delegate type to wrap a base game
+		/// constructor. The dynamic method will automatically adapt if optional parameters
+		/// are added, filling in their default values.
+		/// </summary>
+		/// <typeparam name="D">The delegate type to be used to call the detour.</typeparam>
+		/// <param name="target">The target constructor to be called.</param>
+		/// <returns>The detour that will call that constructor, or null if the delegate does
+		/// not match the target.</returns>
+		public static D TryDetour<D>(this ConstructorInfo target) where D : Delegate {
+			if (target == null)
+				throw new ArgumentNullException(nameof(target));
+			try {
+				return Detour<D>(target);
+			} catch (DetourException) {
+				return null;
+			}
+		}
+		
+		/// <summary>
+		/// Creates dynamic detour methods to wrap a base game field or property with the
+		/// specified name. The detour will still work even if the field is converted to a
+		/// source compatible property and vice versa.
+		/// </summary>
+		/// <typeparam name="P">The type of the parent class.</typeparam>
+		/// <typeparam name="T">The type of the field or property element.</typeparam>
+		/// <param name="name">The name of the field or property to be accessed.</param>
+		/// <returns>A detour element that wraps the field or property with common getter and
+		/// setter delegates, or null if the field cannot be found.</returns>
+		public static IDetouredField<P, T> TryDetourField<P, T>(string name) {
+			if (string.IsNullOrEmpty(name))
+				throw new ArgumentNullException(nameof(name));
+			try {
+				return DetourField<P, T>(name);
+			} catch (DetourException) {
+				return null;
+			}
+		}
+		
+		/// <summary>
+		/// Creates dynamic detour methods to wrap a base game struct field with the specified
+		/// name. For static struct fields, use the regular DetourField.
+		/// </summary>
+		/// <typeparam name="T">The type of the field element.</typeparam>
+		/// <param name="parentType">The struct type which will be accessed.</param>
+		/// <param name="name">The name of the struct field to be accessed.</param>
+		/// <returns>A detour element that wraps the field, or null if the field cannot be found.</returns>
+		public static IDetouredField<object, T> TryDetourStructField<T>(this Type parentType,
+				string name) {
+			if (parentType == null)
+				throw new ArgumentNullException(nameof(parentType));
+			if (string.IsNullOrEmpty(name))
+				throw new ArgumentNullException(nameof(name));
+			try {
+				return DetourStructField<T>(parentType, name);
+			} catch (DetourException) {
+				return null;
 			}
 		}
 

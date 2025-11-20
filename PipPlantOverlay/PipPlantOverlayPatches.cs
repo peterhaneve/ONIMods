@@ -23,6 +23,7 @@ using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.Detours;
 using PeterHan.PLib.PatchManager;
+using PeterHan.PLib.UI;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -62,15 +63,10 @@ namespace PeterHan.PipPlantOverlay {
 
 		[PLibMethod(RunAt.AfterDbInit)]
 		internal static void AfterDbInit() {
-			// Assets are now loaded, so create pip icon
-			var pip = Assets.GetAnim("squirrel_kanim");
-			Sprite sprite = null;
-			if (pip != null)
-				sprite = Def.GetUISpriteFromMultiObjectAnim(pip);
-			if (sprite == null)
-				// Pip anim is somehow missing?
-				sprite = Assets.GetSprite("overlay_farming");
-			Assets.Sprites.Add(PipPlantOverlayStrings.OVERLAY_ICON, sprite);
+			// Create pip icon from the DLL; once versions prior to 699077 no longer need to be
+			// supported, can change it back to using the CodexCache to get the icon
+			Assets.Sprites.Add(PipPlantOverlayStrings.OVERLAY_ICON, PUIUtils.LoadSprite(
+				"PeterHan.PipPlantOverlay.pip.png") ?? Assets.GetSprite("overlay_farming"));
 			// SPPR fixes the symmetry rule
 			bool ruleFix = PPatchTools.GetTypeSafe("MightyVincent.Patches",
 				"SimplerPipPlantRule") != null;
@@ -139,9 +135,8 @@ namespace PeterHan.PipPlantOverlay {
 				OVERLAY_ACTION, PipPlantOverlayStrings.INPUT_BINDINGS.ROOT.PIPPLANT);
 			new PLocalization().Register();
 			// If possible, make farming status items appear properly in pip plant mode
-			var overlayBitsField = typeof(StatusItem).GetFieldSafe("overlayBitfieldMap", true);
-			if (overlayBitsField != null && overlayBitsField.GetValue(null) is
-					IDictionary<HashedString, StatusItemOverlays> overlayBits)
+			if (PPatchTools.TryGetFieldValue<IDictionary<HashedString, StatusItemOverlays>>(
+					typeof(StatusItem), "overlayBitfieldMap", out var overlayBits))
 				overlayBits.Add(PipPlantOverlay.ID, StatusItemOverlays.Farming);
 			new PVersionCheck().Register(this, new SteamVersionChecker());
 		}

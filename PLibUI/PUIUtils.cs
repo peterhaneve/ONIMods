@@ -471,15 +471,9 @@ namespace PeterHan.PLib.UI {
 		public static GameObject GetSideScreenContent(DetailsScreen screen) {
 			GameObject result = null;
 			if (screen != null) {
-				// This ugly hack is for U54-640445's migration of DetailsScreen
-				if (UIDetours.SS_CONTENT_BODY != null)
-					result = UIDetours.SS_CONTENT_BODY.Get(screen);
-				else if (UIDetours.SS_GET_TAB != null) {
-					object intermed = UIDetours.SS_GET_TAB.Invoke(screen, new object[] { 0 });
-					if (intermed != null)
-						PPatchTools.TryGetFieldValue(intermed, nameof(DetailsScreen.
-							SidescreenTab.bodyInstance), out result);
-				}
+				var tab = UIDetours.SS_GET_TAB.Invoke(screen, 0);
+				if (tab != null)
+					result = UIDetours.SS_BODY_INSTANCE.Get(tab);
 			}
 			return result;
 		}

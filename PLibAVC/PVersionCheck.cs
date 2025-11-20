@@ -165,14 +165,12 @@ namespace PeterHan.PLib.AVC {
 		private void AddWarningIfOutdated(object modEntry) {
 			int index = -1;
 			var type = modEntry.GetType();
-			var indexVal = type.GetFieldSafe("mod_index", false)?.GetValue(modEntry);
-			if (indexVal is int intVal)
+			if (PPatchTools.TryGetFieldValue(modEntry, "mod_index", out int intVal))
 				index = intVal;
-			var rowInstance = type.GetFieldSafe("rect_transform", false)?.GetValue(
-				modEntry) as RectTransform;
 			var mods = Global.Instance.modManager?.mods;
 			string id;
-			if (rowInstance != null && mods != null && index >= 0 && index < mods.Count &&
+			if (PPatchTools.TryGetFieldValue(modEntry, "rect_transform", out RectTransform
+					rowInstance) && mods != null && index >= 0 && index < mods.Count &&
 					!string.IsNullOrEmpty(id = mods[index]?.staticID) && rowInstance.
 					TryGetComponent(out HierarchyReferences hr) && resultsByMod.TryGetValue(id,
 					out ModVersionCheckResults data) && data != null)

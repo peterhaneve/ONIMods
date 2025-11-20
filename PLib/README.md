@@ -239,3 +239,16 @@ Register a mod for codex loading by using `PCodexManager.RegisterCreatures()` an
 Creating a new `PCodexManager` instance is required to use this method, but only one `PCodexManager` instance should be created per mod.
 
 The codex files will be loaded using the same structure as the base game: a `codex` folder must exist in the mod directory, with `Creatures` and `Plants` subfolders containing the codex data.
+
+## Forwarded Components
+
+PLib is built on forwarded components, classes inheriting from `PForwardedComponent` to allow communication across mods.
+Forwarded components must declare a `Version` that should be incremented each time any change is made.
+Each instance must `RegisterForForwarding` itself, either when constructed or when it is first used.
+
+PLib will collect the registered component instances; one and only one (arbitrarily selected) of the components with the most recent version will have its `Initialize` method executed.
+This is the ideal location to perform game patches with the latest version.
+All forwarded components will share the same shared data object from `GetSharedData` and `SetSharedData` which can be used to store state; it should only contain types visible to all mods (base game types and System types).
+Each component also has its own `InstanceData` field; this can be collected by the latest version with `GetInstanceData` by iterating all copies with `PRegistry.Instance.GetAllComponents`.
+
+Forwarded components can also request each copy to perform some work; calling `InvokeAllProcess` will call the `Process` method on each instance with the specified operation code.

@@ -19,8 +19,6 @@
 using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using PeterHan.PLib.Core;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -44,14 +42,17 @@ namespace PeterHan.PLib.UI {
 		#endregion
 
 		#region DetailsScreen
-		public static readonly IDetouredField<DetailsScreen, List<SideScreenRef>> SIDE_SCREENS = PDetours.DetourFieldLazy<DetailsScreen, List<SideScreenRef>>("sideScreens");
+		public delegate DetailsScreen.SidescreenTab GetTabOfType(DetailsScreen instance,
+			DetailsScreen.SidescreenTabTypes type);
 
-		private const string SS_FIELD = "sideScreenConfigContentBody";
-		public static readonly IDetouredField<DetailsScreen, GameObject> SS_CONTENT_BODY =
-			typeof(DetailsScreen).GetFieldSafe(SS_FIELD, false) != null ? PDetours.
-			DetourField<DetailsScreen, GameObject>(SS_FIELD) : null;
-		public static readonly MethodInfo SS_GET_TAB = typeof(DetailsScreen).GetMethodSafe(
-			nameof(DetailsScreen.GetTabOfType), false, PPatchTools.AnyArguments);
+		public static readonly IDetouredField<DetailsScreen, List<SideScreenRef>> SIDE_SCREENS =
+			PDetours.DetourFieldLazy<DetailsScreen, List<SideScreenRef>>("sideScreens");
+
+		public static readonly DetouredMethod<GetTabOfType> SS_GET_TAB = typeof(DetailsScreen).
+			DetourLazy<GetTabOfType>(nameof(DetailsScreen.GetTabOfType));
+		public static readonly IDetouredField<DetailsScreen.SidescreenTab, GameObject> SS_BODY_INSTANCE =
+			PDetours.DetourFieldLazy<DetailsScreen.SidescreenTab, GameObject>(
+			nameof(DetailsScreen.SidescreenTab.bodyInstance));
 		#endregion
 
 		#region KButton
