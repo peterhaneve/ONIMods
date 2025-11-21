@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2024 Peter Han
+ * Copyright 2025 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -26,7 +26,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
-using static ResearchTypes;
 
 namespace PeterHan.AIImprovements {
 	/// <summary>
@@ -35,6 +34,12 @@ namespace PeterHan.AIImprovements {
 	public sealed class AIImprovementsPatches : KMod.UserMod2 {
 		private static readonly IDetouredField<Constructable, Building> CONS_BUILDING =
 			PDetours.DetourFieldLazy<Constructable, Building>("building");
+
+		// TODO Remove when versions prior to U57-699077 no longer need to be supported
+		private delegate bool NavigatorStop(Navigator navigator);
+
+		private static readonly NavigatorStop NAVIGATOR_STOP = typeof(Navigator).
+			Detour<NavigatorStop>(nameof(Navigator.Stop));
 
 		/// <summary>
 		/// The chore type used for Build chores.
@@ -127,7 +132,7 @@ namespace PeterHan.AIImprovements {
 			var transform = instance.transform;
 			// Teleport to the new location
 			transform.SetPosition(Grid.CellToPosCBC(destination, Grid.SceneLayer.Move));
-			navigator.Stop();
+			NAVIGATOR_STOP.Invoke(navigator);
 			if (instance.gameObject.HasTag(GameTags.Incapacitated))
 				navigator.SetCurrentNavType(NavType.Floor);
 			instance.UpdateFalling();

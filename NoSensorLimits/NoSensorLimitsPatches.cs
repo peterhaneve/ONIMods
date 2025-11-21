@@ -118,8 +118,7 @@ namespace PeterHan.NoSensorLimits {
 			};
 			CAPACITY_TYPES = new[] {
 				typeof(CreatureDeliveryPoint),
-				// Added in U50-587362
-				PPatchTools.GetTypeSafe("BaggableCritterCapacityTracker", "Assembly-CSharp")
+				typeof(BaggableCritterCapacityTracker)
 			};
 		}
 

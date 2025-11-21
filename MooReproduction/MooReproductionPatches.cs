@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2024 Peter Han
+ * Copyright 2025 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -39,6 +39,11 @@ namespace PeterHan.MooReproduction {
 		/// A tag with the Gassy Moo's ID.
 		/// </summary>
 		private static readonly Tag MOO_TAG = new Tag(MooConfig.ID);
+
+		/// <summary>
+		/// A tag with the Husky Moo's ID.
+		/// </summary>
+		private static readonly Tag DIESEL_MOO_TAG = new Tag(DieselMooConfig.ID);
 
 		/// <summary>
 		/// The happy state, which has its effect modified depending on the source critter.
@@ -140,25 +145,10 @@ namespace PeterHan.MooReproduction {
 			internal static bool Prefix(AnimInterruptMonitor.Instance __instance,
 					HashedString anim) {
 				var go = __instance.gameObject;
-				return !anim.IsValid || anim != GROWUP_ANIM || go == null || go.PrefabID() !=
-					MOO_TAG;
-			}
-		}
-		
-		/// <summary>
-		/// Applied to EntityConfigManager to fix a bug where the baby roller snake would
-		/// sometimes be loaded before the real one, depending on what other mods might be
-		/// installed or the game version. EntityConfigOrder is private and cannot be used by
-		/// mods, so is EntityConfigManager.ConfigEntry
-		/// </summary>
-		[HarmonyPatch(typeof(EntityConfigManager), "GetSortOrder")]
-		public static class EntityConfigManager_GetSortOrder_Patch {
-			/// <summary>
-			/// Applied after GetSortOrder runs.
-			/// </summary>
-			internal static void Postfix(System.Type type, ref int __result) {
-				if (type == typeof(BabyMooConfig))
-					__result = 1;
+				if (!anim.IsValid || anim != GROWUP_ANIM || go == null)
+					return true;
+				var id = go.PrefabID();
+				return id != MOO_TAG && id != DIESEL_MOO_TAG;
 			}
 		}
 
@@ -187,11 +177,48 @@ namespace PeterHan.MooReproduction {
 						tame.ClearExitActions();
 						tame.ToggleEffect(smi => {
 							var obj = smi.master.gameObject;
-							return (obj != null && obj.PrefabID() == MOO_TAG) ? newEffect :
+							if (obj == null)
+								return happyTameEffect;
+							var id = obj.PrefabID();
+							return (id == MOO_TAG || id == DIESEL_MOO_TAG) ? newEffect :
 								happyTameEffect;
 						});
 					}
 				}
+			}
+		}
+
+		/// <summary>
+		/// Applied to DieselMooConfig to add a reproduction monitor to Husky Moos.
+		/// </summary>
+		[HarmonyPatch(typeof(DieselMooConfig), nameof(DieselMooConfig.CreatePrefab))]
+		public static class DieselMooConfig_CreatePrefab_Patch {
+			/// <summary>
+			/// Applied after CreatePrefab runs.
+			/// </summary>
+			internal static void Postfix(GameObject __result) {
+				// ExtendEntityToFertileCreature requires an egg prefab
+				var fm = __result.AddOrGetDef<LiveFertilityMonitor.Def>();
+				fm.initialBreedingWeights = new List<FertilityMonitor.BreedingChance>() {
+					new FertilityMonitor.BreedingChance() {
+						egg = BabyDieselMooConfig.ID_TAG,
+						weight = 1.0f
+					}
+				};
+				// Reduce to 2kg meat for adult
+				if (__result.TryGetComponent(out Butcherable butcherable))
+					butcherable.SetDrops(new Dictionary<string, float>() {
+						{ MeatConfig.ID, 2.0f }
+					});
+				// Hardcoded in CreateMoo, 6/10ths of the max age
+				fm.baseFertileCycles = 45.0f;
+				if (__result.TryGetComponent(out KPrefabID prefabID))
+					prefabID.prefabSpawnFn += (inst) => {
+						// Needs to be changed for vanilla
+						DiscoveredResources.Instance.Discover(BabyDieselMooConfig.ID_TAG,
+							DiscoveredResources.GetCategoryForTags(prefabID.Tags));
+					};
+				UpdateMooChores(__result, false);
 			}
 		}
 
@@ -221,7 +248,6 @@ namespace PeterHan.MooReproduction {
 				fm.baseFertileCycles = 45.0f;
 				if (__result.TryGetComponent(out KPrefabID prefabID))
 					prefabID.prefabSpawnFn += (inst) => {
-						// Needs to be changed for vanilla
 						DiscoveredResources.Instance.Discover(BabyMooConfig.ID_TAG,
 							DiscoveredResources.GetCategoryForTags(prefabID.Tags));
 					};
