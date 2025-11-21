@@ -64,6 +64,36 @@ namespace PeterHan.MooReproduction {
 			Detour<IdleAnimCallback>("CustomIdleAnim");
 
 		/// <summary>
+		/// Configures the Moo prefab to allow live birth.
+		/// </summary>
+		/// <param name="prefab">The creature prefab to configure.</param>
+		/// <param name="babyTag">The baby to spawn at birth.</param>
+		private static void AddMooReproduction(GameObject prefab, Tag babyTag) {
+			// ExtendEntityToFertileCreature requires an egg prefab
+			var fm = prefab.AddOrGetDef<LiveFertilityMonitor.Def>();
+			fm.initialBreedingWeights = new List<FertilityMonitor.BreedingChance>() {
+				new FertilityMonitor.BreedingChance() {
+					egg = babyTag,
+					weight = 1.0f
+				}
+			};
+			// Reduce to 2kg meat for adult
+			if (prefab.TryGetComponent(out Butcherable butcherable))
+				butcherable.SetDrops(new Dictionary<string, float>() {
+					{ MeatConfig.ID, 2.0f }
+				});
+			// Hardcoded in CreateMoo, 6/10ths of the max age
+			fm.baseFertileCycles = 45.0f;
+			if (prefab.TryGetComponent(out KPrefabID prefabID))
+				prefabID.prefabSpawnFn += (inst) => {
+					// Needs to be changed for vanilla
+					DiscoveredResources.Instance.Discover(babyTag,
+						DiscoveredResources.GetCategoryForTags(prefabID.Tags));
+				};
+			UpdateMooChores(prefab, false);
+		}
+
+		/// <summary>
 		/// Disables Mooteor showers if the option is set.
 		/// </summary>
 		[PLibMethod(RunAt.AfterDbInit)]
@@ -197,28 +227,7 @@ namespace PeterHan.MooReproduction {
 			/// Applied after CreatePrefab runs.
 			/// </summary>
 			internal static void Postfix(GameObject __result) {
-				// ExtendEntityToFertileCreature requires an egg prefab
-				var fm = __result.AddOrGetDef<LiveFertilityMonitor.Def>();
-				fm.initialBreedingWeights = new List<FertilityMonitor.BreedingChance>() {
-					new FertilityMonitor.BreedingChance() {
-						egg = BabyDieselMooConfig.ID_TAG,
-						weight = 1.0f
-					}
-				};
-				// Reduce to 2kg meat for adult
-				if (__result.TryGetComponent(out Butcherable butcherable))
-					butcherable.SetDrops(new Dictionary<string, float>() {
-						{ MeatConfig.ID, 2.0f }
-					});
-				// Hardcoded in CreateMoo, 6/10ths of the max age
-				fm.baseFertileCycles = 45.0f;
-				if (__result.TryGetComponent(out KPrefabID prefabID))
-					prefabID.prefabSpawnFn += (inst) => {
-						// Needs to be changed for vanilla
-						DiscoveredResources.Instance.Discover(BabyDieselMooConfig.ID_TAG,
-							DiscoveredResources.GetCategoryForTags(prefabID.Tags));
-					};
-				UpdateMooChores(__result, false);
+				AddMooReproduction(__result, BabyDieselMooConfig.ID_TAG);
 			}
 		}
 
@@ -231,27 +240,7 @@ namespace PeterHan.MooReproduction {
 			/// Applied after CreatePrefab runs.
 			/// </summary>
 			internal static void Postfix(GameObject __result) {
-				// ExtendEntityToFertileCreature requires an egg prefab
-				var fm = __result.AddOrGetDef<LiveFertilityMonitor.Def>();
-				fm.initialBreedingWeights = new List<FertilityMonitor.BreedingChance>() {
-					new FertilityMonitor.BreedingChance() {
-						egg = BabyMooConfig.ID_TAG,
-						weight = 1.0f
-					}
-				};
-				// Reduce to 2kg meat for adult
-				if (__result.TryGetComponent(out Butcherable butcherable))
-					butcherable.SetDrops(new Dictionary<string, float>() {
-						{ MeatConfig.ID, 2.0f }
-					});
-				// Hardcoded in CreateMoo, 6/10ths of the max age
-				fm.baseFertileCycles = 45.0f;
-				if (__result.TryGetComponent(out KPrefabID prefabID))
-					prefabID.prefabSpawnFn += (inst) => {
-						DiscoveredResources.Instance.Discover(BabyMooConfig.ID_TAG,
-							DiscoveredResources.GetCategoryForTags(prefabID.Tags));
-					};
-				UpdateMooChores(__result, false);
+				AddMooReproduction(__result, BabyMooConfig.ID_TAG);
 			}
 		}
 	}

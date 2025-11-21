@@ -1,8 +1,8 @@
 # Peter Han&#39;s Mods for Oxygen Not Included
 
-Last tested on game version: **U55-663500**
+Last tested on game version: **U57-700386**
 
-**No support** for Public Testing branches, including the rolled back Legacy Vanilla (CS-469300).
+**No support** for Public Testing branches.
 
 Steam Workshop: https://steamcommunity.com/profiles/76561198025154321/myworkshopfiles/?appid=457140
 

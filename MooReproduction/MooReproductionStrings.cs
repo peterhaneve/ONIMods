@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2024 Peter Han
+ * Copyright 2025 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -31,6 +31,14 @@ namespace PeterHan.MooReproduction {
 						public static LocString NAME = STRINGS.UI.FormatAsLink("Gassy Moolet", "MOO");
 
 						public static LocString DESC = "A cute little Gassy Moolet.\n\nOne day it will grow into an adult " + STRINGS.UI.FormatAsLink("Gassy Moo", "MOO") + ".";
+					}
+				}
+
+				public static class DIESELMOO {
+					public static class BABY {
+						public static LocString NAME = STRINGS.UI.FormatAsLink("Husky Moolet", "DIESELMOO");
+
+						public static LocString DESC = "A cute little Husky Moolet.\n\nOne day it will grow into an adult " + STRINGS.UI.FormatAsLink("Husky Moo", "DIESELMOO") + ".";
 					}
 				}
 			}
