@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2024 Peter Han
+ * Copyright 2025 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -553,10 +553,14 @@ namespace PeterHan.StockBugFix {
 
 	/// <summary>
 	/// Applied to FuelTank's property setter to properly update the chore when its
-	/// capacity is changed.
+	/// capacity is changed. This issue was fixed in Spaced Out as of U57, so disable it there.
 	/// </summary>
 	[HarmonyPatch]
 	public static class FuelTank_Set_UserMaxCapacity_Patch {
+		internal static bool Prepare() {
+			 return !DlcManager.FeatureClusterSpaceEnabled();
+		}
+
 		/// <summary>
 		/// Determines the target method to patch.
 		/// </summary>
@@ -599,10 +603,14 @@ namespace PeterHan.StockBugFix {
 
 	/// <summary>
 	/// Applied to OxidizerTank's property setter to properly update the chore when its
-	/// capacity is changed.
+	/// capacity is changed. This issue was fixed in Spaced Out as of U57, so disable it there.
 	/// </summary>
 	[HarmonyPatch]
 	public static class OxidizerTank_Set_UserMaxCapacity_Patch {
+		internal static bool Prepare() {
+			 return !DlcManager.FeatureClusterSpaceEnabled();
+		}
+
 		/// <summary>
 		/// Determines the target method to patch.
 		/// </summary>
