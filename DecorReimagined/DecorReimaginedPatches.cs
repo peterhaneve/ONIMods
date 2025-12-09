@@ -28,6 +28,8 @@ using PeterHan.PLib.PatchManager;
 using ReimaginationTeam.Reimagination;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Reflection.Emit;
 using UnityEngine;
 
 namespace ReimaginationTeam.DecorRework {
@@ -72,29 +74,9 @@ namespace ReimaginationTeam.DecorRework {
 				Icon = "art_underground"
 			}.AddAchievement();
 			// Moved to avoid breaking localization
-			PatchParks();
 			PatchRecBuildings();
 			SleepChoreType = Db.Get().ChoreTypes.Sleep;
 			PUtil.LogDebug("Initialized decor effects");
-		}
-
-		/// <summary>
-		/// Counts the number of growing, wild plants in a room.
-		/// </summary>
-		/// <param name="room">The room to check.</param>
-		/// <returns>The number of wild, living (not stifled/dead) plants in that room.</returns>
-		private static int CountValidPlants(Room room) {
-			int wildPlants = 0;
-			if (room != null)
-				foreach (var plant in room.cavity.plants)
-					// Plant must not be wilted
-					if (plant != null && !plant.HasTag(GameTags.PlantBranch) && ((plant.
-							TryGetComponent(out ReceptacleMonitor farm) && !farm.Replanted) ||
-							plant.TryGetComponent(out BasicForagePlantPlanted _)) &&
-							(!plant.TryGetComponent(out WiltCondition wilting) ||
-							!wilting.IsWilting()))
-						wildPlants++;
-			return wildPlants;
 		}
 
 		/// <summary>
@@ -109,18 +91,6 @@ namespace ReimaginationTeam.DecorRework {
 				operational.IsFunctional);
 		}
 		
-		/// <summary>
-		/// Patches the park and nature reserve to require living plants.
-		/// </summary>
-		private static void PatchParks() {
-			RoomConstraints.WILDPLANT = CREATE_ROOM_CONSTRAINT.Invoke(null, room =>
-				CountValidPlants(room) >= 2, 1, STRINGS.ROOMS.CRITERIA.WILDPLANT.NAME, STRINGS.
-				ROOMS.CRITERIA.WILDPLANT.DESCRIPTION);
-			RoomConstraints.WILDPLANTS = CREATE_ROOM_CONSTRAINT.Invoke(null, room =>
-				CountValidPlants(room) >= 4, 1, STRINGS.ROOMS.CRITERIA.WILDPLANTS.NAME,
-				STRINGS.ROOMS.CRITERIA.WILDPLANTS.DESCRIPTION);
-		}
-
 		/// <summary>
 		/// Patches the recreation buildings constraint (for great hall and rec room) to
 		/// require that the building actually be functional. It can be disabled by automation,
@@ -153,6 +123,7 @@ namespace ReimaginationTeam.DecorRework {
 			new POptions().RegisterOptions(this, typeof(DecorReimaginedOptions));
 			new PPatchManager(harmony).RegisterPatchClass(typeof(DecorReimaginedPatches));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
+			PatchParks(harmony);
 		}
 
 		/// <summary>
@@ -553,5 +524,74 @@ namespace ReimaginationTeam.DecorRework {
 				}
 			}
 		}
+
+		private static MethodBase wildplantFunction1;
+		private static MethodBase wildplantFunction2;
+		/// <summary>
+		/// Patches the park and nature reserve to require living plants.
+		/// </summary>
+		private static void PatchParks(Harmony harmony) {
+			// The RoomConstraints.WILDPLANT(S) fields initializers use delegates, which are functions
+			// in an internal inner class with names that change over time. Find them by analyzing
+			// the static constructor. As there is no(?) way to iterate IL of a function using Harmony
+			// or C# itself, use a transpiler that will find the functions and will not actually
+			// change the static constructor.
+			harmony.Patch( AccessTools.Constructor(typeof(RoomConstraints), searchForStatic: true),
+			    transpiler: new HarmonyMethod( typeof( DecorReimaginedPatches ).GetMethod("FindWildplantFunctions")));
+			if( wildplantFunction1 != null && wildplantFunction2 != null )
+			{
+				harmony.Patch( wildplantFunction1, transpiler: new HarmonyMethod(
+				    typeof( DecorReimaginedPatches ).GetMethod("WildplantFunctionTranspiler")));
+				harmony.Patch( wildplantFunction2, transpiler: new HarmonyMethod(
+				    typeof( DecorReimaginedPatches ).GetMethod("WildplantFunctionTranspiler")));
+			}
+			else
+				PUtil.LogWarning("Unable to find park wildplant functions");
+		}
+
+		public static IEnumerable<CodeInstruction> FindWildplantFunctions(IEnumerable<CodeInstruction> body) {
+			MethodInfo lastFunction = null;
+			foreach( CodeInstruction instr in body ) {
+				//Debug.Log("T:" + instr.opcode + "::" + (instr.operand != null ? instr.operand.ToString() : instr.operand));
+				if( instr.opcode == OpCodes.Ldftn )
+					lastFunction = (MethodInfo)instr.operand;
+				if( instr.opcode == OpCodes.Stsfld && instr.operand.ToString() == "RoomConstraints+Constraint WILDPLANT")
+					wildplantFunction1 = lastFunction;
+				if( instr.opcode == OpCodes.Stsfld && instr.operand.ToString() == "RoomConstraints+Constraint WILDPLANTS")
+					wildplantFunction2 = lastFunction;
+				yield return instr;
+			}
+		}
+
+		public static IEnumerable<CodeInstruction> WildplantFunctionTranspiler(IEnumerable<CodeInstruction> body) {
+			var codes = new List<CodeInstruction>(body);
+			bool found = false;
+			for( int i = 0; i < codes.Count; ++i ) {
+				//Debug.Log("T:" + i + ":" + codes[i].opcode + "::" + (codes[i].operand != null ? codes[i].operand.ToString() : codes[i].operand));
+				// The function has code:
+				// if (plant != null && !plant.HasTag(GameTags.PlantBranch))
+				// Extend to:
+				// if (plant != null && !plant.HasTag(GameTags.PlantBranch) && !IsPlantWilting(plant))
+				if( codes[i].IsLdloc()
+				    && i + 3 < codes.Count
+				    && codes[i+1].opcode == OpCodes.Ldsfld && codes[i+1].operand.ToString() == "Tag PlantBranch"
+				    && codes[i+2].opcode == OpCodes.Callvirt && codes[i+2].operand.ToString() == "Boolean HasTag(Tag)"
+				    && codes[i+3].opcode == OpCodes.Brtrue_S) {
+					codes.Insert(i+4, codes[i].Clone());
+					codes.Insert(i+5, new CodeInstruction( OpCodes.Call, typeof( DecorReimaginedPatches ).GetMethod("IsPlantWilting")));
+					codes.Insert(i+6, codes[i+3].Clone());
+					found = true;
+					break;
+				}
+			}
+			if(!found)
+				PUtil.LogWarning("Unable to patch park wildplant function");
+			return codes;
+		}
+
+		public static bool IsPlantWilting(KPrefabID plant) {
+			return plant.TryGetComponent(out WiltCondition wilting) && wilting.IsWilting();
+		}
+
 	}
 }
