@@ -57,7 +57,7 @@ namespace PeterHan.ForbidItems {
 			}
 		}
 
-		protected override void OnCleanUp() {
+		public override void OnCleanUp() {
 			base.OnCleanUp();
 			Unsubscribe((int)GameHashes.RefreshUserMenu);
 			Unsubscribe((int)GameHashes.Absorb);
@@ -67,7 +67,7 @@ namespace PeterHan.ForbidItems {
 				forbiddenStatus = selectable.RemoveStatusItem(forbiddenStatus);
 		}
 
-		protected override void OnSpawn() {
+		public override void OnSpawn() {
 			base.OnSpawn();
 			Subscribe((int)GameHashes.TagsChanged, OnTagsChanged);
 			Subscribe((int)GameHashes.Absorb, OnAbsorb);

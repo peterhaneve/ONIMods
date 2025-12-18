@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2024 Peter Han
+ * Copyright 2025 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -38,6 +38,7 @@ namespace PeterHan.FoodTooltip {
 			PUtil.LogDebug("Destroying FoodRecipeCache");
 #endif
 			FoodRecipeCache.DestroyInstance();
+			InfoScreenRefresher.Instance = null;
 		}
 
 		/// <summary>
@@ -112,7 +113,7 @@ namespace PeterHan.FoodTooltip {
 			/// Applied after OnPrefabInit runs.
 			/// </summary>
 			internal static void Postfix(SimpleInfoScreen __instance) {
-				__instance.gameObject.AddOrGet<InfoScreenRefresher>();
+				InfoScreenRefresher.Instance = __instance.gameObject.AddOrGet<InfoScreenRefresher>();
 			}
 		}
 
@@ -126,9 +127,9 @@ namespace PeterHan.FoodTooltip {
 			/// Applied after OnSelectTarget runs.
 			/// </summary>
 			internal static void Postfix(SimpleInfoScreen __instance, GameObject target) {
-				if (__instance != null && __instance.TryGetComponent(
-						out InfoScreenRefresher rf))
-					rf.OnSelectTarget(target);
+				var inst = InfoScreenRefresher.Instance;
+				if (__instance != null && inst != null)
+					inst.OnSelectTarget(target);
 			}
 		}
 
@@ -141,9 +142,9 @@ namespace PeterHan.FoodTooltip {
 			/// Applied after OnDeselectTarget runs.
 			/// </summary>
 			internal static void Prefix(SimpleInfoScreen __instance, GameObject target) {
-				if (__instance != null && __instance.TryGetComponent(
-						out InfoScreenRefresher rf))
-					rf.OnDeselectTarget(target);
+				var inst = InfoScreenRefresher.Instance;
+				if (__instance != null && inst != null)
+					inst.OnDeselectTarget(target);
 			}
 		}
 	}

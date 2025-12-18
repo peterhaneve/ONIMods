@@ -32,6 +32,11 @@ namespace PeterHan.ForbidItems {
 		}
 
 		public static class UI {
+			public static class ALLOW_FORBIDDEN_SIDE_SCREEN {
+				public static LocString FORBIDDEN = "Allow Forbidden Items";
+				public static LocString FORBIDDEN_TOOLTIP = "Allow the use of forbidden items";
+			}
+
 			public static class USERMENUACTIONS {
 				public static class FORBIDITEM {
 					public static LocString NAME = "Forbid Item";

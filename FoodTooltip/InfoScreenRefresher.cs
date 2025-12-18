@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2024 Peter Han
+ * Copyright 2025 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -27,6 +27,8 @@ namespace PeterHan.FoodTooltip {
 	/// </summary>
 	[SkipSaveFileSerialization]
 	internal sealed class InfoScreenRefresher : KMonoBehaviour {
+		internal static InfoScreenRefresher Instance;
+
 		private static readonly ICollection<string> EFFECTS = new HashSet<string>() {
 			"Happy", "Neutral", "Glum", "Miserable", "FarmTinker"
 		};
@@ -46,8 +48,20 @@ namespace PeterHan.FoodTooltip {
 		private void EffectRefresh(object data) {
 			var di = DetailsScreen.Instance;
 			// Effect IDs are hard coded in HappinessMonitor and Tinkerable
-			if (data is Effect effect && EFFECTS.Contains(effect.Id) && infoScreen != null &&
-					di != null && di.isActiveAndEnabled && di.target != null)
+			if (data is Effect effect && EFFECTS.Contains(effect.Id) && di != null &&
+					di.isActiveAndEnabled && di.target != null)
+				StartCoroutine(RefreshInfoScreenLater());
+		}
+
+		/// <summary>
+		/// Refreshes the information screen the frame after effects are applied to let the
+		/// base game process all of the changes they cause.
+		/// </summary>
+		private System.Collections.IEnumerator RefreshInfoScreenLater() {
+			yield return null;
+			var di = DetailsScreen.Instance;
+			// Effect IDs are hard coded in HappinessMonitor and Tinkerable
+			if (infoScreen != null && di != null && di.isActiveAndEnabled && di.target != null)
 				infoScreen.RefreshInfoScreen(true);
 		}
 

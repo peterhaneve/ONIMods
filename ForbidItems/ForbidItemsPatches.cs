@@ -18,8 +18,9 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using PeterHan.PLib.PatchManager;
 using PeterHan.PLib.Database;
+using PeterHan.PLib.PatchManager;
+using System;
 using UnityEngine;
 
 namespace PeterHan.ForbidItems {
@@ -38,6 +39,11 @@ namespace PeterHan.ForbidItems {
 			ForbiddenStatus = Db.Get().MiscStatusItems.Add(new StatusItem(Forbidden.Name,
 				"MISC", "status_item_building_disabled", StatusItem.IconType.Custom,
 				NotificationType.Neutral, false, OverlayModes.None.ID));
+		}
+		
+		[PLibMethod(RunAt.OnEndGame)]
+		internal static void OnEndGame() {
+			AllowPrefabID.Cleanup();
 		}
 
 		public override void OnLoad(Harmony harmony) {
@@ -58,9 +64,11 @@ namespace PeterHan.ForbidItems {
 			/// Applied after CanReach runs.
 			/// </summary>
 			[HarmonyPriority(Priority.Low)]
-			internal static void Postfix(IApproachable approachable, ref bool __result) {
+			internal static void Postfix(ChoreConsumerState ___consumerState,
+					IApproachable approachable, ref bool __result) {
 				if (__result && approachable is Pickupable pickupable && pickupable != null)
-					__result = !pickupable.KPrefabID.HasTag(Forbidden);
+					__result = ___consumerState.prefabid.HasTag(AllowForbiddenItems.
+						AllowForbiddenUse) || !pickupable.KPrefabID.HasTag(Forbidden);
 			}
 		}
 
@@ -92,11 +100,23 @@ namespace PeterHan.ForbidItems {
 		}
 
 		/// <summary>
+		/// Extracts the original body of FetchableMonitor.IsFetchable before the patch is added.
+		/// </summary>
+		[HarmonyPatch]
+		public static class IsFetchableOriginal {
+			[HarmonyReversePatch]
+			[HarmonyPatch(typeof(FetchableMonitor.Instance), nameof(FetchableMonitor.Instance.
+				IsFetchable))]
+			public static bool IsFetchable(FetchableMonitor.Instance instance) =>
+				throw new NotImplementedException("Reverse patch stub");
+		}
+
+		/// <summary>
 		/// Applied to FetchableMonitor.Instance to make forbidden items unfetchable.
 		/// </summary>
 		[HarmonyPatch(typeof(FetchableMonitor.Instance), nameof(FetchableMonitor.Instance.
 			IsFetchable))]
-		public static class FetchableMonitor_IsFetchable_Patch {
+		public static class FetchableMonitor_Instance_IsFetchable_Patch {
 			/// <summary>
 			/// Applied after IsFetchable runs.
 			/// </summary>
@@ -109,8 +129,24 @@ namespace PeterHan.ForbidItems {
 		}
 
 		/// <summary>
+		/// Applied to SolidTransferArmConfig to add a checkbox for forbidden item use.
+		/// </summary>
+		[HarmonyPatch(typeof(SolidTransferArmConfig), nameof(SolidTransferArmConfig.
+			ConfigureBuildingTemplate))]
+		public static class SolidTransferArmConfig_ConfigureBuildingTemplate_Patch {
+			/// <summary>
+			/// Applied after ConfigureBuildingTemplate runs. The prefab needs the component
+			/// for it to load/save properly!
+			/// </summary>
+			internal static void Postfix(GameObject go) {
+				go.AddOrGet<AllowForbiddenItems>();
+				go.AddOrGet<AllowPrefabID>();
+			}
+		}
+
+		/// <summary>
 		/// Applied to Pickupable to ban collection of forbidden items by Auto-Sweepers.
-		/// Auto-Sweepers do not check if the item is actually fetchable.
+		/// Auto-Sweepers now properly check if the item is actually fetchable!
 		/// </summary>
 		[HarmonyPatch(typeof(Pickupable), "CouldBePickedUpCommon", typeof(int))]
 		public static class Pickupable_CouldBePickedUpCommon_Patch {
@@ -118,9 +154,32 @@ namespace PeterHan.ForbidItems {
 			/// Applied after CouldBePickedUpCommon runs.
 			/// </summary>
 			[HarmonyPriority(Priority.Low)]
-			internal static void Postfix(Pickupable __instance, ref bool __result) {
+			internal static void Postfix(Pickupable __instance, int carrierID,
+					ref bool __result) {
 				if (__result)
-					__result = !__instance.KPrefabID.HasTag(Forbidden);
+					__result = !__instance.KPrefabID.HasTag(Forbidden) ||
+						AllowPrefabID.CanUseForbidden(carrierID);
+			}
+		}
+
+		/// <summary>
+		/// Applied to Pickupable to ban collection of forbidden items by Auto-Sweepers.
+		/// Auto-Sweepers now properly check if the item is actually fetchable!
+		/// </summary>
+		[HarmonyPatch(typeof(Pickupable), nameof(Pickupable.CouldBePickedUpByTransferArm),
+			typeof(int))]
+		public static class Pickupable_CouldBePickedUpByTransferArm_Patch {
+			/// <summary>
+			/// Applied before CouldBePickedUpByTransferArm runs.
+			/// </summary>
+			[HarmonyPriority(Priority.Low)]
+			internal static bool Prefix(Pickupable __instance, int carrierID,
+					ref bool __result) {
+				var fm = __instance.fetchable_monitor;
+				__result = __instance.CouldBePickedUpCommon(carrierID) && (fm == null ||
+					(AllowPrefabID.CanUseForbidden(carrierID) ? IsFetchableOriginal.
+					IsFetchable(fm) : fm.IsFetchable()));
+				return false;
 			}
 		}
 	}
