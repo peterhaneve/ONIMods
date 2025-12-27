@@ -22,7 +22,7 @@ namespace PeterHan.MooReproduction {
 	/// <summary>
 	/// A baby Husky Moo entity that uses a rescaled sprite from the regular Diesel Moo.
 	/// </summary>
-	[EntityConfigOrder(2)]
+	[EntityConfigOrder(3)]
 	public sealed class BabyDieselMooConfig : IEntityConfig, IHasDlcRestrictions {
 		public const string ID = "DieselMooBaby";
 

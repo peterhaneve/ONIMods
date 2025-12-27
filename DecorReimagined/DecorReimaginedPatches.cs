@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2024 Peter Han
+ * Copyright 2025 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -54,6 +54,16 @@ namespace ReimaginationTeam.DecorRework {
 		/// The options for Decor Reimagined.
 		/// </summary>
 		internal static DecorReimaginedOptions Options { get; private set; }
+		
+		/// <summary>
+		/// Patches room constraints (this is an acceptable time, Localization is initialized)
+		/// </summary>
+		[PLibMethod(RunAt.BeforeDbInit)]
+		internal static void PatchRoomConstraints() {
+			PatchParks();
+			PatchRecBuildings();
+			PUtil.LogDebug("Patched parks and rec buildings");
+		}
 
 		/// <summary>
 		/// Applies the new decor levels.
@@ -71,9 +81,6 @@ namespace ReimaginationTeam.DecorRework {
 				},
 				Icon = "art_underground"
 			}.AddAchievement();
-			// Moved to avoid breaking localization
-			PatchParks();
-			PatchRecBuildings();
 			SleepChoreType = Db.Get().ChoreTypes.Sleep;
 			PUtil.LogDebug("Initialized decor effects");
 		}

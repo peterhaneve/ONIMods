@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Decor Reimagined</AssemblyTitle>
-    <FileVersion>4.20.0.0</FileVersion>
+    <FileVersion>4.21.0.0</FileVersion>
     <RootNamespace>ReimaginationTeam.DecorRework</RootNamespace>
     <Description>Reworks decor, making an attractive colony a better colony.</Description>
     <AssemblyVersion>4.1.0.0</AssemblyVersion>
