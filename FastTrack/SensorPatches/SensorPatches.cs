@@ -17,110 +17,15 @@
  */
 
 using HarmonyLib;
-using Klei.AI;
-using UnityEngine;
+using PeterHan.PLib.Core;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Reflection.Emit;
+using System.Threading;
+
+using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.SensorPatches {
-	/// <summary>
-	/// Patches applied to optimize Duplicant Sensors which are quite slow and run every frame.
-	/// ToiletSensor and AssignableReachabilitySensor are very cheap so no big deal
-	/// IdleCellSensor already only runs if the Duplicant has the idle tag
-	/// Anything using PathFinder.RunQuery (idle cell, safe cell) has to be foreground as
-	///   those use shared/static path grid state
-	/// </summary>
-	public static class SensorPatches {
-		/// <summary>
-		/// Compatibility for Rest for the Weary, allow mingle cell sensor during
-		/// Finish Tasks time.
-		/// </summary>
-		private static ScheduleBlockType finishTasks;
-
-		/// <summary>
-		/// Stores the schedule block type used for recreation chores.
-		/// </summary>
-		private static ScheduleBlockType recreation;
-
-		/// <summary>
-		/// Initializes after the Db is loaded.
-		/// </summary>
-		internal static void Init() {
-			finishTasks = Db.Get().ScheduleBlockTypes.TryGet("FinishTask");
-			recreation = Db.Get().ScheduleBlockTypes.Recreation;
-		}
-
-		/// <summary>
-		/// Removes the BalloonStandCellSensor if the Duplicant is not a balloon artist.
-		/// </summary>
-		/// <param name="go">The Duplicant to check.</param>
-		internal static void RemoveBalloonArtistSensor(GameObject go) {
-			if (go.TryGetComponent(out Traits traits) && !traits.HasTrait("BalloonArtist") &&
-					go.TryGetComponent(out Sensors sensors))
-				// Destroy the sensor if not a balloon artist
-				sensors.sensors.RemoveAll((sensor) => sensor is BalloonStandCellSensor);
-		}
-
-		/// <summary>
-		/// Applied to BalloonStandCellSensor to only look for a cell during recreation time.
-		/// </summary>
-		[HarmonyPatch(typeof(BalloonStandCellSensor), nameof(BalloonStandCellSensor.Update))]
-		internal static class BalloonStandCellSensor_Update_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.SensorOpts;
-
-			/// <summary>
-			/// Applied before Update runs.
-			/// </summary>
-			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix(MinionBrain ___brain) {
-				// A slim bit slow, but only run 1-2 times a frame, and way faster than what
-				// the sensor does by default
-				return ___brain != null && recreation != null && (!___brain.TryGetComponent(
-					out Schedulable schedulable) || ScheduleManager.Instance.IsAllowed(
-					schedulable, recreation));
-			}
-		}
-
-		/// <summary>
-		/// Applied to MingleCellSensor to only look for a mingle cell during recreation time.
-		/// </summary>
-		[HarmonyPatch(typeof(MingleCellSensor), nameof(MingleCellSensor.Update))]
-		internal static class MingleCellSensor_Update_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.SensorOpts;
-
-			/// <summary>
-			/// Applied before Update runs.
-			/// </summary>
-			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix(MinionBrain ___brain) {
-				var inst = ScheduleManager.Instance;
-				bool run = ___brain != null;
-				if (run && ___brain.TryGetComponent(out Schedulable schedulable) && inst !=
-						null && recreation != null) {
-					var block = schedulable.GetSchedule().GetCurrentScheduleBlock();
-					run = block.IsAllowed(recreation) || (finishTasks != null && block.
-						IsAllowed(finishTasks));
-				}
-				return run;
-			}
-		}
-	}
-
-	/// <summary>
-	/// Applied to PathProberSensor to shut it off unconditionally if pickup opts have been
-	/// moved to a background task.
-	/// </summary>
-	[HarmonyPatch(typeof(PathProberSensor), nameof(PathProberSensor.Update))]
-	public static class PathProberSensor_Update_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.PickupOpts;
-
-		/// <summary>
-		/// Applied before Update runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix() {
-			return false;
-		}
-	}
-
 	/// <summary>
 	/// Applied to PickupableSensor to shut it off unconditionally if pickup opts have been
 	/// moved to a background task.
@@ -134,6 +39,157 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Patch the Occupy family of methods in MinionGroupProber to trigger a reachability
+	/// update if the cell is freshly occupied.
+	/// </summary>
+	[HarmonyPatch]
+	public static class MinionGroupProber_Occupy_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
+
+		internal static IEnumerable<MethodBase> TargetMethods() {
+			const string occupy = nameof(MinionGroupProber.Occupy);
+			yield return typeof(MinionGroupProber).GetMethodSafe(occupy, false,
+				typeof(List<int>));
+			yield return typeof(MinionGroupProber).GetMethodSafe(occupy, false, typeof(int));
+		}
+
+		/// <summary>
+		/// Enqueues a dirty path grid cell, only if Interlocked.Increment returned 1 (which
+		/// means it was previously zero).
+		/// </summary>
+		/// <param name="value">The incremented value.</param>
+		private static void EnqueueIfOne(int value) {
+			if (value == 1)
+				FastGroupProber.Instance?.AddDirtyCell(value);
+		}
+
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+			var inc = typeof(Interlocked).GetMethodSafe(nameof(Interlocked.Increment), true,
+				typeof(int).MakeByRefType());
+			var target = typeof(MinionGroupProber_Occupy_Patch).GetMethodSafe(
+				nameof(EnqueueIfOne), true, typeof(int));
+			int state = 0;
+			foreach (var instr in instructions) {
+				var opcode = instr.opcode;
+				// Replace the pop after the call to Interlocked.Increment
+				if (opcode == OpCodes.Call && instr.operand is MethodBase method &&
+						method == inc)
+					state = 1;
+				if (opcode == OpCodes.Pop && state == 1) {
+					yield return new CodeInstruction(OpCodes.Call, target);
+					state = 2;
+				} else
+					yield return instr;
+			}
+			if (state == 2) {
+#if DEBUG
+				PUtil.LogDebug("Patched MinionGroupProber.Occupy");
+#endif
+			} else
+				PUtil.LogWarning("Unable to patch MinionGroupProber.Occupy");
+		}
+	}
+	
+	/// <summary>
+	/// Applied to MinionGroupProber to queue dirty path grid cells if cells are freshly
+	/// occupied.
+	/// </summary>
+	[HarmonyPatch(typeof(MinionGroupProber), nameof(MinionGroupProber.OccupyST))]
+	public static class MinionGroupProber_OccupyST_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
+
+		/// <summary>
+		/// Applied before OccupyST runs.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static bool Prefix(List<int> cells, List<int> ___cells) {
+			var fgp = FastGroupProber.Instance;
+			int n = cells.Count;
+			for (int i = 0; i < n; i++) {
+				int cell = cells[i];
+				if (0 == ___cells[cell]++ && fgp != null)
+					fgp.AddDirtyCell(cell);
+			}
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Patch the Vacate family of methods in MinionGroupProber to trigger a reachability
+	/// update if the cell is freshly vacated.
+	/// </summary>
+	[HarmonyPatch]
+	public static class MinionGroupProber_Vacate_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
+
+		internal static IEnumerable<MethodBase> TargetMethods() {
+			const string vacate = nameof(MinionGroupProber.Vacate);
+			yield return typeof(MinionGroupProber).GetMethodSafe(vacate, false,
+				typeof(List<int>));
+			yield return typeof(MinionGroupProber).GetMethodSafe(vacate, false, typeof(int));
+		}
+
+		/// <summary>
+		/// Enqueues a dirty path grid cell, only if Interlocked.Decrement returned 0.
+		/// </summary>
+		/// <param name="value">The incremented value.</param>
+		private static void EnqueueIfZero(int value) {
+			if (value == 0)
+				FastGroupProber.Instance?.AddDirtyCell(value);
+		}
+
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+			var dec = typeof(Interlocked).GetMethodSafe(nameof(Interlocked.Decrement), true,
+				typeof(int).MakeByRefType());
+			var target = typeof(MinionGroupProber_Vacate_Patch).GetMethodSafe(
+				nameof(EnqueueIfZero), true, typeof(int));
+			int state = 0;
+			foreach (var instr in instructions) {
+				var opcode = instr.opcode;
+				// Replace the pop after the call to Interlocked.Decrement
+				if (opcode == OpCodes.Call && instr.operand is MethodBase method &&
+						method == dec)
+					state = 1;
+				if (opcode == OpCodes.Pop && state == 1) {
+					yield return new CodeInstruction(OpCodes.Call, target);
+					state = 2;
+				} else
+					yield return instr;
+			}
+			if (state == 2) {
+#if DEBUG
+				PUtil.LogDebug("Patched MinionGroupProber.Vacate");
+#endif
+			} else
+				PUtil.LogWarning("Unable to patch MinionGroupProber.Vacate");
+		}
+	}
+	
+	/// <summary>
+	/// Applied to MinionGroupProber to queue dirty path grid cells if cells are freshly
+	/// vacated.
+	/// </summary>
+	[HarmonyPatch(typeof(MinionGroupProber), nameof(MinionGroupProber.VacateST))]
+	public static class MinionGroupProber_VacateST_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
+
+		/// <summary>
+		/// Applied before VacateST runs.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static bool Prefix(List<int> cells, List<int> ___cells) {
+			var fgp = FastGroupProber.Instance;
+			int n = cells.Count;
+			for (int i = 0; i < n; i++) {
+				int cell = cells[i];
+				if (0 == --___cells[cell] && fgp != null)
+					fgp.AddDirtyCell(cell);
+			}
 			return false;
 		}
 	}

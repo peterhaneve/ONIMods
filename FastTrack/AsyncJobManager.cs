@@ -83,7 +83,7 @@ namespace PeterHan.FastTrack {
 		private readonly Queue<IWork> workQueue;
 
 		internal AsyncJobManager() {
-			int n = FastTrackMod.CoreCount;
+			int n = CPUBudget.coreCount;
 			if (n < 1)
 				// Ensure at least one thread is created
 				n = 1;

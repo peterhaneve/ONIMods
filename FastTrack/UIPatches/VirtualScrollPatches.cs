@@ -139,7 +139,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			internal static void Prefix(ReceptacleSideScreen __instance,
 					ref VirtualScroll __state) {
-				var obj = __instance.requestObjectList;
+				var obj = __instance.requestObjectListContainerContent;
 				if (obj != null && obj.TryGetComponent(out VirtualScroll vs)) {
 					vs.OnBuild();
 					__state = vs;
@@ -152,7 +152,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// Applied after Initialize runs.
 			/// </summary>
 			internal static void Postfix(ReceptacleSideScreen __instance, VirtualScroll __state) {
-				var entryList = __instance.requestObjectList;
+				var entryList = __instance.requestObjectListContainerContent;
 				GameObject go;
 				if (__state != null)
 					__state.Rebuild();
@@ -188,11 +188,10 @@ namespace PeterHan.FastTrack.UIPatches {
 					__instance.hideUndiscoveredEntities;
 				var inst = DiscoveredResources.Instance;
 				var selected = __instance.selectedEntityToggle;
-				var obj = __instance.requestObjectList;
+				var obj = __instance.requestObjectListContainerContent;
 				var text = CACHED_BUILDER;
-				VirtualScroll vs = null;
-				if (obj != null)
-					obj.TryGetComponent(out vs);
+				if (obj == null || !obj.TryGetComponent(out VirtualScroll vs))
+					vs = null;
 				foreach (var pair in __instance.depositObjectMap) {
 					var key = pair.Key;
 					var display = pair.Value;
@@ -254,7 +253,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <param name="toggle">The toggle to modify.</param>
 			/// <param name="state">The state to apply.</param>
 			private static void SetImageToggleState(ReceptacleSideScreen instance,
-					KToggle toggle, ITState state) {
+					MultiToggle toggle, ITState state) {
 				if (toggle.TryGetComponent(out ImageToggleState its) && (initializing ||
 						state != its.currentState)) {
 					// SetState provides no feedback on whether the state actually changed

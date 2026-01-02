@@ -17,14 +17,8 @@
  */
 
 using HarmonyLib;
-using PeterHan.PLib.Core;
 using System;
-using System.Collections.Generic;
-using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using UnityEngine;
-
-using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.VisualPatches {
 	/// <summary>
@@ -41,98 +35,6 @@ namespace PeterHan.FastTrack.VisualPatches {
 			var go = __instance.gameObject;
 			if (go.TryGetComponent(out LightSymbolTracker _))
 				go.AddOrGet<SlowLightSymbolTracker>();
-		}
-	}
-
-	/// <summary>
-	/// Tracks the number of lighting rays/halos in any particular tile, and stops rendering
-	/// more once it exceeds a threshold.
-	/// </summary>
-	internal static class LightBufferManager {
-		/// <summary>
-		/// The maximum number of light rays rendered per tile.
-		/// </summary>
-		private const int MAX_RENDERED_PER_TILE = 4;
-
-		/// <summary>
-		/// The number of rays rendered in each cell.
-		/// </summary>
-		private static IDictionary<int, int> raysInCell;
-
-		/// <summary>
-		/// Cleans up the array to avoid leaking memory.
-		/// </summary>
-		internal static void Cleanup() {
-			raysInCell.Clear();
-		}
-
-		/// <summary>
-		/// Initializes the light buffer manager to the current grid size if necessary, and
-		/// otherwise clears all light sources to zero.
-		/// </summary>
-		internal static void Init() {
-			if (raysInCell == null)
-				raysInCell = new Dictionary<int, int>(128);
-			else
-				raysInCell.Clear();
-		}
-
-		/// <summary>
-		/// Checks to see if a light source ray should be rendered.
-		/// </summary>
-		/// <param name="light">The light to check.</param>
-		/// <returns>true to render the light source, or false to hide it.</returns>
-		internal static bool ShouldRender(Behaviour light) {
-			bool render = false;
-			// Was already null checked
-			int cell = Grid.PosToCell(light.transform.position);
-			if (Grid.IsValidCell(cell) && light.enabled) {
-				if (!raysInCell.TryGetValue(cell, out int count))
-					count = 0;
-				raysInCell[cell] = count + 1;
-				render = count < MAX_RENDERED_PER_TILE;
-			}
-			return render;
-		}
-	}
-
-	/// <summary>
-	/// Applied to LightBuffer to patch in checks to turn down the lights on big Shine Bug
-	/// farms.
-	/// </summary>
-	[HarmonyPatch(typeof(LightBuffer), nameof(LightBuffer.LateUpdate))]
-	public static class LightBuffer_LateUpdate_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.UnstackLights;
-
-		/// <summary>
-		/// Transpiles LateUpdate to insert the ShouldRender check.
-		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
-			var init = typeof(LightBufferManager).GetMethodSafe(nameof(LightBufferManager.
-				Init), true);
-			var target = typeof(Behaviour).GetPropertySafe<bool>(nameof(Behaviour.enabled),
-				false)?.GetGetMethod(true);
-			var replacement = typeof(LightBufferManager).GetMethodSafe(nameof(
-				LightBufferManager.ShouldRender), true, typeof(Behaviour));
-			if (init != null)
-				yield return new CodeInstruction(OpCodes.Call, init);
-			else
-				PUtil.LogWarning("Unable to find LightBufferManager.Init!");
-			if (target == null || replacement == null) {
-				PUtil.LogWarning("Unable to find Behaviour.enabled!");
-				foreach (var instr in instructions)
-					yield return instr;
-			} else {
-				foreach (var instr in instructions) {
-					if (instr.Is(OpCodes.Callvirt, target)) {
-						instr.operand = replacement;
-#if DEBUG
-						PUtil.LogDebug("Patched LightBuffer.LateUpdate");
-#endif
-					}
-					yield return instr;
-				}
-			}
 		}
 	}
 

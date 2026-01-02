@@ -49,9 +49,7 @@ namespace PeterHan.FastTrack {
 					public static LocString RADIATIONOPTS = "Radiation Tweaks";
 					public static LocString CONDUITOPTS = "Threaded Conduit Updates";
 
-					public static LocString THREATOVERCROWDING = "Critter Monitors";
 					public static LocString CRITTERCONSUMERS = "Optimize Eating";
-					public static LocString UNSTACKLIGHTS = "Unstack Lights";
 					public static LocString REDUCECRITTERIDLEMOVE = "Reduce Idle Movement";
 
 					public static LocString FASTATTRIBUTESMODE = "Attribute Leveling";
@@ -149,9 +147,7 @@ namespace PeterHan.FastTrack {
 					public static LocString RADIATIONOPTS = "Speeds up radiation calculations." + PERF_LOW;
 					public static LocString CONDUITOPTS = "Multi-threads some updates to liquid and gas conduits." + PERF_LOW;
 
-					public static LocString THREATOVERCROWDING = "Optimizes critter Threat and Overcrowding monitors.\n<i>May conflict with mods that add new critters</i>" + PERF_LOW;
 					public static LocString CRITTERCONSUMERS = "Optimize how Critters find objects to eat." + PERF_LOW;
-					public static LocString UNSTACKLIGHTS = "Reduces the visual effects shown when many light sources are stacked.\nIntended for ranching critters like Shine Bugs." + PERF_LOW;
 					public static LocString REDUCECRITTERIDLEMOVE = "Reduces amount of idle movement of critters that are currently not visible on the screen." + PERF_LOW;
 
 					public static LocString FASTATTRIBUTESMODE = "Optimize attribute leveling and work efficiency calculation." + PERF_MEDIUM;
@@ -166,7 +162,7 @@ namespace PeterHan.FastTrack {
 						Constants.BULLETSTRING + "All germs will be removed from pipes and buildings\n" +
 						"<i>Not compatible with mods: Diseases Restored, Diseases Expanded</i>" + PERF_MEDIUM;
 					public static LocString FASTREACHABILITY = "Only check items and chores for reachability when necessary." + PERF_MEDIUM;
-					public static LocString SENSOROPTS = "Only check for locations to Idle, Mingle, or Balloon Artist when necessary." + PERF_LOW;
+					public static LocString SENSOROPTS = "Only check for locations to Idle or Mingle when necessary." + PERF_LOW;
 					public static LocString REDUCEDUPLICANTIDLEMOVE = "Reduces amount of idle movement of duplicants that are currently not visible on the screen." + PERF_LOW;
 
 					public static LocString REDUCECOLONYTRACKING = "Reduces the update rate of Colony Diagnostics.\n<i>Some notifications may take longer to trigger</i>" + PERF_LOW;
@@ -189,7 +185,7 @@ namespace PeterHan.FastTrack {
 					public static LocString DISABLESOUND = "Completely disables <color=#FF0000>all</color> sound playback." + PERF_LOW;
 
 					public static LocString VERINWATERMARK = "Show the Fast Track version in the build watermark.\n\n<i>No performance impact</i>";
-					public static LocString CLUSTERMAPQUALITY = "Slightly reduce the graphics quality of the Spaced Out! Starmap\nin exchange for a significant performance boost." + PERF_HIGH;
+					public static LocString CLUSTERMAPQUALITY = "Slightly reduce the graphics quality of the Spaced Out! Starmap\nin exchange for a significant performance boost." + PERF_MEDIUM;
 					public static LocString CULLCONDUITS = "Hide conduits and wires inside solid walls." + PERF_LOW;
 					public static LocString ANIMOPTS = "Optimizes slow code in animation playback." + PERF_MEDIUM;
 					public static LocString NOPLACEREASING = "Disables the animation which appears when placing\nerrands like Dig or Mop." + PERF_LOW;

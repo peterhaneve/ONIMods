@@ -47,11 +47,6 @@ namespace PeterHan.FastTrack {
 		public const int MAX_TIMEOUT = 5000;
 
 		/// <summary>
-		/// The number of CPUs to use for the async job manager.
-		/// </summary>
-		internal static int CoreCount { get; private set; }
-
-		/// <summary>
 		/// Set to true when the game gets off its feet, and false while it is still loading.
 		/// </summary>
 		internal static bool GameRunning { get; private set; }
@@ -65,8 +60,6 @@ namespace PeterHan.FastTrack {
 			var options = FastTrackOptions.Instance;
 			if (options.BackgroundRoomRebuild)
 				GamePatches.BackgroundRoomProber.Init();
-			if (options.SensorOpts)
-				SensorPatches.SensorPatches.Init();
 			if (options.AnimOpts)
 				VisualPatches.KAnimLoopOptimizer.CreateInstance();
 			if (options.InfoCardOpts || options.CustomStringFormat)
@@ -149,8 +142,6 @@ namespace PeterHan.FastTrack {
 			ConduitPatches.ConduitFlowVisualizerPatches.Cleanup();
 			if (options.CachePaths)
 				PathPatches.PathCacher.Cleanup();
-			if (options.UnstackLights)
-				VisualPatches.LightBufferManager.Cleanup();
 			if (options.ReduceTileUpdates)
 				VisualPatches.PropertyTextureUpdater.DestroyInstance();
 			if (options.ConduitOpts)
@@ -170,11 +161,9 @@ namespace PeterHan.FastTrack {
 			}
 			if (options.MiscOpts)
 				GamePatches.GeyserConfigurator_FindType_Patch.Cleanup();
-			if (options.PickupOpts) {
-				GamePatches.SolidTransferArmUpdater.DestroyInstance();
+			if (options.PickupOpts)
 				// Avoid leaking Brains
 				PathPatches.PriorityBrainScheduler.Instance.updateFirst.Clear();
-			}
 			if (options.PickupOpts || options.FastUpdatePickups)
 				PathPatches.DeferredTriggers.DestroyInstance();
 			if (options.RadiationOpts && DlcManager.FeatureRadiationEnabled())
@@ -203,21 +192,12 @@ namespace PeterHan.FastTrack {
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			var options = FastTrackOptions.Instance;
-			int overrideCoreCount = TuningData<CPUBudget.Tuning>.Get().overrideCoreCount,
-				coreCount = UnityEngine.SystemInfo.processorCount;
 			PUtil.InitLibrary();
 			new PLocalization().Register();
 			LocString.CreateLocStringKeys(typeof(FastTrackStrings.UI));
 			new POptions().RegisterOptions(this, typeof(FastTrackOptions));
 			new PPatchManager(harmony).RegisterPatchClass(typeof(FastTrackMod));
 			new PVersionCheck().Register(this, new SteamVersionChecker());
-			if (overrideCoreCount <= 0 || overrideCoreCount >= coreCount)
-				CoreCount = Math.Min(8, coreCount);
-			else
-				CoreCount = overrideCoreCount;
-			// In case this goes in stock bug fix later
-			if (options.UnstackLights)
-				PRegistry.PutData("Bugs.StackedLights", true);
 			PRegistry.PutData("Bugs.MassStringsReadOnly", true);
 			if (options.MiscOpts) {
 				PRegistry.PutData("Bugs.ElementTagInDetailsScreen", true);
@@ -287,9 +267,6 @@ namespace PeterHan.FastTrack {
 					go.AddOrGet<GamePatches.AchievementPatches>();
 				if (options.RadiationOpts && DlcManager.FeatureRadiationEnabled())
 					go.AddOrGet<GamePatches.SlicedRadiationGridUpdater>();
-				// Requires the AJM to work
-				if (options.PickupOpts)
-					GamePatches.SolidTransferArmUpdater.CreateInstance();
 				if (options.ConduitOpts)
 					ConduitPatches.BackgroundConduitUpdater.CreateInstance();
 				// If debugging is on, start logging
@@ -298,8 +275,6 @@ namespace PeterHan.FastTrack {
 				inst.StartCoroutine(WaitForCleanLoad());
 			}
 			ConduitPatches.ConduitFlowVisualizerPatches.Init();
-			if (options.UnstackLights)
-				VisualPatches.LightBufferManager.Init();
 			VisualPatches.FullScreenDialogPatches.Init();
 #if DEBUG
 			Metrics.FastTrackProfiler.Begin();

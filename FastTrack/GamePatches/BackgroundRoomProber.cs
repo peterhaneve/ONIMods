@@ -17,6 +17,7 @@
  */
 
 using HarmonyLib;
+using PeterHan.FastTrack.CritterPatches;
 using PeterHan.PLib.Core;
 using System;
 using System.Collections.Concurrent;
@@ -93,6 +94,22 @@ namespace PeterHan.FastTrack.GamePatches {
 				if (prefabID != null)
 					prefabID.Trigger((int)GameHashes.UpdateRoom, room);
 			}
+		}
+		
+		/// <summary>
+		/// Used in multiple locations to obtain the overcrowding monitor for a critter
+		/// component quickly.
+		/// </summary>
+		/// <param name="critter">The critter to query. Must not be null.</param>
+		/// <param name="smi">The location to store the overcrowding monitor.</param>
+		/// <returns>true if the monitor was found, or false otherwise.</returns>
+		internal static bool TryGetOvercrowdingMonitor(KMonoBehaviour critter,
+				out OvercrowdingMonitor.Instance smi) {
+			OvercrowdingMonitor.Instance result = null;
+			bool found = critter.TryGetComponent(out StateMachineController smc) &&
+				(result = smc.GetSMI<OvercrowdingMonitor.Instance>()) != null;
+			smi = result;
+			return found;
 		}
 
 		/// <summary>
@@ -179,6 +196,11 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// The solid changes that are currently pending.
 		/// </summary>
 		private readonly ICollection<int> pendingSolidChanges;
+		
+		/// <summary>
+		/// Recycle room cavities if possible.
+		/// </summary>
+		private readonly Queue<CavityInfo> recycled;
 
 		/// <summary>
 		/// The critters which were occupying rooms that were destroyed.
@@ -230,6 +252,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			maxRoomSize = 128;
 			pendingDestroy = new HashSet<HandleVector<int>.Handle>();
 			pendingSolidChanges = new HashSet<int>();
+			recycled = new Queue<CavityInfo>();
 			releasedCritters = new ConcurrentQueue<KPrefabID>();
 			roomsChanged = new AutoResetEvent(false);
 			roomsReady = new AutoResetEvent(false);
@@ -249,7 +272,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		private void AddBuildingToRoom(int cell, HandleVector<int>.Handle cavityID) {
 			var cavity = cavityInfos.GetData(cavityID);
 			if (cavity != null) {
-				int cells = cavity.numCells;
+				int cells = cavity.NumCells;
 				if (cells > 0 && cells <= maxRoomSize) {
 					var go = Grid.Objects[cell, (int)ObjectLayer.Building];
 					bool scanPlants = false, scanBuildings = false, dirty = false;
@@ -342,15 +365,20 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="cell">The starting cell.</param>
 		private void CreateCavityFrom(int cell) {
 			var visited = visitedCells;
-			if (!RoomProber.CavityFloodFiller.IsWall(cell) && visited.Add(cell)) {
+			if (!RoomProber.IsCavityBoundary(cell) && visited.Add(cell)) {
 				int n = 0, minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue,
 					maxY = int.MinValue;
-				var cavity = new CavityInfo();
+				var cavity = (recycled.Count > 0) ? recycled.Dequeue() : new CavityInfo();
 				bool filled;
 				var targetCavity = cavityInfos.Allocate(cavity);
 				var queue = floodFilling;
+				var cells = cavity.cells;
+				cavity.dirty = true;
+				cavity.handle = targetCavity;
+				if (cells == null)
+					cavity.cells = cells = new List<int>(n);
 				do {
-					if (RoomProber.CavityFloodFiller.IsWall(cell))
+					if (RoomProber.IsCavityBoundary(cell))
 						// Walls and doors have no room
 						cavityForCell[cell].Clear();
 					else {
@@ -358,6 +386,7 @@ namespace PeterHan.FastTrack.GamePatches {
 							left = Grid.CellLeft(cell), right = Grid.CellRight(cell);
 						Grid.CellToXY(cell, out int x, out int y);
 						cavityForCell[cell] = targetCavity;
+						cells.Add(cell);
 						n++;
 						if (x < minX)
 							minX = x;
@@ -385,7 +414,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				cavity.minY = minY;
 				cavity.maxX = maxX;
 				cavity.maxY = maxY;
-				cavity.numCells = n;
+				cavity.occupancy.dirty = true;
 			}
 		}
 
@@ -394,9 +423,13 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// in it!
 		/// </summary>
 		/// <param name="cavity">The cavity that this room represents.</param>
+		/// <param name="room">The old room to use if available.</param>
 		/// <returns>The room created.</returns>
-		private Room CreateRoom(CavityInfo cavity) {
-			var room = new Room { cavity = cavity };
+		private Room CreateRoom(CavityInfo cavity, Room room = null) {
+			if (room == null)
+				room = new Room { cavity = cavity };
+			else
+				room.cavity = cavity;
 			cavity.room = room;
 			room.roomType = roomTypes.GetRoomType(room);
 			allRooms.Add(room);
@@ -412,6 +445,8 @@ namespace PeterHan.FastTrack.GamePatches {
 			if (room != null) {
 				Unassign(room, room.buildings);
 				Unassign(room, room.plants);
+				room.primary_buildings.Clear();
+				room.current_owners.Clear();
 				room.CleanUp();
 				allRooms.Remove(room);
 			}
@@ -424,6 +459,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				roomsReady.Reset();
 				disposed = true;
 				Instance = null;
+				recycled.Clear();
 			}
 		}
 
@@ -446,6 +482,24 @@ namespace PeterHan.FastTrack.GamePatches {
 				}
 			}
 			return cavity;
+		}
+
+		/// <summary>
+		/// Synchronously waits for one room update, then force updates all critters in rooms
+		/// to ensure the first Critter Sensor update uses good data.
+		/// </summary>
+		private void InitialUpdate() {
+			var creatures = Components.Brains.Items;
+			roomsReady.Reset();
+			roomsChanged.Set();
+			roomsReady.WaitOne(3000);
+			Postprocess();
+			int n = creatures.Count;
+			// To work around the Critter Sensor requiring critters to be added to the room
+			// on load, force update all overcrowding monitors now
+			for (int i = 0; i < n; i++)
+				if (TryGetOvercrowdingMonitor(creatures[i], out var smi))
+					OvercrowdingMonitor.UpdateState(smi, 0.0f);
 		}
 
 		public override void OnCleanUp() {
@@ -475,12 +529,11 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Post processes the results of the background room prober thread.
 		/// </summary>
 		private void Postprocess() {
-			OvercrowdingMonitor.Instance smi;
 			while (cellChanges.Count > 0) {
 				int cell = cellChanges.Dequeue();
 				ref var cavityID = ref cavityForCell[cell];
 				bool valid = cavityID.IsValid();
-				if (valid == RoomProber.CavityFloodFiller.IsWall(cell))
+				if (valid == RoomProber.IsCavityBoundary(cell))
 					// If a wall building like a mesh door was built but did not trigger a
 					// solid change update, then the tile will have a valid room on a wall
 					// building, set up a solid change
@@ -496,8 +549,20 @@ namespace PeterHan.FastTrack.GamePatches {
 			while (destroyed.TryDequeue(out var destroyedID))
 				if (destroyedID.IsValid() && alreadyDestroyed.Add(destroyedID)) {
 					var cavity = cavityInfos.GetData(destroyedID);
-					if (cavity != null)
+					if (cavity != null) {
 						DestroyRoom(cavity.room);
+						// Clean up room state
+						cavity.handle = HandleVector<int>.Handle.InvalidHandle;
+						cavity.room = null;
+						cavity.buildings.Clear();
+						cavity.eggs.Clear();
+						cavity.creatures.Clear();
+						cavity.fishes.Clear();
+						cavity.fish_eggs.Clear();
+						cavity.cells.Clear();
+						cavity.otherEntities.Clear();
+						recycled.Enqueue(cavity);
+					}
 					cavityInfos.Free(destroyedID);
 				}
 			alreadyDestroyed.Clear();
@@ -505,15 +570,15 @@ namespace PeterHan.FastTrack.GamePatches {
 				// No root canal found ;)
 				var cavityInfo = pair.Value;
 				if (cavityInfo.dirty) {
-					if (cavityInfo.numCells > 0 && cavityInfo.numCells <= maxRoomSize)
+					int cells = cavityInfo.NumCells;
+					if (cells > 0 && cells <= maxRoomSize)
 						UpdateRoom(cavityInfo);
 					cavityInfo.dirty = false;
 				}
 			}
 			// Force a room update for each critter that was in a refreshed room
 			while (releasedCritters.TryDequeue(out var critter))
-				if (critter != null && (smi = critter.
-						GetSMI<OvercrowdingMonitor.Instance>()) != null)
+				if (critter != null && TryGetOvercrowdingMonitor(critter, out var smi))
 					smi.RoomRefreshUpdateCavity();
 		}
 
@@ -576,15 +641,12 @@ namespace PeterHan.FastTrack.GamePatches {
 			bool init = initialized;
 			maxRoomSize = TuningData<RoomProber.Tuning>.Get().maxRoomSize;
 			if (allowStart || init) {
-				if (!init) {
-					// Sync wait ensures rooms are ready when the game is first unpaused
-					roomsReady.Reset();
-					roomsChanged.Set();
-					roomsReady.WaitOne(3000);
-				}
-				Postprocess();
-				if (init && FastTrackMod.GameRunning && solidChanges.Count > 0)
-					roomsChanged.Set();
+				if (init) {
+					Postprocess();
+					if (FastTrackMod.GameRunning && solidChanges.Count > 0)
+						roomsChanged.Set();
+				} else
+					InitialUpdate();
 			}
 			Interlocked.Increment(ref updateCount);
 		}
@@ -692,13 +754,49 @@ namespace PeterHan.FastTrack.GamePatches {
 							room);
 						if (newRoomType != roomType) {
 							DestroyRoom(room);
-							room = CreateRoom(cavity);
+							CreateRoom(cavity, room);
 						}
 					}
 					// Trigger events on plants and buildings
 					TriggerEvents(room, room.buildings);
 					TriggerEvents(room, room.plants);
 				}
+			}
+		}
+		
+		/// <summary>
+		/// Applied to OvercrowdingMonitor.Instance to avoid a race condition when critters
+		/// are added to rooms.
+		/// </summary>
+		[HarmonyPatch(typeof(OvercrowdingMonitor.Instance), nameof(OvercrowdingMonitor.
+			Instance.AddToCavity))]
+		internal static class AddToCavity_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.BackgroundRoomRebuild;
+
+			/// <summary>
+			/// Applied before AddToCavity runs.
+			/// </summary>
+			[HarmonyPriority(Priority.Low)]
+			internal static bool Prefix(OvercrowdingMonitor.Instance __instance) {
+				var inst = Instance;
+				if (inst != null) {
+					var cavity = __instance.cavity;
+					var kpid = __instance.kpid;
+					// Avoid race condition modifying the creature lists
+					lock (cavity.creatures) {
+						if (__instance.IsEgg) {
+							cavity.eggs.Add(kpid);
+							if (OvercrowdingMonitor.FetchIsFishEgg(kpid))
+								cavity.fish_eggs.Add(kpid);
+						} else {
+							cavity.creatures.Add(kpid);
+							if (__instance.IsFish)
+								cavity.fishes.Add(kpid);
+						}
+						cavity.occupancy.dirty = true;
+					}
+				}
+				return inst == null;
 			}
 		}
 
@@ -737,6 +835,42 @@ namespace PeterHan.FastTrack.GamePatches {
 				var inst = Instance;
 				if (inst != null)
 					inst.QueueBuildingChange(cell);
+				return inst == null;
+			}
+		}
+		
+		/// <summary>
+		/// Applied to OvercrowdingMonitor.Instance to avoid a race condition when critters
+		/// are removed from rooms.
+		/// </summary>
+		[HarmonyPatch(typeof(OvercrowdingMonitor.Instance), nameof(OvercrowdingMonitor.
+			Instance.RemoveFromCavity))]
+		internal static class RemoveFromCavity_Patch {
+			internal static bool Prepare() => FastTrackOptions.Instance.BackgroundRoomRebuild;
+
+			/// <summary>
+			/// Applied before RemoveFromCavity runs.
+			/// </summary>
+			[HarmonyPriority(Priority.Low)]
+			internal static bool Prefix(OvercrowdingMonitor.Instance __instance) {
+				var inst = Instance;
+				if (inst != null) {
+					var cavity = __instance.cavity;
+					var kpid = __instance.kpid;
+					// Avoid race condition modifying the creature lists
+					lock (cavity.creatures) {
+						if (__instance.IsEgg) {
+							cavity.RemoveFromCavity(kpid, cavity.eggs);
+							if (OvercrowdingMonitor.FetchIsFishEgg(kpid))
+								cavity.RemoveFromCavity(kpid, cavity.fish_eggs);
+						} else {
+							cavity.RemoveFromCavity(kpid, cavity.creatures);
+							if (__instance.IsFish)
+								cavity.RemoveFromCavity(kpid, cavity.fishes);
+						}
+						cavity.occupancy.dirty = true;
+					}
+				}
 				return inst == null;
 			}
 		}
@@ -813,24 +947,6 @@ namespace PeterHan.FastTrack.GamePatches {
 					inst.UpdateRoom(cavity);
 				return inst == null;
 			}
-		}
-	}
-
-	/// <summary>
-	/// Applied to LogicCritterCountSensor to inhibit updates until critters can be added to
-	/// rooms.
-	/// </summary>
-	[HarmonyPatch(typeof(LogicCritterCountSensor), nameof(LogicCritterCountSensor.Sim200ms))]
-	public static class LogicCritterCountSensor_Sim200ms_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.BackgroundRoomRebuild;
-
-		/// <summary>
-		/// Applied before Sim200ms runs.
-		/// </summary>
-		internal static bool Prefix() {
-			var inst = BackgroundRoomProber.Instance;
-			// Critters are scheduled on 1000ms, but rooms are now updated at 200ms
-			return inst == null || inst.UpdateCount > 5;
 		}
 	}
 }

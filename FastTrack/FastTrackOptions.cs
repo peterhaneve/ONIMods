@@ -88,17 +88,9 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool ConduitOpts { get; set; }
 
-		[Option("STRINGS.UI.FRONTEND.FASTTRACK.THREATOVERCROWDING", "STRINGS.UI.TOOLTIPS.FASTTRACK.THREATOVERCROWDING", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_CRITTERS")]
-		[JsonProperty]
-		public bool ThreatOvercrowding { get; set; }
-
 		[Option("STRINGS.UI.FRONTEND.FASTTRACK.CRITTERCONSUMERS", "STRINGS.UI.TOOLTIPS.FASTTRACK.CRITTERCONSUMERS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_CRITTERS")]
 		[JsonProperty]
 		public bool CritterConsumers { get; set; }
-
-		[Option("STRINGS.UI.FRONTEND.FASTTRACK.UNSTACKLIGHTS", "STRINGS.UI.TOOLTIPS.FASTTRACK.UNSTACKLIGHTS", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_CRITTERS")]
-		[JsonProperty]
-		public bool UnstackLights { get; set; }
 
 		[Option("STRINGS.UI.FRONTEND.FASTTRACK.REDUCECRITTERIDLEMOVE", "STRINGS.UI.TOOLTIPS.FASTTRACK.REDUCECRITTERIDLEMOVE", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_CRITTERS")]
 		[JsonProperty]
@@ -319,8 +311,6 @@ namespace PeterHan.FastTrack {
 			RenderTicks = true;
 			SensorOpts = true;
 			SideScreenOpts = true;
-			ThreatOvercrowding = true;
-			UnstackLights = true;
 			VersionInWatermark = WatermarkMessage.Show;
 			VirtualScroll = true;
 		}

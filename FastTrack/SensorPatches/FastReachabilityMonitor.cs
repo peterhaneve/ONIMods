@@ -18,8 +18,6 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 
 using RMI = ReachabilityMonitor.Instance;
@@ -34,6 +32,22 @@ namespace PeterHan.FastTrack.SensorPatches {
 	/// </summary>
 	[SkipSaveFileSerialization]
 	public sealed class FastReachabilityMonitor : KMonoBehaviour, ISim4000ms {
+		// Avoid allocating closures by using a shared Action
+		private static readonly System.Action<object> ON_MOVED = (target) => {
+			if (target is FastReachabilityMonitor rm)
+				rm.UpdateOffsets();
+		};
+
+		/// <summary>
+		/// The event subscription ID when the object moves.
+		/// </summary>
+		private int cellChangedHash;
+
+		/// <summary>
+		/// The event subscription ID when the object lands.
+		/// </summary>
+		private int landedHash;
+
 		/// <summary>
 		/// The last set of extents from which this item was reachable.
 		/// </summary>
@@ -55,6 +69,8 @@ namespace PeterHan.FastTrack.SensorPatches {
 		private RMI smi;
 
 		internal FastReachabilityMonitor() {
+			cellChangedHash = -1;
+			landedHash = -1;
 			lastExtents = new Extents(int.MinValue, int.MinValue, 1, 1);
 			master = null;
 			partitionerEntry = null;
@@ -66,8 +82,8 @@ namespace PeterHan.FastTrack.SensorPatches {
 				partitionerEntry = null;
 			}
 			if (master != null) {
-				master.Unsubscribe((int)GameHashes.Landed);
-				master.Unsubscribe((int)GameHashes.CellChanged);
+				master.Unsubscribe(landedHash);
+				master.Unsubscribe(cellChangedHash);
 			}
 			base.OnCleanUp();
 		}
@@ -79,13 +95,6 @@ namespace PeterHan.FastTrack.SensorPatches {
 			FastGroupProber.Instance?.Enqueue(smi);
 		}
 
-		/// <summary>
-		/// Updates the reachability immediately if the object moves.
-		/// </summary>
-		private void OnMoved(object _) {
-			UpdateOffsets();
-		}
-
 		public override void OnSpawn() {
 			Workable workable;
 			base.OnSpawn();
@@ -94,8 +103,8 @@ namespace PeterHan.FastTrack.SensorPatches {
 				master = workable.gameObject;
 				// It looks like Klei frequently forgets to set the isMovable flag on anims
 				// that can move anyways. Please!
-				master.Subscribe((int)GameHashes.CellChanged, OnMoved);
-				master.Subscribe((int)GameHashes.Landed, OnMoved);
+				cellChangedHash = master.Subscribe((int)GameHashes.CellChanged, ON_MOVED);
+				landedHash = master.Subscribe((int)GameHashes.Landed, ON_MOVED);
 				UpdateOffsets();
 				FastGroupProber.Instance?.Enqueue(smi);
 			} else {
@@ -141,129 +150,6 @@ namespace PeterHan.FastTrack.SensorPatches {
 					lastExtents.height = 1;
 				}
 			}
-		}
-	}
-
-	/// <summary>
-	/// Applied to MinionGroupProber to use our check for reachability instead of its own.
-	/// </summary>
-	[HarmonyPatch]
-	public static class MinionGroupProber_IsAllReachable_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
-
-		/// <summary>
-		/// Targets two methods that are essentially identical to save a patch.
-		/// </summary>
-		internal static IEnumerable<MethodBase> TargetMethods() {
-			yield return typeof(MinionGroupProber).GetMethodSafe(nameof(MinionGroupProber.
-				IsAllReachable), false, typeof(int), typeof(CellOffset[]));
-			yield return typeof(MinionGroupProber).GetMethodSafe(nameof(MinionGroupProber.
-				IsReachable), false, typeof(int), typeof(CellOffset[]));
-		}
-
-		/// <summary>
-		/// Applied before IsAllReachable runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(int cell, CellOffset[] offsets, ref bool __result) {
-			var inst = FastGroupProber.Instance;
-			if (inst != null)
-				__result = Grid.IsValidCell(cell) && inst.IsReachable(cell, offsets);
-			return inst == null;
-		}
-	}
-
-	/// <summary>
-	/// Applied to MinionGroupProber to use our check for reachability instead of its own.
-	/// </summary>
-	[HarmonyPatch(typeof(MinionGroupProber), nameof(MinionGroupProber.IsReachable),
-		typeof(int))]
-	public static class MinionGroupProber_IsCellReachable_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
-
-		/// <summary>
-		/// Applied before IsReachable runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(int cell, ref bool __result) {
-			var inst = FastGroupProber.Instance;
-			if (inst != null)
-				__result = Grid.IsValidCell(cell) && inst.IsReachable(cell);
-			return inst == null;
-		}
-	}
-
-	/// <summary>
-	/// Applied to MinionGroupProber to use our check for reachability instead of its own.
-	/// </summary>
-	[HarmonyPatch(typeof(MinionGroupProber), nameof(MinionGroupProber.IsReachable),
-		typeof(int))]
-	public static class MinionGroupProber_IsReachable_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
-
-		/// <summary>
-		/// Applied before IsReachable runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(int cell, ref bool __result) {
-			var inst = FastGroupProber.Instance;
-			if (inst != null)
-				__result = Grid.IsValidCell(cell) && inst.IsReachable(cell);
-			return inst == null;
-		}
-	}
-
-	/// <summary>
-	/// Applied to MinionGroupProber to mark cells as dirty when their prober status changes.
-	/// </summary>
-	[HarmonyPatch(typeof(MinionGroupProber), nameof(MinionGroupProber.Occupy))]
-	public static class MinionGroupProber_Occupy_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
-
-		/// <summary>
-		/// Applied before Occupy runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(object prober, IEnumerable<int> cells) {
-			var inst = FastGroupProber.Instance;
-			inst?.Occupy(prober, cells, false);
-			return inst == null;
-		}
-	}
-
-	/// <summary>
-	/// Applied to MinionGroupProber to deallocate references to destroyed path probers.
-	/// </summary>
-	[HarmonyPatch(typeof(MinionGroupProber), nameof(MinionGroupProber.ReleaseProber))]
-	public static class MinionGroupProber_ReleaseProber_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
-
-		/// <summary>
-		/// Applied before ReleaseProber runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(object prober) {
-			var inst = FastGroupProber.Instance;
-			inst?.Remove(prober);
-			return inst == null;
-		}
-	}
-
-	/// <summary>
-	/// Applied to MinionGroupProber to create an entry when a prober starts.
-	/// </summary>
-	[HarmonyPatch(typeof(MinionGroupProber), nameof(MinionGroupProber.SetValidSerialNos))]
-	public static class MinionGroupProber_SetValidSerialNos_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
-
-		/// <summary>
-		/// Applied before SetValidSerialNos runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(object prober) {
-			var inst = FastGroupProber.Instance;
-			inst?.Allocate(prober);
-			return inst == null;
 		}
 	}
 	

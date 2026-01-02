@@ -114,13 +114,11 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// Updates a brain group.
 		/// </summary>
 		/// <param name="inst">The updater for asynchronous brains like Duplicants.</param>
-		/// <param name="asyncProbe">Whether to run path probes asynchronously.</param>
 		/// <param name="brainGroup">The brain group to update.</param>
-		internal void UpdateBrainGroup(AsyncBrainGroupUpdater inst, bool asyncProbe,
+		internal void UpdateBrainGroup(AsyncBrainGroupUpdater inst,
 				BrainScheduler.BrainGroup brainGroup) {
+			brainGroup.BeginBrainGroupUpdate();
 			var brains = brainGroup.brains;
-			if (asyncProbe)
-				brainGroup.AsyncPathProbe();
 			int n = brains.Count;
 			if (n > 0) {
 				int index = brainGroup.nextUpdateBrain % n;
@@ -135,6 +133,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				}
 				brainGroup.nextUpdateBrain = index;
 			}
+			brainGroup.EndBrainGroupUpdate();
 		}
 	}
 }

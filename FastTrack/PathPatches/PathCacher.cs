@@ -39,21 +39,22 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Map path cache IDs to path cache values.
 		/// </summary>
-		private static ConcurrentDictionary<PathProber, double> pathCache;
+		private static ConcurrentDictionary<PathGrid, double> pathCache;
 
 		/// <summary>
-		/// Avoid leaking the PathProbers when the game ends.
+		/// Avoid leaking the PathGrids when the game ends.
 		/// </summary>
 		internal static void Cleanup() {
 			pathCache.Clear();
 		}
 
 		/// <summary>
-		/// When a PathProber is destroyed, remove its cached information.
+		/// When a PathGrid is destroyed, remove its cached information.
 		/// </summary>
-		/// <param name="prober">The path prober that was destroyed.</param>
-		internal static void Cleanup(PathProber prober) {
-			pathCache.TryRemove(prober, out _);
+		/// <param name="grid">The path prober that was destroyed.</param>
+		internal static void Cleanup(PathGrid grid) {
+			if (grid != null)
+				pathCache.TryRemove(grid, out _);
 		}
 
 		/// <summary>
@@ -61,7 +62,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// </summary>
 		internal static void Init() {
 			if (pathCache == null)
-				pathCache = new ConcurrentDictionary<PathProber, double>(4, 128);
+				pathCache = new ConcurrentDictionary<PathGrid, double>(4, 128);
 			else
 				pathCache.Clear();
 		}
@@ -77,33 +78,33 @@ namespace PeterHan.FastTrack.PathPatches {
 				Navigator nav;
 				// navigator is initialized in a Sim1000...
 				if (id != null && (nav = id.navigator) != null)
-					pathCache.TryRemove(nav.PathProber, out _);
+					pathCache.TryRemove(nav.PathGrid, out _);
 			}
 		}
 
 		/// <summary>
-		/// Checks to see if the prober's cache is valid.
+		/// Checks to see if the grid's cache is valid.
 		/// </summary>
-		/// <param name="prober">The path prober to look up.</param>
+		/// <param name="grid">The path grid to look up.</param>
 		/// <returns>true if the cache is valid for this ID, or false otherwise.</returns>
-		internal static bool IsValid(PathProber prober) {
-			if (prober == null)
-				throw new ArgumentNullException(nameof(prober));
-			return pathCache.TryGetValue(prober, out double expires) && now < expires;
+		internal static bool IsValid(PathGrid grid) {
+			if (grid == null)
+				throw new ArgumentNullException(nameof(grid));
+			return pathCache.TryGetValue(grid, out double expires) && now < expires;
 		}
 
 		/// <summary>
-		/// Sets a prober as valid or invalid.
+		/// Sets a grid as valid or invalid.
 		/// </summary>
-		/// <param name="prober">The path prober to look up.</param>
-		/// <param name="valid">true if the prober is valid, or false if it is invalid.</param>
-		internal static void SetValid(PathProber prober, bool valid) {
-			if (prober == null)
-				throw new ArgumentNullException(nameof(prober));
+		/// <param name="grid">The path grid to look up.</param>
+		/// <param name="valid">true if the grid is valid, or false if it is invalid.</param>
+		internal static void SetValid(PathGrid grid, bool valid) {
+			if (grid == null)
+				throw new ArgumentNullException(nameof(grid));
 			if (valid)
-				pathCache[prober] = now + INVALIDATE_TIME;
+				pathCache[grid] = now + INVALIDATE_TIME;
 			else
-				pathCache.TryRemove(prober, out _);
+				pathCache.TryRemove(grid, out _);
 		}
 
 		/// <summary>

@@ -18,9 +18,7 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Reflection.Emit;
 
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
@@ -67,7 +65,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				if (consumer != null && !consumer.consumerState.hasSolidTransferArm) {
 					var nav = consumer.navigator;
 					if (nav != null)
-						PathCacher.SetValid(nav.PathProber, false);
+						PathCacher.SetValid(nav.PathGrid, false);
 				}
 			});
 		}
@@ -87,48 +85,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// </summary>
 		internal static void Prefix(Navigator navigator) {
 			if (navigator != null)
-				PathCacher.SetValid(navigator.PathProber, false);
-		}
-	}
-
-	/// <summary>
-	/// Applied to NavGrid to replace unnecessary allocations with a Clear call.
-	/// </summary>
-	[HarmonyPatch(typeof(NavGrid), nameof(NavGrid.UpdateGraph), new Type[0])]
-	public static class NavGrid_UpdateGraph_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
-
-		/// <summary>
-		/// Transpiles UpdateGraph to clean up allocations and mark cells dirty when required.
-		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-			var setType = typeof(HashSet<int>);
-			var clearMethod = setType.GetMethodSafe(nameof(HashSet<int>.Clear), false);
-			var instructions = new List<CodeInstruction>(method);
-			int n = instructions.Count;
-			if (clearMethod == null)
-				// Should be unreachable
-				PUtil.LogError("What happened to HashSet.Clear?");
-			else {
-				var instr = instructions[0];
-				for (int i = 0; i < n - 1; i++) {
-					var next = instructions[i + 1];
-					if (instr.opcode == OpCodes.Newobj && (instr.operand as MethodBase)?.
-							DeclaringType == setType && next.opcode == OpCodes.Stfld) {
-						// Change "newobj" to "ldfld"
-						instr.opcode = OpCodes.Ldfld;
-						instr.operand = next.operand;
-						// Change "stfld" to "callvirt"
-						next.opcode = OpCodes.Callvirt;
-						next.operand = clearMethod;
-#if DEBUG
-						PUtil.LogDebug("Patched NavGrid.UpdateGraph at {0:D}".F(i));
-#endif
-					}
-					instr = next;
-				}
-			}
-			return instructions;
+				PathCacher.SetValid(navigator.PathGrid, false);
 		}
 	}
 
@@ -165,7 +122,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <param name="instance">The navigator to invalidate.</param>
 		private static void ForceInvalid(Navigator instance) {
 			if (instance != null)
-				PathCacher.SetValid(instance.PathProber, false);
+				PathCacher.SetValid(instance.PathGrid, false);
 		}
 
 		/// <summary>
@@ -226,24 +183,6 @@ namespace PeterHan.FastTrack.PathPatches {
 	}
 
 	/// <summary>
-	/// Applied to Navigator to turn off periodic path probes if async path probing is on.
-	/// </summary>
-	[HarmonyPatch(typeof(Navigator), nameof(Navigator.Sim4000ms))]
-	public static class Navigator_Sim4000ms_Patch {
-		internal static bool Prepare() {
-			return FastTrackOptions.Instance.AsyncPathProbe;
-		}
-
-		/// <summary>
-		/// Applied before Sim4000ms runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix() {
-			return false;
-		}
-	}
-
-	/// <summary>
 	/// Applied to Navigator to force update the path cache once when the navigator is forced
 	/// to stop moving. This can happen due to falls, entombment...
 	/// </summary>
@@ -256,7 +195,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// </summary>
 		internal static void Postfix(Navigator __instance, bool arrived_at_destination) {
 			if (__instance != null && !arrived_at_destination)
-				PathCacher.SetValid(__instance.PathProber, false);
+				PathCacher.SetValid(__instance.PathGrid, false);
 		}
 	}
 
@@ -272,22 +211,16 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// Applied before BeginUpdate runs.
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(PathGrid __instance, int root_cell, bool isContinuation) {
-			__instance.isUpdating = true;
-			__instance.freshlyOccupiedCells.Clear();
-			if (!isContinuation) {
-				var gp = __instance.groupProber;
-				short sn;
-				lock (__instance.Cells) {
-					sn = (short)(__instance.serialNo + 1);
-					if (__instance.applyOffset) {
-						Grid.CellToXY(root_cell, out int rootX, out int rootY);
-						__instance.rootX = rootX - (__instance.widthInCells >> 1);
-						__instance.rootY = rootY - (__instance.heightInCells >> 1);
-					}
-					__instance.serialNo = sn;
+		internal static bool Prefix(PathGrid __instance, ushort new_serial_no, int root_cell,
+				List<int> found_cells_list) {
+			lock (__instance.Cells) {
+				__instance.freshlyOccupiedCells = found_cells_list;
+				if (__instance.applyOffset) {
+					Grid.CellToXY(root_cell, out int rootX, out int rootY);
+					__instance.rootX = rootX - (__instance.widthInCells >> 1);
+					__instance.rootY = rootY - (__instance.heightInCells >> 1);
 				}
-				gp?.SetValidSerialNos(__instance, __instance.previousSerialNo, sn);
+				__instance.serialNo = new_serial_no;
 			}
 			return false;
 		}
@@ -319,17 +252,59 @@ namespace PeterHan.FastTrack.PathPatches {
 			return false;
 		}
 	}
+	
+	/// <summary>
+	/// Applied to AsyncPathProber.Workorder.Execute to handle delayed priority mode.
+	/// </summary>
+	[HarmonyPatch(typeof(AsyncPathProber.WorkOrder), nameof(AsyncPathProber.WorkOrder.Execute))]
+	public static class WorkOrder_Execute_Patch {
+		internal static bool Prepare() {
+			var options = FastTrackOptions.Instance;
+			return options.FastReachability && options.ChorePriorityMode ==
+				FastTrackOptions.NextChorePriority.Delay;
+		}
+
+		/// <summary>
+		/// Applied after Execute runs.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static void Postfix(ref AsyncPathProber.WorkOrder __instance) {
+			// Bump the brain out of the the waiting list
+			PriorityBrainScheduler.Instance.PathReady(__instance.navigator);
+		}
+	}
 
 	/// <summary>
-	/// Applied to PathProber to set full path probes as the source of truth for group probing
-	/// and update the path cache when it finishes.
-	/// 
-	/// Note with FRC off, the path cache can exacerbate a vanilla bug where small pathfinder
-	/// queries can mark items unreachable, but there is nothing we can do about that if
-	/// fast reachability is off.
+	/// Applied to PathProber.Run to handle delayed priority mode.
 	/// </summary>
-	[HarmonyPatch(typeof(PathProber), nameof(PathProber.UpdateProbe))]
-	public static class PathProber_UpdateProbe_Patch {
+	[HarmonyPatch(typeof(PathProber), nameof(PathProber.Run), typeof(Navigator),
+		typeof(List<int>))]
+	public static class PathProber_RunSync_Patch {
+		internal static bool Prepare() {
+			var options = FastTrackOptions.Instance;
+			return options.FastReachability && options.ChorePriorityMode ==
+				FastTrackOptions.NextChorePriority.Delay;
+		}
+
+		/// <summary>
+		/// Applied after Run runs.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static void Postfix(Navigator navigator) {
+			// Bump the brain out of the the waiting list
+			PriorityBrainScheduler.Instance.PathReady(navigator);
+		}
+	}
+
+	/// <summary>
+	/// Applied to PathProber.Run to set full path probes as the source of truth for
+	/// group probing and update the path cache when it finishes.
+	/// </summary>
+	[HarmonyPatch(typeof(PathProber), nameof(PathProber.Run), typeof(int), typeof(
+		PathFinderAbilities), typeof(NavGrid), typeof(NavType), typeof(PathGrid),
+		typeof(ushort), typeof(PathFinder.PotentialScratchPad), typeof(PathFinder.
+		PotentialList), typeof(PathFinder.PotentialPath.Flags), typeof(List<int>))]
+	public static class PathProber_Run_Patch {
 		internal static bool Prepare() {
 			var options = FastTrackOptions.Instance;
 			return options.FastReachability || options.CachePaths;
@@ -338,13 +313,12 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <summary>
 		/// Checks to see if the path cache is clean.
 		/// </summary>
-		/// <param name="instance">The prober that is querying.</param>
+		/// <param name="grid">The grid that is querying.</param>
 		/// <param name="cell">The root cell that will be used for updates.</param>
 		/// <returns>true if the cache is clean, or false if it needs to run.</returns>
-		private static bool CheckCache(PathProber instance, int cell) {
+		private static bool CheckCache(PathGrid grid, int cell) {
 			// If nothing has changed since last time, it is a hit!
-			var grid = instance.PathGrid;
-			bool hit = PathCacher.IsValid(instance) && (!grid.applyOffset || Grid.XYToCell(
+			bool hit = PathCacher.IsValid(grid) && (!grid.applyOffset || Grid.XYToCell(
 				grid.rootX + grid.widthInCells / 2, grid.rootY + grid.heightInCells / 2) ==
 				cell);
 			if (FastTrackOptions.Instance.Metrics)
@@ -353,49 +327,25 @@ namespace PeterHan.FastTrack.PathPatches {
 		}
 
 		/// <summary>
-		/// Ends a path grid update and marks the entry as authoritative in the reachability
-		/// monitor, allowing removed cells to be processed.
+		/// Ends a path grid update and marks it as valid
 		/// </summary>
 		/// <param name="grid">The path grid to update.</param>
-		/// <param name="isComplete">true if the probing is complete.</param>
-		/// <param name="prober">The path prober making the update.</param>
-		private static void EndUpdate(PathGrid grid, bool isComplete, PathProber prober) {
-			grid.isUpdating = false;
-			short sn = grid.serialNo;
-			var gp = grid.groupProber;
-			var inst = SensorPatches.FastGroupProber.Instance;
-			if (gp != null) {
-				var cells = grid.freshlyOccupiedCells;
-				if (inst != null && ReferenceEquals(gp, MinionGroupProber.Instance))
-					inst.Occupy(grid, cells, isComplete);
-				else
-					gp.Occupy(grid, sn, cells);
-			}
-			if (isComplete) {
-				var opts = FastTrackOptions.Instance;
-				// There is no need to do this on the minion group prober, but in case another
-				// one appears later
-				gp?.SetValidSerialNos(grid, grid.previousSerialNo, sn);
-				grid.previousSerialNo = sn;
-				if (opts.CachePaths)
-					PathCacher.SetValid(prober, true);
-				if (opts.ChorePriorityMode == FastTrackOptions.NextChorePriority.Delay)
-					// Bump the brain out of the the waiting list
-					PriorityBrainScheduler.Instance.PathReady(prober);
-			}
+		private static void EndUpdate(PathGrid grid) {
+			grid.freshlyOccupiedCells = null;
+			if (FastTrackOptions.Instance.CachePaths)
+				PathCacher.SetValid(grid, true);
 		}
 
 		/// <summary>
-		/// Transpiles UpdateProbe to use a slightly altered EndUpdate method instead.
+		/// Transpiles Run to use a slightly altered EndUpdate method instead.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
 				ILGenerator generator) {
-			var target = typeof(PathGrid).GetMethodSafe(nameof(PathGrid.EndUpdate), false,
-				typeof(bool));
-			var replacement = typeof(PathProber_UpdateProbe_Patch).GetMethodSafe(nameof(
-				EndUpdate), true, typeof(PathGrid), typeof(bool), typeof(PathProber));
-			var checker = typeof(PathProber_UpdateProbe_Patch).GetMethodSafe(nameof(
-				CheckCache), true, typeof(PathProber), typeof(int));
+			var target = typeof(PathGrid).GetMethodSafe(nameof(PathGrid.EndUpdate), false);
+			var replacement = typeof(PathProber_Run_Patch).GetMethodSafe(nameof(
+				EndUpdate), true, typeof(PathGrid));
+			var checker = typeof(PathProber_Run_Patch).GetMethodSafe(nameof(
+				CheckCache), true, typeof(PathGrid), typeof(int));
 			bool patched = false;
 			var end = generator.DefineLabel();
 			// Sadly streaming is not possible with the "label last RET"
@@ -403,29 +353,27 @@ namespace PeterHan.FastTrack.PathPatches {
 			if (FastTrackOptions.Instance.CachePaths) {
 				if (checker != null) {
 					method.InsertRange(0, new[] {
+						new CodeInstruction(OpCodes.Ldarg_S, 4),
+						// Argument #1 is "root_cell"
 						new CodeInstruction(OpCodes.Ldarg_0),
-						// Argument #2 is "cell"
-						new CodeInstruction(OpCodes.Ldarg_2),
 						new CodeInstruction(OpCodes.Call, checker),
 						new CodeInstruction(OpCodes.Brtrue_S, end)
 					});
 #if DEBUG
-					PUtil.LogDebug("Patched PathProber.UpdateProbe [C]");
+					PUtil.LogDebug("Patched PathProber.Run [C]");
 #endif
 				} else
-					PUtil.LogWarning("Unable to patch PathProber.UpdateProbe [C]");
+					PUtil.LogWarning("Unable to patch PathProber.Run [C]");
 			}
 			if (target != null && replacement != null) {
 				int n = method.Count;
 				for (int i = 0; i < n && !patched; i++) {
 					var instr = method[i];
 					if (instr.Is(OpCodes.Callvirt, target)) {
-						// Push the path prober
-						method.Insert(i, new CodeInstruction(OpCodes.Ldarg_0));
 						instr.opcode = OpCodes.Call;
 						instr.operand = replacement;
 #if DEBUG
-						PUtil.LogDebug("Patched PathProber.UpdateProbe [E]");
+						PUtil.LogDebug("Patched PathProber.Run [E]");
 #endif
 						patched = true;
 					}
@@ -444,24 +392,24 @@ namespace PeterHan.FastTrack.PathPatches {
 				}
 			}
 			if (!patched)
-				PUtil.LogWarning("Unable to patch PathProber.UpdateProbe [E]");
+				PUtil.LogWarning("Unable to patch PathProber.Run [E]");
 			return method;
 		}
 	}
 
 	/// <summary>
-	/// Applied to PathProber to remove the instance from the cache when it is destroyed.
+	/// Applied to Navigator to remove the path grid from the cache when it is destroyed.
 	/// </summary>
-	[HarmonyPatch(typeof(PathProber), nameof(PathProber.OnCleanUp))]
-	public static class PathProber_OnCleanUp_Patch {
+	[HarmonyPatch(typeof(Navigator), nameof(Navigator.OnCleanUp))]
+	public static class Navigator_OnCleanUp_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
 
 		/// <summary>
 		/// Applied before OnCleanUp runs.
 		/// </summary>
-		internal static void Prefix(PathProber __instance) {
+		internal static void Prefix(Navigator __instance) {
 			if (__instance != null)
-				PathCacher.Cleanup(__instance);
+				PathCacher.Cleanup(__instance.PathGrid);
 		}
 	}
 

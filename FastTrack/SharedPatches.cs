@@ -137,23 +137,15 @@ namespace PeterHan.FastTrack {
 	/// </summary>
 	[HarmonyPatch(typeof(MinionConfig), nameof(MinionConfig.OnSpawn))]
 	public static class MinionConfig_OnSpawn_Patch {
-		internal static bool Prepare() {
-			var options = FastTrackOptions.Instance;
-			return options.SensorOpts || options.NoSplash;
-		}
+		internal static bool Prepare() => FastTrackOptions.Instance.NoSplash;
 
 		/// <summary>
 		/// Applied after OnSpawn runs.
 		/// </summary>
 		internal static void Postfix(GameObject go) {
-			if (go != null) {
-				var options = FastTrackOptions.Instance;
-				if (options.SensorOpts)
-					SensorPatches.SensorPatches.RemoveBalloonArtistSensor(go);
-				if (options.NoSplash && go.TryGetComponent(out Navigator nav))
-					nav.transitionDriver.overrideLayers.RemoveAll((layer) => layer is
-						SplashTransitionLayer);
-			}
+			if (go != null && go.TryGetComponent(out Navigator nav))
+				nav.transitionDriver.overrideLayers.RemoveAll((layer) => layer is
+					SplashTransitionLayer);
 		}
 	}
 

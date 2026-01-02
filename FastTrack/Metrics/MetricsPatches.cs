@@ -29,25 +29,6 @@ using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeI
 
 namespace PeterHan.FastTrack.Metrics {
 	/// <summary>
-	/// Applied to BrainScheduler.BrainGroup to dump load balancing statistics.
-	/// </summary>
-	[HarmonyPatch(typeof(BrainScheduler.BrainGroup), nameof(BrainScheduler.BrainGroup.
-		AdjustLoad))]
-	public static class BrainScheduler_BrainGroup_AdjustLoad_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.Metrics;
-
-		/// <summary>
-		/// Applied after AdjustLoad runs.
-		/// </summary>
-		[HarmonyPriority(Priority.High)]
-		internal static void Postfix(float currentFrameTime, float frameTimeDelta,
-				BrainScheduler.BrainGroup __instance) {
-			DebugMetrics.LogBrainBalance(__instance.GetType().Name, frameTimeDelta,
-				currentFrameTime, __instance.probeCount, __instance.probeSize);
-		}
-	}
-
-	/// <summary>
 	/// Applied to EventSystem to log event triggers.
 	/// -1061186183 (AnimQueueComplete): 5,142us
 	/// -1697596308 (OnStorageChange): 4,494us

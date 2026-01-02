@@ -98,7 +98,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				var label = hr.GetReference<LocText>("ValueLabel");
 				// Triggers an Init if necessary
 				artifact.configuration.GetArtifactID();
-				if (artifact.CanHarvestArtifact())
+				if (artifact.HasArtifactAvailableInHexCell())
 					text = STRINGS.UI.CLUSTERMAP.POI.ARTIFACTS_AVAILABLE;
 				else
 					text = STRINGS.UI.CLUSTERMAP.POI.ARTIFACTS_DEPLETED.Format(GameUtil.
