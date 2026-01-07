@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright 2024 Peter Han
+ * Copyright 2025 Peter Han
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without
  * restriction, including without limitation the rights to use, copy, modify, merge, publish,
@@ -47,11 +47,19 @@ namespace PeterHan.ToastControl {
 		/// </summary>
 		private static readonly MethodInfo RESOLVE_TYPE = typeof(Type).GetMethodSafe(nameof(
 			Type.GetTypeFromHandle), true, typeof(RuntimeTypeHandle));
-
+		
 		/// <summary>
 		/// The long form method of PopFXManager.SpawnFX to replace.
 		/// </summary>
 		private static readonly MethodInfo SPAWN_FX_LONG = typeof(PopFXManager).GetMethodSafe(
+			nameof(PopFXManager.SpawnFX), false, typeof(Sprite), typeof(Sprite),
+			typeof(string), typeof(Transform), typeof(Vector3), typeof(float), typeof(bool),
+			typeof(bool), typeof(bool));
+
+		/// <summary>
+		/// The medium form method of PopFXManager.SpawnFX to replace.
+		/// </summary>
+		private static readonly MethodInfo SPAWN_FX_MEDIUM = typeof(PopFXManager).GetMethodSafe(
 			nameof(PopFXManager.SpawnFX), false, typeof(Sprite), typeof(string),
 			typeof(Transform), typeof(Vector3), typeof(float), typeof(bool), typeof(bool));
 
@@ -61,11 +69,24 @@ namespace PeterHan.ToastControl {
 		private static readonly MethodInfo SPAWN_FX_SHORT = typeof(PopFXManager).GetMethodSafe(
 			nameof(PopFXManager.SpawnFX), false, typeof(Sprite), typeof(string),
 			typeof(Transform), typeof(float), typeof(bool));
-
+		
 		/// <summary>
 		/// Methods to patch for the long form of PopFXManager.SpawnFX.
 		/// </summary>
 		private static ICollection<string> TargetsLong => new List<string>() {
+			"CreatureCalorieMonitor+Stomach:Poop",
+			"Moppable:Sim1000ms",
+			"SeedProducer:ProduceSeed",
+			"SolidConsumerMonitor+Instance:OnEatSolidComplete",
+			"Storage:DropSome",
+			"Storage:Store",
+			"WorldDamage:OnDigComplete"
+		};
+
+		/// <summary>
+		/// Methods to patch for the medium form of PopFXManager.SpawnFX.
+		/// </summary>
+		private static ICollection<string> TargetsMedium => new List<string>() {
 			"BaseUtilityBuildTool:BuildPath", // 2 hits
 			"BuildTool:PostProcessBuild",
 			"CaptureTool:MarkForCapture",
@@ -78,8 +99,6 @@ namespace PeterHan.ToastControl {
 			"MinionResume:OnSkillPointGained",
 			"MopTool:OnDragTool",
 			"SandboxSampleTool:OnLeftClickDown",
-			"Storage:DropSome",
-			"Storage:Store",
 			"SuperProductive+<>c:<InitializeStates>b__3_0",
 			"Toilet:FlushMultiple",
 			"ToiletWorkableUse:OnCompleteWork",
@@ -92,18 +111,15 @@ namespace PeterHan.ToastControl {
 		private static ICollection<string> TargetsShort => new List<string>() {
 			"BuildingHP:DoDamagePopFX",
 			"Constructable:OnCompleteWork",
-			"CreatureCalorieMonitor+Stomach:Poop",
 			"ElementDropperMonitor+Instance:DropElement",
 			"ElementEmitter:ForceEmit",
 			"FleeStates+<>c:<InitializeStates>b__8_1",
-			"FleeStates+<>c:<InitializeStates>b__8_2",
 			"HarvestDesignatable:<OnRefreshUserMenu>b__36_0",
 			"HarvestDesignatable:<OnRefreshUserMenu>b__36_1",
 			"Klei.AI.EffectInstance:.ctor",
 			"Klei.AI.SicknessInstance+StatesInstance:Infect",
 			"Klei.AI.SicknessInstance+StatesInstance:Cure",
 			"Klei.AI.SlimeSickness+SlimeLungComponent+StatesInstance:ProduceSlime",
-			"Moppable:Sim1000ms",
 			"NuclearResearchCenterWorkable:OnWorkTick",
 			"PeeChore+States+<>c:<InitializeStates>b__2_6",
 			"ReorderableBuilding:ConvertModule",
@@ -112,11 +128,8 @@ namespace PeterHan.ToastControl {
 			"RotPile:ConvertToElement",
 			"Rottable+<>c:<InitializeStates>b__10_8",
 			"SandboxClearFloorTool:OnPaintCell",
-			"SeedProducer:ProduceSeed",
 			"SetLocker:DropContents",
-			"SolidConsumerMonitor+Instance:OnEatSolidComplete",
-			"VomitChore+States+<>c:<InitializeStates>b__7_4",
-			"WorldDamage:OnDigComplete"
+			"VomitChore+States+<>c:<InitializeStates>b__7_4"
 		};
 
 		/// <summary>
@@ -269,7 +282,30 @@ namespace PeterHan.ToastControl {
 		/// <summary>
 		/// Common transpiled target method for each use of PopFXManager.SpawnFX.
 		/// </summary>
-		private static PopFX SpawnFXLong(PopFXManager instance, Sprite icon, string text,
+		private static PopFX SpawnFXLong(PopFXManager instance, Sprite mainIcon,
+				Sprite secondaryIcon, string text, Transform targetTransform, Vector3 offset,
+				float lifetime, bool selfAdjustPositionIfInGroup, bool track_target,
+				bool force_spawn, object source) {
+			PopFX popup = null;
+			bool show = true;
+			try {
+				// Parameter count cannot be reduced - in order to conform with Klei method
+				show = ToastControlPopups.ShowPopup(source, text);
+			} catch (Exception e) {
+				// Sometimes this gets executed on a background thread and unhandled exceptions
+				// cause a CTD
+				PUtil.LogException(e);
+			}
+			if (show)
+				popup = instance.SpawnFX(mainIcon, secondaryIcon, text, targetTransform,
+					offset, lifetime, selfAdjustPositionIfInGroup, track_target, force_spawn);
+			return popup;
+		}
+		
+		/// <summary>
+		/// Common transpiled target method for each use of PopFXManager.SpawnFX.
+		/// </summary>
+		private static PopFX SpawnFXMedium(PopFXManager instance, Sprite icon, string text,
 				Transform targetTransform, Vector3 offset, float lifetime, bool track_target,
 				bool force_spawn, object source) {
 			PopFX popup = null;
@@ -446,33 +482,6 @@ namespace PeterHan.ToastControl {
 		}
 
 		/// <summary>
-		/// Applied to PopFX to disable the popups moving upward if necessary.
-		/// 
-		/// TODO Remove when versions prior to U57-699077 no longer need to be supported
-		/// </summary>
-		[HarmonyPatch]
-		public static class PopFX_Spawn_Patch {
-			private static readonly MethodBase TARGET = typeof(PopFX).
-				GetOverloadWithMostArguments(nameof(PopFX.Spawn), false, typeof(Sprite));
-
-			internal static bool Prepare() {
-				return TARGET != null;
-			}
-
-			internal static MethodBase TargetMethod() {
-				return TARGET;
-			}
-
-			/// <summary>
-			/// Applied after Spawn runs.
-			/// </summary>
-			internal static void Postfix(ref float ___Speed) {
-				if (ToastControlPopups.Options.DisableMoving)
-					___Speed = 0.0f;
-			}
-		}
-
-		/// <summary>
 		/// Applied to PopFX to disable motion if specified in the settings.
 		/// </summary>
 		[HarmonyPatch(typeof(PopFX), "Update")]
@@ -488,8 +497,7 @@ namespace PeterHan.ToastControl {
 			/// <summary>
 			/// Transpiles Update to replace calls to fetch Vector3.up with our handler.
 			/// </summary>
-			internal static TranspiledMethod Transpiler(TranspiledMethod method,
-					MethodBase original) {
+			internal static TranspiledMethod Transpiler(TranspiledMethod method) {
 				return PPatchTools.ReplaceMethodCallSafe(method, typeof(Vector3).
 					GetPropertySafe<Vector3>(nameof(Vector3.up), true)?.GetGetMethod(),
 					typeof(PopFX_Update_Patch).GetMethodSafe(nameof(MaybeUp), true));
@@ -517,6 +525,31 @@ namespace PeterHan.ToastControl {
 					MethodBase original) {
 				return ExecuteTranspiler(method, SPAWN_FX_LONG, typeof(ToastControlPatches).
 					GetMethodSafe(nameof(SpawnFXLong), true, PPatchTools.AnyArguments),
+					original);
+			}
+		}
+
+		/// <summary>
+		/// Applied to each base game location that uses the medium form overload of
+		/// PopFXManager.SpawnFX.
+		/// </summary>
+		[HarmonyPatch]
+		public static class PopFXManager_SpawnFXMedium_Patch {
+			/// <summary>
+			/// Determines which methods need to be patched
+			/// </summary>
+			/// <returns>A list of everything to patch for the medium form.</returns>
+			internal static IEnumerable<MethodBase> TargetMethods() {
+				return CreateMethodList(TargetsMedium);
+			}
+
+			/// <summary>
+			/// Transpiles SpawnFX to replace calls to SpawnFX with our handler.
+			/// </summary>
+			internal static TranspiledMethod Transpiler(TranspiledMethod method,
+					MethodBase original) {
+				return ExecuteTranspiler(method, SPAWN_FX_MEDIUM, typeof(ToastControlPatches).
+					GetMethodSafe(nameof(SpawnFXMedium), true, PPatchTools.AnyArguments),
 					original);
 			}
 		}
