@@ -2,12 +2,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>Thermal Tooltips</AssemblyTitle>
-    <FileVersion>3.5.0.0</FileVersion>
+    <FileVersion>3.6.0.0</FileVersion>
     <RootNamespace>PeterHan.ThermalTooltips</RootNamespace>
     <Description>Adds additional information to tooltips on the Thermal overlay.</Description>
     <AssemblyVersion>3.1.0.0</AssemblyVersion>
     <CopyPreview>true</CopyPreview>
-    <LastWorkingBuild>581979</LastWorkingBuild>
+    <LastWorkingBuild>699077</LastWorkingBuild>
     <Platforms>Vanilla;Mergedown</Platforms>
   </PropertyGroup>
 </Project>

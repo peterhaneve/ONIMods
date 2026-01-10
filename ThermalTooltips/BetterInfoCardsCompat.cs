@@ -37,7 +37,7 @@ namespace PeterHan.ThermalTooltips {
 		/// <summary>
 		/// The root namespace for types in BetterInfoCards.
 		/// </summary>
-		private const string BIC_NAMESPACE = "BetterInfoCards.";
+		private const string BIC_NAMESPACE = BIC_ASSEMBLY + ".";
 
 		/// <summary>
 		/// The export title for heat energy.
@@ -118,7 +118,7 @@ namespace PeterHan.ThermalTooltips {
 			try {
 				addConv = PPatchTools.GetTypeSafe(BIC_NAMESPACE + "ConverterManager",
 					BIC_ASSEMBLY)?.Detour<RegisterMethodFunc>("AddConverterReflect");
-				var patchType = PPatchTools.GetTypeSafe(BIC_NAMESPACE + "CollectHoverInfo",
+				var patchType = PPatchTools.GetTypeSafe(BIC_NAMESPACE + "ExportSelectToolData",
 					BIC_ASSEMBLY)?.GetNestedType("GetSelectInfo_Patch", BindingFlags.Static |
 					BindingFlags.Instance | PPatchTools.BASE_FLAGS);
 				if (patchType != null)
