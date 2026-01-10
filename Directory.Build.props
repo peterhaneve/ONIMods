@@ -51,7 +51,7 @@
   <PropertyGroup>
     <Product>PeterHanONIMods</Product>
     <Authors>Peter Han</Authors>
-    <Copyright>Copyright ©Peter Han 2024</Copyright>
+    <Copyright>Copyright ©Peter Han 2026</Copyright>
     <TargetFrameworks>net471</TargetFrameworks>
     <RequiredDLCs></RequiredDLCs>
     <ForbiddenDLCs></ForbiddenDLCs>
