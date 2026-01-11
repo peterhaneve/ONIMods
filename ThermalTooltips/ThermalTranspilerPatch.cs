@@ -83,8 +83,8 @@ namespace PeterHan.ThermalTooltips {
 		public static float GetAdjustedMass(GameObject entity, BuildingDef def,
 				float originalMass) {
 			float mass = originalMass;
-			if (entity != null && def != null && entity.TryGetComponent(
-					out SimCellOccupier sco) && sco.IsVisuallySolid)
+			if (entity != null && def != null && (!entity.TryGetComponent(
+					out SimCellOccupier sco) || !sco.IsVisuallySolid))
 				// Buildings have that insidious /5 multiplier... if they do not use tile
 				// temperature instead (with doors only being /5 if open)
 				//  isSolidTile almost works but it is false on FarmTile

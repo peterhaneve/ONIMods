@@ -139,7 +139,6 @@ namespace PeterHan.ThermalTooltips {
 		/// <summary>
 		/// Displays thermal information in the current tooltip.
 		/// </summary>
-		/// <param name="defaultText">The default temperature text.</param>
 		/// <param name="element">The element that is being displayed.</param>
 		/// <param name="temperature">The element's temperature in K.</param>
 		/// <param name="mass">The element's mass in kg.</param>
