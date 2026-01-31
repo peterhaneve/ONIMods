@@ -28,6 +28,8 @@ namespace PeterHan.BulkSettingsChange {
 	/// </summary>
 	internal sealed class BulkChangeTool : DragTool {
 		#region Reflection
+		private delegate void UpdateStatusItem(FossilExcavationWorkable instance, object data);
+
 		// Detours for private fields in InterfaceTool
 		private static readonly IDetouredField<DragTool, GameObject> AREA_VISUALIZER =
 			PDetours.DetourField<DragTool, GameObject>("areaVisualizer");
@@ -48,13 +50,13 @@ namespace PeterHan.BulkSettingsChange {
 		/// Disables automatic disinfect.
 		/// </summary>
 		private static readonly Action<AutoDisinfectable> DISINFECT_DISABLE =
-			typeof(AutoDisinfectable).Detour<Action<AutoDisinfectable>>("DisableAutoDisinfect");
+			typeof(AutoDisinfectable).TryDetour<Action<AutoDisinfectable>>("DisableAutoDisinfect");
 
 		/// <summary>
 		/// Enables automatic disinfect.
 		/// </summary>
 		private static readonly Action<AutoDisinfectable> DISINFECT_ENABLE =
-			typeof(AutoDisinfectable).Detour<Action<AutoDisinfectable>>("EnableAutoDisinfect");
+			typeof(AutoDisinfectable).TryDetour<Action<AutoDisinfectable>>("EnableAutoDisinfect");
 
 		/// <summary>
 		/// The empty storage chore if one is active.
@@ -66,7 +68,7 @@ namespace PeterHan.BulkSettingsChange {
 		/// Enables or disables a building.
 		/// </summary>
 		private static readonly Action<BuildingEnabledButton> ENABLE_DISABLE =
-			typeof(BuildingEnabledButton).Detour<Action<BuildingEnabledButton>>("OnMenuToggle");
+			typeof(BuildingEnabledButton).TryDetour<Action<BuildingEnabledButton>>("OnMenuToggle");
 
 		/// <summary>
 		/// Reports the current enable/disable status of a building.
@@ -78,13 +80,13 @@ namespace PeterHan.BulkSettingsChange {
 		/// Disables auto-repair.
 		/// </summary>
 		private static readonly Action<Repairable> REPAIR_DISABLE =
-			typeof(Repairable).Detour<Action<Repairable>>("CancelRepair");
+			typeof(Repairable).TryDetour<Action<Repairable>>("CancelRepair");
 
 		/// <summary>
 		/// Enables auto-repair.
 		/// </summary>
 		private static readonly Action<Repairable> REPAIR_ENABLE =
-			typeof(Repairable).Detour<Action<Repairable>>("AllowRepair");
+			typeof(Repairable).TryDetour<Action<Repairable>>("AllowRepair");
 
 		/// <summary>
 		/// The state machine instance for repairable objects.
@@ -96,13 +98,19 @@ namespace PeterHan.BulkSettingsChange {
 		/// Enables or disables tinker.
 		/// </summary>
 		private static readonly Action<Tinkerable> TINKER_TOGGLE =
-			typeof(Tinkerable).Detour<Action<Tinkerable>>("UpdateChore");
+			typeof(Tinkerable).TryDetour<Action<Tinkerable>>("UpdateChore");
 
 		/// <summary>
 		/// Reports the status of tinker.
 		/// </summary>
 		private static readonly IDetouredField<Tinkerable, bool> TINKER_FLAG =
 			PDetours.DetourField<Tinkerable, bool>("userMenuAllowed");
+
+		/// <summary>
+		/// Updates the status item of fossil dig sites.
+		/// </summary>
+		private static readonly UpdateStatusItem UPDATE_STATUS =
+			typeof(FossilExcavationWorkable).TryDetour<UpdateStatusItem>("UpdateStatusItem");
 		#endregion
 
 		/// <summary>
@@ -160,7 +168,7 @@ namespace PeterHan.BulkSettingsChange {
 					// Only continue if we are cancelling the toggle errand or (the building
 					// state is different than desired and no toggle errand is queued)
 					if (toggleQueued != (curEnabled != enable)) {
-						ENABLE_DISABLE(ed);
+						ENABLE_DISABLE?.Invoke(ed);
 						// Set priority according to the chosen level
 						if (building.TryGetComponent(out Prioritizable priority))
 							priority.SetMasterPriority(ToolMenu.Instance.PriorityScreen.
@@ -210,9 +218,9 @@ namespace PeterHan.BulkSettingsChange {
 			if (item != null && item.TryGetComponent(out AutoDisinfectable ad) &&
 					DISINFECT_AUTO != null && DISINFECT_AUTO.Get(ad) != enable) {
 				if (enable)
-					DISINFECT_ENABLE(ad);
+					DISINFECT_ENABLE?.Invoke(ad);
 				else
-					DISINFECT_DISABLE(ad);
+					DISINFECT_DISABLE?.Invoke(ad);
 				changed = true;
 			}
 			return changed;
@@ -283,11 +291,11 @@ namespace PeterHan.BulkSettingsChange {
 				// Prevent buildings in the allow state from being repaired again
 				if (enable) {
 					if (currentState == smi.sm.forbidden) {
-						REPAIR_ENABLE(ar);
+						REPAIR_ENABLE?.Invoke(ar);
 						changed = true;
 					}
 				} else if (currentState != smi.sm.forbidden) {
-					REPAIR_DISABLE(ar);
+					REPAIR_DISABLE?.Invoke(ar);
 					changed = true;
 				}
 			}
@@ -302,12 +310,43 @@ namespace PeterHan.BulkSettingsChange {
 		/// <returns>true if changes were made, or false otherwise.</returns>
 		private static bool ToggleTinker(GameObject item, bool enable) {
 			bool changed = false;
-			if (item != null && item.TryGetComponent(out Tinkerable tinkerableComponent) &&
-				TINKER_FLAG != null && TINKER_FLAG.Get(tinkerableComponent) != enable &&
-				TINKER_TOGGLE != null) {
-				TINKER_FLAG.Set(tinkerableComponent, enable);
-				TINKER_TOGGLE(tinkerableComponent);
-				changed = true;
+			if (item != null) {
+				if (item.TryGetComponent(out Tinkerable tinkerableComponent) && TINKER_FLAG !=
+						null && TINKER_FLAG.Get(tinkerableComponent) != enable) {
+					TINKER_FLAG.Set(tinkerableComponent, enable);
+					TINKER_TOGGLE?.Invoke(tinkerableComponent);
+					changed = true;
+				} else if (item.TryGetComponent(out MajorDigSiteWorkable mw) && item.
+						TryGetComponent(out StateMachineController smc)) {
+					// In typical ONI fashion, there are three slightly different components
+					// handling fossil dig excavation for each part. Clay please.
+					var major = smc.GetSMI<MajorFossilDigSite.Instance>();
+					if (major != null) {
+						var sm = major.sm;
+						sm.MarkedForDig.Set(enable, major, false);
+						mw.SetShouldShowSkillPerkStatusItem(enable);
+						changed = true;
+					}
+				} else if (item.TryGetComponent(out MinorDigSiteWorkable dw) && item.
+						TryGetComponent(out smc)) {
+					var minor = smc.GetSMI<MinorFossilDigSite.Instance>();
+					if (minor != null) {
+						var sm = minor.sm;
+						sm.MarkedForDig.Set(enable, minor, false);
+						dw.SetShouldShowSkillPerkStatusItem(enable);
+						changed = true;
+					}
+				} else if (item.TryGetComponent(out FossilBits bits)) {
+					bits.MarkedForDig = enable;
+					bits.SetShouldShowSkillPerkStatusItem(enable);
+					bits.SetEntombStatusItemVisibility(enable);
+					if (enable)
+						bits.CreateWorkableChore();
+					else
+						bits.CancelWorkChore();
+					UPDATE_STATUS?.Invoke(bits, null);
+					changed = true;
+				}
 			}
 			return changed;
 		}
