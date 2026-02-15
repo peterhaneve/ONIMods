@@ -107,7 +107,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// Applied before OccupyST runs.
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(List<int> cells, List<int> ___cells) {
+		internal static bool Prefix(List<int> cells, int[] ___cells) {
 			var fgp = FastGroupProber.Instance;
 			int n = cells.Count;
 			for (int i = 0; i < n; i++) {
@@ -182,7 +182,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// Applied before VacateST runs.
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(List<int> cells, List<int> ___cells) {
+		internal static bool Prefix(List<int> cells, int[] ___cells) {
 			var fgp = FastGroupProber.Instance;
 			int n = cells.Count;
 			for (int i = 0; i < n; i++) {

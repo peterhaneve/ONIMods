@@ -146,10 +146,13 @@ namespace PeterHan.DebugNotIncluded {
 						}
 			} catch (TypeLoadException e) {
 				DebugLogger.LogWarning("Unable to check type " + type.FullName);
-				DebugLogger.LogException(e);
+				DebugLogger.LogExcWarn(e);
 			} catch (AmbiguousMatchException e) {
+				DebugLogger.LogWarning("Unable to check type " + type.FullName +
+					": uses manual method targeting");
+			} catch (UnauthorizedAccessException e) {
 				DebugLogger.LogWarning("Unable to check type " + type.FullName);
-				DebugLogger.LogException(e);
+				DebugLogger.LogExcWarn(e);
 			}
 		}
 

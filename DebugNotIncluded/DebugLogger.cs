@@ -276,6 +276,26 @@ namespace PeterHan.DebugNotIncluded {
 		}
 
 		/// <summary>
+		/// Logs an exception with a detailed breakdown, but as a warning to not crash the game.
+		/// </summary>
+		/// <param name="e">The exception to log.</param>
+		public static void LogExcWarn(Exception e) {
+			// Unwrap target invocation exceptions
+			while (e is TargetInvocationException tie)
+				e = tie.InnerException;
+			if (e == null)
+				LogWarning("<null>");
+			else
+				try {
+					LogWarning(GetExceptionLog(e));
+				} catch {
+					// Ensure it gets logged at all costs
+					BaseLogException(e, null);
+					throw;
+				}
+		}
+
+		/// <summary>
 		/// Logs an exception with a detailed breakdown. This overload is used in KMonoBehavior
 		/// transpilers.
 		/// </summary>

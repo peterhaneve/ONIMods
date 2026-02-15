@@ -16,9 +16,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using Epic.OnlineServices.Platform;
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Reflection.Emit;
 
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
@@ -254,45 +256,105 @@ namespace PeterHan.FastTrack.PathPatches {
 	}
 	
 	/// <summary>
-	/// Applied to AsyncPathProber.Workorder.Execute to handle delayed priority mode.
+	/// Applied to AsyncPathProber.Workorder.Execute to handle delayed priority mode and the
+	/// path cache.
 	/// </summary>
 	[HarmonyPatch(typeof(AsyncPathProber.WorkOrder), nameof(AsyncPathProber.WorkOrder.Execute))]
 	public static class WorkOrder_Execute_Patch {
 		internal static bool Prepare() {
 			var options = FastTrackOptions.Instance;
-			return options.FastReachability && options.ChorePriorityMode ==
-				FastTrackOptions.NextChorePriority.Delay;
+			return options.CachePaths || (options.FastReachability && options.
+				ChorePriorityMode == FastTrackOptions.NextChorePriority.Delay);
+		}
+		
+		/// <summary>
+		/// Applied before Execute runs.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static bool Prefix(ref AsyncPathProber.WorkOrder __instance, out bool __state,
+				ref AsyncPathProber.WorkResult result) {
+			// Path cache hits should skip the method
+			var options = FastTrackOptions.Instance;
+			bool miss = !options.CachePaths || !PathCacher.CheckCache(result.pathGrid,
+				__instance.originCell);
+			var reachables = result.reachableCells;
+			if (!miss) {
+				// Manually release for chores
+				if (options.FastReachability && options.ChorePriorityMode ==
+						FastTrackOptions.NextChorePriority.Delay)
+					PriorityBrainScheduler.Instance.PathReady(__instance.navigator);
+				if (__instance.computeReachables && reachables != null) {
+					reachables.Clear();
+					reachables.AddRange(__instance.navigator.occupiedCells);
+					reachables.Sort();
+					// No changes
+					result.noLongerReachableCells.Clear();
+					result.newlyReachableCells.Clear();
+				}
+			}
+			__state = miss;
+			return miss;
 		}
 
 		/// <summary>
 		/// Applied after Execute runs.
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
-		internal static void Postfix(ref AsyncPathProber.WorkOrder __instance) {
-			// Bump the brain out of the the waiting list
-			PriorityBrainScheduler.Instance.PathReady(__instance.navigator);
+		internal static void Postfix(Navigator ___navigator, bool __state) {
+			var options = FastTrackOptions.Instance;
+			if (__state && options.FastReachability && options.ChorePriorityMode ==
+					FastTrackOptions.NextChorePriority.Delay)
+				// Bump the brain out of the the waiting list
+				PriorityBrainScheduler.Instance.PathReady(___navigator);
 		}
 	}
 
 	/// <summary>
-	/// Applied to PathProber.Run to handle delayed priority mode.
+	/// Applied to PathProber.Run to handle delayed priority mode and the path cache.
 	/// </summary>
 	[HarmonyPatch(typeof(PathProber), nameof(PathProber.Run), typeof(Navigator),
 		typeof(List<int>))]
 	public static class PathProber_RunSync_Patch {
 		internal static bool Prepare() {
 			var options = FastTrackOptions.Instance;
-			return options.FastReachability && options.ChorePriorityMode ==
-				FastTrackOptions.NextChorePriority.Delay;
+			return options.CachePaths || (options.FastReachability && options.
+				ChorePriorityMode == FastTrackOptions.NextChorePriority.Delay);
+		}
+		
+		/// <summary>
+		/// Applied before Run runs.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static bool Prefix(out bool __state, Navigator navigator,
+				List<int> found_cells) {
+			// Path cache hits should skip the method
+			var options = FastTrackOptions.Instance;
+			bool miss = !options.CachePaths || !PathCacher.CheckCache(navigator.PathGrid,
+				navigator.cachedCell);
+			if (!miss) {
+				// Manually release for chores
+				if (options.FastReachability && options.ChorePriorityMode ==
+						FastTrackOptions.NextChorePriority.Delay)
+					PriorityBrainScheduler.Instance.PathReady(navigator);
+				if (found_cells != null && navigator.reportOccupation) {
+					found_cells.Clear();
+					found_cells.AddRange(navigator.occupiedCells);
+				}
+			}
+			__state = miss;
+			return miss;
 		}
 
 		/// <summary>
 		/// Applied after Run runs.
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
-		internal static void Postfix(Navigator navigator) {
-			// Bump the brain out of the the waiting list
-			PriorityBrainScheduler.Instance.PathReady(navigator);
+		internal static void Postfix(Navigator navigator, bool __state) {
+			var options = FastTrackOptions.Instance;
+			if (__state && options.FastReachability && options.ChorePriorityMode ==
+					FastTrackOptions.NextChorePriority.Delay)
+				// Bump the brain out of the the waiting list
+				PriorityBrainScheduler.Instance.PathReady(navigator);
 		}
 	}
 
@@ -304,96 +366,42 @@ namespace PeterHan.FastTrack.PathPatches {
 		PathFinderAbilities), typeof(NavGrid), typeof(NavType), typeof(PathGrid),
 		typeof(ushort), typeof(PathFinder.PotentialScratchPad), typeof(PathFinder.
 		PotentialList), typeof(PathFinder.PotentialPath.Flags), typeof(List<int>))]
-	public static class PathProber_Run_Patch {
-		internal static bool Prepare() {
-			var options = FastTrackOptions.Instance;
-			return options.FastReachability || options.CachePaths;
-		}
+	public static class PathProber_RunAsync_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
 
 		/// <summary>
-		/// Checks to see if the path cache is clean.
-		/// </summary>
-		/// <param name="grid">The grid that is querying.</param>
-		/// <param name="cell">The root cell that will be used for updates.</param>
-		/// <returns>true if the cache is clean, or false if it needs to run.</returns>
-		private static bool CheckCache(PathGrid grid, int cell) {
-			// If nothing has changed since last time, it is a hit!
-			bool hit = PathCacher.IsValid(grid) && (!grid.applyOffset || Grid.XYToCell(
-				grid.rootX + grid.widthInCells / 2, grid.rootY + grid.heightInCells / 2) ==
-				cell);
-			if (FastTrackOptions.Instance.Metrics)
-				Metrics.DebugMetrics.PATH_CACHE.Log(hit);
-			return hit;
-		}
-
-		/// <summary>
-		/// Ends a path grid update and marks it as valid
+		/// Ends a path grid update and marks it as valid.
 		/// </summary>
 		/// <param name="grid">The path grid to update.</param>
 		private static void EndUpdate(PathGrid grid) {
 			grid.freshlyOccupiedCells = null;
-			if (FastTrackOptions.Instance.CachePaths)
-				PathCacher.SetValid(grid, true);
+			PathCacher.SetValid(grid, true);
 		}
 
 		/// <summary>
-		/// Transpiles Run to use a slightly altered EndUpdate method instead.
+		/// Transpiles Run to use a slightly altered EndUpdate method instead and to bypass
+		/// the calculations if the path cache is valid.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
 				ILGenerator generator) {
 			var target = typeof(PathGrid).GetMethodSafe(nameof(PathGrid.EndUpdate), false);
-			var replacement = typeof(PathProber_Run_Patch).GetMethodSafe(nameof(
+			var replacement = typeof(PathProber_RunAsync_Patch).GetMethodSafe(nameof(
 				EndUpdate), true, typeof(PathGrid));
-			var checker = typeof(PathProber_Run_Patch).GetMethodSafe(nameof(
-				CheckCache), true, typeof(PathGrid), typeof(int));
 			bool patched = false;
-			var end = generator.DefineLabel();
-			// Sadly streaming is not possible with the "label last RET"
-			var method = new List<CodeInstruction>(instructions);
-			if (FastTrackOptions.Instance.CachePaths) {
-				if (checker != null) {
-					method.InsertRange(0, new[] {
-						new CodeInstruction(OpCodes.Ldarg_S, 4),
-						// Argument #1 is "root_cell"
-						new CodeInstruction(OpCodes.Ldarg_0),
-						new CodeInstruction(OpCodes.Call, checker),
-						new CodeInstruction(OpCodes.Brtrue_S, end)
-					});
+			foreach (var instr in instructions) {
+				if (target != null && replacement != null && instr.opcode == OpCodes.
+						Callvirt && instr.operand is MethodBase info && info == replacement) {
+					instr.opcode = OpCodes.Call;
+					instr.operand = replacement;
 #if DEBUG
-					PUtil.LogDebug("Patched PathProber.Run [C]");
+					PUtil.LogDebug("Patched PathProber.Run [E]");
 #endif
-				} else
-					PUtil.LogWarning("Unable to patch PathProber.Run [C]");
-			}
-			if (target != null && replacement != null) {
-				int n = method.Count;
-				for (int i = 0; i < n && !patched; i++) {
-					var instr = method[i];
-					if (instr.Is(OpCodes.Callvirt, target)) {
-						instr.opcode = OpCodes.Call;
-						instr.operand = replacement;
-#if DEBUG
-						PUtil.LogDebug("Patched PathProber.Run [E]");
-#endif
-						patched = true;
-					}
+					patched = true;
 				}
-			}
-			// Label the last RET
-			for (int i = method.Count - 1; i > 0; i--) {
-				var instr = method[i];
-				if (instr.opcode == OpCodes.Ret) {
-					// Add the label
-					var labels = instr.labels;
-					if (labels == null)
-						instr.labels = labels = new List<Label>(2);
-					labels.Add(end);
-					break;
-				}
+				yield return instr;
 			}
 			if (!patched)
 				PUtil.LogWarning("Unable to patch PathProber.Run [E]");
-			return method;
 		}
 	}
 

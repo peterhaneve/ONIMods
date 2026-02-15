@@ -140,6 +140,8 @@ namespace PeterHan.FastTrack {
 			Metrics.FastTrackProfiler.End();
 #endif
 			ConduitPatches.ConduitFlowVisualizerPatches.Cleanup();
+			if (options.FastReachability)
+				GamePatches.FastCellChangeMonitor.FastInstance?.Disarm();
 			if (options.CachePaths)
 				PathPatches.PathCacher.Cleanup();
 			if (options.ReduceTileUpdates)

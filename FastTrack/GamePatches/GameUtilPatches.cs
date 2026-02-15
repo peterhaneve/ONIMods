@@ -224,37 +224,4 @@ namespace PeterHan.FastTrack.GamePatches {
 			return false;
 		}
 	}
-
-	/// <summary>
-	/// Applied to PathFinder to fix meaningless memory allocations and slow list lookups that
-	/// happen when a game is loaded.
-	/// </summary>
-	[HarmonyPatch(typeof(PathFinder), nameof(PathFinder.Initialize))]
-	public static class PathFinder_Initialize_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
-
-		/// <summary>
-		/// Applied before Initialize runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix() {
-			if (!Enum.TryParse(nameof(NavType.NumNavTypes), out NavType numTypes))
-				numTypes = NavType.NumNavTypes;
-			var navTypes = new NavType[(int)numTypes];
-			for (int i = 0; i < navTypes.Length; i++)
-				navTypes[i] = (NavType)i;
-			PathFinder.PathGrid = new PathGrid(Grid.WidthInCells, Grid.HeightInCells, false,
-				navTypes);
-			var cells = HashSetPool<int, PathFinder>.Allocate();
-			for (int i = 0; i < Grid.CellCount; i++)
-				if (Grid.Visible[i] > 0 || Grid.Spawnable[i] > 0) {
-					GameUtil.FloodFillConditional(i, PathFinder.allowPathfindingFloodFillCb,
-						cells);
-					Grid.AllowPathfinding[i] = true;
-					cells.Clear();
-				}
-			cells.Recycle();
-			return false;
-		}
-	}
 }

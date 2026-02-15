@@ -162,6 +162,24 @@ namespace PeterHan.FastTrack {
 			}
 		}
 	}
+	
+	/// <summary>
+	/// Applied to CameraController to never say sounds are audible when sound is off.
+	/// </summary>
+	[HarmonyPatch(typeof(CameraController), nameof(CameraController.IsAudibleSound),
+		typeof(UnityEngine.Vector3), typeof(FMODUnity.EventReference))]
+	public static class CameraController_IsAudibleSoundV1_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.DisableSound;
+
+		/// <summary>
+		/// Applied before IsAudibleSound runs.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static bool Prefix(ref bool __result) {
+			__result = false;
+			return false;
+		}
+	}
 
 	/// <summary>
 	/// Applied to CameraController to never say sounds are audible when sound is off.
@@ -198,14 +216,17 @@ namespace PeterHan.FastTrack {
 			return false;
 		}
 	}
-
+	
 	/// <summary>
 	/// Applied to NotificationScreen to suppress sounds queued very early in the load.
 	/// sequence.
 	/// </summary>
 	[HarmonyPatch(typeof(NotificationScreen), nameof(NotificationScreen.PlayDingSound))]
 	public static class NotificationScreen_PlayDingSound_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.ReduceSoundUpdates;
+		internal static bool Prepare() {
+			var options = FastTrackOptions.Instance;
+			return options.DisableSound || options.ReduceSoundUpdates;
+		}
 
 		/// <summary>
 		/// Applied before PlayDingSound runs.
@@ -214,9 +235,9 @@ namespace PeterHan.FastTrack {
 		internal static bool Prefix(Notification notification,
 				IDictionary<NotificationType, string> ___notificationSounds) {
 			// No const for that sound name
-			return notification == null || FastTrackMod.GameRunning ||
-				!___notificationSounds.TryGetValue(notification.Type, out string sound) ||
-				sound != "Notification";
+			return !FastTrackOptions.Instance.DisableSound && (notification == null ||
+				FastTrackMod.GameRunning || !___notificationSounds.TryGetValue(notification.
+				Type, out string sound) || sound != "Notification");
 		}
 	}
 
@@ -242,9 +263,9 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
-			var options = FastTrackOptions.Instance;
-			return !options.DisableSound && KPlayerPrefs.GetFloat(SoundUpdater.VOLUME_MUSIC,
-				1.0f) > 0.0f && KPlayerPrefs.GetFloat(SoundUpdater.VOLUME_MASTER, 1.0f) > 0.0f;
+			return !FastTrackOptions.Instance.DisableSound && KPlayerPrefs.GetFloat(
+				SoundUpdater.VOLUME_MUSIC, 1.0f) > 0.0f && KPlayerPrefs.GetFloat(
+				SoundUpdater.VOLUME_MASTER, 1.0f) > 0.0f;
 		}
 	}
 
@@ -263,18 +284,14 @@ namespace PeterHan.FastTrack {
 			yield return typeof(AudioMixer).GetMethodSafe(nameof(AudioMixer.
 				SetSnapshotParameter), false, typeof(string), typeof(string), typeof(float),
 				typeof(bool));
-			yield return typeof(AudioMixer).GetMethodSafe(nameof(AudioMixer.Start), false,
-				typeof(string));
-			yield return typeof(AudioMixer).GetMethodSafe(nameof(AudioMixer.Stop), false,
-				typeof(HashedString), typeof(FMOD.Studio.STOP_MODE));
 			yield return typeof(ConduitFlowVisualizer).GetMethodSafe(nameof(
 				ConduitFlowVisualizer.AddAudioSource), false, PPatchTools.AnyArguments);
 			yield return typeof(ConduitFlowVisualizer).GetMethodSafe(nameof(
 				ConduitFlowVisualizer.TriggerAudio), false, PPatchTools.AnyArguments);
 			yield return typeof(MusicManager).GetMethodSafe(nameof(MusicManager.StopSong),
 				false, PPatchTools.AnyArguments);
-			yield return typeof(KFMOD).GetMethodSafe(nameof(KFMOD.CreateInstance), true,
-				typeof(string));
+			yield return typeof(MusicManager).GetMethodSafe(nameof(MusicManager.
+				StopDynamicMusic), false, PPatchTools.AnyArguments);
 			yield return typeof(KFMOD).GetMethodSafe(nameof(KFMOD.Initialize), true,
 				PPatchTools.AnyArguments);
 			yield return typeof(KFMOD).GetMethodSafe(nameof(KFMOD.RenderEveryTick), true,
@@ -292,6 +309,77 @@ namespace PeterHan.FastTrack {
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix() {
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to multiple classes to turn off sound completely.
+	/// </summary>
+	[HarmonyPatch]
+	public static class TurnOffSoundChecksPatch {
+		internal static bool Prepare() => FastTrackOptions.Instance.DisableSound;
+
+		internal static IEnumerable<MethodBase> TargetMethods() {
+			yield return typeof(MusicManager).GetMethodSafe(nameof(MusicManager.
+				ShouldPlayDynamicMusicLoadedGame), false, PPatchTools.AnyArguments);
+			yield return typeof(SoundEvent).GetMethodSafe(nameof(SoundEvent.
+				EndOneShot), true, PPatchTools.AnyArguments);
+			yield return typeof(SoundEvent).GetMethodSafe(nameof(SoundEvent.
+				ShouldPlaySound), true, typeof(KBatchedAnimController), typeof(string),
+				typeof(HashedString), typeof(bool), typeof(bool));
+		}
+
+		/// <summary>
+		/// Applied before these methods run.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static bool Prefix(ref bool __result) {
+			__result = false;
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to multiple classes to turn off sound completely.
+	/// </summary>
+	[HarmonyPatch]
+	public static class TurnOffEventSoundsPatch {
+		internal static bool Prepare() => FastTrackOptions.Instance.DisableSound;
+		
+		internal static IEnumerable<MethodBase> TargetMethods() {
+			yield return typeof(AudioMixer).GetMethodSafe(nameof(AudioMixer.Start), false,
+				typeof(string));
+			yield return typeof(KFMOD).GetMethodSafe(nameof(KFMOD.BeginOneShot), true,
+				typeof(FMODUnity.EventReference), typeof(UnityEngine.Vector3), typeof(float));
+			yield return typeof(KFMOD).GetMethodSafe(nameof(KFMOD.CreateInstance), true,
+				typeof(FMODUnity.EventReference));
+		}
+
+		/// <summary>
+		/// Applied before these methods run.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static bool Prefix(ref FMOD.Studio.EventInstance __result) {
+			__result = default;
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Applied to AudioMixer to turn off sound completely.
+	/// </summary>
+	[HarmonyPatch(typeof(AudioMixer), nameof(AudioMixer.Stop), typeof(HashedString),
+		typeof(FMOD.Studio.STOP_MODE))]
+	public static class AudioMixer_Stop_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.DisableSound;
+
+		/// <summary>
+		/// Applied before Stop runs.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static bool Prefix(ref bool __result) {
+			__result = true;
 			return false;
 		}
 	}

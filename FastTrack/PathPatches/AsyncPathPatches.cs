@@ -18,12 +18,6 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
-using System.Collections.Generic;
-using System.Reflection;
-
-using DirtyNode = ScenePartitioner.DirtyNode;
-using SceneEntryHash = System.Collections.Generic.HashSet<ScenePartitionerEntry>;
-using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastTrack.PathPatches {
 	/// <summary>

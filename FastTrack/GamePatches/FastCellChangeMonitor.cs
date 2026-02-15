@@ -21,6 +21,7 @@ using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Pool;
 
 namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
@@ -34,12 +35,18 @@ namespace PeterHan.FastTrack.GamePatches {
 		internal static FastCellChangeMonitor FastInstance { get; private set; }
 
 		/// <summary>
+		/// Pools event entries since they turn over quite a bit.
+		/// </summary>
+		private static readonly ObjectPool<EventEntry> POOL = new ObjectPool<EventEntry>(
+			() => new EventEntry(), null, (entry) => entry.Clear(), null, false, 10, 256);
+
+		/// <summary>
 		/// Creates the singleton instance.
 		/// </summary>
 		internal static void CreateInstance() {
 			FastInstance = new FastCellChangeMonitor();
 		}
-
+		
 		/// <summary>
 		/// Stores the transforms that are currently being processed.
 		/// </summary>
@@ -51,9 +58,20 @@ namespace PeterHan.FastTrack.GamePatches {
 		private readonly IDictionary<int, EventEntry> eventHandlers;
 
 		/// <summary>
+		/// Stores the grid width, but only after initialization, to prevent a variety of race
+		/// conditions that could happen during grid initialization.
+		/// </summary>
+		private int gridWidth;
+
+		/// <summary>
 		/// Stores the transforms which are currently moving.
 		/// </summary>
 		private IDictionary<int, EventEntry> movingTransforms;
+
+		/// <summary>
+		/// The ID of the next handler to avoid a time consuming list walk on cleanup.
+		/// </summary>
+		private volatile uint nextHandler;
 
 		/// <summary>
 		/// Stores the transforms which were marked dirty during the last frame.
@@ -71,7 +89,8 @@ namespace PeterHan.FastTrack.GamePatches {
 			movingTransforms = new Dictionary<int, EventEntry>(256);
 			pendingDirtyTransforms = new Dictionary<int, EventEntry>(256);
 			previouslyMovingTransforms = new Dictionary<int, EventEntry>(256);
-			FastInstance = this;
+			gridWidth = 0;
+			nextHandler = 0U;
 		}
 
 		/// <summary>
@@ -82,10 +101,19 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <returns>The current, or newly created entry.</returns>
 		private EventEntry AddOrGet(int id, Transform transform) {
 			if (!eventHandlers.TryGetValue(id, out var current)) {
-				current = new EventEntry(transform);
+				current = POOL.Get();
+				current.transform = transform;
 				eventHandlers.Add(id, current);
 			}
 			return current;
+		}
+
+		/// <summary>
+		/// Arms the monitor and starts watching for changes.
+		/// </summary>
+		/// <param name="width">The current grid width.</param>
+		internal void Arm(int width) {
+			gridWidth = width;
 		}
 
 		/// <summary>
@@ -97,6 +125,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			movingTransforms.Clear();
 			pendingDirtyTransforms.Clear();
 			previouslyMovingTransforms.Clear();
+			Disarm();
 		}
 
 		/// <summary>
@@ -104,8 +133,9 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		/// <param name="transform">The transform to reset.</param>
 		public void ClearLastKnownCell(Transform transform) {
-			if (transform != null)
-				AddOrGet(transform.GetInstanceID(), transform).ClearLastKnownCell();
+			if (transform != null && eventHandlers.TryGetValue(transform.GetInstanceID(),
+					out var current))
+				current.ClearLastKnownCell();
 		}
 
 		/// <summary>
@@ -115,8 +145,17 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="id">The transform ID to clean up.</param>
 		/// <param name="entry">The current entry.</param>
 		private void CleanupIfEmpty(int id, EventEntry entry) {
-			if (entry.moveHandlers.Count < 1 && entry.cellChangedHandlers.Count < 1)
+			if (entry.moveHandlers.Count < 1 && entry.cellChangedHandlers.Count < 1) {
 				eventHandlers.Remove(id);
+				POOL.Release(entry);
+			}
+		}
+		
+		/// <summary>
+		/// Disarms the monitor and stops watching for changes.
+		/// </summary>
+		internal void Disarm() {
+			gridWidth = 0;
 		}
 
 		/// <summary>
@@ -136,7 +175,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		/// <param name="transform">The transform to mark dirty.</param>
 		public void MarkDirty(Transform transform) {
-			if (Grid.WidthInCells > 0 && transform != null) {
+			if (gridWidth > 0 && transform != null) {
 				int n = transform.childCount, id = transform.GetInstanceID();
 				if (eventHandlers.TryGetValue(id, out var entry))
 					pendingDirtyTransforms[id] = entry;
@@ -151,11 +190,14 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <param name="transform">The transform to track.</param>
 		/// <param name="callback">The event handler to register.</param>
 		/// <returns>The instance ID of the transform thus registered.</returns>
-		public int RegisterCellChangedHandler(Transform transform, System.Action callback) {
+		public ulong RegisterCellChangedHandler(Transform transform, Action<object> callback,
+				object context) {
 			int id = transform.GetInstanceID();
 			var entry = AddOrGet(id, transform);
-			entry.cellChangedHandlers.Add(callback);
-			return id;
+			uint uniqueID = nextHandler++;
+			entry.cellChangedHandlers.Add(new EventEntry.CellChangeHandler(callback, context,
+				uniqueID));
+			return CellChangeMonitor.Join(id, uniqueID);
 		}
 
 		/// <summary>
@@ -163,10 +205,15 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		/// <param name="transform">The transform to track.</param>
 		/// <param name="handler">The event handler to register.</param>
-		public void RegisterMovementStateChanged(Transform transform,
-				Action<Transform, bool> handler) {
-			var entry = AddOrGet(transform.GetInstanceID(), transform);
-			entry.moveHandlers.Add(handler);
+		/// <param name="context">The context to pass to the handler.</param>
+		/// <returns>The ID of the new handler.</returns>
+		public ulong RegisterMovementStateChanged(Transform transform,
+				Action<Transform, bool, object> handler, object context) {
+			int id = transform.GetInstanceID();
+			var entry = AddOrGet(id, transform);
+			uint uniqueID = nextHandler++;
+			entry.moveHandlers.Add(new EventEntry.MoveHandler(handler, context, uniqueID));
+			return CellChangeMonitor.Join(id, uniqueID);
 		}
 
 		/// <summary>
@@ -174,11 +221,16 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		/// <param name="id">The ID of the transform to untrack.</param>
 		/// <param name="callback">The event handler to unregister.</param>
-		public void UnregisterCellChangedHandler(int id, System.Action callback) {
-			if (eventHandlers.TryGetValue(id, out var entry)) {
-				entry.cellChangedHandlers.Remove(callback);
-				CleanupIfEmpty(id, entry);
+		/// <returns>true if the handler was removed, or false if it was not found.</returns>
+		public bool UnregisterCellChangedHandler(ulong id) {
+			bool result = false;
+			CellChangeMonitor.Split(id, out int iid, out uint uniqueID);
+			if (eventHandlers.TryGetValue(iid, out var entry)) {
+				result = entry.RemoveCellChangedHandler(uniqueID);
+				if (result)
+					CleanupIfEmpty(iid, entry);
 			}
+			return result;
 		}
 
 		/// <summary>
@@ -186,15 +238,20 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// </summary>
 		/// <param name="id">The ID of the transform to untrack.</param>
 		/// <param name="callback">The event handler to unregister.</param>
-		public void UnregisterMovementStateChanged(int id,
-				Action<Transform, bool> callback) {
-			if (eventHandlers.TryGetValue(id, out var entry)) {
-				entry.moveHandlers.Remove(callback);
-				CleanupIfEmpty(id, entry);
+		/// <returns>true if the handler was removed, or false if it was not found.</returns>
+		public bool UnregisterMovementStateChanged(ulong id) {
+			bool result = false;
+			CellChangeMonitor.Split(id, out int iid, out uint uniqueID);
+			if (eventHandlers.TryGetValue(iid, out var entry)) {
+				result = entry.RemoveMovementHandler(uniqueID);
+				if (result)
+					CleanupIfEmpty(iid, entry);
 			}
+			return result;
 		}
 
 		public void Update() {
+			var si = Singleton<CellChangeMonitor>.Instance;
 			// Swap the buffers
 			var dirty = pendingDirtyTransforms;
 			pendingDirtyTransforms = dirtyTransforms;
@@ -208,15 +265,15 @@ namespace PeterHan.FastTrack.GamePatches {
 			foreach (var pair in dirty) {
 				int id = pair.Key;
 				var entry = pair.Value;
-				Transform transform;
-				if ((transform = entry.transform) != null) {
-					int oldCell = entry.lastKnownCell, newCell = Grid.PosToCell(transform.
+				var transform = entry.transform;
+				if (transform != null) {
+					int oldCell = entry.lastKnownCell, newCell = si.PosToCell(transform.
 						position);
-					moving.Add(id, entry);
 					if (oldCell != newCell) {
-						entry.CallCellChangedHandlers();
 						entry.lastKnownCell = newCell;
+						entry.CallCellChangedHandlers();
 					}
+					moving.Add(id, entry);
 					if (!previouslyMovingTransforms.ContainsKey(id))
 						entry.CallMovementStateChangedHandlers(true);
 				}
@@ -236,12 +293,12 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// <summary>
 			/// The transform to which these events are bound.
 			/// </summary>
-			public readonly Transform transform;
+			public Transform transform;
 
 			/// <summary>
 			/// The handlers to call when this transform moves to a different cell.
 			/// </summary>
-			public readonly IList<System.Action> cellChangedHandlers;
+			public readonly IList<CellChangeHandler> cellChangedHandlers;
 
 			/// <summary>
 			/// The cell this transform last occupied.
@@ -251,13 +308,19 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// <summary>
 			/// The handlers to call when this transform starts or stops moving.
 			/// </summary>
-			public readonly IList<Action<Transform, bool>> moveHandlers;
+			public readonly IList<MoveHandler> moveHandlers;
 
-			public EventEntry(Transform transform) {
-				cellChangedHandlers = new List<System.Action>(8);
+			/// <summary>
+			/// If handlers are being actively invoked, safely remove the ones to be destroyed.
+			/// </summary>
+			private volatile ICollection<uint> pendingDestroy;
+
+			public EventEntry() {
+				cellChangedHandlers = new List<CellChangeHandler>(8);
 				lastKnownCell = Grid.InvalidCell;
-				moveHandlers = new List<Action<Transform, bool>>(8);
-				this.transform = transform;
+				moveHandlers = new List<MoveHandler>(8);
+				pendingDestroy = null;
+				transform = null;
 			}
 
 			/// <summary>
@@ -265,8 +328,22 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// </summary>
 			public void CallCellChangedHandlers() {
 				// Some cell changed handlers modify the list :(
-				for (int i = 0; i < cellChangedHandlers.Count; i++)
-					cellChangedHandlers[i].Invoke();
+				var destroySet = ListPool<uint, EventEntry>.Allocate();
+				int n = cellChangedHandlers.Count;
+				pendingDestroy = destroySet;
+				for (int i = 0; i < n; i++) {
+					var handler = cellChangedHandlers[i];
+					// Technically a hash set is faster asymptotically, but the removal case
+					// is uncommon and lists are quicker due to lower memory overhead
+					if (!destroySet.Contains(handler.UniqueID))
+						handler.Invoke();
+				}
+				// Clean up removed handlers
+				for (int i = n - 1; i >= 0; i--)
+					if (destroySet.Contains(cellChangedHandlers[i].UniqueID))
+						cellChangedHandlers.RemoveAt(i);
+				pendingDestroy = null;
+				destroySet.Recycle();
 			}
 
 			/// <summary>
@@ -274,8 +351,30 @@ namespace PeterHan.FastTrack.GamePatches {
 			/// </summary>
 			/// <param name="newState">The new movement state.</param>
 			public void CallMovementStateChangedHandlers(bool newState) {
-				for (int i = 0; i < moveHandlers.Count; i++)
-					moveHandlers[i].Invoke(transform, newState);
+				var destroySet = ListPool<uint, EventEntry>.Allocate();
+				int n = moveHandlers.Count;
+				pendingDestroy = destroySet;
+				for (int i = 0; i < n; i++) {
+					var handler = moveHandlers[i];
+					if (!destroySet.Contains(handler.UniqueID))
+						handler.Invoke(transform, newState);
+				}
+				for (int i = n - 1; i >= 0; i--)
+					if (destroySet.Contains(moveHandlers[i].UniqueID))
+						moveHandlers.RemoveAt(i);
+				pendingDestroy = null;
+				destroySet.Recycle();
+			}
+			
+			/// <summary>
+			/// Clears the state before sending the object back to the pool.
+			/// </summary>
+			public void Clear() {
+				cellChangedHandlers.Clear();
+				lastKnownCell = Grid.InvalidCell;
+				moveHandlers.Clear();
+				pendingDestroy = null;
+				transform = null;
 			}
 
 			/// <summary>
@@ -284,10 +383,133 @@ namespace PeterHan.FastTrack.GamePatches {
 			public void ClearLastKnownCell() {
 				lastKnownCell = Grid.InvalidCell;
 			}
+			
+			/// <summary>
+			/// Removes a cell change handler.
+			/// </summary>
+			/// <param name="uniqueID">The handler to remove.</param>
+			/// <returns>true if a handler was removed, or false otherwise</returns>
+			public bool RemoveCellChangedHandler(uint uniqueID) {
+				int n = cellChangedHandlers.Count;
+				bool result = false;
+				var pd = pendingDestroy;
+				for (int i = 0; i < n; i++) {
+					// There are not too many handlers and fewer changes, lists are efficient
+					var ch = cellChangedHandlers[i];
+					if (ch.UniqueID == uniqueID) {
+						if (pd != null)
+							pd.Add(uniqueID);
+						else
+							cellChangedHandlers.RemoveAt(i);
+						result = true;
+						break;
+					}
+				}
+				return result;
+			}
+			
+			/// <summary>
+			/// Removes a movement changed handler.
+			/// </summary>
+			/// <param name="uniqueID">The handler to remove.</param>
+			/// <returns>true if a handler was removed, or false otherwise</returns>
+			public bool RemoveMovementHandler(uint uniqueID) {
+				int n = moveHandlers.Count;
+				bool result = false;
+				var pd = pendingDestroy;
+				for (int i = 0; i < n; i++) {
+					var ch = moveHandlers[i];
+					if (ch.UniqueID == uniqueID) {
+						if (pd != null)
+							pd.Add(uniqueID);
+						else
+							moveHandlers.RemoveAt(i);
+						result = true;
+						break;
+					}
+				}
+				return result;
+			}
 
 			public override string ToString() {
 				return "Event Handlers for {0}: {1:D} on change, {2:D} on move".F(transform.
 					name, cellChangedHandlers.Count, moveHandlers.Count);
+			}
+
+			/// <summary>
+			/// Stores the cell change handler and the context to use when calling it.
+			/// </summary>
+			public sealed class CellChangeHandler : IEquatable<CellChangeHandler> {
+				public readonly Action<object> Handler;
+
+				public readonly object Context;
+				
+				public readonly uint UniqueID;
+
+				public CellChangeHandler(Action<object> handler, object context,
+						uint uniqueID) {
+					Context = context;
+					Handler = handler ?? throw new ArgumentNullException(nameof(handler));
+					UniqueID = uniqueID;
+ 				}
+
+				public override bool Equals(object obj) {
+					return obj is CellChangeHandler ch && ch.UniqueID == UniqueID;
+				}
+
+				public bool Equals(CellChangeHandler other) {
+					return UniqueID == other.UniqueID;
+				}
+
+				public override int GetHashCode() {
+					return (int)UniqueID;
+				}
+				
+				public void Invoke() {
+					Handler.Invoke(Context);
+				}
+
+				public override string ToString() {
+					return "Event Handler: " + Handler + " with context " + Context;
+				}
+			}
+
+			/// <summary>
+			/// Stores the handler and the context to use when calling it.
+			/// </summary>
+			public sealed class MoveHandler : IEquatable<MoveHandler> {
+				public readonly Action<Transform, bool, object> Handler;
+
+				public readonly object Context;
+
+				public readonly uint UniqueID;
+
+				public MoveHandler(Action<Transform, bool, object> handler, object context,
+						uint uniqueID) {
+					Context = context;
+					Handler = handler ?? throw new ArgumentNullException(nameof(handler));
+					UniqueID = uniqueID;
+				}
+
+				public override bool Equals(object obj) {
+					return obj is MoveHandler ch && ch.UniqueID == UniqueID;
+				}
+				
+				public bool Equals(MoveHandler other) {
+					return UniqueID == other.UniqueID;
+				}
+
+				public override int GetHashCode() {
+					return (int)UniqueID;
+				}
+				
+				public void Invoke(Transform transform, bool moving) {
+					Handler.Invoke(transform, moving, Context);
+				}
+
+				public override string ToString() {
+					return "Event Handler: " + Handler + " with context " + Context;
+				}
 			}
 		}
 	}
@@ -374,10 +596,10 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Applied before RegisterCellChangedHandler runs.
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(Transform transform, System.Action callback,
-				ref int __result) {
+		internal static bool Prefix(Transform transform, Action<object> callback,
+				object context, ref ulong __result) {
 			__result = FastCellChangeMonitor.FastInstance.RegisterCellChangedHandler(transform,
-				callback);
+				callback, context);
 			return false;
 		}
 	}
@@ -395,9 +617,10 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Applied before RegisterMovementStateChanged runs.
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(Transform transform, Action<Transform, bool> handler) {
-			FastCellChangeMonitor.FastInstance.RegisterMovementStateChanged(transform,
-				handler);
+		internal static bool Prefix(Transform transform, object context,
+				Action<Transform, bool, object> handler, ref ulong __result) {
+			__result = FastCellChangeMonitor.FastInstance.RegisterMovementStateChanged(
+				transform, handler, context);
 			return false;
 		}
 	}
@@ -407,27 +630,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// version.
 	/// </summary>
 	[HarmonyPatch(typeof(CellChangeMonitor), nameof(CellChangeMonitor.
-		UnregisterCellChangedHandler), typeof(int), typeof(System.Action))]
-	public static class CellChangeMonitor_UnregisterCellChangedHandler_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
-
-		/// <summary>
-		/// Applied before UnregisterCellChangedHandler runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(int instance_id, System.Action callback) {
-			FastCellChangeMonitor.FastInstance.UnregisterCellChangedHandler(instance_id,
-				callback);
-			return false;
-		}
-	}
-
-	/// <summary>
-	/// Applied to CellChangeMonitor to replace UnregisterCellChangedHandler with the fast
-	/// version.
-	/// </summary>
-	[HarmonyPatch(typeof(CellChangeMonitor), nameof(CellChangeMonitor.
-		UnregisterCellChangedHandler), typeof(Transform), typeof(System.Action))]
+		UnregisterCellChangedHandler))]
 	public static class CellChangeMonitor_UnregisterCellChangedHandler2_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
 
@@ -435,9 +638,9 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Applied before UnregisterCellChangedHandler runs.
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(Transform transform, System.Action callback) {
-			FastCellChangeMonitor.FastInstance.UnregisterCellChangedHandler(transform.
-				GetInstanceID(), callback);
+		internal static bool Prefix(ref ulong handlerID) {
+			if (FastCellChangeMonitor.FastInstance.UnregisterCellChangedHandler(handlerID))
+				handlerID = 0UL;
 			return false;
 		}
 	}
@@ -447,7 +650,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// version.
 	/// </summary>
 	[HarmonyPatch(typeof(CellChangeMonitor), nameof(CellChangeMonitor.
-		UnregisterMovementStateChanged), typeof(int), typeof(Action<Transform, bool>))]
+		UnregisterMovementStateChanged))]
 	public static class CellChangeMonitor_UnregisterMovementStateChanged_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
 
@@ -455,30 +658,25 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Applied before UnregisterMovementStateChanged runs.
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(int instance_id, Action<Transform, bool> callback) {
-			FastCellChangeMonitor.FastInstance.UnregisterMovementStateChanged(instance_id,
-				callback);
+		internal static bool Prefix(ref ulong handlerid) {
+			if (FastCellChangeMonitor.FastInstance.UnregisterMovementStateChanged(handlerid))
+				handlerid = 0UL;
 			return false;
 		}
 	}
 
 	/// <summary>
-	/// Applied to CellChangeMonitor to replace UnregisterMovementStateChanged with the fast
-	/// version.
+	/// Applied to CellChangeMonitor to arm cell change updates after most things load.
 	/// </summary>
-	[HarmonyPatch(typeof(CellChangeMonitor), nameof(CellChangeMonitor.
-		UnregisterMovementStateChanged), typeof(Transform), typeof(Action<Transform, bool>))]
-	public static class CellChangeMonitor_UnregisterMovementStateChanged2_Patch {
+	[HarmonyPatch(typeof(CellChangeMonitor), nameof(CellChangeMonitor.SetGridSize))]
+	public static class CellChangeMonitor_SetGridSize_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
 
 		/// <summary>
-		/// Applied before UnregisterMovementStateChanged runs.
+		/// Applied after SetGridSize runs.
 		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(Transform transform, Action<Transform, bool> callback) {
-			FastCellChangeMonitor.FastInstance.UnregisterMovementStateChanged(transform.
-				GetInstanceID(), callback);
-			return false;
+		internal static void Postfix(CellChangeMonitor __instance) {
+			FastCellChangeMonitor.FastInstance.Arm(__instance.gridWidth);
 		}
 	}
 }

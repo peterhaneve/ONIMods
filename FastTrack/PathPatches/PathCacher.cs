@@ -40,6 +40,21 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// Map path cache IDs to path cache values.
 		/// </summary>
 		private static ConcurrentDictionary<PathGrid, double> pathCache;
+		
+		/// <summary>
+		/// Checks to see if the path cache is clean.
+		/// </summary>
+		/// <param name="grid">The grid that is querying.</param>
+		/// <param name="cell">The root cell that will be used for updates.</param>
+		/// <returns>true if the cache is clean, or false if it needs to run.</returns>
+		internal static bool CheckCache(PathGrid grid, int cell) {
+			// If nothing has changed since last time, it is a hit!
+			bool hit = IsValid(grid) && (!grid.applyOffset || Grid.XYToCell(grid.rootX + grid.
+				widthInCells / 2, grid.rootY + grid.heightInCells / 2) == cell);
+			if (FastTrackOptions.Instance.Metrics)
+				Metrics.DebugMetrics.PATH_CACHE.Log(hit);
+			return hit;
+		}
 
 		/// <summary>
 		/// Avoid leaking the PathGrids when the game ends.
