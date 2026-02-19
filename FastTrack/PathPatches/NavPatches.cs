@@ -390,7 +390,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			bool patched = false;
 			foreach (var instr in instructions) {
 				if (target != null && replacement != null && instr.opcode == OpCodes.
-						Callvirt && instr.operand is MethodBase info && info == replacement) {
+						Callvirt && instr.operand is MethodBase info && info == target) {
 					instr.opcode = OpCodes.Call;
 					instr.operand = replacement;
 #if DEBUG

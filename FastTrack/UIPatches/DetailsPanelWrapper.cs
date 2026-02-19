@@ -143,12 +143,11 @@ namespace PeterHan.FastTrack.UIPatches {
 								targetTab.bodyInstance);
 							screen.screenInstance = inst;
 						}
-						int sortOrder = inst.GetSideScreenSortOrder();
 						if (!dss.activeInHierarchy)
 							dss.SetActive(true);
 						inst.SetTarget(target);
 						inst.Show();
-						sortedScreens.Add(new SideScreenPair(screen, sortOrder));
+						sortedScreens.Add(new SideScreenPair(screen, inst.GetSideScreenSortOrder()));
 						anyScreens = true;
 					} else if (inst != null && (instGO = inst.gameObject).activeSelf) {
 						instGO.SetActive(false);
