@@ -268,6 +268,23 @@ namespace PeterHan.PLib.Core {
 		}
 
 		/// <summary>
+		/// Coerces a floating point number to the nearest multiple of the increment.
+		/// </summary>
+		/// <param name="value">The original number.</param>
+		/// <param name="increment">The nearest increment to which to round.</param>
+		/// <returns>The nearest value that is a multiple of increment to value.</returns>
+		public static float RoundTo(this float value, float increment) {
+			float result = value;
+			if (increment > 0.0f && !float.IsInfinity(increment)) {
+				double inc = increment;
+				// Use double precision temporarily as it is less likely to lose precision
+				result = (float)(Math.Round((double)value / inc, 0, MidpointRounding.
+					ToEven) * inc);
+			}
+			return result;
+		}
+
+		/// <summary>
 		/// Sets a game object's parent.
 		/// </summary>
 		/// <param name="child">The game object to modify.</param>

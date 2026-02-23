@@ -62,7 +62,7 @@ namespace PeterHan.PLib.Options {
 			return new PSliderSingle() {
 				OnValueChanged = OnSliderChanged, ToolTip = LookInStrings(Tooltip),
 				MinValue = (float)limits.Minimum, MaxValue = (float)limits.Maximum,
-				InitialValue = value
+				InitialValue = value, Increment = (float)limits.Step
 			};
 		}
 

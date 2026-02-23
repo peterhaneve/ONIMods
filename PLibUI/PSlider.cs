@@ -64,6 +64,12 @@ namespace PeterHan.PLib.UI {
 		/// The size of the slider handle.
 		/// </summary>
 		public float HandleSize { get; set; }
+		
+		/// <summary>
+		/// The increment to be used for the slider for steps. If 0, any value in range can
+		/// be used.
+		/// </summary>
+		public float Increment { get; set; }
 
 		/// <summary>
 		/// The initial slider value.
@@ -126,6 +132,7 @@ namespace PeterHan.PLib.UI {
 			Direction = Slider.Direction.LeftToRight;
 			HandleColor = PUITuning.Colors.ButtonPinkStyle;
 			HandleSize = 16.0f;
+			Increment = 0.0f;
 			InitialValue = 0.5f;
 			IntegersOnly = false;
 			MaxValue = 1.0f;
@@ -146,6 +153,9 @@ namespace PeterHan.PLib.UI {
 		}
 
 		public GameObject Build() {
+			var onChange = OnValueChanged;
+			var onDrag = OnDrag;
+			float inc = IntegersOnly ? 0.0f : Increment;
 			// Bounds must be valid
 			if (MaxValue.IsNaNOrInfinity())
 				throw new ArgumentException(nameof(MaxValue));
@@ -187,10 +197,19 @@ namespace PeterHan.PLib.UI {
 			ks.handleRect = CreateHandle(slider).rectTransform();
 			ks.fillRect = fill.rectTransform();
 			ks.SetDirection(Direction, true);
-			if (OnValueChanged != null)
-				ks.onValueChanged.AddListener((value) => OnValueChanged(slider, value));
-			if (OnDrag != null)
-				ks.onDrag += () => OnDrag(slider, ks.value);
+			// Avoid capturing the PSlider so it is not leaked
+			ks.onValueChanged.AddListener((value) => {
+				if (inc > 0.0f && !float.IsInfinity(inc)) {
+					float newValue = value.RoundTo(inc).InRange(ks.minValue, ks.maxValue);
+					if (!Mathf.Approximately(newValue, value)) {
+						value = newValue;
+						ks.SetValueWithoutNotify(newValue);
+					}
+				}
+				onChange?.Invoke(slider, value);
+			});
+			if (onDrag != null)
+				ks.onDrag += () => onDrag.Invoke(slider, ks.value);
 			// Manually add tooltip with slider link
 			string tt = ToolTip;
 			if (!string.IsNullOrEmpty(tt)) {

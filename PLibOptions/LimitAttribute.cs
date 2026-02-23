@@ -36,9 +36,18 @@ namespace PeterHan.PLib.Options {
 		/// </summary>
 		public double Minimum { get; }
 
-		public LimitAttribute(double min, double max) {
+		/// <summary>
+		/// The increment used for sliders. Only some controls support this attribute.
+		/// For example, it makes no sense for a string length limit.
+		/// </summary>
+		public double Step { get; set; }
+
+		public LimitAttribute(double min, double max) : this(min, max, 0.0) { }
+		
+		public LimitAttribute(double min, double max, double step) {
 			Minimum = min.IsNaNOrInfinity() ? 0.0 : min;
 			Maximum = (max.IsNaNOrInfinity() || max < min) ? min : max;
+			Step = step.IsNaNOrInfinity() ? 0.0 : step;
 		}
 
 		/// <summary>
