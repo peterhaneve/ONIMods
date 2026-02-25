@@ -96,7 +96,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			for (int i = 0; i < n; i++) {
 				var markedClearable = clearables[i];
 				var pickupable = markedClearable.pickupable;
-				int cost = pickupable.GetNavigationCost(navigator, pickupable.cachedCell);
+				int cost = pickupable.GetNavigationCost(navigator, pickupable.GetCell());
 				if (cost >= 0)
 					sortedClearables.Add(new SortedClearable {
 						pickupable = pickupable,
@@ -573,7 +573,7 @@ namespace PeterHan.FastTrack.PathPatches {
 					foreach (var item in byId[index].fetchables.GetDataList()) {
 						var pickupable = item.pickupable;
 						var tracker = pickupable.offsetTracker;
-						int cachedCell = pickupable.cachedCell;
+						int cachedCell = pickupable.GetCell();
 						if (tracker != null && tracker.previousCell != cachedCell)
 							// If an update is actually being performed here, the cached cell
 							// may need to be updated, to fix incubator related issues

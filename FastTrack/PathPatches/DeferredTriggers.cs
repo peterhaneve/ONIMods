@@ -123,7 +123,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			while (cacheCellPending.TryDequeue(out var item))
 				// Pickupables can be destroyed mid-frame
 				if (item != null) {
-					int cell = Grid.PosToCell(item.transform.position), oldCell = item.cachedCell;
+					int cell = Grid.PosToCell(item.transform.position), oldCell = item.GetCell();
 					if (cell != oldCell) {
 						item.UpdateCachedCell(cell);
 						gsp.UpdatePosition(item.solidPartitionerEntry, cell);

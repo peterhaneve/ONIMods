@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.Core;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -123,10 +124,9 @@ namespace PeterHan.FastTrack.SensorPatches {
 					var smi = toDo.Dequeue();
 					var master = smi.master;
 					int cell;
-					if (master != null && Grid.IsValidCell(cell = Grid.PosToCell(master.
-							transform.position)))
-						smi.sm.isReachable.Set(gp.IsReachable(cell, master.GetOffsets(cell)),
-							smi);
+					if (master != null && Grid.IsValidCell(cell = master.GetCell()))
+						smi.sm.isReachable.Set(gp.IsAllReachable(cell, master.
+							GetOffsets(cell)), smi);
 				}
 			}
 		}

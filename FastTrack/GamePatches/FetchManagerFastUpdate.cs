@@ -62,7 +62,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			for (int i = 0; i < n; i++) {
 				var fetchable = fetchables[i];
 				var target = fetchable.pickupable;
-				int cell = target.cachedCell;
+				int cell = target.GetCell();
 				if (!pathCosts.TryGetValue(cell, out int cost))
 					pathCosts.Add(cell, cost = target.GetNavigationCost(worker_navigator,
 						cell));

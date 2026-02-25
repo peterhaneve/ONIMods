@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using Epic.OnlineServices.Platform;
 using HarmonyLib;
 using PeterHan.PLib.Core;
 using System.Collections.Generic;
@@ -202,6 +201,26 @@ namespace PeterHan.FastTrack.PathPatches {
 	}
 
 	/// <summary>
+	/// Applied to Navigator to detect when a cache hit occurs and avoid releasing the result.
+	/// </summary>
+	[HarmonyPatch(typeof(Navigator), nameof(Navigator.TakeResult))]
+	public static class Navigator_TakeResult_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
+
+		/// <summary>
+		/// Applied before TakeResult runs.
+		/// </summary>
+		[HarmonyPriority(Priority.Low)]
+		internal static bool Prefix(ref AsyncPathProber.WorkResult result,
+				ref PathGrid __result) {
+			bool miss = result.pathGrid != null;
+			if (miss)
+				__result = null;
+			return miss;
+		}
+	}
+
+	/// <summary>
 	/// Applied to PathGrid to add a lock around a race condition in BeginUpdate where rootX
 	/// and rootY could be accessed while being updated.
 	/// </summary>
@@ -256,7 +275,7 @@ namespace PeterHan.FastTrack.PathPatches {
 	}
 	
 	/// <summary>
-	/// Applied to AsyncPathProber.Workorder.Execute to handle delayed priority mode and the
+	/// Applied to AsyncPathProber.WorkOrder.Execute to handle delayed priority mode and the
 	/// path cache.
 	/// </summary>
 	[HarmonyPatch(typeof(AsyncPathProber.WorkOrder), nameof(AsyncPathProber.WorkOrder.Execute))]
@@ -275,22 +294,33 @@ namespace PeterHan.FastTrack.PathPatches {
 				ref AsyncPathProber.WorkResult result) {
 			// Path cache hits should skip the method
 			var options = FastTrackOptions.Instance;
-			bool miss = !options.CachePaths || !PathCacher.CheckCache(result.pathGrid,
+			var nav = __instance.navigator;
+			PathGrid originalGrid = nav.PathGrid, newGrid = result.pathGrid;
+			bool miss = !options.CachePaths || !PathCacher.CheckCache(originalGrid,
 				__instance.originCell);
 			var reachables = result.reachableCells;
 			if (!miss) {
-				// Manually release for chores
-				if (options.FastReachability && options.ChorePriorityMode ==
-						FastTrackOptions.NextChorePriority.Delay)
-					PriorityBrainScheduler.Instance.PathReady(__instance.navigator);
+				var manager = AsyncPathProber.Instance;
+				// Do not bump the serial number, the path grid is still accurate using the old
+				// one
 				if (__instance.computeReachables && reachables != null) {
 					reachables.Clear();
-					reachables.AddRange(__instance.navigator.occupiedCells);
+					reachables.AddRange(nav.occupiedCells);
 					reachables.Sort();
 					// No changes
 					result.noLongerReachableCells.Clear();
 					result.newlyReachableCells.Clear();
 				}
+				// The Navigator's TakeResult will try to release the old grid and stuff in a
+				// new one. Release the new one instead
+				if (manager != null)
+					manager.gridPool[newGrid.AllocatedClassification].Release(newGrid);
+				result.pathGrid = null;
+				// Manually release for chores
+				if (options.FastReachability && options.ChorePriorityMode ==
+						FastTrackOptions.NextChorePriority.Delay)
+					PriorityBrainScheduler.Instance.PathReady(nav);
+				__instance.Cleanup();
 			}
 			__state = miss;
 			return miss;
@@ -332,14 +362,14 @@ namespace PeterHan.FastTrack.PathPatches {
 			bool miss = !options.CachePaths || !PathCacher.CheckCache(navigator.PathGrid,
 				navigator.cachedCell);
 			if (!miss) {
-				// Manually release for chores
-				if (options.FastReachability && options.ChorePriorityMode ==
-						FastTrackOptions.NextChorePriority.Delay)
-					PriorityBrainScheduler.Instance.PathReady(navigator);
 				if (found_cells != null && navigator.reportOccupation) {
 					found_cells.Clear();
 					found_cells.AddRange(navigator.occupiedCells);
 				}
+				// Manually release for chores
+				if (options.FastReachability && options.ChorePriorityMode ==
+						FastTrackOptions.NextChorePriority.Delay)
+					PriorityBrainScheduler.Instance.PathReady(navigator);
 			}
 			__state = miss;
 			return miss;
@@ -379,8 +409,7 @@ namespace PeterHan.FastTrack.PathPatches {
 		}
 
 		/// <summary>
-		/// Transpiles Run to use a slightly altered EndUpdate method instead and to bypass
-		/// the calculations if the path cache is valid.
+		/// Transpiles Run to use a slightly altered EndUpdate method instead.
 		/// </summary>
 		internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
 				ILGenerator generator) {

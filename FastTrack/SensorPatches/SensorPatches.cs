@@ -63,17 +63,21 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// means it was previously zero).
 		/// </summary>
 		/// <param name="value">The incremented value.</param>
-		private static void EnqueueIfOne(int value) {
+		/// <param name="cell">The cell that changed.</param>
+		private static void EnqueueIfOne(int value, int cell) {
 			if (value == 1)
-				FastGroupProber.Instance?.AddDirtyCell(value);
+				FastGroupProber.Instance?.AddDirtyCell(cell);
 		}
 
-		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
+				MethodBase __originalMethod) {
 			var inc = typeof(Interlocked).GetMethodSafe(nameof(Interlocked.Increment), true,
 				typeof(int).MakeByRefType());
 			var target = typeof(MinionGroupProber_Occupy_Patch).GetMethodSafe(
-				nameof(EnqueueIfOne), true, typeof(int));
+				nameof(EnqueueIfOne), true, typeof(int), typeof(int));
+			var methodParams = __originalMethod.GetParameters();
 			int state = 0;
+			var paramType = methodParams.Length > 0 ? methodParams[0].ParameterType : null;
 			foreach (var instr in instructions) {
 				var opcode = instr.opcode;
 				// Replace the pop after the call to Interlocked.Increment
@@ -81,6 +85,12 @@ namespace PeterHan.FastTrack.SensorPatches {
 						method == inc)
 					state = 1;
 				if (opcode == OpCodes.Pop && state == 1) {
+					// The two patches are similar enough to use the parameter to determine
+					if (paramType == typeof(int))
+						yield return new CodeInstruction(OpCodes.Ldarg_1);
+					else
+						// Lots of ways around this, but this method is unlikely to change
+						yield return new CodeInstruction(OpCodes.Ldloc_1);
 					yield return new CodeInstruction(OpCodes.Call, target);
 					state = 2;
 				} else
@@ -138,17 +148,21 @@ namespace PeterHan.FastTrack.SensorPatches {
 		/// Enqueues a dirty path grid cell, only if Interlocked.Decrement returned 0.
 		/// </summary>
 		/// <param name="value">The incremented value.</param>
-		private static void EnqueueIfZero(int value) {
+		/// <param name="cell">The cell that changed.</param>
+		private static void EnqueueIfZero(int value, int cell) {
 			if (value == 0)
-				FastGroupProber.Instance?.AddDirtyCell(value);
+				FastGroupProber.Instance?.AddDirtyCell(cell);
 		}
 
-		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions,
+				MethodBase __originalMethod) {
 			var dec = typeof(Interlocked).GetMethodSafe(nameof(Interlocked.Decrement), true,
 				typeof(int).MakeByRefType());
 			var target = typeof(MinionGroupProber_Vacate_Patch).GetMethodSafe(
-				nameof(EnqueueIfZero), true, typeof(int));
+				nameof(EnqueueIfZero), true, typeof(int), typeof(int));
+			var methodParams = __originalMethod.GetParameters();
 			int state = 0;
+			var paramType = methodParams.Length > 0 ? methodParams[0].ParameterType : null;
 			foreach (var instr in instructions) {
 				var opcode = instr.opcode;
 				// Replace the pop after the call to Interlocked.Decrement
@@ -156,6 +170,10 @@ namespace PeterHan.FastTrack.SensorPatches {
 						method == dec)
 					state = 1;
 				if (opcode == OpCodes.Pop && state == 1) {
+					if (paramType == typeof(int))
+						yield return new CodeInstruction(OpCodes.Ldarg_1);
+					else
+						yield return new CodeInstruction(OpCodes.Ldloc_1);
 					yield return new CodeInstruction(OpCodes.Call, target);
 					state = 2;
 				} else

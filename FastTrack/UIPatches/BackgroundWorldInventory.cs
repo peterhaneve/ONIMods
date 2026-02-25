@@ -68,7 +68,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			lock (items) {
 				foreach (var pickupable in items)
 					if (pickupable != null) {
-						int cell = pickupable.cachedCell;
+						int cell = pickupable.GetCell();
 						if (Grid.IsValidCell(cell) && Grid.WorldIdx[cell] == worldId &&
 								!pickupable.KPrefabID.HasTag(GameTags.StoredPrivate))
 							total += pickupable.TotalAmount;
