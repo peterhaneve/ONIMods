@@ -214,7 +214,7 @@ namespace PeterHan.PLib.Options {
 			var indexes = prop.GetIndexParameters();
 			if (indexes.Length < 1) {
 				var attributes = ListPool<Attribute, OptionsEntry>.Allocate();
-				bool dlcMatch = true, restart = false;
+				bool dlcMatch = true, modMatch = true, restart = false;
 				attributes.AddRange(prop.GetCustomAttributes());
 				int n = attributes.Count;
 				for (int i = 0; i < n; i++) {
@@ -223,10 +223,14 @@ namespace PeterHan.PLib.Options {
 					if (attr is RequireDLCAttribute requireDLC && PGameUtils.IsDLCOwned(
 							requireDLC.DlcID) != requireDLC.Required)
 						dlcMatch = false;
+					// Do not create an entry if the required mod is not enabled
+					else if (attr is RequireModAttribute requireMod && !Util.IsModEnabled(
+						requireMod.ModStaticID))
+						modMatch = false;
 					else if (attr is RestartRequiredAttribute)
 						restart = true;
 				}
-				if (dlcMatch)
+				if (dlcMatch && modMatch)
 					for (int i = 0; i < n; i++) {
 						result = TryCreateEntry(attributes[i], prop, depth, restart);
 						if (result != null)

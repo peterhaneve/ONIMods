@@ -25,7 +25,8 @@ namespace PeterHan.PLib.Options {
 	/// show or hide it for particular DLCs. If the option is hidden, the value currently
 	/// in the options file is preserved unchanged when reading or writing.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Property, AllowMultiple = true, Inherited = true)]
+	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true,
+		Inherited = true)]
 	public sealed class RequireDLCAttribute : Attribute {
 		/// <summary>
 		/// The DLC ID to check.
@@ -42,8 +43,9 @@ namespace PeterHan.PLib.Options {
 		/// Annotates an option field as requiring the specified DLC. The [Option] attribute
 		/// must also be present to be displayed at all.
 		/// </summary>
-		/// <param name="dlcID">The DLC ID to require. Must be one of:
-		/// DlcManager.EXPANSION1_ID, DlcManager.VANILLA_ID</param>
+		/// <param name="dlcID">The DLC ID to require. Common values include:
+		/// DlcManager.EXPANSION1_ID, DlcManager.DLC2_ID, DlcManager.DLC4_ID,
+		/// or DlcManager.VANILLA_ID</param>
 		public RequireDLCAttribute(string dlcID) {
 			DlcID = dlcID;
 			Required = true;
@@ -53,8 +55,9 @@ namespace PeterHan.PLib.Options {
 		/// Annotates an option field as requiring or forbidding the specified DLC. The
 		/// [Option] attribute must also be present to be displayed at all.
 		/// </summary>
-		/// <param name="dlcID">The DLC ID to require or forbid. Must be one of:
-		/// DlcManager.EXPANSION1_ID, DlcManager.VANILLA_ID</param>
+		/// <param name="dlcID">The DLC ID to require or forbid. Common values include:
+		/// DlcManager.EXPANSION1_ID, DlcManager.DLC2_ID, DlcManager.DLC4_ID,
+		/// or DlcManager.VANILLA_ID</param>
 		/// <param name="required">true to require the DLC, or false to forbid it.</param>
 		public RequireDLCAttribute(string dlcID, bool required) {
 			DlcID = dlcID ?? "";
