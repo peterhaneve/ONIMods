@@ -213,26 +213,23 @@ namespace PeterHan.PLib.Options {
 			// Must have the annotation, cannot be indexed
 			var indexes = prop.GetIndexParameters();
 			if (indexes.Length < 1) {
-				var attributes = ListPool<Attribute, OptionsEntry>.Allocate();
-				bool dlcMatch = true, restart = false;
-				attributes.AddRange(prop.GetCustomAttributes());
-				int n = attributes.Count;
+				bool conditionsMatch = true, restart = false;
+				var attributes = prop.GetCustomAttributes(false);
+				int n = attributes.Length;
 				for (int i = 0; i < n; i++) {
 					var attr = attributes[i];
-					// Do not create an entry if the DLC does not match
-					if (attr is RequireDLCAttribute requireDLC && PGameUtils.IsDLCOwned(
-							requireDLC.DlcID) != requireDLC.Required)
-						dlcMatch = false;
+					// Do not create an entry if the condition does not match
+					if (attr is IRequireFilter requirement && !requirement.Filter())
+						conditionsMatch = false;
 					else if (attr is RestartRequiredAttribute)
 						restart = true;
 				}
-				if (dlcMatch)
+				if (conditionsMatch)
 					for (int i = 0; i < n; i++) {
 						result = TryCreateEntry(attributes[i], prop, depth, restart);
 						if (result != null)
 							break;
 					}
-				attributes.Recycle();
 			}
 			return result;
 		}
@@ -246,7 +243,7 @@ namespace PeterHan.PLib.Options {
 		/// <param name="depth">The current depth of iteration to avoid infinite loops.</param>
 		/// <param name="restart">true if the options class requests a restart for value changes.</param>
 		/// <returns>The OptionsEntry created from the attribute, or null if none was.</returns>
-		private static IOptionsEntry TryCreateEntry(Attribute attribute, PropertyInfo prop,
+		private static IOptionsEntry TryCreateEntry(object attribute, PropertyInfo prop,
 				int depth, bool restart) {
 			IOptionsEntry result = null;
 			if (prop == null)

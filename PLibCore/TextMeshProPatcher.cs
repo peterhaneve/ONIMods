@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
+using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
 using TMPro;
@@ -32,6 +33,13 @@ namespace PeterHan.PLib.UI {
 		/// The ID to use for Harmony patches.
 		/// </summary>
 		private const string HARMONY_ID = "TextMeshProPatch";
+		
+		/// <summary>
+		/// Only applies to older versions where TMP input fields have clipping bugs in scroll
+		/// rectangles.
+		/// </summary>
+		private static readonly IDetouredField<TMP_Text, bool> RECT_MASK_FIX = PDetours.
+			TryDetourField<TMP_Text, bool>("ignoreRectMaskCulling");
 
 		/// <summary>
 		/// Tracks whether the TMP patches have been checked.
@@ -51,20 +59,25 @@ namespace PeterHan.PLib.UI {
 				RectTransform ___caretRectTrans, TMP_Text ___m_TextComponent) {
 			bool cont = true;
 			var crt = ___caretRectTrans;
-			if (___m_TextComponent != null && crt != null && __instance != null &&
-				___m_TextComponent.isActiveAndEnabled) {
-				var rt = ___m_TextComponent.rectTransform;
-				if (crt.localPosition != rt.localPosition ||
-						crt.localRotation != rt.localRotation ||
-						crt.localScale != rt.localScale ||
-						crt.anchorMin != rt.anchorMin ||
-						crt.anchorMax != rt.anchorMax ||
-						crt.anchoredPosition != rt.anchoredPosition ||
-						crt.sizeDelta != rt.sizeDelta ||
-						crt.pivot != rt.pivot) {
-					__instance.StartCoroutine(ResizeCaret(crt, rt));
-					cont = false;
+			try {
+				if (___m_TextComponent != null && crt != null && __instance != null &&
+					___m_TextComponent.isActiveAndEnabled) {
+					var rt = ___m_TextComponent.rectTransform;
+					if (crt.localPosition != rt.localPosition ||
+							crt.localRotation != rt.localRotation ||
+							crt.localScale != rt.localScale ||
+							crt.anchorMin != rt.anchorMin ||
+							crt.anchorMax != rt.anchorMax ||
+							crt.anchoredPosition != rt.anchoredPosition ||
+							crt.sizeDelta != rt.sizeDelta ||
+							crt.pivot != rt.pivot) {
+						__instance.StartCoroutine(ResizeCaret(crt, rt));
+						cont = false;
+					}
 				}
+			} catch (Exception e) {
+				// Better to swallow this one than break all TMP fields
+				PUtil.LogExcWarn(e);
 			}
 			return cont;
 		}
@@ -79,9 +92,7 @@ namespace PeterHan.PLib.UI {
 			if (patchList != null) {
 				foreach (var patch in patchList) {
 					string ownerName = patch.PatchMethod?.DeclaringType?.Name;
-					// Avoid stomping ourselves, or legacy PLibs < 3.14
-					if (ownerName == nameof(TextMeshProPatcher) || ownerName == "PLibPatches")
-					{
+					if (ownerName == nameof(TextMeshProPatcher)) {
 #if DEBUG
 						PUtil.LogDebug("TextMeshProPatcher found existing patch from: {0}".
 							F(patch.owner));
@@ -95,7 +106,7 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
-		/// Patches TMP_InputField with fixes, but only if necessary.
+		/// Patches TMP_InputField, but only if necessary to fix bugs.
 		/// </summary>
 		/// <param name="tmpType">The type of TMP_InputField.</param>
 		private static void InputFieldPatches(Type tmpType) {
@@ -105,10 +116,12 @@ namespace PeterHan.PLib.UI {
 			if (aip != null && !HasOurPatch(Harmony.GetPatchInfo(aip)?.Prefixes))
 				instance.Patch(aip, prefix: new HarmonyMethod(typeof(TextMeshProPatcher),
 					nameof(AssignPositioningIfNeeded_Prefix)));
-			var oe = tmpType.GetMethodSafe("OnEnable", false, PPatchTools.AnyArguments);
-			if (oe != null && !HasOurPatch(Harmony.GetPatchInfo(oe)?.Postfixes))
-				instance.Patch(oe, postfix: new HarmonyMethod(typeof(TextMeshProPatcher),
-					nameof(OnEnable_Postfix)));
+			if (RECT_MASK_FIX != null) {
+				var oe = tmpType.GetMethodSafe("OnEnable", false, PPatchTools.AnyArguments);
+				if (oe != null && !HasOurPatch(Harmony.GetPatchInfo(oe)?.Postfixes))
+					instance.Patch(oe, postfix: new HarmonyMethod(typeof(TextMeshProPatcher),
+						nameof(OnEnable_Postfix)));
+			}
 		}
 
 		/// <summary>
@@ -118,9 +131,8 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		private static void OnEnable_Postfix(UnityEngine.UI.Scrollbar ___m_VerticalScrollbar,
 				TMP_Text ___m_TextComponent) {
-			var component = ___m_TextComponent;
-			if (component != null)
-				component.ignoreRectMaskCulling = ___m_VerticalScrollbar != null;
+			if (___m_TextComponent != null)
+				RECT_MASK_FIX?.Set(___m_TextComponent, ___m_VerticalScrollbar != null);
 		}
 
 		/// <summary>

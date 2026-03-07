@@ -37,26 +37,51 @@ namespace PeterHan.PLib.Options {
 		private static EnumOption GetAttribute(object enumValue, Type fieldType) {
 			if (enumValue == null)
 				throw new ArgumentNullException(nameof(enumValue));
-			string valueName = enumValue.ToString(), title = valueName, tooltip = "";
-			foreach (var enumField in fieldType.GetMember(valueName, BindingFlags.Public |
-						BindingFlags.Static))
-				if (enumField.DeclaringType == fieldType) {
-					// Search for OptionsAttribute
-					foreach (var attrib in enumField.GetCustomAttributes(false))
-						if (attrib is IOptionSpec spec) {
-							if (string.IsNullOrEmpty(spec.Title))
-								spec = HandleDefaults(spec, enumField);
-							title = LookInStrings(spec.Title);
-							tooltip = LookInStrings(spec.Tooltip);
-							break;
-						} else if (attrib is EnumMemberAttribute attr && attr.
-								IsValueSetExplicitly) {
-							title = LookInStrings(attr.Value);
-							break;
-						}
-					break;
+			string valueName = enumValue.ToString();
+			var members = fieldType.GetMember(valueName, BindingFlags.Public |
+				BindingFlags.Static);
+			int n = members.Length;
+
+			for (int i = 0; i < n; i++) {
+				var enumField = members[i];
+				if (enumField.DeclaringType == fieldType)
+					return CreateOption(enumField, valueName);
+			}
+			return new EnumOption(valueName, "", valueName);
+		}
+
+		/// <summary>
+		/// Creates an option entry by parsing the custom attributes of the enum member.
+		/// </summary>
+		/// <param name="enumField">The field to search for attributes.</param>
+		/// <param name="valueName">The enumeration value name declared in code.</param>
+		/// <returns>The option entry to create for this member, or null if the member is
+		/// filtered out.</returns>
+		private static EnumOption CreateOption(MemberInfo enumField, string valueName) {
+			object[] customAttr = enumField.GetCustomAttributes(false);
+			int n = customAttr.Length;
+			string title = valueName, tooltip = "";
+			bool match = true, hasTitle = false;
+
+			for (int i = 0; i < n && match; i++) {
+				var attrib = customAttr[i];
+
+				if (attrib is IOptionSpec spec && !hasTitle) {
+					if (string.IsNullOrEmpty(spec.Title))
+						spec = HandleDefaults(spec, enumField);
+					title = LookInStrings(spec.Title);
+					tooltip = LookInStrings(spec.Tooltip);
+					hasTitle = true;
 				}
-			return new EnumOption(title, tooltip, enumValue);
+				if (attrib is EnumMemberAttribute attr && attr.
+						IsValueSetExplicitly && !hasTitle) {
+					title = LookInStrings(attr.Value);
+					hasTitle = true;
+				}
+				if (attrib is IRequireFilter filter && !filter.Filter())
+					match = false;
+			}
+			return match ? new EnumOption(title, tooltip, valueName) : null;
 		}
 
 		public override object Value {
@@ -101,8 +126,15 @@ namespace PeterHan.PLib.Options {
 			chosen = null;
 			comboBox = null;
 			options = new List<EnumOption>(n);
-			for (int i = 0; i < n; i++)
-				options.Add(GetAttribute(eval.GetValue(i), fieldType));
+			for (int i = 0; i < n; i++) {
+				var entry = GetAttribute(eval.GetValue(i), fieldType);
+				if (entry != null)
+					options.Add(entry);
+			}
+			if (options.Count < 1)
+				// If all options are filtered out, add a placeholder
+				options.Add(new EnumOption(Core.PLibStrings.OPTIONS_FILTERED, "",
+					eval.GetValue(0)));
 		}
 
 		public override GameObject GetUIComponent() {

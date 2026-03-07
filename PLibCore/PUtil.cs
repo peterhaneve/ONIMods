@@ -174,7 +174,7 @@ namespace PeterHan.PLib.Core {
 		/// <param name="file">The file name to check.</param>
 		/// <returns>true if the name could be used to name a file, or false otherwise.</returns>
 		public static bool IsValidFileName(string file) {
-			bool valid = (file != null);
+			bool valid = !string.IsNullOrEmpty(file);
 			if (valid) {
 				// Cannot contain characters in INVALID_FILE_CHARS
 				int len = file.Length;

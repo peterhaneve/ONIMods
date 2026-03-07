@@ -26,7 +26,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
-using PeterHan.PLib.Detours;
 using UnityEngine;
 
 using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
@@ -244,8 +243,8 @@ namespace PeterHan.StockBugFix {
 			DecorProviderRefreshFix.ApplyPatch(harmony);
 			FixMassStringsReadOnly(harmony);
 			if (PPatchTools.GetTypeSafe("BetterPlantTending.TendedPlant") == null &&
-					!PRegistry.GetData<bool>(FIX_IRRIGATION) && StockBugFixOptions.Instance.
-					FixPlants) {
+					PUtil.GameVersion < 716056U && !PRegistry.GetData<bool>(FIX_IRRIGATION) &&
+					StockBugFixOptions.Instance.FixPlants) {
 				PlantIrrigationFixPatches.Apply(harmony);
 				PRegistry.PutData(FIX_IRRIGATION, true);
 			}
@@ -312,54 +311,6 @@ namespace PeterHan.StockBugFix {
 		/// </summary>
 		internal static bool Prefix(Artable ___target) {
 			return ___target != null && ___target.TryGetComponent(out KPrefabID _);
-		}
-	}
-
-	/// <summary>
-	/// Applied to CharacterContainer to fix duplicate displays of Duplicant attributes.
-	/// </summary>
-	[HarmonyPatch(typeof(CharacterContainer), "SetInfoText")]
-	public static class CharacterContainer_SetInfoText_Patch {
-		internal static bool Prepare() {
-			return StockBugFixOptions.Instance.FixMultipleAttributes;
-		}
-
-		/// <summary>
-		/// Applied before SetInfoText runs.
-		/// </summary>
-		internal static void Prefix() {
-			StockBugsPatches.ALREADY_DISPLAYED.Clear();
-			StockBugsPatches.lastValue = int.MaxValue;
-		}
-
-		/// <summary>
-		/// Transpiles SetInfoText to hide the text box for duplicated attributes.
-		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-			var getStats = typeof(Dictionary<string, int>).GetProperty("Item", PPatchTools.
-				BASE_FLAGS | BindingFlags.Instance)?.GetGetMethod();
-			var replaceStats = typeof(StockBugsPatches).GetMethodSafe(nameof(StockBugsPatches.
-				GetStartingLevels), true, typeof(IDictionary<string, int>), typeof(string));
-			var setActive = typeof(GameObject).GetMethodSafe(nameof(GameObject.SetActive),
-				false, typeof(bool));
-			var replaceActive = typeof(StockBugsPatches).GetMethodSafe(nameof(
-				StockBugsPatches.SetActiveIfNonzero), true, typeof(GameObject), typeof(bool));
-			int patched = 0;
-			foreach (var instr in method) {
-				if (instr.Is(OpCodes.Callvirt, getStats)) {
-					instr.operand = replaceStats;
-					patched = 1;
-				} else if (instr.Is(OpCodes.Callvirt, setActive) && patched == 1) {
-					instr.operand = replaceActive;
-#if DEBUG
-					PUtil.LogDebug("Patched CharacterContainer.SetInfoText");
-#endif
-					patched = 2;
-				}
-				yield return instr;
-			}
-			if (patched < 2)
-				PUtil.LogWarning("Unable to patch CharacterContainer.SetInfoText");
 		}
 	}
 

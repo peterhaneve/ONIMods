@@ -35,14 +35,6 @@ namespace PeterHan.StockBugFix {
 		[Option("Allow Tepidizer Pulsing", "Allow the Liquid Tepidizer to be pulsed rapidly to increase its temperature beyond its usual limits.")]
 		[JsonProperty]
 		public bool AllowTepidizerPulsing { get; set; }
-		
-		/// <summary>
-		/// If true, duplicate attributes in minion selection screens that do not actually add
-		/// the listed value to the Duplicant's final attributes will be hidden.
-		/// </summary>
-		[Option("Clarify Attributes", "Hide duplicate skill-granted attributes in Duplicant selection that do not actually add to the final attributes.")]
-		[JsonProperty]
-		public bool FixMultipleAttributes { get; set; }
 
 		/// <summary>
 		/// If true, overheat temperature patches will be applied.
@@ -55,6 +47,7 @@ namespace PeterHan.StockBugFix {
 		/// If true, plant irrigation patches will be applied.
 		/// </summary>
 		[Option("Fix Plants", "Prevent consumption of fertilizer and irrigation by plants that cannot grow.")]
+		[RequireVersion(716056U, false)]
 		[JsonProperty]
 		public bool FixPlants { get; set; }
 
@@ -91,7 +84,6 @@ namespace PeterHan.StockBugFix {
 		public StockBugFixOptions() {
 			AllowTepidizerPulsing = false;
 			DelayModsMenu = true;
-			FixMultipleAttributes = true;
 			FixOverheat = true;
 			FixPlants = true;
 			FixTraits = true;
@@ -100,8 +92,8 @@ namespace PeterHan.StockBugFix {
 		}
 
 		public override string ToString() {
-			return "StockBugFixOptions[allowTepidizer={1},fixOverheat={0},foodChoreType={2},fixAttributes={3},fixTraits={4},delayModsMenu={5},minOutput={6}]".F(
-				FixOverheat, AllowTepidizerPulsing, StoreFoodChoreType, FixMultipleAttributes,
+			return "StockBugFixOptions[allowTepidizer={1},fixOverheat={0},foodChoreType={2},fixTraits={3},delayModsMenu={4},minOutput={5}]".F(
+				FixOverheat, AllowTepidizerPulsing, StoreFoodChoreType,
 				FixTraits, DelayModsMenu, MinOutputTemperature);
 		}
 	}

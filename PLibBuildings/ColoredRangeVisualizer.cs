@@ -28,46 +28,29 @@ namespace PeterHan.PLib.Buildings {
 	/// previewed.
 	/// </summary>
 	public abstract class ColoredRangeVisualizer : KMonoBehaviour {
-		/// <summary>
-		/// TODO Remove when versions prior to U57-699077 no longer need to be supported
-		/// </summary>
-		private delegate ulong RegisterCellChangedHandlerNew(CellChangeMonitor instance,
+		private delegate ulong RegisterCellChangedHandler(CellChangeMonitor instance,
 			Transform transform, Action<object> callback);
 
-		private delegate int RegisterCellChangedHandlerOld(CellChangeMonitor instance,
-			Transform transform, System.Action callback, string handler);
-
-		private delegate void UnregisterCellChangedHandlerNew(CellChangeMonitor instance,
+		private delegate void UnregisterCellChangedHandler(CellChangeMonitor instance,
 			ref ulong id);
 
-		private delegate void UnregisterCellChangedHandlerOld(CellChangeMonitor instance,
-			Transform transform, System.Action callback);
-
-		private static readonly RegisterCellChangedHandlerNew REGISTER_NEW;
-
-		private static readonly DetouredMethod<RegisterCellChangedHandlerOld> REGISTER_OLD =
-			typeof(CellChangeMonitor).DetourLazy<RegisterCellChangedHandlerOld>(
+		private static readonly DetouredMethod<RegisterCellChangedHandler> REGISTER =
+			typeof(CellChangeMonitor).DetourLazy<RegisterCellChangedHandler>(
 			nameof(CellChangeMonitor.RegisterCellChangedHandler));
-		
-		private static readonly UnregisterCellChangedHandlerNew UNREGISTER_NEW;
 
-		private static readonly DetouredMethod<UnregisterCellChangedHandlerOld> UNREGISTER_OLD =
-			typeof(CellChangeMonitor).DetourLazy<UnregisterCellChangedHandlerOld>(
+		private static readonly DetouredMethod<UnregisterCellChangedHandler> UNREGISTER =
+			typeof(CellChangeMonitor).DetourLazy<UnregisterCellChangedHandler>(
 			nameof(CellChangeMonitor.UnregisterCellChangedHandler));
-		
-		static ColoredRangeVisualizer() {
-			var newMethod = typeof(CellChangeMonitor).GetMethodSafe(
-				nameof(CellChangeMonitor.RegisterCellChangedHandler), false, typeof(Transform),
-				typeof(Action<object>));
-			if (newMethod != null) {
-				REGISTER_NEW = newMethod.Detour<RegisterCellChangedHandlerNew>();
-				UNREGISTER_NEW = typeof(CellChangeMonitor).Detour<UnregisterCellChangedHandlerNew>(
-					nameof(CellChangeMonitor.UnregisterCellChangedHandler));
-			} else {
-				REGISTER_NEW = null;
-				UNREGISTER_NEW = null;
-			}
-		}
+
+		private static readonly Action<object, object> ON_ROTATE = (context, _) => {
+			if (context is ColoredRangeVisualizer visualizer && visualizer != null)
+				visualizer.CreateVisualizers();
+		};
+
+		private static readonly Action<object, object> ON_SELECT = (context, data) => {
+			if (context is ColoredRangeVisualizer visualizer && visualizer != null)
+				visualizer.OnSelect(data);
+		};
 
 		/// <summary>
 		/// The anim name to use when visualizing.
@@ -113,10 +96,16 @@ namespace PeterHan.PLib.Buildings {
 		/// </summary>
 		private ulong handlerID;
 
+		private int onSelectObject;
+
+		private int onRotateObject;
+
 		protected ColoredRangeVisualizer() {
 			cells = new HashSet<VisCellData>();
 			handlerID = 0UL;
 			Layer = Grid.SceneLayer.FXFront;
+			onRotateObject = 0;
+			onSelectObject = 0;
 		}
 
 		/// <summary>
@@ -157,21 +146,14 @@ namespace PeterHan.PLib.Buildings {
 		}
 
 		protected override void OnCleanUp() {
-			Unsubscribe((int)GameHashes.SelectObject);
+			Unsubscribe(ref onSelectObject);
 			if (preview != null) {
-				UnregisterCellChangedHandler();
+				UNREGISTER?.Invoke(Singleton<CellChangeMonitor>.Instance, ref handlerID);
 				if (rotatable != null)
-					Unsubscribe((int)GameHashes.Rotated);
+					Unsubscribe(ref onRotateObject);
 			}
 			RemoveVisualizers();
 			base.OnCleanUp();
-		}
-
-		/// <summary>
-		/// Called when the object is rotated.
-		/// </summary>
-		private void OnRotated(object _) {
-			CreateVisualizers();
 		}
 
 		/// <summary>
@@ -179,10 +161,10 @@ namespace PeterHan.PLib.Buildings {
 		/// </summary>
 		/// <param name="data">true if selected, or false if deselected.</param>
 		private void OnSelect(object data) {
-			if (data is bool selected) {
+			if (data is Boxed<bool> boxed) {
 				var position = transform.position;
 				// Play the appropriate sound and update the visualizers
-				if (selected) {
+				if (boxed.value) {
 					PGameUtils.PlaySound("RadialGrid_form", position);
 					CreateVisualizers();
 				} else {
@@ -194,25 +176,17 @@ namespace PeterHan.PLib.Buildings {
 
 		protected override void OnSpawn() {
 			base.OnSpawn();
-			Subscribe((int)GameHashes.SelectObject, OnSelect);
+			onSelectObject = Subscribe((int)GameHashes.SelectObject, ON_SELECT, this);
 			if (preview != null) {
 				// Previews can be moved
-				RegisterCellChangedHandler();
+				if (REGISTER != null)
+					handlerID = REGISTER.Invoke(Singleton<CellChangeMonitor>.Instance,
+						transform, OnCellChange);
 				if (rotatable != null)
-					Subscribe((int)GameHashes.Rotated, OnRotated);
+					onRotateObject = Subscribe((int)GameHashes.Rotated, ON_ROTATE, this);
+			} else {
+				handlerID = 0UL;
 			}
-		}
-
-		/// <summary>
-		/// Adds the cell changed handler.
-		/// </summary>
-		private void RegisterCellChangedHandler() {
-			if (REGISTER_NEW != null)
-				handlerID = REGISTER_NEW.Invoke(Singleton<CellChangeMonitor>.Instance,
-					transform, OnCellChange);
-			else
-				REGISTER_OLD.Invoke(Singleton<CellChangeMonitor>.Instance, transform,
-					CreateVisualizers, nameof(ColoredRangeVisualizer) + ".OnSpawn");
 		}
 
 		/// <summary>
@@ -235,17 +209,6 @@ namespace PeterHan.PLib.Buildings {
 			if (rotatable != null)
 				offset = rotatable.GetRotatedCellOffset(offset);
 			return Grid.OffsetCell(baseCell, offset);
-		}
-
-		/// <summary>
-		/// Removes the cell changed handler.
-		/// </summary>
-		private void UnregisterCellChangedHandler() {
-			if (UNREGISTER_NEW != null)
-				UNREGISTER_NEW.Invoke(Singleton<CellChangeMonitor>.Instance, ref handlerID);
-			else
-				UNREGISTER_OLD.Invoke(Singleton<CellChangeMonitor>.Instance, transform,
-					CreateVisualizers);
 		}
 
 		/// <summary>

@@ -16,38 +16,22 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-namespace PeterHan.PLib.Core {
-	/// <summary>
-	/// A helper class for migrating to boxed event types.
-	/// </summary>
-	/// <typeparam name="T">The value type to be unboxed.</typeparam>
-	public static class AutoUnbox<T> where T : struct {
-		/// <summary>
-		/// Boxes the specified object.
-		/// </summary>
-		/// <param name="data">The data to box.</param>
-		/// <returns>The boxed data for the Trigger method.</returns>
-		public static object Box(T data) {
-			return Boxed<T>.Get(data);
-		}
+using System;
 
+namespace PeterHan.PLib.Options {
+	/// <summary>
+	/// An attribute placed on an option property for a class used as mod options in order to
+	/// show or hide it for particular criteria.
+	/// 
+	/// This attribute can also be added to individual members of an Enum to filter the options
+	/// shown by SelectOneOptionsEntry.
+	/// </summary>
+	public interface IRequireFilter {
 		/// <summary>
-		/// Unboxes the specified object.
+		/// Filters the option by the specified criteria. If multiple attributes of this type
+		/// are present on one mod option, all must be satisfied to show it.
 		/// </summary>
-		/// <param name="data">The data or boxed data.</param>
-		/// <param name="result">The result of unboxing. Only valid if true is returned.</param>
-		/// <returns>true if the data could be unboxed or directly converted, or false otherwise.</returns>
-		public static bool Unbox(object data, out T result) {
-			bool ok = true;
-			if (data is Boxed<T> boxed)
-				result = boxed.value;
-			else if (data is T rawResult)
-				result = rawResult;
-			else {
-				result = default;
-				ok = false;
-			}
-			return ok;
-		}
+		/// <returns>true if the option should be shown, or false if it should be hidden.</returns>
+		bool Filter();
 	}
 }

@@ -262,10 +262,11 @@ namespace PeterHan.PLib.UI {
 			rowPrefab.AddComponent<ToolTip>();
 			// Text for the entry
 			var textContainer = PUIElements.CreateUI(rowPrefab, "Text");
-			PUIElements.AddLocText(textContainer, style).SetText(" ");
+			// New TMPro versions actually need real text to calculate the proper line size
+			PUIElements.AddLocText(textContainer, style).SetText("X");
 			// Configure the entire layout in 1 statement! (jk this is awful)
-			var group = rowPrefab.AddComponent<RelativeLayoutGroup>();
-			group.AnchorYAxis(isSelected).OverrideSize(isSelected, CheckSize).SetLeftEdge(
+			rowPrefab.AddComponent<RelativeLayoutGroup>().
+				AnchorYAxis(isSelected).OverrideSize(isSelected, CheckSize).SetLeftEdge(
 				isSelected, fraction: 0.0f).SetMargin(isSelected, im).AnchorYAxis(
 				textContainer).SetLeftEdge(textContainer, toRight: isSelected).SetRightEdge(
 				textContainer, 1.0f).SetMargin(textContainer, new RectOffset(0, im.right,

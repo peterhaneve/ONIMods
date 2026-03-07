@@ -100,6 +100,11 @@ namespace PeterHan.PLib.Core {
 		public static LocString MOD_VERSION = "Mod Version: {0}";
 
 		/// <summary>
+		/// A placeholder string to display in a drop down if all the options are filtered out.
+		/// </summary>
+		public static LocString OPTIONS_FILTERED = "No Options Available";
+
+		/// <summary>
 		/// The cancel button in the restart dialog.
 		/// </summary>
 		public static LocString RESTART_CANCEL = STRINGS.UI.FRONTEND.MOD_DIALOGS.RESTART.CANCEL;

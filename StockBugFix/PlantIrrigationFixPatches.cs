@@ -10,6 +10,8 @@ using UnityEngine;
 namespace PeterHan.StockBugFix {
 	/// <summary>
 	/// Fixes a nasty bug where plants continue to burn their fertilizer even when wilted.
+	/// 
+	/// TODO Remove when versions before U57-716056 no longer need to be supported
 	/// </summary>
 	internal static class PlantIrrigationFixPatches {
 		private static HarmonyMethod PatchMethod(string name) => new HarmonyMethod(

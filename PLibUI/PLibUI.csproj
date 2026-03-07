@@ -17,5 +17,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../PLibCore/PLibCore.csproj" />
+	<Reference Include="UnityEngine.TextCoreFontEngineModule" HintPath="$(GameFolder)/UnityEngine.TextCoreFontEngineModule.dll" />
   </ItemGroup>
 </Project>

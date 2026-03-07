@@ -43,20 +43,6 @@ namespace PeterHan.PLib.Core {
 		private static readonly DetouredMethod<InfoRefreshFunction> REFRESH_INFO_SCREEN =
 			typeof(SimpleInfoScreen).DetourLazy<InfoRefreshFunction>("Refresh");
 
-		private delegate bool IsDLCEnabledFunction(string name);
-
-		/// <summary>
-		/// Checks to see if a DLC is subscribed on the platform (Steam/Epic).
-		/// </summary>
-		private static readonly DetouredMethod<IsDLCEnabledFunction> CHECK_SUBSCRIPTION =
-			typeof(DlcManager).DetourLazy<IsDLCEnabledFunction>("CheckPlatformSubscription");
-
-		/// <summary>
-		/// Checks to see if the DLC is turned on in the game options.
-		/// </summary>
-		private static readonly DetouredMethod<IsDLCEnabledFunction> IS_CONTENT_ENABLED =
-			typeof(DlcManager).DetourLazy<IsDLCEnabledFunction>("IsContentSettingEnabled");
-
 		/// <summary>
 		/// Centers and selects an entity.
 		/// </summary>
@@ -224,11 +210,10 @@ namespace PeterHan.PLib.Core {
 		/// should only be used to show or hide items that require a game restart to change
 		/// like the Spaced Out multi-planet/rocketry modes.
 		/// </summary>
-		/// <param name="name"></param>
-		/// <returns></returns>
+		/// <param name="name">The DLC name to check.</param>
+		/// <returns>true if that DLC is subscribed and owned, or false otherwise.</returns>
 		public static bool IsDLCOwned(string name) {
-			return string.IsNullOrEmpty(name) || (CHECK_SUBSCRIPTION.Invoke(name) &&
-				IS_CONTENT_ENABLED.Invoke(name));
+			return DlcManager.IsContentSubscribed(name);
 		}
 
 		/// <summary>

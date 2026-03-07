@@ -22,57 +22,55 @@ using System;
 namespace PeterHan.PLib.Options {
 	/// <summary>
 	/// An attribute placed on an option property for a class used as mod options in order to
-	/// show or hide it for particular DLCs. If the option is hidden, the value currently
-	/// in the options file is preserved unchanged when reading or writing.
+	/// show or hide it for particular game versions. If the option is hidden, the value
+	/// currently in the options file is preserved unchanged when reading or writing.
 	/// 
 	/// This attribute can also be added to individual members of an Enum to filter the options
 	/// shown by SelectOneOptionsEntry.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true,
 		Inherited = true)]
-	public sealed class RequireDLCAttribute : Attribute, IRequireFilter {
+	public sealed class RequireVersionAttribute : Attribute, IRequireFilter {
 		/// <summary>
-		/// The DLC ID to check.
+		/// The game version number (KleiVersion.ChangeList) to check.
 		/// </summary>
-		public string DlcID { get; }
+		public uint Version { get; }
 
 		/// <summary>
-		/// If true, the DLC is required, and the option is hidden if the DLC is inactive.
-		/// If false, the DLC is forbidden, and the option is hidden if the DLC is active.
+		/// If true, the option is shown for game versions greater than or equal to the
+		/// required version. If false, the option is shown for game versions less than the
+		/// required version.
 		/// </summary>
-		public bool Required { get; }
+		public bool Minimum { get; }
 
 		/// <summary>
-		/// Annotates an option field as requiring the specified DLC. The [Option] attribute
-		/// must also be present to be displayed at all.
+		/// Annotates an option field as requiring at least the specified game version.
+		/// The [Option] attribute must also be present to be displayed at all.
 		/// </summary>
-		/// <param name="dlcID">The DLC ID to require. Must be one of:
-		/// DlcManager.EXPANSION1_ID, DlcManager.DLC2_ID, DlcManager.DLC3_ID,
-		/// DlcMaanger.DLC4_ID, DlcManager.VANILLA_ID</param>
-		public RequireDLCAttribute(string dlcID) {
-			DlcID = dlcID ?? "";
-			Required = true;
+		/// <param name="version">The minimum game version to require.</param>
+		public RequireVersionAttribute(uint version) {
+			Version = version;
+			Minimum = true;
 		}
 
 		/// <summary>
-		/// Annotates an option field as requiring or forbidding the specified DLC. The
-		/// [Option] attribute must also be present to be displayed at all.
+		/// Annotates an option field as requiring the specified game version.
+		/// The [Option] attribute must also be present to be displayed at all.
 		/// </summary>
-		/// <param name="dlcID">The DLC ID to require or forbid. Must be one of:
-		/// DlcManager.EXPANSION1_ID, DlcManager.DLC2_ID, DlcManager.DLC3_ID,
-		/// DlcMaanger.DLC4_ID, DlcManager.VANILLA_ID</param>
-		/// <param name="required">true to require the DLC, or false to forbid it.</param>
-		public RequireDLCAttribute(string dlcID, bool required) {
-			DlcID = dlcID ?? "";
-			Required = required;
+		/// <param name="version">The minimum or maximum game version to require.</param>
+		/// <param name="minimum">true if the version is the minimum game version, or false if
+		/// the version is the maximum game version (exclusive).</param>
+		public RequireVersionAttribute(uint version, bool minimum) {
+			Version = version;
+			Minimum = minimum;
 		}
-
+		
 		public bool Filter() {
-			return PGameUtils.IsDLCOwned(DlcID) != Required;
+			return (PUtil.GameVersion >= Version) == Minimum;
 		}
 
 		public override string ToString() {
-			return "RequireDLC[DLC={0},require={1}]".F(DlcID, Required);
+			return "RequireVersion[version={0},minimum={1}]".F(Version, Minimum);
 		}
 	}
 }

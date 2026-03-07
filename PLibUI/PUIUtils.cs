@@ -303,10 +303,14 @@ namespace PeterHan.PLib.UI {
 				throw new ArgumentNullException(nameof(style));
 			var font = style.sdfFont;
 			// Use the em width
-			if (font != null && font.characterDictionary.TryGetValue('m', out TMP_Glyph em)) {
-				var info = font.fontInfo;
-				float ptSize = style.fontSize / (info.PointSize * info.Scale);
-				width = em.width * ptSize + style.fontSize * 0.01f * font.normalSpacingOffset;
+			if (font != null) {
+				width = FontSizeCalculator.GetCharWidth('m', font);
+
+				if (width > 0.0f) {
+					var info = FontSizeCalculator.Instance.Get(font);
+					float ptSize = style.fontSize / (info.pointSize * info.scale);
+					width = width * ptSize + style.fontSize * 0.01f * font.normalSpacingOffset;
+				}
 			}
 			return width;
 		}
@@ -322,8 +326,8 @@ namespace PeterHan.PLib.UI {
 				throw new ArgumentNullException(nameof(style));
 			var font = style.sdfFont;
 			if (font != null) {
-				var info = font.fontInfo;
-				height = info.LineHeight * style.fontSize / (info.Scale * info.PointSize);
+				var info = FontSizeCalculator.Instance.Get(font);
+				height = info.lineHeight * style.fontSize / (info.scale * info.pointSize);
 			}
 			return height;
 		}
