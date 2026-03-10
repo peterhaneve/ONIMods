@@ -55,6 +55,7 @@ namespace PeterHan.ToastControl {
 			{ nameof(Constructable), (c, t) => Options.BuildingComplete },
 			{ nameof(CopyBuildingSettings), (c, t) => Options.CopySettings },
 			{ "CreatureCalorieMonitor+Stomach", ShowCritterPoop },
+			{ nameof(Deconstructable), ShowElementDropped },
 			{ nameof(DebugHandler), ShowInvalidLocation },
 			{ "Klei.AI.EffectInstance", (c, t) => Options.EffectAdded },
 			{ "ElementDropperMonitor+Instance", ShowCritterPoop },
