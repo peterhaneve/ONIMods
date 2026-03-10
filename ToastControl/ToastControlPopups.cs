@@ -193,9 +193,12 @@ namespace PeterHan.ToastControl {
 				// Skip internal delegate classes
 				int index = type.IndexOf('<');
 				if (index > 0) {
-					// Back up to the previous dot before then, if present
+					// Back up to the previous separator before then, if present. Nested classes
+					// show up as '+' in FullName.
 					int lastDot = type.LastIndexOf('.', index);
-					if (lastDot > 0) index = lastDot;
+					int lastPlus = type.LastIndexOf('+', index);
+					int lastSep = Math.Max(lastDot, lastPlus);
+					if (lastSep > 0) index = lastSep;
 					type = type.Substring(0, index);
 				}
 				if (show) {
