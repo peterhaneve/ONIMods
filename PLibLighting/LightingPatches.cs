@@ -21,6 +21,8 @@ using PeterHan.PLib.Core;
 using PeterHan.PLib.Detours;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Reflection.Emit;
 using UnityEngine;
 
 using LightGridEmitter = LightGridManager.LightGridEmitter;
@@ -45,7 +47,7 @@ namespace PeterHan.PLib.Lighting {
 				var shape = __instance.shape;
 				int rad = Mathf.CeilToInt(__instance.Range), cell;
 				lm.AddLight(__instance.emitter, __instance.gameObject);
-				if (shape > LightShape.Cone && rad > 0 && Grid.IsValidCell(cell = ORIGIN.Get(
+				if (shape > LightShape.Quad && rad > 0 && Grid.IsValidCell(cell = ORIGIN.Get(
 						__instance))) {
 					Grid.CellToXY(cell, out int x, out int y);
 					// Better safe than sorry, check whole possible radius
@@ -128,9 +130,30 @@ namespace PeterHan.PLib.Lighting {
 				TranspiledMethod body) {
 			var target = typeof(Light2D).GetPropertySafe<LightShape>(nameof(Light2D.shape),
 				false)?.GetGetMethod(true);
-			return (target == null) ? body : PPatchTools.ReplaceMethodCallSafe(body, target,
-				typeof(PLightManager).GetMethodSafe(nameof(PLightManager.LightShapeToRayShape),
-				true, typeof(Light2D)));
+			var replacement = typeof(PLightManager).GetMethodSafe(nameof(PLightManager.
+				LightShapeToRayShape), true, typeof(Light2D));
+			var cleanup = typeof(PLightManager).GetMethodSafe(nameof(PLightManager.Cleanup),
+				true);
+			if (target == null || replacement == null) {
+				PLightManager.LogLightingWarning("Shape property on Light2D not found");
+				foreach (var instr in body)
+					yield return instr;
+			} else {
+				// Initialize ray shapes with the current instance
+				yield return new CodeInstruction(OpCodes.Ldarg_0);
+				yield return new CodeInstruction(OpCodes.Call, typeof(PLightManager).
+					GetMethodSafe(nameof(PLightManager.InitRayShapes), true));
+				foreach (var instr in body)
+					if (instr.opcode == OpCodes.Callvirt && instr.operand is MethodBase
+							operand && operand == target)
+						yield return new CodeInstruction(OpCodes.Call, replacement);
+					else {
+						// Clean up if possible before exit
+						if (instr.opcode == OpCodes.Ret && cleanup != null)
+							yield return new CodeInstruction(OpCodes.Call, cleanup);
+						yield return instr;
+					}
+			}
 		}
 
 		private static void LightShapePreview_Update_Prefix(LightShapePreview __instance) {

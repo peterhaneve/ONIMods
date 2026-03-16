@@ -49,6 +49,21 @@ namespace PeterHan.PLib.Lighting {
 		internal static readonly Version VERSION = new Version(PVersion.VERSION);
 
 		/// <summary>
+		/// Processes all ray shapes at the start of a lighting pass.
+		/// </summary>
+		private const uint OPERATION_PREPARE = 0U;
+
+		/// <summary>
+		/// Processes light ray handling.
+		/// </summary>
+		private const uint OPERATION_RENDER = 1U;
+		
+		/// <summary>
+		/// Cleans up after light rays are drawn to avoid leaks.
+		/// </summary>
+		private const uint OPERATION_CLEANUP = 2U;
+
+		/// <summary>
 		/// If true, enables the smooth light falloff mode even on vanilla lights.
 		/// </summary>
 		internal static bool ForceSmoothLight { get; set; }
@@ -57,6 +72,13 @@ namespace PeterHan.PLib.Lighting {
 		/// The instantiated copy of this class.
 		/// </summary>
 		internal static PLightManager Instance { get; private set; }
+
+		/// <summary>
+		/// Cleans up references after rendering lights.
+		/// </summary>
+		internal static void Cleanup() {
+			Instance?.InvokeAllProcess(OPERATION_CLEANUP, null);
+		}
 
 		/// <summary>
 		/// Calculates the brightness falloff as it would be in the stock game.
@@ -91,9 +113,21 @@ namespace PeterHan.PLib.Lighting {
 		/// <returns>The shape to use for its rays.</returns>
 		internal static LightShape LightShapeToRayShape(Light2D light) {
 			var shape = light.shape;
-			if (shape != LightShape.Cone && shape != LightShape.Circle)
-				shape = Instance.GetRayShape(shape);
+			var inst = Instance;
+			if (inst != null) {
+				if (shape > LightShape.Quad)
+					shape = inst.GetRayShape(shape);
+				inst.InvokeAllProcess(OPERATION_RENDER, light);
+			}
 			return shape;
+		}
+		
+		/// <summary>
+		/// Initializes user-provided ray shapes (which often need materials set up).
+		/// </summary>
+		/// <param name="instance">The current light buffer.</param>
+		internal static void InitRayShapes(LightBuffer instance) {
+			Instance?.InvokeAllProcess(OPERATION_PREPARE, instance);
 		}
 
 		/// <summary>
@@ -124,6 +158,16 @@ namespace PeterHan.PLib.Lighting {
 		/// time, so no need for thread safety.
 		/// </summary>
 		internal GameObject PreviewObject { get; set; }
+		
+		/// <summary>
+		/// The currently active light buffer.
+		/// </summary>
+		private LightBuffer activeBuffer;
+
+		/// <summary>
+		/// The lighting ray renderers registered by this mod.
+		/// </summary>
+		private readonly IList<IRayMode> rayRenderers;
 
 		/// <summary>
 		/// The lighting shapes available, all in this mod's namespace.
@@ -134,9 +178,11 @@ namespace PeterHan.PLib.Lighting {
 		/// Creates a lighting manager to register PLib lighting.
 		/// </summary>
 		public PLightManager() {
+			activeBuffer = null;
 			// Needs to be thread safe!
 			brightCache = new ConcurrentDictionary<LightGridEmitter, CacheEntry>(2, 128);
 			PreviewObject = null;
+			rayRenderers = new List<IRayMode>(8);
 			shapes = new List<ILightShape>(16);
 		}
 
@@ -180,7 +226,7 @@ namespace PeterHan.PLib.Lighting {
 				LightGridEmitter.State state, out int result) {
 			bool valid;
 			var shape = state.shape;
-			if (shape != LightShape.Cone && shape != LightShape.Circle) {
+			if (shape < LightShape.Circle || shape > LightShape.Quad) {
 				valid = brightCache.TryGetValue(source, out CacheEntry cacheEntry);
 				if (valid) {
 					valid = cacheEntry.Intensity.TryGetValue(location, out float ratio);
@@ -199,7 +245,7 @@ namespace PeterHan.PLib.Lighting {
 					result = 0;
 				}
 			} else if (ForceSmoothLight) {
-				// Use smooth light even for vanilla Cone and Circle
+				// Use smooth light even for vanilla Cone, Circle and Quad
 				result = Mathf.RoundToInt(state.intensity * GetSmoothFalloff(state.falloffRate,
 					location, state.origin));
 				valid = true;
@@ -219,7 +265,7 @@ namespace PeterHan.PLib.Lighting {
 		/// <returns>The light shape to use for ray casting, or the original shape if it is
 		/// a stock shape or a light shape not known to PLib Lighting.</returns>
 		internal LightShape GetRayShape(LightShape shape) {
-			int index = shape - LightShape.Cone - 1;
+			int index = shape - LightShape.Quad - 1;
 			ILightShape ps;
 			if (index >= 0 && index < shapes.Count && (ps = shapes[index]) != null) {
 				var newShape = ps.RayMode;
@@ -255,7 +301,7 @@ namespace PeterHan.PLib.Lighting {
 		internal bool PreviewLight(int origin, float radius, LightShape shape, int lux) {
 			bool handled = false;
 			var owner = PreviewObject;
-			int index = shape - LightShape.Cone - 1;
+			int index = shape - LightShape.Quad - 1;
 			if (index >= 0 && index < shapes.Count && owner != null) {
 				var cells = DictionaryPool<int, float, PLightManager>.Allocate();
 				// Found handler!
@@ -276,6 +322,48 @@ namespace PeterHan.PLib.Lighting {
 				cells.Recycle();
 			}
 			return handled;
+		}
+
+		public override void Process(uint operation, object args) {
+			int n = rayRenderers.Count;
+			var ab = activeBuffer;
+			switch (operation) {
+			case OPERATION_PREPARE:
+				if (args is LightBuffer buffer) {
+					activeBuffer = buffer;
+					// Initialize user ray shapes
+					for (int i = 0; i < n; i++)
+						rayRenderers[i].Prepare(buffer);
+				}
+				break;
+			case OPERATION_RENDER:
+				if (args is Light2D light && ab != null) {
+					// Draw user ray shapes
+					for (int i = 0; i < n; i++)
+						rayRenderers[i].DrawCustomRay(light, ab);
+				}
+				break;
+			case OPERATION_CLEANUP:
+				// Do not leak the buffer
+				activeBuffer = null;
+				break;
+			default:
+				break;
+			}
+		}
+		
+		/// <summary>
+		/// Registers a light ray rendering handler. Mods can either implement IRayMode for
+		/// full control over rendering, or instantiate and register a PRayMode object that
+		/// handles most common cases.
+		/// 
+		/// Ray modes should usually be registered in OnLoad after the texture has been loaded.
+		/// </summary>
+		/// <param name="mode">The ray mode handler to register.</param>
+		public void RegisterRayMode(IRayMode mode) {
+			if (mode == null)
+				throw new ArgumentNullException(nameof(mode));
+			rayRenderers.Add(mode);
 		}
 
 		/// <summary>
@@ -326,7 +414,7 @@ namespace PeterHan.PLib.Lighting {
 		internal bool UpdateLitCells(LightGridEmitter source, LightGridEmitter.State state,
 				IList<int> litCells) {
 			bool handled = false;
-			int index = state.shape - LightShape.Cone - 1;
+			int index = state.shape - LightShape.Quad - 1;
 			if (source == null)
 				throw new ArgumentNullException(nameof(source));
 			if (index >= 0 && index < shapes.Count && litCells != null && brightCache.
