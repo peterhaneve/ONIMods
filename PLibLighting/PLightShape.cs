@@ -35,7 +35,7 @@ namespace PeterHan.PLib.Lighting {
 
 		public LightShape KleiLightShape {
 			get {
-				return ShapeID + LightShape.Cone;
+				return ShapeID + LightShape.Quad;
 			}
 		}
 
