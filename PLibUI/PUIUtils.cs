@@ -65,6 +65,49 @@ namespace PeterHan.PLib.UI {
 		}
 
 		/// <summary>
+		/// Adds text describing hierarchy references, which are a bit dubious in the first
+		/// place...
+		/// </summary>
+		/// <param name="result">The location to append the text.</param>
+		/// <param name="hr">The references to describe.</param>
+		private static void AddReferenceText(StringBuilder result, HierarchyReferences hr) {
+			var refs = hr.references;
+			int n = refs.Length;
+			result.Append(" HierarchyReferences[");
+			for (int i = 0; i < n; i++) {
+				var element = refs[i];
+				var target = element.behaviour;
+				result.Append(element.Name).Append('=').Append(target.GetType().FullName).
+					Append('[').Append(target.name).Append(']');
+				if (i < n - 1)
+					result.Append(", ");
+			}
+			result.AppendLine("]");
+		}
+
+		/// <summary>
+		/// Adds text describing a particular RectTransform instance.
+		/// </summary>
+		/// <param name="result">The location to append the text.</param>
+		/// <param name="rt">The transform to describe.</param>
+		private static void AddTransformText(StringBuilder result, RectTransform rt) {
+			Vector2 size = rt.rect.size, aMin = rt.anchorMin, aMax = rt.anchorMax,
+				oMin = rt.offsetMin, oMax = rt.offsetMax, pivot = rt.pivot;
+			result.AppendFormat(" Rect[Size=({0:F2},{1:F2}) Min=" +
+				"({2:F2},{3:F2}) ", size.x, size.y, LayoutUtility.GetMinWidth(rt),
+				LayoutUtility.GetMinHeight(rt));
+			result.AppendFormat("Preferred=({0:F2},{1:F2}) Flexible=({2:F2}," +
+				"{3:F2}) ", LayoutUtility.GetPreferredWidth(rt), LayoutUtility.
+				GetPreferredHeight(rt), LayoutUtility.GetFlexibleWidth(rt),
+				LayoutUtility.GetFlexibleHeight(rt));
+			result.AppendFormat("Pivot=({4:F2},{5:F2}) AnchorMin=({0:F2},{1:F2}) " +
+				"AnchorMax=({2:F2},{3:F2}) ", aMin.x, aMin.y, aMax.x, aMax.y, pivot.x,
+				pivot.y);
+			result.AppendFormat("OffsetMin=({0:F2},{1:F2}) OffsetMax=({2:F2}," +
+				"{3:F2})]", oMin.x, oMin.y, oMax.x, oMax.y).AppendLine();
+		}
+
+		/// <summary>
 		/// Adds a hot pink rectangle over the target matching its size, to help identify it
 		/// better.
 		/// </summary>
@@ -355,23 +398,15 @@ namespace PeterHan.PLib.UI {
 				"Scale={2}", transform.position, transform.rotation, transform.
 				localScale, transform.localPosition, transform.localRotation).AppendLine();
 			// Components
-			foreach (var component in root.GetComponents<Component>()) {
+			foreach (var component in root.GetComponents<Component>())
 				if (component is RectTransform rt) {
 					// UI rectangle
-					Vector2 size = rt.rect.size, aMin = rt.anchorMin, aMax = rt.anchorMax,
-						oMin = rt.offsetMin, oMax = rt.offsetMax, pivot = rt.pivot;
-					result.Append(sol).AppendFormat(" Rect[Size=({0:F2},{1:F2}) Min=" +
-						"({2:F2},{3:F2}) ", size.x, size.y, LayoutUtility.GetMinWidth(rt),
-						LayoutUtility.GetMinHeight(rt));
-					result.AppendFormat("Preferred=({0:F2},{1:F2}) Flexible=({2:F2}," +
-						"{3:F2}) ", LayoutUtility.GetPreferredWidth(rt), LayoutUtility.
-						GetPreferredHeight(rt), LayoutUtility.GetFlexibleWidth(rt),
-						LayoutUtility.GetFlexibleHeight(rt));
-					result.AppendFormat("Pivot=({4:F2},{5:F2}) AnchorMin=({0:F2},{1:F2}) " +
-						"AnchorMax=({2:F2},{3:F2}) ", aMin.x, aMin.y, aMax.x, aMax.y, pivot.x,
-						pivot.y);
-					result.AppendFormat("OffsetMin=({0:F2},{1:F2}) OffsetMax=({2:F2}," +
-						"{3:F2})]", oMin.x, oMin.y, oMax.x, oMax.y).AppendLine();
+					result.Append(sol);
+					AddTransformText(result, rt);
+				} else if (component is HierarchyReferences hr) {
+					// References
+					result.Append(sol);
+					AddReferenceText(result, hr);
 				} else if (component != null && !(component is Transform)) {
 					// Exclude destroyed components and Transform objects
 					result.Append(sol).Append(" Component[").Append(component.GetType().
@@ -379,7 +414,6 @@ namespace PeterHan.PLib.UI {
 					AddComponentText(result, component);
 					result.AppendLine("]");
 				}
-			}
 			// Children
 			if (n > 0)
 				result.Append(sol).AppendLine(" Children:");

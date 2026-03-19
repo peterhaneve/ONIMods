@@ -75,6 +75,7 @@ namespace PeterHan.ToastControl {
 		/// </summary>
 		private static ICollection<string> TargetsLong => new List<string>() {
 			"CreatureCalorieMonitor+Stomach:Poop",
+			"Deconstructable:SpawnPopFxs",
 			"Moppable:Sim1000ms",
 			"SeedProducer:ProduceSeed",
 			"SolidConsumerMonitor+Instance:OnEatSolidComplete",

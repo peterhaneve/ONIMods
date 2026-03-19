@@ -41,6 +41,11 @@ namespace PeterHan.ToastControl {
 		internal delegate bool ShowFunc(object parent, string message);
 
 		/// <summary>
+		/// The delimiters used for class names.
+		/// </summary>
+		private static readonly char[] CLASS_DELIMS = new char[] { '.', '+' };
+
+		/// <summary>
 		/// Maps type full names (not AQN, just type name) to the function that controls their
 		/// visibility.
 		/// </summary>
@@ -56,6 +61,7 @@ namespace PeterHan.ToastControl {
 			{ nameof(CopyBuildingSettings), (c, t) => Options.CopySettings },
 			{ "CreatureCalorieMonitor+Stomach", ShowCritterPoop },
 			{ nameof(DebugHandler), ShowInvalidLocation },
+			{ nameof(Deconstructable), ShowElementDropped },
 			{ "Klei.AI.EffectInstance", (c, t) => Options.EffectAdded },
 			{ "ElementDropperMonitor+Instance", ShowCritterPoop },
 			{ nameof(ElementEmitter), ShowElementDropped }, // no uses?
@@ -193,8 +199,8 @@ namespace PeterHan.ToastControl {
 				int index = type.IndexOf('<');
 				if (index > 0) {
 					// Back up to the previous dot before then, if present
-					int lastDot = type.LastIndexOf('.', index);
-					if (lastDot > 0) index = lastDot;
+					int lastSep = type.LastIndexOfAny(CLASS_DELIMS, index);
+					if (lastSep > 0) index = lastSep;
 					type = type.Substring(0, index);
 				}
 				if (show) {
@@ -204,7 +210,7 @@ namespace PeterHan.ToastControl {
 						// Debug: Flag popup with no handler
 #if DEBUG
 						PUtil.LogWarning("Popup from {0} => \"{1}\" has no handler defined".F(
-							parent == null ? "null" : parent.GetType().FullName, message));
+							parent == null ? "null" : parentType.FullName, message));
 #endif
 					}
 				}

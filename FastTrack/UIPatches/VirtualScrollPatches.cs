@@ -17,10 +17,13 @@
  */
 
 using HarmonyLib;
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
 
+using ChangedSectionPool = DictionaryPool<UnityEngine.Transform, PeterHan.FastTrack.UIPatches.
+	VirtualScroll, ReceptacleSideScreen>;
 using ITState = ImageToggleState.State;
 
 namespace PeterHan.FastTrack.UIPatches {
@@ -126,9 +129,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static bool initializing;
 
 		/// <summary>
-		/// Applied to ReceptacleSideScreen to force states to be valid on initialize (the
-		/// entries are initialized with the available material, but their state is set to
-		/// disabled).
+		/// Applied to ReceptacleSideScreen to prepare existing virtual scroll panels for a
+		/// rebuild.
 		/// </summary>
 		[HarmonyPatch(typeof(ReceptacleSideScreen), nameof(ReceptacleSideScreen.Initialize))]
 		internal static class Initialize_Patch {
@@ -137,31 +139,15 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Applied before Initialize runs.
 			/// </summary>
-			internal static void Prefix(ReceptacleSideScreen __instance,
-					ref VirtualScroll __state) {
-				var obj = __instance.requestObjectListContainerContent;
-				if (obj != null && obj.TryGetComponent(out VirtualScroll vs)) {
-					vs.OnBuild();
-					__state = vs;
-				} else
-					__state = null;
+			internal static void Prefix(ReceptacleSideScreen __instance) {
+				// Content containers are not disposed
+				foreach (var pair in __instance.contentContainers)
+					if (pair.Value.TryGetComponent(out HierarchyReferences hr)) {
+						var grid = hr.GetReference<GridLayoutGroup>("GridLayout");
+						if (grid != null && grid.TryGetComponent(out VirtualScroll vs))
+							vs.OnBuild();
+					}
 				initializing = true;
-			}
-
-			/// <summary>
-			/// Applied after Initialize runs.
-			/// </summary>
-			internal static void Postfix(ReceptacleSideScreen __instance, VirtualScroll __state) {
-				var entryList = __instance.requestObjectListContainerContent;
-				GameObject go;
-				if (__state != null)
-					__state.Rebuild();
-				else if ((go = entryList.gameObject) != null) {
-					// Add if first load
-					var vs = go.AddComponent<VirtualScroll>();
-					vs.freezeLayout = true;
-					vs.Initialize();
-				}
 			}
 		}
 
@@ -184,34 +170,28 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			[HarmonyPriority(Priority.Low)]
 			internal static bool Prefix(ReceptacleSideScreen __instance, ref bool __result) {
-				bool result = false, changed = false, hide = !DebugHandler.InstantBuildMode &&
+				bool result = false, hide = !DebugHandler.InstantBuildMode &&
 					__instance.hideUndiscoveredEntities;
 				var inst = DiscoveredResources.Instance;
 				var selected = __instance.selectedEntityToggle;
-				var obj = __instance.requestObjectListContainerContent;
 				var text = CACHED_BUILDER;
-				if (obj == null || !obj.TryGetComponent(out VirtualScroll vs))
-					vs = null;
+				var changed = new VirtualScrollTracker(__instance);
 				foreach (var pair in __instance.depositObjectMap) {
 					var key = pair.Key;
 					var display = pair.Value;
 					var go = key.gameObject;
+					// Finds the GridLayout
+					var parent = go.transform.parent;
 					bool active = go.activeSelf;
 					var tag = display.tag;
 					// Hide undiscovered entities in some screens (like pedestal)
 					if (hide && !inst.IsDiscovered(tag)) {
 						if (active) {
-							if (!changed && vs != null) {
-								vs.OnBuild();
-								changed = true;
-							}
+							changed.Mark(parent);
 							go.SetActive(active = false);
 						}
 					} else if (!active) {
-						if (!changed && vs != null) {
-							vs.OnBuild();
-							changed = true;
-						}
+						changed.Mark(parent);
 						go.SetActive(active = true);
 					}
 					if (active) {
@@ -238,9 +218,8 @@ namespace PeterHan.FastTrack.UIPatches {
 							SetImageToggleState(__instance, toggle, ITState.Active);
 					}
 				}
-				// Null was already checked
-				if (changed)
-					vs.Rebuild();
+				changed.Sync();
+				changed.Dispose();
 				__result = result;
 				initializing = false;
 				return false;
@@ -277,6 +256,70 @@ namespace PeterHan.FastTrack.UIPatches {
 						break;
 					}
 				}
+			}
+		}
+
+		/// <summary>
+		/// Tracks the dirty virtual scroll panes and updates the ones that need to be done.
+		/// </summary>
+		private readonly struct VirtualScrollTracker {
+			private readonly ChangedSectionPool.PooledDictionary changed;
+
+			private readonly ReceptacleSideScreen screen;
+
+			public VirtualScrollTracker(ReceptacleSideScreen instance) {
+				changed = ChangedSectionPool.Allocate();
+				screen = instance;
+			}
+
+			public void Dispose() {
+				changed.Recycle();
+			}
+
+			/// <summary>
+			/// Marks a transform as dirty.
+			/// </summary>
+			/// <param name="parent">The transform of the group that is dirty.</param>
+			public void Mark(Transform parent) {
+				if (!changed.TryGetValue(parent, out _)) {
+					if (parent.TryGetComponent(out VirtualScroll vs)) {
+						vs.OnBuild();
+						changed[parent] = vs;
+					}
+				}
+			}
+
+			/// <summary>
+			/// Synchronizes the visibility of each group in the screen with the visibility of
+			/// their contents.
+			/// </summary>
+			public void Sync() {
+				foreach (var pair in screen.contentContainers) {
+					var go = pair.Value;
+					if (go.TryGetComponent(out HierarchyReferences refs)) {
+						var gl = refs.GetReference<GridLayoutGroup>("GridLayout");
+						var transform = gl.transform;
+						bool anyActive = false;
+						int n = transform.childCount;
+						for (int i = 0; i < n && !anyActive; i++)
+							if (transform.GetChild(i).gameObject.activeSelf)
+								anyActive = true;
+						if (go.activeSelf != anyActive)
+							go.SetActive(anyActive);
+						// If hidden, no need to rebuild it
+						if (!anyActive)
+							changed.Remove(transform);
+						else if (!gl.TryGetComponent(out VirtualScroll _)) {
+							// Create here when the GO is guaranteed to be active
+							var vs = gl.gameObject.AddComponent<VirtualScroll>();
+							vs.freezeLayout = true;
+							vs.Awake();
+							vs.Initialize();
+						}
+					}
+				}
+				foreach (var pair in changed)
+					pair.Value.Rebuild();
 			}
 		}
 	}
