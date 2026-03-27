@@ -12,7 +12,7 @@
     $(GameFolder)/FMODUnity.dll $(GameFolder)/Newtonsoft.Json.dll $(GameFolder)/UnityEngine.dll ^
     $(GameFolder)/UnityEngine.CoreModule.dll $(GameFolder)/UnityEngine.ImageConversionModule.dll ^
     $(GameFolder)/UnityEngine.InputLegacyModule.dll $(GameFolder)/Unity.TextMeshPro.dll ^
-    $(GameFolder)/UnityEngine.TextRenderingModule.dll $(GameFolder)/UnityEngine.UI.dll ^
+    $(GameFolder)/UnityEngine.TextRenderingModule.dll $(GameFolder)/UnityEngine.TextCoreFontEngineModule.dll $(GameFolder)/UnityEngine.UI.dll ^
     $(GameFolder)/UnityEngine.UIModule.dll $(GameFolder)/UnityEngine.UnityWebRequestModule.dll ^
     $(GameFolder)/Ionic.Zip.dll $(GameFolder)/Newtonsoft.Json.dll $(GameFolder)/com.rlabrecque.steamworks.net.dll"
     IgnoreExitCode="true"/>

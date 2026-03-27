@@ -68,7 +68,7 @@ namespace PeterHan.PLib.Options {
 		}
 
 		public bool Filter() {
-			return PGameUtils.IsDLCOwned(DlcID) != Required;
+			return PGameUtils.IsDLCOwned(DlcID) == Required;
 		}
 
 		public override string ToString() {
