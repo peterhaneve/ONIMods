@@ -74,6 +74,7 @@ namespace PeterHan.ToastControl {
 		/// Methods to patch for the long form of PopFXManager.SpawnFX.
 		/// </summary>
 		private static ICollection<string> TargetsLong => new List<string>() {
+			"ComplexFabricator:SpawnOrderProduct",
 			"CreatureCalorieMonitor+Stomach:Poop",
 			"Deconstructable:SpawnPopFxs",
 			"Moppable:Sim1000ms",
