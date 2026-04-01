@@ -92,13 +92,13 @@ namespace PeterHan.PLib.Options {
 			}
 			set {
 				// Find a matching value, if possible
-				string valueStr = value?.ToString() ?? "";
-				foreach (var option in options)
-					if (valueStr == option.Value.ToString()) {
-						chosen = option;
-						Update();
-						break;
-					}
+				if (value != null)
+					foreach (var option in options)
+						if (Equals(value, option.Value)) {
+							chosen = option;
+							Update();
+							break;
+						}
 			}
 		}
 
