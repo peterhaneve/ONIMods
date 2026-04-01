@@ -193,7 +193,7 @@ namespace PeterHan.PLib.UI {
 			// Text to display
 			var textDisplay = ConfigureField(textBox.AddComponent<TextMeshProUGUI>(), style,
 				TextAlignment);
-			textDisplay.enableWordWrapping = false;
+			textDisplay.textWrappingMode = TextWrappingModes.Normal;
 			textDisplay.maxVisibleLines = 1;
 			textDisplay.raycastTarget = true;
 			// Text field itself

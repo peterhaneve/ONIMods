@@ -35,19 +35,19 @@ namespace PeterHan.PLib.UI {
 		/// <summary>
 		/// The action to trigger on text change. It is passed the realized source object.
 		/// </summary>
-		[SerializeField]
+		[field: SerializeField]
 		internal PUIDelegates.OnTextChanged OnTextChanged { get; set; }
 
 		/// <summary>
 		/// The callback to invoke when validating input.
 		/// </summary>
-		[SerializeField]
+		[field: SerializeField]
 		internal TMP_InputField.OnValidateInput OnValidate { get; set; }
 
 		/// <summary>
 		/// The object to resize on text change.
 		/// </summary>
-		[SerializeField]
+		[field: SerializeField]
 		internal GameObject TextObject { get; set; }
 
 		[MyCmpReq]

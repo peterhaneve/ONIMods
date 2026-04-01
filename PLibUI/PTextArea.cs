@@ -129,7 +129,7 @@ namespace PeterHan.PLib.UI {
 			// Text to display
 			var textDisplay = PTextField.ConfigureField(textBox.AddComponent<TextMeshProUGUI>(),
 				style, TextAlignment);
-			textDisplay.enableWordWrapping = true;
+			textDisplay.textWrappingMode = TextWrappingModes.Normal;
 			textDisplay.raycastTarget = true;
 			// Text field itself
 			textField.SetActive(false);

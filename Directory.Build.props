@@ -34,6 +34,7 @@
     <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(GameFolder)/UnityEngine.TextRenderingModule.dll" />
     <Reference Include="UnityEngine.UI" HintPath="$(GameFolder)/UnityEngine.UI.dll" />
     <Reference Include="UnityEngine.UIModule" HintPath="$(GameFolder)/UnityEngine.UIModule.dll" />
+    <PackageReference Include="Lib.Harmony.Ref" Version="2.4.2"/>
   </ItemGroup>
   <ItemGroup Condition=" '$(UsesPLib)' != 'false' ">
     <ProjectReference Include="../PLibCore/PLibCore.csproj" />
@@ -52,7 +53,7 @@
     <Product>PeterHanONIMods</Product>
     <Authors>Peter Han</Authors>
     <Copyright>Copyright ©Peter Han 2026</Copyright>
-    <TargetFrameworks>net471</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1</TargetFrameworks>
     <RequiredDLCs></RequiredDLCs>
     <ForbiddenDLCs></ForbiddenDLCs>
     <SupportedContent>VANILLA_ID,EXPANSION1_ID</SupportedContent>

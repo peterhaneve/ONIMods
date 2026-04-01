@@ -45,19 +45,21 @@ namespace PeterHan.PLib.Options {
 			for (int i = 0; i < n; i++) {
 				var enumField = members[i];
 				if (enumField.DeclaringType == fieldType)
-					return CreateOption(enumField, valueName);
+					return CreateOption(enumValue, enumField, valueName);
 			}
-			return new EnumOption(valueName, "", valueName);
+			return new EnumOption(valueName, "", enumValue);
 		}
 
 		/// <summary>
 		/// Creates an option entry by parsing the custom attributes of the enum member.
 		/// </summary>
+		/// <param name="enumValue">The value to report from the enum.</param>
 		/// <param name="enumField">The field to search for attributes.</param>
 		/// <param name="valueName">The enumeration value name declared in code.</param>
 		/// <returns>The option entry to create for this member, or null if the member is
 		/// filtered out.</returns>
-		private static EnumOption CreateOption(MemberInfo enumField, string valueName) {
+		private static EnumOption CreateOption(object enumValue, MemberInfo enumField,
+				string valueName) {
 			object[] customAttr = enumField.GetCustomAttributes(false);
 			int n = customAttr.Length;
 			string title = valueName, tooltip = "";
@@ -81,7 +83,7 @@ namespace PeterHan.PLib.Options {
 				if (attrib is IRequireFilter filter && !filter.Filter())
 					match = false;
 			}
-			return match ? new EnumOption(title, tooltip, valueName) : null;
+			return match ? new EnumOption(title, tooltip, enumValue) : null;
 		}
 
 		public override object Value {
