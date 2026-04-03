@@ -27,10 +27,17 @@ PLib is available as a [NuGet package](https://www.nuget.org/packages/PLib/).
 
 PLib must be included with mods that depend on it.
 The best method to do this is to use ILMerge or ILRepack and add the PLib project or DLL as a reference in the mod project.
-ILMerge is available as a [NuGet package](https://www.nuget.org/packages/ilmerge) and is best used as a post-build command.
-Suggested command:
-```powershell
-"$(ILMergeConsolePath)" /ndebug /out:$(TargetName)Merged.dll $(TargetName).dll PLib.dll /targetplatform:v4,C:\Windows\Microsoft.NET\Framework64\v4.0.30319
+ILRepack is available as a [NuGet package](https://www.nuget.org/packages/ILRepack) and can be included as a reference to the project.
+**The project flag `<CopyLocalLockFileAssemblies>` should be enabled if building for .NET Standard 2.1 to allow ILRepack to merge the dependency automatically.**
+Suggested ILRepack commands:
+```xml
+<PackageReference Include="Lib.Harmony.Ref" Version="2.4.2"/>
+<PackageReference Include="PLib" Version="4.22.0.0">
+  <PrivateAssets>all</PrivateAssets>
+</PackageReference>
+<PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.40">
+  <PrivateAssets>all</PrivateAssets>
+</PackageReference>
 ```
 
 This helps ensure that each mod uses the version of PLib that it was built against, reducing the risk of breakage due to PLib changes.
