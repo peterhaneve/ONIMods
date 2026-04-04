@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net48;netstandard2.1</TargetFrameworks>
     <Title>PeterHan.PLib</Title>
     <AssemblyTitle>PLib</AssemblyTitle>
     <Version>$(PLibVersion)</Version>

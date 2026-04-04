@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net48;netstandard2.1</TargetFrameworks>
     <Title>PLib Core</Title>
     <AssemblyTitle>PLib.Core</AssemblyTitle>
     <Version>$(PLibVersion)</Version>
@@ -29,10 +29,5 @@ namespace PeterHan.PLib {
   </Target>
   <ItemGroup>
     <Compile Include="$(IntermediateOutputPath)\PVersion.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Utils\**" />
-    <EmbeddedResource Remove="Utils\**" />
-    <None Remove="Utils\**" />
   </ItemGroup>
 </Project>

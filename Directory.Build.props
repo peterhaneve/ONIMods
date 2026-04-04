@@ -34,7 +34,14 @@
     <Reference Include="UnityEngine.TextRenderingModule" HintPath="$(GameFolder)/UnityEngine.TextRenderingModule.dll" />
     <Reference Include="UnityEngine.UI" HintPath="$(GameFolder)/UnityEngine.UI.dll" />
     <Reference Include="UnityEngine.UIModule" HintPath="$(GameFolder)/UnityEngine.UIModule.dll" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
     <PackageReference Include="Lib.Harmony.Ref" Version="2.4.2"/>
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' != 'netstandard2.1' ">
+    <Reference Include="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" HintPath="$(GameFolder)/mscorlib.dll" />
+    <Reference Include="netstandard, Version=2.1.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" HintPath="$(GameFolder)/netstandard.dll" />
+    <Reference Include="System.Reflection.Emit.ILGeneration, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   </ItemGroup>
   <ItemGroup Condition=" '$(UsesPLib)' != 'false' ">
     <ProjectReference Include="../PLibCore/PLibCore.csproj" />
