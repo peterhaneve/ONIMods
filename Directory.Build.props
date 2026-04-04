@@ -68,7 +68,7 @@
     <DistributeMod>true</DistributeMod>
     <ArchivedVersionPath></ArchivedVersionPath>
     <UsePublicized>false</UsePublicized>
-    <PLibVersion>4.23.0.0</PLibVersion>
+    <PLibVersion>4.24.0.0</PLibVersion>
     <DefineConstants>MERGEDOWN</DefineConstants>
     <APIVersion>2</APIVersion>
   </PropertyGroup>

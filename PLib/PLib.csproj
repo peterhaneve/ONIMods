@@ -17,11 +17,9 @@
     
 Contains methods aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
     <PackageReleaseNotes>
-        Update PLib Lighting and UI code for U58-716056.
-
-        Add additional attributes for filtering displayed options using [RequireVersion] and [RequireMod]. Attributes can now be applied to individual enum members to filter combo boxes.
-
-        Add support for custom light ray drawing to PLib Lighting.
+StringOptionsEntry default width can now be customized for manually created instances.
+        
+Migrate legacy target version from netframework471 to net48. The primary version will remain netstandard2.1.
     </PackageReleaseNotes>
     <RootNamespace>PeterHan.PLib</RootNamespace>
     <AssemblyVersion>$(PLibVersion)</AssemblyVersion>
