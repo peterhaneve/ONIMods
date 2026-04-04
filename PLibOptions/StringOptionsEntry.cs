@@ -26,6 +26,11 @@ namespace PeterHan.PLib.Options {
 	/// An options entry which represents a string and displays a text field.
 	/// </summary>
 	public class StringOptionsEntry : OptionsEntry {
+		/// <summary>
+		/// The default width in units for text fields.
+		/// </summary>
+		public const int DEFAULT_WIDTH = 128;
+
 		public override object Value {
 			get {
 				return value;
@@ -35,6 +40,11 @@ namespace PeterHan.PLib.Options {
 				Update();
 			}
 		}
+
+		/// <summary>
+		/// The width (in units, not characters!) used for display.
+		/// </summary>
+		public int DisplayWidth { get; set; }
 
 		/// <summary>
 		/// The maximum entry length.
@@ -58,6 +68,7 @@ namespace PeterHan.PLib.Options {
 				maxLength = Math.Max(2, (int)Math.Round(limit.Maximum));
 			else
 				maxLength = 256;
+			DisplayWidth = DEFAULT_WIDTH;
 			textField = null;
 			value = "";
 		}
@@ -65,8 +76,8 @@ namespace PeterHan.PLib.Options {
 		public override GameObject GetUIComponent() {
 			textField = new PTextField() {
 				OnTextChanged = OnTextChanged, ToolTip = LookInStrings(Tooltip),
-				Text = value.ToString(), MinWidth = 128, Type = PTextField.FieldType.Text,
-				MaxLength = maxLength
+				Text = value.ToString(), MinWidth = Math.Min(8, DisplayWidth),
+				Type = PTextField.FieldType.Text, MaxLength = maxLength
 			}.Build();
 			Update();
 			return textField;

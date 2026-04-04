@@ -129,7 +129,7 @@ namespace PeterHan.PLib.UI {
 			// Text to display
 			var textDisplay = PTextField.ConfigureField(textBox.AddComponent<TextMeshProUGUI>(),
 				style, TextAlignment);
-			textDisplay.textWrappingMode = TextWrappingModes.Normal;
+			textDisplay.enableWordWrapping = true;
 			textDisplay.raycastTarget = true;
 			// Text field itself
 			textField.SetActive(false);
@@ -151,10 +151,10 @@ namespace PeterHan.PLib.UI {
 			textField.SetActive(true);
 			// Lay out
 			var layout = PUIUtils.InsetChild(textField, textArea, Vector2.one, new Vector2(
-				MinWidth, Math.Max(LineCount, 1) * PUIUtils.GetLineHeight(style))).
-				AddOrGet<LayoutElement>();
+				MinWidth, Math.Max(LineCount, 1) * PUIUtils.GetLineHeight(style)));
 			layout.flexibleWidth = FlexSize.x;
 			layout.flexibleHeight = FlexSize.y;
+			layout.layoutPriority = 2;
 			OnRealize?.Invoke(textField);
 			return textField;
 		}

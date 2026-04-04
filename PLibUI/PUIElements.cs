@@ -95,7 +95,7 @@ namespace PeterHan.PLib.UI {
 			// Size and position
 			var transform = element.AddOrGet<RectTransform>();
 			transform.localScale = Vector3.one;
-			SetAnchors(element, horizAnchor, vertAnchor);
+			SetAnchors(transform, horizAnchor, vertAnchor);
 			// Almost all UI components need a canvas renderer for some reason
 			if (canvas)
 				element.AddComponent<CanvasRenderer>();
@@ -168,21 +168,20 @@ namespace PeterHan.PLib.UI {
 				constraints.flexibleHeight = 0.0f;
 			}
 		}
-
+		
 		/// <summary>
 		/// Sets the anchor location of a UI element. The offsets will be reset, use
 		/// SetAnchorOffsets to adjust the offset from the new anchor locations.
 		/// </summary>
-		/// <param name="uiElement">The UI element to modify.</param>
+		/// <param name="transform">The RectTransform of the UI element to modify.</param>
 		/// <param name="horizAnchor">The horizontal anchor mode.</param>
 		/// <param name="vertAnchor">The vertical anchor mode.</param>
 		/// <returns>The UI element, for call chaining.</returns>
-		public static GameObject SetAnchors(GameObject uiElement, PUIAnchoring horizAnchor,
-				PUIAnchoring vertAnchor) {
+		public static RectTransform SetAnchors(RectTransform transform,
+				PUIAnchoring horizAnchor, PUIAnchoring vertAnchor) {
 			Vector2 aMax = new Vector2(), aMin = new Vector2(), pivot = new Vector2();
-			if (uiElement == null)
-				throw new ArgumentNullException(nameof(uiElement));
-			var transform = uiElement.rectTransform();
+			if (transform == null)
+				throw new ArgumentNullException(nameof(transform));
 			// Anchor: horizontal
 			switch (horizAnchor) {
 			case PUIAnchoring.Center:
@@ -235,6 +234,22 @@ namespace PeterHan.PLib.UI {
 			transform.anchoredPosition = Vector2.zero;
 			transform.offsetMax = Vector2.zero;
 			transform.offsetMin = Vector2.zero;
+			return transform;
+		}
+
+		/// <summary>
+		/// Sets the anchor location of a UI element. The offsets will be reset, use
+		/// SetAnchorOffsets to adjust the offset from the new anchor locations.
+		/// </summary>
+		/// <param name="uiElement">The UI element to modify.</param>
+		/// <param name="horizAnchor">The horizontal anchor mode.</param>
+		/// <param name="vertAnchor">The vertical anchor mode.</param>
+		/// <returns>The UI element, for call chaining.</returns>
+		public static GameObject SetAnchors(GameObject uiElement, PUIAnchoring horizAnchor,
+				PUIAnchoring vertAnchor) {
+			if (uiElement == null)
+				throw new ArgumentNullException(nameof(uiElement));
+			SetAnchors(uiElement.rectTransform(), horizAnchor, vertAnchor);
 			return uiElement;
 		}
 

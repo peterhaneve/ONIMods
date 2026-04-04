@@ -524,8 +524,8 @@ namespace PeterHan.PLib.UI {
 		/// <param name="child">The child to inset.</param>
 		/// <param name="insets">The insets on each side.</param>
 		/// <param name="prefSize">The minimum component size.</param>
-		/// <returns>The parent component.</returns>
-		internal static GameObject InsetChild(GameObject parent, GameObject child,
+		/// <returns>The layout element that was added.</returns>
+		internal static LayoutElement InsetChild(GameObject parent, GameObject child,
 				Vector2 insets, Vector2 prefSize = default) {
 			var rt = child.rectTransform();
 			float horizontal = insets.x, vertical = insets.y, width = prefSize.x, height =
@@ -537,7 +537,7 @@ namespace PeterHan.PLib.UI {
 				GetPreferredWidth(rt) : width) + horizontal * 2.0f;
 			layout.minHeight = layout.preferredHeight = (height <= 0.0f ? LayoutUtility.
 				GetPreferredHeight(rt) : height) + vertical * 2.0f;
-			return parent;
+			return layout;
 		}
 
 		/// <summary>

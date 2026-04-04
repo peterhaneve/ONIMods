@@ -193,7 +193,7 @@ namespace PeterHan.PLib.UI {
 			// Text to display
 			var textDisplay = ConfigureField(textBox.AddComponent<TextMeshProUGUI>(), style,
 				TextAlignment);
-			textDisplay.textWrappingMode = TextWrappingModes.Normal;
+			textDisplay.enableWordWrapping = false;
 			textDisplay.maxVisibleLines = 1;
 			textDisplay.raycastTarget = true;
 			// Text field itself
@@ -227,9 +227,10 @@ namespace PeterHan.PLib.UI {
 			var rt = textBox.rectTransform();
 			LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
 			var layout = PUIUtils.InsetChild(textField, textArea, Vector2.one, new Vector2(
-				MinWidth, LayoutUtility.GetPreferredHeight(rt))).AddOrGet<LayoutElement>();
+				MinWidth, LayoutUtility.GetPreferredHeight(rt)));
 			layout.flexibleWidth = FlexSize.x;
 			layout.flexibleHeight = FlexSize.y;
+			layout.layoutPriority = 2;
 			OnRealize?.Invoke(textField);
 			return textField;
 		}
