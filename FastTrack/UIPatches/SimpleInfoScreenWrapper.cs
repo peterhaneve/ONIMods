@@ -721,7 +721,8 @@ namespace PeterHan.FastTrack.UIPatches {
 		private void UpdatePanels() {
 			var vitalsPanel = sis.vitalsPanel;
 			RefreshStress();
-			RefreshStorage();
+			// Allow mods' prefixes to run, our prefix still runs
+			SimpleInfoScreen.RefreshStoragePanel(sis.StoragePanel, sis.selectedTarget);
 			RefreshMove();
 			RefreshFertility();
 			if (vitalsActive) {
