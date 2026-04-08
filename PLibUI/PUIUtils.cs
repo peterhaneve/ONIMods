@@ -77,8 +77,12 @@ namespace PeterHan.PLib.UI {
 			for (int i = 0; i < n; i++) {
 				var element = refs[i];
 				var target = element.behaviour;
-				result.Append(element.Name).Append('=').Append(target.GetType().FullName).
-					Append('[').Append(target.name).Append(']');
+				result.Append(element.Name).Append('=');
+				if (target == null)
+					result.Append("null");
+				else
+					result.Append(target.GetType().FullName).Append('[').Append(target.name).
+						Append(']');
 				if (i < n - 1)
 					result.Append(", ");
 			}

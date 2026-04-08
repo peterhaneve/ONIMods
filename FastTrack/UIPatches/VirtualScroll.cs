@@ -98,9 +98,10 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		internal void Awake() {
 			scroll = GetComponentInParent<KScrollRect>();
-			parentRect = scroll.rectTransform();
+			if (scroll != null)
+				parentRect = scroll.rectTransform();
 		}
-
+		
 		/// <summary>
 		/// Restores a game object to be hidden if off-screen.
 		/// </summary>
@@ -157,6 +158,17 @@ namespace PeterHan.FastTrack.UIPatches {
 				// Calculate the margin
 				UpdateScroll();
 			}
+		}
+		
+		/// <summary>
+		/// Forces awake processing if Unity does not want to do it in the right order.
+		/// </summary>
+		/// <param name="scroll">The scroll rect to virtually scroll.</param>
+		internal void ForceAwake(KScrollRect scroll = null) {
+			var s = scroll ?? GetComponentInParent<KScrollRect>();
+			this.scroll = s;
+			if (s != null)
+				parentRect = s.rectTransform();
 		}
 
 		/// <summary>
@@ -250,7 +262,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="disableHide">The game object to show.</param>
 		internal void SetForceShow(GameObject disableHide) {
-			if (forceShow.Add(disableHide))
+			if (forceShow.Add(disableHide) && scroll != null)
 				UpdateScroll();
 		}
 

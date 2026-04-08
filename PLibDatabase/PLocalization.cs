@@ -131,6 +131,11 @@ namespace PeterHan.PLib.Database {
 		/// <summary>
 		/// Registers the specified assembly for automatic PLib localization. If the argument
 		/// is omitted, the calling assembly is registered.
+		/// 
+		/// This method uses the first type listed in the assembly (often ordered
+		/// alphabetically), which usually works and is fast to determine, but might choose the
+		/// wrong type for some ILRepack/ILMerge configurations. Consider
+		/// RegisterFromCallingClass instead.
 		/// </summary>
 		/// <param name="assembly">The assembly to register for PLib localization.</param>
 		public void Register(Assembly assembly = null) {
@@ -148,6 +153,28 @@ namespace PeterHan.PLib.Database {
 #if DEBUG
 				PDatabaseUtils.LogDatabaseDebug("Localizing assembly {0} using base namespace {1}".
 					F(assembly.GetNameSafe(), types[0].Namespace));
+#endif
+			}
+		}
+
+		/// <summary>
+		/// Registers the assembly of the calling class for automatic PLib localization.
+		/// </summary>
+		public void RegisterFromCallingClass() {
+			var frame = new System.Diagnostics.StackFrame(1);
+			var declaringType = frame.GetMethod()?.DeclaringType;
+			if (declaringType == null)
+				PDatabaseUtils.LogDatabaseWarning("Registered using calling method from" +
+					Environment.NewLine + Environment.StackTrace +
+					Environment.NewLine + "but no calling method was found!");
+			else {
+				RegisterForForwarding();
+				toLocalize.Add(declaringType.Assembly);
+				// This call searches all types in the assembly implicitly
+				Localization.RegisterForTranslation(declaringType);
+#if DEBUG
+				PDatabaseUtils.LogDatabaseDebug("Localizing assembly {0} using base namespace {1}".
+					F(declaringType.Assembly.GetNameSafe(), declaringType.Namespace));
 #endif
 			}
 		}

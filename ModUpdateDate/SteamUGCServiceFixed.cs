@@ -68,6 +68,11 @@ namespace PeterHan.ModUpdateDate {
 		/// Avoid duplicate events for clients added before the first Update.
 		/// </summary>
 		private volatile bool firstEvent;
+		
+		/// <summary>
+		/// Set once the service is initialized.
+		/// </summary>
+		private volatile bool initialized;
 
 		/// <summary>
 		/// Triggered when a mod is subscribed.
@@ -104,6 +109,7 @@ namespace PeterHan.ModUpdateDate {
 			clients = new List<SteamUGCService.IClient>(8);
 			download = new SteamDownloadQueue();
 			firstEvent = false;
+			initialized = false;
 			onItemSubscribed = Callback<RemoteStoragePublishedFileSubscribed_t>.Create(
 				OnUGCSubscribed);
 			onItemUnsubscribed = Callback<RemoteStoragePublishedFileUnsubscribed_t>.Create(
@@ -175,14 +181,17 @@ namespace PeterHan.ModUpdateDate {
 		/// (postfix).
 		/// </summary>
 		public void Initialize() {
-			uint numItems = SteamUGC.GetNumSubscribedItems();
-			PUtil.LogDebug("SteamUGCServiceFixed initializing with {0:D} items".F(numItems));
-			if (numItems > 0U) {
-				var allItems = new PublishedFileId_t[numItems];
-				SteamUGC.GetSubscribedItems(allItems, numItems);
-				allMods.Clear();
-				foreach (var item in allItems)
-					allMods.TryAdd(item, new ModInfo(item));
+			if (!initialized) {
+				uint numItems = SteamUGC.GetNumSubscribedItems();
+				PUtil.LogDebug("SteamUGCServiceFixed initializing with {0:D} items".F(numItems));
+				initialized = true;
+				if (numItems > 0U) {
+					var allItems = new PublishedFileId_t[numItems];
+					SteamUGC.GetSubscribedItems(allItems, numItems);
+					allMods.Clear();
+					foreach (var item in allItems)
+						allMods.TryAdd(item, new ModInfo(item));
+				}
 			}
 		}
 

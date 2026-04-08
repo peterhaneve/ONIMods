@@ -296,7 +296,7 @@ namespace PeterHan.FastTrack.UIPatches {
 			public void Sync() {
 				foreach (var pair in screen.contentContainers) {
 					var go = pair.Value;
-					if (go.TryGetComponent(out HierarchyReferences refs)) {
+					if (go != null && go.TryGetComponent(out HierarchyReferences refs)) {
 						var gl = refs.GetReference<GridLayoutGroup>("GridLayout");
 						var transform = gl.transform;
 						bool anyActive = false;
@@ -310,11 +310,14 @@ namespace PeterHan.FastTrack.UIPatches {
 						if (!anyActive)
 							changed.Remove(transform);
 						else if (!gl.TryGetComponent(out VirtualScroll _)) {
-							// Create here when the GO is guaranteed to be active
-							var vs = gl.gameObject.AddComponent<VirtualScroll>();
-							vs.freezeLayout = true;
-							vs.Awake();
-							vs.Initialize();
+							var target = gl.GetComponentInParent<KScrollRect>();
+							if (target != null) {
+								// Create here when the GO is guaranteed to be active
+								var vs = gl.gameObject.AddComponent<VirtualScroll>();
+								vs.freezeLayout = true;
+								vs.ForceAwake(target);
+								vs.Initialize();
+							}
 						}
 					}
 				}

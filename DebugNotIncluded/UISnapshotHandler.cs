@@ -55,14 +55,16 @@ namespace PeterHan.DebugNotIncluded {
 					GetMousePos() }, results);
 				foreach (var hit in results)
 					if (hit.isValid && (target = hit.gameObject) != null) {
+						var transform = target.transform;
 						target.DebugObjectTree();
 						do {
-							var t = target.transform.parent;
 							// GameObject.GetHashCode is fast and threadsafe
 							if (!unique.Add(target))
 								parents.Add(target);
-							target = t != null ? t.gameObject : null;
-						} while (target != null);
+							transform = transform.parent;
+							if (transform != null)
+								target = transform.gameObject;
+						} while (transform != null && target != null);
 					}
 				results.Recycle();
 				// Debug hierarchy
