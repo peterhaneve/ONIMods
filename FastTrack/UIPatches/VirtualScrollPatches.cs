@@ -295,8 +295,9 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// </summary>
 			public void Sync() {
 				foreach (var pair in screen.contentContainers) {
-					var go = pair.Value;
-					if (go != null && go.TryGetComponent(out HierarchyReferences refs)) {
+					var cc = pair.Value;
+					GameObject grid;
+					if (cc != null && cc.TryGetComponent(out HierarchyReferences refs)) {
 						var gl = refs.GetReference<GridLayoutGroup>("GridLayout");
 						var transform = gl.transform;
 						bool anyActive = false;
@@ -304,16 +305,17 @@ namespace PeterHan.FastTrack.UIPatches {
 						for (int i = 0; i < n && !anyActive; i++)
 							if (transform.GetChild(i).gameObject.activeSelf)
 								anyActive = true;
-						if (go.activeSelf != anyActive)
-							go.SetActive(anyActive);
+						if (cc.activeSelf != anyActive)
+							cc.SetActive(anyActive);
 						// If hidden, no need to rebuild it
 						if (!anyActive)
 							changed.Remove(transform);
-						else if (!gl.TryGetComponent(out VirtualScroll _)) {
-							var target = gl.GetComponentInParent<KScrollRect>();
+						else if (!gl.TryGetComponent(out VirtualScroll _) &&
+								(grid = gl.gameObject).activeSelf) {
+							var target = grid.GetComponentInParent<KScrollRect>();
 							if (target != null) {
-								// Create here when the GO is guaranteed to be active
-								var vs = gl.gameObject.AddComponent<VirtualScroll>();
+								// Create here when the layout is guaranteed to be active
+								var vs = grid.AddComponent<VirtualScroll>();
 								vs.freezeLayout = true;
 								vs.ForceAwake(target);
 								vs.Initialize();
