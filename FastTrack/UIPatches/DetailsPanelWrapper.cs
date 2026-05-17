@@ -21,6 +21,8 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using System;
+using System.Linq;
+using System.Reflection.Emit;
 
 using SideScreenPair = System.Collections.Generic.KeyValuePair<DetailsScreen.SideScreenRef, int>;
 
@@ -457,4 +459,32 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 		}
 	}
+
+	[HarmonyPatch(typeof(ReceptacleSideScreen), "Initialize")]
+    public static class ReceptacleSideScreen_Initialize_Patch {
+        internal static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) {
+            var codes = new List<CodeInstruction>(instructions);
+
+            for (int i = 0; i < codes.Count; i++) {
+                if (codes[i].opcode == OpCodes.Call && 
+                    codes[i].operand != null && 
+                    codes[i].operand.ToString().Contains("Assert")) {
+
+                    codes[i].opcode = OpCodes.Nop;
+                    codes[i].operand = null;
+
+                    if (i > i - 2) {
+                        codes[i - 1].opcode = OpCodes.Nop;
+                        codes[i - 1].operand = null;
+                        codes[i - 2].opcode = OpCodes.Nop;
+                        codes[i - 2].operand = null;
+                    }
+
+                    break;
+                }
+            }
+
+            return codes.AsEnumerable();
+        }
+    }
 }
