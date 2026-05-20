@@ -205,10 +205,8 @@ namespace PeterHan.FastTrack.UIPatches {
 					// Generated
 					float generated = GetWattageGenerated(manager, id, out float potential);
 					text.Clear();
-					if (Mathf.Approximately(generated, potential)) {
-						FormatStringPatches.GetFormattedWattage(text, generated);
-					} else {
-						FormatStringPatches.GetFormattedWattage(text, generated);
+					FormatStringPatches.GetFormattedWattage(text, generated);
+					if (!Mathf.Approximately(generated, potential)) {
 						text.Append(" / ");
 						FormatStringPatches.GetFormattedWattage(text, potential);
 					}

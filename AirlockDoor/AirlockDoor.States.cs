@@ -344,11 +344,6 @@ namespace PeterHan.AirlockDoor {
 		/// </summary>
 		public sealed class Instance : States.GameInstance {
 			/// <summary>
-			/// The layer to check for Duplicants.
-			/// </summary>
-			private readonly int minionLayer;
-
-			/// <summary>
 			/// The layer to check for dropped items.
 			/// </summary>
 			private readonly int pickupableLayer;
@@ -371,8 +366,6 @@ namespace PeterHan.AirlockDoor {
 				pressureSamples;
 
 			public Instance(AirlockDoor door) : base(door) {
-				minionLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Minion),
-					ObjectLayer.Minion);
 				pickupableLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.
 					Pickupables), ObjectLayer.Pickupables);
 				pressureSamples = 0;

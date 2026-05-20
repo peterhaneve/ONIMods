@@ -17,8 +17,10 @@
  */
 
 using KSerialization;
+using PeterHan.PLib.Core;
 using System;
 using UnityEngine;
+using static STRINGS.BUILDING.STATUSITEMS;
 
 namespace PeterHan.AirlockDoor {
 	/// <summary>
@@ -38,6 +40,11 @@ namespace PeterHan.AirlockDoor {
 		private static StatusItem storedCharge;
 
 		/// <summary>
+		/// The layer to check for Duplicants.
+		/// </summary>
+		internal static int minionLayer;
+			
+		/// <summary>
 		/// Prevents initialization from multiple threads at once.
 		/// </summary>
 		private static readonly object INIT_LOCK = new object();
@@ -56,12 +63,32 @@ namespace PeterHan.AirlockDoor {
 		/// The parameter for the sound indicating the progress of the door close.
 		/// </summary>
 		private static readonly HashedString SOUND_PROGRESS_PARAMETER = "doorProgress";
+		
+		/// <summary>
+		/// Displaces a creature outside of the airlock door.
+		/// </summary>
+		/// <param name="cell">The current creature cell.</param>
+		/// <param name="go">The creature to move.</param>
+		/// <param name="transform">The creature's transform.</param>
+		private static void DisplaceCreature(int cell, GameObject go, Transform transform) {
+			// Displace 1 tile in the direction not facing
+			int backCell = go.TryGetComponent(out Facing facing) ? facing.GetBackCell() :
+				Grid.CellLeft(cell);
+			if (Grid.IsValidCell(backCell)) {
+				transform.SetPosition(Grid.CellToPosCBC(backCell, Grid.SceneLayer.Move));
+				if (go.TryGetComponent(out Navigator nav))
+					nav.Stop();
+				go.GetSMI<FallMonitor.Instance>()?.UpdateFalling();
+			}
+		}
 
 		/// <summary>
 		/// When the door is first instantiated, initializes the static fields, to avoid the
 		/// crash that the stock Door has if it is loaded too early.
 		/// </summary>
 		private static void StaticInit() {
+			minionLayer = (int)PGameUtils.GetObjectLayer(nameof(ObjectLayer.Minion),
+				ObjectLayer.Minion);
 			doorControlState = new StatusItem("CurrentDoorControlState", "BUILDING",
 				"", StatusItem.IconType.Info, NotificationType.Neutral, false, OverlayModes.
 				None.ID) {
@@ -219,6 +246,30 @@ namespace PeterHan.AirlockDoor {
 		}
 
 		/// <summary>
+		/// Force any Duplicants or critters inside the airlock center cells to the edge cells
+		/// (where the entombment monitor can better rescue them).
+		/// </summary>
+		public void DisplaceCreaturesInside() {
+			int baseCell = building.GetCell(), centerUpCell = Grid.CellAbove(baseCell);
+			// Critters, Duplicants, etc
+			foreach (var brain in Components.Brains.Items)
+				if (brain != null) {
+					var go = brain.gameObject;
+					var transform = go.transform;
+					int cell = Grid.PosToCell(transform.position);
+					if (cell == baseCell || cell == centerUpCell)
+						DisplaceCreature(cell, go, transform);
+				}
+		}
+
+		private System.Collections.IEnumerator DisplaceCreaturesNextFrame() {
+			yield return null;
+			// In case this building was just destroyed
+			if (building != null)
+				DisplaceCreaturesInside();
+		}
+
+		/// <summary>
 		/// Gets the base cell (center bottom) of this door.
 		/// </summary>
 		/// <returns>The door's foundation cell.</returns>
@@ -324,6 +375,9 @@ namespace PeterHan.AirlockDoor {
 			ExitRight = new SideReferenceCounter(this, smi.sm.waitExitRight);
 			requestedState = locked;
 			smi.StartSM();
+			DisplaceCreaturesInside();
+			// And do it again next frame
+			StartCoroutine(DisplaceCreaturesNextFrame());
 			RefreshControlState();
 			SetFakeFloor(true);
 			// Lock out the critters
@@ -459,11 +513,6 @@ namespace PeterHan.AirlockDoor {
 		/// </summary>
 		internal sealed class SideReferenceCounter {
 			/// <summary>
-			/// How many Duplicants are currently waiting.
-			/// </summary>
-			public int WaitingCount { get; private set; }
-
-			/// <summary>
 			/// The master door.
 			/// </summary>
 			private readonly AirlockDoor door;
@@ -473,9 +522,15 @@ namespace PeterHan.AirlockDoor {
 			/// </summary>
 			private readonly States.BoolParameter parameter;
 
+			/// <summary>
+			/// How many Duplicants are currently waiting.
+			/// </summary>
+			private int waitingCount;
+
 			internal SideReferenceCounter(AirlockDoor door, States.BoolParameter parameter) {
 				this.door = door ?? throw new ArgumentNullException("door");
 				this.parameter = parameter ?? throw new ArgumentNullException("parameter");
+				waitingCount = 0;
 			}
 
 			/// <summary>
@@ -486,8 +541,8 @@ namespace PeterHan.AirlockDoor {
 					if (door.locked)
 						parameter.Set(false, door.smi);
 					else {
-						int count = Math.Max(0, WaitingCount - 1);
-						WaitingCount = count;
+						int count = Math.Max(0, waitingCount - 1);
+						waitingCount = count;
 						if (count == 0)
 							parameter.Set(false, door.smi);
 					}
@@ -499,8 +554,10 @@ namespace PeterHan.AirlockDoor {
 			/// </summary>
 			public void Queue() {
 				if (door != null && !door.locked && door.IsUsableOrActive()) {
-					WaitingCount++;
-					parameter.Set(true, door.smi);
+					int count = waitingCount;
+					if (count == 0)
+						parameter.Set(true, door.smi);
+					waitingCount = count + 1;
 				}
 			}
 		}

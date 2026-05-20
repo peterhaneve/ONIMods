@@ -31,7 +31,7 @@ namespace PeterHan.AirlockDoor {
 		public const string ID = "PAirlockDoor";
 
 		internal static float ENERGY_CAPACITY = 10000.0f;
-		internal static float ENERGY_PER_USE = 3000.0f;
+		internal static float ENERGY_PER_USE = 1500.0f;
 
 		/// <summary>
 		/// The completed building template.

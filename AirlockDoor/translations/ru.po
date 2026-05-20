@@ -1,0 +1,78 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not Included
+"POT Version: 2.0\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 3.7\n"
+
+#. PeterHan.AirlockDoor.AirlockDoorStrings.BUILDING.STATUSITEMS.AIRLOCKSTOREDCHARGE.NAME
+msgctxt "PeterHan.AirlockDoor.AirlockDoorStrings.BUILDING.STATUSITEMS.AIRLOCKSTOREDCHARGE.NAME"
+msgid "Charge Available: {0}/{1}"
+msgstr "Зарядка Доступно: {0}/{1}"
+
+#. PeterHan.AirlockDoor.AirlockDoorStrings.BUILDING.STATUSITEMS.AIRLOCKSTOREDCHARGE.TOOLTIP
+msgctxt "PeterHan.AirlockDoor.AirlockDoorStrings.BUILDING.STATUSITEMS.AIRLOCKSTOREDCHARGE.TOOLTIP"
+msgid ""
+"This Airlock has <b>{0}</b> of stored <style=\"KKeyword\">Power</style>\n"
+"\n"
+"It consumes up to <style=\"consumed\">{2}</style> per use"
+msgstr ""
+"Этот шлюз имеет <b>{0}</b> запасенной <style=\"KKeyword\">энергии</style>\n"
+"\n"
+"Он потребляет до <style=\"consumed\">{2}</style> за одно использование"
+
+#. PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.DESC
+msgctxt "PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.DESC"
+msgid ""
+"Sucking Duplicants that have nowhere to go into space through <link=\"PRESSUREDOOR\">Mechanized "
+"Airlocks</link> is poor taste. Airlock Doors now allow Duplicants safe passage without the loss "
+"of any of their mysterious fluids."
+msgstr ""
+"Высасывание дубликантов, которым некуда деться, в космос через <link=\"PRESSUREDOOR\">Механизированные "
+"шлюзы</link> — это дурной вкус. Шлюзовые двери теперь позволяют дубликантам безопасно проходить "
+"без потери каких-либо из их таинственных жидкостей."
+
+#. PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.EFFECT
+msgctxt "PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.EFFECT"
+msgid ""
+"Blocks <link=\"ELEMENTSLIQUID\">Liquid</link> and <link=\"ELEMENTSGAS\">Gas</link> flow, even "
+"while Duplicants are passing.\n"
+"\n"
+"Will not allow passage when no <link=\"POWER\">Power</link> is available.\n"
+"\n"
+"<link=\"CRITTERS\">Critters</link> can never pass through this door."
+msgstr ""
+"Блокирует поток <link=\"ELEMENTSLIQUID\">жидкостей</link> и <link=\"ELEMENTSGAS\">газов</link>, даже когда через них проходят дубликаторы.\n»
+"\n"
+"Не пропускает, когда нет <link=\"POWER\">энергии</link>.\n"
+"\n"
+"<link=\"CRITTERS\">Животные</link> никогда не смогут пройти через эту дверь."
+
+#. PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.LOGIC_OPEN
+msgctxt "PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.LOGIC_OPEN"
+msgid "Unlock/Lock"
+msgstr "Разблокировать/Заблокировать"
+
+#. PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.LOGIC_OPEN_ACTIVE
+msgctxt "PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.LOGIC_OPEN_ACTIVE"
+msgid "<b><style=\"logic_on\">Green Signal</style></b>: Unlock door"
+msgstr "<b><style=\"logic_on\">Зеленый сигнал</style></b>: Открыть дверь"
+
+#. PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.LOGIC_OPEN_INACTIVE
+msgctxt "PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.LOGIC_OPEN_INACTIVE"
+msgid "<b><style=\"logic_off\">Red Signal</style></b>: Lock door"
+msgstr "<b><style=\"logic_off\">Красный сигнал</style></b>: Запереть дверь"
+
+#. PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.NAME
+msgctxt "PeterHan.AirlockDoor.AirlockDoorStrings.BUILDINGS.PREFABS.PAIRLOCKDOOR.NAME"
+msgid "<link=\"PAIRLOCKDOOR\">Airlock Door</link>"
+msgstr "<link=\"PAIRLOCKDOOR\">Шлюзовая дверь</link>"
