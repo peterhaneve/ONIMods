@@ -81,34 +81,17 @@ namespace PeterHan.MismatchedFinder {
 		/// Called when the info screen for the wire is refreshed.
 		/// </summary>
 		public void OnRefreshUserMenu() {
-            if (GetNetwork() is ElectricalUtilityNetwork enet) {
-                var gi = Game.Instance;
-
-                if (wire != null && enet != null && gi != null) {
-                    float wattage = Wire.GetMaxWattageAsFloat(wire.MaxWattageRating);
-                    float maxSafeWattage = float.MaxValue;
-
-                    if (enet.allWires != null) {
-                        int n = enet.allWires.Count;
-                        for (int i = 0; i < n; i++) {
-                            var w = enet.allWires[i];
-                            if (w != null) {
-                                float wireMax = Wire.GetMaxWattageAsFloat(w.MaxWattageRating);
-                                if (wireMax < maxSafeWattage) {
-                                    maxSafeWattage = wireMax;
-                                }
-                            }
-                        }
-                    }
-
-                    if (maxSafeWattage < float.MaxValue && wattage > maxSafeWattage) {
-                        gi.userMenu?.AddButton(gameObject, new KIconButtonMenu.ButtonInfo(
-                            "action_follow_cam", MismatchedFinderStrings.UI.USERMENUOPTIONS.
-                            FIND_WIRE, OnFindMismatched, PAction.MaxAction, null, null, null,
-                            MismatchedFinderStrings.UI.TOOLTIPS.FIND_WIRE));
-                    }
-                }
-            }
-        }
+			var enet = GetNetwork();
+			var gi = Game.Instance;
+			if (wire != null && enet != null && gi != null) {
+				float wattage = Wire.GetMaxWattageAsFloat(wire.MaxWattageRating);
+				if (!Mathf.Approximately(wattage, Game.Instance.circuitManager.
+						GetMaxSafeWattageForCircuit((ushort)enet.id)))
+					gi.userMenu?.AddButton(gameObject, new KIconButtonMenu.ButtonInfo(
+						"action_follow_cam", MismatchedFinderStrings.UI.USERMENUOPTIONS.
+						FIND_WIRE, OnFindMismatched, PAction.MaxAction, null, null, null,
+						MismatchedFinderStrings.UI.TOOLTIPS.FIND_WIRE));
+			}
+		}
 	}
 }

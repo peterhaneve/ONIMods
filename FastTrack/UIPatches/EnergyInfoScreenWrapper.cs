@@ -226,18 +226,8 @@ namespace PeterHan.FastTrack.UIPatches {
 						POTENTIAL_WATTAGE_CONSUMED.Format(text.ToString()), ENERGYGENERATOR.
 						POTENTIAL_WATTAGE_CONSUMED_TOOLTIP);
 					// Max safe
-					float maxSafeWattage = 0f;
-					var conduitSystem = Game.Instance.electricalConduitSystem;
-
-					if (conduitSystem != null) {
-                        if (conduitSystem.GetNetworkByID(id) is ElectricalUtilityNetwork network && manager.circuitInfo.Count > id)
-                        {
-                            var bridgeGroups = manager.circuitInfo[id].bridgeGroups;
-                            maxSafeWattage = network.GetMaxSafeWattage(bridgeGroups);
-                        }
-                    }
-
-					FormatStringPatches.GetFormattedWattage(text.Clear(), maxSafeWattage);
+					FormatStringPatches.GetFormattedWattage(text.Clear(), manager.
+						GetMaxSafeWattageForCircuit(id));
 					panel.SetLabel("maxSafeWattage", ENERGYGENERATOR.MAX_SAFE_WATTAGE.Format(
 						text.ToString()), ENERGYGENERATOR.MAX_SAFE_WATTAGE_TOOLTIP);
 				} else
