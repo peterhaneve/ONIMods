@@ -17,10 +17,8 @@
     
 Contains methods aimed at improving cross-mod compatibility, in-game user interfaces, and game-wide functions such as Actions and Lighting. An easy-to-use Mod Options menu is also included.</Description>
     <PackageReleaseNotes>
-StringOptionsEntry default width can now be customized for manually created instances.
-        
-Migrate legacy target version from netframework471 to net48. The primary version will remain netstandard2.1.
-    </PackageReleaseNotes>
+Update PLib for the U59 game release.
+	</PackageReleaseNotes>
     <RootNamespace>PeterHan.PLib</RootNamespace>
     <AssemblyVersion>$(PLibVersion)</AssemblyVersion>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>  

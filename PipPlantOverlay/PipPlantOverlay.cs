@@ -16,6 +16,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+using PeterHan.PLib.Core;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -126,7 +127,7 @@ namespace PeterHan.PipPlantOverlay {
 				new OverlayModes.ColorHighlightCondition(GetHighlightColor, ShouldHighlight)
 			};
 			layerTargets = new HashSet<Uprootable>();
-			legendFilters = CreateDefaultFilters();
+			InitDefaultFilters();
 			Instance = this;
 			pipPlantLegend = new List<LegendEntry>
 			{
@@ -196,6 +197,19 @@ namespace PeterHan.PipPlantOverlay {
 
 		public override string GetSoundName() {
 			return "Harvest";
+		}
+
+		/// <summary>
+		/// No matter the type it actually uses, preload the legendFilters with the value of
+		/// CreateDefaultFilters.
+		/// </summary>
+		private void InitDefaultFilters() {
+			var targetField = typeof(OverlayModes.Mode).GetFieldSafe(nameof(legendFilters),
+				false);
+			var targetMethod = typeof(OverlayModes.Mode).GetMethodSafe(
+				nameof(CreateDefaultFilters), false);
+			if (targetField != null && targetMethod != null)
+				targetField.SetValue(this, targetMethod.Invoke(this, null));
 		}
 
 		protected override void OnSaveLoadRootRegistered(SaveLoadRoot root) {
