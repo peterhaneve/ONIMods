@@ -17,14 +17,25 @@
  */
 
 using Database;
+using PeterHan.PLib.Detours;
 using FACADES = PeterHan.ThermalPlate.ThermalPlateStrings.BUILDINGS.PREFABS.
 	THERMALINTERFACEPLATE.FACADES;
 
 namespace PeterHan.ThermalPlate {
 	public sealed class ThermalBlueprintProvider : BlueprintProvider {
+		private delegate BuildingFacadeInfo FacadeConstructor(string id, string name,
+			string desc, PermitRarity rarity, string prefabId, string animFile);
+
+		/// <summary>
+		/// Skins are changed fairly often, so detour the BuildingFacadeInfo constructor with
+		/// the minimal set of parameters.
+		/// </summary>
+		private static readonly FacadeConstructor NEW_FACADE = typeof(BuildingFacadeInfo).
+			DetourConstructor<FacadeConstructor>();
+
 		private static BuildingFacadeInfo CreateFacade(string color, LocString name,
 				LocString desc) {
-			return new BuildingFacadeInfo(ThermalPlateConfig.ID + "_" + color,
+			return NEW_FACADE.Invoke(ThermalPlateConfig.ID + "_" + color,
 				name, desc, PermitRarity.Universal, ThermalPlateConfig.ID, "thermalPlate_" +
 				color + "_kanim");
 		}

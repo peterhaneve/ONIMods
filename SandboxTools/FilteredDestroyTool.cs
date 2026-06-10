@@ -107,7 +107,6 @@ namespace PeterHan.SandboxTools {
 		private HashedString previousMode;
 
 		internal FilteredDestroyTool() {
-			Color color;
 			modes = new List<DestroyFilter>(12) {
 				new DestroyFilter("Elements", OverlayModes.TileMode.ID,
 					SandboxToolsStrings.DESTROY_ELEMENTS, DestroyElement),
