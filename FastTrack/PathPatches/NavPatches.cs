@@ -320,7 +320,6 @@ namespace PeterHan.FastTrack.PathPatches {
 				if (options.FastReachability && options.ChorePriorityMode ==
 						FastTrackOptions.NextChorePriority.Delay)
 					PriorityBrainScheduler.Instance.PathReady(nav);
-				__instance.Cleanup();
 			}
 			__state = miss;
 			return miss;

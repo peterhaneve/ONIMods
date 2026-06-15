@@ -33,6 +33,7 @@ namespace PeterHan.StockBugFix {
 		/// temperature. Some builds rely on this.
 		/// </summary>
 		[Option("Allow Tepidizer Pulsing", "Allow the Liquid Tepidizer to be pulsed rapidly to increase its temperature beyond its usual limits.")]
+		[RequireVersion(731233, false)]
 		[JsonProperty]
 		public bool AllowTepidizerPulsing { get; set; }
 
@@ -42,14 +43,6 @@ namespace PeterHan.StockBugFix {
 		[Option("Fix Overheat Temperatures", "Adds missing overheat temperatures to some buildings, and\r\nremoves it from other buildings where it does not make sense.")]
 		[JsonProperty]
 		public bool FixOverheat { get; set; }
-		
-		/// <summary>
-		/// If true, plant irrigation patches will be applied.
-		/// </summary>
-		[Option("Fix Plants", "Prevent consumption of fertilizer and irrigation by plants that cannot grow.")]
-		[RequireVersion(716056U, false)]
-		[JsonProperty]
-		public bool FixPlants { get; set; }
 
 		/// <summary>
 		/// If true, trait conflict patches will be applied.
@@ -85,7 +78,6 @@ namespace PeterHan.StockBugFix {
 			AllowTepidizerPulsing = false;
 			DelayModsMenu = true;
 			FixOverheat = true;
-			FixPlants = true;
 			FixTraits = true;
 			MinOutputTemperature = false;
 			StoreFoodChoreType = StoreFoodCategory.Store;

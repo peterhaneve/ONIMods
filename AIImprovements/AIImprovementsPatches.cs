@@ -35,12 +35,6 @@ namespace PeterHan.AIImprovements {
 		private static readonly IDetouredField<Constructable, Building> CONS_BUILDING =
 			PDetours.DetourFieldLazy<Constructable, Building>("building");
 
-		// TODO Remove when versions prior to U57-699077 no longer need to be supported
-		private delegate bool NavigatorStop(Navigator navigator);
-
-		private static readonly NavigatorStop NAVIGATOR_STOP = typeof(Navigator).
-			Detour<NavigatorStop>(nameof(Navigator.Stop));
-
 		/// <summary>
 		/// The chore type used for Build chores.
 		/// </summary>
@@ -132,7 +126,6 @@ namespace PeterHan.AIImprovements {
 			var transform = instance.transform;
 			// Teleport to the new location
 			transform.SetPosition(Grid.CellToPosCBC(destination, Grid.SceneLayer.Move));
-			NAVIGATOR_STOP.Invoke(navigator);
 			if (instance.gameObject.HasTag(GameTags.Incapacitated))
 				navigator.SetCurrentNavType(NavType.Floor);
 			instance.UpdateFalling();

@@ -238,16 +238,9 @@ namespace PeterHan.StockBugFix {
 		}
 
 		public override void OnAllModsLoaded(Harmony harmony, IReadOnlyList<Mod> mods) {
-			const string FIX_IRRIGATION = "Bugs.PlantIrrigation";
 			base.OnAllModsLoaded(harmony, mods);
 			DecorProviderRefreshFix.ApplyPatch(harmony);
 			FixMassStringsReadOnly(harmony);
-			if (PPatchTools.GetTypeSafe("BetterPlantTending.TendedPlant") == null &&
-					PUtil.GameVersion < 716056U && !PRegistry.GetData<bool>(FIX_IRRIGATION) &&
-					StockBugFixOptions.Instance.FixPlants) {
-				PlantIrrigationFixPatches.Apply(harmony);
-				PRegistry.PutData(FIX_IRRIGATION, true);
-			}
 		}
 
 		public override void OnLoad(Harmony instance) {
@@ -404,32 +397,6 @@ namespace PeterHan.StockBugFix {
 				GetMethodSafe(nameof(RoomProber.SolidChangedEvent), false, typeof(int),
 				typeof(bool)), typeof(DecorProviderRefreshFix).GetMethodSafe(nameof(
 				SolidNotChangedEvent), true, typeof(RoomProber), typeof(int), typeof(bool)));
-		}
-	}
-	
-	/// <summary>
-	/// Applied to Diggable to prevent maximum experience overflow if Super Productive
-	/// manages to complete on Neutronium.
-	/// </summary>
-	[HarmonyPatch(typeof(Diggable), nameof(Diggable.InstantlyFinish))]
-	public static class Diggable_InstantlyFinish_Patch {
-		/// <summary>
-		/// Applied before InstantlyFinish runs.
-		/// </summary>
-		internal static bool Prefix(Diggable __instance, ref bool __result) {
-			bool cont = true;
-			if (__instance != null) {
-				int cell = Grid.PosToCell(__instance);
-				Element element;
-				// Complete by removing the cell instantaneously
-				if (Grid.IsValidCell(cell) && (element = Grid.Element[cell]) != null &&
-						element.hardness > 254) {
-					SimMessages.Dig(cell);
-					__result = true;
-					cont = false;
-				}
-			}
-			return cont;
 		}
 	}
 
@@ -603,6 +570,34 @@ namespace PeterHan.StockBugFix {
 		}
 	}
 
+#if false
+	/// <summary>
+	/// Applied to ReloadElectrobankChore to displace the dropped electrobank a bit higher
+	/// when eating at a table so it does not clip into the floor.
+	/// </summary>
+	[HarmonyPatch(typeof(ReloadElectrobankChore), nameof(ReloadElectrobankChore.
+		RemoveDepletedElectrobank))]
+	public static class SolidTransferArm_RemoveDepletedElectrobank_Patch {
+		/// <summary>
+		/// Applied before RemoveDepletedElectrobank runs.
+		/// </summary>
+		internal static bool Prefix(ReloadElectrobankChore.Instance smi) {
+			var master = smi.master;
+			bool atTable = false;
+			if (master != null && (atTable = master.IsInstallingAtMessStation())) {
+				var emptyBattery = ReloadElectrobankChore.GetAnyEmptyBattery(smi);
+				if (emptyBattery != null) {
+					int cell = Grid.PosToCell(master.transform.position);
+					smi.batteryMonitor.storage.Drop(emptyBattery, true);
+					emptyBattery.transform.SetPosition(Grid.CellToPosCCC(cell, Grid.
+						SceneLayer.Ore));
+				}
+			}
+			return !atTable;
+		}
+	}
+#endif
+
 	/// <summary>
 	/// Applied to SolidTransferArm to prevent offgassing of materials inside its
 	/// storage during transfer.
@@ -620,6 +615,8 @@ namespace PeterHan.StockBugFix {
 
 	/// <summary>
 	/// Applied to SpaceHeater to fix Tepidizer target temperature area being too large.
+	/// 
+	/// TODO Remove when versions older than U59-731233 no longer need to be supported
 	/// </summary>
 	[HarmonyPatch(typeof(SpaceHeater), "MonitorHeating")]
 	public static class SpaceHeater_MonitorHeating_Patch {
@@ -627,7 +624,8 @@ namespace PeterHan.StockBugFix {
 		/// Allow this patch to be turned off in the config.
 		/// </summary>
 		internal static bool Prepare() {
-			return !StockBugFixOptions.Instance.AllowTepidizerPulsing;
+			return PUtil.GameVersion < 731233U && !StockBugFixOptions.Instance.
+				AllowTepidizerPulsing;
 		}
 
 		/// <summary>
@@ -687,7 +685,8 @@ namespace PeterHan.StockBugFix {
 		/// Allow this patch to be turned off in the config.
 		/// </summary>
 		internal static bool Prepare() {
-			return !StockBugFixOptions.Instance.AllowTepidizerPulsing;
+			return PUtil.GameVersion < 731233U && !StockBugFixOptions.Instance.
+				AllowTepidizerPulsing;
 		}
 
 		/// <summary>

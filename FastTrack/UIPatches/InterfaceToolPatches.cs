@@ -179,25 +179,13 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="cell">The cell that the cursor occupies.</param>
 		/// <param name="coords">The raw mouse coordinates.</param>
-		/// <param name="previousItems">The previously selected items.</param>
 		/// <param name="hits">The location where the hits will be stored.</param>
-		/// <returns>true to reset the cycle count, or false to leave it as is.</returns>
-		private static bool GetAllSelectables(int cell, Vector3 coords,
-				HashSet<Component> previousItems, List<KSelectable> hits) {
+		private static void GetAllSelectables(int cell, Vector3 coords,
+				 List<KSelectable> hits) {
 			var compareSet = HashSetPool<Component, InterfaceTool>.Allocate();
-			bool reset = false;
 			if (Grid.IsVisible(cell))
 				FindSelectables(cell, coords, hits, compareSet);
-			if (compareSet.Count < 1)
-				previousItems.Clear();
-			else if (!previousItems.SetEquals(compareSet)) {
-				reset = true;
-				previousItems.Clear();
-				// Copy for next time
-				previousItems.UnionWith(compareSet);
-			}
 			compareSet.Recycle();
-			return reset;
 		}
 
 		/// <summary>
@@ -222,34 +210,27 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// Retrieves the component at the specified index when paging through info cards.
 		/// </summary>
 		/// <param name="hits">The list of sorted hits.</param>
-		/// <param name="index">The index to look up.</param>
 		/// <param name="layerMask">The mask of objects that should not be selected.</param>
 		/// <param name="lastSelected">The object last selected by this method.</param>
 		/// <returns>The object that would be selected.</returns>
-		private static KSelectable GetIndexedSelectable(List<KSelectable> hits, ref int index,
+		private static KSelectable GetNextSelectable(List<KSelectable> hits,
 				int layerMask, KSelectable lastSelected) {
 			var filteredHits = ListPool<KSelectable, InterfaceTool>.Allocate();
 			KSelectable result = null;
+			int index = -1;
 			// hits is already sorted, but if an object is destroyed without changing the
 			// selected tile, some entries could be null
 			foreach (var item in hits)
-				if (item != null && ((1 << item.gameObject.layer) & layerMask) != 0)
+				if (item != null && ((1 << item.gameObject.layer) & layerMask) != 0) {
+					if (lastSelected == item)
+						index = filteredHits.Count;
 					filteredHits.Add(item);
-			int n = filteredHits.Count;
-			if (n > 0) {
-				// Since index has to be modulo by number, have to make the full list even if
-				// the item to select could be determined partway through
-				int newIndex = index % n;
-				if (lastSelected == null || filteredHits[newIndex] != lastSelected) {
-					index = 0;
-					newIndex = 0;
-				} else {
-					// index is allowed to keep increasing, even if n changes
-					index++;
-					newIndex = (newIndex + 1) % n;
 				}
-				result = filteredHits[newIndex];
-			}
+			int n = filteredHits.Count;
+			if (n == 1)
+				result = filteredHits[0];
+			else if (n > 1)
+				result = index >= 0 ? filteredHits[(index + 1) % n] : filteredHits[0];
 			filteredHits.Recycle();
 			return result;
 		}
@@ -328,9 +309,7 @@ namespace PeterHan.FastTrack.UIPatches {
 					if (hoverOverride != null)
 						hits.Add(hoverOverride);
 					// If the items have changed, reset cycle count
-					if (GetAllSelectables(cell, coords, __instance.prevIntersectionGroup,
-							hits))
-						__instance.hitCycleCount = 0;
+					GetAllSelectables(cell, coords, hits);
 					var objectUnderCursor = GetFirstSelectable(hits, __instance.layerMask);
 					__instance.UpdateHoverElements(hits);
 					if (!__instance.hasFocus && hoverOverride == null)
@@ -381,13 +360,8 @@ namespace PeterHan.FastTrack.UIPatches {
 				int cell = Grid.PosToCell(cursor_pos);
 				if (Grid.IsValidCell(cell)) {
 					var hits = __instance.hits;
-					int index = __instance.hitCycleCount;
-					if (GetAllSelectables(cell, cursor_pos, __instance.prevIntersectionGroup,
-							hits))
-						index = 0;
-					var target = GetIndexedSelectable(hits, ref index, __instance.layerMask,
-						__instance.selected);
-					__instance.hitCycleCount = index;
+					GetAllSelectables(cell, cursor_pos, hits);
+					var target = GetNextSelectable(hits, __instance.layerMask, __instance.selected);
 					// Try Aze's override
 					var newTarget = __instance.GetObjectUnderCursor<KSelectable>(true);
 					if (newTarget != null)
