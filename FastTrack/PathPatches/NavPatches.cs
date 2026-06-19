@@ -502,8 +502,17 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// Applied before OnCleanUp runs.
 		/// </summary>
 		internal static void Prefix(Navigator __instance) {
-			if (__instance != null)
+			if (__instance != null) {
 				PathCacher.Cleanup(__instance.PathGrid);
+				// A navigator destroyed in the window between a worker thread flagging a
+				// cache hit (CacheHitNavigators.TryAdd in Execute) and TickFrame consuming
+				// it via TakeResult never gets its entry removed there, leaving a dangling
+				// key that pins the dead Navigator. Critter churn (deaths, hatches) makes
+				// that accumulate over a long colony, so clear it here too. Gating matches:
+				// CacheHitNavigators is only populated when CachePaths is on, which is also
+				// when this patch applies.
+				WorkOrder_Execute_Patch.CacheHitNavigators.TryRemove(__instance, out _);
+			}
 		}
 	}
 
