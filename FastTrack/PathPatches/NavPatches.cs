@@ -527,4 +527,61 @@ namespace PeterHan.FastTrack.PathPatches {
 				PathCacher.InvalidateAllDuplicants();
 		}
 	}
+
+	/// <summary>
+	/// Applied to NavGrid to invalidate cached paths whose region overlaps cells
+	/// that just changed. The base game refreshes the nav grid for dirty cells
+	/// here, but FastTrack's path cache has no terrain-change signal of its own, so
+	/// an idle navigator (typically a swim-nav critter that does not constantly
+	/// re-path the way a chore-driven Duplicant does) can follow a stale cached
+	/// path into a newly-placed tile and get stuck. Same bug class as the
+	/// SuitMarker fix above.
+	/// </summary>
+	[HarmonyPatch(typeof(NavGrid), nameof(NavGrid.UpdateGraph), new[] {
+		typeof(List<int>) })]
+	public static class NavGrid_UpdateGraph_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
+
+		/// <summary>
+		/// Applied after UpdateGraph runs to drop caches over the changed region.
+		/// The dirty cells are already expanded by the nav update range upstream, so
+		/// a navigator adjacent to a change is covered.
+		///
+		/// __0 is the first original argument (the dirty cell list) by position.
+		/// Harmony injects original parameters by NAME; receiving it positionally
+		/// avoids a silent no-op if the publicized assembly's parameter name ever
+		/// differs from the source name.
+		/// </summary>
+		internal static void Postfix(List<int> __0) {
+			var dirtyCells = __0;
+			int n;
+			if (dirtyCells == null || (n = dirtyCells.Count) < 1)
+				return;
+			int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue,
+				maxY = int.MinValue;
+			for (int i = 0; i < n; i++) {
+				int cell = dirtyCells[i];
+				// Guard: an invalid (-1) or out-of-range cell would corrupt the bbox.
+				// Grid.CellToXY is pure modulo (no throw), so a bad cell silently
+				// stretches the box to cover the whole map and invalidates the entire
+				// cache — defeating the optimization. Skip anything not a real cell.
+				if (!Grid.IsValidCell(cell))
+					continue;
+				Grid.CellToXY(cell, out int x, out int y);
+				if (x < minX)
+					minX = x;
+				if (x > maxX)
+					maxX = x;
+				if (y < minY)
+					minY = y;
+				if (y > maxY)
+					maxY = y;
+			}
+			// No valid cell updated the bounds — nothing to invalidate (avoids
+			// passing an inverted box).
+			if (minX > maxX)
+				return;
+			PathCacher.InvalidateRegion(minX, minY, maxX, maxY);
+		}
+	}
 }
