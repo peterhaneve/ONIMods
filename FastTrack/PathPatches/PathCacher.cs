@@ -37,6 +37,14 @@ namespace PeterHan.FastTrack.PathPatches {
 		private static double now;
 
 		/// <summary>
+		/// The (time, bounding box) of the most recent InvalidateRegion call, used to
+		/// skip the redundant per-nav-grid invalidations of a single terrain change.
+		/// </summary>
+		private static double lastInvalidateTime = double.NaN;
+		private static int lastInvalidateMinX, lastInvalidateMinY, lastInvalidateMaxX,
+			lastInvalidateMaxY;
+
+		/// <summary>
 		/// Map path cache IDs to path cache values.
 		/// </summary>
 		private static ConcurrentDictionary<PathGrid, double> pathCache;
@@ -80,6 +88,7 @@ namespace PeterHan.FastTrack.PathPatches {
 				pathCache = new ConcurrentDictionary<PathGrid, double>(4, 128);
 			else
 				pathCache.Clear();
+			lastInvalidateTime = double.NaN;
 		}
 		
 		/// <summary>
@@ -107,6 +116,20 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <param name="maxX">Bounding box maximum X in cell coordinates.</param>
 		/// <param name="maxY">Bounding box maximum Y in cell coordinates.</param>
 		internal static void InvalidateRegion(int minX, int minY, int maxX, int maxY) {
+			// A single terrain change dirties every nav grid (~12 of them), and each
+			// one's UpdateGraph fires this with the same box in the same frame. Skip
+			// the redundant cache scans by remembering the last (time, box): only the
+			// first scan for a given change does work. Cross-frame changes carry a
+			// different time and always run, so this never skips a real invalidation.
+			if (now == lastInvalidateTime && minX == lastInvalidateMinX &&
+					minY == lastInvalidateMinY && maxX == lastInvalidateMaxX &&
+					maxY == lastInvalidateMaxY)
+				return;
+			lastInvalidateTime = now;
+			lastInvalidateMinX = minX;
+			lastInvalidateMinY = minY;
+			lastInvalidateMaxX = maxX;
+			lastInvalidateMaxY = maxY;
 			// ponytail: bbox over-invalidation — a grid intersecting the box but not an
 			// actual dirty cell still gets dropped, which only costs a lazy re-probe.
 			// Upgrade to a per-cell test or spatial index only if a profile shows this
