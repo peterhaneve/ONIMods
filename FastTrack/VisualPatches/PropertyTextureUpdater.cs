@@ -353,7 +353,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 				updater = PropertyTextures.UpdateSolidLiquidGasMassForLight;
 				break;
 			default:
-				throw new ArgumentException("No updater for property: " + property);
+				PUtil.LogWarning("No texture updater for property: " + property);
+				return;
 			}
 			running.Add(new TextureWorkItemCollection(this, buffer, min, max, updater));
 		}
@@ -416,6 +417,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 				break;
 			case SimProperty.LiquidData:
 				UpdateSimProperty(p, PropertyTextures.externalLiquidDataTex, 4 * cells);
+				break;
+			// ponytail: Aquatic added MaterialData as an externally-managed sim texture
+			case SimProperty.MaterialData:
+				UpdateSimProperty(p, PropertyTextures.externalMaterialDataTex, 4 * cells);
 				break;
 			default:
 				if (p < buffers.Length)
