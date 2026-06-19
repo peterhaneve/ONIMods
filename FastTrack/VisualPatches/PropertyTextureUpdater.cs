@@ -139,6 +139,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// References IDs for updating shader texture properties.
 		/// </summary>
+		private readonly int tIDCameraZoom;
 		private readonly int tIDClusterWorldSize;
 		private readonly int tIDFogOfWarScale;
 		private readonly int tIDTopBorderHeight;
@@ -147,6 +148,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		private PropertyTextureUpdater() {
 			var tIDPropTexWsToCs = Shader.PropertyToID("_PropTexWsToCs");
 			var tIDPropTexCsToWs = Shader.PropertyToID("_PropTexCsToWs");
+			// ponytail: Aquatic added _CameraZoomInfo; liquid shaders use it for transparency
+			tIDCameraZoom = Shader.PropertyToID("_CameraZoomInfo");
 			tIDClusterWorldSize = Shader.PropertyToID("_ClusterWorldSizeInfo");
 			tIDFogOfWarScale = Shader.PropertyToID("_FogOfWarScale");
 			tIDTopBorderHeight = Shader.PropertyToID("_TopBorderHeight");
@@ -197,6 +200,19 @@ namespace PeterHan.FastTrack.VisualPatches {
 			if (!Mathf.Approximately(scale, lastFog)) {
 				Shader.SetGlobalFloat(tIDFogOfWarScale, scale);
 				lastFog = scale;
+			}
+			// ponytail: _CameraZoomInfo — Aquatic liquid shaders use this for transparency;
+			// game sets it every LateUpdate, so we must too (camera zoom changes every frame)
+			var cc = CameraController.Instance;
+			if (cc != null && cc.overlayCamera != null) {
+				float orthoSize = cc.OrthographicSize;
+				float maxOrtho = cc.FreeCameraEnabled
+					? TuningData<CameraController.Tuning>.Get().maxOrthographicSizeDebug
+					: 20.0f;
+				Shader.SetGlobalVector(tIDCameraZoom, new Vector4(
+					orthoSize, cc.overlayCamera.aspect, maxOrtho,
+					(orthoSize - cc.minOrthographicSize) / (maxOrtho - cc.minOrthographicSize)
+				));
 			}
 		}
 
