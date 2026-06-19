@@ -116,20 +116,33 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <param name="maxX">Bounding box maximum X in cell coordinates.</param>
 		/// <param name="maxY">Bounding box maximum Y in cell coordinates.</param>
 		internal static void InvalidateRegion(int minX, int minY, int maxX, int maxY) {
-			// A single terrain change dirties every nav grid (~12 of them), and each
-			// one's UpdateGraph fires this with the same box in the same frame. Skip
-			// the redundant cache scans by remembering the last (time, box): only the
-			// first scan for a given change does work. Cross-frame changes carry a
-			// different time and always run, so this never skips a real invalidation.
-			if (now == lastInvalidateTime && minX == lastInvalidateMinX &&
-					minY == lastInvalidateMinY && maxX == lastInvalidateMaxX &&
-					maxY == lastInvalidateMaxY)
-				return;
-			lastInvalidateTime = now;
-			lastInvalidateMinX = minX;
-			lastInvalidateMinY = minY;
-			lastInvalidateMaxX = maxX;
-			lastInvalidateMaxY = maxY;
+			// A single terrain change dirties every nav grid (~16 of them) and each
+			// one's UpdateGraph fires this in the same frame with a box that differs
+			// only by that grid's update range, so the boxes nest around a shared
+			// center. Track the region already scanned this frame (keyed by time):
+			// skip a box contained in it, widen it to the union otherwise. This
+			// collapses the per-grid repeats to a single scan regardless of grid
+			// order. Cross-frame changes carry a different time and always run, so a
+			// real invalidation is never skipped.
+			if (now == lastInvalidateTime) {
+				if (minX >= lastInvalidateMinX && minY >= lastInvalidateMinY &&
+						maxX <= lastInvalidateMaxX && maxY <= lastInvalidateMaxY)
+					return;
+				if (minX < lastInvalidateMinX)
+					lastInvalidateMinX = minX;
+				if (minY < lastInvalidateMinY)
+					lastInvalidateMinY = minY;
+				if (maxX > lastInvalidateMaxX)
+					lastInvalidateMaxX = maxX;
+				if (maxY > lastInvalidateMaxY)
+					lastInvalidateMaxY = maxY;
+			} else {
+				lastInvalidateTime = now;
+				lastInvalidateMinX = minX;
+				lastInvalidateMinY = minY;
+				lastInvalidateMaxX = maxX;
+				lastInvalidateMaxY = maxY;
+			}
 			// ponytail: bbox over-invalidation — a grid intersecting the box but not an
 			// actual dirty cell still gets dropped, which only costs a lazy re-probe.
 			// Upgrade to a per-cell test or spatial index only if a profile shows this
