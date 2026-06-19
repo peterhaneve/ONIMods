@@ -126,7 +126,7 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// Caches geyser type lookups.
 		/// </summary>
 		private static readonly IDictionary<HashedString, GeyserType> CACHE =
-			new Dictionary<HashedString, GeyserType>(32);
+			new System.Collections.Concurrent.ConcurrentDictionary<HashedString, GeyserType>();
 
 		internal static bool Prepare() => FastTrackOptions.Instance.MiscOpts;
 

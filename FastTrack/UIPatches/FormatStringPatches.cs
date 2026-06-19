@@ -39,7 +39,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Avoid reallocating a new StringBuilder every frame.
 		/// </summary>
-		private static readonly StringBuilder CACHED_BUILDER = new StringBuilder(32);
+		[System.ThreadStatic] private static StringBuilder _CACHED_BUILDER; private static StringBuilder CACHED_BUILDER => _CACHED_BUILDER ?? (_CACHED_BUILDER = new StringBuilder(32));
 
 		private static readonly string[] BREATHABLE_LEGEND = new string[4];
 

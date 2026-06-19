@@ -105,9 +105,9 @@ namespace PeterHan.FastTrack.UIPatches {
 			/// <summary>
 			/// Avoid reallocating a new StringBuilder every call.
 			/// </summary>
-			private static readonly StringBuilder OUTER_BUILDER = new StringBuilder(256);
+			[ThreadStatic] private static StringBuilder _OUTER_BUILDER; private static StringBuilder OUTER_BUILDER => _OUTER_BUILDER ?? (_OUTER_BUILDER = new StringBuilder(256));
 
-			private static readonly StringBuilder PART_BUILDER = new StringBuilder(64);
+			[ThreadStatic] private static StringBuilder _PART_BUILDER; private static StringBuilder PART_BUILDER => _PART_BUILDER ?? (_PART_BUILDER = new StringBuilder(64));
 
 			internal static bool Prepare() => FastTrackOptions.Instance.CustomStringFormat;
 
@@ -246,7 +246,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Avoid reallocating a new StringBuilder every frame.
 		/// </summary>
-		private static readonly StringBuilder CACHED_BUILDER = new StringBuilder(128);
+		[ThreadStatic] private static StringBuilder _CACHED_BUILDER; private static StringBuilder CACHED_BUILDER => _CACHED_BUILDER ?? (_CACHED_BUILDER = new StringBuilder(128));
 
 		/// <summary>
 		/// Gets the value to be displayed by the standard amount displayer.
@@ -431,12 +431,12 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Buffers the result of GetActionString.
 		/// </summary>
-		private static readonly StringBuilder ACTION_BUFFER = new StringBuilder(32);
+		[ThreadStatic] private static StringBuilder _ACTION_BUFFER; private static StringBuilder ACTION_BUFFER => _ACTION_BUFFER ?? (_ACTION_BUFFER = new StringBuilder(32));
 
 		/// <summary>
 		/// Avoid reallocating a new StringBuilder every frame.
 		/// </summary>
-		private static readonly StringBuilder CACHED_BUILDER = new StringBuilder(128);
+		[ThreadStatic] private static StringBuilder _CACHED_BUILDER; private static StringBuilder CACHED_BUILDER => _CACHED_BUILDER ?? (_CACHED_BUILDER = new StringBuilder(128));
 		
 		/// <summary>
 		/// The prefix used for all mouse click substitutions.
@@ -446,7 +446,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Buffers the hotkey text.
 		/// </summary>
-		private static readonly StringBuilder HOTKEY_BUFFER = new StringBuilder(32);
+		[ThreadStatic] private static StringBuilder _HOTKEY_BUFFER; private static StringBuilder HOTKEY_BUFFER => _HOTKEY_BUFFER ?? (_HOTKEY_BUFFER = new StringBuilder(32));
 
 		/// <summary>
 		/// The prefix used for all hotkey substitutions.
@@ -458,7 +458,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// written.
 		/// </summary>
 		private static readonly IDictionary<string, string> HOTKEY_LOOKUP =
-			new Dictionary<string, string>(384);
+			new System.Collections.Concurrent.ConcurrentDictionary<string, string>();
 
 		/// <summary>
 		/// Stores the cached text for modifier keys.
@@ -796,7 +796,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <summary>
 		/// Avoid reallocating a new StringBuilder every frame.
 		/// </summary>
-		private static readonly StringBuilder CACHED_BUILDER = new StringBuilder(64);
+		[ThreadStatic] private static StringBuilder _CACHED_BUILDER; private static StringBuilder CACHED_BUILDER => _CACHED_BUILDER ?? (_CACHED_BUILDER = new StringBuilder(64));
 
 		/// <summary>
 		/// An optimized version of STRINGS.UI.StripLinkFormatting and
