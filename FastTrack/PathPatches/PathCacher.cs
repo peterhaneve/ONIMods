@@ -98,6 +98,37 @@ namespace PeterHan.FastTrack.PathPatches {
 		}
 
 		/// <summary>
+		/// Invalidates every cached path whose grid region overlaps the given cell
+		/// bounding box. Called when terrain changes so affected navigators re-probe
+		/// instead of following a stale cached path through a newly-changed cell.
+		/// </summary>
+		/// <param name="minX">Bounding box minimum X in cell coordinates.</param>
+		/// <param name="minY">Bounding box minimum Y in cell coordinates.</param>
+		/// <param name="maxX">Bounding box maximum X in cell coordinates.</param>
+		/// <param name="maxY">Bounding box maximum Y in cell coordinates.</param>
+		internal static void InvalidateRegion(int minX, int minY, int maxX, int maxY) {
+			// ponytail: bbox over-invalidation — a grid intersecting the box but not an
+			// actual dirty cell still gets dropped, which only costs a lazy re-probe.
+			// Upgrade to a per-cell test or spatial index only if a profile shows this
+			// scan matters.
+			foreach (var pair in pathCache) {
+				var grid = pair.Key;
+				if (grid == null)
+					continue;
+				// Bounded probe grids (applyOffset) carry their window position in
+				// rootX/rootY (set in PathGrid.BeginUpdate). Full-map grids
+				// (!applyOffset) leave rootX/rootY at 0 with width/height spanning the
+				// whole map, so the same AABB test always intersects them — which is
+				// correct: a full-map path can be affected by any terrain change.
+				int gx = grid.rootX, gy = grid.rootY;
+				// AABB overlap: grid covers [gx, gx+width) x [gy, gy+height).
+				if (gx <= maxX && gx + grid.widthInCells > minX && gy <= maxY &&
+						gy + grid.heightInCells > minY)
+					pathCache.TryRemove(grid, out _);
+			}
+		}
+
+		/// <summary>
 		/// Checks to see if the grid's cache is valid.
 		/// </summary>
 		/// <param name="grid">The path grid to look up.</param>
