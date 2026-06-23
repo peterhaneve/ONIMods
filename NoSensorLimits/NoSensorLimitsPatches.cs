@@ -211,5 +211,18 @@ namespace PeterHan.NoSensorLimits {
 				return !skip;
 			}
 		}
+
+		/// <summary>
+		/// Applied to TimerSideScreen to increase the maximum duration to 100 cycles.
+		/// </summary>
+		[HarmonyPatch(typeof(TimerSideScreen), "OnSpawn")]
+		public static class TimerSideScreen_OnSpawn_Patch {
+			/// <summary>
+			/// Applied after OnSpawn runs.
+			/// </summary>
+			internal static void Postfix(ref float ___maxCycles) {
+				___maxCycles = 100.0f;
+			}
+		}
 	}
 }
