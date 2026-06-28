@@ -1,0 +1,25 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not Included"
+"POT Version: 2.0"
+"Last-Translator: Nubula"
+"Language: ko"
+"Last-Update: 2026-06-28"
+
+#. PeterHan.DeselectNewMaterials.DeselectMaterialsStrings.ACCEPT_TOOLTIP
+msgctxt "PeterHan.DeselectNewMaterials.DeselectMaterialsStrings.ACCEPT_TOOLTIP"
+msgid ""
+"Toggles whether this storage Accepts or Rejects newly discovered materials"
+msgstr "새로운 물품을 발견했을 때 이 저장소 필터 설정에 해당 물품을 등록할 지 여부를 전환합니다."
+
+#. PeterHan.DeselectNewMaterials.DeselectMaterialsStrings.ACCEPTS_MATERIALS
+msgctxt ""
+"PeterHan.DeselectNewMaterials.DeselectMaterialsStrings.ACCEPTS_MATERIALS"
+msgid "Accepts New Types"
+msgstr "신규 물품 필터 등록"
+
+#. PeterHan.DeselectNewMaterials.DeselectMaterialsStrings.REJECTS_MATERIALS
+msgctxt ""
+"PeterHan.DeselectNewMaterials.DeselectMaterialsStrings.REJECTS_MATERIALS"
+msgid "Rejects New Types"
+msgstr "신규 물품 필터 제외"
