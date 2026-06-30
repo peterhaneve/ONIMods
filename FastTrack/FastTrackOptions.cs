@@ -260,11 +260,16 @@ namespace PeterHan.FastTrack {
 		[JsonProperty]
 		public bool Metrics { get; set; }
 
+		[Option("STRINGS.UI.FRONTEND.FASTTRACK.BENCHMARKLOG", "STRINGS.UI.TOOLTIPS.FASTTRACK.BENCHMARKLOG", "STRINGS.UI.FRONTEND.FASTTRACK.CATEGORY_DEBUG")]
+		[JsonProperty]
+		public bool BenchmarkLog { get; set; }
+
 		public FastTrackOptions() {
 			AllocOpts = true;
 			AnimOpts = true;
 			AsyncPathProbe = true;
 			BackgroundRoomRebuild = true;
+			BenchmarkLog = false;
 			CachePaths = true;
 			ChorePriorityMode = NextChorePriority.Higher;
 			ClusterMapReduce = true;
