@@ -54,6 +54,13 @@ namespace PeterHan.FastTrack.Metrics {
 		internal static readonly RatioProfiler PATH_CACHE = new RatioProfiler();
 
 		/// <summary>
+		/// Of path-cache MISSES, the fraction caused by a stale/invalidated entry
+		/// (true) vs a valid entry whose navigator moved cells (false). Diagnoses
+		/// whether over-invalidation or navigator movement dominates the miss rate.
+		/// </summary>
+		internal static readonly RatioProfiler PATH_CACHE_MISS_INVALID = new RatioProfiler();
+
+		/// <summary>
 		/// Tracks calls to asychronous path probes.
 		/// </summary>
 		private static readonly Profiler PATH_PROBES = new Profiler();
@@ -152,6 +159,7 @@ namespace PeterHan.FastTrack.Metrics {
 			foreach (var pair in TRACKED)
 				pair.Value.Reset();
 			PATH_CACHE.Reset();
+			PATH_CACHE_MISS_INVALID.Reset();
 			int n = SIMANDRENDER.Length;
 			for (int i = 0; i < n; i++)
 				SIMANDRENDER[i].Reset();
@@ -194,8 +202,10 @@ namespace PeterHan.FastTrack.Metrics {
 				}
 				// Events fired
 				PUtil.LogDebug("Events " + EVENTS);
-				// Path cache
-				PUtil.LogDebug("Path Cache: " + PATH_CACHE);
+				// Path cache: overall hit rate, then of the misses, the fraction that were
+				// stale/invalidated (fixable over-invalidation) vs navigator-moved (benign).
+				PUtil.LogDebug("Path Cache: " + PATH_CACHE +
+					" | of misses, invalidated: " + PATH_CACHE_MISS_INVALID);
 				// Brain stats
 				text.Clear();
 				text.Append("Brain Stats:");

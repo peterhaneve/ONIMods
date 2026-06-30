@@ -94,10 +94,16 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <returns>true if the cache is clean, or false if it needs to run.</returns>
 		internal static bool CheckCache(PathGrid grid, int cell) {
 			// If nothing has changed since last time, it is a hit!
-			bool hit = IsValid(grid) && (!grid.applyOffset || Grid.XYToCell(grid.rootX + grid.
+			bool valid = IsValid(grid);
+			bool hit = valid && (!grid.applyOffset || Grid.XYToCell(grid.rootX + grid.
 				widthInCells / 2, grid.rootY + grid.heightInCells / 2) == cell);
-			if (FastTrackOptions.Instance.Metrics)
+			if (FastTrackOptions.Instance.Metrics) {
 				Metrics.DebugMetrics.PATH_CACHE.Log(hit);
+				// Diagnostic: of the misses, was the entry stale (invalidated/expired ->
+				// over-invalidation, fixable) or valid-but-navigator-moved (benign)?
+				if (!hit)
+					Metrics.DebugMetrics.PATH_CACHE_MISS_INVALID.Log(!valid);
+			}
 			return hit;
 		}
 
