@@ -34,5 +34,6 @@ Fast Track mod against the Aquatic-compatible baseline on this branch.
 
 ## Design spec
 
-Full design rationale:
-`E:\projects\ONI\docs\superpowers\specs\2026-06-30-fasttrack-optimization-harness-design.md`
+The full design rationale lives in a separate (out-of-tree, not committed) design
+doc, `2026-06-30-fasttrack-optimization-harness-design.md`, kept alongside this
+repo's parent project. Ask the maintainer if you need it.
