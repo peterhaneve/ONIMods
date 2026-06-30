@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace PeterHan.FastTrack.PathPatches {
 	/// <summary>
@@ -32,17 +33,53 @@ namespace PeterHan.FastTrack.PathPatches {
 		public const double INVALIDATE_TIME = 6.0;
 
 		/// <summary>
+		/// Above this many dirty cells in one InvalidateCells call, a genuine map-wide
+		/// event is in progress (e.g. a large cave-in or flood) where most cached grids
+		/// would overlap a dirty cell anyway. Per-cell membership testing against every
+		/// cached grid is wasted work at that scale, so fall back to wiping the whole
+		/// cache instead.
+		/// NOTE: NavGrid.UpdateGraph expands each physical dirty tile by the nav update
+		/// range BEFORE this runs, so the count here is post-expansion (one dug tile can
+		/// become dozens of cells). 8192 keeps ordinary multi-tile digs/floods on the
+		/// precise membership path (where the win is) and only falls back to a full wipe
+		/// for genuinely map-wide events that would invalidate nearly everything anyway.
+		/// The per-cell scan is cheap (bounded, early-break), so erring high is safe.
+		/// </summary>
+		private const int INVALIDATE_ALL_THRESHOLD = 8192;
+
+		/// <summary>
 		/// The current frame time.
 		/// </summary>
 		private static double now;
 
 		/// <summary>
-		/// The (time, bounding box) of the most recent InvalidateRegion call, used to
-		/// skip the redundant per-nav-grid invalidations of a single terrain change.
+		/// The frame time of the most recent InvalidateCells call, used to reset the
+		/// same-frame dedup set below when a new frame starts.
 		/// </summary>
 		private static double lastInvalidateTime = double.NaN;
-		private static int lastInvalidateMinX, lastInvalidateMinY, lastInvalidateMaxX,
-			lastInvalidateMaxY;
+
+		/// <summary>
+		/// Cells already tested for membership against every cached grid this frame. A
+		/// single terrain change dirties every nav grid (~16 of them) and each one's
+		/// UpdateGraph fires InvalidateCells in the same frame with a dirty-cell list
+		/// that differs only by that grid's nav-update expansion range, so the lists
+		/// nest around the same root changed cells. Skipping cells already proven (this
+		/// frame) to have been checked against the whole pathCache avoids rescanning the
+		/// dictionary for them on every repeat call. This is a cell-level dedup rather
+		/// than the bounding-box containment check InvalidateRegion used to do, because
+		/// once invalidation is precise (per-cell membership) rather than a bbox-overlap
+		/// over-approximation, a bbox-containment skip is no longer sound: a grid could
+		/// sit inside the earlier (larger) box without containing any of the earlier
+		/// call's actual dirty cells, yet contain one of the current call's. Tracking the
+		/// literal cell set sidesteps that.
+		/// </summary>
+		private static readonly HashSet<int> cellsInvalidatedThisFrame = new HashSet<int>();
+
+		/// <summary>
+		/// Reusable scratch list of this call's dirty cells not already covered by
+		/// cellsInvalidatedThisFrame, to avoid an allocation per call.
+		/// </summary>
+		private static readonly List<int> newDirtyCells = new List<int>();
 
 		/// <summary>
 		/// Map path cache IDs to path cache values.
@@ -89,6 +126,7 @@ namespace PeterHan.FastTrack.PathPatches {
 			else
 				pathCache.Clear();
 			lastInvalidateTime = double.NaN;
+			cellsInvalidatedThisFrame.Clear();
 		}
 		
 		/// <summary>
@@ -107,60 +145,79 @@ namespace PeterHan.FastTrack.PathPatches {
 		}
 
 		/// <summary>
-		/// Invalidates every cached path whose grid region overlaps the given cell
-		/// bounding box. Called when terrain changes so affected navigators re-probe
-		/// instead of following a stale cached path through a newly-changed cell.
+		/// Invalidates every cached path whose grid window actually contains one of the
+		/// given dirty cells. Called when terrain changes so affected navigators
+		/// re-probe instead of following a stale cached path through a newly-changed
+		/// cell, without dropping unrelated grids that merely happen to overlap the
+		/// union bounding box of a scattered dirty-cell list (the old InvalidateRegion
+		/// behavior, which collapsed the path cache hit rate under map-wide churn).
 		/// </summary>
-		/// <param name="minX">Bounding box minimum X in cell coordinates.</param>
-		/// <param name="minY">Bounding box minimum Y in cell coordinates.</param>
-		/// <param name="maxX">Bounding box maximum X in cell coordinates.</param>
-		/// <param name="maxY">Bounding box maximum Y in cell coordinates.</param>
-		internal static void InvalidateRegion(int minX, int minY, int maxX, int maxY) {
-			// A single terrain change dirties every nav grid (~16 of them) and each
-			// one's UpdateGraph fires this in the same frame with a box that differs
-			// only by that grid's update range, so the boxes nest around a shared
-			// center. Track the region already scanned this frame (keyed by time):
-			// skip a box contained in it, widen it to the union otherwise. This
-			// collapses the per-grid repeats to a single scan regardless of grid
-			// order. Cross-frame changes carry a different time and always run, so a
-			// real invalidation is never skipped.
-			if (now == lastInvalidateTime) {
-				if (minX >= lastInvalidateMinX && minY >= lastInvalidateMinY &&
-						maxX <= lastInvalidateMaxX && maxY <= lastInvalidateMaxY)
-					return;
-				if (minX < lastInvalidateMinX)
-					lastInvalidateMinX = minX;
-				if (minY < lastInvalidateMinY)
-					lastInvalidateMinY = minY;
-				if (maxX > lastInvalidateMaxX)
-					lastInvalidateMaxX = maxX;
-				if (maxY > lastInvalidateMaxY)
-					lastInvalidateMaxY = maxY;
-			} else {
-				lastInvalidateTime = now;
-				lastInvalidateMinX = minX;
-				lastInvalidateMinY = minY;
-				lastInvalidateMaxX = maxX;
-				lastInvalidateMaxY = maxY;
+		/// <param name="dirtyCells">The cells that changed this nav-update cycle, as
+		/// passed to NavGrid.UpdateGraph.</param>
+		internal static void InvalidateCells(List<int> dirtyCells) {
+			int n;
+			if (dirtyCells == null || (n = dirtyCells.Count) < 1)
+				return;
+			if (n > INVALIDATE_ALL_THRESHOLD) {
+				// Genuine map-wide event (large cave-in/flood/etc.) — at this scale most
+				// cached grids legitimately overlap a dirty cell, so per-cell membership
+				// testing against every grid is wasted work. Wipe everything, matching
+				// the conservative (never under-invalidate) behavior of the old bbox
+				// scan for this case.
+				pathCache.Clear();
+				return;
 			}
-			// ponytail: bbox over-invalidation — a grid intersecting the box but not an
-			// actual dirty cell still gets dropped, which only costs a lazy re-probe.
-			// Upgrade to a per-cell test or spatial index only if a profile shows this
-			// scan matters.
+			// Same-frame dedup: skip cells already proven (this frame) to have been
+			// checked against every cached grid. See cellsInvalidatedThisFrame's doc
+			// comment for why this must track the literal cell set rather than a
+			// bounding box now that invalidation is precise.
+			if (now != lastInvalidateTime) {
+				lastInvalidateTime = now;
+				cellsInvalidatedThisFrame.Clear();
+			}
+			newDirtyCells.Clear();
+			bool anyValid = false;
+			for (int i = 0; i < n; i++) {
+				int cell = dirtyCells[i];
+				// Guard: an invalid (-1) or out-of-range cell would corrupt CellToXY
+				// below. Mirrors the validity check the old Postfix bbox scan used.
+				if (!Grid.IsValidCell(cell))
+					continue;
+				anyValid = true;
+				if (cellsInvalidatedThisFrame.Add(cell))
+					newDirtyCells.Add(cell);
+			}
+			// No valid cell at all this call — nothing to invalidate.
+			if (!anyValid)
+				return;
+			// Every valid cell this call was already tested against pathCache earlier
+			// this frame (by an overlapping/superset dirty-cell list from another nav
+			// grid's UpdateGraph) — every grid relevant to those cells is already gone.
+			if (newDirtyCells.Count < 1)
+				return;
+			int newCount = newDirtyCells.Count;
 			foreach (var pair in pathCache) {
 				var grid = pair.Key;
 				if (grid == null)
 					continue;
+				// Full-map grids (!applyOffset) have no bounded window — any terrain
+				// change can affect a full-map path, so invalidate unconditionally.
 				// Bounded probe grids (applyOffset) carry their window position in
-				// rootX/rootY (set in PathGrid.BeginUpdate). Full-map grids
-				// (!applyOffset) leave rootX/rootY at 0 with width/height spanning the
-				// whole map, so the same AABB test always intersects them — which is
-				// correct: a full-map path can be affected by any terrain change.
-				int gx = grid.rootX, gy = grid.rootY;
-				// AABB overlap: grid covers [gx, gx+width) x [gy, gy+height).
-				if (gx <= maxX && gx + grid.widthInCells > minX && gy <= maxY &&
-						gy + grid.heightInCells > minY)
+				// rootX/rootY/widthInCells/heightInCells (set in PathGrid.BeginUpdate);
+				// invalidate iff at least one new dirty cell falls inside that window.
+				if (!grid.applyOffset)
 					pathCache.TryRemove(grid, out _);
+				else {
+					int gx = grid.rootX, gy = grid.rootY, gw = grid.widthInCells,
+						gh = grid.heightInCells;
+					for (int i = 0; i < newCount; i++) {
+						Grid.CellToXY(newDirtyCells[i], out int cx, out int cy);
+						if (PathCacheGeometry.CellInWindow(cx, cy, gx, gy, gw, gh)) {
+							pathCache.TryRemove(grid, out _);
+							break;
+						}
+					}
+				}
 			}
 		}
 

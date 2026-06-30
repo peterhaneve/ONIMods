@@ -1,6 +1,6 @@
 # Candidate 0002: Path-cache collapse — terrain-invalidation over-scan
 
-- Status: DESIGN (gated on one discriminating measurement before BUILT)
+- Status: QUEUED (built, Stage-4 review ADVANCE; pending in-game A/B measurement)
 - Target: `PathPatches.NavGrid_UpdateGraph_Patch.Postfix` + `PathCacher.InvalidateRegion` — `FastTrack/PathPatches/NavPatches.cs:549-595`, `FastTrack/PathPatches/PathCacher.cs:118-165`
 - Risk class: Postfix (game method) + static helper (no IL/transpiler, no threading change)
 - Gating flag: `FastTrackOptions.CachePaths` (default on)
@@ -50,15 +50,63 @@ Cheapest decisive A/B — temporarily disable only the net-new hook and re-captu
 
 Stronger instrumented variant (if the toggle is ambiguous): split `CheckCache` into two counters — `missInvalid` (`!IsValid`) vs `missMoved` (valid but `center != cell`) — and log both, plus count `InvalidateRegion` calls and mean bbox area per second. This directly attributes the collapse.
 
-## Patch (only if (a) confirmed)
+## Patch (built)
 
-Replace the union-bbox in `NavGrid_UpdateGraph_Patch.Postfix` with dirty-cell-membership invalidation:
+Built per the design below. Real field/method names confirmed against `PathCacher.cs`/`NavPatches.cs` (not guessed): `PathGrid.rootX`, `.rootY`, `.widthInCells`, `.heightInCells`, `.applyOffset`; `Grid.IsValidCell`, `Grid.CellToXY`; `pathCache` is `ConcurrentDictionary<PathGrid, double>`, mutated only from this main-thread nav-update path (unchanged assumption).
 
-- Add `PathCacher.InvalidateCells(List<int> dirtyCells)`: one pass over `pathCache` (same enumeration cost as today). For each grid: full-map grids (`!applyOffset`) invalidate unconditionally when the list is non-empty (unchanged, correct — any change can affect a full-map path); bounded grids invalidate iff at least one dirty cell falls inside their window `[rootX,rootX+w) x [rootY,rootY+h)` (AABB membership test against the dirty list). Keep the existing same-frame dedup.
-- Guard cost: if `dirtyCells.Count` exceeds a threshold (a genuine map-wide event such as a large cave-in), fall back to the current full wipe — at that point most grids legitimately overlap and the per-cell test is wasted work.
-- Change the `Postfix` to call `InvalidateCells(__0)` instead of building `minX..maxY`.
+Window convention: **half-open**, `[root, root+size)`. Confirmed against `PathCacher.CheckCache`'s own center calc (`XYToCell(rootX + widthInCells/2, rootY + heightInCells/2)`) and against the old `InvalidateRegion`'s AABB-overlap test (`gx <= maxX && gx+width > minX && ...`), both of which are half-open-consistent. `PathCacheGeometry.CellInWindow` and its unit test match this.
 
-Cost note: per-grid x dirty-cell AABB tests (hundreds x hundreds ~ 1e4-1e5 cheap int compares/frame) are far cheaper than the full path probes this avoids; a single avoided 10-arg `Run` pays for the whole scan.
+### 1. New file `FastTrack/PathPatches/PathCacheGeometry.cs`
+Pure, game-dependency-free static method:
+```csharp
+public static bool CellInWindow(int cx, int cy, int rootX, int rootY, int width, int height) {
+    return cx >= rootX && cx < rootX + width && cy >= rootY && cy < rootY + height;
+}
+```
+
+### 2. `PathCacher.InvalidateCells(List<int> dirtyCells)` (replaces `InvalidateRegion`, which is now dead — its only caller was the Postfix below)
+- Empty/null list: no-op (unchanged).
+- `dirtyCells.Count > INVALIDATE_ALL_THRESHOLD` (const `8192`, post-expansion-aware — see code comment and the Stage-4 note): `pathCache.Clear()` and return, matching the old code's conservative behavior for genuine map-wide events.
+- Otherwise: filters to `Grid.IsValidCell` cells (same guard the old Postfix had), then does ONE pass over `pathCache`: full-map grids (`!applyOffset`) invalidate unconditionally (unchanged); bounded grids invalidate iff `PathCacheGeometry.CellInWindow(cx, cy, grid.rootX, grid.rootY, grid.widthInCells, grid.heightInCells)` is true for at least one dirty cell (first hit breaks to the next grid).
+- Same-frame dedup is **reimplemented as a literal cell-set dedup** (`HashSet<int> cellsInvalidatedThisFrame`, reset when `now != lastInvalidateTime`) instead of porting the old bbox-containment dedup. Reason (documented in code): once invalidation is precise per-cell membership rather than a bbox-overlap over-approximation, "new bbox ⊆ old bbox" no longer proves "every grid relevant to the new cells was already invalidated" — a grid can sit inside the old box without containing any of the old call's actual dirty cells, yet contain one of the new call's. Tracking the literal already-tested cell set is the correctness-preserving equivalent of the same optimization (collapsing the ~16 nested per-navgrid repeats of one terrain change into effectively one dictionary scan).
+
+### 3. `NavGrid_UpdateGraph_Patch.Postfix` (`FastTrack/PathPatches/NavPatches.cs`)
+Before:
+```csharp
+internal static void Postfix(List<int> __0) {
+    var dirtyCells = __0;
+    int n;
+    if (dirtyCells == null || (n = dirtyCells.Count) < 1) return;
+    int minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue, maxY = int.MinValue;
+    for (int i = 0; i < n; i++) {
+        int cell = dirtyCells[i];
+        if (!Grid.IsValidCell(cell)) continue;
+        Grid.CellToXY(cell, out int x, out int y);
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+    }
+    if (minX > maxX) return;
+    PathCacher.InvalidateRegion(minX, minY, maxX, maxY);
+}
+```
+After:
+```csharp
+internal static void Postfix(List<int> __0) {
+    PathCacher.InvalidateCells(__0);
+}
+```
+The min/max bbox construction is fully removed (now lives, in precise per-cell form, inside `InvalidateCells`).
+
+Cost note: per-grid x dirty-cell window tests (hundreds x hundreds ~ 1e4-1e5 cheap int compares/frame) are far cheaper than the full path probes this avoids; a single avoided 10-arg `Run` pays for the whole scan.
+
+## Static gates (Stage 3) — re-run after build
+- Compiles: **yes**. `dotnet build FastTrack/FastTrack.csproj -c Debug -p:Platform=Mergedown` → 0 errors (30 pre-existing warnings, none from this change).
+- Unit test: **pass**. `harness/tests/PathCacheTests` (mirrors `RyuTests` structure exactly — net8.0 xUnit island walled off via empty `Directory.Build.props`/`.targets`, links only `PathCacheGeometry.cs`). 12/12 `PathCacheGeometryTests` pass (boundary cases at root 0,0 and at a non-zero-root window to exercise the offset, not just the size).
+- IL verify: n/a (no transpiler in this patch, Postfix-only).
+- Thread-safety check: unchanged — `pathCache` is still only mutated from this main-thread nav-update path; the new `cellsInvalidatedThisFrame`/`newDirtyCells` statics follow the same (non-thread-safe, main-thread-only) assumption as the old `lastInvalidateMinX/Y/MaxX/Y` fields they replace.
+- Save-compat: n/a (no serialized layout change).
 
 ## Predicted impact
 
@@ -76,10 +124,15 @@ Postfix on `NavGrid.UpdateGraph(List<int>)` (already patched here) plus a static
 - Save-compat: na
 
 ## Review (Stage 4)
-Pending — write-up to be reviewed by a fresh agent per repo policy before any build.
+**ADVANCE** (Opus, fresh context). Key verifications:
+- The membership predicate `CellInWindow` is **provably identical** to the game's own cell-to-grid mapping `PathGrid.OffsetCell` (decompile `PathGrid.cs:250-262`): a bounded grid covers exactly the cells where `OffsetCell != -1`, i.e. `x>=rootX && x<rootX+widthInCells && y>=rootY && y<rootY+heightInCells`. No off-by-one possible; the `dd9508c` stuck-critter regression cannot return from a geometry error. (`BeginUpdate` sets root to true origin, width/height to full extent — confirmed.)
+- The `HashSet<int>` cell-set dedup is sound and the implementer's reasoning correct (old bbox-nesting dedup *is* unsound under precise membership). Not a regression vs old code under main-thread sequencing.
+- `InvalidateRegion` removal loses no behavior (full-map grids now invalidated explicitly/unconditionally).
+- Cost: early-break on first hit, full-map short-circuit before the cell loop, no pathological blowup below threshold. Thread-safety unchanged (ConcurrentDictionary, main-thread statics as before).
+- No Critical/Important blockers. Notes: (1) a worker-thread validate racing a main-thread invalidate is pre-existing and not widened here — the A/B must watch for stale-path symptoms. (2) Minor: the 1024 threshold counted **post-expansion** cells (NavGrid expands dirty tiles by update range first), risking a `Clear()` fallback on modest digs that would mask the win — **raised to 8192** post-review (comment updated) so ordinary play stays on the precise path.
 
 ## Measurement (Stage 5)
-Not run. The discriminating A/B above is the gate.
+PENDING in-game A/B (same save, Debug Metrics on). Compare Path Cache hit% vs the 4.1% baseline. Watch list: (a) hit% recovery toward the warm regime confirms the win and diagnosis (a); (b) NO critters/Duplicants pathing through freshly dug/built/flooded tiles (correctness — the pre-existing async race); (c) whether the `Clear()` fallback fires during ordinary digs (would mask the win — raise threshold further if so).
 
 ## Outcome
-DESIGN — mechanism identified and verified against the current decompile; transpiler targeting cleared; the regression is localized to the fork's net-new `NavGrid.UpdateGraph -> InvalidateRegion` union-bbox over-scan. Hold at DESIGN until the one toggle/instrumentation capture distinguishes over-invalidation (a) from benign navigator movement (b). Build the membership-invalidation fix only if (a) is confirmed.
+QUEUED — fix built, reviewed ADVANCE, threshold hardened. Awaiting the in-game A/B verdict: hit% jump → ACCEPT (first measured win); flat with no Clear()-masking → PARK as benign (b).
