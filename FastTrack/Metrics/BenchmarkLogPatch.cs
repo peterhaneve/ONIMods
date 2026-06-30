@@ -19,6 +19,7 @@
 using HarmonyLib;
 using UnityEngine;
 using System;
+using System.Globalization;
 
 namespace PeterHan.FastTrack.Metrics {
 	/// <summary>
@@ -37,8 +38,9 @@ namespace PeterHan.FastTrack.Metrics {
 		internal static void Postfix() {
 			long mem = GC.GetTotalMemory(false);
 			int gen0 = GC.CollectionCount(0);
-			Debug.LogFormat("[FT-BENCH] frame={0} ms={1:F3} gcMB={2:F2} gen0={3}",
-				frame++, Time.deltaTime * 1000.0, mem / 1048576.0, gen0);
+			Debug.Log(string.Format(CultureInfo.InvariantCulture,
+				"[FT-BENCH] frame={0} ms={1:F3} gcMB={2:F2} gen0={3}",
+				frame++, Time.unscaledDeltaTime * 1000.0, mem / 1048576.0, gen0));
 		}
 	}
 }
