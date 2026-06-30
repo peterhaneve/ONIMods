@@ -26,5 +26,17 @@ class TestDiffBench(unittest.TestCase):
         self.assertEqual(s["frames"], 21)
         self.assertEqual(s["p95_ms"], 50.0)   # int(0.95*21)=19 -> 20th sorted value = 50, not the 99 max
 
+    def test_skip_drops_warmup(self):
+        full = summarize(os.path.join(HERE, "fixtures", "warmup.log"))
+        trimmed = summarize(os.path.join(HERE, "fixtures", "warmup.log"), skip=1)
+        self.assertEqual(full["frames"], 4)        # 9999 load frame + 3 steady
+        self.assertEqual(trimmed["frames"], 3)     # load frame dropped
+        self.assertEqual(trimmed["mean_ms"], 16.0) # steady state, not swamped by 9999
+        self.assertLess(trimmed["mean_ms"], full["mean_ms"])
+
+    def test_skip_all_raises(self):
+        with self.assertRaises(ValueError):
+            summarize(os.path.join(HERE, "fixtures", "warmup.log"), skip=99)
+
 if __name__ == "__main__":
     unittest.main()
