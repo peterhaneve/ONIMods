@@ -1,5 +1,0 @@
-<Project>
-  <!-- Empty file: walls off this test project from the repo-root Directory.Build.targets
-       (ILRepack/CopyArtifacts/GameFolder targets meant for mod assemblies). See
-       Directory.Build.props in this same folder for why. -->
-</Project>

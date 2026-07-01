@@ -1,6 +1,0 @@
-<Project>
-  <!-- Empty file: walls off this test project from the repo-root Directory.Build.props
-       (which injects ILRepack, PLib ProjectReferences, and game-DLL HintPaths meant for
-       mod assemblies). MSBuild stops its upward search at the first Directory.Build.props
-       it finds, so this isolates the Ryu test island as a plain net8.0 xUnit project. -->
-</Project>
