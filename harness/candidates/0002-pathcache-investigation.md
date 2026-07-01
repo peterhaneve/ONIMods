@@ -1,6 +1,6 @@
 # Candidate 0002: Path-cache collapse — terrain-invalidation over-scan
 
-- Status: QUEUED (built, Stage-4 review ADVANCE; pending in-game A/B measurement)
+- Status: ACCEPTED (kept — smoothness/p95 win; path-cache hit rate proven not tractable, see Outcome)
 - Target: `PathPatches.NavGrid_UpdateGraph_Patch.Postfix` + `PathCacher.InvalidateRegion` — `FastTrack/PathPatches/NavPatches.cs:549-595`, `FastTrack/PathPatches/PathCacher.cs:118-165`
 - Risk class: Postfix (game method) + static helper (no IL/transpiler, no threading change)
 - Gating flag: `FastTrackOptions.CachePaths` (default on)
@@ -139,4 +139,12 @@ DONE — A/B captured (same save, 1 cycle, Debug Metrics on, fixed DLL confirmed
 - This confirms hypothesis **(b)**: the misses are dominated by navigator MOVEMENT (`center(grid) != queryCell` — dupes re-querying from new cells in a busy, deep-queue colony), not by over-invalidation. The path cache is structurally limited for this workload; invalidation precision was not the lever.
 
 ## Outcome
-PARKED (pending decision) — the fix is correct (predicate proven against game ground truth, Stage-4 ADVANCE, no runtime errors) but produced NO measured win on this colony: navigator-movement misses dominate, so cache invalidation is not the bottleneck. Honest negative result. Open question for a follow-up instrumented capture (split `missInvalid` vs `missMoved` counters): definitively attribute the miss cause — if `missMoved` dominates, the path cache is inherently limited here (the lever is probe cost/frequency, a deeper change); if `missInvalid` still dominates, another invalidation/expiry source remains (a new lead). New lead surfaced this capture: a recurring `Update→Game` spike (~3.5x a tick) on Duplicant selection / info-panel open — candidate 0003.
+KEEP (accepted as a smoothness win, not a hit-rate win). Full attribution reached via two instrumented captures:
+- Miss cause: **99.8% stale (`!IsValid`), 0.2% navigator-moved** → hypothesis (b) disproven; misses are staleness, not movement.
+- Of stale misses: **11.2% expired (TTL), 88.8% absent** (removed by invalidation or cold) → the 6s TTL is NOT the lever; relaxing it would not help.
+- Combined with 0002's flat hit-rate A/B (precise membership vs union-bbox both ~4%): making invalidation more precise does not raise the hit rate, because in a pervasively-churning base most grids genuinely overlap changed terrain and are correctly invalidated. **The path-cache hit rate is not a tractable lever for this colony's activity level** — evidence-based dead end.
+- HOWEVER, frame-time p95 dropped **60.0ms → 56.0ms** (mean flat ~44→43ms) post-0002, matching the user's subjective "much more fluid." Precise incremental invalidation replaced bursty whole-cache wipes, cutting stutter spikes the average hit-rate metric can't see. So 0002 is KEPT as a real tail-latency/smoothness improvement.
+
+Decision: KEEP 0002 on the branch. Close the path-cache HIT-RATE investigation (thoroughly measured, not tractable). Diagnostic counters (`PATH_CACHE_MISS_INVALID`, `PATH_CACHE_MISS_EXPIRED`) left in DebugMetrics (gated behind Metrics option, zero overhead in normal play) — strip before any upstream PR if desired.
+
+Next lead (candidate 0003): the recurring `Update→Game` spike (~3.5x a tick) on Duplicant selection / info-panel open — fresh, UI-territory, lower risk.
