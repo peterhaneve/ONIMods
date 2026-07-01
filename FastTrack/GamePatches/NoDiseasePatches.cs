@@ -279,7 +279,10 @@ namespace PeterHan.FastTrack.GamePatches {
 		/// <summary>
 		/// Applied after RenderToMap runs.
 		/// </summary>
-		private static void RenderToMap_Postfix(ref Sim.DiseaseCell[] dcs) {
+		private static void RenderToMap_Postfix(ref ProcGenGame.WorldgenSimData simData) {
+			var dcs = simData.diseaseCells;
+			if (dcs == null)
+				return;
 			int n = dcs.Length;
 			byte idx = SimUtil.DiseaseInfo.Invalid.idx;
 			for (int i = 0; i < n; i++) {
