@@ -1,7 +1,9 @@
 # Candidate 0004: Periodic ~15s hitch = Mono Gen0 GC pause over a chronically multi-GB managed heap
 
-- Status: MEASURED
-- Target: not a single method — this is a runtime/GC characteristic, not a hot-path bug. Nearest code lever: whatever is holding the managed heap at ~3.2-3.8 GB baseline (steady-state live set) and whatever is generating the steady per-tick allocation that fills the Gen0 nursery. See "Next step" for how to find it.
+- Status: MEASURED — LEAK CONFIRMED (idle post-GC floor rises ~18 MB/min)
+- Backend: **Boehm GC** (`mono-2.0-bdwgc.dll`) — non-generational, conservative, whole-heap stop-the-world scan. No nursery to tune; the ONLY per-collection-cost lever is shrinking the live heap. (Correction to the original writeup's "generational nursery" framing.)
+- Leak evidence: a pure ~7 min idle capture (no player input, no windows) shows the post-GC floor climbing monotonically 3413 → 3525 MB (~18 MB/min ≈ 1 GB/hour). In a truly idle colony the retained set should be flat; a rising floor = unbounded retention, not the inherent working set. This is the root of both the 3.3 GB heap AND the hundreds-of-ms Boehm pauses.
+- Target: find WHAT accumulates during idle. Not a single known method yet — see "Next step".
 - Risk class: none (no patch here — this candidate is an attribution writeup)
 - Gating flag: none
 - Collision with Peter's rewrites: n/a
