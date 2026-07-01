@@ -1,0 +1,7 @@
+decompiled/
+baseline-build.log
+*.bench.log
+
+# Harness scratch
+.superpowers/
+**/__pycache__/

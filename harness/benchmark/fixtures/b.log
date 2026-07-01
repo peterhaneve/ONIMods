@@ -1,0 +1,4 @@
+[FT-BENCH] frame=0 ms=16.000 gcMB=100.00 gen0=10
+[FT-BENCH] frame=1 ms=16.000 gcMB=100.50 gen0=10
+[FT-BENCH] frame=2 ms=16.000 gcMB=101.00 gen0=10
+[FT-BENCH] frame=3 ms=16.000 gcMB=101.50 gen0=10

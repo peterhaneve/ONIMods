@@ -38,6 +38,15 @@ namespace PeterHan.FastTrack {
 			harmony.Profile(typeof(Game), nameof(Game.UnsafeSim200ms));
 			harmony.Profile(typeof(ConduitFlow), nameof(ConduitFlow.Sim200ms));
 			harmony.Profile(typeof(EnergySim), nameof(EnergySim.EnergySim200ms));
+			// Candidate 0003: attribute the per-selection info-panel spike (string names:
+			// these are protected/overridden game methods). Times the widget teardown+rebuild
+			// on Duplicant select vs the details-screen refresh pass.
+			harmony.Profile(typeof(SimpleInfoScreen), "OnSelectTarget");
+			harmony.Profile(typeof(SimpleInfoScreen), "OnDeselectTarget");
+			harmony.Profile(typeof(DetailsScreen), "Refresh");
+			// Candidate 0005: size the colony-wide chore list rebuild throttle (Errands tab,
+			// MinionTodoSideScreen) - calls/sec and per-call cost before vs after throttling.
+			harmony.Profile(typeof(MinionTodoSideScreen), "PopulateElements");
 		}
 #endif
 
