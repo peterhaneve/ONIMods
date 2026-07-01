@@ -99,10 +99,15 @@ namespace PeterHan.FastTrack.PathPatches {
 				widthInCells / 2, grid.rootY + grid.heightInCells / 2) == cell);
 			if (FastTrackOptions.Instance.Metrics) {
 				Metrics.DebugMetrics.PATH_CACHE.Log(hit);
-				// Diagnostic: of the misses, was the entry stale (invalidated/expired ->
-				// over-invalidation, fixable) or valid-but-navigator-moved (benign)?
-				if (!hit)
+				if (!hit) {
+					// Of the misses: stale entry (!IsValid) vs valid-but-navigator-moved.
 					Metrics.DebugMetrics.PATH_CACHE_MISS_INVALID.Log(!valid);
+					// Of the stale (!IsValid) misses: expired (still in cache, TTL lapsed ->
+					// TTL is the lever) vs absent (removed by invalidation or never cached).
+					if (!valid)
+						Metrics.DebugMetrics.PATH_CACHE_MISS_EXPIRED.Log(
+							pathCache.TryGetValue(grid, out _));
+				}
 			}
 			return hit;
 		}

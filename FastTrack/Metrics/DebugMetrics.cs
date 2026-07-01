@@ -61,6 +61,14 @@ namespace PeterHan.FastTrack.Metrics {
 		internal static readonly RatioProfiler PATH_CACHE_MISS_INVALID = new RatioProfiler();
 
 		/// <summary>
+		/// Of the stale (!IsValid) path-cache misses, the fraction where the entry was
+		/// still in the cache but its TTL had expired (true) vs absent entirely (false,
+		/// removed by invalidation or never cached). Distinguishes a too-short TTL from
+		/// over-invalidation as the dominant miss cause.
+		/// </summary>
+		internal static readonly RatioProfiler PATH_CACHE_MISS_EXPIRED = new RatioProfiler();
+
+		/// <summary>
 		/// Tracks calls to asychronous path probes.
 		/// </summary>
 		private static readonly Profiler PATH_PROBES = new Profiler();
@@ -160,6 +168,7 @@ namespace PeterHan.FastTrack.Metrics {
 				pair.Value.Reset();
 			PATH_CACHE.Reset();
 			PATH_CACHE_MISS_INVALID.Reset();
+			PATH_CACHE_MISS_EXPIRED.Reset();
 			int n = SIMANDRENDER.Length;
 			for (int i = 0; i < n; i++)
 				SIMANDRENDER[i].Reset();
@@ -202,10 +211,11 @@ namespace PeterHan.FastTrack.Metrics {
 				}
 				// Events fired
 				PUtil.LogDebug("Events " + EVENTS);
-				// Path cache: overall hit rate, then of the misses, the fraction that were
-				// stale/invalidated (fixable over-invalidation) vs navigator-moved (benign).
+				// Path cache: overall hit rate; of misses, fraction stale(!IsValid) vs moved;
+				// of stale misses, fraction expired(TTL lapsed) vs absent(invalidated/cold).
 				PUtil.LogDebug("Path Cache: " + PATH_CACHE +
-					" | of misses, invalidated: " + PATH_CACHE_MISS_INVALID);
+					" | of misses, invalidated: " + PATH_CACHE_MISS_INVALID +
+					" | of those, expired: " + PATH_CACHE_MISS_EXPIRED);
 				// Brain stats
 				text.Clear();
 				text.Append("Brain Stats:");
