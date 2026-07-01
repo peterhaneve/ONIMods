@@ -198,9 +198,11 @@ namespace PeterHan.FastTrack.GamePatches {
 		private readonly ICollection<int> pendingSolidChanges;
 		
 		/// <summary>
-		/// Recycle room cavities if possible.
+		/// Recycle room cavities if possible. Mutated from both the foreground thread
+		/// (Postprocess enqueues) and the background prober thread (CreateCavityFrom
+		/// dequeues), so this must be a thread-safe collection like its siblings above.
 		/// </summary>
-		private readonly Queue<CavityInfo> recycled;
+		private readonly ConcurrentQueue<CavityInfo> recycled;
 
 		/// <summary>
 		/// The critters which were occupying rooms that were destroyed.
@@ -252,7 +254,7 @@ namespace PeterHan.FastTrack.GamePatches {
 			maxRoomSize = 128;
 			pendingDestroy = new HashSet<HandleVector<int>.Handle>();
 			pendingSolidChanges = new HashSet<int>();
-			recycled = new Queue<CavityInfo>();
+			recycled = new ConcurrentQueue<CavityInfo>();
 			releasedCritters = new ConcurrentQueue<KPrefabID>();
 			roomsChanged = new AutoResetEvent(false);
 			roomsReady = new AutoResetEvent(false);
@@ -368,7 +370,8 @@ namespace PeterHan.FastTrack.GamePatches {
 			if (!RoomProber.IsCavityBoundary(cell) && visited.Add(cell)) {
 				int n = 0, minX = int.MaxValue, minY = int.MaxValue, maxX = int.MinValue,
 					maxY = int.MinValue;
-				var cavity = (recycled.Count > 0) ? recycled.Dequeue() : new CavityInfo();
+				var cavity = recycled.TryDequeue(out var recycledCavity) ? recycledCavity :
+					new CavityInfo();
 				bool filled;
 				var targetCavity = cavityInfos.Allocate(cavity);
 				var queue = floodFilling;
@@ -459,7 +462,7 @@ namespace PeterHan.FastTrack.GamePatches {
 				roomsReady.Reset();
 				disposed = true;
 				Instance = null;
-				recycled.Clear();
+				while (recycled.TryDequeue(out _)) { }
 			}
 		}
 

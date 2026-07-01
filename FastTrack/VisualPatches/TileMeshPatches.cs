@@ -28,8 +28,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// Applied before AddBlock runs.
 		/// </summary>
+		// ponytail: Aquatic made the 5-param overload a shim; real callers use 6-param.
+		// isBlueprint ignored — TileMeshRenderer has no blueprint-specific path.
 		private static bool AddBlock_Prefix(int renderLayer, BuildingDef def,
-				bool isReplacement, SimHashes element, int cell) {
+				bool isReplacement, SimHashes element, int cell, bool isBlueprint) {
 			TileMeshRenderer.Instance?.AddBlock(renderLayer, def, isReplacement, element,
 				cell);
 			return false;
@@ -44,7 +46,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 				harmony.Patch(typeof(Assets), nameof(Assets.GetBlockTileDecorInfo),
 					prefix: new HarmonyMethod(typeof(TileMeshPatches),
 					nameof(GetBlockTileDecorInfo_Prefix)));
-			harmony.Patch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.AddBlock),
+			// ponytail: Aquatic moved the real impl to the 6-param overload; 5-param is a shim
+			harmony.Patch(typeof(BlockTileRenderer).GetMethodSafe(nameof(BlockTileRenderer.
+				AddBlock), false, typeof(int), typeof(BuildingDef), typeof(bool),
+				typeof(SimHashes), typeof(int), typeof(bool)),
 				prefix: new HarmonyMethod(typeof(TileMeshPatches), nameof(AddBlock_Prefix)));
 			harmony.Patch(typeof(BlockTileRenderer), nameof(BlockTileRenderer.HighlightCell),
 				prefix: new HarmonyMethod(typeof(TileMeshPatches), nameof(

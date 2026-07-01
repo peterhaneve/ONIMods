@@ -139,6 +139,7 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// <summary>
 		/// References IDs for updating shader texture properties.
 		/// </summary>
+		private readonly int tIDCameraZoom;
 		private readonly int tIDClusterWorldSize;
 		private readonly int tIDFogOfWarScale;
 		private readonly int tIDTopBorderHeight;
@@ -147,6 +148,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 		private PropertyTextureUpdater() {
 			var tIDPropTexWsToCs = Shader.PropertyToID("_PropTexWsToCs");
 			var tIDPropTexCsToWs = Shader.PropertyToID("_PropTexCsToWs");
+			// ponytail: Aquatic added _CameraZoomInfo; liquid shaders use it for transparency
+			tIDCameraZoom = Shader.PropertyToID("_CameraZoomInfo");
 			tIDClusterWorldSize = Shader.PropertyToID("_ClusterWorldSizeInfo");
 			tIDFogOfWarScale = Shader.PropertyToID("_FogOfWarScale");
 			tIDTopBorderHeight = Shader.PropertyToID("_TopBorderHeight");
@@ -198,6 +201,19 @@ namespace PeterHan.FastTrack.VisualPatches {
 				Shader.SetGlobalFloat(tIDFogOfWarScale, scale);
 				lastFog = scale;
 			}
+			// ponytail: _CameraZoomInfo — Aquatic liquid shaders use this for transparency;
+			// game sets it every LateUpdate, so we must too (camera zoom changes every frame)
+			var cc = CameraController.Instance;
+			if (cc != null && cc.overlayCamera != null) {
+				float orthoSize = cc.OrthographicSize;
+				float maxOrtho = cc.FreeCameraEnabled
+					? TuningData<CameraController.Tuning>.Get().maxOrthographicSizeDebug
+					: 20.0f;
+				Shader.SetGlobalVector(tIDCameraZoom, new Vector4(
+					orthoSize, cc.overlayCamera.aspect, maxOrtho,
+					(orthoSize - cc.minOrthographicSize) / (maxOrtho - cc.minOrthographicSize)
+				));
+			}
 		}
 
 		public void Dispose() {
@@ -211,7 +227,14 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		private void DisposeAll() {
 			foreach (var task in running)
-				task.Dispose();
+				// Only unlock buffers whose worker actually finished (TriggerComplete) or
+				// never started (TriggerAbort). If FinishUpdate's WaitOne timed out while a
+				// task is still outstanding, its worker thread could still be writing into
+				// the locked region; Unlock-ing under it would corrupt native memory. Leave
+				// those buffers locked (and leaked for this frame) rather than corrupt them -
+				// this is the deliberately conservative choice for the timeout path.
+				if (task.Done)
+					task.Dispose();
 			running.Clear();
 			outstanding = 0;
 		}
@@ -353,7 +376,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 				updater = PropertyTextures.UpdateSolidLiquidGasMassForLight;
 				break;
 			default:
-				throw new ArgumentException("No updater for property: " + property);
+				PUtil.LogWarning("No texture updater for property: " + property);
+				return;
 			}
 			running.Add(new TextureWorkItemCollection(this, buffer, min, max, updater));
 		}
@@ -416,6 +440,10 @@ namespace PeterHan.FastTrack.VisualPatches {
 				break;
 			case SimProperty.LiquidData:
 				UpdateSimProperty(p, PropertyTextures.externalLiquidDataTex, 4 * cells);
+				break;
+			// ponytail: Aquatic added MaterialData as an externally-managed sim texture
+			case SimProperty.MaterialData:
+				UpdateSimProperty(p, PropertyTextures.externalMaterialDataTex, 4 * cells);
 				break;
 			default:
 				if (p < buffers.Length)
@@ -483,6 +511,14 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// </summary>
 			public int Count { get; }
 
+			/// <summary>
+			/// Set once TriggerComplete or TriggerAbort has actually fired for this
+			/// collection. Only safe to Dispose (Unlock the locked buffer region) once this
+			/// is true - before that, a background worker thread may still be writing into
+			/// the locked region.
+			/// </summary>
+			internal volatile bool Done;
+
 			public IWorkItemCollection Jobs => this;
 
 			public TextureWorkItemCollection(PropertyTextureUpdater instance,
@@ -512,11 +548,18 @@ namespace PeterHan.FastTrack.VisualPatches {
 			}
 
 			public void TriggerAbort() {
-				// Sadly unlocking probably will throw as it happens on a background thread
+				// Only fires for jobs still queued (not yet started) when the
+				// AsyncJobManager is disposed - this runs on whatever thread calls
+				// Dispose (normally the main thread during mod/game shutdown), not a
+				// background worker, and no worker has touched the locked region yet.
+				Done = true;
 				parent.FinishOne();
 			}
 
 			public void TriggerComplete() {
+				// Fires from the last worker's ReportInactive once every sub-job in this
+				// collection has finished, so it is now safe to Unlock the region.
+				Done = true;
 				parent.FinishOne();
 			}
 

@@ -97,6 +97,7 @@ namespace PeterHan.FastTrack {
 					public static LocString VIRTUALSCROLL = "Virtual Scroll";
 
 					public static LocString METRICS = "Log Debug Metrics";
+					public static LocString BENCHMARKLOG = "Benchmark Logging";
 
 					public static class ACHIEVEDISABLE {
 						public static LocString NEVER = "Never";
@@ -200,6 +201,7 @@ namespace PeterHan.FastTrack {
 					public static LocString VIRTUALSCROLL = "Improves the speed of scrolling menus." + PERF_MEDIUM;
 
 					public static LocString METRICS = "Logs extra debug information to the game log.\n\n<b>Only use this option if directed to do so by a developer.</b>";
+					public static LocString BENCHMARKLOG = "Logs frame time and GC to Player.log over a fixed window for A/B measurement.\n\n<b>Only use this option if directed to do so by a developer.</b>";
 
 					public static class ACHIEVEDISABLE {
 						public static LocString NEVER = "Achievements will always be checked.";

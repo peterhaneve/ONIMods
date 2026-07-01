@@ -18,6 +18,8 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -203,6 +205,51 @@ namespace PeterHan.FastTrack.PathPatches {
 	/// <summary>
 	/// Applied to Navigator to detect when a cache hit occurs and avoid releasing the result.
 	/// </summary>
+	/// <summary>
+	/// Patches TickFrame to null-guard PathFinderAbilities.RecycleClone on WorkResult's
+	/// abilitiesInstance field, which Aquatic added. Execute sets it; FT skips Execute on
+	/// cache hits, so abilitiesInstance is null — guard prevents the NPE.
+	/// </summary>
+	[HarmonyPatch(typeof(AsyncPathProber.Manager), "TickFrame")]
+	public static class TickFrame_AbilitiesInstance_Patch {
+		internal static bool Prepare() {
+			var options = FastTrackOptions.Instance;
+			return options.CachePaths || (options.FastReachability && options.
+				ChorePriorityMode == FastTrackOptions.NextChorePriority.Delay);
+		}
+
+		// ponytail: null-safe wrapper so skipped-Execute cache hits don't crash TickFrame
+		internal static void SafeRecycleClone(PathFinderAbilities abilities) {
+			abilities?.RecycleClone();
+		}
+
+		internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+			var abilitiesField = typeof(AsyncPathProber.WorkResult).GetFieldSafe(
+				"abilitiesInstance", false);
+			var recycleMethod = typeof(PathFinderAbilities).GetMethodSafe("RecycleClone", false);
+			var safeMethod = typeof(TickFrame_AbilitiesInstance_Patch).GetMethodSafe(
+				nameof(SafeRecycleClone), true, typeof(PathFinderAbilities));
+			if (abilitiesField == null || recycleMethod == null || safeMethod == null) {
+				PUtil.LogWarning("FastTrack: TickFrame null-guard fields not found");
+				return instructions;
+			}
+			var instList = new List<CodeInstruction>(instructions);
+			for (int i = 0; i < instList.Count - 1; i++) {
+				// Pattern: ldfld abilitiesInstance → callvirt RecycleClone
+				if (instList[i].opcode == OpCodes.Ldfld &&
+						instList[i].operand is System.Reflection.FieldInfo fi &&
+						fi == abilitiesField &&
+						instList[i + 1].opcode == OpCodes.Callvirt &&
+						instList[i + 1].operand is System.Reflection.MethodInfo mi &&
+						mi == recycleMethod) {
+					instList[i + 1] = new CodeInstruction(OpCodes.Call, safeMethod);
+					break;
+				}
+			}
+			return instList;
+		}
+	}
+
 	[HarmonyPatch(typeof(Navigator), nameof(Navigator.TakeResult))]
 	public static class Navigator_TakeResult_Patch {
 		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
@@ -213,10 +260,18 @@ namespace PeterHan.FastTrack.PathPatches {
 		[HarmonyPriority(Priority.Low)]
 		internal static bool Prefix(ref AsyncPathProber.WorkResult result,
 				ref PathGrid __result) {
-			bool miss = result.pathGrid != null;
-			if (miss)
-				__result = null;
-			return miss;
+			if (WorkOrder_Execute_Patch.CacheHitNavigators.TryRemove(result.navigator,
+					out _)) {
+				// Cache hit: release the new grid that TickFrame allocated but we don't need.
+				// The navigator's existing grid stays valid, so return null (no swap).
+				var manager = AsyncPathProber.Instance;
+				var newGrid = result.pathGrid;
+				if (manager != null && newGrid != null)
+					manager.gridPool[newGrid.AllocatedClassification].Release(newGrid);
+				// __result stays null — navigator keeps its current PathGrid
+				return false;
+			}
+			return true;
 		}
 	}
 
@@ -285,7 +340,14 @@ namespace PeterHan.FastTrack.PathPatches {
 			return options.CachePaths || (options.FastReachability && options.
 				ChorePriorityMode == FastTrackOptions.NextChorePriority.Delay);
 		}
-		
+
+		// ponytail: Aquatic's TickFrame reads result.pathGrid after Execute returns, so we
+		// cannot null it to signal a cache hit. Execute runs on a worker thread; TakeResult
+		// runs on the main thread (inside TickFrame) — [ThreadStatic] doesn't cross that
+		// boundary. Use a ConcurrentDictionary keyed by Navigator for cross-thread signaling.
+		internal static readonly ConcurrentDictionary<Navigator, bool> CacheHitNavigators =
+			new ConcurrentDictionary<Navigator, bool>();
+
 		/// <summary>
 		/// Applied before Execute runs.
 		/// </summary>
@@ -295,12 +357,11 @@ namespace PeterHan.FastTrack.PathPatches {
 			// Path cache hits should skip the method
 			var options = FastTrackOptions.Instance;
 			var nav = __instance.navigator;
-			PathGrid originalGrid = nav.PathGrid, newGrid = result.pathGrid;
+			PathGrid originalGrid = nav.PathGrid;
 			bool miss = !options.CachePaths || !PathCacher.CheckCache(originalGrid,
 				__instance.originCell);
 			var reachables = result.reachableCells;
 			if (!miss) {
-				var manager = AsyncPathProber.Instance;
 				// Do not bump the serial number, the path grid is still accurate using the old
 				// one
 				if (__instance.computeReachables && reachables != null) {
@@ -311,11 +372,8 @@ namespace PeterHan.FastTrack.PathPatches {
 					result.noLongerReachableCells.Clear();
 					result.newlyReachableCells.Clear();
 				}
-				// The Navigator's TakeResult will try to release the old grid and stuff in a
-				// new one. Release the new one instead
-				if (manager != null)
-					manager.gridPool[newGrid.AllocatedClassification].Release(newGrid);
-				result.pathGrid = null;
+				// Signal TakeResult (main thread) to release the new grid instead of installing it
+				CacheHitNavigators.TryAdd(nav, true);
 				// Manually release for chores
 				if (options.FastReachability && options.ChorePriorityMode ==
 						FastTrackOptions.NextChorePriority.Delay)
@@ -444,8 +502,17 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// Applied before OnCleanUp runs.
 		/// </summary>
 		internal static void Prefix(Navigator __instance) {
-			if (__instance != null)
+			if (__instance != null) {
 				PathCacher.Cleanup(__instance.PathGrid);
+				// A navigator destroyed in the window between a worker thread flagging a
+				// cache hit (CacheHitNavigators.TryAdd in Execute) and TickFrame consuming
+				// it via TakeResult never gets its entry removed there, leaving a dangling
+				// key that pins the dead Navigator. Critter churn (deaths, hatches) makes
+				// that accumulate over a long colony, so clear it here too. Gating matches:
+				// CacheHitNavigators is only populated when CachePaths is on, which is also
+				// when this patch applies.
+				WorkOrder_Execute_Patch.CacheHitNavigators.TryRemove(__instance, out _);
+			}
 		}
 	}
 
@@ -467,6 +534,35 @@ namespace PeterHan.FastTrack.PathPatches {
 					Rotated && FastTrackMod.GameRunning)
 				// Just to be safe
 				PathCacher.InvalidateAllDuplicants();
+		}
+	}
+
+	/// <summary>
+	/// Applied to NavGrid to invalidate cached paths whose region overlaps cells
+	/// that just changed. The base game refreshes the nav grid for dirty cells
+	/// here, but FastTrack's path cache has no terrain-change signal of its own, so
+	/// an idle navigator (typically a swim-nav critter that does not constantly
+	/// re-path the way a chore-driven Duplicant does) can follow a stale cached
+	/// path into a newly-placed tile and get stuck. Same bug class as the
+	/// SuitMarker fix above.
+	/// </summary>
+	[HarmonyPatch(typeof(NavGrid), nameof(NavGrid.UpdateGraph), new[] {
+		typeof(List<int>) })]
+	public static class NavGrid_UpdateGraph_Patch {
+		internal static bool Prepare() => FastTrackOptions.Instance.CachePaths;
+
+		/// <summary>
+		/// Applied after UpdateGraph runs to drop caches whose grid window actually
+		/// contains a dirty cell. The dirty cells are already expanded by the nav
+		/// update range upstream, so a navigator adjacent to a change is covered.
+		///
+		/// __0 is the first original argument (the dirty cell list) by position.
+		/// Harmony injects original parameters by NAME; receiving it positionally
+		/// avoids a silent no-op if the publicized assembly's parameter name ever
+		/// differs from the source name.
+		/// </summary>
+		internal static void Postfix(List<int> __0) {
+			PathCacher.InvalidateCells(__0);
 		}
 	}
 }

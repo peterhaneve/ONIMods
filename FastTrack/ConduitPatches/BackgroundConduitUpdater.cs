@@ -69,9 +69,12 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		}
 
 		/// <summary>
-		/// Triggered when all jobs complete.
+		/// Triggered when all jobs complete. Not readonly: Dispose nulls this out before
+		/// disposing the handle, so TriggerComplete/TriggerAbort (which can still fire from
+		/// a background worker thread after this instance is disposed, since the dispatched
+		/// job outlives it) can null-check instead of calling Set() on a disposed handle.
 		/// </summary>
-		private readonly EventWaitHandle onComplete;
+		private EventWaitHandle onComplete;
 
 		/// <summary>
 		/// Whether WaitForCompletion needs to actually wait.
@@ -94,7 +97,12 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		}
 
 		public void Dispose() {
-			onComplete.Dispose();
+			// Null out before disposing so a Set() racing in from a background thread
+			// (TriggerComplete/TriggerAbort on an already-dispatched job) sees null and
+			// skips, instead of throwing ObjectDisposedException on the worker thread.
+			var handle = onComplete;
+			onComplete = null;
+			handle?.Dispose();
 		}
 
 		public void InternalDoWorkItem(int index, int threadIndex) {
@@ -152,11 +160,26 @@ namespace PeterHan.FastTrack.ConduitPatches {
 		}
 
 		public void TriggerAbort() {
-			onComplete.Set();
+			TrySet();
 		}
 
 		public void TriggerComplete() {
-			onComplete.Set();
+			TrySet();
+		}
+
+		/// <summary>
+		/// Signals the completion handle, tolerating a concurrent Dispose. The null-check
+		/// only narrows the check-then-act window (a worker can read the handle non-null,
+		/// then Dispose nulls+disposes it before Set); the try/catch closes it fully.
+		/// WaitHandle.Set() throws in managed code before touching the native handle, so a
+		/// disposed handle can only throw here, never corrupt.
+		/// </summary>
+		private void TrySet() {
+			try {
+				onComplete?.Set();
+			} catch (System.ObjectDisposedException) {
+				// Handle disposed mid-set during teardown; the waiter is already gone.
+			}
 		}
 
 		public void TriggerStart() { }
