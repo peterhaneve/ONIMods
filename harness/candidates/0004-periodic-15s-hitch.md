@@ -1,6 +1,7 @@
 # Candidate 0004: Periodic ~15s hitch = Mono Gen0 GC pause over a chronically multi-GB managed heap
 
-- Status: MEASURED — LEAK CONFIRMED (idle post-GC floor rises ~18 MB/min)
+- Status: PARKED — rising idle used-floor ~18 MB/min, but cause NOT distinguished (real object leak vs Boehm heap-fragmentation ratcheting) and NOT a Fast Track structure (full audit clean). Needs a hands-on dnSpy Mono heap-snapshot diff (object counts by type) to resolve; likely vanilla or inherent. Lowest-ROI thread — parked pending user appetite for the dnSpy session.
+- IMPORTANT caveat (corrects an earlier over-confident "leak confirmed"): on Boehm (non-compacting, never returns memory to OS), a rising "used" floor may be fragmentation high-water ratcheting, not live-object growth. Only an object-count-by-type heap diff distinguishes them. Fast Track audit ruled out the fork as the source either way.
 - Backend: **Boehm GC** (`mono-2.0-bdwgc.dll`) — non-generational, conservative, whole-heap stop-the-world scan. No nursery to tune; the ONLY per-collection-cost lever is shrinking the live heap. (Correction to the original writeup's "generational nursery" framing.)
 - Leak evidence: a pure ~7 min idle capture (no player input, no windows) shows the post-GC floor climbing monotonically 3413 → 3525 MB (~18 MB/min ≈ 1 GB/hour). In a truly idle colony the retained set should be flat; a rising floor = unbounded retention, not the inherent working set. This is the root of both the 3.3 GB heap AND the hundreds-of-ms Boehm pauses.
 - Target: find WHAT accumulates during idle. Not a single known method yet — see "Next step".
@@ -59,3 +60,42 @@ Idle-phase capture, `Player.log`, `02:26:33`-`02:28:5x` (~2 min, unpaused, no wi
 ## Outcome
 
 Not applicable yet — this is an attribution writeup, not a patch. Recommend opening a follow-up candidate once the Stage-1 instrumentation above (GC generation split + real pause duration + heap-growth source) narrows the ~3.3 GB baseline to a specific retained structure.
+
+## Leak-source audit (FastTrack collections & subscriptions, idle-retention hunt)
+
+Goal: find the rooted FastTrack structure that gains ~18 MB/min (~300 KB/s) of *retained* (post-GC) heap during a pure idle capture. Audited every per-tick / per-frame / background-worker collection and every event subscription in `FastTrack/`, checking ADD vs DRAIN/REMOVE balance in steady state. Also diffed the fork's net-new code (`git merge-base HEAD origin/main`..HEAD, base `b6f52b3`) to prioritize fork-introduced regressions.
+
+### Conclusion (up front)
+
+**No FastTrack structure plausibly accounts for a steady ~18 MB/min idle retention.** Every rooted collection in the hot paths is either (a) fully drained/cleared every cycle, (b) a bounded object pool, or (c) a cache keyed by a bounded entity set (navigators, storages, prefab IDs) with matching removal. None exhibits the leak signature (per-idle-tick Add with no drain). This points to a **vanilla (game) leak, not Fast Track** — next step is a dnSpy/Mono heap-snapshot diff to name the growing type. Do not patch Fast Track for this.
+
+### What was audited and why each is NOT the leak
+
+Per-frame temporaries — appended then fully cleared/drained every cycle (dead by GC time, cannot retain):
+- `DeferredTriggers` (`PathPatches/DeferredTriggers.cs`): `animPending` / `cacheCellPending` / `offsetPending` all drained to empty in `Process()` every frame (lines 111-137).
+- `AsyncAmountsUpdater` (`GamePatches/AsyncAmountsUpdater.cs`): `results` ConcurrentQueue fully `TryDequeue`-drained in `Finish()` (line 137).
+- `PropertyTextureUpdater` (`VisualPatches/PropertyTextureUpdater.cs`): `running` list `DisposeAll()`-cleared every `FinishUpdate` (LateUpdate) (lines 228-233). Fork's new per-LateUpdate `Shader.SetGlobalVector(_CameraZoomInfo, new Vector4(...))` allocates only a struct (no heap retention).
+- `AsyncBrainGroupUpdater` (`PathPatches/AsyncBrainGroupUpdater.cs`): `brainsToUpdate` cleared each `StartBrainCollect`; `byId` cleared each `EndBrainUpdate`; per-brain `fetches`/`pickups` cleared in `Cleanup()`; `storageCells` ConcurrentDictionary is copy-clear-rebuilt each cycle in `UpdateStorageCells()` and has `RemoveStorage` — bounded to active storage count.
+- `FetchManagerFastUpdate` (`GamePatches/FetchManagerFastUpdate.cs`): `pathCosts`/`finalPickups`/`canBePickedUp`/`pickups` all `.Clear()`ed; `itemPool` is a reuse pool.
+
+Bounded pools / entity-keyed caches with matching removal:
+- `PathCacher` (`PathPatches/PathCacher.cs`): `pathCache` = `ConcurrentDictionary<PathGrid,double>` bounded by navigator count; `cellsInvalidatedThisFrame` HashSet and `newDirtyCells` List cleared every frame; `InvalidateCells` removes precise dirty-cell entries (candidate 0002 — confirmed, moved on).
+- `WorkOrder_Execute_Patch.CacheHitNavigators` (`PathPatches/NavPatches.cs:348`): `ConcurrentDictionary<Navigator,bool>`; `TryAdd` on cache hit (376), `TryRemove` on TickFrame consume (263) AND on navigator destroy (514, the fork's `2401a9d` leak fix). Bounded and cleaned.
+- `FastCellChangeMonitor` (`GamePatches/FastCellChangeMonitor.cs`): object-pooled `EventEntry`; `eventHandlers` has matching `.Remove`; handler lists `RemoveAt`/`Clear` on unsubscribe.
+- `BackgroundRoomProber` (`GamePatches/BackgroundRoomProber.cs`): `recycled` cavity pool; `alreadyDestroyed` cleared each pass; `visited` per-flood-fill. During pure idle no terrain/building changes are enqueued, so the probe loops don't run at all.
+- `FastGroupProber` (`SensorPatches/FastGroupProber.cs`): `dirtyCells` fully drained each `Update`; `toDo` reachability queue is throttled-drained (≥1/16 outstanding per frame) — could in principle back up, but only when reachability actually changes; a truly idle colony enqueues ~nothing, so it stays near-empty.
+- `KAnimLoopOptimizer` (`idleAnims`), `RadiationGridUpdater` (`scanCells`), `SuitMarkerUpdater` (`docks`): all `.Clear()`ed per rebuild.
+
+Subscriptions: `FastReachabilityMonitor` and `SuitMarkerUpdater` `Subscribe` once at spawn (not per tick), balanced by teardown on destroy. No per-frame `+=`/`Subscribe` found anywhere.
+
+UI/string caches: `FormatStringPatches` uses shared reusable StringBuilders (`text.Clear()`) and bounded caches (`HOTKEY_LOOKUP` ~273 entries; Klei's `StringFormatter` caches dumped on load). With no windows open these paths barely execute.
+
+Fork net-new code (base `b6f52b3`..HEAD): path-cache invalidation (removes entries), MinionTodo 10 Hz throttle (adds nothing — candidate 0005), `BenchmarkLogPatch` (only `Debug.Log`s a transient string per frame — garbage, not retained), Aquatic render fixes (`_CameraZoomInfo` struct set, `MaterialData` texture case, 6-param `AddBlock` shim). None introduces a rooted growing collection.
+
+### Plausibility vs ~18 MB/min
+
+~18 MB/min retained = ~300 KB/s surviving every collection. The only FastTrack collections taking per-frame adds are the drain-every-frame ones above, whose contents are unreachable by GC time and therefore cannot contribute to a rising *post-GC* floor. For Fast Track to leak at this rate a rooted collection would need ~thousands of retained entries/sec with no removal; no such structure exists in the code. The magnitude and steadiness are inconsistent with any bounded cache or pool here.
+
+### Recommendation
+
+Attribute the idle retention to **vanilla ONI**, not Fast Track. Take two Mono heap snapshots ~60 s apart in a pure-idle session (dnSpy attach, or `MONO_GC_DEBUG`/`heapshot`) and diff by type to name the growing class. Caveat to verify during the diff: on the Boehm backend `GC.GetTotalMemory(false)` reflects in-use heap that Boehm never returns to the OS, so confirm the rise is genuine live-object growth (type-count increasing) and not heap high-water ratcheting. Likely vanilla idle-accumulators to check first in the diff: notification/report history, tracker/graph datapoint buffers (`WorldTracker`/`ColonyDiagnostics`), and any per-frame render/sim buffer the game itself pins.
