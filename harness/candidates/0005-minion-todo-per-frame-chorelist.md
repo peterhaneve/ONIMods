@@ -1,6 +1,6 @@
 # Candidate 0005: MinionTodoSideScreen recomputes colony-wide chore list every frame
 
-- Status: QUEUED (built, Stage-4 ADVANCE; pending in-game A/B)
+- Status: ACCEPTED (measured ~6–7× fewer chore-list rebuilds while dupe window open; Stage-4 ADVANCE)
 - Target: `MinionTodoSideScreen.ScreenUpdate` / `MinionTodoSideScreen.PopulateElements` — decompile `harness/decompiled/Assembly-CSharp/MinionTodoSideScreen.cs` (~:125-129 ScreenUpdate, ~:159 the 0.1s UIScheduler tick)
 - Risk class: Prefix (low — removes a redundant per-frame call; no state mutation, no widget lifecycle change)
 - Gating flag: `SideScreenOpts` (existing UI-optimization flag)
@@ -49,7 +49,12 @@ Build: `dotnet build FastTrack/FastTrack.csproj -c Debug -p:Platform=Mergedown` 
 - No Critical/Important. **Minor (verify in A/B, no code change):** shared `lastPopulate` can show the previous dupe's Errands list for ≤100 ms on a fast dupe-switch (<0.1 s) before it snaps — bounded, self-healing.
 
 ## Measurement (Stage 5)
-Pending. Add `harmony.Profile(typeof(MinionTodoSideScreen), nameof(PopulateElements))` (DEBUG) to size before/after: calls/sec and total us while a dupe Errands tab is open, plus the reduction in `Game.Update` cost while open. User A/B: does the while-open slowness disappear?
+DONE (in-game, DEBUG + Metrics, dupe Errands tab open). `Methods Run:` `PopulateElements` frequency:
+- **With fix (SideScreenOpts on): median 8/sec, max 10/sec, mean 7.6/sec** — throttle confirmed at the ~10 Hz cadence. Down from vanilla ~60–70/sec (~6–7× fewer rebuilds).
+- Per-call cost on this backlogged colony: ~2–8 ms each (`9 calls / 19,954–77,780 us`). So while a dupe window is open, this path dropped from ~60×~4 ms ≈ **240 ms/sec** to ~8×~4 ms ≈ **~32 ms/sec** — directly the "slow while window open" hitch.
+- Load clean (no exceptions); dupe-switch freshness (the Minor) [user to confirm no lingering previous-dupe list].
 
 ## Outcome
-Open — DESIGN, fix specced (low risk, unambiguous mechanism). Build + Opus review + in-game A/B.
+ACCEPTED — ~6–7× reduction in colony-wide chore-list rebuilds while a Duplicant Errands tab is open, no behavior change, Stage-4 ADVANCE, low risk. First clean *measured* win of the harness.
+
+Follow-up lead (candidate 0006, not built): the per-call cost is still ~2–8 ms because `PopulateElements` rebuilds the whole colony-wide list every call. The sim only refreshes the underlying `PreconditionSnapshot` on a brain tick, so caching/reusing the built list until the snapshot actually changes could cut the remaining per-call cost. Higher effort; deferred.
