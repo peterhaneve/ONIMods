@@ -227,7 +227,14 @@ namespace PeterHan.FastTrack.VisualPatches {
 		/// </summary>
 		private void DisposeAll() {
 			foreach (var task in running)
-				task.Dispose();
+				// Only unlock buffers whose worker actually finished (TriggerComplete) or
+				// never started (TriggerAbort). If FinishUpdate's WaitOne timed out while a
+				// task is still outstanding, its worker thread could still be writing into
+				// the locked region; Unlock-ing under it would corrupt native memory. Leave
+				// those buffers locked (and leaked for this frame) rather than corrupt them -
+				// this is the deliberately conservative choice for the timeout path.
+				if (task.Done)
+					task.Dispose();
 			running.Clear();
 			outstanding = 0;
 		}
@@ -504,6 +511,14 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// </summary>
 			public int Count { get; }
 
+			/// <summary>
+			/// Set once TriggerComplete or TriggerAbort has actually fired for this
+			/// collection. Only safe to Dispose (Unlock the locked buffer region) once this
+			/// is true - before that, a background worker thread may still be writing into
+			/// the locked region.
+			/// </summary>
+			internal volatile bool Done;
+
 			public IWorkItemCollection Jobs => this;
 
 			public TextureWorkItemCollection(PropertyTextureUpdater instance,
@@ -533,11 +548,18 @@ namespace PeterHan.FastTrack.VisualPatches {
 			}
 
 			public void TriggerAbort() {
-				// Sadly unlocking probably will throw as it happens on a background thread
+				// Only fires for jobs still queued (not yet started) when the
+				// AsyncJobManager is disposed - this runs on whatever thread calls
+				// Dispose (normally the main thread during mod/game shutdown), not a
+				// background worker, and no worker has touched the locked region yet.
+				Done = true;
 				parent.FinishOne();
 			}
 
 			public void TriggerComplete() {
+				// Fires from the last worker's ReportInactive once every sub-job in this
+				// collection has finished, so it is now safe to Unlock the region.
+				Done = true;
 				parent.FinishOne();
 			}
 
