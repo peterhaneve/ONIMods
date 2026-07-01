@@ -62,8 +62,6 @@ artifacts/
 *.tmp
 *.tmp_proj
 *.log
-# Benchmark test fixtures are intentional tracked data, not stray logs
-!harness/benchmark/fixtures/*.log
 *.vspscc
 *.vssscc
 .builds
