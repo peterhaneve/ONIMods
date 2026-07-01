@@ -44,6 +44,9 @@ namespace PeterHan.FastTrack {
 			harmony.Profile(typeof(SimpleInfoScreen), "OnSelectTarget");
 			harmony.Profile(typeof(SimpleInfoScreen), "OnDeselectTarget");
 			harmony.Profile(typeof(DetailsScreen), "Refresh");
+			// Candidate 0005: size the colony-wide chore list rebuild throttle (Errands tab,
+			// MinionTodoSideScreen) - calls/sec and per-call cost before vs after throttling.
+			harmony.Profile(typeof(MinionTodoSideScreen), "PopulateElements");
 		}
 #endif
 
