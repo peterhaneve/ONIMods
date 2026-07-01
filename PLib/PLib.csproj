@@ -40,15 +40,15 @@ Update PLib for the U59 game release.
     <ProjectReference Include="../PLibLighting/PLibLighting.csproj" PrivateAssets="all" />
     <ProjectReference Include="../PLibOptions/PLibOptions.csproj" PrivateAssets="all" />
     <ProjectReference Include="../PLibUI/PLibUI.csproj" PrivateAssets="all" />
-    <PLibLibraries Include="$(TargetDir)/PLib*.dll" />
-    <PLibXMLs Include="$(TargetDir)/PLib*.xml" />
   </ItemGroup>
   <Target Name="BuildZip" AfterTargets="Build">
+    <ItemGroup>
+      <PLibLibraries Include="@(ReferencePath)" Condition="$([System.String]::new('%(Filename)').Contains(PLib))" />
+    </ItemGroup>
     <MakeDir Directories="$(IntermediateOutputPath)/PLib" ContinueOnError="true" />
     <Copy SourceFiles="@(PLibLibraries)" DestinationFolder="$(IntermediateOutputPath)/PLib" />
-    <Copy SourceFiles="@(PLibXMLs)" DestinationFolder="$(IntermediateOutputPath)/PLib" />
     <Delete Files="$(IntermediateOutputPath)/PLib/PLib.dll" ContinueOnError="true" />
-    <Delete Files="$(IntermediateOutputPath)/PLib/PLib.xml" ContinueOnError="true" />
     <ZipDirectory SourceDirectory="$(IntermediateOutputPath)/PLib" DestinationFile="$(OutputPath)/PLib.zip" Overwrite="true" />
+    <RemoveDir Directories="$(IntermediateOutputPath)/PLib" ContinueOnError="true" />
   </Target>
 </Project>

@@ -20,12 +20,19 @@
     </PackageReference>
     <Publicize Include="Assembly-CSharp;Assembly-CSharp-firstpass" />
   </ItemGroup>
+  <ItemGroup Condition="'$(TargetFrameworks.Contains(netstandard2.1))' == 'true'">
+    <!-- Choose the correct version to reduce log spam w.r.t. mismatched assembly versions -->
+    <Reference Include="System.IO.Compression, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+      <SpecificVersion>True</SpecificVersion>
+    </Reference>
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp" HintPath="$(GameFolder)/Assembly-CSharp.dll" />
     <Reference Include="Assembly-CSharp-firstpass" HintPath="$(GameFolder)/Assembly-CSharp-firstpass.dll" />
     <Reference Include="0Harmony" HintPath="$(GameFolder)/0Harmony.dll" />
     <Reference Include="FMODUnity" HintPath="$(GameFolder)/FMODUnity.dll" />
     <Reference Include="Newtonsoft.Json" HintPath="$(GameFolder)/Newtonsoft.Json.dll" />
+    <Reference Include="System.Memory" Version="$(GameFolder)/System.Memory.dll"/>
     <Reference Include="UnityEngine" HintPath="$(GameFolder)/UnityEngine.dll" />
     <Reference Include="UnityEngine.CoreModule" HintPath="$(GameFolder)/UnityEngine.CoreModule.dll" />
     <Reference Include="UnityEngine.ImageConversionModule" HintPath="$(GameFolder)/UnityEngine.ImageConversionModule.dll" />
@@ -72,10 +79,4 @@
     <DefineConstants>MERGEDOWN</DefineConstants>
     <APIVersion>2</APIVersion>
   </PropertyGroup>
-  <ItemGroup Condition="'$(TargetFrameworks.Contains(netstandard2.1))' == 'true'">
-    <!-- Choose the correct version to reduce log spam w.r.t. mismatched assembly versions -->
-    <Reference Include="System.IO.Compression, Version=4.2.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-      <SpecificVersion>True</SpecificVersion>
-    </Reference>
-  </ItemGroup>
 </Project>
