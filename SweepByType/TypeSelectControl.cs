@@ -270,11 +270,8 @@ namespace PeterHan.SweepByType {
 		private PRelativePanel CreateTypePanel() {
 			// Select/deselect all types
 			var cp = new PPanel("Categories") {
-				Direction = PanelDirection.Vertical,
-				Alignment = TextAnchor.UpperLeft,
-				Spacing = ROW_SPACING,
-				Margin = ELEMENT_MARGIN,
-				FlexSize = Vector2.right,
+				Direction = PanelDirection.Vertical, Alignment = TextAnchor.UpperLeft,
+				Spacing = ROW_SPACING, Margin = ELEMENT_MARGIN, FlexSize = Vector2.right,
 				// Background ensures that scrolling works properly!
 				BackColor = PUITuning.Colors.BackgroundLight
 			}.AddChild(new PTextField("TextFilter") {
