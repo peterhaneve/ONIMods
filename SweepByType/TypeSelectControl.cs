@@ -22,6 +22,8 @@ using PeterHan.PLib.UI;
 using ProcGen.Noise;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using static STRINGS.MISC;
@@ -72,6 +74,25 @@ namespace PeterHan.SweepByType {
 		/// The spacing between each row.
 		/// </summary>
 		internal const int ROW_SPACING = 2;
+
+		/// <summary>
+		/// The current text of the text filter 
+		/// </summary>
+		internal string FilterText = string.Empty;
+
+		/// <summary>
+		/// Clears the textfilter
+		/// </summary>
+		public void ClearFilterText() => OnFilterTextChanged(string.Empty);
+
+		/// <summary>
+		/// Triggered on changes to the text input
+		/// </summary>
+		/// <param name="newText">the new filter value</param>
+		public void OnFilterTextChanged(string newText) {
+			FilterText = newText;
+			UpdateVisibility();
+		}
 
 		/// <summary>
 		/// Gets the sprite for a particular element tag.
@@ -132,7 +153,7 @@ namespace PeterHan.SweepByType {
 				return children.Count;
 			}
 		}
-		
+
 		/// <summary>
 		/// The currently active preset index, 0 based.
 		/// </summary>
@@ -245,15 +266,25 @@ namespace PeterHan.SweepByType {
 				AnchorXAxis(spacer, 0.0f).SetTopEdge(spacer, below: lastButton);
 			return rp;
 		}
-		
+
 		private PRelativePanel CreateTypePanel() {
 			// Select/deselect all types
 			var cp = new PPanel("Categories") {
-				Direction = PanelDirection.Vertical, Alignment = TextAnchor.UpperLeft,
-				Spacing = ROW_SPACING, Margin = ELEMENT_MARGIN, FlexSize = Vector2.right,
+				Direction = PanelDirection.Vertical,
+				Alignment = TextAnchor.UpperLeft,
+				Spacing = ROW_SPACING,
+				Margin = ELEMENT_MARGIN,
+				FlexSize = Vector2.right,
 				// Background ensures that scrolling works properly!
 				BackColor = PUITuning.Colors.BackgroundLight
-			}.AddChild(new PCheckBox("SelectAll") {
+			}.AddChild(new PTextField("TextFilter") {
+				Text = FilterText, MinWidth = 170,
+				FlexSize = new Vector2(1, 0), 
+				TextAlignment = TMPro.TextAlignmentOptions.MidlineLeft,
+
+			}.AddOnRealize((go) => {
+				go.GetComponent<TMP_InputField>().onValueChanged.AddListener(text => OnFilterTextChanged(text));
+			})).AddChild(new PCheckBox("SelectAll") {
 				Text = STRINGS.UI.UISIDESCREENS.TREEFILTERABLESIDESCREEN.ALLBUTTON,
 				CheckSize = ROW_SIZE, InitialState = PCheckBox.STATE_CHECKED,
 				OnChecked = OnCheck, TextStyle = PUITuning.Fonts.TextDarkStyle
@@ -283,7 +314,7 @@ namespace PeterHan.SweepByType {
 				SetTopEdge(title, fraction: 1.0f).SetBottomEdge(sp, fraction: 0.0f).
 				SetTopEdge(sp, below: title);
 		}
-		
+
 		private void OnCheck(GameObject source, int state) {
 			if (state == PCheckBox.STATE_UNCHECKED)
 				// Clicked when unchecked, check all
@@ -373,7 +404,7 @@ namespace PeterHan.SweepByType {
 				}
 			}
 		}
-		
+
 		private void SwitchPresetButton(GameObject obj) {
 			// Look for realized object in button list
 			int n = presetButtons.Length;
@@ -423,7 +454,7 @@ namespace PeterHan.SweepByType {
 					header.transform.SetSiblingIndex(index);
 					panel.SetParent(childPanel);
 					PUIElements.SetAnchors(panel, PUIAnchoring.Stretch, PUIAnchoring.Stretch);
-					panel.transform.SetSiblingIndex(index + 1);
+					panel.transform.SetSiblingIndex(index + 2); //+1 from search bar
 				}
 				foreach (var element in found)
 					current.TryAddType(element);
@@ -433,9 +464,51 @@ namespace PeterHan.SweepByType {
 		/// <summary>
 		/// Updates the parent check box state from the children.
 		/// </summary>
-		internal void UpdateFromChildren() {
+		internal void UpdateFromChildren(Tag? changedTag = null, bool selected = true) {
+			UpdateCategoryEntriesForTag(changedTag, selected);
 			UpdateAllItems(allItems, children.Values);
 			SaveTypes();
+		}
+
+		/// <summary>
+		/// Updates the selection state for the provided tag if it has a value
+		/// </summary>
+		/// <param name="elementTag">the provided Tag as nullable</param>
+		/// <param name="selected">true or false if should be selected</param>
+		void UpdateCategoryEntriesForTag(Tag? elementTag, bool selected) {
+			if (!elementTag.HasValue)
+				return;
+
+			foreach (var item in children) {
+				if (item.Value.children.TryGetValue(elementTag.Value, out var selectElement)) {
+					selectElement.SetSelected(selected, false);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Filters all categories and their children, 
+		/// disabling those that are not withing the text filter input
+		/// </summary>
+		void UpdateVisibility() {
+			bool hasFilter = !FilterText.IsNullOrWhiteSpace() && FilterText.Any();
+			foreach (var category in children) {
+				bool categoryInFilters = category.Key.ProperName().Contains(FilterText, StringComparison.InvariantCultureIgnoreCase);
+				bool childInFilters = false;
+
+				foreach (var entry in category.Value.children) {
+					bool filterFulfilled = !hasFilter || categoryInFilters || entry.Key.ProperName().Contains(FilterText, StringComparison.InvariantCultureIgnoreCase);
+					entry.Value.CheckBox.SetActive(filterFulfilled);
+					if (filterFulfilled)
+						childInFilters = true;
+				}
+				bool categoryActive = childInFilters || categoryInFilters;
+
+				category.Value.Header.SetActive(categoryActive);
+				if (categoryActive)
+					category.Value.SetToggleState(categoryActive && hasFilter);
+
+			}
 		}
 
 		/// <summary>
@@ -473,6 +546,11 @@ namespace PeterHan.SweepByType {
 			public GameObject Header { get; }
 
 			/// <summary>
+			/// The dropdown toggle for toggling the children
+			/// </summary>
+			public GameObject Toggle { get; private set; }
+
+			/// <summary>
 			/// The child elements.
 			/// </summary>
 			internal readonly SortedList<Tag, TypeSelectElement> children;
@@ -492,6 +570,7 @@ namespace PeterHan.SweepByType {
 					OnStateChanged = OnToggle, Size = new Vector2(ROW_SIZE.x * 0.5f,
 					ROW_SIZE.y * 0.5f), Color = PUITuning.Colors.ComponentLightStyle
 				};
+				showHide.OnRealize += (obj) => { Toggle = obj; };
 				Header = new PRelativePanel("TypeSelectCategory") { DynamicSize = false }.
 					AddChild(showHide).AddChild(selectBox).SetLeftEdge(showHide,
 					fraction: 0.0f).SetRightEdge(selectBox, fraction: 1.0f).SetLeftEdge(
@@ -504,6 +583,15 @@ namespace PeterHan.SweepByType {
 					Spacing = ROW_SPACING, Margin = new RectOffset(INDENT, 0, 0, 0)
 				}.Build();
 				ChildPanel.transform.localScale = Vector3.zero;
+			}
+
+			/// <summary>
+			/// Sets the toggle state of the category
+			/// </summary>
+			/// <param name="open">troe or false if enabled</param>
+			public void SetToggleState(bool open) {
+				PToggle.SetToggleState(this.Toggle, open);
+				OnToggle(Toggle, open);
 			}
 
 			/// <summary>
@@ -581,9 +669,11 @@ namespace PeterHan.SweepByType {
 			/// <summary>
 			/// Updates the parent check box state from the children.
 			/// </summary>
-			internal void UpdateFromChildren() {
+			/// <param name="changedTag">optional tag to pass along to only update ui for that specific tag</param>
+			/// <param name="selected">if that optional tag is selected</param>
+			internal void UpdateFromChildren(Tag? changedTag = null, bool selected = true) {
 				UpdateAllItems(CheckBox, children.Values);
-				Control.UpdateFromChildren();
+				Control.UpdateFromChildren(changedTag, selected);
 			}
 		}
 
@@ -628,14 +718,16 @@ namespace PeterHan.SweepByType {
 			/// Sets the selected state of this type.
 			/// </summary>
 			/// <param name="selected">true to select this type, or false otherwise.</param>
-			public void SetSelected(bool selected) {
+			/// <param name="updateParent">true to also update the ui state of the parent category</param>
+			public void SetSelected(bool selected, bool updateParent = true) {
 				if (selected)
 					// Clicked when unchecked, check and possibly check all
 					PCheckBox.SetCheckState(CheckBox, PCheckBox.STATE_CHECKED);
 				else
 					// Clicked when checked, clear and possibly uncheck
 					PCheckBox.SetCheckState(CheckBox, PCheckBox.STATE_UNCHECKED);
-				parent.UpdateFromChildren();
+				if (updateParent)
+					parent.UpdateFromChildren(ElementTag, selected);
 			}
 
 			public override string ToString() {
