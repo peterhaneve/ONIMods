@@ -113,6 +113,7 @@ namespace PeterHan.SweepByType {
 				root.SetParent(menu.gameObject);
 				root.transform.SetAsFirstSibling();
 				root.SetActive(true);
+				TypeSelect.ClearFilterText();
 			}
 			menu.PriorityScreen.Show(true);
 		}
