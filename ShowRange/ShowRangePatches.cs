@@ -79,11 +79,40 @@ namespace PeterHan.ShowRange {
 		}
 
 		/// <summary>
+		/// Copies the game's built-in RangeVisualizer component from the completed
+		/// building prefab to the under construction prefab, if the completed building
+		/// has one. Some buildings (e.g. LogicDuplicantSensor) register their range via
+		/// RangeVisualizer in DoPostConfigurePreview and DoPostConfigureComplete, which
+		/// means the range is shown for the preview and the completed building but not
+		/// while it is still being constructed. Copying the component fixes that.
+		/// </summary>
+		/// <param name="def">The building def to inspect.</param>
+		private static void AddUnderConstructionRangeVisualizer(BuildingDef def) {
+			GameObject complete = def.BuildingComplete, inBuild = def.
+				BuildingUnderConstruction;
+			if (complete == null || inBuild == null)
+				return;
+			var src = complete.GetComponent<RangeVisualizer>();
+			if (src == null)
+				return;
+			var dst = inBuild.GetComponent<RangeVisualizer>();
+			if (dst == null)
+				dst = inBuild.AddComponent<RangeVisualizer>();
+			dst.OriginOffset = src.OriginOffset;
+			dst.RangeMin = src.RangeMin;
+			dst.RangeMax = src.RangeMax;
+			dst.BlockingTileVisible = src.BlockingTileVisible;
+			PUtil.LogDebug("Copied RangeVisualizer to {0} (UnderConstruction)".F(def.
+				PrefabID));
+		}
+
+		/// <summary>
 		/// Adds components to visualize the range of buildings.
 		/// </summary>
 		/// <param name="def">The building def to add previews (if necessary).</param>
 		private static void AddRangePreviews(BuildingDef def) {
 			AddConsumerPreview(def);
+			AddUnderConstructionRangeVisualizer(def);
 		}
 
 		public override void OnLoad(Harmony harmony) {
