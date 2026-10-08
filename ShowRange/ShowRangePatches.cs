@@ -84,12 +84,47 @@ namespace PeterHan.ShowRange {
 		/// <param name="def">The building def to add previews (if necessary).</param>
 		private static void AddRangePreviews(BuildingDef def) {
 			AddConsumerPreview(def);
+			UpdateConstructionVisualizer(def);
 		}
 
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
 			new PVersionCheck().Register(this, new SteamVersionChecker());
+			// In case Stock Bug Fix were to fix this later
+			PRegistry.PutData("Bugs.UnderConstructionPreview", true);
+		}
+
+		/// <summary>
+		/// Adds range visualizers to the under construction template if they are missing but
+		/// present on the completed (or preview) building.
+		/// </summary>
+		/// <param name="def">The building def to add previews (if necessary).</param>
+		private static void UpdateConstructionVisualizer(BuildingDef def) {
+			GameObject preview = def.BuildingPreview, finished = def.BuildingComplete,
+				underConstruction = def.BuildingUnderConstruction;
+			// Some buildings have no preview or under construction if they are normally
+			// impossible to build
+			if (underConstruction != null) {
+				RangeVisualizer vis = null;
+				if (finished != null)
+					finished.TryGetComponent(out vis);
+				else if (preview != null)
+					preview.TryGetComponent(out vis);
+				// Currently applies to the Duplicant Motion Sensor
+				if (!underConstruction.TryGetComponent(out RangeVisualizer _) && vis != null) {
+					Vector2I radius = vis.RangeMax;
+					if (radius.x > 0 || radius.y > 0) {
+						var newVis = underConstruction.AddComponent<RangeVisualizer>();
+						newVis.OriginOffset = vis.OriginOffset;
+						newVis.RangeMax = radius;
+						newVis.RangeMin = vis.RangeMin;
+						newVis.BlockingTileVisible = vis.BlockingTileVisible;
+						PUtil.LogDebug("Added missing construction visualizer to {0}, range {1:D}x{2:D}".
+							F(def.PrefabID, radius.x, radius.y));
+					}
+				}
+			}
 		}
 
 		/// <summary>
