@@ -93,6 +93,12 @@ namespace PeterHan.PLib.UI {
 		public Color DialogBackColor { get; set; }
 
 		/// <summary>
+		/// If true, the dialog can be moved by dragging its title bar. It cannot be moved
+		/// outside of its parent.
+		/// </summary>
+		public bool Draggable { get; set; }
+
+		/// <summary>
 		/// The dialog's maximum size. If the dialog preferred size is bigger than this size,
 		/// the dialog will be decreased in size to fit. If either axis is zero, the dialog
 		/// gets its preferred size in that axis, at least the value in Size.
@@ -151,6 +157,7 @@ namespace PeterHan.PLib.UI {
 				Margin = new RectOffset(6, 6, 6, 6)
 			};
 			DialogBackColor = PUITuning.Colors.ButtonBlueStyle.inactiveColor;
+			Draggable = false;
 			buttons = new List<DialogButton>(4);
 			MaxSize = Vector2.zero;
 			Name = name ?? "Dialog";
@@ -221,7 +228,7 @@ namespace PeterHan.PLib.UI {
 			layout.AddRow(new GridRowSpec());
 			layout.AddColumn(new GridColumnSpec(flex: 1.0f));
 			layout.AddColumn(new GridColumnSpec());
-			LayoutTitle(layout, dComponent.DoButton);
+			LayoutTitle(layout, dComponent.DoButton, dialog.rectTransform());
 			layout.AddComponent(Body.Build(), new GridComponentSpec(1, 0) {
 				ColumnSpan = 2, Margin = new RectOffset(10, 10, 10, 10)
 			});
@@ -275,8 +282,9 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		/// <param name="layout">The layout manager for the dialog.</param>
 		/// <param name="onClose">The action to invoke when close is pressed.</param>
+		/// <param name="dialog">The dialog to move when the title bar is dragged.</param>
 		private void LayoutTitle(PGridLayoutGroup layout, PUIDelegates.OnButtonPressed
-				onClose) {
+				onClose, RectTransform dialog) {
 			// Title text, expand to width
 			var title = new PLabel("Title") {
 				Margin = new RectOffset(3, 4, 0, 0), Text = Title, FlexSize = Vector2.one
@@ -289,6 +297,9 @@ namespace PeterHan.PLib.UI {
 			var titleBG = title.AddOrGet<Image>();
 			titleBG.sprite = PUITuning.Images.BoxBorder;
 			titleBG.type = Image.Type.Sliced;
+			// Allow the dialog to be moved by dragging the title bar
+			if (Draggable)
+				title.AddComponent<PDialogDragHandle>().Target = dialog;
 			// Close button
 			layout.AddComponent(new PButton(DIALOG_KEY_CLOSE) {
 				Sprite = PUITuning.Images.Close, Margin = CLOSE_ICON_MARGIN, OnClick = onClose,
