@@ -93,6 +93,12 @@ namespace PeterHan.PLib.UI {
 		public Color DialogBackColor { get; set; }
 
 		/// <summary>
+		/// If true, the dialog can be moved by dragging its title bar. It cannot be moved
+		/// outside of its parent.
+		/// </summary>
+		public bool Draggable { get; set; }
+
+		/// <summary>
 		/// The dialog's maximum size. If the dialog preferred size is bigger than this size,
 		/// the dialog will be decreased in size to fit. If either axis is zero, the dialog
 		/// gets its preferred size in that axis, at least the value in Size.
@@ -151,6 +157,7 @@ namespace PeterHan.PLib.UI {
 				Margin = new RectOffset(6, 6, 6, 6)
 			};
 			DialogBackColor = PUITuning.Colors.ButtonBlueStyle.inactiveColor;
+			Draggable = false;
 			buttons = new List<DialogButton>(4);
 			MaxSize = Vector2.zero;
 			Name = name ?? "Dialog";
@@ -289,6 +296,9 @@ namespace PeterHan.PLib.UI {
 			var titleBG = title.AddOrGet<Image>();
 			titleBG.sprite = PUITuning.Images.BoxBorder;
 			titleBG.type = Image.Type.Sliced;
+			// Allow the dialog to be moved by dragging the title bar
+			if (Draggable)
+				title.AddComponent<PDialogDragHandle>().Target = layout.rectTransform();
 			// Close button
 			layout.AddComponent(new PButton(DIALOG_KEY_CLOSE) {
 				Sprite = PUITuning.Images.Close, Margin = CLOSE_ICON_MARGIN, OnClick = onClose,
