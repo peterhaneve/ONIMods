@@ -61,11 +61,12 @@ namespace PeterHan.MismatchedFinder {
 		private void OnFindMismatched() {
 			var enet = GetNetwork();
 			if (wire != null && enet != null) {
-				var wattageRating = wire.MaxWattageRating;
+				float wattageRating = Wire.GetMaxWattageAsFloat(wire.MaxWattageRating);
 				// Just locate the first wire with a mismatched wattage that is less than
 				// this wire and select it
 				foreach (var badWire in enet.allWires)
-					if (badWire.MaxWattageRating < wattageRating && badWire != wire) {
+					if (Wire.GetMaxWattageAsFloat(badWire.MaxWattageRating) < wattageRating &&
+							badWire != wire) {
 						PGameUtils.CenterAndSelect(badWire);
 						break;
 					}

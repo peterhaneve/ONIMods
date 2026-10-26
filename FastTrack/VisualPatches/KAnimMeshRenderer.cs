@@ -137,10 +137,18 @@ namespace PeterHan.FastTrack.VisualPatches {
 				var key = __instance.key;
 				var inst = KAnimBatchManager.Instance();
 				if (inst != null && inst.batchSets.Remove(key)) {
-					// Destroy from the batch manager
-					var toPurge = key.materialType == MaterialType.UI ? inst.uiBatchSets :
-						inst.culledBatchSetInfos;
+					// Destroy from the batch manager; unfortunately it is no longer possible
+					// to determine which set the batch occupies, as the IAnimConverter has
+					// been lost to determine if it was always visible
+					var toPurge = inst.uiBatchSets;
 					int n = toPurge.Count;
+					for (int i = 0; i < n; i++)
+						if (toPurge[i].batchSet == __instance) {
+							toPurge.RemoveAt(i);
+							break;
+						}
+					toPurge = inst.culledBatchSetInfos;
+					n = toPurge.Count;
 					for (int i = 0; i < n; i++)
 						if (toPurge[i].batchSet == __instance) {
 							toPurge.RemoveAt(i);
