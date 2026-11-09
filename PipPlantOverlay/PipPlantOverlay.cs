@@ -84,7 +84,7 @@ namespace PeterHan.PipPlantOverlay {
 		/// <summary>
 		/// The target plants that are visible on screen.
 		/// </summary>
-		private readonly ICollection<Uprootable> layerTargets;
+		private readonly HybridListHashSet<Uprootable> layerTargets;
 
 		/// <summary>
 		/// The partitioner used to selectively iterate plants.
@@ -99,7 +99,7 @@ namespace PeterHan.PipPlantOverlay {
 		/// <summary>
 		/// A collection of all prefab IDs that are considered valid plants.
 		/// </summary>
-		private readonly ICollection<Tag> plants;
+		private readonly HashSet<Tag> plants;
 
 		/// <summary>
 		/// The types of objects that can be selected in the overlay.
@@ -126,7 +126,7 @@ namespace PeterHan.PipPlantOverlay {
 			conditions = new[] {
 				new OverlayModes.ColorHighlightCondition(GetHighlightColor, ShouldHighlight)
 			};
-			layerTargets = new HashSet<Uprootable>();
+			layerTargets = new HybridListHashSet<Uprootable>(128);
 			InitDefaultFilters();
 			Instance = this;
 			pipPlantLegend = new List<LegendEntry>
@@ -166,7 +166,6 @@ namespace PeterHan.PipPlantOverlay {
 
 		public override void Enable() {
 			var camera = Camera.main;
-			base.Enable();
 			RegisterSaveLoadListeners();
 			partition = PopulatePartition<Uprootable>(plants);
 			CameraController.Instance.ToggleColouredOverlayView(true);
@@ -214,22 +213,17 @@ namespace PeterHan.PipPlantOverlay {
 
 		protected override void OnSaveLoadRootRegistered(SaveLoadRoot root) {
 			// Add new plants to partitioner
-			var tag = root.GetComponent<KPrefabID>().GetSaveLoadTag();
-			if (plants.Contains(tag)) {
-				var uprootable = root.GetComponent<Uprootable>();
-				if (uprootable != null)
-					partition.Add(uprootable);
-			}
+			if (root.TryGetComponent(out KPrefabID id) && plants.Contains(
+					id.GetSaveLoadTag()) && root.TryGetComponent(out Uprootable uprootable))
+				partition.Add(uprootable);
 		}
 
 		protected override void OnSaveLoadRootUnregistered(SaveLoadRoot root) {
 			// Remove plants from partitioner if they die
-			if (root != null && root.gameObject != null) {
-				var uprootable = root.GetComponent<Uprootable>();
-				if (uprootable != null) {
-					layerTargets.Remove(uprootable);
-					partition.Remove(uprootable);
-				}
+			if (root != null && root.gameObject != null && root.TryGetComponent(
+					out Uprootable uprootable)) {
+				layerTargets.Remove(uprootable);
+				partition.Remove(uprootable);
 			}
 		}
 
@@ -298,20 +292,19 @@ namespace PeterHan.PipPlantOverlay {
 			Grid.GetVisibleExtents(out var min, out var max);
 			int x1 = min.x, x2 = max.x, y1 = min.y, y2 = max.y;
 			// Refresh plant list with plants on the screen
-			RemoveOffscreenTargets(layerTargets, min, max, null);
 			partition.GetAllIntersecting(new Vector2(x1, y1), new Vector2(x2, y2),
 				intersecting);
 			foreach (var uprootable in intersecting)
 				AddTargetIfVisible(uprootable, min, max, layerTargets, targetLayer);
+			intersecting.Recycle();
 			for (int y = y1; y <= y2; y++)
 				for (int x = x1; x <= x2; x++) {
 					int cell = Grid.XYToCell(x, y);
 					if (Grid.IsValidCell(cell))
 						cells[cell] = PipPlantOverlayTests.CheckCell(cell);
 				}
-			UpdateHighlightTypeOverlay(min, max, layerTargets, plants, conditions,
+			RemoveOffscreenAndUpdateHighlights(min, max, layerTargets, conditions,
 				OverlayModes.BringToFrontLayerSetting.Constant, targetLayer);
-			intersecting.Recycle();
 		}
 
 		public override HashedString ViewMode() {

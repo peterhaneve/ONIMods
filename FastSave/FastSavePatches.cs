@@ -22,8 +22,12 @@ using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
 using PeterHan.PLib.Options;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Reflection.Emit;
 using UnityEngine;
 using UnityEngine.Rendering;
+
+using TranspiledMethod = System.Collections.Generic.IEnumerable<HarmonyLib.CodeInstruction>;
 
 namespace PeterHan.FastSave {
 	/// <summary>
@@ -207,34 +211,30 @@ namespace PeterHan.FastSave {
 		[HarmonyPatch(typeof(RetiredColonyInfoScreen), "ConfigureGraph")]
 		public static class RetiredColonyInfoScreen_ConfigureGraph_Patch {
 			/// <summary>
-			/// Applied after ConfigureGraph runs.
+			/// Finds the first valid day for the graph.
 			/// </summary>
-			internal static void Postfix(RetiredColonyData.RetiredColonyStatistic statistic,
-					Dictionary<string, GameObject> ___activeColonyWidgets,
-					Dictionary<string, Color> ___statColors) {
-				var ri = ReportManager.Instance;
-				var reports = (ri == null) ? null : ri.reports;
-				if (___activeColonyWidgets.TryGetValue(statistic.name, out var obj)) {
-					// Find first remaining report's cycle index
-					int minReport = (reports == null || reports.Count < 1) ? 0 : reports[0].
-						day;
-					var graph = obj.GetComponentInChildren<GraphBase>();
-					var lineLayer = obj.GetComponentInChildren<LineLayer>();
-					if (graph != null && lineLayer != null) {
-						// Update the graph min X value to that cycle #
-						graph.axis_x.min_value = minReport;
-						graph.RefreshGuides();
-						lineLayer.ClearLines();
-						// Recreate the line with the correct scale
-						var graphedLine = lineLayer.NewLine(statistic.value, statistic.id);
-						var lineFormatting = lineLayer.line_formatting;
-						int lastIndex = lineFormatting.Length - 1;
-						// Reassign the color (yes lots of duplicate work but a transpiler
-						// would be super annoying)
-						if (___statColors.TryGetValue(statistic.id, out Color color))
-							lineFormatting[lastIndex].color = color;
-						graphedLine.line_renderer.color = lineFormatting[lastIndex].color;
-					}
+			/// <returns>The actual first report day.</returns>
+			private static float RealLineStart(float _) {
+				var reports = ReportManager.Instance?.reports;
+				// Find first remaining report's cycle index
+				return (reports == null || reports.Count < 1) ? 0.0f : (float)reports[0].day;
+			}
+
+			/// <summary>
+			/// Transpiles ConfigureGraph to reset the minimum X axis value to the first valid
+			/// report.
+			/// </summary>
+			internal static TranspiledMethod Transpiler(TranspiledMethod instructions) {
+				var targetField = typeof(GraphAxis).GetFieldSafe(nameof(GraphAxis.min_value),
+					false);
+				var insertion = typeof(RetiredColonyInfoScreen_ConfigureGraph_Patch).
+					GetMethodSafe(nameof(RealLineStart), true, PPatchTools.AnyArguments);
+				foreach (var instr in instructions) {
+					// Replace the minimum X value
+					if (instr.opcode == OpCodes.Stfld && instr.operand is FieldInfo field &&
+							field == targetField)
+						yield return new CodeInstruction(OpCodes.Call, insertion);
+					yield return instr;
 				}
 			}
 		}

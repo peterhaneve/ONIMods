@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using System;
 using TTS = PeterHan.ThermalTooltips.ThermalTooltipsStrings.UI.THERMALTOOLTIPS;
 
 namespace PeterHan.ThermalTooltips {
@@ -39,15 +38,16 @@ namespace PeterHan.ThermalTooltips {
 		/// </summary>
 		/// <param name="effectsPane">The pane to modify.</param>
 		/// <param name="elementTag">The element that is selected.</param>
-		public void AddThermalInfo(DescriptorPanel effectsPane, Tag elementTag) {
+		/// <returns>true if </returns>
+		public bool AddThermalInfo(DescriptorPanel effectsPane, Tag elementTag) {
 			var element = ElementLoader.GetElement(elementTag);
 			var desc = default(Descriptor);
-			var descriptors = GameUtil.GetMaterialDescriptors(elementTag);
-			// GetMaterialDescriptors returns a fresh list
+			bool hasDescriptors = false;
+			var descriptors = ListPool<Descriptor, BuildThermalTooltip>.Allocate();;
 			desc.SetupDescriptor(STRINGS.ELEMENTS.MATERIAL_MODIFIERS.EFFECTS_HEADER,
 				STRINGS.ELEMENTS.MATERIAL_MODIFIERS.TOOLTIP.EFFECTS_HEADER);
-			if (descriptors.Count > 0)
-				descriptors.Insert(0, desc);
+			descriptors.Add(desc);
+			GameUtil.CollectMaterialDescriptors(elementTag, descriptors);
 			if (element != null && Def != null) {
 				// Get building mass from its def (primary element is in slot 0)
 				var masses = Def.Mass;
@@ -58,9 +58,6 @@ namespace PeterHan.ThermalTooltips {
 					Length > 0 ? masses[0] : 0.0f), tMass = GameUtil.GetDisplaySHC(mass * shc);
 				string deg = GameUtil.GetTemperatureUnitSuffix().Trim(), kDTU = STRINGS.UI.
 					UNITSUFFIXES.HEAT.KDTU.text?.Trim();
-				// Display effects even on tags with no descriptors if possible
-				if (descriptors.Count == 0)
-					descriptors.Add(desc);
 				// Thermal Conductivity
 				desc.SetupDescriptor(string.Format(TTS.EFFECT_CONDUCTIVITY, tc),
 					string.Format(TTS.BUILDING_CONDUCTIVITY, name, GameUtil.
@@ -84,10 +81,11 @@ namespace PeterHan.ThermalTooltips {
 				}
 			}
 			if (descriptors.Count > 0) {
-				effectsPane.gameObject.SetActive(true);
 				effectsPane.SetDescriptors(descriptors);
-			} else
-				effectsPane.gameObject.SetActive(false);
+				hasDescriptors = true;
+			}
+			descriptors.Recycle();
+			return hasDescriptors;
 		}
 
 		/// <summary>

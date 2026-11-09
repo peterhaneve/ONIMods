@@ -104,13 +104,14 @@ namespace PeterHan.ThermalTooltips {
 			/// Applied before SetEffects runs.
 			/// </summary>
 			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix(MaterialSelector __instance, Tag element) {
+			internal static bool Prefix(MaterialSelector __instance, Tag element,
+					ref bool __result) {
 				var inst = buildingInstance;
 				var effectsPane = __instance.MaterialEffectsPane;
 				bool hasInfo = inst != null && __instance.selectorIndex == 0 && __instance.
 					MaterialDescriptionPane != null && effectsPane != null;
 				if (hasInfo)
-					inst.AddThermalInfo(effectsPane, element);
+					__result = inst.AddThermalInfo(effectsPane, element);
 				return !hasInfo;
 			}
 		}
