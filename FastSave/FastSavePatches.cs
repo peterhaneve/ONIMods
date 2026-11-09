@@ -20,6 +20,7 @@ using HarmonyLib;
 using PeterHan.PLib.AVC;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.Database;
+using PeterHan.PLib.Detours;
 using PeterHan.PLib.Options;
 using System.Collections.Generic;
 using System.Reflection;
@@ -34,6 +35,12 @@ namespace PeterHan.FastSave {
 	/// Patches which will be applied via annotations for Fast Save.
 	/// </summary>
 	public sealed class FastSavePatches : KMod.UserMod2 {
+		// TODO Remove when versions older than U59-744825 no longer need to be supported
+		private delegate void SaveColonyPreview(Timelapser instance, string filename);
+
+		private static readonly SaveColonyPreview SAVE_PREVIEW = typeof(Timelapser).
+			Detour<SaveColonyPreview>();
+
 		/// <summary>
 		/// Waits in a coroutine for the GPU to complete uploading the timelapse image, and
 		/// then starts a background task to save it.
@@ -125,7 +132,7 @@ namespace PeterHan.FastSave {
 						var t = Game.Instance.timelapser;
 						// Save in the background
 						if (t != null)
-							t.SaveColonyPreview(filename);
+							SAVE_PREVIEW(t, filename);
 						bi.StartSave(filename);
 						yield return null;
 						RetireColonyUtility.SaveColonySummaryData();
