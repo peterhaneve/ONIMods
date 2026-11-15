@@ -29,15 +29,6 @@ namespace PeterHan.StockBugFix {
 	[RestartRequired]
 	public sealed class StockBugFixOptions : SingletonOptions<StockBugFixOptions> {
 		/// <summary>
-		/// If true, tepidizer pulsing will be allowed to heat material past the intended
-		/// temperature. Some builds rely on this.
-		/// </summary>
-		[Option("Allow Tepidizer Pulsing", "Allow the Liquid Tepidizer to be pulsed rapidly to increase its temperature beyond its usual limits.")]
-		[RequireVersion(731233, false)]
-		[JsonProperty]
-		public bool AllowTepidizerPulsing { get; set; }
-
-		/// <summary>
 		/// If true, overheat temperature patches will be applied.
 		/// </summary>
 		[Option("Fix Overheat Temperatures", "Adds missing overheat temperatures to some buildings, and\r\nremoves it from other buildings where it does not make sense.")]
@@ -75,7 +66,6 @@ namespace PeterHan.StockBugFix {
 		public StoreFoodCategory StoreFoodChoreType { get; set; }
 
 		public StockBugFixOptions() {
-			AllowTepidizerPulsing = false;
 			DelayModsMenu = true;
 			FixOverheat = true;
 			FixTraits = true;
@@ -84,9 +74,9 @@ namespace PeterHan.StockBugFix {
 		}
 
 		public override string ToString() {
-			return "StockBugFixOptions[allowTepidizer={1},fixOverheat={0},foodChoreType={2},fixTraits={3},delayModsMenu={4},minOutput={5}]".F(
-				FixOverheat, AllowTepidizerPulsing, StoreFoodChoreType,
-				FixTraits, DelayModsMenu, MinOutputTemperature);
+			return "StockBugFixOptions[fixOverheat={0},foodChoreType={1},fixTraits={2},delayModsMenu={3},minOutput={4}]".F(
+				FixOverheat, StoreFoodChoreType, FixTraits, DelayModsMenu,
+				MinOutputTemperature);
 		}
 	}
 

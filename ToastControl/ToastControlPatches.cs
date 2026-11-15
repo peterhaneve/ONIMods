@@ -103,13 +103,15 @@ namespace PeterHan.ToastControl {
 			"GunkEmptier+Instance:AddDisseaseToWorker",
 			"GunkMonitor+Instance:ExpellGunk",
 			"Klei.AI.AttributeLevel:LevelUp",
+			// TODO Remove when versions prior to U60-761015 no longer need to be supported
 			"MaterialSelector:AutoSelectAvailableMaterial",
+			"MaterialSelector:AutoSelectAvailableMaterialInternal",
 			"MinionResume:OnSkillPointGained",
 			"MopTool:OnDragTool",
 			"SandboxSampleTool:OnLeftClickDown",
 			"SeekAndInstallBionicUpgradeChore:InstallUpgrade",
 			"SuperProductive+<>c:<InitializeStates>b__3_0",
-			"Telepad+StatesInstance:SpawnExtraPowerBanks", // 2 hits
+			"Telepad+StatesInstance+<SpawnExtraPowerBanks>d__3:MoveNext", // 2 hits
 			"Toilet:FlushMultiple",
 			"ToiletWorkableUse:OnCompleteWork",
 			"UtilityBuildTool:ApplyPathToConduitSystem",
@@ -149,7 +151,9 @@ namespace PeterHan.ToastControl {
 			"SlipperyMonitor+SlipReactable:ApplyStress",
 			"SlipperyMonitor+SlipReactable:InternalBegin",
 			"SolidConsumerMonitor+Instance:OnEatSolidComplete",
-			"VomitChore+States+<>c:<InitializeStates>b__7_4"
+			// TODO Remove when versions prior to U60-761015 no longer need to be supported
+			"VomitChore+States+<>c:<InitializeStates>b__7_4",
+			"VomitChore+States+<>c:<InitializeStates>b__7_5"
 		};
 
 		/// <summary>

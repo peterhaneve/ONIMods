@@ -103,7 +103,7 @@ namespace PeterHan.ToastControl {
 			{ "SolidConsumerMonitor+Instance", ShowElementRemoved },
 			{ nameof(Storage), ShowItemStored },
 			{ nameof(SuperProductive), ShowOverjoyed },
-			{ nameof(Telepad), ShowItemGained },
+			{ "Telepad+StatesInstance+<SpawnExtraPowerBanks>d__3", ShowItemGained },
 			{ nameof(Toilet), ShowGermsAdded },
 			{ nameof(ToiletWorkableUse), ShowRadiationRemoved },
 			{ nameof(UtilityBuildTool), (c, t) => Options.InvalidConnection },

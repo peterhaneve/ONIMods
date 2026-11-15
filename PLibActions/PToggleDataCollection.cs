@@ -56,14 +56,10 @@ namespace PeterHan.PLib.Actions {
 		}
 
 		internal PToggleDataCollection(ICollection<PToolMode> options) {
-			int i = 0, n = options.Count;
-			initialStates = new Dictionary<string, ToolParameterMenu.ToggleState>(n);
-			toggles = new PToggleData[n];
-			// Add to Klei format, yes it loses the order but it means less of a mess
-			foreach (var option in toggles)
-				initialStates.Add(option.Name, option.State);
+			int i = 0;
+			toggles = new PToggleData[options.Count];
 			foreach (var option in options)
-				toggles[i++] = new PToggleData(option, initialStates);
+				toggles[i++] = new PToggleData(option);
 		}
 
 		/// <summary>
@@ -71,25 +67,12 @@ namespace PeterHan.PLib.Actions {
 		/// initialization methods.
 		/// </summary>
 		/// <returns>An array of Klei ToggleData objects matching the toggle states of this collection.</returns>
-		internal object GetToggleDataArray() {
-			var arrayElementType = PToolModeCompatibility.TOGGLE_DATA;
-			if (arrayElementType == null)
-				throw new ArgumentNullException("New method used on previous game version");
+		internal ToolParameterMenu.ToggleData[] GetToggleDataArray() {
 			int n = toggles.Length;
-			var result = Array.CreateInstance(arrayElementType, n);
+			var result = new ToolParameterMenu.ToggleData[n];
 			for (int i = 0; i < n; i++)
-				result.SetValue(toggles[i].backing, i);
+				result[i] = toggles[i].backing;
 			return result;
-		}
-
-		/// <summary>
-		/// Creates a dictionary of raw initial toggle states to pass to legacy tool menu
-		/// initialization methods.
-		/// 
-		/// TODO Remove when versions before U58-719533 no longer need to be supported
-		/// </summary>
-		internal Dictionary<string, ToolParameterMenu.ToggleState> GetToggleDataDictionary() {
-			return initialStates;
 		}
 	}
 }

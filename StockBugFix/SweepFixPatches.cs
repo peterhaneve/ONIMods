@@ -40,7 +40,7 @@ namespace PeterHan.StockBugFix {
 		/// <summary>
 		/// The SortedClearable class required for fixing the comparator.
 		/// </summary>
-		private static readonly Type SORTED_CLEARABLE = PPatchTools.GetTypeSafe(
+		private static readonly Type SC = PPatchTools.GetTypeSafe(
 			"ClearableManager")?.GetNestedType("SortedClearable", METHOD_FLAGS);
 
 		/// <summary>
@@ -56,6 +56,25 @@ namespace PeterHan.StockBugFix {
 				toAdd.interruptPriority = TOP_PRIORITY_IRQ;
 			chores.Add(toAdd);
 		}
+		
+		/// <summary>
+		/// Manually applies the patch to fix Yellow Alert sweep errands being categorized as
+		/// priority 0.
+		/// </summary>
+		/// <param name="harmony"></param>
+		internal static void ApplyTopPriorityPatch(Harmony harmony) {
+			if (SC != null) {
+				var target = SC.GetNestedType("<>c", METHOD_FLAGS)?.GetMethodSafe(
+					"<.cctor>b__5_0", false, SC, SC) ?? SC.GetNestedType("Comparer",
+					METHOD_FLAGS)?.GetMethodSafe(nameof(IComparer<int>.Compare), false, SC, SC);
+				if (target == null)
+					PUtil.LogWarning("Unable to patch Top Priority sweep errands");
+				else
+					harmony.Patch(target, transpiler: new HarmonyMethod(typeof(SweepFixPatches),
+						nameof(TranspileClearComparer)));
+			} else
+				PUtil.LogWarning("SortedClearable type not found");
+		}
 
 		[PLibMethod(RunAt.AfterDbInit)]
 		internal static void AfterDbInit() {
@@ -65,9 +84,13 @@ namespace PeterHan.StockBugFix {
 		/// <summary>
 		/// Transpiles the SortedClearable sorting method to properly use the priority class.
 		/// </summary>
-		private static void TranspileClearComparer(List<CodeInstruction> method,
-				ILGenerator generator) {
-			var mp = SORTED_CLEARABLE.GetFieldSafe("masterPriority", false);
+		/// <param name="method">The method to transile.</param>
+		/// <param name="generator">The IL generator to use for label generation.</param>
+		/// <returns>The transpiled method.</returns>
+		private static IEnumerable<CodeInstruction> TranspileClearComparer(
+				IEnumerable<CodeInstruction> instr, ILGenerator generator) {
+			var method = new List<CodeInstruction>(instr);
+			var mp = SC.GetFieldSafe("masterPriority", false);
 			var pc = typeof(PrioritySetting).GetFieldSafe(nameof(PrioritySetting.
 				priority_class), false);
 			if (mp == null || pc == null)
@@ -110,6 +133,7 @@ namespace PeterHan.StockBugFix {
 					new CodeInstruction(OpCodes.Pop)
 				});
 			}
+			return method;
 		}
 
 		/// <summary>
@@ -140,33 +164,6 @@ namespace PeterHan.StockBugFix {
 				return PPatchTools.ReplaceMethodCallSafe(method, srcMethod,
 					typeof(SweepFixPatches).GetMethodSafe(nameof(AddAndFixPriority), true,
 					listType, argType));
-			}
-		}
-
-		/// <summary>
-		/// Applied to ClearableManager to sort swept items with Top Priority ahead of other
-		/// swept items.
-		/// </summary>
-		[HarmonyPatch]
-		public static class ClearableManager_Compare_Patch {
-			/// <summary>
-			/// Finds the private class and method to patch.
-			/// </summary>
-			internal static MethodBase TargetMethod() {
-				if (SORTED_CLEARABLE == null)
-					throw new InvalidOperationException("SortedClearable type not found");
-				return SORTED_CLEARABLE.GetNestedType("Comparer", METHOD_FLAGS)?.GetMethodSafe(
-					nameof(IComparer<int>.Compare), false, SORTED_CLEARABLE, SORTED_CLEARABLE);
-			}
-
-			/// <summary>
-			/// Transpiles Compare to sort chores with higher priority classes to the top.
-			/// </summary>
-			internal static IEnumerable<CodeInstruction> Transpiler(ILGenerator generator,
-					IEnumerable<CodeInstruction> method) {
-				var allInstr = new List<CodeInstruction>(method);
-				TranspileClearComparer(allInstr, generator);
-				return allInstr;
 			}
 		}
 

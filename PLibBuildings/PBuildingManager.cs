@@ -17,11 +17,14 @@
  */
 
 using HarmonyLib;
+using Klei.AI;
 using PeterHan.PLib.Core;
 using PeterHan.PLib.PatchManager;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using static ElementConverter;
+using static ResearchTypes;
 
 namespace PeterHan.PLib.Buildings {
 	/// <summary>
@@ -169,12 +172,12 @@ namespace PeterHan.PLib.Buildings {
 
 			// Non essential, do not crash on fail
 			try {
-				plibInstance.Patch(typeof(BuildingTemplates), nameof(BuildingTemplates.
-					CreateBuildingDef), postfix: PatchMethod(nameof(
-					CreateBuildingDef_Postfix)));
-				plibInstance.Patch(typeof(EquipmentTemplates), nameof(EquipmentTemplates.
-					CreateEquipmentDef), postfix: PatchMethod(nameof(
-					CreateEquipmentDef_Postfix)));
+				plibInstance.Patch(typeof(BuildingTemplates).GetOverloadWithMostArguments(
+					nameof(BuildingTemplates.CreateBuildingDef), true, typeof(string)),
+					postfix: PatchMethod(nameof(CreateBuildingDef_Postfix)));
+				plibInstance.Patch(typeof(EquipmentTemplates).GetOverloadWithMostArguments(
+					nameof(EquipmentTemplates.CreateEquipmentDef), true, typeof(string)),
+					postfix: PatchMethod(nameof(CreateEquipmentDef_Postfix)));
 			} catch (Exception e) {
 #if DEBUG
 				PUtil.LogExcWarn(e);

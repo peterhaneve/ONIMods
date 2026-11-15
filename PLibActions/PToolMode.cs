@@ -19,7 +19,6 @@
 using PeterHan.PLib.Core;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace PeterHan.PLib.Actions {
 	/// <summary>
@@ -34,13 +33,10 @@ namespace PeterHan.PLib.Actions {
 		/// <returns>A list of tool options that store the real time state of each mode.</returns>
 		public static PToggleDataCollection CreateMenu(ToolParameterMenu menu,
 				ICollection<PToolMode> options) {
-			var compat = PToolModeCompatibility.Instance;
 			if (options == null)
 				throw new ArgumentNullException(nameof(options));
-			compat.LazyInitializeCompatibility();
 			var toggles = new PToggleDataCollection(options);
-			compat.InvokePopulateMenu(menu, compat.UseNewWrapper ? toggles.
-				GetToggleDataArray() : toggles.GetToggleDataDictionary());
+			menu.PopulateMenu(toggles.GetToggleDataArray());
 			return toggles;
 		}
 
@@ -53,20 +49,12 @@ namespace PeterHan.PLib.Actions {
 		[Obsolete("Use CreateMenu instead")]
 		public static IDictionary<string, ToolParameterMenu.ToggleState> PopulateMenu(
 				ToolParameterMenu menu, ICollection<PToolMode> options) {
-			var compat = PToolModeCompatibility.Instance;
 			IDictionary<string, ToolParameterMenu.ToggleState> kOpt;
 			if (options == null)
 				throw new ArgumentNullException(nameof(options));
-			compat.LazyInitializeCompatibility();
 			var toggles = new PToggleDataCollection(options);
-			if (compat.UseNewWrapper) {
-				kOpt = new ToolMenuDictionary(toggles);
-				compat.InvokePopulateMenu(menu, toggles.GetToggleDataArray());
-			} else {
-				// TODO Remove when versions before U58-719533 no longer need to be supported
-				kOpt = toggles.GetToggleDataDictionary();
-				compat.InvokePopulateMenu(menu, kOpt);
-			}
+			kOpt = new ToolMenuDictionary(toggles);
+			menu.PopulateMenu(toggles.GetToggleDataArray());
 			return kOpt;
 		}
 
@@ -136,72 +124,6 @@ namespace PeterHan.PLib.Actions {
 
 		public override string ToString() {
 			return "{0} ({1})".F(Key, Title);
-		}
-	}
-
-	/// <summary>
-	/// Checks which game version is being used and handles compatibility with the wrapper for
-	/// previous versions of PLib.
-	/// </summary>
-	internal sealed class PToolModeCompatibility {
-		/// <summary>
-		/// The singleton instance of this class.
-		/// </summary>
-		public static PToolModeCompatibility Instance { get; } = new PToolModeCompatibility();
-
-		internal static readonly Type TOGGLE_DATA = PPatchTools.GetTypeSafe(
-			nameof(ToolParameterMenu.ToggleData));
-
-		internal bool UseNewWrapper => TOGGLE_DATA != null;
-		
-		private volatile bool compatibilityProbed;
-
-		private FieldInfo getState;
-
-		private MethodInfo populateMenu;
-
-		internal PToolModeCompatibility() {
-			compatibilityProbed = false;
-			getState = null;
-			populateMenu = null;
-		}
-
-		internal void InvokePopulateMenu(ToolParameterMenu menu, object parameter) {
-			populateMenu?.Invoke(menu, new object[] { parameter });
-		}
-
-		internal ToolParameterMenu.ToggleState GetState(object kToggleData) {
-			var result = ToolParameterMenu.ToggleState.Off;
-			if (kToggleData == null)
-				throw new ArgumentNullException(nameof(kToggleData));
-			if (getState == null)
-				throw new ArgumentException("Not initialized");
-			if (getState.GetValue(kToggleData) is ToolParameterMenu.ToggleState toggleState)
-				result = toggleState;
-			return result;
-		}
-
-		/// <summary>
-		/// When first used, probes for the compatibility mode to use on ToolParameterMenu and
-		/// sets the correct 
-		/// </summary>
-		internal void LazyInitializeCompatibility() {
-			lock (this) {
-				if (!compatibilityProbed) {
-					MethodInfo target = null;
-					var targets = typeof(ToolParameterMenu).GetMethods(PPatchTools.BASE_FLAGS |
-						BindingFlags.Instance);
-					foreach (var method in targets)
-						if (method.Name == nameof(ToolParameterMenu.PopulateMenu)) {
-							target = method;
-							break;
-						}
-					populateMenu = target;
-					getState = TOGGLE_DATA?.GetFieldSafe(nameof(ToolParameterMenu.
-						ToggleData.state), false);
-					compatibilityProbed = true;
-				}
-			}
 		}
 	}
 }

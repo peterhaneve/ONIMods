@@ -64,11 +64,13 @@ namespace PeterHan.StockBugFix {
 		/// while carrying the item).
 		/// 
 		/// The target is in an annoying compiler generated class:
-		/// System.Void ChoreDriver/States::<InitializeStates>b__6_3(ChoreDriver/StatesInstance,System.Single)
+		/// System.Void ChoreDriver/States::<InitializeStates>b__7_3(ChoreDriver/StatesInstance,System.Single)
 		/// </summary>
 		/// <param name="instance">The Harmony instance to use for patching.</param>
 		private static void FixLongCommutes(Harmony instance) {
 			var targetMethod = typeof(ChoreDriver.States).GetMethodSafe(
+				"<InitializeStates>b__7_3", false, typeof(ChoreDriver.StatesInstance),
+				typeof(float)) ?? typeof(ChoreDriver.States).GetMethodSafe(
 				"<InitializeStates>b__6_3", false, typeof(ChoreDriver.StatesInstance),
 				typeof(float));
 			if (targetMethod == null)
@@ -287,6 +289,7 @@ namespace PeterHan.StockBugFix {
 		public override void OnLoad(Harmony instance) {
 			base.OnLoad(instance);
 			PUtil.InitLibrary();
+			SweepFixPatches.ApplyTopPriorityPatch(instance);
 			var pm = new PPatchManager(instance);
 			pm.RegisterPatchClass(typeof(StockBugsPatches));
 			pm.RegisterPatchClass(typeof(SweepFixPatches));
@@ -568,6 +571,10 @@ namespace PeterHan.StockBugFix {
 	/// </summary>
 	[HarmonyPatch(typeof(MultipleRenderTargetProxy), "CreateRenderTarget")]
 	public static class MultipleRenderTargetProxy_CreateRenderTarget_Patch {
+		internal static bool Prepare() {
+			return PUtil.GameVersion < 761015U;
+		}
+
 		/// <summary>
 		/// Applied before CreateRenderTarget runs.
 		/// </summary>
@@ -675,98 +682,6 @@ namespace PeterHan.StockBugFix {
 		internal static void Postfix(SolidTransferArm __instance) {
 			if (__instance != null && __instance.TryGetComponent(out Storage storage))
 				storage.SetDefaultStoredItemModifiers(Storage.StandardSealedStorage);
-		}
-	}
-
-	/// <summary>
-	/// Applied to SpaceHeater to fix Tepidizer target temperature area being too large.
-	/// 
-	/// TODO Remove when versions older than U59-731233 no longer need to be supported
-	/// </summary>
-	[HarmonyPatch(typeof(SpaceHeater), "MonitorHeating")]
-	public static class SpaceHeater_MonitorHeating_Patch {
-		/// <summary>
-		/// Allow this patch to be turned off in the config.
-		/// </summary>
-		internal static bool Prepare() {
-			return PUtil.GameVersion < 731233U && !StockBugFixOptions.Instance.
-				AllowTepidizerPulsing;
-		}
-
-		/// <summary>
-		/// Transpiles MonitorHeating to replace the GetNonSolidCells call with one that
-		/// only uses the appropriate building cells.
-		/// </summary>
-		internal static TranspiledMethod Transpiler(TranspiledMethod method) {
-			var instructions = new List<CodeInstruction>(method);
-			var targetMethod = typeof(GameUtil).GetMethodSafe("GetNonSolidCells",
-				true, typeof(int), typeof(int), typeof(List<int>));
-			int targetIndex = -1, n = instructions.Count;
-			for (int i = 0; i < n; i++)
-				if (instructions[i].Is(OpCodes.Call, targetMethod)) {
-					targetIndex = i;
-					break;
-				}
-			if (targetIndex == -1)
-				PUtil.LogWarning("Target method GetNonSolidCells not found.");
-			else {
-				instructions[targetIndex].operand = typeof(SpaceHeater_MonitorHeating_Patch).
-					GetMethodSafe(nameof(GetValidBuildingCells), true, typeof(int),
-					typeof(int), typeof(List<int>), typeof(Component));
-				instructions.Insert(targetIndex, new CodeInstruction(OpCodes.Ldarg_0));
-#if DEBUG
-				PUtil.LogDebug("Patched SpaceHeater.MonitorHeating");
-#endif
-			}
-			return instructions;
-		}
-
-		/// <summary>
-		/// Correctly fill cells with the building placement cells according to the same
-		/// conditions as GetNonSolidCells.
-		/// </summary>
-		/// <param name="cell">Unused, kept for compatibility.</param>
-		/// <param name="radius">Unused, kept for compatibility.</param>
-		/// <param name="cells">List of building cells matching conditions.</param>
-		/// <param name="component">Caller of the method.</param>
-		internal static void GetValidBuildingCells(int cell, int radius, List<int> cells,
-				Component component) {
-			var building = component.GetComponent<Building>();
-			_ = cell;
-			_ = radius;
-			foreach (int targetCell in building.PlacementCells)
-				if (Grid.IsValidCell(targetCell) && !Grid.Solid[targetCell] &&
-						!Grid.DupePassable[targetCell])
-					cells.Add(targetCell);
-		}
-	}
-
-	/// <summary>
-	/// Applied to SpaceHeater.States to fix the tepidizer pulsing and reload bug.
-	/// </summary>
-	[HarmonyPatch(typeof(SpaceHeater.States), nameof(SpaceHeater.States.InitializeStates))]
-	public static class SpaceHeater_States_InitializeStates_Patch {
-		/// <summary>
-		/// Allow this patch to be turned off in the config.
-		/// </summary>
-		internal static bool Prepare() {
-			return PUtil.GameVersion < 731233U && !StockBugFixOptions.Instance.
-				AllowTepidizerPulsing;
-		}
-
-		/// <summary>
-		/// Applied after InitializeStates runs.
-		/// </summary>
-		internal static void Postfix(SpaceHeater.States __instance) {
-			var online = __instance.online;
-			var onUpdate = online.updateActions;
-			foreach (var action in onUpdate)
-				if (action.updater is UpdateBucketWithUpdater<SpaceHeater.StatesInstance>.
-						IUpdater updater)
-					// dt is not used by the handler!
-					online.Enter("CheckOverheatOnStart", (smi) => updater.Update(smi, 0.0f));
-			if (onUpdate.Count <= 0)
-				PUtil.LogWarning("No SpaceHeater update handler found");
 		}
 	}
 

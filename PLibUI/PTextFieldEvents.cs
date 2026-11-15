@@ -16,7 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.Detours;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -26,12 +25,6 @@ namespace PeterHan.PLib.UI {
 	/// A class instance that handles events for text fields.
 	/// </summary>
 	internal sealed class PTextFieldEvents : KScreen {
-		// TODO Remove when versions before U57-716056 no longer need to be supported
-		private delegate void DeactivateInputField(TMP_InputField instance);
-
-		private static readonly DeactivateInputField DEACTIVATE_INPUT = typeof(TMP_InputField).
-			Detour<DeactivateInputField>();
-
 		/// <summary>
 		/// The action to trigger on text change. It is passed the realized source object.
 		/// </summary>
@@ -159,7 +152,7 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		private void StopEditing() {
 			if (textEntry != null && textEntry.gameObject.activeInHierarchy)
-				DEACTIVATE_INPUT.Invoke(textEntry);
+				textEntry.DeactivateInputField(false);
 			editing = false;
 		}
 	}

@@ -16,11 +16,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-using PeterHan.PLib.Core;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-
 namespace PeterHan.PLib.Actions {
 	/// <summary>
 	/// Stores the same data as Klei's ToolParameterMenu.ToggleData class, but wraps it in
@@ -34,45 +29,21 @@ namespace PeterHan.PLib.Actions {
 
 		public readonly bool isToggleInclusive;
 
-		// TODO Simplify when versions before U58-719533 no longer need to be supported
-		internal readonly object backing;
-
-		private readonly IDictionary<string, ToolParameterMenu.ToggleState> legacyBacking;
+		internal readonly ToolParameterMenu.ToggleData backing;
 
 		/// <summary>
 		/// The current state.
 		/// </summary>
 		public ToolParameterMenu.ToggleState State {
 			get {
-				ToolParameterMenu.ToggleState result;
-				if (legacyBacking != null) {
-					// Use realtime updated Klei dictionary from previous game versions
-					if (!legacyBacking.TryGetValue(Name, out result))
-						result = ToolParameterMenu.ToggleState.Off;
-				} else if (backing != null)
-					// Call backing object
-					result = PToolModeCompatibility.Instance.GetState(backing);
-				else
-					throw new ArgumentException("No valid backing object available");
-				return result;
+				return backing.state;
 			}
 		}
 
-		internal PToggleData(PToolMode mode,
-				IDictionary<string, ToolParameterMenu.ToggleState> legacyBacking) {
-			var backingType = PToolModeCompatibility.TOGGLE_DATA;
-			backing = null;
-			this.legacyBacking = legacyBacking;
+		internal PToggleData(PToolMode mode) {
 			Name = mode.Key;
 			isToggleInclusive = false;
-			if (backingType != null)
-				try {
-					backing = Activator.CreateInstance(backingType, new object[0]);
-				} catch (TargetInvocationException e) {
-					PUtil.LogExcWarn(e.GetBaseException());
-				} catch (Exception e) {
-					PUtil.LogExcWarn(e);
-				}
+			backing = new ToolParameterMenu.ToggleData(Name, mode.State, isToggleInclusive);
 			// Add string key
 			if (!string.IsNullOrEmpty(mode.Title))
 				Strings.Add("STRINGS.UI.TOOLS.FILTERLAYERS." + mode.Key, mode.Title);

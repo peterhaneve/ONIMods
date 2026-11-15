@@ -232,6 +232,7 @@ namespace PeterHan.PLib.Actions {
 		public PActionManager() {
 			actions = new List<PAction>(8);
 			maxAction = 0;
+			InstanceData = actions;
 		}
 
 		public override void Bootstrap(Harmony plibInstance) {
@@ -299,6 +300,9 @@ namespace PeterHan.PLib.Actions {
 				prefix: PatchMethod(nameof(IsActive_Prefix)));
 			plibInstance.Patch(typeof(KInputController), nameof(KInputController.
 				QueueButtonEvent), prefix: PatchMethod(nameof(QueueButtonEvent_Prefix)));
+
+			// CheckDoubleBoundKeys uses Enum.ToString on the Action and KKeyCode, not the
+			// localized versions
 		}
 
 		public override void PostInitialize(Harmony plibInstance) {

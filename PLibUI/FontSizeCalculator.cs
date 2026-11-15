@@ -17,9 +17,7 @@
  */
 
 using PeterHan.PLib.Core;
-using System;
 using System.Collections.Generic;
-using System.Reflection;
 using TMPro;
 using UnityEngine.TextCore;
 
@@ -33,78 +31,6 @@ namespace PeterHan.PLib.UI {
 		/// </summary>
 		internal static readonly FontSizeCalculator Instance = new FontSizeCalculator();
 
-		// TODO Massive cleanup when versions before U57-716056 no longer need to be supported
-		private static readonly PropertyInfo FACE_SIZE_NEW;
-		
-		private static readonly PropertyInfo GLYPH_NEW;
-		
-		private static readonly PropertyInfo GLYPH_DICTIONARY_NEW;
-		
-		private static readonly MethodInfo GLYPH_LOOKUP_NEW;
-
-		private static readonly Type FACE_INFO_OLD = PPatchTools.GetTypeSafe("TMPro.FaceInfo");
-		
-		private static readonly FieldInfo FACE_HEIGHT_OLD;
-
-		private static readonly FieldInfo FACE_SCALE_OLD;
-
-		private static readonly FieldInfo FACE_SIZE_OLD;
-		
-		private static readonly PropertyInfo GET_INFO;
-		
-		private static readonly FieldInfo GLYPH_WIDTH_OLD;
-
-		private static readonly PropertyInfo GLYPH_DICTIONARY_OLD;
-		
-		private static readonly MethodInfo GLYPH_LOOKUP_OLD;
-
-		static FontSizeCalculator() {
-			Type dictType;
-			if (FACE_INFO_OLD != null) {
-				var tmpGlyph = PPatchTools.GetTypeSafe("TMPro.TMP_Glyph");
-
-				FACE_HEIGHT_OLD = FACE_INFO_OLD.GetFieldSafe("LineHeight", false);
-				FACE_SCALE_OLD = FACE_INFO_OLD.GetFieldSafe("Scale", false);
-				FACE_SIZE_OLD = FACE_INFO_OLD.GetFieldSafe("PointSize", false);
-				GLYPH_DICTIONARY_OLD = typeof(TMP_FontAsset).GetProperty(
-					"characterDictionary", PPatchTools.BASE_FLAGS | BindingFlags.Instance);
-				GET_INFO = typeof(TMP_FontAsset).GetProperty("fontInfo", PPatchTools.
-					BASE_FLAGS | BindingFlags.Instance);
-
-				if (tmpGlyph != null) {
-					dictType = typeof(Dictionary<,>).MakeGenericType(typeof(int), tmpGlyph);
-
-					GLYPH_LOOKUP_OLD = dictType.GetMethodSafe(nameof(Dictionary<int, int>.
-						TryGetValue), false, typeof(int), tmpGlyph.MakeByRefType());
-					GLYPH_WIDTH_OLD = tmpGlyph.GetFieldSafe("width", false);
-				} else {
-					GLYPH_LOOKUP_OLD = null;
-					GLYPH_WIDTH_OLD = null;
-				}
-			} else {
-				var glyphMetrics = PPatchTools.GetTypeSafe("UnityEngine.TextCore.GlyphMetrics");
-				var tmpCharacter = PPatchTools.GetTypeSafe("TMPro.TMP_Character");
-				var faceInfo = typeof(UnityEngine.TextCore.FaceInfo);
-				
-				FACE_SIZE_NEW = faceInfo.GetPropertySafe<float>("pointSize", false);
-				GLYPH_NEW = typeof(TMP_TextElement).GetPropertySafe<Glyph>("glyph", false);
-				GLYPH_DICTIONARY_NEW = typeof(TMP_FontAsset).GetProperty(
-					"characterLookupTable", PPatchTools.BASE_FLAGS | BindingFlags.Instance);
-				GET_INFO = typeof(TMP_Asset).GetProperty("faceInfo", PPatchTools.BASE_FLAGS |
-					BindingFlags.Instance);
-
-				if (tmpCharacter != null) {
-					dictType = typeof(Dictionary<,>).MakeGenericType(typeof(uint),
-						tmpCharacter);
-
-					GLYPH_LOOKUP_NEW = dictType.GetMethodSafe(nameof(Dictionary<int, int>.
-						TryGetValue), false, typeof(uint), tmpCharacter.MakeByRefType());
-				} else {
-					GLYPH_LOOKUP_NEW = null;
-				}
-			}
-		}
-
 		/// <summary>
 		/// Gets the unscaled width of the character in the specified font.
 		/// </summary>
@@ -114,26 +40,12 @@ namespace PeterHan.PLib.UI {
 		/// metrics are not available.</returns>
 		internal static float GetCharWidth(char ch, TMP_FontAsset font) {
 			float width = 0.0f;
-			object outGlyph;
-
-			if (GLYPH_DICTIONARY_NEW != null) {
-				var dict = GLYPH_DICTIONARY_NEW.GetValue(font);
-				var lookupParams = new object[] { (uint)ch, null };
-
-				if (dict != null && GLYPH_LOOKUP_NEW?.Invoke(dict, lookupParams) is bool
-						result && result && (outGlyph = lookupParams[1]) != null && GLYPH_NEW?.
-						GetValue(outGlyph) is Glyph glyph)
-					// Pull glyph from TMP_Character (parent class is TMP_TextElement)
-					width = glyph.metrics.width;
-			} else if (GLYPH_DICTIONARY_OLD != null) {
-				var dict = GLYPH_DICTIONARY_OLD.GetValue(font);
-				var lookupParams = new object[] { (int)ch, null };
-
-				if (dict != null && GLYPH_LOOKUP_OLD?.Invoke(dict, lookupParams) is bool
-						result && result && (outGlyph = lookupParams[1]) != null &&
-						GLYPH_WIDTH_OLD?.GetValue(outGlyph) is float fv)
-					width = fv;
-			}
+			Glyph glyph;
+			var dict = font.characterLookupTable;
+			if (dict != null && dict.TryGetValue(ch, out TMP_Character outGlyph) &&
+					(glyph = outGlyph?.glyph) != null)
+				// Pull glyph from TMP_Character (parent class is TMP_TextElement)
+				width = glyph.metrics.width;
 			return width;
 		}
 
@@ -153,25 +65,8 @@ namespace PeterHan.PLib.UI {
 		/// <param name="font">The font to calculate.</param>
 		/// <returns>The calculated metrics.</returns>
 		private Metrics CalculateMetrics(TMP_FontAsset font) {
-			float height = 0.0f, size = 0.0f, scale = 0.0f;
-			var face = GET_INFO?.GetValue(font);
-
-			if (face is UnityEngine.TextCore.FaceInfo faceInfo) {
-				// New TMPro
-				height = faceInfo.lineHeight;
-				if (FACE_SIZE_NEW.GetValue(face) is float sv)
-					// Unfortunately this is int in the old version
-					size = sv;
-				scale = faceInfo.scale;
-			} else if (face != null && FACE_HEIGHT_OLD != null) {
-				if (FACE_HEIGHT_OLD.GetValue(face) is float fv)
-					height = fv;
-				if (FACE_SIZE_OLD.GetValue(face) is float sv)
-					size = sv;
-				if (FACE_SCALE_OLD.GetValue(face) is float cv)
-					scale = cv;
-			}
-			return new Metrics(height, size, scale);
+			var faceInfo = font.faceInfo;
+			return new Metrics(faceInfo.lineHeight, faceInfo.pointSize, faceInfo.scale);
 		}
 
 		/// <summary>
