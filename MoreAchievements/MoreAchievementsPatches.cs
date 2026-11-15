@@ -415,11 +415,8 @@ namespace PeterHan.MoreAchievements {
 			internal static void Postfix(ReceptacleMonitor __instance, PlantablePlot plot) {
 				var asc = AchievementStateComponent.Instance;
 				if (plot != null && asc != null && __instance.TryGetComponent(
-						out Crop crop)) {
-					string cropId = crop.cropId;
-					if (asc.IsFoodCrop(cropId)) 
-						asc.FailLocavore();
-				}
+						out Crop crop))
+					asc.CheckLocavore(crop);
 			}
 		}
 

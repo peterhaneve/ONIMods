@@ -30,8 +30,8 @@ namespace PeterHan.CritterInventory {
 			Type = type;
 		}
 
-		public override string FormatValueString(float value) {
-			return GameUtil.GetFormattedSimple(value);
+		public override void AppendValueString(ref KleiStringBuilder builder, float value) {
+			builder.Append(value);
 		}
 	}
 }

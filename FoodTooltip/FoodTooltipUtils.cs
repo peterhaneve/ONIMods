@@ -44,13 +44,17 @@ namespace PeterHan.FoodTooltip {
 			if (crop != null && crop.TryGetComponent(out Modifiers modifiers)) {
 				var cropVal = crop.cropVal;
 				float preModifiedAttributeValue = modifiers.GetPreModifiedAttributeValue(
-					db.PlantAttributes.YieldAmount);
-				var maturity = Db.Get().Amounts.Maturity.Lookup(crop);
-				if (maturity != null)
-					// Do not multiply by cropVal.numProduced, it is factored into YieldAmount
-					CreateDescriptors(TagManager.Create(cropVal.cropId), descriptors,
-						maturity.GetDelta() * preModifiedAttributeValue * Constants.
-						SECONDS_PER_CYCLE / maturity.GetMax(), FoodDescriptorTexts.PLANTS);
+					db.PlantAttributes.YieldFactor);
+				var maturity = db.Amounts.Maturity.Lookup(crop);
+				if (maturity != null) {
+					var products = cropVal.products;
+					int n = products.Count;
+					for (int i = 0; i < n; i++)
+						// Do not multiply by cropVal.numProduced, it is factored into YieldAmount
+						CreateDescriptors(TagManager.Create(products[i].cropId), descriptors,
+							maturity.GetDelta() * preModifiedAttributeValue * Constants.
+							SECONDS_PER_CYCLE / maturity.GetMax(), FoodDescriptorTexts.PLANTS);
+				}
 			}
 		}
 

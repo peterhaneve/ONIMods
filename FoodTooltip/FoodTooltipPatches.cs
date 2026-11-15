@@ -65,14 +65,14 @@ namespace PeterHan.FoodTooltip {
 		/// critter descriptors.
 		/// </summary>
 		[HarmonyPatch(typeof(CreatureCalorieMonitor.Def), nameof(CreatureCalorieMonitor.Def.
-			GetDescriptors))]
-		public static class CreatureCalorieMonitor_Def_GetDescriptors_Patch {
+			CollectDescriptors))]
+		public static class CreatureCalorieMonitor_Def_CollectDescriptors_Patch {
 			/// <summary>
-			/// Applied after GetDescriptors runs.
+			/// Applied after CollectDescriptors runs.
 			/// </summary>
-			internal static void Postfix(GameObject obj, List<Descriptor> __result) {
-				if (__result != null)
-					FoodTooltipUtils.AddCritterDescriptors(obj, __result);
+			internal static void Postfix(GameObject go, List<Descriptor> descriptors) {
+				if (descriptors != null)
+					FoodTooltipUtils.AddCritterDescriptors(go, descriptors);
 			}
 		}
 

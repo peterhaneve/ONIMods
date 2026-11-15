@@ -175,8 +175,8 @@ namespace PeterHan.CritterInventory.NewResourceScreen {
 			var chart = refs.GetReference<SparkLayer>("Chart");
 			var chartableData = tracker.ChartableData(HISTORY);
 			ref var xAxis = ref chart.graph.axis_x;
-			xAxis.max_value = chartableData.Length > 0 ? chartableData[chartableData.
-				Length - 1].first : 0f;
+			int n = chartableData.Count;
+			xAxis.max_value = n > 0 ? chartableData[n - 1].time : 0f;
 			xAxis.min_value = currentTime - HISTORY;
 			chart.RefreshLine(chartableData, "resourceAmount");
 			foreach (var resource in resources)

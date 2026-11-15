@@ -242,6 +242,23 @@ namespace PeterHan.MoreAchievements {
 		}
 
 		/// <summary>
+		/// Checks a crop's products, and fails Locavore if it produces food.
+		/// </summary>
+		/// <param name="crop">The crop to check.</param>
+		/// <returns>true if the achievement was failed, or false otherwise.</returns>
+		internal bool CheckLocavore(Crop crop) {
+			var products = crop.cropVal.products;
+			int n = products.Count;
+			bool result = false;
+			for (int i = 0; i < n && !result; i++)
+				if (IsFoodCrop(products[i].cropId)) {
+					FailLocavore();
+					result = true;
+				}
+			return result;
+		}
+
+		/// <summary>
 		/// Counts the number of artifacts that have been obtained.
 		/// </summary>
 		private void CountArtifacts() {
@@ -452,10 +469,8 @@ namespace PeterHan.MoreAchievements {
 				for (int i = 0; i < n; i++) {
 					var plant = inWorld[i].Occupant;
 					if (plant != null && plant.TryGetComponent(out Crop crop) &&
-							IsFoodCrop(crop.cropId)) {
-						FailLocavore();
+							CheckLocavore(crop))
 						break;
-					}
 				}
 			}
 		}
