@@ -18,6 +18,16 @@ msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.ACTION_TITLE"
 msgid "Settings Change Tool"
 msgstr "设置更改工具"
 
+#. PeterHan.BulkSettingsChange.BulkChangeStrings.FORBID_ITEMS
+msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.FORBID_ITEMS"
+msgid "Forbid Items"
+msgstr "禁止拾取"
+
+#. PeterHan.BulkSettingsChange.BulkChangeStrings.RECLAIM_ITEMS
+msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.RECLAIM_ITEMS"
+msgid "Reclaim Items"
+msgstr "允许拾取"
+
 #. PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DESCRIPTION
 msgctxt "PeterHan.BulkSettingsChange.BulkChangeStrings.TOOL_DESCRIPTION"
 msgid "Enable or disable Auto-Disinfect, Auto-Repair, or buildings {Hotkey}"

@@ -1,0 +1,44 @@
+msgid ""
+msgstr ""
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.4.2\n"
+"Last-Translator: Ventulus\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"Language: zh_CN\n"
+
+#. PeterHan.ForbidItems.ForbidItemsStrings.MISC.STATUSITEMS.FORBIDDEN.NAME
+msgctxt "PeterHan.ForbidItems.ForbidItemsStrings.MISC.STATUSITEMS.FORBIDDEN.NAME"
+msgid "Item Forbidden"
+msgstr "物品已禁止"
+
+#. PeterHan.ForbidItems.ForbidItemsStrings.MISC.STATUSITEMS.FORBIDDEN.TOOLTIP
+msgctxt "PeterHan.ForbidItems.ForbidItemsStrings.MISC.STATUSITEMS.FORBIDDEN.TOOLTIP"
+msgid "This item cannot be picked up by Duplicants or <style=\"KKeyword\">Auto-Sweepers</style>"
+msgstr "复制人或<style=\"KKeyword\">自动清扫器</style>无法拾取此物品"
+
+#. PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.NAME
+msgctxt "PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.NAME"
+msgid "Forbid Item"
+msgstr "禁止拾取"
+
+#. PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.NAME_OFF
+msgctxt "PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.NAME_OFF"
+msgid "Reclaim Item"
+msgstr "允许拾取"
+
+#. PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.TOOLTIP
+msgctxt "PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.TOOLTIP"
+msgid "Prevent this item from being picked up"
+msgstr "阻止拾取此物品"
+
+#. PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.TOOLTIP_OFF
+msgctxt "PeterHan.ForbidItems.ForbidItemsStrings.UI.USERMENUACTIONS.FORBIDITEM.TOOLTIP_OFF"
+msgid "Allow this item to be picked up"
+msgstr "允许拾取此物品"

@@ -268,3 +268,38 @@ msgid ""
 msgstr ""
 "如果选中，会在主菜单显示\n"
 "过时模组数量的警告。"
+
+#. <color=#00CC00>Auto-Update in progress</color>
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MAINMENU_UPDATING"
+msgid "<color=#00CC00>Auto-Update in progress</color>"
+msgstr "<color=#00CC00>正在自动更新</color>"
+
+#. <b>Automatic updates are enabled.</b>
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_AUTO_UPDATE"
+msgid "<b>Automatic updates are enabled.</b>"
+msgstr "<b>已启用自动更新。</b>"
+
+#. Unable to automatically update this mod!  A manual update may be required.
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.MOD_ERR_UPDATE"
+msgid "Unable to automatically update this mod!\nA manual update may be required."
+msgstr "无法自动更新该模组！\n可能需要手动更新。"
+
+#. Auto-Update
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.OPTION_PASSIVE"
+msgid "Auto-Update"
+msgstr "自动更新"
+
+#. <b>Mod Updater did not start correctly.</b>    Due to a recent Klei update, Mod Updater was unable to start.  Steam may automatically update Mod Updater to the latest version.  If not, install the latest version manually from the mod website.    <b>Mod Updater version:</b> {0}  <b>Compiled for game version:</b> {1}
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.SAFE_MODE"
+msgid "<b>Mod Updater did not start correctly.</b>\n\nDue to a recent Klei update, Mod Updater was unable to start.\nSteam may automatically update Mod Updater to the latest version.\nIf not, install the latest version manually from the mod website.\n\n<b>Mod Updater version:</b> {0}\n<b>Compiled for game version:</b> {1}"
+msgstr "<b>Mod Updater 未能正确启动。</b>\n\n由于 Klei 最近的更新，Mod Updater 无法启动。\nSteam 可能会自动将 Mod Updater 更新到最新版本。\n如果没有，请从模组网站手动安装最新版本。\n\n<b>Mod Updater 版本：</b> {0}\n<b>编译所用游戏版本：</b> {1}"
+
+#. VISIT WEBSITE
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.MODUPDATER.SAFE_MODE_GITHUB"
+msgid "VISIT WEBSITE"
+msgstr "访问网站"
+
+#. Automatically keeps all mods up to date in the background  by downloading the correct version in the first place.
+msgctxt "PeterHan.ModUpdateDate.ModUpdateDateStrings.UI.TOOLTIPS.MODUPDATER.OPTION_PASSIVE"
+msgid "Automatically keeps all mods up to date in the background\nby downloading the correct version in the first place."
+msgstr "自动在后台保持所有模组为最新\n通过直接下载正确版本。"

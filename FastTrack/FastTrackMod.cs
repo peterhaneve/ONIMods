@@ -201,7 +201,7 @@ namespace PeterHan.FastTrack {
 			base.OnLoad(harmony);
 			var options = FastTrackOptions.Instance;
 			PUtil.InitLibrary();
-			new PLocalization().Register();
+			new PLocalization().RegisterFromCallingClass();
 			LocString.CreateLocStringKeys(typeof(FastTrackStrings.UI));
 			new POptions().RegisterOptions(this, typeof(FastTrackOptions));
 			new PPatchManager(harmony).RegisterPatchClass(typeof(FastTrackMod));

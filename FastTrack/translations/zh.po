@@ -1,0 +1,1147 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: zh\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Application: Oxygen Not IncludedPOT Version: 2.0\n"
+"X-Generator: Poedit 3.7\n"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.ACHIEVEDISABLE.DISABLED
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.ACHIEVEDISABLE.DISABLED"
+msgid "Always Disabled"
+msgstr "总是禁用"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.ACHIEVEDISABLE.NEVER
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.ACHIEVEDISABLE.NEVER"
+msgid "Never"
+msgstr "永不"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.ACHIEVEDISABLE.SANDBOXDEBUG
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.ACHIEVEDISABLE.SANDBOXDEBUG"
+msgid "In Sandbox/Debug"
+msgstr "在沙盒/调试模式中"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.ALLOCOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.ALLOCOPTS"
+msgid "Reduce Allocations"
+msgstr "减少分配"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.ANIMOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.ANIMOPTS"
+msgid "Faster Animations"
+msgstr "更快的动画"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.ASYNCPATHPROBE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.ASYNCPATHPROBE"
+msgid "Background Pathing"
+msgstr "后台寻路"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.BACKGROUNDROOMREBUILD
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.BACKGROUNDROOMREBUILD"
+msgid "Background Room Rebuild"
+msgstr "后台房间计算"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CACHEPATHS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CACHEPATHS"
+msgid "Cache Paths"
+msgstr "缓存路径"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CATEGORY_BUILDINGS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CATEGORY_BUILDINGS"
+msgid "Buildings"
+msgstr "建筑"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CATEGORY_CRITTERS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CATEGORY_CRITTERS"
+msgid "Critters"
+msgstr "小动物"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CATEGORY_DEBUG
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CATEGORY_DEBUG"
+msgid "Debug"
+msgstr "Debug"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CATEGORY_DUPLICANTS"
+msgid "Duplicants"
+msgstr "复制人"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CATEGORY_INTERFACE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CATEGORY_INTERFACE"
+msgid "Interface"
+msgstr "界面"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CATEGORY_ITEMS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CATEGORY_ITEMS"
+msgid "Items"
+msgstr "物品"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CATEGORY_SOUND
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CATEGORY_SOUND"
+msgid "Sound"
+msgstr "声音"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CATEGORY_VISUAL
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CATEGORY_VISUAL"
+msgid "Visual"
+msgstr "视觉"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CHOREPRIORITYMODE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CHOREPRIORITYMODE"
+msgid "Chore Priority Mode"
+msgstr "任务优先级模式"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CLUSTERMAPQUALITY
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CLUSTERMAPQUALITY"
+msgid "Cluster Map Resolution"
+msgstr "星团地图分辨率"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CONDUITOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CONDUITOPTS"
+msgid "Threaded Conduit Updates"
+msgstr "多线程管道更新"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CRITTERCONSUMERS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CRITTERCONSUMERS"
+msgid "Optimize Eating"
+msgstr "优化进食"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CULLCONDUITS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CULLCONDUITS"
+msgid "Cull Buildings in Tiles"
+msgstr "砖块建筑剔除"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CUSTOMSTRINGFORMAT
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.CUSTOMSTRINGFORMAT"
+msgid "Quick Format"
+msgstr "快速格式化"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.DISABLEACHIEVEMENTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.DISABLEACHIEVEMENTS"
+msgid "Disable Achievements"
+msgstr "禁用成就"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.DISABLECONDUITANIMATION
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.DISABLECONDUITANIMATION"
+msgid "Pipe Animation Quality"
+msgstr "管道动画质量"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.DISABLELOADPREVIEWS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.DISABLELOADPREVIEWS"
+msgid "Disable Load Previews"
+msgstr "禁用加载预览"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.DISABLESOUND
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.DISABLESOUND"
+msgid "Disable <color=#FF0000>ALL</color> Sounds"
+msgstr "禁用<color=#FF0000>所有</color>声音"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.DISABLETUTORIAL
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.DISABLETUTORIAL"
+msgid "Disable Tutorials"
+msgstr "禁用教程"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.ENETOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.ENETOPTS"
+msgid "Electrical Optimizations"
+msgstr "电路优化"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.FASTATTRIBUTESMODE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.FASTATTRIBUTESMODE"
+msgid "Attribute Leveling"
+msgstr "属性提升"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.FASTREACHABILITY
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.FASTREACHABILITY"
+msgid "Fast Reachability Checks"
+msgstr "快速可达性检测"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.FASTSTRUCTURETEMPERATURE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.FASTSTRUCTURETEMPERATURE"
+msgid "Optimize Heat Generation"
+msgstr "优化热生成"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.FASTUPDATEPICKUPS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.FASTUPDATEPICKUPS"
+msgid "Optimize Debris Collection"
+msgstr "优化碎片收集"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.FLATTENAVERAGES
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.FLATTENAVERAGES"
+msgid "Flatten Averages"
+msgstr "平均值平滑"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.INFOCARDOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.INFOCARDOPTS"
+msgid "Info Card Optimization"
+msgstr "信息卡片优化"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.LOADOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.LOADOPTS"
+msgid "Less Loading"
+msgstr "减少加载"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.LOGICUPDATES
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.LOGICUPDATES"
+msgid "Logic Optimizations"
+msgstr "自动化优化"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.MESHRENDEREROPTIONS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.MESHRENDEREROPTIONS"
+msgid "Use Mesh Renderers"
+msgstr "使用网格渲染器"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.MESHRENDERERS.ALL
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.MESHRENDERERS.ALL"
+msgid "All"
+msgstr "全部"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.MESHRENDERERS.EXCEPTTILES
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.MESHRENDERERS.EXCEPTTILES"
+msgid "All but Tiles"
+msgstr "除了砖块之外的"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.MESHRENDERERS.NONE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.MESHRENDERERS.NONE"
+msgid "None"
+msgstr "禁用"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.METRICS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.METRICS"
+msgid "Log Debug Metrics"
+msgstr "记录调试指标（不懂别开）"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.MINIMALKCV
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.MINIMALKCV"
+msgid "Vector Minimization"
+msgstr "向量最小化"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.MISCOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.MISCOPTS"
+msgid "Other UI Optimizations"
+msgstr "其他UI改进"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NEXTCHOREPRIORITY.DELAY
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NEXTCHOREPRIORITY.DELAY"
+msgid "Until Reachable Update"
+msgstr "直到下次可达性检测"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NEXTCHOREPRIORITY.HIGHER
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NEXTCHOREPRIORITY.HIGHER"
+msgid "Immediate (default)"
+msgstr "立即（原版）"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NEXTCHOREPRIORITY.NORMAL
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NEXTCHOREPRIORITY.NORMAL"
+msgid "Round Robin"
+msgstr "Round Robin算法"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NOBOUNCE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NOBOUNCE"
+msgid "No Notification Bounce"
+msgstr "禁止通知弹跳"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NOCONVERSATIONS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NOCONVERSATIONS"
+msgid "Disable Conversations"
+msgstr "禁用对话"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NODISEASE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NODISEASE"
+msgid "Disable Disease"
+msgstr "禁用疾病"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NOPLACEREASING
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NOPLACEREASING"
+msgid "Instant Place Graphics"
+msgstr "即时放置图形"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NOREPORTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NOREPORTS"
+msgid "No Colony Reports"
+msgstr "禁用殖民地报告"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NOSPLASH
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NOSPLASH"
+msgid "No Splashes"
+msgstr "禁用"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NOTILEDECOR
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.NOTILEDECOR"
+msgid "No Tile Caps"
+msgstr "禁用砖块凸起"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.OPTIMIZEDIALOGS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.OPTIMIZEDIALOGS"
+msgid "Optimize Dialogs"
+msgstr "优化对话框"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.PARALLELINVENTORY
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.PARALLELINVENTORY"
+msgid "Background Inventory"
+msgstr "后台库存统计"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.PICKUPOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.PICKUPOPTS"
+msgid "Reduce Debris Checks"
+msgstr "减少碎片检查"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.PIPEANIM.FULL
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.PIPEANIM.FULL"
+msgid "Full"
+msgstr "全开"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.PIPEANIM.MINIMAL
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.PIPEANIM.MINIMAL"
+msgid "Minimal"
+msgstr "最小化"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.PIPEANIM.REDUCED
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.PIPEANIM.REDUCED"
+msgid "Reduced"
+msgstr "减少"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.RADIATIONOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.RADIATIONOPTS"
+msgid "Radiation Tweaks"
+msgstr "辐射调整"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.REDUCECOLONYTRACKING
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.REDUCECOLONYTRACKING"
+msgid "Colony Tracker Reduction"
+msgstr "减少殖民地追踪"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.REDUCECRITTERIDLEMOVE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.REDUCECRITTERIDLEMOVE"
+msgid "Reduce Idle Movement"
+msgstr "减少空闲移动"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.REDUCEDUPLICANTIDLEMOVE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.REDUCEDUPLICANTIDLEMOVE"
+msgid "Reduce Idle Movement"
+msgstr "减少空闲移动"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.REDUCESOUNDUPDATES
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.REDUCESOUNDUPDATES"
+msgid "Batch Sounds"
+msgstr "批量音效"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.REDUCETILEUPDATES
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.REDUCETILEUPDATES"
+msgid "Threaded Tile Updates"
+msgstr "多线程砖块更新"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.RENDERTICKS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.RENDERTICKS"
+msgid "Optimize Renderers"
+msgstr "渲染器优化"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.SENSOROPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.SENSOROPTS"
+msgid "Optimize Idling"
+msgstr "优化空闲"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.SIDESCREENOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.SIDESCREENOPTS"
+msgid "Side Screens"
+msgstr "诊断信息"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.THREATOVERCROWDING
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.THREATOVERCROWDING"
+msgid "Critter Monitors"
+msgstr "小动物监测"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.TUTORIALS.ALL
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.TUTORIALS.ALL"
+msgid "All"
+msgstr "全部"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.TUTORIALS.OFF
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.TUTORIALS.OFF"
+msgid "Off"
+msgstr "关闭"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.TUTORIALS.WARNINGS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.TUTORIALS.WARNINGS"
+msgid "Warnings"
+msgstr "警告"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.UNSTACKLIGHTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.UNSTACKLIGHTS"
+msgid "Unstack Lights"
+msgstr "分离光源"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.VERINWATERMARK
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.VERINWATERMARK"
+msgid "Build Watermark"
+msgstr "版本号水印"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.VIRTUALSCROLL
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.VIRTUALSCROLL"
+msgid "Virtual Scroll"
+msgstr "虚拟滚动"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.WATERMARK.HIDE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.WATERMARK.HIDE"
+msgid "Hide version"
+msgstr "隐藏版本号"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.WATERMARK.OFF
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.WATERMARK.OFF"
+msgid "Hide completely"
+msgstr "完全隐藏"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.WATERMARK.SHOW
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.FRONTEND.FASTTRACK.WATERMARK.SHOW"
+msgid "Show version"
+msgstr "显示版本号"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.ACHIEVEDISABLE.DISABLED
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.ACHIEVEDISABLE.DISABLED"
+msgid ""
+"<color=#FF0000>Achievements cannot be unlocked and\n"
+"no progress towards any achievement can be made.</color>"
+msgstr ""
+"<color=#FF0000>成就无法解锁，\n"
+"且无法在任何成就上获得进度。</color>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.ACHIEVEDISABLE.NEVER
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.ACHIEVEDISABLE.NEVER"
+msgid "Achievements will always be checked."
+msgstr "成就始终会被检测。"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.ACHIEVEDISABLE.SANDBOXDEBUG
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.ACHIEVEDISABLE.SANDBOXDEBUG"
+msgid "Achievements will not be checked in sandbox or debug mode."
+msgstr "在沙盒模式或调试模式下，成就不会被检测。"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.ALLOCOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.ALLOCOPTS"
+msgid ""
+"Reduces memory allocations in a variety of locations.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"减少多个位置的内存分配。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.ANIMOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.ANIMOPTS"
+msgid ""
+"Optimizes slow code in animation playback.\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"优化动画播放中的低效代码。\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.ASYNCPATHPROBE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.ASYNCPATHPROBE"
+msgid ""
+"Moves some pathfinding calculations to a non-blocking thread.\n"
+"\n"
+"<b>Performance Impact: <color=#FF3300>High</color></b>"
+msgstr ""
+"将部分寻路计算移到非阻塞线程中。\n"
+"\n"
+"<b>性能影响：<color=#FF3300>高</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.BACKGROUNDROOMREBUILD
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.BACKGROUNDROOMREBUILD"
+msgid ""
+"Processes most room changes on a background thread.\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"将大部分房间变化处理移到后台线程。\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.CACHEPATHS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.CACHEPATHS"
+msgid ""
+"Cache frequently used paths and reuse them in future calculations.\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"缓存经常使用的路径，并在后续计算中重复使用。\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.CHOREPRIORITYMODE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.CHOREPRIORITYMODE"
+msgid "Adjust the priority of choosing a Duplicant's next task."
+msgstr "调整复制人下一个任务的优先级。"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.CLUSTERMAPQUALITY
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.CLUSTERMAPQUALITY"
+msgid ""
+"Slightly reduce the graphics quality of the Spaced Out! Starmap\n"
+"in exchange for a significant performance boost.\n"
+"\n"
+"<b>Performance Impact: <color=#FF3300>High</color></b>"
+msgstr ""
+"略微降低《眼冒金星!》星图的画质，以换取显著的性能提升。\n"
+"\n"
+"<b>性能影响：<color=#FF3300>高</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.CONDUITOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.CONDUITOPTS"
+msgid ""
+"Multi-threads some updates to liquid and gas conduits.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"将部分液体和气体管道的更新操作多线程处理。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.CRITTERCONSUMERS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.CRITTERCONSUMERS"
+msgid ""
+"Optimize how Critters find objects to eat.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"优化小动物寻找食物的方式。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.CULLCONDUITS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.CULLCONDUITS"
+msgid ""
+"Hide conduits and wires inside solid walls.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"隐藏实体墙内的管道和电线。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.CUSTOMSTRINGFORMAT
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.CUSTOMSTRINGFORMAT"
+msgid ""
+"Reduces memory allocations when formatting strings.\n"
+"<i>Not compatible with mods: DisplayAllTemps</i>\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"减少格式化字符串时的内存分配。\n"
+"<i>与 Mod “DisplayAllTemps” 不兼容</i>\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.DISABLEACHIEVEMENTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.DISABLEACHIEVEMENTS"
+msgid ""
+"Turn off checking for Colony Initiatives.\n"
+"<color=#FF0000>Disabling will prevent unlocking any Steam achievement</color>\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"关闭殖民地任务检测。\n"
+"<color=#FF0000>关闭后将无法解锁任何 Steam 成就</color>\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.DISABLECONDUITANIMATION
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.DISABLECONDUITANIMATION"
+msgid ""
+"Controls the visual fidelity of pipe animations.\n"
+"<i>No changes to actual pipe mechanics will occur</i>\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"控制管道动画的视觉精细度。\n"
+"<i>不会影响管道的实际机制</i>\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.DISABLELOADPREVIEWS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.DISABLELOADPREVIEWS"
+msgid ""
+"Disables loading of colony previews on the Load screen.\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"禁用在加载界面显示殖民地预览。\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.DISABLESOUND
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.DISABLESOUND"
+msgid ""
+"Completely disables <color=#FF0000>all</color> sound playback.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"完全禁用<color=#FF0000>所有</color>音效播放。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.DISABLETUTORIAL
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.DISABLETUTORIAL"
+msgid ""
+"Disables tutorial messages.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"禁用教程提示信息。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.ENETOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.ENETOPTS"
+msgid ""
+"Speeds up calculations of electrical networks.\n"
+"\n"
+"<i>Not compatible with mods: Giga-Watt Wire</i>\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"加快电力网络计算速度。\n"
+"\n"
+"<i>与 Mod “Giga-Watt Wire” 不兼容</i>\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.FASTATTRIBUTESMODE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.FASTATTRIBUTESMODE"
+msgid ""
+"Optimize attribute leveling and work efficiency calculation.\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"优化属性升级和工作效率计算。\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.FASTREACHABILITY
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.FASTREACHABILITY"
+msgid ""
+"Only check items and chores for reachability when necessary.\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"仅在必要时检查物品和任务的可达性。\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.FASTSTRUCTURETEMPERATURE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.FASTSTRUCTURETEMPERATURE"
+msgid ""
+"Reduces memory allocations used when generating heat.\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"<b>性能影响：<color=#FF8827>中</color></b>\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.FASTUPDATEPICKUPS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.FASTUPDATEPICKUPS"
+msgid ""
+"Speed up inefficient and memory-intensive checks for items.\n"
+"<i>Not compatible with mods: Efficient Supply</i>\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"加快对物品进行低效且占用大量内存的检查。\n"
+"<i>与 Mod “Efficient Supply” 不兼容</i>\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.FLATTENAVERAGES
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.FLATTENAVERAGES"
+msgid ""
+"Optimize Amounts and average calculations.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"优化数量和平均值计算。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.INFOCARDOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.INFOCARDOPTS"
+msgid ""
+"Optimizes the info cards shown on hover.\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"优化鼠标悬停显示的信息卡。\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.LOADOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.LOADOPTS"
+msgid ""
+"Speeds up loading times.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"加快加载速度。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.LOGICUPDATES
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.LOGICUPDATES"
+msgid ""
+"Optimizes some buildings to not trigger logic network updates every frame.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"优化部分建筑，使其不在每帧触发自动化更新。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.MESHRENDEREROPTIONS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.MESHRENDEREROPTIONS"
+msgid ""
+"Use faster mesh renderers instead of redrawing\n"
+"every frame for these graphics.\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"对这些图形使用更快的网格渲染器，而不是每帧重绘。\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.MESHRENDERERS.ALL
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.MESHRENDERERS.ALL"
+msgid "Use mesh renderers for all graphics"
+msgstr "对所有图形使用网格渲染器"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.MESHRENDERERS.EXCEPTTILES
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.MESHRENDERERS.EXCEPTTILES"
+msgid "Use mesh renderers for all non-tileable graphics."
+msgstr "对所有非砖块的图形使用网格渲染器。"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.MESHRENDERERS.NONE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.MESHRENDERERS.NONE"
+msgid "Do not use mesh renderers for any graphics."
+msgstr "不对任何图形使用网格渲染器。"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.METRICS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.METRICS"
+msgid ""
+"Logs extra debug information to the game log.\n"
+"\n"
+"<b>Only use this option if directed to do so by a developer.</b>"
+msgstr ""
+"将额外的调试信息记录到游戏日志中。\n"
+"\n"
+"<b>仅在开发者指示时使用此选项。</b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.MINIMALKCV
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.MINIMALKCV"
+msgid ""
+"Reduces memory allocations in most game-wide lists of items.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"减少游戏中大部分物品列表的内存分配。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.MISCOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.MISCOPTS"
+msgid ""
+"Optimizes many event and UI handlers.\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"优化多个事件和 UI 处理器。\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NEXTCHOREPRIORITY.DELAY
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NEXTCHOREPRIORITY.DELAY"
+msgid ""
+"Delay selecting new chores until Reachability updates.\n"
+"\n"
+"<color=#FF3300>Longest</color> ponder time, but selects chores more optimally.\n"
+"<b>Fast Reachability Checks</b> must also be enabled."
+msgstr ""
+"延迟选择新任务，直到可达性更新完成。\n"
+"\n"
+"思考时间<color=#FF3300>最长</color>，但任务选择更为优化。\n"
+"必须同时启用<b>快速可达性检测</b>。"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NEXTCHOREPRIORITY.HIGHER
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NEXTCHOREPRIORITY.HIGHER"
+msgid ""
+"Immediately schedule Duplicants for chore selection when a chore completes.\n"
+"\n"
+"<color=#00CC00>Lowest</color> ponder time, but <color=#FF3300>slowest</color> overall."
+msgstr ""
+"在任务完成时立即安排复制人选择新任务。\n"
+"\n"
+"思考时间<color=#00CC00>最短</color>，但整体速度<color=#FF3300>最慢</color>。"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NEXTCHOREPRIORITY.NORMAL
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NEXTCHOREPRIORITY.NORMAL"
+msgid ""
+"Select new chores in normal order.\n"
+"\n"
+"<color=#00CC00>Fastest</color> overall performance."
+msgstr ""
+"按正常顺序选择新任务。\n"
+"\n"
+"整体性能<color=#00CC00>最快</color>。"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NOBOUNCE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NOBOUNCE"
+msgid ""
+"Disables the bounce effect when new notifications appear.\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"禁用新通知出现时的弹跳效果。\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NOCONVERSATIONS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NOCONVERSATIONS"
+msgid ""
+"Disables all Duplicant thought and speech balloons.\n"
+"\n"
+"<color=#FF0000>Disables the Mysterious Hermit's special trait.</color>\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"禁用所有复制人的思绪和对话气泡。\n"
+"<color=#FF0000>禁用神秘隐士的故事特性。</color>\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NODISEASE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NODISEASE"
+msgid ""
+"Completely disable the entire disease system.\n"
+"• Sick Bay and Disease Clinic cannot be built or used\n"
+"• No new diseases can be contracted\n"
+"• Existing diseases will be immediately removed\n"
+"• All germs will be removed from pipes and buildings\n"
+"<i>Not compatible with mods: Diseases Restored, Diseases Expanded</i>\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"完全禁用整个疾病系统。\n"
+"• 无法建造或使用医务室和疾病诊所\n"
+"• 无法感染新疾病\n"
+"• 现有疾病将立即清除\n"
+"• 管道和建筑中的所有病菌将被移除\n"
+"与 Mod “Diseases Restored” 和 “Diseases Expanded” 不兼容\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NOPLACEREASING
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NOPLACEREASING"
+msgid ""
+"Disables the animation which appears when placing\n"
+"errands like Dig or Mop.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"禁用在放置挖掘或清理等任务时出现的动画。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NOREPORTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NOREPORTS"
+msgid ""
+"Disables colony reports completely.\n"
+"<color=#FF0000>Disabling will prevent some achievements from being unlocked</color>\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"完全禁用殖民地报告。\n"
+"<color=#FF0000>关闭后将导致部分成就无法解锁</color>\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NOSPLASH
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NOSPLASH"
+msgid ""
+"Disables most puff, splash, and breath animations.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"禁用大部分喷气、飞溅和呼吸动画。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NOTILEDECOR
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.NOTILEDECOR"
+msgid ""
+"Disables all ornaments and edges on constructed tiles.\n"
+"<i>Not compatible with mods: True Tiles</i>\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"禁用所有建造方块的装饰和边缘。\n"
+"<i>与 Mod “True Tiles” 不兼容</i>\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.OPTIMIZEDIALOGS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.OPTIMIZEDIALOGS"
+msgid ""
+"Speeds up a variety of dialog boxes.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"加快多种对话框的显示速度。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.PARALLELINVENTORY
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.PARALLELINVENTORY"
+msgid ""
+"Compiles the item quantites in the Resources panel on a non-blocking thread.\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"在非阻塞线程中编译资源面板中的物品数量。\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.PICKUPOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.PICKUPOPTS"
+msgid ""
+"Dramatically speed up scanning for items to store or supply.\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"显著加快物品存储或供应的扫描速度。\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.PIPEANIM.FULL
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.PIPEANIM.FULL"
+msgid "Pipe animation quality is unchanged from the base game."
+msgstr "管道动画质量与原版游戏保持一致。"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.PIPEANIM.MINIMAL
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.PIPEANIM.MINIMAL"
+msgid "Pipe animations are disabled outside the Liquid or Gas overlay."
+msgstr "在液体或气体视图之外，管道动画被禁用。"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.PIPEANIM.REDUCED
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.PIPEANIM.REDUCED"
+msgid "Pipe animations update slower when outside the Liquid or Gas overlay."
+msgstr "在液体或气体覆视图之外，管道动画更新速度较慢。"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.RADIATIONOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.RADIATIONOPTS"
+msgid ""
+"Speeds up radiation calculations.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"加快辐射计算速度。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.REDUCECOLONYTRACKING
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.REDUCECOLONYTRACKING"
+msgid ""
+"Reduces the update rate of Colony Diagnostics.\n"
+"<i>Some notifications may take longer to trigger</i>\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"降低殖民地诊断的更新频率。\n"
+"部分通知触发可能会延迟\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.REDUCECRITTERIDLEMOVE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.REDUCECRITTERIDLEMOVE"
+msgid ""
+"Reduces amount of idle movement of critters that are currently not visible on the screen.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"减少当前屏幕上不可见小动物的闲置移动量。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.REDUCEDUPLICANTIDLEMOVE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.REDUCEDUPLICANTIDLEMOVE"
+msgid ""
+"Reduces amount of idle movement of duplicants that are currently not visible on the screen.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"减少当前屏幕上不可见复制人的闲置移动量。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.REDUCESOUNDUPDATES
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.REDUCESOUNDUPDATES"
+msgid ""
+"Reduces the frequency of sound location updates.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"减少声音位置更新的频率。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.REDUCETILEUPDATES
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.REDUCETILEUPDATES"
+msgid ""
+"Multi-threads updates to most tile textures.\n"
+"\n"
+"<b>Performance Impact: <color=#FF3300>High</color></b>"
+msgstr ""
+"将大部分砖块纹理的更新操作多线程处理。\n"
+"\n"
+"<b>性能影响：<color=#FF3300>高</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.RENDERTICKS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.RENDERTICKS"
+msgid ""
+"Optimizes several renderers that run every frame.\n"
+"<i>Some visual artifacts may appear with no effect on gameplay</i>\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"优化多个每帧运行的渲染器。\n"
+"<i>可能出现一些视觉瑕疵，但不会影响游戏玩法</i>\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.SENSOROPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.SENSOROPTS"
+msgid ""
+"Only check for locations to Idle, Mingle, or Balloon Artist when necessary.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"仅在必要时检查闲置、社交或气球艺术家的位置。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.SIDESCREENOPTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.SIDESCREENOPTS"
+msgid ""
+"Optimizes the informational side screens.\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"优化信息侧屏显示。\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.THREATOVERCROWDING
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.THREATOVERCROWDING"
+msgid ""
+"Optimizes critter Threat and Overcrowding monitors.\n"
+"<i>May conflict with mods that add new critters</i>\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"优化生物的威胁和过度拥挤监控。\n"
+"<i>可能与添加新生物的 Mod 冲突</i>\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.TUTORIALS.ALL
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.TUTORIALS.ALL"
+msgid "All tutorial messages are shown when they would normally appear."
+msgstr "所有教程提示信息都会按正常出现显示。"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.TUTORIALS.OFF
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.TUTORIALS.OFF"
+msgid ""
+"Tutorial messages and these warnings will be disabled:\n"
+"• Insufficient Oxygen Generation\n"
+"• Colony requires a food source\n"
+"• Long Commutes\n"
+"• No Outhouse built\n"
+"• No Wash Basin built\n"
+"• No Oxygen Generator built\n"
+"• Unrefrigerated Food\n"
+"• No Sick Bay built\n"
+"\n"
+"<i>Keep a careful eye on your colony...</i>"
+msgstr ""
+"教程提示信息和以下警告将被禁用：\n"
+"• 氧气生成不足\n"
+"• 殖民地需要食物来源\n"
+"• 通勤时间过长\n"
+"• 未建造厕所\n"
+"• 未建造洗手台\n"
+"• 未建造氧气生产装置\n"
+"• 食物未冷藏\n"
+"• 未建造医务室\n"
+"\n"
+"<i>请密切关注你的殖民地……</i>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.TUTORIALS.WARNINGS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.TUTORIALS.WARNINGS"
+msgid ""
+"Tutorial messages are disabled, but warnings such as\n"
+"<b>Insufficient Oxygen Generation</b> will still appear."
+msgstr ""
+"教程提示信息已被禁用，但诸如\n"
+"<b>氧气生成不足</b>等警告仍会显示。"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.UNSTACKLIGHTS
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.UNSTACKLIGHTS"
+msgid ""
+"Reduces the visual effects shown when many light sources are stacked.\n"
+"Intended for ranching critters like Shine Bugs.\n"
+"\n"
+"<b>Performance Impact: <color=#00CC00>Low</color></b>"
+msgstr ""
+"减少多个光源叠加时显示的视觉效果。\n"
+"适用于饲养如荧光虫等生物。\n"
+"\n"
+"<b>性能影响：<color=#00CC00>低</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.VERINWATERMARK
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.VERINWATERMARK"
+msgid ""
+"Show the Fast Track version in the build watermark.\n"
+"\n"
+"<i>No performance impact</i>"
+msgstr ""
+"在水印中显示 Fast Track 版本。\n"
+"<i>不影响性能</i>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.VIRTUALSCROLL
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.VIRTUALSCROLL"
+msgid ""
+"Improves the speed of scrolling menus.\n"
+"\n"
+"<b>Performance Impact: <color=#FF8827>Medium</color></b>"
+msgstr ""
+"提升滚动菜单的速度。\n"
+"\n"
+"<b>性能影响：<color=#FF8827>中</color></b>"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.WATERMARK.HIDE
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.WATERMARK.HIDE"
+msgid "Show only the current game version in the build watermark."
+msgstr "在水印中仅显示当前游戏版本。"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.WATERMARK.OFF
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.WATERMARK.OFF"
+msgid "Hide the build watermark completely in-game."
+msgstr "在游戏中完全隐藏水印。"
+
+#. PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.WATERMARK.SHOW
+msgctxt "PeterHan.FastTrack.FastTrackStrings.UI.TOOLTIPS.FASTTRACK.WATERMARK.SHOW"
+msgid "Show the current Fast Track version and game version in the build watermark."
+msgstr "在水印中显示当前 Fast Track 版本和游戏版本。"
