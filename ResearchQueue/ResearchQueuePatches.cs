@@ -216,6 +216,64 @@ namespace PeterHan.ResearchQueue {
 			}
 		}
 
+		/// <summary>
+		/// Gets the live research queue (not a copy), or null if there is no research.
+		/// </summary>
+		internal static IList<TechInstance> GetQueue() {
+			var research = Research.Instance;
+			return (research == null) ? null : QUEUED_TECH.Get(research);
+		}
+
+		/// <summary>
+		/// Replaces the order of the research queue. The new order must hold exactly the
+		/// techs already queued, and be a valid research order (QueueReorder guarantees
+		/// both).
+		/// </summary>
+		/// <param name="order">The techs in their new order.</param>
+		internal static void ApplyQueueOrder(IList<Tech> order) {
+			var research = Research.Instance;
+			var queue = GetQueue();
+			if (research == null || queue == null || order == null || order.Count != queue.
+					Count)
+				return;
+			var byTech = new Dictionary<Tech, TechInstance>(queue.Count);
+			foreach (var inst in queue)
+				byTech[inst.tech] = inst;
+			// Refuse anything that would drop, duplicate or misorder a tech
+			var seen = new HashSet<Tech>();
+			foreach (var tech in order) {
+				if (tech == null || !byTech.ContainsKey(tech) || !seen.Add(tech))
+					return;
+				foreach (var pre in tech.requiredTech)
+					if (byTech.ContainsKey(pre) && !seen.Contains(pre)) {
+						PUtil.LogWarning("Refusing queue order with " + tech.Id +
+							" before its prerequisite " + pre.Id);
+						return;
+					}
+			}
+			queue.Clear();
+			foreach (var tech in order)
+				queue.Add(byTech[tech]);
+			// The queue is non-empty, so nothing is re-added, and the tier sort is
+			// transpiled out: the first item becomes the active research
+			research.SetActiveResearch(queue[queue.Count - 1].tech);
+		}
+
+		/// <summary>
+		/// Removes a tech, and everything that depends on it, from the queue.
+		/// </summary>
+		internal static void DequeueTech(Tech tech) {
+			var inst = ManagementMenu.Instance;
+			var screen = (inst == null) ? null : RESEARCH_SCREEN.Get(inst);
+			var research = Research.Instance;
+			var queue = GetQueue();
+			if (tech != null && screen != null && research != null && queue != null) {
+				RemoveResearch(screen, queue, tech);
+				int n = queue.Count;
+				research.SetActiveResearch((n > 0) ? queue[n - 1].tech : null);
+			}
+		}
+
 		public override void OnLoad(Harmony harmony) {
 			base.OnLoad(harmony);
 			PUtil.InitLibrary();
@@ -347,6 +405,55 @@ namespace PeterHan.ResearchQueue {
 					if (n > 0)
 						// If there are techs in the queue, do this no-op to update labels
 						inst.SetActiveResearch(queue[n - 1]?.tech);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Applied to ResearchScreenSideBar to add the queue tab below the filter buttons.
+		/// </summary>
+		[HarmonyPatch(typeof(ResearchScreenSideBar), "OnSpawn")]
+		public static class ResearchScreenSideBar_OnSpawn_Patch {
+			internal static void Postfix(ResearchScreenSideBar __instance) {
+				try {
+					ResearchQueuePanel.Create(__instance);
+				} catch (Exception e) {
+					// A changed sidebar layout must not break the Research screen
+					PUtil.LogException(e);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Applied to ResearchScreenSideBar to switch back to the category tree when a
+		/// search or a filter preset is applied, so its results are visible.
+		/// </summary>
+		[HarmonyPatch(typeof(ResearchScreenSideBar), "SetTextFilter")]
+		public static class ResearchScreenSideBar_SetTextFilter_Patch {
+			internal static void Postfix(string newValue) {
+				try {
+					var panel = ResearchQueuePanel.Instance;
+					if (panel != null && !string.IsNullOrEmpty(newValue))
+						panel.SelectTab(false);
+				} catch (Exception e) {
+					PUtil.LogException(e);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Applied to ResearchScreen to show and hide the queue list with the screen. The
+		/// screen hides itself with a canvas group, which does not hide the list's own
+		/// raycasts.
+		/// </summary>
+		[HarmonyPatch(typeof(ResearchScreen), nameof(ResearchScreen.Show))]
+		public static class ResearchScreen_Show_Patch {
+			internal static void Postfix(bool show) {
+				try {
+					ResearchQueuePanel.Instance?.OnScreenShown(show);
+				} catch (Exception e) {
+					// The Research screen must still open and close
+					PUtil.LogException(e);
 				}
 			}
 		}
