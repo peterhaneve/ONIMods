@@ -29,5 +29,32 @@ namespace PeterHan.ResearchQueue {
 		// The help text for appending to queue.
 		public static LocString QueueTooltip = "Hold " + STRINGS.UI.PRE_KEYWORD + "{0}" +
 			STRINGS.UI.PST_KEYWORD + " and click to add to research queue";
+
+		// Queue tab
+		public static LocString TreeTab = "Categories";
+
+		public static LocString TreeTabTooltip = "Browse research by category";
+
+		public static LocString QueueTab = "Queue";
+
+		public static LocString QueueTabCount = "{0} ({1})";
+
+		public static LocString QueueTabTooltip = "Show the research queue in order";
+
+		// Empty queue
+		public static LocString EmptyTitle = "Queue is empty";
+
+		public static LocString KeyClick = "Click";
+
+		public static LocString KeyShift = "Shift";
+
+		public static LocString EmptyClickHint = "a tech to research it now";
+
+		public static LocString EmptyShiftHint = "to add it to the queue";
+
+		public static LocString RowHint = "Drag to reorder. Click to show it in the tree.";
+
+		public static LocString RemoveTooltip = "Remove from the queue, with everything that " +
+			"depends on it";
 	}
 }
