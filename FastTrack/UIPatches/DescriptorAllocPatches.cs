@@ -24,7 +24,6 @@ using System.Text;
 using UnityEngine;
 
 using MODIFIERS = STRINGS.ELEMENTS.MATERIAL_MODIFIERS;
-using PLANTERSIDESCREEN = STRINGS.UI.UISIDESCREENS.PLANTERSIDESCREEN;
 
 namespace PeterHan.FastTrack.UIPatches {
 	/// <summary>
@@ -57,18 +56,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		private static readonly List<Descriptor> EL_DESCRIPTORS = new List<Descriptor>(16);
 
 		/// <summary>
-		/// A shared instance that will be reused for effect descriptors. You know where it
-		/// is only used?
-		/// </summary>
-		private static readonly List<Descriptor> PLANT_DESCRIPTORS = new List<Descriptor>(16);
-
-		private static Descriptor plantEffects;
-
-		private static Descriptor plantLifecycle;
-
-		private static Descriptor plantRequirements;
-
-		/// <summary>
 		/// Clears any leftover data in the cached lists.
 		/// </summary>
 		internal static void Cleanup() {
@@ -76,28 +63,8 @@ namespace PeterHan.FastTrack.UIPatches {
 			BUFFER.Clear();
 			EFFECT_DESCRIPTORS.Clear();
 			EL_DESCRIPTORS.Clear();
-			PLANT_DESCRIPTORS.Clear();
 		}
 
-		/// <summary>
-		/// Adds the matching descriptors to the full list.
-		/// </summary>
-		/// <param name="descriptors">The location where the descriptors will be added.</param>
-		/// <param name="toAdd">The descriptors to be added.</param>
-		/// <param name="simpleScreen">Whether the descriptors are to be shown in the
-		/// simplified info screen.</param>
-		private static void AddDescriptors(this ICollection<Descriptor> descriptors,
-				IList<Descriptor> toAdd, bool simpleScreen) {
-			if (toAdd != null) {
-				int n = toAdd.Count;
-				for (int i = 0; i < n; i++) {
-					var descriptor = toAdd[i];
-					if (simpleScreen || !descriptor.onlyForSimpleInfoScreen)
-						descriptors.Add(descriptor);
-				}
-			}
-		}
-		
 		/// <summary>
 		/// Adds the modifiers to the tooltip.
 		/// </summary>
@@ -116,25 +83,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		}
 
 		/// <summary>
-		/// Adds components that can provide descriptors from a state machine.
-		/// </summary>
-		/// <param name="smc">The state machine controller to examine.</param>
-		/// <param name="descComponents">The location where the descriptor components will be added.</param>
-		private static void AddStateMachineDescriptors(this StateMachineController smc,
-				ICollection<IGameObjectEffectDescriptor> descComponents) {
-			if (smc.defHandle.IsValid()) {
-				// Avoid allocating another list
-				var defs = smc.cmpdef.defs;
-				int n = defs.Count;
-				for (int i = 0; i < n; i++) {
-					var baseDef = defs[i];
-					if (baseDef is IGameObjectEffectDescriptor descriptor)
-						descComponents.Add(descriptor);
-				}
-			}
-		}
-		
-		/// <summary>
 		/// Adds all descriptors to the specified list.
 		/// </summary>
 		/// <param name="go">The game object to describe.</param>
@@ -142,21 +90,10 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// simplified info screen.</param>
 		/// <param name="descriptors">The location where the descriptors will be added.</param>
 		internal static void GetAllDescriptors(GameObject go, bool simpleScreen,
-				ICollection<Descriptor> descriptors) {
-			var comps = ListPool<IGameObjectEffectDescriptor, DescriptorSorter>.Allocate();
-			go.GetComponents(comps);
-			if (go.TryGetComponent(out StateMachineController smc))
-				smc.AddStateMachineDescriptors(comps);
-			comps.Sort(DescriptorSorter.Instance);
-			int n = comps.Count;
-			for (int i = 0; i < n; i++)
-				descriptors.AddDescriptors(comps[i].GetDescriptors(go), simpleScreen);
-			comps.Recycle();
-			if (go.TryGetComponent(out KPrefabID prefabID)) {
-				descriptors.AddDescriptors(prefabID.AdditionalRequirements,
-					simpleScreen);
-				descriptors.AddDescriptors(prefabID.AdditionalEffects, simpleScreen);
-			}
+				List<Descriptor> descriptors) {
+			// U60 added an allocation free vanilla version that also uses the new
+			// CollectDescriptors API, so use it to match vanilla ordering and content
+			GameUtil.CollectAllDescriptors(go, descriptors, simpleScreen);
 		}
 
 		/// <summary>
@@ -166,7 +103,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// <param name="simpleScreen">Whether the descriptors are to be shown in the
 		/// simplified info screen.</param>
 		/// <returns>The matching effect descriptors.</returns>
-		internal static IList<Descriptor> GetGameObjectEffects(IList<Descriptor> desc,
+		internal static List<Descriptor> GetGameObjectEffects(IList<Descriptor> desc,
 				bool simpleScreen) {
 			var descriptors = EFFECT_DESCRIPTORS;
 			int n = desc.Count;
@@ -185,7 +122,7 @@ namespace PeterHan.FastTrack.UIPatches {
 		/// </summary>
 		/// <param name="desc">All descriptors of the active game object.</param>
 		/// <returns>The matching requirement descriptors.</returns>
-		internal static IList<Descriptor> GetRequirements(IList<Descriptor> desc) {
+		internal static List<Descriptor> GetRequirements(IList<Descriptor> desc) {
 			var descriptors = EFFECT_DESCRIPTORS;
 			int n = desc.Count;
 			descriptors.Clear();
@@ -206,13 +143,6 @@ namespace PeterHan.FastTrack.UIPatches {
 				"{1:0.######}");
 			lowTC = MODIFIERS.TOOLTIP.LOW_THERMAL_CONDUCTIVITY.Replace("{1}",
 				"{1:0.######}");
-			plantEffects.SetupDescriptor(PLANTERSIDESCREEN.PLANTEFFECTS, PLANTERSIDESCREEN.
-				TOOLTIPS.PLANTEFFECTS);
-			plantLifecycle.SetupDescriptor(PLANTERSIDESCREEN.LIFECYCLE, PLANTERSIDESCREEN.
-				TOOLTIPS.PLANTLIFECYCLE, Descriptor.DescriptorType.Lifecycle);
-			plantRequirements.SetupDescriptor(PLANTERSIDESCREEN.PLANTREQUIREMENTS,
-				PLANTERSIDESCREEN.TOOLTIPS.PLANTREQUIREMENTS, Descriptor.DescriptorType.
-				Requirement);
 		}
 
 		/// <summary>
@@ -226,232 +156,9 @@ namespace PeterHan.FastTrack.UIPatches {
 				DiseaseSource;
 		}
 
-		/// <summary>
-		/// Applied to GameUtil to reuse a list for getting descriptors.
-		/// </summary>
-		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetAllDescriptors))]
-		internal static class GetAllDescriptors_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
-
-			/// <summary>
-			/// Applied before GetAllDescriptors runs.
-			/// </summary>
-			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix(GameObject go, bool simpleInfoScreen,
-					ref List<Descriptor> __result) {
-				var descriptors = ALL_DESCRIPTORS;
-				descriptors.Clear();
-				GetAllDescriptors(go, simpleInfoScreen, descriptors);
-				__result = descriptors;
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to GameUtil to reuse a list for getting effect descriptors.
-		/// </summary>
-		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetEffectDescriptors))]
-		internal static class GetEffectDescriptors_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
-
-			/// <summary>
-			/// Applied before GetEffectDescriptors runs.
-			/// </summary>
-			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix(List<Descriptor> descriptors,
-					ref List<Descriptor> __result) {
-				var filtered = EFFECT_DESCRIPTORS;
-				int n = descriptors.Count;
-				filtered.Clear();
-				for (int i = 0; i < n; i++) {
-					var descriptor = descriptors[i];
-					if (descriptor.IsEffectDescriptor()) {
-						descriptor.IncreaseIndent();
-						filtered.Add(descriptor);
-					}
-				}
-				__result = filtered;
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to GameUtil to reuse a list for getting game object effects.
-		/// </summary>
-		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetGameObjectEffects))]
-		internal static class GetGameObjectEffects_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
-
-			/// <summary>
-			/// Applied before GetGameObjectEffects runs.
-			/// </summary>
-			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix(GameObject go, bool simpleInfoScreen,
-					ref List<Descriptor> __result) {
-				var descriptors = EFFECT_DESCRIPTORS;
-				var comps = ListPool<IGameObjectEffectDescriptor, DescriptorSorter>.Allocate();
-				descriptors.Clear();
-				go.GetComponents(comps);
-				if (go.TryGetComponent(out StateMachineController smc))
-					smc.AddStateMachineDescriptors(comps);
-				comps.Sort(DescriptorSorter.Instance);
-				int n = comps.Count;
-				for (int i = 0; i < n; i++) {
-					var toAdd = comps[i].GetDescriptors(go);
-					if (toAdd != null) {
-						int nd = toAdd.Count;
-						for (int j = 0; j < nd; j++) {
-							var descriptor = toAdd[j];
-							if ((simpleInfoScreen || !descriptor.onlyForSimpleInfoScreen) &&
-								descriptor.IsEffectDescriptor())
-								descriptors.Add(descriptor);
-						}
-					}
-				}
-				comps.Recycle();
-				if (go.TryGetComponent(out KPrefabID prefabID))
-					descriptors.AddDescriptors(prefabID.AdditionalEffects, simpleInfoScreen);
-				__result = descriptors;
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to GameUtil to reuse a list for getting plant effect descriptors.
-		/// </summary>
-		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetPlantEffectDescriptors))]
-		internal static class GetPlantEffectDescriptors_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
-
-			/// <summary>
-			/// Applied before GetPlantEffectDescriptors runs.
-			/// </summary>
-			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix(GameObject go, ref List<Descriptor> __result) {
-				var descriptors = PLANT_DESCRIPTORS;
-				descriptors.Clear();
-				if (go.TryGetComponent(out Growing _)) {
-					var allDescriptors = ALL_DESCRIPTORS;
-					bool added = false;
-					allDescriptors.Clear();
-					GetAllDescriptors(go, false, allDescriptors);
-					int n = allDescriptors.Count;
-					for (int i = 0; i < n; i++) {
-						var descriptor = allDescriptors[i];
-						if (descriptor.IsEffectDescriptor()) {
-							if (!added) {
-								descriptors.Add(plantEffects);
-								added = true;
-							}
-							descriptor.IncreaseIndent();
-							descriptors.Add(descriptor);
-						}
-					}
-				}
-				__result = descriptors;
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to GameUtil to reuse a list for getting plant effect descriptors.
-		/// </summary>
-		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetPlantLifeCycleDescriptors))]
-		internal static class GetPlantLifeCycleDescriptors_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
-
-			/// <summary>
-			/// Applied before GetPlantLifeCycleDescriptors runs.
-			/// </summary>
-			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix(GameObject go, ref List<Descriptor> __result) {
-				var descriptors = PLANT_DESCRIPTORS;
-				var allDescriptors = ALL_DESCRIPTORS;
-				bool added = false;
-				descriptors.Clear();
-				allDescriptors.Clear();
-				GetAllDescriptors(go, false, allDescriptors);
-				int n = allDescriptors.Count;
-				for (int i = 0; i < n; i++) {
-					var descriptor = allDescriptors[i];
-					if (descriptor.type == Descriptor.DescriptorType.Lifecycle) {
-						if (!added) {
-							descriptors.Add(plantLifecycle);
-							added = true;
-						}
-						descriptor.IncreaseIndent();
-						descriptors.Add(descriptor);
-					}
-				}
-				__result = descriptors;
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to GameUtil to reuse a list for getting plant requirement descriptors.
-		/// </summary>
-		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetPlantRequirementDescriptors))]
-		internal static class GetPlantRequirementDescriptors_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
-
-			/// <summary>
-			/// Applied before GetPlantRequirementDescriptors runs.
-			/// </summary>
-			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix(GameObject go, ref List<Descriptor> __result) {
-				var descriptors = PLANT_DESCRIPTORS;
-				var allDescriptors = ALL_DESCRIPTORS;
-				bool added = false;
-				descriptors.Clear();
-				allDescriptors.Clear();
-				GetAllDescriptors(go, false, allDescriptors);
-				int n = allDescriptors.Count;
-				for (int i = 0; i < n; i++) {
-					var descriptor = allDescriptors[i];
-					if (descriptor.type == Descriptor.DescriptorType.Requirement) {
-						if (!added) {
-							descriptors.Add(plantRequirements);
-							added = true;
-						}
-						descriptor.IncreaseIndent();
-						descriptors.Add(descriptor);
-					}
-				}
-				__result = descriptors;
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to GameUtil to reuse a list for getting requirement descriptors.
-		/// </summary>
-		[HarmonyPatch(typeof(GameUtil), nameof(GameUtil.GetRequirementDescriptors),
-			typeof(List<Descriptor>), typeof(bool))]
-		internal static class GetRequirementDescriptors_Patch {
-			internal static bool Prepare() => FastTrackOptions.Instance.AllocOpts;
-
-			/// <summary>
-			/// Applied before GetRequirementDescriptors runs.
-			/// </summary>
-			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix(List<Descriptor> descriptors, bool indent,
-					ref List<Descriptor> __result) {
-				var filtered = EFFECT_DESCRIPTORS;
-				int n = descriptors.Count;
-				filtered.Clear();
-				for (int i = 0; i < n; i++) {
-					var descriptor = descriptors[i];
-					if (descriptor.type == Descriptor.DescriptorType.Requirement) {
-						if (indent)
-							descriptor.IncreaseIndent();
-						filtered.Add(descriptor);
-					}
-				}
-				__result = filtered;
-				return false;
-			}
-		}
+		// The GameUtil.Get*Descriptors patches were removed for U60: those methods are now
+		// obsolete wrappers around the new allocation free GameUtil.Collect*Descriptors
+		// methods, and components now provide descriptors through CollectDescriptors.
 	}
 
 	/// <summary>

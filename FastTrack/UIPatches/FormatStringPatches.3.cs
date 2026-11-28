@@ -664,54 +664,9 @@ namespace PeterHan.FastTrack.UIPatches {
 			}
 		}
 
-		/// <summary>
-		/// Applied to LocText to make parsing the text for links and hotkeys more efficient.
-		/// </summary>
-		[HarmonyPatch(typeof(LocText), nameof(LocText.FilterInput))]
-		internal static class FilterInput_Patch {
-			internal static bool Prepare() => CheckPatch();
-
-			/// <summary>
-			/// Applied before FilterInput runs.
-			/// </summary>
-			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix(LocText __instance, string input, ref string __result)
-			{
-				var text = CACHED_BUILDER;
-				if (input != null) {
-					__instance.originalString = ParseHotkeys(input) ? input : "";
-					var newStr = text.ToString();
-					// Link handling
-					if (__instance.AllowLinks)
-						newStr = LocText.ModifyLinkStrings(newStr);
-					__result = newStr;
-				} else
-					__result = null;
-				return false;
-			}
-		}
-
-		/// <summary>
-		/// Applied to LocText to make parsing the text for links and hotkeys more efficient.
-		/// </summary>
-		[HarmonyPatch(typeof(LocText), nameof(LocText.ParseText))]
-		internal static class ParseText_Patch {
-			internal static bool Prepare() => CheckPatch();
-
-			/// <summary>
-			/// Applied before ParseText runs.
-			/// </summary>
-			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix(string input, ref string __result) {
-				var text = CACHED_BUILDER;
-				if (input != null) {
-					ParseHotkeys(input);
-					__result = text.ToString();
-				} else
-					__result = null;
-				return false;
-			}
-		}
+		// LocText.FilterInput and LocText.ParseText patches were removed for U60: the
+		// vanilla versions were rewritten with span-based fast paths (ParseTextWillModify,
+		// ManifestStyledLinks) and ParseText now has a different signature.
 
 		/// <summary>
 		/// Applied to GameInputManager to dump the cache whenever key binds are changed.

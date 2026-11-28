@@ -118,9 +118,27 @@ namespace PeterHan.FastTrack.UIPatches {
 					RyuFormat.ToString(buffer, (double)num, precision, RyuFormatOptions.
 						ExponentialMode);
 				else
-					buffer.Append(num.ToString(floatFormat));
+					buffer.AppendNumberFormat(floatFormat, num);
 			} else
-				buffer.Append(num.ToString(floatFormat));
+				buffer.AppendNumberFormat(floatFormat, num);
+			return buffer;
+		}
+
+		/// <summary>
+		/// Appends a formatted float to the buffer. Supports both composite format strings
+		/// ("{0:0.#}") and plain numeric format strings ("0.#"), since U60 switched some
+		/// GameUtil defaults (like GetFormattedMass) from the former to the latter.
+		/// </summary>
+		/// <param name="buffer">The string builder to append.</param>
+		/// <param name="format">The format to use for the number.</param>
+		/// <param name="num">The value to append.</param>
+		/// <returns>The string builder.</returns>
+		internal static StringBuilder AppendNumberFormat(this StringBuilder buffer,
+				string format, float num) {
+			if (format.IndexOf('{') >= 0)
+				buffer.AppendFormat(format, num);
+			else
+				buffer.Append(num.ToString(format));
 			return buffer;
 		}
 
@@ -325,14 +343,14 @@ namespace PeterHan.FastTrack.UIPatches {
 						suffix = SUFFIXES.MASS.POUND;
 				}
 				// Hardcodes for the most common cases in ONI
-				if (format == null || format == "{0:0.#}")
+				if (format == null || format == "{0:0.#}" || format == "0.#")
 					mass.ToRyuSoftString(text, 1);
-				else if (format == "{0:0.##}")
+				else if (format == "{0:0.##}" || format == "0.##")
 					mass.ToRyuSoftString(text, 2);
-				else if (format == "{0:0.###}")
+				else if (format == "{0:0.###}" || format == "0.###")
 					mass.ToRyuSoftString(text, 3);
 				else
-					text.AppendFormat(format, mass);
+					text.AppendNumberFormat(format, mass);
 				if (displaySuffix)
 					text.Append(suffix).AppendTimeSlice(timeSlice);
 			}

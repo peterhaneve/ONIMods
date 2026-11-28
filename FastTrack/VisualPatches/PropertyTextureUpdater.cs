@@ -25,23 +25,14 @@ using UnityEngine;
 
 using SimProperty = PropertyTextures.Property;
 
+// U60 turned the PropertyTextures.UpdateXxx methods into cached static delegates
+using UpdateTexture = PropertyTextures.WorkItem.Callback;
+
 namespace PeterHan.FastTrack.VisualPatches {
 	/// <summary>
 	/// Queues up the expensive PropertyTexture updates on a background thread.
 	/// </summary>
 	public sealed class PropertyTextureUpdater : IDisposable {
-		/// <summary>
-		/// A delegate which can update property textures. Uses reverse patches pulled from
-		/// the original PropertyTextures class.
-		/// </summary>
-		/// <param name="texture_region">The region to update.</param>
-		/// <param name="x0">The bottom left x coordinate.</param>
-		/// <param name="y0">The bottom left y coordinate.</param>
-		/// <param name="x1">The top right x coordinate.</param>
-		/// <param name="y1">The top right y coordinate.</param>
-		private delegate void UpdateTexture(TextureRegion texture_region, int x0, int y0,
-			int x1, int y1);
-
 		/// <summary>
 		/// Stores the singleton instance of this class.
 		/// </summary>

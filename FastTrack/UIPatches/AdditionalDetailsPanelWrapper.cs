@@ -306,14 +306,9 @@ namespace PeterHan.FastTrack.UIPatches {
 			var target = lastSelection.target;
 			var modifiers = lastSelection.modifiers;
 			Attributes attributes;
-			IList<Descriptor> descriptors;
-			if (FastTrackOptions.Instance.AllocOpts) {
-				// Elide a patch call on a hot path
-				descriptors = DescriptorAllocPatches.ALL_DESCRIPTORS;
-				descriptors.Clear();
-				DescriptorAllocPatches.GetAllDescriptors(target, false, descriptors);
-			} else
-				descriptors = GameUtil.GetAllDescriptors(target);
+			var descriptors = DescriptorAllocPatches.ALL_DESCRIPTORS;
+			descriptors.Clear();
+			DescriptorAllocPatches.GetAllDescriptors(target, false, descriptors);
 			int n;
 			// Some chunks can have modifiers, but no attributes?
 			if (modifiers != null && (attributes = modifiers.attributes) != null &&

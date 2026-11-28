@@ -36,8 +36,6 @@ namespace PeterHan.FastTrack.UIPatches {
 		internal static IEnumerable<MethodBase> TargetMethods() {
 			yield return typeof(Tutorial).GetMethodSafe(nameof(Tutorial.Render1000ms), false,
 				PPatchTools.AnyArguments);
-			yield return typeof(Tutorial).GetMethodSafe(nameof(Tutorial.
-				LoadHiddenTutorialMessages), false, PPatchTools.AnyArguments);
 			yield return typeof(Tutorial).GetMethodSafe(nameof(Tutorial.OnSpawn), false);
 			yield return typeof(Tutorial).GetMethodSafe(nameof(Tutorial.OnCleanUp), false);
 		}

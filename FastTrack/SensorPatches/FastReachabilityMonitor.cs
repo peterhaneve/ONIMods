@@ -18,6 +18,7 @@
 
 using HarmonyLib;
 using PeterHan.PLib.Core;
+using System.Collections.Generic;
 using UnityEngine;
 
 using RMI = ReachabilityMonitor.Instance;
@@ -37,6 +38,28 @@ namespace PeterHan.FastTrack.SensorPatches {
 			if (target is FastReachabilityMonitor rm)
 				rm.UpdateOffsets();
 		};
+
+		/// <summary>
+		/// Computes the bounding extents of a set of offsets from a cell. Equivalent to
+		/// the Extents(int, CellOffset[]) constructor, which has no IReadOnlyList overload
+		/// even though U60 changed Workable.GetOffsets to return one.
+		/// </summary>
+		/// <param name="cell">The origin cell.</param>
+		/// <param name="offsets">The offsets from that cell.</param>
+		/// <returns>The extents covering the cell and all of its offsets.</returns>
+		private static Extents GetExtents(int cell, IReadOnlyList<CellOffset> offsets) {
+			Grid.CellToXY(cell, out int x, out int y);
+			int minX = x, minY = y, maxX = x, maxY = y, n = offsets?.Count ?? 0;
+			for (int i = 0; i < n; i++) {
+				var offset = offsets[i];
+				int ox = x + offset.x, oy = y + offset.y;
+				if (ox < minX) minX = ox;
+				if (ox > maxX) maxX = ox;
+				if (oy < minY) minY = oy;
+				if (oy > maxY) maxY = oy;
+			}
+			return new Extents(minX, minY, maxX - minX + 1, maxY - minY + 1);
+		}
 
 		/// <summary>
 		/// The event subscription ID when the object moves.
@@ -124,7 +147,7 @@ namespace PeterHan.FastTrack.SensorPatches {
 			if (inst != null && master != null) {
 				int cell = Grid.PosToCell(master.transform.position);
 				if (Grid.IsValidCell(cell) && cell > 0) {
-					var extents = new Extents(cell, smi.master.GetOffsets(cell));
+					var extents = GetExtents(cell, smi.master.GetOffsets(cell));
 					// Only if the extents actually changed
 					if (extents.x != lastExtents.x || extents.y != lastExtents.y || extents.
 							width != lastExtents.width || extents.height != lastExtents.
