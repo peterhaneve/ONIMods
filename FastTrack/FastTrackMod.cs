@@ -112,7 +112,7 @@ namespace PeterHan.FastTrack {
 					typeof(FastTrackMod), nameof(FixTimeLapseDrag)));
 				PRegistry.PutData(ASDF, true);
 			}
-			if (options.FastReachability)
+			if (GamePatches.FastCellChangeMonitor.Enabled)
 				GamePatches.FastCellChangeMonitor.CreateInstance();
 			if (options.SideScreenOpts) {
 				FastTrackCompat.CheckStatsCompat(harmony);
@@ -143,7 +143,7 @@ namespace PeterHan.FastTrack {
 			Metrics.FastTrackProfiler.End();
 #endif
 			ConduitPatches.ConduitFlowVisualizerPatches.Cleanup();
-			if (options.FastReachability)
+			if (GamePatches.FastCellChangeMonitor.Enabled)
 				GamePatches.FastCellChangeMonitor.FastInstance?.Disarm();
 			if (options.CachePaths) {
 				PathPatches.PathCacher.Cleanup();
@@ -165,7 +165,7 @@ namespace PeterHan.FastTrack {
 				VisualPatches.TileMeshRenderer.DestroyInstance();
 			if (options.FastReachability) {
 				SensorPatches.FastGroupProber.Cleanup();
-				GamePatches.FastCellChangeMonitor.FastInstance.Cleanup();
+				GamePatches.FastCellChangeMonitor.FastInstance?.Cleanup();
 			}
 			if (options.MiscOpts)
 				GamePatches.GeyserConfigurator_FindType_Patch.Cleanup();

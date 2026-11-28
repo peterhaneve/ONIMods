@@ -105,8 +105,8 @@ namespace PeterHan.FastTrack.VisualPatches {
 			/// Applied before Render runs.
 			/// </summary>
 			[HarmonyPriority(Priority.Low)]
-			internal static bool Prefix(bool forceVisibleRebuild) {
-				return forceVisibleRebuild || !DialogVisible;
+			internal static bool Prefix() {
+				return !DialogVisible;
 			}
 		}
 

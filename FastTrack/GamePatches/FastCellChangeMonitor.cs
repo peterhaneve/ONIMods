@@ -30,6 +30,15 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	public sealed class FastCellChangeMonitor {
 		/// <summary>
+		/// U60 (November 2026 QoL update) rewrote CellChangeMonitor: cell state moved into
+		/// KObject, cell change events are now dispatched through the GameObject event
+		/// system, and a MarkDirty(Transform, Vector3) overload was added. This replacement
+		/// is based on the old implementation, so it is disabled until it can be re-verified
+		/// against the new vanilla code.
+		/// </summary>
+		internal static bool Enabled => false;
+
+		/// <summary>
 		/// A non-locked version of the Singleton instance.
 		/// </summary>
 		internal static FastCellChangeMonitor FastInstance { get; private set; }
@@ -520,7 +529,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	[HarmonyPatch(typeof(CellChangeMonitor), nameof(CellChangeMonitor.ClearLastKnownCell))]
 	public static class CellChangeMonitor_ClearLastKnownCell_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
+		internal static bool Prepare() => FastCellChangeMonitor.Enabled;
 
 		/// <summary>
 		/// Applied before ClearLastKnownCell runs.
@@ -537,7 +546,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	[HarmonyPatch(typeof(CellChangeMonitor), nameof(CellChangeMonitor.IsMoving))]
 	public static class CellChangeMonitor_IsMoving_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
+		internal static bool Prepare() => FastCellChangeMonitor.Enabled;
 
 		/// <summary>
 		/// Applied before IsMoving runs.
@@ -552,9 +561,10 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// <summary>
 	/// Applied to CellChangeMonitor to replace MarkDirty with the fast version.
 	/// </summary>
-	[HarmonyPatch(typeof(CellChangeMonitor), nameof(CellChangeMonitor.MarkDirty))]
+	[HarmonyPatch(typeof(CellChangeMonitor), nameof(CellChangeMonitor.MarkDirty),
+		typeof(Transform))]
 	public static class CellChangeMonitor_MarkDirty_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
+		internal static bool Prepare() => FastCellChangeMonitor.Enabled;
 
 		/// <summary>
 		/// Applied before MarkDirty runs.
@@ -571,7 +581,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	[HarmonyPatch(typeof(CellChangeMonitor), nameof(CellChangeMonitor.RenderEveryTick))]
 	public static class CellChangeMonitor_RenderEveryTick_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
+		internal static bool Prepare() => FastCellChangeMonitor.Enabled;
 
 		/// <summary>
 		/// Applied before RenderEveryTick runs.
@@ -590,7 +600,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	[HarmonyPatch(typeof(CellChangeMonitor), nameof(CellChangeMonitor.
 		RegisterCellChangedHandler))]
 	public static class CellChangeMonitor_RegisterCellChangedHandler_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
+		internal static bool Prepare() => FastCellChangeMonitor.Enabled;
 
 		/// <summary>
 		/// Applied before RegisterCellChangedHandler runs.
@@ -611,7 +621,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	[HarmonyPatch(typeof(CellChangeMonitor), nameof(CellChangeMonitor.
 		RegisterMovementStateChanged))]
 	public static class CellChangeMonitor_RegisterMovementStateChanged_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
+		internal static bool Prepare() => FastCellChangeMonitor.Enabled;
 
 		/// <summary>
 		/// Applied before RegisterMovementStateChanged runs.
@@ -632,7 +642,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	[HarmonyPatch(typeof(CellChangeMonitor), nameof(CellChangeMonitor.
 		UnregisterCellChangedHandler))]
 	public static class CellChangeMonitor_UnregisterCellChangedHandler2_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
+		internal static bool Prepare() => FastCellChangeMonitor.Enabled;
 
 		/// <summary>
 		/// Applied before UnregisterCellChangedHandler runs.
@@ -652,7 +662,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	[HarmonyPatch(typeof(CellChangeMonitor), nameof(CellChangeMonitor.
 		UnregisterMovementStateChanged))]
 	public static class CellChangeMonitor_UnregisterMovementStateChanged_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
+		internal static bool Prepare() => FastCellChangeMonitor.Enabled;
 
 		/// <summary>
 		/// Applied before UnregisterMovementStateChanged runs.
@@ -670,7 +680,7 @@ namespace PeterHan.FastTrack.GamePatches {
 	/// </summary>
 	[HarmonyPatch(typeof(CellChangeMonitor), nameof(CellChangeMonitor.SetGridSize))]
 	public static class CellChangeMonitor_SetGridSize_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.FastReachability;
+		internal static bool Prepare() => FastCellChangeMonitor.Enabled;
 
 		/// <summary>
 		/// Applied after SetGridSize runs.

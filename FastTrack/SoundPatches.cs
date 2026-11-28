@@ -366,21 +366,6 @@ namespace PeterHan.FastTrack {
 		}
 	}
 
-	/// <summary>
-	/// Applied to AudioMixer to turn off sound completely.
-	/// </summary>
-	[HarmonyPatch(typeof(AudioMixer), nameof(AudioMixer.Stop), typeof(HashedString),
-		typeof(FMOD.Studio.STOP_MODE))]
-	public static class AudioMixer_Stop_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.DisableSound;
-
-		/// <summary>
-		/// Applied before Stop runs.
-		/// </summary>
-		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(ref bool __result) {
-			__result = true;
-			return false;
-		}
-	}
+	// AudioMixer_Stop_Patch was removed: AudioMixer.Stop(HashedString, STOP_MODE) no longer
+	// exists, so the patch would fail to apply when Disable Sound is enabled.
 }

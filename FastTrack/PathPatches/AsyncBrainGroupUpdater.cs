@@ -70,14 +70,17 @@ namespace PeterHan.FastTrack.PathPatches {
 		/// <returns>The navigation cost to the destination.</returns>
 		private static int GetNavigationCost(Navigator navigator, Workable destination,
 				int cell) {
-			CellOffset[] offsets = null;
+			IReadOnlyList<CellOffset> offsets = null;
 			var offsetTracker = destination.offsetTracker;
-			if (offsetTracker != null && (offsets = offsetTracker.offsets) == null) {
-				offsetTracker.UpdateOffsets(cell);
-				offsets = offsetTracker.offsets;
-				if (offsetTracker.previousCell != cell)
-					DeferredTriggers.Instance?.Queue(offsetTracker, cell);
-			}
+			if (offsetTracker != null)
+				lock (offsetTracker) {
+					if (!offsetTracker.offsetsValid || offsetTracker.offsets == null) {
+						offsetTracker.UpdateOffsets(cell);
+						if (offsetTracker.previousCell != cell)
+							DeferredTriggers.Instance?.Queue(offsetTracker, cell);
+					}
+					offsets = offsetTracker.offsets;
+				}
 			return offsets == null ? navigator.GetNavigationCost(cell) : navigator.
 				GetNavigationCost(cell, offsets);
 		}
@@ -93,6 +96,8 @@ namespace PeterHan.FastTrack.PathPatches {
 			var clearables = clearableManager.markedClearables.GetDataList();
 			int n = clearables.Count;
 			sortedClearables.Clear();
+			// U60 caches fetch ranges by tag; the fetch list changes for each consumer here
+			clearableManager.fetchRangeByTag?.Clear();
 			for (int i = 0; i < n; i++) {
 				var markedClearable = clearables[i];
 				var pickupable = markedClearable.pickupable;
@@ -105,7 +110,7 @@ namespace PeterHan.FastTrack.PathPatches {
 					});
 			}
 			// Reuses Stock Bug Fix's transpile
-			sortedClearables.Sort(SortedClearable.comparer);
+			sortedClearables.Sort(SortedClearable.comparison);
 		}
 
 		/// <summary>

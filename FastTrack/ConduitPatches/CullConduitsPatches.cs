@@ -36,7 +36,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	[HarmonyPatch(typeof(RenderMeshContext), MethodType.Constructor,
 		typeof(ConduitFlowVisualizer), typeof(float), typeof(Vector2I), typeof(Vector2I))]
 	public static class ConduitFlowVisualizer_RenderMeshContext_Constructor_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.CullConduits;
+		internal static bool Prepare() => UpdateGraphIfEntombed.Enabled;
 
 		/// <summary>
 		/// Removes all conduits that are inside solid, opaque grid cells.
@@ -114,7 +114,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	[HarmonyPatch(typeof(SolidConduitFlowVisualizer), nameof(SolidConduitFlowVisualizer.
 		Render))]
 	public static class SolidConduitFlowVisualizer_Render_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.CullConduits;
+		internal static bool Prepare() => UpdateGraphIfEntombed.Enabled;
 
 		/// <summary>
 		/// Removes all conduits that are inside solid, opaque grid cells.
@@ -178,6 +178,14 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	/// </summary>
 	[SkipSaveFileSerialization]
 	public sealed class UpdateGraphIfEntombed : KMonoBehaviour {
+		/// <summary>
+		/// U60 split OverlayModes.Mode.AddTargetIfVisible into several HybridListHashSet
+		/// overloads, so the transpiler that makes culled conduits visible again in overlays
+		/// no longer applies. Without it, conduits hidden inside tiles would stay hidden in
+		/// the overlays, so all conduit culling is disabled until it is ported.
+		/// </summary>
+		internal static bool Enabled => false; // was FastTrackOptions.Instance.CullConduits
+
 #pragma warning disable IDE0044
 #pragma warning disable CS0649
 		// These fields are automatically populated by KMonoBehaviour
@@ -256,7 +264,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(KAnimGraphTileVisualizer), nameof(KAnimGraphTileVisualizer.OnSpawn))]
 	public static class KAnimGraphTileVisualizer_OnSpawn_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.CullConduits;
+		internal static bool Prepare() => UpdateGraphIfEntombed.Enabled;
 
 		/// <summary>
 		/// Applied after OnSpawn runs.
@@ -276,7 +284,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	/// </summary>
 	[HarmonyPatch(typeof(KAnimGraphTileVisualizer), nameof(KAnimGraphTileVisualizer.Refresh))]
 	public static class KAnimGraphTileVisualizer_Refresh_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.CullConduits;
+		internal static bool Prepare() => UpdateGraphIfEntombed.Enabled;
 
 		/// <summary>
 		/// Applied before Refresh runs.
@@ -294,7 +302,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	/// </summary>
 	[HarmonyPatch]
 	public static class OverlayModes_Modes_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.CullConduits;
+		internal static bool Prepare() => UpdateGraphIfEntombed.Enabled;
 
 		/// <summary>
 		/// Target the update method of each conduit overlay.
@@ -377,7 +385,7 @@ namespace PeterHan.FastTrack.ConduitPatches {
 	[HarmonyPatch(typeof(OverlayModes.Mode), nameof(OverlayModes.Mode.ResetDisplayValues),
 		typeof(KBatchedAnimController))]
 	public static class OverlayModes_Mode_ResetDisplayValues_Patch {
-		internal static bool Prepare() => FastTrackOptions.Instance.CullConduits;
+		internal static bool Prepare() => UpdateGraphIfEntombed.Enabled;
 
 		/// <summary>
 		/// Applied after ResetDisplayValues runs.
