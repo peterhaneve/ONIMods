@@ -280,27 +280,34 @@ namespace PeterHan.FastTrack.PathPatches {
 
 		/// <summary>
 		/// Applied before GetOffsets runs.
+		///
+		/// U60 changed the offsets to a List with an offsetsValid flag. Instead of
+		/// replacing the method, the cell change is deferred when running inside a job, and
+		/// the vanilla method then runs against the previous cell under a lock.
 		/// </summary>
 		[HarmonyPriority(Priority.Low)]
-		internal static bool Prefix(OffsetTracker __instance, int current_cell,
-				ref CellOffset[] __result) {
-			var offsets = __instance.offsets;
-			int lastCell = __instance.previousCell;
-			if (current_cell != lastCell) {
-				if (OffsetTracker.isExecutingWithinJob)
+		internal static void Prefix(OffsetTracker __instance, ref int current_cell,
+				out bool __state) {
+			bool inJob = OffsetTracker.isExecutingWithinJob;
+			if (inJob) {
+				int lastCell = __instance.previousCell;
+				if (current_cell != lastCell) {
 					DeferredTriggers.Instance.Queue(__instance, current_cell);
-				else {
-					__instance.UpdateCell(lastCell, current_cell);
-					__instance.previousCell = lastCell = current_cell;
+					current_cell = lastCell;
 				}
+				System.Threading.Monitor.Enter(__instance);
 			}
-			if (offsets == null)
-				lock (__instance) {
-					__instance.UpdateOffsets(lastCell);
-					offsets = __instance.offsets;
-				}
-			__result = offsets;
-			return false;
+			__state = inJob;
+		}
+
+		/// <summary>
+		/// Applied after GetOffsets runs, even if it throws.
+		/// </summary>
+		internal static Exception Finalizer(OffsetTracker __instance, bool __state,
+				Exception __exception) {
+			if (__state)
+				System.Threading.Monitor.Exit(__instance);
+			return __exception;
 		}
 	}
 }

@@ -516,7 +516,7 @@ namespace PeterHan.FastTrack.UIPatches {
 				units = GameUtil.ApplyTimeSlice(units, timeSlice);
 				if (!text.Clear().AppendIfInfinite(units)) {
 					if (!floatFormatOverride.IsNullOrWhiteSpace())
-						text.AppendFormat(floatFormatOverride, units);
+						text.AppendNumberFormat(floatFormatOverride, units);
 					else
 						units.ToStandardString(text);
 				}

@@ -216,7 +216,8 @@ namespace PeterHan.FastTrack.SensorPatches {
 	/// Applied to SafeCellQuery to dramatically speed it up by cancelling the query once
 	/// a target cell has been found with all criteria.
 	/// </summary>
-	[HarmonyPatch(typeof(SafeCellQuery), nameof(SafeCellQuery.IsMatch))]
+	[HarmonyPatch(typeof(SafeCellQuery), nameof(SafeCellQuery.IsMatch), typeof(int),
+		typeof(int), typeof(int))]
 	public static class SafeCellQuery_IsMatch_Patch {
 		/// <summary>
 		/// SafeFlags is not declared as a [Flags] enum, so manually calculate the OR of all
